@@ -1,7 +1,7 @@
 
 project "game"
 	targetname  "game"
-	targetdir 	"../.."
+	targetdir 	"../../basety"
 	language    "C++"
 	kind        "SharedLib"
 	flags       { "ExtraWarnings" }
@@ -59,7 +59,7 @@ project "game"
 		}
 		postbuildcommands
 		{
-		   "cd ../..",
+		   "cd ../../basety",
 		   "del game00.pk4",
 		   "zip game00.pk4 gamex86.dll",
 		   "zip game00.pk4 binary.conf",
