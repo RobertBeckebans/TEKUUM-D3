@@ -51,7 +51,7 @@ If you have questions concerning this license or the applicable additional terms
 #define CONFIG_FILE						"DoomConfig.cfg"
 
 // base folder where the source code lives
-#define SOURCE_CODE_BASE_FOLDER			"neo"
+#define SOURCE_CODE_BASE_FOLDER			"src"
 
 
 // default idnet host address
