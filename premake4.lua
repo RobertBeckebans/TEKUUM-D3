@@ -103,11 +103,30 @@ newoption
 --	_OPTIONS["with-openal"] = "openal-" .. _OPTIONS["with-openal"]
 --end
 
+function FindDirectXSDK()
+		
+		configuration {}
+		local dxsdkdir = os.getenv("DXSDK_DIR")
+		if (dxsdkdir) then
+			includedirs { "$(DXSDK_DIR)/include" }
+			configuration "x32"
+				libdirs {"$(DXSDK_DIR)/lib/x86"}
+			configuration "x64"
+				libdirs {"$(DXSDK_DIR)/lib/x64"}
+			configuration {}
+			return true
+		end
+		
+		return false
+	end
+	
+foundDirectSDK = FindDirectXSDK()
+
 project "Techyon"
 	targetname  "Techyon"
 	language    "C++"
 	kind        "WindowedApp"
-	flags       { "ExtraWarnings", "StaticRuntime" }
+	flags       { "ExtraWarnings" }
 	files
 	{
 		"idlib/**.cpp", "idlib/**.h",
@@ -130,7 +149,7 @@ project "Techyon"
 		"sound/OggVorbis/vorbissrc/smallft.c",
 		"sound/OggVorbis/vorbissrc/block.c",
 		"sound/OggVorbis/vorbissrc/envelope.c",
-		--"sound/OggVorbis/vorbissrc/window.c",
+		"sound/OggVorbis/vorbissrc/windowvb.c",
 		"sound/OggVorbis/vorbissrc/lsp.c",
 		"sound/OggVorbis/vorbissrc/lpc.c",
 		"sound/OggVorbis/vorbissrc/analysis.c",
@@ -183,21 +202,8 @@ project "Techyon"
 	defines
 	{
 		"__DOOM__",
-		"__DOOM_DLL_",
-		--"STANDALONE",
-		--"REF_HARD_LINKED",
+		"__DOOM_DLL__",
 		--"GLEW_STATIC",
-		--"BUILD_FREETYPE",
-		--"FT2_BUILD_LIBRARY",
-		--"USE_CODEC_VORBIS",
-		--"USE_VOIP",
-		--"USE_CIN_THEORA",
-		--"USE_ALLOCA",
-		--"FLOATING_POINT",
-		--"USE_CURL", 
-		--"USE_MUMBLE",
-		--"USE_INTERNAL_GLFW",
-		--"USE_INTERNAL_GLEW",
 	}
 	
 	--
@@ -221,71 +227,29 @@ project "Techyon"
 	-- Options Configurations
 	--		
 	
-	--configuration { "vs*", "Release" }
-	-- newaction {
-		-- trigger = "prebuild",
-		-- description = "Compile libcurl.lib",
-		-- execute = function ()
-			-- os.execute("cd ../libs/curl-7.12.2;cd lib;nmake /f Makefile.vc6 CFG=release")
-		-- end
-	-- }
+	
 	
 	-- 
 	-- Project Configurations
 	-- 
 	configuration "vs*"
-		flags       { "WinMain" }
+		flags       { "WinMain", "MFC" }
 		files
 		{
 			"sys/win32/**.cpp", "sys/win32/**.h",
 			"sys/win32/rc/doom.rc",
 			"sys/win32/res/*",
 			
-			--"../libs/glew/src/wglew.h",
+			--"libs/glew/src/wglew.h",
 			
-			-- "curl/lib/base64.c",
-			-- "curl/lib/connect.c",
-			-- "curl/lib/cookie.c",
-			-- "curl/lib/dict.c",
-			-- "curl/lib/easy.c",
-			-- "curl/lib/escape.c",
-			-- "curl/lib/file.c",
-			-- "curl/lib/formdata.c",
-			-- "curl/lib/ftp.c",
-			-- "curl/lib/getdate.c",
-			-- "curl/lib/getenv.c",
-			-- "curl/lib/getinfo.c",
-			-- "curl/lib/hash.c",
-			-- "curl/lib/hostip.c",
-			-- "curl/lib/http.c",
-			-- "curl/lib/http_chunks.c",
-			-- "curl/lib/if2ip.c",
-			-- "curl/lib/krb4.c",
-			-- "curl/lib/ldap.c",
-			-- "curl/lib/llist.c",
-			-- "curl/lib/memdebug.c",
-			-- "curl/lib/mprintf.c",
-			-- "curl/lib/multi.c",
-			-- "curl/lib/netrc.c",
-			-- "curl/lib/progress.c",
-			-- "curl/lib/security.c",
-			-- "curl/lib/sendf.c",
-			-- "curl/lib/share.c",
-			-- "curl/lib/speedcheck.c",
-			-- "curl/lib/ssluse.c",
-			-- "curl/lib/strequal.c",
-			-- "curl/lib/strtok.c",
-			-- "curl/lib/telnet.c",
-			-- "curl/lib/timeval.c",
-			-- "curl/lib/transfer.c",
-			-- "curl/lib/url.c",
-			-- "curl/lib/version.c",
+			--"openal/idal.cpp", "openal/idal.h",
+			"openal/include/*.h",
 		}
 		excludes
 		{
 			"sys/win32/gl_logfuncs.cpp",
 			"sys/win32/win_gamma.cpp",
-			"sys/win32/win_snd.cpp",
+			--"sys/win32/win_snd.cpp",
 		}
 		defines
 		{
@@ -294,8 +258,8 @@ project "Techyon"
 		includedirs
 		{
 			"curl/include",
-			--"../libs/sdl/include",
-			--"../libs/openal/include",
+			"openal/include",
+			--"libs/sdl/include",
 		}
 		libdirs
 		{
@@ -310,12 +274,14 @@ project "Techyon"
 		{
 			--"/MT"
 		}
-		linkoptions 
+		linkoptions
 		{
 			"/LARGEADDRESSAWARE",
+			"/DYNAMICBASE",
+			"/STACK:16777216",
 			--"/NODEFAULTLIB:libcmt.lib",
 			--"/NODEFAULTLIB:libcmtd.lib"
-			--"/NODEFAULTLIB:libc"
+			--"/NODEFAULTLIB:libc",
 		}
 		defines
 		{
@@ -328,6 +294,18 @@ project "Techyon"
 			"_MBCS",
 		}
 		
+		
+	-- configuration { "vs*", "Debug" }
+		-- links
+		-- { 
+			-- "libcmtd",
+		-- }
+		
+	-- configuration { "vs*", "Release" }
+		-- links
+		-- { 
+			-- "libcmt",
+		-- }
 		
 	configuration { "vs*", "x32" }
 		targetdir 	"../bin/win32"
@@ -351,6 +329,7 @@ project "Techyon"
 			"dxguid",
 			"DxErr",
 			"eaxguid",
+			"iphlpapi",
 		}
 		prebuildcommands
 		{
