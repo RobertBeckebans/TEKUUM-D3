@@ -212,7 +212,12 @@ public:
 	int			NumLevelsForImageSize( int width, int height ) const;
 
 	// data commonly accessed is grouped here
-	static const int TEXTURE_NOT_LOADED = -1;
+
+// Techyon BEGIN
+	// RB: textures returned by OpenGL are always > 0
+	static const GLuint TEXTURE_NOT_LOADED = 0;
+// Techyon END
+	
 	GLuint				texnum;					// gl texture binding, will be TEXTURE_NOT_LOADED if not loaded
 	textureType_t		type;
 	int					frameUsed;				// for texture usage in frame statistics
