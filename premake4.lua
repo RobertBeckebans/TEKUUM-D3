@@ -266,10 +266,10 @@ project "Techyon"
 			--"openal/lib",
 			--"../libs/curl-7.12.2/lib"
 		}
-		links
-		{
-			"nafxcw",
-		}
+		--links
+		--{
+		--	"nafxcw",
+		--}
 		buildoptions
 		{
 			--"/MT"
@@ -330,6 +330,7 @@ project "Techyon"
 			"DxErr",
 			"eaxguid",
 			"iphlpapi",
+			"winmm",
 		}
 		prebuildcommands
 		{
