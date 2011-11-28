@@ -33,7 +33,9 @@ If you have questions concerning this license or the applicable additional terms
 #ifdef _WIN32
 #include "../openal/include/al.h"
 #include "../openal/include/alc.h"
-#include "../openal/idal.h"
+// Techyon BEGIN
+//#include "../openal/idal.h"
+// Techyon END
 // broken OpenAL SDK ?
 #define ID_ALCHAR (ALubyte *)
 #elif defined( MACOS_X )
