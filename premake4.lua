@@ -14,19 +14,19 @@ solution "Techyon"
 		flags      
 		{
 			"OptimizeSpeed",
-			"EnableSSE",
+			--"EnableSSE",
 			--"StaticRuntime"
 		}
 		
-	--configuration "ReleaseReleaseWithSymbols"
-	--	defines     "NDEBUG"
-	--	flags
-	--	{
-	--		"OptimizeSpeed",
-	--		"EnableSSE",
-	--		"Symbols",
-	--		"StaticRuntime"
-	--	}
+	-- configuration "releasereleasewithsymbols"
+		-- defines     "NDEBUG"
+		-- flags
+		-- {
+			-- "OptimizeSpeed",
+			-- --"EnableSSE",
+			-- "Symbols",
+			-- --"StaticRuntime"
+		-- }
 	
 	configuration "Debug"
 		defines     "_DEBUG"
@@ -170,7 +170,6 @@ project "Techyon"
 		"sys/sys_*.cpp", "sys/sys_*.h",
 		
 		"tools/**.c", "tools/**.cpp", "tools/**.h",
-		"tools/**.CPP", "tools/**.H",
 		"ui/*.cpp", "ui/*.h",
 	}
 	excludes
@@ -225,9 +224,7 @@ project "Techyon"
 		
 	--
 	-- Options Configurations
-	--		
-	
-	
+	--
 	
 	-- 
 	-- Project Configurations
@@ -301,7 +298,30 @@ project "Techyon"
 			-- "libcmtd",
 		-- }
 		
-	-- configuration { "vs*", "Release" }
+	configuration { "vs*", "Release" }
+		buildoptions
+		{
+			-- Produces a program database (PDB) that contains type information and symbolic debugging information for use with the debugger
+			-- /Zi does imply /debug
+			"/Zi",
+			
+			-- turn off Whole Program Optimization
+			"/GL-",
+			
+			-- Inline Function Expansion: Any Suitable (/Ob2)
+			"/Ob2",
+			
+			-- enable Intrinsic Functions
+			"/Oi",
+			
+			-- Omit Frame Pointers
+			"/Oy",
+		}
+		-- linkoptions
+		-- {
+			-- -- turn off Whole Program Optimization
+			-- "/LTCG-",
+		-- }
 		-- links
 		-- { 
 			-- "libcmt",
