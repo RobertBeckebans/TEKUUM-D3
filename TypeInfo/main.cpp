@@ -130,7 +130,26 @@ const char *Sys_DefaultCDPath( void ) {
 }
 
 const char *Sys_DefaultBasePath( void ) {
-	return Sys_Cwd();
+// Techyon BEGIN
+	static char basePath[MAX_OSPATH];
+	idStr cwdPath;
+	
+	cwdPath = Sys_Cwd();
+
+	cwdPath.Replace("bin/win32", "");
+	cwdPath.Replace("bin\\win32", "");
+
+	cwdPath.Replace("bin/win64", "");
+	cwdPath.Replace("bin\\win64", "");
+
+	cwdPath.Replace("/src", "");
+	cwdPath.Replace("\\src", "");
+
+	cwdPath.Copynz(basePath, cwdPath.c_str(), sizeof(basePath));
+	return basePath;
+
+	//return Sys_Cwd();
+// Techyon END
 }
 
 const char *Sys_DefaultSavePath( void ) {
