@@ -62,91 +62,12 @@ project "TypeInfo"
 			-- "libcmtd",
 		-- }
 		
-	configuration { "vs*", "Release" }
-		buildoptions
-		{
-			-- Produces a program database (PDB) that contains type information and symbolic debugging information for use with the debugger
-			-- /Zi does imply /debug
-			"/Zi",
-			
-			-- turn off Whole Program Optimization
-			"/GL-",
-			
-			-- Inline Function Expansion: Any Suitable (/Ob2)
-			"/Ob2",
-			
-			-- enable Intrinsic Functions
-			"/Oi",
-			
-			-- Omit Frame Pointers
-			"/Oy",
-		}
-		-- linkoptions
-		-- {
-			-- -- turn off Whole Program Optimization
-			-- "/LTCG-",
-		-- }
-		-- links
-		-- { 
-			-- "libcmt",
-		-- }
-		
 	configuration { "vs*", "x32" }
 		targetdir 	"../../bin/win32"
 		
 	configuration { "vs*", "x64" }
 		targetdir 	"../../bin/win64"
 
-	configuration { "linux", "gmake" }
-		buildoptions
-		{
-			--"`pkg-config --cflags x11`",
-			--"`pkg-config --cflags xext`",
-			--"`pkg-config --cflags xxf86dga`",
-			--"`pkg-config --cflags xxf86vm`",
-			"`pkg-config --cflags sdl`",
-			"`pkg-config --cflags libcurl`",
-		}
-		linkoptions
-		{
-			--"`pkg-config --libs x11`",
-			--"`pkg-config --libs xext`",
-			--"`pkg-config --libs xxf86dga`",
-			--"`pkg-config --libs xxf86vm`",
-			"`pkg-config --libs sdl`",
-			"`pkg-config --libs libcurl`",
-		}
-		links
-		{ 
-			--"libcurl",
-			"openal",
-		}
 	
-	configuration "linux"
-		targetname  "xreal"
-		files
-		{
-			"sys/sys_main.c",
-			"sys/sys_unix.c",
-			"sys/con_log.c",
-			"sys/con_passive.c",
-			"sys/sdl_gamma.c",
-			"sys/sdl_glimp.c",
-			"sys/sdl_input.c",
-			"sys/sdl_snd.c",
-			"../libs/glew/src/glew.c",
-		}
-		--buildoptions
-		--{
-		--	"-pthread"
-		--}
-		links
-		{
-			"GL",
-		}
-		defines
-		{
-            "PNG_NO_ASSEMBLER_CODE",
-		}
 		
 		

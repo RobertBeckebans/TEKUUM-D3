@@ -58,35 +58,6 @@ project "idlib"
 			-- "libcmtd",
 		-- }
 		
-	configuration { "vs*", "Release" }
-		buildoptions
-		{
-			-- Produces a program database (PDB) that contains type information and symbolic debugging information for use with the debugger
-			-- /Zi does imply /debug
-			"/Zi",
-			
-			-- turn off Whole Program Optimization
-			"/GL-",
-			
-			-- Inline Function Expansion: Any Suitable (/Ob2)
-			"/Ob2",
-			
-			-- enable Intrinsic Functions
-			"/Oi",
-			
-			-- Omit Frame Pointers
-			"/Oy",
-		}
-		-- linkoptions
-		-- {
-			-- -- turn off Whole Program Optimization
-			-- "/LTCG-",
-		-- }
-		-- links
-		-- { 
-			-- "libcmt",
-		-- }
-		
 	
 		
 		
