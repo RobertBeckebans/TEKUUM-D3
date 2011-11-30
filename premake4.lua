@@ -122,6 +122,8 @@ function FindDirectXSDK()
 	
 foundDirectSDK = FindDirectXSDK()
 
+include "idlib"
+
 project "Techyon"
 	targetname  "Techyon"
 	language    "C++"
@@ -129,8 +131,6 @@ project "Techyon"
 	flags       { "ExtraWarnings" }
 	files
 	{
-		"idlib/**.cpp", "idlib/**.h",
-	
 		"cm/*.cpp", "cm/*.h",
 		"framework/**.cpp", "framework/**.h",
 		"renderer/**.c", "renderer/**.cpp", "renderer/**.h",
@@ -174,9 +174,6 @@ project "Techyon"
 	}
 	excludes
 	{
-		"idlib/math/Simd_AltiVec.cpp", "../idlib/math/Simd_AltiVec.h",
-		"idlib/bv/Frustum_gcc.cpp",
-		
 		"renderer/draw_exp*.cpp",
 		"renderer/jpeg-6/jmemdos.c",
 		"renderer/jpeg-6/jload.c",
@@ -203,6 +200,10 @@ project "Techyon"
 		"__DOOM__",
 		"__DOOM_DLL__",
 		--"GLEW_STATIC",
+	}
+	links
+	{
+		"idlib",
 	}
 	
 	--
@@ -426,5 +427,5 @@ project "Techyon"
 		}
 
 		
-		
+include "TypeInfo"
 include "game"

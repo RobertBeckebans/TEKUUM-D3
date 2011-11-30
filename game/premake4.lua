@@ -22,6 +22,7 @@ project "game"
 		"../idlib/math/Simd_AltiVec.cpp", "../idlib/math/Simd_AltiVec.h",
 		"../idlib/bv/Frustum_gcc.cpp",
 		"gamesys/Callbacks.cpp",
+		"EndLevel.cpp", "EndLevel.h",
 	}
 	includedirs
 	{
@@ -29,9 +30,13 @@ project "game"
 	}
 	defines
 	{ 
-		"_D3SDK",
+		--"_D3SDK",
 		"__DOOM__",
 		"GAME_DLL"
+	}
+	links
+	{
+		"TypeInfo"
 	}
 	
 	--
@@ -39,9 +44,19 @@ project "game"
 	--
 	configuration "x32"
 		targetname  "gamex86"
+		prebuildcommands
+		{
+		   "cd ../../bin/win32",
+		   "TypeInfo.exe",
+		}
 	
 	configuration "x64"
 		targetname  "gamex86_64"
+		prebuildcommands
+		{
+		   "cd ../../bin/win64",
+		   "TypeInfo.exe",
+		}
 				
 	-- 
 	-- Project Configurations
@@ -56,6 +71,11 @@ project "game"
 			"WIN32",
 			"_WINDOWS",
 			"_CRT_SECURE_NO_WARNINGS",
+			"_CRT_SECURE_NO_DEPRECATE",
+			"_CRT_NONSTDC_NO_DEPRECATE",
+			"_USE_32BIT_TIME_T",
+			"_MBCS",
+			"_WINDLL"
 		}
 		postbuildcommands
 		{
