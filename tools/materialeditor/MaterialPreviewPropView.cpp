@@ -287,7 +287,13 @@ void MaterialPreviewPropView::OnPropertyChangeNotification( NMHDR *nmhdr, LRESUL
 
 		combo->GetLBText( combo->GetCurSel(), materialName );
 
+// Techyon BEGIN
+#if _MSC_VER >= 1300 && _MFC_VER >= 0x0A00
 		materialPreview->OnLightShaderChange( lightId, materialName.GetBuffer() );
+#else
+		materialPreview->OnLightShaderChange( lightId, materialName.GetBuffer(0) );
+#endif
+// Techyon END
 
 	} else if ( itemLabel == "Radius" ) {
 		materialPreview->OnLightRadiusChange( lightId, atof( (char *)item->GetItemValue() ) );

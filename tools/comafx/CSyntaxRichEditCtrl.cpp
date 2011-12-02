@@ -1403,11 +1403,17 @@ BOOL CSyntaxRichEditCtrl::OnToolTipNotify( UINT id, NMHDR *pNMHDR, LRESULT *pRes
 
 		AFX_MODULE_THREAD_STATE *state = AfxGetModuleThreadState();
 
+// Techyon BEGIN
+#if _MSC_VER >= 1300 && _MFC_VER >= 0x0A00
 		// set max tool tip width to enable multi-line tool tips using "\r\n" for line breaks
 		state->m_pToolTip->SetMaxTipWidth( 500 );
 
 		// set the number of milliseconds after which the tool tip automatically disappears
 		state->m_pToolTip->SetDelayTime( TTDT_AUTOPOP, 5000 + toolTip.GetLength() * 50 );
+#else
+		// FIXME with old MFC
+#endif
+// Techyon END
 
 #ifndef _UNICODE
 		if( pNMHDR->code == TTN_NEEDTEXTA ) {
@@ -1770,11 +1776,18 @@ void CSyntaxRichEditCtrl::OnMouseMove( UINT nFlags, CPoint point ) {
 	if ( point != mousePoint ) {
 		mousePoint = point;
 
+// Techyon BEGIN
+#if _MSC_VER >= 1300 && _MFC_VER >= 0x0A00
+		
 		// remove tool tip and activate the tool tip control, otherwise
 		// tool tips stop working until the mouse moves over another window first
 		AFX_MODULE_THREAD_STATE *state = AfxGetModuleThreadState();
 		state->m_pToolTip->Pop();
 		state->m_pToolTip->Activate( TRUE );
+#else
+		// FIXME with old MFC
+#endif
+// Techyon END
 	}
 }
 
