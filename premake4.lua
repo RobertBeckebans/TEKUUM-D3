@@ -134,24 +134,50 @@ newoption
 --end
 
 function FindDirectXSDK()
-		
+	
+	configuration {}
+	local dxsdkdir = os.getenv("DXSDK_DIR")
+	if (dxsdkdir) then
+		includedirs { "$(DXSDK_DIR)/include" }
+		configuration "x32"
+			libdirs {"$(DXSDK_DIR)/lib/x86"}
+		configuration "x64"
+			libdirs {"$(DXSDK_DIR)/lib/x64"}
 		configuration {}
-		local dxsdkdir = os.getenv("DXSDK_DIR")
-		if (dxsdkdir) then
-			includedirs { "$(DXSDK_DIR)/include" }
-			configuration "x32"
-				libdirs {"$(DXSDK_DIR)/lib/x86"}
-			configuration "x64"
-				libdirs {"$(DXSDK_DIR)/lib/x64"}
-			configuration {}
-			return true
-		end
-		
-		return false
+		print("Found DirectX SDK at '" .. dxsdkdir .. "'")
+		return true
 	end
 	
-foundDirectSDK = FindDirectXSDK()
+	return false
+end
 
+function FindPlatformSDK()
+	
+	configuration {}
+	local platformsdkdir = os.getenv("PLATFORMSDK_DIR")
+	if (platformsdkdir) then
+		includedirs {
+			"$(PLATFORMSDK_DIR)/include/mfc",
+			"$(PLATFORMSDK_DIR)/include/atl"			
+		}
+		configuration "x32"
+			libdirs {"$(PLATFORMSDK_DIR)/lib"}
+		configuration "x64"
+			libdirs {"$(PLATFORMSDK_DIR)/lib/amd64"}
+		configuration {}
+		print("Found Platform SDK at '" .. platformsdkdir .. "'")
+		return true
+	end
+	
+	return false
+end
+
+if _ACTION == "vs2010" then	
+	foundDirectSDK = FindDirectXSDK()
+	foundPlatformSDK = FindPlatformSDK()
+end
+	
+	
 include "idlib"
 
 project "Techyon"

@@ -135,10 +135,10 @@ void PDAEditorInit( const idDict *spawnArgs ) {
 }
 
 void PDAEditorRun( void ) {
-#if _MSC_VER >= 1300
-	MSG *msg = AfxGetCurrentMessage();			// TODO Robert fix me!!
+#if _MSC_VER >= 1300 && _MFC_VER >= 0x0A00
+	MSG *msg = AfxGetCurrentMessage();
 #else
-	MSG *msg = &m_msgCur;
+	MSG *msg = &AfxGetThread()->m_msgCur;
 #endif
 
 	while( ::PeekMessage(msg, NULL, NULL, NULL, PM_NOREMOVE) ) {

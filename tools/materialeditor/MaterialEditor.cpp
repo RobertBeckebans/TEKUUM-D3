@@ -106,7 +106,11 @@ void MaterialEditorInit( void ) {
 */
 void MaterialEditorRun( void ) {
 
+#if _MSC_VER >= 1300 && _MFC_VER >= 0x0A00
 	MSG *msg = AfxGetCurrentMessage();
+#else
+	MSG *msg = &AfxGetThread()->m_msgCur;
+#endif
 	
 	while( ::PeekMessage(msg, NULL, NULL, NULL, PM_NOREMOVE) ) {
 		// pump message
