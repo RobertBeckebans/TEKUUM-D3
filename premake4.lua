@@ -185,6 +185,7 @@ project "Techyon"
 	language    "C++"
 	kind        "WindowedApp"
 	flags       { "ExtraWarnings" }
+	--debugargs	{ "+set com_allowConsole 1 +set fs_game basety" }
 	files
 	{
 		"cm/*.cpp", "cm/*.h",
