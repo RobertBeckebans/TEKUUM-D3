@@ -114,4 +114,18 @@ void	MaterialEditorRun( void );
 void	MaterialEditorShutdown( void );
 void	MaterialEditorPrintConsole( const char *msg );
 
+// Techyon BEGIN
+#if defined(USE_GTK)
+void	GtkTestEditorInit();
+void	GtkTestEditorShutdown();
+void	GtkTestEditorRun();
+#endif
+
+#if defined(USE_QT)
+void	QtTestEditorInit();
+void	QtTestEditorShutdown();
+void	QtTestEditorRun();
+#endif
+// Techyon END
+
 #endif /* !__EDIT_PUBLIC_H__ */

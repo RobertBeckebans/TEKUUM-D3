@@ -1180,6 +1180,22 @@ static void Com_MaterialEditor_f( const idCmdArgs &args ) {
 	soundSystem->SetMute( true );
 	MaterialEditorInit();
 }
+
+
+// Techyon BEGIN
+#if defined(USE_GTK)
+/*
+=============
+Com_GtkTestEditor_f
+=============
+*/
+static void Com_GtkTestEditor_f( const idCmdArgs &args ) {
+	
+	GtkTestEditorInit();
+}
+#endif // defined(USE_GTK)
+// Techyon END
+
 #endif // ID_ALLOW_TOOLS
 
 /*
@@ -2360,6 +2376,13 @@ void idCommonLocal::InitCommands( void ) {
 
 	//BSM Nerve: Add support for the material editor
 	cmdSystem->AddCommand( "materialEditor", Com_MaterialEditor_f, CMD_FL_TOOL, "launches the Material Editor" );
+
+	// Techyon BEGIN
+#if defined(USE_GTK)
+	cmdSystem->AddCommand( "gtkTestEditor", Com_GtkTestEditor_f, CMD_FL_TOOL, "launches the GtkTest Editor" );
+#endif
+	// Techyon END
+
 #endif
 
 	cmdSystem->AddCommand( "printMemInfo", PrintMemInfo_f, CMD_FL_SYSTEM, "prints memory debugging data" );

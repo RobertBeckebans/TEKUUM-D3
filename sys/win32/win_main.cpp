@@ -1514,9 +1514,19 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 					// in-game PDA Editor
 					PDAEditorRun();
 				}
+
+// Techyon BEGIN
+#if defined(USE_GTK)
+				if ( com_editors & EDITOR_GTKTEST) {
+					GtkTestEditorRun();
+				}
+#endif
+// Techyon END
 			}
 		}
-#endif
+
+#endif // ID_ALLOW_TOOLS
+
 		// run the game
 		common->Frame();
 	}

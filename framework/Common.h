@@ -50,7 +50,14 @@ typedef enum {
 	EDITOR_PARTICLE				= BIT(9),
 	EDITOR_PDA					= BIT(10),
 	EDITOR_AAS					= BIT(11),
-	EDITOR_MATERIAL				= BIT(12)
+	EDITOR_MATERIAL				= BIT(12),
+
+// Techyon BEGIN
+#if defined(USE_GTK)
+	EDITOR_GTKTEST				= BIT(13),
+#endif
+// Techyon END
+
 } toolFlag_t;
 
 #define STRTABLE_ID				"#str_"

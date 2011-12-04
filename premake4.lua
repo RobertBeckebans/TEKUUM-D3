@@ -95,6 +95,18 @@ newoption
 	-- }
 -- }
 
+newoption
+{
+	trigger = "gtk-tools",
+	description = "Enable GTK+ based extra tools"
+}
+
+-- newoption
+-- {
+	-- trigger = "qt-tools",
+	-- description = "Enable Qt based extra tools"
+-- }
+
 --newoption
 --{
 --	trigger = "with-freetype",
@@ -172,9 +184,50 @@ function FindPlatformSDK()
 	return false
 end
 
+-- function FindQtSDK()
+	
+	-- configuration {}
+	-- local qtsdkdir = os.getenv("QTDIR")
+	-- if (qtsdkdir) then
+		-- -- includedirs {
+			-- -- "$(QTDIR)/include",
+			-- -- "$(QTDIR)/include/qtmain",
+			-- -- "$(QTDIR)/include/QtCore",
+			-- -- "$(QTDIR)/include/QtGui",
+			-- -- "$(QTDIR)/include/QtOpenGL",
+		-- -- }
+		-- -- configuration "x32"
+			-- -- libdirs {"$(QTDIR)/lib"}
+		
+		-- -- FIXME 64 bit support
+		-- --configuration "x64"
+		-- --	libdirs {"$(QTDIR)/lib/amd64"}
+		-- configuration {}
+		-- print("Found Qt SDK at '" .. qtsdkdir .. "'")
+		-- return true
+	-- end
+	
+	-- return false
+-- end
+
+function FindGtkmmSDK()
+	
+	configuration {}
+	local gtkmmsdkdir = os.getenv("GTKMM_BASEPATH")
+	if (gtkmmsdkdir) then
+		configuration {}
+		print("Found Gtkmm SDK at '" .. gtkmmsdkdir .. "'")
+		return true
+	end
+	
+	return false
+end
+
 if _ACTION == "vs2010" then	
 	foundDirectSDK = FindDirectXSDK()
 	foundPlatformSDK = FindPlatformSDK()
+	--foundQtSDK = FindQtSDK()
+	foundGtkMMSDK = FindGtkmmSDK()
 end
 	
 	
@@ -241,6 +294,8 @@ project "Techyon"
 		"tools/decl/DialogEntityDefEditor.*",
 		"tools/edit_stub.cpp",
 		"tools/guied/GEWindowWrapper_stub.cpp",
+		"tools/qttest/*",
+		"tools/gtktest/*",
 	}
 	includedirs
 	{
@@ -283,6 +338,149 @@ project "Techyon"
 	--
 	-- Options Configurations
 	--
+	-- configuration "qt-tools"
+		-- defines
+		-- {
+			-- "USE_QT"
+		-- }
+		-- includedirs
+		-- {
+			-- --"../libs/qt"
+		-- }
+		-- files
+		-- {
+			-- "tools/qttest/*",
+		-- }
+		
+		-- -- Files can be customized at the project scope and below.
+		-- customizefile "qttest.h"
+			-- filebuilddescription "Generating file using blah blah tool"
+			-- filebuildcommands
+			-- {
+				-- "$(QTDIR)\bin\moc.exe -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DQT_OPENGL_LIB  -I. -I.\GeneratedFiles "-I$(QTDIR)\include" "-I.\GeneratedFiles\$(ConfigurationName)\." "-I$(QTDIR)\include\qtmain" "-I$(QTDIR)\include\QtCore" "-I$(QTDIR)\include\QtGui" "-I$(QTDIR)\include\QtOpenGL" "-I." "-I." "-I." "-I." "qttest1.h" -o ".\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp"",
+				-- "copy some.file generated.cpp"
+			-- }
+			-- filebuildadditionaldependencies { "*.h" }
+			-- filebuildoutputs { "generated.cpp" }
+		
+	-- configuration { "qt-tools", "vs*", "x32" }
+		-- includedirs
+		-- {
+			-- "$(QTDIR)/include",
+			-- "$(QTDIR)/include/qtmain",
+			-- "$(QTDIR)/include/QtCore",
+			-- "$(QTDIR)/include/QtGui",
+			-- "$(QTDIR)/include/QtOpenGL",
+		-- }
+		-- libdirs
+		-- {
+			-- "$(QTDIR)/lib"
+		-- }
+		
+	-- configuration { "qt-tools", "Release" }
+		-- links
+		-- {
+			-- "qtmain",
+			-- "QtCore4",
+			-- "QtGui4",
+			-- "QtOpenGL4",
+		-- }
+		
+	-- configuration { "qt-tools", "Debug" }
+		-- links
+		-- {
+			-- "qtmaind",
+			-- "QtCored4",
+			-- "QtGuid4",
+			-- "QtOpenGLd4",
+		-- }
+	
+	configuration "gtk-tools"
+		defines
+		{
+			"USE_GTK"
+		}
+		includedirs
+		{
+			--"../libs/qt"
+		}
+		files
+		{
+			"tools/gtktest/*.cpp", "tools/gtktest/*.h",
+		}
+		
+	configuration { "gtk-tools", "vs*", "x32" }
+		includedirs
+		{
+			"$(GTKMM_BASEPATH)/include",
+			"$(GTKMM_BASEPATH)/include/gtkmm-2.4",
+			"$(GTKMM_BASEPATH)/lib/gtkmm-2.4/include",
+			"$(GTKMM_BASEPATH)/include/atkmm-1.6",
+			"$(GTKMM_BASEPATH)/include/giomm-2.4",
+			"$(GTKMM_BASEPATH)/lib/giomm-2.4/include",
+			"$(GTKMM_BASEPATH)/include/pangomm-1.4",
+			"$(GTKMM_BASEPATH)/lib/pangomm-1.4/include",
+			"$(GTKMM_BASEPATH)/include/gtk-2.0",
+			"$(GTKMM_BASEPATH)/include/gdkmm-2.4",
+			"$(GTKMM_BASEPATH)/lib/gdkmm-2.4/include",
+			"$(GTKMM_BASEPATH)/include/atk-1.0",
+			"$(GTKMM_BASEPATH)/include/glibmm-2.4",
+			"$(GTKMM_BASEPATH)/lib/glibmm-2.4/include",
+			"$(GTKMM_BASEPATH)/include/glib-2.0",
+			"$(GTKMM_BASEPATH)/lib/glib-2.0/include",
+			"$(GTKMM_BASEPATH)/include/sigc++-2.0",
+			"$(GTKMM_BASEPATH)/lib/sigc++-2.0/include",
+			"$(GTKMM_BASEPATH)/include/cairomm-1.0",
+			"$(GTKMM_BASEPATH)/lib/cairomm-1.0/include",
+			"$(GTKMM_BASEPATH)/include/pango-1.0",
+			"$(GTKMM_BASEPATH)/include/cairo",
+			"$(GTKMM_BASEPATH)/include",
+			"$(GTKMM_BASEPATH)/include/freetype2",
+			"$(GTKMM_BASEPATH)/include/libpng14",
+			"$(GTKMM_BASEPATH)/lib/gtk-2.0/include",
+			"$(GTKMM_BASEPATH)/include/gdk-pixbuf-2.0",
+		}
+		libdirs
+		{
+			"$(GTKMM_BASEPATH)/lib",
+		}
+		
+	--configuration { "gtk-tools", "vs2010", "Release" }
+	configuration { "gtk-tools", "vs2010" }
+		links
+		{
+			"gtkmm-vc100-2_4",
+			"atkmm-vc100-1_6",
+			"gdkmm-vc100-2_4",
+			"giomm-vc100-2_4",
+			"pangomm-vc100-1_4",
+			"gtk-win32-2.0",
+			"glibmm-vc100-2_4",
+			"cairomm-vc100-1_0",
+			"sigc-vc100-2_0",
+			"gdk-win32-2.0",
+			"atk-1.0",
+			"gio-2.0",
+			"pangowin32-1.0",
+			"gdi32",
+			"pangocairo-1.0",
+			"gdk_pixbuf-2.0",
+			--"png14",
+			"pango-1.0",
+			"cairo",
+			"gobject-2.0",
+			"gmodule-2.0",
+			"gthread-2.0",
+			"glib-2.0",
+			"intl",
+		}
+		
+	-- configuration { "gtk-tools", "vs2010", "Debug" }
+		-- links
+		-- {
+			-- "gtkmm-vc100-d-2_4",
+			-- ...
+		-- }
 	
 	-- 
 	-- Project Configurations
