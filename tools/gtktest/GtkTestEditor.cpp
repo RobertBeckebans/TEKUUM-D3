@@ -79,6 +79,7 @@ void	GtkTestEditorInit()
 	}
 	*/
 }
+
 void	GtkTestEditorShutdown()
 {
 	delete s_gtkTestEditor;
