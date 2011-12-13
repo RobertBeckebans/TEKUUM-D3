@@ -8,6 +8,11 @@ if(MSVC)
 	list(REMOVE_ITEM ID_INCLUDES ${CMAKE_CURRENT_SOURCE_DIR}/math/Simd_AltiVec.h)
 	list(REMOVE_ITEM ID_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/math/Simd_AltiVec.cpp)
 	list(REMOVE_ITEM ID_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/bv/Frustum_gcc.cpp)
-endif(MSVC)
+elseif(NOT APPLE)
+	list(REMOVE_ITEM ID_INCLUDES ${CMAKE_CURRENT_SOURCE_DIR}/math/Simd_AltiVec.h)
+	list(REMOVE_ITEM ID_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/math/Simd_AltiVec.cpp)
+endif()
+
+
 	
 add_library(idlib ${ID_SOURCES} ${ID_INCLUDES})
