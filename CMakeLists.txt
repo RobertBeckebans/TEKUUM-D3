@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 2.8)
+set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 
 project(Techyon)
 
@@ -13,7 +14,7 @@ if(MSVC)
 					-D_USE_32BIT_TIME_T
 					-D_MBCS
 					-D_AFXDLL)
-endif(MSVC)
+endif()
 
 add_subdirectory(idlib)
 
@@ -26,8 +27,93 @@ file(GLOB FRAMEWORK_SOURCES framework/*.cpp)
 file(GLOB FRAMEWORK_ASYNC_INCLUDES framework/async/*.h)
 file(GLOB FRAMEWORK_ASYNC_SOURCES framework/async/*.cpp)
 
-file(GLOB RENDERER_INCLUDES renderer/*.h)
-file(GLOB RENDERER_SOURCES renderer/*.cpp)
+set(RENDERER_INCLUDES
+	renderer/Cinematic.h
+	renderer/GuiModel.h
+	renderer/Image.h
+	renderer/Interaction.h
+	renderer/Material.h
+	renderer/MegaTexture.h
+	renderer/Model.h
+	renderer/ModelDecal.h
+	renderer/ModelManager.h
+	renderer/ModelOverlay.h
+	renderer/Model_ase.h
+	renderer/Model_local.h
+	renderer/Model_lwo.h
+	renderer/Model_ma.h
+	renderer/Model_md3.h
+	renderer/RenderSystem.h
+	renderer/RenderWorld.h
+	renderer/RenderWorld_local.h
+	renderer/VertexCache.h
+	renderer/cg_explicit.h
+	renderer/glext.h
+	renderer/qgl.h
+	renderer/qgl_linked.h
+	renderer/simplex.h
+	renderer/tr_local.h
+	renderer/wglext.h)
+
+
+set(RENDERER_SOURCES
+	renderer/Cinematic.cpp
+	renderer/GuiModel.cpp
+	renderer/Image_files.cpp
+	renderer/Image_init.cpp
+	renderer/Image_load.cpp
+	renderer/Image_process.cpp
+	renderer/Image_program.cpp
+	renderer/Interaction.cpp
+	renderer/Material.cpp
+	renderer/MegaTexture.cpp
+	renderer/Model.cpp
+	renderer/ModelDecal.cpp
+	renderer/ModelManager.cpp
+	renderer/ModelOverlay.cpp
+	renderer/Model_ase.cpp
+	renderer/Model_beam.cpp
+	renderer/Model_liquid.cpp
+	renderer/Model_lwo.cpp
+	renderer/Model_ma.cpp
+	renderer/Model_md3.cpp
+	renderer/Model_md5.cpp
+	renderer/Model_prt.cpp
+	renderer/Model_sprite.cpp
+	renderer/RenderEntity.cpp
+	renderer/RenderSystem.cpp
+	renderer/RenderSystem_init.cpp
+	renderer/RenderWorld.cpp
+	renderer/RenderWorld_demo.cpp
+	renderer/RenderWorld_load.cpp
+	renderer/RenderWorld_portals.cpp
+	renderer/VertexCache.cpp
+	renderer/cg_explicit.cpp
+	renderer/draw_arb.cpp
+	renderer/draw_arb2.cpp
+	renderer/draw_common.cpp
+	#renderer/draw_exp.cpp
+	#renderer/draw_exp_stub.cpp
+	renderer/draw_nv10.cpp
+	renderer/draw_nv20.cpp
+	renderer/draw_r200.cpp
+	renderer/tr_backend.cpp
+	renderer/tr_deform.cpp
+	renderer/tr_font.cpp
+	renderer/tr_guisurf.cpp
+	renderer/tr_light.cpp
+	renderer/tr_lightrun.cpp
+	renderer/tr_main.cpp
+	renderer/tr_orderIndexes.cpp
+	renderer/tr_polytope.cpp
+	renderer/tr_render.cpp
+	renderer/tr_rendertools.cpp
+	renderer/tr_shadowbounds.cpp
+	renderer/tr_stencilshadow.cpp
+	renderer/tr_subview.cpp
+	renderer/tr_trace.cpp
+	renderer/tr_trisurf.cpp
+	renderer/tr_turboshadow.cpp)
 
 set(JPEG_INCLUDES
 	renderer/jpeg-6/jchuff.h
@@ -141,57 +227,174 @@ file(GLOB SYS_SOURCES sys/*.cpp)
 
 file(GLOB UI_INCLUDES ui/*.h)
 file(GLOB UI_SOURCES ui/*.cpp)
+
+file(GLOB COMPILER_INCLUDES tools/compilers/*.h)
+
+file(GLOB COMPILER_AAS_INCLUDES tools/compilers/aas/*.h)
+file(GLOB COMPILER_AAS_SOURCES tools/compilers/aas/*.cpp)
+
+file(GLOB COMPILER_DMAP_INCLUDES tools/compilers/dmap/*.h)
+file(GLOB COMPILER_DMAP_SOURCES tools/compilers/dmap/*.cpp)
+
+file(GLOB COMPILER_RENDERBUMP_INCLUDES tools/compilers/renderbump/*.h)
+file(GLOB COMPILER_RENDERBUMP_SOURCES tools/compilers/renderbump/*.cpp)
+
+file(GLOB COMPILER_ROQVQ_INCLUDES tools/compilers/roqvq/*.h)
+file(GLOB COMPILER_ROQVQ_SOURCES tools/compilers/roqvq/*.cpp)
 	
 if(MSVC)
-	set(WIN32_INCLUDES
-		sys/win32/win_local.h
-		sys/win32/rc/doom_resource.h
-		)
+	# set(WIN32_INCLUDES
+		# sys/win32/win_local.h
+		# sys/win32/rc/doom_resource.h
+		# )
 
-	set(WIN32_INCLUDES
+	# set(WIN32_SOURCES
+		# sys/win32/win_cpu.cpp
+		# sys/win32/win_glimp.cpp
+		# sys/win32/win_input.cpp
+		# sys/win32/win_main.cpp
+		# sys/win32/win_net.cpp
+		# sys/win32/win_qgl.cpp
+		# sys/win32/win_shared.cpp
+		# sys/win32/win_snd.cpp
+		# sys/win32/win_syscon.cpp
+		# sys/win32/win_taskkeyhook.cpp
+		# sys/win32/win_wndproc.cpp
+		# )
+		
+	file(GLOB_RECURSE WIN32_INCLUDES sys/win32/*.h)
+	file(GLOB_RECURSE WIN32_SOURCES sys/win32/*.cpp)
+	
+	set(WIN32_RESOURCES
 		sys/win32/rc/doom.rc
-		sys/win32/win_cpu.cpp
-		sys/win32/win_glimp.cpp
-		sys/win32/win_input.cpp
-		sys/win32/win_main.cpp
-		sys/win32/win_net.cpp
-		sys/win32/win_qgl.cpp
-		sys/win32/win_shared.cpp
-		sys/win32/win_syscon.cpp
-		sys/win32/win_taskkeyhook.cpp
-		sys/win32/win_wndproc.cpp
+		sys/win32/rc/res/BEVEL.BMP
+		sys/win32/rc/res/BITMAP2.BMP
+		sys/win32/rc/res/BMP00001.BMP
+		sys/win32/rc/res/BMP0002.BMP
+		sys/win32/rc/res/DEFTEX.WAL
+		sys/win32/rc/res/ENDCAP.BMP
+		sys/win32/rc/res/GetString.htm
+		sys/win32/rc/res/IBEVEL.BMP
+		sys/win32/rc/res/IENDCAP.BMP
+		sys/win32/rc/res/MEFileToolbar.bmp
+		sys/win32/rc/res/MEtoolbar.bmp
+		sys/win32/rc/res/MaterialEditor.ico
+		sys/win32/rc/res/PropTree.rc2
+		sys/win32/rc/res/Q.BMP
+		sys/win32/rc/res/RADIANT3.GIF
+		sys/win32/rc/res/Radiant.ico
+		sys/win32/rc/res/RadiantDoc.ico
+		sys/win32/rc/res/TOOLBAR1.BMP
+		sys/win32/rc/res/TOOLBAR2.BMP
+		sys/win32/rc/res/Toolbar.bmp
+		sys/win32/rc/res/VIEWDEFA.BMP
+		sys/win32/rc/res/VIEWOPPO.BMP
+		sys/win32/rc/res/bmp00002.bmp
+		sys/win32/rc/res/bmp00003.bmp
+		sys/win32/rc/res/bmp00004.bmp
+		sys/win32/rc/res/bmp00005.bmp
+		sys/win32/rc/res/cchsb.bmp
+		sys/win32/rc/res/ccrgb.bmp
+		sys/win32/rc/res/dbg_back.bmp
+		sys/win32/rc/res/dbg_breakpoint.ico
+		sys/win32/rc/res/dbg_current.ico
+		sys/win32/rc/res/dbg_currentline.ico
+		sys/win32/rc/res/dbg_empty.ico
+		sys/win32/rc/res/dbg_open.bmp
+		sys/win32/rc/res/dbg_toolbar.bmp
+		sys/win32/rc/res/doom.ico
+		sys/win32/rc/res/fpoint.cur
+		sys/win32/rc/res/fxed_link.ico
+		sys/win32/rc/res/fxed_toolbar.bmp
+		sys/win32/rc/res/fxeditor.ico
+		sys/win32/rc/res/guied.ico
+		sys/win32/rc/res/guied_collapse.ico
+		sys/win32/rc/res/guied_expand.ico
+		sys/win32/rc/res/guied_hand.cur
+		sys/win32/rc/res/guied_nav_visible.ico
+		sys/win32/rc/res/guied_nav_visibledisabled.ico
+		sys/win32/rc/res/guied_scripts.ico
+		sys/win32/rc/res/guied_scripts_white.ico
+		sys/win32/rc/res/guied_viewer_toolbar.bmp
+		sys/win32/rc/res/icon2.ico
+		sys/win32/rc/res/logo_sm3dfx.bmp
+		sys/win32/rc/res/matedtree.bmp
+		sys/win32/rc/res/me_disabled_icon.ico
+		sys/win32/rc/res/me_enabled.ico
+		sys/win32/rc/res/me_off_icon.ico
+		sys/win32/rc/res/me_on_icon.ico
+		sys/win32/rc/res/qe3.ico
+		sys/win32/rc/res/shaderbar.bmp
+		sys/win32/rc/res/shaderdoc.ico
+		sys/win32/rc/res/shaderframe.ico
+		sys/win32/rc/res/spliter.cur
 		)
-endif(MSVC)
+	
+endif()
 
-SOURCE_GROUP("Include Files\\cm" FILES ${CM_INCLUDES})
-SOURCE_GROUP("Source Files\\cm" FILES ${CM_SOURCES})
+SOURCE_GROUP("cm" FILES ${CM_INCLUDES})
+SOURCE_GROUP("cm" FILES ${CM_SOURCES})
 
-SOURCE_GROUP("Include Files\\framework" FILES ${FRAMEWORK_INCLUDES})
-SOURCE_GROUP("Source Files\\framework" FILES ${FRAMEWORK_SOURCES})
+SOURCE_GROUP("framework" FILES ${FRAMEWORK_INCLUDES})
+SOURCE_GROUP("framework" FILES ${FRAMEWORK_SOURCES})
 
-SOURCE_GROUP("Include Files\\framework\\async" FILES ${FRAMEWORK_ASYNC_INCLUDES})
-SOURCE_GROUP("Source Files\\framework\\async" FILES ${FRAMEWORK_ASYNC_SOURCES})
+SOURCE_GROUP("framework\\async" FILES ${FRAMEWORK_ASYNC_INCLUDES})
+SOURCE_GROUP("framework\\async" FILES ${FRAMEWORK_ASYNC_SOURCES})
 
-SOURCE_GROUP("Include Files\\renderer" FILES ${RENDERER_INCLUDES})
-SOURCE_GROUP("Source Files\\renderer" FILES ${RENDERER_SOURCES})
+SOURCE_GROUP("renderer" FILES ${RENDERER_INCLUDES})
+SOURCE_GROUP("renderer" FILES ${RENDERER_SOURCES})
 
-SOURCE_GROUP("Include Files\\renderer\\jpeg-6" FILES ${JPEG_INCLUDES})
-SOURCE_GROUP("Source Files\\renderer\\jpeg-6" FILES ${JPEG_SOURCES})
+SOURCE_GROUP("renderer\\jpeg-6" FILES ${JPEG_INCLUDES})
+SOURCE_GROUP("renderer\\jpeg-6" FILES ${JPEG_SOURCES})
 
-SOURCE_GROUP("Include Files\\sound" FILES ${SOUND_INCLUDES})
-SOURCE_GROUP("Source Files\\sound" FILES ${SOUND_SOURCES})
+SOURCE_GROUP("sound" FILES ${SOUND_INCLUDES})
+SOURCE_GROUP("sound" FILES ${SOUND_SOURCES})
 
-SOURCE_GROUP("Include Files\\sound\\oggvorbis" FILES ${OGGVORBIS_INCLUDES})
-SOURCE_GROUP("Source Files\\sound\\oggvorbis" FILES ${OGGVORBIS_SOURCES})
+SOURCE_GROUP("sound\\oggvorbis" FILES ${OGGVORBIS_INCLUDES})
+SOURCE_GROUP("sound\\oggvorbis" FILES ${OGGVORBIS_SOURCES})
 
-SOURCE_GROUP("Include Files\\sys" FILES ${SYS_INCLUDES})
-SOURCE_GROUP("Source Files\\sys" FILES ${SYS_SOURCES})
+SOURCE_GROUP("ui" FILES ${UI_INCLUDES})
+SOURCE_GROUP("ui" FILES ${UI_SOURCES})
 
-SOURCE_GROUP("Include Files\\ui" FILES ${SYS_INCLUDES})
-SOURCE_GROUP("Source Files\\ui" FILES ${SYS_SOURCES})
+SOURCE_GROUP("sys" FILES ${SYS_INCLUDES})
+SOURCE_GROUP("sys" FILES ${SYS_SOURCES})
+
+SOURCE_GROUP("sys\\win32" FILES ${WIN32_INCLUDES})
+SOURCE_GROUP("sys\\win32" FILES ${WIN32_SOURCES})
+SOURCE_GROUP("sys\\win32\\Resources" FILES ${WIN32_RESOURCES})
+
+SOURCE_GROUP("tools\\compilers" FILES ${COMPILER_INCLUDES})
+
+SOURCE_GROUP("tools\\compilers\\aas" FILES ${COMPILER_AAS_INCLUDES})
+SOURCE_GROUP("tools\\compilers\\aas" FILES ${COMPILER_AAS_SOURCES})
+
+SOURCE_GROUP("tools\\compilers\\dmap" FILES ${COMPILER_DMAP_INCLUDES})
+SOURCE_GROUP("tools\\compilers\\dmap" FILES ${COMPILER_DMAP_SOURCES})
+
+SOURCE_GROUP("tools\\compilers\\renderbump" FILES ${COMPILER_RENDERBUMP_INCLUDES})
+SOURCE_GROUP("tools\\compilers\\renderbump" FILES ${COMPILER_RENDERBUMP_SOURCES})
+
+SOURCE_GROUP("tools\\compilers\\roqvq" FILES ${COMPILER_ROQVQ_INCLUDES})
+SOURCE_GROUP("tools\\compilers\\roqvq" FILES ${COMPILER_ROQVQ_SOURCES})
+
+add_definitions(-D__DOOM__
+				-D__DOOM_DLL__)
+
+include_directories(
+			curl/include
+			openal/include)
+			
+link_directories(
+			${CMAKE_CURRENT_SOURCE_DIR}/curl/lib
+			${CMAKE_CURRENT_SOURCE_DIR}/openal/lib)
 
 if(MSVC)
-	add_executable(Techyon 
+	find_package(DirectX REQUIRED)
+	include_directories(${DirectX_INCLUDE_DIR})
+	
+	#link_directories(${DirectX_LIBRARIES})
+
+	add_executable(Techyon WIN32 
 		${CM_INCLUDES} ${CM_SOURCES}	
 		${FRAMEWORK_INCLUDES} ${FRAMEWORK_SOURCES}
 		${FRAMEWORK_ASYNC_INCLUDES} ${FRAMEWORK_ASYNC_SOURCES} 
@@ -199,9 +402,32 @@ if(MSVC)
 		${JPEG_INCLUDES} ${JPEG_SOURCES}
 		${SOUND_INCLUDES} ${SOUND_SOURCES}
 		${OGGVORBIS_INCLUDES} ${OGGVORBIS_SOURCES}
+		${UI_INCLUDES} ${UI_SOURCES}
+		${COMPILER_INCLUDES}
+		${COMPILER_AAS_INCLUDES} ${COMPILER_AAS_SOURCES}
+		${COMPILER_DMAP_INCLUDES} ${COMPILER_DMAP_SOURCES}
+		${COMPILER_RENDERBUMP_INCLUDES} ${COMPILER_RENDERBUMP_SOURCES}
+		${COMPILER_ROQVQ_INCLUDES} ${COMPILER_ROQVQ_SOURCES}
 		${SYS_INCLUDES} ${SYS_SOURCES}
-		${WIN32_INCLUDES} ${WIN32_SOURCES}
+		${WIN32_INCLUDES} ${WIN32_SOURCES} ${WIN32_RESOURCES}
 		)
 		
+	add_custom_command(TARGET Techyon
+                   PRE_BUILD
+				   COMMAND nmake ARGS /f Makefile.vc6 CFG=release
+				   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/curl/lib
+                   COMMENT "Compiling libcURL")
+		
 	add_dependencies(Techyon idlib)
-endif(MSVC)
+	target_link_libraries(Techyon
+		idlib
+		${DirectX_LIBRARIES}
+		libcurl 
+		openal32 
+		opengl32
+		glu32
+		dbghelp
+		eaxguid
+		iphlpapi
+		winmm)
+endif()
