@@ -527,6 +527,9 @@ const char *Sys_DefaultBasePath( void ) {
 	cwdPath.Replace("/src", "");
 	cwdPath.Replace("\\src", "");
 
+	cwdPath.Replace("build", "");
+	cwdPath.Replace("\\build", "");
+
 	cwdPath.Copynz(basePath, cwdPath.c_str(), sizeof(basePath));
 	return basePath;
 

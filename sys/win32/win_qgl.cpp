@@ -1291,7 +1291,7 @@ static void APIENTRY logClear(GLbitfield mask)
 
 #endif
 
-#include "gl_logfuncs.cpp"
+#include "gl_logfuncs.h"
 
 /*
 ** QGL_Shutdown
