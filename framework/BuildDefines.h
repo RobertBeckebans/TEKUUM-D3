@@ -92,9 +92,12 @@ If you have questions concerning this license or the applicable additional terms
 //#define ID_DEMO_BUILD
 
 // don't define ID_ALLOW_TOOLS when we don't want tool code in the executable.
-#if defined( _WIN32 ) && !defined( ID_DEDICATED ) && !defined( ID_DEMO_BUILD )
-	#define	ID_ALLOW_TOOLS
-#endif
+
+// Techyon BEGIN
+//#if defined( _WIN32 ) && !defined( ID_DEDICATED ) && !defined( ID_DEMO_BUILD )
+//	#define	ID_ALLOW_TOOLS
+//#endif
+// Techyon END
 
 // don't do backtraces in release builds.
 // atm, we have no useful way to reconstruct the trace, so let's leave it off
