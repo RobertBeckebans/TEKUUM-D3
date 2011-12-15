@@ -523,6 +523,16 @@ if(MSVC)
 	find_package(DirectX REQUIRED)
 	include_directories(${DirectX_INCLUDE_DIR})
 	
+	find_package(MFC REQUIRED)
+	if(MFC_FOUND)
+		include_directories(${MFC_INCLUDE_DIR})
+	endif()
+	
+	find_package(ATL REQUIRED)
+	if(ATL_FOUND)
+		include_directories(${ATL_INCLUDE_DIR})
+	endif()
+	
 	add_definitions(-DID_ALLOW_TOOLS)
 
 	add_executable(Techyon WIN32 
