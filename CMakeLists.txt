@@ -241,96 +241,187 @@ file(GLOB COMPILER_RENDERBUMP_SOURCES tools/compilers/renderbump/*.cpp)
 
 file(GLOB COMPILER_ROQVQ_INCLUDES tools/compilers/roqvq/*.h)
 file(GLOB COMPILER_ROQVQ_SOURCES tools/compilers/roqvq/*.cpp)
-	
-if(MSVC)
-	# set(WIN32_INCLUDES
-		# sys/win32/win_local.h
-		# sys/win32/rc/doom_resource.h
-		# )
 
-	# set(WIN32_SOURCES
-		# sys/win32/win_cpu.cpp
-		# sys/win32/win_glimp.cpp
-		# sys/win32/win_input.cpp
-		# sys/win32/win_main.cpp
-		# sys/win32/win_net.cpp
-		# sys/win32/win_qgl.cpp
-		# sys/win32/win_shared.cpp
-		# sys/win32/win_snd.cpp
-		# sys/win32/win_syscon.cpp
-		# sys/win32/win_taskkeyhook.cpp
-		# sys/win32/win_wndproc.cpp
-		# )
-		
-	file(GLOB_RECURSE WIN32_INCLUDES sys/win32/*.h)
-	file(GLOB_RECURSE WIN32_SOURCES sys/win32/*.cpp)
+set(TOOLS_INCLUDES tools/edit_public.h)
+
+file(GLOB TOOLS_COMAFX_INCLUDES tools/comafx/*.h)
+file(GLOB TOOLS_COMAFX_SOURCES tools/comafx/*.cpp)
+
+set(TOOLS_COMMON_INCLUDES
+	tools/common/ColorButton.h
+	tools/common/DialogHelpers.h
+	tools/common/MaskEdit.h
+	tools/common/OpenFileDialog.h
+	tools/common/PropertyGrid.h
+	tools/common/RegistryOptions.h
+	#tools/common/RenderBumpFlatDialog.h
+	tools/common/RollupPanel.h
+	tools/common/SpinButton.h)
+
+set(TOOLS_COMMON_SOURCES
+	tools/common/AlphaPopup.cpp
+	tools/common/ColorButton.cpp
+	tools/common/MaskEdit.cpp
+	tools/common/OpenFileDialog.cpp
+	tools/common/PropertyGrid.cpp
+	tools/common/RegistryOptions.cpp
+	#tools/common/RenderBumpFlatDialog.cpp
+	tools/common/RollupPanel.cpp
+	tools/common/SpinButton.cpp)
+
+file(GLOB TOOLS_COMMON_PROPTREE_INCLUDES tools/common/PropTree/*.h)
+file(GLOB TOOLS_COMMON_PROPTREE_SOURCES tools/common/PropTree/*.cpp)
+
+file(GLOB EDITOR_AF_INCLUDES tools/af/*.h)
+file(GLOB EDITOR_AF_SOURCES tools/af/*.cpp)
+
+set(EDITOR_DECL_INCLUDES
+	tools/decl/DialogDeclBrowser.h
+	tools/decl/DialogDeclEditor.h
+	tools/decl/DialogDeclNew.h)
 	
-	set(WIN32_RESOURCES
-		sys/win32/rc/doom.rc
-		sys/win32/rc/res/BEVEL.BMP
-		sys/win32/rc/res/BITMAP2.BMP
-		sys/win32/rc/res/BMP00001.BMP
-		sys/win32/rc/res/BMP0002.BMP
-		sys/win32/rc/res/DEFTEX.WAL
-		sys/win32/rc/res/ENDCAP.BMP
-		sys/win32/rc/res/GetString.htm
-		sys/win32/rc/res/IBEVEL.BMP
-		sys/win32/rc/res/IENDCAP.BMP
-		sys/win32/rc/res/MEFileToolbar.bmp
-		sys/win32/rc/res/MEtoolbar.bmp
-		sys/win32/rc/res/MaterialEditor.ico
-		sys/win32/rc/res/PropTree.rc2
-		sys/win32/rc/res/Q.BMP
-		sys/win32/rc/res/RADIANT3.GIF
-		sys/win32/rc/res/Radiant.ico
-		sys/win32/rc/res/RadiantDoc.ico
-		sys/win32/rc/res/TOOLBAR1.BMP
-		sys/win32/rc/res/TOOLBAR2.BMP
-		sys/win32/rc/res/Toolbar.bmp
-		sys/win32/rc/res/VIEWDEFA.BMP
-		sys/win32/rc/res/VIEWOPPO.BMP
-		sys/win32/rc/res/bmp00002.bmp
-		sys/win32/rc/res/bmp00003.bmp
-		sys/win32/rc/res/bmp00004.bmp
-		sys/win32/rc/res/bmp00005.bmp
-		sys/win32/rc/res/cchsb.bmp
-		sys/win32/rc/res/ccrgb.bmp
-		sys/win32/rc/res/dbg_back.bmp
-		sys/win32/rc/res/dbg_breakpoint.ico
-		sys/win32/rc/res/dbg_current.ico
-		sys/win32/rc/res/dbg_currentline.ico
-		sys/win32/rc/res/dbg_empty.ico
-		sys/win32/rc/res/dbg_open.bmp
-		sys/win32/rc/res/dbg_toolbar.bmp
-		sys/win32/rc/res/doom.ico
-		sys/win32/rc/res/fpoint.cur
-		sys/win32/rc/res/fxed_link.ico
-		sys/win32/rc/res/fxed_toolbar.bmp
-		sys/win32/rc/res/fxeditor.ico
-		sys/win32/rc/res/guied.ico
-		sys/win32/rc/res/guied_collapse.ico
-		sys/win32/rc/res/guied_expand.ico
-		sys/win32/rc/res/guied_hand.cur
-		sys/win32/rc/res/guied_nav_visible.ico
-		sys/win32/rc/res/guied_nav_visibledisabled.ico
-		sys/win32/rc/res/guied_scripts.ico
-		sys/win32/rc/res/guied_scripts_white.ico
-		sys/win32/rc/res/guied_viewer_toolbar.bmp
-		sys/win32/rc/res/icon2.ico
-		sys/win32/rc/res/logo_sm3dfx.bmp
-		sys/win32/rc/res/matedtree.bmp
-		sys/win32/rc/res/me_disabled_icon.ico
-		sys/win32/rc/res/me_enabled.ico
-		sys/win32/rc/res/me_off_icon.ico
-		sys/win32/rc/res/me_on_icon.ico
-		sys/win32/rc/res/qe3.ico
-		sys/win32/rc/res/shaderbar.bmp
-		sys/win32/rc/res/shaderdoc.ico
-		sys/win32/rc/res/shaderframe.ico
-		sys/win32/rc/res/spliter.cur
-		)
+set(EDITOR_DECL_SOURCES
+	tools/decl/DialogDeclBrowser.cpp
+	tools/decl/DialogDeclEditor.cpp
+	tools/decl/DialogDeclNew.cpp)
+
+file(GLOB EDITOR_GUIED_INCLUDES tools/guied/*.h)
+set(EDITOR_GUIED_SOURCES
+	tools/guied/GEApp.cpp
+	tools/guied/GECheckInDlg.cpp
+	tools/guied/GEDeleteModifier.cpp
+	tools/guied/GEHideModifier.cpp
+	tools/guied/GEInsertModifier.cpp
+	tools/guied/GEItemPropsDlg.cpp
+	tools/guied/GEItemScriptsDlg.cpp
+	tools/guied/GEKeyValueModifier.cpp
+	tools/guied/GEModifier.cpp
+	tools/guied/GEModifierGroup.cpp
+	tools/guied/GEModifierStack.cpp
+	tools/guied/GEMoveModifier.cpp
+	tools/guied/GENavigator.cpp
+	tools/guied/GEOptions.cpp
+	tools/guied/GEOptionsDlg.cpp
+	tools/guied/GEProperties.cpp
+	tools/guied/GEPropertyPage.cpp
+	tools/guied/GESelectionMgr.cpp
+	tools/guied/GESizeModifier.cpp
+	tools/guied/GEStateModifier.cpp
+	tools/guied/GEStatusBar.cpp
+	tools/guied/GETransformer.cpp
+	tools/guied/GEViewer.cpp
+	tools/guied/GEWindowWrapper.cpp
+	#tools/guied/GEWindowWrapper_stub.cpp
+	tools/guied/GEWorkspace.cpp
+	tools/guied/GEWorkspaceFile.cpp
+	tools/guied/GEZOrderModifier.cpp
+	tools/guied/guied.cpp)
+
+file(GLOB EDITOR_MATERIALEDITOR_INCLUDES tools/materialeditor/*.h)
+file(GLOB EDITOR_MATERIALEDITOR_SOURCES tools/materialeditor/*.cpp)
+
+file(GLOB EDITOR_PARTICLE_INCLUDES tools/particle/*.h)
+file(GLOB EDITOR_PARTICLE_SOURCES tools/particle/*.cpp)
+
+file(GLOB EDITOR_PDA_INCLUDES tools/pda/*.h)
+file(GLOB EDITOR_PDA_SOURCES tools/pda/*.cpp)
+
+file(GLOB EDITOR_RADIANT_INCLUDES tools/radiant/*.h)
+file(GLOB EDITOR_RADIANT_SOURCES tools/radiant/*.cpp)
+
+file(GLOB EDITOR_SCRIPT_INCLUDES tools/script/*.h)
+file(GLOB EDITOR_SCRIPT_SOURCES tools/script/*.cpp)
+
+file(GLOB EDITOR_SOUND_INCLUDES tools/sound/*.h)
+file(GLOB EDITOR_SOUND_SOURCES tools/sound/*.cpp)
 	
-endif()
+
+# set(WIN32_INCLUDES
+	# sys/win32/win_local.h
+	# sys/win32/rc/doom_resource.h
+	# )
+
+# set(WIN32_SOURCES
+	# sys/win32/win_cpu.cpp
+	# sys/win32/win_glimp.cpp
+	# sys/win32/win_input.cpp
+	# sys/win32/win_main.cpp
+	# sys/win32/win_net.cpp
+	# sys/win32/win_qgl.cpp
+	# sys/win32/win_shared.cpp
+	# sys/win32/win_snd.cpp
+	# sys/win32/win_syscon.cpp
+	# sys/win32/win_taskkeyhook.cpp
+	# sys/win32/win_wndproc.cpp
+	# )
+	
+file(GLOB_RECURSE WIN32_INCLUDES sys/win32/*.h)
+file(GLOB_RECURSE WIN32_SOURCES sys/win32/*.cpp)
+
+set(WIN32_RESOURCES
+	sys/win32/rc/doom.rc
+	sys/win32/rc/res/BEVEL.BMP
+	sys/win32/rc/res/BITMAP2.BMP
+	sys/win32/rc/res/BMP00001.BMP
+	sys/win32/rc/res/BMP0002.BMP
+	sys/win32/rc/res/DEFTEX.WAL
+	sys/win32/rc/res/ENDCAP.BMP
+	sys/win32/rc/res/GetString.htm
+	sys/win32/rc/res/IBEVEL.BMP
+	sys/win32/rc/res/IENDCAP.BMP
+	sys/win32/rc/res/MEFileToolbar.bmp
+	sys/win32/rc/res/MEtoolbar.bmp
+	sys/win32/rc/res/MaterialEditor.ico
+	sys/win32/rc/res/PropTree.rc2
+	sys/win32/rc/res/Q.BMP
+	sys/win32/rc/res/RADIANT3.GIF
+	sys/win32/rc/res/Radiant.ico
+	sys/win32/rc/res/RadiantDoc.ico
+	sys/win32/rc/res/TOOLBAR1.BMP
+	sys/win32/rc/res/TOOLBAR2.BMP
+	sys/win32/rc/res/Toolbar.bmp
+	sys/win32/rc/res/VIEWDEFA.BMP
+	sys/win32/rc/res/VIEWOPPO.BMP
+	sys/win32/rc/res/bmp00002.bmp
+	sys/win32/rc/res/bmp00003.bmp
+	sys/win32/rc/res/bmp00004.bmp
+	sys/win32/rc/res/bmp00005.bmp
+	sys/win32/rc/res/cchsb.bmp
+	sys/win32/rc/res/ccrgb.bmp
+	sys/win32/rc/res/dbg_back.bmp
+	sys/win32/rc/res/dbg_breakpoint.ico
+	sys/win32/rc/res/dbg_current.ico
+	sys/win32/rc/res/dbg_currentline.ico
+	sys/win32/rc/res/dbg_empty.ico
+	sys/win32/rc/res/dbg_open.bmp
+	sys/win32/rc/res/dbg_toolbar.bmp
+	sys/win32/rc/res/doom.ico
+	sys/win32/rc/res/fpoint.cur
+	sys/win32/rc/res/fxed_link.ico
+	sys/win32/rc/res/fxed_toolbar.bmp
+	sys/win32/rc/res/fxeditor.ico
+	sys/win32/rc/res/guied.ico
+	sys/win32/rc/res/guied_collapse.ico
+	sys/win32/rc/res/guied_expand.ico
+	sys/win32/rc/res/guied_hand.cur
+	sys/win32/rc/res/guied_nav_visible.ico
+	sys/win32/rc/res/guied_nav_visibledisabled.ico
+	sys/win32/rc/res/guied_scripts.ico
+	sys/win32/rc/res/guied_scripts_white.ico
+	sys/win32/rc/res/guied_viewer_toolbar.bmp
+	sys/win32/rc/res/icon2.ico
+	sys/win32/rc/res/logo_sm3dfx.bmp
+	sys/win32/rc/res/matedtree.bmp
+	sys/win32/rc/res/me_disabled_icon.ico
+	sys/win32/rc/res/me_enabled.ico
+	sys/win32/rc/res/me_off_icon.ico
+	sys/win32/rc/res/me_on_icon.ico
+	sys/win32/rc/res/qe3.ico
+	sys/win32/rc/res/shaderbar.bmp
+	sys/win32/rc/res/shaderdoc.ico
+	sys/win32/rc/res/shaderframe.ico
+	sys/win32/rc/res/spliter.cur
+	)
 
 SOURCE_GROUP("cm" FILES ${CM_INCLUDES})
 SOURCE_GROUP("cm" FILES ${CM_SOURCES})
@@ -377,6 +468,46 @@ SOURCE_GROUP("tools\\compilers\\renderbump" FILES ${COMPILER_RENDERBUMP_SOURCES}
 SOURCE_GROUP("tools\\compilers\\roqvq" FILES ${COMPILER_ROQVQ_INCLUDES})
 SOURCE_GROUP("tools\\compilers\\roqvq" FILES ${COMPILER_ROQVQ_SOURCES})
 
+SOURCE_GROUP("tools" FILES ${TOOLS_INCLUDES})
+
+SOURCE_GROUP("tools\\comafx" FILES ${TOOLS_COMAFX_INCLUDES})
+SOURCE_GROUP("tools\\comafx" FILES ${TOOLS_COMAFX_SOURCES})
+
+SOURCE_GROUP("tools\\common" FILES ${TOOLS_COMMON_INCLUDES})
+SOURCE_GROUP("tools\\common" FILES ${TOOLS_COMMON_SOURCES})
+
+SOURCE_GROUP("tools\\common\\proptree" FILES ${TOOLS_COMMON_PROPTREE_INCLUDES})
+SOURCE_GROUP("tools\\common\\proptree" FILES ${TOOLS_COMMON_PROPTREE_SOURCES})
+
+SOURCE_GROUP("tools\\af" FILES ${EDITOR_AF_INCLUDES})
+SOURCE_GROUP("tools\\af" FILES ${EDITOR_AF_SOURCES})
+
+SOURCE_GROUP("tools\\decl" FILES ${EDITOR_DECL_INCLUDES})
+SOURCE_GROUP("tools\\decl" FILES ${EDITOR_DECL_SOURCES})
+
+SOURCE_GROUP("tools\\guied" FILES ${EDITOR_GUIED_INCLUDES})
+SOURCE_GROUP("tools\\guied" FILES ${EDITOR_GUIED_SOURCES})
+
+SOURCE_GROUP("tools\\materialeditor" FILES ${EDITOR_MATERIALEDITOR_INCLUDES})
+SOURCE_GROUP("tools\\materialeditor" FILES ${EDITOR_MATERIALEDITOR_SOURCES})
+
+SOURCE_GROUP("tools\\particle" FILES ${EDITOR_PARTICLE_INCLUDES})
+SOURCE_GROUP("tools\\particle" FILES ${EDITOR_PARTICLE_SOURCES})
+
+SOURCE_GROUP("tools\\pda" FILES ${EDITOR_PDA_INCLUDES})
+SOURCE_GROUP("tools\\pda" FILES ${EDITOR_PDA_SOURCES})
+
+SOURCE_GROUP("tools\\radiant" FILES ${EDITOR_RADIANT_INCLUDES})
+SOURCE_GROUP("tools\\radiant" FILES ${EDITOR_RADIANT_SOURCES})
+
+SOURCE_GROUP("tools\\script" FILES ${EDITOR_SCRIPT_INCLUDES})
+SOURCE_GROUP("tools\\script" FILES ${EDITOR_SCRIPT_SOURCES})
+
+SOURCE_GROUP("tools\\sound" FILES ${EDITOR_SOUND_INCLUDES})
+SOURCE_GROUP("tools\\sound" FILES ${EDITOR_SOUND_SOURCES})
+
+
+
 add_definitions(-D__DOOM__
 				-D__DOOM_DLL__)
 
@@ -392,10 +523,10 @@ if(MSVC)
 	find_package(DirectX REQUIRED)
 	include_directories(${DirectX_INCLUDE_DIR})
 	
-	#link_directories(${DirectX_LIBRARIES})
+	add_definitions(-DID_ALLOW_TOOLS)
 
 	add_executable(Techyon WIN32 
-		${CM_INCLUDES} ${CM_SOURCES}	
+		${CM_INCLUDES} ${CM_SOURCES}
 		${FRAMEWORK_INCLUDES} ${FRAMEWORK_SOURCES}
 		${FRAMEWORK_ASYNC_INCLUDES} ${FRAMEWORK_ASYNC_SOURCES} 
 		${RENDERER_INCLUDES} ${RENDERER_SOURCES}
@@ -403,11 +534,28 @@ if(MSVC)
 		${SOUND_INCLUDES} ${SOUND_SOURCES}
 		${OGGVORBIS_INCLUDES} ${OGGVORBIS_SOURCES}
 		${UI_INCLUDES} ${UI_SOURCES}
+		
 		${COMPILER_INCLUDES}
 		${COMPILER_AAS_INCLUDES} ${COMPILER_AAS_SOURCES}
 		${COMPILER_DMAP_INCLUDES} ${COMPILER_DMAP_SOURCES}
 		${COMPILER_RENDERBUMP_INCLUDES} ${COMPILER_RENDERBUMP_SOURCES}
 		${COMPILER_ROQVQ_INCLUDES} ${COMPILER_ROQVQ_SOURCES}
+		
+		${TOOLS_INCLUDES}
+		${TOOLS_COMAFX_INCLUDES} ${TOOLS_COMAFX_SOURCES}
+		${TOOLS_COMMON_INCLUDES} ${TOOLS_COMMON_SOURCES}
+		${TOOLS_COMMON_PROPTREE_INCLUDES} ${TOOLS_COMMON_PROPTREE_SOURCES}
+		
+		${EDITOR_AF_INCLUDES} ${EDITOR_AF_SOURCES}
+		${EDITOR_DECL_INCLUDES} ${EDITOR_DECL_SOURCES}
+		${EDITOR_GUIED_INCLUDES} ${EDITOR_GUIED_SOURCES}
+		${EDITOR_MATERIALEDITOR_INCLUDES} ${EDITOR_MATERIALEDITOR_SOURCES}
+		${EDITOR_PARTICLE_INCLUDES} ${EDITOR_PARTICLE_SOURCES}
+		${EDITOR_PDA_INCLUDES} ${EDITOR_PDA_SOURCES}
+		${EDITOR_RADIANT_INCLUDES} ${EDITOR_RADIANT_SOURCES}
+		${EDITOR_SCRIPT_INCLUDES} ${EDITOR_SCRIPT_SOURCES}
+		${EDITOR_SOUND_INCLUDES} ${EDITOR_SOUND_SOURCES}
+		
 		${SYS_INCLUDES} ${SYS_SOURCES}
 		${WIN32_INCLUDES} ${WIN32_SOURCES} ${WIN32_RESOURCES}
 		)
