@@ -56,7 +56,7 @@ If you have questions concerning this license or the applicable additional terms
 #include "../tools/comafx/StdAfx.h"			// this will go away when MFC goes away
 #endif
 
-#else
+#elif defined(ID_ALLOW_TOOLS)
 
 #include "../tools/comafx/StdAfx.h"
 

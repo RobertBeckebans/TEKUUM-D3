@@ -319,7 +319,17 @@ BOOL DialogScriptEditor::OnInitDialog()  {
 	m_hAccel = ::LoadAccelerators( AfxGetResourceHandle(), MAKEINTRESOURCE( IDR_ACCELERATOR_SCRIPTEDITOR ) );
 
 	// create status bar
+// Techyon BEGIN
+#if _MFC_VER >= 0x0A00
 	statusBar.CreateEx( SBARS_SIZEGRIP, WS_CHILD | WS_VISIBLE | CBRS_BOTTOM, initialRect, this, AFX_IDW_STATUS_BAR );
+#else
+	/*
+	#if _MFC_VER >= 0x0600
+	BOOL Create(DWORD dwStyle, const RECT& rect, CWnd* pParentWnd, UINT nID);
+	*/
+	statusBar.Create( WS_CHILD | WS_VISIBLE | CBRS_BOTTOM, initialRect, this, AFX_IDW_STATUS_BAR );
+#endif
+// Techyon END
 
 	scriptEdit.LimitText( 1024 * 1024 );
 

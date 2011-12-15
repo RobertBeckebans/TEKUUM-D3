@@ -644,7 +644,18 @@ void CSyntaxRichEditCtrl::HighlightSyntax( int startCharIndex, int endCharIndex 
 	CString text;
 
 	// get text length
+
+// Techyon BEGIN
+#if _MFC_VER >= 0x0A00
 	GetTextRange( 0, GetTextLength(), text );
+#else
+	EDITSTREAM es;
+	es.dwCookie = (DWORD)&text; 
+	es.pfnCallback = MEditStreamOutCallback;
+	StreamIn(SF_RTF, es);
+#endif
+// Techyon END
+
 	textLength = text.GetLength();
 
 	// make sure the indexes are within bounds
@@ -1082,7 +1093,15 @@ void CSyntaxRichEditCtrl::AutoCompleteShow( int charIndex ) {
 	CRect rect;
 
 	autoCompleteStart = charIndex;
+	
+// Techyon BEGIN
+#if _MFC_VER >= 0x0A00
 	point = PosFromChar( charIndex );
+#else
+	point = GetCharPos( charIndex );
+#endif
+// Techyon END
+
 	GetClientRect( rect );
 	if ( point.y < rect.bottom - AUTOCOMPLETE_OFFSET - AUTOCOMPLETE_HEIGHT ) {
 		rect.top = point.y + AUTOCOMPLETE_OFFSET;
@@ -1121,7 +1140,15 @@ void CSyntaxRichEditCtrl::ToolTipShow( int charIndex, const char *string ) {
 	funcParmToolTip.SetWindowText( string );
 	p1 = funcParmToolTip.PosFromChar( 0 );
 	p2 = funcParmToolTip.PosFromChar( strlen( string ) - 1 );
+
+// Techyon BEGIN
+#if _MFC_VER >= 0x0A00
 	point = PosFromChar( charIndex );
+#else
+	point = GetCharPos( charIndex );
+#endif
+// Techyon END
+	
 	GetClientRect( rect );
 	if ( point.y < rect.bottom - FUNCPARMTOOLTIP_OFFSET - FUNCPARMTOOLTIP_HEIGHT ) {
 		rect.top = point.y + FUNCPARMTOOLTIP_OFFSET;
@@ -1313,7 +1340,13 @@ bool CSyntaxRichEditCtrl::GetNameForMousePosition( idStr &name ) const {
 	int charIndex, startCharIndex, endCharIndex, type;
 	idStr text;
 
+// Techyon BEGIN
+#if _MFC_VER >= 0x0A00
 	charIndex = CharFromPos( mousePoint );
+#else
+	return false;
+#endif
+// Techyon END
 
 	for ( startCharIndex = charIndex; startCharIndex > 0; startCharIndex-- ) {
 		GetText( text, startCharIndex - 1, startCharIndex );
@@ -1404,7 +1437,7 @@ BOOL CSyntaxRichEditCtrl::OnToolTipNotify( UINT id, NMHDR *pNMHDR, LRESULT *pRes
 		AFX_MODULE_THREAD_STATE *state = AfxGetModuleThreadState();
 
 // Techyon BEGIN
-#if _MSC_VER >= 1300 && _MFC_VER >= 0x0A00
+#if _MFC_VER >= 0x0A00
 		// set max tool tip width to enable multi-line tool tips using "\r\n" for line breaks
 		state->m_pToolTip->SetMaxTipWidth( 500 );
 
@@ -1777,8 +1810,7 @@ void CSyntaxRichEditCtrl::OnMouseMove( UINT nFlags, CPoint point ) {
 		mousePoint = point;
 
 // Techyon BEGIN
-#if _MSC_VER >= 1300 && _MFC_VER >= 0x0A00
-		
+#if _MFC_VER >= 0x0A00
 		// remove tool tip and activate the tool tip control, otherwise
 		// tool tips stop working until the mouse moves over another window first
 		AFX_MODULE_THREAD_STATE *state = AfxGetModuleThreadState();
@@ -1914,3 +1946,42 @@ void CSyntaxRichEditCtrl::OnAutoCompleteListBoxDblClk() {
 	AutoCompleteInsertText();
 	AutoCompleteHide();
 }
+
+
+// Techyon BEGIN
+DWORD CSyntaxRichEditCtrl::MEditStreamInCallback(DWORD dwCookie, LPBYTE pbBuff, LONG cb, LONG *pcb)
+{
+	CString *psBuffer = (CString *)dwCookie;
+
+	if (cb < psBuffer->GetLength()) cb = psBuffer->GetLength();
+
+	for (int i=0;i<cb;i++)
+	{
+		*(pbBuff+i) = psBuffer->GetAt(i);
+	}
+
+	*pcb = cb;
+
+	*psBuffer = psBuffer->Mid(cb);
+
+	return 0;
+}
+
+DWORD CSyntaxRichEditCtrl::MEditStreamOutCallback(DWORD dwCookie, LPBYTE pbBuff, LONG cb, LONG *pcb)
+{
+	CString sThisWrite;
+	sThisWrite.GetBufferSetLength(cb);
+
+	CString *psBuffer = (CString *)dwCookie;
+	
+	for (int i=0;i<cb;i++) {
+		sThisWrite.SetAt(i,*(pbBuff+i));
+	}
+
+	*psBuffer += sThisWrite;
+
+	*pcb = sThisWrite.GetLength();
+	sThisWrite.ReleaseBuffer();
+	return 0;
+}
+// Techyon END

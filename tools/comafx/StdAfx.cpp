@@ -157,7 +157,13 @@ bool EditControlEnterHit( CEdit *edit ) {
 		edit->GetWindowText( strIn );
 		for ( int i = 0; i < strIn.GetLength(); i++ ) {
 			if ( strIn[i] >= ' ' ) {
+// Techyon BEGIN
+#if _MFC_VER >= 0x0A00
 				strOut.AppendChar( strIn[i] );
+#else
+				strOut += strIn[i];
+#endif
+// Techyon END
 			}
 		}
 		edit->SetWindowText( strOut );
@@ -183,15 +189,35 @@ float EditVerifyFloat( CEdit *edit, bool allowNegative ) {
 	for ( int i = 0; i < strIn.GetLength(); i++ ) {
 		// first character may be a minus sign
 		if ( allowNegative && strOut.GetLength() == 0 && strIn[i] == '-' ) {
+		
+			// Techyon BEGIN
+			#if _MFC_VER >= 0x0A00
 			strOut.AppendChar( '-' );
+			#else
+			strOut += '-';
+			#endif
+			// Techyon END
 		}
 		// the string may contain one dot
 		else if ( !dot && strIn[i] == '.' ) {
+
+			// Techyon BEGIN
+			#if _MFC_VER >= 0x0A00
 			strOut.AppendChar( strIn[i] );
+			#else
+			strOut += strIn[i];
+			#endif
+			// Techyon END
 			dot = true;
 		}
 		else if ( strIn[i] >= '0' && strIn[i] <= '9' ) {
+			// Techyon BEGIN
+			#if _MFC_VER >= 0x0A00
 			strOut.AppendChar( strIn[i] );
+			#else
+			strOut += strIn[i];
+			#endif
+			// Techyon END
 		}
 	}
 	edit->SetWindowText( strOut );
@@ -222,7 +248,14 @@ void SpinFloatString( CString &str, bool up ) {
 		}
 	}
 	if ( digitIndex == -1 ) {
+		// Techyon BEGIN
+		#if _MFC_VER >= 0x0A00
 		str.SetString( "1" );
+		#else
+		str = "1";
+		#endif
+		// Techyon END
+
 		return;
 	}
 
@@ -255,7 +288,13 @@ void SpinFloatString( CString &str, bool up ) {
 		if ( str[digitIndex] == '1' ) {
 			if ( str[digitIndex+1] == '\0' ) {
 				str.SetAt( digitIndex, '0' );
+
+				// Techyon BEGIN
+				#if _MFC_VER >= 0x0A00
 				str.AppendChar( '9' );
+				#else
+				str += '9';
+				#endif
 			}
 			else if ( str[digitIndex+1] == '0' ) {
 				str.SetAt( digitIndex, '0' );

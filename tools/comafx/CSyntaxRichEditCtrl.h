@@ -231,6 +231,11 @@ protected:
 	void					BracedSectionAdjustEndTabs( void );
 	void					BracedSectionShow( void );
 	void					BracedSectionHide( void );
+
+// Techyon BEGIN
+	static DWORD __stdcall	MEditStreamInCallback(DWORD dwCookie, LPBYTE pbBuff, LONG cb, LONG *pcb);
+	static DWORD __stdcall	MEditStreamOutCallback(DWORD dwCookie, LPBYTE pbBuff, LONG cb, LONG *pcb);
+// Techyon END
 };
 
 #endif /* !__CSYNTAXRICHEDITCTR_H__ */
