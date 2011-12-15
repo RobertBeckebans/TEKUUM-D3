@@ -583,8 +583,7 @@ cpuid_t Sys_GetCPUId( void ) {
 
 // Techyon BEGIN
 	// RB: this crashes if compiled with whole program optimization /GL and /LTCG
-#if 1
-
+#if 0
 	// check for Denormals-Are-Zero mode
 	if ( HasDAZ() ) {
 		flags |= CPUID_DAZ;
