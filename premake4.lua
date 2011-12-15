@@ -507,6 +507,7 @@ project "Techyon"
 		defines
 		{
 			--"USE_OPENAL",
+			"ID_ALLOW_TOOLS",
 		}
 		includedirs
 		{
