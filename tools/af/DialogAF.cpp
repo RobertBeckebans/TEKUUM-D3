@@ -344,11 +344,14 @@ AFEditorRun
 ================
 */
 void AFEditorRun( void ) {
-#if _MSC_VER >= 1300 && _MFC_VER >= 0x0A00
+
+// Techyon BEGIN
+#if _MFC_VER >= 0x0A00
 	MSG *msg = AfxGetCurrentMessage();
 #else
 	MSG *msg = &AfxGetThread()->m_msgCur;
 #endif
+// Techyon END
 
 	while( ::PeekMessage(msg, NULL, NULL, NULL, PM_NOREMOVE) ) {
 		// pump message

@@ -47,6 +47,12 @@ If you have questions concerning this license or the applicable additional terms
 #pragma comment (lib, "wbemuuid.lib")
 #endif
 
+// Techyon BEGIN
+#if !defined(ID_ALLOW_TOOLS)
+#include "win_nanoafx.h"
+#endif
+// Techyon END
+
 /*
 ================
 Sys_Milliseconds

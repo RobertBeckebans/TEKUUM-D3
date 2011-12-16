@@ -564,6 +564,9 @@ DialogDeclBrowser::OnToolTipNotify
 ================
 */
 BOOL DialogDeclBrowser::OnToolTipNotify( UINT id, NMHDR *pNMHDR, LRESULT *pResult ) {
+
+	// Techyon BEGIN
+#if _MFC_VER >= 0x0A00
 	// need to handle both ANSI and UNICODE versions of the message
 	TOOLTIPTEXTA* pTTTA = (TOOLTIPTEXTA*)pNMHDR;
 	TOOLTIPTEXTW* pTTTW = (TOOLTIPTEXTW*)pNMHDR;
@@ -607,6 +610,12 @@ BOOL DialogDeclBrowser::OnToolTipNotify( UINT id, NMHDR *pNMHDR, LRESULT *pResul
 	}
 
 	return DefaultOnToolTipNotify( toolTips, id, pNMHDR, pResult );
+
+#else
+	// FIXME with MFC6
+	return FALSE;
+#endif
+// Techyon END
 }
 
 /*

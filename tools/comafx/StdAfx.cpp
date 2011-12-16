@@ -102,6 +102,10 @@ DefaultOnToolTipNotify
 ================
 */
 BOOL DefaultOnToolTipNotify( const toolTip_t *toolTips, UINT id, NMHDR *pNMHDR, LRESULT *pResult ) {
+
+	// Techyon BEGIN
+#if _MFC_VER >= 0x0A00
+
 	// need to handle both ANSI and UNICODE versions of the message
 	TOOLTIPTEXTA* pTTTA = (TOOLTIPTEXTA*)pNMHDR;
 	TOOLTIPTEXTW* pTTTW = (TOOLTIPTEXTW*)pNMHDR;
@@ -131,6 +135,12 @@ BOOL DefaultOnToolTipNotify( const toolTip_t *toolTips, UINT id, NMHDR *pNMHDR, 
 		_mbstowcsz( pTTTW->szText, toolTips[i].tip, sizeof(pTTTW->szText) );
 	}
 	return TRUE;
+
+#else
+	// FIXME with MFC6
+	return FALSE;
+#endif
+// Techyon END
 }
 
 

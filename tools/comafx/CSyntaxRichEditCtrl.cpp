@@ -1413,6 +1413,10 @@ CSyntaxRichEditCtrl::OnToolTipNotify
 ================
 */
 BOOL CSyntaxRichEditCtrl::OnToolTipNotify( UINT id, NMHDR *pNMHDR, LRESULT *pResult ) {
+
+// Techyon BEGIN
+#if _MFC_VER >= 0x0A00
+
 	TOOLTIPTEXTA* pTTTA = (TOOLTIPTEXTA*)pNMHDR;
 	TOOLTIPTEXTW* pTTTW = (TOOLTIPTEXTW*)pNMHDR;
 
@@ -1436,17 +1440,12 @@ BOOL CSyntaxRichEditCtrl::OnToolTipNotify( UINT id, NMHDR *pNMHDR, LRESULT *pRes
 
 		AFX_MODULE_THREAD_STATE *state = AfxGetModuleThreadState();
 
-// Techyon BEGIN
-#if _MFC_VER >= 0x0A00
+
 		// set max tool tip width to enable multi-line tool tips using "\r\n" for line breaks
 		state->m_pToolTip->SetMaxTipWidth( 500 );
 
 		// set the number of milliseconds after which the tool tip automatically disappears
 		state->m_pToolTip->SetDelayTime( TTDT_AUTOPOP, 5000 + toolTip.GetLength() * 50 );
-#else
-		// FIXME with old MFC
-#endif
-// Techyon END
 
 #ifndef _UNICODE
 		if( pNMHDR->code == TTN_NEEDTEXTA ) {
@@ -1477,6 +1476,12 @@ BOOL CSyntaxRichEditCtrl::OnToolTipNotify( UINT id, NMHDR *pNMHDR, LRESULT *pRes
 		return TRUE;
 	}
 	return FALSE;
+
+#else
+	// FIXME with old MFC
+	return FALSE;
+#endif
+// Techyon END
 }
 
 /*

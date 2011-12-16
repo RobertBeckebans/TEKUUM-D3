@@ -34,7 +34,9 @@ If you have questions concerning this license or the applicable additional terms
 //
 
 //#define _WIN32_WINNT 0x0500 // for KBDLLHOOKSTRUCT
-#include <afxwin.h>         // MFC core and standard components
+// Techyon BEGIN
+//#include <afxwin.h>         // MFC core and standard components
+// Techyon END
 #include "win_local.h"
 
 #define DLLEXPORT __declspec(dllexport)
