@@ -184,6 +184,40 @@ function FindPlatformSDK()
 	return false
 end
 
+function FindWinDDK()
+	
+	configuration {}
+	local platformsdkdir = os.getenv("WINDDK_DIR")
+	if (platformsdkdir) then
+		includedirs 
+		{
+			"$(WINDDK_DIR)/inc/mfc42",
+			"$(WINDDK_DIR)/inc/atl71"			
+		}
+		defines
+		{
+			"USE_MFC6_WITH_ATL7",
+		}
+		configuration "x32"
+			libdirs 
+			{
+			"$(WINDDK_DIR)/lib/mfc/i386",
+			"$(WINDDK_DIR)/lib/atl/i386"
+			}
+		configuration "x64"
+			libdirs 
+			{
+			"$(WINDDK_DIR)/lib/mfc/amd64",
+			"$(WINDDK_DIR)/lib/atl/amd64"
+			}
+		configuration {}
+		print("Found Windows Driver Development Kit at '" .. platformsdkdir .. "'")
+		return true
+	end
+	
+	return false
+end
+
 -- function FindQtSDK()
 	
 	-- configuration {}
@@ -225,7 +259,8 @@ end
 
 if _ACTION == "vs2010" then	
 	foundDirectSDK = FindDirectXSDK()
-	foundPlatformSDK = FindPlatformSDK()
+	--foundPlatformSDK = FindPlatformSDK()
+	foundWinDDK = FindWinDDK()
 	--foundQtSDK = FindQtSDK()
 	foundGtkMMSDK = FindGtkmmSDK()
 end
@@ -579,6 +614,7 @@ project "Techyon"
 			"eaxguid",
 			"iphlpapi",
 			"winmm",
+			"ws2_32.lib",
 		}
 		prebuildcommands
 		{
