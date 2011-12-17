@@ -2152,7 +2152,9 @@ bool idWindow::Parse( idParser *src, bool rebuild) {
 	bool ret = true;
 
 	// attach a window wrapper to the window if the gui editor is running
-#ifdef ID_ALLOW_TOOLS
+// Techyon BEGIN
+#if defined(USE_MFC_TOOLS)
+// Techyon END
 	if ( com_editors & EDITOR_GUI ) {
 		new rvGEWindowWrapper ( this, rvGEWindowWrapper::WT_NORMAL );
 	}
@@ -2337,7 +2339,9 @@ bool idWindow::Parse( idParser *src, bool rebuild) {
 
 			// If we are in the gui editor then add the internal var to the 
 			// the wrapper
-#ifdef ID_ALLOW_TOOLS
+// Techyon BEGIN
+#if defined(USE_MFC_TOOLS)
+// Techyon END
 			if ( com_editors & EDITOR_GUI ) {
 				idStr str;
 				idStr out;
@@ -2375,7 +2379,9 @@ bool idWindow::Parse( idParser *src, bool rebuild) {
 			// add the script to the wrappers script list
 			// If we are in the gui editor then add the internal var to the 
 			// the wrapper
-#ifdef ID_ALLOW_TOOLS
+// Techyon BEGIN
+#if defined(USE_MFC_TOOLS)
+// Techyon END
 			if ( com_editors & EDITOR_GUI ) {
 				idStr str;
 				idStr out;
@@ -2411,7 +2417,9 @@ bool idWindow::Parse( idParser *src, bool rebuild) {
 			regList.AddReg(work, idRegister::FLOAT, src, this, varf);
 
 			// If we are in the gui editor then add the float to the defines
-#ifdef ID_ALLOW_TOOLS
+// Techyon BEGIN
+#if defined(USE_MFC_TOOLS)
+// Techyon END
 			if ( com_editors & EDITOR_GUI ) {
 				idStr str;
 				
@@ -2440,7 +2448,9 @@ bool idWindow::Parse( idParser *src, bool rebuild) {
 
 			// store the original vec4 for the editor
 			// If we are in the gui editor then add the float to the defines
-#ifdef ID_ALLOW_TOOLS
+// Techyon BEGIN
+#if defined(USE_MFC_TOOLS)
+// Techyon END
 			if ( com_editors & EDITOR_GUI ) {
 				idStr str;
 				
@@ -2466,7 +2476,9 @@ bool idWindow::Parse( idParser *src, bool rebuild) {
 			regList.AddReg(work, idRegister::FLOAT, src, this, varf);
 
 			// If we are in the gui editor then add the float to the defines
-#ifdef ID_ALLOW_TOOLS
+// Techyon BEGIN
+#if defined(USE_MFC_TOOLS)
+// Techyon END
 			if ( com_editors & EDITOR_GUI ) {
 				idStr str;
 				
@@ -2480,7 +2492,9 @@ bool idWindow::Parse( idParser *src, bool rebuild) {
 			// add the script to the wrappers script list
 			// If we are in the gui editor then add the internal var to the 
 			// the wrapper
-#ifdef ID_ALLOW_TOOLS
+// Techyon BEGIN
+#if defined(USE_MFC_TOOLS)
+// Techyon END
 			if ( com_editors & EDITOR_GUI ) {
 				idStr str;
 				idStr out;
@@ -2500,7 +2514,9 @@ bool idWindow::Parse( idParser *src, bool rebuild) {
 			// gui editor support		
 			// If we are in the gui editor then add the internal var to the 
 			// the wrapper
-#ifdef ID_ALLOW_TOOLS
+// Techyon BEGIN
+#if defined(USE_MFC_TOOLS)
+// Techyon END
 			if ( com_editors & EDITOR_GUI ) {
 				idStr str;
 				src->GetStringFromMarker ( str );
@@ -2513,7 +2529,9 @@ bool idWindow::Parse( idParser *src, bool rebuild) {
 			// hook into the main window parsing for the gui editor
 			// If we are in the gui editor then add the internal var to the 
 			// the wrapper
-#ifdef ID_ALLOW_TOOLS
+// Techyon BEGIN
+#if defined(USE_MFC_TOOLS)
+// Techyon END
 			if ( com_editors & EDITOR_GUI ) {
 				idStr str;
 				src->GetStringFromMarker ( str );
@@ -2538,7 +2556,9 @@ bool idWindow::Parse( idParser *src, bool rebuild) {
 	// hook into the main window parsing for the gui editor
 	// If we are in the gui editor then add the internal var to the 
 	// the wrapper
-#ifdef ID_ALLOW_TOOLS
+// Techyon BEGIN
+#if defined(USE_MFC_TOOLS)
+// Techyon END
 	if ( com_editors & EDITOR_GUI ) {
 		rvGEWindowWrapper::GetWrapper ( this )->Finish ( );
 	}

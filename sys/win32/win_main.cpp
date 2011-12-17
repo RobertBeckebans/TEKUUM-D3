@@ -798,7 +798,9 @@ void Sys_PumpEvents( void ) {
 			win32.sysMsgTime = msg.time;
 		}
 
-#ifdef ID_ALLOW_TOOLS
+// Techyon BEGIN
+#if defined(USE_MFC_TOOLS)
+// Techyon END
 		if ( GUIEditorHandleMessage ( &msg ) ) {	
 			continue;
 		}
@@ -1475,8 +1477,10 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 		// set exceptions, even if some crappy syscall changes them!
 		Sys_FPU_EnableExceptions( TEST_FPU_EXCEPTIONS );
 
-#ifdef ID_ALLOW_TOOLS
+#if defined(USE_MFC_TOOLS) || defined(USE_GTK_TOOLS)
 		if ( com_editors ) {
+
+#if defined(USE_MFC_TOOLS)
 			if ( com_editors & EDITOR_GUI ) {
 				// GUI editor
 				GUIEditorRun();
@@ -1517,9 +1521,10 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 					// in-game PDA Editor
 					PDAEditorRun();
 				}
+#endif
 
 // Techyon BEGIN
-#if defined(USE_GTK)
+#if defined(USE_GTK_TOOLS)
 				if ( com_editors & EDITOR_GTKTEST) {
 					GtkTestEditorRun();
 				}
@@ -1528,7 +1533,7 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 			}
 		}
 
-#endif // ID_ALLOW_TOOLS
+#endif // #if defined(USE_MFC_TOOLS)
 
 		// run the game
 		common->Frame();

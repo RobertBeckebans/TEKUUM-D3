@@ -532,20 +532,20 @@ if(MSVC)
 	include_directories(${DirectX_INCLUDE_DIR})
 	
 	if(USE_MFC_TOOLS)	
-		find_package(MFC REQUIRED)
-		if(MFC_FOUND)
-			include_directories(${MFC_INCLUDE_DIR})
-			link_directories(${MFC_LIBRARY_DIR})
-		endif()
+		# find_package(MFC REQUIRED)
+		# if(MFC_FOUND)
+			# include_directories(${MFC_INCLUDE_DIR})
+			# link_directories(${MFC_LIBRARY_DIR})
+		# endif()
 		
-		find_package(ATL REQUIRED)
-		if(ATL_FOUND)
-			include_directories(${ATL_INCLUDE_DIR})
-			link_directories(${ATL_LIBRARY_DIR})
-			add_definitions(-DUSE_MFC6_WITH_ATL7)
-		endif()
+		# find_package(ATL REQUIRED)
+		# if(ATL_FOUND)
+			# include_directories(${ATL_INCLUDE_DIR})
+			# link_directories(${ATL_LIBRARY_DIR})
+			# add_definitions(-DUSE_MFC6_WITH_ATL7)
+		# endif()
 		
-		add_definitions(-DID_ALLOW_TOOLS)
+		add_definitions(-DUSE_MFC_TOOLS)
 		
 		set(TECHYON_SOURCES
 			${CM_INCLUDES} ${CM_SOURCES}

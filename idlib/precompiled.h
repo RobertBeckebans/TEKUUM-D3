@@ -56,7 +56,9 @@ If you have questions concerning this license or the applicable additional terms
 #include "../tools/comafx/StdAfx.h"			// this will go away when MFC goes away
 #endif
 
-#elif defined(ID_ALLOW_TOOLS)
+// Techyon BEGIN
+#elif defined(USE_MFC_TOOLS)
+// Techyon END
 
 #include "../tools/comafx/StdAfx.h"
 

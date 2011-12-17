@@ -851,7 +851,9 @@ void idConsoleLocal::Print( const char *txt ) {
 	int		c, l;
 	int		color;
 
-#ifdef ID_ALLOW_TOOLS
+// Techyon BEGIN
+#if defined(USE_MFC_TOOLS)
+// Techyon END
 	RadiantPrint( txt );
 
 	if( com_editors & EDITOR_MATERIAL ) {

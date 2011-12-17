@@ -774,7 +774,9 @@ idCommonLocal::Quit
 */
 void idCommonLocal::Quit( void ) {
 
-#ifdef ID_ALLOW_TOOLS
+// Techyon BEGIN
+#if defined(USE_MFC_TOOLS)
+// Techyon END
 	if ( com_editors & EDITOR_RADIANT ) {
 		RadiantInit();
 		return;
@@ -984,7 +986,9 @@ idCommonLocal::InitTool
 =================
 */
 void idCommonLocal::InitTool( const toolFlag_t tool, const idDict *dict ) {
-#ifdef ID_ALLOW_TOOLS
+// Techyon BEGIN
+#if defined(USE_MFC_TOOLS)
+// Techyon END
 	if ( tool & EDITOR_SOUND ) {
 		SoundEditorInit( dict );
 	} else if ( tool & EDITOR_LIGHT ) {
@@ -1136,7 +1140,10 @@ int	idCommonLocal::KeyState( int key ) {
 
 //============================================================================
 
-#ifdef ID_ALLOW_TOOLS
+
+// Techyon BEGIN
+#if defined(USE_MFC_TOOLS)
+// Techyon END
 /*
 ==================
 Com_Editor_f
@@ -1181,9 +1188,10 @@ static void Com_MaterialEditor_f( const idCmdArgs &args ) {
 	MaterialEditorInit();
 }
 
+#endif // ID_ALLOW_TOOLS
 
 // Techyon BEGIN
-#if defined(USE_GTK)
+#if defined(USE_GTK_TOOLS)
 /*
 =============
 Com_GtkTestEditor_f
@@ -1193,10 +1201,8 @@ static void Com_GtkTestEditor_f( const idCmdArgs &args ) {
 	
 	GtkTestEditorInit();
 }
-#endif // defined(USE_GTK)
+#endif // defined(USE_GTK_TOOLS)
 // Techyon END
-
-#endif // ID_ALLOW_TOOLS
 
 /*
 ============
@@ -1239,7 +1245,9 @@ static void PrintMemInfo_f( const idCmdArgs &args ) {
 	fileSystem->CloseFile( f );
 }
 
-#ifdef ID_ALLOW_TOOLS
+// Techyon BEGIN
+#if defined(USE_MFC_TOOLS)
+// Techyon END
 /*
 ==================
 Com_EditLights_f
@@ -1304,7 +1312,7 @@ Com_EditPDAs_f
 static void Com_EditPDAs_f( const idCmdArgs &args ) {
 	PDAEditorInit( NULL );
 }
-#endif // ID_ALLOW_TOOLS
+#endif // #if defined(USE_MFC_TOOLS)
 
 /*
 ==================
@@ -2361,7 +2369,9 @@ void idCommonLocal::InitCommands( void ) {
 	cmdSystem->AddCommand( "roq", RoQFileEncode_f, CMD_FL_TOOL, "encodes a roq file" );
 #endif
 
-#ifdef ID_ALLOW_TOOLS
+// Techyon BEGIN
+#if defined(USE_MFC_TOOLS)
+// Techyon END
 	// editors
 	cmdSystem->AddCommand( "editor", Com_Editor_f, CMD_FL_TOOL, "launches the level editor Radiant" );
 	cmdSystem->AddCommand( "editLights", Com_EditLights_f, CMD_FL_TOOL, "launches the in-game Light Editor" );
@@ -2376,14 +2386,13 @@ void idCommonLocal::InitCommands( void ) {
 
 	//BSM Nerve: Add support for the material editor
 	cmdSystem->AddCommand( "materialEditor", Com_MaterialEditor_f, CMD_FL_TOOL, "launches the Material Editor" );
+#endif
 
 	// Techyon BEGIN
-#if defined(USE_GTK)
+#if defined(USE_GTK_TOOLS)
 	cmdSystem->AddCommand( "gtkTestEditor", Com_GtkTestEditor_f, CMD_FL_TOOL, "launches the GtkTest Editor" );
 #endif
 	// Techyon END
-
-#endif
 
 	cmdSystem->AddCommand( "printMemInfo", PrintMemInfo_f, CMD_FL_SYSTEM, "prints memory debugging data" );
 

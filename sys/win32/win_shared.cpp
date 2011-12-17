@@ -48,7 +48,7 @@ If you have questions concerning this license or the applicable additional terms
 #endif
 
 // Techyon BEGIN
-#if !defined(ID_ALLOW_TOOLS)
+#if !defined(USE_MFC_TOOLS)
 #include "win_nanoafx.h"
 #endif
 // Techyon END

@@ -41,6 +41,8 @@ If you have questions concerning this license or the applicable additional terms
 class	idProgram;
 class	idInterpreter;
 
+// Techyon BEGIN
+#if defined(USE_MFC_TOOLS)
 
 // Radiant Level Editor
 void	RadiantInit( void );
@@ -114,14 +116,16 @@ void	MaterialEditorRun( void );
 void	MaterialEditorShutdown( void );
 void	MaterialEditorPrintConsole( const char *msg );
 
-// Techyon BEGIN
-#if defined(USE_GTK)
+#endif // #if defined(USE_MFC_TOOLS)
+
+
+#if defined(USE_GTK_TOOLS)
 void	GtkTestEditorInit();
 void	GtkTestEditorShutdown();
 void	GtkTestEditorRun();
 #endif
 
-#if defined(USE_QT)
+#if defined(USE_QT_TOOLS)
 void	QtTestEditorInit();
 void	QtTestEditorShutdown();
 void	QtTestEditorRun();
