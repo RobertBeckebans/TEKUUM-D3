@@ -59,6 +59,11 @@ typedef enum {
 #if defined(USE_GTK_TOOLS)
 	EDITOR_GTKTEST				= BIT(13),
 #endif
+
+#if defined(USE_QT_TOOLS)
+	EDITOR_QTTEST				= BIT(14),
+#endif
+
 // Techyon END
 
 } toolFlag_t;

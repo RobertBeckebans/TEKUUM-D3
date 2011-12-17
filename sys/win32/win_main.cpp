@@ -1477,63 +1477,83 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 		// set exceptions, even if some crappy syscall changes them!
 		Sys_FPU_EnableExceptions( TEST_FPU_EXCEPTIONS );
 
-#if defined(USE_MFC_TOOLS) || defined(USE_GTK_TOOLS)
-		if ( com_editors ) {
+#if defined(USE_MFC_TOOLS) || defined(USE_GTK_TOOLS) || defined(USE_QT_TOOLS)
+		if ( com_editors )
+		{
 
 #if defined(USE_MFC_TOOLS)
-			if ( com_editors & EDITOR_GUI ) {
+			if ( com_editors & EDITOR_GUI )
+			{
 				// GUI editor
 				GUIEditorRun();
-			} else if ( com_editors & EDITOR_RADIANT ) {
+			} else if ( com_editors & EDITOR_RADIANT )
+			{
 				// Level Editor
 				RadiantRun();
 			}
-			else if (com_editors & EDITOR_MATERIAL ) {
+			else if (com_editors & EDITOR_MATERIAL )
+			{
 				//BSM Nerve: Add support for the material editor
 				MaterialEditorRun();
 			}
-			else {
-				if ( com_editors & EDITOR_LIGHT ) {
+			else
+			{
+				if ( com_editors & EDITOR_LIGHT )
+				{
 					// in-game Light Editor
 					LightEditorRun();
 				}
-				if ( com_editors & EDITOR_SOUND ) {
+				if ( com_editors & EDITOR_SOUND )
+				{
 					// in-game Sound Editor
 					SoundEditorRun();
 				}
-				if ( com_editors & EDITOR_DECL ) {
+				if ( com_editors & EDITOR_DECL )
+				{
 					// in-game Declaration Browser
 					DeclBrowserRun();
 				}
-				if ( com_editors & EDITOR_AF ) {
+				if ( com_editors & EDITOR_AF )
+				{
 					// in-game Articulated Figure Editor
 					AFEditorRun();
 				}
-				if ( com_editors & EDITOR_PARTICLE ) {
+				if ( com_editors & EDITOR_PARTICLE )
+				{
 					// in-game Particle Editor
 					ParticleEditorRun();
 				}
-				if ( com_editors & EDITOR_SCRIPT ) {
+				if ( com_editors & EDITOR_SCRIPT )
+				{
 					// in-game Script Editor
 					ScriptEditorRun();
 				}
-				if ( com_editors & EDITOR_PDA ) {
+				if ( com_editors & EDITOR_PDA )
+				{
 					// in-game PDA Editor
 					PDAEditorRun();
 				}
-#endif
+			}
+#endif // #if defined(USE_MFC_TOOLS)
 
 // Techyon BEGIN
 #if defined(USE_GTK_TOOLS)
-				if ( com_editors & EDITOR_GTKTEST) {
-					GtkTestEditorRun();
-				}
-#endif
-// Techyon END
+			if ( com_editors & EDITOR_GTKTEST)
+			{
+				GtkTestEditorRun();
 			}
+#endif
+
+#if defined(USE_QT_TOOLS)
+			if ( com_editors & EDITOR_QTTEST)
+			{
+				QtTestEditorRun();
+			}
+#endif
 		}
 
-#endif // #if defined(USE_MFC_TOOLS)
+#endif // #if defined(USE_MFC_TOOLS) || defined(USE_GTK_TOOLS) || defined(USE_QT_TOOLS)
+// Techyon END
 
 		// run the game
 		common->Frame();

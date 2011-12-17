@@ -1188,7 +1188,7 @@ static void Com_MaterialEditor_f( const idCmdArgs &args ) {
 	MaterialEditorInit();
 }
 
-#endif // ID_ALLOW_TOOLS
+#endif // defined(USE_MFC_TOOLS)
 
 // Techyon BEGIN
 #if defined(USE_GTK_TOOLS)
@@ -1202,6 +1202,22 @@ static void Com_GtkTestEditor_f( const idCmdArgs &args ) {
 	GtkTestEditorInit();
 }
 #endif // defined(USE_GTK_TOOLS)
+
+
+#if defined(USE_QT_TOOLS)
+/*
+=============
+Com_QtTestEditor_f
+=============
+*/
+static void Com_QtTestEditor_f( const idCmdArgs &args ) {
+	
+	QtTestEditorInit();
+}
+#endif // defined(USE_QT_TOOLS)
+
+
+
 // Techyon END
 
 /*
@@ -2391,6 +2407,10 @@ void idCommonLocal::InitCommands( void ) {
 	// Techyon BEGIN
 #if defined(USE_GTK_TOOLS)
 	cmdSystem->AddCommand( "gtkTestEditor", Com_GtkTestEditor_f, CMD_FL_TOOL, "launches the GtkTest Editor" );
+#endif
+
+#if defined(USE_QT_TOOLS)
+	cmdSystem->AddCommand( "qtTestEditor", Com_QtTestEditor_f, CMD_FL_TOOL, "launches the QtTest Editor" );
 #endif
 	// Techyon END
 
