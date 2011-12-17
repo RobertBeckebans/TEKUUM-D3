@@ -41,7 +41,7 @@ typedef enum {
 	EDITOR_NONE					= 0,
 
 // Techyon BEGIN
-#if defined(USE_MFC_TOOLS)
+//#if defined(USE_MFC_TOOLS)
 	EDITOR_RADIANT				= BIT(1),
 	EDITOR_GUI					= BIT(2),
 	EDITOR_DEBUGGER				= BIT(3),
@@ -54,7 +54,7 @@ typedef enum {
 	EDITOR_PDA					= BIT(10),
 	EDITOR_AAS					= BIT(11),
 	EDITOR_MATERIAL				= BIT(12),
-#endif
+//#endif
 
 #if defined(USE_GTK_TOOLS)
 	EDITOR_GTKTEST				= BIT(13),
