@@ -15,8 +15,16 @@ if(MSVC)
 					-D_CRT_NONSTDC_NO_DEPRECATE
 					-D_CRT_SECURE_NO_WARNINGS
 					-D_USE_32BIT_TIME_T
-					-D_MBCS
-					-D_AFXDLL)
+					-D_MBCS)
+					
+	if(USE_MFC_TOOLS)
+		add_definitions(-D_AFXDLL)
+		
+		# 0: Use Standard Windows Libraries
+		# 1: Use MFC in a Static Library
+		# 2: Use MFC in a Shared DLL 
+		set(CMAKE_MFC_FLAG 2)
+	endif()
 endif()
 
 add_subdirectory(idlib)
