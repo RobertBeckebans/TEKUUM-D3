@@ -1,0 +1,1 @@
+configure -debug-and-release -opensource -platform win32-msvc2010 -qt-zlib -qt-gif -qt-libpng -qt-libmng -qt-libtiff -qt-libjpeg -no-dsp -no-webkit -no-multimedia -no-audio-backend -no-phonon -no-phonon-backend -no-script -no-scripttools -no-qt3support -nomake demos -nomake examples
