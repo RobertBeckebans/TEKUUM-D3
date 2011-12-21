@@ -1,0 +1,2756 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1049</width>
+    <height>514</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>QtRadiant</string>
+  </property>
+  <property name="iconSize">
+   <size>
+    <width>16</width>
+    <height>16</height>
+   </size>
+  </property>
+  <property name="unifiedTitleAndToolBarOnMac">
+   <bool>true</bool>
+  </property>
+  <widget class="QWidget" name="centralWidget"/>
+  <widget class="QMenuBar" name="menuBar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1049</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuFile">
+    <property name="title">
+     <string>&amp;File</string>
+    </property>
+    <widget class="QMenu" name="menuRecent_Files">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="title">
+      <string>Recent Files</string>
+     </property>
+     <addaction name="actionClearRecentFilesList"/>
+    </widget>
+    <addaction name="actionNewMap"/>
+    <addaction name="separator"/>
+    <addaction name="actionOpen"/>
+    <addaction name="actionLoad"/>
+    <addaction name="menuRecent_Files"/>
+    <addaction name="separator"/>
+    <addaction name="actionSave"/>
+    <addaction name="actionSaveAs"/>
+    <addaction name="actionSaveSelected"/>
+    <addaction name="separator"/>
+    <addaction name="actionSaveRegion"/>
+    <addaction name="separator"/>
+    <addaction name="actionNewProject"/>
+    <addaction name="actionLoadProject"/>
+    <addaction name="actionProjectSettings"/>
+    <addaction name="separator"/>
+    <addaction name="actionPointfile"/>
+    <addaction name="separator"/>
+    <addaction name="actionExit"/>
+   </widget>
+   <widget class="QMenu" name="menuEdit">
+    <property name="title">
+     <string>&amp;Edit</string>
+    </property>
+    <addaction name="actionUndo"/>
+    <addaction name="actionRedo"/>
+    <addaction name="separator"/>
+    <addaction name="actionCut"/>
+    <addaction name="actionCopy"/>
+    <addaction name="actionPaste"/>
+    <addaction name="actionDelete"/>
+    <addaction name="separator"/>
+    <addaction name="actionMapInfo"/>
+    <addaction name="actionEntityInfo"/>
+    <addaction name="separator"/>
+    <addaction name="actionBrushScripts"/>
+    <addaction name="separator"/>
+    <addaction name="actionLoadPrefab"/>
+    <addaction name="actionSaveSelectionAsPrefab"/>
+    <addaction name="separator"/>
+    <addaction name="actionPreferences"/>
+   </widget>
+   <widget class="QMenu" name="menuView">
+    <property name="title">
+     <string>&amp;View</string>
+    </property>
+    <widget class="QMenu" name="menuToggle">
+     <property name="title">
+      <string>Toggle</string>
+     </property>
+     <addaction name="actionCameraView"/>
+     <addaction name="actionConsoleView"/>
+     <addaction name="actionEntityView"/>
+     <addaction name="actionGroupsView"/>
+     <addaction name="actionXYTop"/>
+     <addaction name="actionYZSide"/>
+     <addaction name="actionXZFront"/>
+     <addaction name="actionZView"/>
+    </widget>
+    <widget class="QMenu" name="menuLayout">
+     <property name="title">
+      <string>Layout</string>
+     </property>
+     <property name="icon">
+      <iconset resource="../QtRadiant.qrc">
+       <normaloff>:/icons/layout</normaloff>:/icons/layout</iconset>
+     </property>
+     <addaction name="actionXY"/>
+     <addaction name="actionYZ"/>
+     <addaction name="actionXZ"/>
+    </widget>
+    <widget class="QMenu" name="menuZoom">
+     <property name="title">
+      <string>Zoom</string>
+     </property>
+     <property name="icon">
+      <iconset resource="../QtRadiant.qrc">
+       <normaloff>:/icons/zoom</normaloff>:/icons/zoom</iconset>
+     </property>
+     <addaction name="actionXYZoom100"/>
+     <addaction name="actionXYZoomIn"/>
+     <addaction name="actionXYZoomOut"/>
+     <addaction name="separator"/>
+     <addaction name="actionZZoom100"/>
+     <addaction name="actionZZoomIn"/>
+     <addaction name="actionZZoomOut"/>
+     <addaction name="separator"/>
+     <addaction name="actionCubicClipZoomIn"/>
+     <addaction name="actionCubicClipZoomOut"/>
+    </widget>
+    <widget class="QMenu" name="menuShow">
+     <property name="title">
+      <string>Show</string>
+     </property>
+     <addaction name="actionShowNames"/>
+     <addaction name="actionShowBlocks"/>
+     <addaction name="actionShowCoordinates"/>
+     <addaction name="actionShowEntities"/>
+     <addaction name="actionShowPath"/>
+     <addaction name="actionShowLights"/>
+     <addaction name="actionShowDynamics"/>
+     <addaction name="actionShowClipBrush"/>
+     <addaction name="actionShowHintBrush"/>
+     <addaction name="actionShowWorld"/>
+     <addaction name="actionShowDetail"/>
+     <addaction name="actionShowCurves"/>
+     <addaction name="actionShowCaulk"/>
+     <addaction name="actionShowAngles"/>
+     <addaction name="actionShowVisPortals"/>
+     <addaction name="actionShowNoDraw"/>
+     <addaction name="actionShowCombatNodes"/>
+     <addaction name="actionShowTriggers"/>
+    </widget>
+    <widget class="QMenu" name="menuShowHide">
+     <property name="title">
+      <string>Show/Hide</string>
+     </property>
+     <addaction name="actionHideSelected"/>
+     <addaction name="actionHideNotSelected"/>
+     <addaction name="actionShowHidden"/>
+    </widget>
+    <widget class="QMenu" name="menuEntitiesAs">
+     <property name="title">
+      <string>Entities as</string>
+     </property>
+     <addaction name="actionBoundingBox"/>
+     <addaction name="actionWireframe"/>
+     <addaction name="actionSelectedWireframe"/>
+     <addaction name="actionSelectedSkinned"/>
+     <addaction name="actionSkinned"/>
+     <addaction name="actionSkinnedAndBoxed"/>
+    </widget>
+    <addaction name="menuToggle"/>
+    <addaction name="separator"/>
+    <addaction name="actionCenter"/>
+    <addaction name="actionUpFloor"/>
+    <addaction name="actionDownFloor"/>
+    <addaction name="separator"/>
+    <addaction name="actionNext"/>
+    <addaction name="menuLayout"/>
+    <addaction name="menuZoom"/>
+    <addaction name="separator"/>
+    <addaction name="menuShow"/>
+    <addaction name="menuShowHide"/>
+    <addaction name="actionCyclePrecisionCursor"/>
+    <addaction name="separator"/>
+    <addaction name="menuEntitiesAs"/>
+    <addaction name="separator"/>
+    <addaction name="actionCubicClipping"/>
+    <addaction name="separator"/>
+    <addaction name="actionRenderMode"/>
+    <addaction name="actionRealtimeRebuild"/>
+    <addaction name="actionRenderLightOutlines"/>
+    <addaction name="actionMaterialAnimation"/>
+    <addaction name="actionRebuildRenderData"/>
+    <addaction name="actionRenderSelection"/>
+    <addaction name="actionRenderSound"/>
+   </widget>
+   <widget class="QMenu" name="menuSelection">
+    <property name="title">
+     <string>&amp;Selection</string>
+    </property>
+    <widget class="QMenu" name="menuDrag">
+     <property name="title">
+      <string>Drag</string>
+     </property>
+     <addaction name="actionDragEdges"/>
+     <addaction name="actionDragVertices"/>
+    </widget>
+    <widget class="QMenu" name="menuFlip">
+     <property name="title">
+      <string>Flip</string>
+     </property>
+     <addaction name="actionFlipX"/>
+     <addaction name="actionFlipY"/>
+     <addaction name="actionFlipZ"/>
+    </widget>
+    <widget class="QMenu" name="menuRotate">
+     <property name="title">
+      <string>Rotate</string>
+     </property>
+     <addaction name="actionRotateX"/>
+     <addaction name="actionRotateY"/>
+     <addaction name="actionRotateZ"/>
+     <addaction name="actionArbitraryRotation"/>
+    </widget>
+    <widget class="QMenu" name="menuCSG">
+     <property name="title">
+      <string>CSG</string>
+     </property>
+     <addaction name="actionHollow"/>
+     <addaction name="actionSubtract"/>
+     <addaction name="actionMerge"/>
+    </widget>
+    <widget class="QMenu" name="menuSelect">
+     <property name="title">
+      <string>Select</string>
+     </property>
+     <addaction name="actionSelectCompleteTall"/>
+     <addaction name="actionSelectTouching"/>
+     <addaction name="actionSelectPartialTall"/>
+     <addaction name="actionSelectInside"/>
+     <addaction name="actionAllTargets"/>
+     <addaction name="actionCompleteEntity"/>
+    </widget>
+    <widget class="QMenu" name="menuClipper">
+     <property name="title">
+      <string>Clipper</string>
+     </property>
+     <addaction name="actionToggleClipper"/>
+     <addaction name="separator"/>
+     <addaction name="actionClipSelection"/>
+     <addaction name="actionSplitSelection"/>
+     <addaction name="actionFlipClipOrientation"/>
+    </widget>
+    <widget class="QMenu" name="menuExport">
+     <property name="title">
+      <string>Export</string>
+     </property>
+     <addaction name="actionToOBJ"/>
+     <addaction name="actionToCM"/>
+    </widget>
+    <addaction name="menuDrag"/>
+    <addaction name="separator"/>
+    <addaction name="actionClone"/>
+    <addaction name="actionInvertSelection"/>
+    <addaction name="actionDeselect"/>
+    <addaction name="separator"/>
+    <addaction name="menuFlip"/>
+    <addaction name="separator"/>
+    <addaction name="menuRotate"/>
+    <addaction name="separator"/>
+    <addaction name="actionScale"/>
+    <addaction name="menuCSG"/>
+    <addaction name="separator"/>
+    <addaction name="menuSelect"/>
+    <addaction name="separator"/>
+    <addaction name="menuClipper"/>
+    <addaction name="separator"/>
+    <addaction name="actionConnectEntities"/>
+    <addaction name="actionUngroupEntities"/>
+    <addaction name="separator"/>
+    <addaction name="actionMakeDetail"/>
+    <addaction name="actionMakeStructural"/>
+    <addaction name="separator"/>
+    <addaction name="actionCombine"/>
+    <addaction name="separator"/>
+    <addaction name="menuExport"/>
+   </widget>
+   <widget class="QMenu" name="menuBuild">
+    <property name="title">
+     <string>&amp;Build</string>
+    </property>
+    <addaction name="actionCustomizeBuildMenu"/>
+    <addaction name="separator"/>
+    <addaction name="actionBsp"/>
+    <addaction name="actionBspNoflood"/>
+    <addaction name="actionBspShadowOpt2"/>
+    <addaction name="actionBspNoaas"/>
+    <addaction name="actionBspext"/>
+    <addaction name="actionBspextNoflood"/>
+   </widget>
+   <widget class="QMenu" name="menuGrid">
+    <property name="title">
+     <string>&amp;Grid</string>
+    </property>
+    <addaction name="actionGrid0_125"/>
+    <addaction name="actionGrid0_25"/>
+    <addaction name="actionGrid0_5"/>
+    <addaction name="actionGrid1"/>
+    <addaction name="actionGrid2"/>
+    <addaction name="actionGrid4"/>
+    <addaction name="actionGrid8"/>
+    <addaction name="actionGrid16"/>
+    <addaction name="actionGrid32"/>
+    <addaction name="actionGrid64"/>
+    <addaction name="separator"/>
+    <addaction name="actionSnapToGrid"/>
+   </widget>
+   <widget class="QMenu" name="menuMaterials">
+    <property name="title">
+     <string>Ma&amp;terials</string>
+    </property>
+    <widget class="QMenu" name="menuTextureLock">
+     <property name="title">
+      <string>Texture Lock</string>
+     </property>
+     <property name="icon">
+      <iconset resource="../QtRadiant.qrc">
+       <normaloff>:/icons/lock</normaloff>:/icons/lock</iconset>
+     </property>
+     <addaction name="actionMoves"/>
+     <addaction name="actionRotations"/>
+    </widget>
+    <widget class="QMenu" name="menuTextureWindowScale">
+     <property name="title">
+      <string>Texture Window Scale</string>
+     </property>
+     <addaction name="actionPercent200"/>
+     <addaction name="actionTextureWindowScale100"/>
+     <addaction name="actionTextureWindowScale50"/>
+     <addaction name="actionTextureWindowScale25"/>
+     <addaction name="actionTextureWindowScale10"/>
+    </widget>
+    <addaction name="actionShowInUse"/>
+    <addaction name="actionShowAll"/>
+    <addaction name="actionHideAll"/>
+    <addaction name="separator"/>
+    <addaction name="actionSurfaceInspector"/>
+    <addaction name="separator"/>
+    <addaction name="actionFindReplace"/>
+    <addaction name="separator"/>
+    <addaction name="menuTextureLock"/>
+    <addaction name="separator"/>
+    <addaction name="actionReload"/>
+    <addaction name="separator"/>
+    <addaction name="menuTextureWindowScale"/>
+    <addaction name="separator"/>
+    <addaction name="actionGenerateMaterialList"/>
+   </widget>
+   <widget class="QMenu" name="menuMisc">
+    <property name="title">
+     <string>&amp;Misc</string>
+    </property>
+    <widget class="QMenu" name="menuColors">
+     <property name="title">
+      <string>Colors</string>
+     </property>
+     <property name="icon">
+      <iconset resource="../QtRadiant.qrc">
+       <normaloff>:/icons/uicolors</normaloff>:/icons/uicolors</iconset>
+     </property>
+     <widget class="QMenu" name="menuThemes">
+      <property name="title">
+       <string>Themes</string>
+      </property>
+      <addaction name="actionThemeQE4Original"/>
+      <addaction name="actionThemeQ3RadiantOriginal"/>
+      <addaction name="actionThemeBlackAndGreen"/>
+      <addaction name="actionThemeMaxMayaLightwave"/>
+      <addaction name="actionThemeSuperMal"/>
+     </widget>
+     <addaction name="menuThemes"/>
+     <addaction name="separator"/>
+     <addaction name="actionTextureBackground"/>
+     <addaction name="actionGridBackground"/>
+     <addaction name="actionGridMajor"/>
+     <addaction name="actionGridMinor"/>
+     <addaction name="actionGridText"/>
+     <addaction name="actionGridBlock"/>
+     <addaction name="actionDefaultBrush"/>
+     <addaction name="actionSelectedBrush"/>
+     <addaction name="actionClipper2"/>
+     <addaction name="actionActiveViewName"/>
+    </widget>
+    <addaction name="actionBenchmark"/>
+    <addaction name="separator"/>
+    <addaction name="menuColors"/>
+    <addaction name="actionGamma"/>
+    <addaction name="separator"/>
+    <addaction name="actionFindBrush"/>
+    <addaction name="separator"/>
+    <addaction name="actionNextLeakSpot"/>
+    <addaction name="actionPreviousLeakSpot"/>
+    <addaction name="separator"/>
+    <addaction name="actionPrintXYView"/>
+    <addaction name="separator"/>
+    <addaction name="actionSelectEntityColor"/>
+    <addaction name="actionFindOrReplaceEntity"/>
+    <addaction name="separator"/>
+    <addaction name="actionSetViewPosition"/>
+   </widget>
+   <widget class="QMenu" name="menuRegion">
+    <property name="title">
+     <string>&amp;Region</string>
+    </property>
+    <addaction name="actionOff"/>
+    <addaction name="actionSetXY"/>
+    <addaction name="actionSetTallBrush"/>
+    <addaction name="actionSetBrush"/>
+    <addaction name="actionSetSelectedBrushes"/>
+   </widget>
+   <widget class="QMenu" name="menuBrush">
+    <property name="title">
+     <string>&amp;Brush</string>
+    </property>
+    <widget class="QMenu" name="menuPrimitives">
+     <property name="title">
+      <string>Primitives</string>
+     </property>
+     <addaction name="actionCone"/>
+     <addaction name="actionSphere"/>
+    </widget>
+    <addaction name="actionSided3"/>
+    <addaction name="actionSided4"/>
+    <addaction name="actionSided5"/>
+    <addaction name="actionSided6"/>
+    <addaction name="actionSided7"/>
+    <addaction name="actionSided8"/>
+    <addaction name="action9Sided"/>
+    <addaction name="separator"/>
+    <addaction name="actionArbitrarySided"/>
+    <addaction name="separator"/>
+    <addaction name="menuPrimitives"/>
+   </widget>
+   <widget class="QMenu" name="menuPatch">
+    <property name="title">
+     <string>&amp;Patch</string>
+    </property>
+    <widget class="QMenu" name="menuMoreCylinders">
+     <property name="title">
+      <string>More Cylinders</string>
+     </property>
+     <addaction name="actionDenseCylinder"/>
+     <addaction name="actionVeryDenseCylinder"/>
+     <addaction name="actionSquareCylinder"/>
+    </widget>
+    <widget class="QMenu" name="menuMoreEndCapsBevels">
+     <property name="title">
+      <string>More End Caps, Bevels</string>
+     </property>
+     <addaction name="actionSquareEndCap"/>
+     <addaction name="actionSquareBevel"/>
+    </widget>
+    <widget class="QMenu" name="menuInsert">
+     <property name="title">
+      <string>Insert</string>
+     </property>
+     <property name="icon">
+      <iconset resource="../QtRadiant.qrc">
+       <normaloff>:/icons/patch-insert</normaloff>:/icons/patch-insert</iconset>
+     </property>
+     <addaction name="actionInsert2Columns"/>
+     <addaction name="actionAdd2Columns"/>
+     <addaction name="separator"/>
+     <addaction name="actionInsert2Rows"/>
+     <addaction name="actionAdd2Rows"/>
+    </widget>
+    <widget class="QMenu" name="menuDelete">
+     <property name="title">
+      <string>Delete</string>
+     </property>
+     <property name="icon">
+      <iconset resource="../QtRadiant.qrc">
+       <normaloff>:/icons/patch-delete</normaloff>:/icons/patch-delete</iconset>
+     </property>
+     <addaction name="actionFirst2Columns"/>
+     <addaction name="actionLast2Columns"/>
+     <addaction name="separator"/>
+     <addaction name="actionFirst2Rows"/>
+     <addaction name="actionLast2Rows"/>
+    </widget>
+    <widget class="QMenu" name="menuMatrix">
+     <property name="title">
+      <string>Matrix</string>
+     </property>
+     <widget class="QMenu" name="menuRe_disperse">
+      <property name="title">
+       <string>Re-disperse</string>
+      </property>
+      <addaction name="actionCols"/>
+      <addaction name="actionRows"/>
+     </widget>
+     <addaction name="actionInvertMatrix"/>
+     <addaction name="menuRe_disperse"/>
+     <addaction name="actionTranspose"/>
+    </widget>
+    <widget class="QMenu" name="menuCap">
+     <property name="title">
+      <string>Cap</string>
+     </property>
+     <addaction name="actionNormal"/>
+     <addaction name="actionInvertedBevel"/>
+     <addaction name="actionInvertedEndCap"/>
+     <addaction name="separator"/>
+     <addaction name="actionCycleCapTexture"/>
+    </widget>
+    <widget class="QMenu" name="menuOverlay">
+     <property name="title">
+      <string>Overlay</string>
+     </property>
+     <addaction name="actionSet"/>
+     <addaction name="actionClear"/>
+    </widget>
+    <addaction name="actionCylinder"/>
+    <addaction name="menuMoreCylinders"/>
+    <addaction name="separator"/>
+    <addaction name="actionEndCap"/>
+    <addaction name="actionBevel"/>
+    <addaction name="menuMoreEndCapsBevels"/>
+    <addaction name="separator"/>
+    <addaction name="actionCone2"/>
+    <addaction name="actionSphere2"/>
+    <addaction name="separator"/>
+    <addaction name="actionSimplePatchMesh"/>
+    <addaction name="separator"/>
+    <addaction name="menuInsert"/>
+    <addaction name="menuDelete"/>
+    <addaction name="separator"/>
+    <addaction name="menuMatrix"/>
+    <addaction name="separator"/>
+    <addaction name="menuCap"/>
+    <addaction name="separator"/>
+    <addaction name="menuOverlay"/>
+    <addaction name="separator"/>
+    <addaction name="actionThicken"/>
+    <addaction name="actionCombine2"/>
+    <addaction name="separator"/>
+    <addaction name="actionNurbEditor"/>
+   </widget>
+   <widget class="QMenu" name="menuPlugins">
+    <property name="title">
+     <string>P&amp;lugins</string>
+    </property>
+    <addaction name="actionRefresh"/>
+    <addaction name="separator"/>
+    <addaction name="actionNoPluginsInstalled"/>
+    <addaction name="separator"/>
+    <addaction name="actionDownloadPlugins"/>
+   </widget>
+   <widget class="QMenu" name="menuHelp">
+    <property name="title">
+     <string>&amp;Help</string>
+    </property>
+    <addaction name="actionHelp"/>
+    <addaction name="separator"/>
+    <addaction name="actionCommandList"/>
+    <addaction name="separator"/>
+    <addaction name="actionAbout"/>
+    <addaction name="actionAboutQt"/>
+   </widget>
+   <addaction name="menuFile"/>
+   <addaction name="menuEdit"/>
+   <addaction name="menuView"/>
+   <addaction name="menuSelection"/>
+   <addaction name="menuBuild"/>
+   <addaction name="menuGrid"/>
+   <addaction name="menuMaterials"/>
+   <addaction name="menuMisc"/>
+   <addaction name="menuRegion"/>
+   <addaction name="menuBrush"/>
+   <addaction name="menuPatch"/>
+   <addaction name="menuPlugins"/>
+   <addaction name="menuHelp"/>
+  </widget>
+  <widget class="QToolBar" name="mainToolBar">
+   <property name="windowTitle">
+    <string>Toolbar</string>
+   </property>
+   <property name="movable">
+    <bool>true</bool>
+   </property>
+   <property name="iconSize">
+    <size>
+     <width>16</width>
+     <height>16</height>
+    </size>
+   </property>
+   <property name="toolButtonStyle">
+    <enum>Qt::ToolButtonIconOnly</enum>
+   </property>
+   <property name="floatable">
+    <bool>true</bool>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="actionNewMap"/>
+   <addaction name="actionOpen"/>
+   <addaction name="actionSave"/>
+   <addaction name="separator"/>
+   <addaction name="actionFlipX"/>
+   <addaction name="actionRotateX"/>
+   <addaction name="actionFlipY"/>
+   <addaction name="actionRotateY"/>
+   <addaction name="actionFlipZ"/>
+   <addaction name="actionRotateZ"/>
+   <addaction name="separator"/>
+   <addaction name="actionSelectCompleteTall"/>
+   <addaction name="actionSelectTouching"/>
+   <addaction name="actionSelectPartialTall"/>
+   <addaction name="actionSelectInside"/>
+   <addaction name="separator"/>
+   <addaction name="actionSubtract"/>
+   <addaction name="actionMerge"/>
+   <addaction name="actionHollow"/>
+   <addaction name="actionToggleClipper"/>
+   <addaction name="separator"/>
+   <addaction name="actionNext"/>
+   <addaction name="actionTextureViewMode"/>
+   <addaction name="actionCubicClipping"/>
+   <addaction name="actionArbitraryRotation"/>
+   <addaction name="separator"/>
+   <addaction name="actionMouseScale"/>
+   <addaction name="actionScaleX"/>
+   <addaction name="actionScaleY"/>
+   <addaction name="actionScaleZ"/>
+   <addaction name="separator"/>
+   <addaction name="actionTranslateSelection"/>
+   <addaction name="separator"/>
+  </widget>
+  <widget class="QStatusBar" name="statusBar">
+   <property name="sizeGripEnabled">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <action name="actionNewMap">
+   <property name="icon">
+    <iconset resource="../QtRadiant.qrc">
+     <normaloff>:/icons/new</normaloff>:/icons/new</iconset>
+   </property>
+   <property name="text">
+    <string>New Map</string>
+   </property>
+   <property name="statusTip">
+    <string>Create a new map</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+N</string>
+   </property>
+  </action>
+  <action name="actionOpen">
+   <property name="icon">
+    <iconset resource="../QtRadiant.qrc">
+     <normaloff>:/icons/open</normaloff>:/icons/open</iconset>
+   </property>
+   <property name="text">
+    <string>Open...</string>
+   </property>
+   <property name="statusTip">
+    <string>Open an existing map</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+O</string>
+   </property>
+   <property name="priority">
+    <enum>QAction::NormalPriority</enum>
+   </property>
+  </action>
+  <action name="actionLoad">
+   <property name="text">
+    <string>Load...</string>
+   </property>
+   <property name="statusTip">
+    <string>Load map, leaving current map intact</string>
+   </property>
+  </action>
+  <action name="actionSave">
+   <property name="icon">
+    <iconset resource="../QtRadiant.qrc">
+     <normaloff>:/icons/save</normaloff>:/icons/save</iconset>
+   </property>
+   <property name="text">
+    <string>Save</string>
+   </property>
+   <property name="statusTip">
+    <string>Save the active map</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+S</string>
+   </property>
+  </action>
+  <action name="actionSaveAs">
+   <property name="text">
+    <string>Save As...</string>
+   </property>
+  </action>
+  <action name="actionSaveSelected">
+   <property name="text">
+    <string>Save Selected...</string>
+   </property>
+   <property name="statusTip">
+    <string>Save selection into map file</string>
+   </property>
+  </action>
+  <action name="actionSaveRegion">
+   <property name="text">
+    <string>Save Region</string>
+   </property>
+   <property name="statusTip">
+    <string>Save defined region</string>
+   </property>
+  </action>
+  <action name="actionNewProject">
+   <property name="text">
+    <string>New Project...</string>
+   </property>
+  </action>
+  <action name="actionLoadProject">
+   <property name="text">
+    <string>Load Project...</string>
+   </property>
+  </action>
+  <action name="actionProjectSettings">
+   <property name="text">
+    <string>Project Settings...</string>
+   </property>
+   <property name="statusTip">
+    <string>View and edit project attributes</string>
+   </property>
+  </action>
+  <action name="actionExit">
+   <property name="icon">
+    <iconset resource="../QtRadiant.qrc">
+     <normaloff>:/icons/exit</normaloff>:/icons/exit</iconset>
+   </property>
+   <property name="text">
+    <string>Exit</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Q</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::TextHeuristicRole</enum>
+   </property>
+  </action>
+  <action name="actionUndo">
+   <property name="icon">
+    <iconset resource="../QtRadiant.qrc">
+     <normaloff>:/arrows/curve-left</normaloff>:/arrows/curve-left</iconset>
+   </property>
+   <property name="text">
+    <string>Undo</string>
+   </property>
+   <property name="statusTip">
+    <string>Undo the last action</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Z</string>
+   </property>
+  </action>
+  <action name="actionRedo">
+   <property name="icon">
+    <iconset resource="../QtRadiant.qrc">
+     <normaloff>:/arrows/curve-right</normaloff>:/arrows/curve-right</iconset>
+   </property>
+   <property name="text">
+    <string>Redo</string>
+   </property>
+   <property name="statusTip">
+    <string>Redo the previously undone action</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Y</string>
+   </property>
+  </action>
+  <action name="actionCut">
+   <property name="icon">
+    <iconset resource="../QtRadiant.qrc">
+     <normaloff>:/icons/cut</normaloff>:/icons/cut</iconset>
+   </property>
+   <property name="text">
+    <string>Cut</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+X</string>
+   </property>
+  </action>
+  <action name="actionCopy">
+   <property name="icon">
+    <iconset resource="../QtRadiant.qrc">
+     <normaloff>:/icons/copy</normaloff>:/icons/copy</iconset>
+   </property>
+   <property name="text">
+    <string>Copy</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+C</string>
+   </property>
+  </action>
+  <action name="actionPaste">
+   <property name="icon">
+    <iconset resource="../QtRadiant.qrc">
+     <normaloff>:/icons/paste</normaloff>:/icons/paste</iconset>
+   </property>
+   <property name="text">
+    <string>Paste</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+V</string>
+   </property>
+  </action>
+  <action name="actionDelete">
+   <property name="icon">
+    <iconset resource="../QtRadiant.qrc">
+     <normaloff>:/icons/delete</normaloff>:/icons/delete</iconset>
+   </property>
+   <property name="text">
+    <string>Delete</string>
+   </property>
+   <property name="shortcut">
+    <string>Backspace</string>
+   </property>
+  </action>
+  <action name="actionMapInfo">
+   <property name="text">
+    <string>Map Info...</string>
+   </property>
+   <property name="statusTip">
+    <string>Map Information</string>
+   </property>
+  </action>
+  <action name="actionEntityInfo">
+   <property name="text">
+    <string>Entity Info...</string>
+   </property>
+   <property name="statusTip">
+    <string>Entity Information</string>
+   </property>
+   <property name="shortcut">
+    <string>I</string>
+   </property>
+  </action>
+  <action name="actionBrushScripts">
+   <property name="text">
+    <string>Brush Scripts</string>
+   </property>
+   <property name="statusTip">
+    <string>Define and run BrushScripts</string>
+   </property>
+  </action>
+  <action name="actionLoadPrefab">
+   <property name="text">
+    <string>Load Prefab</string>
+   </property>
+   <property name="statusTip">
+    <string>Load .map from prefab path</string>
+   </property>
+  </action>
+  <action name="actionSaveSelectionAsPrefab">
+   <property name="text">
+    <string>Save Selection as Prefab</string>
+   </property>
+  </action>
+  <action name="actionPreferences">
+   <property name="icon">
+    <iconset resource="../QtRadiant.qrc">
+     <normaloff>:/icons/preferences</normaloff>:/icons/preferences</iconset>
+   </property>
+   <property name="text">
+    <string>Preferences</string>
+   </property>
+   <property name="statusTip">
+    <string>Preferences</string>
+   </property>
+   <property name="shortcut">
+    <string>P</string>
+   </property>
+  </action>
+  <action name="actionCenter">
+   <property name="icon">
+    <iconset resource="../QtRadiant.qrc">
+     <normaloff>:/arrows/in</normaloff>:/arrows/in</iconset>
+   </property>
+   <property name="text">
+    <string>Center</string>
+   </property>
+   <property name="shortcut">
+    <string>End</string>
+   </property>
+  </action>
+  <action name="actionUpFloor">
+   <property name="icon">
+    <iconset resource="../QtRadiant.qrc">
+     <normaloff>:/arrows/top</normaloff>:/arrows/top</iconset>
+   </property>
+   <property name="text">
+    <string>Up Floor</string>
+   </property>
+   <property name="shortcut">
+    <string>PgUp</string>
+   </property>
+  </action>
+  <action name="actionDownFloor">
+   <property name="icon">
+    <iconset resource="../QtRadiant.qrc">
+     <normaloff>:/arrows/bottom</normaloff>:/arrows/bottom</iconset>
+   </property>
+   <property name="text">
+    <string>Down Floor</string>
+   </property>
+   <property name="shortcut">
+    <string>PgDown</string>
+   </property>
+  </action>
+  <action name="actionNext">
+   <property name="text">
+    <string>Next (XY, YZ, XZ)</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Tab</string>
+   </property>
+  </action>
+  <action name="actionCyclePrecisionCursor">
+   <property name="text">
+    <string>Cycle Precision Cursor</string>
+   </property>
+   <property name="shortcut">
+    <string>F11</string>
+   </property>
+  </action>
+  <action name="actionRenderMode">
+   <property name="text">
+    <string>Render Mode</string>
+   </property>
+   <property name="statusTip">
+    <string>Camera view shows render data</string>
+   </property>
+   <property name="shortcut">
+    <string>F3</string>
+   </property>
+  </action>
+  <action name="actionRealtimeRebuild">
+   <property name="text">
+    <string>Realtime Rebuild</string>
+   </property>
+   <property name="statusTip">
+    <string>Rebuild render data in realtime</string>
+   </property>
+   <property name="shortcut">
+    <string>F4</string>
+   </property>
+  </action>
+  <action name="actionRenderLightOutlines">
+   <property name="text">
+    <string>Render Light Outlines</string>
+   </property>
+   <property name="statusTip">
+    <string>Render light entities in render mode</string>
+   </property>
+   <property name="shortcut">
+    <string>F5</string>
+   </property>
+  </action>
+  <action name="actionMaterialAnimation">
+   <property name="text">
+    <string>Material Animation</string>
+   </property>
+   <property name="statusTip">
+    <string>Render material (shader) animation</string>
+   </property>
+   <property name="shortcut">
+    <string>F6</string>
+   </property>
+  </action>
+  <action name="actionRebuildRenderData">
+   <property name="text">
+    <string>Rebuild Render Data</string>
+   </property>
+   <property name="statusTip">
+    <string>Rebuild render data now</string>
+   </property>
+   <property name="shortcut">
+    <string>F7</string>
+   </property>
+  </action>
+  <action name="actionRenderSelection">
+   <property name="text">
+    <string>Render Selection</string>
+   </property>
+   <property name="shortcut">
+    <string>F8</string>
+   </property>
+  </action>
+  <action name="actionRenderSound">
+   <property name="icon">
+    <iconset resource="../QtRadiant.qrc">
+     <normaloff>:/icons/sound</normaloff>:/icons/sound</iconset>
+   </property>
+   <property name="text">
+    <string>Render Sound</string>
+   </property>
+   <property name="statusTip">
+    <string>Render sound</string>
+   </property>
+   <property name="shortcut">
+    <string>F9</string>
+   </property>
+  </action>
+  <action name="actionClone">
+   <property name="text">
+    <string>Clone</string>
+   </property>
+   <property name="shortcut">
+    <string>Space</string>
+   </property>
+  </action>
+  <action name="actionDeselect">
+   <property name="text">
+    <string>Deselect</string>
+   </property>
+   <property name="shortcut">
+    <string>Esc</string>
+   </property>
+  </action>
+  <action name="actionScale">
+   <property name="text">
+    <string>Scale...</string>
+   </property>
+  </action>
+  <action name="actionConnectEntities">
+   <property name="text">
+    <string>Connect Entities</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+K</string>
+   </property>
+  </action>
+  <action name="actionUngroupEntities">
+   <property name="text">
+    <string>Ungroup Entities</string>
+   </property>
+   <property name="shortcut">
+    <string>Shift+G</string>
+   </property>
+  </action>
+  <action name="actionMakeDetail">
+   <property name="text">
+    <string>Make Detail</string>
+   </property>
+   <property name="toolTip">
+    <string>Make Detail</string>
+   </property>
+  </action>
+  <action name="actionMakeStructural">
+   <property name="text">
+    <string>Make Structural</string>
+   </property>
+   <property name="toolTip">
+    <string>Make Structural</string>
+   </property>
+  </action>
+  <action name="actionPointfile">
+   <property name="text">
+    <string>Pointfile...</string>
+   </property>
+  </action>
+  <action name="actionCombine">
+   <property name="icon">
+    <iconset resource="../QtRadiant.qrc">
+     <normaloff>:/arrows/join-90</normaloff>:/arrows/join-90</iconset>
+   </property>
+   <property name="text">
+    <string>Combine</string>
+   </property>
+   <property name="shortcut">
+    <string>Shift+K</string>
+   </property>
+  </action>
+  <action name="actionCustomizeBuildMenu">
+   <property name="text">
+    <string>Customize Build Menu</string>
+   </property>
+  </action>
+  <action name="actionCameraView">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Camera View</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+C</string>
+   </property>
+  </action>
+  <action name="actionConsoleView">
+   <property name="text">
+    <string>Console View</string>
+   </property>
+  </action>
+  <action name="actionEntityView">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Entity View</string>
+   </property>
+   <property name="statusTip">
+    <string>Toggle entity inspector</string>
+   </property>
+   <property name="shortcut">
+    <string>N</string>
+   </property>
+  </action>
+  <action name="actionGroupsView">
+   <property name="text">
+    <string>Groups View</string>
+   </property>
+  </action>
+  <action name="actionXYTop">
+   <property name="text">
+    <string>XY (Top)</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+V</string>
+   </property>
+  </action>
+  <action name="actionYZSide">
+   <property name="text">
+    <string>YZ (Side)</string>
+   </property>
+  </action>
+  <action name="actionXZFront">
+   <property name="text">
+    <string>XZ (Front)</string>
+   </property>
+  </action>
+  <action name="actionZView">
+   <property name="text">
+    <string>Z View</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+Z</string>
+   </property>
+  </action>
+  <action name="actionXY">
+   <property name="text">
+    <string>XY (Top)</string>
+   </property>
+   <property name="statusTip">
+    <string>View original layout (Top)</string>
+   </property>
+  </action>
+  <action name="actionYZ">
+   <property name="text">
+    <string>YZ</string>
+   </property>
+   <property name="statusTip">
+    <string>Side view</string>
+   </property>
+  </action>
+  <action name="actionXZ">
+   <property name="text">
+    <string>XZ</string>
+   </property>
+   <property name="statusTip">
+    <string>Front view</string>
+   </property>
+  </action>
+  <action name="actionXYZoom100">
+   <property name="icon">
+    <iconset resource="../QtRadiant.qrc">
+     <normaloff>:/icons/zoom-fit</normaloff>:/icons/zoom-fit</iconset>
+   </property>
+   <property name="text">
+    <string>XY 100%</string>
+   </property>
+  </action>
+  <action name="actionXYZoomIn">
+   <property name="icon">
+    <iconset resource="../QtRadiant.qrc">
+     <normaloff>:/icons/zoom-in</normaloff>:/icons/zoom-in</iconset>
+   </property>
+   <property name="text">
+    <string>XY Zoom In</string>
+   </property>
+   <property name="shortcut">
+    <string>Del</string>
+   </property>
+  </action>
+  <action name="actionXYZoomOut">
+   <property name="icon">
+    <iconset resource="../QtRadiant.qrc">
+     <normaloff>:/icons/zoom-out</normaloff>:/icons/zoom-out</iconset>
+   </property>
+   <property name="text">
+    <string>XY Zoom Out</string>
+   </property>
+   <property name="shortcut">
+    <string>Ins</string>
+   </property>
+  </action>
+  <action name="actionZZoom100">
+   <property name="icon">
+    <iconset resource="../QtRadiant.qrc">
+     <normaloff>:/icons/zoom-fit</normaloff>:/icons/zoom-fit</iconset>
+   </property>
+   <property name="text">
+    <string>Z 100%</string>
+   </property>
+  </action>
+  <action name="actionZZoomIn">
+   <property name="icon">
+    <iconset resource="../QtRadiant.qrc">
+     <normaloff>:/icons/zoom-in</normaloff>:/icons/zoom-in</iconset>
+   </property>
+   <property name="text">
+    <string>Z Zoom In</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Del</string>
+   </property>
+  </action>
+  <action name="actionZZoomOut">
+   <property name="icon">
+    <iconset resource="../QtRadiant.qrc">
+     <normaloff>:/icons/zoom-out</normaloff>:/icons/zoom-out</iconset>
+   </property>
+   <property name="text">
+    <string>Z Zoom Out</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Ins</string>
+   </property>
+  </action>
+  <action name="actionCubicClipZoomIn">
+   <property name="icon">
+    <iconset resource="../QtRadiant.qrc">
+     <normaloff>:/icons/zoom-in</normaloff>:/icons/zoom-in</iconset>
+   </property>
+   <property name="text">
+    <string>Cubic Clip Zoom In</string>
+   </property>
+   <property name="statusTip">
+    <string>Zoom cubic clip in</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+]</string>
+   </property>
+  </action>
+  <action name="actionCubicClipZoomOut">
+   <property name="icon">
+    <iconset resource="../QtRadiant.qrc">
+     <normaloff>:/icons/zoom-out</normaloff>:/icons/zoom-out</iconset>
+   </property>
+   <property name="text">
+    <string>Cubic Clip Zoom Out</string>
+   </property>
+   <property name="statusTip">
+    <string>Zoom cubic clip out</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+[</string>
+   </property>
+  </action>
+  <action name="actionShowNames">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Show Names</string>
+   </property>
+  </action>
+  <action name="actionShowBlocks">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Show Blocks</string>
+   </property>
+  </action>
+  <action name="actionShowCoordinates">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Show Coordinates</string>
+   </property>
+  </action>
+  <action name="actionShowEntities">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Show Entities</string>
+   </property>
+  </action>
+  <action name="actionShowPath">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Show Path</string>
+   </property>
+  </action>
+  <action name="actionShowLights">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Show Lights</string>
+   </property>
+   <property name="shortcut">
+    <string>Alt+0</string>
+   </property>
+  </action>
+  <action name="actionShowDynamics">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Show Dynamics</string>
+   </property>
+  </action>
+  <action name="actionShowClipBrush">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Show Clip Brush</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+L</string>
+   </property>
+  </action>
+  <action name="actionShowHintBrush">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Show Hint Brush</string>
+   </property>
+  </action>
+  <action name="actionShowWorld">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Show World</string>
+   </property>
+  </action>
+  <action name="actionShowDetail">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Show Detail</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+D</string>
+   </property>
+  </action>
+  <action name="actionShowCurves">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Show Curves</string>
+   </property>
+   <property name="statusTip">
+    <string>Show curved brushes</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+P</string>
+   </property>
+  </action>
+  <action name="actionShowCaulk">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Show Caulk</string>
+   </property>
+  </action>
+  <action name="actionShowAngles">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Show Angles</string>
+   </property>
+  </action>
+  <action name="actionShowVisPortals">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Show Vis Portals</string>
+   </property>
+  </action>
+  <action name="actionShowNoDraw">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Show No Draw</string>
+   </property>
+  </action>
+  <action name="actionShowCombatNodes">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Show Combat Nodes</string>
+   </property>
+  </action>
+  <action name="actionShowTriggers">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Show Triggers</string>
+   </property>
+  </action>
+  <action name="actionHideSelected">
+   <property name="text">
+    <string>Hide Selected</string>
+   </property>
+   <property name="shortcut">
+    <string>H</string>
+   </property>
+  </action>
+  <action name="actionHideNotSelected">
+   <property name="text">
+    <string>Hide Not Selected</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+H</string>
+   </property>
+  </action>
+  <action name="actionShowHidden">
+   <property name="text">
+    <string>Show Hidden</string>
+   </property>
+   <property name="shortcut">
+    <string>Shift+H</string>
+   </property>
+  </action>
+  <action name="actionBoundingBox">
+   <property name="text">
+    <string>Bounding Box</string>
+   </property>
+  </action>
+  <action name="actionWireframe">
+   <property name="text">
+    <string>Wireframe</string>
+   </property>
+  </action>
+  <action name="actionSelectedWireframe">
+   <property name="text">
+    <string>Selected Wireframe</string>
+   </property>
+  </action>
+  <action name="actionSelectedSkinned">
+   <property name="text">
+    <string>Selected Skinned</string>
+   </property>
+  </action>
+  <action name="actionSkinned">
+   <property name="text">
+    <string>Skinned</string>
+   </property>
+  </action>
+  <action name="actionSkinnedAndBoxed">
+   <property name="text">
+    <string>Skinned and Boxed</string>
+   </property>
+  </action>
+  <action name="actionCubicClipping">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Cubic Clipping</string>
+   </property>
+   <property name="statusTip">
+    <string>Cubic clip the camera view</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+\</string>
+   </property>
+  </action>
+  <action name="actionDragEdges">
+   <property name="text">
+    <string>Drag Edges</string>
+   </property>
+   <property name="shortcut">
+    <string>E</string>
+   </property>
+  </action>
+  <action name="actionDragVertices">
+   <property name="text">
+    <string>Drag Vertices</string>
+   </property>
+   <property name="shortcut">
+    <string>V</string>
+   </property>
+  </action>
+  <action name="actionFlipX">
+   <property name="text">
+    <string>Flip X</string>
+   </property>
+   <property name="statusTip">
+    <string>Flip selected brushes along x-axis</string>
+   </property>
+  </action>
+  <action name="actionFlipY">
+   <property name="text">
+    <string>Flip Y</string>
+   </property>
+   <property name="statusTip">
+    <string>Flip selected brushes along y-axis</string>
+   </property>
+  </action>
+  <action name="actionFlipZ">
+   <property name="text">
+    <string>Flip Z</string>
+   </property>
+   <property name="statusTip">
+    <string>Flip selected brushes along z-axis</string>
+   </property>
+  </action>
+  <action name="actionRotateX">
+   <property name="text">
+    <string>Rotate X</string>
+   </property>
+   <property name="statusTip">
+    <string>Rotate selected brushes along x-axis</string>
+   </property>
+  </action>
+  <action name="actionRotateY">
+   <property name="text">
+    <string>Rotate Y</string>
+   </property>
+   <property name="statusTip">
+    <string>Rotate selected brushes along y-axis</string>
+   </property>
+  </action>
+  <action name="actionRotateZ">
+   <property name="text">
+    <string>Rotate Z</string>
+   </property>
+   <property name="statusTip">
+    <string>Rotate selected brushes along z-axis</string>
+   </property>
+  </action>
+  <action name="actionArbitraryRotation">
+   <property name="text">
+    <string>Arbitrary Rotation...</string>
+   </property>
+  </action>
+  <action name="actionHollow">
+   <property name="text">
+    <string>Hollow</string>
+   </property>
+   <property name="statusTip">
+    <string>Hollow selection</string>
+   </property>
+  </action>
+  <action name="actionSubtract">
+   <property name="text">
+    <string>Subtract</string>
+   </property>
+   <property name="statusTip">
+    <string>CSG Subtract</string>
+   </property>
+  </action>
+  <action name="actionMerge">
+   <property name="text">
+    <string>Merge</string>
+   </property>
+   <property name="statusTip">
+    <string>CSG Merge</string>
+   </property>
+   <property name="shortcut">
+    <string>Shift+M</string>
+   </property>
+  </action>
+  <action name="actionSelectCompleteTall">
+   <property name="text">
+    <string>Select Complete Tall</string>
+   </property>
+   <property name="iconText">
+    <string>Complete Tall</string>
+   </property>
+   <property name="statusTip">
+    <string>Complete Tall</string>
+   </property>
+  </action>
+  <action name="actionSelectTouching">
+   <property name="text">
+    <string>Select Touching</string>
+   </property>
+   <property name="statusTip">
+    <string>Select Touching</string>
+   </property>
+  </action>
+  <action name="actionSelectPartialTall">
+   <property name="text">
+    <string>Select Partial Tall</string>
+   </property>
+   <property name="statusTip">
+    <string>Select Partial Tall</string>
+   </property>
+  </action>
+  <action name="actionSelectInside">
+   <property name="text">
+    <string>Select Inside</string>
+   </property>
+   <property name="statusTip">
+    <string>Select Inside</string>
+   </property>
+  </action>
+  <action name="actionAllTargets">
+   <property name="text">
+    <string>All Targets</string>
+   </property>
+  </action>
+  <action name="actionCompleteEntity">
+   <property name="text">
+    <string>Complete Entity</string>
+   </property>
+  </action>
+  <action name="actionToggleClipper">
+   <property name="text">
+    <string>Toggle Clipper</string>
+   </property>
+   <property name="iconText">
+    <string>Toggle Clipper</string>
+   </property>
+   <property name="statusTip">
+    <string>Set clipper mode</string>
+   </property>
+   <property name="shortcut">
+    <string>X</string>
+   </property>
+  </action>
+  <action name="actionClipSelection">
+   <property name="text">
+    <string>Clip Selection</string>
+   </property>
+   <property name="shortcut">
+    <string>Return</string>
+   </property>
+  </action>
+  <action name="actionSplitSelection">
+   <property name="text">
+    <string>Split Selection</string>
+   </property>
+   <property name="shortcut">
+    <string>Shift+Return</string>
+   </property>
+  </action>
+  <action name="actionFlipClipOrientation">
+   <property name="text">
+    <string>Flip Clip Orientation</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Return</string>
+   </property>
+  </action>
+  <action name="actionToOBJ">
+   <property name="text">
+    <string>To OBJ</string>
+   </property>
+  </action>
+  <action name="actionToCM">
+   <property name="text">
+    <string>To CM</string>
+   </property>
+  </action>
+  <action name="actionBsp">
+   <property name="text">
+    <string>bsp</string>
+   </property>
+  </action>
+  <action name="actionBspNoflood">
+   <property name="text">
+    <string>bsp noflood</string>
+   </property>
+  </action>
+  <action name="actionBspShadowOpt2">
+   <property name="text">
+    <string>bsp shadowOpt 2</string>
+   </property>
+  </action>
+  <action name="actionBspNoaas">
+   <property name="text">
+    <string>bsp noaas</string>
+   </property>
+  </action>
+  <action name="actionBspext">
+   <property name="text">
+    <string>bspext</string>
+   </property>
+  </action>
+  <action name="actionBspextNoflood">
+   <property name="text">
+    <string>bspext noflood</string>
+   </property>
+  </action>
+  <action name="actionGrid0_125">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Grid 0.125</string>
+   </property>
+   <property name="shortcut">
+    <string>Shift+2</string>
+   </property>
+  </action>
+  <action name="actionGrid0_25">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Grid 0.25</string>
+   </property>
+   <property name="shortcut">
+    <string>Shift+3</string>
+   </property>
+  </action>
+  <action name="actionGrid0_5">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Grid 0.5</string>
+   </property>
+   <property name="shortcut">
+    <string>Shift+4</string>
+   </property>
+  </action>
+  <action name="actionGrid1">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Grid1</string>
+   </property>
+   <property name="shortcut">
+    <string>1</string>
+   </property>
+  </action>
+  <action name="actionGrid2">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Grid2</string>
+   </property>
+   <property name="shortcut">
+    <string>2</string>
+   </property>
+  </action>
+  <action name="actionGrid4">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Grid4</string>
+   </property>
+   <property name="shortcut">
+    <string>3</string>
+   </property>
+  </action>
+  <action name="actionGrid8">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Grid8</string>
+   </property>
+   <property name="shortcut">
+    <string>4</string>
+   </property>
+  </action>
+  <action name="actionGrid16">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Grid16</string>
+   </property>
+   <property name="shortcut">
+    <string>5</string>
+   </property>
+  </action>
+  <action name="actionGrid32">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Grid32</string>
+   </property>
+   <property name="shortcut">
+    <string>6</string>
+   </property>
+  </action>
+  <action name="actionGrid64">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Grid64</string>
+   </property>
+   <property name="shortcut">
+    <string>7</string>
+   </property>
+  </action>
+  <action name="actionSnapToGrid">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="../QtRadiant.qrc">
+     <normaloff>:/icons/snap-grid</normaloff>:/icons/snap-grid</iconset>
+   </property>
+   <property name="text">
+    <string>Snap to Grid</string>
+   </property>
+   <property name="toolTip">
+    <string>Snap to Grid</string>
+   </property>
+  </action>
+  <action name="actionShowInUse">
+   <property name="text">
+    <string>Show In Use</string>
+   </property>
+   <property name="shortcut">
+    <string>U</string>
+   </property>
+  </action>
+  <action name="actionShowAll">
+   <property name="text">
+    <string>Show All</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+A</string>
+   </property>
+  </action>
+  <action name="actionHideAll">
+   <property name="text">
+    <string>Hide All</string>
+   </property>
+  </action>
+  <action name="actionSurfaceInspector">
+   <property name="icon">
+    <iconset resource="../QtRadiant.qrc">
+     <normaloff>:/icons/surface-inspector</normaloff>:/icons/surface-inspector</iconset>
+   </property>
+   <property name="text">
+    <string>Surface Inspector</string>
+   </property>
+   <property name="shortcut">
+    <string>S</string>
+   </property>
+  </action>
+  <action name="actionFindReplace">
+   <property name="icon">
+    <iconset resource="../QtRadiant.qrc">
+     <normaloff>:/icons/search</normaloff>:/icons/search</iconset>
+   </property>
+   <property name="text">
+    <string>Find/Replace...</string>
+   </property>
+   <property name="toolTip">
+    <string>Find/Replace</string>
+   </property>
+   <property name="statusTip">
+    <string>Find and replace texture names in all brushes</string>
+   </property>
+   <property name="shortcut">
+    <string>Shift+F</string>
+   </property>
+  </action>
+  <action name="actionReload">
+   <property name="icon">
+    <iconset resource="../QtRadiant.qrc">
+     <normaloff>:/arrows/arrow-circle-315</normaloff>:/arrows/arrow-circle-315</iconset>
+   </property>
+   <property name="text">
+    <string>Reload</string>
+   </property>
+   <property name="statusTip">
+    <string>Reload Shaders and apply visual changes to current map</string>
+   </property>
+  </action>
+  <action name="actionGenerateMaterialList">
+   <property name="text">
+    <string>Generate Material List</string>
+   </property>
+  </action>
+  <action name="actionMoves">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Moves</string>
+   </property>
+   <property name="shortcut">
+    <string>Shift+T</string>
+   </property>
+  </action>
+  <action name="actionRotations">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Rotations</string>
+   </property>
+   <property name="shortcut">
+    <string>Shift+R</string>
+   </property>
+  </action>
+  <action name="actionPercent200">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>200%</string>
+   </property>
+  </action>
+  <action name="actionTextureWindowScale100">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>100%</string>
+   </property>
+  </action>
+  <action name="actionTextureWindowScale50">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>50%</string>
+   </property>
+  </action>
+  <action name="actionTextureWindowScale25">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>25%</string>
+   </property>
+  </action>
+  <action name="actionTextureWindowScale10">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>10%</string>
+   </property>
+  </action>
+  <action name="actionBenchmark">
+   <property name="icon">
+    <iconset resource="../QtRadiant.qrc">
+     <normaloff>:/icons/benchmark</normaloff>:/icons/benchmark</iconset>
+   </property>
+   <property name="text">
+    <string>Benchmark</string>
+   </property>
+  </action>
+  <action name="actionGamma">
+   <property name="icon">
+    <iconset resource="../QtRadiant.qrc">
+     <normaloff>:/icons/gamma</normaloff>:/icons/gamma</iconset>
+   </property>
+   <property name="text">
+    <string>Gamma...</string>
+   </property>
+  </action>
+  <action name="actionFindBrush">
+   <property name="icon">
+    <iconset resource="../QtRadiant.qrc">
+     <normaloff>:/icons/search</normaloff>:/icons/search</iconset>
+   </property>
+   <property name="text">
+    <string>Find Brush...</string>
+   </property>
+  </action>
+  <action name="actionNextLeakSpot">
+   <property name="icon">
+    <iconset resource="../QtRadiant.qrc">
+     <normaloff>:/arrows/skip-left</normaloff>:/arrows/skip-left</iconset>
+   </property>
+   <property name="text">
+    <string>Next Leak Spot</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+K</string>
+   </property>
+  </action>
+  <action name="actionPreviousLeakSpot">
+   <property name="icon">
+    <iconset resource="../QtRadiant.qrc">
+     <normaloff>:/arrows/skip-right</normaloff>:/arrows/skip-right</iconset>
+   </property>
+   <property name="text">
+    <string>Previous Leak Spot</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+L</string>
+   </property>
+  </action>
+  <action name="actionPrintXYView">
+   <property name="icon">
+    <iconset resource="../QtRadiant.qrc">
+     <normaloff>:/icons/print</normaloff>:/icons/print</iconset>
+   </property>
+   <property name="text">
+    <string>Print XY View</string>
+   </property>
+  </action>
+  <action name="actionSelectEntityColor">
+   <property name="icon">
+    <iconset resource="../QtRadiant.qrc">
+     <normaloff>:/icons/editcolor</normaloff>:/icons/editcolor</iconset>
+   </property>
+   <property name="text">
+    <string>Select Entity Color...</string>
+   </property>
+   <property name="shortcut">
+    <string>K</string>
+   </property>
+  </action>
+  <action name="actionFindOrReplaceEntity">
+   <property name="icon">
+    <iconset resource="../QtRadiant.qrc">
+     <normaloff>:/icons/search</normaloff>:/icons/search</iconset>
+   </property>
+   <property name="text">
+    <string>Find or Replace Entity</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+F3</string>
+   </property>
+  </action>
+  <action name="actionSetViewPosition">
+   <property name="icon">
+    <iconset resource="../QtRadiant.qrc">
+     <normaloff>:/icons/eyepos</normaloff>:/icons/eyepos</iconset>
+   </property>
+   <property name="text">
+    <string>Set View Position</string>
+   </property>
+  </action>
+  <action name="actionTextureBackground">
+   <property name="text">
+    <string>Texture Background...</string>
+   </property>
+  </action>
+  <action name="actionGridBackground">
+   <property name="text">
+    <string>Grid Background...</string>
+   </property>
+  </action>
+  <action name="actionGridMajor">
+   <property name="text">
+    <string>Grid Major...</string>
+   </property>
+  </action>
+  <action name="actionGridMinor">
+   <property name="text">
+    <string>Grid Minor...</string>
+   </property>
+  </action>
+  <action name="actionGridText">
+   <property name="text">
+    <string>Grid Text...</string>
+   </property>
+  </action>
+  <action name="actionGridBlock">
+   <property name="text">
+    <string>Grid Block...</string>
+   </property>
+  </action>
+  <action name="actionDefaultBrush">
+   <property name="text">
+    <string>Default Brush...</string>
+   </property>
+  </action>
+  <action name="actionSelectedBrush">
+   <property name="text">
+    <string>Selected Brush...</string>
+   </property>
+  </action>
+  <action name="actionClipper2">
+   <property name="text">
+    <string>Clipper...</string>
+   </property>
+  </action>
+  <action name="actionActiveViewName">
+   <property name="text">
+    <string>Active View Name...</string>
+   </property>
+  </action>
+  <action name="actionThemeQE4Original">
+   <property name="text">
+    <string>QE4 Original</string>
+   </property>
+  </action>
+  <action name="actionThemeQ3RadiantOriginal">
+   <property name="text">
+    <string>Q3Radiant Original</string>
+   </property>
+  </action>
+  <action name="actionThemeBlackAndGreen">
+   <property name="text">
+    <string>Black and Green</string>
+   </property>
+  </action>
+  <action name="actionThemeMaxMayaLightwave">
+   <property name="text">
+    <string>Max/Maya/Lightwave</string>
+   </property>
+  </action>
+  <action name="actionThemeSuperMal">
+   <property name="text">
+    <string>Super Mal</string>
+   </property>
+  </action>
+  <action name="actionOff">
+   <property name="text">
+    <string>Off</string>
+   </property>
+  </action>
+  <action name="actionSetXY">
+   <property name="text">
+    <string>Set XY</string>
+   </property>
+  </action>
+  <action name="actionSetTallBrush">
+   <property name="text">
+    <string>Set Tall Brush</string>
+   </property>
+  </action>
+  <action name="actionSetBrush">
+   <property name="text">
+    <string>Set Brush</string>
+   </property>
+  </action>
+  <action name="actionSetSelectedBrushes">
+   <property name="text">
+    <string>Set Selected Brushes</string>
+   </property>
+  </action>
+  <action name="actionSided3">
+   <property name="text">
+    <string>3 Sided</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+3</string>
+   </property>
+  </action>
+  <action name="actionSided4">
+   <property name="text">
+    <string>4 Sided</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+4</string>
+   </property>
+  </action>
+  <action name="actionSided5">
+   <property name="text">
+    <string>5 Sided</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+5</string>
+   </property>
+  </action>
+  <action name="actionSided6">
+   <property name="text">
+    <string>6 Sided</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+6</string>
+   </property>
+  </action>
+  <action name="actionSided7">
+   <property name="text">
+    <string>7 Sided</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+7</string>
+   </property>
+  </action>
+  <action name="actionSided8">
+   <property name="text">
+    <string>8 Sided</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+8</string>
+   </property>
+  </action>
+  <action name="action9Sided">
+   <property name="text">
+    <string>9 Sided</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+9</string>
+   </property>
+  </action>
+  <action name="actionArbitrarySided">
+   <property name="text">
+    <string>Arbitrary Sided...</string>
+   </property>
+  </action>
+  <action name="actionCone">
+   <property name="icon">
+    <iconset resource="../QtRadiant.qrc">
+     <normaloff>:/icons/cone</normaloff>:/icons/cone</iconset>
+   </property>
+   <property name="text">
+    <string>Cone...</string>
+   </property>
+  </action>
+  <action name="actionSphere">
+   <property name="icon">
+    <iconset resource="../QtRadiant.qrc">
+     <normaloff>:/icons/sphere</normaloff>:/icons/sphere</iconset>
+   </property>
+   <property name="text">
+    <string>Sphere...</string>
+   </property>
+  </action>
+  <action name="actionCylinder">
+   <property name="text">
+    <string>Cylinder</string>
+   </property>
+   <property name="statusTip">
+    <string>Create a cylinder</string>
+   </property>
+  </action>
+  <action name="actionEndCap">
+   <property name="text">
+    <string>End Cap</string>
+   </property>
+   <property name="statusTip">
+    <string>Create an endcap</string>
+   </property>
+  </action>
+  <action name="actionBevel">
+   <property name="text">
+    <string>Bevel</string>
+   </property>
+   <property name="statusTip">
+    <string>Create a bevel</string>
+   </property>
+  </action>
+  <action name="actionCone2">
+   <property name="icon">
+    <iconset resource="../QtRadiant.qrc">
+     <normaloff>:/icons/cone</normaloff>:/icons/cone</iconset>
+   </property>
+   <property name="text">
+    <string>Cone</string>
+   </property>
+  </action>
+  <action name="actionSphere2">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="../QtRadiant.qrc">
+     <normaloff>:/icons/sphere</normaloff>:/icons/sphere</iconset>
+   </property>
+   <property name="text">
+    <string>Sphere</string>
+   </property>
+  </action>
+  <action name="actionSimplePatchMesh">
+   <property name="text">
+    <string>Simple Patch Mesh...</string>
+   </property>
+   <property name="statusTip">
+    <string>Builds a flat patch mesh, you specify the size</string>
+   </property>
+  </action>
+  <action name="actionThicken">
+   <property name="text">
+    <string>Thicken...</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+T</string>
+   </property>
+  </action>
+  <action name="actionCombine2">
+   <property name="icon">
+    <iconset resource="../QtRadiant.qrc">
+     <normaloff>:/arrows/join-90</normaloff>:/arrows/join-90</iconset>
+   </property>
+   <property name="text">
+    <string>Combine</string>
+   </property>
+  </action>
+  <action name="actionNurbEditor">
+   <property name="text">
+    <string>Nurb Editor</string>
+   </property>
+  </action>
+  <action name="actionDenseCylinder">
+   <property name="text">
+    <string>Dense Cylinder</string>
+   </property>
+   <property name="statusTip">
+    <string>Create a dense tube</string>
+   </property>
+  </action>
+  <action name="actionVeryDenseCylinder">
+   <property name="text">
+    <string>Very Dense Cylinder</string>
+   </property>
+   <property name="statusTip">
+    <string>Create a very dense cylinder</string>
+   </property>
+  </action>
+  <action name="actionSquareCylinder">
+   <property name="text">
+    <string>Square Cylinder</string>
+   </property>
+   <property name="statusTip">
+    <string>Create a very square cylinder</string>
+   </property>
+  </action>
+  <action name="actionSquareEndCap">
+   <property name="text">
+    <string>Square End Cap</string>
+   </property>
+  </action>
+  <action name="actionSquareBevel">
+   <property name="text">
+    <string>Square Bevel</string>
+   </property>
+  </action>
+  <action name="actionInsert2Columns">
+   <property name="text">
+    <string>Insert (2) Columns</string>
+   </property>
+   <property name="statusTip">
+    <string>Insert a column at the beginning of the patch</string>
+   </property>
+  </action>
+  <action name="actionAdd2Columns">
+   <property name="text">
+    <string>Add (2) Columns</string>
+   </property>
+   <property name="statusTip">
+    <string>Add a column to the end of the patch</string>
+   </property>
+  </action>
+  <action name="actionInsert2Rows">
+   <property name="text">
+    <string>Insert (2) Rows</string>
+   </property>
+   <property name="statusTip">
+    <string>Insert a row at the beginning of the patch</string>
+   </property>
+  </action>
+  <action name="actionAdd2Rows">
+   <property name="text">
+    <string>Add (2) Rows</string>
+   </property>
+   <property name="statusTip">
+    <string>Add a row at the end of the patch</string>
+   </property>
+  </action>
+  <action name="actionFirst2Columns">
+   <property name="text">
+    <string>First (2) Columns</string>
+   </property>
+   <property name="statusTip">
+    <string>Delete the first (2) columns</string>
+   </property>
+  </action>
+  <action name="actionLast2Columns">
+   <property name="text">
+    <string>Last (2) Columns</string>
+   </property>
+   <property name="statusTip">
+    <string>Delete the last (2) columns</string>
+   </property>
+  </action>
+  <action name="actionFirst2Rows">
+   <property name="text">
+    <string>First (2) Rows</string>
+   </property>
+   <property name="statusTip">
+    <string>Delete the first (2) rows</string>
+   </property>
+  </action>
+  <action name="actionLast2Rows">
+   <property name="text">
+    <string>Last (2) Rows</string>
+   </property>
+   <property name="statusTip">
+    <string>Delete the last (2) rows</string>
+   </property>
+  </action>
+  <action name="actionInvertMatrix">
+   <property name="text">
+    <string>Invert</string>
+   </property>
+   <property name="statusTip">
+    <string>Toggle negative flag</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+I</string>
+   </property>
+  </action>
+  <action name="actionTranspose">
+   <property name="text">
+    <string>Transpose</string>
+   </property>
+  </action>
+  <action name="actionCols">
+   <property name="text">
+    <string>Cols</string>
+   </property>
+   <property name="statusTip">
+    <string>Re-disperse columns across the dimensions of the patch</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+E</string>
+   </property>
+  </action>
+  <action name="actionRows">
+   <property name="text">
+    <string>Rows</string>
+   </property>
+   <property name="statusTip">
+    <string>Re-disperse rows across the dimensions of the patch</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+E</string>
+   </property>
+  </action>
+  <action name="actionNormal">
+   <property name="text">
+    <string>Normal</string>
+   </property>
+   <property name="statusTip">
+    <string>Put caps on the current patch</string>
+   </property>
+   <property name="shortcut">
+    <string>Shift+C</string>
+   </property>
+  </action>
+  <action name="actionInvertedBevel">
+   <property name="text">
+    <string>Inverted Bevel</string>
+   </property>
+  </action>
+  <action name="actionInvertedEndCap">
+   <property name="text">
+    <string>Inverted End Cap</string>
+   </property>
+  </action>
+  <action name="actionCycleCapTexture">
+   <property name="text">
+    <string>Cycle Cap Texture</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+P</string>
+   </property>
+  </action>
+  <action name="actionSet">
+   <property name="text">
+    <string>Set</string>
+   </property>
+   <property name="shortcut">
+    <string>Y</string>
+   </property>
+  </action>
+  <action name="actionClear">
+   <property name="text">
+    <string>Clear</string>
+   </property>
+   <property name="shortcut">
+    <string>Shift+Y</string>
+   </property>
+  </action>
+  <action name="actionRefresh">
+   <property name="icon">
+    <iconset resource="../QtRadiant.qrc">
+     <normaloff>:/arrows/arrow-circle-315</normaloff>:/arrows/arrow-circle-315</iconset>
+   </property>
+   <property name="text">
+    <string>Refresh</string>
+   </property>
+  </action>
+  <action name="actionHelp">
+   <property name="icon">
+    <iconset resource="../QtRadiant.qrc">
+     <normaloff>:/icons/helpicon</normaloff>:/icons/helpicon</iconset>
+   </property>
+   <property name="text">
+    <string>Help</string>
+   </property>
+   <property name="shortcut">
+    <string>F1</string>
+   </property>
+  </action>
+  <action name="actionCommandList">
+   <property name="text">
+    <string>Command List</string>
+   </property>
+   <property name="statusTip">
+    <string>Provides a list of the currently bound commands</string>
+   </property>
+  </action>
+  <action name="actionAbout">
+   <property name="text">
+    <string>About</string>
+   </property>
+  </action>
+  <action name="actionAboutQt">
+   <property name="text">
+    <string>About Qt</string>
+   </property>
+  </action>
+  <action name="actionTextureViewMode">
+   <property name="text">
+    <string>Texture View Mode</string>
+   </property>
+  </action>
+  <action name="actionScaleX">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Scale X</string>
+   </property>
+  </action>
+  <action name="actionScaleY">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Scale Y</string>
+   </property>
+   <property name="toolTip">
+    <string>Scale Y</string>
+   </property>
+  </action>
+  <action name="actionScaleZ">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Scale Z</string>
+   </property>
+   <property name="toolTip">
+    <string>Scale Z</string>
+   </property>
+  </action>
+  <action name="actionMouseScale">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Mouse Scale</string>
+   </property>
+  </action>
+  <action name="actionTranslateSelection">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Translate Selection</string>
+   </property>
+  </action>
+  <action name="actionBrushSelectionOnly">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Brush Selection Only</string>
+   </property>
+  </action>
+  <action name="actionDontSelectModels">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Don't Select Models</string>
+   </property>
+  </action>
+  <action name="actionClearRecentFilesList">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Clear Recent Files List</string>
+   </property>
+  </action>
+  <action name="actionNoPluginsInstalled">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>No Plugins Installed.</string>
+   </property>
+   <property name="font">
+    <font>
+     <weight>50</weight>
+     <italic>true</italic>
+     <bold>false</bold>
+    </font>
+   </property>
+  </action>
+  <action name="actionDownloadPlugins">
+   <property name="icon">
+    <iconset resource="../QtRadiant.qrc">
+     <normaloff>:/icons/download</normaloff>:/icons/download</iconset>
+   </property>
+   <property name="text">
+    <string>Download Plugins</string>
+   </property>
+  </action>
+  <action name="actionInvertSelection">
+   <property name="text">
+    <string>Invert</string>
+   </property>
+   <property name="shortcut">
+    <string>I</string>
+   </property>
+  </action>
+ </widget>
+ <layoutdefault spacing="6" margin="11"/>
+ <resources>
+  <include location="../QtRadiant.qrc"/>
+ </resources>
+ <connections>
+  <connection>
+   <sender>actionExit</sender>
+   <signal>triggered()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>close()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>456</x>
+     <y>318</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>

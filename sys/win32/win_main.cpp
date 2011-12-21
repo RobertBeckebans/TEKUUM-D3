@@ -1545,9 +1545,17 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 #endif
 
 #if defined(USE_QT_TOOLS)
-			if ( com_editors & EDITOR_QTTEST)
+			if ( com_editors & EDITOR_QTRADIANT )
 			{
-				QtTestEditorRun();
+				// Level Editor
+				QtRadiantRun();
+			}
+			else
+			{
+				if ( com_editors & EDITOR_QTTEST)
+				{
+					QtTestEditorRun();
+				}
 			}
 #endif
 		}

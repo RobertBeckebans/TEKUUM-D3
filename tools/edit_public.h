@@ -129,6 +129,10 @@ void	GtkTestEditorRun();
 void	QtTestEditorInit();
 void	QtTestEditorShutdown();
 void	QtTestEditorRun();
+
+void	QtRadiantInit();
+void	QtRadiantShutdown();
+void	QtRadiantRun();
 #endif
 // Techyon END
 

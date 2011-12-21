@@ -1,0 +1,67 @@
+<RCC>
+    <qresource prefix="/icons">
+        <file alias="search">resources/icons/binocular.png</file>
+        <file alias="book">resources/icons/book.png</file>
+        <file alias="gamma">resources/icons/color-adjustment.png</file>
+        <file alias="compile">resources/icons/compile.png</file>
+        <file alias="console">resources/icons/console.png</file>
+        <file alias="cut">resources/icons/scissors.png</file>
+        <file alias="delete">resources/icons/cross.png</file>
+        <file alias="exit">resources/icons/cross-button.png</file>
+        <file alias="delete2">resources/icons/cross-script.png</file>
+        <file alias="patch-delete">resources/icons/database-delete.png</file>
+        <file alias="patch-insert">resources/icons/database-insert.png</file>
+        <file alias="new">resources/icons/document.png</file>
+        <file alias="copy">resources/icons/document-copy.png</file>
+        <file alias="editcolor">resources/icons/editcolor.png</file>
+        <file alias="eyepos">resources/icons/eye.png</file>
+        <file alias="folder">resources/icons/folder.png</file>
+        <file alias="download">resources/icons/globe.png</file>
+        <file alias="snap-grid">resources/icons/grid-snap-dot.png</file>
+        <file alias="helpicon">resources/icons/helpicon.png</file>
+        <file alias="layer">resources/icons/layer.png</file>
+        <file alias="layers">resources/icons/layers.png</file>
+        <file alias="lock">resources/icons/lock.png</file>
+        <file alias="surface-inspector">resources/icons/magnifier.png</file>
+        <file alias="zoom">resources/icons/magnifier-zoom.png</file>
+        <file alias="zoom-actual">resources/icons/magnifier-zoom-actual.png</file>
+        <file alias="zoom-actual-equal">resources/icons/magnifier-zoom-actual-equal.png</file>
+        <file alias="zoom-fit">resources/icons/magnifier-zoom-fit.png</file>
+        <file alias="zoom-in">resources/icons/magnifier-zoom-in.png</file>
+        <file alias="zoom-out">resources/icons/magnifier-zoom-out.png</file>
+        <file alias="open">resources/icons/open.png</file>
+        <file alias="paste">resources/icons/clipboard-paste.png</file>
+        <file alias="save">resources/icons/save.png</file>
+        <file alias="script">resources/icons/script.png</file>
+        <file alias="sound">resources/icons/sound.png</file>
+        <file alias="preferences">resources/icons/wrench-screwdriver.png</file>
+        <file alias="play">resources/icons/control.png</file>
+        <file alias="stop">resources/icons/control-stop-square.png</file>
+        <file alias="print">resources/icons/printer.png</file>
+        <file alias="benchmark">resources/icons/chart.png</file>
+        <file alias="uicolors">resources/icons/palette.png</file>
+        <file alias="layout">resources/icons/layout-design.png</file>
+        <file alias="sphere">resources/icons/pearl.png</file>
+        <file alias="cone">resources/icons/traffic-cone.png</file>
+    </qresource>
+    <qresource prefix="/arrows">
+        <file alias="bottom">resources/icons/arrow-bottom.png</file>
+        <file alias="bottom-left">resources/icons/arrow-bottom-left.png</file>
+        <file alias="bottom-right">resources/icons/arrow-bottom-right.png</file>
+        <file alias="arrow-circle-315">resources/icons/arrow-circle-315.png</file>
+        <file alias="curve-left">resources/icons/arrow-curve-180-left.png</file>
+        <file alias="curve-right">resources/icons/arrow-curve.png</file>
+        <file alias="in">resources/icons/arrow-in.png</file>
+        <file alias="join-90">resources/icons/arrow-join-090.png</file>
+        <file alias="left">resources/icons/arrow-left.png</file>
+        <file alias="right">resources/icons/arrow-right.png</file>
+        <file alias="skip-left">resources/icons/arrow-skip-180.png</file>
+        <file alias="skip-right">resources/icons/arrow-skip.png</file>
+        <file alias="top">resources/icons/arrow-top.png</file>
+        <file alias="top-left">resources/icons/arrow-top-left.png</file>
+        <file alias="top-right">resources/icons/arrow-top-right.png</file>
+    </qresource>
+    <qresource prefix="/translations">
+        <file alias="pl_PL">trans/QtRadiant.pl_PL.qm</file>
+    </qresource>
+</RCC>

@@ -1,0 +1,7 @@
+*.user
+*.directory
+*~
+*.bak
+*.orig
+*.new
+*.modified

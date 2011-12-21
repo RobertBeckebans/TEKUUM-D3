@@ -471,6 +471,28 @@ if(USE_QT_TOOLS)
 	source_group("tools\\qttest\\Generated Files" FILES ${EDITOR_QTTEST_INCLUDES_MOC})
 	source_group("tools\\qttest\\Generated Files" FILES ${EDITOR_QTTEST_FORMS_INCLUDES})
 	source_group("tools\\qttest\\Generated Files" FILES ${EDITOR_QTTEST_RESOURCES_RCC})
+	
+	
+	file(GLOB EDITOR_QTRADIANT_INCLUDES	tools/qtradiant/src/*.h)
+	file(GLOB EDITOR_QTRADIANT_SOURCES tools/qtradiant/src/*.cpp)
+	
+	#file(GLOB EDITOR_QTRADIANT_RESOURCES tools/qtradiant/resources/icons/*.png)
+	set(EDITOR_QTRADIANT_RESOURCES tools/qtradiant/QtRadiant.qrc)
+	file(GLOB EDITOR_QTRADIANT_FORMS tools/qtradiant/src/*.ui)
+		
+	QT4_WRAP_CPP(EDITOR_QTRADIANT_INCLUDES_MOC ${EDITOR_QTRADIANT_INCLUDES})
+	QT4_WRAP_UI(EDITOR_QTRADIANT_FORMS_INCLUDES ${EDITOR_QTRADIANT_FORMS})
+	QT4_ADD_RESOURCES(EDITOR_QTRADIANT_RESOURCES_RCC ${EDITOR_QTRADIANT_RESOURCES})
+	
+	source_group("tools\\qtradiant\\Header Files" FILES ${EDITOR_QTRADIANT_INCLUDES})
+	source_group("tools\\qtradiant\\Source Files" FILES ${EDITOR_QTRADIANT_SOURCES})
+	source_group("tools\\qtradiant\\Resource Files" FILES ${EDITOR_QTRADIANT_RESOURCES})
+	source_group("tools\\qtradiant\\Form Files" FILES ${EDITOR_QTRADIANT_FORMS})
+	
+	source_group("tools\\qtradiant\\Generated Files" FILES ${EDITOR_QTRADIANT_INCLUDES_MOC})
+	source_group("tools\\qtradiant\\Generated Files" FILES ${EDITOR_QTRADIANT_FORMS_INCLUDES})
+	source_group("tools\\qtradiant\\Generated Files" FILES ${EDITOR_QTRADIANT_RESOURCES_RCC})
+	
 endif(USE_QT_TOOLS)
 
 source_group("cm" FILES ${CM_INCLUDES})
@@ -640,7 +662,17 @@ if(MSVC)
 			
 			${EDITOR_QTTEST_INCLUDES_MOC}
 			${EDITOR_QTTEST_FORMS_INCLUDES}
-			${EDITOR_QTTEST_RESOURCES_RCC})
+			${EDITOR_QTTEST_RESOURCES_RCC}
+			
+			${EDITOR_QTRADIANT_INCLUDES}
+			${EDITOR_QTRADIANT_SOURCES}
+			${EDITOR_QTRADIANT_RESOURCES}
+			${EDITOR_QTRADIANT_FORMS}
+			
+			${EDITOR_QTRADIANT_INCLUDES_MOC}
+			${EDITOR_QTRADIANT_FORMS_INCLUDES}
+			${EDITOR_QTRADIANT_RESOURCES_RCC}
+			)
 	endif()
 	
 	set(TECHYON_SOURCES ${TECHYON_SOURCES}

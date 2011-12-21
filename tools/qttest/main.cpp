@@ -25,6 +25,8 @@ void	QtTestEditorInit()
 
 	s_qtTestEditor = new QtTest();
 	s_qtTestEditor->show();
+
+	com_editors |= EDITOR_QTTEST;
 }
 void	QtTestEditorShutdown()
 {
@@ -33,6 +35,6 @@ void	QtTestEditorShutdown()
 
 void	QtTestEditorRun()
 {
-	// TODO
+	//s_qtMain->processEvents();
 }
 

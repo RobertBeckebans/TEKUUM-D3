@@ -69,7 +69,10 @@ idCVar com_asyncSound( "com_asyncSound", "1", CVAR_INTEGER|CVAR_SYSTEM, ASYNCSOU
 #endif
 idCVar com_forceGenericSIMD( "com_forceGenericSIMD", "0", CVAR_BOOL | CVAR_SYSTEM | CVAR_NOCHEAT, "force generic platform independent SIMD" );
 idCVar com_developer( "developer", "0", CVAR_BOOL|CVAR_SYSTEM|CVAR_NOCHEAT, "developer mode" );
-idCVar com_allowConsole( "com_allowConsole", "0", CVAR_BOOL | CVAR_SYSTEM | CVAR_NOCHEAT, "allow toggling console with the tilde key" );
+// Techyon BEGIN
+// defaulted to 1
+idCVar com_allowConsole( "com_allowConsole", "1", CVAR_BOOL | CVAR_SYSTEM | CVAR_NOCHEAT, "allow toggling console with the tilde key" );
+// Techyon END
 idCVar com_speeds( "com_speeds", "0", CVAR_BOOL|CVAR_SYSTEM|CVAR_NOCHEAT, "show engine timings" );
 idCVar com_showFPS( "com_showFPS", "0", CVAR_BOOL|CVAR_SYSTEM|CVAR_ARCHIVE|CVAR_NOCHEAT, "show frames rendered per second" );
 idCVar com_showMemoryUsage( "com_showMemoryUsage", "0", CVAR_BOOL|CVAR_SYSTEM|CVAR_NOCHEAT, "show total and per frame memory usage" );
@@ -1213,6 +1216,16 @@ Com_QtTestEditor_f
 static void Com_QtTestEditor_f( const idCmdArgs &args ) {
 	
 	QtTestEditorInit();
+}
+
+/*
+=============
+Com_QtRadiant_f
+=============
+*/
+static void Com_QtRadiant_f( const idCmdArgs &args ) {
+	
+	QtRadiantInit();
 }
 #endif // defined(USE_QT_TOOLS)
 
@@ -2411,6 +2424,7 @@ void idCommonLocal::InitCommands( void ) {
 
 #if defined(USE_QT_TOOLS)
 	cmdSystem->AddCommand( "qtTestEditor", Com_QtTestEditor_f, CMD_FL_TOOL, "launches the QtTest Editor" );
+	cmdSystem->AddCommand( "qtRadiant", Com_QtRadiant_f, CMD_FL_TOOL, "launches the QtRadiant Level Editor" );
 #endif
 	// Techyon END
 
