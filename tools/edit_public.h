@@ -133,6 +133,7 @@ void	QtTestEditorRun();
 void	QtRadiantInit();
 void	QtRadiantShutdown();
 void	QtRadiantRun();
+void	QtRadiantPrint( const char *text );
 #endif
 // Techyon END
 

@@ -853,13 +853,19 @@ void idConsoleLocal::Print( const char *txt ) {
 
 // Techyon BEGIN
 #if defined(USE_MFC_TOOLS)
-// Techyon END
 	RadiantPrint( txt );
 
 	if( com_editors & EDITOR_MATERIAL ) {
 		MaterialEditorPrintConsole(txt);
 	}
+
+#elif defined(USE_QT_TOOLS)
+	if( com_editors & EDITOR_QTRADIANT ) {
+		QtRadiantPrint( txt);
+	}
 #endif
+
+// Techyon END
 
 	color = idStr::ColorIndex( C_COLOR_CYAN );
 

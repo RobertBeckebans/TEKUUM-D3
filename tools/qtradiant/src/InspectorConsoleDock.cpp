@@ -24,3 +24,12 @@ void InspectorConsoleDock::changeEvent(QEvent *e)
         break;
     }
 }
+
+
+void InspectorConsoleDock::logMessage(const char* msg)
+{
+	QString s(msg);
+	//s = s.trimmed();
+	ui->consoleOutputText->append(s);
+	//ui->consoleOutputText->setVisible(true);
+}

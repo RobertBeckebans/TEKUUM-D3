@@ -3,6 +3,7 @@
 #include <QTranslator>
 #include <QTextCodec>
 #include <QDebug>
+#include <Qthread>
 
 
 #include "MainWindow.h"
@@ -12,26 +13,181 @@
 
 #include "../../game/game.h"
 
-#ifdef ID_DEBUG_MEMORY
-#undef new
-#undef DEBUG_NEW
-#define DEBUG_NEW new
-#endif
+static QApplication*			s_qtMain = NULL;
+static MainWindow*				s_qtRadiant = NULL;
+static bool						didTranslator = false;
+ 
+idRenderWorld*                          rw;
+idSoundWorld*                           sw;
 
-static QApplication*		s_qtMain = NULL;
-static MainWindow*			s_qtRadiant = NULL;
+
+#if defined(USE_QTRADIANT_THREAD)
+
+class RadiantThread : public QThread 
+{
+protected:
+        void run() 
+		{
+                s_qtMain->processEvents();
+        }
+};
+ 
+static RadiantThread*           s_qtRadiantThread = NULL;
+ 
+void    QtRadiantInit()
+{
+        // make sure the renderer is initialized
+        if(!renderSystem->IsOpenGLRunning())
+        {
+                common->Printf("no OpenGL running\n");
+                return;
+        }
+ 
+        if(s_qtRadiant && s_qtRadiant->isVisible())
+        {
+                common->Printf("QtRadiant already running\n");
+                return;
+        }
+ 
+        if ( rw == NULL ) {
+                rw = renderSystem->AllocRenderWorld();
+                rw->InitFromMap( NULL );
+        }
+        if ( sw == NULL ) {
+                sw = soundSystem->AllocSoundWorld( rw );
+        }
+ 
+        if(s_qtMain == NULL)
+        {
+                int argc = 0;
+                s_qtMain = new QApplication(argc, NULL);
+        }
+ 
+        if(didTranslator == false)
+        {
+                QString locale = QLocale::system().name();
+ 
+                QTranslator translator;
+                translator.load(QString(":/translations/") + locale);
+                QTextCodec::setCodecForTr(QTextCodec::codecForName("utf8"));
+                s_qtMain->installTranslator(&translator);
+                didTranslator = true;
+        }
+ 
+        // thread should be deleted in QtRadiantShutdown
+        s_qtRadiantThread = new RadiantThread();
+ 
+        s_qtRadiantThread->start();
+ 
+        if(s_qtRadiant == NULL)
+        {
+                s_qtRadiant = new MainWindow();
+        }
+        s_qtRadiant->show();
+ 
+        com_editors |= EDITOR_QTRADIANT;
+ 
+        common->Printf("Launching QtRadiant\n");
+}
+void    QtRadiantShutdown()
+{
+        if(s_qtRadiantThread != NULL)
+        {
+                s_qtRadiantThread->terminate();
+                delete s_qtRadiantThread;
+                s_qtRadiantThread = NULL;
+        }
+        com_editors &= ~EDITOR_QTRADIANT;
+ 
+        common->Printf("Closing QtRadiant\n");
+        s_qtMain->closeAllWindows();
+        if(s_qtRadiant != NULL)
+        {
+                if(s_qtRadiant->isVisible() == false)
+                {
+                        delete s_qtRadiant;
+                        s_qtRadiant = NULL;
+                }
+                else
+                {
+                        s_qtRadiant->close();
+                        delete s_qtRadiant;
+                        s_qtRadiant = NULL;
+                }
+        }
+}
+ 
+void    QtRadiantRun()
+{
+/*      if(s_qtRadiantThread == NULL)
+        {
+                s_qtRadiantThread = new RadiantThread();
+        }
+        s_qtRadiantThread->start();*/
+}
+
+void	QtRadiantPrint( const char *text )
+{
+	if(s_qtRadiant != NULL && s_qtRadiant->isVisible())
+	{
+		s_qtRadiant->GetInspectorConsoleDock()->LogMessage(text);
+	}
+}
+
+#else
 
 void	QtRadiantInit()
 {
-	int argc = 0;
-	s_qtMain = new QApplication(argc, NULL);
+	// make sure the renderer is initialized
+    if(!renderSystem->IsOpenGLRunning())
+    {
+            common->Printf("no OpenGL running\n");
+            return;
+    }
 
-	s_qtRadiant = new MainWindow();
-	s_qtRadiant->show();
+	if(s_qtRadiant)// && s_qtRadiant->isVisible())
+    {
+            common->Printf("QtRadiant already running\n");
+            return;
+    }
+ 
+    if(rw == NULL) 
+	{
+            rw = renderSystem->AllocRenderWorld();
+            rw->InitFromMap(NULL);
+    }
+    
+	if(sw == NULL)
+	{
+            sw = soundSystem->AllocSoundWorld(rw);
+    }
+ 
+    if(s_qtMain == NULL)
+    {
+            int argc = 0;
+            s_qtMain = new QApplication(argc, NULL);
+    }
+ 
+    if(didTranslator == false)
+    {
+            QString locale = QLocale::system().name();
+ 
+            QTranslator translator;
+            translator.load(QString(":/translations/") + locale);
+            QTextCodec::setCodecForTr(QTextCodec::codecForName("utf8"));
+            s_qtMain->installTranslator(&translator);
+            didTranslator = true;
+    }
 
-	com_editors |= EDITOR_QTRADIANT;
-
-	//s_qtMain->exec();
+	if(s_qtRadiant == NULL)
+    {
+            s_qtRadiant = new MainWindow();
+    }
+    s_qtRadiant->show();
+ 
+    com_editors |= EDITOR_QTRADIANT;
+ 
+    common->Printf("Launching QtRadiant\n");
 }
 
 void	QtRadiantShutdown()
@@ -55,6 +211,18 @@ void	QtRadiantRun()
 		}
 	}
 }
+
+void	QtRadiantPrint( const char *text )
+{
+	if(s_qtRadiant != NULL)// && s_qtRadiant->isVisible())
+	{
+		s_qtRadiant->logMessage(text);
+	}
+}
+
+
+#endif // #if defined(USE_QTRADIANT_THREAD)
+
 
 /*
 int main(int argc, char *argv[])

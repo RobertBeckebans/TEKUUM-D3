@@ -4,9 +4,8 @@
 #include <QGLWidget>
 #include <QTimer>
 #include <GL/gl.h>
-// note: glext can be still included on *nix but im not sure GLU is needed ?
+#include <GL/glu.h>
 #include "glext.h"
-#include <GL/GLU.h>
 
 class Radiant3DWidget : public QGLWidget
 {

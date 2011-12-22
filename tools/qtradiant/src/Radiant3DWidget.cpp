@@ -1,9 +1,9 @@
 #include "Radiant3DWidget.h"
 
 Radiant3DWidget::Radiant3DWidget(QWidget *parent) :
-        QGLWidget(QGLFormat(QGL::SampleBuffers), parent)
+	QGLWidget(QGLFormat(QGL::SampleBuffers), parent)
 {
-        rotx = 0.0f;
+	rotx = 0.0f;
 	timer = new QTimer(this);
 	timer->setInterval(10);
 	timer->setSingleShot(false);
@@ -49,7 +49,7 @@ void Radiant3DWidget::resizeGL(int width, int height)
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	gluPerspective(45.0, (GLfloat)width / (GLfloat)height, 0.1f, 1500.0 );
-/*
+	/*
 #ifdef QT_OPENGL_ES_1
 	glOrthof(-0.5, +0.5, -0.5, +0.5, 4.0, 15.0);
 #else

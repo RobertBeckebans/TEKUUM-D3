@@ -5,6 +5,7 @@
 #include <QList>
 #include <QDockWidget>
 #include <QMessageBox>
+#include <QFileDialog>
 
 #include "InspectorConsoleDock.h"
 #include "InspectorEntityDock.h"
@@ -18,7 +19,7 @@ namespace Ui {
 	class InspectorEntityDock;
 	class InspectorMediaDock;
 	class InspectorTexturesDock;
-        class CameraWindow;
+	class CameraWindow;
 }
 
 class MainWindow : public QMainWindow
@@ -40,6 +41,12 @@ private slots:
 
 	void on_actionFindReplace_triggered();
 
+	void on_actionOpen_triggered();
+
+	void on_actionSaveAs_triggered();
+
+	void on_actionSave_triggered();
+
 	void on_actionExit_triggered();
 
 private:
@@ -52,7 +59,23 @@ private:
 	Ui::InspectorTexturesDock *m_texturesUi;
 	Ui::CameraWindow          *m_cameraUi;
 
+	QDockWidget *inspectorConsoleDock;
+	QDockWidget *inspectorEntityDock;
+	QDockWidget *inspectorMediaDock;
+	QDockWidget *inspectorTexturesDock;
+	QDockWidget *cameraWindow;
+
 	QLabel *statusCoords;
+
+public:
+
+	/*InspectorConsoleDock*		GetInspectorConsoleDock() { return inspectorConsoleDock; }
+	QDockWidget*				GetInspectorEntityDock() { return inspectorEntityDock; }
+	QDockWidget*				GetInspectorMediaDock() { return inspectorMediaDock; }
+	QDockWidget*				GetInspectorTexturesDock() { return inspectorTexturesDock; }
+	QDockWidget*				GetCameraWindow() { return cameraWindow; }*/
+
+	void						logMessage(const char* msg);
 };
 
 #endif // MAINWINDOW_H

@@ -15,6 +15,8 @@ public:
     explicit InspectorConsoleDock(QWidget *parent = 0);
     ~InspectorConsoleDock();
     
+	void			logMessage(const char* msg);
+
 protected:
     void changeEvent(QEvent *e);
     
