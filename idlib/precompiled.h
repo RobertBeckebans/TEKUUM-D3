@@ -42,7 +42,9 @@ If you have questions concerning this license or the applicable additional terms
 #ifndef _D3SDK
 #ifndef GAME_DLL
 
+#ifndef WINVER
 #define WINVER				0x501
+#endif
 
 #if 0
 // Dedicated server hits unresolved when trying to link this way now. Likely because of the 2010/Win7 transition? - TTimo
@@ -64,9 +66,13 @@ If you have questions concerning this license or the applicable additional terms
 
 #endif
 
+// Techyon BEGIN
+#if !defined(_WINSOCKAPI_)
 #include <winsock2.h>
 #include <mmsystem.h>
 #include <mmreg.h>
+#endif
+// Techyon END
 
 #define DIRECTINPUT_VERSION  0x0800			// was 0x0700 with the old mssdk
 #define DIRECTSOUND_VERSION  0x0800
