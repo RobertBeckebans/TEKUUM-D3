@@ -8,6 +8,13 @@ option(USE_MFC_TOOLS
 		
 option(USE_QT_TOOLS
 		"Compile the built-in Qt based tools" OFF)
+		
+option(USE_QT_WINDOWING
+		"Run game as Qt app" OFF)
+
+if(USE_QT_TOOLS)
+	set(USE_QT_WINDOWING TRUE)
+endif()
 
 if(MSVC)
 	#set(CMAKE_USE_RELATIVE_PATHS ON)
@@ -369,72 +376,82 @@ file(GLOB EDITOR_SOUND_SOURCES tools/sound/*.cpp)
 	# sys/win32/win_wndproc.cpp
 	# )
 	
-file(GLOB_RECURSE WIN32_INCLUDES sys/win32/*.h)
-file(GLOB_RECURSE WIN32_SOURCES sys/win32/*.cpp)
+	
+if(USE_QT_WINDOWING)
+	
+	file(GLOB_RECURSE WIN32_INCLUDES sys/qt/win32/*.h)
+	file(GLOB_RECURSE WIN32_SOURCES sys/qt/win32/*.cpp)
+	
+	set(WIN32_RESOURCES sys/win32/rc/res/doom.ico)
+	
+else(USE_QT_WINDOWING)
+	file(GLOB_RECURSE WIN32_INCLUDES sys/win32/*.h)
+	file(GLOB_RECURSE WIN32_SOURCES sys/win32/*.cpp)
 
-set(WIN32_RESOURCES
-	sys/win32/rc/res/BEVEL.BMP
-	sys/win32/rc/res/BITMAP2.BMP
-	sys/win32/rc/res/BMP00001.BMP
-	sys/win32/rc/res/BMP0002.BMP
-	sys/win32/rc/res/DEFTEX.WAL
-	sys/win32/rc/res/ENDCAP.BMP
-	sys/win32/rc/res/GetString.htm
-	sys/win32/rc/res/IBEVEL.BMP
-	sys/win32/rc/res/IENDCAP.BMP
-	sys/win32/rc/res/MEFileToolbar.bmp
-	sys/win32/rc/res/MEtoolbar.bmp
-	sys/win32/rc/res/MaterialEditor.ico
-	sys/win32/rc/res/PropTree.rc2
-	sys/win32/rc/res/Q.BMP
-	sys/win32/rc/res/RADIANT3.GIF
-	sys/win32/rc/res/Radiant.ico
-	sys/win32/rc/res/RadiantDoc.ico
-	sys/win32/rc/res/TOOLBAR1.BMP
-	sys/win32/rc/res/TOOLBAR2.BMP
-	sys/win32/rc/res/Toolbar.bmp
-	sys/win32/rc/res/VIEWDEFA.BMP
-	sys/win32/rc/res/VIEWOPPO.BMP
-	sys/win32/rc/res/bmp00002.bmp
-	sys/win32/rc/res/bmp00003.bmp
-	sys/win32/rc/res/bmp00004.bmp
-	sys/win32/rc/res/bmp00005.bmp
-	sys/win32/rc/res/cchsb.bmp
-	sys/win32/rc/res/ccrgb.bmp
-	sys/win32/rc/res/dbg_back.bmp
-	sys/win32/rc/res/dbg_breakpoint.ico
-	sys/win32/rc/res/dbg_current.ico
-	sys/win32/rc/res/dbg_currentline.ico
-	sys/win32/rc/res/dbg_empty.ico
-	sys/win32/rc/res/dbg_open.bmp
-	sys/win32/rc/res/dbg_toolbar.bmp
-	sys/win32/rc/res/doom.ico
-	sys/win32/rc/res/fpoint.cur
-	sys/win32/rc/res/fxed_link.ico
-	sys/win32/rc/res/fxed_toolbar.bmp
-	sys/win32/rc/res/fxeditor.ico
-	sys/win32/rc/res/guied.ico
-	sys/win32/rc/res/guied_collapse.ico
-	sys/win32/rc/res/guied_expand.ico
-	sys/win32/rc/res/guied_hand.cur
-	sys/win32/rc/res/guied_nav_visible.ico
-	sys/win32/rc/res/guied_nav_visibledisabled.ico
-	sys/win32/rc/res/guied_scripts.ico
-	sys/win32/rc/res/guied_scripts_white.ico
-	sys/win32/rc/res/guied_viewer_toolbar.bmp
-	sys/win32/rc/res/icon2.ico
-	sys/win32/rc/res/logo_sm3dfx.bmp
-	sys/win32/rc/res/matedtree.bmp
-	sys/win32/rc/res/me_disabled_icon.ico
-	sys/win32/rc/res/me_enabled.ico
-	sys/win32/rc/res/me_off_icon.ico
-	sys/win32/rc/res/me_on_icon.ico
-	sys/win32/rc/res/qe3.ico
-	sys/win32/rc/res/shaderbar.bmp
-	sys/win32/rc/res/shaderdoc.ico
-	sys/win32/rc/res/shaderframe.ico
-	sys/win32/rc/res/spliter.cur
-	)
+	set(WIN32_RESOURCES
+		sys/win32/rc/res/BEVEL.BMP
+		sys/win32/rc/res/BITMAP2.BMP
+		sys/win32/rc/res/BMP00001.BMP
+		sys/win32/rc/res/BMP0002.BMP
+		sys/win32/rc/res/DEFTEX.WAL
+		sys/win32/rc/res/ENDCAP.BMP
+		sys/win32/rc/res/GetString.htm
+		sys/win32/rc/res/IBEVEL.BMP
+		sys/win32/rc/res/IENDCAP.BMP
+		sys/win32/rc/res/MEFileToolbar.bmp
+		sys/win32/rc/res/MEtoolbar.bmp
+		sys/win32/rc/res/MaterialEditor.ico
+		sys/win32/rc/res/PropTree.rc2
+		sys/win32/rc/res/Q.BMP
+		sys/win32/rc/res/RADIANT3.GIF
+		sys/win32/rc/res/Radiant.ico
+		sys/win32/rc/res/RadiantDoc.ico
+		sys/win32/rc/res/TOOLBAR1.BMP
+		sys/win32/rc/res/TOOLBAR2.BMP
+		sys/win32/rc/res/Toolbar.bmp
+		sys/win32/rc/res/VIEWDEFA.BMP
+		sys/win32/rc/res/VIEWOPPO.BMP
+		sys/win32/rc/res/bmp00002.bmp
+		sys/win32/rc/res/bmp00003.bmp
+		sys/win32/rc/res/bmp00004.bmp
+		sys/win32/rc/res/bmp00005.bmp
+		sys/win32/rc/res/cchsb.bmp
+		sys/win32/rc/res/ccrgb.bmp
+		sys/win32/rc/res/dbg_back.bmp
+		sys/win32/rc/res/dbg_breakpoint.ico
+		sys/win32/rc/res/dbg_current.ico
+		sys/win32/rc/res/dbg_currentline.ico
+		sys/win32/rc/res/dbg_empty.ico
+		sys/win32/rc/res/dbg_open.bmp
+		sys/win32/rc/res/dbg_toolbar.bmp
+		sys/win32/rc/res/doom.ico
+		sys/win32/rc/res/fpoint.cur
+		sys/win32/rc/res/fxed_link.ico
+		sys/win32/rc/res/fxed_toolbar.bmp
+		sys/win32/rc/res/fxeditor.ico
+		sys/win32/rc/res/guied.ico
+		sys/win32/rc/res/guied_collapse.ico
+		sys/win32/rc/res/guied_expand.ico
+		sys/win32/rc/res/guied_hand.cur
+		sys/win32/rc/res/guied_nav_visible.ico
+		sys/win32/rc/res/guied_nav_visibledisabled.ico
+		sys/win32/rc/res/guied_scripts.ico
+		sys/win32/rc/res/guied_scripts_white.ico
+		sys/win32/rc/res/guied_viewer_toolbar.bmp
+		sys/win32/rc/res/icon2.ico
+		sys/win32/rc/res/logo_sm3dfx.bmp
+		sys/win32/rc/res/matedtree.bmp
+		sys/win32/rc/res/me_disabled_icon.ico
+		sys/win32/rc/res/me_enabled.ico
+		sys/win32/rc/res/me_off_icon.ico
+		sys/win32/rc/res/me_on_icon.ico
+		sys/win32/rc/res/qe3.ico
+		sys/win32/rc/res/shaderbar.bmp
+		sys/win32/rc/res/shaderdoc.ico
+		sys/win32/rc/res/shaderframe.ico
+		sys/win32/rc/res/spliter.cur
+		)
+endif(USE_QT_WINDOWING)
 	
 if(USE_MFC_TOOLS)
 	list(APPEND WIN32_RESOURCES sys/win32/rc/doom.rc)
@@ -494,6 +511,27 @@ if(USE_QT_TOOLS)
 	source_group("tools\\qtradiant\\Generated Files" FILES ${EDITOR_QTRADIANT_FORMS_INCLUDES})
 	source_group("tools\\qtradiant\\Generated Files" FILES ${EDITOR_QTRADIANT_RESOURCES_RCC})
 	
+	if(USE_QT_WINDOWING)
+		file(GLOB QTTECHYON_INCLUDES sys/qt/*.h)
+		file(GLOB QTTECHYON_SOURCES sys/qt/*.cpp)
+		
+		set(QTTECHYON_RESOURCES sys/qt/Techyon.qrc)
+		file(GLOB QTTECHYON_FORMS sys/qt/*.ui)
+			
+		QT4_WRAP_CPP(QTTECHYON_INCLUDES_MOC ${QTTECHYON_INCLUDES})
+		QT4_WRAP_UI(QTTECHYON_FORMS_INCLUDES ${QTTECHYON_FORMS})
+		QT4_ADD_RESOURCES(QTTECHYON_RESOURCES_RCC ${QTTECHYON_RESOURCES})
+		
+		source_group("sys\\qt\\Header Files" FILES ${QTTECHYON_INCLUDES})
+		source_group("sys\\qt\\Source Files" FILES ${QTTECHYON_SOURCES})
+		source_group("sys\\qt\\Resource Files" FILES ${QTTECHYON_RESOURCES})
+		source_group("sys\\qt\\Form Files" FILES ${QTTECHYON_FORMS})
+		
+		source_group("sys\\qt\\Generated Files" FILES ${QTTECHYON_INCLUDES_MOC})
+		source_group("sys\\qt\\Generated Files" FILES ${QTTECHYON_FORMS_INCLUDES})
+		source_group("sys\\qt\\Generated Files" FILES ${QTTECHYON_RESOURCES_RCC})
+	endif()
+	
 endif(USE_QT_TOOLS)
 
 source_group("cm" FILES ${CM_INCLUDES})
@@ -523,9 +561,15 @@ source_group("ui" FILES ${UI_SOURCES})
 source_group("sys" FILES ${SYS_INCLUDES})
 source_group("sys" FILES ${SYS_SOURCES})
 
-source_group("sys\\win32" FILES ${WIN32_INCLUDES})
-source_group("sys\\win32" FILES ${WIN32_SOURCES})
-source_group("sys\\win32\\Resources" FILES ${WIN32_RESOURCES})
+if(USE_QT_WINDOWING)
+	source_group("sys\\qt\\win32" FILES ${WIN32_INCLUDES})
+	source_group("sys\\qt\\win32" FILES ${WIN32_SOURCES})
+	source_group("sys\\qt\\win32\\Resources" FILES ${WIN32_RESOURCES})
+else()
+	source_group("sys\\win32" FILES ${WIN32_INCLUDES})
+	source_group("sys\\win32" FILES ${WIN32_SOURCES})
+	source_group("sys\\win32\\Resources" FILES ${WIN32_RESOURCES})
+endif()
 
 source_group("tools\\compilers" FILES ${COMPILER_INCLUDES})
 
@@ -655,6 +699,10 @@ if(MSVC)
 	
 		set(TECHYON_SOURCES ${TECHYON_SOURCES}
 			${TOOLS_INCLUDES}
+			
+			${QTTECHYON_INCLUDES}
+			${QTTECHYON_SOURCES}
+			${QTTECHYON_RESOURCES}
 			
 			${EDITOR_QTTEST_INCLUDES}
 			${EDITOR_QTTEST_SOURCES}
