@@ -12,9 +12,9 @@ option(USE_QT_TOOLS
 option(USE_QT_WINDOWING
 		"Run game as Qt app" OFF)
 
-if(USE_QT_TOOLS)
-	set(USE_QT_WINDOWING TRUE)
-endif()
+#if(USE_QT_TOOLS)
+#	set(USE_QT_WINDOWING TRUE)
+#endif()
 
 if(MSVC)
 	#set(CMAKE_USE_RELATIVE_PATHS ON)
