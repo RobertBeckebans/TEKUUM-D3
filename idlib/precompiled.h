@@ -69,10 +69,11 @@ If you have questions concerning this license or the applicable additional terms
 // Techyon BEGIN
 #if !defined(_WINSOCKAPI_)
 #include <winsock2.h>
-#include <mmsystem.h>
-#include <mmreg.h>
 #endif
 // Techyon END
+
+#include <mmsystem.h>
+#include <mmreg.h>
 
 #define DIRECTINPUT_VERSION  0x0800			// was 0x0700 with the old mssdk
 #define DIRECTSOUND_VERSION  0x0800
@@ -147,7 +148,10 @@ const int MAX_EXPRESSION_OPS = 4096;
 const int MAX_EXPRESSION_REGISTERS = 4096;
 
 // renderer
-#include "../renderer/qgl.h"
+// Techyon BEGIN
+#include "../libs/glew/include/GL/glew.h"
+//#include "../renderer/qgl.h"
+// Techyon END
 #include "../renderer/Cinematic.h"
 #include "../renderer/Material.h"
 #include "../renderer/Model.h"

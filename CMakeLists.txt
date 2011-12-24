@@ -69,12 +69,8 @@ set(RENDERER_INCLUDES
 	renderer/RenderWorld_local.h
 	renderer/VertexCache.h
 	renderer/cg_explicit.h
-	renderer/glext.h
-	renderer/qgl.h
-	renderer/qgl_linked.h
 	renderer/simplex.h
-	renderer/tr_local.h
-	renderer/wglext.h)
+	renderer/tr_local.h)
 
 
 set(RENDERER_SOURCES
@@ -199,6 +195,18 @@ set(JPEG_SOURCES
 	renderer/jpeg-6/jquant2.c
 	renderer/jpeg-6/jutils.c)
 
+set(GLEW_INCLUDES
+	libs/glew/include/GL/glew.h)
+	
+if(WIN32)
+	set(GLEW_INCLUDES ${GLEW_INCLUDES} libs/glew/include/GL/wglew.h)
+else()
+	set(GLEW_INCLUDES ${GLEW_INCLUDES} libs/glew/include/GL/glxew.h)
+endif()
+	
+set(GLEW_SOURCES
+	libs/glew/src/glew.c)
+	
 set(SOUND_INCLUDES
 	sound/snd_local.h
 	sound/sound.h)
@@ -549,6 +557,9 @@ source_group("renderer" FILES ${RENDERER_SOURCES})
 source_group("renderer\\jpeg-6" FILES ${JPEG_INCLUDES})
 source_group("renderer\\jpeg-6" FILES ${JPEG_SOURCES})
 
+source_group("libs\\glew" FILES ${GLEW_INCLUDES})
+source_group("libs\\glew" FILES ${GLEW_SOURCES})
+
 source_group("sound" FILES ${SOUND_INCLUDES})
 source_group("sound" FILES ${SOUND_SOURCES})
 
@@ -630,6 +641,7 @@ set(TECHYON_SOURCES
 			${FRAMEWORK_ASYNC_INCLUDES} ${FRAMEWORK_ASYNC_SOURCES} 
 			${RENDERER_INCLUDES} ${RENDERER_SOURCES}
 			${JPEG_INCLUDES} ${JPEG_SOURCES}
+			${GLEW_INCLUDES} ${GLEW_SOURCES}
 			${SOUND_INCLUDES} ${SOUND_SOURCES}
 			${OGGVORBIS_INCLUDES} ${OGGVORBIS_SOURCES}
 			${UI_INCLUDES} ${UI_SOURCES}
@@ -641,11 +653,13 @@ set(TECHYON_SOURCES
 			${COMPILER_ROQVQ_INCLUDES} ${COMPILER_ROQVQ_SOURCES})
 
 add_definitions(-D__DOOM__
-				-D__DOOM_DLL__)
+				-D__DOOM_DLL__
+				-DGLEW_STATIC)
 
 include_directories(
 			curl/include
-			openal/include)
+			openal/include
+			libs/glew/include)
 			
 link_directories(
 			${CMAKE_CURRENT_SOURCE_DIR}/curl/lib
@@ -668,6 +682,13 @@ if(MSVC)
 			# link_directories(${ATL_LIBRARY_DIR})
 			# add_definitions(-DUSE_MFC6_WITH_ATL7)
 		# endif()
+		
+		# include_directories(libs/atlmfc/include)
+		# if(CMAKE_CL_64)
+			# link_directories(${CMAKE_CURRENT_SOURCE_DIR}/libs/atlmfc/lib/amd64)
+		# else(CMAKE_CL_64)
+			# link_directories(${CMAKE_CURRENT_SOURCE_DIR}/libs/atlmfc/lib)
+		# endif(CMAKE_CL_64)
 		
 		add_definitions(-DUSE_MFC_TOOLS)
 		

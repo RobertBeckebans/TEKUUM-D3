@@ -33,30 +33,10 @@ If you have questions concerning this license or the applicable additional terms
 #pragma hdrstop
 
 #include <windows.h>
-#include "../../renderer/wglext.h"		// windows OpenGL extensions
-
-// WGL_ARB_extensions_string
-extern	PFNWGLGETEXTENSIONSSTRINGARBPROC wglGetExtensionsStringARB;
-
-// WGL_EXT_swap_interval
-extern	PFNWGLSWAPINTERVALEXTPROC wglSwapIntervalEXT;
-
-// WGL_ARB_pixel_format
-extern	PFNWGLGETPIXELFORMATATTRIBIVARBPROC wglGetPixelFormatAttribivARB;
-extern	PFNWGLGETPIXELFORMATATTRIBFVARBPROC wglGetPixelFormatAttribfvARB;
-extern	PFNWGLCHOOSEPIXELFORMATARBPROC wglChoosePixelFormatARB;
-
-// WGL_ARB_pbuffer
-extern	PFNWGLCREATEPBUFFERARBPROC	wglCreatePbufferARB;
-extern	PFNWGLGETPBUFFERDCARBPROC	wglGetPbufferDCARB;
-extern	PFNWGLRELEASEPBUFFERDCARBPROC	wglReleasePbufferDCARB;
-extern	PFNWGLDESTROYPBUFFERARBPROC	wglDestroyPbufferARB;
-extern	PFNWGLQUERYPBUFFERARBPROC	wglQueryPbufferARB;
-
-// WGL_ARB_render_texture 
-extern	PFNWGLBINDTEXIMAGEARBPROC		wglBindTexImageARB;
-extern	PFNWGLRELEASETEXIMAGEARBPROC	wglReleaseTexImageARB;
-extern	PFNWGLSETPBUFFERATTRIBARBPROC	wglSetPbufferAttribARB;
+// Techyon BEGIN
+#include "../../libs/glew/include/GL/wglew.h"
+//#include "../../renderer/wglext.h"		// windows OpenGL extensions
+// Techyon END
 
 
 #define	MAX_OSPATH			256
