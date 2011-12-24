@@ -34,12 +34,17 @@ If you have questions concerning this license or the applicable additional terms
 #pragma hdrstop
 
 #include "../../framework/Common.h"
+#include "../../renderer/tr_local.h"
+#include "../sys_public.h"
 
 //static char		sys_cmdline[MAX_STRING_CHARS];
 
 int main(int argc, char **argv)
 {
 	QApplication app(argc, argv);
+
+	GameMainWindow gameMainWindow;
+	gameMainWindow.show();
 
 	//win32.hInstance = hInstance;
 	//idStr::Copynz( sys_cmdline, lpCmdLine, sizeof( sys_cmdline ) );
@@ -50,12 +55,10 @@ int main(int argc, char **argv)
 	// no abort/retry/fail errors
 	//SetErrorMode( SEM_FAILCRITICALERRORS );
 
-	//for ( int i = 0; i < MAX_CRITICAL_SECTIONS; i++ ) {
-	//	InitializeCriticalSection( &win32.criticalSections[i] );
-	//}
+	Sys_InitCriticalSections();
 
 	// get the initial time base
-	//Sys_Milliseconds();
+	Sys_Milliseconds();
 
 #ifdef DEBUG
 	// disable the painfully slow MS heap check every 1024 allocs
@@ -64,6 +67,19 @@ int main(int argc, char **argv)
 
 //	Sys_FPU_EnableExceptions( TEST_FPU_EXCEPTIONS );
 	//Sys_FPU_SetPrecision( FPU_PRECISION_DOUBLE_EXTENDED );
+
+	GLenum glewResult = glewInit();
+	if(GLEW_OK != glewResult)
+	{
+		// glewInit failed, something is seriously wrong
+		//common->Printf( "^3GLimp_Init() - GLEW could not load OpenGL subsystem: %s", glewGetErrorString(glewResult));
+		printf( "^3GLimp_Init() - GLEW could not load OpenGL subsystem: %s", glewGetErrorString(glewResult));
+	}
+	else
+	{
+		common->Printf( "Using GLEW %s\n", glewGetString(GLEW_VERSION));
+		printf( "Using GLEW %s\n", glewGetString(GLEW_VERSION));
+	}
 
 	common->Init( argc, (const char**) argv, NULL );
 
@@ -93,9 +109,69 @@ int main(int argc, char **argv)
 
 	//::SetCursor( hcurSave );
 	//::SetFocus( win32.hWnd );
-
-	GameMainWindow gameMainWindow;
-	gameMainWindow.show();
 	
 	return app.exec();
 }
+
+bool		GLimp_SetScreenParms( glimpParms_t parms )
+{
+	// TODO
+	return true;
+}
+
+void GLimp_WakeBackEnd(void*a) {};
+void GLimp_EnableLogging(bool) {};
+void GLimp_FrontEndSleep() {};
+void GLimp_ActivateContext() {};
+void GLimp_DeactivateContext() {};
+bool GLimp_SpawnRenderThread(void (*a)()) {return false;};
+
+bool GLimp_Init(glimpParms_t a) {return true;};
+void GLimp_SetGamma(unsigned short*a, unsigned short*b, unsigned short*c) {};
+void GLimp_Shutdown() {};
+void GLimp_SwapBuffers() {};
+void *GLimp_BackEndSleep() {return 0;};
+
+void			Sys_ShowConsole( int visLevel, bool quitOnClose )
+{
+}
+
+void Sys_InitInput( void ) {}
+
+void Sys_ShutdownInput( void ) {}
+
+// event generation
+void Sys_GenerateEvents( void ) {}
+void Sys_ClearEvents( void ) {}
+
+sysEvent_t	Sys_GetEvent( void ) {
+	sysEvent_t	ev;
+
+	memset( &ev, 0, sizeof( ev ) );
+	ev.evType = SE_NONE;
+	//ev.evTime = Sys_Milliseconds();
+	return ev;
+}
+
+unsigned char Sys_GetConsoleKey( bool shifted ) {
+	return K_SHIFT;
+}
+
+void Sys_InitScanTable( void ) {}
+
+unsigned char Sys_MapCharForKey( int key ) {
+	return (unsigned char)key;
+}
+
+// keyboard input polling
+int				Sys_PollKeyboardInputEvents( void ) { return 0; }
+int				Sys_ReturnKeyboardInputEvent( const int n, int &ch, bool &state ) { return 0; }
+void			Sys_EndKeyboardInputEvents( void ) {}
+
+// mouse input polling
+int				Sys_PollMouseInputEvents( void ) { return 0; }
+int				Sys_ReturnMouseInputEvent( const int n, int &action, int &value ) { return 0; }
+void			Sys_EndMouseInputEvents( void ) {}
+
+
+void Sys_GrabMouseCursor( bool grabIt ) {}

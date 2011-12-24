@@ -31,7 +31,8 @@ If you have questions concerning this license or the applicable additional terms
 #include "../../idlib/precompiled.h"
 #pragma hdrstop
 
-GameMainWindow::GameMainWindow()
+GameMainWindow::GameMainWindow():
+	QGLWidget(QGLFormat(QGL::SampleBuffers))
 {
 
 }

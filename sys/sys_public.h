@@ -511,6 +511,9 @@ enum {
 	CRITICAL_SECTION_THREE
 };
 
+// Techyon BEGIN
+void				Sys_InitCriticalSections();
+// Techyon END
 void				Sys_EnterCriticalSection( int index = CRITICAL_SECTION_ZERO );
 void				Sys_LeaveCriticalSection( int index = CRITICAL_SECTION_ZERO );
 

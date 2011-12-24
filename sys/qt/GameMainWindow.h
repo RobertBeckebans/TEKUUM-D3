@@ -1,9 +1,10 @@
 #ifndef GAMEMAINWINDOW_H
 #define GAMEMAINWINDOW_H
 
-#include <QWidget> 
+#include "../../libs/glew/include/GL/glew.h"
+#include <QGLWidget>
 
-class GameMainWindow : public QWidget
+class GameMainWindow : public QGLWidget
 {
 	Q_OBJECT
 

@@ -45,10 +45,13 @@ If you have questions concerning this license or the applicable additional terms
 
 void	Sys_QueEvent( int time, sysEventType_t type, int value, int value2, int ptrLength, void *ptr );
 
+#if !defined(USE_QT_WINDOWING)
 void	Sys_CreateConsole( void );
 void	Sys_DestroyConsole( void );
 
 char	*Sys_ConsoleInput (void);
+#endif
+
 char	*Sys_GetCurrentUser( void );
 
 void	Win_SetErrorText( const char *text );
@@ -78,7 +81,9 @@ void	DisableTaskKeys( BOOL bDisable, BOOL bBeep, BOOL bTaskMgr );
 // window procedure
 LONG WINAPI MainWndProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
+#if !defined(USE_QT_WINDOWING)
 void Conbuf_AppendText( const char *msg );
+#endif
 
 typedef struct {
 	HWND			hWnd;

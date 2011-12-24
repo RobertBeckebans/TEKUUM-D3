@@ -365,30 +365,25 @@ file(GLOB EDITOR_SOUND_INCLUDES tools/sound/*.h)
 file(GLOB EDITOR_SOUND_SOURCES tools/sound/*.cpp)
 	
 
-# set(WIN32_INCLUDES
-	# sys/win32/win_local.h
-	# sys/win32/rc/doom_resource.h
-	# )
 
-# set(WIN32_SOURCES
-	# sys/win32/win_cpu.cpp
-	# sys/win32/win_glimp.cpp
-	# sys/win32/win_input.cpp
-	# sys/win32/win_main.cpp
-	# sys/win32/win_net.cpp
-	# sys/win32/win_qgl.cpp
-	# sys/win32/win_shared.cpp
-	# sys/win32/win_snd.cpp
-	# sys/win32/win_syscon.cpp
-	# sys/win32/win_taskkeyhook.cpp
-	# sys/win32/win_wndproc.cpp
-	# )
 	
 	
 if(USE_QT_WINDOWING)
 	
-	file(GLOB_RECURSE WIN32_INCLUDES sys/qt/win32/*.h)
-	file(GLOB_RECURSE WIN32_SOURCES sys/qt/win32/*.cpp)
+	set(WIN32_INCLUDES
+		sys/win32/win_local.h
+		sys/win32/rc/doom_resource.h
+		)
+
+	set(WIN32_SOURCES
+		sys/win32/win_cpu.cpp
+		sys/win32/win_main.cpp
+		sys/win32/win_net.cpp
+		sys/win32/win_shared.cpp
+		sys/win32/win_snd.cpp
+		#sys/win32/win_syscon.cpp
+		sys/win32/win_taskkeyhook.cpp
+		)
 	
 	set(WIN32_RESOURCES sys/win32/rc/res/doom.ico)
 	
@@ -520,6 +515,8 @@ if(USE_QT_TOOLS)
 	source_group("tools\\qtradiant\\Generated Files" FILES ${EDITOR_QTRADIANT_RESOURCES_RCC})
 	
 	if(USE_QT_WINDOWING)
+		add_definitions(-DUSE_QT_WINDOWING)
+	
 		file(GLOB QTTECHYON_INCLUDES sys/qt/*.h)
 		file(GLOB QTTECHYON_SOURCES sys/qt/*.cpp)
 		
@@ -743,6 +740,18 @@ if(MSVC)
 			${EDITOR_QTRADIANT_FORMS_INCLUDES}
 			${EDITOR_QTRADIANT_RESOURCES_RCC}
 			)
+			
+		if(USE_QT_WINDOWING)
+			set(TECHYON_SOURCES ${TECHYON_SOURCES}
+				${QTTECHYON_INCLUDES}
+				${QTTECHYON_SOURCES}
+				${QTTECHYON_RESOURCES}
+				${QTTECHYON_FORMS}
+				
+				${QTTECHYON_INCLUDES_MOC}
+				${QTTECHYON_FORMS_INCLUDES}
+				${QTTECHYON_RESOURCES_RCC})
+		endif(USE_QT_WINDOWING)
 	endif()
 	
 	set(TECHYON_SOURCES ${TECHYON_SOURCES}
@@ -751,7 +760,12 @@ if(MSVC)
 		
 
 	list(REMOVE_DUPLICATES TECHYON_SOURCES)
-	add_executable(Techyon WIN32 ${TECHYON_SOURCES})
+	
+	if(USE_QT_WINDOWING)
+		add_executable(Techyon ${TECHYON_SOURCES})
+	else()
+		add_executable(Techyon WIN32 ${TECHYON_SOURCES})
+	endif()
 		
 	add_custom_command(TARGET Techyon
                    PRE_BUILD

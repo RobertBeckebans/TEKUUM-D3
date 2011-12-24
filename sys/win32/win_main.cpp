@@ -152,6 +152,14 @@ const char* Sys_GetThreadName(int *index) {
 	return "main";
 }
 
+// Techyon BEGIN
+void Sys_InitCriticalSections()
+{
+	for ( int i = 0; i < MAX_CRITICAL_SECTIONS; i++ ) {
+		InitializeCriticalSection( &win32.criticalSections[i] );
+	}
+}
+// Techyon END
 
 /*
 ==================
@@ -341,11 +349,13 @@ void Sys_Error( const char *error, ... ) {
 	vsprintf( text, error, argptr );
 	va_end( argptr);
 
+#if !defined(USE_QT_WINDOWING)
 	Conbuf_AppendText( text );
 	Conbuf_AppendText( "\n" );
 
 	Win_SetErrorText( text );
 	Sys_ShowConsole( 1, true );
+#endif
 
 	timeEndPeriod( 1 );
 
@@ -362,7 +372,9 @@ void Sys_Error( const char *error, ... ) {
       	DispatchMessage( &msg );
 	}
 
+#if !defined(USE_QT_WINDOWING)
 	Sys_DestroyConsole();
+#endif
 
 	exit (1);
 }
@@ -375,7 +387,9 @@ Sys_Quit
 void Sys_Quit( void ) {
 	timeEndPeriod( 1 );
 	Sys_ShutdownInput();
+#if !defined(USE_QT_WINDOWING)
 	Sys_DestroyConsole();
+#endif
 	ExitProcess( 0 );
 }
 
@@ -398,9 +412,11 @@ void Sys_Printf( const char *fmt, ... ) {
 	if ( win32.win_outputDebugString.GetBool() ) {
 		OutputDebugString( msg );
 	}
+#if !defined(USE_QT_WINDOWING)
 	if ( win32.win_outputEditString.GetBool() ) {
 		Conbuf_AppendText( msg );
 	}
+#endif
 }
 
 /*
@@ -816,6 +832,7 @@ void Sys_PumpEvents( void ) {
 Sys_GenerateEvents
 ================
 */
+#if !defined(USE_QT_WINDOWING)
 void Sys_GenerateEvents( void ) {
 	static int entered = false;
 	char *s;
@@ -846,6 +863,7 @@ void Sys_GenerateEvents( void ) {
 	entered = false;
 }
 
+
 /*
 ================
 Sys_ClearEvents
@@ -874,6 +892,7 @@ sysEvent_t Sys_GetEvent( void ) {
 
 	return ev;
 }
+#endif // #if !defined(USE_QT_WINDOWING)
 
 //================================================================
 
@@ -1387,6 +1406,7 @@ EXCEPTION_DISPOSITION __cdecl _except_handler( struct _EXCEPTION_RECORD *Excepti
 WinMain
 ==================
 */
+#if !defined(USE_QT_WINDOWING)
 int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow ) {
 
 	const HCURSOR hcurSave = ::SetCursor( LoadCursor( 0, IDC_WAIT ) );
@@ -1414,9 +1434,9 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 	// no abort/retry/fail errors
 	SetErrorMode( SEM_FAILCRITICALERRORS );
 
-	for ( int i = 0; i < MAX_CRITICAL_SECTIONS; i++ ) {
-		InitializeCriticalSection( &win32.criticalSections[i] );
-	}
+// Techyon BEGIN
+	Sys_InitCriticalSections();
+// Techyon END
 
 	// get the initial time base
 	Sys_Milliseconds();
@@ -1570,6 +1590,7 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 	// never gets here
 	return 0;
 }
+#endif // #if !defined(USE_QT_WINDOWING)
 
 /*
 ====================
