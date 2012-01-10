@@ -2583,6 +2583,8 @@ void idSessionLocal::Frame() {
 		minTic = latchedTicNumber;
 	}
 
+// Techyon BEGIN
+#if !defined(USE_QT_WINDOWING)
 	// FIXME: deserves a cleanup and abstraction
 #if defined( _WIN32 )
 	// Spin in place if needed.  The game should yield the cpu if
@@ -2604,6 +2606,9 @@ void idSessionLocal::Frame() {
 		Sys_WaitForEvent( TRIGGER_EVENT_ONE );
 	}
 #endif
+
+#endif // #if !defined(USE_QT_WINDOWING)
+// Techyon END
 
 	if ( authEmitTimeout ) {
 		// waiting for a game auth

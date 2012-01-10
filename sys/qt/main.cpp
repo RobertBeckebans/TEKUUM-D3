@@ -43,7 +43,7 @@ int main(int argc, char **argv)
 {
 	QApplication app(argc, argv);
 
-	GameMainWindow gameMainWindow;
+	GameMainWindow gameMainWindow(argc, (const char **) argv);
 	gameMainWindow.show();
 
 	//win32.hInstance = hInstance;
@@ -82,6 +82,7 @@ int main(int argc, char **argv)
 	}
 
 	common->Init( argc, (const char**) argv, NULL );
+	gameMainWindow.resize(glConfig.vidWidth, glConfig.vidHeight);
 
 #if TEST_FPU_EXCEPTIONS != 0
 	common->Printf( Sys_FPU_GetState() );
