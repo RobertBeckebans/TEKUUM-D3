@@ -82,6 +82,7 @@ int main(int argc, char **argv)
 	}
 
 	common->Init( argc, (const char**) argv, NULL );
+	//common->Init( 0, NULL, NULL );
 	gameMainWindow.resize(glConfig.vidWidth, glConfig.vidHeight);
 
 #if TEST_FPU_EXCEPTIONS != 0
@@ -142,20 +143,68 @@ void Sys_InitInput( void ) {}
 void Sys_ShutdownInput( void ) {}
 
 // event generation
-void Sys_GenerateEvents( void ) {}
-void Sys_ClearEvents( void ) {}
+#define	MAX_QUED_EVENTS		256
+#define	MASK_QUED_EVENTS	( MAX_QUED_EVENTS - 1 )
 
-sysEvent_t	Sys_GetEvent( void ) {
+static sysEvent_t	eventQue[MAX_QUED_EVENTS];
+static int			eventHead = 0;
+static int			eventTail = 0;
+
+void Sys_GenerateEvents( void ) {}
+
+void Sys_ClearEvents( void )
+{
+	eventHead = eventTail = 0;
+}
+
+/*
+================
+Sys_QueEvent
+
+Ptr should either be null, or point to a block of data that can
+be freed by the game later.
+================
+*/
+void Sys_QueEvent( int time, sysEventType_t type, int value, int value2, int ptrLength, void *ptr ) {
+	sysEvent_t	*ev;
+
+	ev = &eventQue[ eventHead & MASK_QUED_EVENTS ];
+
+	if ( eventHead - eventTail >= MAX_QUED_EVENTS ) {
+		common->Printf("Sys_QueEvent: overflow\n");
+		// we are discarding an event, but don't leak memory
+		if ( ev->evPtr ) {
+			Mem_Free( ev->evPtr );
+		}
+		eventTail++;
+	}
+
+	eventHead++;
+
+	ev->evType = type;
+	ev->evValue = value;
+	ev->evValue2 = value2;
+	ev->evPtrLength = ptrLength;
+	ev->evPtr = ptr;
+}
+
+sysEvent_t Sys_GetEvent( void ) {
 	sysEvent_t	ev;
 
+	// return if we have data
+	if ( eventHead > eventTail ) {
+		eventTail++;
+		return eventQue[ ( eventTail - 1 ) & MASK_QUED_EVENTS ];
+	}
+
+	// return the empty event 
 	memset( &ev, 0, sizeof( ev ) );
-	ev.evType = SE_NONE;
-	//ev.evTime = Sys_Milliseconds();
+
 	return ev;
 }
 
 unsigned char Sys_GetConsoleKey( bool shifted ) {
-	return K_SHIFT;
+	return Qt::Key_AsciiCircum;
 }
 
 void Sys_InitScanTable( void ) {}

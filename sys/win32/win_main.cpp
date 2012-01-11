@@ -751,7 +751,7 @@ EVENT LOOP
 
 ========================================================================
 */
-
+#if !defined(USE_QT_WINDOWING)
 #define	MAX_QUED_EVENTS		256
 #define	MASK_QUED_EVENTS	( MAX_QUED_EVENTS - 1 )
 
@@ -832,7 +832,6 @@ void Sys_PumpEvents( void ) {
 Sys_GenerateEvents
 ================
 */
-#if !defined(USE_QT_WINDOWING)
 void Sys_GenerateEvents( void ) {
 	static int entered = false;
 	char *s;

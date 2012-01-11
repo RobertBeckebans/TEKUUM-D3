@@ -15,7 +15,9 @@ public:
 
 protected:
     void keyPressEvent(QKeyEvent *event);
+	void keyReleaseEvent(QKeyEvent *event);
 	void mousePressEvent(QMouseEvent *event);
+	void mouseReleaseEvent(QMouseEvent *event);
     void mouseMoveEvent(QMouseEvent *event);
 	
 	//void initializeGL();
@@ -24,6 +26,7 @@ protected:
 
 private:
 	void initDoom3Engine(int argc, const char **argv);
+	int  QKeyToDKey(QKeyEvent *event);
 
 signals:
 

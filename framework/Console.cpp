@@ -742,6 +742,15 @@ bool	idConsoleLocal::ProcessEvent( const sysEvent_t *event, bool forceAccept ) {
 	bool consoleKey;
 	consoleKey = event->evType == SE_KEY && ( event->evValue == Sys_GetConsoleKey( false ) || event->evValue == Sys_GetConsoleKey( true ) );
 
+// Techyon BEGIN
+	/*
+	if ( !consoleKey && (idKeyInput::IsDown( K_SHIFT ) && event->evValue == K_ESCAPE && event->evValue2 != 0) )
+	{
+		consoleKey = true;
+	}
+	*/
+// Techyon END
+
 #if ID_CONSOLE_LOCK
 	// If the console's not already down, and we have it turned off, check for ctrl+alt
 	if ( !keyCatching && !com_allowConsole.GetBool() ) {
