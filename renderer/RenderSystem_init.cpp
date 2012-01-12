@@ -347,6 +347,13 @@ static void R_CheckPortableExtensions( void ) {
 
  	// GL_EXT_depth_bounds_test
  	glConfig.depthBoundsTestAvailable = GLEW_EXT_depth_bounds_test;
+
+	// GL_GREMEDY_string_marker
+	if ( GLEW_GREMEDY_string_marker ) {
+		common->Printf( "...using GL_GREMEDY_string_marker\n" );
+	} else {
+		common->Printf( "...GL_GREMEDY_string_marker not found\n" );
+	}
 }
 // Techyon END
 

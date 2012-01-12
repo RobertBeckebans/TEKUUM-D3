@@ -109,17 +109,23 @@ void RB_SetDefaultGLState( void ) {
 RB_LogComment
 ====================
 */
-void RB_LogComment( const char *comment, ... ) {
-   va_list marker;
+void RB_LogComment( const char *fmt, ... ) {
+// Techyon BEGIN
 
-	if ( !tr.logFile ) {
+	va_list		argptr;
+	char		msg[4096];
+		
+	if ( !cvarSystem->IsInitialized() || !r_logFile.GetBool() || !GLEW_GREMEDY_string_marker ) {
 		return;
 	}
 
-	fprintf( tr.logFile, "// " );
-	va_start( marker, comment );
-	vfprintf( tr.logFile, comment, marker );
-	va_end( marker );
+	va_start( argptr, fmt );
+	idStr::vsnPrintf( msg, sizeof(msg), fmt, argptr );
+	va_end( argptr );
+	msg[sizeof(msg)-1] = '\0';
+	
+	glStringMarkerGREMEDY(strlen(msg), msg);
+// Techyon END
 }
 
 
