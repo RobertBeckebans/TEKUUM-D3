@@ -64,7 +64,9 @@ void GameGLWidget::mouseMoveEvent(QMouseEvent *event)
 	
 void GameGLWidget::initializeGL()
 {
-
+	glConfig.colorBits = format().redBufferSize() + format().greenBufferSize() + format().blueBufferSize();
+	glConfig.depthBits = format().depthBufferSize();
+	glConfig.stencilBits = format().stencilBufferSize();
 }
 
 void GameGLWidget::paintGL()
