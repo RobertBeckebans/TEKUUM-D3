@@ -81,8 +81,12 @@ int main(int argc, char **argv)
 		printf( "Using GLEW %s\n", glewGetString(GLEW_VERSION));
 	}
 
-	common->Init( argc, (const char**) argv, NULL );
-	//common->Init( 0, NULL, NULL );
+	if ( argc > 1 ) {
+		common->Init( argc-1, (const char**) &argv[1], NULL );
+	} else {
+		common->Init( 0, NULL, NULL );
+	}
+
 	gameMainWindow.resize(glConfig.vidWidth, glConfig.vidHeight);
 
 #if TEST_FPU_EXCEPTIONS != 0
