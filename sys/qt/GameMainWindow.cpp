@@ -118,7 +118,7 @@ void GameMainWindow::initDoom3Engine(int argc, const char **argv)
 
 void GameMainWindow::keyPressEvent(QKeyEvent *event)
 {
-	common->Printf("GameMainWindow::keyPressEvent(%s)\n", event->text().toStdString().c_str());
+	//common->Printf("GameMainWindow::keyPressEvent(%s)\n", event->text().toStdString().c_str());
 
 	QChar qch( event->key() );
 	int ch;
@@ -126,27 +126,52 @@ void GameMainWindow::keyPressEvent(QKeyEvent *event)
 	if( event->key() == Qt::Key_AsciiCircum)
 	{
 		ch = Qt::Key_AsciiCircum;
-		Sys_QueEvent( Sys_Milliseconds(), SE_CHAR, ch, 1, 0, NULL );
-	}
-	else if( qch.isLetterOrNumber() )
-	{
-		if(!(event->modifiers() & Qt::ShiftModifier))
-		{
-			qch = qch.toLower();
-		}
-		ch = qch.toAscii();
-		Sys_QueEvent( Sys_Milliseconds(), SE_CHAR, ch, 1, 0, NULL );
+		Sys_QueEvent( Sys_Milliseconds(), SE_KEY, ch, 1, 0, NULL );
 	}
 	else
 	{
 		ch = QKeyToDKey(event);
-		Sys_QueEvent( Sys_Milliseconds(), SE_KEY, ch, 1, 0, NULL );
+	
+		if(ch != -1)
+		{
+			Sys_QueEvent( Sys_Milliseconds(), SE_KEY, ch, 1, 0, NULL );
+		}
+		else
+		{
+			if( qch.isLetterOrNumber() )
+			{
+				if(!(event->modifiers() & Qt::ShiftModifier))
+				{
+					qch = qch.toLower();
+				}
+				ch = qch.toAscii();
+				Sys_QueEvent( Sys_Milliseconds(), SE_CHAR, ch, 1, 0, NULL );
+			}
+			else if( qch.isSpace() )
+			{
+				if(!(event->modifiers() & Qt::ShiftModifier))
+				{
+					//qch = qch.toLower();
+					ch = qch.toAscii();
+					Sys_QueEvent( Sys_Milliseconds(), SE_CHAR, ch, 1, 0, NULL );
+				}
+			}
+			else if( qch.isPunct() )
+			{
+				if(!(event->modifiers() & Qt::ShiftModifier))
+				{
+					qch = qch.toLower();
+				}
+				ch = qch.toAscii();
+				Sys_QueEvent( Sys_Milliseconds(), SE_CHAR, ch, 1, 0, NULL );
+			}
+		}
 	}
 }
 
 void GameMainWindow::keyReleaseEvent(QKeyEvent *event)
 {
-	common->Printf("GameMainWindow::keyReleaseEvent(%s)\n", event->text().toStdString().c_str());
+	//common->Printf("GameMainWindow::keyReleaseEvent(%s)\n", event->text().toStdString().c_str());
 
 	QChar qch( event->key() );
 	int ch;
@@ -154,9 +179,19 @@ void GameMainWindow::keyReleaseEvent(QKeyEvent *event)
 	if( event->key() == Qt::Key_AsciiCircum)
 	{
 		ch = Qt::Key_AsciiCircum;
-		Sys_QueEvent( Sys_Milliseconds(), SE_CHAR, ch, 0, 0, NULL );
+		Sys_QueEvent( Sys_Milliseconds(), SE_KEY, ch, 0, 0, NULL );
 	}
-	else if( qch.isLetterOrNumber() )
+	else
+	{
+		ch = QKeyToDKey(event);
+	
+		if(ch != -1)
+		{
+			Sys_QueEvent( Sys_Milliseconds(), SE_KEY, ch, 0, 0, NULL );
+		}
+	}
+	/*
+	else if( qch.isLetterOrNumber() || qch.isSpace() || qch.isPunct())
 	{
 		//ch = qch.toAscii();
 		//Sys_QueEvent( Sys_Milliseconds(), SE_CHAR, ch, 0, 0, NULL );
@@ -166,6 +201,7 @@ void GameMainWindow::keyReleaseEvent(QKeyEvent *event)
 		ch = QKeyToDKey(event);
 		Sys_QueEvent( Sys_Milliseconds(), SE_KEY, ch, 0, 0, NULL );
 	}
+	*/
 }
 
 void GameMainWindow::mousePressEvent(QMouseEvent *event)
@@ -196,7 +232,7 @@ int  GameMainWindow::QKeyToDKey(QKeyEvent *event)
 		{K_ENTER, Qt::Key_Enter},
 		{K_ENTER, Qt::Key_Return},
 		{K_ESCAPE, Qt::Key_Escape},
-		{K_SPACE, Qt::Key_Space},
+		//{K_SPACE, Qt::Key_Space},
 
 		{K_BACKSPACE, Qt::Key_Backspace},
 
@@ -218,7 +254,7 @@ int  GameMainWindow::QKeyToDKey(QKeyEvent *event)
 
 		{K_ALT, Qt::Key_Alt},
 		{K_CTRL, Qt::Key_Control},
-		{K_SHIFT, Qt::Key_Shift},
+		//{K_SHIFT, Qt::Key_Shift},
 		{K_INS, Qt::Key_Insert},
 		{K_DEL, Qt::Key_Delete},
 		{K_PGDN, Qt::Key_PageDown},
