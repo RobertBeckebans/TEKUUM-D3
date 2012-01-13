@@ -39,7 +39,8 @@ GameGLWidget::GameGLWidget():
 	QGLWidget(QGLFormat(QGL::SampleBuffers))
 {
 	timer = new QTimer(this);
-	timer->setInterval(16);
+	// every 10 milliseconds = 100 fps
+	timer->setInterval(10);
 	timer->setSingleShot(false);
 	timer->start();
 
@@ -72,8 +73,12 @@ void GameGLWidget::paintGL()
 	Sys_MemFrame();
 #endif
 
+	//makeCurrent();
+
 	// run the game
 	common->Frame();
+
+	//doneCurrent();
 }
 
 void GameGLWidget::resizeGL(int width, int height)
