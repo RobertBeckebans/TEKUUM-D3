@@ -37,6 +37,12 @@ If you have questions concerning this license or the applicable additional terms
 #include "../../renderer/tr_local.h"
 #include "../sys_public.h"
 
+#if defined(_WIN32)
+//#include "../win32/win_local.h"
+void Sys_StartAsyncThread( void );
+
+#endif
+
 //static char		sys_cmdline[MAX_STRING_CHARS];
 
 int main(int argc, char **argv)
@@ -99,7 +105,9 @@ int main(int argc, char **argv)
 	//}
 #endif
 
-	//Sys_StartAsyncThread();
+#if defined(_WIN32)
+	Sys_StartAsyncThread();
+#endif
 
 	// hide or show the early console as necessary
 	//if ( win32.win_viewlog.GetInteger() || com_skipRenderer.GetBool() || idAsyncNetwork::serverDedicated.GetInteger() ) {
