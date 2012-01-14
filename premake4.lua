@@ -97,6 +97,12 @@ newoption
 
 newoption
 {
+	trigger = "mfc-tools",
+	description = "Enable original Doom 3 tools"
+}
+
+newoption
+{
 	trigger = "gtk-tools",
 	description = "Enable GTK+ based extra tools"
 }
@@ -280,8 +286,8 @@ project "Techyon"
 		"framework/**.cpp", "framework/**.h",
 		"renderer/**.c", "renderer/**.cpp", "renderer/**.h",
 		
-		--"libs/glew/src/glew.c",
-		--"libs/glew/src/glew.h",
+		"libs/glew/src/glew.c",
+		"libs/glew/include/GL/glew.h",
 		
 		"sound/*.cpp", "sound/*.h",
 		
@@ -314,7 +320,7 @@ project "Techyon"
 		
 		"sys/sys_*.cpp", "sys/sys_*.h",
 		
-		"tools/**.c", "tools/**.cpp", "tools/**.h",
+		"tools/compilers/**.cpp", "tools/*.h",
 		"ui/*.cpp", "ui/*.h",
 	}
 	excludes
@@ -336,7 +342,7 @@ project "Techyon"
 	{
 		--"../shared",
 		--"../libs/zlib",
-		--"../libs/glew/include",
+		"libs/glew/include",
 		--"../libs/freetype/include",
 		--"../libs/ogg/include",
 		"sound/OggVorbis/ogg",
@@ -346,7 +352,7 @@ project "Techyon"
 	{
 		"__DOOM__",
 		"__DOOM_DLL__",
-		--"GLEW_STATIC",
+		"GLEW_STATIC",
 	}
 	links
 	{
@@ -373,6 +379,33 @@ project "Techyon"
 	--
 	-- Options Configurations
 	--
+	configuration { "mfc-tools", "vs*", "x32" }
+		flags       { "MFC" }
+		defines
+		{
+			"USE_MFC_TOOLS",
+		}
+		files
+		{
+			"tools/af/*.cpp", "tools/af/*.h",
+			"tools/comafx/*.cpp", "tools/comafx/*.h",
+			"tools/decl/*.cpp", "tools/decl/*.h",
+			"tools/guied/*.cpp", "tools/guied/*.h",
+			"tools/materialeditor/*.cpp", "tools/materialeditor/*.h",
+			"tools/particle/*.cpp", "tools/particle/*.h",
+			"tools/pda/*.cpp", "tools/pda/*.h",
+			"tools/radiant/*.cpp", "tools/radiant/*.h",
+			"tools/script/*.cpp", "tools/script/*.h",
+			"tools/sound/*.cpp", "tools/sound/*.h",
+			
+			"sys/win32/rc/doom.rc",
+		}
+		excludes
+		{
+			"sys/win32/rc/doom_nomfc.rc",
+		}
+	
+	
 	-- configuration "qt-tools"
 		-- defines
 		-- {
@@ -521,28 +554,28 @@ project "Techyon"
 	-- Project Configurations
 	-- 
 	configuration "vs*"
-		flags       { "WinMain", "MFC" }
+		flags       { "WinMain" }
 		files
 		{
 			"sys/win32/**.cpp", "sys/win32/**.h",
-			"sys/win32/rc/doom.rc",
-			"sys/win32/res/*",
+			--"sys/win32/rc/doom.rc",
+			"sys/win32/rc/doom_nomfc.rc",
+			--"sys/win32/res/*",
 			
-			--"libs/glew/src/wglew.h",
+			"libs/glew/include/GL/wglew.h",
 			
 			--"openal/idal.cpp", "openal/idal.h",
 			"openal/include/*.h",
 		}
 		excludes
 		{
-			"sys/win32/gl_logfuncs.cpp",
 			"sys/win32/win_gamma.cpp",
 			--"sys/win32/win_snd.cpp",
 		}
 		defines
 		{
 			--"USE_OPENAL",
-			"ID_ALLOW_TOOLS",
+			--"ID_ALLOW_TOOLS",
 		}
 		includedirs
 		{
@@ -555,10 +588,10 @@ project "Techyon"
 			--"openal/lib",
 			--"../libs/curl-7.12.2/lib"
 		}
-		--links
-		--{
-		--	"nafxcw",
-		--}
+		links
+		{
+			"idlib",
+		}
 		buildoptions
 		{
 			--"/MT"
@@ -614,7 +647,7 @@ project "Techyon"
 			"eaxguid",
 			"iphlpapi",
 			"winmm",
-			"ws2_32.lib",
+			"ws2_32",
 		}
 		prebuildcommands
 		{
