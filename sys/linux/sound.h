@@ -28,6 +28,10 @@ If you have questions concerning this license or the applicable additional terms
 #ifndef ID_SND_BACKENDS
 #define ID_SND_BACKENDS
 
+// Techyon BEGIN
+#if defined(USE_SOUND_OSS)
+// Techyon END
+
 class idAudioHardwareOSS : public idAudioHardware {
 	// if you can't write MIXBUFFER_SAMPLES all at once to the audio device, split in MIXBUFFER_CHUNKS
 	static const int MIXBUFFER_CHUNKS = 4;
@@ -80,6 +84,10 @@ private:
 	void		InitFailed();
 	void		ExtractOSSVersion( int version, idStr &str ) const;
 };
+
+// Techyon BEGIN
+#endif // #if defined(USE_SOUND_OSS)
+// Techyon END
 
 #ifndef NO_ALSA
 

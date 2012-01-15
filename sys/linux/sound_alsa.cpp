@@ -282,6 +282,10 @@ bool idAudioHardwareALSA::Flush( void ) {
 		Sys_Printf( "preparing audio device for output\n" );
 	}
 	Write( true );
+
+// Techyon BEGIN
+	return true;
+// Techyon END
 }
 
 /*

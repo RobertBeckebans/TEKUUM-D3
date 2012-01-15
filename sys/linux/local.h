@@ -28,6 +28,8 @@ If you have questions concerning this license or the applicable additional terms
 #ifndef __LINUX_LOCAL_H__
 #define __LINUX_LOCAL_H__
 
+#include <X11/Xlib.h>
+
 extern glconfig_t glConfig;
 
 // glimp.cpp
@@ -51,13 +53,5 @@ void Sys_XUninstallGrabs();
 #define KEY_MASK (KeyPressMask | KeyReleaseMask)
 #define MOUSE_MASK (ButtonPressMask | ButtonReleaseMask | PointerMotionMask | ButtonMotionMask )
 #define X_MASK (KEY_MASK | MOUSE_MASK | VisibilityChangeMask | StructureNotifyMask )
-
-#ifndef ID_GL_HARDLINK
-bool GLimp_dlopen();
-void GLimp_dlclose();
-
-void GLimp_BindLogging();
-void GLimp_BindNative();
-#endif
 
 #endif

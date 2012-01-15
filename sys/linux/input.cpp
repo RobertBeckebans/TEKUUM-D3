@@ -30,6 +30,7 @@ If you have questions concerning this license or the applicable additional terms
 #include "local.h"
 
 #include <pthread.h>
+#include <X11/Xutil.h>
 
 idCVar in_mouse( "in_mouse", "1", CVAR_SYSTEM | CVAR_ARCHIVE, "" );
 idCVar in_dgamouse( "in_dgamouse", "1", CVAR_SYSTEM | CVAR_ARCHIVE, "" );

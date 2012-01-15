@@ -41,7 +41,13 @@ If you have questions concerning this license or the applicable additional terms
 #include "../posix/posix_public.h"
 #include "sound.h"
 
+// Techyon BEGIN
+#if defined(USE_SOUND_OSS)
 const char	*s_driverArgs[]	= { "best", "oss", "alsa", NULL };
+#else
+const char	*s_driverArgs[]	= { "best", "alsa", NULL };
+#endif
+// Techyon END
 
 #ifndef NO_ALSA
 static idCVar s_driver( "s_driver", s_driverArgs[0], CVAR_SYSTEM | CVAR_ARCHIVE, "sound driver. 'best' will attempt to use alsa and fallback to OSS if not available", s_driverArgs, idCmdSystem::ArgCompletion_String<s_driverArgs> );
@@ -59,14 +65,29 @@ idAudioHardware *idAudioHardware::Alloc() {
 		}
 		common->Printf( "Alsa is not available\n" );
 		delete test;
+
+		// Techyon BEGIN
+		#if defined(USE_SOUND_OSS)
 		return new idAudioHardwareOSS;
+		#else
+		return NULL;
+		#endif
+		// Techyon END
 	}
 	if ( !strcmp( s_driver.GetString(), "alsa" ) ) {
 		return new idAudioHardwareALSA;
 	}
 #endif
+
+// Techyon BEGIN
+#if defined(USE_SOUND_OSS)
 	return new idAudioHardwareOSS;
+#else
+	return NULL;
+#endif
+// Techyon END
 }
+
 
 // OSS sound ----------------------------------------------------
 
@@ -76,7 +97,10 @@ idAudioHardware::~idAudioHardware
 ===============
 */
 idAudioHardware::~idAudioHardware() { }
-	
+
+// Techyon BEGIN
+#if defined(USE_SOUND_OSS)
+
 /*
 =================
 idAudioHardwareOSS::~idAudioHardwareOSS
@@ -387,6 +411,9 @@ void idAudioHardwareOSS::Write( bool flushing ) {
 	}
 	m_writeChunks -= Min( m_writeChunks, m_freeWriteChunks );
 }
+
+#endif // #if defined(USE_SOUND_OSS)
+// Techyon END
 
 /*
  ===============

@@ -29,6 +29,8 @@ If you have questions concerning this license or the applicable additional terms
 #ifndef __SYS_PUBLIC__
 #define __SYS_PUBLIC__
 
+//#include "../framework/BuildDefines.h"
+
 /*
 ===============================================================================
 
@@ -101,7 +103,7 @@ If you have questions concerning this license or the applicable additional terms
 
 
 // Linux
-#ifdef __linux__
+#if defined(__linux__)
 
 #ifdef __i386__
 	#define	BUILD_STRING				"linux-x86"
@@ -115,7 +117,7 @@ If you have questions concerning this license or the applicable additional terms
 #endif
 
 #define _alloca							alloca
-#define _alloca16( x )					((void *)((((int)alloca( (x)+15 )) + 15) & ~15))
+#define _alloca16( x )					((void *)((((uintptr_t)alloca( (x)+15 )) + 15) & ~15))
 
 #define ALIGN16( x )					x
 #define PACKED							__attribute__((packed))
