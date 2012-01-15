@@ -14,7 +14,7 @@ project "idlib"
 		"bv/Frustum.cpp", "bv/Frustum.h",
 		"bv/Sphere.cpp", "bv/Sphere.h",
 		
-		"contains/*.cpp", "containers/*.h",
+		"containers/*.cpp", "containers/*.h",
 		"geometry/*.cpp", "geometry/*.h",
 		"hashing/*.cpp", "hashing/*.h",
 		
