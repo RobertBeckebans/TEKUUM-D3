@@ -6,12 +6,24 @@ project "idlib"
 	flags       { "ExtraWarnings" }
 	files
 	{
-		"**.cpp", "**.h",
+		--"**.cpp", "**.h",
+		"*.cpp", "*.h",
+				
+		"bv/Bounds.cpp", "bv/Bounds.h",
+		"bv/Box.cpp", "bv/Box.h",
+		"bv/Frustum.cpp", "bv/Frustum.h",
+		"bv/Sphere.cpp", "bv/Sphere.h",
+		
+		"contains/*.cpp", "containers/*.h",
+		"geometry/*.cpp", "geometry/*.h",
+		"hashing/*.cpp", "hashing/*.h",
+		
+		"math/*.cpp", "math/*.h",
 	}
 	excludes
 	{
 		"math/Simd_AltiVec.cpp", "math/Simd_AltiVec.h",
-		"bv/Frustum_gcc.cpp",
+		--"bv/Frustum_gcc.cpp",
 	}
 	includedirs
 	{
@@ -52,11 +64,11 @@ project "idlib"
 		}
 		
 		
-	-- configuration { "vs*", "Debug" }
-		-- links
-		-- { 
-			-- "libcmtd",
-		-- }
+	configuration { "linux" }
+		files
+		{
+			"bv/Frustum_gcc.cpp",
+		}
 		
 	
 		
