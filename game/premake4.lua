@@ -34,15 +34,11 @@ project "game"
 		"__DOOM__",
 		"GAME_DLL"
 	}
-	links
-	{
-		"TypeInfo"
-	}
 	
 	--
 	-- Platform Configurations
 	--
-	configuration "x32"
+	configuration { "vs*", "x32" }
 		targetname  "gamex86"
 		prebuildcommands
 		{
@@ -50,7 +46,7 @@ project "game"
 		   "TypeInfo.exe",
 		}
 	
-	configuration "x64"
+	configuration { "vs*", "x64" }
 		targetname  "gamex86_64"
 		prebuildcommands
 		{
@@ -84,11 +80,15 @@ project "game"
 		   "zip game00.pk4 gamex86.dll",
 		   "zip game00.pk4 binary.conf",
 		}
+		links
+		{
+			"TypeInfo"
+		}
 	
 	configuration { "linux", "x32" }
-		--targetname  "gamex86"
+		targetname  "gamex86"
 		targetprefix ""
 	
 	configuration { "linux", "x64" }
-		--targetname  "gamex86_64"
+		targetname  "gamex86_64"
 		targetprefix ""
