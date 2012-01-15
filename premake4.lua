@@ -66,6 +66,42 @@ solution "Techyon"
 		-- { 
 			-- "libcmt",
 		-- }
+			
+	configuration { "linux" }
+		buildoptions
+		{
+			"-pipe",
+			"-Wall",
+			"-Wno-unknown-pragmas",
+			
+			-- only export what we mean to from the game SO
+			"-fvisibility=hidden",
+			
+			-- FIXME
+			--"-Wnowrite-strings",
+			--"-Wnounitialized",
+			--"-Wno-deprecated",
+			
+			-- maintain this dangerous optimization off at all times
+			"-fno-strict-aliasing",
+			
+			"-Wno-unused-variable",
+		}
+			
+	configuration { "linux", "Release" }
+		buildoptions
+		{
+			-- -finline-functions: implicit at -O3
+			-- -fschedule-insns2: implicit at -O2
+			
+			"-ffast-math",
+			
+			-- no-unsafe-math-optimizations: that should be on by default really. hit some wonko bugs in physics code because of that
+			"-fno-unsafe-math-optimizations",
+			
+			-- -fomit-frame-pointer: -O also turns on -fomit-frame-pointer on machines where doing so does not interfere with debugging
+			"-fomit-frame-pointer",
+		}
 	
 --
 -- Options
@@ -673,55 +709,74 @@ project "Techyon"
 	configuration { "linux", "gmake" }
 		buildoptions
 		{
-			--"`pkg-config --cflags x11`",
-			--"`pkg-config --cflags xext`",
-			--"`pkg-config --cflags xxf86dga`",
-			--"`pkg-config --cflags xxf86vm`",
-			"`pkg-config --cflags sdl`",
-			"`pkg-config --cflags libcurl`",
+			"`pkg-config --cflags x11`",
+			"`pkg-config --cflags xext`",
+			"`pkg-config --cflags xxf86dga`",
+			"`pkg-config --cflags xxf86vm`",
+			--"`pkg-config --cflags sdl`",
+			--"`pkg-config --cflags libcurl`",
 		}
 		linkoptions
 		{
-			--"`pkg-config --libs x11`",
-			--"`pkg-config --libs xext`",
-			--"`pkg-config --libs xxf86dga`",
-			--"`pkg-config --libs xxf86vm`",
-			"`pkg-config --libs sdl`",
-			"`pkg-config --libs libcurl`",
+			"`pkg-config --libs x11`",
+			"`pkg-config --libs xext`",
+			"`pkg-config --libs xxf86dga`",
+			"`pkg-config --libs xxf86vm`",
+			--"`pkg-config --libs sdl`",
+			--"`pkg-config --libs libcurl`",
 		}
 		links
 		{ 
-			--"libcurl",
+			"curl",
 			"openal",
 		}
 	
 	configuration "linux"
-		targetname  "xreal"
+		targetname  "techyon"
 		files
 		{
-			"sys/sys_main.c",
-			"sys/sys_unix.c",
-			"sys/con_log.c",
-			"sys/con_passive.c",
-			"sys/sdl_gamma.c",
-			"sys/sdl_glimp.c",
-			"sys/sdl_input.c",
-			"sys/sdl_snd.c",
-			"../libs/glew/src/glew.c",
+			"sys/sys_local.cpp",
+			"sys/posix/posix_net.cpp",
+			"sys/posix/posix_main.cpp",
+			"sys/posix/posix_signal.cpp",
+			"sys/posix/posix_threads.cpp",
+			"sys/posix/posix_input.cpp",
+			"sys/linux/stack.cpp",
+			"sys/linux/main.cpp",
+			"sys/linux/glimp.cpp",
+			"sys/linux/input.cpp",
+			"sys/linux/sound.cpp",
+			"sys/linux/sound_alsa.cpp",
+			"sys/linux/libXNVCtrl/NVCtrl.c",
+			"tools/compilers/dmap/optimize_gcc.cpp",
 		}
-		--buildoptions
-		--{
-		--	"-pthread"
-		--}
+		buildoptions
+		{
+			"-pthread"
+		}
 		links
 		{
 			"GL",
+			"dl",
+		}
+		linkoptions
+		{
+			"-pthread"
 		}
 		defines
 		{
             "PNG_NO_ASSEMBLER_CODE",
 		}
+			
+	configuration { "linux", "x32" }
+		targetdir 	"../bin/linux-x86"
+		
+	configuration { "linux", "x64" }
+		targetdir 	"../bin/linux-x86_64"
 
 		
-include "TypeInfo"
+if(os.is("windows")) then
+	include "TypeInfo"
+end
+
 include "game"
