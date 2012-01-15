@@ -113,6 +113,10 @@ If you have questions concerning this license or the applicable additional terms
 #include <errno.h>
 #include <math.h>
 
+// Techyon BEGIN
+#include <stdint.h>
+// Techyon END
+
 //-----------------------------------------------------
 
 // non-portable system services
