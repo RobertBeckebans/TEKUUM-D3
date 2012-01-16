@@ -304,7 +304,10 @@ if _ACTION == "vs2010" then
 	--foundPlatformSDK = FindPlatformSDK()
 	foundWinDDK = FindWinDDK()
 	--foundQtSDK = FindQtSDK()
-	foundGtkMMSDK = FindGtkmmSDK()
+	
+	if _OPTIONS["gtk-tools"] then
+		foundGtkMMSDK = FindGtkmmSDK()
+	end
 end
 	
 	
