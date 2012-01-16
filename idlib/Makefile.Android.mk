@@ -8,19 +8,19 @@ ifndef verbose
 endif
 
 #ifndef CC
-  CC = gcc
+  #CC = gcc
   #CC = ${NDK}/toolchains/arm-linux-androideabi-4.4.3/prebuilt/linux-x86/bin/arm-linux-androideabi-gcc
-  CC = ${NDK}/toolchains/arm-linux-androideabi-4.4.3/prebuilt/windows/bin/arm-linux-androideabi-gcc
+  #CC = ${NDK}/toolchains/arm-linux-androideabi-4.4.3/prebuilt/windows/bin/arm-linux-androideabi-gcc
 #endif
 
 #ifndef CXX
-  CXX = g++
-  CXX = ${NDK}/toolchains/arm-linux-androideabi-4.4.3/prebuilt/windows/bin/arm-linux-androideabi-gcc
+  #CXX = g++
+  #CXX = ${NDK}/toolchains/arm-linux-androideabi-4.4.3/prebuilt/windows/bin/arm-linux-androideabi-gcc
 #endif
 
 #ifndef AR
   # AR = ar
-  AR = ${NDK}/toolchains/arm-linux-androideabi-4.4.3/prebuilt/windows/bin/arm-linux-androideabi-ar
+  #AR = ${NDK}/toolchains/arm-linux-androideabi-4.4.3/prebuilt/windows/bin/arm-linux-androideabi-ar
 #endif
 
 ifeq ($(config),release32)
@@ -35,7 +35,7 @@ ifeq ($(config),release32)
   CFLAGS    += -I$(NDK)/platforms/android-4/arch-arm/usr/include -D__MATH_NEON -DANDROID #-D__linux__
   CFLAGS    += -I$(NDK)/prebuilt/windows/lib/gcc/arm-linux-androideabi/4.4.3/include
   CXXFLAGS  += $(CFLAGS) 
-  CFLAGS    += -I$(NDK)/sources/cxx-stl/stlport/stlport
+  CXXFLAGS  += -I$(NDK)/sources/cxx-stl/stlport/stlport
   #LDFLAGS   += -s -m32 -L/usr/lib32
   LDFLAGS   += -nostdlib -L$(NDK)/platforms/android-4/arch-arm/usr/lib
   LIBS      += 

@@ -6,7 +6,15 @@ ifndef config
 endif
 export config
 
-PROJECTS := idlib #Techyon game
+CC = ${NDK}/toolchains/arm-linux-androideabi-4.4.3/prebuilt/windows/bin/arm-linux-androideabi-gcc
+CXX = ${NDK}/toolchains/arm-linux-androideabi-4.4.3/prebuilt/windows/bin/arm-linux-androideabi-gcc
+AR = ${NDK}/toolchains/arm-linux-androideabi-4.4.3/prebuilt/windows/bin/arm-linux-androideabi-ar
+
+export CC
+export CXX
+export AR
+
+PROJECTS := idlib game #Techyon
 
 .PHONY: all clean help $(PROJECTS)
 
@@ -22,12 +30,12 @@ Techyon: idlib
 
 game: 
 	@echo "==== Building game ($(config)) ===="
-	@${MAKE} --no-print-directory -C game -f Makefile
+	@${MAKE} --no-print-directory -C game -f Makefile.Android.mk
 
 clean:
-	@${MAKE} --no-print-directory -C idlib -f Makefile clean
-	@${MAKE} --no-print-directory -C . -f Techyon.make clean
-	@${MAKE} --no-print-directory -C game -f Makefile clean
+	@${MAKE} --no-print-directory -C idlib -f Makefile.Android.mk clean
+	@${MAKE} --no-print-directory -C . -f Techyon.make.Android.mk clean
+	@${MAKE} --no-print-directory -C game -f Makefile.Android.mk clean
 
 help:
 	@echo "Usage: make [config=name] [target]"
