@@ -153,8 +153,10 @@ const int MAX_EXPRESSION_REGISTERS = 4096;
 
 // renderer
 // Techyon BEGIN
+#if !defined(ID_TYPEINFO)
 #include "../libs/glew/include/GL/glew.h"
 //#include "../renderer/qgl.h"
+#endif
 // Techyon END
 #include "../renderer/Cinematic.h"
 #include "../renderer/Material.h"
