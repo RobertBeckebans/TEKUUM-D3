@@ -153,7 +153,7 @@ const int MAX_EXPRESSION_REGISTERS = 4096;
 
 // renderer
 // Techyon BEGIN
-#if !defined(ID_TYPEINFO)
+#if !defined(ID_TYPEINFO) && !defined(__ANDROID__)
 #include "../libs/glew/include/GL/glew.h"
 //#include "../renderer/qgl.h"
 #endif
