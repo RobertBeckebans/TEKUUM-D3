@@ -428,10 +428,10 @@ if _ACTION == "vs2010" then
 	if _OPTIONS["gtk-tools"] then
 		foundGtkMMSDK = FindGtkmmSDK()
 	end
-	
-	--if _OPTIONS["android"] then
-		--foundAndroidNDK = FindAndroidNDK()
-	--end
+end
+
+if _OPTIONS["android"] then
+	foundAndroidNDK = FindAndroidNDK()
 end
 
 	--configuration { "linux", "android" }
