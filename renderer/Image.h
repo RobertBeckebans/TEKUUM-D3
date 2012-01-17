@@ -166,16 +166,20 @@ public:
 	void		GenerateImage( const byte *pic, int width, int height, 
 					   textureFilter_t filter, bool allowDownSize, 
 					   textureRepeat_t repeat, textureDepth_t depth );
+#if !defined(USE_GLES1)
 	void		Generate3DImage( const byte *pic, int width, int height, int depth,
 						textureFilter_t filter, bool allowDownSize, 
 						textureRepeat_t repeat, textureDepth_t minDepth );
+#endif
 	void		GenerateCubeImage( const byte *pic[6], int size, 
 						textureFilter_t filter, bool allowDownSize, 
 						textureDepth_t depth );
 
 	void		CopyFramebuffer( int x, int y, int width, int height, bool useOversizedBuffer );
 
+#if !defined(USE_GLES1)
 	void		CopyDepthbuffer( int x, int y, int width, int height );
+#endif
 
 	void		UploadScratch( const byte *pic, int width, int height );
 

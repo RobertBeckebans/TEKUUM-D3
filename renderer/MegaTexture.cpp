@@ -235,7 +235,9 @@ void idMegaTexture::BindForViewOrigin( const idVec3 viewOrigin ) {
 			globalImages->whiteImage->Bind();
 
 			static float	parms[4] = { -2, -2, 0, 1 };	// no contribution
+#if !defined(USE_GLES1)
 			glProgramLocalParameter4fvARB( GL_VERTEX_PROGRAM_ARB, i, parms );
+#endif
 		} else {
 			idTextureLevel	*level = &levels[ numLevels-1-i ];
 			
@@ -248,10 +250,13 @@ void idMegaTexture::BindForViewOrigin( const idVec3 viewOrigin ) {
 			} else {
 				level->image->Bind();
 			}
+#if !defined(USE_GLES1)
 			glProgramLocalParameter4fvARB( GL_VERTEX_PROGRAM_ARB, i, level->parms );
+#endif
 		}
 	}
 
+#if !defined(USE_GLES1)
 	float	parms[4];
 	parms[0] = 0;
 	parms[1] = 0;
@@ -264,6 +269,7 @@ void idMegaTexture::BindForViewOrigin( const idVec3 viewOrigin ) {
 	parms[2] = r_terrainScale.GetFloat();
 	parms[3] = 1;
 	glProgramLocalParameter4fvARB( GL_VERTEX_PROGRAM_ARB, 8, parms );
+#endif
 }
 
 /*

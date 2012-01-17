@@ -140,9 +140,10 @@ If you have questions concerning this license or the applicable additional terms
 // Android
 #if defined(__ANDROID__)
 
+#define BUILD_OS_ID						3
+
 #ifdef __i386__
 	#define	BUILD_STRING				"android-x86"
-	#define BUILD_OS_ID					2
 	#define CPUSTRING					"x86"
 	#define CPU_EASYARGS				1
 #elif defined(__ARMEL__)

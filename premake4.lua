@@ -1,10 +1,195 @@
 --
 -- Techyon build configuration script
 -- 
+
+function FindAndroidNDK()
+	
+	configuration {}
+	local ndkdir = os.getenv("NDK")
+	if (ndkdir) then
+		includedirs 
+		{
+			--"$(NDK)/platforms/android-4/arch-arm/usr/include",
+			--"$(NDK)/prebuilt/windows/lib/gcc/arm-linux-androideabi/4.4.3/include",
+			--"$(NDK)/sources/cxx-stl/stlport/stlport",
+		}
+		
+		--if os.is("windows") then
+			--gcc =
+			--{
+			--	cc = "${NDK}/toolchains/arm-linux-androideabi-4.4.3/prebuilt/windows/bin/arm-linux-androideabi-gcc",
+			--	cxx = "${NDK}/toolchains/arm-linux-androideabi-4.4.3/prebuilt/windows/bin/arm-linux-androideabi-gcc",
+			--	ar = "${NDK}/toolchains/arm-linux-androideabi-4.4.3/prebuilt/windows/bin/arm-linux-androideabi-ar",
+			--}
+		--elseif os.is("linux") then
+			--gcc =
+			--{
+			--	cc = "${NDK}/toolchains/arm-linux-androideabi-4.4.3/prebuilt/linux-x86/bin/arm-linux-androideabi-gcc",
+			--	cxx = "${NDK}/toolchains/arm-linux-androideabi-4.4.3/prebuilt/linux-x86/bin/arm-linux-androideabi-gcc",
+			--	ar = "${NDK}/toolchains/arm-linux-androideabi-4.4.3/prebuilt/linux-x86/bin/arm-linux-androideabi-ar",
+			--}
+		--end
+		
+		defines
+		{
+			--"ANDROID",
+		}
+		-- TODO configuration "neon"
+		
+		--configuration "x32"
+		--	libdirs 
+		--	{
+		--	"$(WINDDK_DIR)/lib/mfc/i386",
+		--	"$(WINDDK_DIR)/lib/atl/i386"
+		--	}
+		--configuration "x64"
+		--	libdirs 
+		--	{
+		--	"$(WINDDK_DIR)/lib/mfc/amd64",
+		--	"$(WINDDK_DIR)/lib/atl/amd64"
+		--	}
+		configuration {}
+		print("Found Android Native Development Kit at '" .. ndkdir .. "'")
+		return true
+	end
+	
+	return false
+end
+
+function newplatform(plf)
+    local name = plf.name
+    local description = plf.description
+ 
+    -- Register new platform
+    premake.platforms[name] = {
+        cfgsuffix = "_"..name,
+        iscrosscompiler = true
+    }
+ 
+    -- Allow use of new platform in --platfroms
+    table.insert(premake.option.list["platform"].allowed, { name, description })
+    table.insert(premake.fields.platforms.allowed, name)
+ 
+    -- Add compiler support
+    -- gcc
+    premake.gcc.platforms[name] = plf.gcc
+    --other compilers (?)
+end
+
+newplatform {
+    name = "arm",
+    description = "Android arm",
+    gcc = {
+        cc = "${NDK}/toolchains/arm-linux-androideabi-4.4.3/prebuilt/windows/bin/arm-linux-androideabi-gcc",
+		cxx = "${NDK}/toolchains/arm-linux-androideabi-4.4.3/prebuilt/windows/bin/arm-linux-androideabi-g++",
+		ar = "${NDK}/toolchains/arm-linux-androideabi-4.4.3/prebuilt/windows/bin/arm-linux-androideabi-ar",
+    }
+}
+
+newplatform {
+    name = "vfp",
+    description = "Android vfp",
+    gcc = {
+        cc = "${NDK}/toolchains/arm-linux-androideabi-4.4.3/prebuilt/windows/bin/arm-linux-androideabi-gcc",
+		cxx = "${NDK}/toolchains/arm-linux-androideabi-4.4.3/prebuilt/windows/bin/arm-linux-androideabi-g++",
+		ar = "${NDK}/toolchains/arm-linux-androideabi-4.4.3/prebuilt/windows/bin/arm-linux-androideabi-ar",
+    }
+}
+
+newplatform {
+    name = "neon",
+    description = "Android neon",
+    gcc = {
+        cc = "${NDK}/toolchains/arm-linux-androideabi-4.4.3/prebuilt/windows/bin/arm-linux-androideabi-gcc",
+		cxx = "${NDK}/toolchains/arm-linux-androideabi-4.4.3/prebuilt/windows/bin/arm-linux-androideabi-g++",
+		ar = "${NDK}/toolchains/arm-linux-androideabi-4.4.3/prebuilt/windows/bin/arm-linux-androideabi-ar",
+    }
+}
+
+
+--
+-- Options
+--
+newoption
+{
+	trigger = "debug-memory",
+	description = "Enables memory logging to file"
+}
+
+newoption
+{
+	trigger = "no-lanaddress",
+	description = "Don't recognize any IP as LAN address. This is useful when debugging network	code where LAN / not LAN influences application behaviour"
+}
+
+-- newoption
+-- {
+	-- trigger = "memcheck"
+	-- description = "Perform heap consistency checking",
+	-- value = "TYPE",
+	-- allowed = 
+	-- {
+		-- { "0", "on in Debug / off in Release" },
+		-- { "1", "forces on" },
+		-- { "2", "forces off" },
+	-- }
+-- }
+
+newoption
+{
+	trigger = "mfc-tools",
+	description = "Enable original Doom 3 tools"
+}
+
+newoption
+{
+	trigger = "gtk-tools",
+	description = "Enable GTK+ based extra tools"
+}
+
+-- newoption
+-- {
+	-- trigger = "qt-tools",
+	-- description = "Enable Qt based extra tools"
+-- }
+
+newoption
+{
+	trigger = "android",
+	description = "Cross compile for Android"
+}
+
+--newoption
+--{
+--	trigger = "with-freetype",
+--	description = "Compile with freetype support"
+--}
+		
+--newoption
+--{
+--	trigger = "with-openal",
+--	value = "TYPE",
+--	description = "Specify which OpenAL library",
+--	allowed = 
+--	{
+--		{ "none", "No support for OpenAL" },
+--		{ "dlopen", "Dynamically load OpenAL library if available" },
+--		{ "link", "Link the OpenAL library as normal" },
+--		{ "openal-dlopen", "Dynamically load OpenAL library if available" },
+--		{ "openal-link", "Link the OpenAL library as normal" }
+--	}
+--}
+
+
 solution "Techyon"
 	--configurations { "Release", "ReleaseWithSymbols", "Debug" }
 	configurations { "Release", "Debug" }
-	platforms {"x32", "x64"}
+	
+	if _OPTIONS["android"] then
+		platforms {"arm", "vfp", "neon"}
+	else
+		platforms {"x32", "x64"}
+	end
 	
 	--
 	-- Release/Debug Configurations
@@ -103,72 +288,7 @@ solution "Techyon"
 			"-fomit-frame-pointer",
 		}
 	
---
--- Options
---
-newoption
-{
-	trigger = "debug-memory",
-	description = "Enables memory logging to file"
-}
 
-newoption
-{
-	trigger = "no-lanaddress",
-	description = "Don't recognize any IP as LAN address. This is useful when debugging network	code where LAN / not LAN influences application behaviour"
-}
-
--- newoption
--- {
-	-- trigger = "memcheck"
-	-- description = "Perform heap consistency checking",
-	-- value = "TYPE",
-	-- allowed = 
-	-- {
-		-- { "0", "on in Debug / off in Release" },
-		-- { "1", "forces on" },
-		-- { "2", "forces off" },
-	-- }
--- }
-
-newoption
-{
-	trigger = "mfc-tools",
-	description = "Enable original Doom 3 tools"
-}
-
-newoption
-{
-	trigger = "gtk-tools",
-	description = "Enable GTK+ based extra tools"
-}
-
--- newoption
--- {
-	-- trigger = "qt-tools",
-	-- description = "Enable Qt based extra tools"
--- }
-
---newoption
---{
---	trigger = "with-freetype",
---	description = "Compile with freetype support"
---}
-		
---newoption
---{
---	trigger = "with-openal",
---	value = "TYPE",
---	description = "Specify which OpenAL library",
---	allowed = 
---	{
---		{ "none", "No support for OpenAL" },
---		{ "dlopen", "Dynamically load OpenAL library if available" },
---		{ "link", "Link the OpenAL library as normal" },
---		{ "openal-dlopen", "Dynamically load OpenAL library if available" },
---		{ "openal-link", "Link the OpenAL library as normal" }
---	}
---}
 
 --		
 -- Platform specific defaults
@@ -308,15 +428,38 @@ if _ACTION == "vs2010" then
 	if _OPTIONS["gtk-tools"] then
 		foundGtkMMSDK = FindGtkmmSDK()
 	end
+	
+	--if _OPTIONS["android"] then
+		--foundAndroidNDK = FindAndroidNDK()
+	--end
 end
+
+	--configuration { "linux", "android" }
 	
+	configuration "android"
+		includedirs
+		{
+			"$(NDK)/platforms/android-4/arch-arm/usr/include",
+			"$(NDK)/prebuilt/windows/lib/gcc/arm-linux-androideabi/4.4.3/include",
+			"$(NDK)/sources/cxx-stl/stlport/stlport",
+		}
+		defines
+		{
+			"ANDROID",
+		}
 	
-include "idlib"
+if not _OPTIONS["android"] then
+	include "idlib"
+end
 
 project "Techyon"
 	targetname  "Techyon"
 	language    "C++"
-	kind        "WindowedApp"
+	if _OPTIONS["android"] then
+		kind        "SharedLib"
+	else
+		kind        "WindowedApp"
+	end
 	flags       { "ExtraWarnings" }
 	--debugargs	{ "+set com_allowConsole 1 +set fs_game basety" }
 	files
@@ -324,7 +467,6 @@ project "Techyon"
 		"cm/*.cpp", "cm/*.h",
 		"framework/**.cpp", "framework/**.h",
 		"renderer/**.c", "renderer/**.cpp", "renderer/**.h",
-		
 		"libs/glew/src/glew.c",
 		"libs/glew/include/GL/glew.h",
 		
@@ -390,13 +532,19 @@ project "Techyon"
 	defines
 	{
 		"__DOOM__",
-		"__DOOM_DLL__",
 		"GLEW_STATIC",
 	}
 	links
 	{
 		"idlib",
 	}
+	
+if not _OPTIONS["android"] then
+	defines
+	{
+		"__DOOM_DLL__",
+	}
+end
 	
 	--
 	-- Platform Configurations
@@ -709,6 +857,7 @@ project "Techyon"
 			"OpenAL32",
 		}
 
+if not _OPTIONS["android"] then
 	configuration { "linux", "gmake" }
 		buildoptions
 		{
@@ -777,9 +926,51 @@ project "Techyon"
 	configuration { "linux", "x64" }
 		targetdir 	"../bin/linux-x86_64"
 
+end -- if not _OPTIONS["android"]
+
+	configuration "android"
+		targetname  "techyon"
+		includedirs 
+		{
+			"$(NDK)/platforms/android-4/arch-arm/usr/include",
+			"$(NDK)/prebuilt/windows/lib/gcc/arm-linux-androideabi/4.4.3/include",
+			"$(NDK)/sources/cxx-stl/stlport/stlport",
+		}
+		excludes
+		{
+			--"renderer/draw_arb.cpp",
+			"renderer/draw_arb2.cpp",
+			"renderer/draw_exp.cpp",
+			"renderer/draw_nv10.cpp",
+			"renderer/draw_nv20.cpp",
+			"renderer/draw_r200.cpp",
+			"libs/glew/src/glew.c",
+			"libs/glew/include/GL/glew.h",
+		}
+		defines
+		{
+			"USE_GLES1"
+		}
+		links
+		{
+			"GLES_CM"
+		}
 		
+	configuration "neon"
+		buildoptions
+		{
+			"-mcpu=cortex-a8 -mfloat-abi=softfp -mfpu=neon -fpic -fno-short-enums -ffunction-sections -funwind-tables -fstack-protector -ftree-vectorize -fsingle-precision-constant"
+		}
+		defines
+		{
+			"__MATH_NEON",
+		}
+
+-- FIXME
 if(os.is("windows")) then
 	include "TypeInfo"
 end
 
-include "game"
+if not _OPTIONS["android"] then
+	include "game"
+end

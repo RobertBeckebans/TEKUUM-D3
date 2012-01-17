@@ -366,7 +366,9 @@ static void R_BorderClampImage( idImage *image ) {
 	// explicit zero border
 	float	color[4];
 	color[0] = color[1] = color[2] = color[3] = 0;
+#if !defined(USE_GLES1)
 	glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, color );
+#endif
 }
 
 static void R_RGBA8Image( idImage *image ) {
@@ -978,11 +980,17 @@ static filterName_t textureFilters[] = {
 		case TT_2D:
 			texEnum = GL_TEXTURE_2D;
 			break;
+#if !defined(USE_GLES1)
 		case TT_3D:
 			texEnum = GL_TEXTURE_3D;
 			break;
+#endif
 		case TT_CUBIC:
+#if defined(USE_GLES1)
+			texEnum = GL_TEXTURE_CUBE_MAP_OES;
+#else
 			texEnum = GL_TEXTURE_CUBE_MAP_EXT;
+#endif
 			break;
 		}
 
@@ -1183,12 +1191,14 @@ void R_ListImages_f( const idCmdArgs &args ) {
 	for ( i = 0 ; i < globalImages->images.Num() ; i++ ) {
 		image = globalImages->images[ i ];
 
+#if !defined(USE_GLES1)
 		if ( uncompressedOnly ) {
 			if ( ( image->internalFormat >= GL_COMPRESSED_RGB_S3TC_DXT1_EXT && image->internalFormat <= GL_COMPRESSED_RGBA_S3TC_DXT5_EXT )
 				|| image->internalFormat == GL_COLOR_INDEX8_EXT ) {
 				continue;
 			}
 		}
+#endif
 
 		if ( matchTag && image->classification != matchTag ) {
 			continue;
@@ -1379,6 +1389,7 @@ void idImageManager::SetNormalPalette( void ) {
 	temptable[255*3+1] =
 	temptable[255*3+2] = 128;
 
+#if !defined(USE_GLES1)
 	if ( !glConfig.sharedTexturePaletteAvailable ) {
 		return;
 	}
@@ -1391,6 +1402,7 @@ void idImageManager::SetNormalPalette( void ) {
 					   temptable );
 
 	glEnable( GL_SHARED_TEXTURE_PALETTE_EXT );
+#endif
 }
 
 /*
@@ -1922,9 +1934,15 @@ void idImageManager::BindNull() {
 
 	RB_LogComment( "BindNull()\n" );
 	if ( tmu->textureType == TT_CUBIC ) {
+#if defined(USE_GLES1)
+		glDisable( GL_TEXTURE_CUBE_MAP_OES );
+#else
 		glDisable( GL_TEXTURE_CUBE_MAP_EXT );
+#endif
 	} else if ( tmu->textureType == TT_3D ) {
+#if !defined(USE_GLES1)
 		glDisable( GL_TEXTURE_3D );
+#endif
 	} else if ( tmu->textureType == TT_2D ) {
 		glDisable( GL_TEXTURE_2D );
 	}

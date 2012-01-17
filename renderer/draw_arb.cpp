@@ -99,14 +99,19 @@ static void RB_ARB_DrawInteraction( const drawInteraction_t *din ) {
 	//
 	GL_State( GLS_COLORMASK | GLS_DEPTHMASK | backEnd.depthFunc );
 
-	glColor3f( 1, 1, 1 );
+	glColor4f( 1, 1, 1, 1 );
 	glDisableClientState( GL_TEXTURE_COORD_ARRAY );
+
+#if !defined(USE_GLES1)
 	glEnable( GL_TEXTURE_GEN_S );
 	glTexGenfv( GL_S, GL_OBJECT_PLANE, din->lightProjection[3].ToFloatPtr() );
 	glTexCoord2f( 0, 0.5 );
+#endif
 
 // ATI R100 can't do partial texgens
+#if !defined(USE_GLES1)
 #define	NO_MIXED_TEXGEN
+#endif
 
 #ifdef NO_MIXED_TEXGEN
 idVec4	plane;
@@ -131,7 +136,11 @@ glTexGenfv( GL_Q, GL_OBJECT_PLANE, plane.ToFloatPtr() );
 	// draw it
 	RB_DrawElementsWithCounters( tri );
 
+#if !defined(USE_GLES1)
 	glDisable( GL_TEXTURE_GEN_S );
+#endif
+
+
 #ifdef NO_MIXED_TEXGEN
 glDisable( GL_TEXTURE_GEN_T );
 glDisable( GL_TEXTURE_GEN_Q );
@@ -176,14 +185,15 @@ return;
 		glTexCoordPointer( 3, GL_FLOAT, sizeof( lightingCache_t ), ((lightingCache_t *)vertexCache.Position(tri->lightingCache))->localLightVector.ToFloatPtr() );
 
 		// I just want alpha = Dot( texture0, texture1 )
-		GL_TexEnv( GL_COMBINE_ARB );
 
-		glTexEnvi( GL_TEXTURE_ENV, GL_COMBINE_RGB_ARB, GL_DOT3_RGBA_ARB );
-		glTexEnvi( GL_TEXTURE_ENV, GL_SOURCE0_RGB_ARB, GL_TEXTURE );
-		glTexEnvi( GL_TEXTURE_ENV, GL_SOURCE1_RGB_ARB, GL_PREVIOUS_ARB );
-		glTexEnvi( GL_TEXTURE_ENV, GL_OPERAND0_RGB_ARB, GL_SRC_COLOR );
-		glTexEnvi( GL_TEXTURE_ENV, GL_OPERAND1_RGB_ARB, GL_SRC_COLOR );
-		glTexEnvi( GL_TEXTURE_ENV, GL_RGB_SCALE_ARB, 1 );
+		GL_TexEnv( GL_COMBINE );
+
+		glTexEnvi( GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_DOT3_RGBA );
+		glTexEnvi( GL_TEXTURE_ENV, GL_SRC0_RGB, GL_TEXTURE );
+		glTexEnvi( GL_TEXTURE_ENV, GL_SRC1_RGB, GL_PREVIOUS );
+		glTexEnvi( GL_TEXTURE_ENV, GL_OPERAND0_RGB, GL_SRC_COLOR );
+		glTexEnvi( GL_TEXTURE_ENV, GL_OPERAND1_RGB, GL_SRC_COLOR );
+		glTexEnvi( GL_TEXTURE_ENV, GL_RGB_SCALE, 1 );
 		glTexEnvi( GL_TEXTURE_ENV, GL_ALPHA_SCALE, 1 );
 
 		// draw it
@@ -212,20 +222,21 @@ return;
 
 	// select the vertex color source
 	if ( din->vertexColor == SVC_IGNORE ) {
-		glColor4fv( din->diffuseColor.ToFloatPtr() );
+		const float *color = din->diffuseColor.ToFloatPtr();
+		glColor4f( color[0], color[1], color[2], color[3]);
 	} else {
 		// FIXME: does this not get diffuseColor blended in?
 		glColorPointer( 4, GL_UNSIGNED_BYTE, sizeof( idDrawVert ), (void *)&ac->color );
 		glEnableClientState( GL_COLOR_ARRAY );
 
 		if ( din->vertexColor == SVC_INVERSE_MODULATE ) {
-			GL_TexEnv( GL_COMBINE_ARB );
-			glTexEnvi( GL_TEXTURE_ENV, GL_COMBINE_RGB_ARB, GL_MODULATE );
-			glTexEnvi( GL_TEXTURE_ENV, GL_SOURCE0_RGB_ARB, GL_TEXTURE );
-			glTexEnvi( GL_TEXTURE_ENV, GL_SOURCE1_RGB_ARB, GL_PRIMARY_COLOR_ARB );
-			glTexEnvi( GL_TEXTURE_ENV, GL_OPERAND0_RGB_ARB, GL_SRC_COLOR );
-			glTexEnvi( GL_TEXTURE_ENV, GL_OPERAND1_RGB_ARB, GL_ONE_MINUS_SRC_COLOR );
-			glTexEnvi( GL_TEXTURE_ENV, GL_RGB_SCALE_ARB, 1 );
+			GL_TexEnv( GL_COMBINE );
+			glTexEnvi( GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_MODULATE );
+			glTexEnvi( GL_TEXTURE_ENV, GL_SRC0_RGB, GL_TEXTURE );
+			glTexEnvi( GL_TEXTURE_ENV, GL_SRC1_RGB, GL_PRIMARY_COLOR );
+			glTexEnvi( GL_TEXTURE_ENV, GL_OPERAND0_RGB, GL_SRC_COLOR );
+			glTexEnvi( GL_TEXTURE_ENV, GL_OPERAND1_RGB, GL_ONE_MINUS_SRC_COLOR );
+			glTexEnvi( GL_TEXTURE_ENV, GL_RGB_SCALE, 1 );
 		}
 	}
 
@@ -237,21 +248,26 @@ return;
 	// texture 1 will get the light projected texture
 	GL_SelectTexture( 1 );
 	glDisableClientState( GL_TEXTURE_COORD_ARRAY );
+
+#if !defined(USE_GLES1)
 	glEnable( GL_TEXTURE_GEN_S );
 	glEnable( GL_TEXTURE_GEN_T );
 	glEnable( GL_TEXTURE_GEN_Q );
 	glTexGenfv( GL_S, GL_OBJECT_PLANE, din->lightProjection[0].ToFloatPtr() );
 	glTexGenfv( GL_T, GL_OBJECT_PLANE, din->lightProjection[1].ToFloatPtr() );
 	glTexGenfv( GL_Q, GL_OBJECT_PLANE, din->lightProjection[2].ToFloatPtr() );
+#endif
 
 	din->lightImage->Bind();
 
 	// draw it
 	RB_DrawElementsWithCounters( tri );
 
+#if !defined(USE_GLES1)
 	glDisable( GL_TEXTURE_GEN_S );
 	glDisable( GL_TEXTURE_GEN_T );
 	glDisable( GL_TEXTURE_GEN_Q );
+#endif
 
 	globalImages->BindNull();
 	GL_SelectTexture( 0 );
@@ -286,7 +302,7 @@ static void RB_ARB_DrawThreeTextureInteraction( const drawInteraction_t *din ) {
 	glVertexPointer( 3, GL_FLOAT, sizeof( idDrawVert ), ac->xyz.ToFloatPtr() );
 	GL_SelectTexture( 0 );
 	glTexCoordPointer( 2, GL_FLOAT, sizeof( idDrawVert ), (void *)&ac->st );
-	glColor3f( 1, 1, 1 );
+	glColor4f( 1, 1, 1, 1 );
 
 	//
 	// bump map dot cubeMap into the alpha channel
@@ -312,14 +328,14 @@ static void RB_ARB_DrawThreeTextureInteraction( const drawInteraction_t *din ) {
 	glTexCoordPointer( 3, GL_FLOAT, sizeof( lightingCache_t ), ((lightingCache_t *)vertexCache.Position(tri->lightingCache))->localLightVector.ToFloatPtr() );
 
 	// I just want alpha = Dot( texture0, texture1 )
-	GL_TexEnv( GL_COMBINE_ARB );
+	GL_TexEnv( GL_COMBINE );
 
-	glTexEnvi( GL_TEXTURE_ENV, GL_COMBINE_RGB_ARB, GL_DOT3_RGBA_ARB );
-	glTexEnvi( GL_TEXTURE_ENV, GL_SOURCE0_RGB_ARB, GL_TEXTURE );
-	glTexEnvi( GL_TEXTURE_ENV, GL_SOURCE1_RGB_ARB, GL_PREVIOUS_ARB );
-	glTexEnvi( GL_TEXTURE_ENV, GL_OPERAND0_RGB_ARB, GL_SRC_COLOR );
-	glTexEnvi( GL_TEXTURE_ENV, GL_OPERAND1_RGB_ARB, GL_SRC_COLOR );
-	glTexEnvi( GL_TEXTURE_ENV, GL_RGB_SCALE_ARB, 1 );
+	glTexEnvi( GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_DOT3_RGBA );
+	glTexEnvi( GL_TEXTURE_ENV, GL_SRC0_RGB, GL_TEXTURE );
+	glTexEnvi( GL_TEXTURE_ENV, GL_SRC1_RGB, GL_PREVIOUS );
+	glTexEnvi( GL_TEXTURE_ENV, GL_OPERAND0_RGB, GL_SRC_COLOR );
+	glTexEnvi( GL_TEXTURE_ENV, GL_OPERAND1_RGB, GL_SRC_COLOR );
+	glTexEnvi( GL_TEXTURE_ENV, GL_RGB_SCALE, 1 );
 	glTexEnvi( GL_TEXTURE_ENV, GL_ALPHA_SCALE, 1 );
 
 	// draw it
@@ -348,20 +364,21 @@ static void RB_ARB_DrawThreeTextureInteraction( const drawInteraction_t *din ) {
 
 	// select the vertex color source
 	if ( din->vertexColor == SVC_IGNORE ) {
-		glColor4fv( din->diffuseColor.ToFloatPtr() );
+		const float *color = din->diffuseColor.ToFloatPtr();
+		glColor4f( color[0], color[1], color[2], color[3]);
 	} else {
 		// FIXME: does this not get diffuseColor blended in?
 		glColorPointer( 4, GL_UNSIGNED_BYTE, sizeof( idDrawVert ), (void *)&ac->color );
 		glEnableClientState( GL_COLOR_ARRAY );
 
 		if ( din->vertexColor == SVC_INVERSE_MODULATE ) {
-			GL_TexEnv( GL_COMBINE_ARB );
-			glTexEnvi( GL_TEXTURE_ENV, GL_COMBINE_RGB_ARB, GL_MODULATE );
-			glTexEnvi( GL_TEXTURE_ENV, GL_SOURCE0_RGB_ARB, GL_TEXTURE );
-			glTexEnvi( GL_TEXTURE_ENV, GL_SOURCE1_RGB_ARB, GL_PRIMARY_COLOR_ARB );
-			glTexEnvi( GL_TEXTURE_ENV, GL_OPERAND0_RGB_ARB, GL_SRC_COLOR );
-			glTexEnvi( GL_TEXTURE_ENV, GL_OPERAND1_RGB_ARB, GL_ONE_MINUS_SRC_COLOR );
-			glTexEnvi( GL_TEXTURE_ENV, GL_RGB_SCALE_ARB, 1 );
+			GL_TexEnv( GL_COMBINE );
+			glTexEnvi( GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_MODULATE );
+			glTexEnvi( GL_TEXTURE_ENV, GL_SRC0_RGB, GL_TEXTURE );
+			glTexEnvi( GL_TEXTURE_ENV, GL_SRC1_RGB, GL_PRIMARY_COLOR );
+			glTexEnvi( GL_TEXTURE_ENV, GL_OPERAND0_RGB, GL_SRC_COLOR );
+			glTexEnvi( GL_TEXTURE_ENV, GL_OPERAND1_RGB, GL_ONE_MINUS_SRC_COLOR );
+			glTexEnvi( GL_TEXTURE_ENV, GL_RGB_SCALE, 1 );
 		}
 	}
 
@@ -373,17 +390,23 @@ static void RB_ARB_DrawThreeTextureInteraction( const drawInteraction_t *din ) {
 	// texture 1 will get the light projected texture
 	GL_SelectTexture( 1 );
 	glDisableClientState( GL_TEXTURE_COORD_ARRAY );
+
+#if !defined(USE_GLES1)
 	glEnable( GL_TEXTURE_GEN_S );
 	glEnable( GL_TEXTURE_GEN_T );
 	glEnable( GL_TEXTURE_GEN_Q );
 	glTexGenfv( GL_S, GL_OBJECT_PLANE, din->lightProjection[0].ToFloatPtr() );
 	glTexGenfv( GL_T, GL_OBJECT_PLANE, din->lightProjection[1].ToFloatPtr() );
 	glTexGenfv( GL_Q, GL_OBJECT_PLANE, din->lightProjection[2].ToFloatPtr() );
+#endif
+
 	din->lightImage->Bind();
 
 	// texture 2 will get the light falloff texture
 	GL_SelectTexture( 2 );
 	glDisableClientState( GL_TEXTURE_COORD_ARRAY );
+
+#if !defined(USE_GLES1)
 	glEnable( GL_TEXTURE_GEN_S );
 	glEnable( GL_TEXTURE_GEN_T );
 	glEnable( GL_TEXTURE_GEN_Q );
@@ -402,21 +425,27 @@ static void RB_ARB_DrawThreeTextureInteraction( const drawInteraction_t *din ) {
 	plane[2] = 0;
 	plane[3] = 1;
 	glTexGenfv( GL_Q, GL_OBJECT_PLANE, plane.ToFloatPtr() );
+#endif
 
 	din->lightFalloffImage->Bind();
 
 	// draw it
 	RB_DrawElementsWithCounters( tri );
 
+#if !defined(USE_GLES1)
 	glDisable( GL_TEXTURE_GEN_S );
 	glDisable( GL_TEXTURE_GEN_T );
 	glDisable( GL_TEXTURE_GEN_Q );
+#endif
+
 	globalImages->BindNull();
 
 	GL_SelectTexture( 1 );
+#if !defined(USE_GLES1)
 	glDisable( GL_TEXTURE_GEN_S );
 	glDisable( GL_TEXTURE_GEN_T );
 	glDisable( GL_TEXTURE_GEN_Q );
+#endif
 	globalImages->BindNull();
 
 	GL_SelectTexture( 0 );
