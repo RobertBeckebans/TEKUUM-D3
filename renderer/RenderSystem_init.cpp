@@ -222,7 +222,22 @@ idCVar r_materialOverride( "r_materialOverride", "", CVAR_RENDERER, "overrides a
 idCVar r_debugRenderToTexture( "r_debugRenderToTexture", "0", CVAR_RENDERER | CVAR_INTEGER, "" );
 
 
+/*
+=================
+R_CheckExtension
+=================
+*/
+#if defined(USE_GLES1)
+bool R_CheckExtension( char *name ) {
+	if ( !strstr( glConfig.extensions_string, name ) ) {
+		common->Printf( "X..%s not found\n", name );
+		return false;
+	}
 
+	common->Printf( "...using %s\n", name );
+	return true;
+}
+#endif
 
 /*
 ==================
@@ -234,7 +249,23 @@ static void R_CheckPortableExtensions( void ) {
 	glConfig.glVersion = atof( glConfig.version_string );
 
 	// GL_ARB_multitexture
+#if defined(USE_GLES1)
+	glConfig.multitextureAvailable = true;
+
+	glGetIntegerv( GL_MAX_TEXTURE_UNITS, (GLint *)&glConfig.maxTextureUnits );
+
+	if ( glConfig.maxTextureUnits > MAX_MULTITEXTURE_UNITS ) {
+		glConfig.maxTextureUnits = MAX_MULTITEXTURE_UNITS;
+	}
+	if ( glConfig.maxTextureUnits < 2 ) {
+		glConfig.multitextureAvailable = false;	// shouldn't ever happen
+	}
+	//glGetIntegerv( GL_MAX_TEXTURE_COORDS, (GLint *)&glConfig.maxTextureCoords );
+	//glGetIntegerv( GL_MAX_TEXTURE_IMAGE_UNITS, (GLint *)&glConfig.maxTextureImageUnits );
+
+#else
 	glConfig.multitextureAvailable = GLEW_ARB_multitexture;
+
 	if ( glConfig.multitextureAvailable ) {
 		
 		glGetIntegerv( GL_MAX_TEXTURE_UNITS_ARB, (GLint *)&glConfig.maxTextureUnits );
@@ -248,31 +279,60 @@ static void R_CheckPortableExtensions( void ) {
 		glGetIntegerv( GL_MAX_TEXTURE_COORDS_ARB, (GLint *)&glConfig.maxTextureCoords );
 		glGetIntegerv( GL_MAX_TEXTURE_IMAGE_UNITS_ARB, (GLint *)&glConfig.maxTextureImageUnits );
 	}
+#endif
 
 	// GL_ARB_texture_env_combine
+#if defined(USE_GLES1)
+	glConfig.textureEnvCombineAvailable = true;
+#else
 	glConfig.textureEnvCombineAvailable = GLEW_ARB_texture_env_combine;
+#endif
 
 	// GL_ARB_texture_cube_map
+#if defined(USE_GLES1)
+	glConfig.cubeMapAvailable = R_CheckExtension("GL_OES_texture_cube_map");
+#else
 	glConfig.cubeMapAvailable = GLEW_ARB_texture_cube_map;
+#endif
 
 	// GL_ARB_texture_env_dot3
+#if defined(USE_GLES1)
+	glConfig.envDot3Available = true;
+#else
 	glConfig.envDot3Available = GLEW_ARB_texture_env_dot3;
+#endif
 
 	// GL_ARB_texture_env_add
+#if defined(USE_GLES1)
+	glConfig.textureEnvAddAvailable = true;
+#else
 	glConfig.textureEnvAddAvailable = GLEW_ARB_texture_env_add;
+#endif
 
 	// GL_ARB_texture_non_power_of_two
+#if defined(USE_GLES1)
+	glConfig.textureNonPowerOfTwoAvailable = false;
+#else
 	glConfig.textureNonPowerOfTwoAvailable = GLEW_ARB_texture_non_power_of_two;
+#endif
 
 	// GL_ARB_texture_compression + GL_S3_s3tc
 	// DRI drivers may have GL_ARB_texture_compression but no GL_EXT_texture_compression_s3tc
+#if defined(USE_GLES1)
+	// RB: TODO
+	glConfig.textureCompressionAvailable = false;
+#else
 	if ( GLEW_ARB_texture_compression && GLEW_EXT_texture_compression_s3tc ) {
 		glConfig.textureCompressionAvailable = true;
 	} else {
 		glConfig.textureCompressionAvailable = false;
 	}
+#endif
 
 	// GL_EXT_texture_filter_anisotropic
+#if defined(USE_GLES1)
+	glConfig.anisotropicAvailable = false;
+#else
 	glConfig.anisotropicAvailable = GLEW_EXT_texture_filter_anisotropic;
 	if ( glConfig.anisotropicAvailable ) {
 		glGetFloatv( GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &glConfig.maxTextureAnisotropy );
@@ -280,10 +340,14 @@ static void R_CheckPortableExtensions( void ) {
 	} else {
 		glConfig.maxTextureAnisotropy = 1;
 	}
+#endif
 
 	// GL_EXT_texture_lod_bias
 	// The actual extension is broken as specificed, storing the state in the texture unit instead
 	// of the texture object.  The behavior in GL 1.4 is the behavior we use.
+#if defined(USE_GLES1)
+	glConfig.textureLODBiasAvailable = false;
+#else
 	if ( glConfig.glVersion >= 1.4 || GLEW_EXT_texture_lod_bias ) {
 		common->Printf( "...using %s\n", "GL_1.4_texture_lod_bias" );
 		glConfig.textureLODBiasAvailable = true;
@@ -291,17 +355,30 @@ static void R_CheckPortableExtensions( void ) {
 		common->Printf( "X..%s not found\n", "GL_1.4_texture_lod_bias" );
 		glConfig.textureLODBiasAvailable = false;
 	}
+#endif
 
 	// GL_EXT_shared_texture_palette
+#if defined(USE_GLES1)
+	glConfig.sharedTexturePaletteAvailable = false;
+#else
 	glConfig.sharedTexturePaletteAvailable = GLEW_EXT_shared_texture_palette;
+#endif
 
 	// GL_EXT_texture3D (not currently used for anything)
+#if defined(USE_GLES1)
+	glConfig.texture3DAvailable = false;
+#else
 	glConfig.texture3DAvailable = GLEW_EXT_texture3D;
+#endif
 
 	// EXT_stencil_wrap
 	// This isn't very important, but some pathological case might cause a clamp error and give a shadow bug.
 	// Nvidia also believes that future hardware may be able to run faster with this enabled to avoid the
 	// serialization of clamping.
+#if defined(USE_GLES1)
+	tr.stencilIncr = GL_INCR;
+	tr.stencilDecr = GL_DECR;
+#else
 	if ( GLEW_EXT_stencil_wrap ) {
 		tr.stencilIncr = GL_INCR_WRAP_EXT;
 		tr.stencilDecr = GL_DECR_WRAP_EXT;
@@ -309,35 +386,60 @@ static void R_CheckPortableExtensions( void ) {
 		tr.stencilIncr = GL_INCR;
 		tr.stencilDecr = GL_DECR;
 	}
+#endif
 
 	// GL_NV_register_combiners
+#if defined(USE_GLES1)
+	glConfig.registerCombinersAvailable = false;
+#else
 	glConfig.registerCombinersAvailable = GLEW_NV_register_combiners;
+#endif
 
 	// GL_EXT_stencil_two_side
+#if defined(USE_GLES1)
+	glConfig.twoSidedStencilAvailable = false;
+#else
 	glConfig.twoSidedStencilAvailable = GLEW_EXT_stencil_two_side;
 	if ( !glConfig.twoSidedStencilAvailable ) {
 		glConfig.atiTwoSidedStencilAvailable = GLEW_ATI_separate_stencil;
 	}
+#endif
 
 	// GL_ATI_fragment_shader
+#if defined(USE_GLES1)
+	glConfig.atiFragmentShaderAvailable = false;
+#else
 	glConfig.atiFragmentShaderAvailable = GLEW_ATI_fragment_shader;
 	if (! glConfig.atiFragmentShaderAvailable ) {
 		// only on OSX: ATI_fragment_shader is faked through ATI_text_fragment_shader (macosx_glimp.cpp)
 		glConfig.atiFragmentShaderAvailable = GLEW_ATI_text_fragment_shader;
 	}
+#endif
 
 	// ARB_vertex_buffer_object
+#if defined(USE_GLES1)
+	glConfig.ARBVertexBufferObjectAvailable = true;
+#else
 	glConfig.ARBVertexBufferObjectAvailable = GLEW_ARB_vertex_buffer_object;
+#endif
 
 	// ARB_vertex_program
+#if defined(USE_GLES1)
+	glConfig.ARBVertexProgramAvailable = false;
+#else
 	glConfig.ARBVertexProgramAvailable = GLEW_ARB_vertex_program;
+#endif
 
 	// ARB_fragment_program
+#if defined(USE_GLES1)
+	glConfig.ARBFragmentProgramAvailable = false;
+#else
 	if ( r_inhibitFragmentProgram.GetBool() ) {
 		glConfig.ARBFragmentProgramAvailable = false;
 	} else {
 		glConfig.ARBFragmentProgramAvailable = GLEW_ARB_fragment_program;
 	}
+#endif
 
 	// check for minimum set
 	if ( !glConfig.multitextureAvailable || !glConfig.textureEnvCombineAvailable || !glConfig.cubeMapAvailable
@@ -346,14 +448,20 @@ static void R_CheckPortableExtensions( void ) {
 	}
 
  	// GL_EXT_depth_bounds_test
+#if defined(USE_GLES1)
+	glConfig.depthBoundsTestAvailable = false;
+#else
  	glConfig.depthBoundsTestAvailable = GLEW_EXT_depth_bounds_test;
+#endif
 
 	// GL_GREMEDY_string_marker
+#if !defined(USE_GLES1)
 	if ( GLEW_GREMEDY_string_marker ) {
 		common->Printf( "...using GL_GREMEDY_string_marker\n" );
 	} else {
 		common->Printf( "...GL_GREMEDY_string_marker not found\n" );
 	}
+#endif
 }
 // Techyon END
 
@@ -1006,7 +1114,9 @@ void R_ReadTiledPixels( int width, int height, byte *buffer, renderView_t *ref =
 				h = height - yo;
 			}
 
+#if !defined(USE_GLES1)
 			glReadBuffer( GL_FRONT );
+#endif
 			glReadPixels( 0, 0, w, h, GL_RGB, GL_UNSIGNED_BYTE, temp ); 
 
 			int	row = ( w * 3 + 3 ) & ~3;		// OpenGL pads to dword boundaries
@@ -1228,6 +1338,7 @@ Save out a screenshot showing the stencil buffer expanded by 16x range
 ===============
 */
 void R_StencilShot( void ) {
+#if !defined(USE_GLES1)
 	byte		*buffer;
 	int			i, c;
 
@@ -1263,6 +1374,7 @@ void R_StencilShot( void ) {
 
 	Mem_Free( buffer );
 	Mem_Free( byteBuffer );	
+#endif // #if !defined(USE_GLES1)
 }
 
 /* 

@@ -1244,7 +1244,9 @@ RENDER
 void RB_EnterWeaponDepthHack();
 void RB_EnterModelDepthHack( float depth );
 void RB_LeaveDepthHack();
+#if !defined(USE_GLES1)
 void RB_DrawElementsImmediate( const srfTriangles_t *tri );
+#endif
 void RB_RenderTriangleSurface( const srfTriangles_t *tri );
 void RB_T_RenderTriangleSurface( const drawSurf_t *surf );
 void RB_RenderDrawSurfListWithFunction( drawSurf_t **drawSurfs, int numDrawSurfs, 

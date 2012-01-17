@@ -69,10 +69,14 @@ void RB_SetDefaultGLState( void ) {
 	glEnable( GL_SCISSOR_TEST );
 	glEnable( GL_CULL_FACE );
 	glDisable( GL_LIGHTING );
+#if !defined(USE_GLES1)
 	glDisable( GL_LINE_STIPPLE );
+#endif
 	glDisable( GL_STENCIL_TEST );
 
+#if !defined(USE_GLES1)
 	glPolygonMode (GL_FRONT_AND_BACK, GL_FILL);
+#endif
 	glDepthMask( GL_TRUE );
 	glDepthFunc( GL_ALWAYS );
  
@@ -87,16 +91,20 @@ void RB_SetDefaultGLState( void ) {
 		GL_SelectTexture( i );
 
 		// object linear texgen is our default
+#if !defined(USE_GLES1)
 		glTexGenf( GL_S, GL_TEXTURE_GEN_MODE, GL_OBJECT_LINEAR );
 		glTexGenf( GL_T, GL_TEXTURE_GEN_MODE, GL_OBJECT_LINEAR );
 		glTexGenf( GL_R, GL_TEXTURE_GEN_MODE, GL_OBJECT_LINEAR );
 		glTexGenf( GL_Q, GL_TEXTURE_GEN_MODE, GL_OBJECT_LINEAR );
-
+#endif
 		GL_TexEnv( GL_MODULATE );
 		glDisable( GL_TEXTURE_2D );
+
+#if !defined(USE_GLES1)
 		if ( glConfig.texture3DAvailable ) {
 			glDisable( GL_TEXTURE_3D );
 		}
+#endif
 		if ( glConfig.cubeMapAvailable ) {
 			glDisable( GL_TEXTURE_CUBE_MAP_EXT );
 		}
@@ -111,7 +119,7 @@ RB_LogComment
 */
 void RB_LogComment( const char *fmt, ... ) {
 // Techyon BEGIN
-
+#if !defined(USE_GLES1)
 	va_list		argptr;
 	char		msg[4096];
 		
@@ -125,6 +133,7 @@ void RB_LogComment( const char *fmt, ... ) {
 	msg[sizeof(msg)-1] = '\0';
 	
 	glStringMarkerGREMEDY(strlen(msg), msg);
+#endif
 // Techyon END
 }
 
@@ -148,8 +157,8 @@ void GL_SelectTexture( int unit ) {
 		return;
 	}
 
-	glActiveTextureARB( GL_TEXTURE0_ARB + unit );
-	glClientActiveTextureARB( GL_TEXTURE0_ARB + unit );
+	glActiveTexture( GL_TEXTURE0 + unit );
+	glClientActiveTexture( GL_TEXTURE0 + unit );
 	RB_LogComment( "glActiveTextureARB( %i );\nglClientActiveTextureARB( %i );\n", unit, unit );
 
 	backEnd.glState.currenttmu = unit;
@@ -210,7 +219,7 @@ void GL_TexEnv( int env ) {
 	tmu->texEnv = env;
 
 	switch ( env ) {
-	case GL_COMBINE_EXT:
+	case GL_COMBINE:
 	case GL_MODULATE:
 	case GL_REPLACE:
 	case GL_DECAL:
@@ -371,6 +380,7 @@ void GL_State( int stateBits ) {
 	//
 	// fill/line mode
 	//
+#if !defined(USE_GLES1)
 	if ( diff & GLS_POLYMODE_LINE ) {
 		if ( stateBits & GLS_POLYMODE_LINE ) {
 			glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
@@ -378,6 +388,7 @@ void GL_State( int stateBits ) {
 			glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
 		}
 	}
+#endif
 
 	//
 	// alpha test
@@ -434,7 +445,10 @@ void RB_SetGL2D( void ) {
 	}
 	glMatrixMode( GL_PROJECTION );
     glLoadIdentity();
-	glOrtho( 0, 640, 480, 0, 0, 1 );		// always assume 640x480 virtual coordinates
+
+    // always assume 640x480 virtual coordinates
+	glOrtho( 0, 640, 480, 0, 0, 1 );
+
 	glMatrixMode( GL_MODELVIEW );
     glLoadIdentity();
 
@@ -465,7 +479,9 @@ static void	RB_SetBuffer( const void *data ) {
 
 	backEnd.frameCount = cmd->frameCount;
 
+#if !defined(USE_GLES1)
 	glDrawBuffer( cmd->buffer );
+#endif
 
 	// clear screen for debugging
 	// automatically enable this with several other debug tools
@@ -527,6 +543,8 @@ void RB_ShowImages( void ) {
 		}
 
 		image->Bind();
+
+#if !defined(USE_GLES1)
 		glBegin (GL_QUADS);
 		glTexCoord2f( 0, 0 );
 		glVertex2f( x, y );
@@ -537,6 +555,7 @@ void RB_ShowImages( void ) {
 		glTexCoord2f( 0, 1 );
 		glVertex2f( x, y + h );
 		glEnd();
+#endif
 	}
 
 	glFinish();

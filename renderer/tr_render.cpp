@@ -46,6 +46,7 @@ Draws with immediate mode commands, which is going to be very slow.
 This should never happen if the vertex cache is operating properly.
 =================
 */
+#if !defined(USE_GLES1)
 void RB_DrawElementsImmediate( const srfTriangles_t *tri ) {
 
 	backEnd.pc.c_drawElements++;
@@ -68,6 +69,7 @@ void RB_DrawElementsImmediate( const srfTriangles_t *tri ) {
 	}
 	glEnd();
 }
+#endif
 
 
 /*
@@ -145,10 +147,13 @@ Sets texcoord and vertex pointers
 ===============
 */
 void RB_RenderTriangleSurface( const srfTriangles_t *tri ) {
+
+#if !defined(USE_GLES1)
 	if ( !tri->ambientCache ) {
 		RB_DrawElementsImmediate( tri );
 		return;
 	}
+#endif
 
 
 	idDrawVert *ac = (idDrawVert *)vertexCache.Position( tri->ambientCache );
@@ -419,12 +424,14 @@ void RB_BindStageTexture( const float *shaderRegisters, const textureStage_t *te
 		glTexCoordPointer( 3, GL_FLOAT, 0, vertexCache.Position( surf->dynamicTexCoords ) );
 	}
 	if ( texture->texgen == TG_REFLECT_CUBE ) {
+#if !defined(USE_GLES1)
 		glEnable( GL_TEXTURE_GEN_S );
 		glEnable( GL_TEXTURE_GEN_T );
 		glEnable( GL_TEXTURE_GEN_R );
 		glTexGenf( GL_S, GL_TEXTURE_GEN_MODE, GL_REFLECTION_MAP_EXT );
 		glTexGenf( GL_T, GL_TEXTURE_GEN_MODE, GL_REFLECTION_MAP_EXT );
 		glTexGenf( GL_R, GL_TEXTURE_GEN_MODE, GL_REFLECTION_MAP_EXT );
+#endif
 		glEnableClientState( GL_NORMAL_ARRAY );
 		glNormalPointer( GL_FLOAT, sizeof( idDrawVert ), ((idDrawVert *)vertexCache.Position( surf->geo->ambientCache ))->normal.ToFloatPtr() );
 
@@ -456,12 +463,14 @@ void RB_FinishStageTexture( const textureStage_t *texture, const drawSurf_t *sur
 	}
 
 	if ( texture->texgen == TG_REFLECT_CUBE ) {
+#if !defined(USE_GLES1)
 		glDisable( GL_TEXTURE_GEN_S );
 		glDisable( GL_TEXTURE_GEN_T );
 		glDisable( GL_TEXTURE_GEN_R );
 		glTexGenf( GL_S, GL_TEXTURE_GEN_MODE, GL_OBJECT_LINEAR );
 		glTexGenf( GL_T, GL_TEXTURE_GEN_MODE, GL_OBJECT_LINEAR );
 		glTexGenf( GL_R, GL_TEXTURE_GEN_MODE, GL_OBJECT_LINEAR );
+#endif
 		glDisableClientState( GL_NORMAL_ARRAY );
 
 		glMatrixMode( GL_TEXTURE );

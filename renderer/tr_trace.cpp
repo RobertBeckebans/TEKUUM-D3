@@ -284,6 +284,7 @@ RB_DrawExpandedTriangles
 =================
 */
 void RB_DrawExpandedTriangles( const srfTriangles_t *tri, const float radius, const idVec3 &vieworg ) {
+#if !defined(USE_GLES1)
 	int i, j, k;
 	idVec3 dir[6], normal, point;
 
@@ -341,6 +342,7 @@ void RB_DrawExpandedTriangles( const srfTriangles_t *tri, const float radius, co
 
 		glEnd();
 	}
+#endif
 }
 
 /*
@@ -403,7 +405,11 @@ void RB_ShowTrace( drawSurf_t **drawSurfs, int numDrawSurfs ) {
 		GL_State( GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA );
 
 		glColor4f( 1, 0, 0, 0.25 );
+#if defined(USE_GLES1)
+		RB_DrawElementsWithCounters( tri );
+#else
 		RB_DrawElementsImmediate( tri );
+#endif
 
 		// draw the bounding box
 		GL_State( GLS_DEPTHFUNC_ALWAYS );
