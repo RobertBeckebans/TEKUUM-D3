@@ -292,7 +292,11 @@ Adds a new parameter for a function type.
 */
 void idTypeDef::AddFunctionParm( idTypeDef *parmtype, const char *name ) {
 	if ( type != ev_function ) {
+#if defined(USE_EXCEPTIONS)
 		throw idCompileError( "idTypeDef::AddFunctionParm : tried to add parameter on non-function type" );
+#else
+		gameLocal.Error( "idTypeDef::AddFunctionParm : tried to add parameter on non-function type" );
+#endif
 	}
 
 	parmTypes.Append( parmtype );
@@ -309,7 +313,11 @@ Adds a new field to an object type.
 */
 void idTypeDef::AddField( idTypeDef *fieldtype, const char *name ) {
 	if ( type != ev_object ) {
+#if defined(USE_EXCEPTIONS)
 		throw idCompileError( "idTypeDef::AddField : tried to add field to non-object type" );
+#else
+		gameLocal.Error( "idTypeDef::AddField : tried to add field to non-object type" );
+#endif
 	}
 
 	parmTypes.Append( fieldtype );
@@ -368,7 +376,11 @@ If type is an object, then returns the object's superclass
 */
 idTypeDef *idTypeDef::SuperClass( void ) const {
 	if ( type != ev_object ) {
+#if defined(USE_EXCEPTIONS)
 		throw idCompileError( "idTypeDef::SuperClass : tried to get superclass of a non-object type" );
+#else
+		gameLocal.Error( "idTypeDef::SuperClass : tried to get superclass of a non-object type" );
+#endif
 	}
 
 	return auxType;
@@ -383,7 +395,11 @@ If type is a function, then returns the function's return type
 */
 idTypeDef *idTypeDef::ReturnType( void ) const {
 	if ( type != ev_function ) {
+#if defined(USE_EXCEPTIONS)
 		throw idCompileError( "idTypeDef::ReturnType: tried to get return type on non-function type" );
+#else
+		gameLocal.Error( "idTypeDef::ReturnType: tried to get return type on non-function type" );
+#endif
 	}
 
 	return auxType;
@@ -398,7 +414,11 @@ If type is a function, then sets the function's return type
 */
 void idTypeDef::SetReturnType( idTypeDef *returntype ) {
 	if ( type != ev_function ) {
+#if defined(USE_EXCEPTIONS)
 		throw idCompileError( "idTypeDef::SetReturnType: tried to set return type on non-function type" );
+#else
+		gameLocal.Error( "idTypeDef::SetReturnType: tried to set return type on non-function type" );
+#endif
 	}
 
 	auxType = returntype;
@@ -413,7 +433,11 @@ If type is a field, then returns it's type
 */
 idTypeDef *idTypeDef::FieldType( void ) const {
 	if ( type != ev_field ) {
+#if defined(USE_EXCEPTIONS)
 		throw idCompileError( "idTypeDef::FieldType: tried to get field type on non-field type" );
+#else
+		gameLocal.Error( "idTypeDef::FieldType: tried to get field type on non-field type" );
+#endif
 	}
 
 	return auxType;
@@ -428,7 +452,11 @@ If type is a field, then sets the function's return type
 */
 void idTypeDef::SetFieldType( idTypeDef *fieldtype ) {
 	if ( type != ev_field ) {
+#if defined(USE_EXCEPTIONS)
 		throw idCompileError( "idTypeDef::SetFieldType: tried to set return type on non-function type" );
+#else
+		gameLocal.Error( "idTypeDef::SetFieldType: tried to set return type on non-function type" );
+#endif
 	}
 
 	auxType = fieldtype;
@@ -443,7 +471,11 @@ If type is a pointer, then returns the type it points to
 */
 idTypeDef *idTypeDef::PointerType( void ) const {
 	if ( type != ev_pointer ) {
+#if defined(USE_EXCEPTIONS)
 		throw idCompileError( "idTypeDef::PointerType: tried to get pointer type on non-pointer" );
+#else
+		gameLocal.Error( "idTypeDef::PointerType: tried to get pointer type on non-pointer" );
+#endif
 	}
 
 	return auxType;
@@ -458,7 +490,11 @@ If type is a pointer, then sets the pointer's type
 */
 void idTypeDef::SetPointerType( idTypeDef *pointertype ) {
 	if ( type != ev_pointer ) {
+#if defined(USE_EXCEPTIONS)
 		throw idCompileError( "idTypeDef::SetPointerType: tried to set type on non-pointer" );
+#else
+		gameLocal.Error( "idTypeDef::SetPointerType: tried to set type on non-pointer" );
+#endif
 	}
 
 	auxType = pointertype;
@@ -708,7 +744,11 @@ void idVarDef::SetValue( const eval_t &_value, bool constant ) {
 		break;
 
 	default :
+#if defined(USE_EXCEPTIONS)
 		throw idCompileError( va( "weird type on '%s'", Name() ) );
+#else
+		gameLocal.Error( "weird type on '%s'", Name() );
+#endif
 		break;
 	}
 }
@@ -1320,7 +1360,11 @@ idVarDef *idProgram::AllocDef( idTypeDef *type, const char *name, idVarDef *scop
 		def->value.bytePtr = &variables[ numVariables ];
 		numVariables += def->TypeDef()->Size();
 		if ( numVariables > sizeof( variables ) ) {
+#if defined(USE_EXCEPTIONS)
 			throw idCompileError( va( "Exceeded global memory size (%d bytes)", sizeof( variables ) ) );
+#else
+			gameLocal.Error( "Exceeded global memory size (%d bytes)", sizeof( variables ) );
+#endif
 		}
 
 		memset( def->value.bytePtr, 0, def->TypeDef()->Size() );
@@ -1366,7 +1410,11 @@ idVarDef *idProgram::GetDef( const idTypeDef *type, const char *name, const idVa
 
 	// see if the name is already in use for another type
 	if ( bestDef && type && ( bestDef->TypeDef() != type ) ) {
+#if defined(USE_EXCEPTIONS)
 		throw idCompileError( va( "Type mismatch on redeclaration of %s", name ) );
+#else
+		gameLocal.Error( "Type mismatch on redeclaration of %s", name );
+#endif
 	}
 
 	return bestDef;
@@ -1526,7 +1574,11 @@ idProgram::AllocFunction
 */
 function_t &idProgram::AllocFunction( idVarDef *def ) {
 	if ( functions.Num() >= functions.Max() ) {
+#if defined(USE_EXCEPTIONS)
 		throw idCompileError( va( "Exceeded maximum allowed number of functions (%d)", functions.Max() ) );
+#else
+		gameLocal.Error( "Exceeded maximum allowed number of functions (%d)", functions.Max() );
+#endif
 	}
 
 	// fill in the dfunction
@@ -1576,7 +1628,11 @@ idProgram::AllocStatement
 */
 statement_t *idProgram::AllocStatement( void ) {
 	if ( statements.Num() >= statements.Max() ) {
+#if defined(USE_EXCEPTIONS)
 		throw idCompileError( va( "Exceeded maximum allowed number of statements (%d)", statements.Max() ) );
+#else
+		gameLocal.Error( "Exceeded maximum allowed number of statements (%d)", statements.Max() );
+#endif
 	}
 	return statements.Alloc();
 }
@@ -1593,7 +1649,10 @@ void idProgram::BeginCompilation( void ) {
 
 	FreeData();
 
-	try {
+#if defined(USE_EXCEPTIONS)
+	try
+#endif
+	{
 		// make the first statement a return for a "NULL" function
 		statement = AllocStatement();
 		statement->linenumber	= 0;
@@ -1615,10 +1674,11 @@ void idProgram::BeginCompilation( void ) {
 		// define the sys object
 		sysDef = AllocDef( &type_void, "sys", &def_namespace, true );
 	}
-
+#if defined(USE_EXCEPTIONS)
 	catch( idCompileError &err ) {
 		gameLocal.Error( "%s", err.error );
 	}
+#endif
 }
 
 /*
@@ -1779,7 +1839,10 @@ bool idProgram::CompileText( const char *source, const char *text, bool console 
 	ospath = fileSystem->RelativePathToOSPath( source );
 	filenum = GetFilenum( ospath );
 
-	try {
+#if defined(USE_EXCEPTIONS)
+	try
+#endif
+	{
 		compiler.CompileFile( text, filename, console );
 
 		// check to make sure all functions prototyped have code
@@ -1787,12 +1850,16 @@ bool idProgram::CompileText( const char *source, const char *text, bool console 
 			def = varDefs[ i ];
 			if ( ( def->Type() == ev_function ) && ( ( def->scope->Type() == ev_namespace ) || def->scope->TypeDef()->Inherits( &type_object ) ) ) {
 				if ( !def->value.functionPtr->eventdef && !def->value.functionPtr->firstStatement ) {
+#if defined(USE_EXCEPTIONS)
 					throw idCompileError( va( "function %s was not defined\n", def->GlobalName() ) );
+#else
+					gameLocal.Error( "function %s was not defined\n", def->GlobalName() );
+#endif
 				}
 			}
 		}
 	}
-	
+#if defined(USE_EXCEPTIONS)
 	catch( idCompileError &err ) {
 		if ( console ) {
 			gameLocal.Printf( "%s\n", err.error );
@@ -1801,6 +1868,7 @@ bool idProgram::CompileText( const char *source, const char *text, bool console 
 			gameLocal.Error( "%s\n", err.error );
 		}
 	};
+#endif
 
 	if ( !console ) {
 		CompileStats();

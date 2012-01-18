@@ -107,6 +107,7 @@ proper superclass is indicated or the run-time type information will be
 incorrect.  Use this on concrete classes only.
 ================
 */
+#if defined(USE_EXCEPTIONS)
 #define CLASS_DECLARATION( nameofsuperclass, nameofclass )											\
 	idTypeInfo nameofclass::Type( #nameofclass, #nameofsuperclass,									\
 		( idEventFunc<idClass> * )nameofclass::eventCallbacks,	nameofclass::CreateInstance, ( void ( idClass::* )( void ) )&nameofclass::Spawn,	\
@@ -125,6 +126,21 @@ incorrect.  Use this on concrete classes only.
 		return &( nameofclass::Type );																\
 	}																								\
 idEventFunc<nameofclass> nameofclass::eventCallbacks[] = {
+#else
+#define CLASS_DECLARATION( nameofsuperclass, nameofclass )											\
+	idTypeInfo nameofclass::Type( #nameofclass, #nameofsuperclass,									\
+		( idEventFunc<idClass> * )nameofclass::eventCallbacks,	nameofclass::CreateInstance, ( void ( idClass::* )( void ) )&nameofclass::Spawn,	\
+		( void ( idClass::* )( idSaveGame * ) const )&nameofclass::Save, ( void ( idClass::* )( idRestoreGame * ) )&nameofclass::Restore );	\
+	idClass *nameofclass::CreateInstance( void ) {													\
+			nameofclass *ptr = new nameofclass;														\
+			ptr->FindUninitializedMemory();															\
+			return ptr;																				\
+	}																								\
+	idTypeInfo *nameofclass::GetType( void ) const {												\
+		return &( nameofclass::Type );																\
+	}																								\
+idEventFunc<nameofclass> nameofclass::eventCallbacks[] = {
+#endif
 
 /*
 ================

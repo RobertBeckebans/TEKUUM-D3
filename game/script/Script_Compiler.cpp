@@ -253,7 +253,11 @@ void idCompiler::Error( const char *message, ... ) const {
 	vsprintf( string, message, argptr );
 	va_end( argptr );
 
+#if defined(USE_EXCEPTIONS)
 	throw idCompileError( string );
+#else
+	parserPtr->Error( "%s", string );
+#endif
 }
 
 /*
@@ -2616,7 +2620,10 @@ void idCompiler::CompileFile( const char *text, const char *filename, bool toCon
 	token.line = 1;
 
 	error = false;
-	try {
+#if defined(USE_EXCEPTIONS)
+	try
+#endif
+	{
 		// read first token
 		NextToken();
 		while( !eof && !error ) {
@@ -2624,7 +2631,7 @@ void idCompiler::CompileFile( const char *text, const char *filename, bool toCon
 			ParseNamespace( &def_namespace );
 		}
 	}
-		
+#if defined(USE_EXCEPTIONS)
 	catch( idCompileError &err ) {
 		idStr error;
 
@@ -2639,6 +2646,9 @@ void idCompiler::CompileFile( const char *text, const char *filename, bool toCon
 
 		throw idCompileError( error );
 	}
+#else
+	common->Printf("Error: idCompiler::CompileFile: file %s, line %d: unknown error\n", gameLocal.program.GetFilename( currentFileNumber ), currentLineNumber );
+#endif
 
 	parser.FreeSource();
 

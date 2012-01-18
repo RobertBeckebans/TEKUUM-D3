@@ -700,15 +700,21 @@ void idCommonLocal::Error( const char *fmt, ... ) {
 
 	if ( code == ERP_DISCONNECT ) {
 		com_errorEntered = 0;
+#if defined(USE_EXCEPTIONS)
 		throw idException( errorMessage );
+#endif
 	// The gui editor doesnt want thing to com_error so it handles exceptions instead
 	} else if( com_editors & ( EDITOR_GUI | EDITOR_DEBUGGER ) ) {
 		com_errorEntered = 0;
+#if defined(USE_EXCEPTIONS)
 		throw idException( errorMessage );
+#endif
 	} else if ( code == ERP_DROP ) {
 		Printf( "********************\nERROR: %s\n********************\n", errorMessage );
 		com_errorEntered = 0;
+#if defined(USE_EXCEPTIONS)
 		throw idException( errorMessage );
+#endif
 	} else {
 		Printf( "********************\nERROR: %s\n********************\n", errorMessage );
 	}
@@ -2503,7 +2509,13 @@ idCommonLocal::Frame
 =================
 */
 void idCommonLocal::Frame( void ) {
-	try {
+
+// Techyon BEGIN
+#if defined(USE_EXCEPTIONS)
+	try
+#endif
+	{
+// Techyon END
 
 		// pump all the events
 		Sys_GenerateEvents();
@@ -2557,9 +2569,13 @@ void idCommonLocal::Frame( void ) {
 		}
 	}
 
+// Techyon BEGIN
+#if defined(USE_EXCEPTIONS)
 	catch( idException & ) {
 		return;			// an ERP_DROP was thrown
 	}
+#endif
+// Techyon END
 }
 
 /*
@@ -2828,7 +2844,13 @@ idCommonLocal::Init
 =================
 */
 void idCommonLocal::Init( int argc, const char **argv, const char *cmdline ) {
-	try {
+
+// Techyon BEGIN
+#if defined(USE_EXCEPTIONS)
+	try
+#endif
+	{
+// Techyon END
 
 		// set interface pointers used by idLib
 		idLib::sys			= sys;
@@ -2925,9 +2947,13 @@ void idCommonLocal::Init( int argc, const char **argv, const char *cmdline ) {
 		com_fullyInitialized = true;
 	}
 
+// Techyon BEGIN
+#if defined(USE_EXCEPTIONS)
 	catch( idException & ) {
 		Sys_Error( "Error during initialization" );
 	}
+#endif
+// Techyon END
 }
 
 

@@ -1350,16 +1350,21 @@ void TestSaveGame_f( const idCmdArgs &args ) {
 
 	name = args.Argv( 1 );
 
-	try {
+#if defined(USE_EXCEPTIONS)
+	try
+#endif
+	{
 		cmdSystem->BufferCommandText( CMD_EXEC_NOW, va( "map %s", name.c_str() ) );
 		name.Replace( "\\", "_" );
 		name.Replace( "/", "_" );
 		cmdSystem->BufferCommandText( CMD_EXEC_NOW, va( "saveGame test_%s", name.c_str() ) );
 		cmdSystem->BufferCommandText( CMD_EXEC_NOW, va( "loadGame test_%s", name.c_str() ) );
 	}
+#if defined(USE_EXCEPTIONS)
 	catch( idException & ) {
 		// an ERR_DROP was thrown
 	}
+#endif
 	cmdSystem->BufferCommandText( CMD_EXEC_NOW, "quit" );
 }
 
