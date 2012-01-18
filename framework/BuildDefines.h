@@ -68,9 +68,13 @@ If you have questions concerning this license or the applicable additional terms
 	#define ID_ALLOW_CHEATS 0
 #endif
 
+// Techyon BEGIN
+#if !defined(__ANDROID__)
 #ifndef ID_ENABLE_CURL
 	#define ID_ENABLE_CURL 1
 #endif
+#endif
+// Techyon END
 
 // fake a pure client. useful to connect an all-debug client to a server
 #ifndef ID_FAKE_PURE
