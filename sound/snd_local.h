@@ -30,6 +30,10 @@ If you have questions concerning this license or the applicable additional terms
 #define __SND_LOCAL_H__
 
 // you need the OpenAL headers for build, even if AL is not enabled - http://www.openal.org/
+
+// Techyon BEGIN
+#if defined(USE_OPENAL)
+
 #ifdef _WIN32
 #include "../openal/include/al.h"
 #include "../openal/include/alc.h"
@@ -42,12 +46,21 @@ If you have questions concerning this license or the applicable additional terms
 #include <OpenAL/al.h>
 #include <OpenAL/alc.h>
 #define ID_ALCHAR
+// Techyon BEGIN
+#elif defined(__ANDROID__)
+// don't include OpenAL on Android
+//#include <al.h>
+//#include <alc.h>
+// Techyon END
 #else         
 #include <AL/al.h>
 #include <AL/alc.h>
 #define ID_ALCHAR
 #endif
+
 #include "../openal/include/efxlib.h"
+#endif // #if defined(USE_OPENAL)
+// Techyon END
 
 // demo sound commands
 typedef enum {
@@ -424,10 +437,14 @@ public:
 	float				lastV[6];				// last calculated volume for each speaker, so we can smoothly fade
 	idSoundFade			channelFade;
 	bool				triggered;
+// Techyon BEGIN
+#if defined(USE_OPENAL)
 	ALuint				openalSource;
 	ALuint				openalStreamingOffset;
 	ALuint				openalStreamingBuffer[3];
 	ALuint				lastopenalStreamingBuffer[3];
+#endif
+// Techyon END
 
 	bool				disallowSlow;
 
@@ -667,7 +684,11 @@ idSoundSystemLocal
 */
 
 typedef struct {
+	// Techyon BEGIN
+#if defined(USE_OPENAL)
 	ALuint			handle;
+#endif
+	// Techyon END
 	int				startTime;
 	idSoundChannel	*chan;
 	bool			inUse;
@@ -731,8 +752,12 @@ public:
 
 	void					DoEnviroSuit( float* samples, int numSamples, int numSpeakers );
 
+	// Techyon BEGIN
+#if defined(USE_OPENAL)
 	ALuint					AllocOpenALSource( idSoundChannel *chan, bool looping, bool stereo );
 	void					FreeOpenALSource( ALuint handle );
+#endif
+	// Techyon END
 
 	idAudioHardware *		snd_audio_hw;
 	idSoundCache *			soundCache;
@@ -763,6 +788,8 @@ public:
 
 	idList<SoundFX*>		fxList;
 
+	// Techyon BEGIN
+#if defined(USE_OPENAL)
 	ALCdevice				*openalDevice;
 	ALCcontext				*openalContext;
 	ALsizei					openalSourceCount;
@@ -778,7 +805,8 @@ public:
 	static bool				useEAXReverb;
 							// mark available during initialization, or through an explicit test
 	static int				EAXAvailable;
-
+#endif
+	// Techyon END
 
 	static idCVar			s_noSound;
 	static idCVar			s_quadraticFalloff;
@@ -850,7 +878,11 @@ public:
 	int						objectMemSize;				// object size in memory
 	byte *					nonCacheData;				// if it's not cached
 	byte *					amplitudeData;				// precomputed min,max amplitude pairs
+	// Techyon BEGIN
+#if defined(USE_OPENAL)
 	ALuint					openalBuffer;				// openal buffer
+#endif
+	// Techyon END
 	bool					hardwareBuffer;
 	bool					defaultSound;
 	bool					onDemand;

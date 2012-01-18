@@ -185,10 +185,15 @@ void idSoundChannel::Clear( void ) {
 	memset( &parms, 0, sizeof(parms) );
 
 	triggered = false;
+
+	// Techyon BEGIN
+#if defined(USE_OPENAL)
 	openalSource = NULL;
 	openalStreamingOffset = 0;
 	openalStreamingBuffer[0] = openalStreamingBuffer[1] = openalStreamingBuffer[2] = 0;
 	lastopenalStreamingBuffer[0] = lastopenalStreamingBuffer[1] = lastopenalStreamingBuffer[2] = 0;
+#endif
+	// Techyon END
 }
 
 /*
@@ -222,6 +227,9 @@ idSoundChannel::ALStop
 ===================
 */
 void idSoundChannel::ALStop( void ) {
+
+	// Techyon BEGIN
+#if defined(USE_OPENAL)
 	if ( idSoundSystemLocal::useOpenAL ) {
 
 		if ( alIsSource( openalSource ) ) {
@@ -246,6 +254,8 @@ void idSoundChannel::ALStop( void ) {
 			}
 		}
 	}
+#endif
+	// Techyon END
 }
 
 /*
@@ -450,11 +460,17 @@ void idSoundEmitterLocal::CheckForCompletion( int current44kHzTime ) {
 
 			// see if this channel has completed
 			if ( !( chan->parms.soundShaderFlags & SSF_LOOPING ) ) {
+
+				// Techyon BEGIN
+#if defined(USE_OPENAL)
 				ALint state = AL_PLAYING;
 
 				if ( idSoundSystemLocal::useOpenAL && alIsSource( chan->openalSource ) ) {
 					alGetSourcei( chan->openalSource, AL_SOURCE_STATE, &state );
 				}
+#endif
+				// Techyon END
+
 				idSlowChannel slow = GetSlowChannel( chan );
 
 				if ( soundWorld->slowmoActive && slow.IsActive() ) {
@@ -466,7 +482,13 @@ void idSoundEmitterLocal::CheckForCompletion( int current44kHzTime ) {
 						}
 						continue;
 					}
-				} else if ( ( chan->trigger44kHzTime + chan->leadinSample->LengthIn44kHzSamples() < current44kHzTime ) || ( state == AL_STOPPED ) ) {
+				} else if ( ( chan->trigger44kHzTime + chan->leadinSample->LengthIn44kHzSamples() < current44kHzTime )
+				// Techyon BEGIN
+#if defined(USE_OPENAL)
+						|| ( state == AL_STOPPED )
+#endif
+				// Techyon END
+						) {
 					chan->Stop();
 
 					// free hardware resources
@@ -829,7 +851,13 @@ int idSoundEmitterLocal::StartSound( const idSoundShader *shader, const s_channe
 
 	// the sound will start mixing in the next async mix block
 	chan->triggered = true;
+
+	// Techyon BEGIN
+#if defined(USE_OPENAL)
 	chan->openalStreamingOffset = 0;
+#endif
+	// Techyon END
+
 	chan->trigger44kHzTime = start44kHz;
 	chan->parms = chanParms;
 	chan->triggerGame44kHzTime = soundWorld->game44kHz;

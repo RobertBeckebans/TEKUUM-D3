@@ -292,7 +292,11 @@ idSoundSample::idSoundSample() {
 	objectMemSize = 0;
 	nonCacheData = NULL;
 	amplitudeData = NULL;
+	// Techyon BEGIN
+#if defined(USE_OPENAL)
 	openalBuffer = NULL;
+#endif
+	// Techyon END
 	hardwareBuffer = false;
 	defaultSound = false;
 	onDemand = false;
@@ -355,6 +359,8 @@ void idSoundSample::MakeDefault( void ) {
 		ncd[i*2+1] = sample;
 	}
 
+	// Techyon BEGIN
+#if defined(USE_OPENAL)
 	if ( idSoundSystemLocal::useOpenAL ) {
 		alGetError();
 		alGenBuffers( 1, &openalBuffer );
@@ -370,6 +376,8 @@ void idSoundSample::MakeDefault( void ) {
 			hardwareBuffer = true;
 		}
 	}
+#endif
+	// Techyon END
 
 	defaultSound = true;
 }
@@ -485,6 +493,8 @@ void idSoundSample::Load( void ) {
 	// optionally convert it to 22kHz to save memory
 	CheckForDownSample();
 
+	// Techyon BEGIN
+#if defined(USE_OPENAL)
 	// create hardware audio buffers 
 	if ( idSoundSystemLocal::useOpenAL ) {
 		// PCM loads directly
@@ -616,6 +626,9 @@ void idSoundSample::Load( void ) {
 			nonCacheData = NULL;
 		}
 	}
+#endif // defined(USE_OPENAL)
+// Techyon END
+
 
 	fh.Close();
 }
@@ -628,6 +641,8 @@ idSoundSample::PurgeSoundSample
 void idSoundSample::PurgeSoundSample() {
 	purged = true;
 
+	// Techyon BEGIN
+#if defined(USE_OPENAL)
 	if ( hardwareBuffer && idSoundSystemLocal::useOpenAL ) {
 		alGetError();
 		alDeleteBuffers( 1, &openalBuffer );
@@ -638,6 +653,8 @@ void idSoundSample::PurgeSoundSample() {
 			hardwareBuffer = false;
 		}
 	}
+#endif
+	// Techyon END
 
 	if ( amplitudeData ) {
 		soundCacheAllocator.Free( amplitudeData );
