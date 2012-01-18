@@ -189,9 +189,15 @@ Sys_DestroyThread
 void Sys_DestroyThread( xthreadInfo& info ) {
 	// the target thread must have a cancelation point, otherwise pthread_cancel is useless
 	assert( info.threadHandle );
+
+// Techyon BEGIN
+#if !defined(__ANDROID__)
 	if ( pthread_cancel( ( pthread_t )info.threadHandle ) != 0 ) {
 		common->Error( "ERROR: pthread_cancel %s failed\n", info.name );
 	}
+#endif
+// Techyon END
+
 	if ( pthread_join( ( pthread_t )info.threadHandle, NULL ) != 0 ) {
 		common->Error( "ERROR: pthread_join %s failed\n", info.name );
 	}

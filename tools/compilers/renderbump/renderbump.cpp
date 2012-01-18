@@ -921,6 +921,8 @@ RenderBumpTriangles
 ==============
 */
 static void RenderBumpTriangles( srfTriangles_t *lowMesh, renderBump_t *rb ) {
+	// Techyon BEGIN
+#if !defined(USE_GLES1)
 	int		i, j;
 
 	RB_SetGL2D();
@@ -986,6 +988,8 @@ static void RenderBumpTriangles( srfTriangles_t *lowMesh, renderBump_t *rb ) {
 	}
 
 	Mem_Free( lowMeshNormals );
+#endif
+	// Techyon END
 }
 
 
@@ -1430,7 +1434,7 @@ void RenderBumpFlat_f( const idCmdArgs &args ) {
 	glDepthMask( GL_TRUE );
 	glDepthFunc( GL_LEQUAL );
 
-	glColor3f( 1, 1, 1 );
+	glColor4f( 1, 1, 1, 1 );
 
 	glMatrixMode( GL_PROJECTION );
 	glLoadIdentity();
@@ -1469,6 +1473,8 @@ void RenderBumpFlat_f( const idCmdArgs &args ) {
 			glClearColor(0.5,0.5,0.5,0);
 			glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
+			// Techyon BEGIN
+#if !defined(USE_GLES1)
 			glBegin( GL_TRIANGLES );
 			for ( i = 0 ; i < highPolyModel->NumSurfaces() ; i++ ) {
 				const modelSurface_t *surf = highPolyModel->Surface( i );
@@ -1546,6 +1552,9 @@ void RenderBumpFlat_f( const idCmdArgs &args ) {
 			}
 
 			glEnd();
+#endif
+			// Techyon END
+
 			glFlush();
 			GLimp_SwapBuffers();
 			glReadPixels( 0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, buffer ); 

@@ -1770,6 +1770,7 @@ void	RB_STD_DrawView( void ) {
 	case BE_ARB:
 		RB_ARB_DrawInteractions();
 		break;
+#if !defined(USE_GLES1)
 	case BE_ARB2:
 		RB_ARB2_DrawInteractions();
 		break;
@@ -1782,6 +1783,7 @@ void	RB_STD_DrawView( void ) {
 	case BE_R200:
 		RB_R200_DrawInteractions();
 		break;
+#endif
 	}
 
 	// disable stencil shadow test

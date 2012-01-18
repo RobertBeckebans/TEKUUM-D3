@@ -42,6 +42,12 @@ If you have questions concerning this license or the applicable additional terms
 #include <signal.h>
 #include <fcntl.h>
 
+// Techyon BEGIN
+#if defined(__ANDROID__)
+#include <android/log.h>
+#endif
+// Techyon END
+
 #include "posix_public.h"
 
 #define					MAX_OSPATH 256
@@ -447,9 +453,16 @@ void Sys_Sleep(int msec) {
 		// ignore that sleep call, keep going
 		return;
 	}
+
 	// use nanosleep? keep sleeping if signal interrupt?
+
+	// Techyon BEGIN
+#if defined(__ANDROID__)
+	usleep(msec * 1000);
+#else
 	if (usleep(msec * 1000) == -1)
 		Sys_Printf("usleep: %s\n", strerror(errno));
+#endif
 }
 
 char *Sys_GetClipboardData(void) {
@@ -690,6 +703,13 @@ void tty_Show() {
 		char *buf = input_field.GetBuffer();
 		if ( buf[0] ) {
 			write( STDOUT_FILENO, buf, strlen( buf ) );
+
+			// Techyon BEGIN
+#if defined(__ANDROID__)
+			__android_log_print(ANDROID_LOG_DEBUG, "Techyon_DEBUG", "%s", buf);
+#endif
+			// Techyon END
+
 			int back = strlen( buf ) - input_field.GetCursor();
 			while ( back > 0 ) {
 				tty_Left();

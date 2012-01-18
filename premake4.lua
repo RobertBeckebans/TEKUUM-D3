@@ -536,7 +536,7 @@ project "Techyon"
 	}
 	links
 	{
-		"idlib",
+		--"idlib",
 	}
 	
 if not _OPTIONS["android"] then
@@ -759,11 +759,6 @@ end
 			"sys/win32/win_gamma.cpp",
 			--"sys/win32/win_snd.cpp",
 		}
-		defines
-		{
-			--"USE_OPENAL",
-			--"ID_ALLOW_TOOLS",
-		}
 		includedirs
 		{
 			"curl/include",
@@ -801,6 +796,8 @@ end
 			--"_CRT_SECURE_NO_WARNINGS",
 			"_USE_32BIT_TIME_T",
 			"_MBCS",
+			"USE_OPENAL",
+			"USE_EXCEPTIONS",
 		}
 		
 		
@@ -910,6 +907,7 @@ if not _OPTIONS["android"] then
 		{
 			"GL",
 			"dl",
+			"idlib",
 		}
 		linkoptions
 		{
@@ -917,6 +915,8 @@ if not _OPTIONS["android"] then
 		}
 		defines
 		{
+			"USE_EXCEPTIONS",
+			"USE_OPENAL",
             "PNG_NO_ASSEMBLER_CODE",
 		}
 			
@@ -930,11 +930,40 @@ end -- if not _OPTIONS["android"]
 
 	configuration "android"
 		targetname  "techyon"
+		targetdir 	"../android/libs/armeabi"
 		includedirs 
 		{
 			"$(NDK)/platforms/android-4/arch-arm/usr/include",
 			"$(NDK)/prebuilt/windows/lib/gcc/arm-linux-androideabi/4.4.3/include",
 			"$(NDK)/sources/cxx-stl/stlport/stlport",
+		}
+		buildoptions
+		{
+			-- shut up about: the mangling of 'va_list' has changed in GCC 4.4
+			"-Wno-psabi",
+			
+			-- Android NDK does not support exceptions ...
+			"-fno-exceptions",
+		}
+		files
+		{
+			"idlib/**.cpp", "idlib/**.h",
+			"game/**.cpp", "game/**.h",
+			"sys/android/**.cpp", "android/**.h",
+			"sys/posix/posix_net.cpp",
+			"sys/posix/posix_main.cpp",
+			"sys/posix/posix_signal.cpp",
+			"sys/posix/posix_threads.cpp",
+			"sys/linux/stack.cpp",
+			--"sys/linux/main.cpp",
+			"tools/compilers/dmap/optimize_gcc.cpp",
+		}
+		excludes
+		{
+			"idlib/math/Simd_AltiVec.cpp", "idlib/math/Simd_AltiVec.h",
+			--"idlib/bv/Frustum_gcc.cpp",
+			"game/gamesys/Callbacks.cpp",
+			"game/EndLevel.cpp", "game/EndLevel.h",
 		}
 		excludes
 		{
@@ -946,17 +975,44 @@ end -- if not _OPTIONS["android"]
 			"renderer/draw_r200.cpp",
 			"libs/glew/src/glew.c",
 			"libs/glew/include/GL/glew.h",
+			"sound/snd_efxfile.cpp",
+		}
+		includedirs
+		{
+			--"curl/include",
+			--"openal/include",
+			--"libs/sdl/include",
 		}
 		defines
 		{
-			"USE_GLES1"
+			"USE_GLES1",
+		}
+		libdirs
+		{
+			"$(NDK)/platforms/android-4/arch-arm/usr/lib",
+			"$(NDK)/sources/cxx-stl/gnu-libstdc++/libs/armeabi",
+			"$(NDK)/sources/cxx-stl/stlport/libs/armeabi",
 		}
 		links
 		{
-			"GLES_CM"
+			"GLESv1_CM",
+			"m",
+			"c",
+			"log",
+			"gcc",
+			"dl",
+			"stdc++",
+			"stlport_static",
+			--"stlport_shared",
+			--"supc++",
+		}
+		linkoptions
+		{
+			"-nostdlib",
 		}
 		
 	configuration "neon"
+		targetname  "techyon_neon"
 		buildoptions
 		{
 			"-mcpu=cortex-a8 -mfloat-abi=softfp -mfpu=neon -fpic -fno-short-enums -ffunction-sections -funwind-tables -fstack-protector -ftree-vectorize -fsingle-precision-constant"
