@@ -77,8 +77,8 @@ function newplatform(plf)
 end
 
 newplatform {
-    name = "arm",
-    description = "Android arm",
+    name = "armeabi",
+    description = "Android armeabi",
     gcc = {
         cc = "${NDK}/toolchains/arm-linux-androideabi-4.4.3/prebuilt/windows/bin/arm-linux-androideabi-gcc",
 		cxx = "${NDK}/toolchains/arm-linux-androideabi-4.4.3/prebuilt/windows/bin/arm-linux-androideabi-g++",
@@ -87,8 +87,8 @@ newplatform {
 }
 
 newplatform {
-    name = "vfp",
-    description = "Android vfp",
+    name = "armeabi-v7a",
+    description = "Android armeabi-v7a",
     gcc = {
         cc = "${NDK}/toolchains/arm-linux-androideabi-4.4.3/prebuilt/windows/bin/arm-linux-androideabi-gcc",
 		cxx = "${NDK}/toolchains/arm-linux-androideabi-4.4.3/prebuilt/windows/bin/arm-linux-androideabi-g++",
@@ -96,15 +96,15 @@ newplatform {
     }
 }
 
-newplatform {
-    name = "neon",
-    description = "Android neon",
-    gcc = {
-        cc = "${NDK}/toolchains/arm-linux-androideabi-4.4.3/prebuilt/windows/bin/arm-linux-androideabi-gcc",
-		cxx = "${NDK}/toolchains/arm-linux-androideabi-4.4.3/prebuilt/windows/bin/arm-linux-androideabi-g++",
-		ar = "${NDK}/toolchains/arm-linux-androideabi-4.4.3/prebuilt/windows/bin/arm-linux-androideabi-ar",
-    }
-}
+--newplatform {
+--   name = "neon",
+--    description = "Android neon",
+--    gcc = {
+--        cc = "${NDK}/toolchains/arm-linux-androideabi-4.4.3/prebuilt/windows/bin/arm-linux-androideabi-gcc",
+--		cxx = "${NDK}/toolchains/arm-linux-androideabi-4.4.3/prebuilt/windows/bin/arm-linux-androideabi-g++",
+--		ar = "${NDK}/toolchains/arm-linux-androideabi-4.4.3/prebuilt/windows/bin/arm-linux-androideabi-ar",
+--    }
+--}
 
 
 --
@@ -186,7 +186,7 @@ solution "Techyon"
 	configurations { "Release", "Debug" }
 	
 	if _OPTIONS["android"] then
-		platforms {"arm", "vfp", "neon"}
+		platforms {"armeabi", "armeabi-v7a", "x32"}
 	else
 		platforms {"x32", "x64"}
 	end
@@ -260,7 +260,7 @@ solution "Techyon"
 			"-Wno-unknown-pragmas",
 			
 			-- only export what we mean to from the game SO
-			"-fvisibility=hidden",
+			--"-fvisibility=hidden",
 			
 			-- FIXME
 			--"-Wnowrite-strings",
@@ -930,7 +930,6 @@ end -- if not _OPTIONS["android"]
 
 	configuration "android"
 		targetname  "techyon"
-		targetdir 	"../android/libs/armeabi"
 		includedirs 
 		{
 			"$(NDK)/platforms/android-4/arch-arm/usr/include",
@@ -1009,18 +1008,22 @@ end -- if not _OPTIONS["android"]
 		linkoptions
 		{
 			"-nostdlib",
+			"--no-undefined",
 		}
 		
-	configuration "neon"
-		targetname  "techyon_neon"
-		buildoptions
-		{
-			"-mcpu=cortex-a8 -mfloat-abi=softfp -mfpu=neon -fpic -fno-short-enums -ffunction-sections -funwind-tables -fstack-protector -ftree-vectorize -fsingle-precision-constant"
-		}
-		defines
-		{
-			"__MATH_NEON",
-		}
+	configuration "armeabi"
+		targetdir 	"../android/libs/armeabi"
+	
+	-- configuration "neon"
+		-- targetname  "techyon_neon"
+		-- buildoptions
+		-- {
+			-- "-mcpu=cortex-a8 -mfloat-abi=softfp -mfpu=neon -fpic -fno-short-enums -ffunction-sections -funwind-tables -fstack-protector -ftree-vectorize -fsingle-precision-constant"
+		-- }
+		-- defines
+		-- {
+			-- "__MATH_NEON",
+		-- }
 
 -- FIXME
 if(os.is("windows")) then

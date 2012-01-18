@@ -28,6 +28,8 @@ If you have questions concerning this license or the applicable additional terms
 
 #include "../../idlib/precompiled.h"
 #include "../../renderer/tr_local.h"
+#include "../../sound/snd_local.h"
+#include "android_local.h"
 
 idCVar sys_videoRam( "sys_videoRam", "0", CVAR_SYSTEM | CVAR_ARCHIVE | CVAR_INTEGER, "Texture memory on the video card (in megabytes) - 0: autodetect", 0, 512 );
 
@@ -35,7 +37,7 @@ idCVar sys_videoRam( "sys_videoRam", "0", CVAR_SYSTEM | CVAR_ARCHIVE | CVAR_INTE
 extern "C"
 {
 
-void setResolution(int width, int height)
+void JNI_SetResolution(int width, int height)
 {
 	glConfig.vidWidth = width;
 	glConfig.vidHeight = height;
@@ -43,18 +45,31 @@ void setResolution(int width, int height)
 
 }
 
+
 bool GLimp_Init( glimpParms_t parms )
 {
+	const char *glstring;
+
 	glConfig.isFullscreen = true;
 
 	// FIXME check these with egl functions
 	glConfig.colorBits = 32;
 	glConfig.depthBits = 24;
 	glConfig.stencilBits = 8;
+
+	glstring = (const char *) glGetString(GL_RENDERER);
+	common->Printf("GL_RENDERER: %s\n", glstring);
+
+	glstring = (const char *) glGetString(GL_EXTENSIONS);
+	common->Printf("GL_EXTENSIONS: %s\n", glstring);
+
+	return true;
 }
+
 
 bool GLimp_SetScreenParms( glimpParms_t parms )
 {
+	return true;
 }
 
 void GLimp_Shutdown( void )

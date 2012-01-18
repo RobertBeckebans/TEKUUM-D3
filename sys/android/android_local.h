@@ -31,6 +31,11 @@ If you have questions concerning this license or the applicable additional terms
 
 extern glconfig_t glConfig;
 
+extern "C"
+{
+void JNI_SetResolution(int width, int height);
+}
+
 class idAudioHardwareOSS : public idAudioHardware {
 	// if you can't write MIXBUFFER_SAMPLES all at once to the audio device, split in MIXBUFFER_CHUNKS
 	static const int MIXBUFFER_CHUNKS = 4;

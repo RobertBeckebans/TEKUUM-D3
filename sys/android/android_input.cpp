@@ -28,6 +28,34 @@ If you have questions concerning this license or the applicable additional terms
 
 #include "../../idlib/precompiled.h"
 
+
+static void            (*s_setMenuState) (int shown);
+
+extern "C"
+{
+
+void JNI_SetInputCallbacks(void (*set_menu_state) (int shown))
+{
+	s_setMenuState = set_menu_state;
+}
+
+void JNI_QueueKeyEvent(int key, int state)
+{
+
+}
+
+void JNI_QueueMotionEvent(int action, float x, float y, float pressure)
+{
+
+}
+
+void JNI_QueueTrackballEvent(int action, float dx, float dy)
+{
+
+}
+
+}
+
 void Sys_InitInput( void ) {}
 
 void Sys_ShutdownInput( void ) {}

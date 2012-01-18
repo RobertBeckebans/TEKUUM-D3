@@ -42,6 +42,31 @@ If you have questions concerning this license or the applicable additional terms
 #include "../posix/posix_public.h"
 #include "android_local.h"
 
+
+static int             (*s_getPos) (void);
+static void            (*s_initAudio) (void *buffer, int size);
+static void            (*s_writeAudio) (int offset, int length);
+
+extern "C"
+{
+
+void JNI_SetAudioCallbacks(int (*get_pos) (void), void (*write_audio) (int, int), void (*init_audio) (void *, int))
+{
+	s_getPos = get_pos;
+	s_writeAudio = write_audio;
+	s_initAudio = init_audio;
+}
+
+void JNI_RequestAudioData(void)
+{
+	//int             offset = (dmapos * bytes_per_sample) & (buf_size - 1);
+
+	//writeAudio(offset, chunkSizeBytes);
+	//dmapos += dma.submission_chunk;
+}
+
+}
+
 // Techyon BEGIN
 #if defined(USE_SOUND_OSS)
 const char	*s_driverArgs[]	= { "best", "oss", "alsa", NULL };

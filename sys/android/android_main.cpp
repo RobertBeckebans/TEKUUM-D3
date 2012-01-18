@@ -552,6 +552,9 @@ void abrt_func( mcheck_status status ) {
 main
 ===============
 */
+extern "C"
+{
+
 int main(int argc, const char **argv) {
 
 	__android_log_print(ANDROID_LOG_DEBUG, "Techyon", "Inside Techyon source!");
@@ -572,7 +575,14 @@ int main(int argc, const char **argv) {
 
 	Posix_LateInit( );
 
-	while (1) {
-		common->Frame();
-	}
+	//while (1) {
+	//	common->Frame();
+	//}
+}
+
+void JNI_NextFrame(void)
+{
+	common->Frame();
+}
+
 }
