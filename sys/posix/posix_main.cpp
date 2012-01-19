@@ -1017,6 +1017,17 @@ low level output
 */
 
 void Sys_DebugPrintf( const char *fmt, ... ) {
+#if defined(__ANDROID__)
+	va_list		argptr;
+	char		msg[4096];
+
+	va_start( argptr, fmt );
+	idStr::vsnPrintf( msg, sizeof(msg), fmt, argptr );
+	va_end( argptr );
+	msg[sizeof(msg)-1] = '\0';
+
+	__android_log_print(ANDROID_LOG_DEBUG, "Techyon_Debug", msg);
+#else
 	va_list argptr;
 
 	tty_Hide();
@@ -1024,12 +1035,17 @@ void Sys_DebugPrintf( const char *fmt, ... ) {
 	vprintf( fmt, argptr );
 	va_end( argptr );
 	tty_Show();
+#endif
 }
 
 void Sys_DebugVPrintf( const char *fmt, va_list arg ) {
+#if defined(__ANDROID__)
+	__android_log_vprint(ANDROID_LOG_DEBUG, "Techyon_Debug", fmt, arg);
+#else
 	tty_Hide();
 	vprintf( fmt, arg );
 	tty_Show();
+#endif
 }
 
 void Sys_Printf(const char *fmt, ...) {
