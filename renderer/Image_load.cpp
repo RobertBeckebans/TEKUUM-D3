@@ -1758,7 +1758,7 @@ Automatically enables 2D mapping, cube mapping, or 3D texturing if needed
 ==============
 */
 void idImage::Bind() {
-	if ( tr.logFile ) {
+	if ( r_logFile.GetBool() ) {
 		RB_LogComment( "idImage::Bind( %s )\n", imgName.c_str() );
 	}
 
@@ -1862,7 +1862,7 @@ do any enable / disable changes
 ==============
 */
 void idImage::BindFragment() {
-	if ( tr.logFile ) {
+	if ( r_logFile.GetBool() ) {
 		RB_LogComment( "idImage::BindFragment %s )\n", imgName.c_str() );
 	}
 
