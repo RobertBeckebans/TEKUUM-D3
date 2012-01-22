@@ -607,6 +607,7 @@ typedef struct {
 	int			faceCulling;
 	int			glStateBits;
 	bool		forceGlState;		// the next GL_State will ignore glStateBits and set everything
+	struct shaderProgram_s   *currentProgram;
 } glstate_t;
 
 
@@ -1379,6 +1380,278 @@ typedef enum {
 
 	PP_LIGHT_FALLOFF_TQ = 20	// only for NV programs
 } programParameter_t;
+
+
+
+// Techyon BEGIN
+
+enum
+{
+	ATTR_INDEX_POSITION,
+	ATTR_INDEX_TEXCOORD0,
+	ATTR_INDEX_TEXCOORD1,
+	ATTR_INDEX_TANGENT,
+	ATTR_INDEX_BITANGENT,
+	ATTR_INDEX_NORMAL,
+	ATTR_INDEX_COLOR,
+//	ATTR_INDEX_LIGHTDIRECTION,
+
+	// GPU vertex skinning
+	ATTR_INDEX_BONE_INDEXES,
+	ATTR_INDEX_BONE_WEIGHTS,
+
+	// GPU vertex animations
+	ATTR_INDEX_POSITION2,
+	ATTR_INDEX_TANGENT2,
+	ATTR_INDEX_BINORMAL2,
+	ATTR_INDEX_NORMAL2,
+};
+
+enum
+{
+	ATTR_POSITION = BIT(0),
+	ATTR_TEXCOORD = BIT(1),
+	ATTR_LIGHTCOORD = BIT(2),
+	ATTR_TANGENT = BIT(3),
+	ATTR_BITANGENT = BIT(4),
+	ATTR_NORMAL = BIT(5),
+	ATTR_COLOR = BIT(6),
+//	ATTR_LIGHTDIRECTION = BIT(8),
+	
+	ATTR_BONE_INDEXES = BIT(9),
+	ATTR_BONE_WEIGHTS = BIT(10),
+
+	// for .md3 interpolation
+	ATTR_POSITION2 = BIT(11),
+	ATTR_TANGENT2 = BIT(12),
+	ATTR_BINORMAL2 = BIT(13),
+	ATTR_NORMAL2 = BIT(14),
+
+	// FIXME XBSP format with ATTR_LIGHTDIRECTION and ATTR_PAINTCOLOR
+	//ATTR_DEFAULT = ATTR_POSITION | ATTR_TEXCOORD | ATTR_TANGENT | ATTR_BINORMAL | ATTR_COLOR,
+
+	ATTR_BITS =	ATTR_POSITION |
+				ATTR_TEXCOORD |
+				ATTR_LIGHTCOORD |
+				ATTR_TANGENT |
+				ATTR_BITANGENT |
+				ATTR_NORMAL |
+				ATTR_COLOR// |
+//				ATTR_LIGHTDIRECTION
+
+				//|
+				//ATTR_BONE_INDEXES |
+				//ATTR_BONE_WEIGHTS
+};
+
+// RB: shaderProgram_t represents a compiled GLSL shader including vertex, fragment and geometry shader parts
+typedef struct shaderProgram_s
+{
+	idStr			name;
+	//char            name[MAX_OSPATH];
+	char           *compileMacros;
+
+	GLhandleARB     program;
+	uint32_t        attribs;	// vertex array attributes
+
+	// uniform parameters
+	int32_t         u_ColorMap;
+	int32_t         u_CurrentMap;
+	int32_t         u_ContrastMap;
+	int32_t         u_DiffuseMap;
+	int32_t         u_NormalMap;
+	int32_t         u_SpecularMap;
+	int32_t         u_LightMap;
+	int32_t         u_DeluxeMap;
+	int32_t         u_DepthMap;
+	int32_t         u_DepthMapBack;
+	int32_t         u_DepthMapFront;
+	int32_t         u_PortalMap;
+	int32_t         u_AttenuationMapXY;
+	int32_t         u_AttenuationMapZ;
+	int32_t         u_ShadowMap;
+	int32_t         u_ShadowMap0;
+	int32_t         u_ShadowMap1;
+	int32_t         u_ShadowMap2;
+	int32_t         u_ShadowMap3;
+	int32_t         u_ShadowMap4;
+	int32_t         u_EnvironmentMap0;
+	int32_t         u_EnvironmentMap1;
+
+	int32_t			u_RandomMap;
+	int32_t         u_GrainMap;
+	int32_t         u_VignetteMap;
+
+	int32_t         u_ColorTextureMatrix;
+	idMat4			t_ColorTextureMatrix;
+
+	int32_t         u_DiffuseTextureMatrix;
+	idMat4			t_DiffuseTextureMatrix;
+
+	int32_t         u_NormalTextureMatrix;
+	idMat4			t_NormalTextureMatrix;
+
+	int32_t         u_SpecularTextureMatrix;
+	idMat4			t_SpecularTextureMatrix;
+
+//	int32_t         u_AlphaTest;
+//	alphaTest_t		t_AlphaTest;
+
+	int32_t         u_ViewOrigin;
+	idVec3			t_ViewOrigin;
+
+	GLint			u_DeformParms;
+
+	int32_t         u_Color;
+	idVec4			t_Color;
+
+	int32_t         u_ColorModulate;
+	idVec4			t_ColorModulate;
+
+	int32_t         u_AmbientColor;
+	idVec3			t_AmbientColor;
+
+	int32_t         u_LightDir;
+	idVec3			t_LightDir;
+
+	int32_t         u_LightOrigin;
+	idVec3			t_LightOrigin;
+
+	int32_t         u_LightColor;
+	idVec3			t_LightColor;
+
+	int32_t         u_LightRadius;
+	float			t_LightRadius;
+
+	int32_t         u_LightScale;
+	float			t_LightScale;
+
+	int32_t         u_LightWrapAround;
+	float			t_LightWrapAround;
+
+	int32_t         u_LightAttenuationMatrix;
+	idMat4			t_LightAttenuationMatrix;
+
+	int32_t         u_LightFrustum;
+
+	int32_t         u_ShadowMatrix;
+	idMat4			t_ShadowMatrix;
+
+	int32_t         u_ShadowTexelSize;
+	float			t_ShadowTexelSize;
+
+	int32_t         u_ShadowBlur;
+	float			t_ShadowBlur;
+
+	GLint			u_ShadowParallelSplitDistances;
+	idVec4			t_ShadowParallelSplitDistances;
+
+	int32_t         u_RefractionIndex;
+	float			t_RefractionIndex;
+
+	int32_t         u_FresnelPower;
+	int32_t         u_FresnelScale;
+	int32_t         u_FresnelBias;
+
+	GLint			u_NormalScale;
+
+	int32_t         u_EtaRatio;
+
+	int32_t         u_FogDensity;
+	int32_t         u_FogColor;
+
+	GLint			u_FogDistanceVector;
+	idVec4			t_FogDistanceVector;
+
+	GLint			u_FogDepthVector;
+	idVec4			t_FogDepthVector;
+
+	GLint			u_FogEyeT;
+	float			t_FogEyeT;
+
+	int32_t         u_SSAOJitter;
+	int32_t         u_SSAORadius;
+
+//	GLint			u_ParallaxMapping;
+//	qboolean		t_ParallaxMapping;
+
+	int32_t         u_DepthScale;
+	float			t_DepthScale;
+
+
+//	GLint			u_PortalClipping;
+//	qboolean		t_PortalClipping;
+
+	GLint			u_PortalPlane;
+	idVec4			t_PortalPlane;
+
+	int32_t         u_PortalRange;
+	float			t_PortalRange;
+
+	GLint			u_EnvironmentInterpolation;
+	float			t_EnvironmentInterpolation;
+
+	GLint			u_HDRKey;
+	float			t_HDRKey;
+
+	GLint			u_HDRAverageLuminance;
+	float			t_HDRAverageLuminance;
+
+	GLint			u_HDRMaxLuminance;
+	float			t_HDRMaxLuminance;
+
+	int32_t         u_DeformMagnitude;
+	float			t_DeformMagnitude;
+
+
+	int32_t         u_ModelMatrix;	// model -> world
+	idMat4			t_ModelMatrix;
+
+	int32_t         u_ViewMatrix;	// world -> camera
+	idMat4			t_ViewMatrix;
+
+	int32_t         u_ModelViewMatrix;	// model -> camera
+	idMat4			t_ModelViewMatrix;
+
+	int32_t         u_ModelViewMatrixTranspose;
+	idMat4			t_ModelViewMatrixTranspose;
+
+	int32_t         u_ProjectionMatrix;
+	idMat4			t_ProjectionMatrix;
+
+	int32_t         u_ProjectionMatrixTranspose;
+	idMat4			t_ProjectionMatrixTranspose;
+
+	int32_t         u_ModelViewProjectionMatrix;
+	idMat4			t_ModelViewProjectionMatrix;
+
+	int32_t         u_UnprojectMatrix;
+	idMat4			t_UnprojectMatrix;
+
+//	int32_t         u_VertexSkinning;
+//	bool			t_VertexSkinning;
+
+	GLint			u_VertexInterpolation;
+	float			t_VertexInterpolation;
+
+	int32_t         u_BoneMatrix;
+
+	int32_t         u_Time;
+	float			t_Time;
+} shaderProgram_t;
+
+//#define	SHADER_PROGRAM_T_OFS(x) ((size_t)&(((shader_t *)0)->x))
+
+
+void			R_GLSL_Init( void );
+void			RB_GLSL_DrawInteractions( void );
+void			R_ReloadShaders_f( const idCmdArgs &args );
+int				R_FindShader( GLenum target, const char *program );
+
+void            GL_BindProgram(shaderProgram_t * program);
+void            GL_BindNullProgram(void);
+
+// Techyon END
 
 
 /*
