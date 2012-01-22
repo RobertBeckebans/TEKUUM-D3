@@ -123,12 +123,7 @@ void Sys_AsyncThread( void ) {
  ==============
  */
 const char *Sys_DefaultSavePath(void) {
-#if defined( ID_DEMO_BUILD )
-	sprintf( savepath, "%s/.doom3-demo", getenv( "HOME" ) );
-#else
-	sprintf( savepath, "%s/.doom3", getenv( "HOME" ) );
-#endif
-	return savepath.c_str();
+	return cvarSystem->GetCVarString( "fs_basepath" );
 }
 /*
 ==============
@@ -184,7 +179,9 @@ const char *Sys_DefaultBasePath(void) {
 		}
 	}
 	common->Printf( "WARNING: using hardcoded default base path\n" );
-	return LINUX_DEFAULT_PATH;
+	//return LINUX_DEFAULT_PATH;
+
+	return "/sdcard/techyon";
 }
 
 /*
@@ -559,6 +556,11 @@ int main(int argc, const char **argv) {
 
 	__android_log_print(ANDROID_LOG_DEBUG, "Techyon", "Inside Techyon source!");
 
+	for (int i = 0; i < argc; i++)
+	{
+		__android_log_print(ANDROID_LOG_DEBUG, "Techyon", "main(argc=%d, %s)", i, argv[i]);
+	}
+
 #ifdef ID_MCHECK
 	// must have -lmcheck linkage
 	mcheck( abrt_func );
@@ -567,8 +569,8 @@ int main(int argc, const char **argv) {
 
 	Posix_EarlyInit( );
 
-	if ( argc > 1 ) {
-		common->Init( argc-1, &argv[1], NULL );
+	if ( argc > 0 ) {
+		common->Init( argc, &argv[0], NULL );
 	} else {
 		common->Init( 0, NULL, NULL );
 	}
@@ -582,6 +584,8 @@ int main(int argc, const char **argv) {
 
 void JNI_NextFrame(void)
 {
+	//__android_log_print(ANDROID_LOG_DEBUG, "Techyon", "JNI_NextFrame()");
+
 	common->Frame();
 }
 

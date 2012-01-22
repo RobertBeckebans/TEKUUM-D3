@@ -57,6 +57,9 @@ bool GLimp_Init( glimpParms_t parms )
 	glConfig.depthBits = 24;
 	glConfig.stencilBits = 8;
 
+	glstring = (const char *) glGetString(GL_VENDOR);
+	common->Printf("GL_VENDOR: %s\n", glstring);
+
 	glstring = (const char *) glGetString(GL_RENDERER);
 	common->Printf("GL_RENDERER: %s\n", glstring);
 
