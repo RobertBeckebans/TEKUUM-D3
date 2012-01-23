@@ -620,6 +620,7 @@ void R_InitOpenGL( void ) {
 	R_NV20_Init();
 	R_R200_Init();
 	R_ARB2_Init();
+	R_GLSL_Init();
 
 	cmdSystem->AddCommand( "reloadARBprograms", R_ReloadARBPrograms_f, CMD_FL_RENDERER, "reloads ARB programs" );
 	R_ReloadARBPrograms_f( idCmdArgs() );
@@ -1763,6 +1764,12 @@ static void GfxInfo_f( const idCmdArgs &args ) {
 		common->Printf( "ARB2 path ENABLED%s\n", active[tr.backEndRenderer == BE_ARB2] );
 	} else {
 		common->Printf( "ARB2 path disabled\n" );
+	}
+
+	if ( GLEW_ARB_fragment_shader && GLEW_ARB_vertex_shader && GL_ARB_shader_objects && GLEW_ARB_shading_language_100 ) {
+		common->Printf( "GLSL path ENABLED%s\n", active[tr.backEndRenderer == BE_GLSL] );
+	} else {
+		common->Printf( "GLSL path disabled\n" );
 	}
 
 	//=============================

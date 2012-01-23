@@ -93,9 +93,33 @@ static void GL_SelectTextureNoClient( int unit ) {
 RB_GLSL_DrawInteraction
 ==================
 */
-void	RB_GLSL_DrawInteraction( const drawInteraction_t *din ) {
-#if 0
+static void	RB_GLSL_DrawInteraction( const drawInteraction_t *din ) {
+
+	// choose and bind the vertex program
+	// TODO gl_forwardLightingShader->SetAmbientLighting(backEnd.vLight->lightShader->IsAmbientLight());
+	gl_forwardLightingShader->SetNormalMapping(!r_skipBump.GetBool());
+	gl_forwardLightingShader->BindProgram();
+
 	// load all the vertex program parameters
+	gl_forwardLightingShader->SetUniform_ViewOrigin(din->localViewOrigin.ToVec3());
+
+	gl_forwardLightingShader->SetUniform_LightOrigin(din->localLightOrigin.ToVec3());
+
+	gl_forwardLightingShader->SetUniform_LightProjectS(din->lightProjection[0]);
+	gl_forwardLightingShader->SetUniform_LightProjectT(din->lightProjection[1]);
+	gl_forwardLightingShader->SetUniform_LightProjectQ(din->lightProjection[2]);
+	gl_forwardLightingShader->SetUniform_LightFalloffS(din->lightProjection[3]);
+
+	gl_forwardLightingShader->SetUniform_DiffuseMatrixS(din->diffuseMatrix[0]);
+	gl_forwardLightingShader->SetUniform_DiffuseMatrixT(din->diffuseMatrix[1]);
+
+	gl_forwardLightingShader->SetUniform_BumpMatrixS(din->bumpMatrix[0]);
+	gl_forwardLightingShader->SetUniform_BumpMatrixT(din->bumpMatrix[1]);
+
+	gl_forwardLightingShader->SetUniform_SpecularMatrixS(din->specularMatrix[0]);
+	gl_forwardLightingShader->SetUniform_SpecularMatrixT(din->specularMatrix[1]);
+
+	/*
 	glProgramEnvParameter4fvARB( GL_VERTEX_PROGRAM_ARB, PP_LIGHT_ORIGIN, din->localLightOrigin.ToFloatPtr() );
 	glProgramEnvParameter4fvARB( GL_VERTEX_PROGRAM_ARB, PP_VIEW_ORIGIN, din->localViewOrigin.ToFloatPtr() );
 	glProgramEnvParameter4fvARB( GL_VERTEX_PROGRAM_ARB, PP_LIGHT_PROJECT_S, din->lightProjection[0].ToFloatPtr() );
@@ -108,35 +132,38 @@ void	RB_GLSL_DrawInteraction( const drawInteraction_t *din ) {
 	glProgramEnvParameter4fvARB( GL_VERTEX_PROGRAM_ARB, PP_DIFFUSE_MATRIX_T, din->diffuseMatrix[1].ToFloatPtr() );
 	glProgramEnvParameter4fvARB( GL_VERTEX_PROGRAM_ARB, PP_SPECULAR_MATRIX_S, din->specularMatrix[0].ToFloatPtr() );
 	glProgramEnvParameter4fvARB( GL_VERTEX_PROGRAM_ARB, PP_SPECULAR_MATRIX_T, din->specularMatrix[1].ToFloatPtr() );
+	*/
 
 	// testing fragment based normal mapping
+	/*
 	if ( r_testARBProgram.GetBool() ) {
 		glProgramEnvParameter4fvARB( GL_FRAGMENT_PROGRAM_ARB, 2, din->localLightOrigin.ToFloatPtr() );
 		glProgramEnvParameter4fvARB( GL_FRAGMENT_PROGRAM_ARB, 3, din->localViewOrigin.ToFloatPtr() );
 	}
+	*/
 
-	static const float zero[4] = { 0, 0, 0, 0 };
-	static const float one[4] = { 1, 1, 1, 1 };
-	static const float negOne[4] = { -1, -1, -1, -1 };
+	static const idVec4 zero( 0, 0, 0, 0 );
+	static const idVec4 one( 1, 1, 1, 1 );
+	static const idVec4 negOne( -1, -1, -1, -1 );
 
 	switch ( din->vertexColor ) {
 	case SVC_IGNORE:
-		glProgramEnvParameter4fvARB( GL_VERTEX_PROGRAM_ARB, PP_COLOR_MODULATE, zero );
-		glProgramEnvParameter4fvARB( GL_VERTEX_PROGRAM_ARB, PP_COLOR_ADD, one );
+		gl_forwardLightingShader->SetUniform_ColorModulate(zero);
+		gl_forwardLightingShader->SetUniform_Color(one);
 		break;
 	case SVC_MODULATE:
-		glProgramEnvParameter4fvARB( GL_VERTEX_PROGRAM_ARB, PP_COLOR_MODULATE, one );
-		glProgramEnvParameter4fvARB( GL_VERTEX_PROGRAM_ARB, PP_COLOR_ADD, zero );
+		gl_forwardLightingShader->SetUniform_ColorModulate(one);
+		gl_forwardLightingShader->SetUniform_Color(zero);
 		break;
 	case SVC_INVERSE_MODULATE:
-		glProgramEnvParameter4fvARB( GL_VERTEX_PROGRAM_ARB, PP_COLOR_MODULATE, negOne );
-		glProgramEnvParameter4fvARB( GL_VERTEX_PROGRAM_ARB, PP_COLOR_ADD, one );
+		gl_forwardLightingShader->SetUniform_ColorModulate(negOne);
+		gl_forwardLightingShader->SetUniform_Color(one);
 		break;
 	}
 
 	// set the constant colors
-	glProgramEnvParameter4fvARB( GL_FRAGMENT_PROGRAM_ARB, 0, din->diffuseColor.ToFloatPtr() );
-	glProgramEnvParameter4fvARB( GL_FRAGMENT_PROGRAM_ARB, 1, din->specularColor.ToFloatPtr() );
+	gl_forwardLightingShader->SetUniform_DiffuseColor(din->diffuseColor);
+	gl_forwardLightingShader->SetUniform_SpecularColor(din->specularColor);
 
 	// set the textures
 
@@ -162,7 +189,6 @@ void	RB_GLSL_DrawInteraction( const drawInteraction_t *din ) {
 
 	// draw it
 	RB_DrawElementsWithCounters( din->surf->geo );
-#endif
 }
 
 
@@ -171,8 +197,7 @@ void	RB_GLSL_DrawInteraction( const drawInteraction_t *din ) {
 RB_GLSL_CreateDrawInteractions
 =============
 */
-void RB_GLSL_CreateDrawInteractions( const drawSurf_t *surf ) {
-#if 0
+static void RB_GLSL_CreateDrawInteractions( const drawSurf_t *surf ) {
 	if ( !surf ) {
 		return;
 	}
@@ -180,23 +205,11 @@ void RB_GLSL_CreateDrawInteractions( const drawSurf_t *surf ) {
 	// perform setup here that will be constant for all interactions
 	GL_State( GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE | GLS_DEPTHMASK | backEnd.depthFunc );
 
-	// bind the vertex program
-	if ( r_testARBProgram.GetBool() ) {
-		glBindProgramARB( GL_VERTEX_PROGRAM_ARB, VPROG_TEST );
-		glBindProgramARB( GL_FRAGMENT_PROGRAM_ARB, FPROG_TEST );
-	} else {
-		glBindProgramARB( GL_VERTEX_PROGRAM_ARB, VPROG_INTERACTION );
-		glBindProgramARB( GL_FRAGMENT_PROGRAM_ARB, FPROG_INTERACTION );
-	}
-
-	glEnable(GL_VERTEX_PROGRAM_ARB);
-	glEnable(GL_FRAGMENT_PROGRAM_ARB);
-
 	// enable the vertex arrays
-	glEnableVertexAttribArrayARB( 8 );
-	glEnableVertexAttribArrayARB( 9 );
-	glEnableVertexAttribArrayARB( 10 );
-	glEnableVertexAttribArrayARB( 11 );
+	glEnableVertexAttribArrayARB( VA_INDEX_TEXCOORD0 );
+	glEnableVertexAttribArrayARB( VA_INDEX_TANGENT );
+	glEnableVertexAttribArrayARB( VA_INDEX_BITANGENT );
+	glEnableVertexAttribArrayARB( VA_INDEX_NORMAL );
 	glEnableClientState( GL_COLOR_ARRAY );
 
 	// texture 0 is the normalization cube map for the vector towards the light
@@ -208,13 +221,14 @@ void RB_GLSL_CreateDrawInteractions( const drawSurf_t *surf ) {
 	}
 
 	// texture 6 is the specular lookup table
+	/*
 	GL_SelectTextureNoClient( 6 );
 	if ( r_testARBProgram.GetBool() ) {
 		globalImages->specular2DTableImage->Bind();	// variable specularity in alpha channel
 	} else {
 		globalImages->specularTableImage->Bind();
 	}
-
+	*/
 
 	for ( ; surf ; surf=surf->nextOnLight ) {
 		// perform setup here that will not change over multiple interaction passes
@@ -222,21 +236,21 @@ void RB_GLSL_CreateDrawInteractions( const drawSurf_t *surf ) {
 		// set the vertex pointers
 		idDrawVert	*ac = (idDrawVert *)vertexCache.Position( surf->geo->ambientCache );
 		glColorPointer( 4, GL_UNSIGNED_BYTE, sizeof( idDrawVert ), ac->color );
-		glVertexAttribPointerARB( 11, 3, GL_FLOAT, false, sizeof( idDrawVert ), ac->normal.ToFloatPtr() );
-		glVertexAttribPointerARB( 10, 3, GL_FLOAT, false, sizeof( idDrawVert ), ac->tangents[1].ToFloatPtr() );
-		glVertexAttribPointerARB( 9, 3, GL_FLOAT, false, sizeof( idDrawVert ), ac->tangents[0].ToFloatPtr() );
-		glVertexAttribPointerARB( 8, 2, GL_FLOAT, false, sizeof( idDrawVert ), ac->st.ToFloatPtr() );
+		glVertexAttribPointerARB( VA_INDEX_NORMAL, 3, GL_FLOAT, false, sizeof( idDrawVert ), ac->normal.ToFloatPtr() );
+		glVertexAttribPointerARB( VA_INDEX_BITANGENT, 3, GL_FLOAT, false, sizeof( idDrawVert ), ac->tangents[1].ToFloatPtr() );
+		glVertexAttribPointerARB( VA_INDEX_TANGENT, 3, GL_FLOAT, false, sizeof( idDrawVert ), ac->tangents[0].ToFloatPtr() );
+		glVertexAttribPointerARB( VA_INDEX_TEXCOORD0, 2, GL_FLOAT, false, sizeof( idDrawVert ), ac->st.ToFloatPtr() );
 		glVertexPointer( 3, GL_FLOAT, sizeof( idDrawVert ), ac->xyz.ToFloatPtr() );
 
 		// this may cause RB_ARB2_DrawInteraction to be exacuted multiple
 		// times with different colors and images if the surface or light have multiple layers
-		RB_CreateSingleDrawInteractions( surf, RB_ARB2_DrawInteraction );
+		RB_CreateSingleDrawInteractions( surf, RB_GLSL_DrawInteraction );
 	}
 
-	glDisableVertexAttribArrayARB( 8 );
-	glDisableVertexAttribArrayARB( 9 );
-	glDisableVertexAttribArrayARB( 10 );
-	glDisableVertexAttribArrayARB( 11 );
+	glDisableVertexAttribArrayARB( VA_INDEX_TEXCOORD0 );
+	glDisableVertexAttribArrayARB( VA_INDEX_TANGENT );
+	glDisableVertexAttribArrayARB( VA_INDEX_BITANGENT );
+	glDisableVertexAttribArrayARB( VA_INDEX_NORMAL );
 	glDisableClientState( GL_COLOR_ARRAY );
 
 	// disable features
@@ -261,9 +275,7 @@ void RB_GLSL_CreateDrawInteractions( const drawSurf_t *surf ) {
 	backEnd.glState.currenttmu = -1;
 	GL_SelectTexture( 0 );
 
-	glDisable(GL_VERTEX_PROGRAM_ARB);
-	glDisable(GL_FRAGMENT_PROGRAM_ARB);
-#endif
+	GL_BindNullProgram();
 }
 
 
@@ -273,7 +285,6 @@ RB_GLSL_DrawInteractions
 ==================
 */
 void RB_GLSL_DrawInteractions( void ) {
-#if 0
 	viewLight_t		*vLight;
 	const idMaterial	*lightShader;
 
@@ -318,21 +329,22 @@ void RB_GLSL_DrawInteractions( void ) {
 			glStencilFunc( GL_ALWAYS, 128, 255 );
 		}
 
+		/*
 		if ( r_useShadowVertexProgram.GetBool() ) {
 			glEnable( GL_VERTEX_PROGRAM_ARB );
 			glBindProgramARB( GL_VERTEX_PROGRAM_ARB, VPROG_STENCIL_SHADOW );
 			RB_StencilShadowPass( vLight->globalShadows );
-			RB_ARB2_CreateDrawInteractions( vLight->localInteractions );
+			RB_GLSL_CreateDrawInteractions( vLight->localInteractions );
 			glEnable( GL_VERTEX_PROGRAM_ARB );
 			glBindProgramARB( GL_VERTEX_PROGRAM_ARB, VPROG_STENCIL_SHADOW );
 			RB_StencilShadowPass( vLight->localShadows );
 			RB_ARB2_CreateDrawInteractions( vLight->globalInteractions );
 			glDisable( GL_VERTEX_PROGRAM_ARB );	// if there weren't any globalInteractions, it would have stayed on
-		} else {
+		} else*/ {
 			RB_StencilShadowPass( vLight->globalShadows );
-			RB_ARB2_CreateDrawInteractions( vLight->localInteractions );
+			RB_GLSL_CreateDrawInteractions( vLight->localInteractions );
 			RB_StencilShadowPass( vLight->localShadows );
-			RB_ARB2_CreateDrawInteractions( vLight->globalInteractions );
+			RB_GLSL_CreateDrawInteractions( vLight->globalInteractions );
 		}
 
 		// translucent surfaces never get stencil shadowed
@@ -343,7 +355,7 @@ void RB_GLSL_DrawInteractions( void ) {
 		glStencilFunc( GL_ALWAYS, 128, 255 );
 
 		backEnd.depthFunc = GLS_DEPTHFUNC_LESS;
-		RB_ARB2_CreateDrawInteractions( vLight->translucentInteractions );
+		RB_GLSL_CreateDrawInteractions( vLight->translucentInteractions );
 
 		backEnd.depthFunc = GLS_DEPTHFUNC_EQUAL;
 	}
@@ -353,7 +365,6 @@ void RB_GLSL_DrawInteractions( void ) {
 
 	GL_SelectTexture( 0 );
 	glEnableClientState( GL_TEXTURE_COORD_ARRAY );
-#endif
 }
 
 //===================================================================================
@@ -361,105 +372,7 @@ void RB_GLSL_DrawInteractions( void ) {
 
 
 
-/*
-=================
-R_LoadShader
-=================
-*/
-void R_LoadShader( int progIndex ) {
-#if 0
-	int		ofs;
-	int		err;
-	idStr	fullPath = "glprogs/";
-	fullPath += progs[progIndex].name;
-	char	*fileBuffer;
-	char	*buffer;
-	char	*start, *end;
 
-	common->Printf( "%s", fullPath.c_str() );
-
-	// load the program even if we don't support it, so
-	// fs_copyfiles can generate cross-platform data dumps
-	fileSystem->ReadFile( fullPath.c_str(), (void **)&fileBuffer, NULL );
-	if ( !fileBuffer ) {
-		common->Printf( ": File not found\n" );
-		return;
-	}
-
-	// copy to stack memory and free
-	buffer = (char *)_alloca( strlen( fileBuffer ) + 1 );
-	strcpy( buffer, fileBuffer );
-	fileSystem->FreeFile( fileBuffer );
-
-	if ( !glConfig.isInitialized ) {
-		return;
-	}
-
-	//
-	// submit the program string at start to GL
-	//
-	if ( progs[progIndex].ident == 0 ) {
-		// allocate a new identifier for this program
-		progs[progIndex].ident = PROG_USER + progIndex;
-	}
-
-	// vertex and fragment programs can both be present in a single file, so
-	// scan for the proper header to be the start point, and stamp a 0 in after the end
-
-	if ( progs[progIndex].target == GL_VERTEX_PROGRAM_ARB ) {
-		if ( !glConfig.ARBVertexProgramAvailable ) {
-			common->Printf( ": GL_VERTEX_PROGRAM_ARB not available\n" );
-			return;
-		}
-		start = strstr( (char *)buffer, "!!ARBvp" );
-	}
-	if ( progs[progIndex].target == GL_FRAGMENT_PROGRAM_ARB ) {
-		if ( !glConfig.ARBFragmentProgramAvailable ) {
-			common->Printf( ": GL_FRAGMENT_PROGRAM_ARB not available\n" );
-			return;
-		}
-		start = strstr( (char *)buffer, "!!ARBfp" );
-	}
-	if ( !start ) {
-		common->Printf( ": !!ARB not found\n" );
-		return;
-	}
-	end = strstr( start, "END" );
-
-	if ( !end ) {
-		common->Printf( ": END not found\n" );
-		return;
-	}
-	end[3] = 0;
-
-	glBindProgramARB( progs[progIndex].target, progs[progIndex].ident );
-	glGetError();
-
-	glProgramStringARB( progs[progIndex].target, GL_PROGRAM_FORMAT_ASCII_ARB,
-		strlen( start ), (unsigned char *)start );
-
-	err = glGetError();
-	glGetIntegerv( GL_PROGRAM_ERROR_POSITION_ARB, (GLint *)&ofs );
-	if ( err == GL_INVALID_OPERATION ) {
-		const GLubyte *str = glGetString( GL_PROGRAM_ERROR_STRING_ARB );
-		common->Printf( "\nGL_PROGRAM_ERROR_STRING_ARB: %s\n", str );
-		if ( ofs < 0 ) {
-			common->Printf( "GL_PROGRAM_ERROR_POSITION_ARB < 0 with error\n" );
-		} else if ( ofs >= (int)strlen( (char *)start ) ) {
-			common->Printf( "error at end of program\n" );
-		} else {
-			common->Printf( "error at %i:\n%s", ofs, start + ofs );
-		}
-		return;
-	}
-	if ( ofs != -1 ) {
-		common->Printf( "\nGL_PROGRAM_ERROR_POSITION_ARB != -1 without error\n" );
-		return;
-	}
-
-	common->Printf( "\n" );
-#endif
-}
 
 /*
 ==================
@@ -515,9 +428,17 @@ R_ReloadShaders_f
 void R_ReloadShaders_f( const idCmdArgs &args ) {
 
 	common->Printf( "----- R_ReloadShaders -----\n" );
-	//for (int i = 0 ; progs[i].name[0] ; i++ ) {
-	//	R_LoadShader( i );
-	//}
+	
+	if ( GLEW_ARB_fragment_shader && GLEW_ARB_vertex_shader && GL_ARB_shader_objects && GLEW_ARB_shading_language_100 ) 
+	{
+		if(gl_forwardLightingShader)
+		{
+			delete gl_forwardLightingShader;
+			gl_forwardLightingShader = NULL;
+		}
+		gl_forwardLightingShader = new GLShader_forwardLighting();
+	}
+
 	common->Printf( "-------------------------------\n" );
 }
 
@@ -531,7 +452,7 @@ void R_GLSL_Init( void ) {
 
 	common->Printf( "---------- R_GLSL_Init ----------\n" );
 
-	if ( !glConfig.ARBVertexProgramAvailable || !glConfig.ARBFragmentProgramAvailable ) {
+	if ( !GLEW_ARB_fragment_shader || !GLEW_ARB_vertex_shader || !GL_ARB_shader_objects || !GLEW_ARB_shading_language_100 ) {
 		common->Printf( "Not available.\n" );
 		return;
 	}

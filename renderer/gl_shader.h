@@ -27,6 +27,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 // *INDENT-OFF*
 
+#define USE_UNIFORM_FIREWALL
+#define LOG_GLSL_UNIFORMS
+
 class GLUniform;
 class GLCompileMacro;
 
@@ -41,7 +44,7 @@ private:
 protected:
 	int									_activeMacros;
 
-	idList<shaderProgram_t>				_shaderPrograms;
+	idList<shaderProgram_t*>			_shaderPrograms;
 	shaderProgram_t*					_currentProgram;
 
 	idList<GLUniform*>					_uniforms;
@@ -68,11 +71,13 @@ protected:
 
 	~GLShader()
 	{
-		for(std::size_t i = 0; i < _shaderPrograms.Size(); i++)
+		for(std::size_t i = 0; i < _shaderPrograms.Num(); i++)
 		{
-			if(_shaderPrograms[i].program)
+			shaderProgram_t* shaderProgram = _shaderPrograms[i];
+			if(shaderProgram != NULL && shaderProgram->program)
 			{
-				glDeleteObjectARB(_shaderPrograms[i].program);
+				glDeleteObjectARB(shaderProgram->program);
+				delete shaderProgram;
 			}
 		}
 	}
@@ -86,7 +91,7 @@ public:
 
 	void RegisterCompileMacro(GLCompileMacro* compileMacro)
 	{
-		if(_compileMacros.Size() >= 9)
+		if(_compileMacros.Num() >= 9)
 		{
 			common->Error("Can't register more than 9 compile macros for a single shader");
 		}
@@ -94,7 +99,7 @@ public:
 		_compileMacros.Append(compileMacro);
 	}
 
-	size_t				GetNumOfCompiledMacros() const				{ return _compileMacros.Size(); }
+	size_t				GetNumOfCompiledMacros() const				{ return _compileMacros.Num(); }
 	shaderProgram_t*	GetProgram() const							{ return _currentProgram; }
 
 protected:
@@ -335,7 +340,7 @@ public:
 	EGLCompileMacro GetType() const { return USE_VERTEX_SKINNING; }
 	bool		HasConflictingMacros(int permutation, const idList<GLCompileMacro*>& macros) const;
 	bool		MissesRequiredMacros(int permutation, const idList<GLCompileMacro*>& macros) const;
-	uint32_t	GetRequiredVertexAttributes() const { return ATTR_BONE_INDEXES | ATTR_BONE_WEIGHTS; }
+	uint32_t	GetRequiredVertexAttributes() const { return VA_BONE_INDEXES | VA_BONE_WEIGHTS; }
 	
 
 	void EnableVertexSkinning()
@@ -403,7 +408,7 @@ public:
 	const char* GetName() const { return "USE_DEFORM_VERTEXES"; }
 	EGLCompileMacro GetType() const { return USE_DEFORM_VERTEXES; }
 	bool		HasConflictingMacros(int permutation, const idList<GLCompileMacro*>& macros) const;
-	uint32_t	GetRequiredVertexAttributes() const { return ATTR_NORMAL; }
+	uint32_t	GetRequiredVertexAttributes() const { return VA_NORMAL; }
 
 	void EnableDeformVertexes()
 	{
@@ -443,7 +448,7 @@ public:
 
 	const char* GetName() const { return "USE_TCGEN_ENVIRONMENT"; }
 	EGLCompileMacro GetType() const { return USE_TCGEN_ENVIRONMENT; }
-	uint32_t	GetRequiredVertexAttributes() const { return ATTR_NORMAL; }
+	uint32_t	GetRequiredVertexAttributes() const { return VA_NORMAL; }
 
 	void EnableTCGenEnvironment()
 	{
@@ -476,7 +481,7 @@ public:
 
 	const char* GetName() const { return "USE_NORMAL_MAPPING"; }
 	EGLCompileMacro GetType() const { return USE_NORMAL_MAPPING; }
-	uint32_t	GetRequiredVertexAttributes() const { return ATTR_NORMAL | ATTR_TANGENT | ATTR_BITANGENT; }
+	uint32_t	GetRequiredVertexAttributes() const { return VA_NORMAL | VA_TANGENT | VA_BITANGENT; }
 
 	void EnableNormalMapping()	{ EnableMacro(); }
 	void DisableNormalMapping()	{ DisableMacro(); }
@@ -555,7 +560,7 @@ public:
 	const char* GetName() const { return "TWOSIDED"; }
 	EGLCompileMacro GetType() const { return TWOSIDED; }
 	//bool		MissesRequiredMacros(int permutation, const idList<GLCompileMacro*>& macros) const;
-	uint32_t	GetRequiredVertexAttributes() const { return ATTR_NORMAL; }
+	uint32_t	GetRequiredVertexAttributes() const { return VA_NORMAL; }
 
 	void EnableMacro_TWOSIDED()		{ EnableMacro(); }
 	void DisableMacro_TWOSIDED()	{ DisableMacro(); }
@@ -754,93 +759,419 @@ public:
 		glUniform1iARB(_shader->GetProgram()->u_CurrentMap, texUnit);
 	}
 };
+*/
 
-
-class u_ColorTextureMatrix:
+class u_DiffuseMatrixS:
 GLUniform
 {
 public:
-	u_ColorTextureMatrix(GLShader* shader):
+	u_DiffuseMatrixS(GLShader* shader):
 	  GLUniform(shader)
 	{
 	}
 
-	const char* GetName() const { return "u_ColorTextureMatrix"; }
-	void				UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
+	const char* GetName() const { return "u_DiffuseMatrixS"; }
+	void UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
 	{
-		shaderProgram->u_ColorTextureMatrix = glGetUniformLocationARB(shaderProgram->program, GetName());
+		shaderProgram->u_DiffuseMatrixS = glGetUniformLocationARB(shaderProgram->program, GetName());
 	}
 
-	void SetUniform_ColorTextureMatrix(const idMat4 m)
+	void SetUniform_DiffuseMatrixS(const idVec4& v)
 	{
-		GLSL_SetUniform_ColorTextureMatrix(_shader->GetProgram(), m);
+		shaderProgram_t* program = _shader->GetProgram();
+
+#if defined(USE_UNIFORM_FIREWALL)
+		if(program->t_DiffuseMatrixS == v)
+			return;
+
+		program->t_DiffuseMatrixS = v;
+#endif
+
+#if defined(LOG_GLSL_UNIFORMS)
+		if(r_logFile.GetBool())
+		{
+			RB_LogComment("--- SetUniform_DiffuseMatrixS( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name, v[0], v[1], v[2], v[3]);
+		}
+#endif
+
+		glUniform4fARB(program->u_DiffuseMatrixS, v[0], v[1], v[2], v[3]);
 	}
 };
 
-class u_DiffuseTextureMatrix:
+class u_DiffuseMatrixT:
 GLUniform
 {
 public:
-	u_DiffuseTextureMatrix(GLShader* shader):
+	u_DiffuseMatrixT(GLShader* shader):
 	  GLUniform(shader)
 	{
 	}
 
-	const char* GetName() const { return "u_DiffuseTextureMatrix"; }
-	void				UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
+	const char* GetName() const { return "u_DiffuseMatrixT"; }
+	void UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
 	{
-		shaderProgram->u_DiffuseTextureMatrix = glGetUniformLocationARB(shaderProgram->program, GetName());
+		shaderProgram->u_DiffuseMatrixT = glGetUniformLocationARB(shaderProgram->program, GetName());
 	}
 
-	void SetUniform_DiffuseTextureMatrix(const idMat4& m)
+	void SetUniform_DiffuseMatrixT(const idVec4& v)
 	{
-		GLSL_SetUniform_DiffuseTextureMatrix(_shader->GetProgram(), m);
+		shaderProgram_t* program = _shader->GetProgram();
+
+#if defined(USE_UNIFORM_FIREWALL)
+		if(program->t_DiffuseMatrixT == v)
+			return;
+
+		program->t_DiffuseMatrixT = v;
+#endif
+
+#if defined(LOG_GLSL_UNIFORMS)
+		if(r_logFile.GetBool())
+		{
+			RB_LogComment("--- SetUniform_DiffuseMatrixT( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name, v[0], v[1], v[2], v[3]);
+		}
+#endif
+
+		glUniform4fARB(program->u_DiffuseMatrixT, v[0], v[1], v[2], v[3]);
 	}
 };
 
-class u_NormalTextureMatrix:
+class u_BumpMatrixS:
 GLUniform
 {
 public:
-	u_NormalTextureMatrix(GLShader* shader):
+	u_BumpMatrixS(GLShader* shader):
 	  GLUniform(shader)
 	{
 	}
 
-	const char* GetName() const { return "u_NormalTextureMatrix"; }
-	void				UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
+	const char* GetName() const { return "u_BumpMatrixS"; }
+	void UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
 	{
-		shaderProgram->u_NormalTextureMatrix = glGetUniformLocationARB(shaderProgram->program, GetName());
+		shaderProgram->u_BumpMatrixS = glGetUniformLocationARB(shaderProgram->program, GetName());
 	}
 
-	void SetUniform_NormalTextureMatrix(const matrix_t m)
+	void SetUniform_BumpMatrixS(const idVec4& v)
 	{
-		GLSL_SetUniform_NormalTextureMatrix(_shader->GetProgram(), m);
+		shaderProgram_t* program = _shader->GetProgram();
+
+#if defined(USE_UNIFORM_FIREWALL)
+		if(program->t_BumpMatrixS == v)
+			return;
+
+		program->t_BumpMatrixS = v;
+#endif
+
+#if defined(LOG_GLSL_UNIFORMS)
+		if(r_logFile.GetBool())
+		{
+			RB_LogComment("--- SetUniform_BumpMatrixS( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name, v[0], v[1], v[2], v[3]);
+		}
+#endif
+
+		glUniform4fARB(program->u_BumpMatrixS, v[0], v[1], v[2], v[3]);
 	}
 };
 
-class u_SpecularTextureMatrix:
+class u_BumpMatrixT:
 GLUniform
 {
 public:
-	u_SpecularTextureMatrix(GLShader* shader):
+	u_BumpMatrixT(GLShader* shader):
 	  GLUniform(shader)
 	{
 	}
 
-	const char* GetName() const { return "u_SpecularTextureMatrix"; }
-	void				UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
+	const char* GetName() const { return "u_BumpMatrixT"; }
+	void UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
 	{
-		shaderProgram->u_SpecularTextureMatrix = glGetUniformLocationARB(shaderProgram->program, GetName());
+		shaderProgram->u_BumpMatrixT = glGetUniformLocationARB(shaderProgram->program, GetName());
 	}
 
-	void SetUniform_SpecularTextureMatrix(const matrix_t m)
+	void SetUniform_BumpMatrixT(const idVec4& v)
 	{
-		GLSL_SetUniform_SpecularTextureMatrix(_shader->GetProgram(), m);
+		shaderProgram_t* program = _shader->GetProgram();
+
+#if defined(USE_UNIFORM_FIREWALL)
+		if(program->t_BumpMatrixT == v)
+			return;
+
+		program->t_BumpMatrixT = v;
+#endif
+
+#if defined(LOG_GLSL_UNIFORMS)
+		if(r_logFile.GetBool())
+		{
+			RB_LogComment("--- SetUniform_BumpMatrixT( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name, v[0], v[1], v[2], v[3]);
+		}
+#endif
+
+		glUniform4fARB(program->u_BumpMatrixT, v[0], v[1], v[2], v[3]);
 	}
 };
 
 
+class u_SpecularMatrixS:
+GLUniform
+{
+public:
+	u_SpecularMatrixS(GLShader* shader):
+	  GLUniform(shader)
+	{
+	}
+
+	const char* GetName() const { return "u_SpecularMatrixS"; }
+	void UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
+	{
+		shaderProgram->u_SpecularMatrixS = glGetUniformLocationARB(shaderProgram->program, GetName());
+	}
+
+	void SetUniform_SpecularMatrixS(const idVec4& v)
+	{
+		shaderProgram_t* program = _shader->GetProgram();
+
+#if defined(USE_UNIFORM_FIREWALL)
+		if(program->t_SpecularMatrixS == v)
+			return;
+
+		program->t_SpecularMatrixS = v;
+#endif
+
+#if defined(LOG_GLSL_UNIFORMS)
+		if(r_logFile.GetBool())
+		{
+			RB_LogComment("--- SetUniform_SpecularMatrixS( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name, v[0], v[1], v[2], v[3]);
+		}
+#endif
+
+		glUniform4fARB(program->u_SpecularMatrixS, v[0], v[1], v[2], v[3]);
+	}
+};
+
+class u_SpecularMatrixT:
+GLUniform
+{
+public:
+	u_SpecularMatrixT(GLShader* shader):
+	  GLUniform(shader)
+	{
+	}
+
+	const char* GetName() const { return "u_SpecularMatrixT"; }
+	void UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
+	{
+		shaderProgram->u_SpecularMatrixT = glGetUniformLocationARB(shaderProgram->program, GetName());
+	}
+
+	void SetUniform_SpecularMatrixT(const idVec4& v)
+	{
+		shaderProgram_t* program = _shader->GetProgram();
+
+#if defined(USE_UNIFORM_FIREWALL)
+		if(program->t_SpecularMatrixT == v)
+			return;
+
+		program->t_SpecularMatrixT = v;
+#endif
+
+#if defined(LOG_GLSL_UNIFORMS)
+		if(r_logFile.GetBool())
+		{
+			RB_LogComment("--- SetUniform_SpecularMatrixT( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name, v[0], v[1], v[2], v[3]);
+		}
+#endif
+
+		glUniform4fARB(program->u_SpecularMatrixT, v[0], v[1], v[2], v[3]);
+	}
+};
+
+
+class u_Color:
+GLUniform
+{
+public:
+	u_Color(GLShader* shader):
+	  GLUniform(shader)
+	{
+	}
+
+	const char* GetName() const { return "u_Color"; }
+	void UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
+	{
+		shaderProgram->u_Color = glGetUniformLocationARB(shaderProgram->program, GetName());
+	}
+
+	void SetUniform_Color(const idVec4& v)
+	{
+		shaderProgram_t* program = _shader->GetProgram();
+
+#if defined(USE_UNIFORM_FIREWALL)
+		if(program->t_Color == v)
+			return;
+
+		program->t_Color = v;
+#endif
+
+#if defined(LOG_GLSL_UNIFORMS)
+		if(r_logFile.GetBool())
+		{
+			RB_LogComment("--- SetUniform_Color( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name, v[0], v[1], v[2], v[3]);
+		}
+#endif
+
+		glUniform4fARB(program->u_Color, v[0], v[1], v[2], v[3]);
+	}
+};
+
+class u_ColorModulate:
+GLUniform
+{
+public:
+	u_ColorModulate(GLShader* shader):
+	  GLUniform(shader)
+	{
+	}
+
+	const char* GetName() const { return "u_ColorModulate"; }
+	void UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
+	{
+		shaderProgram->u_ColorModulate = glGetUniformLocationARB(shaderProgram->program, GetName());
+	}
+
+	void SetUniform_ColorModulate(const idVec4& v)
+	{
+		shaderProgram_t* program = _shader->GetProgram();
+
+#if defined(USE_UNIFORM_FIREWALL)
+		if(program->t_ColorModulate == v)
+			return;
+
+		program->t_ColorModulate = v;
+#endif
+
+#if defined(LOG_GLSL_UNIFORMS)
+		if(r_logFile.GetBool())
+		{
+			RB_LogComment("--- SetUniform_ColorModulate( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name, v[0], v[1], v[2], v[3]);
+		}
+#endif
+
+		glUniform4fARB(program->u_ColorModulate, v[0], v[1], v[2], v[3]);
+	}
+};
+
+class u_AmbientColor:
+GLUniform
+{
+public:
+	u_AmbientColor(GLShader* shader):
+	  GLUniform(shader)
+	{
+	}
+
+	const char* GetName() const { return "u_AmbientColor"; }
+	void UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
+	{
+		shaderProgram->u_AmbientColor = glGetUniformLocationARB(shaderProgram->program, GetName());
+	}
+
+	void SetUniform_AmbientColor(const idVec4& v)
+	{
+		shaderProgram_t* program = _shader->GetProgram();
+
+#if defined(USE_UNIFORM_FIREWALL)
+		if(program->t_AmbientColor == v)
+			return;
+
+		program->t_AmbientColor = v;
+#endif
+
+#if defined(LOG_GLSL_UNIFORMS)
+		if(r_logFile.GetBool())
+		{
+			RB_LogComment("--- SetUniform_AmbientColor( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name, v[0], v[1], v[2], v[3]);
+		}
+#endif
+
+		glUniform4fARB(program->u_AmbientColor, v[0], v[1], v[2], v[3]);
+	}
+};
+
+class u_DiffuseColor:
+GLUniform
+{
+public:
+	u_DiffuseColor(GLShader* shader):
+	  GLUniform(shader)
+	{
+	}
+
+	const char* GetName() const { return "u_DiffuseColor"; }
+	void UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
+	{
+		shaderProgram->u_DiffuseColor = glGetUniformLocationARB(shaderProgram->program, GetName());
+	}
+
+	void SetUniform_DiffuseColor(const idVec4& v)
+	{
+		shaderProgram_t* program = _shader->GetProgram();
+
+#if defined(USE_UNIFORM_FIREWALL)
+		if(program->t_DiffuseColor == v)
+			return;
+
+		program->t_DiffuseColor = v;
+#endif
+
+#if defined(LOG_GLSL_UNIFORMS)
+		if(r_logFile.GetBool())
+		{
+			RB_LogComment("--- SetUniform_DiffuseColor( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name, v[0], v[1], v[2], v[3]);
+		}
+#endif
+
+		glUniform4fARB(program->u_DiffuseColor, v[0], v[1], v[2], v[3]);
+	}
+};
+
+class u_SpecularColor:
+GLUniform
+{
+public:
+	u_SpecularColor(GLShader* shader):
+	  GLUniform(shader)
+	{
+	}
+
+	const char* GetName() const { return "u_SpecularColor"; }
+	void UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
+	{
+		shaderProgram->u_SpecularColor = glGetUniformLocationARB(shaderProgram->program, GetName());
+	}
+
+	void SetUniform_SpecularColor(const idVec4& v)
+	{
+		shaderProgram_t* program = _shader->GetProgram();
+
+#if defined(USE_UNIFORM_FIREWALL)
+		if(program->t_SpecularColor == v)
+			return;
+
+		program->t_SpecularColor = v;
+#endif
+
+#if defined(LOG_GLSL_UNIFORMS)
+		if(r_logFile.GetBool())
+		{
+			RB_LogComment("--- SetUniform_SpecularColor( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name, v[0], v[1], v[2], v[3]);
+		}
+#endif
+
+		glUniform4fARB(program->u_SpecularColor, v[0], v[1], v[2], v[3]);
+	}
+};
+
+
+/*
 class u_AlphaTest:
 GLUniform
 {
@@ -861,29 +1192,7 @@ public:
 		GLSL_SetUniform_AlphaTest(_shader->GetProgram(), stateBits);
 	}
 };
-
-
-class u_AmbientColor:
-GLUniform
-{
-public:
-	u_AmbientColor(GLShader* shader):
-	  GLUniform(shader)
-	{
-	}
-
-	const char* GetName() const { return "u_AmbientColor"; }
-	void				UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
-	{
-		shaderProgram->u_AmbientColor = glGetUniformLocationARB(shaderProgram->program, GetName());
-	}
-
-	void SetUniform_AmbientColor(const idVec3 v)
-	{
-		GLSL_SetUniform_AmbientColor(_shader->GetProgram(), v);
-	}
-};
-
+*/
 
 class u_ViewOrigin:
 GLUniform
@@ -895,18 +1204,34 @@ public:
 	}
 
 	const char* GetName() const { return "u_ViewOrigin"; }
-	void				UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
+	void UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
 	{
 		shaderProgram->u_ViewOrigin = glGetUniformLocationARB(shaderProgram->program, GetName());
 	}
 
 	void SetUniform_ViewOrigin(const idVec3 v)
 	{
-		GLSL_SetUniform_ViewOrigin(_shader->GetProgram(), v);
+		shaderProgram_t* program = _shader->GetProgram();
+
+#if defined(USE_UNIFORM_FIREWALL)
+		if(program->t_ViewOrigin == v)
+			return;
+
+		program->t_ViewOrigin = v;
+#endif
+
+#if defined(LOG_GLSL_UNIFORMS)
+		if(r_logFile.GetBool())
+		{
+			RB_LogComment("--- SetUniform_ViewOrigin( program = %s, vector = ( %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name, v[0], v[1], v[2]);
+		}
+#endif
+
+		glUniform3fARB(program->u_ViewOrigin, v[0], v[1], v[2]);
 	}
 };
 
-
+/*
 class u_LightDir:
 GLUniform
 {
@@ -927,6 +1252,7 @@ public:
 		GLSL_SetUniform_LightDir(_shader->GetProgram(), v);
 	}
 };
+*/
 
 class u_LightOrigin:
 GLUniform
@@ -938,17 +1264,182 @@ public:
 	}
 
 	const char* GetName() const { return "u_LightOrigin"; }
-	void				UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
+	void UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
 	{
 		shaderProgram->u_LightOrigin = glGetUniformLocationARB(shaderProgram->program, GetName());
 	}
 
-	void SetUniform_LightOrigin(const vec3_t v)
+	void SetUniform_LightOrigin(const idVec3& v)
 	{
-		GLSL_SetUniform_LightOrigin(_shader->GetProgram(), v);
+		shaderProgram_t* program = _shader->GetProgram();
+
+#if defined(USE_UNIFORM_FIREWALL)
+		if(program->t_LightOrigin == v)
+			return;
+
+		program->t_LightOrigin = v;
+#endif
+
+#if defined(LOG_GLSL_UNIFORMS)
+		if(r_logFile.GetBool())
+		{
+			RB_LogComment("--- SetUniform_LightOrigin( program = %s, vector = ( %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name, v[0], v[1], v[2]);
+		}
+#endif
+
+		glUniform3fARB(program->u_LightOrigin, v[0], v[1], v[2]);
 	}
 };
 
+class u_LightProjectS:
+GLUniform
+{
+public:
+	u_LightProjectS(GLShader* shader):
+	  GLUniform(shader)
+	{
+	}
+
+	const char* GetName() const { return "u_LightProjectS"; }
+	void UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
+	{
+		shaderProgram->u_LightProjectS = glGetUniformLocationARB(shaderProgram->program, GetName());
+	}
+
+	void SetUniform_LightProjectS(const idVec4& v)
+	{
+		shaderProgram_t* program = _shader->GetProgram();
+
+#if defined(USE_UNIFORM_FIREWALL)
+		if(program->t_LightProjectS == v)
+			return;
+
+		program->t_LightProjectS = v;
+#endif
+
+#if defined(LOG_GLSL_UNIFORMS)
+		if(r_logFile.GetBool())
+		{
+			RB_LogComment("--- SetUniform_LightProjectS( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name, v[0], v[1], v[2], v[3]);
+		}
+#endif
+
+		glUniform4fARB(program->u_LightProjectS, v[0], v[1], v[2], v[3]);
+	}
+};
+
+class u_LightProjectT:
+GLUniform
+{
+public:
+	u_LightProjectT(GLShader* shader):
+	  GLUniform(shader)
+	{
+	}
+
+	const char* GetName() const { return "u_LightProjectT"; }
+	void UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
+	{
+		shaderProgram->u_LightProjectT = glGetUniformLocationARB(shaderProgram->program, GetName());
+	}
+
+	void SetUniform_LightProjectT(const idVec4& v)
+	{
+		shaderProgram_t* program = _shader->GetProgram();
+
+#if defined(USE_UNIFORM_FIREWALL)
+		if(program->t_LightProjectT == v)
+			return;
+
+		program->t_LightProjectT = v;
+#endif
+
+#if defined(LOG_GLSL_UNIFORMS)
+		if(r_logFile.GetBool())
+		{
+			RB_LogComment("--- SetUniform_LightProjectT( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name, v[0], v[1], v[2], v[3]);
+		}
+#endif
+
+		glUniform4fARB(program->u_LightProjectT, v[0], v[1], v[2], v[3]);
+	}
+};
+
+class u_LightProjectQ:
+GLUniform
+{
+public:
+	u_LightProjectQ(GLShader* shader):
+	  GLUniform(shader)
+	{
+	}
+
+	const char* GetName() const { return "u_LightProjectQ"; }
+	void UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
+	{
+		shaderProgram->u_LightProjectQ = glGetUniformLocationARB(shaderProgram->program, GetName());
+	}
+
+	void SetUniform_LightProjectQ(const idVec4& v)
+	{
+		shaderProgram_t* program = _shader->GetProgram();
+
+#if defined(USE_UNIFORM_FIREWALL)
+		if(program->t_LightProjectQ == v)
+			return;
+
+		program->t_LightProjectQ = v;
+#endif
+
+#if defined(LOG_GLSL_UNIFORMS)
+		if(r_logFile.GetBool())
+		{
+			RB_LogComment("--- SetUniform_LightProjectQ( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name, v[0], v[1], v[2], v[3]);
+		}
+#endif
+
+		glUniform4fARB(program->u_LightProjectQ, v[0], v[1], v[2], v[3]);
+	}
+};
+
+class u_LightFalloffS:
+GLUniform
+{
+public:
+	u_LightFalloffS(GLShader* shader):
+	  GLUniform(shader)
+	{
+	}
+
+	const char* GetName() const { return "u_LightFalloffS"; }
+	void UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
+	{
+		shaderProgram->u_LightFalloffS = glGetUniformLocationARB(shaderProgram->program, GetName());
+	}
+
+	void SetUniform_LightFalloffS(const idVec4& v)
+	{
+		shaderProgram_t* program = _shader->GetProgram();
+
+#if defined(USE_UNIFORM_FIREWALL)
+		if(program->t_LightFalloffS == v)
+			return;
+
+		program->t_LightFalloffS = v;
+#endif
+
+#if defined(LOG_GLSL_UNIFORMS)
+		if(r_logFile.GetBool())
+		{
+			RB_LogComment("--- SetUniform_LightFalloffS( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name, v[0], v[1], v[2], v[3]);
+		}
+#endif
+
+		glUniform4fARB(program->u_LightFalloffS, v[0], v[1], v[2], v[3]);
+	}
+};
+
+/*
 class u_LightColor:
 GLUniform
 {
@@ -1613,74 +2104,6 @@ public:
 	}
 };
 
-
-
-
-class u_ColorModulate:
-GLUniform
-{
-public:
-	u_ColorModulate(GLShader* shader):
-	  GLUniform(shader)
-	{
-	}
-
-	const char* GetName() const { return "u_ColorModulate"; }
-	void				UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
-	{
-		shaderProgram->u_ColorModulate = glGetUniformLocationARB(shaderProgram->program, GetName());
-	}
-
-	void SetUniform_ColorModulate(colorGen_t colorGen, alphaGen_t alphaGen)
-	{
-		vec4_t				v;
-
-		if(r_logFile->integer)
-		{
-			GLimp_LogComment(va("--- u_ColorModulate::SetUniform_ColorModulate( program = %s, colorGen = %i, alphaGen = %i ) ---\n", _shader->GetProgram()->name, colorGen, alphaGen));
-		}
-
-		switch (colorGen)
-		{
-			case CGEN_VERTEX:
-				_shader->AddVertexAttribBit(ATTR_COLOR);
-				VectorSet(v, 1, 1, 1);
-				break;
-
-			case CGEN_ONE_MINUS_VERTEX:
-				_shader->AddVertexAttribBit(ATTR_COLOR);
-				VectorSet(v, -1, -1, -1);
-				break;
-
-			default:
-				_shader->DelVertexAttribBit(ATTR_COLOR);
-				VectorSet(v, 0, 0, 0);
-				break;
-		}
-
-		switch (alphaGen)
-		{
-			case AGEN_VERTEX:
-				_shader->AddVertexAttribBit(ATTR_COLOR);
-				v[3] = 1.0f;
-				break;
-
-			case AGEN_ONE_MINUS_VERTEX:
-				_shader->AddVertexAttribBit(ATTR_COLOR);
-				v[3] = -1.0f;
-				break;
-
-			default:
-				v[3] = 0.0f;
-				break;
-		}
-
-		GLSL_SetUniform_ColorModulate(_shader->GetProgram(), v);
-	}
-};
-
-
-
 class u_FogDistanceVector:
 GLUniform
 {
@@ -1975,30 +2398,37 @@ public:
 
 class GLShader_forwardLighting:
 public GLShader,
-/*
-public u_DiffuseTextureMatrix,
-public u_NormalTextureMatrix,
-public u_SpecularTextureMatrix,
-public u_AlphaTest,
-public u_ColorModulate,
+public u_DiffuseMatrixS,
+public u_DiffuseMatrixT,
+public u_BumpMatrixS,
+public u_BumpMatrixT,
+public u_SpecularMatrixS,
+public u_SpecularMatrixT,
+//public u_AlphaTest,
 public u_Color,
+public u_ColorModulate,
+public u_DiffuseColor,
+public u_SpecularColor,
 public u_ViewOrigin,
 public u_LightOrigin,
-public u_LightColor,
-public u_LightRadius,
-public u_LightScale,
-public u_LightWrapAround,
-public u_LightAttenuationMatrix,
-public u_ShadowTexelSize,
-public u_ShadowBlur,
-public u_ModelMatrix,
-public u_ModelViewProjectionMatrix,
-public u_BoneMatrix,
-public u_VertexInterpolation,
-public u_PortalPlane,
-public u_DepthScale,
-public GLDeformStage,
-*/
+public u_LightProjectS,
+public u_LightProjectT,
+public u_LightProjectQ,
+public u_LightFalloffS,
+//public u_LightColor,
+//public u_LightRadius,
+//public u_LightScale,
+//public u_LightWrapAround,
+//public u_LightAttenuationMatrix,
+//public u_ShadowTexelSize,
+//public u_ShadowBlur,
+//public u_ModelMatrix,
+//public u_ModelViewProjectionMatrix,
+//public u_BoneMatrix,
+//public u_VertexInterpolation,
+//public u_PortalPlane,
+//public u_DepthScale,
+//public GLDeformStage,
 //public GLCompileMacro_USE_PORTAL_CLIPPING,
 //public GLCompileMacro_USE_ALPHA_TESTING,
 //public GLCompileMacro_USE_VERTEX_SKINNING,
@@ -2060,7 +2490,7 @@ public:
 
 
 //extern GLShader_generic* gl_genericShader;
-extern GLShader_forwardLighting* gl_forwardLighting;
+extern GLShader_forwardLighting* gl_forwardLightingShader;
 //extern GLShader_screen* gl_screenShader;
 //extern GLShader_portal* gl_portalShader;
 //extern GLShader_toneMapping* gl_toneMappingShader;

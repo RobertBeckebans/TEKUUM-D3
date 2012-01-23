@@ -44,7 +44,7 @@ GLShader_forwardLighting* gl_forwardLightingShader = NULL;
 
 bool GLCompileMacro_USE_VERTEX_SKINNING::HasConflictingMacros(int permutation, const idList<GLCompileMacro*>& macros) const
 {
-	for(size_t i = 0; i < macros.Size(); i++)
+	for(size_t i = 0; i < macros.Num(); i++)
 	{
 		GLCompileMacro* macro = macros[i];
 
@@ -70,7 +70,7 @@ bool GLCompileMacro_USE_VERTEX_SKINNING::MissesRequiredMacros(int permutation, c
 bool GLCompileMacro_USE_VERTEX_ANIMATION::HasConflictingMacros(int permutation, const idList<GLCompileMacro*>& macros) const
 {
 #if 1
-	for(size_t i = 0; i < macros.Size(); i++)
+	for(size_t i = 0; i < macros.Num(); i++)
 	{
 		GLCompileMacro* macro = macros[i];
 
@@ -86,11 +86,11 @@ bool GLCompileMacro_USE_VERTEX_ANIMATION::HasConflictingMacros(int permutation, 
 
 uint32_t	GLCompileMacro_USE_VERTEX_ANIMATION::GetRequiredVertexAttributes() const
 {
-	uint32_t attribs = ATTR_NORMAL | ATTR_POSITION2 | ATTR_NORMAL2;
+	uint32_t attribs = VA_NORMAL | VA_POSITION2 | VA_NORMAL2;
 
 	if(!r_skipBump.GetBool())
 	{
-		attribs |= ATTR_TANGENT2 | ATTR_BINORMAL2;
+		attribs |= VA_TANGENT2 | VA_BINORMAL2;
 	}
 
 	return attribs;
@@ -107,7 +107,7 @@ bool GLCompileMacro_USE_DEFORM_VERTEXES::HasConflictingMacros(int permutation, c
 bool GLCompileMacro_USE_PARALLAX_MAPPING::MissesRequiredMacros(int permutation, const idList<GLCompileMacro*>& macros) const
 {
 	bool foundUSE_NORMAL_MAPPING = false;
-	for(size_t i = 0; i < macros.Size(); i++)
+	for(size_t i = 0; i < macros.Num(); i++)
 	{
 		GLCompileMacro* macro = macros[i];
 
@@ -129,7 +129,7 @@ bool GLCompileMacro_USE_PARALLAX_MAPPING::MissesRequiredMacros(int permutation, 
 bool GLCompileMacro_USE_REFLECTIVE_SPECULAR::MissesRequiredMacros(int permutation, const idList<GLCompileMacro*>& macros) const
 {
 	bool foundUSE_NORMAL_MAPPING = false;
-	for(size_t i = 0; i < macros.Size(); i++)
+	for(size_t i = 0; i < macros.Num(); i++)
 	{
 		GLCompileMacro* macro = macros[i];
 
@@ -153,7 +153,7 @@ bool GLCompileMacro_USE_REFLECTIVE_SPECULAR::MissesRequiredMacros(int permutatio
 bool GLShader::GetCompileMacrosString(int permutation, idStrList& compileMacrosOut) const
 {
 	compileMacrosOut.Clear();
-	for(size_t j = 0; j < _compileMacros.Size(); j++)
+	for(size_t j = 0; j < _compileMacros.Num(); j++)
 	{
 		GLCompileMacro* macro = _compileMacros[j];
 
@@ -179,7 +179,7 @@ bool GLShader::GetCompileMacrosString(int permutation, idStrList& compileMacrosO
 
 void GLShader::UpdateShaderProgramUniformLocations(shaderProgram_t *shaderProgram) const
 {
-	for(size_t j = 0; j < _uniforms.Size(); j++)
+	for(size_t j = 0; j < _uniforms.Num(); j++)
 	{
 		GLUniform* uniform = _uniforms[j];
 
@@ -193,8 +193,6 @@ idStr	GLShader::BuildGPUShaderText(	const char *mainShaderName,
 {
 	idStr           fileName;
 	char           *fileBuffer;
-	GLcharARB      *mainBuffer = NULL;
-	int             mainSize;
 
 	idStr			shaderText;
 	idStr			libsShaderText;
@@ -202,18 +200,18 @@ idStr	GLShader::BuildGPUShaderText(	const char *mainShaderName,
 	GL_CheckErrors();
 
 	// load libs
-	for(size_t i = 0; i < libShaderNames.Size(); i++)
+	for(size_t i = 0; i < libShaderNames.Num(); i++)
 	{
 		const idStr& libName = libShaderNames[i];
 
 		if(shaderType == GL_VERTEX_SHADER_ARB)
 		{
-			fileName = va("glsl/%s_vp.glsl", libName.c_str());
+			fileName = va("shaders/glsl/%s_vs.glsl", libName.c_str());
 			common->Printf("...loading vertex shader '%s'\n", fileName.c_str());
 		}
 		else
 		{
-			fileName = va("glsl/%s_fp.glsl", libName.c_str());
+			fileName = va("shaders/glsl/%s_fs.glsl", libName.c_str());
 			common->Printf("...loading fragment shader '%s'\n", fileName.c_str());
 		}
 
@@ -234,12 +232,12 @@ idStr	GLShader::BuildGPUShaderText(	const char *mainShaderName,
 	// load main() program
 	if(shaderType == GL_VERTEX_SHADER_ARB)
 	{
-		fileName = va("glsl/%s_vp.glsl", mainShaderName);
+		fileName = va("shaders/glsl/%s_vs.glsl", mainShaderName);
 		common->Printf("...loading vertex shader '%s'\n", fileName.c_str());
 	}
 	else
 	{
-		fileName = va("glsl/%s_fp.glsl", mainShaderName);
+		fileName = va("shaders/glsl/%s_fs.glsl", mainShaderName);
 		common->Printf("...loading fragment shader '%s'\n", fileName.c_str());
 	}
 
@@ -247,11 +245,6 @@ idStr	GLShader::BuildGPUShaderText(	const char *mainShaderName,
 	if ( !fileBuffer ) {
 		common->Error("Couldn't load %s\n", fileName.c_str());
 	}
-
-	shaderText.Append(fileBuffer, strlen(fileBuffer));
-
-	fileSystem->FreeFile( fileBuffer );
-
 	
 	// HACK: add some macros to avoid extra uniforms and save speed and code maintenance
 	/*
@@ -460,6 +453,10 @@ idStr	GLShader::BuildGPUShaderText(	const char *mainShaderName,
 	// so we have to reset the line counting
 	shaderText += "#line 0\n";
 
+	shaderText.Append(fileBuffer, strlen(fileBuffer));
+
+	fileSystem->FreeFile( fileBuffer );
+
 	//common->Printf("GLSL extra: %s\n", bufferExtra);
 
 #if 0
@@ -579,17 +576,17 @@ void GLShader::CompileAndLinkGPUShaderProgram(	shaderProgram_t * program,
 	/*
 	if(glConfig.driverType == GLDRV_OPENGL3)
 	{
-		// HACK: abuse the GLSL preprocessor to turn GLSL 1.20 shaders into 1.30 ones
+		// HACK: use the GLSL preprocessor to turn GLSL 1.20 shaders into 1.30 ones
 
 		vertexHeader += "#version 130\n";
 		fragmentHeader += "#version 130\n";
 
-		//if(shaderType == GL_VERTEX_SHADER_ARB)
+		if(shaderType == GL_VERTEX_SHADER_ARB)
 		{
 			vertexHeader += "#define attribute in\n";
 			vertexHeader += "#define varying out\n";
 		}
-		//else
+		else
 		{
 			fragmentHeader += "#define varying in\n";
 
@@ -610,13 +607,13 @@ void GLShader::CompileAndLinkGPUShaderProgram(	shaderProgram_t * program,
 	// permutation macros
 	idStr macrosString;
 
-	if(compileMacros.Size())
+	if(compileMacros.Num())
 	{
-		for(size_t i = 0; i < compileMacros.Size(); i++)
+		for(size_t i = 0; i < compileMacros.Num(); i++)
 		{
 			const char *compileMacro = compileMacros[i].c_str();
 		
-			macrosString += va("#ifndef %s\n#define %s 1\n#endif\n", compileMacro);
+			macrosString += va("#ifndef %s\n#define %s 1\n#endif\n", compileMacro, compileMacro);
 		}
 	}
 
@@ -637,8 +634,9 @@ void GLShader::CompileGPUShader(GLhandleARB program, const idStr& programName, c
 
 	GL_CheckErrors();
 
-	int shaderTextSize = shaderText.Size();
-	glShaderSourceARB(shader, 1, (const GLcharARB **)shaderText.c_str(), &shaderTextSize);
+	int shaderTextSize = shaderText.Length();
+	const char* shaderTextPtr = shaderText.c_str();
+	glShaderSourceARB(shader, 1, (const GLcharARB **)&shaderTextPtr, &shaderTextSize);
 
 	// compile shader
 	glCompileShaderARB(shader);
@@ -791,67 +789,67 @@ void GLShader::ShowProgramUniforms(GLhandleARB program) const
 
 void GLShader::BindAttribLocations(GLhandleARB program) const
 {
-	//if(attribs & ATTR_POSITION)
-		glBindAttribLocationARB(program, ATTR_INDEX_POSITION, "attr_Position");
+	//if(attribs & VA_POSITION)
+		glBindAttribLocationARB(program, VA_INDEX_POSITION, "va_Position");
 
-	//if(attribs & ATTR_TEXCOORD)
-		glBindAttribLocationARB(program, ATTR_INDEX_TEXCOORD0, "attr_TexCoord0");
+	//if(attribs & VA_TEXCOORD)
+		glBindAttribLocationARB(program, VA_INDEX_TEXCOORD0, "va_TexCoord0");
 
-	//if(attribs & ATTR_LIGHTCOORD)
-		glBindAttribLocationARB(program, ATTR_INDEX_TEXCOORD1, "attr_TexCoord1");
+	//if(attribs & VA_LIGHTCOORD)
+		glBindAttribLocationARB(program, VA_INDEX_TEXCOORD1, "va_TexCoord1");
 
-//  if(attribs & ATTR_TEXCOORD2)
-//      glBindAttribLocationARB(program, ATTR_INDEX_TEXCOORD2, "attr_TexCoord2");
+//  if(attribs & VA_TEXCOORD2)
+//      glBindAttribLocationARB(program, VA_INDEX_TEXCOORD2, "va_TexCoord2");
 
-//  if(attribs & ATTR_TEXCOORD3)
-//      glBindAttribLocationARB(program, ATTR_INDEX_TEXCOORD3, "attr_TexCoord3");
+//  if(attribs & VA_TEXCOORD3)
+//      glBindAttribLocationARB(program, VA_INDEX_TEXCOORD3, "va_TexCoord3");
 
-	//if(attribs & ATTR_TANGENT)
-		glBindAttribLocationARB(program, ATTR_INDEX_TANGENT, "attr_Tangent");
+	//if(attribs & VA_TANGENT)
+		glBindAttribLocationARB(program, VA_INDEX_TANGENT, "va_Tangent");
 
-	//if(attribs & ATTR_BITANGENT)
-		glBindAttribLocationARB(program, ATTR_INDEX_BITANGENT, "attr_Bitangent");
+	//if(attribs & VA_BITANGENT)
+		glBindAttribLocationARB(program, VA_INDEX_BITANGENT, "va_Bitangent");
 
-	//if(attribs & ATTR_NORMAL)
-		glBindAttribLocationARB(program, ATTR_INDEX_NORMAL, "attr_Normal");
+	//if(attribs & VA_NORMAL)
+		glBindAttribLocationARB(program, VA_INDEX_NORMAL, "va_Normal");
 
-	//if(attribs & ATTR_COLOR)
-		glBindAttribLocationARB(program, ATTR_INDEX_COLOR, "attr_Color");
+	//if(attribs & VA_COLOR)
+		glBindAttribLocationARB(program, VA_INDEX_COLOR, "va_Color");
 
-	//if(attribs & ATTR_LIGHTDIRECTION)
-//		glBindAttribLocationARB(program, ATTR_INDEX_LIGHTDIRECTION, "attr_LightDirection");
+	//if(attribs & VA_LIGHTDIRECTION)
+//		glBindAttribLocationARB(program, VA_INDEX_LIGHTDIRECTION, "va_LightDirection");
 
 	//if(glConfig2.vboVertexSkinningAvailable)
 	{
-		glBindAttribLocationARB(program, ATTR_INDEX_BONE_INDEXES, "attr_BoneIndexes");
-		glBindAttribLocationARB(program, ATTR_INDEX_BONE_WEIGHTS, "attr_BoneWeights");
+		glBindAttribLocationARB(program, VA_INDEX_BONE_INDEXES, "va_BoneIndexes");
+		glBindAttribLocationARB(program, VA_INDEX_BONE_WEIGHTS, "va_BoneWeights");
 	}
 
-	//if(attribs & ATTR_POSITION2)
-		glBindAttribLocationARB(program, ATTR_INDEX_POSITION2, "attr_Position2");
+	//if(attribs & VA_POSITION2)
+		glBindAttribLocationARB(program, VA_INDEX_POSITION2, "va_Position2");
 
-	//if(attribs & ATTR_TANGENT2)
-		glBindAttribLocationARB(program, ATTR_INDEX_TANGENT2, "attr_Tangent2");
+	//if(attribs & VA_TANGENT2)
+		glBindAttribLocationARB(program, VA_INDEX_TANGENT2, "va_Tangent2");
 
-	//if(attribs & ATTR_BINORMAL2)
-		glBindAttribLocationARB(program, ATTR_INDEX_BINORMAL2, "attr_Binormal2");
+	//if(attribs & VA_BINORMAL2)
+		glBindAttribLocationARB(program, VA_INDEX_BINORMAL2, "va_Binormal2");
 
-	//if(attribs & ATTR_NORMAL2)
-		glBindAttribLocationARB(program, ATTR_INDEX_NORMAL2, "attr_Normal2");
+	//if(attribs & VA_NORMAL2)
+		glBindAttribLocationARB(program, VA_INDEX_NORMAL2, "va_Normal2");
 }
 
 void GLShader::SelectProgram()
 {
 	int index = 0;
 
-	size_t numMacros = _compileMacros.Size();
+	size_t numMacros = _compileMacros.Num();
 	for(int i = 0; i < numMacros; i++)
 	{
 		if(_activeMacros & BIT(i))
 			index += BIT(i);
 	}
 
-	_currentProgram = &_shaderPrograms[index];
+	_currentProgram = _shaderPrograms[index];
 }
 
 void GLShader::BindProgram()
@@ -861,7 +859,7 @@ void GLShader::BindProgram()
 	if(_currentProgram->program == 0)
 	{
 		idStr activeMacros = "";
-		size_t numMacros = _compileMacros.Size();
+		size_t numMacros = _compileMacros.Num();
 		for(size_t j = 0; j < numMacros; j++)
 		{
 			GLCompileMacro* macro = _compileMacros[j];
@@ -885,7 +883,7 @@ void GLShader::BindProgram()
 void GLShader::SetRequiredVertexPointers()
 {
 	uint32_t macroVertexAttribs = 0;
-	size_t numMacros = _compileMacros.Size();
+	size_t numMacros = _compileMacros.Num();
 	for(size_t j = 0; j < numMacros; j++)
 	{
 		GLCompileMacro* macro = _compileMacros[j];
@@ -911,7 +909,7 @@ void GLShader::SetRequiredVertexPointers()
 
 /*
 GLShader_generic::GLShader_generic():
-		GLShader(	"generic", ATTR_POSITION | ATTR_TEXCOORD | ATTR_NORMAL),
+		GLShader(	"generic", VA_POSITION | VA_TEXCOORD | VA_NORMAL),
 		u_ColorMap(this),
 		u_ColorTextureMatrix(this),
 		u_ViewOrigin(this),
@@ -1015,36 +1013,43 @@ GLShader_generic::GLShader_generic():
 
 
 GLShader_forwardLighting::GLShader_forwardLighting():
-		GLShader("forwardLighting", ATTR_POSITION | ATTR_TEXCOORD | ATTR_NORMAL),
-		/*
-		u_DiffuseTextureMatrix(this),
-		u_NormalTextureMatrix(this),
-		u_SpecularTextureMatrix(this),
-		u_AlphaTest(this),
-		u_ColorModulate(this),
+		GLShader("forwardLighting", VA_POSITION | VA_TEXCOORD | VA_NORMAL),
+		u_DiffuseMatrixS(this),
+		u_DiffuseMatrixT(this),
+		u_BumpMatrixS(this),
+		u_BumpMatrixT(this),
+		u_SpecularMatrixS(this),
+		u_SpecularMatrixT(this),
+		//u_AlphaTest(this),
 		u_Color(this),
+		u_ColorModulate(this),
+		u_DiffuseColor(this),
+		u_SpecularColor(this),
 		u_ViewOrigin(this),
 		u_LightOrigin(this),
-		u_LightColor(this),
-		u_LightRadius(this),
-		u_LightScale(this),
-		u_LightWrapAround(this),
-		u_LightAttenuationMatrix(this),
-		u_ShadowTexelSize(this),
-		u_ShadowBlur(this),
-		u_ModelMatrix(this),
-		u_ModelViewProjectionMatrix(this),
-		u_BoneMatrix(this),
-		u_VertexInterpolation(this),
-		u_PortalPlane(this),
-		u_DepthScale(this),
-		GLDeformStage(this),
-		GLCompileMacro_USE_PORTAL_CLIPPING(this),
-		GLCompileMacro_USE_ALPHA_TESTING(this),
-		GLCompileMacro_USE_VERTEX_SKINNING(this),
-		GLCompileMacro_USE_VERTEX_ANIMATION(this),
-		GLCompileMacro_USE_DEFORM_VERTEXES(this),
-		*/
+		u_LightProjectS(this),
+		u_LightProjectT(this),
+		u_LightProjectQ(this),
+		u_LightFalloffS(this),
+		//u_LightColor(this),
+		//u_LightRadius(this),
+		//u_LightScale(this),
+		//u_LightWrapAround(this),
+		//u_LightAttenuationMatrix(this),
+		//u_ShadowTexelSize(this),
+		//u_ShadowBlur(this),
+		//u_ModelMatrix(this),
+		//u_ModelViewProjectionMatrix(this),
+		//u_BoneMatrix(this),
+		//u_VertexInterpolation(this),
+		//u_PortalPlane(this),
+		//u_DepthScale(this),
+		//GLDeformStage(this),
+		//GLCompileMacro_USE_PORTAL_CLIPPING(this),
+		//GLCompileMacro_USE_ALPHA_TESTING(this),
+		//GLCompileMacro_USE_VERTEX_SKINNING(this),
+		//GLCompileMacro_USE_VERTEX_ANIMATION(this),
+		//GLCompileMacro_USE_DEFORM_VERTEXES(this),
 		GLCompileMacro_USE_NORMAL_MAPPING(this)
 		//GLCompileMacro_USE_PARALLAX_MAPPING(this),
 		//GLCompileMacro_USE_SHADOWING(this)//,
@@ -1056,7 +1061,8 @@ GLShader_forwardLighting::GLShader_forwardLighting():
 	idTimer compile_time;
 	compile_time.Start();
 
-	_shaderPrograms = idList<shaderProgram_t>(1 << _compileMacros.Size());
+	//_shaderPrograms = idList<shaderProgram_t>(numPermutations);
+	
 	
 	//Com_Memset(_shaderPrograms, 0, sizeof(_shaderPrograms));
 	
@@ -1075,9 +1081,9 @@ GLShader_forwardLighting::GLShader_forwardLighting():
 	idStr vertexShaderText = BuildGPUShaderText("forwardLighting", vertexInlines, GL_VERTEX_SHADER_ARB);
 	idStr fragmentShaderText = BuildGPUShaderText("forwardLighting", fragmentInlines, GL_FRAGMENT_SHADER_ARB);
 
-	size_t numPermutations = (1 << _compileMacros.Size());	// same as 2^n, n = no. compile macros
+	size_t numPermutations = (1 << _compileMacros.Num());	// same as 2^n, n = no. compile macros
 	size_t numCompiled = 0;
-	common->Printf("...compiling forwardLighting_omniXYZ shaders\n");
+	common->Printf("...compiling forwardLighting shaders\n");
 	common->Printf("0%%  10   20   30   40   50   60   70   80   90   100%%\n");
 	common->Printf("|----|----|----|----|----|----|----|----|----|----|\n");
 	size_t tics = 0;
@@ -1102,42 +1108,46 @@ GLShader_forwardLighting::GLShader_forwardLighting():
 		idStrList compileMacros;
 		if(GetCompileMacrosString(i, compileMacros))
 		{
-			compileMacros.Append("TWOSIDED");
+			//compileMacros.Append("TWOSIDED");
+			compileMacros.Append("HALF_LAMBERT");
 
-			//ri.Printf(PRINT_DEVELOPER, "Compile macros: '%s'\n", compileMacros.c_str());
+			//common->DPrintf("Compile macros: '%s'\n", compileMacros.To);
 		
-			shaderProgram_t *shaderProgram = &_shaderPrograms[i];
+			shaderProgram_t *shaderProgram = new shaderProgram_t();
+			_shaderPrograms.Append(shaderProgram);
 
 			CompileAndLinkGPUShaderProgram(	shaderProgram,
-											"forwardLighting_omniXYZ",
+											"forwardLighting",
 											vertexShaderText,
 											fragmentShaderText,
 											compileMacros);
 
 			UpdateShaderProgramUniformLocations(shaderProgram);
 
-			shaderProgram->u_DiffuseMap	= glGetUniformLocationARB(shaderProgram->program, "u_DiffuseMap");
-			shaderProgram->u_NormalMap = glGetUniformLocationARB(shaderProgram->program, "u_NormalMap");
-			shaderProgram->u_SpecularMap = glGetUniformLocationARB(shaderProgram->program, "u_SpecularMap");
-			shaderProgram->u_AttenuationMapXY = glGetUniformLocationARB(shaderProgram->program, "u_AttenuationMapXY");
-			shaderProgram->u_AttenuationMapZ = glGetUniformLocationARB(shaderProgram->program, "u_AttenuationMapZ");
+			shaderProgram->u_NormalCubeMapImage	= glGetUniformLocationARB(shaderProgram->program, "u_NormalCubeMapImage");
+			shaderProgram->u_NormalImage = glGetUniformLocationARB(shaderProgram->program, "u_NormalImage");
+			shaderProgram->u_LightFalloffImage = glGetUniformLocationARB(shaderProgram->program, "u_LightFalloffImage");
+			shaderProgram->u_LightImage = glGetUniformLocationARB(shaderProgram->program, "u_LightImage");
+			shaderProgram->u_DiffuseImage = glGetUniformLocationARB(shaderProgram->program, "u_DiffuseImage");
+			shaderProgram->u_SpecularImage = glGetUniformLocationARB(shaderProgram->program, "u_SpecularImage");
 			//if(r_shadows->integer >= SHADOWING_ESM16)
-			{
-				shaderProgram->u_ShadowMap = glGetUniformLocationARB(shaderProgram->program, "u_ShadowMap");
-			}
-			shaderProgram->u_RandomMap = glGetUniformLocationARB(shaderProgram->program, "u_RandomMap");
+			//{
+			//	shaderProgram->u_ShadowMap = glGetUniformLocationARB(shaderProgram->program, "u_ShadowMap");
+			//}
+			//shaderProgram->u_RandomMap = glGetUniformLocationARB(shaderProgram->program, "u_RandomMap");
 
 			glUseProgramObjectARB(shaderProgram->program);
-			glUniform1iARB(shaderProgram->u_DiffuseMap, 0);
-			glUniform1iARB(shaderProgram->u_NormalMap, 1);
-			glUniform1iARB(shaderProgram->u_SpecularMap, 2);
-			glUniform1iARB(shaderProgram->u_AttenuationMapXY, 3);
-			glUniform1iARB(shaderProgram->u_AttenuationMapZ, 4);
+			glUniform1iARB(shaderProgram->u_NormalCubeMapImage, 0);
+			glUniform1iARB(shaderProgram->u_NormalImage, 1);
+			glUniform1iARB(shaderProgram->u_LightFalloffImage, 2);
+			glUniform1iARB(shaderProgram->u_LightImage, 3);
+			glUniform1iARB(shaderProgram->u_DiffuseImage, 4);
+			glUniform1iARB(shaderProgram->u_SpecularImage, 5);
 			//if(r_shadows->integer >= SHADOWING_ESM16)
-			{
-				glUniform1iARB(shaderProgram->u_ShadowMap, 5);
-			}
-			glUniform1iARB(shaderProgram->u_RandomMap, 6);
+			//{
+			//	glUniform1iARB(shaderProgram->u_ShadowMap, 5);
+			//}
+			//glUniform1iARB(shaderProgram->u_RandomMap, 6);
 			glUseProgramObjectARB(0);
 
 			ValidateProgram(shaderProgram->program);
@@ -1146,12 +1156,16 @@ GLShader_forwardLighting::GLShader_forwardLighting():
 
 			numCompiled++;
 		}
+		else
+		{
+			_shaderPrograms.Append(NULL);
+		}
 	}
 
 	SelectProgram();
 
 	compile_time.Stop();
-	common->Printf("...compiled %i forwardLighting_omniXYZ shader permutations in %5.2f seconds\n", numCompiled, compile_time.Milliseconds() / 1000.0);
+	common->Printf("...compiled %i forwardLighting shader permutations in %5.2f seconds\n", numCompiled, compile_time.Milliseconds() / 1000.0);
 }
 
 

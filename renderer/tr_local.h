@@ -676,6 +676,7 @@ typedef enum {
 	BE_NV20,
 	BE_R200,
 	BE_ARB2,
+	BE_GLSL,
 	BE_BAD
 } backEndName_t;
 
@@ -1385,63 +1386,63 @@ typedef enum {
 
 // Techyon BEGIN
 
+// Vertex attributes
 enum
 {
-	ATTR_INDEX_POSITION,
-	ATTR_INDEX_TEXCOORD0,
-	ATTR_INDEX_TEXCOORD1,
-	ATTR_INDEX_TANGENT,
-	ATTR_INDEX_BITANGENT,
-	ATTR_INDEX_NORMAL,
-	ATTR_INDEX_COLOR,
-//	ATTR_INDEX_LIGHTDIRECTION,
+	VA_INDEX_POSITION,
+	VA_INDEX_TEXCOORD0 = 8,
+	VA_INDEX_TANGENT = 9,
+	VA_INDEX_BITANGENT = 10,
+	VA_INDEX_NORMAL = 11,
+	VA_INDEX_TEXCOORD1,
+	VA_INDEX_COLOR,
+//	VA_INDEX_LIGHTDIRECTION,
 
 	// GPU vertex skinning
-	ATTR_INDEX_BONE_INDEXES,
-	ATTR_INDEX_BONE_WEIGHTS,
+	VA_INDEX_BONE_INDEXES,
+	VA_INDEX_BONE_WEIGHTS,
 
 	// GPU vertex animations
-	ATTR_INDEX_POSITION2,
-	ATTR_INDEX_TANGENT2,
-	ATTR_INDEX_BINORMAL2,
-	ATTR_INDEX_NORMAL2,
+	VA_INDEX_POSITION2,
+	VA_INDEX_TANGENT2,
+	VA_INDEX_BINORMAL2,
+	VA_INDEX_NORMAL2,
 };
 
 enum
 {
-	ATTR_POSITION = BIT(0),
-	ATTR_TEXCOORD = BIT(1),
-	ATTR_LIGHTCOORD = BIT(2),
-	ATTR_TANGENT = BIT(3),
-	ATTR_BITANGENT = BIT(4),
-	ATTR_NORMAL = BIT(5),
-	ATTR_COLOR = BIT(6),
-//	ATTR_LIGHTDIRECTION = BIT(8),
+	VA_POSITION = BIT(0),
+	VA_TEXCOORD = BIT(1),
+	VA_LIGHTCOORD = BIT(2),
+	VA_TANGENT = BIT(3),
+	VA_BITANGENT = BIT(4),
+	VA_NORMAL = BIT(5),
+	VA_COLOR = BIT(6),
+//	VA_LIGHTDIRECTION = BIT(8),
 	
-	ATTR_BONE_INDEXES = BIT(9),
-	ATTR_BONE_WEIGHTS = BIT(10),
+	VA_BONE_INDEXES = BIT(9),
+	VA_BONE_WEIGHTS = BIT(10),
 
 	// for .md3 interpolation
-	ATTR_POSITION2 = BIT(11),
-	ATTR_TANGENT2 = BIT(12),
-	ATTR_BINORMAL2 = BIT(13),
-	ATTR_NORMAL2 = BIT(14),
+	VA_POSITION2 = BIT(11),
+	VA_TANGENT2 = BIT(12),
+	VA_BINORMAL2 = BIT(13),
+	VA_NORMAL2 = BIT(14),
 
-	// FIXME XBSP format with ATTR_LIGHTDIRECTION and ATTR_PAINTCOLOR
-	//ATTR_DEFAULT = ATTR_POSITION | ATTR_TEXCOORD | ATTR_TANGENT | ATTR_BINORMAL | ATTR_COLOR,
+	// FIXME XBSP format with VA_LIGHTDIRECTION and VA_PAINTCOLOR
+	//VA_DEFAULT = VA_POSITION | VA_TEXCOORD | VA_TANGENT | VA_BINORMAL | VA_COLOR,
 
-	ATTR_BITS =	ATTR_POSITION |
-				ATTR_TEXCOORD |
-				ATTR_LIGHTCOORD |
-				ATTR_TANGENT |
-				ATTR_BITANGENT |
-				ATTR_NORMAL |
-				ATTR_COLOR// |
-//				ATTR_LIGHTDIRECTION
-
+	VA_BITS =	VA_POSITION |
+				VA_TEXCOORD |
+				VA_LIGHTCOORD |
+				VA_TANGENT |
+				VA_BITANGENT |
+				VA_NORMAL |
+				VA_COLOR// |
+//				VA_LIGHTDIRECTION
 				//|
-				//ATTR_BONE_INDEXES |
-				//ATTR_BONE_WEIGHTS
+				//VA_BONE_INDEXES |
+				//VA_BONE_WEIGHTS
 };
 
 // RB: shaderProgram_t represents a compiled GLSL shader including vertex, fragment and geometry shader parts
@@ -1455,44 +1456,54 @@ typedef struct shaderProgram_s
 	uint32_t        attribs;	// vertex array attributes
 
 	// uniform parameters
-	int32_t         u_ColorMap;
-	int32_t         u_CurrentMap;
-	int32_t         u_ContrastMap;
-	int32_t         u_DiffuseMap;
-	int32_t         u_NormalMap;
-	int32_t         u_SpecularMap;
-	int32_t         u_LightMap;
-	int32_t         u_DeluxeMap;
-	int32_t         u_DepthMap;
-	int32_t         u_DepthMapBack;
-	int32_t         u_DepthMapFront;
-	int32_t         u_PortalMap;
-	int32_t         u_AttenuationMapXY;
-	int32_t         u_AttenuationMapZ;
-	int32_t         u_ShadowMap;
-	int32_t         u_ShadowMap0;
-	int32_t         u_ShadowMap1;
-	int32_t         u_ShadowMap2;
-	int32_t         u_ShadowMap3;
-	int32_t         u_ShadowMap4;
-	int32_t         u_EnvironmentMap0;
-	int32_t         u_EnvironmentMap1;
+	int32_t         u_ColorImage;
+	int32_t         u_CurrentImage;
+	int32_t         u_ContrastImage;
+	int32_t         u_DiffuseImage;
+	int32_t         u_NormalImage;
+	int32_t			u_NormalCubeMapImage;
+	int32_t         u_SpecularImage;
+	int32_t         u_LightmapImage;
+	int32_t         u_DeluxeImage;
+	int32_t         u_DepthImage;
+//	int32_t         u_DepthImageBack;
+//	int32_t         u_DepthImageFront;
+	int32_t         u_PortalImage;
+	int32_t         u_LightImage;
+	int32_t         u_LightFalloffImage;
+	int32_t         u_ShadowImage;
+	int32_t         u_ShadowImage0;
+	int32_t         u_ShadowImage1;
+	int32_t         u_ShadowImage2;
+	int32_t         u_ShadowImage3;
+	int32_t         u_ShadowImage4;
+	int32_t         u_EnvironmentImage0;
+	int32_t         u_EnvironmentImage1;
 
-	int32_t			u_RandomMap;
-	int32_t         u_GrainMap;
-	int32_t         u_VignetteMap;
+	int32_t			u_RandomSamplesImage;
+	int32_t         u_GrainImage;
+	int32_t         u_VignetteImage;
 
-	int32_t         u_ColorTextureMatrix;
-	idMat4			t_ColorTextureMatrix;
+//	int32_t         u_ColorTextureMatrix;
+//	idMat4			t_ColorTextureMatrix;
 
-	int32_t         u_DiffuseTextureMatrix;
-	idMat4			t_DiffuseTextureMatrix;
+	int32_t         u_DiffuseMatrixS;
+	idVec4			t_DiffuseMatrixS;
 
-	int32_t         u_NormalTextureMatrix;
-	idMat4			t_NormalTextureMatrix;
+	int32_t         u_DiffuseMatrixT;
+	idVec4			t_DiffuseMatrixT;
 
-	int32_t         u_SpecularTextureMatrix;
-	idMat4			t_SpecularTextureMatrix;
+	int32_t         u_BumpMatrixS;
+	idVec4			t_BumpMatrixS;
+
+	int32_t         u_BumpMatrixT;
+	idVec4			t_BumpMatrixT;
+
+	int32_t         u_SpecularMatrixS;
+	idVec4			t_SpecularMatrixS;
+
+	int32_t         u_SpecularMatrixT;
+	idVec4			t_SpecularMatrixT;
 
 //	int32_t         u_AlphaTest;
 //	alphaTest_t		t_AlphaTest;
@@ -1509,13 +1520,31 @@ typedef struct shaderProgram_s
 	idVec4			t_ColorModulate;
 
 	int32_t         u_AmbientColor;
-	idVec3			t_AmbientColor;
+	idVec4			t_AmbientColor;
+
+	int32_t         u_DiffuseColor;
+	idVec4			t_DiffuseColor;
+
+	int32_t         u_SpecularColor;
+	idVec4			t_SpecularColor;
 
 	int32_t         u_LightDir;
 	idVec3			t_LightDir;
 
 	int32_t         u_LightOrigin;
 	idVec3			t_LightOrigin;
+
+	int32_t         u_LightProjectS;
+	idVec4			t_LightProjectS;
+
+	int32_t         u_LightProjectT;
+	idVec4			t_LightProjectT;
+
+	int32_t         u_LightProjectQ;
+	idVec4			t_LightProjectQ;
+
+	int32_t         u_LightFalloffS;
+	idVec4			t_LightFalloffS;
 
 	int32_t         u_LightColor;
 	idVec3			t_LightColor;
