@@ -45,7 +45,7 @@ void GL_BindProgram(shaderProgram_t * program)
 	if(r_logFile.GetBool())
 	{
 		// don't just call LogComment, or we will get a call to va() every frame!
-		RB_LogComment("--- GL_BindProgram( name = '%s', macros = '%s' ) ---\n", program->name, program->compileMacros);
+		RB_LogComment("--- GL_BindProgram( name = '%s', macros = '%s' ) ---\n", program->name.c_str(), program->compileMacros);
 	}
 
 	if(backEnd.glState.currentProgram != program)

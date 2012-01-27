@@ -790,7 +790,7 @@ public:
 #if defined(LOG_GLSL_UNIFORMS)
 		if(r_logFile.GetBool())
 		{
-			RB_LogComment("--- SetUniform_DiffuseMatrixS( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name, v[0], v[1], v[2], v[3]);
+			RB_LogComment("--- SetUniform_DiffuseMatrixS( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name.c_str(), v[0], v[1], v[2], v[3]);
 		}
 #endif
 
@@ -827,7 +827,7 @@ public:
 #if defined(LOG_GLSL_UNIFORMS)
 		if(r_logFile.GetBool())
 		{
-			RB_LogComment("--- SetUniform_DiffuseMatrixT( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name, v[0], v[1], v[2], v[3]);
+			RB_LogComment("--- SetUniform_DiffuseMatrixT( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name.c_str(), v[0], v[1], v[2], v[3]);
 		}
 #endif
 
@@ -864,7 +864,7 @@ public:
 #if defined(LOG_GLSL_UNIFORMS)
 		if(r_logFile.GetBool())
 		{
-			RB_LogComment("--- SetUniform_BumpMatrixS( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name, v[0], v[1], v[2], v[3]);
+			RB_LogComment("--- SetUniform_BumpMatrixS( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name.c_str(), v[0], v[1], v[2], v[3]);
 		}
 #endif
 
@@ -901,7 +901,7 @@ public:
 #if defined(LOG_GLSL_UNIFORMS)
 		if(r_logFile.GetBool())
 		{
-			RB_LogComment("--- SetUniform_BumpMatrixT( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name, v[0], v[1], v[2], v[3]);
+			RB_LogComment("--- SetUniform_BumpMatrixT( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name.c_str(), v[0], v[1], v[2], v[3]);
 		}
 #endif
 
@@ -939,7 +939,7 @@ public:
 #if defined(LOG_GLSL_UNIFORMS)
 		if(r_logFile.GetBool())
 		{
-			RB_LogComment("--- SetUniform_SpecularMatrixS( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name, v[0], v[1], v[2], v[3]);
+			RB_LogComment("--- SetUniform_SpecularMatrixS( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name.c_str(), v[0], v[1], v[2], v[3]);
 		}
 #endif
 
@@ -976,7 +976,7 @@ public:
 #if defined(LOG_GLSL_UNIFORMS)
 		if(r_logFile.GetBool())
 		{
-			RB_LogComment("--- SetUniform_SpecularMatrixT( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name, v[0], v[1], v[2], v[3]);
+			RB_LogComment("--- SetUniform_SpecularMatrixT( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name.c_str(), v[0], v[1], v[2], v[3]);
 		}
 #endif
 
@@ -1014,7 +1014,7 @@ public:
 #if defined(LOG_GLSL_UNIFORMS)
 		if(r_logFile.GetBool())
 		{
-			RB_LogComment("--- SetUniform_Color( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name, v[0], v[1], v[2], v[3]);
+			RB_LogComment("--- SetUniform_Color( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name.c_str(), v[0], v[1], v[2], v[3]);
 		}
 #endif
 
@@ -1051,7 +1051,7 @@ public:
 #if defined(LOG_GLSL_UNIFORMS)
 		if(r_logFile.GetBool())
 		{
-			RB_LogComment("--- SetUniform_ColorModulate( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name, v[0], v[1], v[2], v[3]);
+			RB_LogComment("--- SetUniform_ColorModulate( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name.c_str(), v[0], v[1], v[2], v[3]);
 		}
 #endif
 
@@ -1088,7 +1088,7 @@ public:
 #if defined(LOG_GLSL_UNIFORMS)
 		if(r_logFile.GetBool())
 		{
-			RB_LogComment("--- SetUniform_AmbientColor( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name, v[0], v[1], v[2], v[3]);
+			RB_LogComment("--- SetUniform_AmbientColor( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name.c_str(), v[0], v[1], v[2], v[3]);
 		}
 #endif
 
@@ -1125,7 +1125,7 @@ public:
 #if defined(LOG_GLSL_UNIFORMS)
 		if(r_logFile.GetBool())
 		{
-			RB_LogComment("--- SetUniform_DiffuseColor( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name, v[0], v[1], v[2], v[3]);
+			RB_LogComment("--- SetUniform_DiffuseColor( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name.c_str(), v[0], v[1], v[2], v[3]);
 		}
 #endif
 
@@ -1162,7 +1162,7 @@ public:
 #if defined(LOG_GLSL_UNIFORMS)
 		if(r_logFile.GetBool())
 		{
-			RB_LogComment("--- SetUniform_SpecularColor( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name, v[0], v[1], v[2], v[3]);
+			RB_LogComment("--- SetUniform_SpecularColor( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name.c_str(), v[0], v[1], v[2], v[3]);
 		}
 #endif
 
@@ -1223,7 +1223,7 @@ public:
 #if defined(LOG_GLSL_UNIFORMS)
 		if(r_logFile.GetBool())
 		{
-			RB_LogComment("--- SetUniform_ViewOrigin( program = %s, vector = ( %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name, v[0], v[1], v[2]);
+			RB_LogComment("--- SetUniform_ViewOrigin( program = %s, vector = ( %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name.c_str(), v[0], v[1], v[2]);
 		}
 #endif
 
@@ -1283,7 +1283,7 @@ public:
 #if defined(LOG_GLSL_UNIFORMS)
 		if(r_logFile.GetBool())
 		{
-			RB_LogComment("--- SetUniform_LightOrigin( program = %s, vector = ( %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name, v[0], v[1], v[2]);
+			RB_LogComment("--- SetUniform_LightOrigin( program = %s, vector = ( %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name.c_str(), v[0], v[1], v[2]);
 		}
 #endif
 
@@ -1320,7 +1320,7 @@ public:
 #if defined(LOG_GLSL_UNIFORMS)
 		if(r_logFile.GetBool())
 		{
-			RB_LogComment("--- SetUniform_LightProjectS( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name, v[0], v[1], v[2], v[3]);
+			RB_LogComment("--- SetUniform_LightProjectS( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name.c_str(), v[0], v[1], v[2], v[3]);
 		}
 #endif
 
@@ -1357,7 +1357,7 @@ public:
 #if defined(LOG_GLSL_UNIFORMS)
 		if(r_logFile.GetBool())
 		{
-			RB_LogComment("--- SetUniform_LightProjectT( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name, v[0], v[1], v[2], v[3]);
+			RB_LogComment("--- SetUniform_LightProjectT( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name.c_str(), v[0], v[1], v[2], v[3]);
 		}
 #endif
 
@@ -1394,7 +1394,7 @@ public:
 #if defined(LOG_GLSL_UNIFORMS)
 		if(r_logFile.GetBool())
 		{
-			RB_LogComment("--- SetUniform_LightProjectQ( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name, v[0], v[1], v[2], v[3]);
+			RB_LogComment("--- SetUniform_LightProjectQ( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name.c_str(), v[0], v[1], v[2], v[3]);
 		}
 #endif
 
@@ -1431,7 +1431,7 @@ public:
 #if defined(LOG_GLSL_UNIFORMS)
 		if(r_logFile.GetBool())
 		{
-			RB_LogComment("--- SetUniform_LightFalloffS( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name, v[0], v[1], v[2], v[3]);
+			RB_LogComment("--- SetUniform_LightFalloffS( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name.c_str(), v[0], v[1], v[2], v[3]);
 		}
 #endif
 
@@ -1582,7 +1582,7 @@ public:
 								"( %5.3f, %5.3f, %5.3f, %5.3f )\n"
 								"( %5.3f, %5.3f, %5.3f, %5.3f )\n"
 								"( %5.3f, %5.3f, %5.3f, %5.3f ) ) ---\n",
-								program->name,
+								program->name.c_str(),
 								lightFrustum[0][0], lightFrustum[0][1], lightFrustum[0][2], lightFrustum[0][3],
 								lightFrustum[1][0], lightFrustum[1][1], lightFrustum[1][2], lightFrustum[1][3],
 								lightFrustum[2][0], lightFrustum[2][1], lightFrustum[2][2], lightFrustum[2][3],
@@ -2133,7 +2133,7 @@ public:
 #if defined(LOG_GLSL_UNIFORMS)
 		if(r_logFile->integer)
 		{
-			GLimp_LogComment(va("--- SetUniform_FogDistanceVector( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f ) ) ---\n", program->name, v[0], v[1], v[2], v[3]));
+			GLimp_LogComment(va("--- SetUniform_FogDistanceVector( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f ) ) ---\n", program->name.c_str(), v[0], v[1], v[2], v[3]));
 		}
 #endif
 
@@ -2171,7 +2171,7 @@ public:
 #if defined(LOG_GLSL_UNIFORMS)
 		if(r_logFile->integer)
 		{
-			GLimp_LogComment(va("--- SetUniform_FogDepthVector( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f ) ) ---\n", program->name, v[0], v[1], v[2], v[3]));
+			GLimp_LogComment(va("--- SetUniform_FogDepthVector( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f ) ) ---\n", program->name.c_str(), v[0], v[1], v[2], v[3]));
 		}
 #endif
 
@@ -2209,7 +2209,7 @@ public:
 #if defined(LOG_GLSL_UNIFORMS)
 		if(r_logFile->integer)
 		{
-			GLimp_LogComment(va("--- SetUniform_FogEyeT( program = %s, value = %f ) ---\n", program->name, value));
+			GLimp_LogComment(va("--- SetUniform_FogEyeT( program = %s, value = %f ) ---\n", program->name.c_str(), value));
 		}
 #endif
 
@@ -2247,7 +2247,7 @@ public:
 #if defined(LOG_GLSL_UNIFORMS)
 		if(r_logFile->integer)
 		{
-			GLimp_LogComment(va("--- SetUniform_DeformMagnitude( program = %s, value = %f ) ---\n", program->name, value));
+			GLimp_LogComment(va("--- SetUniform_DeformMagnitude( program = %s, value = %f ) ---\n", program->name.c_str(), value));
 		}
 #endif
 
@@ -2286,7 +2286,7 @@ public:
 #if defined(LOG_GLSL_UNIFORMS)
 		if(r_logFile->integer)
 		{
-			GLimp_LogComment(va("--- SetUniform_HDRKey( program = %s, value = %f ) ---\n", program->name, value));
+			GLimp_LogComment(va("--- SetUniform_HDRKey( program = %s, value = %f ) ---\n", program->name.c_str(), value));
 		}
 #endif
 
@@ -2323,7 +2323,7 @@ public:
 #if defined(LOG_GLSL_UNIFORMS)
 		if(r_logFile->integer)
 		{
-			GLimp_LogComment(va("--- SetUniform_HDRAverageLuminance( program = %s, value = %f ) ---\n", program->name, value));
+			GLimp_LogComment(va("--- SetUniform_HDRAverageLuminance( program = %s, value = %f ) ---\n", program->name.c_str(), value));
 		}
 #endif
 
@@ -2360,7 +2360,7 @@ public:
 #if defined(LOG_GLSL_UNIFORMS)
 		if(r_logFile->integer)
 		{
-			GLimp_LogComment(va("--- SetUniform_HDRMaxLuminance( program = %s, value = %f ) ---\n", program->name, value));
+			GLimp_LogComment(va("--- SetUniform_HDRMaxLuminance( program = %s, value = %f ) ---\n", program->name.c_str(), value));
 		}
 #endif
 
