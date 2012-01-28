@@ -467,37 +467,38 @@ project "Techyon"
 		"cm/*.cpp", "cm/*.h",
 		"framework/**.cpp", "framework/**.h",
 		"renderer/**.c", "renderer/**.cpp", "renderer/**.h",
+		"libs/jpeg-6/*.c", "libs/jpeg-6/*.h",
 		"libs/glew/src/glew.c",
 		"libs/glew/include/GL/glew.h",
 		
 		"sound/*.cpp", "sound/*.h",
 		
-		"sound/OggVorbis/ogg/*.h",
-		"sound/OggVorbis/oggsrc/bitwise.c",
-		"sound/OggVorbis/oggsrc/framing.c",
+		"libs/oggvorbis/ogg/*.h",
+		"libs/oggvorbis/oggsrc/bitwise.c",
+		"libs/oggvorbis/oggsrc/framing.c",
 		
-		"sound/OggVorbis/vorbis/*.h",
-		"sound/OggVorbis/vorbissrc/mdct.c",
-		"sound/OggVorbis/vorbissrc/smallft.c",
-		"sound/OggVorbis/vorbissrc/block.c",
-		"sound/OggVorbis/vorbissrc/envelope.c",
-		"sound/OggVorbis/vorbissrc/windowvb.c",
-		"sound/OggVorbis/vorbissrc/lsp.c",
-		"sound/OggVorbis/vorbissrc/lpc.c",
-		"sound/OggVorbis/vorbissrc/analysis.c",
-		"sound/OggVorbis/vorbissrc/synthesis.c",
-		"sound/OggVorbis/vorbissrc/psy.c",
-		"sound/OggVorbis/vorbissrc/info.c",
-		"sound/OggVorbis/vorbissrc/floor1.c",
-		"sound/OggVorbis/vorbissrc/floor0.c",
-		"sound/OggVorbis/vorbissrc/res0.c",
-		"sound/OggVorbis/vorbissrc/mapping0.c",
-		"sound/OggVorbis/vorbissrc/registry.c",
-		"sound/OggVorbis/vorbissrc/codebook.c",
-		"sound/OggVorbis/vorbissrc/sharedbook.c",
-		"sound/OggVorbis/vorbissrc/lookup.c",
-		"sound/OggVorbis/vorbissrc/bitrate.c",
-		"sound/OggVorbis/vorbissrc/vorbisfile.c",
+		"libs/oggvorbis/vorbis/*.h",
+		"libs/oggvorbis/vorbissrc/mdct.c",
+		"libs/oggvorbis/vorbissrc/smallft.c",
+		"libs/oggvorbis/vorbissrc/block.c",
+		"libs/oggvorbis/vorbissrc/envelope.c",
+		"libs/oggvorbis/vorbissrc/windowvb.c",
+		"libs/oggvorbis/vorbissrc/lsp.c",
+		"libs/oggvorbis/vorbissrc/lpc.c",
+		"libs/oggvorbis/vorbissrc/analysis.c",
+		"libs/oggvorbis/vorbissrc/synthesis.c",
+		"libs/oggvorbis/vorbissrc/psy.c",
+		"libs/oggvorbis/vorbissrc/info.c",
+		"libs/oggvorbis/vorbissrc/floor1.c",
+		"libs/oggvorbis/vorbissrc/floor0.c",
+		"libs/oggvorbis/vorbissrc/res0.c",
+		"libs/oggvorbis/vorbissrc/mapping0.c",
+		"libs/oggvorbis/vorbissrc/registry.c",
+		"libs/oggvorbis/vorbissrc/codebook.c",
+		"libs/oggvorbis/vorbissrc/sharedbook.c",
+		"libs/oggvorbis/vorbissrc/lookup.c",
+		"libs/oggvorbis/vorbissrc/bitrate.c",
+		"libs/oggvorbis/vorbissrc/vorbisfile.c",
 		
 		"sys/sys_*.cpp", "sys/sys_*.h",
 		
@@ -507,9 +508,9 @@ project "Techyon"
 	excludes
 	{
 		"renderer/draw_exp*.cpp",
-		"renderer/jpeg-6/jmemdos.c",
-		"renderer/jpeg-6/jload.c",
-		"renderer/jpeg-6/jpegtran.c",
+		"libs/jpeg-6/jmemdos.c",
+		"libs/jpeg-6/jload.c",
+		"libs/jpeg-6/jpegtran.c",
 		
 		"tools/common/RenderBumpFlatDialog.*",
 		"tools/debugger/*",
@@ -526,8 +527,8 @@ project "Techyon"
 		"libs/glew/include",
 		--"../libs/freetype/include",
 		--"../libs/ogg/include",
-		"sound/OggVorbis/ogg",
-		"sound/OggVorbis/vorbis",
+		"libs/oggvorbis/ogg",
+		"libs/oggvorbis/vorbis",
 	}
 	defines
 	{
@@ -751,8 +752,8 @@ end
 			
 			"libs/glew/include/GL/wglew.h",
 			
-			--"openal/idal.cpp", "openal/idal.h",
-			"openal/include/*.h",
+			--"libs/openal/idal.cpp", "libs/openal/idal.h",
+			"libs/openal/include/*.h",
 		}
 		excludes
 		{
@@ -761,14 +762,14 @@ end
 		}
 		includedirs
 		{
-			"curl/include",
-			"openal/include",
+			"libs/curl/include",
+			"libs/openal/include",
 			--"libs/sdl/include",
 		}
 		libdirs
 		{
-			--"openal/lib",
-			--"../libs/curl-7.12.2/lib"
+			--"libs/openal/lib",
+			--"libs/curl-7.12.2/lib"
 		}
 		links
 		{
@@ -814,9 +815,9 @@ end
 		{
 			--"../libs/sdl/lib",
 			--"../libs/openal/libs/win32",
-			"openal/lib",
+			"libs/openal/lib",
 			--"../libs/curl-7.12.2/lib"
-			"curl/lib"
+			"libs/curl/lib"
 		}
 		links
 		{ 
@@ -836,7 +837,7 @@ end
 		}
 		prebuildcommands
 		{
-		   "cd curl/lib",
+		   "cd libs/curl/lib",
 		   "nmake /f Makefile.vc6 CFG=release",
 		}
 		
@@ -846,7 +847,7 @@ end
 		{
 			--"../libs/sdl/lib64",
 			--"../libs/openal/libs/win64",
-			"openal/lib",
+			"libs/openal/lib",
 			--"../libs/curl-7.12.2/lib"
 		}
 		links

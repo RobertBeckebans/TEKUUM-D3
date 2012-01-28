@@ -35,8 +35,8 @@ If you have questions concerning this license or the applicable additional terms
 #if defined(USE_OPENAL)
 
 #ifdef _WIN32
-#include "../openal/include/al.h"
-#include "../openal/include/alc.h"
+#include "../libs/openal/include/al.h"
+#include "../libs/openal/include/alc.h"
 // Techyon BEGIN
 //#include "../openal/idal.h"
 // Techyon END
@@ -58,7 +58,7 @@ If you have questions concerning this license or the applicable additional terms
 #define ID_ALCHAR
 #endif
 
-#include "../openal/include/efxlib.h"
+#include "../libs/openal/include/efxlib.h"
 #endif // #if defined(USE_OPENAL)
 // Techyon END
 

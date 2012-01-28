@@ -229,6 +229,9 @@ void GLW_CheckWGLExtensions( HDC hDC ) {
 GLW_GetWGLExtensionsWithFakeWindow
 ==================
 */
+// Techyon BEGIN
+// unused
+/*
 static void GLW_GetWGLExtensionsWithFakeWindow( void ) {
 	HWND	hWnd;
     MSG		msg;
@@ -258,6 +261,8 @@ static void GLW_GetWGLExtensionsWithFakeWindow( void ) {
         DispatchMessage( &msg );
     }
 }
+*/
+// Techyon END
 
 //=============================================================================
 
