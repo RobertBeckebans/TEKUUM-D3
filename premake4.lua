@@ -798,6 +798,7 @@ end
 			"_MBCS",
 			"USE_OPENAL",
 			"USE_EXCEPTIONS",
+			--"USE_GLES1",
 		}
 		
 		
