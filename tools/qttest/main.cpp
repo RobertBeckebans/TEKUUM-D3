@@ -15,13 +15,17 @@
 #define DEBUG_NEW new
 #endif
 
-static QApplication*		s_qtMain = NULL;
+static QCoreApplication*	s_qtMain = NULL;
 static QtTest*				s_qtTestEditor = NULL;
 
 void	QtTestEditorInit()
 {
-	int argc = 0;
-	s_qtMain = new QApplication(argc, NULL);
+	s_qtMain = QApplication::instance();
+	if(s_qtMain == NULL)
+	{
+		int argc = 0;
+		s_qtMain = new QApplication(argc, NULL);
+	}
 
 	s_qtTestEditor = new QtTest();
 	s_qtTestEditor->show();
