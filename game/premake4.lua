@@ -32,7 +32,8 @@ project "game"
 	{ 
 		--"_D3SDK",
 		"__DOOM__",
-		"GAME_DLL"
+		"GAME_DLL",
+		"USE_EXCEPTIONS",
 	}
 	
 	--
@@ -53,7 +54,16 @@ project "game"
 		   "cd ../../bin/win64",
 		   "TypeInfo.exe",
 		}
-				
+	
+	--
+	-- Options Configurations
+	--
+	configuration "lightmaps"
+		defines
+		{
+			"USE_LIGHTMAPS",
+		}
+	
 	-- 
 	-- Project Configurations
 	-- 

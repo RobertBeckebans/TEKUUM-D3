@@ -159,6 +159,13 @@ newoption
 	description = "Cross compile for Android"
 }
 
+newoption
+{
+	trigger = "lightmaps",
+	description = "Enable support for lightmaps",
+	value = "1"
+}
+
 --newoption
 --{
 --	trigger = "with-freetype",
@@ -223,6 +230,16 @@ solution "Techyon"
 		}
 	
 	
+	configuration { "vs*", "Debug" }
+		buildoptions
+		{
+			-- turn off Smaller Type Check
+			"/RTCc-",
+		
+			-- turn off Basic Runtime Checks
+			"/RTC1-",
+		}
+	
 	configuration { "vs*", "Release" }
 		buildoptions
 		{
@@ -242,11 +259,14 @@ solution "Techyon"
 			-- Omit Frame Pointers
 			"/Oy",
 		}
-		-- linkoptions
-		-- {
-			-- -- turn off Whole Program Optimization
+		linkoptions
+		{
+			-- turn off Whole Program Optimization
 			-- "/LTCG-",
-		-- }
+			
+			-- create .pdb file
+			"/DEBUG",
+		}
 		-- links
 		-- { 
 			-- "libcmt",
@@ -567,6 +587,12 @@ end
 	--
 	-- Options Configurations
 	--
+	configuration "lightmaps"
+		defines
+		{
+			"USE_LIGHTMAPS",
+		}
+	
 	configuration { "mfc-tools", "vs*", "x32" }
 		flags       { "MFC" }
 		defines

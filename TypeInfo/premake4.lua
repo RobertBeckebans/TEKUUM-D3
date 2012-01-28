@@ -25,6 +25,7 @@ project "TypeInfo"
 		"__DOOM_DLL__",
 		"ID_ENABLE_CURL=0",
 		"ID_TYPEINFO",
+		"USE_EXCEPTIONS",
 	}
 	links
 	{

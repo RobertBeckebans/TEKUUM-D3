@@ -33,6 +33,7 @@ project "idlib"
 	{ 
 		"__IDLIB__",
 		"__DOOM_DLL__",
+		"USE_EXCEPTIONS",
 	}
 	
 	--
@@ -42,6 +43,11 @@ project "idlib"
 	--
 	-- Options Configurations
 	--
+	configuration "lightmaps"
+		defines
+		{
+			"USE_LIGHTMAPS",
+		}
 	
 	-- 
 	-- Project Configurations
