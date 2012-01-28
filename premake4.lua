@@ -968,7 +968,9 @@ end -- if not _OPTIONS["android"]
 		}
 		excludes
 		{
+			"renderer/GLShader.cpp",
 			--"renderer/draw_arb.cpp",
+			"renderer/draw_glsl.cpp",
 			"renderer/draw_arb2.cpp",
 			"renderer/draw_exp.cpp",
 			"renderer/draw_nv10.cpp",

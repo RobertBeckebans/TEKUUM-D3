@@ -539,11 +539,15 @@ void idRenderSystemLocal::SetBackEndRenderer() {
 
 	backEndRenderer = BE_BAD;
 
+#if !defined(USE_GLES1)
 	if ( idStr::Icmp( r_renderer.GetString(), "glsl" ) == 0 ) {
 		if ( GLEW_ARB_fragment_shader && GLEW_ARB_vertex_shader && GL_ARB_shader_objects && GLEW_ARB_shading_language_100 ) {
 			backEndRenderer = BE_GLSL;
 		}
-	} else if ( idStr::Icmp( r_renderer.GetString(), "arb" ) == 0 ) {
+	}
+	else
+#endif
+	if ( idStr::Icmp( r_renderer.GetString(), "arb" ) == 0 ) {
 		backEndRenderer = BE_ARB;
 	} else if ( idStr::Icmp( r_renderer.GetString(), "arb2" ) == 0 ) {
 		if ( glConfig.allowARB2Path ) {
@@ -566,9 +570,12 @@ void idRenderSystemLocal::SetBackEndRenderer() {
 	// fallback
 	if ( backEndRenderer == BE_BAD ) {
 		// choose the best
+#if !defined(USE_GLES1)
 		if ( GLEW_ARB_fragment_shader && GLEW_ARB_vertex_shader && GL_ARB_shader_objects && GLEW_ARB_shading_language_100 ) {
 			backEndRenderer = BE_GLSL;
-		} else if ( glConfig.allowARB2Path ) {
+		} else
+#endif
+		if ( glConfig.allowARB2Path ) {
 			backEndRenderer = BE_ARB2;
 		} else if ( glConfig.allowR200Path ) {
 			backEndRenderer = BE_R200;

@@ -1446,6 +1446,7 @@ enum
 };
 
 // RB: shaderProgram_t represents a compiled GLSL shader including vertex, fragment and geometry shader parts
+#if !defined(USE_GLES1)
 typedef struct shaderProgram_s
 {
 	idStr			name;
@@ -1669,7 +1670,8 @@ typedef struct shaderProgram_s
 	float			t_Time;
 } shaderProgram_t;
 
-//#define	SHADER_PROGRAM_T_OFS(x) ((size_t)&(((shader_t *)0)->x))
+#endif // #if !defined(USE_GLES1)
+
 
 
 void			R_GLSL_Init( void );
@@ -1677,8 +1679,10 @@ void			RB_GLSL_DrawInteractions( void );
 void			R_ReloadShaders_f( const idCmdArgs &args );
 int				R_FindShader( GLenum target, const char *program );
 
+#if !defined(USE_GLES1)
 void            GL_BindProgram(shaderProgram_t * program);
 void            GL_BindNullProgram(void);
+#endif
 
 // Techyon END
 

@@ -1766,11 +1766,13 @@ static void GfxInfo_f( const idCmdArgs &args ) {
 		common->Printf( "ARB2 path disabled\n" );
 	}
 
+#if !defined(USE_GLES1)
 	if ( GLEW_ARB_fragment_shader && GLEW_ARB_vertex_shader && GL_ARB_shader_objects && GLEW_ARB_shading_language_100 ) {
 		common->Printf( "GLSL path ENABLED%s\n", active[tr.backEndRenderer == BE_GLSL] );
 	} else {
 		common->Printf( "GLSL path disabled\n" );
 	}
+#endif
 
 	//=============================
 
