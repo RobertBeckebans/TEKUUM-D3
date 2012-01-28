@@ -29,6 +29,7 @@ If you have questions concerning this license or the applicable additional terms
 #pragma hdrstop
 
 #include "tr_local.h"
+#include "gl_shader.h"
 
 /*
 =====================
@@ -1090,7 +1091,17 @@ static void RB_T_Shadow( const drawSurf_t *surf ) {
 		R_GlobalPointToLocal( surf->space->modelMatrix, backEnd.vLight->globalLightOrigin, localLight.ToVec3() );
 		localLight.w = 0.0f;
 #if !defined(USE_GLES1)
-		glProgramEnvParameter4fvARB( GL_VERTEX_PROGRAM_ARB, PP_LIGHT_ORIGIN, localLight.ToFloatPtr() );
+		switch( tr.backEndRenderer ) {
+			case BE_NV20:
+			case BE_R200:
+			case BE_ARB2:
+				glProgramEnvParameter4fvARB( GL_VERTEX_PROGRAM_ARB, PP_LIGHT_ORIGIN, localLight.ToFloatPtr() );
+				break;
+
+			case BE_GLSL:
+				gl_shadowVolumeShader->SetUniform_LightOrigin(localLight.ToVec3());
+				break;
+		};
 #endif
 	}
 

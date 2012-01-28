@@ -71,7 +71,7 @@ protected:
 
 	~GLShader()
 	{
-		for(std::size_t i = 0; i < _shaderPrograms.Num(); i++)
+		for(int i = 0; i < _shaderPrograms.Num(); i++)
 		{
 			shaderProgram_t* shaderProgram = _shaderPrograms[i];
 			if(shaderProgram != NULL && shaderProgram->program)
@@ -2486,11 +2486,23 @@ public:
 };
 */
 
+class GLShader_shadowVolume:
+public GLShader,
+public u_LightOrigin
+//public GLCompileMacro_USE_VERTEX_SKINNING,
+//public GLCompileMacro_USE_VERTEX_ANIMATION,
+//public GLCompileMacro_USE_DEFORM_VERTEXES,
+{
+public:
+	GLShader_shadowVolume();
+};
+
 
 
 
 //extern GLShader_generic* gl_genericShader;
 extern GLShader_forwardLighting* gl_forwardLightingShader;
+extern GLShader_shadowVolume* gl_shadowVolumeShader;
 //extern GLShader_screen* gl_screenShader;
 //extern GLShader_portal* gl_portalShader;
 //extern GLShader_toneMapping* gl_toneMappingShader;

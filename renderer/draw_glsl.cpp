@@ -329,18 +329,21 @@ void RB_GLSL_DrawInteractions( void ) {
 			glStencilFunc( GL_ALWAYS, 128, 255 );
 		}
 
-		/*
-		if ( r_useShadowVertexProgram.GetBool() ) {
-			glEnable( GL_VERTEX_PROGRAM_ARB );
-			glBindProgramARB( GL_VERTEX_PROGRAM_ARB, VPROG_STENCIL_SHADOW );
+		if ( r_useShadowVertexProgram.GetBool() ) 
+		{
+			gl_shadowVolumeShader->BindProgram();
+			
 			RB_StencilShadowPass( vLight->globalShadows );
 			RB_GLSL_CreateDrawInteractions( vLight->localInteractions );
-			glEnable( GL_VERTEX_PROGRAM_ARB );
-			glBindProgramARB( GL_VERTEX_PROGRAM_ARB, VPROG_STENCIL_SHADOW );
+			
+			gl_shadowVolumeShader->BindProgram();
+
 			RB_StencilShadowPass( vLight->localShadows );
-			RB_ARB2_CreateDrawInteractions( vLight->globalInteractions );
-			glDisable( GL_VERTEX_PROGRAM_ARB );	// if there weren't any globalInteractions, it would have stayed on
-		} else*/ {
+			RB_GLSL_CreateDrawInteractions( vLight->globalInteractions );
+
+			//glDisable( GL_VERTEX_PROGRAM_ARB );	// if there weren't any globalInteractions, it would have stayed on
+			GL_BindNullProgram();
+		} else {
 			RB_StencilShadowPass( vLight->globalShadows );
 			RB_GLSL_CreateDrawInteractions( vLight->localInteractions );
 			RB_StencilShadowPass( vLight->localShadows );
@@ -437,6 +440,13 @@ void R_ReloadShaders_f( const idCmdArgs &args ) {
 			gl_forwardLightingShader = NULL;
 		}
 		gl_forwardLightingShader = new GLShader_forwardLighting();
+
+		if(gl_shadowVolumeShader)
+		{
+			delete gl_shadowVolumeShader;
+			gl_shadowVolumeShader = NULL;
+		}
+		gl_shadowVolumeShader = new GLShader_shadowVolume();
 	}
 
 	common->Printf( "-------------------------------\n" );
