@@ -13,7 +13,7 @@
 
 #include "../../game/game.h"
 
-static QApplication*			s_qtMain = NULL;
+static QCoreApplication*		s_qtMain = NULL;
 static MainWindow*				s_qtRadiant = NULL;
 static bool						didTranslator = false;
  
@@ -162,6 +162,7 @@ void	QtRadiantInit()
             sw = soundSystem->AllocSoundWorld(rw);
     }
  
+	s_qtMain = QApplication::instance();
     if(s_qtMain == NULL)
     {
             int argc = 0;
