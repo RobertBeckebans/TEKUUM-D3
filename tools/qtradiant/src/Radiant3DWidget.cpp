@@ -1,8 +1,18 @@
 #include "Radiant3DWidget.h"
+#include "EngineQGLContext.h"
+#include "glext.h"
+#include <gl/GLU.h>
+
+/*
+explicit QGLWidget(QGLContext *context, QWidget* parent=0,
+                       const QGLWidget* shareWidget = 0, Qt::WindowFlags f=0);
+*/
 
 Radiant3DWidget::Radiant3DWidget(QWidget *parent) :
 	QGLWidget(QGLFormat(QGL::SampleBuffers), parent)
+	//QGLWidget(new EngineQGLContext(), parent)
 {
+	
 	rotx = 0.0f;
 	timer = new QTimer(this);
 	timer->setInterval(10);
@@ -10,16 +20,18 @@ Radiant3DWidget::Radiant3DWidget(QWidget *parent) :
 	timer->start();
 
 	connect(timer, SIGNAL(timeout()), this, SLOT(onTimer()));
+	
 }
 
 void Radiant3DWidget::onTimer()
 {
 	rotx += 1.0f;
-	updateGL();
+	//updateGL();
 }
 
 void Radiant3DWidget::initializeGL()
 {
+#if 0
 	qglClearColor(QColor(0, 0, 32, 0));
 
 	glClearDepth(1.0f);
@@ -38,10 +50,12 @@ void Radiant3DWidget::initializeGL()
 	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 
 	glColor4f(1.0, 1.0, 1.0, 1.0);
+#endif
 }
 
 void Radiant3DWidget::resizeGL(int width, int height)
 {
+#if 0
 	//int size = qMin(width, height);
 	//glViewport((width - size) / 2, (height - size) / 2, size, size);
 	glViewport(0, 0, width, height);
@@ -58,10 +72,14 @@ void Radiant3DWidget::resizeGL(int width, int height)
 */
 	glMatrixMode(GL_MODELVIEW);
 	paintGL();
+#endif
 }
 
 void Radiant3DWidget::paintGL()
 {
+#if 0
+	//makeCurrent();
+
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glLoadIdentity();
 
@@ -109,4 +127,7 @@ void Radiant3DWidget::paintGL()
 	glVertex3f( size, size, -size);
 
 	glEnd();
+
+	//doneCurrent();
+#endif
 }

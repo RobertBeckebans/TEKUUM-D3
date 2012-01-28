@@ -1,11 +1,14 @@
 #ifndef RADIANT3DWIDGET_H
 #define RADIANT3DWIDGET_H
 
+#include "../../../libs/glew/include/GL/glew.h"
 #include <QGLWidget>
 #include <QTimer>
-#include <GL/gl.h>
-#include <GL/glu.h>
-#include "glext.h"
+//#include <GL/gl.h>
+//#include <GL/glu.h>
+//#include "glext.h"
+
+
 
 class Radiant3DWidget : public QGLWidget
 {

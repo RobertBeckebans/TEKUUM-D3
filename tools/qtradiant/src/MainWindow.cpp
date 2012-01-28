@@ -10,19 +10,20 @@
 #include "MapInfoDialog.h"
 #include "FindReplaceDialog.h"
 
-#include "../../idlib/precompiled.h"
-#pragma hdrstop
+//#include "../../idlib/precompiled.h"
+//#pragma hdrstop
 
-#include "../../game/game.h"
+//#include "../../game/game.h"
+#include "../../edit_public.h"
 
 MainWindow::MainWindow(QWidget *parent) :
 	QMainWindow(parent),
-	ui(new Ui::MainWindow),
-	m_inspectorUi(new Ui::InspectorConsoleDock()),
-	m_entityUi   (new Ui::InspectorEntityDock()),
-	m_mediaUi    (new Ui::InspectorMediaDock()),
-	m_texturesUi (new Ui::InspectorTexturesDock()),
-	m_cameraUi   (new Ui::CameraWindow())
+	ui(new Ui::MainWindow)
+	//m_inspectorUi(new Ui::InspectorConsoleDock()),
+	//m_entityUi   (new Ui::InspectorEntityDock()),
+	//m_mediaUi    (new Ui::InspectorMediaDock()),
+	//m_texturesUi (new Ui::InspectorTexturesDock()),
+	//m_cameraUi   (new Ui::CameraWindow())
 {
 	ui->setupUi(this);
 
@@ -30,44 +31,43 @@ MainWindow::MainWindow(QWidget *parent) :
 	inspectorConsoleDock  = new QDockWidget(tr("Console"), this);
 	//inspectorConsoleDock  = new InspectorConsoleDock(this);
 	inspectorEntityDock   = new QDockWidget(tr("Entity"), this);
-	inspectorMediaDock    = new QDockWidget(tr("Media"), this);
-	inspectorTexturesDock = new QDockWidget(tr("Textures"), this);
-	cameraWindow          = new QDockWidget(tr("Cam"), this);
+	//inspectorMediaDock    = new QDockWidget(tr("Media"), this);
+	//inspectorTexturesDock = new QDockWidget(tr("Textures"), this);
+	cameraWindowDock = new QDockWidget(tr("Cam"), this);
 
-	inspectorConsoleDock->setObjectName("inspectorConsoleDock");
-	inspectorEntityDock->setObjectName("inspectorEntityDock");
-	inspectorMediaDock->setObjectName("inspectorMediaDock");
-	inspectorTexturesDock->setObjectName("inspectorTexturesDock");
-	cameraWindow->setObjectName("cameraWindow");
+	//inspectorConsoleDock->setObjectName("inspectorConsoleDock");
+	//inspectorEntityDock->setObjectName("inspectorEntityDock");
+	//inspectorMediaDock->setObjectName("inspectorMediaDock");
+	//inspectorTexturesDock->setObjectName("inspectorTexturesDock");
+	//cameraWindow->setObjectName("cameraWindow");
 
-	//inspectorConsoleDock->setWidget(new QWidget(inspectorConsoleDock));
 	inspectorConsoleDock->setWidget(new InspectorConsoleDock(inspectorConsoleDock));
-	inspectorEntityDock->setWidget(new QWidget(inspectorEntityDock));
-	inspectorMediaDock->setWidget(new QWidget(inspectorMediaDock));
-	inspectorTexturesDock->setWidget(new QWidget(inspectorTexturesDock));
-	cameraWindow->setWidget(new QWidget(cameraWindow));
+	inspectorEntityDock->setWidget(new InspectorEntityDock(inspectorEntityDock));
+	//inspectorMediaDock->setWidget(new QWidget(inspectorMediaDock));
+	//inspectorTexturesDock->setWidget(new QWidget(inspectorTexturesDock));
+	cameraWindowDock->setWidget(new CameraWindow(cameraWindowDock));
 
 	//m_inspectorUi->setupUi(inspectorConsoleDock->widget());
-	m_entityUi->setupUi(inspectorEntityDock->widget());
-	m_mediaUi->setupUi(inspectorMediaDock->widget());
-	m_texturesUi->setupUi(inspectorTexturesDock->widget());
-	m_cameraUi->setupUi(cameraWindow->widget());
+	//m_entityUi->setupUi(inspectorEntityDock->widget());
+	//m_mediaUi->setupUi(inspectorMediaDock->widget());
+	//m_texturesUi->setupUi(inspectorTexturesDock->widget());
+	//m_cameraUi->setupUi(cameraWindow->widget());
 
-	addDockWidget(Qt::LeftDockWidgetArea, cameraWindow);
+	addDockWidget(Qt::LeftDockWidgetArea, cameraWindowDock);
 	addDockWidget(Qt::LeftDockWidgetArea, inspectorConsoleDock);
 	addDockWidget(Qt::LeftDockWidgetArea, inspectorEntityDock);
-	addDockWidget(Qt::LeftDockWidgetArea, inspectorMediaDock);
-	addDockWidget(Qt::LeftDockWidgetArea, inspectorTexturesDock);
+	//addDockWidget(Qt::LeftDockWidgetArea, inspectorMediaDock);
+	//addDockWidget(Qt::LeftDockWidgetArea, inspectorTexturesDock);
 
-	m_docks.append(cameraWindow);
+	m_docks.append(cameraWindowDock);
 	m_docks.append(inspectorConsoleDock);
 	m_docks.append(inspectorEntityDock);
-	m_docks.append(inspectorMediaDock);
-	m_docks.append(inspectorTexturesDock);
+	//m_docks.append(inspectorMediaDock);
+	//m_docks.append(inspectorTexturesDock);
 
 	tabifyDockWidget(inspectorConsoleDock, inspectorEntityDock);
-	tabifyDockWidget(inspectorEntityDock, inspectorMediaDock);
-	tabifyDockWidget(inspectorMediaDock, inspectorTexturesDock);
+	//tabifyDockWidget(inspectorEntityDock, inspectorMediaDock);
+	//tabifyDockWidget(inspectorMediaDock, inspectorTexturesDock);
 
 	// setup icons from theme (on linux) or use resource icon
 	ui->actionNewMap->setIcon(QIcon::fromTheme("document-new",     QIcon(":/icons/new")));
@@ -145,16 +145,17 @@ void MainWindow::on_actionExit_triggered()
 #if defined(USE_QTRADIANT_THREAD)
 	QtRadiantShutdown();
 #else
-	com_editors &= ~EDITOR_QTRADIANT;
-	close();
+	//com_editors &= ~EDITOR_QTRADIANT;
+	//close();
+	QtRadiantShutdown();
 #endif
 }
 
 
 void MainWindow::logMessage(const char* msg)
 {
-	InspectorConsoleDock* console = qobject_cast<InspectorConsoleDock*>(inspectorConsoleDock->widget());
-
-	if(console != NULL)
+	if(InspectorConsoleDock* console = qobject_cast<InspectorConsoleDock*>(inspectorConsoleDock->widget()))
+	{
 		console->logMessage(msg);
+	}
 }

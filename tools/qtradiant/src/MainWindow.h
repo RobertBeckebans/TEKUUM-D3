@@ -53,17 +53,17 @@ private:
 	QList<QDockWidget*> m_docks;
 	Ui::MainWindow *ui;
 
-	Ui::InspectorConsoleDock  *m_inspectorUi;
+	/*Ui::InspectorConsoleDock  *m_inspectorUi;
 	Ui::InspectorEntityDock   *m_entityUi;
 	Ui::InspectorMediaDock    *m_mediaUi;
 	Ui::InspectorTexturesDock *m_texturesUi;
-	Ui::CameraWindow          *m_cameraUi;
+	Ui::CameraWindow          *m_cameraUi;*/
 
 	QDockWidget *inspectorConsoleDock;
 	QDockWidget *inspectorEntityDock;
 	QDockWidget *inspectorMediaDock;
 	QDockWidget *inspectorTexturesDock;
-	QDockWidget *cameraWindow;
+	QDockWidget *cameraWindowDock;
 
 	QLabel *statusCoords;
 
