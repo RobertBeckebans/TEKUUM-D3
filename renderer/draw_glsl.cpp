@@ -242,7 +242,7 @@ static void RB_GLSL_CreateDrawInteractions( const drawSurf_t *surf ) {
 		glVertexAttribPointerARB( VA_INDEX_TEXCOORD0, 2, GL_FLOAT, false, sizeof( idDrawVert ), ac->st.ToFloatPtr() );
 		glVertexPointer( 3, GL_FLOAT, sizeof( idDrawVert ), ac->xyz.ToFloatPtr() );
 
-		// this may cause RB_ARB2_DrawInteraction to be exacuted multiple
+		// this may cause RB_GLSL_DrawInteraction to be exacuted multiple
 		// times with different colors and images if the surface or light have multiple layers
 		RB_CreateSingleDrawInteractions( surf, RB_GLSL_DrawInteraction );
 	}

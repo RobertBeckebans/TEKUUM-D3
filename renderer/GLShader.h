@@ -117,6 +117,8 @@ protected:
 														const idStrList& compileMacros) const;
 
 private:
+	static const char*	FindEmbeddedShaderText(const idStr& shaderName, GLenum shaderType);
+
 	void				CompileGPUShader(GLhandleARB program, const idStr& programName, const idStr& shaderText, GLenum shaderType) const;
 
 	void				PrintShaderText(const idStr& shaderText) const;

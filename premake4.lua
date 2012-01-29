@@ -187,6 +187,19 @@ newoption
 --	}
 --}
 
+--
+-- Use the embed action to convert all of the Lua scripts into C strings, which 
+-- can then be built into the executable. Always embed the scripts before creating
+-- a release build.
+--
+dofile("premake4/embed.lua")
+
+newaction {
+	trigger     = "embed",
+	description = "Embed scripts in scripts.c; required before release builds",
+	execute     = doembed
+}
+
 
 solution "Techyon"
 	--configurations { "Release", "ReleaseWithSymbols", "Debug" }

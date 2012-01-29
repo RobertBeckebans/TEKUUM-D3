@@ -25,6 +25,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #pragma hdrstop
 
 #include "GLShader.h"
+#include "GLShader_strings.h"
 
 // *INDENT-OFF*
 
@@ -188,6 +189,33 @@ void GLShader::UpdateShaderProgramUniformLocations(shaderProgram_t *shaderProgra
 	}
 }
 
+
+const char*	GLShader::FindEmbeddedShaderText(const idStr& shaderName, GLenum shaderType)
+{
+	const char* name;
+
+	if(shaderType == GL_VERTEX_SHADER_ARB)
+	{
+		name = va("%s_vs", shaderName.c_str());
+	}
+	else
+	{
+		name = va("%s_fs", shaderName.c_str());
+	}
+
+	for ( int i = 0 ; glsl_shaders[i].name[0] ; i++ )
+	{
+		idStr compare = glsl_shaders[i].name;
+
+		if ( !idStr::Icmp( name, compare.c_str() ) ) {
+			return glsl_shaders[i].shaderText;
+		}
+	}
+
+	return NULL;
+}
+
+
 idStr	GLShader::BuildGPUShaderText(	const char *mainShaderName,
 										const idStrList& libShaderNames,
 										GLenum shaderType) const
@@ -216,16 +244,23 @@ idStr	GLShader::BuildGPUShaderText(	const char *mainShaderName,
 			common->Printf("...loading fragment shader '%s'\n", fileName.c_str());
 		}
 
+		bool loadedFromFileSystem = true;
 		fileSystem->ReadFile( fileName.c_str(), (void **)&fileBuffer, NULL );
 		if ( !fileBuffer ) {
-			common->Printf( ": File not found\n" );
-			continue;
+			fileBuffer = (char *) FindEmbeddedShaderText(mainShaderName, shaderType);
+
+			loadedFromFileSystem = false;
+	
+			if ( !fileBuffer ) {
+				common->Error("Couldn't load %s\n", fileName.c_str());
+			}
 		}
 
-		//char *buffer = (char *)_alloca( strlen( fileBuffer ) + 1 );
 		libsShaderText.Append(fileBuffer, strlen(fileBuffer));
 		
-		fileSystem->FreeFile( fileBuffer );
+		if ( loadedFromFileSystem ) {
+			fileSystem->FreeFile( fileBuffer );
+		}
 	}
 
 	shaderText += libsShaderText;
@@ -242,10 +277,19 @@ idStr	GLShader::BuildGPUShaderText(	const char *mainShaderName,
 		common->Printf("...loading fragment shader '%s'\n", fileName.c_str());
 	}
 
+	bool loadedFromFileSystem = true;
 	fileSystem->ReadFile( fileName.c_str(), (void **)&fileBuffer, NULL );
-	if ( !fileBuffer ) {
-		common->Error("Couldn't load %s\n", fileName.c_str());
+	if ( !fileBuffer ) 
+	{
+		fileBuffer = (char *) FindEmbeddedShaderText(mainShaderName, shaderType);
+
+		loadedFromFileSystem = false;
+	
+		if ( !fileBuffer ) {
+			common->Error("Couldn't load %s\n", fileName.c_str());
+		}
 	}
+
 	
 	// HACK: add some macros to avoid extra uniforms and save speed and code maintenance
 	/*
@@ -455,8 +499,10 @@ idStr	GLShader::BuildGPUShaderText(	const char *mainShaderName,
 	shaderText += "#line 0\n";
 
 	shaderText.Append(fileBuffer, strlen(fileBuffer));
-
-	fileSystem->FreeFile( fileBuffer );
+	
+	if ( loadedFromFileSystem ) {
+		fileSystem->FreeFile( fileBuffer );
+	}
 
 	//common->Printf("GLSL extra: %s\n", bufferExtra);
 
