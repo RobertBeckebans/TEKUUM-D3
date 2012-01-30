@@ -148,12 +148,12 @@ Sets texcoord and vertex pointers
 */
 void RB_RenderTriangleSurface( const srfTriangles_t *tri ) {
 
-#if !defined(USE_GLES1)
 	if ( !tri->ambientCache ) {
+#if !defined(USE_GLES1)
 		RB_DrawElementsImmediate( tri );
+#endif
 		return;
 	}
-#endif
 
 
 	idDrawVert *ac = (idDrawVert *)vertexCache.Position( tri->ambientCache );

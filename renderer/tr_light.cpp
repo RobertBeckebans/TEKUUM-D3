@@ -87,10 +87,15 @@ bool R_CreateLightingCache( const idRenderEntityLocal *ent, const idRenderLightL
 
 	R_GlobalPointToLocal( ent->modelMatrix, light->globalLightOrigin, localLightOrigin );
 
+	idPlane localLightProject[4];
+	for ( int i = 0 ; i < 4 ; i++ ) {
+		R_GlobalPlaneToLocal( ent->modelMatrix, light->lightProject[i], localLightProject[i] );
+	}
+
 	int	size = tri->ambientSurface->numVerts * sizeof( lightingCache_t );
 	lightingCache_t *cache = (lightingCache_t *)_alloca16( size );
 
-#if 1
+#if 0
 
 	SIMDProcessor->CreateTextureSpaceLightVectors( &cache[0].localLightVector, localLightOrigin,
 												tri->ambientSurface->verts, tri->ambientSurface->numVerts, tri->indexes, tri->numIndexes );
@@ -119,6 +124,19 @@ bool R_CreateLightingCache( const idRenderEntityLocal *ent, const idRenderLightL
 		cache[i].localLightVector[0] = lightDir * v->tangents[0];
 		cache[i].localLightVector[1] = lightDir * v->tangents[1];
 		cache[i].localLightVector[2] = lightDir * v->normal;
+
+#if defined(USE_GLES1)
+		cache[i].lightFalloff[0] = localLightProject[3].ToVec4() * idVec4(v->xyz[0], v->xyz[1], v->xyz[2], 1);
+		cache[i].lightFalloff[1] = 0.5;
+		cache[i].lightFalloff[2] = 0;
+		cache[i].lightFalloff[3] = 0;
+		
+		cache[i].lightProjection[0] = localLightProject[0].ToVec4() * idVec4(v->xyz[0], v->xyz[1], v->xyz[2], 1);
+		cache[i].lightProjection[1] = localLightProject[1].ToVec4() * idVec4(v->xyz[0], v->xyz[1], v->xyz[2], 1);
+		cache[i].lightProjection[2] = 0;
+		cache[i].lightProjection[3] = localLightProject[2].ToVec4() * idVec4(v->xyz[0], v->xyz[1], v->xyz[2], 1);
+#endif
+
 	}
 
 #endif

@@ -74,6 +74,12 @@ typedef struct dominantTri_s {
 typedef struct lightingCache_s {
 	idVec3						localLightVector;		// this is the statically computed vector to the light
 														// in texture space for cards without vertex programs
+
+#if defined(USE_GLES1)
+	idVec4						lightFalloff;			// light falloff texgen
+	idVec4						lightProjection;		// light projection texgen
+#endif
+	
 } lightingCache_t;
 
 typedef struct shadowCache_s {

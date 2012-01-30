@@ -84,8 +84,9 @@ static void RB_ARB_DrawInteraction( const drawInteraction_t *din ) {
 	// set the vertex arrays, which may not all be enabled on a given pass
 	idDrawVert *ac = (idDrawVert *)vertexCache.Position( tri->ambientCache );
 	glVertexPointer( 3, GL_FLOAT, sizeof( idDrawVert ), ac->xyz.ToFloatPtr() );
+	
 	GL_SelectTexture( 0 );
-	glTexCoordPointer( 2, GL_FLOAT, sizeof( idDrawVert ), (void *)&ac->st );
+	//glTexCoordPointer( 2, GL_FLOAT, sizeof( idDrawVert ), (void *)&ac->st );
 
 	//-----------------------------------------------------
 	//
@@ -100,50 +101,58 @@ static void RB_ARB_DrawInteraction( const drawInteraction_t *din ) {
 	GL_State( GLS_COLORMASK | GLS_DEPTHMASK | backEnd.depthFunc );
 
 	glColor4f( 1, 1, 1, 1 );
-	glDisableClientState( GL_TEXTURE_COORD_ARRAY );
 
-#if !defined(USE_GLES1)
+#if defined(USE_GLES1)
+	glEnableClientState( GL_TEXTURE_COORD_ARRAY );
+	glTexCoordPointer( 4, GL_FLOAT, sizeof( lightingCache_t ), ((lightingCache_t *)vertexCache.Position(tri->lightingCache))->lightFalloff.ToFloatPtr() );
+#else
+	glDisableClientState( GL_TEXTURE_COORD_ARRAY );
 	glEnable( GL_TEXTURE_GEN_S );
 	glTexGenfv( GL_S, GL_OBJECT_PLANE, din->lightProjection[3].ToFloatPtr() );
-	glTexCoord2f( 0, 0.5 );
-#endif
+	//glTexCoord2f( 0, 0.5 );
 
-// ATI R100 can't do partial texgens
-#if !defined(USE_GLES1)
-#define	NO_MIXED_TEXGEN
-#endif
+	idVec4	plane;
+	plane[0] = 0;
+	plane[1] = 0;
+	plane[2] = 0;
+	plane[3] = 0.5;
+	glEnable( GL_TEXTURE_GEN_T );
+	glTexGenfv( GL_T, GL_OBJECT_PLANE, plane.ToFloatPtr() );
 
-#ifdef NO_MIXED_TEXGEN
-idVec4	plane;
-plane[0] = 0;
-plane[1] = 0;
-plane[2] = 0;
-plane[3] = 0.5;
-glEnable( GL_TEXTURE_GEN_T );
-glTexGenfv( GL_T, GL_OBJECT_PLANE, plane.ToFloatPtr() );
-
-plane[0] = 0;
-plane[1] = 0;
-plane[2] = 0;
-plane[3] = 1;
-glEnable( GL_TEXTURE_GEN_Q );
-glTexGenfv( GL_Q, GL_OBJECT_PLANE, plane.ToFloatPtr() );
-
+	plane[0] = 0;
+	plane[1] = 0;
+	plane[2] = 0;
+	plane[3] = 1;
+	glEnable( GL_TEXTURE_GEN_Q );
+	glTexGenfv( GL_Q, GL_OBJECT_PLANE, plane.ToFloatPtr() );
 #endif
 
 	din->lightFalloffImage->Bind();
+	//globalImages->whiteImage->Bind();
+
+
+#if 0
+GL_State( GLS_SRCBLEND_ONE | GLS_DSTBLEND_ZERO | GLS_DEPTHMASK | backEnd.depthFunc );
+// draw it
+RB_DrawElementsWithCounters( tri );
+
+glDisable( GL_TEXTURE_GEN_S );
+glDisable( GL_TEXTURE_GEN_T );
+glDisable( GL_TEXTURE_GEN_Q );
+glDisableClientState( GL_TEXTURE_COORD_ARRAY );
+
+return;
+#endif
 
 	// draw it
 	RB_DrawElementsWithCounters( tri );
 
-#if !defined(USE_GLES1)
+#if defined(USE_GLES1)
+	glDisableClientState( GL_TEXTURE_COORD_ARRAY );
+#else
 	glDisable( GL_TEXTURE_GEN_S );
-#endif
-
-
-#ifdef NO_MIXED_TEXGEN
-glDisable( GL_TEXTURE_GEN_T );
-glDisable( GL_TEXTURE_GEN_Q );
+	glDisable( GL_TEXTURE_GEN_T );
+	glDisable( GL_TEXTURE_GEN_Q );
 #endif
 
 #if 0
@@ -159,17 +168,21 @@ RB_DrawElementsWithCounters( tri );
 return;
 #endif
 
+#if 1
 	// we can't do bump mapping with standard calls, so skip it
 	if ( glConfig.envDot3Available && glConfig.cubeMapAvailable ) {
 		//
 		// draw the bump map result onto the alpha channel
 		//
 		GL_State( GLS_SRCBLEND_DST_ALPHA | GLS_DSTBLEND_ZERO | GLS_COLORMASK | GLS_DEPTHMASK 
-			| backEnd.depthFunc );
+		| backEnd.depthFunc );
 
 		// texture 0 will be the per-surface bump map
+		GL_SelectTexture( 1 );
 		GL_SelectTexture( 0 );
 		glEnableClientState( GL_TEXTURE_COORD_ARRAY );
+		glTexCoordPointer( 2, GL_FLOAT, sizeof( idDrawVert ), (void *)&ac->st );
+
 //	FIXME: matrix work!	RB_BindStageTexture( surfaceRegs, &surfaceStage->texture, surf );
 		din->bumpImage->Bind();
 
@@ -206,7 +219,10 @@ return;
 
 		GL_SelectTexture( 0 );
 //		RB_FinishStageTexture( &surfaceStage->texture, surf );
+
+		//return;
 	}
+#endif
 
 	//-----------------------------------------------------
 	//
@@ -218,6 +234,7 @@ return;
 	| backEnd.depthFunc );
 
 	// texture 0 will get the surface color texture
+	GL_SelectTexture( 1 );
 	GL_SelectTexture( 0 );
 
 	// select the vertex color source
@@ -241,15 +258,21 @@ return;
 	}
 
 	glEnableClientState( GL_TEXTURE_COORD_ARRAY );
+	glTexCoordPointer( 2, GL_FLOAT, sizeof( idDrawVert ), (void *)&ac->st );
+
 	// FIXME: does this not get the texture matrix?
 //	RB_BindStageTexture( surfaceRegs, &surfaceStage->texture, surf );
 	din->diffuseImage->Bind();
+	//globalImages->whiteImage->Bind();
 
 	// texture 1 will get the light projected texture
 	GL_SelectTexture( 1 );
-	glDisableClientState( GL_TEXTURE_COORD_ARRAY );
 
-#if !defined(USE_GLES1)
+#if defined(USE_GLES1)
+	glEnableClientState( GL_TEXTURE_COORD_ARRAY );
+	glTexCoordPointer( 4, GL_FLOAT, sizeof( lightingCache_t ), ((lightingCache_t *)vertexCache.Position(tri->lightingCache))->lightProjection.ToFloatPtr() );
+#else
+	glDisableClientState( GL_TEXTURE_COORD_ARRAY );
 	glEnable( GL_TEXTURE_GEN_S );
 	glEnable( GL_TEXTURE_GEN_T );
 	glEnable( GL_TEXTURE_GEN_Q );
@@ -259,11 +282,14 @@ return;
 #endif
 
 	din->lightImage->Bind();
+	//globalImages->whiteImage->Bind();
 
 	// draw it
 	RB_DrawElementsWithCounters( tri );
 
-#if !defined(USE_GLES1)
+#if defined(USE_GLES1)
+	glDisableClientState( GL_TEXTURE_COORD_ARRAY );
+#else
 	glDisable( GL_TEXTURE_GEN_S );
 	glDisable( GL_TEXTURE_GEN_T );
 	glDisable( GL_TEXTURE_GEN_Q );
@@ -389,9 +415,12 @@ static void RB_ARB_DrawThreeTextureInteraction( const drawInteraction_t *din ) {
 
 	// texture 1 will get the light projected texture
 	GL_SelectTexture( 1 );
-	glDisableClientState( GL_TEXTURE_COORD_ARRAY );
 
-#if !defined(USE_GLES1)
+#if defined(USE_GLES1)
+	glEnableClientState( GL_TEXTURE_COORD_ARRAY );
+	glTexCoordPointer( 4, GL_FLOAT, sizeof( lightingCache_t ), ((lightingCache_t *)vertexCache.Position(tri->lightingCache))->lightProjection.ToFloatPtr() );
+#else
+	glDisableClientState( GL_TEXTURE_COORD_ARRAY );
 	glEnable( GL_TEXTURE_GEN_S );
 	glEnable( GL_TEXTURE_GEN_T );
 	glEnable( GL_TEXTURE_GEN_Q );
@@ -404,9 +433,12 @@ static void RB_ARB_DrawThreeTextureInteraction( const drawInteraction_t *din ) {
 
 	// texture 2 will get the light falloff texture
 	GL_SelectTexture( 2 );
-	glDisableClientState( GL_TEXTURE_COORD_ARRAY );
 
-#if !defined(USE_GLES1)
+#if defined(USE_GLES1)
+	glEnableClientState( GL_TEXTURE_COORD_ARRAY );
+	glTexCoordPointer( 4, GL_FLOAT, sizeof( lightingCache_t ), ((lightingCache_t *)vertexCache.Position(tri->lightingCache))->lightFalloff.ToFloatPtr() );
+#else
+	glDisableClientState( GL_TEXTURE_COORD_ARRAY );
 	glEnable( GL_TEXTURE_GEN_S );
 	glEnable( GL_TEXTURE_GEN_T );
 	glEnable( GL_TEXTURE_GEN_Q );
@@ -432,7 +464,9 @@ static void RB_ARB_DrawThreeTextureInteraction( const drawInteraction_t *din ) {
 	// draw it
 	RB_DrawElementsWithCounters( tri );
 
-#if !defined(USE_GLES1)
+#if defined(USE_GLES1)
+	glDisableClientState( GL_TEXTURE_COORD_ARRAY );
+#else
 	glDisable( GL_TEXTURE_GEN_S );
 	glDisable( GL_TEXTURE_GEN_T );
 	glDisable( GL_TEXTURE_GEN_Q );
@@ -441,7 +475,9 @@ static void RB_ARB_DrawThreeTextureInteraction( const drawInteraction_t *din ) {
 	globalImages->BindNull();
 
 	GL_SelectTexture( 1 );
-#if !defined(USE_GLES1)
+#if defined(USE_GLES1)
+	glDisableClientState( GL_TEXTURE_COORD_ARRAY );
+#else
 	glDisable( GL_TEXTURE_GEN_S );
 	glDisable( GL_TEXTURE_GEN_T );
 	glDisable( GL_TEXTURE_GEN_Q );
