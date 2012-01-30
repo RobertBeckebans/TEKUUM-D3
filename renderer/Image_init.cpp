@@ -986,11 +986,7 @@ static filterName_t textureFilters[] = {
 			break;
 #endif
 		case TT_CUBIC:
-#if defined(USE_GLES1)
-			texEnum = GL_TEXTURE_CUBE_MAP_OES;
-#else
 			texEnum = GL_TEXTURE_CUBE_MAP_EXT;
-#endif
 			break;
 		}
 
@@ -1934,11 +1930,7 @@ void idImageManager::BindNull() {
 
 	RB_LogComment( "BindNull()\n" );
 	if ( tmu->textureType == TT_CUBIC ) {
-#if defined(USE_GLES1)
-		glDisable( GL_TEXTURE_CUBE_MAP_OES );
-#else
 		glDisable( GL_TEXTURE_CUBE_MAP_EXT );
-#endif
 	} else if ( tmu->textureType == TT_3D ) {
 #if !defined(USE_GLES1)
 		glDisable( GL_TEXTURE_3D );
