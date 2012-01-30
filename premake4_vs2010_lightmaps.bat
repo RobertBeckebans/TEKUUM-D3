@@ -1,3 +1,3 @@
 premake4 clean
-premake4 vs2010 --lightmaps
+premake4 --lightmaps vs2010
 pause
