@@ -163,7 +163,13 @@ newoption
 {
 	trigger = "lightmaps",
 	description = "Enable support for lightmaps",
-	value = "1"
+	--value = "1"
+}
+
+newoption
+{
+	trigger = "force-gles1",
+	description = "Only use OpenGL ES 1.0 functions",
 }
 
 --newoption
@@ -535,7 +541,8 @@ project "Techyon"
 		
 		"sys/sys_*.cpp", "sys/sys_*.h",
 		
-		"tools/compilers/**.cpp", "tools/*.h",
+		"tools/compilers/**.cpp", "tools/compilers/**.h",
+		"tools/*.h",
 		"ui/*.cpp", "ui/*.h",
 	}
 	excludes
@@ -604,6 +611,17 @@ end
 		defines
 		{
 			"USE_LIGHTMAPS",
+		}
+		
+	configuration "force-gles1"
+		defines
+		{
+			"USE_GLES1",
+		}
+		excludes
+		{
+			"renderer/GLShader.cpp",
+			"renderer/draw_glsl.cpp",
 		}
 	
 	configuration { "mfc-tools", "vs*", "x32" }
