@@ -86,7 +86,9 @@ static void RB_ARB_DrawInteraction( const drawInteraction_t *din ) {
 	glVertexPointer( 3, GL_FLOAT, sizeof( idDrawVert ), ac->xyz.ToFloatPtr() );
 	
 	GL_SelectTexture( 0 );
-	//glTexCoordPointer( 2, GL_FLOAT, sizeof( idDrawVert ), (void *)&ac->st );
+	glTexCoordPointer( 2, GL_FLOAT, sizeof( idDrawVert ), (void *)&ac->st );
+
+	globalImages->whiteImage->Bind();
 
 	//-----------------------------------------------------
 	//
@@ -101,6 +103,8 @@ static void RB_ARB_DrawInteraction( const drawInteraction_t *din ) {
 	GL_State( GLS_COLORMASK | GLS_DEPTHMASK | backEnd.depthFunc );
 
 	glColor4f( 1, 1, 1, 1 );
+
+	GL_SelectTexture( 1 );
 
 #if defined(USE_GLES1)
 	glEnableClientState( GL_TEXTURE_COORD_ARRAY );
@@ -178,12 +182,12 @@ return;
 		| backEnd.depthFunc );
 
 		// texture 0 will be the per-surface bump map
-		GL_SelectTexture( 1 );
 		GL_SelectTexture( 0 );
-		glEnableClientState( GL_TEXTURE_COORD_ARRAY );
-		glTexCoordPointer( 2, GL_FLOAT, sizeof( idDrawVert ), (void *)&ac->st );
+		//glDisableClientState( GL_TEXTURE_COORD_ARRAY );
+		//glEnableClientState( GL_TEXTURE_COORD_ARRAY );
+		//glTexCoordPointer( 2, GL_FLOAT, sizeof( idDrawVert ), ac->st.ToFloatPtr() );
 
-//	FIXME: matrix work!	RB_BindStageTexture( surfaceRegs, &surfaceStage->texture, surf );
+		//	FIXME: matrix work!	RB_BindStageTexture( surfaceRegs, &surfaceStage->texture, surf );
 		din->bumpImage->Bind();
 
 		// texture 1 is the normalization cube map
@@ -234,7 +238,7 @@ return;
 	| backEnd.depthFunc );
 
 	// texture 0 will get the surface color texture
-	GL_SelectTexture( 1 );
+	//GL_SelectTexture( 1 );
 	GL_SelectTexture( 0 );
 
 	// select the vertex color source
@@ -257,8 +261,8 @@ return;
 		}
 	}
 
-	glEnableClientState( GL_TEXTURE_COORD_ARRAY );
-	glTexCoordPointer( 2, GL_FLOAT, sizeof( idDrawVert ), (void *)&ac->st );
+	//glEnableClientState( GL_TEXTURE_COORD_ARRAY );
+	//glTexCoordPointer( 2, GL_FLOAT, sizeof( idDrawVert ), (void *)&ac->st );
 
 	// FIXME: does this not get the texture matrix?
 //	RB_BindStageTexture( surfaceRegs, &surfaceStage->texture, surf );
