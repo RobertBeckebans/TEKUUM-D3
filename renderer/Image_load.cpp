@@ -693,6 +693,8 @@ void idImage::GenerateImage( const byte *pic, int width, int height,
 		}
 	}
 
+	GL_CheckErrors();
+
 	// swap the red and alpha for rxgb support
 	// do this even on tga normal maps so we only have to use
 	// one fragment program
@@ -706,6 +708,8 @@ void idImage::GenerateImage( const byte *pic, int width, int height,
 	}
 	// upload the main image level
 	Bind();
+
+	GL_CheckErrors();
 
 #if !defined(USE_GLES1)
 	if ( internalFormat == GL_COLOR_INDEX8_EXT ) {
@@ -723,6 +727,8 @@ void idImage::GenerateImage( const byte *pic, int width, int height,
 	{
 		glTexImage2D( GL_TEXTURE_2D, 0, internalFormat, scaled_width, scaled_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, scaledBuffer );
 	}
+
+	GL_CheckErrors();
 
 	// create and upload the mip map levels, which we do in all cases, even if we don't think they are needed
 	int		miplevel;
@@ -763,6 +769,8 @@ void idImage::GenerateImage( const byte *pic, int width, int height,
 				0, GL_RGBA, GL_UNSIGNED_BYTE, scaledBuffer );
 		}
 	}
+
+	GL_CheckErrors();
 
 	if ( scaledBuffer != 0 ) {
 		R_StaticFree( scaledBuffer );
