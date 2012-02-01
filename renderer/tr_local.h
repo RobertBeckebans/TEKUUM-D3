@@ -997,7 +997,12 @@ GL wrapper/helper functions
 */
 
 void	GL_SelectTexture( int unit );
-void	GL_CheckErrors( void );
+
+// Techyon BEGIN
+void	GL_CheckErrors_( const char *filename, int line );
+#define         GL_CheckErrors()	GL_CheckErrors_(__FILE__, __LINE__)
+// Techyon END
+
 void	GL_ClearStateDelta( void );
 void	GL_State( int stateVector );
 void	GL_TexEnv( int env );
