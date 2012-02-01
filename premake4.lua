@@ -198,7 +198,7 @@ newoption
 -- can then be built into the executable. Always embed the scripts before creating
 -- a release build.
 --
-dofile("premake4/embed.lua")
+dofile("premake/embed.lua")
 
 newaction {
 	trigger     = "embed",
