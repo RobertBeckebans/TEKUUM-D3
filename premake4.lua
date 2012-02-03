@@ -96,15 +96,15 @@ newplatform {
     }
 }
 
---newplatform {
---   name = "neon",
---    description = "Android neon",
---    gcc = {
---        cc = "${NDK}/toolchains/arm-linux-androideabi-4.4.3/prebuilt/windows/bin/arm-linux-androideabi-gcc",
---		cxx = "${NDK}/toolchains/arm-linux-androideabi-4.4.3/prebuilt/windows/bin/arm-linux-androideabi-g++",
---		ar = "${NDK}/toolchains/arm-linux-androideabi-4.4.3/prebuilt/windows/bin/arm-linux-androideabi-ar",
---    }
---}
+newplatform {
+  name = "neon",
+   description = "Android neon",
+   gcc = {
+       cc = "${NDK}/toolchains/arm-linux-androideabi-4.4.3/prebuilt/windows/bin/arm-linux-androideabi-gcc",
+		cxx = "${NDK}/toolchains/arm-linux-androideabi-4.4.3/prebuilt/windows/bin/arm-linux-androideabi-g++",
+		ar = "${NDK}/toolchains/arm-linux-androideabi-4.4.3/prebuilt/windows/bin/arm-linux-androideabi-ar",
+   }
+}
 
 
 --
@@ -212,7 +212,7 @@ solution "Techyon"
 	configurations { "Release", "Debug" }
 	
 	if _OPTIONS["android"] then
-		platforms {"armeabi", "armeabi-v7a", "x32"}
+		platforms {"armeabi", "armeabi-v7a", "neon", "x32"}
 	else
 		platforms {"x32", "x64"}
 	end
@@ -1075,16 +1075,17 @@ end -- if not _OPTIONS["android"]
 	configuration "armeabi"
 		targetdir 	"../android/libs/armeabi"
 	
-	-- configuration "neon"
-		-- targetname  "techyon_neon"
-		-- buildoptions
-		-- {
-			-- "-mcpu=cortex-a8 -mfloat-abi=softfp -mfpu=neon -fpic -fno-short-enums -ffunction-sections -funwind-tables -fstack-protector -ftree-vectorize -fsingle-precision-constant"
-		-- }
-		-- defines
-		-- {
-			-- "__MATH_NEON",
-		-- }
+	configuration "neon"
+		targetname  "techyon_neon"
+		targetdir 	"../android/libs/armeabi"
+		buildoptions
+		{
+			"-mcpu=cortex-a8 -mfloat-abi=softfp -mfpu=neon -fpic -fno-short-enums -ffunction-sections -funwind-tables -fstack-protector -ftree-vectorize -fsingle-precision-constant"
+		}
+		defines
+		{
+			"__MATH_NEON",
+		}
 
 -- FIXME
 if(os.is("windows")) then
