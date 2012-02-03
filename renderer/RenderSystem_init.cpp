@@ -679,21 +679,24 @@ void R_InitOpenGL( void ) {
 GL_CheckErrors
 ==================
 */
-void GL_CheckErrors_( const char *filename, int line ) {
+bool GL_CheckErrors_( const char *filename, int line ) {
     int		err;
     char	s[64];
 	int		i;
 
 	if ( r_ignoreGLErrors.GetBool() ) {
-		return;
+		return false;
 	}
 
 	// check for up to 10 errors pending
+	bool error = false;
 	for ( i = 0 ; i < 10 ; i++ ) {
 		err = glGetError();
 		if ( err == GL_NO_ERROR ) {
-			return;
+			break;
 		}
+
+		error = true;
 		switch( err ) {
 			case GL_INVALID_ENUM:
 				strcpy( s, "GL_INVALID_ENUM" );
@@ -722,6 +725,8 @@ void GL_CheckErrors_( const char *filename, int line ) {
 			common->Printf( "caught OpenGL error: %s in file %s line %i", s, filename, line );
 		//}
 	}
+
+	return error;
 }
 
 /*

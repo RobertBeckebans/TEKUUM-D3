@@ -306,7 +306,7 @@ GLenum idImage::SelectInternalFormat( const byte **dataPtrs, int numDataPtrs, in
 	if ( minimumDepth == TD_SPECULAR ) {
 		// we are assuming that any alpha channel is unintentional
 #if defined(USE_GLES1)
-		return GL_RGB;
+		return GL_RGBA;
 #else
 		if ( glConfig.textureCompressionAvailable ) {
 			return GL_COMPRESSED_RGB_S3TC_DXT1_EXT;
@@ -319,7 +319,7 @@ GLenum idImage::SelectInternalFormat( const byte **dataPtrs, int numDataPtrs, in
 	if ( minimumDepth == TD_DIFFUSE ) {
 #if defined(USE_GLES1)
 		if ( ( aAnd == 255 || aOr == 0 ) ) {
-			return GL_RGB;
+			return GL_RGBA;
 		} else {
 			return GL_RGBA;
 		}
@@ -353,7 +353,7 @@ GLenum idImage::SelectInternalFormat( const byte **dataPtrs, int numDataPtrs, in
 	// cases without alpha
 	if ( !needAlpha ) {
 #if defined(USE_GLES1)
-		return GL_RGB;			// two bytes
+		return GL_RGBA;			// two bytes
 #else
 		if ( minimumDepth == TD_HIGH_QUALITY ) {
 			return GL_RGB8;			// four bytes
@@ -728,7 +728,11 @@ void idImage::GenerateImage( const byte *pic, int width, int height,
 		glTexImage2D( GL_TEXTURE_2D, 0, internalFormat, scaled_width, scaled_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, scaledBuffer );
 	}
 
-	GL_CheckErrors();
+	if(GL_CheckErrors())
+	{
+		common->Printf("OpenGL Error: image = '%s', internalFormat = %i, scaled_width = %i, scaled_height = %i, scaledBuffer = %p",
+				imgName.c_str(), internalFormat, scaled_width, scaled_height, scaledBuffer);
+	}
 
 	// create and upload the mip map levels, which we do in all cases, even if we don't think they are needed
 	int		miplevel;
