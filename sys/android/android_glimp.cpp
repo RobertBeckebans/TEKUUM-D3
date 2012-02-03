@@ -33,12 +33,21 @@ If you have questions concerning this license or the applicable additional terms
 
 idCVar sys_videoRam( "sys_videoRam", "0", CVAR_SYSTEM | CVAR_ARCHIVE | CVAR_INTEGER, "Texture memory on the video card (in megabytes) - 0: autodetect", 0, 512 );
 
+static void            (*s_requestRender) (void);
+
 // JNI
 extern "C"
 {
 
+void JNI_SetRendererCallbacks(void (*request_render) (void))
+{
+	s_requestRender = request_render;
+}
+
 void JNI_SetResolution(int width, int height)
 {
+	common->Printf( "JNI_SetResolution( %i, %i )\n", width, height );
+
 	glConfig.vidWidth = width;
 	glConfig.vidHeight = height;
 }
@@ -48,23 +57,25 @@ void JNI_SetResolution(int width, int height)
 
 bool GLimp_Init( glimpParms_t parms )
 {
-	const char *glstring;
+	common->Printf( "----- GLimp_Init -----\n" );
+
+	//const char *glstring;
 
 	glConfig.isFullscreen = true;
 
 	// FIXME check these with egl functions
-	glConfig.colorBits = 32;
+	glConfig.colorBits = 16;
 	glConfig.depthBits = 24;
 	glConfig.stencilBits = 8;
 
-	glstring = (const char *) glGetString(GL_VENDOR);
-	common->Printf("GL_VENDOR: %s\n", glstring);
+	//glstring = (const char *) glGetString(GL_VENDOR);
+	//common->Printf("GL_VENDOR: %s\n", glstring);
 
-	glstring = (const char *) glGetString(GL_RENDERER);
-	common->Printf("GL_RENDERER: %s\n", glstring);
+	//glstring = (const char *) glGetString(GL_RENDERER);
+	//common->Printf("GL_RENDERER: %s\n", glstring);
 
-	glstring = (const char *) glGetString(GL_EXTENSIONS);
-	common->Printf("GL_EXTENSIONS: %s\n", glstring);
+	//glstring = (const char *) glGetString(GL_EXTENSIONS);
+	//common->Printf("GL_EXTENSIONS: %s\n", glstring);
 
 	return true;
 }
@@ -72,6 +83,8 @@ bool GLimp_Init( glimpParms_t parms )
 
 bool GLimp_SetScreenParms( glimpParms_t parms )
 {
+	common->Printf( "----- GLimp_SetScreenParms -----\n" );
+
 	return true;
 }
 
@@ -82,7 +95,7 @@ void GLimp_Shutdown( void )
 
 void GLimp_SwapBuffers( void )
 {
-
+	//s_requestRender();
 }
 
 void GLimp_SetGamma(unsigned short red[256], unsigned short green[256], unsigned short blue[256]) {
