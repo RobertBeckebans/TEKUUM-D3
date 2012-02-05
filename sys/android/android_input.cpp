@@ -30,9 +30,7 @@ If you have questions concerning this license or the applicable additional terms
 #include "../../idlib/precompiled.h"
 #include "../posix/posix_public.h"
 #include "../../renderer/tr_local.h"
-
-
-static void            (*s_setMenuState) (int shown);
+#include "android_local.h"
 
 
 static const unsigned char s_scantokey[256] = {
@@ -93,20 +91,12 @@ static int mouse_threshold;
 
 
 
-extern "C"
-{
-
-void JNI_SetInputCallbacks(void (*set_menu_state) (int shown))
-{
-	s_setMenuState = set_menu_state;
-}
-
-void JNI_QueueKeyEvent(int key, int state)
+void JE_QueueKeyEvent(int key, int state)
 {
 	if (!common || !common->IsInitialized())
 		return;
 
-	common->Printf( "JNI_QueueKeyEvent( key = %i, state = %i )\n", key, state );
+	common->Printf( "JE_QueueKeyEvent( key = %i, state = %i )\n", key, state );
 
 	Posix_QueEvent( SE_KEY, key, state, 0, NULL);
 	//Posix_QueEvent( SE_KEY, s_scantokey[key], state, 0, NULL);
@@ -126,12 +116,12 @@ enum MotionEventAction
 	MOTION_EVENT_ACTION_MOVE = 2,
 };
 
-void JNI_QueueMotionEvent(int action, float x, float y, float pressure)
+void JE_QueueMotionEvent(int action, float x, float y, float pressure)
 {
 	if (!common || !common->IsInitialized())
 		return;
 
-	common->Printf( "JNI_QueueKeyEvent( action = %i, x = %f, y = %f, pressure = %f )\n", action, x, y, pressure );
+	common->Printf( "JE_QueueKeyEvent( action = %i, x = %f, y = %f, pressure = %f )\n", action, x, y, pressure );
 
 	int b, dx, dy;
 
@@ -193,10 +183,8 @@ void JNI_QueueMotionEvent(int action, float x, float y, float pressure)
 	mwy = y;
 }
 
-void JNI_QueueTrackballEvent(int action, float dx, float dy)
+void JE_QueueTrackballEvent(int action, float dx, float dy)
 {
-
-}
 
 }
 

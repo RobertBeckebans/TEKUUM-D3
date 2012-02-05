@@ -617,4 +617,11 @@ extern idSys *				sys;
 bool Sys_LoadOpenAL( void );
 void Sys_FreeOpenAL( void );
 
+
+#if defined(__ANDROID__)
+#include "../../android/jni/techyonjni_public.h"
+
+extern jniImport_t			ji;
+#endif
+
 #endif /* !__SYS_PUBLIC__ */

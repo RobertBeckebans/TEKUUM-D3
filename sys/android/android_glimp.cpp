@@ -33,27 +33,15 @@ If you have questions concerning this license or the applicable additional terms
 
 idCVar sys_videoRam( "sys_videoRam", "0", CVAR_SYSTEM | CVAR_ARCHIVE | CVAR_INTEGER, "Texture memory on the video card (in megabytes) - 0: autodetect", 0, 512 );
 
-static void            (*s_requestRender) (void);
-
 // JNI
-extern "C"
-{
 
-void JNI_SetRendererCallbacks(void (*request_render) (void))
-{
-	s_requestRender = request_render;
-}
-
-void JNI_SetResolution(int width, int height)
+void JE_SetResolution(int width, int height)
 {
 	common->Printf( "JNI_SetResolution( %i, %i )\n", width, height );
 
 	glConfig.vidWidth = width;
 	glConfig.vidHeight = height;
 }
-
-}
-
 
 bool GLimp_Init( glimpParms_t parms )
 {

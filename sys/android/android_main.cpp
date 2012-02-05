@@ -30,7 +30,7 @@ If you have questions concerning this license or the applicable additional terms
 #include "../posix/posix_public.h"
 #include "../sys_local.h"
 #include "../sys_public.h"
-//#include "local.h"
+#include "android_local.h"
 
 #include <pthread.h>
 #include <errno.h>
@@ -47,6 +47,8 @@ If you have questions concerning this license or the applicable additional terms
 
 static idStr	basepath;
 static idStr	savepath;
+
+jniImport_t		ji;
 
 /*
 ===========
@@ -549,10 +551,7 @@ void abrt_func( mcheck_status status ) {
 main
 ===============
 */
-extern "C"
-{
-
-int main(int argc, const char **argv) {
+int JE_Main(int argc, char **argv) {
 
 	__android_log_print(ANDROID_LOG_DEBUG, "Techyon", "Inside Techyon source!");
 
@@ -570,7 +569,7 @@ int main(int argc, const char **argv) {
 	Posix_EarlyInit( );
 
 	if ( argc > 0 ) {
-		common->Init( argc, &argv[0], NULL );
+		common->Init( argc, (const char **)&argv[0], NULL );
 	} else {
 		common->Init( 0, NULL, NULL );
 	}
@@ -580,13 +579,47 @@ int main(int argc, const char **argv) {
 	//while (1) {
 	//	common->Frame();
 	//}
+
+	return 0;
 }
 
-void JNI_NextFrame(void)
+void JE_DrawFrame(void)
 {
 	//__android_log_print(ANDROID_LOG_DEBUG, "Techyon", "JNI_NextFrame()");
 
 	common->Frame();
 }
 
+extern "C"
+{
+
+jniExport_t* GetEngineJavaAPI(int apiVersion, jniImport_t * jimp)
+{
+	static jniExport_t je;
+
+	ji = *jimp;
+
+	__android_log_print(ANDROID_LOG_DEBUG, "Techyon", "GetEngineJavaAPI()");
+
+	memset(&je, 0, sizeof(je));
+
+	if(apiVersion != ENGINE_JNI_API_VERSION)
+	{
+		__android_log_print(ANDROID_LOG_ERROR, "Techyon", "GetEngineJavaAPI: Mismatched ENGINE_JNI_API_VERSION: expected %i, got %i\n", ENGINE_JNI_API_VERSION, apiVersion);
+		return NULL;
+	}
+
+	je.Main = JE_Main;
+	je.DrawFrame = JE_DrawFrame;
+
+	je.QueueKeyEvent = JE_QueueKeyEvent;
+	je.QueueMotionEvent = JE_QueueMotionEvent;
+	je.QueueTrackballEvent = JE_QueueTrackballEvent;
+
+	je.RequestAudioData = JE_RequestAudioData;
+	je.SetResolution = JE_SetResolution;
+
+	return &je;
 }
+
+} // extern C
