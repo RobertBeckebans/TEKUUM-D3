@@ -63,9 +63,11 @@ Used for determining memory utilization
 */
 int idImage::BitsForInternalFormat( int internalFormat ) const {
 
-	// RB: FIXME
-#if !defined(USE_GLES1)
 	switch ( internalFormat ) {
+#if defined(USE_GLES1)
+	case GL_RGBA:
+		return 32;
+#else
 	case GL_INTENSITY8:
 	case 1:
 		return 8;
@@ -104,11 +106,11 @@ int idImage::BitsForInternalFormat( int internalFormat ) const {
 		return 4;			// not sure
 	case GL_COMPRESSED_RGBA_ARB:
 		return 8;			// not sure
+#endif // #if !defined(USE_GLES1)
 	default:
 		common->Error( "R_BitsForInternalFormat: BAD FORMAT:%i", internalFormat );
 		break;
 	}
-#endif // #if !defined(USE_GLES1)
 
 	return 0;
 }
