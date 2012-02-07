@@ -696,7 +696,7 @@ Sys_GetCallStack
 ==================
 */
 void Sys_GetCallStack( address_t *callStack, const int callStackSize ) {
-#if 1 //def _DEBUG
+#ifdef _DEBUG
 	int i;
 	long m_ebp;
 
