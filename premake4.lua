@@ -491,6 +491,18 @@ if not _OPTIONS["android"] then
 	include "idlib"
 end
 
+
+
+
+
+
+
+
+
+
+
+
+
 project "Techyon"
 	targetname  "Techyon"
 	language    "C++"
@@ -607,6 +619,13 @@ end
 	--
 	-- Options Configurations
 	--
+	configuration "debug-memory"
+		defines
+		{
+			"ID_DEBUG_MEMORY",
+			"ID_REDIRECT_NEWDELETE",
+		}
+	
 	configuration "lightmaps"
 		defines
 		{
@@ -1071,6 +1090,11 @@ end -- if not _OPTIONS["android"]
 			"-nostdlib",
 			"--no-undefined",
 		}
+		--prebuildcommands
+		--{
+		--   "cd ../android",
+		--   "ndk-build V=1",
+		--}
 		
 	configuration "armeabi"
 		targetdir 	"../android/libs/armeabi"

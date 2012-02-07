@@ -39,6 +39,12 @@ project "TypeInfo"
 	--
 	-- Options Configurations
 	--
+	configuration "debug-memory"
+		defines
+		{
+			"ID_DEBUG_MEMORY",
+			"ID_REDIRECT_NEWDELETE",
+		}
 	
 	-- 
 	-- Project Configurations

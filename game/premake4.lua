@@ -58,6 +58,13 @@ project "game"
 	--
 	-- Options Configurations
 	--
+	configuration "debug-memory"
+		defines
+		{
+			"ID_DEBUG_MEMORY",
+			"ID_REDIRECT_NEWDELETE",
+		}
+	
 	configuration "lightmaps"
 		defines
 		{
