@@ -2088,7 +2088,7 @@ void idImage::UploadScratch( const byte *data, int cols, int rows ) {
 			// upload the base level
 			for ( i = 0 ; i < 6 ; i++ ) {
 #if defined(USE_GLES1)
-				glTexImage2D( GL_TEXTURE_CUBE_MAP_POSITIVE_X_EXT+i, 0, GL_RGB, cols, rows, 0,
+				glTexImage2D( GL_TEXTURE_CUBE_MAP_POSITIVE_X_EXT+i, 0, GL_RGBA, cols, rows, 0,
 									GL_RGBA, GL_UNSIGNED_BYTE, data + cols*rows*4*i );
 #else
 				glTexImage2D( GL_TEXTURE_CUBE_MAP_POSITIVE_X_EXT+i, 0, GL_RGB8, cols, rows, 0, 
@@ -2123,7 +2123,7 @@ void idImage::UploadScratch( const byte *data, int cols, int rows ) {
 			uploadHeight = rows;
 
 #if defined(USE_GLES1)
-			glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, cols, rows, 0, GL_RGBA, GL_UNSIGNED_BYTE, data );
+			glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, cols, rows, 0, GL_RGBA, GL_UNSIGNED_BYTE, data );
 #else
 			glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB8, cols, rows, 0, GL_RGBA, GL_UNSIGNED_BYTE, data );
 #endif
