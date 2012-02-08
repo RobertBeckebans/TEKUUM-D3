@@ -615,9 +615,12 @@ jniExport_t* GetEngineJavaAPI(int apiVersion, jniImport_t * jimp)
 	je.QueueKeyEvent = JE_QueueKeyEvent;
 	je.QueueMotionEvent = JE_QueueMotionEvent;
 	je.QueueTrackballEvent = JE_QueueTrackballEvent;
+	je.QueueConsoleEvent = JE_QueueConsoleEvent;
 
 	je.RequestAudioData = JE_RequestAudioData;
 	je.SetResolution = JE_SetResolution;
+
+	je.IsConsoleActive = JE_IsConsoleActive;
 
 	return &je;
 }

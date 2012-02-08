@@ -188,6 +188,27 @@ void JE_QueueTrackballEvent(int action, float dx, float dy)
 
 }
 
+void JE_QueueConsoleEvent(const char *s)
+{
+	if ( s ) {
+		char *b;
+		int len;
+
+		len = strlen( s ) + 1;
+		b = (char *)Mem_Alloc( len );
+		strcpy( b, s );
+		Posix_QueEvent( SE_CONSOLE, 0, 0, len, b );
+	}
+}
+
+int JE_IsConsoleActive(void)
+{
+	if( console && console->Active())
+		return 1;
+
+	return 0;
+}
+
 void Sys_InitInput( void ) {}
 
 void Sys_ShutdownInput( void ) {}
