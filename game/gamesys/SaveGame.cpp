@@ -104,7 +104,10 @@ void idSaveGame::Close( void ) {
 
 	objects.Clear();
 
-#ifdef ID_DEBUG_MEMORY
+// Techyon BEGIN
+// RB: this crashes
+#if 0 //def ID_DEBUG_MEMORY
+// Techyon END
 	idStr gameState = file->GetName();
 	gameState.StripFileExtension();
 	WriteGameState_f( idCmdArgs( va( "test %s_save", gameState.c_str() ), false ) );
