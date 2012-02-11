@@ -472,6 +472,51 @@ static void R_CheckPortableExtensions( void ) {
  	glConfig.depthBoundsTestAvailable = GLEW_EXT_depth_bounds_test;
 #endif
 
+	// GL_EXT_framebuffer_object
+	glConfig.framebufferObjectAvailable = false;
+#if !defined(USE_GLES1)
+	if(GLEW_EXT_framebuffer_object)
+	{
+		glGetIntegerv(GL_MAX_RENDERBUFFER_SIZE, &glConfig.maxRenderbufferSize);
+		glGetIntegerv(GL_MAX_COLOR_ATTACHMENTS, &glConfig.maxColorAttachments);
+
+		//if(r_ext_framebuffer_object->value)
+		{
+			glConfig.framebufferObjectAvailable = true;
+			common->Printf("...using GL_EXT_framebuffer_object\n");
+		}
+		//else
+		//{
+		//	common->Printf("...ignoring GL_EXT_framebuffer_object\n");
+		//}
+	}
+	else
+	{
+		common->Printf("...GL_EXT_framebuffer_object not found\n");
+	}
+#endif
+
+	// GL_EXT_framebuffer_blit
+	glConfig.framebufferBlitAvailable = false;
+#if !defined(USE_GLES1)
+	if(GLEW_EXT_framebuffer_blit)
+	{
+		//if(r_ext_framebuffer_blit->integer)
+		{
+			glConfig.framebufferBlitAvailable = true;
+			common->Printf("...using GL_EXT_framebuffer_blit\n");
+		}
+		//else
+		//{
+		//	common->Printf("...ignoring GL_EXT_framebuffer_blit\n");
+		//}
+	}
+	else
+	{
+		common->Printf("...GL_EXT_framebuffer_blit not found\n");
+	}
+#endif
+
 	// GL_GREMEDY_string_marker
 #if !defined(USE_GLES1)
 	if ( GLEW_GREMEDY_string_marker ) {
@@ -1756,6 +1801,13 @@ static void GfxInfo_f( const idCmdArgs &args ) {
 	common->Printf( "GL_MAX_TEXTURE_UNITS_ARB: %d\n", glConfig.maxTextureUnits );
 	common->Printf( "GL_MAX_TEXTURE_COORDS_ARB: %d\n", glConfig.maxTextureCoords );
 	common->Printf( "GL_MAX_TEXTURE_IMAGE_UNITS_ARB: %d\n", glConfig.maxTextureImageUnits );
+
+	if(glConfig.framebufferObjectAvailable)
+	{
+		common->Printf( "GL_MAX_RENDERBUFFER_SIZE: %d\n", glConfig.maxRenderbufferSize);
+		common->Printf( "GL_MAX_COLOR_ATTACHMENTS: %d\n", glConfig.maxColorAttachments);
+	}
+
 	common->Printf( "\nPIXELFORMAT: color(%d-bits) Z(%d-bit) stencil(%d-bits)\n", glConfig.colorBits, glConfig.depthBits, glConfig.stencilBits );
 	common->Printf( "MODE: %d, %d x %d %s hz:", r_mode.GetInteger(), glConfig.vidWidth, glConfig.vidHeight, fsstrings[r_fullscreen.GetBool()] );
 
@@ -2122,6 +2174,10 @@ void idRenderSystemLocal::Init( void ) {
 
 	globalImages->Init();
 
+#if !defined(USE_GLES1)
+	Framebuffer::Init();
+#endif
+
 	idCinematic::InitCinematic( );
 
 	// build brightness translation tables
@@ -2161,6 +2217,10 @@ void idRenderSystemLocal::Shutdown( void ) {
 	renderModelManager->Shutdown();
 
 	idCinematic::ShutdownCinematic( );
+
+#if !defined(USE_GLES1)
+	Framebuffer::Shutdown();
+#endif
 
 	globalImages->Shutdown();
 

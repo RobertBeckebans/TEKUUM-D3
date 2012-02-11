@@ -96,7 +96,18 @@ typedef struct glconfig_s {
 	bool				allowARB2Path;
 
 	bool				isInitialized;
+
+// Techyon BEGIN
+	bool				framebufferObjectAvailable;
+	int					maxRenderbufferSize;
+	int					maxColorAttachments;
+	bool				framebufferPackedDepthStencilAvailable;
+	bool				framebufferBlitAvailable;
+// Techyon END
+
 } glconfig_t;
+
+
 
 
 // font support 

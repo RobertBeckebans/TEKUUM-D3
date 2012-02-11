@@ -31,6 +31,9 @@ If you have questions concerning this license or the applicable additional terms
 
 #include "Image.h"
 #include "MegaTexture.h"
+#if !defined(USE_GLES1)
+#include "FrameBuffer.h"
+#endif
 
 class idRenderWorldLocal;
 
@@ -608,6 +611,9 @@ typedef struct {
 	int			glStateBits;
 	bool		forceGlState;		// the next GL_State will ignore glStateBits and set everything
 	struct shaderProgram_s   *currentProgram;
+#if !defined(USE_GLES1)
+	Framebuffer *framebuffer;
+#endif
 } glstate_t;
 
 
