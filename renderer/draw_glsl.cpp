@@ -97,7 +97,7 @@ static void	RB_GLSL_DrawInteraction( const drawInteraction_t *din ) {
 
 	// choose and bind the vertex program
 	// TODO gl_forwardLightingShader->SetAmbientLighting(backEnd.vLight->lightShader->IsAmbientLight());
-	gl_forwardLightingShader->SetNormalMapping(!r_skipBump.GetBool());
+	gl_forwardLightingShader->SetNormalMapping(!r_skipBump.GetBool() || backEnd.vLight->lightShader->IsAmbientLight());
 	gl_forwardLightingShader->BindProgram();
 
 	// load all the vertex program parameters
@@ -409,7 +409,7 @@ void R_ReloadShaders_f( const idCmdArgs &args ) {
 
 	common->Printf( "----- R_ReloadShaders -----\n" );
 	
-	if ( GLEW_ARB_fragment_shader && GLEW_ARB_vertex_shader && GL_ARB_shader_objects && GLEW_ARB_shading_language_100 ) 
+	if ( GLEW_ARB_fragment_shader && GLEW_ARB_vertex_shader && GLEW_ARB_shader_objects && GLEW_ARB_shading_language_100 ) 
 	{
 		if(gl_forwardLightingShader)
 		{
@@ -424,6 +424,13 @@ void R_ReloadShaders_f( const idCmdArgs &args ) {
 			gl_shadowVolumeShader = NULL;
 		}
 		gl_shadowVolumeShader = new GLShader_shadowVolume();
+
+		if(gl_shadowMapShader)
+		{
+			delete gl_shadowMapShader;
+			gl_shadowMapShader = NULL;
+		}
+		gl_shadowMapShader = new GLShader_shadowMap();
 	}
 
 	common->Printf( "-------------------------------\n" );
@@ -439,7 +446,7 @@ void R_GLSL_Init( void ) {
 
 	common->Printf( "---------- R_GLSL_Init ----------\n" );
 
-	if ( !GLEW_ARB_fragment_shader || !GLEW_ARB_vertex_shader || !GL_ARB_shader_objects || !GLEW_ARB_shading_language_100 ) {
+	if ( !GLEW_ARB_fragment_shader || !GLEW_ARB_vertex_shader || !GLEW_ARB_shader_objects || !GLEW_ARB_shading_language_100 ) {
 		common->Printf( "Not available.\n" );
 		return;
 	}

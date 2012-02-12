@@ -683,6 +683,7 @@ typedef enum {
 	BE_R200,
 	BE_ARB2,
 	BE_GLSL,
+	BE_EXP,
 	BE_BAD
 } backEndName_t;
 
@@ -1405,19 +1406,19 @@ enum
 	VA_INDEX_TANGENT = 9,
 	VA_INDEX_BITANGENT = 10,
 	VA_INDEX_NORMAL = 11,
-	VA_INDEX_TEXCOORD1,
-	VA_INDEX_COLOR,
+	VA_INDEX_TEXCOORD1 = 12,
+	VA_INDEX_COLOR = 13,
 //	VA_INDEX_LIGHTDIRECTION,
 
 	// GPU vertex skinning
-	VA_INDEX_BONE_INDEXES,
-	VA_INDEX_BONE_WEIGHTS,
+	VA_INDEX_BONE_INDEXES = 1,
+	VA_INDEX_BONE_WEIGHTS = 2,
 
 	// GPU vertex animations
-	VA_INDEX_POSITION2,
-	VA_INDEX_TANGENT2,
-	VA_INDEX_BINORMAL2,
-	VA_INDEX_NORMAL2,
+	VA_INDEX_POSITION2 = 3,
+	VA_INDEX_TANGENT2 = 4,
+	VA_INDEX_BINORMAL2 = 5,
+	VA_INDEX_NORMAL2 = 6,
 };
 
 enum
@@ -1694,6 +1695,9 @@ int				R_FindShader( GLenum target, const char *program );
 void            GL_BindProgram(shaderProgram_t * program);
 void            GL_BindNullProgram(void);
 #endif
+
+void			R_Exp_Init( void );
+void			RB_Exp_DrawInteractions( void );
 
 // Techyon END
 

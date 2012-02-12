@@ -641,6 +641,7 @@ end
 		{
 			"renderer/GLShader.cpp",
 			"renderer/draw_glsl.cpp",
+			"renderer/draw_exp.cpp",
 		}
 	
 	configuration { "mfc-tools", "vs*", "x32" }

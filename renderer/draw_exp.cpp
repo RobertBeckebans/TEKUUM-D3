@@ -32,6 +32,8 @@ If you have questions concerning this license or the applicable additional terms
 #include "tr_local.h"
 #include "../sys/win32/win_local.h"
 
+#include "GLShader.h"
+
 /*
 
 strictly experimental / research codepaths
@@ -102,11 +104,13 @@ static	idImage		*jitterImage1;
 
 static	idImage		*random256Image;
 
+/*
 static	int			shadowVertexProgram;
 static	int			shadowFragmentProgram16;
 static	int			shadowFragmentProgram4;
 static	int			shadowFragmentProgram1;
 static	int			shadowFragmentProgram0;
+*/
 
 static	int			screenSpaceShadowVertexProgram;
 static	int			screenSpaceShadowFragmentProgram16;
@@ -151,7 +155,7 @@ idCVar r_sb_singleSide( "r_sb_singleSide", "-1", CVAR_RENDERER | CVAR_INTEGER, "
 idCVar r_sb_useCulling( "r_sb_useCulling", "1", CVAR_RENDERER | CVAR_BOOL, "cull geometry to individual side frustums" );
 idCVar r_sb_linearFilter( "r_sb_linearFilter", "1", CVAR_RENDERER | CVAR_BOOL, "use GL_LINEAR instead of GL_NEAREST on shadow maps" );
 
-idCVar r_sb_screenSpaceShadow( "r_sb_screenSpaceShadow", "1", CVAR_RENDERER | CVAR_BOOL, "build shadows in screen space instead of on surfaces" );
+idCVar r_sb_screenSpaceShadow( "r_sb_screenSpaceShadow", "0", CVAR_RENDERER | CVAR_BOOL, "build shadows in screen space instead of on surfaces" );
 
 idCVar r_hdr_useFloats( "r_hdr_useFloats", "0", CVAR_RENDERER | CVAR_BOOL, "use a floating point rendering buffer" );
 idCVar r_hdr_exposure( "r_hdr_exposure", "1.0", CVAR_RENDERER | CVAR_FLOAT, "maximum light scale" );
@@ -509,7 +513,7 @@ void R_Exp_Allocate( void ) {
 
 	initialized = true;
 
-#if 1
+#if 0
 	//
 	// allocate the floating point rendering buffer
 	//
@@ -585,6 +589,7 @@ void R_Exp_Allocate( void ) {
 
 	if ( !wglShareLists( floatContext, win32.hGLRC ) ) {
 		common->Printf( "failed to share lists.\n" );
+		GL_CheckErrors();
 	}
 
 	// create a rendering context for this pixel format and share textures
@@ -682,12 +687,14 @@ pixelformats[0] = win32.pixelformat;	// forced to do this by wgl...
 	screenSpaceShadowFragmentProgram4 = R_FindARBProgram( GL_FRAGMENT_PROGRAM_ARB, "screenSpaceShadow4.vfp" );
 	screenSpaceShadowFragmentProgram16 = R_FindARBProgram( GL_FRAGMENT_PROGRAM_ARB, "screenSpaceShadow16.vfp" );
 
+	/*
 	shadowVertexProgram = R_FindARBProgram( GL_VERTEX_PROGRAM_ARB, "shadowBufferInteraction1.vfp" );
 
 	shadowFragmentProgram0 = R_FindARBProgram( GL_FRAGMENT_PROGRAM_ARB, "shadowBufferInteraction0.vfp" );
 	shadowFragmentProgram1 = R_FindARBProgram( GL_FRAGMENT_PROGRAM_ARB, "shadowBufferInteraction1.vfp" );
 	shadowFragmentProgram4 = R_FindARBProgram( GL_FRAGMENT_PROGRAM_ARB, "shadowBufferInteraction4.vfp" );
 	shadowFragmentProgram16 = R_FindARBProgram( GL_FRAGMENT_PROGRAM_ARB, "shadowBufferInteraction16.vfp" );
+	*/
 
 	gammaDitherVertexProgram = R_FindARBProgram( GL_VERTEX_PROGRAM_ARB, "gammaDither.vfp" );
 	gammaDitherFragmentProgram = R_FindARBProgram( GL_FRAGMENT_PROGRAM_ARB, "gammaDither.vfp" );
@@ -699,6 +706,8 @@ pixelformats[0] = win32.pixelformat;	// forced to do this by wgl...
 	bloomFragmentProgram = R_FindARBProgram( GL_FRAGMENT_PROGRAM_ARB, "bloom.vfp" );
 
 	random256Image = globalImages->ImageFromFunction( "_random256", R_CreateRandom256Image );
+
+	GL_CheckErrors();
 }
 
 //===========================================================================================
@@ -714,7 +723,12 @@ Sets surfaceInteraction_t->cullBits
 ==================
 */
 void RB_EXP_CullInteractions( viewLight_t *vLight, idPlane frustumPlanes[6] ) {
-	for ( idInteraction *inter = vLight->lightDef->firstInteraction ; inter ; inter = inter->lightNext ) {
+	
+	if ( vLight->lightDef == NULL ) {
+		return;
+	}
+	
+	for ( idInteraction *inter = vLight->lightDef->firstInteraction ; inter != NULL ; inter = inter->lightNext ) {
 		const idRenderEntityLocal *entityDef = inter->entityDef;
 		if ( !entityDef ) {
 			continue;
@@ -778,7 +792,12 @@ RB_EXP_RenderOccluders
 ==================
 */
 void RB_EXP_RenderOccluders( viewLight_t *vLight ) {
-	for ( idInteraction *inter = vLight->lightDef->firstInteraction ; inter ; inter = inter->lightNext ) {
+
+	if ( vLight->lightDef == NULL ) {
+		return;
+	}
+
+	for ( idInteraction *inter = vLight->lightDef->firstInteraction ; inter != NULL ; inter = inter->lightNext ) {
 		const idRenderEntityLocal *entityDef = inter->entityDef;
 		if ( !entityDef ) {
 			continue;
@@ -1022,8 +1041,8 @@ glEnableClientState( GL_TEXTURE_COORD_ARRAY );
 		globalFrustum[i][3] = - (origin * globalFrustum[i].ToVec4().ToVec3() );
 	}
 
+	// FIXME
 	RB_EXP_CullInteractions( vLight, globalFrustum );
-
 
 	// FIXME: we want to skip the sampling as well as the generation when not casting shadows
 	if ( !r_sb_noShadows.GetBool() && vLight->lightShader->LightCastsShadows() ) {
@@ -1123,20 +1142,31 @@ glDisableClientState( GL_TEXTURE_COORD_ARRAY );
 RB_EXP_DrawInteraction
 ==================
 */
-void	RB_EXP_DrawInteraction( const drawInteraction_t *din ) {
+static void	RB_EXP_DrawInteraction( const drawInteraction_t *din ) {
+	
+	// choose and bind the vertex program
+	// TODO gl_forwardLightingShader->SetAmbientLighting(backEnd.vLight->lightShader->IsAmbientLight());
+	gl_forwardLightingShader->SetNormalMapping(!r_skipBump.GetBool() || backEnd.vLight->lightShader->IsAmbientLight());
+	gl_forwardLightingShader->BindProgram();
+
 	// load all the vertex program parameters
-	glProgramEnvParameter4fvARB( GL_VERTEX_PROGRAM_ARB, PP_LIGHT_ORIGIN, din->localLightOrigin.ToFloatPtr() );
-	glProgramEnvParameter4fvARB( GL_VERTEX_PROGRAM_ARB, PP_VIEW_ORIGIN, din->localViewOrigin.ToFloatPtr() );
-	glProgramEnvParameter4fvARB( GL_VERTEX_PROGRAM_ARB, PP_LIGHT_PROJECT_S, din->lightProjection[0].ToFloatPtr() );
-	glProgramEnvParameter4fvARB( GL_VERTEX_PROGRAM_ARB, PP_LIGHT_PROJECT_T, din->lightProjection[1].ToFloatPtr() );
-	glProgramEnvParameter4fvARB( GL_VERTEX_PROGRAM_ARB, PP_LIGHT_PROJECT_Q, din->lightProjection[2].ToFloatPtr() );
-	glProgramEnvParameter4fvARB( GL_VERTEX_PROGRAM_ARB, PP_LIGHT_FALLOFF_S, din->lightProjection[3].ToFloatPtr() );
-	glProgramEnvParameter4fvARB( GL_VERTEX_PROGRAM_ARB, PP_BUMP_MATRIX_S, din->bumpMatrix[0].ToFloatPtr() );
-	glProgramEnvParameter4fvARB( GL_VERTEX_PROGRAM_ARB, PP_BUMP_MATRIX_T, din->bumpMatrix[1].ToFloatPtr() );
-	glProgramEnvParameter4fvARB( GL_VERTEX_PROGRAM_ARB, PP_DIFFUSE_MATRIX_S, din->diffuseMatrix[0].ToFloatPtr() );
-	glProgramEnvParameter4fvARB( GL_VERTEX_PROGRAM_ARB, PP_DIFFUSE_MATRIX_T, din->diffuseMatrix[1].ToFloatPtr() );
-	glProgramEnvParameter4fvARB( GL_VERTEX_PROGRAM_ARB, PP_SPECULAR_MATRIX_S, din->specularMatrix[0].ToFloatPtr() );
-	glProgramEnvParameter4fvARB( GL_VERTEX_PROGRAM_ARB, PP_SPECULAR_MATRIX_T, din->specularMatrix[1].ToFloatPtr() );
+	gl_forwardLightingShader->SetUniform_ViewOrigin(din->localViewOrigin.ToVec3());
+
+	gl_forwardLightingShader->SetUniform_LightOrigin(din->localLightOrigin.ToVec3());
+
+	gl_forwardLightingShader->SetUniform_LightProjectS(din->lightProjection[0]);
+	gl_forwardLightingShader->SetUniform_LightProjectT(din->lightProjection[1]);
+	gl_forwardLightingShader->SetUniform_LightProjectQ(din->lightProjection[2]);
+	gl_forwardLightingShader->SetUniform_LightFalloffS(din->lightProjection[3]);
+
+	gl_forwardLightingShader->SetUniform_DiffuseMatrixS(din->diffuseMatrix[0]);
+	gl_forwardLightingShader->SetUniform_DiffuseMatrixT(din->diffuseMatrix[1]);
+
+	gl_forwardLightingShader->SetUniform_BumpMatrixS(din->bumpMatrix[0]);
+	gl_forwardLightingShader->SetUniform_BumpMatrixT(din->bumpMatrix[1]);
+
+	gl_forwardLightingShader->SetUniform_SpecularMatrixS(din->specularMatrix[0]);
+	gl_forwardLightingShader->SetUniform_SpecularMatrixT(din->specularMatrix[1]);
 
 
 // calculate depth projection for shadow buffer
@@ -1154,52 +1184,47 @@ sRow[0] = 0.5 * lightBufferSizeFraction * ( matrix2[0] + matrix2[3] );
 sRow[1] = 0.5 * lightBufferSizeFraction * ( matrix2[4] + matrix2[7] );
 sRow[2] = 0.5 * lightBufferSizeFraction * ( matrix2[8] + matrix2[11] );
 sRow[3] = 0.5 * lightBufferSizeFraction * ( matrix2[12] + matrix2[15] );
-glProgramEnvParameter4fvARB( GL_VERTEX_PROGRAM_ARB, 18, sRow );
+//glProgramEnvParameter4fvARB( GL_VERTEX_PROGRAM_ARB, 18, sRow );
 tRow[0] = 0.5 * lightBufferSizeFraction * ( matrix2[1] + matrix2[3] );
 tRow[1] = 0.5 * lightBufferSizeFraction * ( matrix2[5] + matrix2[7] );
 tRow[2] = 0.5 * lightBufferSizeFraction * ( matrix2[9] + matrix2[11] );
 tRow[3] = 0.5 * lightBufferSizeFraction * ( matrix2[13] + matrix2[15] );
-glProgramEnvParameter4fvARB( GL_VERTEX_PROGRAM_ARB, 19, tRow );
+//glProgramEnvParameter4fvARB( GL_VERTEX_PROGRAM_ARB, 19, tRow );
 rRow[0] = 0.5 * ( matrix2[2] + matrix2[3] );
 rRow[1] = 0.5 * ( matrix2[6] + matrix2[7] );
 rRow[2] = 0.5 * ( matrix2[10] + matrix2[11] );
 rRow[3] = 0.5 * ( matrix2[14] + matrix2[15] );
-glProgramEnvParameter4fvARB( GL_VERTEX_PROGRAM_ARB, 20, rRow );
+//glProgramEnvParameter4fvARB( GL_VERTEX_PROGRAM_ARB, 20, rRow );
 qRow[0] = matrix2[3];
 qRow[1] = matrix2[7];
 qRow[2] = matrix2[11];
 qRow[3] = matrix2[15];
-glProgramEnvParameter4fvARB( GL_VERTEX_PROGRAM_ARB, 21, qRow );
+//glProgramEnvParameter4fvARB( GL_VERTEX_PROGRAM_ARB, 21, qRow );
 
 
-	// testing fragment based normal mapping
-	if ( r_testARBProgram.GetBool() ) {
-		glProgramEnvParameter4fvARB( GL_FRAGMENT_PROGRAM_ARB, 2, din->localLightOrigin.ToFloatPtr() );
-		glProgramEnvParameter4fvARB( GL_FRAGMENT_PROGRAM_ARB, 3, din->localViewOrigin.ToFloatPtr() );
-	}
 
-	static const float zero[4] = { 0, 0, 0, 0 };
-	static const float one[4] = { 1, 1, 1, 1 };
-	static const float negOne[4] = { -1, -1, -1, -1 };
+	static const idVec4 zero( 0, 0, 0, 0 );
+	static const idVec4 one( 1, 1, 1, 1 );
+	static const idVec4 negOne( -1, -1, -1, -1 );
 
 	switch ( din->vertexColor ) {
 	case SVC_IGNORE:
-		glProgramEnvParameter4fvARB( GL_VERTEX_PROGRAM_ARB, PP_COLOR_MODULATE, zero );
-		glProgramEnvParameter4fvARB( GL_VERTEX_PROGRAM_ARB, PP_COLOR_ADD, one );
+		gl_forwardLightingShader->SetUniform_ColorModulate(zero);
+		gl_forwardLightingShader->SetUniform_Color(one);
 		break;
 	case SVC_MODULATE:
-		glProgramEnvParameter4fvARB( GL_VERTEX_PROGRAM_ARB, PP_COLOR_MODULATE, one );
-		glProgramEnvParameter4fvARB( GL_VERTEX_PROGRAM_ARB, PP_COLOR_ADD, zero );
+		gl_forwardLightingShader->SetUniform_ColorModulate(one);
+		gl_forwardLightingShader->SetUniform_Color(zero);
 		break;
 	case SVC_INVERSE_MODULATE:
-		glProgramEnvParameter4fvARB( GL_VERTEX_PROGRAM_ARB, PP_COLOR_MODULATE, negOne );
-		glProgramEnvParameter4fvARB( GL_VERTEX_PROGRAM_ARB, PP_COLOR_ADD, one );
+		gl_forwardLightingShader->SetUniform_ColorModulate(negOne);
+		gl_forwardLightingShader->SetUniform_Color(one);
 		break;
 	}
 
 	// set the constant colors
-	glProgramEnvParameter4fvARB( GL_FRAGMENT_PROGRAM_ARB, 0, din->diffuseColor.ToFloatPtr() );
-	glProgramEnvParameter4fvARB( GL_FRAGMENT_PROGRAM_ARB, 1, din->specularColor.ToFloatPtr() );
+	gl_forwardLightingShader->SetUniform_DiffuseColor(din->diffuseColor);
+	gl_forwardLightingShader->SetUniform_SpecularColor(din->specularColor);
 
 	//-----------------------------------------------------
 	// screen power of two correction factor
@@ -1266,6 +1291,7 @@ void RB_EXP_CreateDrawInteractions( const drawSurf_t *surf ) {
 	if ( !surf ) {
 		return;
 	}
+	/*
 	if ( r_sb_screenSpaceShadow.GetBool() ) {
 		// perform setup here that will be constant for all interactions
 		GL_State( GLS_SRCBLEND_DST_ALPHA | GLS_DSTBLEND_ONE | GLS_DEPTHMASK | backEnd.depthFunc );
@@ -1277,12 +1303,14 @@ void RB_EXP_CreateDrawInteractions( const drawSurf_t *surf ) {
 			glBindProgramARB( GL_VERTEX_PROGRAM_ARB, VPROG_INTERACTION );
 			glBindProgramARB( GL_FRAGMENT_PROGRAM_ARB, FPROG_INTERACTION );
 		}
-	} else {
+	} else*/ {
 		// perform setup here that will be constant for all interactions
 		GL_State( GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE | GLS_DEPTHMASK | backEnd.depthFunc );
-GL_State( GLS_DEPTHMASK | GLS_DEPTHFUNC_ALWAYS );//!@#
+//GL_State( GLS_DEPTHMASK | GLS_DEPTHFUNC_ALWAYS );//!@#
 
 		// bind the vertex program
+
+		/*
 		glBindProgramARB( GL_VERTEX_PROGRAM_ARB, shadowVertexProgram );
 		if ( r_sb_samples.GetInteger() == 16 ) {
 			glBindProgramARB( GL_FRAGMENT_PROGRAM_ARB, shadowFragmentProgram16 );
@@ -1293,42 +1321,42 @@ GL_State( GLS_DEPTHMASK | GLS_DEPTHFUNC_ALWAYS );//!@#
 		} else {
 			glBindProgramARB( GL_FRAGMENT_PROGRAM_ARB, shadowFragmentProgram0 );
 		}
+		*/
 	}
 
-	glEnable(GL_VERTEX_PROGRAM_ARB);
-	glEnable(GL_FRAGMENT_PROGRAM_ARB);
-
 	// enable the vertex arrays
-	glEnableVertexAttribArrayARB( 8 );
-	glEnableVertexAttribArrayARB( 9 );
-	glEnableVertexAttribArrayARB( 10 );
-	glEnableVertexAttribArrayARB( 11 );
+	glEnableVertexAttribArrayARB( VA_INDEX_TEXCOORD0 );
+	glEnableVertexAttribArrayARB( VA_INDEX_TANGENT );
+	glEnableVertexAttribArrayARB( VA_INDEX_BITANGENT );
+	glEnableVertexAttribArrayARB( VA_INDEX_NORMAL );
 	glEnableClientState( GL_COLOR_ARRAY );
 
 	// texture 0 is the normalization cube map for the vector towards the light
 	GL_SelectTextureNoClient( 0 );
 	if ( backEnd.vLight->lightShader->IsAmbientLight() ) {
-		globalImages->normalCubeMapImage->Bind();
-		glBindProgramARB( GL_VERTEX_PROGRAM_ARB, VPROG_AMBIENT);
-		glBindProgramARB( GL_FRAGMENT_PROGRAM_ARB, FPROG_AMBIENT);
+		globalImages->ambientNormalMap->Bind();
 	} else {
 		globalImages->normalCubeMapImage->Bind();
 	}
 
 	// texture 6 is the specular lookup table
+	/*
 	GL_SelectTextureNoClient( 6 );
 	if ( r_testARBProgram.GetBool() ) {
 		globalImages->specular2DTableImage->Bind();	// variable specularity in alpha channel
 	} else {
 		globalImages->specularTableImage->Bind();
 	}
+	*/
 
+	// bind the program
 
 	for ( ; surf ; surf=surf->nextOnLight ) {
 		// perform setup here that will not change over multiple interaction passes
 		if ( backEnd.vLight->lightShader->IsAmbientLight() ) {
 			float	parm[4];
 
+			/*
 			parm[0] = surf->space->modelMatrix[0];
 			parm[1] = surf->space->modelMatrix[4];
 			parm[2] = surf->space->modelMatrix[8];
@@ -1344,6 +1372,9 @@ GL_State( GLS_DEPTHMASK | GLS_DEPTHFUNC_ALWAYS );//!@#
 			parm[2] = surf->space->modelMatrix[10];
 			parm[3] = 0;
 			glProgramEnvParameter4fvARB( GL_VERTEX_PROGRAM_ARB, 22, parm );
+			*/
+
+			//gl_forwardLightShader->SetUniform_ModelMatrix(surf->space->modelMatrix);
 
 			GL_SelectTextureNoClient( 0 );
 			const shaderStage_t *stage = backEnd.vLight->lightShader->GetStage( 0 );
@@ -1355,25 +1386,25 @@ GL_State( GLS_DEPTHMASK | GLS_DEPTHFUNC_ALWAYS );//!@#
 		// set the vertex pointers
 		idDrawVert	*ac = (idDrawVert *)vertexCache.Position( surf->geo->ambientCache );
 		glColorPointer( 4, GL_UNSIGNED_BYTE, sizeof( idDrawVert ), ac->color );
-		glVertexAttribPointerARB( 11, 3, GL_FLOAT, false, sizeof( idDrawVert ), ac->normal.ToFloatPtr() );
-		glVertexAttribPointerARB( 10, 3, GL_FLOAT, false, sizeof( idDrawVert ), ac->tangents[1].ToFloatPtr() );
-		glVertexAttribPointerARB( 9, 3, GL_FLOAT, false, sizeof( idDrawVert ), ac->tangents[0].ToFloatPtr() );
-		glVertexAttribPointerARB( 8, 2, GL_FLOAT, false, sizeof( idDrawVert ), ac->st.ToFloatPtr() );
+		glVertexAttribPointerARB( VA_INDEX_NORMAL, 3, GL_FLOAT, false, sizeof( idDrawVert ), ac->normal.ToFloatPtr() );
+		glVertexAttribPointerARB( VA_INDEX_BITANGENT, 3, GL_FLOAT, false, sizeof( idDrawVert ), ac->tangents[1].ToFloatPtr() );
+		glVertexAttribPointerARB( VA_INDEX_TANGENT, 3, GL_FLOAT, false, sizeof( idDrawVert ), ac->tangents[0].ToFloatPtr() );
+		glVertexAttribPointerARB( VA_INDEX_TEXCOORD0, 2, GL_FLOAT, false, sizeof( idDrawVert ), ac->st.ToFloatPtr() );
 		glVertexPointer( 3, GL_FLOAT, sizeof( idDrawVert ), ac->xyz.ToFloatPtr() );
 
 		// this may cause RB_ARB2_DrawInteraction to be exacuted multiple
 		// times with different colors and images if the surface or light have multiple layers
-		if ( r_sb_screenSpaceShadow.GetBool() ) {
-			RB_CreateSingleDrawInteractions( surf, RB_ARB2_DrawInteraction );
-		} else {
+		//if ( r_sb_screenSpaceShadow.GetBool() ) {
+		//	RB_CreateSingleDrawInteractions( surf, RB_ARB2_DrawInteraction );
+		//} else {
 			RB_CreateSingleDrawInteractions( surf, RB_EXP_DrawInteraction );
-		}
+		//}
 	}
 
-	glDisableVertexAttribArrayARB( 8 );
-	glDisableVertexAttribArrayARB( 9 );
-	glDisableVertexAttribArrayARB( 10 );
-	glDisableVertexAttribArrayARB( 11 );
+	glDisableVertexAttribArrayARB( VA_INDEX_TEXCOORD0 );
+	glDisableVertexAttribArrayARB( VA_INDEX_TANGENT );
+	glDisableVertexAttribArrayARB( VA_INDEX_BITANGENT );
+	glDisableVertexAttribArrayARB( VA_INDEX_NORMAL );
 	glDisableClientState( GL_COLOR_ARRAY );
 
 	// disable features
@@ -1397,6 +1428,8 @@ GL_State( GLS_DEPTHMASK | GLS_DEPTHFUNC_ALWAYS );//!@#
 
 	backEnd.glState.currenttmu = -1;
 	GL_SelectTexture( 0 );
+
+	GL_BindNullProgram();
 
 	glDisable(GL_VERTEX_PROGRAM_ARB);
 	glDisable(GL_FRAGMENT_PROGRAM_ARB);
@@ -2362,9 +2395,14 @@ RB_Exp_DrawInteractions
 ==================
 */
 void    RB_Exp_DrawInteractions( void ) {
+
+	GL_CheckErrors();
+	
 	if ( !initialized ) {
 		R_Exp_Allocate();
 	}
+
+	GL_CheckErrors();
 
 	if ( !backEnd.viewDef->viewLights ) {
 		return;
@@ -2512,7 +2550,9 @@ void    RB_Exp_DrawInteractions( void ) {
 			}
 
 			// render the shadows into destination alpha on the included pixels
-			RB_Exp_SelectFrustum( vLight, side );
+			
+			// FIXME
+			//RB_Exp_SelectFrustum( vLight, side );
 
 			if ( !r_sb_screenSpaceShadow.GetBool() ) {
 				// bind shadow buffer to texture
@@ -2585,11 +2625,16 @@ void R_Exp_Init( void ) {
 
 	common->Printf( "---------- R_Exp_Init ----------\n" );
 
-	if ( !glConfig.ARBVertexProgramAvailable || !glConfig.ARBFragmentProgramAvailable ) {
+	if ( !glConfig.ARBVertexProgramAvailable || !glConfig.ARBFragmentProgramAvailable || 
+		!WGLEW_ARB_pbuffer ||
+		!WGLEW_ARB_pixel_format ||
+		!WGLEW_ARB_render_texture ) {
 		common->Printf( "Not available.\n" );
 		return;
 	}
-RB_CreateBloomTable();
+
+	RB_CreateBloomTable();
+
 #if 0
 	if ( !R_CheckExtension( "GL_NV_float_buffer" ) ) {
 		common->Printf( "Not available.\n" );

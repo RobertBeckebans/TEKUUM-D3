@@ -541,11 +541,15 @@ void idRenderSystemLocal::SetBackEndRenderer() {
 
 #if !defined(USE_GLES1)
 	if ( idStr::Icmp( r_renderer.GetString(), "glsl" ) == 0 ) {
-		if ( GLEW_ARB_fragment_shader && GLEW_ARB_vertex_shader && GL_ARB_shader_objects && GLEW_ARB_shading_language_100 ) {
+		if ( GLEW_ARB_fragment_shader && GLEW_ARB_vertex_shader && GLEW_ARB_shader_objects && GLEW_ARB_shading_language_100 ) {
 			backEndRenderer = BE_GLSL;
 		}
 	}
-	else
+	else if ( idStr::Icmp( r_renderer.GetString(), "exp" ) == 0 ) {
+		if ( GLEW_ARB_fragment_shader && GLEW_ARB_vertex_shader && GLEW_ARB_shader_objects && GLEW_ARB_shading_language_100 ) {
+			backEndRenderer = BE_EXP;
+		}
+	}
 #endif
 	if ( idStr::Icmp( r_renderer.GetString(), "arb" ) == 0 ) {
 		backEndRenderer = BE_ARB;
@@ -571,7 +575,7 @@ void idRenderSystemLocal::SetBackEndRenderer() {
 	if ( backEndRenderer == BE_BAD ) {
 		// choose the best
 #if !defined(USE_GLES1)
-		if ( GLEW_ARB_fragment_shader && GLEW_ARB_vertex_shader && GL_ARB_shader_objects && GLEW_ARB_shading_language_100 ) {
+		if ( GLEW_ARB_fragment_shader && GLEW_ARB_vertex_shader && GLEW_ARB_shader_objects && GLEW_ARB_shading_language_100 ) {
 			backEndRenderer = BE_GLSL;
 		} else
 #endif
@@ -614,6 +618,11 @@ void idRenderSystemLocal::SetBackEndRenderer() {
 		break;
 	case BE_GLSL:
 		common->Printf( "using GLSL renderSystem\n" );
+		backEndRendererHasVertexPrograms = true;
+		backEndRendererMaxLight = 999;
+		break;
+	case BE_EXP:
+		common->Printf( "using Experimental renderSystem\n" );
 		backEndRendererHasVertexPrograms = true;
 		backEndRendererMaxLight = 999;
 		break;

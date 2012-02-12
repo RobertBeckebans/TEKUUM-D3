@@ -1791,6 +1791,9 @@ void	RB_STD_DrawView( void ) {
 	case BE_GLSL:
 		RB_GLSL_DrawInteractions();
 		break;
+	case BE_EXP:
+		RB_Exp_DrawInteractions();
+		break;
 	case BE_NV20:
 		RB_NV20_DrawInteractions();
 		break;

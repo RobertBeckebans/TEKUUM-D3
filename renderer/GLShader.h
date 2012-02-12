@@ -2499,12 +2499,22 @@ public:
 	GLShader_shadowVolume();
 };
 
-
+class GLShader_shadowMap:
+public GLShader,
+public u_LightOrigin
+//public GLCompileMacro_USE_VERTEX_SKINNING,
+//public GLCompileMacro_USE_VERTEX_ANIMATION,
+//public GLCompileMacro_USE_DEFORM_VERTEXES,
+{
+public:
+	GLShader_shadowMap();
+};
 
 
 //extern GLShader_generic* gl_genericShader;
 extern GLShader_forwardLighting* gl_forwardLightingShader;
 extern GLShader_shadowVolume* gl_shadowVolumeShader;
+extern GLShader_shadowMap* gl_shadowMapShader;
 //extern GLShader_screen* gl_screenShader;
 //extern GLShader_portal* gl_portalShader;
 //extern GLShader_toneMapping* gl_toneMappingShader;

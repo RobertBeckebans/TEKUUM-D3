@@ -81,7 +81,7 @@ idCVar r_znear( "r_znear", "3", CVAR_RENDERER | CVAR_FLOAT, "near Z clip plane d
 #if defined(__ANDROID__)
 idCVar r_ignoreGLErrors( "r_ignoreGLErrors", "0", CVAR_RENDERER | CVAR_BOOL, "ignore GL errors" );
 #else
-idCVar r_ignoreGLErrors( "r_ignoreGLErrors", "1", CVAR_RENDERER | CVAR_BOOL, "ignore GL errors" );
+idCVar r_ignoreGLErrors( "r_ignoreGLErrors", "0", CVAR_RENDERER | CVAR_BOOL, "ignore GL errors" );
 #endif
 idCVar r_finish( "r_finish", "0", CVAR_RENDERER | CVAR_BOOL, "force a call to glFinish() every frame" );
 idCVar r_swapInterval( "r_swapInterval", "0", CVAR_RENDERER | CVAR_ARCHIVE | CVAR_INTEGER, "changes wglSwapIntarval" );
@@ -684,6 +684,7 @@ void R_InitOpenGL( void ) {
 	R_R200_Init();
 	R_ARB2_Init();
 	R_GLSL_Init();
+	R_Exp_Init();
 
 	cmdSystem->AddCommand( "reloadARBprograms", R_ReloadARBPrograms_f, CMD_FL_RENDERER, "reloads ARB programs" );
 	R_ReloadARBPrograms_f( idCmdArgs() );
@@ -776,7 +777,7 @@ bool GL_CheckErrors_( const char *filename, int line ) {
 		}
 
 		//if ( !r_ignoreGLErrors.GetBool() ) {
-			common->Printf( "caught OpenGL error: %s in file %s line %i", s, filename, line );
+			common->Printf( "caught OpenGL error: %s in file %s line %i\n", s, filename, line );
 		//}
 	}
 

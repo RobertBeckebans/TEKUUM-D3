@@ -98,6 +98,7 @@ typedef struct glconfig_s {
 	bool				isInitialized;
 
 // Techyon BEGIN
+	bool				allowExpPath;
 	bool				framebufferObjectAvailable;
 	int					maxRenderbufferSize;
 	int					maxColorAttachments;
