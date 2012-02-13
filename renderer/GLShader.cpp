@@ -219,7 +219,8 @@ const char*	GLShader::FindEmbeddedShaderText(const idStr& shaderName, GLenum sha
 
 idStr	GLShader::BuildGPUShaderText(	const char *mainShaderName,
 										const idStrList& libShaderNames,
-										GLenum shaderType) const
+										GLenum shaderType,
+										const char *preIncludeText) const
 {
 	idStr           fileName;
 	char           *fileBuffer;
@@ -291,6 +292,9 @@ idStr	GLShader::BuildGPUShaderText(	const char *mainShaderName,
 		}
 	}
 
+	if (preIncludeText != NULL && preIncludeText[0] != '\0') {
+		shaderText += preIncludeText;
+	}
 	
 	// HACK: add some macros to avoid extra uniforms and save speed and code maintenance
 	/*
@@ -1300,90 +1304,4 @@ GLShader_shadowVolume::GLShader_shadowVolume():
 }
 
 
-GLShader_shadowMap::GLShader_shadowMap():
-		GLShader("shadowMap", VA_POSITION),
-		u_LightOrigin(this)
-		//GLCompileMacro_USE_VERTEX_SKINNING(this),
-		//GLCompileMacro_USE_VERTEX_ANIMATION(this),
-		//GLCompileMacro_USE_DEFORM_VERTEXES(this),
-{
-	common->Printf("/// -------------------------------------------------\n");
-	common->Printf("/// creating shadowMap shaders --------\n");
 
-	idTimer compile_time;
-	compile_time.Start();
-
-	//idStr vertexInlines = "vertexSkinning vertexAnimation ";
-	idStrList vertexInlines;
-	/*
-	if(glConfig.driverType == GLDRV_OPENGL3 && r_vboDeformVertexes->integer)
-	{
-		vertexInlines += "deformVertexes ";
-	}
-	*/
-
-	idStrList fragmentInlines;
-
-	idStr vertexShaderText = BuildGPUShaderText("shadowMap", vertexInlines, GL_VERTEX_SHADER_ARB);
-	idStr fragmentShaderText = BuildGPUShaderText("shadowMap", fragmentInlines, GL_FRAGMENT_SHADER_ARB);
-
-	size_t numPermutations = (1 << _compileMacros.Num());	// same as 2^n, n = no. compile macros
-	size_t numCompiled = 0;
-	common->Printf("...compiling shadowMap shaders\n");
-	common->Printf("0%%  10   20   30   40   50   60   70   80   90   100%%\n");
-	common->Printf("|----|----|----|----|----|----|----|----|----|----|\n");
-	size_t tics = 0;
-	size_t nextTicCount = 0;
-	for(size_t i = 0; i < numPermutations; i++)
-	{
-		if((i + 1) >= nextTicCount)
-		{
-			size_t ticsNeeded = (size_t)(((double)(i + 1) / numPermutations) * 50.0);
-
-			do { common->Printf("*"); } while ( ++tics < ticsNeeded );
-
-			nextTicCount = (size_t)((tics / 50.0) * numPermutations);
-			if(i == (numPermutations - 1))
-			{
-				if(tics < 51)
-					common->Printf("*");
-				common->Printf("\n");
-			}
-		}
-
-		idStrList compileMacros;
-		if(GetCompileMacrosString(i, compileMacros))
-		{
-			//compileMacros.Append("TWOSIDED");
-			//compileMacros.Append("HALF_LAMBERT");
-
-			//common->DPrintf("Compile macros: '%s'\n", compileMacros.To);
-		
-			shaderProgram_t *shaderProgram = new shaderProgram_t();
-			_shaderPrograms.Append(shaderProgram);
-
-			CompileAndLinkGPUShaderProgram(	shaderProgram,
-											"shadowMap",
-											vertexShaderText,
-											fragmentShaderText,
-											compileMacros);
-
-			UpdateShaderProgramUniformLocations(shaderProgram);
-
-			ValidateProgram(shaderProgram->program);
-			//ShowProgramUniforms(shaderProgram->program);
-			GL_CheckErrors();
-
-			numCompiled++;
-		}
-		else
-		{
-			_shaderPrograms.Append(NULL);
-		}
-	}
-
-	SelectProgram();
-
-	compile_time.Stop();
-	common->Printf("...compiled %i shadowMap shader permutations in %5.2f seconds\n", numCompiled, compile_time.Milliseconds() / 1000.0);
-}

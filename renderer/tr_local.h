@@ -1996,6 +1996,8 @@ idScreenRect R_CalcIntersectionScissor( const idRenderLightLocal * lightDef,
 									    const idRenderEntityLocal * entityDef,
 									    const viewDef_t * viewDef );
 
+idMat4 make_idMat4(const float * m);
+
 //=============================================
 
 #include "RenderWorld_local.h"

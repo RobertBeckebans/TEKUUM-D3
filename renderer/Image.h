@@ -124,7 +124,12 @@ typedef enum {
 	TD_DIFFUSE,				// may be compressed
 	TD_DEFAULT,				// will use compressed formats when possible
 	TD_BUMP,				// may be compressed with 8 bit lookup
-	TD_HIGH_QUALITY			// either 32 bit or a component format, no loss at all
+	TD_HIGH_QUALITY,		// either 32 bit or a component format, no loss at all
+
+	// internal FBO targets
+	TD_FBO_RGBA16F,
+	TD_FBO_ALPHA16F,
+	TD_FBO_LUMINANCE_ALPHA16F
 } textureDepth_t;
 
 typedef enum {
@@ -211,7 +216,7 @@ public:
 	int			BitsForInternalFormat( int internalFormat ) const;
 	void		UploadCompressedNormalMap( int width, int height, const byte *rgba, int mipLevel );
 	GLenum		SelectInternalFormat( const byte **dataPtrs, int numDataPtrs, int width, int height,
-									 textureDepth_t minimumDepth, bool *monochromeResult ) const;
+									 textureDepth_t minimumDepth, bool *monochromeResult) const;
 	void		ImageProgramStringToCompressedFileName( const char *imageProg, char *fileName ) const;
 	int			NumLevelsForImageSize( int width, int height ) const;
 

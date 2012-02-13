@@ -225,6 +225,27 @@ GLenum idImage::SelectInternalFormat( const byte **dataPtrs, int numDataPtrs, in
 	int		rgbOr, rgbAnd, aOr, aAnd;
 	int		rgbDiffer, rgbaDiffer;
 
+// Techyon BEGIN
+	if (minimumDepth > TD_HIGH_QUALITY)
+	{
+		switch (minimumDepth)
+		{
+			case TD_FBO_RGBA16F:
+				return GL_RGBA16F_ARB;
+
+			case TD_FBO_ALPHA16F:
+				return GL_ALPHA16F_ARB;
+
+			case TD_FBO_LUMINANCE_ALPHA16F:
+				return GL_LUMINANCE_ALPHA16F_ARB;
+
+			default:
+				common->Error( "idImage::SelectInternalFormat: bad minimumDepth for float texture: %i", minimumDepth );
+				break;
+		}
+	}
+// Techyon END
+
 	// determine if the rgb channels are all the same
 	// and if either all rgb or all alpha are 255
 	c = width*height;
@@ -301,7 +322,7 @@ GLenum idImage::SelectInternalFormat( const byte **dataPtrs, int numDataPtrs, in
 	}
 
 	// allow a complete override of image compression with a cvar
-	if ( !globalImages->image_useCompression.GetBool() ) {
+	if ( !globalImages->image_useCompression.GetBool() && minimumDepth < TD_HIGH_QUALITY ) {
 		minimumDepth = TD_HIGH_QUALITY;
 	}
 
@@ -594,17 +615,37 @@ void idImage::GenerateImage( const byte *pic, int width, int height,
 		common->Error( "R_CreateImage: not a power of 2 image" );
 	}
 
-	// Optionally modify our width/height based on options/hardware
-	GetDownsize( scaled_width, scaled_height );
-
-	scaledBuffer = NULL;
-
 	// generate the texture number
 	glGenTextures( 1, &texnum );
 
 	// select proper internal format before we resample
 	internalFormat = SelectInternalFormat( &pic, 1, width, height, depth, &isMonochrome );
 
+	type = TT_2D;
+	Bind();
+
+// Techyon BEGIN
+	if (depth > TD_HIGH_QUALITY) {
+		glTexImage2D( GL_TEXTURE_2D, 0, internalFormat, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL );
+
+		if(GL_CheckErrors())
+		{
+			common->Printf("OpenGL Error: image = '%s', internalFormat = %i, width = %i, height = %i",
+					imgName.c_str(), internalFormat, width, height);
+		}
+
+		SetImageFilterAndRepeat();
+
+		GL_CheckErrors();
+		return;
+	}
+// Techyon END
+
+	// Optionally modify our width/height based on options/hardware
+	GetDownsize( scaled_width, scaled_height );
+
+	scaledBuffer = NULL;
+	
 	// copy or resample data as appropriate for first MIP level
 	if ( ( scaled_width == width ) && ( scaled_height == height ) ) {
 		// we must copy even if unchanged, because the border zeroing
@@ -646,7 +687,6 @@ void idImage::GenerateImage( const byte *pic, int width, int height,
 
 	uploadHeight = scaled_height;
 	uploadWidth = scaled_width;
-	type = TT_2D;
 
 	// zero the border if desired, allowing clamped projection textures
 	// even after picmip resampling or careless artists.
@@ -998,12 +1038,30 @@ void idImage::GenerateCubeImage( const byte *pic[6], int size,
 	}
 
 	// upload the base level
-	// FIXME: support GL_COLOR_INDEX8_EXT?
-	for ( i = 0 ; i < 6 ; i++ ) {
-		glTexImage2D( GL_TEXTURE_CUBE_MAP_POSITIVE_X_EXT+i, 0, internalFormat, scaled_width, scaled_height, 0, 
-			GL_RGBA, GL_UNSIGNED_BYTE, pic[i] );
-	}
 
+// Techyon BEGIN
+	if (depth > TD_HIGH_QUALITY) {
+
+		for ( i = 0 ; i < 6 ; i++ ) {
+			glTexImage2D( GL_TEXTURE_CUBE_MAP_POSITIVE_X_EXT+i, 0, internalFormat, scaled_width, scaled_height, 0, 
+				GL_RGBA, GL_UNSIGNED_BYTE, NULL );
+		}
+
+		if(GL_CheckErrors())
+		{
+			common->Printf("OpenGL Error: image = '%s', internalFormat = %i, width = %i, height = %i",
+					imgName.c_str(), internalFormat, scaled_width, scaled_height);
+		}
+		return;
+	} else {
+
+		// FIXME: support GL_COLOR_INDEX8_EXT?
+		for ( i = 0 ; i < 6 ; i++ ) {
+			glTexImage2D( GL_TEXTURE_CUBE_MAP_POSITIVE_X_EXT+i, 0, internalFormat, scaled_width, scaled_height, 0, 
+				GL_RGBA, GL_UNSIGNED_BYTE, pic[i] );
+		}
+	}
+// Techyon END
 
 	// create and upload the mip map levels
 	int		miplevel;

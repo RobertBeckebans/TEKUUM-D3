@@ -2,7 +2,8 @@
 ===========================================================================
 
 Doom 3 GPL Source Code
-Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company. 
+Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2012 Robert Beckebans
 
 This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).  
 
@@ -58,11 +59,22 @@ polygon offset factor causes occasional texture holes from highly angled texture
 
 */
 
+#define MAX_SHADOWMAPS 5
+
+typedef enum
+{
+	SHADOWING_ESM16,
+	SHADOWING_ESM32,
+	SHADOWING_VSM16,
+	SHADOWING_VSM32,
+	SHADOWING_EVSM32,
+} shadowingMode_t;
+
 static	bool		initialized;
 
-static	int lightBufferSize = 1024;
+static	int shadowMapResolutions[MAX_SHADOWMAPS] = { 1024, 1024, 512, 256, 128 };
 static	int	maxLightBufferSize = 1024;
-static float lightBufferSizeFraction = 0.5;
+static float lightBufferSizeFraction[MAX_SHADOWMAPS] = {0.5, 0.5, 0.5, 0.5, 0.5};
 
 static	int viewBufferSize = 1024;
 static	int	viewBufferHeight = 768;
@@ -85,18 +97,20 @@ static	idImage		*floatPbufferQuarterImage;
 
 static	HGLRC		floatContext;
 
+/*
 static	HPBUFFERARB	shadowPbuffer;
 static	HDC			shadowPbufferDC;
+*/
+static	Framebuffer	*shadowMapFBO[MAX_SHADOWMAPS];
 
 static	HPBUFFERARB	viewPbuffer;
 static	HDC			viewPbufferDC;
 
-static	idImage		*shadowImage[3];
+static	idImage		*shadowMapImage[MAX_SHADOWMAPS];
+static	idImage		*shadowCubeImage[MAX_SHADOWMAPS];
 
-static	idImage		*viewDepthImage;
+//static	idImage		*viewDepthImage;
 static	idImage		*viewAlphaImage;
-
-static	idImage		*viewShadowImage;
 
 static	idImage		*jitterImage16;
 static	idImage		*jitterImage4;
@@ -135,7 +149,12 @@ static	int			bloomFragmentProgram;
 
 static	float		viewLightAxialSize;
 
-idCVar r_sb_lightResolution( "r_sb_lightResolution", "1024", CVAR_RENDERER | CVAR_INTEGER, "Pixel dimensions for each shadow buffer, 64 - 2048" );
+idCVar r_sb_lightResolutionUltra( "r_sb_lightResolutionUltra", "1024", CVAR_RENDERER | CVAR_INTEGER, "Pixel dimensions for each shadow buffer, 64 - 2048" );
+idCVar r_sb_lightResolutionVeryHigh( "r_sb_lightResolutionVeryHigh", "512", CVAR_RENDERER | CVAR_INTEGER, "Pixel dimensions for each shadow buffer, 64 - 2048" );
+idCVar r_sb_lightResolutionHigh( "r_sb_lightResolutionHigh", "256", CVAR_RENDERER | CVAR_INTEGER, "Pixel dimensions for each shadow buffer, 64 - 2048" );
+idCVar r_sb_lightResolutionMedium( "r_sb_lightResolutionMedium", "128", CVAR_RENDERER | CVAR_INTEGER, "Pixel dimensions for each shadow buffer, 64 - 2048" );
+idCVar r_sb_lightResolutionLow( "r_sb_lightResolutionLow", "64", CVAR_RENDERER | CVAR_INTEGER, "Pixel dimensions for each shadow buffer, 64 - 2048" );
+
 idCVar r_sb_viewResolution( "r_sb_viewResolution", "1024", CVAR_RENDERER | CVAR_INTEGER, "Width of screen space shadow sampling" );
 idCVar r_sb_noShadows( "r_sb_noShadows", "0", CVAR_RENDERER | CVAR_BOOL, "don't draw any occluders" );
 idCVar r_sb_usePbuffer( "r_sb_usePbuffer", "1", CVAR_RENDERER | CVAR_BOOL, "draw offscreen" );
@@ -148,6 +167,11 @@ idCVar r_sb_polyOfsFactor( "r_sb_polyOfsFactor", "2", CVAR_RENDERER | CVAR_FLOAT
 idCVar r_sb_polyOfsUnits( "r_sb_polyOfsUnits", "3000", CVAR_RENDERER | CVAR_FLOAT, "polygonOffset units for drawing shadow buffer" );
 idCVar r_sb_occluderFacing( "r_sb_occluderFacing", "0", CVAR_RENDERER | CVAR_INTEGER, "0 = front faces, 1 = back faces, 2 = midway between" );
 // r_sb_randomizeBufferOrientation?
+
+idCVar r_sb_type( "r_sb_type", "0", CVAR_RENDERER | CVAR_INTEGER, "0 = ESM16, 1 = ESM32, 2 = VSM16, 3 = VSM32, 4 = EVSM32" );
+
+// EVSM specific
+idCVar r_evsm_postProcess( "r_evsm_postProcess", "0", CVAR_RENDERER | CVAR_BOOL, "don't use the expensive RGBA32F MRT" );
 
 idCVar r_sb_frustomFOV( "r_sb_frustomFOV", "92", CVAR_RENDERER | CVAR_FLOAT, "oversize FOV for point light side matching" );
 idCVar r_sb_showFrustumPixels( "r_sb_showFrustumPixels", "0", CVAR_RENDERER | CVAR_BOOL, "color the pixels contained in the frustum" );
@@ -162,6 +186,210 @@ idCVar r_hdr_exposure( "r_hdr_exposure", "1.0", CVAR_RENDERER | CVAR_FLOAT, "max
 idCVar r_hdr_bloomFraction( "r_hdr_bloomFraction", "0.1", CVAR_RENDERER | CVAR_FLOAT, "fraction to smear across neighbors" );
 idCVar r_hdr_gamma( "r_hdr_gamma", "1", CVAR_RENDERER | CVAR_FLOAT, "monitor gamma power" );
 idCVar r_hdr_monitorDither( "r_hdr_monitorDither", "0.01", CVAR_RENDERER | CVAR_FLOAT, "random dither in monitor space" );
+
+
+
+
+
+
+
+
+
+
+
+
+
+GLShader_shadowMap::GLShader_shadowMap():
+		GLShader("shadowMap", VA_POSITION),
+		u_ModelMatrix(this),
+		u_LightOrigin(this),
+		u_LightRadius(this)
+		//GLCompileMacro_USE_VERTEX_SKINNING(this),
+		//GLCompileMacro_USE_VERTEX_ANIMATION(this),
+		//GLCompileMacro_USE_DEFORM_VERTEXES(this),
+{
+	common->Printf("/// -------------------------------------------------\n");
+	common->Printf("/// creating shadowMap shaders --------\n");
+
+	idTimer compile_time;
+	compile_time.Start();
+
+	//idStr vertexInlines = "vertexSkinning vertexAnimation ";
+	idStrList vertexInlines;
+	/*
+	if(glConfig.driverType == GLDRV_OPENGL3 && r_vboDeformVertexes->integer)
+	{
+		vertexInlines += "deformVertexes ";
+	}
+	*/
+
+	idStrList fragmentInlines;
+
+	idStr preIncludeText;
+	CreatePreIncludeText(preIncludeText);
+
+	idStr vertexShaderText = BuildGPUShaderText("shadowMap", vertexInlines, GL_VERTEX_SHADER_ARB, preIncludeText.c_str());
+	idStr fragmentShaderText = BuildGPUShaderText("shadowMap", fragmentInlines, GL_FRAGMENT_SHADER_ARB, preIncludeText.c_str());
+
+	size_t numPermutations = (1 << _compileMacros.Num());	// same as 2^n, n = no. compile macros
+	size_t numCompiled = 0;
+	common->Printf("...compiling shadowMap shaders\n");
+	common->Printf("0%%  10   20   30   40   50   60   70   80   90   100%%\n");
+	common->Printf("|----|----|----|----|----|----|----|----|----|----|\n");
+	size_t tics = 0;
+	size_t nextTicCount = 0;
+	for(size_t i = 0; i < numPermutations; i++)
+	{
+		if((i + 1) >= nextTicCount)
+		{
+			size_t ticsNeeded = (size_t)(((double)(i + 1) / numPermutations) * 50.0);
+
+			do { common->Printf("*"); } while ( ++tics < ticsNeeded );
+
+			nextTicCount = (size_t)((tics / 50.0) * numPermutations);
+			if(i == (numPermutations - 1))
+			{
+				if(tics < 51)
+					common->Printf("*");
+				common->Printf("\n");
+			}
+		}
+
+		idStrList compileMacros;
+		if(GetCompileMacrosString(i, compileMacros))
+		{
+			//compileMacros.Append("TWOSIDED");
+			//compileMacros.Append("HALF_LAMBERT");
+
+			//common->DPrintf("Compile macros: '%s'\n", compileMacros.To);
+		
+			shaderProgram_t *shaderProgram = new shaderProgram_t();
+			_shaderPrograms.Append(shaderProgram);
+
+			CompileAndLinkGPUShaderProgram(	shaderProgram,
+											"shadowMap",
+											vertexShaderText,
+											fragmentShaderText,
+											compileMacros);
+
+			UpdateShaderProgramUniformLocations(shaderProgram);
+
+			ValidateProgram(shaderProgram->program);
+			//ShowProgramUniforms(shaderProgram->program);
+			GL_CheckErrors();
+
+			numCompiled++;
+		}
+		else
+		{
+			_shaderPrograms.Append(NULL);
+		}
+	}
+
+	SelectProgram();
+
+	compile_time.Stop();
+	common->Printf("...compiled %i shadowMap shader permutations in %5.2f seconds\n", numCompiled, compile_time.Milliseconds() / 1000.0);
+}
+
+
+void GLShader_shadowMap::CreatePreIncludeText(idStr& preIncludeText)
+{
+	if(r_sb_type.GetInteger() == SHADOWING_ESM16 || r_sb_type.GetInteger() == SHADOWING_ESM32)
+	{
+		preIncludeText += "#ifndef ESM\n#define ESM 1\n#endif\n";
+	}
+	/*
+	else if(r_sb_type.GetInteger() == SHADOWING_EVSM32)
+	{
+		Q_strcat(bufferExtra, sizeof(bufferExtra), "#ifndef EVSM\n#define EVSM 1\n#endif\n");
+
+		// The exponents for the EVSM techniques should be less than ln(FLT_MAX/FILTER_SIZE)/2 {ln(FLT_MAX/1)/2 ~44.3}
+		//         42.9 is the maximum possible value for FILTER_SIZE=15
+		//         42.0 is the truncated value that we pass into the sample
+		Q_strcat(bufferExtra, sizeof(bufferExtra),
+				va("#ifndef r_EVSMExponents\n#define r_EVSMExponents vec2(%f, %f)\n#endif\n", 42.0f, 42.0f));
+
+		if(r_evsmPostProcess->integer)
+		{
+			Q_strcat(bufferExtra, sizeof(bufferExtra), "#ifndef r_EVSMPostProcess\n#define r_EVSMPostProcess 1\n#endif\n");
+		}
+	}
+	else
+	{
+		Q_strcat(bufferExtra, sizeof(bufferExtra), "#ifndef VSM\n#define VSM 1\n#endif\n");
+
+		if(glConfig.hardwareType == GLHW_ATI)
+		{
+			Q_strcat(bufferExtra, sizeof(bufferExtra), "#ifndef VSM_CLAMP\n#define VSM_CLAMP 1\n#endif\n");
+		}
+	}
+
+	if((glConfig.hardwareType == GLHW_NV_DX10 || glConfig.hardwareType == GLHW_ATI_DX10) && r_sb_type.GetInteger() == SHADOWING_VSM32)
+	{
+		Q_strcat(bufferExtra, sizeof(bufferExtra), "#ifndef VSM_EPSILON\n#define VSM_EPSILON 0.000001\n#endif\n");
+	}
+	else
+	{
+		Q_strcat(bufferExtra, sizeof(bufferExtra), "#ifndef VSM_EPSILON\n#define VSM_EPSILON 0.0001\n#endif\n");
+	}
+
+	if(r_lightBleedReduction->value)
+	{
+		Q_strcat(bufferExtra, sizeof(bufferExtra),
+					va("#ifndef r_LightBleedReduction\n#define r_LightBleedReduction %f\n#endif\n",
+					r_lightBleedReduction->value));
+	}
+
+	if(r_overDarkeningFactor->value)
+	{
+		Q_strcat(bufferExtra, sizeof(bufferExtra),
+					va("#ifndef r_OverDarkeningFactor\n#define r_OverDarkeningFactor %f\n#endif\n",
+					r_overDarkeningFactor->value));
+	}
+
+	if(r_shadowMapDepthScale->value)
+	{
+		Q_strcat(bufferExtra, sizeof(bufferExtra),
+					va("#ifndef r_ShadowMapDepthScale\n#define r_ShadowMapDepthScale %f\n#endif\n",
+					r_shadowMapDepthScale->value));
+	}
+
+	if(r_debugShadowMaps->integer)
+	{
+		Q_strcat(bufferExtra, sizeof(bufferExtra),
+					va("#ifndef r_DebugShadowMaps\n#define r_DebugShadowMaps %i\n#endif\n", r_debugShadowMaps->integer));
+	}
+	if(r_softShadows->integer == 6)
+	{
+		Q_strcat(bufferExtra, sizeof(bufferExtra), "#ifndef PCSS\n#define PCSS 1\n#endif\n");
+	}
+	else if(r_softShadows->integer)
+	{
+		Q_strcat(bufferExtra, sizeof(bufferExtra),
+			va("#ifndef r_PCFSamples\n#define r_PCFSamples %1.1f\n#endif\n", r_softShadows->value + 1.0f));
+	}
+
+	if(r_parallelShadowSplits->integer)
+	{
+		Q_strcat(bufferExtra, sizeof(bufferExtra),
+					va("#ifndef r_ParallelShadowSplits_%i\n#define r_ParallelShadowSplits_%i\n#endif\n", r_parallelShadowSplits->integer, r_parallelShadowSplits->integer));
+	}
+
+	if(r_showParallelShadowSplits->integer)
+	{
+		Q_strcat(bufferExtra, sizeof(bufferExtra), "#ifndef r_ShowParallelShadowSplits\n#define r_ShowParallelShadowSplits 1\n#endif\n");
+	}
+	*/
+}
+
+
+
+
+
+
+
+
 
 // from world space to light origin, looking down the X axis
 static float	unflippedLightMatrix[16];
@@ -263,6 +491,7 @@ static void R_CheckWglErrors( void ) {
 	common->Printf( "GetLastError: %s\n", name );
 }
 
+/*
 static void R_MakeCurrent( HDC dc, HGLRC context, HPBUFFERARB pbuffer ) {
 	if ( pbuffer ) {
 		if ( !wglReleaseTexImageARB( pbuffer, WGL_FRONT_LEFT_ARB ) ) {
@@ -286,6 +515,7 @@ static void R_BindTexImage( HPBUFFERARB pbuffer ) {
 		common->Error( "failed wglBindTexImageARB" );
 	}
 }
+*/
 
 static void R_ReportTextureParms( void ) {
 	int	parms[8];
@@ -338,36 +568,137 @@ static void GL_SelectTextureNoClient( int unit ) {
 /*
 ================
 R_CreateShadowBufferImage
-
 ================
 */
-static void R_CreateShadowBufferImage( idImage *image ) {
-	byte	*data = (byte *)Mem_Alloc( lightBufferSize*lightBufferSize );
+static void R_CreateShadowBufferImage( idImage *image, int lightBufferSize ) 
+{
+	byte	*data = (byte *)Mem_Alloc( lightBufferSize*lightBufferSize*4 );
 
-	memset( data, 0, lightBufferSize*lightBufferSize );
+	memset( data, 0, lightBufferSize*lightBufferSize*4 );
 
-	image->GenerateImage( (byte *)data, 4, 4, 
-		TF_LINEAR, false, TR_CLAMP_TO_BORDER, TD_HIGH_QUALITY );
+	if(r_sb_type.GetInteger() == SHADOWING_ESM16)
+	{
+		//image->GenerateImage( (byte *)data, lightBufferSize, lightBufferSize, TF_LINEAR, false, TR_CLAMP_TO_BORDER, TD_FBO_ALPHA16F );
+		image->GenerateImage( (byte *)data, lightBufferSize, lightBufferSize, TF_LINEAR, false, TR_CLAMP_TO_BORDER, TD_FBO_RGBA16F );
+	}
+	else if(r_sb_type.GetInteger() == SHADOWING_VSM16)
+	{
+		image->GenerateImage( (byte *)data, lightBufferSize, lightBufferSize, TF_LINEAR, false, TR_CLAMP_TO_BORDER, TD_FBO_LUMINANCE_ALPHA16F );
+	}
+	else
+	{
+		image->GenerateImage( (byte *)data, lightBufferSize, lightBufferSize, TF_LINEAR, false, TR_CLAMP_TO_BORDER, TD_FBO_RGBA16F );
+	}
 
-	// now reset it to a shadow depth image
 	GL_CheckErrors();
-	image->uploadWidth = image->uploadHeight = lightBufferSize; 
-	glTexImage2D( GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24_ARB, lightBufferSize, lightBufferSize, 
-		0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, data );
-
-	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE_ARB, GL_COMPARE_R_TO_TEXTURE );
-//	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE_ARB, GL_NONE );
-	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC_ARB, GL_LEQUAL );
 
 	// explicit zero depth border
+	/*
 	float	color[4];
 	color[0] = color[1] = color[2] = color[3] = 0;
 	glTexParameterfv( GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, color );
 
 	GL_CheckErrors();
+	*/
 
 	Mem_Free( data );
 }
+
+static void R_CreateShadowBufferImage_Res0( idImage *image )
+{
+	R_CreateShadowBufferImage( image, shadowMapResolutions[0] );
+}
+
+static void R_CreateShadowBufferImage_Res1( idImage *image )
+{
+	R_CreateShadowBufferImage( image, shadowMapResolutions[1] );
+}
+
+static void R_CreateShadowBufferImage_Res2( idImage *image )
+{
+	R_CreateShadowBufferImage( image, shadowMapResolutions[2] );
+}
+
+static void R_CreateShadowBufferImage_Res3( idImage *image )
+{
+	R_CreateShadowBufferImage( image, shadowMapResolutions[3] );
+}
+
+static void R_CreateShadowBufferImage_Res4( idImage *image )
+{
+	R_CreateShadowBufferImage( image, shadowMapResolutions[4] );
+}
+
+
+
+
+static void R_CreateShadowCubeImage( idImage *image, int lightBufferSize ) 
+{
+	byte	*data = (byte *)Mem_Alloc( lightBufferSize*lightBufferSize*4 );
+
+	memset( data, 0, lightBufferSize*lightBufferSize*4 );
+
+	const byte	*pics[6];
+	for ( int i = 0 ; i < 6 ; i++ ) {
+		pics[i] = data;
+	}
+
+	if(r_sb_type.GetInteger() == SHADOWING_ESM16)
+	{
+		//image->GenerateCubeImage( pics, lightBufferSize, TF_LINEAR, true, TD_FBO_ALPHA16F );
+		image->GenerateCubeImage( pics, lightBufferSize, TF_LINEAR, true, TD_FBO_RGBA16F );
+	}
+	else if(r_sb_type.GetInteger() == SHADOWING_VSM16)
+	{
+		image->GenerateCubeImage( pics, lightBufferSize, TF_LINEAR, true, TD_FBO_LUMINANCE_ALPHA16F );
+	}
+	else
+	{
+		image->GenerateCubeImage( pics, lightBufferSize, TF_LINEAR, true, TD_FBO_RGBA16F );
+	}
+
+	GL_CheckErrors();
+
+	// explicit zero depth border
+	/*
+	float	color[4];
+	color[0] = color[1] = color[2] = color[3] = 0;
+	glTexParameterfv( GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, color );
+
+	GL_CheckErrors();
+	*/
+
+	Mem_Free( data );
+}
+
+static void R_CreateShadowCubeImage_Res0( idImage *image )
+{
+	R_CreateShadowCubeImage( image, shadowMapResolutions[0] );
+}
+
+static void R_CreateShadowCubeImage_Res1( idImage *image )
+{
+	R_CreateShadowCubeImage( image, shadowMapResolutions[1] );
+}
+
+static void R_CreateShadowCubeImage_Res2( idImage *image )
+{
+	R_CreateShadowCubeImage( image, shadowMapResolutions[2] );
+}
+
+static void R_CreateShadowCubeImage_Res3( idImage *image )
+{
+	R_CreateShadowCubeImage( image, shadowMapResolutions[3] );
+}
+
+static void R_CreateShadowCubeImage_Res4( idImage *image )
+{
+	R_CreateShadowCubeImage( image, shadowMapResolutions[4] );
+}
+
+
+
+
 
 static void R_CreateViewAlphaImage( idImage *image ) {
 	int		c = viewBufferSize*viewBufferSize*4;
@@ -600,59 +931,87 @@ void R_Exp_Allocate( void ) {
 
 	//=================================================================================
 
-	//
-	// allocate the shadow pbuffer
-	//
-	atr_p = iAttributes;
+	common->Printf( "\ncreating FBOs...\n" );
 
-	*atr_p++ = WGL_DRAW_TO_PBUFFER_ARB;
-	*atr_p++ = TRUE;
-	*atr_p++ = WGL_RED_BITS_ARB;
-	*atr_p++ = 8;
-	*atr_p++ = WGL_GREEN_BITS_ARB;
-	*atr_p++ = 8;
-	*atr_p++ = WGL_BLUE_BITS_ARB;
-	*atr_p++ = 8;
-	*atr_p++ = WGL_ALPHA_BITS_ARB;
-	*atr_p++ = 8;
-	*atr_p++ = WGL_DEPTH_BITS_ARB;
-	*atr_p++ = 24;
-	*atr_p++ = WGL_STENCIL_BITS_ARB;
-	*atr_p++ = 8;
-	*atr_p++ = 0;
-	*atr_p++ = 0;
+	for(int i = 0; i < MAX_SHADOWMAPS; i++)
+	{
+		int width, height;
+		width = height = shadowMapResolutions[i];
 
-	ret = wglChoosePixelFormatARB( win32.hDC, iAttributes, fAttributes, 
-		sizeof( pixelformats ) / sizeof( pixelformats[0] ), pixelformats, &numFormats );
-#if 0
-	for ( int i = 0 ; i < (int)numFormats ; i++ ) {
-		R_PrintPixelFormat( pixelformats[i] );	
+		shadowMapFBO[i] = new Framebuffer(va("_shadowMap%d", i), width, height);
+		shadowMapFBO[i]->Bind();
+
+
+		//if((glConfig.driverType == GLDRV_OPENGL3) || (glConfig.hardwareType == GLHW_NV_DX10 || glConfig.hardwareType == GLHW_ATI_DX10))
+		/*
+		{
+			if(r_sb_type.GetInteger() == SHADOWING_ESM32)
+			{
+				shadowMapFBO[i]->AddColorBuffer(GL_ALPHA32F_ARB, 0);
+			}
+			else if(r_sb_type.GetInteger() == SHADOWING_VSM32)
+			{
+				shadowMapFBO[i]->AddColorBuffer(GL_LUMINANCE_ALPHA32F_ARB, 0);
+			}
+			else if(r_sb_type.GetInteger() == SHADOWING_EVSM32)
+			{
+				if(r_evsm_postProcess.GetBool())
+				{
+					shadowMapFBO[i]->AddColorBuffer(GL_ALPHA32F_ARB, 0);
+				}
+				else
+				{
+					shadowMapFBO[i]->AddColorBuffer(GL_RGBA32F_ARB, 0);
+				}
+			}
+			else
+			{
+				shadowMapFBO[i]->AddColorBuffer(GL_RGBA16F_ARB, 0);
+			}
+		}
+		else
+		*/
+		{
+			if(r_sb_type.GetInteger() == SHADOWING_ESM16)
+			{
+				//shadowMapFBO[i]->AddColorBuffer(GL_ALPHA16F_ARB, 0);
+				shadowMapFBO[i]->AddColorBuffer(GL_RGBA16F_ARB, 0);
+			}
+			else if(r_sb_type.GetInteger() == SHADOWING_VSM16)
+			{
+				shadowMapFBO[i]->AddColorBuffer(GL_LUMINANCE_ALPHA16F_ARB, 0);
+			}
+			else
+			{
+				shadowMapFBO[i]->AddColorBuffer(GL_RGBA16F_ARB, 0);
+			}
+		}
+
+		shadowMapFBO[i]->AddDepthBuffer(GL_DEPTH_COMPONENT24_ARB);
+
+		shadowMapFBO[i]->Check();
 	}
-#endif
-	common->Printf( "\nshadowPbuffer:\n" );
-	R_PrintPixelFormat( pixelformats[0] );
 
-pixelformats[0] = win32.pixelformat;	// forced to do this by wgl...
+	Framebuffer::BindNull();
 
-	//-----------------------------------
-
-	lightBufferSize = maxLightBufferSize;
-
-	// allocate a pbuffer with this pixel format
-	shadowPbuffer = wglCreatePbufferARB( win32.hDC, pixelformats[0], lightBufferSize,
-		lightBufferSize, pbiAttributes );
-
-	// allocate a rendering context for the pbuffer
-	shadowPbufferDC = wglGetPbufferDCARB( shadowPbuffer );
+	common->Printf( "\ncreating FBO targets...\n" );
 
 	// generate the texture number
-	shadowImage[0] = globalImages->ImageFromFunction( va("_shadowBuffer%i_0",lightBufferSize), R_CreateShadowBufferImage );
-	shadowImage[1] = globalImages->ImageFromFunction( va("_shadowBuffer%i_1",lightBufferSize), R_CreateShadowBufferImage );
-	shadowImage[2] = globalImages->ImageFromFunction( va("_shadowBuffer%i_2",lightBufferSize), R_CreateShadowBufferImage );
+	shadowMapImage[0] = globalImages->ImageFromFunction( va("_shadowBuffer%i_0", shadowMapResolutions[0]), R_CreateShadowBufferImage_Res0 );
+	shadowMapImage[1] = globalImages->ImageFromFunction( va("_shadowBuffer%i_1", shadowMapResolutions[1]), R_CreateShadowBufferImage_Res1 );
+	shadowMapImage[2] = globalImages->ImageFromFunction( va("_shadowBuffer%i_2", shadowMapResolutions[2]), R_CreateShadowBufferImage_Res2 );
+	shadowMapImage[3] = globalImages->ImageFromFunction( va("_shadowBuffer%i_3", shadowMapResolutions[3]), R_CreateShadowBufferImage_Res3 );
+	shadowMapImage[4] = globalImages->ImageFromFunction( va("_shadowBuffer%i_4", shadowMapResolutions[4]), R_CreateShadowBufferImage_Res4 );
+
+	shadowCubeImage[0] = globalImages->ImageFromFunction( va("_shadowCube%i_0", shadowMapResolutions[0]), R_CreateShadowCubeImage_Res0 );
+	shadowCubeImage[1] = globalImages->ImageFromFunction( va("_shadowCube%i_1", shadowMapResolutions[1]), R_CreateShadowCubeImage_Res1 );
+	shadowCubeImage[2] = globalImages->ImageFromFunction( va("_shadowCube%i_2", shadowMapResolutions[2]), R_CreateShadowCubeImage_Res2 );
+	shadowCubeImage[3] = globalImages->ImageFromFunction( va("_shadowCube%i_3", shadowMapResolutions[3]), R_CreateShadowCubeImage_Res3 );
+	shadowCubeImage[4] = globalImages->ImageFromFunction( va("_shadowCube%i_4", shadowMapResolutions[4]), R_CreateShadowCubeImage_Res4 );
 
 	//-----------------------------------
 
-	lightBufferSize = maxViewBufferSize;
+	//lightBufferSize = maxViewBufferSize;
 
 	// allocate a pbuffer with this pixel format
 	viewPbuffer = wglCreatePbufferARB( win32.hDC, pixelformats[0], maxViewBufferSize,
@@ -662,7 +1021,7 @@ pixelformats[0] = win32.pixelformat;	// forced to do this by wgl...
 	viewPbufferDC = wglGetPbufferDCARB( viewPbuffer );
 
 	// create the image space depth buffer for image-space shadow trnasforms
-	viewDepthImage = globalImages->ImageFromFunction("_viewDepth", R_CreateShadowBufferImage );
+//	viewDepthImage = globalImages->ImageFromFunction("_viewDepth", R_CreateShadowBufferImage );
 
 	// create the image space shadow alpha buffer for subsampling the shadow calculation
 	viewAlphaImage = globalImages->ImageFromFunction("_viewAlpha", R_CreateViewAlphaImage );
@@ -812,6 +1171,8 @@ void RB_EXP_RenderOccluders( viewLight_t *vLight ) {
 		myGlMultMatrix( inter->entityDef->modelMatrix, lightMatrix, matrix );
 		glLoadMatrixf( matrix );
 
+		gl_shadowMapShader->SetUniform_ModelMatrix(make_idMat4(inter->entityDef->modelMatrix));
+
 		// draw each surface
 		for ( int i = 0 ; i < inter->numSurfaces ; i++ ) {
 			surfaceInteraction_t	*surfInt = &inter->surfaces[i];
@@ -835,10 +1196,11 @@ void RB_EXP_RenderOccluders( viewLight_t *vLight ) {
 			}
 			idDrawVert *ac = (idDrawVert *)vertexCache.Position( tri->ambientCache );
 			glVertexPointer( 3, GL_FLOAT, sizeof( idDrawVert ), ac->xyz.ToFloatPtr() );
-	glTexCoordPointer( 2, GL_FLOAT, sizeof( idDrawVert ), ac->st.ToFloatPtr() );
-	if ( surfInt->shader ) {
-		surfInt->shader->GetEditorImage()->Bind();
-	}
+			glVertexAttribPointerARB( VA_INDEX_TEXCOORD0, 2, GL_FLOAT, false, sizeof( idDrawVert ), ac->st.ToFloatPtr() );
+	//glTexCoordPointer( 2, GL_FLOAT, sizeof( idDrawVert ), ac->st.ToFloatPtr() );
+	//if ( surfInt->shader ) {
+	//	surfInt->shader->GetEditorImage()->Bind();
+	//}
 			RB_DrawElementsWithCounters( tri );
 		}
 	}
@@ -855,6 +1217,13 @@ void    RB_RenderShadowBuffer( viewLight_t	*vLight, int side ) {
 	float	zNear;
 
 	float	fov = r_sb_frustomFOV.GetFloat();
+
+	if(r_logFile.GetBool())
+	{
+		RB_LogComment("--- RB_RenderShadowBuffer( side = %i ) ---\n", side);
+	}
+
+	GL_CheckErrors();
 
 	//
 	// set up 90 degree projection matrix
@@ -893,28 +1262,50 @@ void    RB_RenderShadowBuffer( viewLight_t	*vLight, int side ) {
 	lightProjectionMatrix[11] = -1;
 	lightProjectionMatrix[15] = 0;
 
+	if ( r_sb_usePbuffer.GetBool() ) 
+	{
+		// TODO use vLight->shadowLOD
 
-	if ( r_sb_usePbuffer.GetBool() ) {
 		// set the current openGL drawable to the shadow buffer
-		R_MakeCurrent( shadowPbufferDC, win32.hGLRC, NULL /* !@# shadowPbuffer */ );
+		if ( vLight->lightDef->parms.pointLight )
+		{
+			shadowMapFBO[0]->Bind();
+			shadowMapFBO[0]->AttachImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X_ARB + side, shadowCubeImage[0], 0);
+		}
+		else
+		{
+			shadowMapFBO[0]->Bind();
+			shadowMapFBO[0]->AttachImage2D(GL_TEXTURE_2D, shadowMapImage[0], 0);
+		}
+
+		if ( !r_ignoreGLErrors.GetBool() ) {
+			shadowMapFBO[0]->Check();
+		}
 	}
+
+	GL_CheckErrors();
 
 	glMatrixMode( GL_PROJECTION );
 	glLoadMatrixf( lightProjectionMatrix );
 	glMatrixMode( GL_MODELVIEW );
 
-	glViewport( 0, 0, lightBufferSize, lightBufferSize );
-	glScissor( 0, 0, lightBufferSize, lightBufferSize );
-	glStencilFunc( GL_ALWAYS, 0, 255 );
+	// TODO vLight->shadowLOD
+	glViewport( 0, 0, shadowMapResolutions[0], shadowMapResolutions[0] );
+	glScissor( 0, 0, shadowMapResolutions[0], shadowMapResolutions[0] );
 
-glClearColor( 0, 1, 0, 0 );
+	glDisable( GL_STENCIL_TEST );
+	//glStencilFunc( GL_ALWAYS, 0, 255 );
+
+glClearColor( 1, 1, 1, 1 );
 GL_State( GLS_DEPTHFUNC_LESS | GLS_SRCBLEND_ONE | GLS_DSTBLEND_ZERO );	// make sure depth mask is off before clear
 glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
 // draw all the occluders
 glColor3f( 1, 1, 1 );
 GL_SelectTexture( 0 );
-glEnableClientState( GL_TEXTURE_COORD_ARRAY );
+//glEnableClientState( GL_TEXTURE_COORD_ARRAY );
+
+	GL_CheckErrors();
 
 	backEnd.currentSpace = NULL;
 
@@ -1046,15 +1437,19 @@ glEnableClientState( GL_TEXTURE_COORD_ARRAY );
 
 	// FIXME: we want to skip the sampling as well as the generation when not casting shadows
 	if ( !r_sb_noShadows.GetBool() && vLight->lightShader->LightCastsShadows() ) {
+
+		gl_shadowMapShader->BindProgram();
+		gl_shadowMapShader->SetUniform_LightOrigin(origin);
+
 		//
 		// set polygon offset for the rendering
 		//
 		switch ( r_sb_occluderFacing.GetInteger() ) {
 		case 0:		// front sides
-			glPolygonOffset( r_sb_polyOfsFactor.GetFloat(), r_sb_polyOfsUnits.GetFloat() );
-			glEnable( GL_POLYGON_OFFSET_FILL );
+			//glPolygonOffset( r_sb_polyOfsFactor.GetFloat(), r_sb_polyOfsUnits.GetFloat() );
+			//glEnable( GL_POLYGON_OFFSET_FILL );
 			RB_EXP_RenderOccluders( vLight );
-			glDisable( GL_POLYGON_OFFSET_FILL );
+			//glDisable( GL_POLYGON_OFFSET_FILL );
 			break;
 		case 1:		// back sides
 			glPolygonOffset( -r_sb_polyOfsFactor.GetFloat(), -r_sb_polyOfsUnits.GetFloat() );
@@ -1064,6 +1459,7 @@ glEnableClientState( GL_TEXTURE_COORD_ARRAY );
 			GL_Cull( CT_FRONT_SIDED );
 			glDisable( GL_POLYGON_OFFSET_FILL );
 			break;
+		/*
 		case 2:		// both sides
 			GL_Cull( CT_BACK_SIDED );
 			RB_EXP_RenderOccluders( vLight );
@@ -1117,14 +1513,17 @@ glEnableClientState( GL_TEXTURE_COORD_ARRAY );
 			glDisable( GL_FRAGMENT_PROGRAM_ARB );
 
 			break;
+			*/
 		}
 	}
 
-	// copy to the texture
-	shadowImage[0]->Bind();
-	glCopyTexSubImage2D( GL_TEXTURE_2D, 0, 0, 0, 0, 0, lightBufferSize, lightBufferSize );
+	GL_CheckErrors();
 
-glDisableClientState( GL_TEXTURE_COORD_ARRAY );
+	// copy to the texture
+	//shadowImage[0]->Bind();
+	//glCopyTexSubImage2D( GL_TEXTURE_2D, 0, 0, 0, 0, 0, lightBufferSize, lightBufferSize );
+
+	glDisableClientState( GL_TEXTURE_COORD_ARRAY );
 
 
 	// reset the normal view matrix
@@ -1135,6 +1534,8 @@ glDisableClientState( GL_TEXTURE_COORD_ARRAY );
 
 	// the current modelView matrix is not valid
 	backEnd.currentSpace = NULL;
+
+	GL_CheckErrors();
 }
 
 /*
@@ -1180,15 +1581,15 @@ myGlMultMatrix( din->surf->space->modelMatrix, lightMatrix, matrix );
 myGlMultMatrix( matrix, lightProjectionMatrix, matrix2 );
 
 // the final values need to be in 0.0 : 1.0 range instead of -1 : 1
-sRow[0] = 0.5 * lightBufferSizeFraction * ( matrix2[0] + matrix2[3] );
-sRow[1] = 0.5 * lightBufferSizeFraction * ( matrix2[4] + matrix2[7] );
-sRow[2] = 0.5 * lightBufferSizeFraction * ( matrix2[8] + matrix2[11] );
-sRow[3] = 0.5 * lightBufferSizeFraction * ( matrix2[12] + matrix2[15] );
+sRow[0] = 0.5 * lightBufferSizeFraction[0] * ( matrix2[0] + matrix2[3] );
+sRow[1] = 0.5 * lightBufferSizeFraction[0] * ( matrix2[4] + matrix2[7] );
+sRow[2] = 0.5 * lightBufferSizeFraction[0] * ( matrix2[8] + matrix2[11] );
+sRow[3] = 0.5 * lightBufferSizeFraction[0] * ( matrix2[12] + matrix2[15] );
 //glProgramEnvParameter4fvARB( GL_VERTEX_PROGRAM_ARB, 18, sRow );
-tRow[0] = 0.5 * lightBufferSizeFraction * ( matrix2[1] + matrix2[3] );
-tRow[1] = 0.5 * lightBufferSizeFraction * ( matrix2[5] + matrix2[7] );
-tRow[2] = 0.5 * lightBufferSizeFraction * ( matrix2[9] + matrix2[11] );
-tRow[3] = 0.5 * lightBufferSizeFraction * ( matrix2[13] + matrix2[15] );
+tRow[0] = 0.5 * lightBufferSizeFraction[0] * ( matrix2[1] + matrix2[3] );
+tRow[1] = 0.5 * lightBufferSizeFraction[0] * ( matrix2[5] + matrix2[7] );
+tRow[2] = 0.5 * lightBufferSizeFraction[0] * ( matrix2[9] + matrix2[11] );
+tRow[3] = 0.5 * lightBufferSizeFraction[0] * ( matrix2[13] + matrix2[15] );
 //glProgramEnvParameter4fvARB( GL_VERTEX_PROGRAM_ARB, 19, tRow );
 rRow[0] = 0.5 * ( matrix2[2] + matrix2[3] );
 rRow[1] = 0.5 * ( matrix2[6] + matrix2[7] );
@@ -1238,7 +1639,7 @@ qRow[3] = matrix2[15];
 
 	// jitter tex scale
 	parm[0] = 
-	parm[1] = r_sb_jitterScale.GetFloat() * lightBufferSizeFraction;
+	parm[1] = r_sb_jitterScale.GetFloat() * lightBufferSizeFraction[0];
 	parm[2] = -r_sb_biasScale.GetFloat();
 	parm[3] = 0;
 	glProgramLocalParameter4fvARB( GL_FRAGMENT_PROGRAM_ARB, 3, parm );
@@ -1609,6 +2010,7 @@ const srfTriangles_t	*RB_Exp_TrianglesForFrustum( viewLight_t *vLight, int side 
 RB_Exp_SelectFrustum
 ==================
 */
+#if 0
 void	RB_Exp_SelectFrustum( viewLight_t *vLight, int side ) {
 	glLoadMatrixf( backEnd.viewDef->worldSpace.modelViewMatrix );
 
@@ -1840,6 +2242,7 @@ PARAM	jitterTexOffset				= program.local[9];
 
 	// we can avoid clearing the stencil buffer by changing the hasLight value for each light
 }
+#endif
 
 /*
 ==================
@@ -1878,6 +2281,7 @@ Bilerp might even be aprorpiate, although it would cause issues at edges
 */
 void RB_T_FillDepthBuffer( const drawSurf_t *surf );
 
+#if 0
 void R_EXP_RenderViewDepthImage( void ) {
 	if ( !r_sb_screenSpaceShadow.GetBool() ) {
 		return;
@@ -1946,6 +2350,7 @@ void R_EXP_RenderViewDepthImage( void ) {
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
 }
+#endif
 
 /*
 ==================
@@ -1956,7 +2361,8 @@ This is always the back buffer, and scissor is set full screen
 */
 void RB_EXP_SetNativeBuffer( void ) {
 	// set the normal screen drawable current
-	R_MakeCurrent( win32.hDC, win32.hGLRC, NULL );
+	//R_MakeCurrent( win32.hDC, win32.hGLRC, NULL );
+	Framebuffer::BindNull();
 
 	glViewport( tr.viewportOffset[0] + backEnd.viewDef->viewport.x1, 
 		tr.viewportOffset[1] + backEnd.viewDef->viewport.y1, 
@@ -1980,6 +2386,7 @@ This may be to a float pBuffer, and scissor is set to cover only the light
 ==================
 */
 void RB_EXP_SetRenderBuffer( viewLight_t *vLight ) {
+	/*
 	if ( r_hdr_useFloats.GetBool() ) {
 		R_MakeCurrent( floatPbufferDC, floatContext, floatPbuffer );
 	} else {
@@ -1988,6 +2395,7 @@ void RB_EXP_SetRenderBuffer( viewLight_t *vLight ) {
 			common->FatalError( "Couldn't return to normal drawing context" );
 		}
 	}
+	*/
 
 	glViewport( tr.viewportOffset[0] + backEnd.viewDef->viewport.x1, 
 		tr.viewportOffset[1] + backEnd.viewDef->viewport.y1, 
@@ -2175,6 +2583,7 @@ void RB_TestGamma( void );
 RB_EXP_GammaDither
 ==================
 */
+#if 0
 void	RB_EXP_GammaDither( void ) {
 	if ( !r_hdr_useFloats.GetBool() ) {
 		return;
@@ -2269,12 +2678,14 @@ PARAM	positionToBloomScale =		program.local[5];
 	glDisable(GL_VERTEX_PROGRAM_ARB);
 	glDisable(GL_FRAGMENT_PROGRAM_ARB);
 }
+#endif
 
 /*
 ==================
 RB_EXP_Bloom
 ==================
 */
+#if 0
 void	RB_EXP_Bloom( void ) {
 	if ( !r_hdr_useFloats.GetBool() ) {
 		return;
@@ -2388,6 +2799,39 @@ PARAM	step =		program.local[0];		# { 1, 0 } or { 0, 1 } for horizontal / vertica
 
 	GL_CheckErrors();
 }
+#endif
+
+static void AssertCvarRange(idCVar *cv, float minVal, float maxVal)
+{
+
+	bool isInteger = (cv->GetFlags() & CVAR_INTEGER) != 0;
+	if(isInteger)
+	{
+		if(cv->GetInteger() < minVal)
+		{
+			common->Warning("cvar '%s' out of range (%i < %f)\n", cv->GetName(), cv->GetInteger(), minVal);
+			cv->SetInteger((int) minVal);
+		}
+		else if(cv->GetInteger() > maxVal)
+		{
+			common->Warning("cvar '%s' out of range (%i > %f)\n", cv->GetName(), cv->GetInteger(), maxVal);
+			cv->SetInteger((int) maxVal);
+		}
+	}
+	else
+	{
+		if(cv->GetFloat() < minVal)
+		{
+			common->Warning("cvar '%s' out of range (%f < %f)\n", cv->GetName(), cv->GetFloat(), minVal);
+			cv->SetFloat(minVal);
+		}
+		else if(cv->GetFloat() > maxVal)
+		{
+			common->Warning("cvar '%s' out of range (%f > %f)\n", cv->GetName(), cv->GetFloat(), maxVal);
+			cv->SetFloat(maxVal);
+		}
+	}
+}
 
 /*
 ==================
@@ -2414,13 +2858,16 @@ void    RB_Exp_DrawInteractions( void ) {
 	}
 
 	// validate the light resolution
-	if ( r_sb_lightResolution.GetInteger() < 64 ) {
-		r_sb_lightResolution.SetInteger( 64 );
-	} else if ( r_sb_lightResolution.GetInteger() > maxLightBufferSize ) {
-		r_sb_lightResolution.SetInteger( maxLightBufferSize );
+	AssertCvarRange(&r_sb_lightResolutionUltra, 64, maxLightBufferSize);
+	AssertCvarRange(&r_sb_lightResolutionVeryHigh, 64, maxLightBufferSize);
+	AssertCvarRange(&r_sb_lightResolutionHigh, 64, maxLightBufferSize);
+	AssertCvarRange(&r_sb_lightResolutionMedium, 64, maxLightBufferSize);
+	AssertCvarRange(&r_sb_lightResolutionLow, 64, maxLightBufferSize);
+	
+	for (int i = 0; i < MAX_SHADOWMAPS; i++)
+	{
+		lightBufferSizeFraction[i] = (float)shadowMapResolutions[i] / maxLightBufferSize;
 	}
-	lightBufferSize = r_sb_lightResolution.GetInteger();
-	lightBufferSizeFraction = (float)lightBufferSize / maxLightBufferSize;
 
 	// validate the view resolution
 	if ( r_sb_viewResolution.GetInteger() < 64 ) {
@@ -2439,7 +2886,7 @@ void    RB_Exp_DrawInteractions( void ) {
 	}
 	
 	// set up for either point sampled or percentage-closer filtering for the shadow sampling
-	shadowImage[0]->BindFragment();
+	shadowMapImage[0]->BindFragment();
 	if ( r_sb_linearFilter.GetBool() ) {
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
@@ -2447,13 +2894,13 @@ void    RB_Exp_DrawInteractions( void ) {
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
 	}
-	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE_ARB, GL_COMPARE_R_TO_TEXTURE );
+	//glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE_ARB, GL_COMPARE_R_TO_TEXTURE );
 
 	globalImages->BindNull();
 
 	// copy the current depth buffer to a texture for image-space shadowing,
 	// or re-render at a lower resolution
-	R_EXP_RenderViewDepthImage();
+	//R_EXP_RenderViewDepthImage();
 
 	GL_SelectTexture( 0 );
 	glDisableClientState( GL_TEXTURE_COORD_ARRAY );
@@ -2483,6 +2930,7 @@ void    RB_Exp_DrawInteractions( void ) {
 		RB_STD_FillDepthBuffer( (drawSurf_t **)&backEnd.viewDef->drawSurfs[0], backEnd.viewDef->numDrawSurfs );
 	}
 
+	GL_CheckErrors();
 
 	//
 	// for each light, perform adding and shadowing
@@ -2531,10 +2979,14 @@ void    RB_Exp_DrawInteractions( void ) {
 		for (  ; side < sideStop ; side++ ) {
 			// FIXME: check for frustums completely off the screen
 
+			//GL_BindNullProgram();
+			//Framebuffer::BindNull();
+
 			// render a shadow buffer
 			RB_RenderShadowBuffer( vLight, side );
 
 			// back to view rendering, possibly in the off-screen buffer
+			/*
 			if ( nativeViewBuffer || !r_sb_screenSpaceShadow.GetBool() ) {
 				// directly to screen
 				RB_EXP_SetRenderBuffer( vLight );
@@ -2548,45 +3000,45 @@ void    RB_Exp_DrawInteractions( void ) {
 				glViewport( 0, 0, viewBufferSize, viewBufferHeight );
 				glScissor( 0, 0, viewBufferSize, viewBufferHeight );	// !@# FIXME: scale light scissor
 			}
+			*/
 
 			// render the shadows into destination alpha on the included pixels
 			
 			// FIXME
 			//RB_Exp_SelectFrustum( vLight, side );
-
-			if ( !r_sb_screenSpaceShadow.GetBool() ) {
-				// bind shadow buffer to texture
-				GL_SelectTextureNoClient( 7 );
-				shadowImage[0]->BindFragment();
-
-				RB_EXP_CreateDrawInteractions( vLight->localInteractions );
-				RB_EXP_CreateDrawInteractions( vLight->globalInteractions );
-				backEnd.depthFunc = GLS_DEPTHFUNC_LESS;
-				RB_EXP_CreateDrawInteractions( vLight->translucentInteractions );
-				backEnd.depthFunc = GLS_DEPTHFUNC_EQUAL;
-			}
 		}
 
-		// render the native window coordinates interactions
-		if ( r_sb_screenSpaceShadow.GetBool() ) {
-			if ( !nativeViewBuffer ) {
-				RB_shadowResampleAlpha();
-				glEnable( GL_STENCIL_TEST );
-			} else {
-				RB_EXP_SetRenderBuffer( vLight );
-if ( r_ignore.GetBool() ) {
-glEnable( GL_STENCIL_TEST );	//!@#
-} else {
-glDisable( GL_STENCIL_TEST );	//!@#
-}
-			}
-			RB_EXP_CreateDrawInteractions( vLight->localInteractions );
-			RB_EXP_CreateDrawInteractions( vLight->globalInteractions );
-			backEnd.depthFunc = GLS_DEPTHFUNC_LESS;
-			RB_EXP_CreateDrawInteractions( vLight->translucentInteractions );
-			backEnd.depthFunc = GLS_DEPTHFUNC_EQUAL;
+		GL_CheckErrors();
+
+		GL_BindNullProgram();
+		Framebuffer::BindNull();
+
+		RB_EXP_SetRenderBuffer( NULL );
+
+		// bind shadow buffer to texture
+		if ( vLight->lightDef->parms.pointLight ) 
+		{
+			GL_SelectTextureNoClient( 7 );
+			shadowCubeImage[0]->BindFragment();
 		}
+		else
+		{
+			GL_SelectTextureNoClient( 7 );
+			shadowMapImage[0]->BindFragment();
+		}
+
+		RB_EXP_CreateDrawInteractions( vLight->localInteractions );
+		RB_EXP_CreateDrawInteractions( vLight->globalInteractions );
+		backEnd.depthFunc = GLS_DEPTHFUNC_LESS;
+		RB_EXP_CreateDrawInteractions( vLight->translucentInteractions );
+		backEnd.depthFunc = GLS_DEPTHFUNC_EQUAL;
 	}
+
+	GL_CheckErrors();
+
+	Framebuffer::BindNull();
+
+	GL_CheckErrors();
 
 	GL_SelectTexture( 0 );
 	glEnableClientState( GL_TEXTURE_COORD_ARRAY );
@@ -2598,8 +3050,8 @@ glDisable( GL_STENCIL_TEST );	//!@#
 	}
 	GL_State( 0 );
 
-	RB_EXP_Bloom();
-	RB_EXP_GammaDither();
+//	RB_EXP_Bloom();
+//	RB_EXP_GammaDither();
 
 	// these haven't been state saved
 	for ( int i = 0 ; i < 8 ; i++ ) {
@@ -2607,10 +3059,10 @@ glDisable( GL_STENCIL_TEST );	//!@#
 	}
 
 	// take it out of texture compare mode so I can testImage it for debugging
-	shadowImage[0]->BindFragment();
-	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE_ARB, GL_NONE );
+	//shadowImage[0]->BindFragment();
+	//glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE_ARB, GL_NONE );
 
-
+	GL_CheckErrors();
 }
 
 

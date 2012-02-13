@@ -75,7 +75,7 @@ void Framebuffer::Bind()
 
 void Framebuffer::BindNull()
 {
-	if(backEnd.glState.framebuffer != NULL)
+	//if(backEnd.glState.framebuffer != NULL)
 	{
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glBindRenderbuffer(GL_RENDERBUFFER, 0);
@@ -126,6 +126,24 @@ void Framebuffer::AddDepthBuffer(int format)
 
 	GL_CheckErrors();
 }
+
+void Framebuffer::AttachImage2D(int target, const idImage *image, int index)
+{
+	if((target != GL_TEXTURE_2D) && (target < GL_TEXTURE_CUBE_MAP_POSITIVE_X || target > GL_TEXTURE_CUBE_MAP_NEGATIVE_Z))
+	{
+		common->Warning("Framebuffer::AttachImage2D( %s ): invalid target", fboName.c_str());
+		return;
+	}
+
+	if(index < 0 || index >= glConfig.maxColorAttachments)
+	{
+		common->Warning("Framebuffer::AttachImage2D( %s ): bad index = %i", fboName.c_str(), index);
+		return;
+	}
+
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + index, target, image->texnum, 0);
+}
+
 
 void Framebuffer::Check()
 {

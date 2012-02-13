@@ -108,7 +108,8 @@ protected:
 
 	idStr				BuildGPUShaderText(	const char *mainShader,
 											const idStrList& libShaderNames,
-											GLenum shaderType) const;
+											GLenum shaderType,
+											const char *preIncludeText = NULL) const;
 
 	void				CompileAndLinkGPUShaderProgram(	shaderProgram_t * program,
 														const char *programName,
@@ -762,6 +763,52 @@ public:
 	}
 };
 */
+
+class u_ModelMatrix:
+GLUniform
+{
+public:
+	u_ModelMatrix(GLShader* shader):
+	  GLUniform(shader)
+	{
+	}
+
+	const char* GetName() const { return "u_ModelMatrix"; }
+	void				UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
+	{
+		shaderProgram->u_ModelMatrix = glGetUniformLocationARB(shaderProgram->program, GetName());
+	}
+
+	void SetUniform_ModelMatrix(const idMat4& m)
+	{
+		shaderProgram_t* program = _shader->GetProgram();
+
+#if defined(USE_UNIFORM_FIREWALL)
+		if(program->t_ModelMatrix == m)
+			return;
+
+		program->t_ModelMatrix = m;
+#endif
+
+#if defined(LOG_GLSL_UNIFORMS)
+		if(r_logFile.GetBool())
+		{
+			RB_LogComment("--- SetUniform_ModelMatrix( program = %s, "
+								"( %5.3f, %5.3f, %5.3f, %5.3f )\n"
+								"( %5.3f, %5.3f, %5.3f, %5.3f )\n"
+								"( %5.3f, %5.3f, %5.3f, %5.3f )\n"
+								"( %5.3f, %5.3f, %5.3f, %5.3f ) ) ---\n",
+								program->name.c_str(),
+								m[0][0], m[0][1], m[0][2], m[0][3],
+								m[1][0], m[1][1], m[1][2], m[1][3],
+								m[2][0], m[2][1], m[2][2], m[2][3],
+								m[3][0], m[3][1], m[3][2], m[3][3]);
+		}
+#endif
+
+		glUniformMatrix4fvARB(program->u_ModelMatrix, 1, GL_FALSE, m.ToFloatPtr());
+	}
+};
 
 class u_DiffuseMatrixS:
 GLUniform
@@ -1441,6 +1488,45 @@ public:
 	}
 };
 
+
+class u_LightRadius:
+GLUniform
+{
+public:
+	u_LightRadius(GLShader* shader):
+	  GLUniform(shader)
+	{
+	}
+
+	const char* GetName() const { return "u_LightRadius"; }
+	void				UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
+	{
+		shaderProgram->u_LightRadius = glGetUniformLocationARB(shaderProgram->program, GetName());
+	}
+
+	void SetUniform_LightRadius(float value)
+	{
+		shaderProgram_t* program = _shader->GetProgram();
+
+#if defined(USE_UNIFORM_FIREWALL)
+		if(program->t_LightRadius == value)
+			return;
+
+		program->t_LightRadius = value;
+#endif
+
+#if defined(LOG_GLSL_UNIFORMS)
+		if(r_logFile.GetBool())
+		{
+			RB_LogComment("--- SetUniform_LightRadius( program = %s, value = %f ) ---\n", program->name.c_str(), value);
+		}
+#endif
+
+		glUniform1fARB(program->u_LightRadius, value);
+	}
+};
+
+
 /*
 class u_LightColor:
 GLUniform
@@ -1460,27 +1546,6 @@ public:
 	void SetUniform_LightColor(const vec3_t v)
 	{
 		GLSL_SetUniform_LightColor(_shader->GetProgram(), v);
-	}
-};
-
-class u_LightRadius:
-GLUniform
-{
-public:
-	u_LightRadius(GLShader* shader):
-	  GLUniform(shader)
-	{
-	}
-
-	const char* GetName() const { return "u_LightRadius"; }
-	void				UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
-	{
-		shaderProgram->u_LightRadius = glGetUniformLocationARB(shaderProgram->program, GetName());
-	}
-
-	void SetUniform_LightRadius(float value)
-	{
-		GLSL_SetUniform_LightRadius(_shader->GetProgram(), value);
 	}
 };
 
@@ -2501,13 +2566,18 @@ public:
 
 class GLShader_shadowMap:
 public GLShader,
-public u_LightOrigin
+public u_ModelMatrix,
+public u_LightOrigin,
+public u_LightRadius
 //public GLCompileMacro_USE_VERTEX_SKINNING,
 //public GLCompileMacro_USE_VERTEX_ANIMATION,
 //public GLCompileMacro_USE_DEFORM_VERTEXES,
 {
 public:
 	GLShader_shadowMap();
+
+private:
+	void			CreatePreIncludeText(idStr& preIncludeText);
 };
 
 
