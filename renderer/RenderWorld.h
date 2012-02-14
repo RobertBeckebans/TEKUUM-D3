@@ -40,6 +40,12 @@ If you have questions concerning this license or the applicable additional terms
 #define PROC_FILE_EXT				"proc"
 #define	PROC_FILE_ID				"mapProcFile003"
 
+enum procVersion_t
+{
+	PROC_DBSP_ORIG,
+	PROC_DBSP_004
+};
+
 // shader parms
 const int MAX_GLOBAL_SHADER_PARMS	= 12;
 

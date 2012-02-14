@@ -129,7 +129,12 @@ typedef enum {
 	// internal FBO targets
 	TD_FBO_RGBA16F,
 	TD_FBO_ALPHA16F,
-	TD_FBO_LUMINANCE_ALPHA16F
+	TD_FBO_LUMINANCE_ALPHA16F,
+
+	TD_FBO_RGBA32F,
+	TD_FBO_ALPHA32F,
+	TD_FBO_LUMINANCE_ALPHA32F,
+
 } textureDepth_t;
 
 typedef enum {

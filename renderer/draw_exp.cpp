@@ -61,15 +61,6 @@ polygon offset factor causes occasional texture holes from highly angled texture
 
 #define MAX_SHADOWMAPS 5
 
-typedef enum
-{
-	SHADOWING_ESM16,
-	SHADOWING_ESM32,
-	SHADOWING_VSM16,
-	SHADOWING_VSM32,
-	SHADOWING_EVSM32,
-} shadowingMode_t;
-
 static	bool		initialized;
 
 static	int shadowMapResolutions[MAX_SHADOWMAPS] = { 1024, 1024, 512, 256, 128 };
@@ -168,12 +159,7 @@ idCVar r_sb_polyOfsUnits( "r_sb_polyOfsUnits", "3000", CVAR_RENDERER | CVAR_FLOA
 idCVar r_sb_occluderFacing( "r_sb_occluderFacing", "0", CVAR_RENDERER | CVAR_INTEGER, "0 = front faces, 1 = back faces, 2 = midway between" );
 // r_sb_randomizeBufferOrientation?
 
-idCVar r_sb_type( "r_sb_type", "0", CVAR_RENDERER | CVAR_INTEGER, "0 = ESM16, 1 = ESM32, 2 = VSM16, 3 = VSM32, 4 = EVSM32" );
-
-// EVSM specific
-idCVar r_evsm_postProcess( "r_evsm_postProcess", "0", CVAR_RENDERER | CVAR_BOOL, "don't use the expensive RGBA32F MRT" );
-
-idCVar r_sb_frustomFOV( "r_sb_frustomFOV", "92", CVAR_RENDERER | CVAR_FLOAT, "oversize FOV for point light side matching" );
+idCVar r_sb_frustomFOV( "r_sb_frustomFOV", "90", CVAR_RENDERER | CVAR_FLOAT, "oversize FOV for point light side matching" );
 idCVar r_sb_showFrustumPixels( "r_sb_showFrustumPixels", "0", CVAR_RENDERER | CVAR_BOOL, "color the pixels contained in the frustum" );
 idCVar r_sb_singleSide( "r_sb_singleSide", "-1", CVAR_RENDERER | CVAR_INTEGER, "only draw a single side (0-5) of point lights" );
 idCVar r_sb_useCulling( "r_sb_useCulling", "1", CVAR_RENDERER | CVAR_BOOL, "cull geometry to individual side frustums" );
@@ -202,7 +188,7 @@ idCVar r_hdr_monitorDither( "r_hdr_monitorDither", "0.01", CVAR_RENDERER | CVAR_
 GLShader_shadowMap::GLShader_shadowMap():
 		GLShader("shadowMap", VA_POSITION),
 		u_ModelMatrix(this),
-		u_LightOrigin(this),
+		u_GlobalLightOrigin(this),
 		u_LightRadius(this)
 		//GLCompileMacro_USE_VERTEX_SKINNING(this),
 		//GLCompileMacro_USE_VERTEX_ANIMATION(this),
@@ -295,92 +281,6 @@ GLShader_shadowMap::GLShader_shadowMap():
 
 void GLShader_shadowMap::CreatePreIncludeText(idStr& preIncludeText)
 {
-	if(r_sb_type.GetInteger() == SHADOWING_ESM16 || r_sb_type.GetInteger() == SHADOWING_ESM32)
-	{
-		preIncludeText += "#ifndef ESM\n#define ESM 1\n#endif\n";
-	}
-	/*
-	else if(r_sb_type.GetInteger() == SHADOWING_EVSM32)
-	{
-		Q_strcat(bufferExtra, sizeof(bufferExtra), "#ifndef EVSM\n#define EVSM 1\n#endif\n");
-
-		// The exponents for the EVSM techniques should be less than ln(FLT_MAX/FILTER_SIZE)/2 {ln(FLT_MAX/1)/2 ~44.3}
-		//         42.9 is the maximum possible value for FILTER_SIZE=15
-		//         42.0 is the truncated value that we pass into the sample
-		Q_strcat(bufferExtra, sizeof(bufferExtra),
-				va("#ifndef r_EVSMExponents\n#define r_EVSMExponents vec2(%f, %f)\n#endif\n", 42.0f, 42.0f));
-
-		if(r_evsmPostProcess->integer)
-		{
-			Q_strcat(bufferExtra, sizeof(bufferExtra), "#ifndef r_EVSMPostProcess\n#define r_EVSMPostProcess 1\n#endif\n");
-		}
-	}
-	else
-	{
-		Q_strcat(bufferExtra, sizeof(bufferExtra), "#ifndef VSM\n#define VSM 1\n#endif\n");
-
-		if(glConfig.hardwareType == GLHW_ATI)
-		{
-			Q_strcat(bufferExtra, sizeof(bufferExtra), "#ifndef VSM_CLAMP\n#define VSM_CLAMP 1\n#endif\n");
-		}
-	}
-
-	if((glConfig.hardwareType == GLHW_NV_DX10 || glConfig.hardwareType == GLHW_ATI_DX10) && r_sb_type.GetInteger() == SHADOWING_VSM32)
-	{
-		Q_strcat(bufferExtra, sizeof(bufferExtra), "#ifndef VSM_EPSILON\n#define VSM_EPSILON 0.000001\n#endif\n");
-	}
-	else
-	{
-		Q_strcat(bufferExtra, sizeof(bufferExtra), "#ifndef VSM_EPSILON\n#define VSM_EPSILON 0.0001\n#endif\n");
-	}
-
-	if(r_lightBleedReduction->value)
-	{
-		Q_strcat(bufferExtra, sizeof(bufferExtra),
-					va("#ifndef r_LightBleedReduction\n#define r_LightBleedReduction %f\n#endif\n",
-					r_lightBleedReduction->value));
-	}
-
-	if(r_overDarkeningFactor->value)
-	{
-		Q_strcat(bufferExtra, sizeof(bufferExtra),
-					va("#ifndef r_OverDarkeningFactor\n#define r_OverDarkeningFactor %f\n#endif\n",
-					r_overDarkeningFactor->value));
-	}
-
-	if(r_shadowMapDepthScale->value)
-	{
-		Q_strcat(bufferExtra, sizeof(bufferExtra),
-					va("#ifndef r_ShadowMapDepthScale\n#define r_ShadowMapDepthScale %f\n#endif\n",
-					r_shadowMapDepthScale->value));
-	}
-
-	if(r_debugShadowMaps->integer)
-	{
-		Q_strcat(bufferExtra, sizeof(bufferExtra),
-					va("#ifndef r_DebugShadowMaps\n#define r_DebugShadowMaps %i\n#endif\n", r_debugShadowMaps->integer));
-	}
-	if(r_softShadows->integer == 6)
-	{
-		Q_strcat(bufferExtra, sizeof(bufferExtra), "#ifndef PCSS\n#define PCSS 1\n#endif\n");
-	}
-	else if(r_softShadows->integer)
-	{
-		Q_strcat(bufferExtra, sizeof(bufferExtra),
-			va("#ifndef r_PCFSamples\n#define r_PCFSamples %1.1f\n#endif\n", r_softShadows->value + 1.0f));
-	}
-
-	if(r_parallelShadowSplits->integer)
-	{
-		Q_strcat(bufferExtra, sizeof(bufferExtra),
-					va("#ifndef r_ParallelShadowSplits_%i\n#define r_ParallelShadowSplits_%i\n#endif\n", r_parallelShadowSplits->integer, r_parallelShadowSplits->integer));
-	}
-
-	if(r_showParallelShadowSplits->integer)
-	{
-		Q_strcat(bufferExtra, sizeof(bufferExtra), "#ifndef r_ShowParallelShadowSplits\n#define r_ShowParallelShadowSplits 1\n#endif\n");
-	}
-	*/
 }
 
 
@@ -576,12 +476,16 @@ static void R_CreateShadowBufferImage( idImage *image, int lightBufferSize )
 
 	memset( data, 0, lightBufferSize*lightBufferSize*4 );
 
-	if(r_sb_type.GetInteger() == SHADOWING_ESM16)
+	if(r_sb_mode.GetInteger() == SHADOWING_ESM16)
 	{
 		//image->GenerateImage( (byte *)data, lightBufferSize, lightBufferSize, TF_LINEAR, false, TR_CLAMP_TO_BORDER, TD_FBO_ALPHA16F );
 		image->GenerateImage( (byte *)data, lightBufferSize, lightBufferSize, TF_LINEAR, false, TR_CLAMP_TO_BORDER, TD_FBO_RGBA16F );
 	}
-	else if(r_sb_type.GetInteger() == SHADOWING_VSM16)
+	else if(r_sb_mode.GetInteger() == SHADOWING_ESM32)
+	{
+		image->GenerateImage( (byte *)data, lightBufferSize, lightBufferSize, TF_LINEAR, false, TR_CLAMP_TO_BORDER, TD_FBO_RGBA32F );
+	}
+	else if(r_sb_mode.GetInteger() == SHADOWING_VSM16)
 	{
 		image->GenerateImage( (byte *)data, lightBufferSize, lightBufferSize, TF_LINEAR, false, TR_CLAMP_TO_BORDER, TD_FBO_LUMINANCE_ALPHA16F );
 	}
@@ -643,18 +547,22 @@ static void R_CreateShadowCubeImage( idImage *image, int lightBufferSize )
 		pics[i] = data;
 	}
 
-	if(r_sb_type.GetInteger() == SHADOWING_ESM16)
+	if(r_sb_mode.GetInteger() == SHADOWING_ESM16)
 	{
-		//image->GenerateCubeImage( pics, lightBufferSize, TF_LINEAR, true, TD_FBO_ALPHA16F );
-		image->GenerateCubeImage( pics, lightBufferSize, TF_LINEAR, true, TD_FBO_RGBA16F );
+		//image->GenerateCubeImage( pics, lightBufferSize, TF_LINEAR, false, TD_FBO_ALPHA16F );
+		image->GenerateCubeImage( pics, lightBufferSize, TF_LINEAR, false, TD_FBO_RGBA16F );
 	}
-	else if(r_sb_type.GetInteger() == SHADOWING_VSM16)
+	else if(r_sb_mode.GetInteger() == SHADOWING_ESM32)
 	{
-		image->GenerateCubeImage( pics, lightBufferSize, TF_LINEAR, true, TD_FBO_LUMINANCE_ALPHA16F );
+		image->GenerateCubeImage( pics, lightBufferSize, TF_LINEAR, false, TD_FBO_RGBA32F );
+	}
+	else if(r_sb_mode.GetInteger() == SHADOWING_VSM16)
+	{
+		image->GenerateCubeImage( pics, lightBufferSize, TF_LINEAR, false, TD_FBO_LUMINANCE_ALPHA16F );
 	}
 	else
 	{
-		image->GenerateCubeImage( pics, lightBufferSize, TF_LINEAR, true, TD_FBO_RGBA16F );
+		image->GenerateCubeImage( pics, lightBufferSize, TF_LINEAR, false, TD_FBO_RGBA16F );
 	}
 
 	GL_CheckErrors();
@@ -945,15 +853,15 @@ void R_Exp_Allocate( void ) {
 		//if((glConfig.driverType == GLDRV_OPENGL3) || (glConfig.hardwareType == GLHW_NV_DX10 || glConfig.hardwareType == GLHW_ATI_DX10))
 		/*
 		{
-			if(r_sb_type.GetInteger() == SHADOWING_ESM32)
+			if(r_sb_mode.GetInteger() == SHADOWING_ESM32)
 			{
 				shadowMapFBO[i]->AddColorBuffer(GL_ALPHA32F_ARB, 0);
 			}
-			else if(r_sb_type.GetInteger() == SHADOWING_VSM32)
+			else if(r_sb_mode.GetInteger() == SHADOWING_VSM32)
 			{
 				shadowMapFBO[i]->AddColorBuffer(GL_LUMINANCE_ALPHA32F_ARB, 0);
 			}
-			else if(r_sb_type.GetInteger() == SHADOWING_EVSM32)
+			else if(r_sb_mode.GetInteger() == SHADOWING_EVSM32)
 			{
 				if(r_evsm_postProcess.GetBool())
 				{
@@ -972,12 +880,16 @@ void R_Exp_Allocate( void ) {
 		else
 		*/
 		{
-			if(r_sb_type.GetInteger() == SHADOWING_ESM16)
+			if(r_sb_mode.GetInteger() == SHADOWING_ESM16)
 			{
 				//shadowMapFBO[i]->AddColorBuffer(GL_ALPHA16F_ARB, 0);
 				shadowMapFBO[i]->AddColorBuffer(GL_RGBA16F_ARB, 0);
 			}
-			else if(r_sb_type.GetInteger() == SHADOWING_VSM16)
+			else if(r_sb_mode.GetInteger() == SHADOWING_ESM32)
+			{
+				shadowMapFBO[i]->AddColorBuffer(GL_RGBA32F_ARB, 0);
+			}
+			else if(r_sb_mode.GetInteger() == SHADOWING_VSM16)
 			{
 				shadowMapFBO[i]->AddColorBuffer(GL_LUMINANCE_ALPHA16F_ARB, 0);
 			}
@@ -1293,8 +1205,8 @@ void    RB_RenderShadowBuffer( viewLight_t	*vLight, int side ) {
 	glViewport( 0, 0, shadowMapResolutions[0], shadowMapResolutions[0] );
 	glScissor( 0, 0, shadowMapResolutions[0], shadowMapResolutions[0] );
 
-	glDisable( GL_STENCIL_TEST );
-	//glStencilFunc( GL_ALWAYS, 0, 255 );
+	//glDisable( GL_STENCIL_TEST );
+	glStencilFunc( GL_ALWAYS, 0, 255 );
 
 glClearColor( 1, 1, 1, 1 );
 GL_State( GLS_DEPTHFUNC_LESS | GLS_SRCBLEND_ONE | GLS_DSTBLEND_ZERO );	// make sure depth mask is off before clear
@@ -1439,17 +1351,17 @@ GL_SelectTexture( 0 );
 	if ( !r_sb_noShadows.GetBool() && vLight->lightShader->LightCastsShadows() ) {
 
 		gl_shadowMapShader->BindProgram();
-		gl_shadowMapShader->SetUniform_LightOrigin(origin);
+		gl_shadowMapShader->SetUniform_GlobalLightOrigin(origin);
 
 		//
 		// set polygon offset for the rendering
 		//
 		switch ( r_sb_occluderFacing.GetInteger() ) {
 		case 0:		// front sides
-			//glPolygonOffset( r_sb_polyOfsFactor.GetFloat(), r_sb_polyOfsUnits.GetFloat() );
-			//glEnable( GL_POLYGON_OFFSET_FILL );
+			glPolygonOffset( r_sb_polyOfsFactor.GetFloat(), r_sb_polyOfsUnits.GetFloat() );
+			glEnable( GL_POLYGON_OFFSET_FILL );
 			RB_EXP_RenderOccluders( vLight );
-			//glDisable( GL_POLYGON_OFFSET_FILL );
+			glDisable( GL_POLYGON_OFFSET_FILL );
 			break;
 		case 1:		// back sides
 			glPolygonOffset( -r_sb_polyOfsFactor.GetFloat(), -r_sb_polyOfsUnits.GetFloat() );
@@ -1547,13 +1459,17 @@ static void	RB_EXP_DrawInteraction( const drawInteraction_t *din ) {
 	
 	// choose and bind the vertex program
 	// TODO gl_forwardLightingShader->SetAmbientLighting(backEnd.vLight->lightShader->IsAmbientLight());
+	gl_forwardLightingShader->SetShadowing(backEnd.vLight->lightShader->LightCastsShadows());
 	gl_forwardLightingShader->SetNormalMapping(!r_skipBump.GetBool() || backEnd.vLight->lightShader->IsAmbientLight());
 	gl_forwardLightingShader->BindProgram();
 
 	// load all the vertex program parameters
+	gl_forwardLightingShader->SetUniform_ModelMatrix(make_idMat4(din->surf->space->modelMatrix));
+
 	gl_forwardLightingShader->SetUniform_ViewOrigin(din->localViewOrigin.ToVec3());
 
-	gl_forwardLightingShader->SetUniform_LightOrigin(din->localLightOrigin.ToVec3());
+	gl_forwardLightingShader->SetUniform_LocalLightOrigin(din->localLightOrigin.ToVec3());
+	gl_forwardLightingShader->SetUniform_GlobalLightOrigin(din->globalLightOrigin.ToVec3());
 
 	gl_forwardLightingShader->SetUniform_LightProjectS(din->lightProjection[0]);
 	gl_forwardLightingShader->SetUniform_LightProjectT(din->lightProjection[1]);
@@ -1571,10 +1487,10 @@ static void	RB_EXP_DrawInteraction( const drawInteraction_t *din ) {
 
 
 // calculate depth projection for shadow buffer
-float	sRow[4];
-float	tRow[4];
-float	rRow[4];
-float	qRow[4];
+idVec4	sRow;
+idVec4	tRow;
+idVec4	rRow;
+idVec4	qRow;
 float	matrix[16];
 float	matrix2[16];
 myGlMultMatrix( din->surf->space->modelMatrix, lightMatrix, matrix );
@@ -1602,7 +1518,10 @@ qRow[2] = matrix2[11];
 qRow[3] = matrix2[15];
 //glProgramEnvParameter4fvARB( GL_VERTEX_PROGRAM_ARB, 21, qRow );
 
+	//idMat4 shadowMat(sRow, tRow, rRow, qRow);
+	idMat4 shadowMat = make_idMat4(matrix2);//.Transpose();
 
+	gl_forwardLightingShader->SetUniform_ShadowMatrix(shadowMat);
 
 	static const idVec4 zero( 0, 0, 0, 0 );
 	static const idVec4 one( 1, 1, 1, 1 );
@@ -1692,38 +1611,25 @@ void RB_EXP_CreateDrawInteractions( const drawSurf_t *surf ) {
 	if ( !surf ) {
 		return;
 	}
-	/*
-	if ( r_sb_screenSpaceShadow.GetBool() ) {
-		// perform setup here that will be constant for all interactions
-		GL_State( GLS_SRCBLEND_DST_ALPHA | GLS_DSTBLEND_ONE | GLS_DEPTHMASK | backEnd.depthFunc );
-
-		if ( r_testARBProgram.GetBool() ) {
-			glBindProgramARB( GL_VERTEX_PROGRAM_ARB, VPROG_TEST );
-			glBindProgramARB( GL_FRAGMENT_PROGRAM_ARB, FPROG_TEST );
-		} else {
-			glBindProgramARB( GL_VERTEX_PROGRAM_ARB, VPROG_INTERACTION );
-			glBindProgramARB( GL_FRAGMENT_PROGRAM_ARB, FPROG_INTERACTION );
-		}
-	} else*/ {
-		// perform setup here that will be constant for all interactions
-		GL_State( GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE | GLS_DEPTHMASK | backEnd.depthFunc );
+	
+	// perform setup here that will be constant for all interactions
+	GL_State( GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE | GLS_DEPTHMASK | backEnd.depthFunc );
 //GL_State( GLS_DEPTHMASK | GLS_DEPTHFUNC_ALWAYS );//!@#
 
-		// bind the vertex program
+	// bind the vertex program
 
-		/*
-		glBindProgramARB( GL_VERTEX_PROGRAM_ARB, shadowVertexProgram );
-		if ( r_sb_samples.GetInteger() == 16 ) {
-			glBindProgramARB( GL_FRAGMENT_PROGRAM_ARB, shadowFragmentProgram16 );
-		} else if ( r_sb_samples.GetInteger() == 4 ) {
-			glBindProgramARB( GL_FRAGMENT_PROGRAM_ARB, shadowFragmentProgram4 );
-		} else if ( r_sb_samples.GetInteger() == 1 ) {
-			glBindProgramARB( GL_FRAGMENT_PROGRAM_ARB, shadowFragmentProgram1 );
-		} else {
-			glBindProgramARB( GL_FRAGMENT_PROGRAM_ARB, shadowFragmentProgram0 );
-		}
-		*/
+	/*
+	glBindProgramARB( GL_VERTEX_PROGRAM_ARB, shadowVertexProgram );
+	if ( r_sb_samples.GetInteger() == 16 ) {
+		glBindProgramARB( GL_FRAGMENT_PROGRAM_ARB, shadowFragmentProgram16 );
+	} else if ( r_sb_samples.GetInteger() == 4 ) {
+		glBindProgramARB( GL_FRAGMENT_PROGRAM_ARB, shadowFragmentProgram4 );
+	} else if ( r_sb_samples.GetInteger() == 1 ) {
+		glBindProgramARB( GL_FRAGMENT_PROGRAM_ARB, shadowFragmentProgram1 );
+	} else {
+		glBindProgramARB( GL_FRAGMENT_PROGRAM_ARB, shadowFragmentProgram0 );
 	}
+	*/
 
 	// enable the vertex arrays
 	glEnableVertexAttribArrayARB( VA_INDEX_TEXCOORD0 );
@@ -1792,14 +1698,8 @@ void RB_EXP_CreateDrawInteractions( const drawSurf_t *surf ) {
 		glVertexAttribPointerARB( VA_INDEX_TANGENT, 3, GL_FLOAT, false, sizeof( idDrawVert ), ac->tangents[0].ToFloatPtr() );
 		glVertexAttribPointerARB( VA_INDEX_TEXCOORD0, 2, GL_FLOAT, false, sizeof( idDrawVert ), ac->st.ToFloatPtr() );
 		glVertexPointer( 3, GL_FLOAT, sizeof( idDrawVert ), ac->xyz.ToFloatPtr() );
-
-		// this may cause RB_ARB2_DrawInteraction to be exacuted multiple
-		// times with different colors and images if the surface or light have multiple layers
-		//if ( r_sb_screenSpaceShadow.GetBool() ) {
-		//	RB_CreateSingleDrawInteractions( surf, RB_ARB2_DrawInteraction );
-		//} else {
-			RB_CreateSingleDrawInteractions( surf, RB_EXP_DrawInteraction );
-		//}
+		
+		RB_CreateSingleDrawInteractions( surf, RB_EXP_DrawInteraction );
 	}
 
 	glDisableVertexAttribArrayARB( VA_INDEX_TEXCOORD0 );
@@ -2932,9 +2832,7 @@ void    RB_Exp_DrawInteractions( void ) {
 
 	GL_CheckErrors();
 
-	//
 	// for each light, perform adding and shadowing
-	//
 	for ( viewLight_t *vLight = backEnd.viewDef->viewLights ; vLight ; vLight = vLight->next ) {
 		backEnd.vLight = vLight;
 
@@ -2984,28 +2882,6 @@ void    RB_Exp_DrawInteractions( void ) {
 
 			// render a shadow buffer
 			RB_RenderShadowBuffer( vLight, side );
-
-			// back to view rendering, possibly in the off-screen buffer
-			/*
-			if ( nativeViewBuffer || !r_sb_screenSpaceShadow.GetBool() ) {
-				// directly to screen
-				RB_EXP_SetRenderBuffer( vLight );
-			} else {
-				// to off screen buffer
-				if ( r_sb_usePbuffer.GetBool() ) {
-					GL_CheckErrors();
-					// set the current openGL drawable to the shadow buffer
-					R_MakeCurrent( viewPbufferDC, win32.hGLRC, viewPbuffer );
-				}
-				glViewport( 0, 0, viewBufferSize, viewBufferHeight );
-				glScissor( 0, 0, viewBufferSize, viewBufferHeight );	// !@# FIXME: scale light scissor
-			}
-			*/
-
-			// render the shadows into destination alpha on the included pixels
-			
-			// FIXME
-			//RB_Exp_SelectFrustum( vLight, side );
 		}
 
 		GL_CheckErrors();
@@ -3013,6 +2889,7 @@ void    RB_Exp_DrawInteractions( void ) {
 		GL_BindNullProgram();
 		Framebuffer::BindNull();
 
+		// back to view rendering, possibly in the off-screen buffer
 		RB_EXP_SetRenderBuffer( NULL );
 
 		// bind shadow buffer to texture
@@ -3080,7 +2957,8 @@ void R_Exp_Init( void ) {
 	if ( !glConfig.ARBVertexProgramAvailable || !glConfig.ARBFragmentProgramAvailable || 
 		!WGLEW_ARB_pbuffer ||
 		!WGLEW_ARB_pixel_format ||
-		!WGLEW_ARB_render_texture ) {
+		!WGLEW_ARB_render_texture ||
+		!GLEW_ARB_texture_float) {
 		common->Printf( "Not available.\n" );
 		return;
 	}

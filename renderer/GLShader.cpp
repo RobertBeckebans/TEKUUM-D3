@@ -351,47 +351,51 @@ idStr	GLShader::BuildGPUShaderText(	const char *mainShaderName,
 	{
 		Q_strcat(bufferExtra, sizeof(bufferExtra), "#ifndef GLHW_NV_DX10\n#define GLHW_NV_DX10 1\n#endif\n");
 	}
+	*/
 
-	if(r_shadows->integer >= SHADOWING_ESM16 && glConfig2.textureFloatAvailable && glConfig2.framebufferObjectAvailable)
+	//if(r_sb_mode.GetInteger() >= SHADOWING_ESM16 && glConfig2.textureFloatAvailable && glConfig2.framebufferObjectAvailable)
 	{
-		if(r_shadows->integer == SHADOWING_ESM16 || r_shadows->integer == SHADOWING_ESM32)
+		if(r_sb_mode.GetInteger() == SHADOWING_ESM16 || r_sb_mode.GetInteger() == SHADOWING_ESM32)
 		{
-			Q_strcat(bufferExtra, sizeof(bufferExtra), "#ifndef ESM\n#define ESM 1\n#endif\n");
+			shaderText += "#ifndef ESM\n#define ESM 1\n#endif\n";
 		}
-		else if(r_shadows->integer == SHADOWING_EVSM32)
+		else if(r_sb_mode.GetInteger() == SHADOWING_EVSM32)
 		{
-			Q_strcat(bufferExtra, sizeof(bufferExtra), "#ifndef EVSM\n#define EVSM 1\n#endif\n");
+			shaderText += "#ifndef EVSM\n#define EVSM 1\n#endif\n";
 
 			// The exponents for the EVSM techniques should be less than ln(FLT_MAX/FILTER_SIZE)/2 {ln(FLT_MAX/1)/2 ~44.3}
 			//         42.9 is the maximum possible value for FILTER_SIZE=15
 			//         42.0 is the truncated value that we pass into the sample
-			Q_strcat(bufferExtra, sizeof(bufferExtra),
-					va("#ifndef r_EVSMExponents\n#define r_EVSMExponents vec2(%f, %f)\n#endif\n", 42.0f, 42.0f));
+			shaderText += va("#ifndef r_EVSMExponents\n#define r_EVSMExponents vec2(%f, %f)\n#endif\n", 42.0f, 42.0f);
 
-			if(r_evsmPostProcess->integer)
+			if(r_evsm_postProcess.GetBool())
 			{
-				Q_strcat(bufferExtra, sizeof(bufferExtra), "#ifndef r_EVSMPostProcess\n#define r_EVSMPostProcess 1\n#endif\n");
+				shaderText += "#ifndef r_EVSMPostProcess\n#define r_EVSMPostProcess 1\n#endif\n";
 			}
 		}
 		else
 		{
-			Q_strcat(bufferExtra, sizeof(bufferExtra), "#ifndef VSM\n#define VSM 1\n#endif\n");
+			shaderText += "#ifndef VSM\n#define VSM 1\n#endif\n";
 
+			/*
 			if(glConfig.hardwareType == GLHW_ATI)
 			{
-				Q_strcat(bufferExtra, sizeof(bufferExtra), "#ifndef VSM_CLAMP\n#define VSM_CLAMP 1\n#endif\n");
+				shaderText += "#ifndef VSM_CLAMP\n#define VSM_CLAMP 1\n#endif\n";
 			}
+			*/
 		}
 
-		if((glConfig.hardwareType == GLHW_NV_DX10 || glConfig.hardwareType == GLHW_ATI_DX10) && r_shadows->integer == SHADOWING_VSM32)
+		//if((glConfig.hardwareType == GLHW_NV_DX10 || glConfig.hardwareType == GLHW_ATI_DX10) && r_sb_mode.GetInteger() == SHADOWING_VSM32)
+		if(r_sb_mode.GetInteger() == SHADOWING_VSM32)
 		{
-			Q_strcat(bufferExtra, sizeof(bufferExtra), "#ifndef VSM_EPSILON\n#define VSM_EPSILON 0.000001\n#endif\n");
+			shaderText += "#ifndef VSM_EPSILON\n#define VSM_EPSILON 0.000001\n#endif\n";
 		}
 		else
 		{
-			Q_strcat(bufferExtra, sizeof(bufferExtra), "#ifndef VSM_EPSILON\n#define VSM_EPSILON 0.0001\n#endif\n");
+			shaderText += "#ifndef VSM_EPSILON\n#define VSM_EPSILON 0.0001\n#endif\n";
 		}
 
+		/*
 		if(r_lightBleedReduction->value)
 		{
 			Q_strcat(bufferExtra, sizeof(bufferExtra),
@@ -412,12 +416,14 @@ idStr	GLShader::BuildGPUShaderText(	const char *mainShaderName,
 						va("#ifndef r_ShadowMapDepthScale\n#define r_ShadowMapDepthScale %f\n#endif\n",
 						r_shadowMapDepthScale->value));
 		}
+		*/
 
-		if(r_debugShadowMaps->integer)
+		if(r_sb_debug.GetInteger())
 		{
-			Q_strcat(bufferExtra, sizeof(bufferExtra),
-						va("#ifndef r_DebugShadowMaps\n#define r_DebugShadowMaps %i\n#endif\n", r_debugShadowMaps->integer));
+			shaderText += va("#ifndef r_DebugShadowMaps\n#define r_DebugShadowMaps %i\n#endif\n", r_sb_debug.GetInteger());
 		}
+		
+		/*
 		if(r_softShadows->integer == 6)
 		{
 			Q_strcat(bufferExtra, sizeof(bufferExtra), "#ifndef PCSS\n#define PCSS 1\n#endif\n");
@@ -438,8 +444,8 @@ idStr	GLShader::BuildGPUShaderText(	const char *mainShaderName,
 		{
 			Q_strcat(bufferExtra, sizeof(bufferExtra), "#ifndef r_ShowParallelShadowSplits\n#define r_ShowParallelShadowSplits 1\n#endif\n");
 		}
+		*/
 	}
-	*/
 
 	/*
 	if(r_deferredShading->integer && glConfig2.maxColorAttachments >= 4 && glConfig2.textureFloatAvailable &&
@@ -1066,23 +1072,25 @@ GLShader_generic::GLShader_generic():
 
 GLShader_forwardLighting::GLShader_forwardLighting():
 		GLShader("forwardLighting", VA_POSITION | VA_TEXCOORD | VA_NORMAL),
+		u_ModelMatrix(this),
 		u_DiffuseMatrixS(this),
 		u_DiffuseMatrixT(this),
 		u_BumpMatrixS(this),
 		u_BumpMatrixT(this),
 		u_SpecularMatrixS(this),
 		u_SpecularMatrixT(this),
-		//u_AlphaTest(this),
 		u_Color(this),
 		u_ColorModulate(this),
 		u_DiffuseColor(this),
 		u_SpecularColor(this),
 		u_ViewOrigin(this),
-		u_LightOrigin(this),
+		u_LocalLightOrigin(this),
+		u_GlobalLightOrigin(this),
 		u_LightProjectS(this),
 		u_LightProjectT(this),
 		u_LightProjectQ(this),
 		u_LightFalloffS(this),
+		u_ShadowMatrix(this),
 		//u_LightColor(this),
 		//u_LightRadius(this),
 		//u_LightScale(this),
@@ -1102,10 +1110,9 @@ GLShader_forwardLighting::GLShader_forwardLighting():
 		//GLCompileMacro_USE_VERTEX_SKINNING(this),
 		//GLCompileMacro_USE_VERTEX_ANIMATION(this),
 		//GLCompileMacro_USE_DEFORM_VERTEXES(this),
-		GLCompileMacro_USE_NORMAL_MAPPING(this)
+		GLCompileMacro_USE_NORMAL_MAPPING(this),
 		//GLCompileMacro_USE_PARALLAX_MAPPING(this),
-		//GLCompileMacro_USE_SHADOWING(this)//,
-		//GLCompileMacro_TWOSIDED(this)
+		GLCompileMacro_USE_SHADOWING(this)
 {
 	common->Printf("/// -------------------------------------------------\n");
 	common->Printf("/// creating forwardLighting shaders --------\n");
@@ -1176,10 +1183,10 @@ GLShader_forwardLighting::GLShader_forwardLighting():
 			shaderProgram->u_LightImage = glGetUniformLocationARB(shaderProgram->program, "u_LightImage");
 			shaderProgram->u_DiffuseImage = glGetUniformLocationARB(shaderProgram->program, "u_DiffuseImage");
 			shaderProgram->u_SpecularImage = glGetUniformLocationARB(shaderProgram->program, "u_SpecularImage");
-			//if(r_shadows->integer >= SHADOWING_ESM16)
-			//{
-			//	shaderProgram->u_ShadowMap = glGetUniformLocationARB(shaderProgram->program, "u_ShadowMap");
-			//}
+			//if(r_sb_mode.GetInteger() >= SHADOWING_ESM16)
+			{
+				shaderProgram->u_ShadowImage = glGetUniformLocationARB(shaderProgram->program, "u_ShadowImage");
+			}
 			//shaderProgram->u_RandomMap = glGetUniformLocationARB(shaderProgram->program, "u_RandomMap");
 
 			glUseProgramObjectARB(shaderProgram->program);
@@ -1189,10 +1196,10 @@ GLShader_forwardLighting::GLShader_forwardLighting():
 			glUniform1iARB(shaderProgram->u_LightImage, 3);
 			glUniform1iARB(shaderProgram->u_DiffuseImage, 4);
 			glUniform1iARB(shaderProgram->u_SpecularImage, 5);
-			//if(r_shadows->integer >= SHADOWING_ESM16)
-			//{
-			//	glUniform1iARB(shaderProgram->u_ShadowMap, 5);
-			//}
+			//if(r_sb_mode.GetInteger() >= SHADOWING_ESM16)
+			{
+				glUniform1iARB(shaderProgram->u_ShadowImage, 7);
+			}
 			//glUniform1iARB(shaderProgram->u_RandomMap, 6);
 			glUseProgramObjectARB(0);
 
@@ -1217,7 +1224,7 @@ GLShader_forwardLighting::GLShader_forwardLighting():
 
 GLShader_shadowVolume::GLShader_shadowVolume():
 		GLShader("shadowVolume", VA_POSITION),
-		u_LightOrigin(this)
+		u_LocalLightOrigin(this)
 		//GLCompileMacro_USE_VERTEX_SKINNING(this),
 		//GLCompileMacro_USE_VERTEX_ANIMATION(this),
 		//GLCompileMacro_USE_DEFORM_VERTEXES(this),

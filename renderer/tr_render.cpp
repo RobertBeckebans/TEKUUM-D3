@@ -740,6 +740,14 @@ void RB_CreateSingleDrawInteractions( const drawSurf_t *surf, void (*DrawInterac
 
 	R_GlobalPointToLocal( surf->space->modelMatrix, vLight->globalLightOrigin, inter.localLightOrigin.ToVec3() );
 	R_GlobalPointToLocal( surf->space->modelMatrix, backEnd.viewDef->renderView.vieworg, inter.localViewOrigin.ToVec3() );
+
+// Techyon BEGIN
+	inter.globalLightOrigin.ToVec3() = vLight->globalLightOrigin;
+	inter.globalLightOrigin[3] = 0;
+
+	inter.globalViewOrigin.ToVec3() = backEnd.viewDef->renderView.vieworg;
+	inter.globalViewOrigin[3] = 1;
+// Techyon END
 	inter.localLightOrigin[3] = 0;
 	inter.localViewOrigin[3] = 1;
 	inter.ambientLight = lightShader->IsAmbientLight();

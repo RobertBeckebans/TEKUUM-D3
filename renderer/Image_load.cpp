@@ -239,6 +239,15 @@ GLenum idImage::SelectInternalFormat( const byte **dataPtrs, int numDataPtrs, in
 			case TD_FBO_LUMINANCE_ALPHA16F:
 				return GL_LUMINANCE_ALPHA16F_ARB;
 
+			case TD_FBO_RGBA32F:
+				return GL_RGBA32F_ARB;
+
+			case TD_FBO_ALPHA32F:
+				return GL_ALPHA32F_ARB;
+
+			case TD_FBO_LUMINANCE_ALPHA32F:
+				return GL_LUMINANCE_ALPHA32F_ARB;
+
 			default:
 				common->Error( "idImage::SelectInternalFormat: bad minimumDepth for float texture: %i", minimumDepth );
 				break;

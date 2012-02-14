@@ -88,6 +88,16 @@ typedef enum {
 	DC_GUI_MODEL
 } demoCommand_t;
 
+typedef enum
+{
+	SHADOWING_ESM16,
+	SHADOWING_ESM32,
+	SHADOWING_VSM16,
+	SHADOWING_VSM32,
+	SHADOWING_EVSM32,
+} shadowingMode_t;
+
+
 /*
 ==============================================================================
 
@@ -453,6 +463,10 @@ typedef struct {
 	// (not a bool just to avoid an uninitialized memory check of the pad region by valgrind)
 
 	// these are loaded into the vertex program
+// Techyon BEGIN
+	idVec4				globalLightOrigin;
+	idVec4				globalViewOrigin;
+// Techyon END
 	idVec4				localLightOrigin;
 	idVec4				localViewOrigin;
 	idVec4				lightProjection[4];	// in local coordinates, possibly with a texture matrix baked in
@@ -994,6 +1008,14 @@ extern idCVar r_debugPolygonFilled;
 extern idCVar r_materialOverride;		// override all materials
 
 extern idCVar r_debugRenderToTexture;
+
+// Techyon BEGIN
+extern idCVar r_sb_debug;
+extern idCVar r_sb_mode;
+
+extern idCVar r_evsm_postProcess;
+
+// Techyon END
 
 /*
 ====================================================================
@@ -1544,8 +1566,11 @@ typedef struct shaderProgram_s
 	int32_t         u_LightDir;
 	idVec3			t_LightDir;
 
-	int32_t         u_LightOrigin;
-	idVec3			t_LightOrigin;
+	int32_t         u_LocalLightOrigin;
+	idVec3			t_LocalLightOrigin;
+
+	int32_t         u_GlobalLightOrigin;
+	idVec3			t_GlobalLightOrigin;
 
 	int32_t         u_LightProjectS;
 	idVec4			t_LightProjectS;

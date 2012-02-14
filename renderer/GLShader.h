@@ -806,9 +806,57 @@ public:
 		}
 #endif
 
-		glUniformMatrix4fvARB(program->u_ModelMatrix, 1, GL_FALSE, m.ToFloatPtr());
+		glUniformMatrix4fvARB(program->u_ModelMatrix, 1, GL_TRUE, m.ToFloatPtr());
 	}
 };
+
+
+class u_ShadowMatrix:
+GLUniform
+{
+public:
+	u_ShadowMatrix(GLShader* shader):
+	  GLUniform(shader)
+	{
+	}
+
+	const char* GetName() const { return "u_ShadowMatrix"; }
+	void				UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
+	{
+		shaderProgram->u_ShadowMatrix = glGetUniformLocationARB(shaderProgram->program, GetName());
+	}
+
+	void SetUniform_ShadowMatrix(const idMat4& m)
+	{
+		shaderProgram_t* program = _shader->GetProgram();
+
+#if defined(USE_UNIFORM_FIREWALL)
+		if(program->t_ShadowMatrix == m)
+			return;
+
+		program->t_ShadowMatrix = m;
+#endif
+
+#if defined(LOG_GLSL_UNIFORMS)
+		if(r_logFile.GetBool())
+		{
+			RB_LogComment("--- SetUniform_ShadowMatrix( program = %s, "
+								"( %5.3f, %5.3f, %5.3f, %5.3f )\n"
+								"( %5.3f, %5.3f, %5.3f, %5.3f )\n"
+								"( %5.3f, %5.3f, %5.3f, %5.3f )\n"
+								"( %5.3f, %5.3f, %5.3f, %5.3f ) ) ---\n",
+								program->name.c_str(),
+								m[0][0], m[0][1], m[0][2], m[0][3],
+								m[1][0], m[1][1], m[1][2], m[1][3],
+								m[2][0], m[2][1], m[2][2], m[2][3],
+								m[3][0], m[3][1], m[3][2], m[3][3]);
+		}
+#endif
+
+		glUniformMatrix4fvARB(program->u_ShadowMatrix, 1, GL_FALSE, m.ToFloatPtr());
+	}
+};
+
 
 class u_DiffuseMatrixS:
 GLUniform
@@ -1303,40 +1351,77 @@ public:
 };
 */
 
-class u_LightOrigin:
+class u_LocalLightOrigin:
 GLUniform
 {
 public:
-	u_LightOrigin(GLShader* shader):
+	u_LocalLightOrigin(GLShader* shader):
 	  GLUniform(shader)
 	{
 	}
 
-	const char* GetName() const { return "u_LightOrigin"; }
+	const char* GetName() const { return "u_LocalLightOrigin"; }
 	void UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
 	{
-		shaderProgram->u_LightOrigin = glGetUniformLocationARB(shaderProgram->program, GetName());
+		shaderProgram->u_LocalLightOrigin = glGetUniformLocationARB(shaderProgram->program, GetName());
 	}
 
-	void SetUniform_LightOrigin(const idVec3& v)
+	void SetUniform_LocalLightOrigin(const idVec3& v)
 	{
 		shaderProgram_t* program = _shader->GetProgram();
 
 #if defined(USE_UNIFORM_FIREWALL)
-		if(program->t_LightOrigin == v)
+		if(program->t_LocalLightOrigin == v)
 			return;
 
-		program->t_LightOrigin = v;
+		program->t_LocalLightOrigin = v;
 #endif
 
 #if defined(LOG_GLSL_UNIFORMS)
 		if(r_logFile.GetBool())
 		{
-			RB_LogComment("--- SetUniform_LightOrigin( program = %s, vector = ( %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name.c_str(), v[0], v[1], v[2]);
+			RB_LogComment("--- SetUniform_LocalLightOrigin( program = %s, vector = ( %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name.c_str(), v[0], v[1], v[2]);
 		}
 #endif
 
-		glUniform3fARB(program->u_LightOrigin, v[0], v[1], v[2]);
+		glUniform3fARB(program->u_LocalLightOrigin, v[0], v[1], v[2]);
+	}
+};
+
+class u_GlobalLightOrigin:
+GLUniform
+{
+public:
+	u_GlobalLightOrigin(GLShader* shader):
+	  GLUniform(shader)
+	{
+	}
+
+	const char* GetName() const { return "u_GlobalLightOrigin"; }
+	void UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
+	{
+		shaderProgram->u_GlobalLightOrigin = glGetUniformLocationARB(shaderProgram->program, GetName());
+	}
+
+	void SetUniform_GlobalLightOrigin(const idVec3& v)
+	{
+		shaderProgram_t* program = _shader->GetProgram();
+
+#if defined(USE_UNIFORM_FIREWALL)
+		if(program->t_GlobalLightOrigin == v)
+			return;
+
+		program->t_GlobalLightOrigin = v;
+#endif
+
+#if defined(LOG_GLSL_UNIFORMS)
+		if(r_logFile.GetBool())
+		{
+			RB_LogComment("--- SetUniform_GlobalLightOrigin( program = %s, vector = ( %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name.c_str(), v[0], v[1], v[2]);
+		}
+#endif
+
+		glUniform3fARB(program->u_GlobalLightOrigin, v[0], v[1], v[2]);
 	}
 };
 
@@ -1707,27 +1792,6 @@ public:
 	}
 };
 
-class u_ShadowMatrix:
-GLUniform
-{
-public:
-	u_ShadowMatrix(GLShader* shader):
-	  GLUniform(shader)
-	{
-	}
-
-	const char* GetName() const { return "u_ShadowMatrix"; }
-	void				UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
-	{
-		shaderProgram->u_ShadowMatrix = glGetUniformLocationARB(shaderProgram->program, GetName());
-	}
-
-	void SetUniform_ShadowMatrix(matrix_t m[MAX_SHADOWMAPS])
-	{
-		GLSL_SetUniform_ShadowMatrix(_shader->GetProgram(), m);
-	}
-};
-
 
 class u_ShadowParallelSplitDistances:
 GLUniform
@@ -1771,29 +1835,6 @@ public:
 	}
 };
 
-
-
-
-class u_ModelMatrix:
-GLUniform
-{
-public:
-	u_ModelMatrix(GLShader* shader):
-	  GLUniform(shader)
-	{
-	}
-
-	const char* GetName() const { return "u_ModelMatrix"; }
-	void				UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
-	{
-		shaderProgram->u_ModelMatrix = glGetUniformLocationARB(shaderProgram->program, GetName());
-	}
-
-	void SetUniform_ModelMatrix(const matrix_t m)
-	{
-		GLSL_SetUniform_ModelMatrix(_shader->GetProgram(), m);
-	}
-};
 
 
 class u_ViewMatrix:
@@ -2465,23 +2506,25 @@ public:
 
 class GLShader_forwardLighting:
 public GLShader,
+public u_ModelMatrix,
 public u_DiffuseMatrixS,
 public u_DiffuseMatrixT,
 public u_BumpMatrixS,
 public u_BumpMatrixT,
 public u_SpecularMatrixS,
 public u_SpecularMatrixT,
-//public u_AlphaTest,
 public u_Color,
 public u_ColorModulate,
 public u_DiffuseColor,
 public u_SpecularColor,
 public u_ViewOrigin,
-public u_LightOrigin,
+public u_LocalLightOrigin,
+public u_GlobalLightOrigin,
 public u_LightProjectS,
 public u_LightProjectT,
 public u_LightProjectQ,
 public u_LightFalloffS,
+public u_ShadowMatrix,
 //public u_LightColor,
 //public u_LightRadius,
 //public u_LightScale,
@@ -2501,10 +2544,9 @@ public u_LightFalloffS,
 //public GLCompileMacro_USE_VERTEX_SKINNING,
 //public GLCompileMacro_USE_VERTEX_ANIMATION,
 //public GLCompileMacro_USE_DEFORM_VERTEXES,
-public GLCompileMacro_USE_NORMAL_MAPPING
+public GLCompileMacro_USE_NORMAL_MAPPING,
 //public GLCompileMacro_USE_PARALLAX_MAPPING,
-//public GLCompileMacro_USE_SHADOWING//,
-//public GLCompileMacro_TWOSIDED
+public GLCompileMacro_USE_SHADOWING
 {
 public:
 	GLShader_forwardLighting();
@@ -2555,7 +2597,7 @@ public:
 
 class GLShader_shadowVolume:
 public GLShader,
-public u_LightOrigin
+public u_LocalLightOrigin
 //public GLCompileMacro_USE_VERTEX_SKINNING,
 //public GLCompileMacro_USE_VERTEX_ANIMATION,
 //public GLCompileMacro_USE_DEFORM_VERTEXES,
@@ -2567,7 +2609,7 @@ public:
 class GLShader_shadowMap:
 public GLShader,
 public u_ModelMatrix,
-public u_LightOrigin,
+public u_GlobalLightOrigin,
 public u_LightRadius
 //public GLCompileMacro_USE_VERTEX_SKINNING,
 //public GLCompileMacro_USE_VERTEX_ANIMATION,

@@ -1102,7 +1102,7 @@ static void RB_T_Shadow( const drawSurf_t *surf ) {
 				break;
 
 			case BE_GLSL:
-				gl_shadowVolumeShader->SetUniform_LightOrigin(localLight.ToVec3());
+				gl_shadowVolumeShader->SetUniform_LocalLightOrigin(localLight.ToVec3());
 				break;
 		};
 #endif
