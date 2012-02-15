@@ -59,8 +59,6 @@ polygon offset factor causes occasional texture holes from highly angled texture
 
 */
 
-#define MAX_SHADOWMAPS 5
-
 static	bool		initialized;
 
 static	int shadowMapResolutions[MAX_SHADOWMAPS] = { 1024, 1024, 512, 256, 128 };
@@ -1185,17 +1183,17 @@ void    RB_RenderShadowBuffer( viewLight_t	*vLight, int side ) {
 		// set the current openGL drawable to the shadow buffer
 		if ( vLight->lightDef->parms.pointLight )
 		{
-			shadowMapFBO[0]->Bind();
-			shadowMapFBO[0]->AttachImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X_ARB + side, shadowCubeImage[0], 0);
+			shadowMapFBO[vLight->shadowLOD]->Bind();
+			shadowMapFBO[vLight->shadowLOD]->AttachImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X_ARB + side, shadowCubeImage[vLight->shadowLOD], 0);
 		}
 		else
 		{
-			shadowMapFBO[0]->Bind();
-			shadowMapFBO[0]->AttachImage2D(GL_TEXTURE_2D, shadowMapImage[0], 0);
+			shadowMapFBO[vLight->shadowLOD]->Bind();
+			shadowMapFBO[vLight->shadowLOD]->AttachImage2D(GL_TEXTURE_2D, shadowMapImage[vLight->shadowLOD], 0);
 		}
 
 		if ( !r_ignoreGLErrors.GetBool() ) {
-			shadowMapFBO[0]->Check();
+			shadowMapFBO[vLight->shadowLOD]->Check();
 		}
 	}
 
@@ -2797,7 +2795,8 @@ void    RB_Exp_DrawInteractions( void ) {
 	}
 	
 	// set up for either point sampled or percentage-closer filtering for the shadow sampling
-	shadowMapImage[0]->BindFragment();
+	/*
+	shadowMapImage[]->BindFragment();
 	if ( r_sb_linearFilter.GetBool() ) {
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
@@ -2805,7 +2804,7 @@ void    RB_Exp_DrawInteractions( void ) {
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
 	}
-	//glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE_ARB, GL_COMPARE_R_TO_TEXTURE );
+	*/
 
 	globalImages->BindNull();
 
@@ -2907,12 +2906,12 @@ void    RB_Exp_DrawInteractions( void ) {
 		if ( vLight->lightDef->parms.pointLight ) 
 		{
 			GL_SelectTextureNoClient( 7 );
-			shadowCubeImage[0]->BindFragment();
+			shadowCubeImage[vLight->shadowLOD]->BindFragment();
 		}
 		else
 		{
 			GL_SelectTextureNoClient( 7 );
-			shadowMapImage[0]->BindFragment();
+			shadowMapImage[vLight->shadowLOD]->BindFragment();
 		}
 
 		RB_EXP_CreateDrawInteractions( vLight->localInteractions );

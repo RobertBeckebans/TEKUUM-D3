@@ -1679,6 +1679,81 @@ void RB_ShowLights( void ) {
 	common->Printf( " = %i total\n", count );
 }
 
+void RB_ShowLightShadowLODs( void ) {
+	const idRenderLightLocal	*light;
+	int					count;
+	srfTriangles_t		*tri;
+	viewLight_t			*vLight;
+
+	if ( !r_showShadowLod.GetInteger() ) {
+		return;
+	}
+
+	// all volumes are expressed in world coordinates
+	RB_SimpleWorldSetup();
+
+	glDisableClientState( GL_TEXTURE_COORD_ARRAY );
+	globalImages->BindNull();
+	glDisable( GL_STENCIL_TEST );
+
+	GL_Cull( CT_TWO_SIDED );
+	glDisable( GL_DEPTH_TEST );
+
+	count = 0;
+	for ( vLight = backEnd.viewDef->viewLights ; vLight ; vLight = vLight->next ) {
+		light = vLight->lightDef;
+		count++;
+
+		tri = light->frustumTris;
+
+		// non-hidden lines
+
+		idVec4 c;
+		if(vLight->shadowLOD == 0)
+		{
+			c = colorRed;
+		}
+		else if(vLight->shadowLOD == 1)
+		{
+			c = colorGreen;
+		}
+		else if(vLight->shadowLOD == 2)
+		{
+			c = colorBlue;
+		}
+		else if(vLight->shadowLOD == 3)
+		{
+			c = colorYellow;
+		}
+		else if(vLight->shadowLOD == 4)
+		{
+			c = colorMagenta;
+		}
+		else if(vLight->shadowLOD == 5)
+		{
+			c = colorCyan;
+		}
+		else
+		{
+			c = colorMdGrey;
+		}
+		
+		GL_State( GLS_POLYMODE_LINE | GLS_DEPTHMASK  );
+		glDisable( GL_DEPTH_TEST );
+		glColor4f( c[0], c[1], c[2], c[3] );
+		RB_RenderTriangleSurface( tri );
+	}
+
+	glEnable( GL_DEPTH_TEST );
+#if !defined(USE_GLES1)
+	glDisable( GL_POLYGON_OFFSET_LINE );
+#endif
+
+	glDepthRange( 0, 1 );
+	GL_State( GLS_DEFAULT );
+	GL_Cull( CT_FRONT_SIDED );
+}
+
 /*
 =====================
 RB_ShowPortals
@@ -2429,6 +2504,10 @@ void RB_RenderDebugTools( drawSurf_t **drawSurfs, int numDrawSurfs ) {
 	RB_ShowNormals( drawSurfs, numDrawSurfs );
 	RB_ShowViewEntitys( backEnd.viewDef->viewEntitys );
 	RB_ShowLights();
+// Techyon BEGIN
+	RB_ShowLightShadowLODs();
+// Techyon END
+
 	RB_ShowTextureVectors( drawSurfs, numDrawSurfs );
 	RB_ShowDominantTris( drawSurfs, numDrawSurfs );
 	if ( r_testGamma.GetInteger() > 0 ) {	// test here so stack check isn't so damn slow on debug builds

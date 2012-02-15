@@ -465,6 +465,87 @@ static bool R_PointInFrustum( idVec3 &p, idPlane *planes, int numPlanes ) {
 	return true;
 }
 
+// Techyon BEGIN
+static void R_SetViewLightShadowLOD(viewLight_t *vLight)
+{
+	float           radius;
+	float           flod, lodscale;
+	float           projectedRadius;
+	idBounds		projectionBounds;
+	int             lod;
+	int             numLods;
+
+	numLods = 5;
+
+	if(vLight->lightDef->parms.noShadows)
+	{
+		vLight->shadowLOD = numLods -1;
+		return;
+	}
+
+	// compute projected bounding sphere
+	// and use that as a criteria for selecting LOD
+
+	//if ( vLight->lightDef->parms.pointLight ) {
+	//	idBox box( vLight->lightDef->parms.origin, vLight->lightDef->parms.lightRadius, vLight->lightDef->parms.axis );
+	//	radius = box.GetVolume();
+	//} else {
+		//idBox box( vLight->lightDef->frustumTris->bounds );
+		//radius = box.GetVolume();
+	//}
+
+	radius = vLight->lightDef->frustumTris->bounds.GetRadius();
+
+	if((projectedRadius = R_ProjectRadius(radius, vLight->lightDef->parms.origin)) != 0)
+	{
+		lodscale = r_shadowLodScale.GetFloat();
+
+		if(lodscale > 20)
+			lodscale = 20;
+
+		flod = 1.0f - projectedRadius * lodscale;
+	}
+	else
+	{
+		// object intersects near view plane, e.g. view weapon
+		flod = 0;
+	}
+
+	flod *= numLods;
+	lod = idMath::Ftol(flod);
+
+	if(lod < 0)
+	{
+		lod = 0;
+	}
+	else if(lod >= numLods)
+	{
+		//lod = numLods - 1;
+	}
+
+	lod += r_shadowLodBias.GetFloat();
+
+	if(lod < 0)
+	{
+		lod = 0;
+	}
+
+	if(lod >= numLods)
+	{
+		// don't draw any shadow
+		//lod = -1;
+
+		lod = numLods - 1;
+	}
+
+	// never give ultra quality for point lights
+	if(lod == 0 && vLight->lightDef->parms.pointLight)
+		lod = 1;
+
+	vLight->shadowLOD = lod;
+}
+// Techyon END
+
 /*
 =============
 R_SetLightDefViewLight
@@ -505,6 +586,10 @@ viewLight_t *R_SetLightDefViewLight( idRenderLightLocal *light ) {
 
 	// see if the light center is in view, which will allow us to cull invisible shadows
 	vLight->viewSeesGlobalLightOrigin = R_PointInFrustum( light->globalLightOrigin, tr.viewDef->frustum, 4 );
+
+// Techyon BEGIN
+	R_SetViewLightShadowLOD(vLight);
+// Techyon END
 
 	// copy data used by backend
 	vLight->globalLightOrigin = light->globalLightOrigin;

@@ -50,6 +50,8 @@ const int FOG_ENTER_SIZE = 64;
 const float FOG_ENTER = (FOG_ENTER_SIZE+1.0f)/(FOG_ENTER_SIZE*2);
 // picky to get the bilerp correct at terminator
 
+const int MAX_SHADOWMAPS = 5;
+
 
 // idScreenRect gets carried around with each drawSurf, so it makes sense
 // to keep it compact, instead of just using the idBounds class
@@ -339,6 +341,10 @@ typedef struct viewLight_s {
 	const idMaterial *		lightShader;				// light shader used by backend
 	const float	*			shaderRegisters;			// shader registers used by backend
 	idImage *				falloffImage;				// falloff image used by backend
+
+// Techyon BEGIN
+	int						shadowLOD;					// shadowmap resolution index
+// Techyon END
 
 	const struct drawSurf_s	*globalShadows;				// shadow everything
 	const struct drawSurf_s	*localInteractions;			// don't get local shadows
@@ -1019,6 +1025,10 @@ extern idCVar r_sb_debug;
 extern idCVar r_sb_randomize;
 extern idCVar r_sb_softShadows;
 
+extern idCVar r_shadowLodScale;
+extern idCVar r_shadowLodBias;
+extern idCVar r_showShadowLod;
+
 extern idCVar r_esmOverDarkeningFactor;
 extern idCVar r_evsm_postProcess;
 
@@ -1198,6 +1208,10 @@ void R_TransposeGLMatrix( const float in[16], float out[16] );
 void R_SetViewMatrix( viewDef_t *viewDef );
 
 void myGlMultMatrix( const float *a, const float *b, float *out );
+
+// Techyon BEGIN
+float R_ProjectRadius(float r, const idVec3 &location);
+// Techyon END
 
 /*
 ============================================================
