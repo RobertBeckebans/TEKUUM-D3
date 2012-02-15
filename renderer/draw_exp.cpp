@@ -1354,16 +1354,17 @@ GL_SelectTexture( 0 );
 
 		gl_shadowMapShader->BindProgram();
 		gl_shadowMapShader->SetUniform_GlobalLightOrigin(origin);
+		gl_shadowMapShader->SetUniform_LightRadius(vLight->lightDef->frustumTris->bounds.GetRadius());
 
 		//
 		// set polygon offset for the rendering
 		//
 		switch ( r_sb_occluderFacing.GetInteger() ) {
 		case 0:		// front sides
-			glPolygonOffset( r_sb_polyOfsFactor.GetFloat(), r_sb_polyOfsUnits.GetFloat() );
-			glEnable( GL_POLYGON_OFFSET_FILL );
+			//glPolygonOffset( r_sb_polyOfsFactor.GetFloat(), r_sb_polyOfsUnits.GetFloat() );
+			//glEnable( GL_POLYGON_OFFSET_FILL );
 			RB_EXP_RenderOccluders( vLight );
-			glDisable( GL_POLYGON_OFFSET_FILL );
+			//glDisable( GL_POLYGON_OFFSET_FILL );
 			break;
 		case 1:		// back sides
 			glPolygonOffset( -r_sb_polyOfsFactor.GetFloat(), -r_sb_polyOfsUnits.GetFloat() );
@@ -1459,7 +1460,7 @@ RB_EXP_DrawInteraction
 */
 static void	RB_EXP_DrawInteraction( const drawInteraction_t *din ) {
 	
-	bool shadowCompare = backEnd.vLight->lightShader->LightCastsShadows();
+	bool shadowCompare = (!r_sb_noShadows.GetBool() && backEnd.vLight->lightShader->LightCastsShadows() && !backEnd.vLight->lightDef->parms.noShadows);
 
 	// choose and bind the vertex program
 	// TODO gl_forwardLightingShader->SetAmbientLighting(backEnd.vLight->lightShader->IsAmbientLight());
@@ -1474,6 +1475,8 @@ static void	RB_EXP_DrawInteraction( const drawInteraction_t *din ) {
 
 	gl_forwardLightingShader->SetUniform_LocalLightOrigin(din->localLightOrigin.ToVec3());
 	gl_forwardLightingShader->SetUniform_GlobalLightOrigin(din->globalLightOrigin.ToVec3());
+
+	gl_forwardLightingShader->SetUniform_LightRadius(backEnd.vLight->lightDef->frustumTris->bounds.GetRadius());
 
 	gl_forwardLightingShader->SetUniform_LightProjectS(din->lightProjection[0]);
 	gl_forwardLightingShader->SetUniform_LightProjectT(din->lightProjection[1]);

@@ -1075,6 +1075,7 @@ GLShader_forwardLighting::GLShader_forwardLighting():
 		u_ViewOrigin(this),
 		u_LocalLightOrigin(this),
 		u_GlobalLightOrigin(this),
+		u_LightRadius(this),
 		u_LightProjectS(this),
 		u_LightProjectT(this),
 		u_LightProjectQ(this),
