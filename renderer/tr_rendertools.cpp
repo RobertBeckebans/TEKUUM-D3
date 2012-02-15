@@ -765,6 +765,7 @@ static void RB_ShowTris( drawSurf_t **drawSurfs, int numDrawSurfs ) {
 
 	glColor4f( 1, 1, 1, 1 );
 
+	backEnd.showTrisEnabled = true;
 
 	GL_State( GLS_POLYMODE_LINE );
 
@@ -796,6 +797,10 @@ static void RB_ShowTris( drawSurf_t **drawSurfs, int numDrawSurfs ) {
 	glDepthRange( 0, 1 );
 	GL_State( GLS_DEFAULT );
 	GL_Cull( CT_FRONT_SIDED );
+
+	glColor4f( 1, 1, 1, 1 );
+
+	backEnd.showTrisEnabled = false;
 }
 
 

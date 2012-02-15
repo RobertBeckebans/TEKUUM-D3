@@ -49,6 +49,10 @@ This should never happen if the vertex cache is operating properly.
 #if !defined(USE_GLES1)
 void RB_DrawElementsImmediate( const srfTriangles_t *tri ) {
 
+	if ( backEnd.showTrisEnabled ) {
+		glColor4f(1, 0, 0, 1);
+	}
+
 	backEnd.pc.c_drawElements++;
 	backEnd.pc.c_drawIndexes += tri->numIndexes;
 	backEnd.pc.c_drawVertexes += tri->numVerts;
@@ -93,12 +97,22 @@ void RB_DrawElementsWithCounters( const srfTriangles_t *tri ) {
 	}
 
 	if ( tri->indexCache && r_useIndexBuffers.GetBool() ) {
+
+		if ( backEnd.showTrisEnabled ) {
+			glColor4f(0, 1, 0, 1);
+		}
+
 		glDrawElements( GL_TRIANGLES, 
 						r_singleTriangle.GetBool() ? 3 : tri->numIndexes,
 						GL_INDEX_TYPE,
 						(int *)vertexCache.Position( tri->indexCache ) );
 		backEnd.pc.c_vboIndexes += tri->numIndexes;
 	} else {
+
+		if ( backEnd.showTrisEnabled ) {
+			glColor4f(0, 0, 1, 1);
+		}
+
 		if ( r_useIndexBuffers.GetBool() ) {
 			vertexCache.UnbindIndex();
 		}

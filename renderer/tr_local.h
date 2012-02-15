@@ -680,6 +680,10 @@ typedef struct {
 
 	bool				currentRenderCopied;	// true if any material has already referenced _currentRender
 
+// Techyon BEGIN
+	bool				showTrisEnabled;	// use colors to see what objects are hardware accelerated
+// Techyon END
+
 	// our OpenGL state deltas
 	glstate_t			glState;
 
