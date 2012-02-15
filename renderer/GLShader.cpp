@@ -313,25 +313,18 @@ idStr	GLShader::BuildGPUShaderText(	const char *mainShaderName,
 
 	shaderText += "#ifndef M_PI\n#define M_PI 3.14159265358979323846f\n#endif\n";
 
-	/*
-	fbufWidthScale = Q_recip((float)glConfig.vidWidth);
-	fbufHeightScale = Q_recip((float)glConfig.vidHeight);
-	Q_strcat(bufferExtra, sizeof(bufferExtra),
-				va("#ifndef r_FBufScale\n#define r_FBufScale vec2(%f, %f)\n#endif\n", fbufWidthScale, fbufHeightScale));
+	float fbufWidthScale = 1.0f / (float)glConfig.vidWidth;
+	float fbufHeightScale = 1.0f / (float)glConfig.vidHeight;
+	shaderText += va("#ifndef r_FBufScale\n#define r_FBufScale vec2(%f, %f)\n#endif\n", fbufWidthScale, fbufHeightScale);
 
-	if(glConfig2.textureNPOTAvailable)
+	float npotWidthScale = 1;
+	float npotHeightScale = 1;
+	if(!glConfig.textureNonPowerOfTwoAvailable)
 	{
-		npotWidthScale = 1;
-		npotHeightScale = 1;
+		npotWidthScale = (float)glConfig.vidWidth / (float)MakePowerOfTwo(glConfig.vidWidth);
+		npotHeightScale = (float)glConfig.vidHeight / (float)MakePowerOfTwo(glConfig.vidHeight);
 	}
-	else
-	{
-		npotWidthScale = (float)glConfig.vidWidth / (float)NearestPowerOfTwo(glConfig.vidWidth);
-		npotHeightScale = (float)glConfig.vidHeight / (float)NearestPowerOfTwo(glConfig.vidHeight);
-	}
-	Q_strcat(bufferExtra, sizeof(bufferExtra),
-				va("#ifndef r_NPOTScale\n#define r_NPOTScale vec2(%f, %f)\n#endif\n", npotWidthScale, npotHeightScale));
-	*/
+	shaderText += va("#ifndef r_NPOTScale\n#define r_NPOTScale vec2(%f, %f)\n#endif\n", npotWidthScale, npotHeightScale);
 
 	/*
 	if(glConfig.driverType == GLDRV_MESA)
@@ -402,14 +395,14 @@ idStr	GLShader::BuildGPUShaderText(	const char *mainShaderName,
 						va("#ifndef r_LightBleedReduction\n#define r_LightBleedReduction %f\n#endif\n",
 						r_lightBleedReduction->value));
 		}
+		*/
 
-		if(r_overDarkeningFactor->value)
+		if(r_esmOverDarkeningFactor.GetFloat() > 0)
 		{
-			Q_strcat(bufferExtra, sizeof(bufferExtra),
-						va("#ifndef r_OverDarkeningFactor\n#define r_OverDarkeningFactor %f\n#endif\n",
-						r_overDarkeningFactor->value));
+			shaderText += va("#ifndef r_EsmOverDarkeningFactor\n#define r_EsmOverDarkeningFactor %f\n#endif\n", r_esmOverDarkeningFactor.GetFloat());
 		}
 
+		/*
 		if(r_shadowMapDepthScale->value)
 		{
 			Q_strcat(bufferExtra, sizeof(bufferExtra),
@@ -423,17 +416,13 @@ idStr	GLShader::BuildGPUShaderText(	const char *mainShaderName,
 			shaderText += va("#ifndef r_DebugShadowMaps\n#define r_DebugShadowMaps %i\n#endif\n", r_sb_debug.GetInteger());
 		}
 		
-		/*
-		if(r_softShadows->integer == 6)
+		
+		if(r_sb_softShadows.GetBool())
 		{
-			Q_strcat(bufferExtra, sizeof(bufferExtra), "#ifndef PCSS\n#define PCSS 1\n#endif\n");
-		}
-		else if(r_softShadows->integer)
-		{
-			Q_strcat(bufferExtra, sizeof(bufferExtra),
-				va("#ifndef r_PCFSamples\n#define r_PCFSamples %1.1f\n#endif\n", r_softShadows->value + 1.0f));
+			shaderText += va("#ifndef r_PCFSamples\n#define r_PCFSamples %1.1f\n#endif\n", r_sb_softShadows.GetFloat() + 1.0f);
 		}
 
+		/*
 		if(r_parallelShadowSplits->integer)
 		{
 			Q_strcat(bufferExtra, sizeof(bufferExtra),
@@ -1091,13 +1080,11 @@ GLShader_forwardLighting::GLShader_forwardLighting():
 		u_LightProjectQ(this),
 		u_LightFalloffS(this),
 		u_ShadowMatrix(this),
-		//u_LightColor(this),
-		//u_LightRadius(this),
-		//u_LightScale(this),
-		//u_LightWrapAround(this),
-		//u_LightAttenuationMatrix(this),
-		//u_ShadowTexelSize(this),
-		//u_ShadowBlur(this),
+		u_ShadowTexelSize(this),
+		u_ShadowBlur(this),
+		u_PositionToJitterTexScale(this),
+		u_JitterTexScale(this),
+		u_JitterTexOffset(this),
 		//u_ModelMatrix(this),
 		//u_ModelViewProjectionMatrix(this),
 		//u_BoneMatrix(this),
@@ -1183,11 +1170,11 @@ GLShader_forwardLighting::GLShader_forwardLighting():
 			shaderProgram->u_LightImage = glGetUniformLocationARB(shaderProgram->program, "u_LightImage");
 			shaderProgram->u_DiffuseImage = glGetUniformLocationARB(shaderProgram->program, "u_DiffuseImage");
 			shaderProgram->u_SpecularImage = glGetUniformLocationARB(shaderProgram->program, "u_SpecularImage");
+			shaderProgram->u_JitterImage = glGetUniformLocationARB(shaderProgram->program, "u_JitterImage");
 			//if(r_sb_mode.GetInteger() >= SHADOWING_ESM16)
 			{
 				shaderProgram->u_ShadowImage = glGetUniformLocationARB(shaderProgram->program, "u_ShadowImage");
 			}
-			//shaderProgram->u_RandomMap = glGetUniformLocationARB(shaderProgram->program, "u_RandomMap");
 
 			glUseProgramObjectARB(shaderProgram->program);
 			glUniform1iARB(shaderProgram->u_NormalCubeMapImage, 0);
@@ -1196,11 +1183,11 @@ GLShader_forwardLighting::GLShader_forwardLighting():
 			glUniform1iARB(shaderProgram->u_LightImage, 3);
 			glUniform1iARB(shaderProgram->u_DiffuseImage, 4);
 			glUniform1iARB(shaderProgram->u_SpecularImage, 5);
+			glUniform1iARB(shaderProgram->u_JitterImage, 6);
 			//if(r_sb_mode.GetInteger() >= SHADOWING_ESM16)
 			{
 				glUniform1iARB(shaderProgram->u_ShadowImage, 7);
 			}
-			//glUniform1iARB(shaderProgram->u_RandomMap, 6);
 			glUseProgramObjectARB(0);
 
 			ValidateProgram(shaderProgram->program);

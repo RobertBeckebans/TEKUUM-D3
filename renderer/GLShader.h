@@ -1611,145 +1611,6 @@ public:
 	}
 };
 
-
-/*
-class u_LightColor:
-GLUniform
-{
-public:
-	u_LightColor(GLShader* shader):
-	  GLUniform(shader)
-	{
-	}
-
-	const char* GetName() const { return "u_LightColor"; }
-	void				UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
-	{
-		shaderProgram->u_LightColor = glGetUniformLocationARB(shaderProgram->program, GetName());
-	}
-
-	void SetUniform_LightColor(const vec3_t v)
-	{
-		GLSL_SetUniform_LightColor(_shader->GetProgram(), v);
-	}
-};
-
-
-class u_LightScale:
-GLUniform
-{
-public:
-	u_LightScale(GLShader* shader):
-	  GLUniform(shader)
-	{
-	}
-
-	const char* GetName() const { return "u_LightScale"; }
-	void				UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
-	{
-		shaderProgram->u_LightScale = glGetUniformLocationARB(shaderProgram->program, GetName());
-	}
-
-	void SetUniform_LightScale(float value)
-	{
-		GLSL_SetUniform_LightScale(_shader->GetProgram(), value);
-	}
-};
-
-
-class u_LightWrapAround:
-GLUniform
-{
-public:
-	u_LightWrapAround(GLShader* shader):
-	  GLUniform(shader)
-	{
-	}
-
-	const char* GetName() const { return "u_LightWrapAround"; }
-	void				UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
-	{
-		shaderProgram->u_LightWrapAround = glGetUniformLocationARB(shaderProgram->program, GetName());
-	}
-
-	void SetUniform_LightWrapAround(float value)
-	{
-		GLSL_SetUniform_LightWrapAround(_shader->GetProgram(), value);
-	}
-};
-
-class u_LightAttenuationMatrix:
-GLUniform
-{
-public:
-	u_LightAttenuationMatrix(GLShader* shader):
-	  GLUniform(shader)
-	{
-	}
-
-	const char* GetName() const { return "u_LightAttenuationMatrix"; }
-	void				UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
-	{
-		shaderProgram->u_LightAttenuationMatrix = glGetUniformLocationARB(shaderProgram->program, GetName());
-	}
-
-	void SetUniform_LightAttenuationMatrix(const matrix_t m)
-	{
-		GLSL_SetUniform_LightAttenuationMatrix(_shader->GetProgram(), m);
-	}
-};
-
-
-class u_LightFrustum:
-GLUniform
-{
-public:
-	u_LightFrustum(GLShader* shader):
-	  GLUniform(shader)
-	{
-	}
-
-	const char* GetName() const { return "u_LightFrustum"; }
-	void				UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
-	{
-		shaderProgram->u_LightFrustum = glGetUniformLocationARB(shaderProgram->program, GetName());
-	}
-
-	void SetUniform_LightFrustum(vec4_t lightFrustum[6])
-	{
-		shaderProgram_t* program = _shader->GetProgram();
-
-#if 0
-		if(memcmp(program->t_LightFrustum, m))
-			return;
-#endif
-
-#if defined(LOG_GLSL_UNIFORMS)
-		if(r_logFile->integer)
-		{
-			GLimp_LogComment(va("--- SetUniform_LightFrustum( program = %s, "
-								"( %5.3f, %5.3f, %5.3f, %5.3f )\n"
-								"( %5.3f, %5.3f, %5.3f, %5.3f )\n"
-								"( %5.3f, %5.3f, %5.3f, %5.3f )\n"
-								"( %5.3f, %5.3f, %5.3f, %5.3f )\n"
-								"( %5.3f, %5.3f, %5.3f, %5.3f )\n"
-								"( %5.3f, %5.3f, %5.3f, %5.3f ) ) ---\n",
-								program->name.c_str(),
-								lightFrustum[0][0], lightFrustum[0][1], lightFrustum[0][2], lightFrustum[0][3],
-								lightFrustum[1][0], lightFrustum[1][1], lightFrustum[1][2], lightFrustum[1][3],
-								lightFrustum[2][0], lightFrustum[2][1], lightFrustum[2][2], lightFrustum[2][3],
-								lightFrustum[3][0], lightFrustum[3][1], lightFrustum[3][2], lightFrustum[3][3],
-								lightFrustum[4][0], lightFrustum[4][1], lightFrustum[4][2], lightFrustum[4][3],
-								lightFrustum[5][0], lightFrustum[5][1], lightFrustum[5][2], lightFrustum[5][3]
-								));
-		}
-#endif
-
-		glUniform4fvARB(program->u_LightFrustum, 6, &lightFrustum[0][0]);
-	}
-};
-
-
 class u_ShadowTexelSize:
 GLUniform
 {
@@ -1767,7 +1628,23 @@ public:
 
 	void SetUniform_ShadowTexelSize(float value)
 	{
-		GLSL_SetUniform_ShadowTexelSize(_shader->GetProgram(), value);
+		shaderProgram_t* program = _shader->GetProgram();
+
+#if defined(USE_UNIFORM_FIREWALL)
+		if(program->t_ShadowTexelSize == value)
+			return;
+
+		program->t_ShadowTexelSize = value;
+#endif
+
+#if defined(LOG_GLSL_UNIFORMS)
+		if(r_logFile.GetBool())
+		{
+			RB_LogComment("--- SetUniform_ShadowTexelSize( program = %s, value = %f ) ---\n", program->name.c_str(), value);
+		}
+#endif
+
+		glUniform1fARB(program->u_ShadowTexelSize, value);
 	}
 };
 
@@ -1788,583 +1665,141 @@ public:
 
 	void SetUniform_ShadowBlur(float value)
 	{
-		GLSL_SetUniform_ShadowBlur(_shader->GetProgram(), value);
-	}
-};
+		shaderProgram_t* program = _shader->GetProgram();
 
+#if defined(USE_UNIFORM_FIREWALL)
+		if(program->t_ShadowBlur == value)
+			return;
 
-class u_ShadowParallelSplitDistances:
-GLUniform
-{
-public:
-	u_ShadowParallelSplitDistances(GLShader* shader):
-	  GLUniform(shader)
-	{
-	}
+		program->t_ShadowBlur = value;
+#endif
 
-	const char* GetName() const { return "u_ShadowParallelSplitDistances"; }
-	void				UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
-	{
-		shaderProgram->u_ShadowParallelSplitDistances = glGetUniformLocationARB(shaderProgram->program, GetName());
-	}
-
-	void SetUniform_ShadowParallelSplitDistances(const vec4_t v)
-	{
-		GLSL_SetUniform_ShadowParallelSplitDistances(_shader->GetProgram(), v);
-	}
-};
-
-class u_Color:
-GLUniform
-{
-public:
-	u_Color(GLShader* shader):
-	  GLUniform(shader)
-	{
-	}
-
-	const char* GetName() const { return "u_Color"; }
-	void				UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
-	{
-		shaderProgram->u_Color = glGetUniformLocationARB(shaderProgram->program, GetName());
-	}
-
-	void SetUniform_Color(const vec4_t v)
-	{
-		GLSL_SetUniform_Color(_shader->GetProgram(), v);
-	}
-};
-
-
-
-class u_ViewMatrix:
-GLUniform
-{
-public:
-	u_ViewMatrix(GLShader* shader):
-	  GLUniform(shader)
-	{
-	}
-
-	const char* GetName() const { return "u_ViewMatrix"; }
-	void				UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
-	{
-		shaderProgram->u_ViewMatrix = glGetUniformLocationARB(shaderProgram->program, GetName());
-	}
-
-	void SetUniform_ViewMatrix(const matrix_t m)
-	{
-		GLSL_SetUniform_ViewMatrix(_shader->GetProgram(), m);
-	}
-};
-
-
-class u_ModelViewMatrix:
-GLUniform
-{
-public:
-	u_ModelViewMatrix(GLShader* shader):
-	  GLUniform(shader)
-	{
-	}
-
-	const char* GetName() const { return "u_ModelViewMatrix"; }
-	void				UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
-	{
-		shaderProgram->u_ModelViewMatrix = glGetUniformLocationARB(shaderProgram->program, GetName());
-	}
-
-	void SetUniform_ModelViewMatrix(const matrix_t m)
-	{
-		GLSL_SetUniform_ModelViewMatrix(_shader->GetProgram(), m);
-	}
-};
-
-
-class u_ModelViewMatrixTranspose:
-GLUniform
-{
-public:
-	u_ModelViewMatrixTranspose(GLShader* shader):
-	  GLUniform(shader)
-	{
-	}
-
-	const char* GetName() const { return "u_ModelViewMatrixTranspose"; }
-	void				UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
-	{
-		shaderProgram->u_ModelViewMatrixTranspose = glGetUniformLocationARB(shaderProgram->program, GetName());
-	}
-
-	void SetUniform_ModelViewMatrixTranspose(const matrix_t m)
-	{
-		GLSL_SetUniform_ModelViewMatrixTranspose(_shader->GetProgram(), m);
-	}
-};
-
-
-class u_ProjectionMatrixTranspose:
-GLUniform
-{
-public:
-	u_ProjectionMatrixTranspose(GLShader* shader):
-	  GLUniform(shader)
-	{
-	}
-
-	const char* GetName() const { return "u_ProjectionMatrixTranspose"; }
-	void				UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
-	{
-		shaderProgram->u_ProjectionMatrixTranspose = glGetUniformLocationARB(shaderProgram->program, GetName());
-	}
-
-	void SetUniform_ProjectionMatrixTranspose(const matrix_t m)
-	{
-		GLSL_SetUniform_ProjectionMatrixTranspose(_shader->GetProgram(), m);
-	}
-};
-
-
-class u_ModelViewProjectionMatrix:
-GLUniform
-{
-public:
-	u_ModelViewProjectionMatrix(GLShader* shader):
-	  GLUniform(shader)
-	{
-	}
-
-	const char* GetName() const { return "u_ModelViewProjectionMatrix"; }
-	void				UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
-	{
-		shaderProgram->u_ModelViewProjectionMatrix = glGetUniformLocationARB(shaderProgram->program, GetName());
-	}
-
-	void SetUniform_ModelViewProjectionMatrix(const matrix_t m)
-	{
-		GLSL_SetUniform_ModelViewProjectionMatrix(_shader->GetProgram(), m);
-	}
-};
-
-
-class u_UnprojectMatrix:
-GLUniform
-{
-public:
-	u_UnprojectMatrix(GLShader* shader):
-	  GLUniform(shader)
-	{
-	}
-
-	const char* GetName() const { return "u_UnprojectMatrix"; }
-	void				UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
-	{
-		shaderProgram->u_UnprojectMatrix = glGetUniformLocationARB(shaderProgram->program, GetName());
-	}
-
-	void SetUniform_UnprojectMatrix(const matrix_t m)
-	{
-		GLSL_SetUniform_UnprojectMatrix(_shader->GetProgram(), m);
-	}
-};
-
-
-class u_BoneMatrix:
-GLUniform
-{
-public:
-	u_BoneMatrix(GLShader* shader):
-	  GLUniform(shader)
-	{
-	}
-
-	const char* GetName() const { return "u_BoneMatrix"; }
-	void				UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
-	{
-		shaderProgram->u_BoneMatrix = glGetUniformLocationARB(shaderProgram->program, GetName());
-	}
-
-	void SetUniform_BoneMatrix(int numBones, const matrix_t boneMatrices[MAX_BONES])
-	{
-		glUniformMatrix4fvARB(_shader->GetProgram()->u_BoneMatrix, numBones, GL_FALSE, &boneMatrices[0][0]);
-	}
-};
-
-
-class u_VertexInterpolation:
-GLUniform
-{
-public:
-	u_VertexInterpolation(GLShader* shader):
-	  GLUniform(shader)
-	{
-	}
-
-	const char* GetName() const { return "u_VertexInterpolation"; }
-	void				UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
-	{
-		shaderProgram->u_VertexInterpolation = glGetUniformLocationARB(shaderProgram->program, GetName());
-	}
-
-	void SetUniform_VertexInterpolation(float value)
-	{
-		GLSL_SetUniform_VertexInterpolation(_shader->GetProgram(), value);
-	}
-};
-
-
-class u_PortalPlane:
-GLUniform
-{
-public:
-	u_PortalPlane(GLShader* shader):
-	  GLUniform(shader)
-	{
-	}
-
-	const char* GetName() const { return "u_PortalPlane"; }
-	void				UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
-	{
-		shaderProgram->u_PortalPlane = glGetUniformLocationARB(shaderProgram->program, GetName());
-	}
-
-	void SetUniform_PortalPlane(const vec4_t v)
-	{
-		GLSL_SetUniform_PortalPlane(_shader->GetProgram(), v);
-	}
-};
-
-class u_PortalRange:
-GLUniform
-{
-public:
-	u_PortalRange(GLShader* shader):
-	  GLUniform(shader)
-	{
-	}
-
-	const char* GetName() const { return "u_PortalRange"; }
-	void				UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
-	{
-		shaderProgram->u_PortalRange = glGetUniformLocationARB(shaderProgram->program, GetName());
-	}
-
-	void SetUniform_PortalRange(float value)
-	{
-		GLSL_SetUniform_PortalRange(_shader->GetProgram(), value);
-	}
-};
-
-
-class u_DepthScale:
-GLUniform
-{
-public:
-	u_DepthScale(GLShader* shader):
-	  GLUniform(shader)
-	{
-	}
-
-	const char* GetName() const { return "u_DepthScale"; }
-	void				UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
-	{
-		shaderProgram->u_DepthScale = glGetUniformLocationARB(shaderProgram->program, GetName());
-	}
-
-	void SetUniform_DepthScale(float value)
-	{
-		GLSL_SetUniform_DepthScale(_shader->GetProgram(), value);
-	}
-};
-
-class u_EnvironmentInterpolation:
-GLUniform
-{
-public:
-	u_EnvironmentInterpolation(GLShader* shader):
-	  GLUniform(shader)
-	{
-	}
-
-	const char* GetName() const { return "u_EnvironmentInterpolation"; }
-	void				UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
-	{
-		shaderProgram->u_EnvironmentInterpolation = glGetUniformLocationARB(shaderProgram->program, GetName());
-	}
-
-	void SetUniform_EnvironmentInterpolation(float value)
-	{
-		GLSL_SetUniform_EnvironmentInterpolation(_shader->GetProgram(), value);
-	}
-};
-
-
-
-
-
-
-class u_DeformParms:
-GLUniform
-{
-public:
-	u_DeformParms(GLShader* shader):
-	  GLUniform(shader)
-	{
-	}
-
-	const char* GetName() const { return "u_DeformParms"; }
-	void				UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
-	{
-		shaderProgram->u_DeformParms = glGetUniformLocationARB(shaderProgram->program, GetName());
-	}
-
-	void SetUniform_DeformParms(deformStage_t deforms[MAX_SHADER_DEFORMS], int numDeforms)
-	{
-		float	deformParms[MAX_SHADER_DEFORM_PARMS];
-		int		deformOfs = 0;
-
-		if(numDeforms > MAX_SHADER_DEFORMS)
-			numDeforms = MAX_SHADER_DEFORMS;
-
-		deformParms[deformOfs++] = numDeforms;
-
-		for(int i = 0; i < numDeforms; i++)
+#if defined(LOG_GLSL_UNIFORMS)
+		if(r_logFile.GetBool())
 		{
-			deformStage_t *ds = &deforms[i];
-
-			switch (ds->deformation)
-			{
-				case DEFORM_WAVE:
-					deformParms[deformOfs++] = DEFORM_WAVE;
-
-					deformParms[deformOfs++] = ds->deformationWave.func;
-					deformParms[deformOfs++] = ds->deformationWave.base;
-					deformParms[deformOfs++] = ds->deformationWave.amplitude;
-					deformParms[deformOfs++] = ds->deformationWave.phase;
-					deformParms[deformOfs++] = ds->deformationWave.frequency;
-
-					deformParms[deformOfs++] = ds->deformationSpread;
-					break;
-
-				case DEFORM_BULGE:
-					deformParms[deformOfs++] = DEFORM_BULGE;
-
-					deformParms[deformOfs++] = ds->bulgeWidth;
-					deformParms[deformOfs++] = ds->bulgeHeight;
-					deformParms[deformOfs++] = ds->bulgeSpeed;
-					break;
-
-				case DEFORM_MOVE:
-					deformParms[deformOfs++] = DEFORM_MOVE;
-
-					deformParms[deformOfs++] = ds->deformationWave.func;
-					deformParms[deformOfs++] = ds->deformationWave.base;
-					deformParms[deformOfs++] = ds->deformationWave.amplitude;
-					deformParms[deformOfs++] = ds->deformationWave.phase;
-					deformParms[deformOfs++] = ds->deformationWave.frequency;
-
-					deformParms[deformOfs++] = ds->bulgeWidth;
-					deformParms[deformOfs++] = ds->bulgeHeight;
-					deformParms[deformOfs++] = ds->bulgeSpeed;
-					break;
-			}
-
-			glUniform1fvARB(_shader->GetProgram()->u_DeformParms, MAX_SHADER_DEFORM_PARMS, deformParms);
+			RB_LogComment("--- SetUniform_ShadowBlur( program = %s, value = %f ) ---\n", program->name.c_str(), value);
 		}
+#endif
+
+		glUniform1fARB(program->u_ShadowBlur, value);
 	}
 };
 
 
-class u_Time:
+class u_PositionToJitterTexScale:
 GLUniform
 {
 public:
-	u_Time(GLShader* shader):
+	u_PositionToJitterTexScale(GLShader* shader):
 	  GLUniform(shader)
 	{
 	}
 
-	const char* GetName() const { return "u_Time"; }
-	void				UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
+	const char* GetName() const { return "u_PositionToJitterTexScale"; }
+	void UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
 	{
-		shaderProgram->u_Time = glGetUniformLocationARB(shaderProgram->program, GetName());
+		shaderProgram->u_PositionToJitterTexScale = glGetUniformLocationARB(shaderProgram->program, GetName());
 	}
 
-	void SetUniform_Time(float value)
-	{
-		GLSL_SetUniform_Time(_shader->GetProgram(), value);
-	}
-};
-
-
-
-
-
-class GLDeformStage:
-public u_DeformParms,
-public u_Time
-{
-public:
-	GLDeformStage(GLShader* shader):
-	  u_DeformParms(shader),
-	  u_Time(shader)
-	{
-	}
-};
-
-class u_FogDistanceVector:
-GLUniform
-{
-public:
-	u_FogDistanceVector(GLShader* shader):
-	  GLUniform(shader)
-	{
-	}
-
-	const char* GetName() const { return "u_FogDistanceVector"; }
-	void				UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
-	{
-		shaderProgram->u_FogDistanceVector = glGetUniformLocationARB(shaderProgram->program, GetName());
-	}
-
-	void SetUniform_FogDistanceVector(const vec4_t v)
+	void SetUniform_PositionToJitterTexScale(const idVec4& v)
 	{
 		shaderProgram_t* program = _shader->GetProgram();
 
 #if defined(USE_UNIFORM_FIREWALL)
-		if(Vector4Compare(program->t_FogDistanceVector, v))
+		if(program->t_PositionToJitterTexScale == v)
 			return;
 
-		VectorCopy(v, program->t_FogDistanceVector);
+		program->t_PositionToJitterTexScale = v;
 #endif
 
 #if defined(LOG_GLSL_UNIFORMS)
-		if(r_logFile->integer)
+		if(r_logFile.GetBool())
 		{
-			GLimp_LogComment(va("--- SetUniform_FogDistanceVector( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f ) ) ---\n", program->name.c_str(), v[0], v[1], v[2], v[3]));
+			RB_LogComment("--- SetUniform_PositionToJitterTexScale( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name.c_str(), v[0], v[1], v[2], v[3]);
 		}
 #endif
 
-		glUniform4fARB(program->u_FogDistanceVector, v[0], v[1], v[2], v[3]);
+		glUniform4fARB(program->u_PositionToJitterTexScale, v[0], v[1], v[2], v[3]);
 	}
 };
 
 
-class u_FogDepthVector:
+class u_JitterTexScale:
 GLUniform
 {
 public:
-	u_FogDepthVector(GLShader* shader):
+	u_JitterTexScale(GLShader* shader):
 	  GLUniform(shader)
 	{
 	}
 
-	const char* GetName() const { return "u_FogDepthVector"; }
-	void				UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
+	const char* GetName() const { return "u_JitterTexScale"; }
+	void UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
 	{
-		shaderProgram->u_FogDepthVector = glGetUniformLocationARB(shaderProgram->program, GetName());
+		shaderProgram->u_JitterTexScale = glGetUniformLocationARB(shaderProgram->program, GetName());
 	}
 
-	void SetUniform_FogDepthVector(const vec4_t v)
+	void SetUniform_JitterTexScale(const idVec4& v)
 	{
 		shaderProgram_t* program = _shader->GetProgram();
 
 #if defined(USE_UNIFORM_FIREWALL)
-		if(Vector4Compare(program->t_FogDepthVector, v))
+		if(program->t_JitterTexScale == v)
 			return;
 
-		VectorCopy(v, program->t_FogDepthVector);
+		program->t_JitterTexScale = v;
 #endif
 
 #if defined(LOG_GLSL_UNIFORMS)
-		if(r_logFile->integer)
+		if(r_logFile.GetBool())
 		{
-			GLimp_LogComment(va("--- SetUniform_FogDepthVector( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f ) ) ---\n", program->name.c_str(), v[0], v[1], v[2], v[3]));
+			RB_LogComment("--- SetUniform_JitterTexScale( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name.c_str(), v[0], v[1], v[2], v[3]);
 		}
 #endif
 
-		glUniform4fARB(program->u_FogDepthVector, v[0], v[1], v[2], v[3]);
+		glUniform4fARB(program->u_JitterTexScale, v[0], v[1], v[2], v[3]);
 	}
 };
 
-
-class u_FogEyeT:
+class u_JitterTexOffset:
 GLUniform
 {
 public:
-	u_FogEyeT(GLShader* shader):
+	u_JitterTexOffset(GLShader* shader):
 	  GLUniform(shader)
 	{
 	}
 
-	const char* GetName() const { return "u_FogEyeT"; }
-	void				UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
+	const char* GetName() const { return "u_JitterTexOffset"; }
+	void UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
 	{
-		shaderProgram->u_FogEyeT = glGetUniformLocationARB(shaderProgram->program, GetName());
+		shaderProgram->u_JitterTexOffset = glGetUniformLocationARB(shaderProgram->program, GetName());
 	}
 
-	void SetUniform_FogEyeT(float value)
-	{
-		shaderProgram_t* program = _shader->GetProgram();
-
-#if defined(USE_UNIFORM_FIREWALL)
-		if(program->t_FogEyeT == value)
-			return;
-
-		program->t_FogEyeT = value;
-#endif
-
-#if defined(LOG_GLSL_UNIFORMS)
-		if(r_logFile->integer)
-		{
-			GLimp_LogComment(va("--- SetUniform_FogEyeT( program = %s, value = %f ) ---\n", program->name.c_str(), value));
-		}
-#endif
-
-		glUniform1fARB(program->u_FogEyeT, value);
-	}
-};
-
-
-class u_DeformMagnitude:
-GLUniform
-{
-public:
-	u_DeformMagnitude(GLShader* shader):
-	  GLUniform(shader)
-	{
-	}
-
-	const char* GetName() const { return "u_DeformMagnitude"; }
-	void				UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
-	{
-		shaderProgram->u_DeformMagnitude = glGetUniformLocationARB(shaderProgram->program, GetName());
-	}
-
-	void SetUniform_DeformMagnitude(float value)
+	void SetUniform_JitterTexOffset(const idVec4& v)
 	{
 		shaderProgram_t* program = _shader->GetProgram();
 
 #if defined(USE_UNIFORM_FIREWALL)
-		if(program->t_DeformMagnitude == value)
+		if(program->t_JitterTexOffset == v)
 			return;
 
-		program->t_DeformMagnitude = value;
+		program->t_JitterTexOffset = v;
 #endif
 
 #if defined(LOG_GLSL_UNIFORMS)
-		if(r_logFile->integer)
+		if(r_logFile.GetBool())
 		{
-			GLimp_LogComment(va("--- SetUniform_DeformMagnitude( program = %s, value = %f ) ---\n", program->name.c_str(), value));
+			RB_LogComment("--- SetUniform_JitterTexOffset( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name.c_str(), v[0], v[1], v[2], v[3]);
 		}
 #endif
 
-		glUniform1fARB(program->u_DeformMagnitude, value);
+		glUniform4fARB(program->u_JitterTexOffset, v[0], v[1], v[2], v[3]);
 	}
 };
 
 
-
+/*
 class u_HDRKey:
 GLUniform
 {
@@ -2525,15 +1960,11 @@ public u_LightProjectT,
 public u_LightProjectQ,
 public u_LightFalloffS,
 public u_ShadowMatrix,
-//public u_LightColor,
-//public u_LightRadius,
-//public u_LightScale,
-//public u_LightWrapAround,
-//public u_LightAttenuationMatrix,
-//public u_ShadowTexelSize,
-//public u_ShadowBlur,
-//public u_ModelMatrix,
-//public u_ModelViewProjectionMatrix,
+public u_ShadowTexelSize,
+public u_ShadowBlur,
+public u_PositionToJitterTexScale,
+public u_JitterTexScale,
+public u_JitterTexOffset,
 //public u_BoneMatrix,
 //public u_VertexInterpolation,
 //public u_PortalPlane,

@@ -152,7 +152,7 @@ idCVar r_sb_usePbuffer( "r_sb_usePbuffer", "1", CVAR_RENDERER | CVAR_BOOL, "draw
 idCVar r_sb_jitterScale( "r_sb_jitterScale", "0.006", CVAR_RENDERER | CVAR_FLOAT, "scale factor for jitter offset" );
 idCVar r_sb_biasScale( "r_sb_biasScale", "0.0001", CVAR_RENDERER | CVAR_FLOAT, "scale factor for jitter bias" );
 idCVar r_sb_samples( "r_sb_samples", "4", CVAR_RENDERER | CVAR_INTEGER, "0, 1, 4, or 16" );
-idCVar r_sb_randomize( "r_sb_randomize", "1", CVAR_RENDERER | CVAR_BOOL, "randomly offset jitter texture each draw" );
+
 // polyOfsFactor causes holes in low res images
 idCVar r_sb_polyOfsFactor( "r_sb_polyOfsFactor", "2", CVAR_RENDERER | CVAR_FLOAT, "polygonOffset factor for drawing shadow buffer" );
 idCVar r_sb_polyOfsUnits( "r_sb_polyOfsUnits", "3000", CVAR_RENDERER | CVAR_FLOAT, "polygonOffset units for drawing shadow buffer" );
@@ -472,26 +472,29 @@ R_CreateShadowBufferImage
 */
 static void R_CreateShadowBufferImage( idImage *image, int lightBufferSize ) 
 {
-	byte	*data = (byte *)Mem_Alloc( lightBufferSize*lightBufferSize*4 );
-
-	memset( data, 0, lightBufferSize*lightBufferSize*4 );
-
 	if(r_sb_mode.GetInteger() == SHADOWING_ESM16)
 	{
-		//image->GenerateImage( (byte *)data, lightBufferSize, lightBufferSize, TF_LINEAR, false, TR_CLAMP_TO_BORDER, TD_FBO_ALPHA16F );
-		image->GenerateImage( (byte *)data, lightBufferSize, lightBufferSize, TF_LINEAR, false, TR_CLAMP_TO_BORDER, TD_FBO_RGBA16F );
+		image->GenerateImage( NULL, lightBufferSize, lightBufferSize, TF_LINEAR, false, TR_CLAMP_TO_BORDER, TD_FBO_R16F );
 	}
 	else if(r_sb_mode.GetInteger() == SHADOWING_ESM32)
 	{
-		image->GenerateImage( (byte *)data, lightBufferSize, lightBufferSize, TF_LINEAR, false, TR_CLAMP_TO_BORDER, TD_FBO_RGBA32F );
+		image->GenerateImage( NULL, lightBufferSize, lightBufferSize, TF_LINEAR, false, TR_CLAMP_TO_BORDER, TD_FBO_RGBA32F );
 	}
 	else if(r_sb_mode.GetInteger() == SHADOWING_VSM16)
 	{
-		image->GenerateImage( (byte *)data, lightBufferSize, lightBufferSize, TF_LINEAR, false, TR_CLAMP_TO_BORDER, TD_FBO_LUMINANCE_ALPHA16F );
+		image->GenerateImage( NULL, lightBufferSize, lightBufferSize, TF_LINEAR, false, TR_CLAMP_TO_BORDER, TD_FBO_RG16F );
+	}
+	else if(r_sb_mode.GetInteger() == SHADOWING_VSM32)
+	{
+		image->GenerateImage( NULL, lightBufferSize, lightBufferSize, TF_LINEAR, false, TR_CLAMP_TO_BORDER, TD_FBO_RG32F );
+	}
+	else if(r_sb_mode.GetInteger() == SHADOWING_EVSM32)
+	{
+		image->GenerateImage( NULL, lightBufferSize, lightBufferSize, TF_LINEAR, false, TR_CLAMP_TO_BORDER, TD_FBO_RGBA32F );
 	}
 	else
 	{
-		image->GenerateImage( (byte *)data, lightBufferSize, lightBufferSize, TF_LINEAR, false, TR_CLAMP_TO_BORDER, TD_FBO_RGBA16F );
+		image->GenerateImage( NULL, lightBufferSize, lightBufferSize, TF_LINEAR, false, TR_CLAMP_TO_BORDER, TD_FBO_RGBA16F );
 	}
 
 	GL_CheckErrors();
@@ -504,8 +507,6 @@ static void R_CreateShadowBufferImage( idImage *image, int lightBufferSize )
 
 	GL_CheckErrors();
 	*/
-
-	Mem_Free( data );
 }
 
 static void R_CreateShadowBufferImage_Res0( idImage *image )
@@ -538,27 +539,30 @@ static void R_CreateShadowBufferImage_Res4( idImage *image )
 
 static void R_CreateShadowCubeImage( idImage *image, int lightBufferSize ) 
 {
-	byte	*data = (byte *)Mem_Alloc( lightBufferSize*lightBufferSize*4 );
-
-	memset( data, 0, lightBufferSize*lightBufferSize*4 );
-
 	const byte	*pics[6];
 	for ( int i = 0 ; i < 6 ; i++ ) {
-		pics[i] = data;
+		pics[i] = NULL;
 	}
 
 	if(r_sb_mode.GetInteger() == SHADOWING_ESM16)
 	{
-		//image->GenerateCubeImage( pics, lightBufferSize, TF_LINEAR, false, TD_FBO_ALPHA16F );
-		image->GenerateCubeImage( pics, lightBufferSize, TF_LINEAR, false, TD_FBO_RGBA16F );
+		image->GenerateCubeImage( pics, lightBufferSize, TF_LINEAR, false, TD_FBO_R16F );
 	}
 	else if(r_sb_mode.GetInteger() == SHADOWING_ESM32)
 	{
-		image->GenerateCubeImage( pics, lightBufferSize, TF_LINEAR, false, TD_FBO_RGBA32F );
+		image->GenerateCubeImage( pics, lightBufferSize, TF_LINEAR, false, TD_FBO_R32F );
 	}
 	else if(r_sb_mode.GetInteger() == SHADOWING_VSM16)
 	{
-		image->GenerateCubeImage( pics, lightBufferSize, TF_LINEAR, false, TD_FBO_LUMINANCE_ALPHA16F );
+		image->GenerateCubeImage( pics, lightBufferSize, TF_LINEAR, false, TD_FBO_RG16F );
+	}
+	else if(r_sb_mode.GetInteger() == SHADOWING_VSM32)
+	{
+		image->GenerateCubeImage( pics, lightBufferSize, TF_LINEAR, false, TD_FBO_RG32F );
+	}
+	else if(r_sb_mode.GetInteger() == SHADOWING_EVSM32)
+	{
+		image->GenerateCubeImage( pics, lightBufferSize, TF_LINEAR, false, TD_FBO_RGBA32F );
 	}
 	else
 	{
@@ -575,8 +579,6 @@ static void R_CreateShadowCubeImage( idImage *image, int lightBufferSize )
 
 	GL_CheckErrors();
 	*/
-
-	Mem_Free( data );
 }
 
 static void R_CreateShadowCubeImage_Res0( idImage *image )
@@ -882,16 +884,19 @@ void R_Exp_Allocate( void ) {
 		{
 			if(r_sb_mode.GetInteger() == SHADOWING_ESM16)
 			{
-				//shadowMapFBO[i]->AddColorBuffer(GL_ALPHA16F_ARB, 0);
-				shadowMapFBO[i]->AddColorBuffer(GL_RGBA16F_ARB, 0);
+				shadowMapFBO[i]->AddColorBuffer(GL_R16F, 0);
 			}
 			else if(r_sb_mode.GetInteger() == SHADOWING_ESM32)
 			{
-				shadowMapFBO[i]->AddColorBuffer(GL_RGBA32F_ARB, 0);
+				shadowMapFBO[i]->AddColorBuffer(GL_R32F, 0);
 			}
 			else if(r_sb_mode.GetInteger() == SHADOWING_VSM16)
 			{
-				shadowMapFBO[i]->AddColorBuffer(GL_LUMINANCE_ALPHA16F_ARB, 0);
+				shadowMapFBO[i]->AddColorBuffer(GL_RG16F, 0);
+			}
+			else if(r_sb_mode.GetInteger() == SHADOWING_VSM32)
+			{
+				shadowMapFBO[i]->AddColorBuffer(GL_RG32F, 0);
 			}
 			else
 			{
@@ -899,8 +904,7 @@ void R_Exp_Allocate( void ) {
 			}
 		}
 
-		shadowMapFBO[i]->AddDepthBuffer(GL_DEPTH_COMPONENT24_ARB);
-
+		shadowMapFBO[i]->AddDepthBuffer(GL_DEPTH_COMPONENT32);
 		shadowMapFBO[i]->Check();
 	}
 
@@ -1109,10 +1113,10 @@ void RB_EXP_RenderOccluders( viewLight_t *vLight ) {
 			idDrawVert *ac = (idDrawVert *)vertexCache.Position( tri->ambientCache );
 			glVertexPointer( 3, GL_FLOAT, sizeof( idDrawVert ), ac->xyz.ToFloatPtr() );
 			glVertexAttribPointerARB( VA_INDEX_TEXCOORD0, 2, GL_FLOAT, false, sizeof( idDrawVert ), ac->st.ToFloatPtr() );
-	//glTexCoordPointer( 2, GL_FLOAT, sizeof( idDrawVert ), ac->st.ToFloatPtr() );
-	//if ( surfInt->shader ) {
-	//	surfInt->shader->GetEditorImage()->Bind();
-	//}
+	glTexCoordPointer( 2, GL_FLOAT, sizeof( idDrawVert ), ac->st.ToFloatPtr() );
+	if ( surfInt->shader ) {
+		surfInt->shader->GetEditorImage()->Bind();
+	}
 			RB_DrawElementsWithCounters( tri );
 		}
 	}
@@ -1457,9 +1461,11 @@ RB_EXP_DrawInteraction
 */
 static void	RB_EXP_DrawInteraction( const drawInteraction_t *din ) {
 	
+	bool shadowCompare = backEnd.vLight->lightShader->LightCastsShadows();
+
 	// choose and bind the vertex program
 	// TODO gl_forwardLightingShader->SetAmbientLighting(backEnd.vLight->lightShader->IsAmbientLight());
-	gl_forwardLightingShader->SetShadowing(backEnd.vLight->lightShader->LightCastsShadows());
+	gl_forwardLightingShader->SetShadowing(shadowCompare);
 	gl_forwardLightingShader->SetNormalMapping(!r_skipBump.GetBool() || backEnd.vLight->lightShader->IsAmbientLight());
 	gl_forwardLightingShader->BindProgram();
 
@@ -1485,7 +1491,7 @@ static void	RB_EXP_DrawInteraction( const drawInteraction_t *din ) {
 	gl_forwardLightingShader->SetUniform_SpecularMatrixS(din->specularMatrix[0]);
 	gl_forwardLightingShader->SetUniform_SpecularMatrixT(din->specularMatrix[1]);
 
-
+	/*
 // calculate depth projection for shadow buffer
 idVec4	sRow;
 idVec4	tRow;
@@ -1517,11 +1523,26 @@ qRow[1] = matrix2[7];
 qRow[2] = matrix2[11];
 qRow[3] = matrix2[15];
 //glProgramEnvParameter4fvARB( GL_VERTEX_PROGRAM_ARB, 21, qRow );
+	*/
 
 	//idMat4 shadowMat(sRow, tRow, rRow, qRow);
-	idMat4 shadowMat = make_idMat4(matrix2);//.Transpose();
+	//idMat4 shadowMat = make_idMat4(matrix2);//.Transpose();
 
-	gl_forwardLightingShader->SetUniform_ShadowMatrix(shadowMat);
+	//gl_forwardLightingShader->SetUniform_ShadowMatrix(shadowMat);
+
+	// FIXME use vLight->shadowLOD
+	float shadowTexelSize;
+	if(shadowCompare)
+		shadowTexelSize = 1.0f / shadowMapResolutions[0];
+	else
+		shadowTexelSize = 1.0f;
+	
+	if(shadowCompare)
+	{
+		gl_forwardLightingShader->SetUniform_ShadowTexelSize(shadowTexelSize);
+		gl_forwardLightingShader->SetUniform_ShadowBlur(r_sb_samples.GetInteger());
+	}
+
 
 	static const idVec4 zero( 0, 0, 0, 0 );
 	static const idVec4 one( 1, 1, 1, 1 );
@@ -1549,19 +1570,19 @@ qRow[3] = matrix2[15];
 	//-----------------------------------------------------
 	// screen power of two correction factor
 
-	float	parm[4];
+	idVec4	parm;
 	parm[0] = 1.0 / ( JITTER_SIZE * r_sb_samples.GetInteger() ) ;
 	parm[1] = 1.0 / JITTER_SIZE;
 	parm[2] = 0;
 	parm[3] = 1;
-	glProgramLocalParameter4fvARB( GL_FRAGMENT_PROGRAM_ARB, 2, parm );
+	gl_forwardLightingShader->SetUniform_PositionToJitterTexScale(parm);
 
 	// jitter tex scale
 	parm[0] = 
 	parm[1] = r_sb_jitterScale.GetFloat() * lightBufferSizeFraction[0];
 	parm[2] = -r_sb_biasScale.GetFloat();
 	parm[3] = 0;
-	glProgramLocalParameter4fvARB( GL_FRAGMENT_PROGRAM_ARB, 3, parm );
+	gl_forwardLightingShader->SetUniform_JitterTexScale(parm);
 
 	// jitter tex offset
 	if ( r_sb_randomize.GetBool() ) {
@@ -1572,7 +1593,7 @@ qRow[3] = matrix2[15];
 	}
 	parm[2] = 0;
 	parm[3] = 0;
-	glProgramLocalParameter4fvARB( GL_FRAGMENT_PROGRAM_ARB, 4, parm );
+	gl_forwardLightingShader->SetUniform_JitterTexOffset(parm);
 	//-----------------------------------------------------
 
 	// set the textures
@@ -1656,32 +1677,22 @@ void RB_EXP_CreateDrawInteractions( const drawSurf_t *surf ) {
 	}
 	*/
 
+	// texture 6 is the random samples image
+	GL_SelectTextureNoClient( 6 );
+	if ( r_sb_samples.GetInteger() == 16 ) {
+		jitterImage16->Bind();
+	} else if ( r_sb_samples.GetInteger() == 4 ) {
+		jitterImage4->Bind();
+	} else {
+		jitterImage1->Bind();
+	}
+
 	// bind the program
 
 	for ( ; surf ; surf=surf->nextOnLight ) {
 		// perform setup here that will not change over multiple interaction passes
 		if ( backEnd.vLight->lightShader->IsAmbientLight() ) {
 			float	parm[4];
-
-			/*
-			parm[0] = surf->space->modelMatrix[0];
-			parm[1] = surf->space->modelMatrix[4];
-			parm[2] = surf->space->modelMatrix[8];
-			parm[3] = 0;
-			glProgramEnvParameter4fvARB( GL_VERTEX_PROGRAM_ARB, 20, parm );
-			parm[0] = surf->space->modelMatrix[1];
-			parm[1] = surf->space->modelMatrix[5];
-			parm[2] = surf->space->modelMatrix[9];
-			parm[3] = 0;
-			glProgramEnvParameter4fvARB( GL_VERTEX_PROGRAM_ARB, 21, parm );
-			parm[0] = surf->space->modelMatrix[2];
-			parm[1] = surf->space->modelMatrix[6];
-			parm[2] = surf->space->modelMatrix[10];
-			parm[3] = 0;
-			glProgramEnvParameter4fvARB( GL_VERTEX_PROGRAM_ARB, 22, parm );
-			*/
-
-			//gl_forwardLightShader->SetUniform_ModelMatrix(surf->space->modelMatrix);
 
 			GL_SelectTextureNoClient( 0 );
 			const shaderStage_t *stage = backEnd.vLight->lightShader->GetStage( 0 );
@@ -2958,7 +2969,8 @@ void R_Exp_Init( void ) {
 		!WGLEW_ARB_pbuffer ||
 		!WGLEW_ARB_pixel_format ||
 		!WGLEW_ARB_render_texture ||
-		!GLEW_ARB_texture_float) {
+		!GLEW_ARB_texture_float ||
+		!GLEW_ARB_texture_rg) {
 		common->Printf( "Not available.\n" );
 		return;
 	}

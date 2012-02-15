@@ -163,35 +163,35 @@ void Framebuffer::Check()
 	switch(status)
 	{
 		case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
-			common->Warning("Framebuffer::Check( %s ): Framebuffer incomplete, incomplete attachment", fboName.c_str());
+			common->Error("Framebuffer::Check( %s ): Framebuffer incomplete, incomplete attachment", fboName.c_str());
 			break;
 
 		case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
-			common->Warning("Framebuffer::Check( %s ): Framebuffer incomplete, missing attachment", fboName.c_str());
+			common->Error("Framebuffer::Check( %s ): Framebuffer incomplete, missing attachment", fboName.c_str());
 			break;
 
 		case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER:
-			common->Warning("Framebuffer::Check( %s ): Framebuffer incomplete, missing draw buffer", fboName.c_str());
+			common->Error("Framebuffer::Check( %s ): Framebuffer incomplete, missing draw buffer", fboName.c_str());
 			break;
 
 		case GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER:
-			common->Warning("Framebuffer::Check( %s ): Framebuffer incomplete, missing read buffer", fboName.c_str());
+			common->Error("Framebuffer::Check( %s ): Framebuffer incomplete, missing read buffer", fboName.c_str());
 			break;
 
 		case GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS:
-			common->Warning("Framebuffer::Check( %s ): Framebuffer incomplete, missing layer targets", fboName.c_str());
+			common->Error("Framebuffer::Check( %s ): Framebuffer incomplete, missing layer targets", fboName.c_str());
 			break;
 
 		case GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE:
-			common->Warning("Framebuffer::Check( %s ): Framebuffer incomplete, missing multisample", fboName.c_str());
+			common->Error("Framebuffer::Check( %s ): Framebuffer incomplete, missing multisample", fboName.c_str());
 			break;
 
 		case GL_FRAMEBUFFER_UNSUPPORTED:
-			common->Warning("Framebuffer::Check( %s ): Unsupported framebuffer format", fboName.c_str());
+			common->Error("Framebuffer::Check( %s ): Unsupported framebuffer format", fboName.c_str());
 			break;
 
 		default:
-			common->Warning("Framebuffer::Check( %s ): Unknown error 0x%X", fboName.c_str(), status);
+			common->Error("Framebuffer::Check( %s ): Unknown error 0x%X", fboName.c_str(), status);
 			break;
 	};
 

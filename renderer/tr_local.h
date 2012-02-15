@@ -1010,9 +1010,12 @@ extern idCVar r_materialOverride;		// override all materials
 extern idCVar r_debugRenderToTexture;
 
 // Techyon BEGIN
-extern idCVar r_sb_debug;
 extern idCVar r_sb_mode;
+extern idCVar r_sb_debug;
+extern idCVar r_sb_randomize;
+extern idCVar r_sb_softShadows;
 
+extern idCVar r_esmOverDarkeningFactor;
 extern idCVar r_evsm_postProcess;
 
 // Techyon END
@@ -1515,7 +1518,7 @@ typedef struct shaderProgram_s
 	int32_t         u_EnvironmentImage0;
 	int32_t         u_EnvironmentImage1;
 
-	int32_t			u_RandomSamplesImage;
+	int32_t			u_JitterImage;
 	int32_t         u_GrainImage;
 	int32_t         u_VignetteImage;
 
@@ -1613,6 +1616,16 @@ typedef struct shaderProgram_s
 	GLint			u_ShadowParallelSplitDistances;
 	idVec4			t_ShadowParallelSplitDistances;
 
+	GLint			u_PositionToJitterTexScale;
+	idVec4			t_PositionToJitterTexScale;
+
+	GLint			u_JitterTexScale;
+	idVec4			t_JitterTexScale;
+
+	GLint			u_JitterTexOffset;
+	idVec4			t_JitterTexOffset;
+
+/*
 	int32_t         u_RefractionIndex;
 	float			t_RefractionIndex;
 
@@ -1635,6 +1648,7 @@ typedef struct shaderProgram_s
 
 	GLint			u_FogEyeT;
 	float			t_FogEyeT;
+*/
 
 	int32_t         u_SSAOJitter;
 	int32_t         u_SSAORadius;
