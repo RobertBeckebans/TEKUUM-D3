@@ -52,6 +52,8 @@ const float FOG_ENTER = (FOG_ENTER_SIZE+1.0f)/(FOG_ENTER_SIZE*2);
 
 const int MAX_SHADOWMAPS = 5;
 
+typedef float   matrix_t[16];
+
 
 // idScreenRect gets carried around with each drawSurf, so it makes sense
 // to keep it compact, instead of just using the idBounds class
@@ -98,6 +100,16 @@ typedef enum
 	SHADOWING_VSM32,
 	SHADOWING_EVSM32,
 } shadowingMode_t;
+
+typedef enum
+{
+	FRUSTUM_LEFT,
+	FRUSTUM_RIGHT,
+	FRUSTUM_BOTTOM,
+	FRUSTUM_TOP,
+	FRUSTUM_NEAR,
+	FRUSTUM_FAR,
+} frustumPlane_t;
 
 
 /*
@@ -622,7 +634,7 @@ typedef struct {
 	textureType_t	textureType;
 } tmu_t;
 
-const int MAX_MULTITEXTURE_UNITS =	8;
+const int MAX_MULTITEXTURE_UNITS = 16;
 typedef struct {
 	tmu_t		tmu[MAX_MULTITEXTURE_UNITS];
 	int			currenttmu;
@@ -1527,7 +1539,7 @@ typedef struct shaderProgram_s
 	int32_t         u_PortalImage;
 	int32_t         u_LightImage;
 	int32_t         u_LightFalloffImage;
-	int32_t         u_ShadowImage;
+	int32_t         u_ShadowCubeImage;
 	int32_t         u_ShadowImage0;
 	int32_t         u_ShadowImage1;
 	int32_t         u_ShadowImage2;

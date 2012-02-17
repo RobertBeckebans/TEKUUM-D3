@@ -61,7 +61,11 @@ polygon offset factor causes occasional texture holes from highly angled texture
 
 static	bool		initialized;
 
+#if 0
 static	int shadowMapResolutions[MAX_SHADOWMAPS] = { 1024, 1024, 512, 256, 128 };
+#else
+static	int shadowMapResolutions[MAX_SHADOWMAPS] = { 1024, 512, 256, 128, 64 };
+#endif
 static	int	maxLightBufferSize = 1024;
 static float lightBufferSizeFraction[MAX_SHADOWMAPS] = {0.5, 0.5, 0.5, 0.5, 0.5};
 
@@ -299,8 +303,6 @@ static float	lightMatrix[16];
 static float	lightProjectionMatrix[16];
 
 
-void	RB_ARB2_DrawInteraction( const drawInteraction_t *din );
-
 typedef struct {
 	const char	*name;
 	int			num;
@@ -476,7 +478,7 @@ static void R_CreateShadowBufferImage( idImage *image, int lightBufferSize )
 	}
 	else if(r_sb_mode.GetInteger() == SHADOWING_ESM32)
 	{
-		image->GenerateImage( NULL, lightBufferSize, lightBufferSize, TF_LINEAR, false, TR_CLAMP_TO_BORDER, TD_FBO_RGBA32F );
+		image->GenerateImage( NULL, lightBufferSize, lightBufferSize, TF_LINEAR, false, TR_CLAMP_TO_BORDER, TD_FBO_R32F );
 	}
 	else if(r_sb_mode.GetInteger() == SHADOWING_VSM16)
 	{
@@ -1120,6 +1122,62 @@ void RB_EXP_RenderOccluders( viewLight_t *vLight ) {
 	}
 }
 
+
+static void MatrixFromPlanes(float m[16], const idPlane frustum[6])
+{
+	const idPlane& left = frustum[FRUSTUM_LEFT];
+	const idPlane& right = frustum[FRUSTUM_RIGHT];
+	const idPlane& bottom = frustum[FRUSTUM_BOTTOM];
+	const idPlane& top = frustum[FRUSTUM_TOP];
+	const idPlane& zNear = frustum[FRUSTUM_NEAR];
+	const idPlane& zFar = frustum[FRUSTUM_FAR];
+
+	m[ 0] = (right[0] - left[0]) / 2;
+	m[ 1] = (top[0] - bottom[0]) / 2;
+	m[ 2] = (zFar[0] - zNear[0]) / 2;
+	m[ 3] = right[0] - (right[0] - left[0]) / 2;
+
+	m[ 4] = (right[1] - left[1]) / 2;
+	m[ 5] = (top[1] - bottom[1]) / 2;
+	m[ 6] = (zFar[1] - zNear[1]) / 2;
+	m[ 7] = right[1] - (right[1] - left[1]) / 2;
+
+	m[ 8] = (right[2] - left[2]) / 2;
+	m[ 9] = (top[2] - bottom[2]) / 2;
+	m[10] = (zFar[2] - zNear[2]) / 2;
+	m[11] = right[2] - (right[2] - left[2]) / 2;
+
+#if 0
+	m[12] = (right[3] - left[3]) / 2;
+	m[13] = (top[3] - bottom[3]) / 2;
+	m[14] = (zFar[3] - zNear[3]) / 2;
+	m[15] = right[3] - (right[3] - left[3]) / 2;
+#else
+	m[12] = (-right[3] - -left[3]) / 2;
+	m[13] = (-top[3] - -bottom[3]) / 2;
+	m[14] = (-zFar[3] - -zNear[3]) / 2;
+	m[15] = -right[3] - (-right[3] - -left[3]) / 2;
+#endif
+}
+
+
+void MatrixCopy(const matrix_t in, matrix_t out)
+{
+    out[ 0] = in[ 0];       out[ 4] = in[ 4];       out[ 8] = in[ 8];       out[12] = in[12];
+    out[ 1] = in[ 1];       out[ 5] = in[ 5];       out[ 9] = in[ 9];       out[13] = in[13];
+	out[ 2] = in[ 2];       out[ 6] = in[ 6];       out[10] = in[10];       out[14] = in[14];
+	out[ 3] = in[ 3];       out[ 7] = in[ 7];       out[11] = in[11];       out[15] = in[15];
+}
+
+void MatrixTranspose(const matrix_t in, matrix_t out)
+{
+	out[ 0] = in[ 0];       out[ 1] = in[ 4];       out[ 2] = in[ 8];       out[ 3] = in[12];
+	out[ 4] = in[ 1];       out[ 5] = in[ 5];       out[ 6] = in[ 9];       out[ 7] = in[13];
+	out[ 8] = in[ 2];       out[ 9] = in[ 6];       out[10] = in[10];       out[11] = in[14];
+	out[12] = in[ 3];       out[13] = in[ 7];       out[14] = in[11];       out[15] = in[15];
+}
+
+
 /*
 ==================
 RB_RenderShadowBuffer
@@ -1139,47 +1197,88 @@ void    RB_RenderShadowBuffer( viewLight_t	*vLight, int side ) {
 
 	GL_CheckErrors();
 
-	//
-	// set up 90 degree projection matrix
-	//
-	zNear	= 4;
+#if 1
+	if(!vLight->lightDef->parms.pointLight)
+	{
+#if 0
+		MatrixFromPlanes(lightProjectionMatrix, vLight->lightDef->frustum);
+#else
+		idPlane lightProject[4];
+		for ( int i = 0 ; i < 4 ; i++ ) {
+			R_GlobalPlaneToLocal( vLight->lightDef->modelMatrix, vLight->lightProject[i], lightProject[i] );
+		}
 
-	ymax = zNear * tan( fov * idMath::PI / 360.0f );
-	ymin = -ymax;
+		idMat4 lProj(lightProject[0].ToVec4(), lightProject[1].ToVec4(), lightProject[2].ToVec4(), lightProject[3].ToVec4());
+		lProj.TransposeSelf();
+		
+		memcpy( lightProjectionMatrix, lProj.ToFloatPtr(), sizeof( lightProjectionMatrix ) );
 
-	xmax = zNear * tan( fov * idMath::PI / 360.0f );
-	xmin = -xmax;
 
-	width = xmax - xmin;
-	height = ymax - ymin;
+		/*
+		lightProjectionMatrix[0] = vLight->lightProject[0][0];
+		lightProjectionMatrix[4] = vLight->lightProject[0][1];
+		lightProjectionMatrix[8] = vLight->lightProject[0][2];
+		lightProjectionMatrix[12] = vLight->lightProject[0][3];
 
-	lightProjectionMatrix[0] = 2 * zNear / width;
-	lightProjectionMatrix[4] = 0;
-	lightProjectionMatrix[8] = 0;
-	lightProjectionMatrix[12] = 0;
+		lightProjectionMatrix[1] = vLight->lightProject[1][0];
+		lightProjectionMatrix[5] = vLight->lightProject[1][1];
+		lightProjectionMatrix[9] = vLight->lightProject[1][2];
+		lightProjectionMatrix[13] = vLight->lightProject[1][3];
 
-	lightProjectionMatrix[1] = 0;
-	lightProjectionMatrix[5] = 2 * zNear / height;
-	lightProjectionMatrix[9] = 0;
-	lightProjectionMatrix[13] = 0;
+		lightProjectionMatrix[2] = vLight->lightProject[2][0];
+		lightProjectionMatrix[6] = vLight->lightProject[2][1];
+		lightProjectionMatrix[10] = vLight->lightProject[2][2];
+		lightProjectionMatrix[14] = vLight->lightProject[2][3];
 
-	// this is the far-plane-at-infinity formulation, and
-	// crunches the Z range slightly so w=0 vertexes do not
-	// rasterize right at the wraparound point
-	lightProjectionMatrix[2] = 0;
-	lightProjectionMatrix[6] = 0;
-	lightProjectionMatrix[10] = -0.999f;
-	lightProjectionMatrix[14] = -2.0f * zNear;
+		lightProjectionMatrix[3] = vLight->lightProject[3][0];
+		lightProjectionMatrix[7] = vLight->lightProject[3][1];
+		lightProjectionMatrix[11] = vLight->lightProject[3][2];
+		lightProjectionMatrix[15] = vLight->lightProject[3][3];
+		*/
+#endif
+	}
+	else
+#endif
+	{
+		// set up 90 degree projection matrix
 
-	lightProjectionMatrix[3] = 0;
-	lightProjectionMatrix[7] = 0;
-	lightProjectionMatrix[11] = -1;
-	lightProjectionMatrix[15] = 0;
+		zNear	= 4;
+
+		ymax = zNear * tan( fov * idMath::PI / 360.0f );
+		ymin = -ymax;
+
+		xmax = zNear * tan( fov * idMath::PI / 360.0f );
+		xmin = -xmax;
+
+		width = xmax - xmin;
+		height = ymax - ymin;
+
+		lightProjectionMatrix[0] = 2 * zNear / width;
+		lightProjectionMatrix[4] = 0;
+		lightProjectionMatrix[8] = 0;
+		lightProjectionMatrix[12] = 0;
+
+		lightProjectionMatrix[1] = 0;
+		lightProjectionMatrix[5] = 2 * zNear / height;
+		lightProjectionMatrix[9] = 0;
+		lightProjectionMatrix[13] = 0;
+
+		// this is the far-plane-at-infinity formulation, and
+		// crunches the Z range slightly so w=0 vertexes do not
+		// rasterize right at the wraparound point
+		lightProjectionMatrix[2] = 0;
+		lightProjectionMatrix[6] = 0;
+		lightProjectionMatrix[10] = -0.999f;
+		lightProjectionMatrix[14] = -2.0f * zNear;
+
+		lightProjectionMatrix[3] = 0;
+		lightProjectionMatrix[7] = 0;
+		lightProjectionMatrix[11] = -1;
+		lightProjectionMatrix[15] = 0;
+	}
 
 	if ( r_sb_usePbuffer.GetBool() ) 
 	{
-		// TODO use vLight->shadowLOD
-
 		// set the current openGL drawable to the shadow buffer
 		if ( vLight->lightDef->parms.pointLight )
 		{
@@ -1204,8 +1303,8 @@ void    RB_RenderShadowBuffer( viewLight_t	*vLight, int side ) {
 	glMatrixMode( GL_MODELVIEW );
 
 	// TODO vLight->shadowLOD
-	glViewport( 0, 0, shadowMapResolutions[0], shadowMapResolutions[0] );
-	glScissor( 0, 0, shadowMapResolutions[0], shadowMapResolutions[0] );
+	glViewport( 0, 0, shadowMapResolutions[vLight->shadowLOD], shadowMapResolutions[vLight->shadowLOD] );
+	glScissor( 0, 0, shadowMapResolutions[vLight->shadowLOD], shadowMapResolutions[vLight->shadowLOD] );
 
 	//glDisable( GL_STENCIL_TEST );
 	glStencilFunc( GL_ALWAYS, 0, 255 );
@@ -1464,6 +1563,7 @@ static void	RB_EXP_DrawInteraction( const drawInteraction_t *din ) {
 
 	// choose and bind the vertex program
 	// TODO gl_forwardLightingShader->SetAmbientLighting(backEnd.vLight->lightShader->IsAmbientLight());
+	gl_forwardLightingShader->SetMacro_LIGHT_PROJ(!backEnd.vLight->lightDef->parms.pointLight);
 	gl_forwardLightingShader->SetShadowing(shadowCompare);
 	gl_forwardLightingShader->SetNormalMapping(!r_skipBump.GetBool() || backEnd.vLight->lightShader->IsAmbientLight());
 	gl_forwardLightingShader->BindProgram();
@@ -1492,56 +1592,52 @@ static void	RB_EXP_DrawInteraction( const drawInteraction_t *din ) {
 	gl_forwardLightingShader->SetUniform_SpecularMatrixS(din->specularMatrix[0]);
 	gl_forwardLightingShader->SetUniform_SpecularMatrixT(din->specularMatrix[1]);
 
-	/*
-// calculate depth projection for shadow buffer
-idVec4	sRow;
-idVec4	tRow;
-idVec4	rRow;
-idVec4	qRow;
-float	matrix[16];
-float	matrix2[16];
-myGlMultMatrix( din->surf->space->modelMatrix, lightMatrix, matrix );
-myGlMultMatrix( matrix, lightProjectionMatrix, matrix2 );
-
-// the final values need to be in 0.0 : 1.0 range instead of -1 : 1
-sRow[0] = 0.5 * lightBufferSizeFraction[0] * ( matrix2[0] + matrix2[3] );
-sRow[1] = 0.5 * lightBufferSizeFraction[0] * ( matrix2[4] + matrix2[7] );
-sRow[2] = 0.5 * lightBufferSizeFraction[0] * ( matrix2[8] + matrix2[11] );
-sRow[3] = 0.5 * lightBufferSizeFraction[0] * ( matrix2[12] + matrix2[15] );
-//glProgramEnvParameter4fvARB( GL_VERTEX_PROGRAM_ARB, 18, sRow );
-tRow[0] = 0.5 * lightBufferSizeFraction[0] * ( matrix2[1] + matrix2[3] );
-tRow[1] = 0.5 * lightBufferSizeFraction[0] * ( matrix2[5] + matrix2[7] );
-tRow[2] = 0.5 * lightBufferSizeFraction[0] * ( matrix2[9] + matrix2[11] );
-tRow[3] = 0.5 * lightBufferSizeFraction[0] * ( matrix2[13] + matrix2[15] );
-//glProgramEnvParameter4fvARB( GL_VERTEX_PROGRAM_ARB, 19, tRow );
-rRow[0] = 0.5 * ( matrix2[2] + matrix2[3] );
-rRow[1] = 0.5 * ( matrix2[6] + matrix2[7] );
-rRow[2] = 0.5 * ( matrix2[10] + matrix2[11] );
-rRow[3] = 0.5 * ( matrix2[14] + matrix2[15] );
-//glProgramEnvParameter4fvARB( GL_VERTEX_PROGRAM_ARB, 20, rRow );
-qRow[0] = matrix2[3];
-qRow[1] = matrix2[7];
-qRow[2] = matrix2[11];
-qRow[3] = matrix2[15];
-//glProgramEnvParameter4fvARB( GL_VERTEX_PROGRAM_ARB, 21, qRow );
-	*/
-
-	//idMat4 shadowMat(sRow, tRow, rRow, qRow);
-	//idMat4 shadowMat = make_idMat4(matrix2);//.Transpose();
-
-	//gl_forwardLightingShader->SetUniform_ShadowMatrix(shadowMat);
-
-	// FIXME use vLight->shadowLOD
-	float shadowTexelSize;
-	if(shadowCompare)
-		shadowTexelSize = 1.0f / shadowMapResolutions[0];
-	else
-		shadowTexelSize = 1.0f;
 	
+
+
 	if(shadowCompare)
 	{
+		float shadowTexelSize = 1.0f / shadowMapResolutions[backEnd.vLight->shadowLOD];
 		gl_forwardLightingShader->SetUniform_ShadowTexelSize(shadowTexelSize);
 		gl_forwardLightingShader->SetUniform_ShadowBlur(r_sb_samples.GetInteger());
+
+		// calculate depth projection for shadow buffer
+		idVec4	sRow;
+		idVec4	tRow;
+		idVec4	rRow;
+		idVec4	qRow;
+		float	matrix[16];
+		float	matrix2[16];
+		myGlMultMatrix( din->surf->space->modelMatrix, lightMatrix, matrix );
+		myGlMultMatrix( matrix, lightProjectionMatrix, matrix2 );
+		//myGlMultMatrix( lightMatrix, lightProjectionMatrix, matrix2 );
+
+		// the final values need to be in 0.0 : 1.0 range instead of -1 : 1
+		sRow[0] = 0.5 * lightBufferSizeFraction[0] * ( matrix2[0] + matrix2[3] );
+		sRow[1] = 0.5 * lightBufferSizeFraction[0] * ( matrix2[4] + matrix2[7] );
+		sRow[2] = 0.5 * lightBufferSizeFraction[0] * ( matrix2[8] + matrix2[11] );
+		sRow[3] = 0.5 * lightBufferSizeFraction[0] * ( matrix2[12] + matrix2[15] );
+		//glProgramEnvParameter4fvARB( GL_VERTEX_PROGRAM_ARB, 18, sRow );
+		tRow[0] = 0.5 * lightBufferSizeFraction[0] * ( matrix2[1] + matrix2[3] );
+		tRow[1] = 0.5 * lightBufferSizeFraction[0] * ( matrix2[5] + matrix2[7] );
+		tRow[2] = 0.5 * lightBufferSizeFraction[0] * ( matrix2[9] + matrix2[11] );
+		tRow[3] = 0.5 * lightBufferSizeFraction[0] * ( matrix2[13] + matrix2[15] );
+		//glProgramEnvParameter4fvARB( GL_VERTEX_PROGRAM_ARB, 19, tRow );
+		rRow[0] = 0.5 * ( matrix2[2] + matrix2[3] );
+		rRow[1] = 0.5 * ( matrix2[6] + matrix2[7] );
+		rRow[2] = 0.5 * ( matrix2[10] + matrix2[11] );
+		rRow[3] = 0.5 * ( matrix2[14] + matrix2[15] );
+		//glProgramEnvParameter4fvARB( GL_VERTEX_PROGRAM_ARB, 20, rRow );
+		qRow[0] = matrix2[3];
+		qRow[1] = matrix2[7];
+		qRow[2] = matrix2[11];
+		qRow[3] = matrix2[15];
+		//glProgramEnvParameter4fvARB( GL_VERTEX_PROGRAM_ARB, 21, qRow );
+
+		//idMat4 shadowMat(sRow, tRow, rRow, qRow);
+		idMat4 shadowMat = make_idMat4(matrix2);//.Transpose();
+
+		gl_forwardLightingShader->SetUniform_ShadowMatrix(shadowMat);
 	}
 
 
@@ -2908,7 +3004,7 @@ void    RB_Exp_DrawInteractions( void ) {
 		// bind shadow buffer to texture
 		if ( vLight->lightDef->parms.pointLight ) 
 		{
-			GL_SelectTextureNoClient( 7 );
+			GL_SelectTextureNoClient( 8 );
 			shadowCubeImage[vLight->shadowLOD]->BindFragment();
 		}
 		else
@@ -2934,7 +3030,7 @@ void    RB_Exp_DrawInteractions( void ) {
 	glEnableClientState( GL_TEXTURE_COORD_ARRAY );
 
 	// experimental transfer function
-	for ( int i = 7 ; i >= 0 ; i-- ) {
+	for ( int i = 8 ; i >= 0 ; i-- ) {
 		GL_SelectTextureNoClient( i );
 		globalImages->BindNull();
 	}
@@ -2946,6 +3042,8 @@ void    RB_Exp_DrawInteractions( void ) {
 	// these haven't been state saved
 	for ( int i = 0 ; i < 8 ; i++ ) {
 		backEnd.glState.tmu[i].current2DMap = -1;
+		backEnd.glState.tmu[i].current3DMap = -1;
+		backEnd.glState.tmu[i].currentCubeMap = -1;
 	}
 
 	// take it out of texture compare mode so I can testImage it for debugging

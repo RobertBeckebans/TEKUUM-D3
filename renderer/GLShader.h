@@ -221,6 +221,7 @@ protected:
 		EYE_OUTSIDE,
 		BRIGHTPASS_FILTER,
 		LIGHT_DIRECTIONAL,
+		LIGHT_PROJ,
 		USE_GBUFFER
 	};
 
@@ -636,11 +637,37 @@ public:
 
 	const char* GetName() const { return "LIGHT_DIRECTIONAL"; }
 	EGLCompileMacro GetType() const { return LIGHT_DIRECTIONAL; }
+	bool		HasConflictingMacros(int permutation, const idList<GLCompileMacro*>& macros) const;
 
 	void EnableMacro_LIGHT_DIRECTIONAL()	{ EnableMacro(); }
 	void DisableMacro_LIGHT_DIRECTIONAL()	{ DisableMacro(); }
 
 	void SetMacro_LIGHT_DIRECTIONAL(bool enable)
+	{
+		if(enable)
+			EnableMacro();
+		else
+			DisableMacro();
+	}
+};
+
+class GLCompileMacro_LIGHT_PROJ:
+GLCompileMacro
+{
+public:
+	GLCompileMacro_LIGHT_PROJ(GLShader* shader):
+	  GLCompileMacro(shader)
+	{
+	}
+
+	const char* GetName() const { return "LIGHT_PROJ"; }
+	EGLCompileMacro GetType() const { return LIGHT_PROJ; }
+	//bool		HasConflictingMacros(int permutation, const idList<GLCompileMacro*>& macros) const;
+
+	void EnableMacro_LIGHT_PROJ()	{ EnableMacro(); }
+	void DisableMacro_LIGHT_PROJ()	{ DisableMacro(); }
+
+	void SetMacro_LIGHT_PROJ(bool enable)
 	{
 		if(enable)
 			EnableMacro();
@@ -853,7 +880,7 @@ public:
 		}
 #endif
 
-		glUniformMatrix4fvARB(program->u_ShadowMatrix, 1, GL_FALSE, m.ToFloatPtr());
+		glUniformMatrix4fvARB(program->u_ShadowMatrix, 1, GL_TRUE, m.ToFloatPtr());
 	}
 };
 
@@ -1978,7 +2005,9 @@ public u_JitterTexOffset,
 //public GLCompileMacro_USE_DEFORM_VERTEXES,
 public GLCompileMacro_USE_NORMAL_MAPPING,
 //public GLCompileMacro_USE_PARALLAX_MAPPING,
-public GLCompileMacro_USE_SHADOWING
+public GLCompileMacro_USE_SHADOWING,
+//public GLCompileMacro_LIGHT_DIRECTIONAL,
+public GLCompileMacro_LIGHT_PROJ
 {
 public:
 	GLShader_forwardLighting();

@@ -1100,7 +1100,9 @@ GLShader_forwardLighting::GLShader_forwardLighting():
 		//GLCompileMacro_USE_DEFORM_VERTEXES(this),
 		GLCompileMacro_USE_NORMAL_MAPPING(this),
 		//GLCompileMacro_USE_PARALLAX_MAPPING(this),
-		GLCompileMacro_USE_SHADOWING(this)
+		GLCompileMacro_USE_SHADOWING(this),
+		//GLCompileMacro_LIGHT_DIRECTIONAL(this),
+		GLCompileMacro_LIGHT_PROJ(this)
 {
 	common->Printf("/// -------------------------------------------------\n");
 	common->Printf("/// creating forwardLighting shaders --------\n");
@@ -1174,7 +1176,12 @@ GLShader_forwardLighting::GLShader_forwardLighting():
 			shaderProgram->u_JitterImage = glGetUniformLocationARB(shaderProgram->program, "u_JitterImage");
 			//if(r_sb_mode.GetInteger() >= SHADOWING_ESM16)
 			{
-				shaderProgram->u_ShadowImage = glGetUniformLocationARB(shaderProgram->program, "u_ShadowImage");
+				shaderProgram->u_ShadowCubeImage = glGetUniformLocationARB(shaderProgram->program, "u_ShadowCubeImage");
+				shaderProgram->u_ShadowImage0 = glGetUniformLocationARB(shaderProgram->program, "u_ShadowImage0");
+				shaderProgram->u_ShadowImage1 = glGetUniformLocationARB(shaderProgram->program, "u_ShadowImage1");
+				shaderProgram->u_ShadowImage2 = glGetUniformLocationARB(shaderProgram->program, "u_ShadowImage2");
+				shaderProgram->u_ShadowImage3 = glGetUniformLocationARB(shaderProgram->program, "u_ShadowImage3");
+				shaderProgram->u_ShadowImage4 = glGetUniformLocationARB(shaderProgram->program, "u_ShadowImage4");
 			}
 
 			glUseProgramObjectARB(shaderProgram->program);
@@ -1187,7 +1194,12 @@ GLShader_forwardLighting::GLShader_forwardLighting():
 			glUniform1iARB(shaderProgram->u_JitterImage, 6);
 			//if(r_sb_mode.GetInteger() >= SHADOWING_ESM16)
 			{
-				glUniform1iARB(shaderProgram->u_ShadowImage, 7);
+				glUniform1iARB(shaderProgram->u_ShadowCubeImage, 8);
+				glUniform1iARB(shaderProgram->u_ShadowImage0, 7);
+				glUniform1iARB(shaderProgram->u_ShadowImage1, 9);
+				glUniform1iARB(shaderProgram->u_ShadowImage2, 10);
+				glUniform1iARB(shaderProgram->u_ShadowImage3, 11);
+				glUniform1iARB(shaderProgram->u_ShadowImage4, 12);
 			}
 			glUseProgramObjectARB(0);
 

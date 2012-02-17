@@ -240,7 +240,7 @@ idCVar r_materialOverride( "r_materialOverride", "", CVAR_RENDERER, "overrides a
 idCVar r_debugRenderToTexture( "r_debugRenderToTexture", "0", CVAR_RENDERER | CVAR_INTEGER, "" );
 
 // Techyon BEGIN
-idCVar r_sb_mode( "r_sb_mode", "2", CVAR_RENDERER | CVAR_INTEGER, "0 = ESM16, 1 = ESM32, 2 = VSM16, 3 = VSM32, 4 = EVSM32" );
+idCVar r_sb_mode( "r_sb_mode", "3", CVAR_RENDERER | CVAR_INTEGER, "0 = ESM16, 1 = ESM32, 2 = VSM16, 3 = VSM32, 4 = EVSM32" );
 idCVar r_sb_debug( "r_sb_debug", "0", CVAR_RENDERER | CVAR_INTEGER, "" );
 
 idCVar r_sb_randomize( "r_sb_randomize", "1", CVAR_RENDERER | CVAR_BOOL, "randomly offset jitter texture each draw" );
@@ -251,7 +251,7 @@ idCVar r_shadowLodBias( "r_shadowLodBias", "0", CVAR_RENDERER | CVAR_FLOAT, "" )
 idCVar r_showShadowLod( "r_showShadowLod", "0", CVAR_RENDERER | CVAR_BOOL, "show light shadowmap resolution indices" );
 
 // ESM specific
-idCVar r_esmOverDarkeningFactor( "r_esmOverDarkeningFactor", "20", CVAR_RENDERER | CVAR_FLOAT, "ESM scaling factor for avoiding light bleeding" );
+idCVar r_esmOverDarkeningFactor( "r_esmOverDarkeningFactor", "30", CVAR_RENDERER | CVAR_FLOAT, "ESM scaling factor for avoiding light bleeding" );
 
 // EVSM specific
 idCVar r_evsm_postProcess( "r_evsm_postProcess", "0", CVAR_RENDERER | CVAR_BOOL, "don't use the expensive RGBA32F MRT" );
