@@ -1083,9 +1083,26 @@ void RB_EXP_RenderOccluders( viewLight_t *vLight ) {
 
 		// no need to check for current on this, because each interaction is always
 		// a different space
-		float	matrix[16];
-		myGlMultMatrix( inter->entityDef->modelMatrix, lightMatrix, matrix );
-		glLoadMatrixf( matrix );
+		matrix_t	modelViewMatrix;
+		myGlMultMatrix( inter->entityDef->modelMatrix, lightMatrix, modelViewMatrix );
+		glLoadMatrixf( modelViewMatrix );
+
+#if 1
+		matrix_t	lightProjectionMatrix;
+		idPlane lightProject[4];
+		for ( int i = 0 ; i < 4 ; i++ ) {
+			R_GlobalPlaneToLocal( inter->entityDef->modelMatrix, vLight->lightProject[i], lightProject[i] );
+		}
+
+		idMat4 lProj(lightProject[0].ToVec4(), lightProject[1].ToVec4(), lightProject[2].ToVec4(), lightProject[3].ToVec4());
+		lProj.TransposeSelf();
+		
+		memcpy( lightProjectionMatrix, lProj.ToFloatPtr(), sizeof( lightProjectionMatrix ) );
+
+		glMatrixMode( GL_PROJECTION );
+		glLoadMatrixf( lightProjectionMatrix );
+		glMatrixMode( GL_MODELVIEW );
+#endif
 
 		gl_shadowMapShader->SetUniform_ModelMatrix(make_idMat4(inter->entityDef->modelMatrix));
 
@@ -1203,6 +1220,7 @@ void    RB_RenderShadowBuffer( viewLight_t	*vLight, int side ) {
 #if 0
 		MatrixFromPlanes(lightProjectionMatrix, vLight->lightDef->frustum);
 #else
+		/*
 		idPlane lightProject[4];
 		for ( int i = 0 ; i < 4 ; i++ ) {
 			R_GlobalPlaneToLocal( vLight->lightDef->modelMatrix, vLight->lightProject[i], lightProject[i] );
@@ -1212,7 +1230,7 @@ void    RB_RenderShadowBuffer( viewLight_t	*vLight, int side ) {
 		lProj.TransposeSelf();
 		
 		memcpy( lightProjectionMatrix, lProj.ToFloatPtr(), sizeof( lightProjectionMatrix ) );
-
+		*/
 
 		/*
 		lightProjectionMatrix[0] = vLight->lightProject[0][0];

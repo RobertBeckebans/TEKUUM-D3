@@ -559,7 +559,7 @@ project "Techyon"
 	}
 	excludes
 	{
-		"renderer/draw_exp*.cpp",
+		"renderer/draw_exp_stub.cpp",
 		"libs/jpeg-6/jmemdos.c",
 		"libs/jpeg-6/jload.c",
 		"libs/jpeg-6/jpegtran.c",
