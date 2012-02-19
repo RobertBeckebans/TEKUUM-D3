@@ -185,114 +185,6 @@ idCVar r_hdr_monitorDither( "r_hdr_monitorDither", "0.01", CVAR_RENDERER | CVAR_
 
 
 
-
-
-GLShader_shadowMap::GLShader_shadowMap():
-		GLShader("shadowMap", VA_POSITION),
-		u_ModelMatrix(this),
-		u_GlobalLightOrigin(this),
-		u_LightRadius(this)
-		//GLCompileMacro_USE_VERTEX_SKINNING(this),
-		//GLCompileMacro_USE_VERTEX_ANIMATION(this),
-		//GLCompileMacro_USE_DEFORM_VERTEXES(this),
-{
-	common->Printf("/// -------------------------------------------------\n");
-	common->Printf("/// creating shadowMap shaders --------\n");
-
-	idTimer compile_time;
-	compile_time.Start();
-
-	//idStr vertexInlines = "vertexSkinning vertexAnimation ";
-	idStrList vertexInlines;
-	/*
-	if(glConfig.driverType == GLDRV_OPENGL3 && r_vboDeformVertexes->integer)
-	{
-		vertexInlines += "deformVertexes ";
-	}
-	*/
-
-	idStrList fragmentInlines;
-
-	idStr preIncludeText;
-	CreatePreIncludeText(preIncludeText);
-
-	idStr vertexShaderText = BuildGPUShaderText("shadowMap", vertexInlines, GL_VERTEX_SHADER_ARB, preIncludeText.c_str());
-	idStr fragmentShaderText = BuildGPUShaderText("shadowMap", fragmentInlines, GL_FRAGMENT_SHADER_ARB, preIncludeText.c_str());
-
-	size_t numPermutations = (1 << _compileMacros.Num());	// same as 2^n, n = no. compile macros
-	size_t numCompiled = 0;
-	common->Printf("...compiling shadowMap shaders\n");
-	common->Printf("0%%  10   20   30   40   50   60   70   80   90   100%%\n");
-	common->Printf("|----|----|----|----|----|----|----|----|----|----|\n");
-	size_t tics = 0;
-	size_t nextTicCount = 0;
-	for(size_t i = 0; i < numPermutations; i++)
-	{
-		if((i + 1) >= nextTicCount)
-		{
-			size_t ticsNeeded = (size_t)(((double)(i + 1) / numPermutations) * 50.0);
-
-			do { common->Printf("*"); } while ( ++tics < ticsNeeded );
-
-			nextTicCount = (size_t)((tics / 50.0) * numPermutations);
-			if(i == (numPermutations - 1))
-			{
-				if(tics < 51)
-					common->Printf("*");
-				common->Printf("\n");
-			}
-		}
-
-		idStrList compileMacros;
-		if(GetCompileMacrosString(i, compileMacros))
-		{
-			//compileMacros.Append("TWOSIDED");
-			//compileMacros.Append("HALF_LAMBERT");
-
-			//common->DPrintf("Compile macros: '%s'\n", compileMacros.To);
-		
-			shaderProgram_t *shaderProgram = new shaderProgram_t();
-			_shaderPrograms.Append(shaderProgram);
-
-			CompileAndLinkGPUShaderProgram(	shaderProgram,
-											"shadowMap",
-											vertexShaderText,
-											fragmentShaderText,
-											compileMacros);
-
-			UpdateShaderProgramUniformLocations(shaderProgram);
-
-			ValidateProgram(shaderProgram->program);
-			//ShowProgramUniforms(shaderProgram->program);
-			GL_CheckErrors();
-
-			numCompiled++;
-		}
-		else
-		{
-			_shaderPrograms.Append(NULL);
-		}
-	}
-
-	SelectProgram();
-
-	compile_time.Stop();
-	common->Printf("...compiled %i shadowMap shader permutations in %5.2f seconds\n", numCompiled, compile_time.Milliseconds() / 1000.0);
-}
-
-
-void GLShader_shadowMap::CreatePreIncludeText(idStr& preIncludeText)
-{
-}
-
-
-
-
-
-
-
-
-
 // from world space to light origin, looking down the X axis
 static float	unflippedLightMatrix[16];
 
@@ -1087,20 +979,17 @@ void RB_EXP_RenderOccluders( viewLight_t *vLight ) {
 		myGlMultMatrix( inter->entityDef->modelMatrix, lightMatrix, modelViewMatrix );
 		glLoadMatrixf( modelViewMatrix );
 
-#if 1
-		matrix_t	lightProjectionMatrix;
+#if 0
 		idPlane lightProject[4];
 		for ( int i = 0 ; i < 4 ; i++ ) {
-			R_GlobalPlaneToLocal( inter->entityDef->modelMatrix, vLight->lightProject[i], lightProject[i] );
+			R_GlobalPlaneToLocal( inter->entityDef->modelMatrix, vLight->lightDef->lightProject[i], lightProject[i] );
 		}
 
 		idMat4 lProj(lightProject[0].ToVec4(), lightProject[1].ToVec4(), lightProject[2].ToVec4(), lightProject[3].ToVec4());
 		lProj.TransposeSelf();
-		
-		memcpy( lightProjectionMatrix, lProj.ToFloatPtr(), sizeof( lightProjectionMatrix ) );
 
 		glMatrixMode( GL_PROJECTION );
-		glLoadMatrixf( lightProjectionMatrix );
+		glLoadMatrixf( lProj.ToFloatPtr() );
 		glMatrixMode( GL_MODELVIEW );
 #endif
 
@@ -1118,8 +1007,11 @@ void RB_EXP_RenderOccluders( viewLight_t *vLight ) {
 			}
 
 			// cull it
-			if ( surfInt->expCulled == CULL_OCCLUDER_AND_RECEIVER ) {
-				continue;
+			if(vLight->lightDef->parms.pointLight) 
+			{
+				if ( surfInt->expCulled == CULL_OCCLUDER_AND_RECEIVER ) {
+					continue;
+				}
 			}
 
 			// render it
@@ -1130,7 +1022,7 @@ void RB_EXP_RenderOccluders( viewLight_t *vLight ) {
 			idDrawVert *ac = (idDrawVert *)vertexCache.Position( tri->ambientCache );
 			glVertexPointer( 3, GL_FLOAT, sizeof( idDrawVert ), ac->xyz.ToFloatPtr() );
 			glVertexAttribPointerARB( VA_INDEX_TEXCOORD0, 2, GL_FLOAT, false, sizeof( idDrawVert ), ac->st.ToFloatPtr() );
-	glTexCoordPointer( 2, GL_FLOAT, sizeof( idDrawVert ), ac->st.ToFloatPtr() );
+	//glTexCoordPointer( 2, GL_FLOAT, sizeof( idDrawVert ), ac->st.ToFloatPtr() );
 	if ( surfInt->shader ) {
 		surfInt->shader->GetEditorImage()->Bind();
 	}
@@ -1140,7 +1032,7 @@ void RB_EXP_RenderOccluders( viewLight_t *vLight ) {
 }
 
 
-static void MatrixFromPlanes(float m[16], const idPlane frustum[6])
+void MatrixFromPlanes(matrix_t m, const idPlane frustum[6])
 {
 	const idPlane& left = frustum[FRUSTUM_LEFT];
 	const idPlane& right = frustum[FRUSTUM_RIGHT];
@@ -1164,7 +1056,7 @@ static void MatrixFromPlanes(float m[16], const idPlane frustum[6])
 	m[10] = (zFar[2] - zNear[2]) / 2;
 	m[11] = right[2] - (right[2] - left[2]) / 2;
 
-#if 0
+#if 1
 	m[12] = (right[3] - left[3]) / 2;
 	m[13] = (top[3] - bottom[3]) / 2;
 	m[14] = (zFar[3] - zNear[3]) / 2;
@@ -1177,6 +1069,14 @@ static void MatrixFromPlanes(float m[16], const idPlane frustum[6])
 #endif
 }
 
+
+void MatrixIdentity(matrix_t m)
+{
+    m[ 0] = 1;      m[ 4] = 0;      m[ 8] = 0;      m[12] = 0;
+	m[ 1] = 0;      m[ 5] = 1;      m[ 9] = 0;      m[13] = 0;
+	m[ 2] = 0;      m[ 6] = 0;      m[10] = 1;      m[14] = 0;
+	m[ 3] = 0;      m[ 7] = 0;      m[11] = 0;      m[15] = 1;
+}
 
 void MatrixCopy(const matrix_t in, matrix_t out)
 {
@@ -1192,6 +1092,23 @@ void MatrixTranspose(const matrix_t in, matrix_t out)
 	out[ 4] = in[ 1];       out[ 5] = in[ 5];       out[ 6] = in[ 9];       out[ 7] = in[13];
 	out[ 8] = in[ 2];       out[ 9] = in[ 6];       out[10] = in[10];       out[11] = in[14];
 	out[12] = in[ 3];       out[13] = in[ 7];       out[14] = in[11];       out[15] = in[15];
+}
+
+void MatrixAffineInverse(const matrix_t in, matrix_t out)
+{
+#if 0
+		MatrixCopy(in, out);
+		MatrixInverse(out);
+#else
+        out[ 0] = in[ 0];       out[ 4] = in[ 1];       out[ 8] = in[ 2];
+        out[ 1] = in[ 4];       out[ 5] = in[ 5];       out[ 9] = in[ 6];
+		out[ 2] = in[ 8];       out[ 6] = in[ 9];       out[10] = in[10];
+		out[ 3] = 0;            out[ 7] = 0;            out[11] = 0;            out[15] = 1;
+
+		out[12] = -( in[12] * out[ 0] + in[13] * out[ 4] + in[14] * out[ 8] );
+		out[13] = -( in[12] * out[ 1] + in[13] * out[ 5] + in[14] * out[ 9] );
+		out[14] = -( in[12] * out[ 2] + in[13] * out[ 6] + in[14] * out[10] );
+#endif
 }
 
 
@@ -1214,49 +1131,11 @@ void    RB_RenderShadowBuffer( viewLight_t	*vLight, int side ) {
 
 	GL_CheckErrors();
 
-#if 1
 	if(!vLight->lightDef->parms.pointLight)
 	{
-#if 0
-		MatrixFromPlanes(lightProjectionMatrix, vLight->lightDef->frustum);
-#else
-		/*
-		idPlane lightProject[4];
-		for ( int i = 0 ; i < 4 ; i++ ) {
-			R_GlobalPlaneToLocal( vLight->lightDef->modelMatrix, vLight->lightProject[i], lightProject[i] );
-		}
-
-		idMat4 lProj(lightProject[0].ToVec4(), lightProject[1].ToVec4(), lightProject[2].ToVec4(), lightProject[3].ToVec4());
-		lProj.TransposeSelf();
-		
-		memcpy( lightProjectionMatrix, lProj.ToFloatPtr(), sizeof( lightProjectionMatrix ) );
-		*/
-
-		/*
-		lightProjectionMatrix[0] = vLight->lightProject[0][0];
-		lightProjectionMatrix[4] = vLight->lightProject[0][1];
-		lightProjectionMatrix[8] = vLight->lightProject[0][2];
-		lightProjectionMatrix[12] = vLight->lightProject[0][3];
-
-		lightProjectionMatrix[1] = vLight->lightProject[1][0];
-		lightProjectionMatrix[5] = vLight->lightProject[1][1];
-		lightProjectionMatrix[9] = vLight->lightProject[1][2];
-		lightProjectionMatrix[13] = vLight->lightProject[1][3];
-
-		lightProjectionMatrix[2] = vLight->lightProject[2][0];
-		lightProjectionMatrix[6] = vLight->lightProject[2][1];
-		lightProjectionMatrix[10] = vLight->lightProject[2][2];
-		lightProjectionMatrix[14] = vLight->lightProject[2][3];
-
-		lightProjectionMatrix[3] = vLight->lightProject[3][0];
-		lightProjectionMatrix[7] = vLight->lightProject[3][1];
-		lightProjectionMatrix[11] = vLight->lightProject[3][2];
-		lightProjectionMatrix[15] = vLight->lightProject[3][3];
-		*/
-#endif
+		MatrixCopy(vLight->lightDef->projectionMatrix, lightProjectionMatrix);
 	}
 	else
-#endif
 	{
 		// set up 90 degree projection matrix
 
@@ -1340,7 +1219,7 @@ GL_SelectTexture( 0 );
 
 	backEnd.currentSpace = NULL;
 
-	static float	s_flipMatrix[16] = {
+	static const float	s_flipMatrix[16] = {
 		// convert from our coordinate system (looking down X)
 		// to OpenGL's coordinate system (looking down -Z)
 		0, 0, -1, 0,
@@ -1355,6 +1234,10 @@ GL_SelectTexture( 0 );
 	idVec3	origin = vLight->lightDef->globalLightOrigin;
 
 	if ( side == -1 ) {
+#if 1
+		// MatrixIdentity(viewMatrix);
+		MatrixAffineInverse(vLight->lightDef->modelMatrix, viewMatrix);
+#else
 		// projected light
 		vec = vLight->lightDef->parms.target;
 		vec.Normalize();
@@ -1373,6 +1256,7 @@ GL_SelectTexture( 0 );
 		viewMatrix[2] = vec[0];
 		viewMatrix[6] = vec[1];
 		viewMatrix[10] = vec[2];
+#endif
 	} else {
 		// side of a point light
 		memset( viewMatrix, 0, sizeof( viewMatrix ) );
@@ -1420,51 +1304,63 @@ GL_SelectTexture( 0 );
 	viewMatrix[15] = 1;
 
 	memcpy( unflippedLightMatrix, viewMatrix, sizeof( unflippedLightMatrix ) );
-	myGlMultMatrix( viewMatrix, s_flipMatrix,lightMatrix);
-
-	// create frustum planes
-	idPlane	globalFrustum[6];
-
-	// near clip
-	globalFrustum[0][0] = -viewMatrix[0];
-	globalFrustum[0][1] = -viewMatrix[4];
-	globalFrustum[0][2] = -viewMatrix[8];
-	globalFrustum[0][3] = -(origin[0] * globalFrustum[0][0] + origin[1] * globalFrustum[0][1] + origin[2] * globalFrustum[0][2]);
-
-	// far clip
-	globalFrustum[1][0] = viewMatrix[0];
-	globalFrustum[1][1] = viewMatrix[4];
-	globalFrustum[1][2] = viewMatrix[8];
-	globalFrustum[1][3] = -globalFrustum[0][3] - viewLightAxialSize;
-
-	// side clips
-	globalFrustum[2][0] = -viewMatrix[0] + viewMatrix[1];
-	globalFrustum[2][1] = -viewMatrix[4] + viewMatrix[5];
-	globalFrustum[2][2] = -viewMatrix[8] + viewMatrix[9];
-
-	globalFrustum[3][0] = -viewMatrix[0] - viewMatrix[1];
-	globalFrustum[3][1] = -viewMatrix[4] - viewMatrix[5];
-	globalFrustum[3][2] = -viewMatrix[8] - viewMatrix[9];
-
-	globalFrustum[4][0] = -viewMatrix[0] + viewMatrix[2];
-	globalFrustum[4][1] = -viewMatrix[4] + viewMatrix[6];
-	globalFrustum[4][2] = -viewMatrix[8] + viewMatrix[10];
-
-	globalFrustum[5][0] = -viewMatrix[0] - viewMatrix[2];
-	globalFrustum[5][1] = -viewMatrix[4] - viewMatrix[6];
-	globalFrustum[5][2] = -viewMatrix[8] - viewMatrix[10];
-
-	// is this nromalization necessary?
-	for ( int i = 0 ; i < 6 ; i++ ) {
-		globalFrustum[i].ToVec4().ToVec3().Normalize();
+	if(vLight->lightDef->parms.pointLight) 
+	{
+		myGlMultMatrix( viewMatrix, s_flipMatrix,lightMatrix);
+	}
+	else
+	{
+		// projected light
+		memcpy( lightMatrix, viewMatrix, sizeof( lightMatrix ) );
 	}
 
-	for ( int i = 2 ; i < 6 ; i++ ) {
-		globalFrustum[i][3] = - (origin * globalFrustum[i].ToVec4().ToVec3() );
-	}
 
-	// FIXME
-	RB_EXP_CullInteractions( vLight, globalFrustum );
+	if(vLight->lightDef->parms.pointLight) 
+	{
+		// create frustum planes
+		idPlane	globalFrustum[6];
+
+		// near clip
+		globalFrustum[0][0] = -viewMatrix[0];
+		globalFrustum[0][1] = -viewMatrix[4];
+		globalFrustum[0][2] = -viewMatrix[8];
+		globalFrustum[0][3] = -(origin[0] * globalFrustum[0][0] + origin[1] * globalFrustum[0][1] + origin[2] * globalFrustum[0][2]);
+
+		// far clip
+		globalFrustum[1][0] = viewMatrix[0];
+		globalFrustum[1][1] = viewMatrix[4];
+		globalFrustum[1][2] = viewMatrix[8];
+		globalFrustum[1][3] = -globalFrustum[0][3] - viewLightAxialSize;
+
+		// side clips
+		globalFrustum[2][0] = -viewMatrix[0] + viewMatrix[1];
+		globalFrustum[2][1] = -viewMatrix[4] + viewMatrix[5];
+		globalFrustum[2][2] = -viewMatrix[8] + viewMatrix[9];
+
+		globalFrustum[3][0] = -viewMatrix[0] - viewMatrix[1];
+		globalFrustum[3][1] = -viewMatrix[4] - viewMatrix[5];
+		globalFrustum[3][2] = -viewMatrix[8] - viewMatrix[9];
+
+		globalFrustum[4][0] = -viewMatrix[0] + viewMatrix[2];
+		globalFrustum[4][1] = -viewMatrix[4] + viewMatrix[6];
+		globalFrustum[4][2] = -viewMatrix[8] + viewMatrix[10];
+
+		globalFrustum[5][0] = -viewMatrix[0] - viewMatrix[2];
+		globalFrustum[5][1] = -viewMatrix[4] - viewMatrix[6];
+		globalFrustum[5][2] = -viewMatrix[8] - viewMatrix[10];
+
+		// is this nromalization necessary?
+		for ( int i = 0 ; i < 6 ; i++ ) {
+			globalFrustum[i].ToVec4().ToVec3().Normalize();
+		}
+
+		for ( int i = 2 ; i < 6 ; i++ ) {
+			globalFrustum[i][3] = - (origin * globalFrustum[i].ToVec4().ToVec3() );
+		}
+
+		// FIXME
+		RB_EXP_CullInteractions( vLight, globalFrustum );
+	}
 
 	// FIXME: we want to skip the sampling as well as the generation when not casting shadows
 	if ( !r_sb_noShadows.GetBool() && vLight->lightShader->LightCastsShadows() ) {

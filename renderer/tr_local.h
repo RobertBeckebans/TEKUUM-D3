@@ -103,10 +103,10 @@ typedef enum
 
 typedef enum
 {
-	FRUSTUM_LEFT,
 	FRUSTUM_RIGHT,
-	FRUSTUM_BOTTOM,
 	FRUSTUM_TOP,
+	FRUSTUM_LEFT,
+	FRUSTUM_BOTTOM,
 	FRUSTUM_NEAR,
 	FRUSTUM_FAR,
 } frustumPlane_t;
@@ -246,6 +246,10 @@ public:
 	idPlane					frustum[6];				// in global space, positive side facing out, last two are front/back
 	idWinding *				frustumWindings[6];		// used for culling
 	srfTriangles_t *		frustumTris;			// triangulated frustumWindings[]
+
+// Techyon BEGIN
+	matrix_t				projectionMatrix;
+// Techyon END
 
 	int						numShadowFrustums;		// one for projected lights, usually six for point lights
 	shadowFrustum_t			shadowFrustums[6];
@@ -2068,6 +2072,8 @@ idScreenRect R_CalcIntersectionScissor( const idRenderLightLocal * lightDef,
 idMat4 make_idMat4(const float * m);
 
 //=============================================
+
+void            MatrixFromPlanes(matrix_t m, const idPlane frustum[6]);
 
 #include "RenderWorld_local.h"
 #include "GuiModel.h"

@@ -294,7 +294,7 @@ Creates plane equations from the light projection, positive sides
 face out of the light
 ===================
 */
-void R_SetLightFrustum( const idPlane lightProject[4], idPlane frustum[6] ) {
+void R_SetLightFrustum( const idPlane lightProject[4], idPlane frustum[6], matrix_t lightProjectionMatrix ) {
 	int		i;
 
 	// we want the planes of s=0, s=q, t=0, and t=q
@@ -309,6 +309,8 @@ void R_SetLightFrustum( const idPlane lightProject[4], idPlane frustum[6] ) {
 	frustum[5] = lightProject[3];
 	frustum[5][3] -= 1.0f;
 	frustum[5] = -frustum[5];
+
+	MatrixFromPlanes(lightProjectionMatrix, frustum);
 
 	for ( i = 0 ; i < 6 ; i++ ) {
 		float	l;
@@ -398,7 +400,7 @@ void R_DeriveLightData( idRenderLightLocal *light ) {
 	}
 
 	// set the frustum planes
-	R_SetLightFrustum( light->lightProject, light->frustum );
+	R_SetLightFrustum( light->lightProject, light->frustum, light->projectionMatrix );
 
 	// rotate the light planes and projections by the axis
 	R_AxisToModelMatrix( light->parms.axis, light->parms.origin, light->modelMatrix );
