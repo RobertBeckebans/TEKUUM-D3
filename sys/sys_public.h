@@ -251,6 +251,18 @@ typedef enum {
 	M_DELTAZ
 } sys_mEvents;
 
+// Techyon BEGIN
+typedef enum {
+	GP_AXIS_SIDE,
+	GP_AXIS_FORWARD,
+	GP_AXIS_UP,
+	GP_AXIS_ROLL,
+	GP_AXIS_YAW,
+	GP_AXIS_PITCH,
+	GP_BUTTON,
+} sysGamePadEvent_t;
+// Techyon END
+
 typedef struct sysEvent_s {
 	sysEventType_t	evType;
 	int				evValue;
@@ -395,6 +407,13 @@ void			Sys_EndKeyboardInputEvents( void );
 int				Sys_PollMouseInputEvents( void );
 int				Sys_ReturnMouseInputEvent( const int n, int &action, int &value );
 void			Sys_EndMouseInputEvents( void );
+
+// Techyon BEGIN
+// gamepad input polling
+int				Sys_PollXbox360ControllerInputEvents( void );
+int				Sys_ReturnXbox360ControllerInputEvent( const int n, int &action, int &value );
+void			Sys_EndXbox360ControllerInputEvents( void );
+// Techyon END
 
 // when the console is down, or the game is about to perform a lengthy
 // operation like map loading, the system can release the mouse cursor

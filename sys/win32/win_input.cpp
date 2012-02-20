@@ -3,6 +3,7 @@
 
 Doom 3 GPL Source Code
 Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company. 
+Copyright (C) 2012 Robert Beckebans
 
 This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).  
 
@@ -1045,3 +1046,111 @@ void Sys_EndMouseInputEvents( void ) { }
 unsigned char Sys_MapCharForKey( int key ) {
 	return (unsigned char)key;
 }
+
+
+//=====================================================================================
+
+// Techyon BEGIN
+typedef struct
+{
+	int action;
+	int value;
+} pollGamepadEvent_t;
+
+#define MAX_POLL_EVENTS 50
+#define POLL_EVENTS_HEADROOM 2
+static pollGamepadEvent_t s_pollGamepadEvents[MAX_POLL_EVENTS + POLL_EVENTS_HEADROOM];
+static int s_pollGamepadEventsCount;
+
+static bool IN_AddGamepadPollEvent(int action, int value) 
+{
+	if (s_pollGamepadEventsCount >= MAX_POLL_EVENTS + POLL_EVENTS_HEADROOM)
+		common->FatalError( "pollGamepadEventsCount exceeded MAX_POLL_EVENT + POLL_EVENTS_HEADROOM\n");
+
+	s_pollGamepadEvents[s_pollGamepadEventsCount].action = action;
+	s_pollGamepadEvents[s_pollGamepadEventsCount++].value = value;
+	
+	if (s_pollGamepadEventsCount >= MAX_POLL_EVENTS) {
+		common->DPrintf("WARNING: reached MAX_POLL_EVENT pollGamepadEventsCount\n");
+		return false;
+	}
+
+	return true;
+}
+
+static void IN_XBox360Axis(int action, short thumbAxis, float scale)
+{
+	float           f = ((float)thumbAxis) / 32767.0f;
+
+	float threshold = win32.in_xbox360ControllerThreshold.GetFloat();
+	if(f > -threshold && f < threshold)
+	{
+		IN_AddGamepadPollEvent(action, 0);
+	}
+	else
+	{
+		if(win32.in_xbox360ControllerDebug.GetBool())
+		{
+			common->Printf("xbox axis %i = %f\n", action, f);
+		}
+
+		IN_AddGamepadPollEvent(action, f * scale);
+	}
+}
+
+int Sys_PollXbox360ControllerInputEvents( void )
+{
+	//ZeroMemory(&win32.g_Controller
+
+	if (!win32.in_xbox360Controller.GetBool())
+		return 0;
+
+	s_pollGamepadEventsCount = 0;
+
+	XINPUT_STATE state;
+	DWORD dwResult = XInputGetState(0, &state);
+
+	if(dwResult == ERROR_SUCCESS)
+	{
+		win32.g_ControllerAvailable = true;
+
+		// always send the axis 
+		
+		// use left analog stick for strafing
+		IN_XBox360Axis(GP_AXIS_SIDE, state.Gamepad.sThumbLX, 127);
+		IN_XBox360Axis(GP_AXIS_FORWARD, state.Gamepad.sThumbLY, 127);
+
+		// use right analog stick for viewing
+		IN_XBox360Axis(GP_AXIS_YAW, state.Gamepad.sThumbRX, -127);
+		IN_XBox360Axis(GP_AXIS_PITCH, state.Gamepad.sThumbRY, -127);
+
+		if(state.dwPacketNumber == win32.g_Controller.dwPacketNumber) {
+			// no changes since last frame so skip the buttons
+			return s_pollGamepadEventsCount;
+		} else {
+			win32.g_Controller = state;
+		}
+
+		// TODO buttons
+
+		return s_pollGamepadEventsCount;
+	}
+
+	return 0;
+}
+
+int	Sys_ReturnXbox360ControllerInputEvent( const int n, int &action, int &value )
+{
+	if ( n>= s_pollGamepadEventsCount ) {
+		return 0;
+	}
+	
+	action = s_pollGamepadEvents[ n ].action;
+	value = s_pollGamepadEvents[ n ].value;
+	
+	return 1;
+}
+
+void Sys_EndXbox360ControllerInputEvents( void ) { }
+
+// Techyon END

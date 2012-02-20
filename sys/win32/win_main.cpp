@@ -51,6 +51,9 @@ If you have questions concerning this license or the applicable additional terms
 idCVar Win32Vars_t::sys_arch( "sys_arch", "", CVAR_SYSTEM | CVAR_INIT, "" );
 idCVar Win32Vars_t::sys_cpustring( "sys_cpustring", "detect", CVAR_SYSTEM | CVAR_INIT, "" );
 idCVar Win32Vars_t::in_mouse( "in_mouse", "1", CVAR_SYSTEM | CVAR_BOOL, "enable mouse input" );
+idCVar Win32Vars_t::in_xbox360Controller( "in_xbox360Controller", "1", CVAR_SYSTEM | CVAR_BOOL, "enable Xbox 360 controller" );
+idCVar Win32Vars_t::in_xbox360ControllerDebug( "in_xbox360ControllerDebug", "0", CVAR_SYSTEM | CVAR_BOOL, "enable Xbox 360 controller debugging" );
+idCVar Win32Vars_t::in_xbox360ControllerThreshold( "in_xbox360ControllerThreshold", "0.15", CVAR_SYSTEM | CVAR_FLOAT, "enable Xbox 360 controller debugging" );
 idCVar Win32Vars_t::win_allowAltTab( "win_allowAltTab", "0", CVAR_SYSTEM | CVAR_BOOL, "allow Alt-Tab when fullscreen" );
 idCVar Win32Vars_t::win_notaskkeys( "win_notaskkeys", "0", CVAR_SYSTEM | CVAR_INTEGER, "disable windows task keys" );
 idCVar Win32Vars_t::win_username( "win_username", "", CVAR_SYSTEM | CVAR_INIT, "windows user name" );

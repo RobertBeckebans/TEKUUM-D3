@@ -911,6 +911,7 @@ end
 			"iphlpapi",
 			"winmm",
 			"ws2_32",
+			"Xinput",
 		}
 		prebuildcommands
 		{

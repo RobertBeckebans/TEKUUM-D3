@@ -33,6 +33,7 @@ If you have questions concerning this license or the applicable additional terms
 #pragma hdrstop
 
 #include <windows.h>
+#include <XInput.h>
 // Techyon BEGIN
 #include "../../libs/glew/include/GL/wglew.h"
 //#include "../../renderer/wglext.h"		// windows OpenGL extensions
@@ -42,6 +43,8 @@ If you have questions concerning this license or the applicable additional terms
 #define	MAX_OSPATH			256
 
 #define	WINDOW_STYLE	(WS_OVERLAPPED|WS_BORDER|WS_CAPTION|WS_VISIBLE | WS_THICKFRAME)
+
+const int MAX_XBOX360_GAMEPADS = 4;
 
 void	Sys_QueEvent( int time, sysEventType_t type, int value, int value2, int ptrLength, void *ptr );
 
@@ -126,6 +129,11 @@ typedef struct {
 	static idCVar	sys_arch;
 	static idCVar	sys_cpustring;
 	static idCVar	in_mouse;
+	// Techyon BEGIN
+	static idCVar	in_xbox360Controller;
+	static idCVar	in_xbox360ControllerDebug;
+	static idCVar	in_xbox360ControllerThreshold;
+	// Techyon END
 	static idCVar	win_allowAltTab;
 	static idCVar	win_notaskkeys;
 	static idCVar	win_username;
@@ -145,6 +153,11 @@ typedef struct {
 	LPDIRECTINPUT8			g_pdi;
 	LPDIRECTINPUTDEVICE8	g_pMouse;
 	LPDIRECTINPUTDEVICE8	g_pKeyboard;
+// Techyon BEGIN
+	bool					g_ControllerAvailable;
+	XINPUT_STATE			g_Controller; //[MAX_XBOX360_GAMEPADS];
+// Techyon END
+
 
 	HANDLE			renderCommandsEvent;
 	HANDLE			renderCompletedEvent;

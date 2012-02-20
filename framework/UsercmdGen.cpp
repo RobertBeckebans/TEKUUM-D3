@@ -347,12 +347,18 @@ private:
 	void			AdjustAngles( void );
 	void			KeyMove( void );
 	void			JoystickMove( void );
+// Techyon BEGIN
+	void			Xbox360ControllerMove();
+// Techyon END
 	void			MouseMove( void );
 	void			CmdButtons( void );
 
 	void			Mouse( void );
 	void			Keyboard( void );
 	void			Joystick( void );
+// Techyon BEGIN
+	void			Xbox360Controller( void );
+// Techyon END
 
 	void			Key( int keyNum, bool down );
 
@@ -674,6 +680,7 @@ idUsercmdGenLocal::JoystickMove
 =================
 */
 void idUsercmdGenLocal::JoystickMove( void ) {
+#if 0
 	float	anglespeed;
 
 	if ( toggled_run.on ^ ( in_alwaysRun.GetBool() && idAsyncNetwork::IsActive() ) ) {
@@ -691,7 +698,37 @@ void idUsercmdGenLocal::JoystickMove( void ) {
 	}
 
 	cmd.upmove = idMath::ClampChar( cmd.upmove + joystickAxis[AXIS_UP] );
+#endif
 }
+
+// Techyon BEGIN
+void idUsercmdGenLocal::Xbox360ControllerMove( void )
+{
+	float	anglespeed;
+
+	if(toggled_run.on ^ (in_alwaysRun.GetBool() && idAsyncNetwork::IsActive()))
+	{
+		anglespeed = idMath::M_MS2SEC * USERCMD_MSEC * in_angleSpeedKey.GetFloat();
+	} 
+	else
+	{
+		anglespeed = idMath::M_MS2SEC * USERCMD_MSEC;
+	}
+
+	viewangles[YAW] += anglespeed * in_yawSpeed.GetFloat() * (joystickAxis[AXIS_YAW] / 127.0f);
+	viewangles[PITCH] += anglespeed * in_pitchSpeed.GetFloat() * (joystickAxis[AXIS_PITCH] / 127.0f);
+	 
+	if(joystickAxis[AXIS_SIDE] != 0.0f || joystickAxis[AXIS_FORWARD] != 0.0f)
+	{
+		cmd.rightmove = idMath::ClampChar( cmd.rightmove + joystickAxis[AXIS_SIDE] );
+		cmd.forwardmove = idMath::ClampChar( cmd.forwardmove + joystickAxis[AXIS_FORWARD] );
+		//cmd.upmove = idMath::ClampChar( cmd.upmove + joystickAxis[AXIS_UP] );
+
+		// always run because we have a fine control with the analog stick
+		//cmd.buttons |= BUTTON_RUN;
+	}
+}
+// Techyon END
 
 /*
 ==============
@@ -785,6 +822,11 @@ void idUsercmdGenLocal::MakeCurrent( void ) {
 
 		// get basic movement from joystick
 		JoystickMove();
+
+// Techyon BEGIN
+		// get basic movement from xbox 360 controller
+		Xbox360ControllerMove();
+// Techyon END
 
 		// check to make sure the angles haven't wrapped
 		if ( viewangles[PITCH] - oldAngles[PITCH] > 90 ) {
@@ -1038,6 +1080,65 @@ void idUsercmdGenLocal::Joystick( void ) {
 	memset( joystickAxis, 0, sizeof( joystickAxis ) );
 }
 
+void idUsercmdGenLocal::Xbox360Controller( void )
+{
+	int numEvents = Sys_PollXbox360ControllerInputEvents();
+
+	if ( numEvents ) 
+	{
+		for( int i = 0; i < numEvents; i++ ) 
+		{
+			int action, value;
+			if ( Sys_ReturnXbox360ControllerInputEvent( i, action, value ) ) 
+			{
+				/*
+				if ( action >= M_ACTION1 && action <= M_ACTION8 ) 
+				{
+					mouseButton = K_MOUSE1 + ( action - M_ACTION1 );
+					mouseDown = ( value != 0 );
+					Key( mouseButton, mouseDown );
+				}
+				*/
+
+				// convert xbox 360 controller axis to generic joystick axis
+				switch ( action ) 
+				{
+					case GP_AXIS_SIDE:
+						joystickAxis[AXIS_SIDE] = value;
+						break;
+
+					case GP_AXIS_FORWARD:
+						joystickAxis[AXIS_FORWARD] = value;
+						break;
+
+					case GP_AXIS_UP:
+						joystickAxis[AXIS_UP] = value;
+						break;
+
+					case GP_AXIS_ROLL:
+						joystickAxis[AXIS_ROLL] = value;
+						break;
+
+					case GP_AXIS_YAW:
+						joystickAxis[AXIS_YAW] = value;
+						break;
+
+					case GP_AXIS_PITCH:
+						joystickAxis[AXIS_PITCH] = value;
+						break;
+
+					case GP_BUTTON:
+						// TODO
+						break;
+				}
+				
+			}
+		}
+	}
+
+	Sys_EndXbox360ControllerInputEvents();
+}
+
 /*
 ================
 idUsercmdGenLocal::UsercmdInterrupt
@@ -1102,6 +1203,10 @@ usercmd_t idUsercmdGenLocal::GetDirectUsercmd( void ) {
 
 	// process the system joystick events
 	Joystick();
+
+// Techyon BEGIN
+	Xbox360Controller();
+// Techyon END
 
 	// create the usercmd
 	MakeCurrent();
