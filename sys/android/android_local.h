@@ -37,6 +37,7 @@ void JE_SetResolution(int width, int height);
 void JE_QueueKeyEvent(int key, int state);
 void JE_QueueMotionEvent(int action, float x, float y, float pressure);
 void JE_QueueTrackballEvent(int action, float dx, float dy);
+void JE_QueueJoystickEvent(int axis, float dy);
 void JE_QueueConsoleEvent(const char *cmd);
 
 void JE_RequestAudioData(void);

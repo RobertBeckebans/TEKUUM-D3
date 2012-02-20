@@ -226,6 +226,7 @@ GLenum idImage::SelectInternalFormat( const byte **dataPtrs, int numDataPtrs, in
 	int		rgbDiffer, rgbaDiffer;
 
 // Techyon BEGIN
+#if !defined(USE_GLES1)
 	if (minimumDepth > TD_HIGH_QUALITY)
 	{
 		switch (minimumDepth)
@@ -253,6 +254,7 @@ GLenum idImage::SelectInternalFormat( const byte **dataPtrs, int numDataPtrs, in
 				break;
 		}
 	}
+#endif
 // Techyon END
 
 	// determine if the rgb channels are all the same

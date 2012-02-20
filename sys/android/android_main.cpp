@@ -615,6 +615,7 @@ jniExport_t* GetEngineJavaAPI(int apiVersion, jniImport_t * jimp)
 	je.QueueKeyEvent = JE_QueueKeyEvent;
 	je.QueueMotionEvent = JE_QueueMotionEvent;
 	je.QueueTrackballEvent = JE_QueueTrackballEvent;
+	je.QueueJoystickEvent = JE_QueueJoystickEvent;
 	je.QueueConsoleEvent = JE_QueueConsoleEvent;
 
 	je.RequestAudioData = JE_RequestAudioData;

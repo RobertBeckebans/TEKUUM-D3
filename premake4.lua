@@ -9,7 +9,7 @@ function FindAndroidNDK()
 	if (ndkdir) then
 		includedirs 
 		{
-			--"$(NDK)/platforms/android-4/arch-arm/usr/include",
+			--"$(NDK)/platforms/android-8/arch-arm/usr/include",
 			--"$(NDK)/prebuilt/windows/lib/gcc/arm-linux-androideabi/4.4.3/include",
 			--"$(NDK)/sources/cxx-stl/stlport/stlport",
 		}
@@ -478,7 +478,7 @@ end
 	configuration "android"
 		includedirs
 		{
-			"$(NDK)/platforms/android-4/arch-arm/usr/include",
+			"$(NDK)/platforms/android-8/arch-arm/usr/include",
 			"$(NDK)/prebuilt/windows/lib/gcc/arm-linux-androideabi/4.4.3/include",
 			"$(NDK)/sources/cxx-stl/stlport/stlport",
 		}
@@ -1012,7 +1012,7 @@ end -- if not _OPTIONS["android"]
 		targetname  "techyon"
 		includedirs 
 		{
-			"$(NDK)/platforms/android-4/arch-arm/usr/include",
+			"$(NDK)/platforms/android-8/arch-arm/usr/include",
 			"$(NDK)/prebuilt/windows/lib/gcc/arm-linux-androideabi/4.4.3/include",
 			"$(NDK)/sources/cxx-stl/stlport/stlport",
 		}
@@ -1071,7 +1071,7 @@ end -- if not _OPTIONS["android"]
 		}
 		libdirs
 		{
-			"$(NDK)/platforms/android-4/arch-arm/usr/lib",
+			"$(NDK)/platforms/android-8/arch-arm/usr/lib",
 			"$(NDK)/sources/cxx-stl/gnu-libstdc++/libs/armeabi",
 			"$(NDK)/sources/cxx-stl/stlport/libs/armeabi",
 		}

@@ -228,5 +228,128 @@ int				Sys_PollMouseInputEvents( void ) { return 0; }
 int				Sys_ReturnMouseInputEvent( const int n, int &action, int &value ) { return 0; }
 void			Sys_EndMouseInputEvents( void ) {}
 
+//=====================================================================================
+
+static float		s_joystickAxis[MAX_JOYSTICK_AXIS];	// set by joystick events
+
+void JE_QueueJoystickEvent(int axis, float value)
+{
+#if 0
+	if (!common || !common->IsInitialized())
+		return;
+
+	common->Printf( "JE_QueueJoystickEvent( axis = %i, value = %f )\n", axis, value );
+#endif
+
+	if (axis < 0 || axis >= MAX_JOYSTICK_AXIS) {
+		return;
+	}
+
+	s_joystickAxis[axis] = value;
+}
+
+typedef struct
+{
+	int action;
+	int value;
+} pollGamepadEvent_t;
+
+#define MAX_POLL_EVENTS 50
+#define POLL_EVENTS_HEADROOM 2
+static pollGamepadEvent_t s_pollGamepadEvents[MAX_POLL_EVENTS + POLL_EVENTS_HEADROOM];
+static int s_pollGamepadEventsCount;
+
+static bool IN_AddGamepadPollEvent(int action, int value)
+{
+	if (s_pollGamepadEventsCount >= MAX_POLL_EVENTS + POLL_EVENTS_HEADROOM)
+		common->FatalError( "pollGamepadEventsCount exceeded MAX_POLL_EVENT + POLL_EVENTS_HEADROOM\n");
+
+	s_pollGamepadEvents[s_pollGamepadEventsCount].action = action;
+	s_pollGamepadEvents[s_pollGamepadEventsCount++].value = value;
+
+	if (s_pollGamepadEventsCount >= MAX_POLL_EVENTS) {
+		common->DPrintf("WARNING: reached MAX_POLL_EVENT pollGamepadEventsCount\n");
+		return false;
+	}
+
+	return true;
+}
+
+static void IN_XBox360Axis(int action, float thumbAxis, float scale)
+{
+#if 1
+	//float           f = ((float)thumbAxis) / 32767.0f;
+	float f = thumbAxis;
+
+	float threshold = 0.15f; //win32.in_xbox360ControllerThreshold.GetFloat();
+	if(f > -threshold && f < threshold)
+	{
+		IN_AddGamepadPollEvent(action, 0);
+	}
+	else
+	{
+		//if(in_xbox360ControllerDebug.GetBool())
+		//{
+		//	common->Printf("xbox axis %i = %f\n", action, f);
+		//}
+
+		IN_AddGamepadPollEvent(action, f * scale);
+	}
+#endif
+}
+
+int Sys_PollXbox360ControllerInputEvents( void )
+{
+#if 1
+	s_pollGamepadEventsCount = 0;
+
+	//XINPUT_STATE state;
+	//DWORD dwResult = XInputGetState(0, &state);
+
+	//if(dwResult == ERROR_SUCCESS)
+	{
+		//win32.g_ControllerAvailable = true;
+
+		// always send the axis
+
+		// use left analog stick for strafing
+		IN_XBox360Axis(GP_AXIS_SIDE, s_joystickAxis[AXIS_SIDE], 127);
+		IN_XBox360Axis(GP_AXIS_FORWARD, s_joystickAxis[AXIS_FORWARD], 127);
+
+		// use right analog stick for viewing
+		IN_XBox360Axis(GP_AXIS_YAW, s_joystickAxis[AXIS_YAW], -63);
+		IN_XBox360Axis(GP_AXIS_PITCH, s_joystickAxis[AXIS_PITCH], -63);
+
+		/*
+		if(state.dwPacketNumber == win32.g_Controller.dwPacketNumber) {
+			// no changes since last frame so skip the buttons
+			return s_pollGamepadEventsCount;
+		} else {
+			win32.g_Controller = state;
+		}
+		*/
+
+		// TODO buttons
+
+		return s_pollGamepadEventsCount;
+	}
+#endif
+	return 0;
+}
+
+int	Sys_ReturnXbox360ControllerInputEvent( const int n, int &action, int &value )
+{
+	if ( n>= s_pollGamepadEventsCount ) {
+		return 0;
+	}
+
+	action = s_pollGamepadEvents[ n ].action;
+	value = s_pollGamepadEvents[ n ].value;
+
+	return 1;
+}
+
+void Sys_EndXbox360ControllerInputEvents( void ) { }
+
 
 void Sys_GrabMouseCursor( bool grabIt ) {}
