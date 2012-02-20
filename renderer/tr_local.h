@@ -2073,6 +2073,10 @@ idMat4 make_idMat4(const float * m);
 
 //=============================================
 
+void			MatrixIdentity(matrix_t m);
+void			MatrixCopy(const matrix_t in, matrix_t out);
+void			MatrixTranspose(const matrix_t in, matrix_t out);
+void			MatrixAffineInverse(const matrix_t in, matrix_t out);
 void            MatrixFromPlanes(matrix_t m, const idPlane frustum[6]);
 
 #include "RenderWorld_local.h"
