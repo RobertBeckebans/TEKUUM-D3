@@ -1088,8 +1088,8 @@ void idUsercmdGenLocal::Xbox360Controller( void )
 	{
 		for( int i = 0; i < numEvents; i++ ) 
 		{
-			int action, value;
-			if ( Sys_ReturnXbox360ControllerInputEvent( i, action, value ) ) 
+			int action, value, value2;
+			if ( Sys_ReturnXbox360ControllerInputEvent( i, action, value, value2 ) ) 
 			{
 				/*
 				if ( action >= M_ACTION1 && action <= M_ACTION8 ) 
@@ -1128,7 +1128,7 @@ void idUsercmdGenLocal::Xbox360Controller( void )
 						break;
 
 					case GP_BUTTON:
-						// TODO
+						Key( value, value2 != 0 );
 						break;
 				}
 				

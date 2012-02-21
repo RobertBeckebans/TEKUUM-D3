@@ -1055,6 +1055,7 @@ typedef struct
 {
 	int action;
 	int value;
+	int value2;
 } pollGamepadEvent_t;
 
 #define MAX_POLL_EVENTS 50
@@ -1062,13 +1063,15 @@ typedef struct
 static pollGamepadEvent_t s_pollGamepadEvents[MAX_POLL_EVENTS + POLL_EVENTS_HEADROOM];
 static int s_pollGamepadEventsCount;
 
-static bool IN_AddGamepadPollEvent(int action, int value) 
+static bool IN_AddGamepadPollEvent(int action, int value, int value2) 
 {
 	if (s_pollGamepadEventsCount >= MAX_POLL_EVENTS + POLL_EVENTS_HEADROOM)
 		common->FatalError( "pollGamepadEventsCount exceeded MAX_POLL_EVENT + POLL_EVENTS_HEADROOM\n");
 
 	s_pollGamepadEvents[s_pollGamepadEventsCount].action = action;
-	s_pollGamepadEvents[s_pollGamepadEventsCount++].value = value;
+	s_pollGamepadEvents[s_pollGamepadEventsCount].value = value;
+	s_pollGamepadEvents[s_pollGamepadEventsCount].value2 = value2;
+	s_pollGamepadEventsCount++;
 	
 	if (s_pollGamepadEventsCount >= MAX_POLL_EVENTS) {
 		common->DPrintf("WARNING: reached MAX_POLL_EVENT pollGamepadEventsCount\n");
@@ -1085,7 +1088,7 @@ static void IN_XBox360Axis(int action, short thumbAxis, float scale)
 	float threshold = win32.in_xbox360ControllerThreshold.GetFloat();
 	if(f > -threshold && f < threshold)
 	{
-		IN_AddGamepadPollEvent(action, 0);
+		IN_AddGamepadPollEvent(action, 0, 0);
 	}
 	else
 	{
@@ -1094,14 +1097,39 @@ static void IN_XBox360Axis(int action, short thumbAxis, float scale)
 			common->Printf("xbox axis %i = %f\n", action, f);
 		}
 
-		IN_AddGamepadPollEvent(action, f * scale);
+		IN_AddGamepadPollEvent(action, f * scale, 0);
+	}
+}
+
+static void IN_XBox360TriggerToButton(byte triggerAxis, byte oldTriggerAxis, int key, float expectedStartValue, float threshold)
+{
+	float           f = ((float)triggerAxis) / 255.0f;
+	float           fOld = ((float)triggerAxis) / 255.0f;
+
+	if(f > (expectedStartValue + threshold + win32.in_xbox360ControllerThreshold.GetFloat()))
+	{
+		IN_AddGamepadPollEvent(GP_BUTTON, key, 1);
+		Sys_QueEvent( GetTickCount(), SE_KEY, key, 1, 0, NULL );
+
+		if(win32.in_xbox360ControllerDebug.GetBool())
+		{
+			common->Printf("xbox trigger to key press = Q:0x%02x(%s), value = %f\n", key, idKeyInput::KeyNumToString(key, false), f);
+		}
+	}
+	else
+	{
+		IN_AddGamepadPollEvent(GP_BUTTON, key, 0);
+		Sys_QueEvent( GetTickCount(), SE_KEY, key, 0, 0, NULL );
+
+		if(win32.in_xbox360ControllerDebug.GetBool())
+		{
+			common->Printf("xbox trigger to key release = Q:0x%02x(%s), value = %f\n", key, idKeyInput::KeyNumToString(key, false), f);
+		}
 	}
 }
 
 int Sys_PollXbox360ControllerInputEvents( void )
 {
-	//ZeroMemory(&win32.g_Controller
-
 	if (!win32.in_xbox360Controller.GetBool())
 		return 0;
 
@@ -1127,19 +1155,184 @@ int Sys_PollXbox360ControllerInputEvents( void )
 		if(state.dwPacketNumber == win32.g_Controller.dwPacketNumber) {
 			// no changes since last frame so skip the buttons
 			return s_pollGamepadEventsCount;
-		} else {
-			win32.g_Controller = state;
 		}
 
-		// TODO buttons
+		if(state.Gamepad.bLeftTrigger != win32.g_Controller.Gamepad.bLeftTrigger)
+		{
+			IN_XBox360TriggerToButton(state.Gamepad.bLeftTrigger, win32.g_Controller.Gamepad.bLeftTrigger, K_XINPUT_GAMEPAD_LT, 0, 0);
+		}
 
+		if(state.Gamepad.bRightTrigger != win32.g_Controller.Gamepad.bRightTrigger)
+		{
+			IN_XBox360TriggerToButton(state.Gamepad.bRightTrigger, win32.g_Controller.Gamepad.bRightTrigger, K_XINPUT_GAMEPAD_RT, 0, 0);
+		}
+
+		WORD diff = state.Gamepad.wButtons ^ win32.g_Controller.Gamepad.wButtons;
+		if(diff)
+		{
+			if(diff & XINPUT_GAMEPAD_DPAD_UP) 
+			{
+				if(state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_UP) {
+					IN_AddGamepadPollEvent(GP_BUTTON, K_XINPUT_GAMEPAD_DPAD_UP, 1);
+					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_DPAD_UP, 1, 0, NULL );
+				} else {
+					IN_AddGamepadPollEvent(GP_BUTTON, K_XINPUT_GAMEPAD_DPAD_UP, 0);
+					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_DPAD_UP, 0, 0, NULL );
+				}
+			}
+
+			if(diff & XINPUT_GAMEPAD_DPAD_DOWN) 
+			{
+				if(state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_DOWN) {
+					IN_AddGamepadPollEvent(GP_BUTTON, K_XINPUT_GAMEPAD_DPAD_DOWN, 1);
+					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_DPAD_DOWN, 1, 0, NULL );
+				} else {
+					IN_AddGamepadPollEvent(GP_BUTTON, K_XINPUT_GAMEPAD_DPAD_DOWN, 0);
+					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_DPAD_DOWN, 0, 0, NULL );
+				}
+			}
+
+			if(diff & XINPUT_GAMEPAD_DPAD_LEFT) 
+			{
+				if(state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_LEFT) {
+					IN_AddGamepadPollEvent(GP_BUTTON, K_XINPUT_GAMEPAD_DPAD_LEFT, 1);
+					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_DPAD_LEFT, 1, 0, NULL );
+				} else {
+					IN_AddGamepadPollEvent(GP_BUTTON, K_XINPUT_GAMEPAD_DPAD_LEFT, 0);
+					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_DPAD_LEFT, 0, 0, NULL );
+				}
+			}
+
+			if(diff & XINPUT_GAMEPAD_DPAD_RIGHT) 
+			{
+				if(state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_RIGHT) {
+					IN_AddGamepadPollEvent(GP_BUTTON, K_XINPUT_GAMEPAD_DPAD_RIGHT, 1);
+					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_DPAD_RIGHT, 1, 0, NULL );
+				} else {
+					IN_AddGamepadPollEvent(GP_BUTTON, K_XINPUT_GAMEPAD_DPAD_RIGHT, 0);
+					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_DPAD_RIGHT, 0, 0, NULL );
+				}
+			}
+
+			if(diff & XINPUT_GAMEPAD_START) 
+			{
+				if(state.Gamepad.wButtons & XINPUT_GAMEPAD_START) {
+					IN_AddGamepadPollEvent(GP_BUTTON, K_XINPUT_GAMEPAD_START, 1);
+					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_START, 1, 0, NULL );
+				} else {
+					IN_AddGamepadPollEvent(GP_BUTTON, K_XINPUT_GAMEPAD_START, 0);
+					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_START, 0, 0, NULL );
+				}
+			}
+
+			if(diff & XINPUT_GAMEPAD_BACK) 
+			{
+				if(state.Gamepad.wButtons & XINPUT_GAMEPAD_BACK) {
+					IN_AddGamepadPollEvent(GP_BUTTON, K_XINPUT_GAMEPAD_BACK, 1);
+					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_BACK, 1, 0, NULL );
+				} else {
+					IN_AddGamepadPollEvent(GP_BUTTON, K_XINPUT_GAMEPAD_BACK, 0);
+					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_BACK, 0, 0, NULL );
+				}
+			}
+
+			if(diff & XINPUT_GAMEPAD_LEFT_THUMB) 
+			{
+				if(state.Gamepad.wButtons & XINPUT_GAMEPAD_LEFT_THUMB) {
+					IN_AddGamepadPollEvent(GP_BUTTON, K_XINPUT_GAMEPAD_LS, 1);
+					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_LS, 1, 0, NULL );
+				} else {
+					IN_AddGamepadPollEvent(GP_BUTTON, K_XINPUT_GAMEPAD_LS, 0);
+					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_LS, 0, 0, NULL );
+				}
+			}
+
+			if(diff & XINPUT_GAMEPAD_RIGHT_THUMB) 
+			{
+				if(state.Gamepad.wButtons & XINPUT_GAMEPAD_RIGHT_THUMB) {
+					IN_AddGamepadPollEvent(GP_BUTTON, K_XINPUT_GAMEPAD_RS, 1);
+					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_RS, 1, 0, NULL );
+				} else {
+					IN_AddGamepadPollEvent(GP_BUTTON, K_XINPUT_GAMEPAD_RS, 0);
+					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_RS, 0, 0, NULL );
+				}
+			}
+
+			if(diff & XINPUT_GAMEPAD_LEFT_SHOULDER) 
+			{
+				if(state.Gamepad.wButtons & XINPUT_GAMEPAD_LEFT_SHOULDER) {
+					IN_AddGamepadPollEvent(GP_BUTTON, K_XINPUT_GAMEPAD_LB, 1);
+					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_LB, 1, 0, NULL );
+				} else {
+					IN_AddGamepadPollEvent(GP_BUTTON, K_XINPUT_GAMEPAD_LB, 0);
+					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_LB, 0, 0, NULL );
+				}
+			}
+
+			if(diff & XINPUT_GAMEPAD_RIGHT_SHOULDER) 
+			{
+				if(state.Gamepad.wButtons & XINPUT_GAMEPAD_RIGHT_SHOULDER) {
+					IN_AddGamepadPollEvent(GP_BUTTON, K_XINPUT_GAMEPAD_RB, 1);
+					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_RB, 1, 0, NULL );
+				} else {
+					IN_AddGamepadPollEvent(GP_BUTTON, K_XINPUT_GAMEPAD_RB, 0);
+					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_RB, 0, 0, NULL );
+				}
+			}
+
+			if(diff & XINPUT_GAMEPAD_A) 
+			{
+				if(state.Gamepad.wButtons & XINPUT_GAMEPAD_A) {
+					IN_AddGamepadPollEvent(GP_BUTTON, K_XINPUT_GAMEPAD_A, 1);
+					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_A, 1, 0, NULL );
+				} else {
+					IN_AddGamepadPollEvent(GP_BUTTON, K_XINPUT_GAMEPAD_A, 0);
+					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_A, 0, 0, NULL );
+				}
+			}
+
+			if(diff & XINPUT_GAMEPAD_B) 
+			{
+				if(state.Gamepad.wButtons & XINPUT_GAMEPAD_B) {
+					IN_AddGamepadPollEvent(GP_BUTTON, K_XINPUT_GAMEPAD_B, 1);
+					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_B, 1, 0, NULL );
+				} else {
+					IN_AddGamepadPollEvent(GP_BUTTON, K_XINPUT_GAMEPAD_B, 0);
+					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_B, 0, 0, NULL );
+				}
+			}
+
+			if(diff & XINPUT_GAMEPAD_X) 
+			{
+				if(state.Gamepad.wButtons & XINPUT_GAMEPAD_X) {
+					IN_AddGamepadPollEvent(GP_BUTTON, K_XINPUT_GAMEPAD_X, 1);
+					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_X, 1, 0, NULL );
+				} else {
+					IN_AddGamepadPollEvent(GP_BUTTON, K_XINPUT_GAMEPAD_X, 0);
+					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_X, 0, 0, NULL );
+				}
+			}
+
+			if(diff & XINPUT_GAMEPAD_Y) 
+			{
+				if(state.Gamepad.wButtons & XINPUT_GAMEPAD_Y) {
+					IN_AddGamepadPollEvent(GP_BUTTON, K_XINPUT_GAMEPAD_Y, 1);
+					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_Y, 1, 0, NULL );
+				} else {
+					IN_AddGamepadPollEvent(GP_BUTTON, K_XINPUT_GAMEPAD_Y, 0);
+					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_Y, 0, 0, NULL );
+				}
+			}
+		}
+
+		win32.g_Controller = state;
 		return s_pollGamepadEventsCount;
 	}
 
 	return 0;
 }
 
-int	Sys_ReturnXbox360ControllerInputEvent( const int n, int &action, int &value )
+int	Sys_ReturnXbox360ControllerInputEvent( const int n, int &action, int &value, int &value2 )
 {
 	if ( n>= s_pollGamepadEventsCount ) {
 		return 0;
@@ -1147,6 +1340,7 @@ int	Sys_ReturnXbox360ControllerInputEvent( const int n, int &action, int &value 
 	
 	action = s_pollGamepadEvents[ n ].action;
 	value = s_pollGamepadEvents[ n ].value;
+	value2 = s_pollGamepadEvents[ n ].value2;
 	
 	return 1;
 }
