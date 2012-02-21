@@ -1315,6 +1315,7 @@ void idAsyncClient::ProcessAuthKeyMessage( const netadr_t from, const idBitMsg &
 		common->DPrintf( "auth deny: %s\n", auth_msg.c_str() );
 		
 		// keys to be cleared. applies to both net connect and game auth
+#if defined(USE_CDKEY)
 		session->ClearCDKey( valid );
 
 		// get rid of the bad key - at least that's gonna annoy people who stole a fake key
@@ -1340,11 +1341,14 @@ void idAsyncClient::ProcessAuthKeyMessage( const netadr_t from, const idBitMsg &
 			// forward the auth status information to the session code
 			session->CDKeysAuthReply( false, auth_msg );
 		}
+#endif // #if defined(USE_CDKEY)
 	} else {
 		msg.ReadString( read_string, MAX_STRING_CHARS );
 		cvarSystem->SetCVarString( "com_guid", read_string );
 		common->Printf( "guid set to %s\n", read_string );
+#if defined(USE_CDKEY)
 		session->CDKeysAuthReply( true, NULL );
+#endif
 	}
 }
 
@@ -1689,6 +1693,7 @@ void idAsyncClient::SetupConnection( void ) {
 		if ( idAsyncNetwork::LANServer.GetBool() ) {
 			common->Printf( "net_LANServer is set, connecting in LAN mode\n" );
 		} else {
+#if defined(USE_CDKEY)
 			// emit a cd key authorization request
 			// modified at protocol 1.37 for XP key addition
 			msg.BeginWriting();
@@ -1706,6 +1711,7 @@ void idAsyncClient::SetupConnection( void ) {
 				msg.WriteString( xpkey );
 			}
 			clientPort.SendPacket( idAsyncNetwork::GetMasterAddress(), msg.GetData(), msg.GetSize() );
+#endif
 		}
 	} else {
 		return;

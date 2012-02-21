@@ -114,6 +114,7 @@ public:
 
 	virtual void		TimeHitch( int msec );
 
+#if defined(USE_CDKEY)
 	virtual void		ReadCDKey( void );
 	virtual void		WriteCDKey( void );
 	virtual const char *GetCDKey( bool xp );
@@ -121,8 +122,10 @@ public:
 	virtual bool		CDKeysAreValid( bool strict );
 	virtual void		ClearCDKey( bool valid[ 2 ] );
 	virtual void		SetCDKeyGuiVars( void );
-	virtual bool		WaitingForGameAuth( void );
 	virtual void		CDKeysAuthReply( bool valid, const char *auth_msg );
+#endif
+
+	virtual bool		WaitingForGameAuth( void );
 
 	virtual int			GetSaveGameVersion( void );
 
@@ -155,7 +158,9 @@ public:
 	bool				LoadGame(const char *saveName);
 	bool				SaveGame(const char *saveName, bool autosave = false);
 
+#if defined(USE_CDKEY)
 	const char			*GetAuthMsg( void );
+#endif
 
 	//=====================================
 
@@ -303,7 +308,9 @@ public:
 	void				UnloadMap();
 
 	// return true if we actually waiting on an auth reply
+#if defined(USE_CDKEY)
 	bool				MaybeWaitOnCDKey( void );
+#endif
 
 	//------------------
 	// Session_menu.cpp
@@ -337,6 +344,7 @@ private:
 	bool				BoxDialogSanityCheck( void );
 	void				EmitGameAuth( void );
 	
+#if defined(USE_CDKEY)
 	typedef enum {
 		CDKEY_UNKNOWN,	// need to perform checks on the key
 		CDKEY_INVALID,	// that key is wrong
@@ -354,8 +362,8 @@ private:
 	cdKeyState_t		xpkey_state;
 	int					authEmitTimeout;
 	bool				authWaitBox;
-
 	idStr				authMsg;
+#endif
 };
 
 extern idSessionLocal	sessLocal;

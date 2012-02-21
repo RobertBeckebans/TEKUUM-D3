@@ -309,7 +309,10 @@ void idSessionLocal::SetMainMenuGuiVars( void ) {
 		guiMainMenu->SetStateString( "inGame", "0" );
 	}
 
+#if defined(USE_CDKEY)
 	SetCDKeyGuiVars( );
+#endif
+
 #ifdef ID_DEMO_BUILD
 	guiMainMenu->SetStateString( "nightmare", "0" );
 #else
@@ -1321,6 +1324,7 @@ const char* idSessionLocal::MessageBox( msgBoxType_t type, const char *message, 
 			guiMsg->SetStateString( "visible_hasxp", fileSystem->HasD3XP() ? "1" : "0" );
 			// the current cdkey / xpkey values may have bad/random data in them
 			// it's best to avoid printing them completely, unless the key is good
+#if defined(USE_CDKEY)
 			if ( cdkey_state == CDKEY_OK ) {
 				guiMsg->SetStateString( "str_cdkey", cdkey );
 				guiMsg->SetStateString( "visible_cdchk", "0" );
@@ -1328,7 +1332,7 @@ const char* idSessionLocal::MessageBox( msgBoxType_t type, const char *message, 
 				guiMsg->SetStateString( "str_cdkey", "" );
 				guiMsg->SetStateString( "visible_cdchk", "1" );
 			}
-			guiMsg->SetStateString( "str_cdchk", "" );
+			
 			if ( xpkey_state == CDKEY_OK ) {
 				guiMsg->SetStateString( "str_xpkey", xpkey );
 				guiMsg->SetStateString( "visible_xpchk", "0" );
@@ -1336,6 +1340,13 @@ const char* idSessionLocal::MessageBox( msgBoxType_t type, const char *message, 
 				guiMsg->SetStateString( "str_xpkey", "" );
 				guiMsg->SetStateString( "visible_xpchk", "1" );
 			}
+#else
+			guiMsg->SetStateString( "str_cdkey", "" );
+			guiMsg->SetStateString( "visible_cdchk", "0" );
+			guiMsg->SetStateString( "str_xpkey", "" );
+			guiMsg->SetStateString( "visible_xpchk", "0" );
+#endif
+			guiMsg->SetStateString( "str_cdchk", "" );
 			guiMsg->SetStateString( "str_xpchk", "" );
 			guiMsg->HandleNamedEvent( "CDKey" );
 			break;
@@ -1645,6 +1656,7 @@ void idSessionLocal::HandleNoteCommands( const char *menuCommand ) {
 idSessionLocal::SetCDKeyGuiVars
 ===============
 */
+#if defined(USE_CDKEY)
 void idSessionLocal::SetCDKeyGuiVars( void ) {
 	if ( !guiMainMenu ) {
 		return;
@@ -1652,3 +1664,4 @@ void idSessionLocal::SetCDKeyGuiVars( void ) {
 	guiMainMenu->SetStateString( "str_d3key_state", common->GetLanguageDict()->GetString( va( "#str_071%d", 86 + cdkey_state ) ) );
 	guiMainMenu->SetStateString( "str_xpkey_state", common->GetLanguageDict()->GetString( va( "#str_071%d", 86 + xpkey_state ) ) );
 }
+#endif

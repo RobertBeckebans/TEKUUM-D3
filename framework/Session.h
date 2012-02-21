@@ -119,6 +119,7 @@ public:
 	// doesn't advance and get things out of sync
 	virtual void	TimeHitch( int msec ) = 0;
 
+#if defined(USE_CDKEY)
 	// read and write the cd key data to files
 	// doesn't perform any validity checks
 	virtual void	ReadCDKey( void ) = 0;
@@ -140,10 +141,11 @@ public:
 	// configure gui variables for mainmenu.gui and cd key state
 	virtual void	SetCDKeyGuiVars( void ) = 0;
 
-	virtual bool	WaitingForGameAuth( void ) = 0;
-
 	// got reply from master about the keys. if !valid, auth_msg given
 	virtual void	CDKeysAuthReply( bool valid, const char *auth_msg ) = 0;
+#endif
+
+	virtual bool	WaitingForGameAuth( void ) = 0;
 
 	virtual const char *GetCurrentMapName( void ) = 0;
 

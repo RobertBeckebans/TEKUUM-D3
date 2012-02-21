@@ -206,6 +206,7 @@ static void Sess_WritePrecache_f( const idCmdArgs &args ) {
 idSessionLocal::MaybeWaitOnCDKey
 ===============
 */
+#if defined(USE_CDKEY)
 bool idSessionLocal::MaybeWaitOnCDKey( void ) {
 	if ( authEmitTimeout > 0 ) {
 		authWaitBox = true;
@@ -214,6 +215,7 @@ bool idSessionLocal::MaybeWaitOnCDKey( void ) {
 	}
 	return false;
 }
+#endif
 
 /*
 ===================
@@ -221,6 +223,7 @@ Session_PromptKey_f
 ===================
 */
 static void Session_PromptKey_f( const idCmdArgs &args ) {
+#if defined(USE_CDKEY)
 	const char	*retkey;
 	bool		valid[ 2 ];
 	static bool recursed = false;
@@ -279,6 +282,7 @@ static void Session_PromptKey_f( const idCmdArgs &args ) {
 		}
 	} while ( retkey );
 	recursed = false;
+#endif // #if defined(USE_CDKEY)
 }
 
 /*
@@ -340,10 +344,12 @@ void idSessionLocal::Clear() {
 	loadGameList.Clear();
 	modsList.Clear();
 
+#if defined(USE_CDKEY)
 	authEmitTimeout = 0;
 	authWaitBox = false;
 
 	authMsg.Clear();
+#endif
 }
 
 /*
@@ -2610,6 +2616,7 @@ void idSessionLocal::Frame() {
 #endif // #if !defined(USE_QT_WINDOWING)
 // Techyon END
 
+#if defined(USE_CDKEY)
 	if ( authEmitTimeout ) {
 		// waiting for a game auth
 		if ( Sys_Milliseconds() > authEmitTimeout ) {
@@ -2633,6 +2640,7 @@ void idSessionLocal::Frame() {
 			SetCDKeyGuiVars();
 		}
 	}
+#endif
 
 	// send frame and mouse events to active guis
 	GuiFrameEvents();
@@ -2930,7 +2938,9 @@ void idSessionLocal::Init() {
 	guiActive = NULL;
 	guiHandle = NULL;
 
+#if defined(USE_CDKEY)
 	ReadCDKey();
+#endif
 
 	common->Printf( "session initialized\n" );
 	common->Printf( "--------------------------------------\n" );
@@ -2987,6 +2997,7 @@ void idSessionLocal::TimeHitch( int msec ) {
 idSessionLocal::ReadCDKey
 =================
 */
+#if defined(USE_CDKEY)
 void idSessionLocal::ReadCDKey( void ) {
 	idStr filename;
 	idFile *f;
@@ -3020,12 +3031,14 @@ void idSessionLocal::ReadCDKey( void ) {
 		idStr::Copynz( xpkey, buffer, CDKEY_BUF_LEN );
 	}
 }
+#endif // #if defined(USE_CDKEY)
 
 /*
 ================
 idSessionLocal::WriteCDKey
 ================
 */
+#if defined(USE_CDKEY)
 void idSessionLocal::WriteCDKey( void ) {
 	idStr filename;
 	idFile *f;
@@ -3053,12 +3066,14 @@ void idSessionLocal::WriteCDKey( void ) {
 	f->Printf( "%s%s", xpkey, CDKEY_TEXT );
 	fileSystem->CloseFile( f );
 }
+#endif // #if defined(USE_CDKEY)
 
 /*
 ===============
 idSessionLocal::ClearKey
 ===============
 */
+#if defined(USE_CDKEY)
 void idSessionLocal::ClearCDKey( bool valid[ 2 ] ) {
 	if ( !valid[ 0 ] ) {
 		memset( cdkey, 0, CDKEY_BUF_LEN );
@@ -3075,12 +3090,14 @@ void idSessionLocal::ClearCDKey( bool valid[ 2 ] ) {
 	}
 	WriteCDKey( );
 }
+#endif // #if defined(USE_CDKEY)
 
 /*
 ================
 idSessionLocal::GetCDKey
 ================
 */
+#if defined(USE_CDKEY)
 const char *idSessionLocal::GetCDKey( bool xp ) {
 	if ( !xp ) {
 		return cdkey;
@@ -3093,6 +3110,7 @@ const char *idSessionLocal::GetCDKey( bool xp ) {
 
 // digits to letters table
 #define CDKEY_DIGITS "TWSBJCGD7PA23RLH"
+#endif // #if defined(USE_CDKEY)
 
 /*
 ===============
@@ -3100,6 +3118,7 @@ idSessionLocal::EmitGameAuth
 we toggled some key state to CDKEY_CHECKING. send a standalone auth packet to validate
 ===============
 */
+#if defined(USE_CDKEY)
 void idSessionLocal::EmitGameAuth( void ) {
 	// make sure the auth reply is empty, we use it to indicate an auth reply
 	authMsg.Empty();
@@ -3117,6 +3136,7 @@ void idSessionLocal::EmitGameAuth( void ) {
 		}
 	}	
 }
+#endif // #if defined(USE_CDKEY)
 
 /*
 ================
@@ -3125,6 +3145,7 @@ the function will only modify keys to _OK or _CHECKING if the offline checks are
 if the function returns false, the offline checks failed, and offline_valid holds which keys are bad
 ================
 */
+#if defined(USE_CDKEY)
 bool idSessionLocal::CheckKey( const char *key, bool netConnect, bool offline_valid[ 2 ] ) {
 	char lkey[ 2 ][ CDKEY_BUF_LEN ];
 	char l_chk[ 2 ][ 3 ];
@@ -3198,6 +3219,7 @@ bool idSessionLocal::CheckKey( const char *key, bool netConnect, bool offline_va
 
 	return true;
 }
+#endif // #if defined(USE_CDKEY)
 
 /*
 ===============
@@ -3207,6 +3229,7 @@ if d3xp is installed, check for a valid xpkey as well
 emit an auth packet to the master if possible and needed
 ===============
 */
+#if defined(USE_CDKEY)
 bool idSessionLocal::CDKeysAreValid( bool strict ) {
 	int i;
 	bool emitAuth = false;
@@ -3257,6 +3280,7 @@ bool idSessionLocal::CDKeysAreValid( bool strict ) {
 		return ( cdkey_state == CDKEY_OK || cdkey_state == CDKEY_CHECKING ) && ( xpkey_state == CDKEY_OK || xpkey_state == CDKEY_CHECKING || xpkey_state == CDKEY_NA );
 	}
 }
+#endif // #if defined(USE_CDKEY)
 
 /*
 ===============
@@ -3264,7 +3288,11 @@ idSessionLocal::WaitingForGameAuth
 ===============
 */
 bool idSessionLocal::WaitingForGameAuth( void ) {
+#if defined(USE_CDKEY)
 	return authEmitTimeout != 0;
+#else
+	return true;
+#endif
 }
 
 /*
@@ -3272,6 +3300,7 @@ bool idSessionLocal::WaitingForGameAuth( void ) {
 idSessionLocal::CDKeysAuthReply
 ===============
 */
+#if defined(USE_CDKEY)
 void idSessionLocal::CDKeysAuthReply( bool valid, const char *auth_msg ) {
 	assert( authEmitTimeout > 0 );
 	if ( authWaitBox ) {
@@ -3300,6 +3329,7 @@ void idSessionLocal::CDKeysAuthReply( bool valid, const char *auth_msg ) {
 	authEmitTimeout = 0;
 	SetCDKeyGuiVars();
 }
+#endif // #if defined(USE_CDKEY)
 
 /*
 ===============
@@ -3324,6 +3354,8 @@ int idSessionLocal::GetSaveGameVersion( void ) {
 idSessionLocal::GetAuthMsg
 ===============
 */
+#if defined(USE_CDKEY)
 const char *idSessionLocal::GetAuthMsg( void ) {
 	return authMsg.c_str();
 }
+#endif

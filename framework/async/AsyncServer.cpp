@@ -1530,6 +1530,7 @@ void idAsyncServer::ProcessChallengeMessage( const netadr_t from, const idBitMsg
 
 	serverPort.SendPacket( from, outMsg.GetData(), outMsg.GetSize() );
 
+#if defined(USE_CDKEY)
 	if ( Sys_IsLANAddress( from ) ) {
 		// no CD Key check for LAN clients
 		challenges[i].authState = CDK_OK;
@@ -1550,6 +1551,9 @@ void idAsyncServer::ProcessChallengeMessage( const netadr_t from, const idBitMsg
 			serverPort.SendPacket( idAsyncNetwork::GetMasterAddress(), outMsg.GetData(), outMsg.GetSize() );
 		}
 	}
+#else
+	challenges[i].authState = CDK_OK;
+#endif
 }
 
 /*

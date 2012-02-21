@@ -116,6 +116,8 @@ If you have questions concerning this license or the applicable additional terms
 	#endif
 #endif
 
+// Techyon BEGIN
+#if defined(USE_CDKEY)
 #ifndef ID_ENFORCE_KEY
 #	if !defined( ID_DEDICATED ) && !defined( ID_DEMO_BUILD )
 #		define ID_ENFORCE_KEY 1
@@ -123,6 +125,8 @@ If you have questions concerning this license or the applicable additional terms
 #		define ID_ENFORCE_KEY 0
 #	endif
 #endif
+#endif // #if defined(USE_CDKEY)
+// Techyon END
 
 #ifndef ID_OPENAL
 #	if ( defined(_WIN32) || defined(MACOS_X) ) && !defined( ID_DEDICATED )
