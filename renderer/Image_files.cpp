@@ -163,6 +163,9 @@ void R_WritePalTGA( const char *filename, const byte *data, const byte *palette,
 static void LoadBMP( const char *name, byte **pic, int *width, int *height, ID_TIME_T *timestamp );
 static void LoadTGA( const char *name, byte **pic, int *width, int *height, ID_TIME_T *timestamp );
 static void LoadJPG( const char *name, byte **pic, int *width, int *height, ID_TIME_T *timestamp );
+// Techyon BEGIN
+static void LoadPNG( const char *name, byte **pic, int *width, int *height, ID_TIME_T *timestamp );
+// Techyon END
 
 
 /*
@@ -969,7 +972,279 @@ static void LoadJPG( const char *filename, unsigned char **pic, int *width, int 
   /* And we're done! */
 }
 
+
+/*
+=========================================================
+
+PNG LOADING
+
+=========================================================
+*/
+
+extern "C" 
+{
+#include "../libs/png/png.h"
+
+
+static void png_Error( png_structp pngPtr, png_const_charp msg ) {
+	common->FatalError( "%s", msg );
+}
+
+static void png_Warning( png_structp pngPtr, png_const_charp msg ) {
+	common->Warning( "%s", msg );
+}
+
+static void	png_ReadData(png_structp pngPtr, png_bytep data, png_size_t length)
+{
+	memcpy(data, (byte*)pngPtr->io_ptr, length);
+
+	pngPtr->io_ptr = ((byte*) pngPtr->io_ptr) + length;
+}
+
+}
+
+/*
+=============
+LoadPNG
+=============
+*/
+static void LoadPNG( const char *filename, unsigned char **pic, int *width, int *height, ID_TIME_T *timestamp )
+{
+	byte	*fbuffer;
+
+#if 0
+	if ( pic ) {
+		*pic = NULL;		// until proven otherwise
+	}
+	{
+		int		len;
+		idFile *f;
+
+		f = fileSystem->OpenFileRead( filename );
+		if ( !f ) {
+			return;
+		}
+		len = f->Length();
+			if ( timestamp ) {
+			*timestamp = f->Timestamp();
+		}
+		if ( !pic ) {
+			fileSystem->CloseFile( f );
+			return;	// just getting timestamp
+		}
+		fbuffer = (byte *)Mem_ClearedAlloc( len + 4096 );
+		f->Read( fbuffer, len );
+		fileSystem->CloseFile( f );
+	}
+#else
+	if ( !pic ) {
+		fileSystem->ReadFile( filename, NULL, timestamp );
+		return;	// just getting timestamp
+	}
+
+	*pic = NULL;
+
+	//
+	// load the file
+	//
+	int fileSize = fileSystem->ReadFile( filename, (void **)&fbuffer, timestamp );
+	if ( !fbuffer ) {
+		return;
+	}
+#endif
+
+	// create png_struct with the custom error handlers
+	png_structp pngPtr = png_create_read_struct(PNG_LIBPNG_VER_STRING, (png_voidp) NULL, png_Error, png_Warning);
+	if(!pngPtr)
+	{
+		common->Error( "LoadPNG( %s ): png_create_read_struct failed", filename );
+	}
+
+	// allocate the memory for image information
+	png_infop infoPtr = png_create_info_struct(pngPtr);
+	if(!infoPtr)
+	{
+		common->Error( "LoadPNG( %s ): png_create_info_struct failed", filename );
+	}
+
+	png_set_read_fn(pngPtr, fbuffer, png_ReadData);
+
+	png_set_sig_bytes(pngPtr, 0);
+
+	png_read_info(pngPtr, infoPtr);
+
+	png_uint_32 pngWidth, pngHeight;
+	int bitDepth, colorType, interlaceType;
+	png_get_IHDR(pngPtr, infoPtr, &pngWidth, &pngHeight, &bitDepth, &colorType, &interlaceType, NULL, NULL);
+
+	// 16 bit -> 8 bit
+	png_set_strip_16(pngPtr);
+
+	// 1, 2, 4 bit -> 8 bit
+	if(bitDepth < 8) {
+		png_set_packing(pngPtr);
+	}
+
+#if 1
+	if(colorType & PNG_COLOR_MASK_PALETTE) {
+		png_set_expand(pngPtr);
+	}
+
+	if(!(colorType & PNG_COLOR_MASK_COLOR)) {
+		png_set_gray_to_rgb(pngPtr);
+	}
+
+#else
+	if(colorType == PNG_COLOR_TYPE_PALETTE) {
+		png_set_palette_to_rgb(pngPtr);
+	}
+
+	if(colorType == PNG_COLOR_TYPE_GRAY && bitDepth < 8) {
+		png_set_expand_gray_1_2_4_to_8(pngPtr);
+	}
+#endif
+
+	// set paletted or RGB images with transparency to full alpha so we get RGBA
+	if(png_get_valid(pngPtr, infoPtr, PNG_INFO_tRNS)) {
+		png_set_tRNS_to_alpha(pngPtr);
+	}
+
+	// make sure every pixel has an alpha value
+	if(!(colorType & PNG_COLOR_MASK_ALPHA)) {
+		png_set_filler(pngPtr, 255, PNG_FILLER_AFTER);
+	}
+
+	png_read_update_info(pngPtr, infoPtr);
+
+	byte *out = (byte *)R_StaticAlloc(pngWidth * pngHeight * 4);
+
+	*pic = out;
+	*width = pngWidth;
+	*height = pngHeight;
+
+	png_uint_32 rowBytes = png_get_rowbytes(pngPtr, infoPtr);
+	
+	png_bytep* rowPointers = (png_bytep*) R_StaticAlloc(sizeof(png_bytep) * pngHeight);
+	for(int row = 0; row < pngHeight; row++)
+	{
+		rowPointers[row] = (png_bytep) (out + (row * pngWidth * 4));
+	}
+
+	png_read_image(pngPtr, rowPointers);
+
+	png_read_end(pngPtr, infoPtr);
+
+	png_destroy_read_struct(&pngPtr, &infoPtr, NULL);
+
+	R_StaticFree(rowPointers);
+	Mem_Free(fbuffer);
+}
+
+
+extern "C" 
+{
+
+static int png_compressedSize = 0;
+static void	png_WriteData(png_structp pngPtr, png_bytep data, png_size_t length)
+{
+	memcpy((byte*)pngPtr->io_ptr, data, length);
+
+	pngPtr->io_ptr = ((byte*) pngPtr->io_ptr) + length;
+
+	png_compressedSize += length;
+}
+
+static void	png_FlushData(png_structp pngPtr) { }
+
+}
+
+/*
+================
+R_WritePNG
+================
+*/
+void R_WritePNG( const char *filename, const byte *data, int bytesPerPixel, int width, int height, bool flipVertical, const char *basePath ) 
+{	
+	png_structp pngPtr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, png_Error, png_Warning);
+	if(!pngPtr)
+	{
+		common->Error( "R_WritePNG( %s ): png_create_write_struct failed", filename );
+	}
+
+	png_infop infoPtr = png_create_info_struct(pngPtr);
+	if(!infoPtr)
+	{
+		common->Error( "R_WritePNG( %s ): png_create_info_struct failed", filename );
+	}
+
+	png_compressedSize = 0;
+	byte *buffer = (byte*) Mem_Alloc(width * height * bytesPerPixel);
+	png_set_write_fn(pngPtr, buffer, png_WriteData, png_FlushData);
+
+	if(bytesPerPixel == 4) 
+	{
+		png_set_IHDR(pngPtr, infoPtr, width, height, 8, PNG_COLOR_TYPE_RGBA, PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
+	}
+	else if(bytesPerPixel == 3) 
+	{
+		png_set_IHDR(pngPtr, infoPtr, width, height, 8, PNG_COLOR_TYPE_RGB, PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
+	} 
+	else 
+	{
+		common->Error( "R_WritePNG( %s ): bytesPerPixel = %i not supported", filename, bytesPerPixel );
+	}
+
+	// write header
+	png_write_info(pngPtr, infoPtr);
+
+	png_bytep* rowPointers = (png_bytep*) Mem_Alloc(sizeof(png_bytep) * height);
+	
+	if(!flipVertical)
+	{
+		for(int row = 0, flippedRow = height - 1; row < height; row++, flippedRow--)
+		{
+			rowPointers[flippedRow] = (png_bytep) (data + (row * width * bytesPerPixel));
+		}
+	}
+	else
+	{
+		for(int row = 0; row < height; row++)
+		{
+			rowPointers[row] = (png_bytep) (data + (row * width * bytesPerPixel));
+		}
+	}
+
+	png_write_image(pngPtr, rowPointers);
+	png_write_end(pngPtr, infoPtr);
+
+	png_destroy_write_struct(&pngPtr, &infoPtr);
+
+	Mem_Free(rowPointers);
+
+	fileSystem->WriteFile( filename, buffer, png_compressedSize, basePath );
+
+	Mem_Free(buffer);
+}
+
+
 //===================================================================
+
+
+typedef struct
+{
+	const char	*ext;
+	void		(*ImageLoader)( const char *filename, unsigned char **pic, int *width, int *height, ID_TIME_T *timestamp );
+} imageExtToLoader_t;
+
+static imageExtToLoader_t imageLoaders[] = {
+	{"png", LoadPNG},
+	{"tga", LoadTGA},
+	{"jpg", LoadJPG},
+	{"pcx", LoadPCX32},
+	{"bmp", LoadBMP},
+};
+
+static const int numImageLoaders = sizeof(imageLoaders) / sizeof(imageLoaders[0]);
 
 /*
 =================
@@ -1020,7 +1295,10 @@ void R_LoadImage( const char *cname, byte **pic, int *width, int *height, ID_TIM
 	name.ToLower();
 	idStr ext;
 	name.ExtractFileExtension( ext );
+	idStr origName = name;
 
+// Techyon BEGIN
+#if 0
 	if ( ext == "tga" ) {
 		LoadTGA( name.c_str(), pic, width, height, timestamp );            // try tga first
 		if ( ( pic && *pic == 0 ) || ( timestamp && *timestamp == -1 ) ) {
@@ -1035,6 +1313,40 @@ void R_LoadImage( const char *cname, byte **pic, int *width, int *height, ID_TIM
 	} else if ( ext == "jpg" ) {
 		LoadJPG( name.c_str(), pic, width, height, timestamp );
 	}
+#else
+	if(!ext.IsEmpty())
+	{
+		int i;
+		for(i = 0; i < numImageLoaders; i++)
+		{
+			if(!ext.Icmp(imageLoaders[i].ext))
+			{
+				imageLoaders[i].ImageLoader(name.c_str(), pic, width, height, timestamp);
+				break;
+			}
+		}
+
+		if(i < numImageLoaders)
+		{
+			if (pic && *pic == NULL)
+			{
+				// image with the specified extension was not found so try all formats
+				for(i = 0; i < numImageLoaders; i++)
+				{
+					name.SetFileExtension(imageLoaders[i].ext);
+					imageLoaders[i].ImageLoader(name.c_str(), pic, width, height, timestamp);
+					
+					if(pic && *pic != NULL)
+					{
+						//common->Warning("image %s failed to load, using %s instead", origName.c_str(), name.c_str());
+						break;
+					}
+				}
+			}
+		}
+	}
+#endif
+// Techyon END
 
 	if ( ( width && *width < 1 ) || ( height && *height < 1 ) ) {
 		if ( pic && *pic ) {

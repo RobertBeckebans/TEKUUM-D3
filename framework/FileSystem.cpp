@@ -3024,6 +3024,18 @@ bool idFileSystemLocal::FileAllowedFromDir( const char *path ) {
 	if ( strstr( path, "screenshots" ) == path && !strcmp( path + l - 4, ".tga" ) ) {
 		return true;
 	}
+
+// Techyon BEGIN
+	if ( strstr( path, "screenshots" ) == path && !strcmp( path + l - 4, ".png" ) ) {
+		return true;
+	}
+
+	if ( strstr( path, "screenshots" ) == path && !strcmp( path + l - 4, ".jpg" ) ) {
+		return true;
+	}
+// Techyon END
+
+
 	// objective tgas
 	if ( strstr( path, "maps/game" ) == path && 
 		!strcmp( path + l - 4, ".tga" ) ) {

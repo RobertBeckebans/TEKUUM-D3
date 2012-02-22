@@ -313,6 +313,10 @@ void	R_WriteTGA( const char *filename, const byte *data, int width, int height, 
 void	R_WritePalTGA( const char *filename, const byte *data, const byte *palette, int width, int height, bool flipVertical = false );
 // data is in top-to-bottom raster order unless flipVertical is set
 
+// Techyon BEGIN
+void	R_WritePNG( const char *filename, const byte *data, int bytesPerPixel, int width, int height, bool flipVertical = false, const char *basePath = "fs_savepath" );
+// Techyon END
+
 
 class idImageManager {
 public:

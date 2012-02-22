@@ -1252,6 +1252,7 @@ If ref == NULL, session->updateScreen will be used
 ================== 
 */  
 void idRenderSystemLocal::TakeScreenshot( int width, int height, const char *fileName, int blends, renderView_t *ref ) {
+#if 0
 	byte		*buffer;
 	int			i, j, c, temp;
 
@@ -1312,6 +1313,51 @@ void idRenderSystemLocal::TakeScreenshot( int width, int height, const char *fil
 	}
 
 	R_StaticFree( buffer );
+#else
+	byte		*buffer;
+	int			i, j, c, temp;
+
+	takingScreenshot = true;
+
+	int	pix = width * height;
+
+	buffer = (byte *)R_StaticAlloc(pix*3);
+
+	if ( blends <= 1 ) {
+		R_ReadTiledPixels( width, height, buffer, ref );
+	} else {
+		unsigned short *shortBuffer = (unsigned short *)R_StaticAlloc(pix*2*3);
+		memset (shortBuffer, 0, pix*2*3);
+
+		// enable anti-aliasing jitter
+		r_jitter.SetBool( true );
+
+		for ( i = 0 ; i < blends ; i++ ) {
+			R_ReadTiledPixels( width, height, buffer, ref );
+
+			for ( j = 0 ; j < pix*3 ; j++ ) {
+				shortBuffer[j] += buffer[j];
+			}
+		}
+
+		// divide back to bytes
+		for ( i = 0 ; i < pix*3 ; i++ ) {
+			buffer[i] = shortBuffer[i] / blends;
+		}
+
+		R_StaticFree( shortBuffer );
+		r_jitter.SetBool( false );
+	}
+
+	// _D3XP adds viewnote screenie save to cdpath
+	if ( strstr( fileName, "viewnote" ) ) {
+		R_WritePNG( fileName, buffer, 3, width, height, false, "fs_cdpath" );
+	} else {
+		R_WritePNG( fileName, buffer, 3, width, height, false );
+	}
+
+	R_StaticFree( buffer );
+#endif
 
 	takingScreenshot = false;
 
@@ -1351,7 +1397,7 @@ void R_ScreenshotFilename( int &lastNumber, const char *base, idStr &fileName ) 
 		frac -= d*10;
 		e = frac;
 
-		sprintf( fileName, "%s%i%i%i%i%i.tga", base, a, b, c, d, e );
+		sprintf( fileName, "%s%i%i%i%i%i.png", base, a, b, c, d, e );
 		if ( lastNumber == 99999 ) {
 			break;
 		}
