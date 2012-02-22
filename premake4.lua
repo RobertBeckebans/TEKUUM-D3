@@ -521,6 +521,8 @@ project "Techyon"
 		"libs/jpeg-6/*.c", "libs/jpeg-6/*.h",
 		"libs/glew/src/glew.c",
 		"libs/glew/include/GL/glew.h",
+		"libs/png/*.c", "libs/png/*.h",
+		"libs/zlib/*.c", "libs/zlib/*.h",
 		
 		"sound/*.cpp", "sound/*.h",
 		
@@ -575,7 +577,7 @@ project "Techyon"
 	includedirs
 	{
 		--"../shared",
-		--"../libs/zlib",
+		"libs/zlib",
 		"libs/glew/include",
 		--"../libs/freetype/include",
 		--"../libs/ogg/include",
@@ -932,6 +934,7 @@ end
 		{ 
 			--"libcurl",
 			"OpenAL32",
+			"PNG_NO_ASSEMBLER_CODE",
 		}
 
 if not _OPTIONS["android"] then
@@ -1068,6 +1071,7 @@ end -- if not _OPTIONS["android"]
 		defines
 		{
 			"USE_GLES1",
+			"PNG_NO_ASSEMBLER_CODE",
 		}
 		libdirs
 		{
