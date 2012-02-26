@@ -13,6 +13,8 @@ Copyright (C) 2012 Robert Beckebans
 
 idList<Framebuffer*>	Framebuffer::framebuffers;
 
+globalFramebuffers_t globalFramebuffers;
+
 static void R_ListFramebuffers_f( const idCmdArgs &args ) {
 
 	if(!glConfig.framebufferObjectAvailable)

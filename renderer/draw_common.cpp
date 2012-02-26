@@ -522,6 +522,282 @@ void RB_T_FillDepthBuffer( const drawSurf_t *surf ) {
 }
 
 /*
+==================
+RB_T_FillDepthBufferWithNormals
+==================
+*/
+void RB_T_FillDepthBufferWithNormals( const drawSurf_t *surf ) {
+	int			stage;
+	const idMaterial	*shader;
+	const shaderStage_t *pStage;
+	const float	*regs;
+	float		color[4];
+	const srfTriangles_t	*tri;
+
+	tri = surf->geo;
+	shader = surf->material;
+
+	// update the clip plane if needed
+	if ( backEnd.viewDef->numClipPlanes && surf->space != backEnd.currentSpace ) {
+		GL_SelectTexture( 1 );
+		
+		idPlane	plane;
+
+		R_GlobalPlaneToLocal( surf->space->modelMatrix, backEnd.viewDef->clipPlanes[0], plane );
+		plane[3] += 0.5;	// the notch is in the middle
+#if !defined(USE_GLES1)
+		glTexGenfv( GL_S, GL_OBJECT_PLANE, plane.ToFloatPtr() );
+#endif
+		GL_SelectTexture( 0 );
+	}
+
+	if ( !shader->IsDrawn() ) {
+		return;
+	}
+
+	// some deforms may disable themselves by setting numIndexes = 0
+	if ( !tri->numIndexes ) {
+		return;
+	}
+
+	// translucent surfaces don't put anything in the depth buffer and don't
+	// test against it, which makes them fail the mirror clip plane operation
+	if ( shader->Coverage() == MC_TRANSLUCENT ) {
+		return;
+	}
+
+	if ( !tri->ambientCache ) {
+		common->Printf( "RB_T_FillDepthBuffer: !tri->ambientCache\n" );
+		return;
+	}
+
+	// get the expressions for conditionals / color / texcoords
+	regs = surf->shaderRegisters;
+
+	// if all stages of a material have been conditioned off, don't do anything
+	for ( stage = 0; stage < shader->GetNumStages() ; stage++ ) {		
+		pStage = shader->GetStage(stage);
+		
+		// check the stage enable condition
+		if ( regs[ pStage->conditionRegister ] != 0 ) {
+			break;
+		}
+	}
+	if ( stage == shader->GetNumStages() ) {
+		return;
+	}
+
+	// set polygon offset if necessary
+	if ( shader->TestMaterialFlag(MF_POLYGONOFFSET) ) {
+		glEnable( GL_POLYGON_OFFSET_FILL );
+		glPolygonOffset( r_offsetFactor.GetFloat(), r_offsetUnits.GetFloat() * shader->GetPolygonOffset() );
+	}
+
+	// subviews will just down-modulate the color buffer by overbright
+	if ( shader->GetSort() == SS_SUBVIEW ) {
+		GL_State( GLS_SRCBLEND_DST_COLOR | GLS_DSTBLEND_ZERO | GLS_DEPTHFUNC_LESS );
+		color[0] =
+		color[1] = 
+		color[2] = ( 1.0 / backEnd.overBright );
+		color[3] = 1;
+	} else {
+		// others just draw white
+		color[0] = 1;
+		color[1] = 1;
+		color[2] = 1;
+		color[3] = 1;
+	}
+
+	idDrawVert *ac = (idDrawVert *)vertexCache.Position( tri->ambientCache );
+	glVertexPointer( 3, GL_FLOAT, sizeof( idDrawVert ), ac->xyz.ToFloatPtr() );
+	glVertexAttribPointerARB( VA_INDEX_TEXCOORD0, 2, GL_FLOAT, false, sizeof( idDrawVert ), ac->st.ToFloatPtr() );
+	glVertexAttribPointerARB( VA_INDEX_NORMAL, 3, GL_FLOAT, false, sizeof( idDrawVert ), ac->normal.ToFloatPtr() );
+	glVertexAttribPointerARB( VA_INDEX_BITANGENT, 3, GL_FLOAT, false, sizeof( idDrawVert ), ac->tangents[1].ToFloatPtr() );
+	glVertexAttribPointerARB( VA_INDEX_TANGENT, 3, GL_FLOAT, false, sizeof( idDrawVert ), ac->tangents[0].ToFloatPtr() );
+
+	bool drawSolid = false;
+
+	//if ( shader->Coverage() == MC_OPAQUE ) {
+	//	drawSolid = true;
+	//}
+	
+	gl_geometricFillShader->SetNormalMapping(true);
+	//gl_geometricFillShader->SetParallaxMapping(normalMapping && r_parallaxMapping->integer && tess.surfaceShader->parallax);
+	//gl_geometricFillShader->SetReflectiveSpecular(false);//normalMapping && tr.cubeHashTable != NULL);
+
+	gl_geometricFillShader->BindProgram();
+
+	gl_geometricFillShader->SetUniform_GlobalViewOrigin(backEnd.viewDef->renderView.vieworg);
+//	gl_geometricFillShader->SetUniform_AmbientColor(ambientColor);
+
+	gl_geometricFillShader->SetUniform_ModelMatrix(make_idMat4(surf->space->modelMatrix));
+
+	gl_geometricFillShader->SetUniform_NormalImage(0);
+
+#if 1
+	// we may have multiple alpha tested stages
+	if ( shader->Coverage() == MC_PERFORATED ) {
+		// if the only alpha tested stages are condition register omitted,
+		// draw a normal opaque surface
+		bool	didDraw = false;
+
+		glEnable( GL_ALPHA_TEST );
+		
+		// perforated surfaces may have multiple alpha tested stages
+		for ( stage = 0; stage < shader->GetNumStages() ; stage++ ) {		
+			pStage = shader->GetStage(stage);
+
+			if ( !pStage->hasAlphaTest ) {
+				continue;
+			}
+
+			// check the stage enable condition
+			if ( regs[ pStage->conditionRegister ] == 0 ) {
+				continue;
+			}
+
+			// if we at least tried to draw an alpha tested stage,
+			// we won't draw the opaque surface
+			didDraw = true;
+
+			// set the alpha modulate
+			color[3] = regs[ pStage->color.registers[3] ];
+
+			// skip the entire stage if alpha would be black
+			if ( color[3] <= 0 ) {
+				continue;
+			}
+			glColor4f( color[0], color[1], color[2], color[3] );
+
+			glAlphaFunc( GL_GREATER, regs[ pStage->alphaTestRegister ] );
+
+			// bind the texture
+			pStage->texture.image->Bind();
+
+			// set texture matrix and texGens
+			RB_PrepareStageTexturing( pStage, surf, ac );
+
+			// draw it
+			RB_DrawElementsWithCounters( tri );
+
+			RB_FinishStageTexturing( pStage, surf, ac );
+		}
+		glDisable( GL_ALPHA_TEST );
+		if ( !didDraw ) {
+			drawSolid = true;
+		}
+	}
+#if 1
+	else if ( shader->Coverage() == MC_OPAQUE ) 
+	{
+		glColor4f( color[0], color[1], color[2], color[3] );
+
+		for ( stage = 0; stage < shader->GetNumStages() ; stage++ ) {		
+			pStage = shader->GetStage(stage);
+
+			// check the stage enable condition
+			if ( regs[ pStage->conditionRegister ] == 0 ) {
+				continue;
+			}
+
+			if ( pStage->lighting != SL_BUMP ) {
+				continue;
+			}
+
+			color[0] = regs[ pStage->color.registers[0] ];
+			color[1] = regs[ pStage->color.registers[1] ];
+			color[2] = regs[ pStage->color.registers[2] ];
+			color[3] = regs[ pStage->color.registers[3] ];
+
+			// select the vertex color source
+#if 0
+			if ( pStage->vertexColor == SVC_IGNORE ) {
+				glColor4f( color[0], color[1], color[2], color[3] );
+			} else {
+				glColorPointer( 4, GL_UNSIGNED_BYTE, sizeof( idDrawVert ), (void *)&ac->color );
+				glEnableClientState( GL_COLOR_ARRAY );
+
+				if ( pStage->vertexColor == SVC_INVERSE_MODULATE ) {
+					GL_TexEnv( GL_COMBINE );
+					glTexEnvi( GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_MODULATE );
+					glTexEnvi( GL_TEXTURE_ENV, GL_SRC0_RGB, GL_TEXTURE );
+					glTexEnvi( GL_TEXTURE_ENV, GL_SRC1_RGB, GL_PRIMARY_COLOR );
+					glTexEnvi( GL_TEXTURE_ENV, GL_OPERAND0_RGB, GL_SRC_COLOR );
+					glTexEnvi( GL_TEXTURE_ENV, GL_OPERAND1_RGB, GL_ONE_MINUS_SRC_COLOR );
+					glTexEnvi( GL_TEXTURE_ENV, GL_RGB_SCALE, 1 );
+				}
+
+				// for vertex color and modulated color, we need to enable a second
+				// texture stage
+				if ( color[0] != 1 || color[1] != 1 || color[2] != 1 || color[3] != 1 ) {
+					GL_SelectTexture( 1 );
+
+					globalImages->whiteImage->Bind();
+					GL_TexEnv( GL_COMBINE );
+
+					glTexEnvfv( GL_TEXTURE_ENV, GL_TEXTURE_ENV_COLOR, color );
+
+					glTexEnvi( GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_MODULATE );
+					glTexEnvi( GL_TEXTURE_ENV, GL_SRC0_RGB, GL_PREVIOUS );
+					glTexEnvi( GL_TEXTURE_ENV, GL_SRC1_RGB, GL_CONSTANT );
+					glTexEnvi( GL_TEXTURE_ENV, GL_OPERAND0_RGB, GL_SRC_COLOR );
+					glTexEnvi( GL_TEXTURE_ENV, GL_OPERAND1_RGB, GL_SRC_COLOR );
+					glTexEnvi( GL_TEXTURE_ENV, GL_RGB_SCALE, 1 );
+
+					glTexEnvi( GL_TEXTURE_ENV, GL_COMBINE_ALPHA, GL_MODULATE );
+					glTexEnvi( GL_TEXTURE_ENV, GL_SRC0_ALPHA, GL_PREVIOUS );
+					glTexEnvi( GL_TEXTURE_ENV, GL_SRC1_ALPHA, GL_CONSTANT );
+					glTexEnvi( GL_TEXTURE_ENV, GL_OPERAND0_ALPHA, GL_SRC_ALPHA );
+					glTexEnvi( GL_TEXTURE_ENV, GL_OPERAND1_ALPHA, GL_SRC_ALPHA );
+					glTexEnvi( GL_TEXTURE_ENV, GL_ALPHA_SCALE, 1 );
+
+					GL_SelectTexture( 0 );
+				}
+			}
+#endif
+
+			// bind the texture
+			RB_BindVariableStageImage( &pStage->texture, regs );
+
+			// set the state
+			//GL_State( pStage->drawStateBits );
+			GL_State(0);
+		
+			RB_PrepareStageTexturing( pStage, surf, ac );
+
+			// draw it
+			RB_DrawElementsWithCounters( tri );
+
+			RB_FinishStageTexturing( pStage, surf, ac );
+		
+			if ( pStage->vertexColor != SVC_IGNORE ) {
+				glDisableClientState( GL_COLOR_ARRAY );
+
+				GL_SelectTexture( 1 );
+				GL_TexEnv( GL_MODULATE );
+				globalImages->BindNull();
+				GL_SelectTexture( 0 );
+				GL_TexEnv( GL_MODULATE );
+			}
+		}
+	}
+#endif
+#endif
+
+	// reset polygon offset
+	if ( shader->TestMaterialFlag(MF_POLYGONOFFSET) ) {
+		glDisable( GL_POLYGON_OFFSET_FILL );
+	}
+
+	// reset blending
+	if ( shader->GetSort() == SS_SUBVIEW ) {
+		GL_State( GLS_DEPTHFUNC_LESS );
+	}
+
+}
+
+
+/*
 =====================
 RB_STD_FillDepthBuffer
 
@@ -550,7 +826,20 @@ void RB_STD_FillDepthBuffer( drawSurf_t **drawSurfs, int numDrawSurfs ) {
 
 	// the first texture will be used for alpha tested surfaces
 	GL_SelectTexture( 0 );
-	glEnableClientState( GL_TEXTURE_COORD_ARRAY );
+
+#if !defined(USE_GLES1)
+	if(r_useDeferredShading.GetBool())
+	{
+		glEnableVertexAttribArrayARB( VA_INDEX_TEXCOORD0 );
+		glEnableVertexAttribArrayARB( VA_INDEX_TANGENT );
+		glEnableVertexAttribArrayARB( VA_INDEX_BITANGENT );
+		glEnableVertexAttribArrayARB( VA_INDEX_NORMAL );
+	}
+#endif
+	else
+	{
+		glEnableClientState( GL_TEXTURE_COORD_ARRAY );
+	}
 
 	// decal surfaces may enable polygon offset
 	glPolygonOffset( r_offsetFactor.GetFloat(), r_offsetUnits.GetFloat() );
@@ -563,7 +852,24 @@ void RB_STD_FillDepthBuffer( drawSurf_t **drawSurfs, int numDrawSurfs ) {
 	glEnable( GL_STENCIL_TEST );
 	glStencilFunc( GL_ALWAYS, 1, 255 );
 
-	RB_RenderDrawSurfListWithFunction( drawSurfs, numDrawSurfs, RB_T_FillDepthBuffer );
+#if !defined(USE_GLES1)
+	if(/*tr.backEndRenderer == BE_EXP &&*/ r_useDeferredShading.GetBool())
+	{
+		RB_RenderDrawSurfListWithFunction( drawSurfs, numDrawSurfs, RB_T_FillDepthBufferWithNormals );
+		//RB_RenderDrawSurfListWithFunction( drawSurfs, numDrawSurfs, RB_T_FillDepthBufferWithNormals );
+
+		glDisableVertexAttribArrayARB( VA_INDEX_TEXCOORD0 );
+		glDisableVertexAttribArrayARB( VA_INDEX_TANGENT );
+		glDisableVertexAttribArrayARB( VA_INDEX_BITANGENT );
+		glDisableVertexAttribArrayARB( VA_INDEX_NORMAL );
+
+		GL_BindNullProgram();
+	}
+	else
+#endif
+	{
+		RB_RenderDrawSurfListWithFunction( drawSurfs, numDrawSurfs, RB_T_FillDepthBuffer );
+	}
 
 	if ( backEnd.viewDef->numClipPlanes ) {
 		GL_SelectTexture( 1 );
@@ -1768,6 +2074,13 @@ void	RB_STD_DrawView( void ) {
 
 	drawSurfs = (drawSurf_t **)&backEnd.viewDef->drawSurfs[0];
 	numDrawSurfs = backEnd.viewDef->numDrawSurfs;
+
+#if 0 // !defined(USE_GLES1)
+	if(tr.backEndRenderer == BE_EXP && r_useHighDynamicRange.GetBool())
+	{
+		globalFramebuffers.hdrRender->Bind();
+	}
+#endif
 
 	// clear the z buffer, set the projection matrix, etc
 	RB_BeginDrawingView();

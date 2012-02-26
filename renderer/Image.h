@@ -428,6 +428,10 @@ public:
 	idImage *			scratchImage2;
 	idImage *			accumImage;
 	idImage *			currentRenderImage;			// for SS_POST_PROCESS shaders
+#if !defined(USE_GLES1)
+	idImage *			currentNormalsImage;		// for light pre-pass deferred shading
+	idImage *			currentLightImage;			// for light pre-pass deferred shading
+#endif
 	idImage *			scratchCubeMapImage;
 	idImage *			specularTableImage;			// 1D intensity texture with our specular function
 	idImage *			specular2DTableImage;		// 2D intensity texture with our specular function with variable specularity

@@ -76,69 +76,27 @@ static float viewBufferSizeFraction = 0.5;
 static float viewBufferHeightFraction = 0.5;
 static	bool	nativeViewBuffer = false;		// true if viewBufferSize is the viewport width
 
-static	HPBUFFERARB	floatPbuffer;
-static	HDC			floatPbufferDC;
-static	idImage		*floatPbufferImage;
 
-static	HPBUFFERARB	floatPbuffer2;
-static	HDC			floatPbuffer2DC;
-static	idImage		*floatPbuffer2Image;
+static	Framebuffer	*downScaleFBO_quarter;
+static	Framebuffer	*downScaleFBO_64x64;
+//static	Framebuffer	*downScaleFBO_16x16;
+//static	Framebuffer	*downScaleFBO_4x4;
+//static	Framebuffer	*downScaleFBO_1x1;
 
-static	HPBUFFERARB	floatPbufferQuarter;
-static	HDC			floatPbufferQuarterDC;
-static	idImage		*floatPbufferQuarterImage;
-
-static	HGLRC		floatContext;
-
-/*
-static	HPBUFFERARB	shadowPbuffer;
-static	HDC			shadowPbufferDC;
-*/
 static	Framebuffer	*shadowMapFBO[MAX_SHADOWMAPS];
 
-static	HPBUFFERARB	viewPbuffer;
-static	HDC			viewPbufferDC;
 
+static	idImage		*hdrRenderImage;
+static	idImage		*downScaleImage_quarter;
+static	idImage		*downScaleImage_64x64;
 static	idImage		*shadowMapImage[MAX_SHADOWMAPS];
 static	idImage		*shadowCubeImage[MAX_SHADOWMAPS];
-
-//static	idImage		*viewDepthImage;
-static	idImage		*viewAlphaImage;
 
 static	idImage		*jitterImage16;
 static	idImage		*jitterImage4;
 static	idImage		*jitterImage1;
 
 static	idImage		*random256Image;
-
-/*
-static	int			shadowVertexProgram;
-static	int			shadowFragmentProgram16;
-static	int			shadowFragmentProgram4;
-static	int			shadowFragmentProgram1;
-static	int			shadowFragmentProgram0;
-*/
-
-static	int			screenSpaceShadowVertexProgram;
-static	int			screenSpaceShadowFragmentProgram16;
-static	int			screenSpaceShadowFragmentProgram4;
-static	int			screenSpaceShadowFragmentProgram1;
-static	int			screenSpaceShadowFragmentProgram0;
-
-static	int			depthMidpointVertexProgram;
-static	int			depthMidpointFragmentProgram;
-
-static	int			shadowResampleVertexProgram;
-static	int			shadowResampleFragmentProgram;
-
-static	int			gammaDitherVertexProgram;
-static	int			gammaDitherFragmentProgram;
-
-static	int			downSampleVertexProgram;
-static	int			downSampleFragmentProgram;
-
-static	int			bloomVertexProgram;
-static	int			bloomFragmentProgram;
 
 static	float		viewLightAxialSize;
 
@@ -169,11 +127,16 @@ idCVar r_sb_linearFilter( "r_sb_linearFilter", "1", CVAR_RENDERER | CVAR_BOOL, "
 
 idCVar r_sb_screenSpaceShadow( "r_sb_screenSpaceShadow", "0", CVAR_RENDERER | CVAR_BOOL, "build shadows in screen space instead of on surfaces" );
 
-idCVar r_hdr_useFloats( "r_hdr_useFloats", "0", CVAR_RENDERER | CVAR_BOOL, "use a floating point rendering buffer" );
-idCVar r_hdr_exposure( "r_hdr_exposure", "1.0", CVAR_RENDERER | CVAR_FLOAT, "maximum light scale" );
-idCVar r_hdr_bloomFraction( "r_hdr_bloomFraction", "0.1", CVAR_RENDERER | CVAR_FLOAT, "fraction to smear across neighbors" );
-idCVar r_hdr_gamma( "r_hdr_gamma", "1", CVAR_RENDERER | CVAR_FLOAT, "monitor gamma power" );
-idCVar r_hdr_monitorDither( "r_hdr_monitorDither", "0.01", CVAR_RENDERER | CVAR_FLOAT, "random dither in monitor space" );
+idCVar r_useHighDynamicRange( "r_useHighDynamicRange", "0", CVAR_RENDERER | CVAR_BOOL, "use a floating point rendering buffer" );
+idCVar r_hdrMinLuminance( "r_hdrMinLuminance", "0.18", CVAR_RENDERER | CVAR_FLOAT, "minimum light scale" );
+idCVar r_hdrMaxLuminance( "r_hdrMaxLuminance", "3000", CVAR_RENDERER | CVAR_FLOAT, "maximum light scale" );
+idCVar r_hdrKey( "r_hdrKey", "0.28", CVAR_RENDERER | CVAR_FLOAT, "" );
+idCVar r_hdrContrastThreshold( "r_hdrContrastThreshold", "0.28", CVAR_RENDERER | CVAR_FLOAT, "" );
+idCVar r_hdrContrastOffset( "r_hdrContrastOffset", "3.0", CVAR_RENDERER | CVAR_FLOAT, "" );
+idCVar r_hdrGamma( "r_hdrGamma", "1", CVAR_RENDERER | CVAR_FLOAT, "monitor gamma power" );
+idCVar r_showHDR( "r_showHDR", "0", CVAR_RENDERER | CVAR_BOOL, "show HDR luminance values" );
+
+//idCVar r_hdr_monitorDither( "r_hdr_monitorDither", "0.01", CVAR_RENDERER | CVAR_FLOAT, "random dither in monitor space" );
 
 
 
@@ -194,128 +157,6 @@ static float	lightMatrix[16];
 // from OpenGL view space to OpenGL NDC ( -1 : 1 in XYZ )
 static float	lightProjectionMatrix[16];
 
-
-typedef struct {
-	const char	*name;
-	int			num;
-} wglString_t;
-
-wglString_t	wglString[] = {
-{ "WGL_NUMBER_PIXEL_FORMATS_ARB",		0x2000 },
-{ "WGL_DRAW_TO_WINDOW_ARB",			0x2001 },
-{ "WGL_DRAW_TO_BITMAP_ARB",			0x2002 },
-{ "WGL_ACCELERATION_ARB",			0x2003 },
-{ "WGL_NEED_PALETTE_ARB",			0x2004 },
-{ "WGL_NEED_SYSTEM_PALETTE_ARB",		0x2005 },
-{ "WGL_SWAP_LAYER_BUFFERS_ARB",		0x2006 },
-{ "WGL_SWAP_METHOD_ARB",			0x2007 },
-{ "WGL_NUMBER_OVERLAYS_ARB",			0x2008 },
-{ "WGL_NUMBER_UNDERLAYS_ARB",		0x2009 },
-{ "WGL_TRANSPARENT_ARB",			0x200A },
-{ "WGL_TRANSPARENT_RED_VALUE_ARB",		0x2037 },
-{ "WGL_TRANSPARENT_GREEN_VALUE_ARB",		0x2038 },
-{ "WGL_TRANSPARENT_BLUE_VALUE_ARB",		0x2039 },
-{ "WGL_TRANSPARENT_ALPHA_VALUE_ARB",		0x203A },
-{ "WGL_TRANSPARENT_INDEX_VALUE_ARB",		0x203B },
-{ "WGL_SHARE_DEPTH_ARB",			0x200C },
-{ "WGL_SHARE_STENCIL_ARB",			0x200D },
-{ "WGL_SHARE_ACCUM_ARB",			0x200E },
-{ "WGL_SUPPORT_GDI_ARB",			0x200F },
-{ "WGL_SUPPORT_OPENGL_ARB",			0x2010 },
-{ "WGL_DOUBLE_BUFFER_ARB",			0x2011 },
-{ "WGL_STEREO_ARB",				0x2012 },
-{ "WGL_PIXEL_TYPE_ARB",			0x2013 },
-{ "WGL_COLOR_BITS_ARB",			0x2014 },
-{ "WGL_RED_BITS_ARB",			0x2015 },
-{ "WGL_RED_SHIFT_ARB",			0x2016 },
-{ "WGL_GREEN_BITS_ARB",			0x2017 },
-{ "WGL_GREEN_SHIFT_ARB",			0x2018 },
-{ "WGL_BLUE_BITS_ARB",			0x2019 },
-{ "WGL_BLUE_SHIFT_ARB",			0x201A },
-{ "WGL_ALPHA_BITS_ARB",			0x201B },
-{ "WGL_ALPHA_SHIFT_ARB",			0x201C },
-{ "WGL_ACCUM_BITS_ARB",			0x201D },
-{ "WGL_ACCUM_RED_BITS_ARB",			0x201E },
-{ "WGL_ACCUM_GREEN_BITS_ARB",		0x201F },
-{ "WGL_ACCUM_BLUE_BITS_ARB",			0x2020 },
-{ "WGL_ACCUM_ALPHA_BITS_ARB",		0x2021 },
-{ "WGL_DEPTH_BITS_ARB",			0x2022 },
-{ "WGL_STENCIL_BITS_ARB",			0x2023 },
-{ "WGL_AUX_BUFFERS_ARB",			0x2024 },
-
-{ "WGL_NO_ACCELERATION_ARB",			0x2025 },
-{ "WGL_GENERIC_ACCELERATION_ARB",		0x2026 },
-{ "WGL_FULL_ACCELERATION_ARB",		0x2027 },
-
-{ "WGL_SWAP_EXCHANGE_ARB",			0x2028 },
-{ "WGL_SWAP_COPY_ARB",			0x2029 },
-{ "WGL_SWAP_UNDEFINED_ARB",			0x202A },
-
-{ "WGL_TYPE_RGBA_ARB",			0x202B },
-{ "WGL_TYPE_COLORINDEX_ARB",			0x202C },
-};
-
-static const int NUM_WGL_STRINGS = sizeof( wglString ) / sizeof( wglString[0] );
-
-static void R_CheckWglErrors( void ) {
-	int	err = GetLastError();
-	char	*name;
-
-#if 0
-	LPVOID lpMsgBuf;
-	FormatMessage( FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-					NULL,
-					err,
-					MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // Default language
-					(LPTSTR) &lpMsgBuf,
-					0,
-					NULL 
-					);
-#endif
-	err &= 0xffff;
-	switch ( err ) {
-	case 13: name = "ERROR_INVALID_DATA"; break;
-	case 6: name = "ERROR_INVALID_HANDLE"; break;
-	case 4317: name = "ERROR_INVALID_OPERATION"; break;
-	default: name = va( "code %i", err ); break;
-	}
-
-	common->Printf( "GetLastError: %s\n", name );
-}
-
-/*
-static void R_MakeCurrent( HDC dc, HGLRC context, HPBUFFERARB pbuffer ) {
-	if ( pbuffer ) {
-		if ( !wglReleaseTexImageARB( pbuffer, WGL_FRONT_LEFT_ARB ) ) {
-			R_CheckWglErrors();
-			common->Error( "wglReleaseTexImageARB failed" );
-		}
-	}
-	if ( !wglMakeCurrent( dc, context ) ) {
-		R_CheckWglErrors();
-		common->FatalError( "wglMakeCurrent failed" );
-	}
-}
-
-static void R_BindTexImage( HPBUFFERARB pbuffer ) {
-	if ( !wglReleaseTexImageARB( pbuffer, WGL_FRONT_LEFT_ARB ) ) {
-		R_CheckWglErrors();
-		common->Error( "wglReleaseTexImageARB failed" );
-	}
-	if ( !wglBindTexImageARB( pbuffer, WGL_FRONT_LEFT_ARB ) ) {
-		R_CheckWglErrors();
-		common->Error( "failed wglBindTexImageARB" );
-	}
-}
-*/
-
-static void R_ReportTextureParms( void ) {
-	int	parms[8];
-
-//	q glGetTexParameteriv( GL_TEXTURE_RECTANGLE_NV, 
-	glGetIntegerv( GL_TEXTURE_BINDING_RECTANGLE_NV, parms );
-
-}
 
 /*
 ====================
@@ -342,7 +183,6 @@ static void RB_CreateBloomTable( void ) {
 		bloom[i] *= 1.0 / total;
 		common->Printf( "PARAM bloom%i = { %f };\n", i, bloom[i] );
 	}
-
 }
 
 /*
@@ -356,6 +196,84 @@ static void GL_SelectTextureNoClient( int unit ) {
 	RB_LogComment( "glActiveTextureARB( %i )\n", unit );
 }
 
+
+static void R_CreateHDRRenderImage( idImage *image ) 
+{
+	int width, height;
+
+	if(glConfig.textureNonPowerOfTwoAvailable)
+	{
+		width = glConfig.vidWidth;
+		height = glConfig.vidHeight;
+	}
+	else
+	{
+		width = MakePowerOfTwo(glConfig.vidWidth);
+		height = MakePowerOfTwo(glConfig.vidHeight);
+	}
+
+#if 0
+	if(r_useHighDynamicRange.GetBool())
+	{
+		image->GenerateImage( NULL, width, height, TF_LINEAR, false, TR_CLAMP_TO_BORDER, TD_FBO_RGBA16F );
+	}
+	else
+#endif
+	{
+		byte *data = (byte *)Mem_Alloc( width * height * 4 );
+		image->GenerateImage( data, width, height, TF_LINEAR, false, TR_CLAMP_TO_BORDER, TD_HIGH_QUALITY );
+		Mem_Free(data);
+	}
+}
+
+static void R_CreateDownScaleImage_Quarter( idImage *image ) 
+{
+	int width, height;
+
+	if(glConfig.textureNonPowerOfTwoAvailable)
+	{
+		width = glConfig.vidWidth * 0.25f;
+		height = glConfig.vidHeight * 0.25f;
+	}
+	else
+	{
+		width = MakePowerOfTwo(glConfig.vidWidth * 0.25f);
+		height = MakePowerOfTwo(glConfig.vidHeight * 0.25f);
+	}
+
+#if 0
+	if(r_useHighDynamicRange.GetBool())
+	{
+		image->GenerateImage( NULL, width, height, TF_LINEAR, false, TR_CLAMP_TO_BORDER, TD_FBO_RGBA16F );
+	}
+	else
+#endif
+	{
+		byte *data = (byte *)Mem_Alloc( width * height * 4 );
+		image->GenerateImage( data, width, height, TF_LINEAR, false, TR_CLAMP_TO_BORDER, TD_HIGH_QUALITY );
+		Mem_Free(data);
+	}
+}
+
+static void R_CreateDownScaleImage_64x64( idImage *image ) 
+{
+	int width, height;
+
+	width = height = 64;
+
+#if 0
+	if(r_useHighDynamicRange.GetBool())
+	{
+		image->GenerateImage( NULL, width, height, TF_LINEAR, false, TR_CLAMP_TO_BORDER, TD_FBO_RGBA16F );
+	}
+	else
+#endif
+	{
+		byte *data = (byte *)Mem_Alloc( width * height * 4 );
+		image->GenerateImage( data, width, height, TF_LINEAR, false, TR_CLAMP_TO_BORDER, TD_HIGH_QUALITY );
+		Mem_Free(data);
+	}
+}
 
 /*
 ================
@@ -502,19 +420,7 @@ static void R_CreateShadowCubeImage_Res4( idImage *image )
 
 
 
-static void R_CreateViewAlphaImage( idImage *image ) {
-	int		c = viewBufferSize*viewBufferSize*4;
-	byte	*data = (byte *)Mem_Alloc( c );
 
-	// don't let it pick an intensity format
-	for ( int i = 0 ; i < c ; i++ ) {
-		data[i] = i;
-	}
-	memset( data, 0, viewBufferSize*viewBufferSize );
-
-	image->GenerateImage( (byte *)data, viewBufferSize, viewBufferSize, 
-		TF_LINEAR, false, TR_CLAMP, TD_HIGH_QUALITY );
-}
 
 static void R_CreateStubImage( idImage *image ) {
 	float	data[3][4][4];
@@ -529,7 +435,6 @@ static void R_CreateStubImage( idImage *image ) {
 /*
 ================
 R_CreateJitterImage
-
 ================
 */
 const static	int JITTER_SIZE = 128;
@@ -544,7 +449,7 @@ static void R_CreateJitterImage16( idImage *image ) {
 			for ( int j = 0 ; j < JITTER_SIZE ; j++ ) {
 				data[i][s*JITTER_SIZE+j][0] = (rand() & 63 ) | sOfs;
 				data[i][s*JITTER_SIZE+j][1] = (rand() & 63 ) | tOfs;
-				data[i][s*JITTER_SIZE+j][2] = rand();
+				data[i][s*JITTER_SIZE+j][2] = (rand() & 0xFF);
 				data[i][s*JITTER_SIZE+j][3] = 0;
 			}
 		}
@@ -565,7 +470,7 @@ static void R_CreateJitterImage4( idImage *image ) {
 			for ( int j = 0 ; j < JITTER_SIZE ; j++ ) {
 				data[i][s*JITTER_SIZE+j][0] = (rand() & 127 ) | sOfs;
 				data[i][s*JITTER_SIZE+j][1] = (rand() & 127 ) | tOfs;
-				data[i][s*JITTER_SIZE+j][2] = rand();
+				data[i][s*JITTER_SIZE+j][2] = (rand() & 0xFF);
 				data[i][s*JITTER_SIZE+j][3] = 0;
 			}
 		}
@@ -580,9 +485,9 @@ static void R_CreateJitterImage1( idImage *image ) {
 
 	for ( int i = 0 ; i < JITTER_SIZE ; i++ ) {
 		for ( int j = 0 ; j < JITTER_SIZE ; j++ ) {
-			data[i][j][0] = rand();
-			data[i][j][1] = rand();
-			data[i][j][2] = rand();
+			data[i][j][0] = (rand() & 0xFF);
+			data[i][j][1] = (rand() & 0xFF);
+			data[i][j][2] = (rand() & 0xFF);
 			data[i][j][3] = 0;
 		}
 	}
@@ -596,10 +501,10 @@ static void R_CreateRandom256Image( idImage *image ) {
 
 	for ( int i = 0 ; i < 256 ; i++ ) {
 		for ( int j = 0 ; j < 256 ; j++ ) {
-			data[i][j][0] = rand();
-			data[i][j][1] = rand();
-			data[i][j][2] = rand();
-			data[i][j][3] = rand();
+			data[i][j][0] = (rand() & 0xFF);
+			data[i][j][1] = (rand() & 0xFF);
+			data[i][j][2] = (rand() & 0xFF);
+			data[i][j][3] = (rand() & 0xFF);
 		}
 	}
 
@@ -610,134 +515,123 @@ static void R_CreateRandom256Image( idImage *image ) {
 
 /*
 ==================
-R_PrintPixelFormat
-==================
-*/
-void R_PrintPixelFormat( int pixelFormat ) {
-	int		res;
-	int		iAttribute;
-	int	iValue;
-
-	common->Printf( "----- pixelFormat %i -----\n", pixelFormat );
-
-	for ( int i = 1 ; i < NUM_WGL_STRINGS ; i++ ) {
-		iAttribute = wglString[i].num;
-		res = wglGetPixelFormatAttribivARB( win32.hDC, pixelFormat, 0, 1, &iAttribute, &iValue );
-		if ( res && iValue ) {
-			common->Printf( "%s : %i\n", wglString[i].name, iValue );
-		}
-	}
-}
-
-
-/*
-==================
 R_Exp_Allocate
 ==================
 */
-void R_Exp_Allocate( void ) {
-	// find a pixel format for our floating point pbuffer
-	int		iAttributes[NUM_WGL_STRINGS*2], *atr_p;
-	FLOAT	fAttributes[] = {0, 0};
-	UINT	numFormats;
-	int		pixelformats[1024];
-	int		ret;
-	int	pbiAttributes[] = {0, 0};
+void R_Exp_Allocate( void ) 
+{
+	int				width, height;
 
 	initialized = true;
 
-#if 0
-	//
-	// allocate the floating point rendering buffer
-	//
-	atr_p = iAttributes;
+	common->Printf( "\ncreating FBO targets...\n" );
 
-	*atr_p++ = WGL_DRAW_TO_PBUFFER_ARB;
-	*atr_p++ = TRUE;
-	*atr_p++ = WGL_FLOAT_COMPONENTS_NV;
-	*atr_p++ = TRUE;
-	*atr_p++ = WGL_BIND_TO_TEXTURE_RECTANGLE_FLOAT_RGBA_NV;
-	*atr_p++ = TRUE;
-//	*atr_p++ = WGL_BIND_TO_TEXTURE_RGBA_ARB;
-//	*atr_p++ = TRUE;
-	*atr_p++ = WGL_DEPTH_BITS_ARB;
-	*atr_p++ = 24;
-	*atr_p++ = WGL_STENCIL_BITS_ARB;
-	*atr_p++ = 8;
-	*atr_p++ = 0;
-	*atr_p++ = 0;
+	// generate the texture number
+	shadowMapImage[0] = globalImages->ImageFromFunction( va("_shadowBuffer%i_0", shadowMapResolutions[0]), R_CreateShadowBufferImage_Res0 );
+	shadowMapImage[1] = globalImages->ImageFromFunction( va("_shadowBuffer%i_1", shadowMapResolutions[1]), R_CreateShadowBufferImage_Res1 );
+	shadowMapImage[2] = globalImages->ImageFromFunction( va("_shadowBuffer%i_2", shadowMapResolutions[2]), R_CreateShadowBufferImage_Res2 );
+	shadowMapImage[3] = globalImages->ImageFromFunction( va("_shadowBuffer%i_3", shadowMapResolutions[3]), R_CreateShadowBufferImage_Res3 );
+	shadowMapImage[4] = globalImages->ImageFromFunction( va("_shadowBuffer%i_4", shadowMapResolutions[4]), R_CreateShadowBufferImage_Res4 );
 
-	ret = wglChoosePixelFormatARB( win32.hDC, iAttributes, fAttributes, 
-		sizeof( pixelformats ) / sizeof( pixelformats[0] ), pixelformats, &numFormats );
+	shadowCubeImage[0] = globalImages->ImageFromFunction( va("_shadowCube%i_0", shadowMapResolutions[0]), R_CreateShadowCubeImage_Res0 );
+	shadowCubeImage[1] = globalImages->ImageFromFunction( va("_shadowCube%i_1", shadowMapResolutions[1]), R_CreateShadowCubeImage_Res1 );
+	shadowCubeImage[2] = globalImages->ImageFromFunction( va("_shadowCube%i_2", shadowMapResolutions[2]), R_CreateShadowCubeImage_Res2 );
+	shadowCubeImage[3] = globalImages->ImageFromFunction( va("_shadowCube%i_3", shadowMapResolutions[3]), R_CreateShadowCubeImage_Res3 );
+	shadowCubeImage[4] = globalImages->ImageFromFunction( va("_shadowCube%i_4", shadowMapResolutions[4]), R_CreateShadowCubeImage_Res4 );
 
-#if 0
-	for ( int i = 0 ; i < (int)numFormats ; i++ ) {
-		R_PrintPixelFormat( pixelformats[i] );
-	}
-#endif
-	common->Printf( "\nfloatPbuffer:\n" );
-	R_PrintPixelFormat( pixelformats[0] );
+	//-----------------------------------
 
-	// allocate a pbuffer with this pixel format
-	int	pbiAttributesTexture[] = {
-		WGL_TEXTURE_FORMAT_ARB, WGL_TEXTURE_FLOAT_RGBA_NV, 
-		WGL_TEXTURE_TARGET_ARB, WGL_TEXTURE_RECTANGLE_NV, // WGL_TEXTURE_2D_ARB,
-			0, 0};
+	//lightBufferSize = maxViewBufferSize;
 
-	floatPbuffer = wglCreatePbufferARB( win32.hDC, pixelformats[0], glConfig.vidWidth,
-		glConfig.vidHeight, pbiAttributesTexture );
-	if ( !floatPbuffer ) {
-		common->Printf( "failed to create floatPbuffer.\n" );
-		GL_CheckErrors();
-	}
-	floatPbufferDC = wglGetPbufferDCARB( floatPbuffer );
-	floatPbufferImage = globalImages->ImageFromFunction( "_floatPbuffer", R_CreateStubImage );
+	//-----------------------------------
 
-	// create a second buffer for ping-pong operations
-	floatPbuffer2 = wglCreatePbufferARB( win32.hDC, pixelformats[0], glConfig.vidWidth,
-		glConfig.vidHeight, pbiAttributesTexture );
-	if ( !floatPbuffer2 ) {
-		common->Printf( "failed to create floatPbuffer.\n" );
-		GL_CheckErrors();
-	}
-	floatPbuffer2DC = wglGetPbufferDCARB( floatPbuffer2 );
-	floatPbuffer2Image = globalImages->ImageFromFunction( "_floatPbuffer2", R_CreateStubImage );
+	// generate the jitter image
+	jitterImage16 = globalImages->ImageFromFunction( "_jitter16", R_CreateJitterImage16 );
+	jitterImage4 = globalImages->ImageFromFunction( "_jitter4", R_CreateJitterImage4 );
+	jitterImage1 = globalImages->ImageFromFunction( "_jitter1", R_CreateJitterImage1 );
 
-	// create a third buffer for down sampling operations
-	floatPbufferQuarter = wglCreatePbufferARB( win32.hDC, pixelformats[0], glConfig.vidWidth / 4,
-		glConfig.vidHeight / 4, pbiAttributesTexture );
-	if ( !floatPbufferQuarter ) {
-		common->Printf( "failed to create floatPbuffer.\n" );
-		GL_CheckErrors();
-	}
-	floatPbufferQuarterDC = wglGetPbufferDCARB( floatPbufferQuarter );
-	floatPbufferQuarterImage = globalImages->ImageFromFunction( "floatPbufferQuarter", R_CreateStubImage );
+	random256Image = globalImages->ImageFromFunction( "_random256", R_CreateRandom256Image );
 
-	// create a new GL context for this pixel format and share textures
-	floatContext = wglCreateContext( floatPbufferDC ); 
-	if ( !floatContext ) {
-		common->Printf( "failed to create context for floatPbufferDC.\n" );
-		GL_CheckErrors();
-	}
+	// ----------------------------------
+	hdrRenderImage = globalImages->ImageFromFunction( "_hdrRender", R_CreateHDRRenderImage );
+	downScaleImage_quarter = globalImages->ImageFromFunction( "_downScale_quarter", R_CreateDownScaleImage_Quarter );
+	downScaleImage_64x64 = globalImages->ImageFromFunction( "_downScale_64x64", R_CreateDownScaleImage_64x64 );
 
-	if ( !wglShareLists( floatContext, win32.hGLRC ) ) {
-		common->Printf( "failed to share lists.\n" );
-		GL_CheckErrors();
-	}
 
-	// create a rendering context for this pixel format and share textures
-
-	// allocate a texture for the rendering 
-
-#endif
-
-	//=================================================================================
 
 	common->Printf( "\ncreating FBOs...\n" );
 
+	if(glConfig.textureNonPowerOfTwoAvailable)
+	{
+		width = glConfig.vidWidth;
+		height = glConfig.vidHeight;
+	}
+	else
+	{
+		width = MakePowerOfTwo(glConfig.vidWidth);
+		height = MakePowerOfTwo(glConfig.vidHeight);
+	}
+
+	// create HDR rendering context
+	if(r_useHighDynamicRange.GetBool())
+	{
+		globalFramebuffers.hdrRender = new Framebuffer("_hdrRender", width, height);
+		globalFramebuffers.hdrRender->Bind();
+
+		globalFramebuffers.hdrRender->AddDepthBuffer(GL_DEPTH_COMPONENT24);
+		//globalFramebuffers.hdrRender->AttachImageDepth(depthRenderImage);
+
+		globalFramebuffers.hdrRender->AddColorBuffer(GL_RGBA8, 0);
+		globalFramebuffers.hdrRender->AttachImage2D(GL_TEXTURE_2D, hdrRenderImage, 0);
+
+		globalFramebuffers.hdrRender->Check();
+	}
+
+	// create downscale FBOs
+	if(glConfig.textureNonPowerOfTwoAvailable)
+	{
+		width = glConfig.vidWidth * 0.25f;
+		height = glConfig.vidHeight * 0.25f;
+	}
+	else
+	{
+		width = MakePowerOfTwo(glConfig.vidWidth * 0.25f);
+		height = MakePowerOfTwo(glConfig.vidHeight * 0.25f);
+	}
+	downScaleFBO_quarter = new Framebuffer("_downScale_quarter", width, height);
+	downScaleFBO_quarter->Bind();
+#if 0
+	if(r_useHighDynamicRange.GetBool())
+	{
+		downScaleFBO_quarter->AddColorBuffer(GL_RGBA16F, 0);
+	}
+	else
+#endif
+	{
+		downScaleFBO_quarter->AddColorBuffer(GL_RGBA, 0);
+	}
+	downScaleFBO_quarter->AttachImage2D(GL_TEXTURE_2D, downScaleImage_quarter, 0);
+	downScaleFBO_quarter->Check();
+
+
+	downScaleFBO_64x64 = new Framebuffer("_downScale_64x64", 64, 64);
+	downScaleFBO_64x64->Bind();
+#if 0
+	if(r_useHighDynamicRange.GetBool())
+	{
+		downScaleFBO_64x64->AddColorBuffer(GL_RGBA16F, 0);
+	}
+	else
+#endif
+	{
+		downScaleFBO_64x64->AddColorBuffer(GL_RGBA, 0);
+	}
+	downScaleFBO_64x64->AttachImage2D(GL_TEXTURE_2D, downScaleImage_64x64, 0);
+	downScaleFBO_64x64->Check();
+
+	// create shadow maps
 	for(int i = 0; i < MAX_SHADOWMAPS; i++)
 	{
-		int width, height;
 		width = height = shadowMapResolutions[i];
 
 		shadowMapFBO[i] = new Framebuffer(va("_shadowMap%d", i), width, height);
@@ -802,77 +696,6 @@ void R_Exp_Allocate( void ) {
 
 	Framebuffer::BindNull();
 
-	common->Printf( "\ncreating FBO targets...\n" );
-
-	// generate the texture number
-	shadowMapImage[0] = globalImages->ImageFromFunction( va("_shadowBuffer%i_0", shadowMapResolutions[0]), R_CreateShadowBufferImage_Res0 );
-	shadowMapImage[1] = globalImages->ImageFromFunction( va("_shadowBuffer%i_1", shadowMapResolutions[1]), R_CreateShadowBufferImage_Res1 );
-	shadowMapImage[2] = globalImages->ImageFromFunction( va("_shadowBuffer%i_2", shadowMapResolutions[2]), R_CreateShadowBufferImage_Res2 );
-	shadowMapImage[3] = globalImages->ImageFromFunction( va("_shadowBuffer%i_3", shadowMapResolutions[3]), R_CreateShadowBufferImage_Res3 );
-	shadowMapImage[4] = globalImages->ImageFromFunction( va("_shadowBuffer%i_4", shadowMapResolutions[4]), R_CreateShadowBufferImage_Res4 );
-
-	shadowCubeImage[0] = globalImages->ImageFromFunction( va("_shadowCube%i_0", shadowMapResolutions[0]), R_CreateShadowCubeImage_Res0 );
-	shadowCubeImage[1] = globalImages->ImageFromFunction( va("_shadowCube%i_1", shadowMapResolutions[1]), R_CreateShadowCubeImage_Res1 );
-	shadowCubeImage[2] = globalImages->ImageFromFunction( va("_shadowCube%i_2", shadowMapResolutions[2]), R_CreateShadowCubeImage_Res2 );
-	shadowCubeImage[3] = globalImages->ImageFromFunction( va("_shadowCube%i_3", shadowMapResolutions[3]), R_CreateShadowCubeImage_Res3 );
-	shadowCubeImage[4] = globalImages->ImageFromFunction( va("_shadowCube%i_4", shadowMapResolutions[4]), R_CreateShadowCubeImage_Res4 );
-
-	//-----------------------------------
-
-	//lightBufferSize = maxViewBufferSize;
-
-	// allocate a pbuffer with this pixel format
-	viewPbuffer = wglCreatePbufferARB( win32.hDC, pixelformats[0], maxViewBufferSize,
-		maxViewBufferSize, pbiAttributes );
-
-	// allocate a rendering context for the pbuffer
-	viewPbufferDC = wglGetPbufferDCARB( viewPbuffer );
-
-	// create the image space depth buffer for image-space shadow trnasforms
-//	viewDepthImage = globalImages->ImageFromFunction("_viewDepth", R_CreateShadowBufferImage );
-
-	// create the image space shadow alpha buffer for subsampling the shadow calculation
-	viewAlphaImage = globalImages->ImageFromFunction("_viewAlpha", R_CreateViewAlphaImage );
-
-	//-----------------------------------
-
-	// generate the jitter image
-	jitterImage16 = globalImages->ImageFromFunction( "_jitter16", R_CreateJitterImage16 );
-	jitterImage4 = globalImages->ImageFromFunction( "_jitter4", R_CreateJitterImage4 );
-	jitterImage1 = globalImages->ImageFromFunction( "_jitter1", R_CreateJitterImage1 );
-
-	depthMidpointVertexProgram = R_FindARBProgram( GL_VERTEX_PROGRAM_ARB, "depthMidpoint.vfp" );
-	depthMidpointFragmentProgram = R_FindARBProgram( GL_FRAGMENT_PROGRAM_ARB, "depthMidpoint.vfp" );
-
-	shadowResampleVertexProgram = R_FindARBProgram( GL_VERTEX_PROGRAM_ARB, "shadowResample.vfp" );
-	shadowResampleFragmentProgram = R_FindARBProgram( GL_FRAGMENT_PROGRAM_ARB, "shadowResample.vfp" );
-
-	screenSpaceShadowVertexProgram = R_FindARBProgram( GL_VERTEX_PROGRAM_ARB, "screenSpaceShadow1.vfp" );
-
-	screenSpaceShadowFragmentProgram0 = R_FindARBProgram( GL_FRAGMENT_PROGRAM_ARB, "screenSpaceShadow0.vfp" );
-	screenSpaceShadowFragmentProgram1 = R_FindARBProgram( GL_FRAGMENT_PROGRAM_ARB, "screenSpaceShadow1.vfp" );
-	screenSpaceShadowFragmentProgram4 = R_FindARBProgram( GL_FRAGMENT_PROGRAM_ARB, "screenSpaceShadow4.vfp" );
-	screenSpaceShadowFragmentProgram16 = R_FindARBProgram( GL_FRAGMENT_PROGRAM_ARB, "screenSpaceShadow16.vfp" );
-
-	/*
-	shadowVertexProgram = R_FindARBProgram( GL_VERTEX_PROGRAM_ARB, "shadowBufferInteraction1.vfp" );
-
-	shadowFragmentProgram0 = R_FindARBProgram( GL_FRAGMENT_PROGRAM_ARB, "shadowBufferInteraction0.vfp" );
-	shadowFragmentProgram1 = R_FindARBProgram( GL_FRAGMENT_PROGRAM_ARB, "shadowBufferInteraction1.vfp" );
-	shadowFragmentProgram4 = R_FindARBProgram( GL_FRAGMENT_PROGRAM_ARB, "shadowBufferInteraction4.vfp" );
-	shadowFragmentProgram16 = R_FindARBProgram( GL_FRAGMENT_PROGRAM_ARB, "shadowBufferInteraction16.vfp" );
-	*/
-
-	gammaDitherVertexProgram = R_FindARBProgram( GL_VERTEX_PROGRAM_ARB, "gammaDither.vfp" );
-	gammaDitherFragmentProgram = R_FindARBProgram( GL_FRAGMENT_PROGRAM_ARB, "gammaDither.vfp" );
-
-	downSampleVertexProgram = R_FindARBProgram( GL_VERTEX_PROGRAM_ARB, "downSample.vfp" );
-	downSampleFragmentProgram = R_FindARBProgram( GL_FRAGMENT_PROGRAM_ARB, "downSample.vfp" );
-
-	bloomVertexProgram = R_FindARBProgram( GL_VERTEX_PROGRAM_ARB, "bloom.vfp" );
-	bloomFragmentProgram = R_FindARBProgram( GL_FRAGMENT_PROGRAM_ARB, "bloom.vfp" );
-
-	random256Image = globalImages->ImageFromFunction( "_random256", R_CreateRandom256Image );
 
 	GL_CheckErrors();
 }
@@ -1405,7 +1228,7 @@ static void	RB_EXP_DrawInteraction( const drawInteraction_t *din ) {
 	// load all the vertex program parameters
 	gl_forwardLightingShader->SetUniform_ModelMatrix(make_idMat4(din->surf->space->modelMatrix));
 
-	gl_forwardLightingShader->SetUniform_ViewOrigin(din->localViewOrigin.ToVec3());
+	gl_forwardLightingShader->SetUniform_LocalViewOrigin(din->localViewOrigin.ToVec3());
 
 	gl_forwardLightingShader->SetUniform_LocalLightOrigin(din->localLightOrigin.ToVec3());
 	gl_forwardLightingShader->SetUniform_GlobalLightOrigin(din->globalLightOrigin.ToVec3());
@@ -1563,6 +1386,8 @@ void RB_EXP_CreateDrawInteractions( const drawSurf_t *surf ) {
 	if ( !surf ) {
 		return;
 	}
+
+	RB_LogComment( "---------- RB_EXP_CreateDrawInteractions ----------\n" );
 	
 	// perform setup here that will be constant for all interactions
 	GL_State( GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE | GLS_DEPTHMASK | backEnd.depthFunc );
@@ -2203,7 +2028,6 @@ This is always the back buffer, and scissor is set full screen
 */
 void RB_EXP_SetNativeBuffer( void ) {
 	// set the normal screen drawable current
-	//R_MakeCurrent( win32.hDC, win32.hGLRC, NULL );
 	Framebuffer::BindNull();
 
 	glViewport( tr.viewportOffset[0] + backEnd.viewDef->viewport.x1, 
@@ -2228,16 +2052,12 @@ This may be to a float pBuffer, and scissor is set to cover only the light
 ==================
 */
 void RB_EXP_SetRenderBuffer( viewLight_t *vLight ) {
-	/*
-	if ( r_hdr_useFloats.GetBool() ) {
-		R_MakeCurrent( floatPbufferDC, floatContext, floatPbuffer );
+	
+	if ( r_useHighDynamicRange.GetBool() ) {
+		globalFramebuffers.hdrRender->Bind();
 	} else {
-		if ( !wglMakeCurrent( win32.hDC, win32.hGLRC ) ) {
-			GL_CheckErrors();
-			common->FatalError( "Couldn't return to normal drawing context" );
-		}
+		Framebuffer::BindNull();
 	}
-	*/
 
 	glViewport( tr.viewportOffset[0] + backEnd.viewDef->viewport.x1, 
 		tr.viewportOffset[1] + backEnd.viewDef->viewport.y1, 
@@ -2260,9 +2080,9 @@ void RB_EXP_SetRenderBuffer( viewLight_t *vLight ) {
 /*
 ==================
 RB_shadowResampleAlpha
-
 ==================
 */
+#if 0
 void	RB_shadowResampleAlpha( void ) {
 	viewAlphaImage->Bind();
 	// we could make this a subimage, but it isn't relevent once we have render-to-texture
@@ -2350,7 +2170,7 @@ void	RB_shadowResampleAlpha( void ) {
 	glStencilFunc( GL_EQUAL, 0, 255 );
 	glStencilOp( GL_KEEP, GL_KEEP, GL_KEEP );
 }
-
+#endif
 
 /*
 ==================
@@ -2417,6 +2237,124 @@ void RB_EXP_ReadFloatBuffer( void ) {
 	R_StaticFree( buf );
 }
 
+static void RB_CalculateHDRAdaptation()
+{
+	int				i;
+	static float	image[64 * 64 * 4];
+	float           curTime;
+	float			deltaTime;
+	float           luminance;
+	float			avgLuminance;
+	float			maxLuminance;
+	double			sum;
+	const idVec3    LUMINANCE_VECTOR(0.2125f, 0.7154f, 0.0721f);
+	idVec4			color;
+	float			newAdaptation;
+	float			newMaximum;
+
+	RB_LogComment( "---------- RB_CalculateHDRAdaptation ----------\n" );
+
+	if(glConfig.framebufferBlitAvailable)
+	{
+		glBindFramebuffer(GL_READ_FRAMEBUFFER, globalFramebuffers.hdrRender->GetFramebuffer());
+		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, downScaleFBO_quarter->GetFramebuffer());
+		glBlitFramebuffer(0, 0, glConfig.vidWidth, glConfig.vidHeight,
+								0, 0, glConfig.vidWidth * 0.25f, glConfig.vidHeight * 0.25f,
+								GL_COLOR_BUFFER_BIT,
+								GL_LINEAR);
+
+		glBindFramebuffer(GL_READ_FRAMEBUFFER, globalFramebuffers.hdrRender->GetFramebuffer());
+		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, downScaleFBO_64x64->GetFramebuffer());
+		glBlitFramebuffer(0, 0, glConfig.vidWidth, glConfig.vidHeight,
+								0, 0, 64, 64,
+								GL_COLOR_BUFFER_BIT,
+								GL_LINEAR);
+	}
+	else
+	{
+		// FIXME add non EXT_framebuffer_blit code
+	}
+
+	curTime = Sys_Milliseconds() / 1000.0f;
+
+	// calculate the average scene luminance
+	downScaleFBO_64x64->Bind();
+
+	// read back the contents
+//	glFinish();
+	glReadPixels(0, 0, 64, 64, GL_RGBA, GL_FLOAT, image);
+
+	sum = 0.0f;
+	maxLuminance = 0.0f;
+	for(i = 0; i < (64 * 64 * 4); i += 4)
+	{
+		color[0] = image[i + 0];
+		color[1] = image[i + 1];
+		color[2] = image[i + 2];
+		color[3] = image[i + 3];
+
+		luminance = DotProduct(color, LUMINANCE_VECTOR) + 0.0001f;
+		if(luminance > maxLuminance)
+			maxLuminance = luminance;
+
+		sum += log(luminance);
+	}
+	sum /= (64.0f * 64.0f);
+	avgLuminance = exp(sum);
+
+	// the user's adapted luminance level is simulated by closing the gap between
+	// adapted luminance and current luminance by 2% every frame, based on a
+	// 30 fps rate. This is not an accurate model of human adaptation, which can
+	// take longer than half an hour.
+	if(backEnd.hdrTime > curTime)
+		backEnd.hdrTime = curTime;
+
+	deltaTime = curTime - backEnd.hdrTime;
+
+	//if(r_hdrMaxLuminance->value)
+	{
+		backEnd.hdrAverageLuminance = idMath::ClampFloat(r_hdrMinLuminance.GetFloat(), r_hdrMaxLuminance.GetFloat(), backEnd.hdrAverageLuminance);
+		avgLuminance = idMath::ClampFloat(r_hdrMinLuminance.GetFloat(), r_hdrMaxLuminance.GetFloat(), avgLuminance);
+
+		backEnd.hdrMaxLuminance = idMath::ClampFloat(r_hdrMinLuminance.GetFloat(), r_hdrMaxLuminance.GetFloat(), backEnd.hdrMaxLuminance);
+		maxLuminance = idMath::ClampFloat(r_hdrMinLuminance.GetFloat(), r_hdrMaxLuminance.GetFloat(), maxLuminance);
+	}
+
+	newAdaptation = backEnd.hdrAverageLuminance + (avgLuminance - backEnd.hdrAverageLuminance) * (1.0f - powf(0.98f, 30.0f * deltaTime));
+	newMaximum = backEnd.hdrMaxLuminance + (maxLuminance - backEnd.hdrMaxLuminance) * (1.0f - powf(0.98f, 30.0f * deltaTime));
+
+	if(!FLOAT_IS_NAN(newAdaptation) && !FLOAT_IS_NAN(newMaximum))
+	{
+		#if 1
+		backEnd.hdrAverageLuminance = newAdaptation;
+		backEnd.hdrMaxLuminance = newMaximum;
+		#else
+		backEnd.hdrAverageLuminance = avgLuminance;
+		backEnd.hdrMaxLuminance = maxLuminance;
+		#endif
+	}
+
+	backEnd.hdrTime = curTime;
+
+	// calculate HDR image key
+	if(r_hdrKey.GetFloat() <= 0)
+	{
+		// calculation from: Perceptual Effects in Real-time Tone Mapping - Krawczyk et al.
+		backEnd.hdrKey = 1.03 - 2.0 / (2.0 + log10f(backEnd.hdrAverageLuminance + 1.0f));
+	}
+	else
+	{
+		backEnd.hdrKey = r_hdrKey.GetFloat();
+	}
+
+	if(r_showHDR.GetBool())
+	{
+		common->Printf("HDR luminance avg = %f, max = %f, key = %f\n", backEnd.hdrAverageLuminance, backEnd.hdrMaxLuminance, backEnd.hdrKey);
+	}
+
+	GL_CheckErrors();
+}
+
 
 void RB_TestGamma( void );
 
@@ -2425,11 +2363,13 @@ void RB_TestGamma( void );
 RB_EXP_GammaDither
 ==================
 */
-#if 0
-void	RB_EXP_GammaDither( void ) {
-	if ( !r_hdr_useFloats.GetBool() ) {
+void	RB_EXP_GammaDither( void ) 
+{
+	if ( !r_useHighDynamicRange.GetBool() ) {
 		return;
 	}
+
+	RB_LogComment( "---------- RB_EXP_GammaDither ----------\n" );
 
 #if 0
 r_testGamma.SetBool( true );
@@ -2439,75 +2379,17 @@ r_testGamma.SetBool( false );
 
 	RB_EXP_SetNativeBuffer();
 
-	/*
-# texture 0 is the high dynamic range buffer
-# texture 1 is the random dither texture
-# texture 2 is the light bloom texture
+	gl_toneMappingShader->DisableMacro_BRIGHTPASS_FILTER();
+	gl_toneMappingShader->BindProgram();
 
-# writes result.color as the 32 bit dithered and gamma corrected values
+	gl_toneMappingShader->SetUniform_HDRKey(backEnd.hdrKey);
+	gl_toneMappingShader->SetUniform_HDRAverageLuminance(backEnd.hdrAverageLuminance);
+	gl_toneMappingShader->SetUniform_HDRMaxLuminance(backEnd.hdrMaxLuminance);
 
-PARAM	exposure =			program.local[0];		# multiply HDR value by this to get screen pixels
-PARAM	gammaPower =		program.local[1];
-PARAM	monitorDither =		program.local[2];
-PARAM	positionToDitherScale =		program.local[3];
-PARAM	bloomFraction =		program.local[4];
-PARAM	positionToBloomScale =		program.local[5];
-
-	*/
-
-	glBindProgramARB( GL_VERTEX_PROGRAM_ARB,gammaDitherVertexProgram );
-	glBindProgramARB( GL_FRAGMENT_PROGRAM_ARB, gammaDitherFragmentProgram );
-	glEnable(GL_VERTEX_PROGRAM_ARB);
-	glEnable(GL_FRAGMENT_PROGRAM_ARB);
-
-	glActiveTextureARB( GL_TEXTURE2_ARB );
-	glBindTexture( GL_TEXTURE_RECTANGLE_NV, floatPbufferQuarterImage->texnum );
-	R_BindTexImage( floatPbufferQuarter );
-
-	glActiveTextureARB( GL_TEXTURE1_ARB );
-	random256Image->BindFragment();
-
-	glActiveTextureARB( GL_TEXTURE0_ARB );
-	glBindTexture( GL_TEXTURE_RECTANGLE_NV, floatPbufferImage->texnum );
-	R_BindTexImage( floatPbuffer );
-
-	float	parm[4];
-
-	parm[0] = r_hdr_exposure.GetFloat();
-	parm[1] = 0;
-	parm[2] = 0;
-	parm[3] = 0;
-	glProgramLocalParameter4fvARB( GL_FRAGMENT_PROGRAM_ARB, 0, parm );
-
-	parm[0] = r_hdr_gamma.GetFloat();
-	parm[1] = 0;
-	parm[2] = 0;
-	parm[3] = 0;
-	glProgramLocalParameter4fvARB( GL_FRAGMENT_PROGRAM_ARB, 1, parm );
-
-	parm[0] = r_hdr_monitorDither.GetFloat();
-	parm[1] = 0;
-	parm[2] = 0;
-	parm[3] = 0;
-	glProgramLocalParameter4fvARB( GL_FRAGMENT_PROGRAM_ARB, 2, parm );
-
-	parm[0] = 1.0 / 256;
-	parm[1] = parm[0];
-	parm[2] = rand()/65535.0;
-	parm[3] = rand()/65535.0;
-	glProgramLocalParameter4fvARB( GL_FRAGMENT_PROGRAM_ARB, 3, parm );
-
-	parm[0] = 1.0 - r_hdr_bloomFraction.GetFloat();
-	parm[1] = r_hdr_bloomFraction.GetFloat();
-	parm[2] = 0;
-	parm[3] = 0;
-	glProgramLocalParameter4fvARB( GL_FRAGMENT_PROGRAM_ARB, 4, parm );
-
-	parm[0] = 0.25;
-	parm[1] = 0.25;
-	parm[2] = 0;
-	parm[3] = 0;
-	glProgramLocalParameter4fvARB( GL_FRAGMENT_PROGRAM_ARB, 5, parm );
+	// bind u_CurrentImage
+	gl_toneMappingShader->SetUniform_CurrentRenderImage(0);
+	GL_SelectTextureNoClient(0);
+	hdrRenderImage->BindFragment();
 
 	glDisable( GL_STENCIL_TEST );
 	glDisable( GL_SCISSOR_TEST );
@@ -2520,7 +2402,6 @@ PARAM	positionToBloomScale =		program.local[5];
 	glDisable(GL_VERTEX_PROGRAM_ARB);
 	glDisable(GL_FRAGMENT_PROGRAM_ARB);
 }
-#endif
 
 /*
 ==================
@@ -2529,7 +2410,7 @@ RB_EXP_Bloom
 */
 #if 0
 void	RB_EXP_Bloom( void ) {
-	if ( !r_hdr_useFloats.GetBool() ) {
+	if ( !r_useHighDynamicRange.GetBool() ) {
 		return;
 	}
 
@@ -2688,6 +2569,8 @@ void    RB_Exp_DrawInteractions( void ) {
 		R_Exp_Allocate();
 	}
 
+	RB_LogComment( "---------- RB_Exp_DrawInteractions ----------\n" );
+
 	GL_CheckErrors();
 
 	if ( !backEnd.viewDef->viewLights ) {
@@ -2762,7 +2645,8 @@ void    RB_Exp_DrawInteractions( void ) {
 	}
 
 	// if we are using a float buffer, clear it now
-	if ( r_hdr_useFloats.GetBool() ) {
+#if 1
+	if ( r_useHighDynamicRange.GetBool() ) {
 		RB_EXP_SetRenderBuffer( NULL );
 		// we need to set a lot of things, because this is a completely different context
 		RB_SetDefaultGLState();
@@ -2772,6 +2656,7 @@ void    RB_Exp_DrawInteractions( void ) {
 		RB_BeginDrawingView();
 		RB_STD_FillDepthBuffer( (drawSurf_t **)&backEnd.viewDef->drawSurfs[0], backEnd.viewDef->numDrawSurfs );
 	}
+#endif
 
 	GL_CheckErrors();
 
@@ -2830,7 +2715,6 @@ void    RB_Exp_DrawInteractions( void ) {
 		GL_CheckErrors();
 
 		GL_BindNullProgram();
-		Framebuffer::BindNull();
 
 		// back to view rendering, possibly in the off-screen buffer
 		RB_EXP_SetRenderBuffer( NULL );
@@ -2870,8 +2754,17 @@ void    RB_Exp_DrawInteractions( void ) {
 	}
 	GL_State( 0 );
 
+	if(r_useHighDynamicRange.GetBool())
+	{
+		RB_CalculateHDRAdaptation();
+
+		RB_EXP_GammaDither();
+	}
+
 //	RB_EXP_Bloom();
 //	RB_EXP_GammaDither();
+
+	GL_BindNullProgram();
 
 	// these haven't been state saved
 	for ( int i = 0 ; i < 8 ; i++ ) {

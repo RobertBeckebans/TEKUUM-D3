@@ -33,6 +33,7 @@ public:
 
 	// check for OpenGL errors
 	void					Check();
+	uint32_t				GetFramebuffer() const { return frameBuffer; }
 
 private:
 	idStr					fboName;
@@ -54,5 +55,12 @@ private:
 
 	static idList<Framebuffer*>	framebuffers;
 };
+
+typedef struct
+{
+	Framebuffer				*hdrRender;
+} globalFramebuffers_t;
+extern globalFramebuffers_t globalFramebuffers;
+
 
 #endif // __FRAMEBUFFER_H__

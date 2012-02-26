@@ -102,7 +102,7 @@ static void	RB_GLSL_DrawInteraction( const drawInteraction_t *din ) {
 	gl_forwardLightingShader->BindProgram();
 
 	// load all the vertex program parameters
-	gl_forwardLightingShader->SetUniform_ViewOrigin(din->localViewOrigin.ToVec3());
+	gl_forwardLightingShader->SetUniform_LocalViewOrigin(din->localViewOrigin.ToVec3());
 
 	gl_forwardLightingShader->SetUniform_LocalLightOrigin(din->localLightOrigin.ToVec3());
 
@@ -412,6 +412,13 @@ void R_ReloadShaders_f( const idCmdArgs &args ) {
 	
 	if ( GLEW_ARB_fragment_shader && GLEW_ARB_vertex_shader && GLEW_ARB_shader_objects && GLEW_ARB_shading_language_100 ) 
 	{
+		if(gl_geometricFillShader)
+		{
+			delete gl_geometricFillShader;
+			gl_geometricFillShader = NULL;
+		}
+		gl_geometricFillShader = new GLShader_geometricFill();
+
 		if(gl_forwardLightingShader)
 		{
 			delete gl_forwardLightingShader;
@@ -432,6 +439,13 @@ void R_ReloadShaders_f( const idCmdArgs &args ) {
 			gl_shadowMapShader = NULL;
 		}
 		gl_shadowMapShader = new GLShader_shadowMap();
+
+		if(gl_toneMappingShader)
+		{
+			delete gl_toneMappingShader;
+			gl_toneMappingShader = NULL;
+		}
+		gl_toneMappingShader = new GLShader_toneMapping();
 	}
 
 	common->Printf( "-------------------------------\n" );

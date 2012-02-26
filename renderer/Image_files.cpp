@@ -1012,31 +1012,6 @@ static void LoadPNG( const char *filename, unsigned char **pic, int *width, int 
 {
 	byte	*fbuffer;
 
-#if 0
-	if ( pic ) {
-		*pic = NULL;		// until proven otherwise
-	}
-	{
-		int		len;
-		idFile *f;
-
-		f = fileSystem->OpenFileRead( filename );
-		if ( !f ) {
-			return;
-		}
-		len = f->Length();
-			if ( timestamp ) {
-			*timestamp = f->Timestamp();
-		}
-		if ( !pic ) {
-			fileSystem->CloseFile( f );
-			return;	// just getting timestamp
-		}
-		fbuffer = (byte *)Mem_ClearedAlloc( len + 4096 );
-		f->Read( fbuffer, len );
-		fileSystem->CloseFile( f );
-	}
-#else
 	if ( !pic ) {
 		fileSystem->ReadFile( filename, NULL, timestamp );
 		return;	// just getting timestamp
@@ -1051,7 +1026,6 @@ static void LoadPNG( const char *filename, unsigned char **pic, int *width, int 
 	if ( !fbuffer ) {
 		return;
 	}
-#endif
 
 	// create png_struct with the custom error handlers
 	png_structp pngPtr = png_create_read_struct(PNG_LIBPNG_VER_STRING, (png_voidp) NULL, png_Error, png_Warning);

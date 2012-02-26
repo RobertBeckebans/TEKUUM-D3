@@ -81,7 +81,7 @@ idCVar r_znear( "r_znear", "3", CVAR_RENDERER | CVAR_FLOAT, "near Z clip plane d
 #if defined(__ANDROID__)
 idCVar r_ignoreGLErrors( "r_ignoreGLErrors", "0", CVAR_RENDERER | CVAR_BOOL, "ignore GL errors" );
 #else
-idCVar r_ignoreGLErrors( "r_ignoreGLErrors", "0", CVAR_RENDERER | CVAR_BOOL, "ignore GL errors" );
+idCVar r_ignoreGLErrors( "r_ignoreGLErrors", "1", CVAR_RENDERER | CVAR_BOOL, "ignore GL errors" );
 #endif
 idCVar r_finish( "r_finish", "0", CVAR_RENDERER | CVAR_BOOL, "force a call to glFinish() every frame" );
 idCVar r_swapInterval( "r_swapInterval", "0", CVAR_RENDERER | CVAR_ARCHIVE | CVAR_INTEGER, "changes wglSwapIntarval" );
@@ -250,11 +250,15 @@ idCVar r_shadowLodScale( "r_shadowLodScale", "0.8", CVAR_RENDERER | CVAR_FLOAT, 
 idCVar r_shadowLodBias( "r_shadowLodBias", "0", CVAR_RENDERER | CVAR_FLOAT, "" );
 idCVar r_showShadowLod( "r_showShadowLod", "0", CVAR_RENDERER | CVAR_BOOL, "show light shadowmap resolution indices" );
 
+
+
 // ESM specific
 idCVar r_esmOverDarkeningFactor( "r_esmOverDarkeningFactor", "30", CVAR_RENDERER | CVAR_FLOAT, "ESM scaling factor for avoiding light bleeding" );
 
 // EVSM specific
 idCVar r_evsm_postProcess( "r_evsm_postProcess", "0", CVAR_RENDERER | CVAR_BOOL, "don't use the expensive RGBA32F MRT" );
+
+idCVar r_useDeferredShading( "r_useDeferredShading", "0", CVAR_RENDERER | CVAR_BOOL, "enable light pre pass deferred shading" );
 
 // Techyon END
 

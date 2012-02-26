@@ -704,6 +704,11 @@ typedef struct {
 
 // Techyon BEGIN
 	bool				showTrisEnabled;	// use colors to see what objects are hardware accelerated
+
+	float				hdrAverageLuminance;
+	float				hdrMaxLuminance;
+	float				hdrTime;
+	float				hdrKey;
 // Techyon END
 
 	// our OpenGL state deltas
@@ -1047,6 +1052,9 @@ extern idCVar r_showShadowLod;
 
 extern idCVar r_esmOverDarkeningFactor;
 extern idCVar r_evsm_postProcess;
+
+extern idCVar r_useHighDynamicRange;
+extern idCVar r_useDeferredShading;
 
 // Techyon END
 
@@ -1528,18 +1536,31 @@ typedef struct shaderProgram_s
 	uint32_t        attribs;	// vertex array attributes
 
 	// uniform parameters
-	int32_t         u_ColorImage;
-	int32_t         u_CurrentImage;
-	int32_t         u_ContrastImage;
+	int32_t         u_CurrentRenderImage;
+	int32_t         t_CurrentRenderImage;
+
+	int32_t         u_CurrentNormalsImage;
+	int32_t         t_CurrentNormalsImage;
+
+	int32_t         u_CurrentDepthImage;
+	int32_t         t_CurrentDepthImage;
+
+	int32_t         u_CurrentLightImage;
+	int32_t         t_CurrentLightImage;
+
 	int32_t         u_DiffuseImage;
+	int32_t         t_DiffuseImage;
+
 	int32_t         u_NormalImage;
-	int32_t			u_NormalCubeMapImage;
+	int32_t         t_NormalImage;
+
 	int32_t         u_SpecularImage;
+	int32_t         t_SpecularImage;
+
+	int32_t         u_ContrastImage;
+	int32_t			u_NormalCubeMapImage;
 	int32_t         u_LightmapImage;
 	int32_t         u_DeluxeImage;
-	int32_t         u_DepthImage;
-//	int32_t         u_DepthImageBack;
-//	int32_t         u_DepthImageFront;
 	int32_t         u_PortalImage;
 	int32_t         u_LightImage;
 	int32_t         u_LightFalloffImage;
@@ -1549,6 +1570,7 @@ typedef struct shaderProgram_s
 	int32_t         u_ShadowImage2;
 	int32_t         u_ShadowImage3;
 	int32_t         u_ShadowImage4;
+	
 	int32_t         u_EnvironmentImage0;
 	int32_t         u_EnvironmentImage1;
 
@@ -1580,8 +1602,11 @@ typedef struct shaderProgram_s
 //	int32_t         u_AlphaTest;
 //	alphaTest_t		t_AlphaTest;
 
-	int32_t         u_ViewOrigin;
-	idVec3			t_ViewOrigin;
+	int32_t         u_LocalViewOrigin;
+	idVec3			t_LocalViewOrigin;
+
+	int32_t         u_GlobalViewOrigin;
+	idVec3			t_GlobalViewOrigin;
 
 	GLint			u_DeformParms;
 

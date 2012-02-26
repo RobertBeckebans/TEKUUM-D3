@@ -618,13 +618,23 @@ void idImage::GenerateImage( const byte *pic, int width, int height,
 		preserveBorder = false;
 	}
 
-	// make sure it is a power of 2
-	scaled_width = MakePowerOfTwo( width );
-	scaled_height = MakePowerOfTwo( height );
-
-	if ( scaled_width != width || scaled_height != height ) {
-		common->Error( "R_CreateImage: not a power of 2 image" );
+// Techyon BEGIN
+	if (glConfig.textureNonPowerOfTwoAvailable)
+	{
+		scaled_width = width;
+		scaled_height = height;
 	}
+	else
+	{
+		// make sure it is a power of 2
+		scaled_width = MakePowerOfTwo( width );
+		scaled_height = MakePowerOfTwo( height );
+
+		if ( scaled_width != width || scaled_height != height ) {
+			common->Error( "R_CreateImage: not a power of 2 image" );
+		}
+	}
+// Techyon END
 
 	// generate the texture number
 	glGenTextures( 1, &texnum );

@@ -31,12 +31,13 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 
 //GLShader_generic* gl_genericShader = NULL;
+GLShader_geometricFill* gl_geometricFillShader = NULL;
 GLShader_forwardLighting* gl_forwardLightingShader = NULL;
 GLShader_shadowVolume* gl_shadowVolumeShader = NULL;
 GLShader_shadowMap* gl_shadowMapShader = NULL;
 //GLShader_screen* gl_screenShader = NULL;
 //GLShader_portal* gl_portalShader = NULL;
-//GLShader_toneMapping* gl_toneMappingShader = NULL;
+GLShader_toneMapping* gl_toneMappingShader = NULL;
 //GLShader_contrast* gl_contrastShader = NULL;
 //GLShader_cameraEffects* gl_cameraEffectsShader = NULL;
 //GLShader_blurX* gl_blurXShader = NULL;
@@ -204,7 +205,7 @@ const char*	GLShader::FindEmbeddedShaderText(const idStr& shaderName, GLenum sha
 		name = va("%s_fs", shaderName.c_str());
 	}
 
-	for ( int i = 0 ; glsl_shaders[i].name[0] ; i++ )
+	for ( int i = 0 ; glsl_shaders[i].name ; i++ )
 	{
 		idStr compare = glsl_shaders[i].name;
 
@@ -434,6 +435,11 @@ idStr	GLShader::BuildGPUShaderText(	const char *mainShaderName,
 			Q_strcat(bufferExtra, sizeof(bufferExtra), "#ifndef r_ShowParallelShadowSplits\n#define r_ShowParallelShadowSplits 1\n#endif\n");
 		}
 		*/
+	}
+
+	if(r_useDeferredShading.GetBool())
+	{
+		shaderText += va("#ifndef r_DeferredLighting\n#define r_DeferredLighting 1\n#endif\n");
 	}
 
 	/*
@@ -952,51 +958,49 @@ void GLShader::SetRequiredVertexPointers()
 
 
 
-
-
-/*
-GLShader_generic::GLShader_generic():
-		GLShader(	"generic", VA_POSITION | VA_TEXCOORD | VA_NORMAL),
-		u_ColorMap(this),
-		u_ColorTextureMatrix(this),
-		u_ViewOrigin(this),
-		u_AlphaTest(this),
-		u_ColorModulate(this),
-		u_Color(this),
+GLShader_geometricFill::GLShader_geometricFill():
+		GLShader("geometricFill", VA_POSITION | VA_TEXCOORD | VA_NORMAL),
+		u_DiffuseImage(this),
+		u_NormalImage(this),
+		u_SpecularImage(this),
 		u_ModelMatrix(this),
-		u_ModelViewProjectionMatrix(this),
-		u_BoneMatrix(this),
-		u_VertexInterpolation(this),
-		u_PortalPlane(this),
-		GLDeformStage(this),
-		GLCompileMacro_USE_PORTAL_CLIPPING(this),
-		GLCompileMacro_USE_ALPHA_TESTING(this),
-		GLCompileMacro_USE_VERTEX_SKINNING(this),
-		GLCompileMacro_USE_VERTEX_ANIMATION(this),
-		GLCompileMacro_USE_DEFORM_VERTEXES(this),
-		GLCompileMacro_USE_TCGEN_ENVIRONMENT(this)
+		u_DiffuseMatrixS(this),
+		u_DiffuseMatrixT(this),
+		u_BumpMatrixS(this),
+		u_BumpMatrixT(this),
+		u_SpecularMatrixS(this),
+		u_SpecularMatrixT(this),
+		u_Color(this),
+		u_ColorModulate(this),
+		u_DiffuseColor(this),
+		u_SpecularColor(this),
+		u_GlobalViewOrigin(this),
+		GLCompileMacro_USE_NORMAL_MAPPING(this)
+		//GLCompileMacro_USE_PARALLAX_MAPPING(this),
 {
 	common->Printf("/// -------------------------------------------------\n");
-	common->Printf("/// creating generic shaders ------------------------\n");
+	common->Printf("/// creating geometricFill shaders --------\n");
 
-	int startTime = ri.Milliseconds();
+	idTimer compile_time;
+	compile_time.Start();	
 
-	_shaderPrograms = idList<shaderProgram_t>(1 << _compileMacros.size());
-	
-	//Com_Memset(_shaderPrograms, 0, sizeof(_shaderPrograms));
-
-	idStr vertexInlines = "vertexSkinning vertexAnimation ";
+	//idStr vertexInlines = "vertexSkinning vertexAnimation ";
+	idStrList vertexInlines;
+	/*
 	if(glConfig.driverType == GLDRV_OPENGL3 && r_vboDeformVertexes->integer)
 	{
 		vertexInlines += "deformVertexes ";
 	}
+	*/
 
-	idStr vertexShaderText = BuildGPUShaderText("generic", vertexInlines.c_str(), GL_VERTEX_SHADER_ARB);
-	idStr fragmentShaderText = BuildGPUShaderText("generic", "", GL_FRAGMENT_SHADER_ARB);
+	idStrList fragmentInlines; // reliefMapping
 
-	size_t numPermutations = (1 << _compileMacros.size());	// same as 2^n, n = no. compile macros
+	idStr vertexShaderText = BuildGPUShaderText("geometricFill", vertexInlines, GL_VERTEX_SHADER_ARB);
+	idStr fragmentShaderText = BuildGPUShaderText("geometricFill", fragmentInlines, GL_FRAGMENT_SHADER_ARB);
+
+	size_t numPermutations = (1 << _compileMacros.Num());	// same as 2^n, n = no. compile macros
 	size_t numCompiled = 0;
-	common->Printf("...compiling generic shaders\n");
+	common->Printf("...compiling geometricFill shaders\n");
 	common->Printf("0%%  10   20   30   40   50   60   70   80   90   100%%\n");
 	common->Printf("|----|----|----|----|----|----|----|----|----|----|\n");
 	size_t tics = 0;
@@ -1018,45 +1022,41 @@ GLShader_generic::GLShader_generic():
 			}
 		}
 
-		idStr compileMacros;
+		idStrList compileMacros;
 		if(GetCompileMacrosString(i, compileMacros))
 		{
-			ri.Printf(PRINT_DEVELOPER, "Compile macros: '%s'\n", compileMacros.c_str());
-
-			shaderProgram_t *shaderProgram = &_shaderPrograms[i];
+			//common->DPrintf("Compile macros: '%s'\n", compileMacros.To);
+		
+			shaderProgram_t *shaderProgram = new shaderProgram_t();
+			_shaderPrograms.Append(shaderProgram);
 
 			CompileAndLinkGPUShaderProgram(	shaderProgram,
-											"generic",
+											"geometricFill",
 											vertexShaderText,
 											fragmentShaderText,
 											compileMacros);
-			
+
 			UpdateShaderProgramUniformLocations(shaderProgram);
-
-			//shaderProgram->u_ColorMap = glGetUniformLocationARB(shaderProgram->program, "u_ColorMap");
-
-			//common->Printf("u_ColorMap = %i\n", shaderProgram->u_ColorMap);
-
-			glUseProgramObjectARB(shaderProgram->program);
-			glUniform1iARB(shaderProgram->u_ColorMap, 0);
-			glUseProgramObjectARB(0);
 
 			ValidateProgram(shaderProgram->program);
 			//ShowProgramUniforms(shaderProgram->program);
-			
 			GL_CheckErrors();
 
 			numCompiled++;
 		}
+		else
+		{
+			_shaderPrograms.Append(NULL);
+		}
 	}
-	common->Printf("\n");
 
 	SelectProgram();
 
-	int endTime = ri.Milliseconds();
-	common->Printf("...compiled %i generic shader permutations in %5.2f seconds\n", numCompiled, (endTime - startTime) / 1000.0);
+	compile_time.Stop();
+	common->Printf("...compiled %i geometricFill shader permutations in %5.2f seconds\n", numCompiled, compile_time.Milliseconds() / 1000.0);
 }
-*/
+
+
 
 
 GLShader_forwardLighting::GLShader_forwardLighting():
@@ -1072,7 +1072,7 @@ GLShader_forwardLighting::GLShader_forwardLighting():
 		u_ColorModulate(this),
 		u_DiffuseColor(this),
 		u_SpecularColor(this),
-		u_ViewOrigin(this),
+		u_LocalViewOrigin(this),
 		u_LocalLightOrigin(this),
 		u_GlobalLightOrigin(this),
 		u_LightRadius(this),
@@ -1408,4 +1408,86 @@ GLShader_shadowMap::GLShader_shadowMap():
 
 void GLShader_shadowMap::CreatePreIncludeText(idStr& preIncludeText)
 {
+}
+
+
+
+GLShader_toneMapping::GLShader_toneMapping():
+		GLShader("toneMapping", VA_POSITION),
+		u_CurrentRenderImage(this),
+		u_HDRKey(this),
+		u_HDRAverageLuminance(this),
+		u_HDRMaxLuminance(this),
+		GLCompileMacro_BRIGHTPASS_FILTER(this)
+{
+	common->Printf("/// -------------------------------------------------\n");
+	common->Printf("/// creating toneMapping shaders --------\n");
+
+	idTimer compile_time;
+	compile_time.Start();
+
+	idStrList vertexInlines;
+	idStrList fragmentInlines;
+
+	idStr vertexShaderText = BuildGPUShaderText("toneMapping", vertexInlines, GL_VERTEX_SHADER_ARB);
+	idStr fragmentShaderText = BuildGPUShaderText("toneMapping", fragmentInlines, GL_FRAGMENT_SHADER_ARB);
+
+	size_t numPermutations = (1 << _compileMacros.Num());	// same as 2^n, n = no. compile macros
+	size_t numCompiled = 0;
+	common->Printf("...compiling toneMapping shaders\n");
+	common->Printf("0%%  10   20   30   40   50   60   70   80   90   100%%\n");
+	common->Printf("|----|----|----|----|----|----|----|----|----|----|\n");
+	size_t tics = 0;
+	size_t nextTicCount = 0;
+	for(size_t i = 0; i < numPermutations; i++)
+	{
+		if((i + 1) >= nextTicCount)
+		{
+			size_t ticsNeeded = (size_t)(((double)(i + 1) / numPermutations) * 50.0);
+
+			do { common->Printf("*"); } while ( ++tics < ticsNeeded );
+
+			nextTicCount = (size_t)((tics / 50.0) * numPermutations);
+			if(i == (numPermutations - 1))
+			{
+				if(tics < 51)
+					common->Printf("*");
+				common->Printf("\n");
+			}
+		}
+
+		idStrList compileMacros;
+		if(GetCompileMacrosString(i, compileMacros))
+		{
+			//common->DPrintf("Compile macros: '%s'\n", compileMacros.To);
+		
+			shaderProgram_t *shaderProgram = new shaderProgram_t();
+			_shaderPrograms.Append(shaderProgram);
+
+			CompileAndLinkGPUShaderProgram(	shaderProgram,
+											"toneMapping",
+											vertexShaderText,
+											fragmentShaderText,
+											compileMacros);
+
+			UpdateShaderProgramUniformLocations(shaderProgram);
+
+			//SetUniform_CurrentImage(0);
+
+			ValidateProgram(shaderProgram->program);
+			//ShowProgramUniforms(shaderProgram->program);
+			GL_CheckErrors();
+
+			numCompiled++;
+		}
+		else
+		{
+			_shaderPrograms.Append(NULL);
+		}
+	}
+
+	SelectProgram();
+
+	compile_time.Stop();
+	common->Printf("...compiled %i toneMapping shader permutations in %5.2f seconds\n", numCompiled, compile_time.Milliseconds() / 1000.0);
 }

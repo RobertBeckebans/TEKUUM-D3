@@ -726,70 +726,265 @@ public:
 	}
 };
 
-/*
-class u_ColorMap:
+
+
+class u_CurrentRenderImage:
 GLUniform
 {
 public:
-	u_ColorMap(GLShader* shader):
+	u_CurrentRenderImage(GLShader* shader):
 	  GLUniform(shader)
 	{
 	}
 
-	const char* GetName() const { return "u_ColorMap"; }
+	const char* GetName() const { return "u_CurrentRenderImage"; }
 	void				UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
 	{
-		shaderProgram->u_ColorMap = glGetUniformLocationARB(shaderProgram->program, GetName());
+		shaderProgram->u_CurrentRenderImage = glGetUniformLocationARB(shaderProgram->program, GetName());
 	}
 
-	void SetUniform_ColorMap(int texUnit)
+	void SetUniform_CurrentRenderImage(int value)
 	{
-		glUniform1iARB(_shader->GetProgram()->u_ColorMap, texUnit);
+		shaderProgram_t* program = _shader->GetProgram();
+
+#if defined(USE_UNIFORM_FIREWALL)
+		if(program->t_CurrentRenderImage == value)
+			return;
+
+		program->t_CurrentRenderImage = value;
+#endif
+
+#if defined(LOG_GLSL_UNIFORMS)
+		if(r_logFile.GetBool())
+		{
+			RB_LogComment("--- SetUniform_CurrentRenderImage( program = %s, value = %f ) ---\n", program->name.c_str(), value);
+		}
+#endif
+		glUniform1iARB(program->u_CurrentRenderImage, value);
 	}
 };
 
-class u_NormalMap:
+class u_CurrentNormalsImage:
 GLUniform
 {
 public:
-	u_NormalMap(GLShader* shader):
+	u_CurrentNormalsImage(GLShader* shader):
 	  GLUniform(shader)
 	{
 	}
 
-	const char* GetName() const { return "u_NormalMap"; }
+	const char* GetName() const { return "u_CurrentNormalsImage"; }
 	void				UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
 	{
-		shaderProgram->u_NormalMap = glGetUniformLocationARB(shaderProgram->program, GetName());
+		shaderProgram->u_CurrentNormalsImage = glGetUniformLocationARB(shaderProgram->program, GetName());
 	}
 
-	void SetUniform_NormalMap(int texUnit)
+	void SetUniform_CurrentNormalsImage(int value)
 	{
-		glUniform1iARB(_shader->GetProgram()->u_NormalMap, texUnit);
+		shaderProgram_t* program = _shader->GetProgram();
+
+#if defined(USE_UNIFORM_FIREWALL)
+		if(program->t_CurrentNormalsImage == value)
+			return;
+
+		program->t_CurrentNormalsImage = value;
+#endif
+
+#if defined(LOG_GLSL_UNIFORMS)
+		if(r_logFile.GetBool())
+		{
+			RB_LogComment("--- SetUniform_CurrentNormalsImage( program = %s, value = %f ) ---\n", program->name.c_str(), value);
+		}
+#endif
+		glUniform1iARB(program->u_CurrentNormalsImage, value);
 	}
 };
 
-class u_CurrentMap:
+
+
+class u_CurrentDepthImage:
 GLUniform
 {
 public:
-	u_CurrentMap(GLShader* shader):
+	u_CurrentDepthImage(GLShader* shader):
 	  GLUniform(shader)
 	{
 	}
 
-	const char* GetName() const { return "u_CurrentMap"; }
+	const char* GetName() const { return "u_CurrentDepthImage"; }
 	void				UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
 	{
-		shaderProgram->u_CurrentMap = glGetUniformLocationARB(shaderProgram->program, GetName());
+		shaderProgram->u_CurrentDepthImage = glGetUniformLocationARB(shaderProgram->program, GetName());
 	}
 
-	void SetUniform_CurrentMap(int texUnit)
+	void SetUniform_CurrentDepthImage(int value)
 	{
-		glUniform1iARB(_shader->GetProgram()->u_CurrentMap, texUnit);
+		shaderProgram_t* program = _shader->GetProgram();
+
+#if defined(USE_UNIFORM_FIREWALL)
+		if(program->t_CurrentDepthImage == value)
+			return;
+
+		program->t_CurrentDepthImage = value;
+#endif
+
+#if defined(LOG_GLSL_UNIFORMS)
+		if(r_logFile.GetBool())
+		{
+			RB_LogComment("--- SetUniform_CurrentDepthImage( program = %s, value = %f ) ---\n", program->name.c_str(), value);
+		}
+#endif
+		glUniform1iARB(program->u_CurrentDepthImage, value);
 	}
 };
-*/
+
+class u_CurrentLightImage:
+GLUniform
+{
+public:
+	u_CurrentLightImage(GLShader* shader):
+	  GLUniform(shader)
+	{
+	}
+
+	const char* GetName() const { return "u_CurrentLightImage"; }
+	void				UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
+	{
+		shaderProgram->u_CurrentLightImage = glGetUniformLocationARB(shaderProgram->program, GetName());
+	}
+
+	void SetUniform_CurrentLightImage(int value)
+	{
+		shaderProgram_t* program = _shader->GetProgram();
+
+#if defined(USE_UNIFORM_FIREWALL)
+		if(program->t_CurrentLightImage == value)
+			return;
+
+		program->t_CurrentLightImage = value;
+#endif
+
+#if defined(LOG_GLSL_UNIFORMS)
+		if(r_logFile.GetBool())
+		{
+			RB_LogComment("--- SetUniform_CurrentLightImage( program = %s, value = %f ) ---\n", program->name.c_str(), value);
+		}
+#endif
+		glUniform1iARB(program->u_CurrentLightImage, value);
+	}
+};
+
+
+
+class u_DiffuseImage:
+GLUniform
+{
+public:
+	u_DiffuseImage(GLShader* shader):
+	  GLUniform(shader)
+	{
+	}
+
+	const char* GetName() const { return "u_DiffuseImage"; }
+	void				UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
+	{
+		shaderProgram->u_DiffuseImage = glGetUniformLocationARB(shaderProgram->program, GetName());
+	}
+
+	void SetUniform_DiffuseImage(int value)
+	{
+		shaderProgram_t* program = _shader->GetProgram();
+
+#if defined(USE_UNIFORM_FIREWALL)
+		if(program->t_DiffuseImage == value)
+			return;
+
+		program->t_DiffuseImage = value;
+#endif
+
+#if defined(LOG_GLSL_UNIFORMS)
+		if(r_logFile.GetBool())
+		{
+			RB_LogComment("--- SetUniform_DiffuseImage( program = %s, value = %f ) ---\n", program->name.c_str(), value);
+		}
+#endif
+		glUniform1iARB(program->u_DiffuseImage, value);
+	}
+};
+
+class u_NormalImage:
+GLUniform
+{
+public:
+	u_NormalImage(GLShader* shader):
+	  GLUniform(shader)
+	{
+	}
+
+	const char* GetName() const { return "u_NormalImage"; }
+	void				UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
+	{
+		shaderProgram->u_NormalImage = glGetUniformLocationARB(shaderProgram->program, GetName());
+	}
+
+	void SetUniform_NormalImage(int value)
+	{
+		shaderProgram_t* program = _shader->GetProgram();
+
+#if defined(USE_UNIFORM_FIREWALL)
+		if(program->t_NormalImage == value)
+			return;
+
+		program->t_NormalImage = value;
+#endif
+
+#if defined(LOG_GLSL_UNIFORMS)
+		if(r_logFile.GetBool())
+		{
+			RB_LogComment("--- SetUniform_NormalImage( program = %s, value = %f ) ---\n", program->name.c_str(), value);
+		}
+#endif
+		glUniform1iARB(program->u_NormalImage, value);
+	}
+};
+
+class u_SpecularImage:
+GLUniform
+{
+public:
+	u_SpecularImage(GLShader* shader):
+	  GLUniform(shader)
+	{
+	}
+
+	const char* GetName() const { return "u_SpecularImage"; }
+	void				UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
+	{
+		shaderProgram->u_SpecularImage = glGetUniformLocationARB(shaderProgram->program, GetName());
+	}
+
+	void SetUniform_SpecularImage(int value)
+	{
+		shaderProgram_t* program = _shader->GetProgram();
+
+#if defined(USE_UNIFORM_FIREWALL)
+		if(program->t_SpecularImage == value)
+			return;
+
+		program->t_SpecularImage = value;
+#endif
+
+#if defined(LOG_GLSL_UNIFORMS)
+		if(r_logFile.GetBool())
+		{
+			RB_LogComment("--- SetUniform_SpecularImage( program = %s, value = %f ) ---\n", program->name.c_str(), value);
+		}
+#endif
+		glUniform1iARB(program->u_SpecularImage, value);
+	}
+};
+
+
 
 class u_ModelMatrix:
 GLUniform
@@ -1318,40 +1513,77 @@ public:
 };
 */
 
-class u_ViewOrigin:
+class u_LocalViewOrigin:
 GLUniform
 {
 public:
-	u_ViewOrigin(GLShader* shader):
+	u_LocalViewOrigin(GLShader* shader):
 	  GLUniform(shader)
 	{
 	}
 
-	const char* GetName() const { return "u_ViewOrigin"; }
+	const char* GetName() const { return "u_LocalViewOrigin"; }
 	void UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
 	{
-		shaderProgram->u_ViewOrigin = glGetUniformLocationARB(shaderProgram->program, GetName());
+		shaderProgram->u_LocalViewOrigin = glGetUniformLocationARB(shaderProgram->program, GetName());
 	}
 
-	void SetUniform_ViewOrigin(const idVec3 v)
+	void SetUniform_LocalViewOrigin(const idVec3 v)
 	{
 		shaderProgram_t* program = _shader->GetProgram();
 
 #if defined(USE_UNIFORM_FIREWALL)
-		if(program->t_ViewOrigin == v)
+		if(program->t_LocalViewOrigin == v)
 			return;
 
-		program->t_ViewOrigin = v;
+		program->t_LocalViewOrigin = v;
 #endif
 
 #if defined(LOG_GLSL_UNIFORMS)
 		if(r_logFile.GetBool())
 		{
-			RB_LogComment("--- SetUniform_ViewOrigin( program = %s, vector = ( %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name.c_str(), v[0], v[1], v[2]);
+			RB_LogComment("--- SetUniform_LocalViewOrigin( program = %s, vector = ( %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name.c_str(), v[0], v[1], v[2]);
 		}
 #endif
 
-		glUniform3fARB(program->u_ViewOrigin, v[0], v[1], v[2]);
+		glUniform3fARB(program->u_LocalViewOrigin, v[0], v[1], v[2]);
+	}
+};
+
+class u_GlobalViewOrigin:
+GLUniform
+{
+public:
+	u_GlobalViewOrigin(GLShader* shader):
+	  GLUniform(shader)
+	{
+	}
+
+	const char* GetName() const { return "u_GlobalViewOrigin"; }
+	void UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
+	{
+		shaderProgram->u_GlobalViewOrigin = glGetUniformLocationARB(shaderProgram->program, GetName());
+	}
+
+	void SetUniform_GlobalViewOrigin(const idVec3 v)
+	{
+		shaderProgram_t* program = _shader->GetProgram();
+
+#if defined(USE_UNIFORM_FIREWALL)
+		if(program->t_GlobalViewOrigin == v)
+			return;
+
+		program->t_GlobalViewOrigin = v;
+#endif
+
+#if defined(LOG_GLSL_UNIFORMS)
+		if(r_logFile.GetBool())
+		{
+			RB_LogComment("--- SetUniform_GlobalViewOrigin( program = %s, vector = ( %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name.c_str(), v[0], v[1], v[2]);
+		}
+#endif
+
+		glUniform3fARB(program->u_GlobalViewOrigin, v[0], v[1], v[2]);
 	}
 };
 
@@ -1826,7 +2058,6 @@ public:
 };
 
 
-/*
 class u_HDRKey:
 GLUniform
 {
@@ -1854,15 +2085,16 @@ public:
 #endif
 
 #if defined(LOG_GLSL_UNIFORMS)
-		if(r_logFile->integer)
+		if(r_logFile.GetBool())
 		{
-			GLimp_LogComment(va("--- SetUniform_HDRKey( program = %s, value = %f ) ---\n", program->name.c_str(), value));
+			RB_LogComment("--- SetUniform_HDRKey( program = %s, value = %f ) ---\n", program->name.c_str(), value);
 		}
 #endif
 
 		glUniform1fARB(program->u_HDRKey, value);
 	}
 };
+
 
 class u_HDRAverageLuminance:
 GLUniform
@@ -1891,15 +2123,16 @@ public:
 #endif
 
 #if defined(LOG_GLSL_UNIFORMS)
-		if(r_logFile->integer)
+		if(r_logFile.GetBool())
 		{
-			GLimp_LogComment(va("--- SetUniform_HDRAverageLuminance( program = %s, value = %f ) ---\n", program->name.c_str(), value));
+			RB_LogComment("--- SetUniform_HDRAverageLuminance( program = %s, value = %f ) ---\n", program->name.c_str(), value);
 		}
 #endif
 
 		glUniform1fARB(program->u_HDRAverageLuminance, value);
 	}
 };
+
 
 class u_HDRMaxLuminance:
 GLUniform
@@ -1928,16 +2161,18 @@ public:
 #endif
 
 #if defined(LOG_GLSL_UNIFORMS)
-		if(r_logFile->integer)
+		if(r_logFile.GetBool())
 		{
-			GLimp_LogComment(va("--- SetUniform_HDRMaxLuminance( program = %s, value = %f ) ---\n", program->name.c_str(), value));
+			RB_LogComment("--- SetUniform_HDRMaxLuminance( program = %s, value = %f ) ---\n", program->name.c_str(), value);
 		}
 #endif
 
 		glUniform1fARB(program->u_HDRMaxLuminance, value);
 	}
 };
-*/
+
+
+
 
 /*
 class GLShader_generic:
@@ -1966,6 +2201,31 @@ public:
 };
 */
 
+class GLShader_geometricFill:
+public GLShader,
+public u_DiffuseImage,
+public u_NormalImage,
+public u_SpecularImage,
+public u_DiffuseMatrixS,
+public u_DiffuseMatrixT,
+public u_BumpMatrixS,
+public u_BumpMatrixT,
+public u_SpecularMatrixS,
+public u_SpecularMatrixT,
+public u_ColorModulate,
+public u_Color,
+public u_DiffuseColor,
+public u_SpecularColor,
+public u_GlobalViewOrigin,
+public u_ModelMatrix,
+//public u_DepthScale,
+public GLCompileMacro_USE_NORMAL_MAPPING
+//public GLCompileMacro_USE_PARALLAX_MAPPING,
+{
+public:
+	GLShader_geometricFill();
+};
+
 class GLShader_forwardLighting:
 public GLShader,
 public u_ModelMatrix,
@@ -1979,7 +2239,7 @@ public u_Color,
 public u_ColorModulate,
 public u_DiffuseColor,
 public u_SpecularColor,
-public u_ViewOrigin,
+public u_LocalViewOrigin,
 public u_LocalLightOrigin,
 public u_GlobalLightOrigin,
 public u_LightRadius,
@@ -2056,6 +2316,7 @@ public:
 };
 */
 
+
 class GLShader_shadowVolume:
 public GLShader,
 public u_LocalLightOrigin
@@ -2083,14 +2344,27 @@ private:
 	void			CreatePreIncludeText(idStr& preIncludeText);
 };
 
+class GLShader_toneMapping:
+public GLShader,
+public u_CurrentRenderImage,
+public u_HDRKey,
+public u_HDRAverageLuminance,
+public u_HDRMaxLuminance,
+public GLCompileMacro_BRIGHTPASS_FILTER
+{
+public:
+	GLShader_toneMapping();
+};
+
 
 //extern GLShader_generic* gl_genericShader;
+extern GLShader_geometricFill* gl_geometricFillShader;
 extern GLShader_forwardLighting* gl_forwardLightingShader;
 extern GLShader_shadowVolume* gl_shadowVolumeShader;
 extern GLShader_shadowMap* gl_shadowMapShader;
 //extern GLShader_screen* gl_screenShader;
 //extern GLShader_portal* gl_portalShader;
-//extern GLShader_toneMapping* gl_toneMappingShader;
+extern GLShader_toneMapping* gl_toneMappingShader;
 //extern GLShader_contrast* gl_contrastShader;
 //extern GLShader_cameraEffects* gl_cameraEffectsShader;
 //extern GLShader_blurX* gl_blurXShader;

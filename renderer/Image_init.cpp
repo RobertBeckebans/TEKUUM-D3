@@ -1985,6 +1985,10 @@ void idImageManager::Init() {
 	accumImage = ImageFromFunction("_accum", R_RGBA8Image );
 	scratchCubeMapImage = ImageFromFunction("_scratchCubeMap", makeNormalizeVectorCubeMap );
 	currentRenderImage = ImageFromFunction("_currentRender", R_RGBA8Image );
+#if !defined(USE_GLES1)
+	currentNormalsImage = ImageFromFunction("_currentNormals", R_RGBA8Image );
+	currentLightImage = ImageFromFunction("_currentLight", R_RGBA8Image );
+#endif
 
 	cmdSystem->AddCommand( "reloadImages", R_ReloadImages_f, CMD_FL_RENDERER, "reloads images" );
 	cmdSystem->AddCommand( "listImages", R_ListImages_f, CMD_FL_RENDERER, "lists images" );
