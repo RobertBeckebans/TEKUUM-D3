@@ -3,6 +3,7 @@
 
 Doom 3 GPL Source Code
 Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company. 
+Copyright (C) 2012 Robert Beckebans
 
 This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).  
 
@@ -940,6 +941,10 @@ void R_SetViewMatrix( viewDef_t *viewDef ) {
 	// convert from our coordinate system (looking down X)
 	// to OpenGL's coordinate system (looking down -Z)
 	myGlMultMatrix( viewerMatrix, s_flipMatrix, world->modelViewMatrix );
+
+// Techyon BEGIN
+	MatrixCopy( viewerMatrix, world->unflippedViewMatrix );
+// Techyon END
 }
 
 /*
@@ -949,10 +954,11 @@ R_SetupProjection
 This uses the "infinite far z" trick
 ===============
 */
-void R_SetupProjection( void ) {
+static void R_SetupProjection( bool infiniteFarClip ) 
+{
 	float	xmin, xmax, ymin, ymax;
-	float	width, height;
-	float	zNear;
+	float	width, height, depth;
+	float	zNear, zFar;
 	float	jitterx, jittery;
 	static	idRandom random;
 
@@ -973,6 +979,8 @@ void R_SetupProjection( void ) {
 	if ( tr.viewDef->renderView.cramZNear ) {
 		zNear *= 0.25;
 	}
+	zFar	= r_zfar.GetFloat();
+	// FIXME compute zFar dynamically
 
 	ymax = zNear * tan( tr.viewDef->renderView.fov_y * idMath::PI / 360.0f );
 	ymin = -ymax;
@@ -982,6 +990,7 @@ void R_SetupProjection( void ) {
 
 	width = xmax - xmin;
 	height = ymax - ymin;
+	depth = zFar - zNear;
 
 	jitterx = jitterx * width / ( tr.viewDef->viewport.x2 - tr.viewDef->viewport.x1 + 1 );
 	xmin += jitterx;
@@ -989,6 +998,7 @@ void R_SetupProjection( void ) {
 	jittery = jittery * height / ( tr.viewDef->viewport.y2 - tr.viewDef->viewport.y1 + 1 );
 	ymin += jittery;
 	ymax += jittery;
+
 
 	tr.viewDef->projectionMatrix[0] = 2 * zNear / width;
 	tr.viewDef->projectionMatrix[4] = 0;
@@ -1005,14 +1015,62 @@ void R_SetupProjection( void ) {
 	// rasterize right at the wraparound point
 	tr.viewDef->projectionMatrix[2] = 0;
 	tr.viewDef->projectionMatrix[6] = 0;
-	tr.viewDef->projectionMatrix[10] = -0.999f;
-	tr.viewDef->projectionMatrix[14] = -2.0f * zNear;
+
+	if(infiniteFarClip)
+	{
+		tr.viewDef->projectionMatrix[10] = -0.999f;
+		tr.viewDef->projectionMatrix[14] = -2.0f * zNear;
+	}
+	else
+	{
+		tr.viewDef->projectionMatrix[10] = -(zFar + zNear) / depth;
+		tr.viewDef->projectionMatrix[14] = -2.0f * zFar * zNear / depth;
+	}
 
 	tr.viewDef->projectionMatrix[3] = 0;
 	tr.viewDef->projectionMatrix[7] = 0;
 	tr.viewDef->projectionMatrix[11] = -1;
 	tr.viewDef->projectionMatrix[15] = 0;
 }
+
+// Techyon BEGIN
+/*
+=================
+R_SetupUnprojection
+create a matrix with similar functionality like gluUnproject, project from window space to world space
+=================
+*/
+static void R_SetupUnprojection(void)
+{
+	static const float	s_flipMatrix[16] = {
+		// convert from our coordinate system (looking down X)
+		// to OpenGL's coordinate system (looking down -Z)
+		0, 0, -1, 0,
+		-1, 0, 0, 0,
+		0, 1, 0, 0,
+		0, 0, 0, 1
+	};
+
+	float          *unprojectMatrix = tr.viewDef->unprojectionMatrix;
+
+#if 0
+	MatrixCopy(tr.viewDef->projectionMatrix, unprojectMatrix);
+	MatrixMultiply2(unprojectMatrix, s_flipMatrix);
+	MatrixMultiply2(unprojectMatrix, tr.viewDef->worldSpace.unflippedViewMatrix);
+	MatrixFullInverse(unprojectMatrix, unprojectMatrix);
+#else
+	myGlMultMatrix( tr.viewDef->worldSpace.modelViewMatrix, tr.viewDef->projectionMatrix, unprojectMatrix );
+	MatrixFullInverse(unprojectMatrix, unprojectMatrix);
+#endif
+
+	// FIXME ?
+	// MatrixMultiplyTranslation(unprojectMatrix, -(float)glConfig.vidWidth / (float)tr.viewParms.viewportWidth,
+	// -(float)glConfig.vidHeight / (float)tr.viewParms.viewportHeight, -1.0);
+
+	MatrixMultiplyTranslation(unprojectMatrix, -1.0, -1.0, -1.0);
+	MatrixMultiplyScale(unprojectMatrix, 2.0 * (1.0 / (float)glConfig.vidWidth), 2.0 * (1.0 / (float)glConfig.vidHeight), 2.0);
+}
+// Techyon END
 
 /*
 =================
@@ -1172,9 +1230,18 @@ void R_RenderView( viewDef_t *parms ) {
 	// for culling and portal visibility
 	R_SetupViewFrustum();
 
+// Techyon BEGIN
+	// we need a unprojection matrix to calculate the vertex position based on the depth image value
+	// for some post process shaders
+	R_SetupProjection(false);
+	R_SetupUnprojection();
+// Techyon END
+
 	// we need to set the projection matrix before doing
 	// portal-to-screen scissor box calculations
-	R_SetupProjection();
+	if(!r_useDeferredShading.GetBool()) {
+		R_SetupProjection(true);
+	}
 
 	// identify all the visible portalAreas, and the entityDefs and
 	// lightDefs that are in them and pass culling.
@@ -1220,85 +1287,5 @@ void R_RenderView( viewDef_t *parms ) {
 }
 
 
-// ================================================================================
-
-void MatrixFromPlanes(matrix_t m, const idPlane frustum[6])
-{
-	const idPlane& left = frustum[FRUSTUM_LEFT];
-	const idPlane& right = frustum[FRUSTUM_RIGHT];
-	const idPlane& bottom = frustum[FRUSTUM_BOTTOM];
-	const idPlane& top = frustum[FRUSTUM_TOP];
-	const idPlane& zNear = frustum[FRUSTUM_NEAR];
-	const idPlane& zFar = frustum[FRUSTUM_FAR];
-
-	m[ 0] = (right[0] - left[0]) / 2;
-	m[ 1] = (top[0] - bottom[0]) / 2;
-	m[ 2] = (zFar[0] - zNear[0]) / 2;
-	m[ 3] = right[0] - (right[0] - left[0]) / 2;
-
-	m[ 4] = (right[1] - left[1]) / 2;
-	m[ 5] = (top[1] - bottom[1]) / 2;
-	m[ 6] = (zFar[1] - zNear[1]) / 2;
-	m[ 7] = right[1] - (right[1] - left[1]) / 2;
-
-	m[ 8] = (right[2] - left[2]) / 2;
-	m[ 9] = (top[2] - bottom[2]) / 2;
-	m[10] = (zFar[2] - zNear[2]) / 2;
-	m[11] = right[2] - (right[2] - left[2]) / 2;
-
-#if 1
-	m[12] = (right[3] - left[3]) / 2;
-	m[13] = (top[3] - bottom[3]) / 2;
-	m[14] = (zFar[3] - zNear[3]) / 2;
-	m[15] = right[3] - (right[3] - left[3]) / 2;
-#else
-	m[12] = (-right[3] - -left[3]) / 2;
-	m[13] = (-top[3] - -bottom[3]) / 2;
-	m[14] = (-zFar[3] - -zNear[3]) / 2;
-	m[15] = -right[3] - (-right[3] - -left[3]) / 2;
-#endif
-}
-
-
-void MatrixIdentity(matrix_t m)
-{
-    m[ 0] = 1;      m[ 4] = 0;      m[ 8] = 0;      m[12] = 0;
-	m[ 1] = 0;      m[ 5] = 1;      m[ 9] = 0;      m[13] = 0;
-	m[ 2] = 0;      m[ 6] = 0;      m[10] = 1;      m[14] = 0;
-	m[ 3] = 0;      m[ 7] = 0;      m[11] = 0;      m[15] = 1;
-}
-
-void MatrixCopy(const matrix_t in, matrix_t out)
-{
-    out[ 0] = in[ 0];       out[ 4] = in[ 4];       out[ 8] = in[ 8];       out[12] = in[12];
-    out[ 1] = in[ 1];       out[ 5] = in[ 5];       out[ 9] = in[ 9];       out[13] = in[13];
-	out[ 2] = in[ 2];       out[ 6] = in[ 6];       out[10] = in[10];       out[14] = in[14];
-	out[ 3] = in[ 3];       out[ 7] = in[ 7];       out[11] = in[11];       out[15] = in[15];
-}
-
-void MatrixTranspose(const matrix_t in, matrix_t out)
-{
-	out[ 0] = in[ 0];       out[ 1] = in[ 4];       out[ 2] = in[ 8];       out[ 3] = in[12];
-	out[ 4] = in[ 1];       out[ 5] = in[ 5];       out[ 6] = in[ 9];       out[ 7] = in[13];
-	out[ 8] = in[ 2];       out[ 9] = in[ 6];       out[10] = in[10];       out[11] = in[14];
-	out[12] = in[ 3];       out[13] = in[ 7];       out[14] = in[11];       out[15] = in[15];
-}
-
-void MatrixAffineInverse(const matrix_t in, matrix_t out)
-{
-#if 0
-		MatrixCopy(in, out);
-		MatrixInverse(out);
-#else
-        out[ 0] = in[ 0];       out[ 4] = in[ 1];       out[ 8] = in[ 2];
-        out[ 1] = in[ 4];       out[ 5] = in[ 5];       out[ 9] = in[ 6];
-		out[ 2] = in[ 8];       out[ 6] = in[ 9];       out[10] = in[10];
-		out[ 3] = 0;            out[ 7] = 0;            out[11] = 0;            out[15] = 1;
-
-		out[12] = -( in[12] * out[ 0] + in[13] * out[ 4] + in[14] * out[ 8] );
-		out[13] = -( in[12] * out[ 1] + in[13] * out[ 5] + in[14] * out[ 9] );
-		out[14] = -( in[12] * out[ 2] + in[13] * out[ 6] + in[14] * out[10] );
-#endif
-}
 
 

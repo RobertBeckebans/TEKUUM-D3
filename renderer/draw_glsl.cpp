@@ -419,6 +419,13 @@ void R_ReloadShaders_f( const idCmdArgs &args ) {
 		}
 		gl_geometricFillShader = new GLShader_geometricFill();
 
+		if(gl_deferredLightingShader)
+		{
+			delete gl_deferredLightingShader;
+			gl_deferredLightingShader = NULL;
+		}
+		gl_deferredLightingShader = new GLShader_deferredLighting();
+
 		if(gl_forwardLightingShader)
 		{
 			delete gl_forwardLightingShader;

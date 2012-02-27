@@ -1033,6 +1033,53 @@ public:
 };
 
 
+class u_UnprojectMatrix:
+GLUniform
+{
+public:
+	u_UnprojectMatrix(GLShader* shader):
+	  GLUniform(shader)
+	{
+	}
+
+	const char* GetName() const { return "u_UnprojectMatrix"; }
+	void				UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
+	{
+		shaderProgram->u_UnprojectMatrix = glGetUniformLocationARB(shaderProgram->program, GetName());
+	}
+
+	void SetUniform_UnprojectMatrix(const idMat4& m)
+	{
+		shaderProgram_t* program = _shader->GetProgram();
+
+#if defined(USE_UNIFORM_FIREWALL)
+		if(program->t_UnprojectMatrix == m)
+			return;
+
+		program->t_UnprojectMatrix = m;
+#endif
+
+#if defined(LOG_GLSL_UNIFORMS)
+		if(r_logFile.GetBool())
+		{
+			RB_LogComment("--- SetUniform_UnprojectMatrix( program = %s, "
+								"( %5.3f, %5.3f, %5.3f, %5.3f )\n"
+								"( %5.3f, %5.3f, %5.3f, %5.3f )\n"
+								"( %5.3f, %5.3f, %5.3f, %5.3f )\n"
+								"( %5.3f, %5.3f, %5.3f, %5.3f ) ) ---\n",
+								program->name.c_str(),
+								m[0][0], m[0][1], m[0][2], m[0][3],
+								m[1][0], m[1][1], m[1][2], m[1][3],
+								m[2][0], m[2][1], m[2][2], m[2][3],
+								m[3][0], m[3][1], m[3][2], m[3][3]);
+		}
+#endif
+
+		glUniformMatrix4fvARB(program->u_UnprojectMatrix, 1, GL_TRUE, m.ToFloatPtr());
+	}
+};
+
+
 class u_ShadowMatrix:
 GLUniform
 {
@@ -1486,6 +1533,43 @@ public:
 #endif
 
 		glUniform4fARB(program->u_SpecularColor, v[0], v[1], v[2], v[3]);
+	}
+};
+
+class u_LightColor:
+GLUniform
+{
+public:
+	u_LightColor(GLShader* shader):
+	  GLUniform(shader)
+	{
+	}
+
+	const char* GetName() const { return "u_LightColor"; }
+	void UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
+	{
+		shaderProgram->u_LightColor = glGetUniformLocationARB(shaderProgram->program, GetName());
+	}
+
+	void SetUniform_LightColor(const idVec4& v)
+	{
+		shaderProgram_t* program = _shader->GetProgram();
+
+#if defined(USE_UNIFORM_FIREWALL)
+		if(program->t_LightColor == v)
+			return;
+
+		program->t_LightColor = v;
+#endif
+
+#if defined(LOG_GLSL_UNIFORMS)
+		if(r_logFile.GetBool())
+		{
+			RB_LogComment("--- SetUniform_LightColor( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name.c_str(), v[0], v[1], v[2], v[3]);
+		}
+#endif
+
+		glUniform4fARB(program->u_LightColor, v[0], v[1], v[2], v[3]);
 	}
 };
 
@@ -2226,6 +2310,35 @@ public:
 	GLShader_geometricFill();
 };
 
+class GLShader_deferredLighting:
+public GLShader,
+public u_UnprojectMatrix,
+public u_Color,
+public u_ColorModulate,
+public u_LightColor,
+public u_GlobalViewOrigin,
+public u_GlobalLightOrigin,
+public u_LightRadius,
+public u_LightProjectS,
+public u_LightProjectT,
+public u_LightProjectQ,
+public u_LightFalloffS,
+public u_ShadowMatrix,
+public u_ShadowTexelSize,
+public u_ShadowBlur,
+public u_PositionToJitterTexScale,
+public u_JitterTexScale,
+public u_JitterTexOffset,
+public GLCompileMacro_USE_NORMAL_MAPPING,
+//public GLCompileMacro_USE_PARALLAX_MAPPING,
+public GLCompileMacro_USE_SHADOWING,
+//public GLCompileMacro_LIGHT_DIRECTIONAL,
+public GLCompileMacro_LIGHT_PROJ
+{
+public:
+	GLShader_deferredLighting();
+};
+
 class GLShader_forwardLighting:
 public GLShader,
 public u_ModelMatrix,
@@ -2359,6 +2472,7 @@ public:
 
 //extern GLShader_generic* gl_genericShader;
 extern GLShader_geometricFill* gl_geometricFillShader;
+extern GLShader_deferredLighting* gl_deferredLightingShader;
 extern GLShader_forwardLighting* gl_forwardLightingShader;
 extern GLShader_shadowVolume* gl_shadowVolumeShader;
 extern GLShader_shadowMap* gl_shadowMapShader;

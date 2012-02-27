@@ -127,6 +127,10 @@ typedef enum {
 	TD_HIGH_QUALITY,		// either 32 bit or a component format, no loss at all
 
 	// internal FBO targets
+	TD_FBO_DEPTH16,
+	TD_FBO_DEPTH24,
+	TD_FBO_DEPTH32,
+
 	TD_FBO_RGBA16F,
 	TD_FBO_R16F,
 	TD_FBO_RG16F,
@@ -428,10 +432,13 @@ public:
 	idImage *			scratchImage2;
 	idImage *			accumImage;
 	idImage *			currentRenderImage;			// for SS_POST_PROCESS shaders
+// Techyon BEGIN
 #if !defined(USE_GLES1)
+	idImage *			currentDepthImage;			// for any kind of post process shaders like SSAO
 	idImage *			currentNormalsImage;		// for light pre-pass deferred shading
 	idImage *			currentLightImage;			// for light pre-pass deferred shading
 #endif
+// Techyon END
 	idImage *			scratchCubeMapImage;
 	idImage *			specularTableImage;			// 1D intensity texture with our specular function
 	idImage *			specular2DTableImage;		// 2D intensity texture with our specular function with variable specularity

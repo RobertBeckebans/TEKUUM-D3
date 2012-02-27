@@ -212,7 +212,7 @@ static void R_CreateHDRRenderImage( idImage *image )
 		height = MakePowerOfTwo(glConfig.vidHeight);
 	}
 
-#if 0
+#if 1
 	if(r_useHighDynamicRange.GetBool())
 	{
 		image->GenerateImage( NULL, width, height, TF_LINEAR, false, TR_CLAMP_TO_BORDER, TD_FBO_RGBA16F );
@@ -241,7 +241,7 @@ static void R_CreateDownScaleImage_Quarter( idImage *image )
 		height = MakePowerOfTwo(glConfig.vidHeight * 0.25f);
 	}
 
-#if 0
+#if 1
 	if(r_useHighDynamicRange.GetBool())
 	{
 		image->GenerateImage( NULL, width, height, TF_LINEAR, false, TR_CLAMP_TO_BORDER, TD_FBO_RGBA16F );
@@ -261,7 +261,7 @@ static void R_CreateDownScaleImage_64x64( idImage *image )
 
 	width = height = 64;
 
-#if 0
+#if 1
 	if(r_useHighDynamicRange.GetBool())
 	{
 		image->GenerateImage( NULL, width, height, TF_LINEAR, false, TR_CLAMP_TO_BORDER, TD_FBO_RGBA16F );
@@ -579,7 +579,7 @@ void R_Exp_Allocate( void )
 		globalFramebuffers.hdrRender->Bind();
 
 		globalFramebuffers.hdrRender->AddDepthBuffer(GL_DEPTH_COMPONENT24);
-		//globalFramebuffers.hdrRender->AttachImageDepth(depthRenderImage);
+		globalFramebuffers.hdrRender->AttachImageDepth(globalImages->currentDepthImage);
 
 		globalFramebuffers.hdrRender->AddColorBuffer(GL_RGBA8, 0);
 		globalFramebuffers.hdrRender->AttachImage2D(GL_TEXTURE_2D, hdrRenderImage, 0);
@@ -600,7 +600,7 @@ void R_Exp_Allocate( void )
 	}
 	downScaleFBO_quarter = new Framebuffer("_downScale_quarter", width, height);
 	downScaleFBO_quarter->Bind();
-#if 0
+#if 1
 	if(r_useHighDynamicRange.GetBool())
 	{
 		downScaleFBO_quarter->AddColorBuffer(GL_RGBA16F, 0);
@@ -616,7 +616,7 @@ void R_Exp_Allocate( void )
 
 	downScaleFBO_64x64 = new Framebuffer("_downScale_64x64", 64, 64);
 	downScaleFBO_64x64->Bind();
-#if 0
+#if 1
 	if(r_useHighDynamicRange.GetBool())
 	{
 		downScaleFBO_64x64->AddColorBuffer(GL_RGBA16F, 0);
@@ -1106,7 +1106,7 @@ GL_SelectTexture( 0 );
 	}
 
 	// FIXME: we want to skip the sampling as well as the generation when not casting shadows
-	if ( !r_sb_noShadows.GetBool() && vLight->lightShader->LightCastsShadows() ) {
+	if ( !r_sb_noShadows.GetBool() && r_shadows.GetBool() && vLight->lightShader->LightCastsShadows() ) {
 
 		gl_shadowMapShader->BindProgram();
 		gl_shadowMapShader->SetUniform_GlobalLightOrigin(origin);
@@ -1209,6 +1209,23 @@ GL_SelectTexture( 0 );
 	GL_CheckErrors();
 }
 
+void RB_EXP_CoverScreen( void ) 
+{
+	// draw a full screen quad
+	glMatrixMode( GL_PROJECTION );
+	glLoadIdentity(); 
+	glOrtho( 0, 1, 0, 1, -1, 1 );
+	glMatrixMode( GL_MODELVIEW );
+	glLoadIdentity();
+
+	glBegin( GL_TRIANGLE_FAN );
+	glVertex2f( 0, 0 );
+	glVertex2f( 0, 1 );
+	glVertex2f( 1, 1 );
+	glVertex2f( 1, 0 );
+	glEnd();
+}
+
 /*
 ==================
 RB_EXP_DrawInteraction
@@ -1216,7 +1233,7 @@ RB_EXP_DrawInteraction
 */
 static void	RB_EXP_DrawInteraction( const drawInteraction_t *din ) {
 	
-	bool shadowCompare = (!r_sb_noShadows.GetBool() && backEnd.vLight->lightShader->LightCastsShadows() && !backEnd.vLight->lightDef->parms.noShadows);
+	bool shadowCompare = (!r_sb_noShadows.GetBool() && r_shadows.GetBool() && backEnd.vLight->lightShader->LightCastsShadows() && !backEnd.vLight->lightDef->parms.noShadows);
 
 	// choose and bind the vertex program
 	// TODO gl_forwardLightingShader->SetAmbientLighting(backEnd.vLight->lightShader->IsAmbientLight());
@@ -1379,7 +1396,6 @@ static void	RB_EXP_DrawInteraction( const drawInteraction_t *din ) {
 /*
 =============
 RB_EXP_CreateDrawInteractions
-
 =============
 */
 void RB_EXP_CreateDrawInteractions( const drawSurf_t *surf ) {
@@ -1502,6 +1518,202 @@ void RB_EXP_CreateDrawInteractions( const drawSurf_t *surf ) {
 	glDisable(GL_VERTEX_PROGRAM_ARB);
 	glDisable(GL_FRAGMENT_PROGRAM_ARB);
 }
+
+static void RB_EXP_DrawLightDeferred( viewLight_t *vLight ) 
+{
+	const idMaterial	*lightShader = vLight->lightShader;
+	const float			*lightRegs = vLight->shaderRegisters;
+
+	if(r_logFile.GetBool()) {
+		RB_LogComment( "---------- RB_EXP_DrawLightDeferred ----------\n" );
+	}
+
+	if(vLight->viewInsideLight)
+	{
+		GL_Cull(CT_BACK_SIDED);
+		glDisable(GL_DEPTH_TEST);
+	}
+	else
+	{
+		GL_Cull(CT_FRONT_SIDED);
+	}
+
+	GL_State( GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE | GLS_DEPTHMASK );// | backEnd.depthFunc );
+	//GL_State( GLS_DEPTHMASK );// | backEnd.depthFunc );
+
+	// go back to world space
+	if ( backEnd.currentSpace != &backEnd.viewDef->worldSpace ) {
+		backEnd.currentSpace = &backEnd.viewDef->worldSpace;
+		glLoadMatrixf( backEnd.viewDef->worldSpace.modelViewMatrix );
+	}
+
+	// change the scissor if needed
+	if ( r_useScissor.GetBool() && !backEnd.currentScissor.Equals( vLight->scissorRect ) ) {
+		backEnd.currentScissor = vLight->scissorRect;
+		glScissor( backEnd.viewDef->viewport.x1 + backEnd.currentScissor.x1, 
+			backEnd.viewDef->viewport.y1 + backEnd.currentScissor.y1,
+			backEnd.currentScissor.x2 + 1 - backEnd.currentScissor.x1,
+			backEnd.currentScissor.y2 + 1 - backEnd.currentScissor.y1 );
+	}
+
+	for ( int lightStageNum = 0 ; lightStageNum < lightShader->GetNumStages() ; lightStageNum++ ) 
+	{
+		const shaderStage_t	*lightStage = lightShader->GetStage( lightStageNum );
+
+		// ignore stages that fail the condition
+		if ( !lightRegs[ lightStage->conditionRegister ] ) {
+			continue;
+		}
+
+		idVec4 lightColor;
+
+		// backEnd.lightScale is calculated so that lightColor[] will never exceed
+		// tr.backEndRendererMaxLight
+		lightColor[0] = backEnd.lightScale * lightRegs[ lightStage->color.registers[0] ];
+		lightColor[1] = backEnd.lightScale * lightRegs[ lightStage->color.registers[1] ];
+		lightColor[2] = backEnd.lightScale * lightRegs[ lightStage->color.registers[2] ];
+		lightColor[3] = lightRegs[ lightStage->color.registers[3] ];
+
+		// if we wouldn't draw anything, don't call the Draw function
+		if (lightColor.LengthSqr() == 0) {
+			continue;
+		}
+
+#if 0
+		bool shadowCompare = (!r_sb_noShadows.GetBool() && r_shadows.GetBool() && vLight->lightShader->LightCastsShadows() && !vLight->lightDef->parms.noShadows);
+#else
+		bool shadowCompare = false;
+#endif
+
+		// choose and bind the vertex program
+		// TODO gl_deferredLightingShader->SetAmbientLighting(vLight->lightShader->IsAmbientLight());
+		gl_deferredLightingShader->SetMacro_LIGHT_PROJ(!vLight->lightDef->parms.pointLight);
+		gl_deferredLightingShader->SetShadowing(shadowCompare);
+		gl_deferredLightingShader->SetNormalMapping(!r_skipBump.GetBool() || vLight->lightShader->IsAmbientLight());
+		gl_deferredLightingShader->BindProgram();
+
+		// load all the vertex program parameters
+		gl_deferredLightingShader->SetUniform_UnprojectMatrix(make_idMat4(backEnd.viewDef->unprojectionMatrix));
+
+		gl_deferredLightingShader->SetUniform_GlobalViewOrigin(backEnd.viewDef->renderView.vieworg);
+		gl_deferredLightingShader->SetUniform_GlobalLightOrigin(vLight->lightDef->globalLightOrigin);
+
+		gl_deferredLightingShader->SetUniform_LightColor(lightColor);
+
+		gl_deferredLightingShader->SetUniform_LightRadius(vLight->lightDef->frustumTris->bounds.GetRadius());
+
+		gl_deferredLightingShader->SetUniform_LightProjectS(vLight->lightDef->lightProject[0].ToVec4());
+		gl_deferredLightingShader->SetUniform_LightProjectT(vLight->lightDef->lightProject[1].ToVec4());
+		gl_deferredLightingShader->SetUniform_LightProjectQ(vLight->lightDef->lightProject[2].ToVec4());
+		gl_deferredLightingShader->SetUniform_LightFalloffS(vLight->lightDef->lightProject[3].ToVec4());
+
+	#if 0
+		if(shadowCompare)
+		{
+			float shadowTexelSize = 1.0f / shadowMapResolutions[backEnd.vLight->shadowLOD];
+			gl_deferredLightingShader->SetUniform_ShadowTexelSize(shadowTexelSize);
+			gl_deferredLightingShader->SetUniform_ShadowBlur(r_sb_samples.GetInteger());
+
+			// calculate depth projection for shadow buffer
+			idVec4	sRow;
+			idVec4	tRow;
+			idVec4	rRow;
+			idVec4	qRow;
+			float	matrix[16];
+			float	matrix2[16];
+			myGlMultMatrix( din->surf->space->modelMatrix, lightMatrix, matrix );
+			myGlMultMatrix( matrix, lightProjectionMatrix, matrix2 );
+			//myGlMultMatrix( lightMatrix, lightProjectionMatrix, matrix2 );
+
+			// the final values need to be in 0.0 : 1.0 range instead of -1 : 1
+			sRow[0] = 0.5 * lightBufferSizeFraction[0] * ( matrix2[0] + matrix2[3] );
+			sRow[1] = 0.5 * lightBufferSizeFraction[0] * ( matrix2[4] + matrix2[7] );
+			sRow[2] = 0.5 * lightBufferSizeFraction[0] * ( matrix2[8] + matrix2[11] );
+			sRow[3] = 0.5 * lightBufferSizeFraction[0] * ( matrix2[12] + matrix2[15] );
+			//glProgramEnvParameter4fvARB( GL_VERTEX_PROGRAM_ARB, 18, sRow );
+			tRow[0] = 0.5 * lightBufferSizeFraction[0] * ( matrix2[1] + matrix2[3] );
+			tRow[1] = 0.5 * lightBufferSizeFraction[0] * ( matrix2[5] + matrix2[7] );
+			tRow[2] = 0.5 * lightBufferSizeFraction[0] * ( matrix2[9] + matrix2[11] );
+			tRow[3] = 0.5 * lightBufferSizeFraction[0] * ( matrix2[13] + matrix2[15] );
+			//glProgramEnvParameter4fvARB( GL_VERTEX_PROGRAM_ARB, 19, tRow );
+			rRow[0] = 0.5 * ( matrix2[2] + matrix2[3] );
+			rRow[1] = 0.5 * ( matrix2[6] + matrix2[7] );
+			rRow[2] = 0.5 * ( matrix2[10] + matrix2[11] );
+			rRow[3] = 0.5 * ( matrix2[14] + matrix2[15] );
+			//glProgramEnvParameter4fvARB( GL_VERTEX_PROGRAM_ARB, 20, rRow );
+			qRow[0] = matrix2[3];
+			qRow[1] = matrix2[7];
+			qRow[2] = matrix2[11];
+			qRow[3] = matrix2[15];
+			//glProgramEnvParameter4fvARB( GL_VERTEX_PROGRAM_ARB, 21, qRow );
+
+			//idMat4 shadowMat(sRow, tRow, rRow, qRow);
+			idMat4 shadowMat = make_idMat4(matrix2);//.Transpose();
+
+			gl_deferredLightingShader->SetUniform_ShadowMatrix(shadowMat);
+		}
+	#endif
+
+		//-----------------------------------------------------
+		// screen power of two correction factor
+
+		idVec4	parm;
+		parm[0] = 1.0 / ( JITTER_SIZE * r_sb_samples.GetInteger() ) ;
+		parm[1] = 1.0 / JITTER_SIZE;
+		parm[2] = 0;
+		parm[3] = 1;
+		gl_deferredLightingShader->SetUniform_PositionToJitterTexScale(parm);
+
+		// jitter tex scale
+		parm[0] = 
+		parm[1] = r_sb_jitterScale.GetFloat() * lightBufferSizeFraction[0];
+		parm[2] = -r_sb_biasScale.GetFloat();
+		parm[3] = 0;
+		gl_deferredLightingShader->SetUniform_JitterTexScale(parm);
+
+		// jitter tex offset
+		if ( r_sb_randomize.GetBool() ) {
+			parm[0] = (rand()&255) / 255.0;
+			parm[1] = (rand()&255) / 255.0;
+		} else {
+			parm[0] = parm[1] = 0;
+		}
+		parm[2] = 0;
+		parm[3] = 0;
+		gl_deferredLightingShader->SetUniform_JitterTexOffset(parm);
+		//-----------------------------------------------------
+
+		// set the textures
+
+		// texture 0 will be the _currentNormals
+		GL_SelectTextureNoClient( 0 );
+		globalImages->currentNormalsImage->Bind();
+
+		// texture 1 will be the _currentDepth
+		GL_SelectTextureNoClient( 1 );
+		globalImages->currentDepthImage->Bind();
+
+		// texture 2 will be the light falloff texture
+		GL_SelectTextureNoClient( 2 );
+		vLight->falloffImage->Bind();
+
+		// texture 3 will be the light projection texture
+		GL_SelectTextureNoClient( 3 );
+		lightStage->texture.image->Bind();
+
+		// draw it
+		RB_RenderTriangleSurface( vLight->lightDef->frustumTris );
+	}
+
+	if(vLight->viewInsideLight)
+	{
+		GL_Cull(CT_FRONT_SIDED);
+		glEnable(GL_DEPTH_TEST);
+	}
+
+	GL_BindNullProgram();
+}
+
 
 void InvertByTranspose( const float a[16], float r[16] ) {
     r[ 0] = a[ 0];
@@ -1950,13 +2162,11 @@ void RB_T_FillDepthBuffer( const drawSurf_t *surf );
 
 #if 0
 void R_EXP_RenderViewDepthImage( void ) {
-	if ( !r_sb_screenSpaceShadow.GetBool() ) {
-		return;
-	}
+	
 
 	// if the screen resolution is exactly the window width, we can
 	// use the depth buffer we already have
-	if ( 0 ) { // nativeViewBuffer ) {
+	if ( 1 ) { // nativeViewBuffer ) {
 		viewDepthImage->CopyDepthbuffer( backEnd.viewDef->viewport.x1,
 			backEnd.viewDef->viewport.y1,  backEnd.viewDef->viewport.x2 -  backEnd.viewDef->viewport.x1 + 1,
 			backEnd.viewDef->viewport.y2 -  backEnd.viewDef->viewport.y1 + 1 );
@@ -2172,26 +2382,7 @@ void	RB_shadowResampleAlpha( void ) {
 }
 #endif
 
-/*
-==================
-RB_EXP_CoverScreen
-==================
-*/
-void RB_EXP_CoverScreen( void ) {
-	// draw a full screen quad
-	glMatrixMode( GL_PROJECTION );
-	glLoadIdentity(); 
-	glOrtho( 0, 1, 0, 1, -1, 1 );
-	glMatrixMode( GL_MODELVIEW );
-	glLoadIdentity();
 
-	glBegin( GL_TRIANGLE_FAN );
-	glVertex2f( 0, 0 );
-	glVertex2f( 0, 1 );
-	glVertex2f( 1, 1 );
-	glVertex2f( 1, 0 );
-	glEnd();
-}
 
 /*
 ==================
@@ -2626,7 +2817,22 @@ void    RB_Exp_DrawInteractions( void ) {
 
 	// copy the current depth buffer to a texture for image-space shadowing,
 	// or re-render at a lower resolution
-	//R_EXP_RenderViewDepthImage();
+	
+	if(r_useDeferredShading.GetBool())
+	{
+		//R_EXP_RenderViewDepthImage();
+
+		globalImages->currentNormalsImage->CopyFramebuffer( backEnd.viewDef->viewport.x1,
+			backEnd.viewDef->viewport.y1,  backEnd.viewDef->viewport.x2 -  backEnd.viewDef->viewport.x1 + 1,
+			backEnd.viewDef->viewport.y2 -  backEnd.viewDef->viewport.y1 + 1, !glConfig.textureNonPowerOfTwoAvailable );
+
+		globalImages->currentDepthImage->CopyDepthbuffer( backEnd.viewDef->viewport.x1,
+			backEnd.viewDef->viewport.y1,  backEnd.viewDef->viewport.x2 -  backEnd.viewDef->viewport.x1 + 1,
+			backEnd.viewDef->viewport.y2 -  backEnd.viewDef->viewport.y1 + 1 );
+
+		glClearColor( 0.0f, 0.0f,  0.0f, 0.0f );
+		glClear( GL_COLOR_BUFFER_BIT );
+	}
 
 	GL_SelectTexture( 0 );
 	glDisableClientState( GL_TEXTURE_COORD_ARRAY );
@@ -2731,8 +2937,15 @@ void    RB_Exp_DrawInteractions( void ) {
 			shadowMapImage[vLight->shadowLOD]->BindFragment();
 		}
 
-		RB_EXP_CreateDrawInteractions( vLight->localInteractions );
-		RB_EXP_CreateDrawInteractions( vLight->globalInteractions );
+		if( r_useDeferredShading.GetBool() )
+		{
+			RB_EXP_DrawLightDeferred( vLight );
+		}
+		else
+		{
+			RB_EXP_CreateDrawInteractions( vLight->localInteractions );
+			RB_EXP_CreateDrawInteractions( vLight->globalInteractions );
+		}
 		backEnd.depthFunc = GLS_DEPTHFUNC_LESS;
 		RB_EXP_CreateDrawInteractions( vLight->translucentInteractions );
 		backEnd.depthFunc = GLS_DEPTHFUNC_EQUAL;

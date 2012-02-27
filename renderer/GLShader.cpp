@@ -32,6 +32,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 //GLShader_generic* gl_genericShader = NULL;
 GLShader_geometricFill* gl_geometricFillShader = NULL;
+GLShader_deferredLighting* gl_deferredLightingShader = NULL;
 GLShader_forwardLighting* gl_forwardLightingShader = NULL;
 GLShader_shadowVolume* gl_shadowVolumeShader = NULL;
 GLShader_shadowMap* gl_shadowMapShader = NULL;
@@ -437,7 +438,7 @@ idStr	GLShader::BuildGPUShaderText(	const char *mainShaderName,
 		*/
 	}
 
-	if(r_useDeferredShading.GetBool())
+	//if(r_useDeferredShading.GetBool())
 	{
 		shaderText += va("#ifndef r_DeferredLighting\n#define r_DeferredLighting 1\n#endif\n");
 	}
@@ -1057,6 +1058,144 @@ GLShader_geometricFill::GLShader_geometricFill():
 }
 
 
+
+GLShader_deferredLighting::GLShader_deferredLighting():
+		GLShader("deferredLighting", VA_POSITION),
+		u_UnprojectMatrix(this),
+		u_Color(this),
+		u_ColorModulate(this),
+		u_LightColor(this),
+		u_GlobalViewOrigin(this),
+		u_GlobalLightOrigin(this),
+		u_LightRadius(this),
+		u_LightProjectS(this),
+		u_LightProjectT(this),
+		u_LightProjectQ(this),
+		u_LightFalloffS(this),
+		u_ShadowMatrix(this),
+		u_ShadowTexelSize(this),
+		u_ShadowBlur(this),
+		u_PositionToJitterTexScale(this),
+		u_JitterTexScale(this),
+		u_JitterTexOffset(this),
+		GLCompileMacro_USE_NORMAL_MAPPING(this),
+		//GLCompileMacro_USE_PARALLAX_MAPPING(this),
+		GLCompileMacro_USE_SHADOWING(this),
+		//GLCompileMacro_LIGHT_DIRECTIONAL(this),
+		GLCompileMacro_LIGHT_PROJ(this)
+{
+	common->Printf("/// -------------------------------------------------\n");
+	common->Printf("/// creating deferredLighting shaders --------\n");
+
+	idTimer compile_time;
+	compile_time.Start();	
+
+	//idStr vertexInlines = "vertexSkinning vertexAnimation ";
+	idStrList vertexInlines;
+	/*
+	if(glConfig.driverType == GLDRV_OPENGL3 && r_vboDeformVertexes->integer)
+	{
+		vertexInlines += "deformVertexes ";
+	}
+	*/
+
+	idStrList fragmentInlines; // reliefMapping
+
+	idStr vertexShaderText = BuildGPUShaderText("deferredLighting", vertexInlines, GL_VERTEX_SHADER_ARB);
+	idStr fragmentShaderText = BuildGPUShaderText("deferredLighting", fragmentInlines, GL_FRAGMENT_SHADER_ARB);
+
+	size_t numPermutations = (1 << _compileMacros.Num());	// same as 2^n, n = no. compile macros
+	size_t numCompiled = 0;
+	common->Printf("...compiling deferredLighting shaders\n");
+	common->Printf("0%%  10   20   30   40   50   60   70   80   90   100%%\n");
+	common->Printf("|----|----|----|----|----|----|----|----|----|----|\n");
+	size_t tics = 0;
+	size_t nextTicCount = 0;
+	for(size_t i = 0; i < numPermutations; i++)
+	{
+		if((i + 1) >= nextTicCount)
+		{
+			size_t ticsNeeded = (size_t)(((double)(i + 1) / numPermutations) * 50.0);
+
+			do { common->Printf("*"); } while ( ++tics < ticsNeeded );
+
+			nextTicCount = (size_t)((tics / 50.0) * numPermutations);
+			if(i == (numPermutations - 1))
+			{
+				if(tics < 51)
+					common->Printf("*");
+				common->Printf("\n");
+			}
+		}
+
+		idStrList compileMacros;
+		if(GetCompileMacrosString(i, compileMacros))
+		{
+			//compileMacros.Append("TWOSIDED");
+			compileMacros.Append("HALF_LAMBERT");
+
+			//common->DPrintf("Compile macros: '%s'\n", compileMacros.To);
+		
+			shaderProgram_t *shaderProgram = new shaderProgram_t();
+			_shaderPrograms.Append(shaderProgram);
+
+			CompileAndLinkGPUShaderProgram(	shaderProgram,
+											"deferredLighting",
+											vertexShaderText,
+											fragmentShaderText,
+											compileMacros);
+
+			UpdateShaderProgramUniformLocations(shaderProgram);
+
+			shaderProgram->u_CurrentNormalsImage = glGetUniformLocationARB(shaderProgram->program, "u_CurrentNormalsImage");
+			shaderProgram->u_CurrentDepthImage = glGetUniformLocationARB(shaderProgram->program, "u_CurrentDepthImage");
+			shaderProgram->u_LightFalloffImage = glGetUniformLocationARB(shaderProgram->program, "u_LightFalloffImage");
+			shaderProgram->u_LightImage = glGetUniformLocationARB(shaderProgram->program, "u_LightImage");
+			shaderProgram->u_JitterImage = glGetUniformLocationARB(shaderProgram->program, "u_JitterImage");
+			//if(r_sb_mode.GetInteger() >= SHADOWING_ESM16)
+			{
+				shaderProgram->u_ShadowCubeImage = glGetUniformLocationARB(shaderProgram->program, "u_ShadowCubeImage");
+				shaderProgram->u_ShadowImage0 = glGetUniformLocationARB(shaderProgram->program, "u_ShadowImage0");
+				shaderProgram->u_ShadowImage1 = glGetUniformLocationARB(shaderProgram->program, "u_ShadowImage1");
+				shaderProgram->u_ShadowImage2 = glGetUniformLocationARB(shaderProgram->program, "u_ShadowImage2");
+				shaderProgram->u_ShadowImage3 = glGetUniformLocationARB(shaderProgram->program, "u_ShadowImage3");
+				shaderProgram->u_ShadowImage4 = glGetUniformLocationARB(shaderProgram->program, "u_ShadowImage4");
+			}
+
+			glUseProgramObjectARB(shaderProgram->program);
+			glUniform1iARB(shaderProgram->u_CurrentNormalsImage, 0);
+			glUniform1iARB(shaderProgram->u_CurrentDepthImage, 1);
+			glUniform1iARB(shaderProgram->u_LightFalloffImage, 2);
+			glUniform1iARB(shaderProgram->u_LightImage, 3);
+			glUniform1iARB(shaderProgram->u_JitterImage, 6);
+			//if(r_sb_mode.GetInteger() >= SHADOWING_ESM16)
+			{
+				glUniform1iARB(shaderProgram->u_ShadowCubeImage, 8);
+				glUniform1iARB(shaderProgram->u_ShadowImage0, 7);
+				glUniform1iARB(shaderProgram->u_ShadowImage1, 9);
+				glUniform1iARB(shaderProgram->u_ShadowImage2, 10);
+				glUniform1iARB(shaderProgram->u_ShadowImage3, 11);
+				glUniform1iARB(shaderProgram->u_ShadowImage4, 12);
+			}
+			glUseProgramObjectARB(0);
+
+			ValidateProgram(shaderProgram->program);
+			//ShowProgramUniforms(shaderProgram->program);
+			GL_CheckErrors();
+
+			numCompiled++;
+		}
+		else
+		{
+			_shaderPrograms.Append(NULL);
+		}
+	}
+
+	SelectProgram();
+
+	compile_time.Stop();
+	common->Printf("...compiled %i deferredLighting shader permutations in %5.2f seconds\n", numCompiled, compile_time.Milliseconds() / 1000.0);
+}
 
 
 GLShader_forwardLighting::GLShader_forwardLighting():

@@ -231,6 +231,15 @@ GLenum idImage::SelectInternalFormat( const byte **dataPtrs, int numDataPtrs, in
 	{
 		switch (minimumDepth)
 		{
+			case TD_FBO_DEPTH16:
+				return GL_DEPTH_COMPONENT16;
+
+			case TD_FBO_DEPTH24:
+				return GL_DEPTH_COMPONENT24;
+
+			case TD_FBO_DEPTH32:
+				return GL_DEPTH_COMPONENT32;
+
 			case TD_FBO_RGBA16F:
 				return GL_RGBA16F;
 
@@ -2029,8 +2038,18 @@ void idImage::CopyFramebuffer( int x, int y, int imageWidth, int imageHeight, bo
 	// if the size isn't a power of 2, the image must be increased in size
 	int	potWidth, potHeight;
 
-	potWidth = MakePowerOfTwo( imageWidth );
-	potHeight = MakePowerOfTwo( imageHeight );
+// Techyon BEGIN
+	if(glConfig.textureNonPowerOfTwoAvailable) 
+	{
+		potWidth = imageWidth;
+		potHeight = imageHeight;
+	}
+	else
+	{
+		potWidth = MakePowerOfTwo( imageWidth );
+		potHeight = MakePowerOfTwo( imageHeight );
+	}
+// Techyon END
 
 	GetDownsize( imageWidth, imageHeight );
 	GetDownsize( potWidth, potHeight );
@@ -2108,8 +2127,18 @@ void idImage::CopyDepthbuffer( int x, int y, int imageWidth, int imageHeight ) {
 	// if the size isn't a power of 2, the image must be increased in size
 	int	potWidth, potHeight;
 
-	potWidth = MakePowerOfTwo( imageWidth );
-	potHeight = MakePowerOfTwo( imageHeight );
+// Techyon BEGIN
+	if(glConfig.textureNonPowerOfTwoAvailable) 
+	{
+		potWidth = imageWidth;
+		potHeight = imageHeight;
+	}
+	else
+	{
+		potWidth = MakePowerOfTwo( imageWidth );
+		potHeight = MakePowerOfTwo( imageHeight );
+	}
+// Techyon END
 
 	if ( uploadWidth != potWidth || uploadHeight != potHeight ) {
 		uploadWidth = potWidth;

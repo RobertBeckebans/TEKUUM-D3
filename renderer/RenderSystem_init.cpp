@@ -77,6 +77,9 @@ idCVar r_useStateCaching( "r_useStateCaching", "1", CVAR_RENDERER | CVAR_BOOL, "
 idCVar r_useInfiniteFarZ( "r_useInfiniteFarZ", "1", CVAR_RENDERER | CVAR_BOOL, "use the no-far-clip-plane trick" );
 
 idCVar r_znear( "r_znear", "3", CVAR_RENDERER | CVAR_FLOAT, "near Z clip plane distance", 0.001f, 200.0f );
+// Techyon BEGIN
+idCVar r_zfar( "r_zfar", "1024", CVAR_RENDERER | CVAR_FLOAT, "far Z clip plane distance", 0.001f, 32000.0f );
+// Techyon END
 
 #if defined(__ANDROID__)
 idCVar r_ignoreGLErrors( "r_ignoreGLErrors", "0", CVAR_RENDERER | CVAR_BOOL, "ignore GL errors" );

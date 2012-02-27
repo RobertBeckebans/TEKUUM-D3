@@ -394,6 +394,9 @@ typedef struct viewEntity_s {
 
 	float				modelMatrix[16];		// local coords to global coords
 	float				modelViewMatrix[16];	// local coords to eye coords
+// Techyon BEGIN
+	matrix_t			unflippedViewMatrix;	// local coords to eye coords in Doom coordinate system
+// Techyon END
 } viewEntity_t;
 
 
@@ -404,7 +407,10 @@ typedef struct viewDef_s {
 	// specified in the call to DrawScene()
 	renderView_t		renderView;
 
-	float				projectionMatrix[16];
+// Techyon BEGIN
+	matrix_t			projectionMatrix;
+	matrix_t			unprojectionMatrix;		// transform pixel window space to world space
+// Techyon END
 	viewEntity_t		worldSpace;
 
 	idRenderWorldLocal *renderWorld;
@@ -877,6 +883,7 @@ extern idCVar r_multiSamples;			// number of antialiasing samples
 extern idCVar r_ignore;					// used for random debugging without defining new vars
 extern idCVar r_ignore2;				// used for random debugging without defining new vars
 extern idCVar r_znear;					// near Z clip plane
+extern idCVar r_zfar;
 
 extern idCVar r_finish;					// force a call to glFinish() every frame
 extern idCVar r_frontBuffer;			// draw to front buffer for debugging
@@ -1647,7 +1654,7 @@ typedef struct shaderProgram_s
 	idVec4			t_LightFalloffS;
 
 	int32_t         u_LightColor;
-	idVec3			t_LightColor;
+	idVec4			t_LightColor;
 
 	int32_t         u_LightRadius;
 	float			t_LightRadius;
@@ -2096,12 +2103,24 @@ idScreenRect R_CalcIntersectionScissor( const idRenderLightLocal * lightDef,
 
 idMat4 make_idMat4(const float * m);
 
-//=============================================
+
+
+/*
+=============================================================
+
+TR_MATH
+
+=============================================================
+*/
 
 void			MatrixIdentity(matrix_t m);
 void			MatrixCopy(const matrix_t in, matrix_t out);
 void			MatrixTranspose(const matrix_t in, matrix_t out);
 void			MatrixAffineInverse(const matrix_t in, matrix_t out);
+void			MatrixFullInverse(const matrix_t a, matrix_t r);
+void			MatrixMultiply2(matrix_t m, const matrix_t m2);
+void			MatrixMultiplyTranslation(matrix_t m, float x, float y, float z);
+void			MatrixMultiplyScale(matrix_t m, float x, float y, float z);
 void            MatrixFromPlanes(matrix_t m, const idPlane frustum[6]);
 
 #include "RenderWorld_local.h"

@@ -146,6 +146,11 @@ void Framebuffer::AttachImage2D(int target, const idImage *image, int index)
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + index, target, image->texnum, 0);
 }
 
+void Framebuffer::AttachImageDepth(const idImage *image)
+{
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, image->texnum, 0);
+}
+
 
 void Framebuffer::Check()
 {
