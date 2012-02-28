@@ -399,17 +399,17 @@ static void R_RGB8Image( idImage *image ) {
 
 static void R_Depth16Image( idImage *image ) {
 	image->GenerateImage( NULL, DEFAULT_SIZE, DEFAULT_SIZE, 
-		TF_DEFAULT, false, TR_CLAMP_TO_BORDER, TD_FBO_DEPTH16 );
+		TF_NEAREST, false, TR_CLAMP, TD_FBO_DEPTH16 );
 }
 
 static void R_Depth24Image( idImage *image ) {
 	image->GenerateImage( NULL, DEFAULT_SIZE, DEFAULT_SIZE, 
-		TF_DEFAULT, false, TR_CLAMP_TO_BORDER, TD_FBO_DEPTH24 );
+		TF_NEAREST, false, TR_CLAMP, TD_FBO_DEPTH24 );
 }
 
 static void R_Depth32Image( idImage *image ) {
 	image->GenerateImage( NULL, DEFAULT_SIZE, DEFAULT_SIZE, 
-		TF_DEFAULT, false, TR_CLAMP_TO_BORDER, TD_FBO_DEPTH32 );
+		TF_NEAREST, false, TR_CLAMP, TD_FBO_DEPTH32 );
 }
 
 static void R_AlphaNotchImage( idImage *image ) {

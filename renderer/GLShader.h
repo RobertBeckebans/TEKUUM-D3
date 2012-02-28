@@ -2255,7 +2255,143 @@ public:
 	}
 };
 
+class u_InvertedFramebufferResolution:
+GLUniform
+{
+public:
+	u_InvertedFramebufferResolution(GLShader* shader):
+	  GLUniform(shader)
+	{
+	}
 
+	const char* GetName() const { return "u_InvertedFramebufferResolution"; }
+	void				UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
+	{
+		shaderProgram->u_InvertedFramebufferResolution = glGetUniformLocationARB(shaderProgram->program, GetName());
+	}
+
+	void SetUniform_InvertedFramebufferResolution(const idVec2& v)
+	{
+		shaderProgram_t* program = _shader->GetProgram();
+
+#if defined(USE_UNIFORM_FIREWALL)
+		if(program->t_InvertedFramebufferResolution == v)
+			return;
+
+		program->t_InvertedFramebufferResolution = v;
+#endif
+
+#if defined(LOG_GLSL_UNIFORMS)
+		if(r_logFile.GetBool())
+		{
+			RB_LogComment("--- SetUniform_InvertedFramebufferResolution( program = %s, vector = ( %5.3f, %5.3f  ) ) ---\n", program->name.c_str(), v[0], v[1]);
+		}
+#endif
+
+		glUniform2fARB(program->u_InvertedFramebufferResolution, v[0], v[1]);
+	}
+
+	void SetUniform_InvertedFramebufferResolution(const idScreenRect& viewport)
+	{
+		int	width = viewport.x2 - viewport.x1 + 1;
+		int	height = viewport.y2 - viewport.y1 + 1;
+
+		SetUniform_InvertedFramebufferResolution(idVec2(1.0f / (float) width, 1.0f / (float) height));
+	}
+};
+
+class u_NonPowerOfTwoScale:
+GLUniform
+{
+public:
+	u_NonPowerOfTwoScale(GLShader* shader):
+	  GLUniform(shader)
+	{
+	}
+
+	const char* GetName() const { return "u_NonPowerOfTwoScale"; }
+	void				UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
+	{
+		shaderProgram->u_NonPowerOfTwoScale = glGetUniformLocationARB(shaderProgram->program, GetName());
+	}
+
+	void SetUniform_NonPowerOfTwoScale(const idVec2& v)
+	{
+		shaderProgram_t* program = _shader->GetProgram();
+
+#if defined(USE_UNIFORM_FIREWALL)
+		if(program->t_NonPowerOfTwoScale == v)
+			return;
+
+		program->t_NonPowerOfTwoScale = v;
+#endif
+
+#if defined(LOG_GLSL_UNIFORMS)
+		if(r_logFile.GetBool())
+		{
+			RB_LogComment("--- SetUniform_NonPowerOfTwoScale( program = %s, vector = ( %5.3f, %5.3f  ) ) ---\n", program->name.c_str(), v[0], v[1]);
+		}
+#endif
+
+		glUniform2fARB(program->u_NonPowerOfTwoScale, v[0], v[1]);
+	}
+
+	void SetUniform_NonPowerOfTwoScale(const idScreenRect& viewport, int uploadWidth, int uploadHeight)
+	{
+		// screen power of two correction factor, assuming the copy to _currentRender
+		// also copied an extra row and column for the bilerp
+		int	w = viewport.x2 - viewport.x1 + 1;
+		int	h = viewport.y2 - viewport.y1 + 1;
+
+		SetUniform_NonPowerOfTwoScale(idVec2( (float)w / uploadWidth, (float)h / uploadHeight ));
+	}
+};
+
+
+class u_Viewport:
+GLUniform
+{
+public:
+	u_Viewport(GLShader* shader):
+	  GLUniform(shader)
+	{
+	}
+
+	const char* GetName() const { return "u_Viewport"; }
+	void UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
+	{
+		shaderProgram->u_Viewport = glGetUniformLocationARB(shaderProgram->program, GetName());
+	}
+
+	void SetUniform_Viewport(const idVec4& v)
+	{
+		shaderProgram_t* program = _shader->GetProgram();
+
+#if defined(USE_UNIFORM_FIREWALL)
+		if(program->t_Viewport == v)
+			return;
+
+		program->t_Viewport = v;
+#endif
+
+#if defined(LOG_GLSL_UNIFORMS)
+		if(r_logFile.GetBool())
+		{
+			RB_LogComment("--- SetUniform_Viewport( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name.c_str(), v[0], v[1], v[2], v[3]);
+		}
+#endif
+
+		glUniform4fARB(program->u_Viewport, v[0], v[1], v[2], v[3]);
+	}
+
+	void SetUniform_Viewport(const idScreenRect& viewport)
+	{
+		int	width = viewport.x2 - viewport.x1 + 1;
+		int	height = viewport.y2 - viewport.y1 + 1;
+
+		SetUniform_Viewport(idVec4(viewport.x1, viewport.y1, (float) width, (float) height));
+	}
+};
 
 
 /*
@@ -2329,6 +2465,9 @@ public u_ShadowBlur,
 public u_PositionToJitterTexScale,
 public u_JitterTexScale,
 public u_JitterTexOffset,
+public u_InvertedFramebufferResolution,
+public u_NonPowerOfTwoScale,
+public u_Viewport,
 public GLCompileMacro_USE_NORMAL_MAPPING,
 //public GLCompileMacro_USE_PARALLAX_MAPPING,
 public GLCompileMacro_USE_SHADOWING,

@@ -53,6 +53,7 @@ const float FOG_ENTER = (FOG_ENTER_SIZE+1.0f)/(FOG_ENTER_SIZE*2);
 const int MAX_SHADOWMAPS = 5;
 
 typedef float   matrix_t[16];
+typedef float   matrix3x3_t[9];
 
 
 // idScreenRect gets carried around with each drawSurf, so it makes sense
@@ -1785,6 +1786,16 @@ typedef struct shaderProgram_s
 
 	int32_t         u_Time;
 	float			t_Time;
+
+	int32_t         u_InvertedFramebufferResolution;
+	idVec2			t_InvertedFramebufferResolution;
+
+	int32_t			u_NonPowerOfTwoScale;
+	idVec2			t_NonPowerOfTwoScale;
+
+	GLint			u_Viewport;
+	idVec4			t_Viewport;
+
 } shaderProgram_t;
 
 #endif // #if !defined(USE_GLES1)
@@ -2122,6 +2133,8 @@ void			MatrixMultiply2(matrix_t m, const matrix_t m2);
 void			MatrixMultiplyTranslation(matrix_t m, float x, float y, float z);
 void			MatrixMultiplyScale(matrix_t m, float x, float y, float z);
 void            MatrixFromPlanes(matrix_t m, const idPlane frustum[6]);
+void			MatrixPerspectiveProjectionFovXYRH(matrix_t m, float fovX, float fovY, float near, float far);
+void			MatrixPerspectiveProjectionFovXYInfiniteRH(matrix_t m, float fovX, float fovY, float near);
 
 #include "RenderWorld_local.h"
 #include "GuiModel.h"

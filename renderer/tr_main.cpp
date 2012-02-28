@@ -1000,6 +1000,7 @@ static void R_SetupProjection( bool infiniteFarClip )
 	ymax += jittery;
 
 
+#if 1
 	tr.viewDef->projectionMatrix[0] = 2 * zNear / width;
 	tr.viewDef->projectionMatrix[4] = 0;
 	tr.viewDef->projectionMatrix[8] = ( xmax + xmin ) / width;	// normally 0
@@ -1031,6 +1032,17 @@ static void R_SetupProjection( bool infiniteFarClip )
 	tr.viewDef->projectionMatrix[7] = 0;
 	tr.viewDef->projectionMatrix[11] = -1;
 	tr.viewDef->projectionMatrix[15] = 0;
+#else
+	float *proj = tr.viewDef->projectionMatrix;
+	if(zFar <= 0 || infiniteFarClip)
+	{
+		MatrixPerspectiveProjectionFovXYInfiniteRH(proj, tr.viewDef->renderView.fov_x, tr.viewDef->renderView.fov_y, zNear);
+	}
+	else
+	{
+		MatrixPerspectiveProjectionFovXYRH(proj, tr.viewDef->renderView.fov_x, tr.viewDef->renderView.fov_y, zNear, zFar);
+	}
+#endif
 }
 
 // Techyon BEGIN
@@ -1051,24 +1063,41 @@ static void R_SetupUnprojection(void)
 		0, 0, 0, 1
 	};
 
-	float          *unprojectMatrix = tr.viewDef->unprojectionMatrix;
+	float *unprojectMatrix = tr.viewDef->unprojectionMatrix;
 
 #if 0
 	MatrixCopy(tr.viewDef->projectionMatrix, unprojectMatrix);
 	MatrixMultiply2(unprojectMatrix, s_flipMatrix);
 	MatrixMultiply2(unprojectMatrix, tr.viewDef->worldSpace.unflippedViewMatrix);
-	MatrixFullInverse(unprojectMatrix, unprojectMatrix);
+	MatrixInverse(unprojectMatrix);
 #else
 	myGlMultMatrix( tr.viewDef->worldSpace.modelViewMatrix, tr.viewDef->projectionMatrix, unprojectMatrix );
 	MatrixFullInverse(unprojectMatrix, unprojectMatrix);
 #endif
 
-	// FIXME ?
-	// MatrixMultiplyTranslation(unprojectMatrix, -(float)glConfig.vidWidth / (float)tr.viewParms.viewportWidth,
-	// -(float)glConfig.vidHeight / (float)tr.viewParms.viewportHeight, -1.0);
+	// FIXME move viewport offset into matrix for non-full window size viewports ?
+#if 1
 
-	MatrixMultiplyTranslation(unprojectMatrix, -1.0, -1.0, -1.0);
-	MatrixMultiplyScale(unprojectMatrix, 2.0 * (1.0 / (float)glConfig.vidWidth), 2.0 * (1.0 / (float)glConfig.vidHeight), 2.0);
+#if 0
+	MatrixMultiplyTranslation(unprojectMatrix, -tr.viewDef->viewport.x1, -tr.viewDef->viewport.y1, -1.0);
+#else
+	MatrixMultiplyTranslation(unprojectMatrix, -1.0f, -1.0f, -1.0f);
+#endif
+
+
+#if 1
+	MatrixMultiplyScale(unprojectMatrix, 2.0f * (1.0f / (float)glConfig.vidWidth), 2.0f * (1.0f / (float)glConfig.vidHeight), 2.0f);
+#elif 1
+	{
+		int	 width = tr.viewDef->viewport.x2 - tr.viewDef->viewport.x1 + 1;
+		int	 height = tr.viewDef->viewport.y2 - tr.viewDef->viewport.y1 + 1;
+
+		 MatrixMultiplyScale(unprojectMatrix, 2.0f * (1.0f / (float)width), 2.0f * (1.0f / (float)height), 2.0f);
+		//MatrixMultiplyScale(unprojectMatrix, 2.0f * (1.0f / (float)width), 2.0f * (1.0f / (float)(glConfig.vidHeight - idMath::Abs(glConfig.vidHeight - height))), 2.0f);
+	}
+#endif
+
+#endif
 }
 // Techyon END
 
@@ -1230,18 +1259,15 @@ void R_RenderView( viewDef_t *parms ) {
 	// for culling and portal visibility
 	R_SetupViewFrustum();
 
+	// we need to set the projection matrix before doing
+	// portal-to-screen scissor box calculations
+	R_SetupProjection(true);
+
 // Techyon BEGIN
 	// we need a unprojection matrix to calculate the vertex position based on the depth image value
 	// for some post process shaders
-	R_SetupProjection(false);
 	R_SetupUnprojection();
 // Techyon END
-
-	// we need to set the projection matrix before doing
-	// portal-to-screen scissor box calculations
-	if(!r_useDeferredShading.GetBool()) {
-		R_SetupProjection(true);
-	}
 
 	// identify all the visible portalAreas, and the entityDefs and
 	// lightDefs that are in them and pass culling.

@@ -127,16 +127,16 @@ typedef enum {
 	TD_HIGH_QUALITY,		// either 32 bit or a component format, no loss at all
 
 	// internal FBO targets
-	TD_FBO_DEPTH16,
-	TD_FBO_DEPTH24,
-	TD_FBO_DEPTH32,
-
 	TD_FBO_RGBA16F,
 	TD_FBO_R16F,
 	TD_FBO_RG16F,
 	TD_FBO_RGBA32F,
 	TD_FBO_R32F,
 	TD_FBO_RG32F,
+
+	TD_FBO_DEPTH16,
+	TD_FBO_DEPTH24,
+	TD_FBO_DEPTH32,
 
 } textureDepth_t;
 
@@ -188,7 +188,10 @@ public:
 						textureFilter_t filter, bool allowDownSize, 
 						textureDepth_t depth );
 
-	void		CopyFramebuffer( int x, int y, int width, int height, bool useOversizedBuffer );
+// Techyon BEGIN
+	// RB: added useNearestFilter to allow high quality post process effects
+	void		CopyFramebuffer( int x, int y, int width, int height, bool useOversizedBuffer, bool useNearestFilter = false );
+// Techyon END
 
 #if !defined(USE_GLES1)
 	void		CopyDepthbuffer( int x, int y, int width, int height );

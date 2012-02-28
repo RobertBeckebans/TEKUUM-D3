@@ -656,7 +656,15 @@ void idImage::GenerateImage( const byte *pic, int width, int height,
 
 // Techyon BEGIN
 	if (depth > TD_HIGH_QUALITY) {
-		glTexImage2D( GL_TEXTURE_2D, 0, internalFormat, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL );
+
+		if (depth >= TD_FBO_DEPTH16)
+		{
+			glTexImage2D( GL_TEXTURE_2D, 0, internalFormat, width, height, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, NULL );
+		}
+		else
+		{
+			glTexImage2D( GL_TEXTURE_2D, 0, internalFormat, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL );
+		}
 
 		if(GL_CheckErrors())
 		{
@@ -2027,7 +2035,7 @@ void idImage::BindFragment() {
 CopyFramebuffer
 ====================
 */
-void idImage::CopyFramebuffer( int x, int y, int imageWidth, int imageHeight, bool useOversizedBuffer ) {
+void idImage::CopyFramebuffer( int x, int y, int imageWidth, int imageHeight, bool useOversizedBuffer, bool useNearestFilter ) {
 	Bind();
 
 	if ( cvarSystem->GetCVarBool( "g_lowresFullscreenFX" ) ) {
@@ -2104,8 +2112,18 @@ void idImage::CopyFramebuffer( int x, int y, int imageWidth, int imageHeight, bo
 		glCopyTexSubImage2D( GL_TEXTURE_2D, 0, 0, imageHeight, x, y+imageHeight-1, imageWidth, 1 );
 	}
 
-	glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
-	glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+// Techyon BEGIN
+	if(useNearestFilter)
+	{
+		glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
+		glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
+	}
+	else
+	{
+		glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+		glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+	}
+// Techyon END
 
 	glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
 	glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );

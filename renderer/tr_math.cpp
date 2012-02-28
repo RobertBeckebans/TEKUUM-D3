@@ -208,7 +208,7 @@ void MatrixMultiplyTranslation(matrix_t m, float x, float y, float z)
 
 void MatrixMultiplyScale(matrix_t m, float x, float y, float z)
 {
-#if 0
+#if 1
 	matrix_t        tmp, scale;
 
 	MatrixCopy(m, tmp);
@@ -257,4 +257,32 @@ void MatrixFromPlanes(matrix_t m, const idPlane frustum[6])
 	m[14] = (-zFar[3] - -zNear[3]) / 2;
 	m[15] = -right[3] - (-right[3] - -left[3]) / 2;
 #endif
+}
+
+
+void MatrixPerspectiveProjectionFovXYRH(matrix_t m, float fovX, float fovY, float zNear, float zFar)
+{
+	float width, height;
+
+	width = tanf(DEG2RAD(fovX * 0.5f));
+	height = tanf(DEG2RAD(fovY * 0.5f));
+
+	m[0] = 1 / width;	m[4] = 0;			m[8] = 0;						m[12] = 0;
+	m[1] = 0;			m[5] = 1 / height;	m[9] = 0;						m[13] = 0;
+	m[2] = 0;			m[6] = 0;			m[10] = zFar / (zNear - zFar);	m[14] = (zNear * zFar) / (zNear - zFar);
+	m[3] = 0;			m[7] = 0;			m[11] = -1;						m[15] = 0;
+}
+
+// RB: far plane at infinity, see RobustShadowVolumes.pdf by Nvidia
+void MatrixPerspectiveProjectionFovXYInfiniteRH(matrix_t m, float fovX, float fovY, float zNear)
+{
+	float width, height;
+
+	width = tanf(DEG2RAD(fovX * 0.5f));
+	height = tanf(DEG2RAD(fovY * 0.5f));
+
+	m[0] = 1 / width;	m[4] = 0;			m[8] = 0;						m[12] = 0;
+	m[1] = 0;			m[5] = 1 / height;	m[9] = 0;						m[13] = 0;
+	m[2] = 0;			m[6] = 0;			m[10] = -1;						m[14] = -2 * zNear;
+	m[3] = 0;			m[7] = 0;			m[11] = -1;						m[15] = 0;
 }

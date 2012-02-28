@@ -572,6 +572,22 @@ void R_Exp_Allocate( void )
 		height = MakePowerOfTwo(glConfig.vidHeight);
 	}
 
+#if 0
+	//if(r_useDeferredShading.GetBool())
+	{
+		globalFramebuffers.gbuffer = new Framebuffer("_geometryBuffer", width, height);
+		globalFramebuffers.gbuffer->Bind();
+
+		globalFramebuffers.gbuffer->AddColorBuffer(GL_RGBA16F_ARB, 0);
+		globalFramebuffers.gbuffer->AttachImage2D(GL_TEXTURE_2D, globalImages->hdrRenderImage, 0);
+
+		globalFramebuffers.gbuffer->AddDepthBuffer(GL_DEPTH_COMPONENT24);
+		globalFramebuffers.gbuffer->AttachImageDepth(globalImages->currentDepthImage);
+
+		globalFramebuffers.gbuffer->Check();
+	}
+#endif
+
 	// create HDR rendering context
 	if(r_useHighDynamicRange.GetBool())
 	{
@@ -1569,9 +1585,15 @@ static void RB_EXP_DrawLightDeferred( viewLight_t *vLight )
 
 		// backEnd.lightScale is calculated so that lightColor[] will never exceed
 		// tr.backEndRendererMaxLight
+#if 0
 		lightColor[0] = backEnd.lightScale * lightRegs[ lightStage->color.registers[0] ];
 		lightColor[1] = backEnd.lightScale * lightRegs[ lightStage->color.registers[1] ];
 		lightColor[2] = backEnd.lightScale * lightRegs[ lightStage->color.registers[2] ];
+#else
+		lightColor[0] = lightRegs[ lightStage->color.registers[0] ];
+		lightColor[1] = lightRegs[ lightStage->color.registers[1] ];
+		lightColor[2] = lightRegs[ lightStage->color.registers[2] ];
+#endif
 		lightColor[3] = lightRegs[ lightStage->color.registers[3] ];
 
 		// if we wouldn't draw anything, don't call the Draw function
@@ -1579,7 +1601,7 @@ static void RB_EXP_DrawLightDeferred( viewLight_t *vLight )
 			continue;
 		}
 
-#if 0
+#if 1
 		bool shadowCompare = (!r_sb_noShadows.GetBool() && r_shadows.GetBool() && vLight->lightShader->LightCastsShadows() && !vLight->lightDef->parms.noShadows);
 #else
 		bool shadowCompare = false;
@@ -1607,7 +1629,14 @@ static void RB_EXP_DrawLightDeferred( viewLight_t *vLight )
 		gl_deferredLightingShader->SetUniform_LightProjectQ(vLight->lightDef->lightProject[2].ToVec4());
 		gl_deferredLightingShader->SetUniform_LightFalloffS(vLight->lightDef->lightProject[3].ToVec4());
 
-	#if 0
+		gl_deferredLightingShader->SetUniform_InvertedFramebufferResolution(backEnd.viewDef->viewport);
+		gl_deferredLightingShader->SetUniform_NonPowerOfTwoScale(backEnd.viewDef->viewport, 
+																globalImages->currentNormalsImage->uploadWidth, 
+																globalImages->currentNormalsImage->uploadHeight);
+
+		gl_deferredLightingShader->SetUniform_Viewport(backEnd.viewDef->viewport);
+
+	#if 1
 		if(shadowCompare)
 		{
 			float shadowTexelSize = 1.0f / shadowMapResolutions[backEnd.vLight->shadowLOD];
@@ -1621,10 +1650,11 @@ static void RB_EXP_DrawLightDeferred( viewLight_t *vLight )
 			idVec4	qRow;
 			float	matrix[16];
 			float	matrix2[16];
-			myGlMultMatrix( din->surf->space->modelMatrix, lightMatrix, matrix );
-			myGlMultMatrix( matrix, lightProjectionMatrix, matrix2 );
-			//myGlMultMatrix( lightMatrix, lightProjectionMatrix, matrix2 );
+			//myGlMultMatrix( din->surf->space->modelMatrix, lightMatrix, matrix );
+			//myGlMultMatrix( matrix, lightProjectionMatrix, matrix2 );
+			myGlMultMatrix( lightMatrix, lightProjectionMatrix, matrix2 );
 
+			/*
 			// the final values need to be in 0.0 : 1.0 range instead of -1 : 1
 			sRow[0] = 0.5 * lightBufferSizeFraction[0] * ( matrix2[0] + matrix2[3] );
 			sRow[1] = 0.5 * lightBufferSizeFraction[0] * ( matrix2[4] + matrix2[7] );
@@ -1646,6 +1676,7 @@ static void RB_EXP_DrawLightDeferred( viewLight_t *vLight )
 			qRow[2] = matrix2[11];
 			qRow[3] = matrix2[15];
 			//glProgramEnvParameter4fvARB( GL_VERTEX_PROGRAM_ARB, 21, qRow );
+			*/
 
 			//idMat4 shadowMat(sRow, tRow, rRow, qRow);
 			idMat4 shadowMat = make_idMat4(matrix2);//.Transpose();
@@ -2824,7 +2855,7 @@ void    RB_Exp_DrawInteractions( void ) {
 
 		globalImages->currentNormalsImage->CopyFramebuffer( backEnd.viewDef->viewport.x1,
 			backEnd.viewDef->viewport.y1,  backEnd.viewDef->viewport.x2 -  backEnd.viewDef->viewport.x1 + 1,
-			backEnd.viewDef->viewport.y2 -  backEnd.viewDef->viewport.y1 + 1, !glConfig.textureNonPowerOfTwoAvailable );
+			backEnd.viewDef->viewport.y2 -  backEnd.viewDef->viewport.y1 + 1, !glConfig.textureNonPowerOfTwoAvailable, true );
 
 		globalImages->currentDepthImage->CopyDepthbuffer( backEnd.viewDef->viewport.x1,
 			backEnd.viewDef->viewport.y1,  backEnd.viewDef->viewport.x2 -  backEnd.viewDef->viewport.x1 + 1,

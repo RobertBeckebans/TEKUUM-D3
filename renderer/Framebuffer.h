@@ -58,6 +58,7 @@ private:
 
 typedef struct
 {
+	Framebuffer				*gbuffer;
 	Framebuffer				*hdrRender;
 } globalFramebuffers_t;
 extern globalFramebuffers_t globalFramebuffers;
