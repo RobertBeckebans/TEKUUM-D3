@@ -654,7 +654,10 @@ idInteraction::HasShadows
 ===============
 */
 ID_INLINE bool idInteraction::HasShadows( void ) const {
-	return ( !lightDef->parms.noShadows && !entityDef->parms.noShadow && lightDef->lightShader->LightCastsShadows() );
+// Techyon BEGIN
+	// RB: added check for r_shadows 0
+	return ( r_shadows.GetBool() && !lightDef->parms.noShadows && !entityDef->parms.noShadow && lightDef->lightShader->LightCastsShadows() );
+// Techyon END
 }
 
 /*
@@ -1160,11 +1163,21 @@ void idInteraction::AddActiveInteraction( void ) {
 						R_LinkLightSurf( &vLight->translucentInteractions, lightTris, 
 							vEntity, lightDef, shader, lightScissor, false );
 					} else if ( !lightDef->parms.noShadows && sint->shader->TestMaterialFlag(MF_NOSELFSHADOW) ) {
-						R_LinkLightSurf( &vLight->localInteractions, lightTris, 
-							vEntity, lightDef, shader, lightScissor, false );
+						// Techyon BEGIN
+						// TODO support post process blend and fog lights
+						if ( (tr.backEndRenderer != BE_EXP) || !r_useDeferredShading.GetBool() || lightDef->lightShader->IsBlendLight() || lightDef->lightShader->IsFogLight() ) {
+							R_LinkLightSurf( &vLight->localInteractions, lightTris, 
+								vEntity, lightDef, shader, lightScissor, false );
+						}
+						// Techyon END
 					} else {
-						R_LinkLightSurf( &vLight->globalInteractions, lightTris, 
-							vEntity, lightDef, shader, lightScissor, false );
+						// Techyon BEGIN
+						// TODO support post process blend and fog lights
+						if ( (tr.backEndRenderer != BE_EXP) || !r_useDeferredShading.GetBool() || lightDef->lightShader->IsBlendLight() || lightDef->lightShader->IsFogLight() ) {
+							R_LinkLightSurf( &vLight->globalInteractions, lightTris, 
+								vEntity, lightDef, shader, lightScissor, false );
+						}
+						// Techyon END
 					}
 				}
 			}
@@ -1174,7 +1187,9 @@ void idInteraction::AddActiveInteraction( void ) {
 
 		// the shadows will always have to be added, unless we can tell they
 		// are from a surface in an unconnected area
-		if ( shadowTris ) {
+// Techyon BEGIN
+		if ( shadowTris && (tr.backEndRenderer != BE_EXP)) {
+// Techyon END
 			
 			// check for view specific shadow suppression (player shadows, etc)
 			if ( !r_skipSuppress.GetBool() ) {

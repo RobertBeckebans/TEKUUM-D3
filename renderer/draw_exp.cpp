@@ -2310,6 +2310,7 @@ void RB_EXP_SetRenderBuffer( viewLight_t *vLight ) {
 	} else {
 		backEnd.currentScissor = vLight->scissorRect;
 	}
+
 	if ( r_useScissor.GetBool() ) {
 		glScissor( backEnd.viewDef->viewport.x1 + backEnd.currentScissor.x1, 
 			backEnd.viewDef->viewport.y1 + backEnd.currentScissor.y1,
@@ -2855,7 +2856,7 @@ void    RB_Exp_DrawInteractions( void ) {
 
 		globalImages->currentNormalsImage->CopyFramebuffer( backEnd.viewDef->viewport.x1,
 			backEnd.viewDef->viewport.y1,  backEnd.viewDef->viewport.x2 -  backEnd.viewDef->viewport.x1 + 1,
-			backEnd.viewDef->viewport.y2 -  backEnd.viewDef->viewport.y1 + 1, !glConfig.textureNonPowerOfTwoAvailable, true );
+			backEnd.viewDef->viewport.y2 -  backEnd.viewDef->viewport.y1 + 1, !glConfig.textureNonPowerOfTwoAvailable, false );
 
 		globalImages->currentDepthImage->CopyDepthbuffer( backEnd.viewDef->viewport.x1,
 			backEnd.viewDef->viewport.y1,  backEnd.viewDef->viewport.x2 -  backEnd.viewDef->viewport.x1 + 1,
@@ -2911,9 +2912,15 @@ void    RB_Exp_DrawInteractions( void ) {
 			continue;
 		}
 
-		if ( !vLight->localInteractions && !vLight->globalInteractions
-			&& !vLight->translucentInteractions ) {
-			continue;
+		if ( !vLight->localInteractions && !vLight->globalInteractions && !vLight->translucentInteractions ) 
+		{
+			if (r_useDeferredShading.GetBool()) {
+				if (!vLight->translucentInteractions) {
+					//continue;
+				}
+			} else {
+				continue;
+			}
 		}
 
 		if ( !vLight->frustumTris->ambientCache ) {
@@ -2924,29 +2931,31 @@ void    RB_Exp_DrawInteractions( void ) {
 		// and non-cubic lights must take the largest length
 		viewLightAxialSize = R_EXP_CalcLightAxialSize( vLight );
 
-		int	side, sideStop;
+		if ( r_shadows.GetBool() ) {
+			int	side, sideStop;
 
-		if ( vLight->lightDef->parms.pointLight ) {
-			if ( r_sb_singleSide.GetInteger() != -1 ) {
-				side = r_sb_singleSide.GetInteger();
-				sideStop = side+1;
+			if ( vLight->lightDef->parms.pointLight ) {
+				if ( r_sb_singleSide.GetInteger() != -1 ) {
+					side = r_sb_singleSide.GetInteger();
+					sideStop = side+1;
+				} else {
+					side = 0;
+					sideStop = 6;
+				}
 			} else {
-				side = 0;
-				sideStop = 6;
+				side = -1;
+				sideStop = 0;
 			}
-		} else {
-			side = -1;
-			sideStop = 0;
-		}
 
-		for (  ; side < sideStop ; side++ ) {
-			// FIXME: check for frustums completely off the screen
+			for (  ; side < sideStop ; side++ ) {
+				// FIXME: check for frustums completely off the screen
 
-			//GL_BindNullProgram();
-			//Framebuffer::BindNull();
+				//GL_BindNullProgram();
+				//Framebuffer::BindNull();
 
-			// render a shadow buffer
-			RB_RenderShadowBuffer( vLight, side );
+				// render a shadow buffer
+				RB_RenderShadowBuffer( vLight, side );
+			}
 		}
 
 		GL_CheckErrors();
@@ -2957,15 +2966,17 @@ void    RB_Exp_DrawInteractions( void ) {
 		RB_EXP_SetRenderBuffer( NULL );
 
 		// bind shadow buffer to texture
-		if ( vLight->lightDef->parms.pointLight ) 
-		{
-			GL_SelectTextureNoClient( 8 );
-			shadowCubeImage[vLight->shadowLOD]->BindFragment();
-		}
-		else
-		{
-			GL_SelectTextureNoClient( 7 );
-			shadowMapImage[vLight->shadowLOD]->BindFragment();
+		if ( r_shadows.GetBool() ) {
+			if ( vLight->lightDef->parms.pointLight ) 
+			{
+				GL_SelectTextureNoClient( 8 );
+				shadowCubeImage[vLight->shadowLOD]->BindFragment();
+			}
+			else
+			{
+				GL_SelectTextureNoClient( 7 );
+				shadowMapImage[vLight->shadowLOD]->BindFragment();
+			}
 		}
 
 		if( r_useDeferredShading.GetBool() )
@@ -2984,7 +2995,7 @@ void    RB_Exp_DrawInteractions( void ) {
 
 	GL_CheckErrors();
 
-	Framebuffer::BindNull();
+	RB_EXP_SetRenderBuffer( NULL );
 
 	GL_CheckErrors();
 
