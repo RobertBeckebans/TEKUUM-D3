@@ -2075,9 +2075,9 @@ void idImage::CopyFramebuffer( int x, int y, int imageWidth, int imageHeight, bo
 		if ( potWidth == imageWidth && potHeight == imageHeight )
 		{
 #if defined(USE_GLES1)
-			glCopyTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, x, y, imageWidth, imageHeight, 0 );
+			glCopyTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, x, y, imageWidth, imageHeight, 0 );
 #else
-			glCopyTexImage2D( GL_TEXTURE_2D, 0, GL_RGB8, x, y, imageWidth, imageHeight, 0 );
+			glCopyTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA8, x, y, imageWidth, imageHeight, 0 );
 #endif
 		}
 		else
@@ -2093,7 +2093,7 @@ void idImage::CopyFramebuffer( int x, int y, int imageWidth, int imageHeight, bo
 				junk[i+1] = 255;
 			}
 #endif
-			glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, potWidth, potHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, junk );
+			glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, potWidth, potHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, junk );
 			Mem_Free( junk );
 
 			glCopyTexSubImage2D( GL_TEXTURE_2D, 0, 0, 0, x, y, imageWidth, imageHeight );
