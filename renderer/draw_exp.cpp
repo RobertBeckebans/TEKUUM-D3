@@ -2850,7 +2850,7 @@ void    RB_Exp_DrawInteractions( void ) {
 	// copy the current depth buffer to a texture for image-space shadowing,
 	// or re-render at a lower resolution
 	
-	if(r_useDeferredShading.GetBool())
+	if(r_useDeferredShading.GetBool() && !r_skipDeferredLighting.GetBool())
 	{
 		//R_EXP_RenderViewDepthImage();
 
@@ -2981,7 +2981,9 @@ void    RB_Exp_DrawInteractions( void ) {
 
 		if( r_useDeferredShading.GetBool() )
 		{
-			RB_EXP_DrawLightDeferred( vLight );
+			if( !r_skipDeferredLighting.GetBool() ) {
+				RB_EXP_DrawLightDeferred( vLight );
+			}
 		}
 		else
 		{

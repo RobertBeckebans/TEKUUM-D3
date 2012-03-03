@@ -133,6 +133,11 @@ idCVar r_skipROQ( "r_skipROQ", "1", CVAR_RENDERER | CVAR_BOOL, "skip ROQ decodin
 idCVar r_skipROQ( "r_skipROQ", "0", CVAR_RENDERER | CVAR_BOOL, "skip ROQ decoding" );
 #endif
 
+// Techyon BEGIN
+idCVar r_skipDeferredLighting( "r_skipDeferredLighting", "0", CVAR_RENDERER | CVAR_BOOL, "skip all light pre-pass drawing" );
+idCVar r_skipPostLighting( "r_skipPostLighting", "0", CVAR_RENDERER | CVAR_BOOL, "skip forward shading using the pre-pass light buffer" );
+// Techyon END
+
 idCVar r_ignore( "r_ignore", "0", CVAR_RENDERER, "used for random debugging without defining new vars" );
 idCVar r_ignore2( "r_ignore2", "0", CVAR_RENDERER, "used for random debugging without defining new vars" );
 idCVar r_usePreciseTriangleInteractions( "r_usePreciseTriangleInteractions", "0", CVAR_RENDERER | CVAR_BOOL, "1 = do winding clipping to determine if each ambiguous tri should be lit" );
@@ -256,7 +261,7 @@ idCVar r_showShadowLod( "r_showShadowLod", "0", CVAR_RENDERER | CVAR_BOOL, "show
 
 
 // ESM specific
-idCVar r_esmOverDarkeningFactor( "r_esmOverDarkeningFactor", "30", CVAR_RENDERER | CVAR_FLOAT, "ESM scaling factor for avoiding light bleeding" );
+idCVar r_esmOverDarkeningFactor( "r_esmOverDarkeningFactor", "80", CVAR_RENDERER | CVAR_FLOAT, "ESM scaling factor for avoiding light bleeding" );
 
 // EVSM specific
 idCVar r_evsm_postProcess( "r_evsm_postProcess", "0", CVAR_RENDERER | CVAR_BOOL, "don't use the expensive RGBA32F MRT" );

@@ -521,6 +521,102 @@ void RB_T_FillDepthBuffer( const drawSurf_t *surf ) {
 
 }
 
+// Techyon BEGIN
+static void	RB_T_DrawInteractionAsFillDepthBufferWithNormals( const drawInteractionMaterialOnly_t *din ) 
+{
+	// choose and bind the vertex program
+	gl_geometricFillShader->SetNormalMapping(!r_skipBump.GetBool());
+	gl_geometricFillShader->BindProgram();
+
+	// load all the vertex program parameters
+	gl_geometricFillShader->SetUniform_BumpMatrixS(din->bumpMatrix[0]);
+	gl_geometricFillShader->SetUniform_BumpMatrixT(din->bumpMatrix[1]);
+
+#if 1
+	gl_geometricFillShader->SetUniform_DiffuseMatrixS(din->diffuseMatrix[0]);
+	gl_geometricFillShader->SetUniform_DiffuseMatrixT(din->diffuseMatrix[1]);
+
+	gl_geometricFillShader->SetUniform_SpecularMatrixS(din->specularMatrix[0]);
+	gl_geometricFillShader->SetUniform_SpecularMatrixT(din->specularMatrix[1]);
+#endif
+
+	static const idVec4 zero( 0, 0, 0, 0 );
+	static const idVec4 one( 1, 1, 1, 1 );
+	static const idVec4 negOne( -1, -1, -1, -1 );
+
+	switch ( din->vertexColor ) {
+	case SVC_IGNORE:
+		gl_geometricFillShader->SetUniform_ColorModulate(zero);
+		gl_geometricFillShader->SetUniform_Color(one);
+		break;
+	case SVC_MODULATE:
+		gl_geometricFillShader->SetUniform_ColorModulate(one);
+		gl_geometricFillShader->SetUniform_Color(zero);
+		break;
+	case SVC_INVERSE_MODULATE:
+		gl_geometricFillShader->SetUniform_ColorModulate(negOne);
+		gl_geometricFillShader->SetUniform_Color(one);
+		break;
+	}
+
+	// set the textures
+
+	// texture 0 will be the per-surface bump map
+	gl_geometricFillShader->SetUniform_NormalImage(0);
+	GL_SelectTexture(0);
+	din->bumpImage->Bind();
+
+#if 1
+	// texture 1 is the per-surface diffuse map
+	gl_geometricFillShader->SetUniform_DiffuseImage(1);
+	GL_SelectTexture(1);
+	din->diffuseImage->Bind();
+
+	// texture 2 is the per-surface specular map
+	gl_geometricFillShader->SetUniform_SpecularImage(2);
+	GL_SelectTexture(2);
+	din->specularImage->Bind();
+#endif
+
+	// draw it
+	RB_DrawElementsWithCounters( din->surf->geo );
+}
+
+static bool RB_T_SubmittInteraction( drawInteractionMaterialOnly_t *din, void (*DrawInteraction)(const drawInteractionMaterialOnly_t *) ) {
+	if ( !din->bumpImage ) {
+		return false;
+	}
+
+	if ( !din->diffuseImage || r_skipDiffuse.GetBool() ) {
+		din->diffuseImage = globalImages->blackImage;
+	}
+	if ( !din->specularImage || r_skipSpecular.GetBool() ) {
+		din->specularImage = globalImages->blackImage;
+	}
+	if ( !din->bumpImage || r_skipBump.GetBool() ) {
+		din->bumpImage = globalImages->flatNormalMap;
+	}
+
+	// if we wouldn't draw anything, don't call the Draw function
+	//if ( 
+	//	( ( din->diffuseColor[0] > 0 || din->diffuseColor[1] > 0 || din->diffuseColor[2] > 0 ) && din->diffuseImage != globalImages->blackImage )
+	//	|| ( ( din->specularColor[0] > 0 || din->specularColor[1] > 0 || din->specularColor[2] > 0 ) && din->specularImage != globalImages->blackImage ) ) 
+	{
+		if (din->alphaTest > 0.0f) {
+			glEnable( GL_ALPHA_TEST );
+			glAlphaFunc( GL_GREATER, din->alphaTest );
+		}
+
+		DrawInteraction( din );
+
+		if (din->alphaTest > 0.0f) {
+			glDisable( GL_ALPHA_TEST );
+		}
+
+		return true;
+	}
+}
+
 /*
 ==================
 RB_T_FillDepthBufferWithNormals
@@ -634,155 +730,155 @@ void RB_T_FillDepthBufferWithNormals( const drawSurf_t *surf ) {
 
 	gl_geometricFillShader->SetUniform_NormalImage(0);
 
-#if 1
-	// we may have multiple alpha tested stages
-	if ( shader->Coverage() == MC_PERFORATED ) {
-		// if the only alpha tested stages are condition register omitted,
-		// draw a normal opaque surface
-		bool	didDraw = false;
 
-		glEnable( GL_ALPHA_TEST );
-		
-		// perforated surfaces may have multiple alpha tested stages
-		for ( stage = 0; stage < shader->GetNumStages() ; stage++ ) {		
-			pStage = shader->GetStage(stage);
 
-			if ( !pStage->hasAlphaTest ) {
-				continue;
-			}
+	drawInteractionMaterialOnly_t inter;
 
-			// check the stage enable condition
-			if ( regs[ pStage->conditionRegister ] == 0 ) {
-				continue;
-			}
+	inter.surf = surf;
 
-			// if we at least tried to draw an alpha tested stage,
-			// we won't draw the opaque surface
-			didDraw = true;
+	inter.bumpImage = NULL;
+	inter.specularImage = NULL;
+	inter.diffuseImage = NULL;
+	inter.diffuseColor[0] = inter.diffuseColor[1] = inter.diffuseColor[2] = inter.diffuseColor[3] = 0;
+	inter.specularColor[0] = inter.specularColor[1] = inter.specularColor[2] = inter.specularColor[3] = 0;
 
-			// set the alpha modulate
-			color[3] = regs[ pStage->color.registers[3] ];
+	glColor4f( color[0], color[1], color[2], color[3] );
 
-			// skip the entire stage if alpha would be black
-			if ( color[3] <= 0 ) {
-				continue;
-			}
-			glColor4f( color[0], color[1], color[2], color[3] );
+	bool	didDraw = false;
 
-			glAlphaFunc( GL_GREATER, regs[ pStage->alphaTestRegister ] );
+	for ( stage = 0; stage < shader->GetNumStages() ; stage++ ) 
+	{		
+		pStage = shader->GetStage(stage);
 
-			// bind the texture
-			pStage->texture.image->Bind();
-
-			// set texture matrix and texGens
-			RB_PrepareStageTexturing( pStage, surf, ac );
-
-			// draw it
-			RB_DrawElementsWithCounters( tri );
-
-			RB_FinishStageTexturing( pStage, surf, ac );
+		/*
+		// check the stage enable condition
+		if ( regs[ pStage->conditionRegister ] == 0 ) {
+			continue;
 		}
-		glDisable( GL_ALPHA_TEST );
-		if ( !didDraw ) {
-			drawSolid = true;
+
+		if ( pStage->lighting != SL_BUMP ) {
+			continue;
 		}
-	}
+
+		color[0] = regs[ pStage->color.registers[0] ];
+		color[1] = regs[ pStage->color.registers[1] ];
+		color[2] = regs[ pStage->color.registers[2] ];
+		color[3] = regs[ pStage->color.registers[3] ];
+		*/
+
+		switch( pStage->lighting ) {
+			case SL_AMBIENT: {
 #if 1
-	else if ( shader->Coverage() == MC_OPAQUE ) 
-	{
-		glColor4f( color[0], color[1], color[2], color[3] );
-
-		for ( stage = 0; stage < shader->GetNumStages() ; stage++ ) {		
-			pStage = shader->GetStage(stage);
-
-			// check the stage enable condition
-			if ( regs[ pStage->conditionRegister ] == 0 ) {
+				// ignore ambient stages while drawing interactions
 				continue;
-			}
+#else
+				if ( !pStage->hasAlphaTest ) {
+					continue;
+				}
 
-			if ( pStage->lighting != SL_BUMP ) {
-				continue;
-			}
+				// check the stage enable condition
+				if ( regs[ pStage->conditionRegister ] == 0 ) {
+					continue;
+				}
 
-			color[0] = regs[ pStage->color.registers[0] ];
-			color[1] = regs[ pStage->color.registers[1] ];
-			color[2] = regs[ pStage->color.registers[2] ];
-			color[3] = regs[ pStage->color.registers[3] ];
+				// if we at least tried to draw an alpha tested stage,
+				// we won't draw the opaque surface
+				didDraw = true;
 
-			// select the vertex color source
-#if 0
-			if ( pStage->vertexColor == SVC_IGNORE ) {
+				// set the alpha modulate
+				color[3] = regs[ pStage->color.registers[3] ];
+
+				// skip the entire stage if alpha would be black
+				if ( color[3] <= 0 ) {
+					continue;
+				}
 				glColor4f( color[0], color[1], color[2], color[3] );
-			} else {
-				glColorPointer( 4, GL_UNSIGNED_BYTE, sizeof( idDrawVert ), (void *)&ac->color );
-				glEnableClientState( GL_COLOR_ARRAY );
 
-				if ( pStage->vertexColor == SVC_INVERSE_MODULATE ) {
-					GL_TexEnv( GL_COMBINE );
-					glTexEnvi( GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_MODULATE );
-					glTexEnvi( GL_TEXTURE_ENV, GL_SRC0_RGB, GL_TEXTURE );
-					glTexEnvi( GL_TEXTURE_ENV, GL_SRC1_RGB, GL_PRIMARY_COLOR );
-					glTexEnvi( GL_TEXTURE_ENV, GL_OPERAND0_RGB, GL_SRC_COLOR );
-					glTexEnvi( GL_TEXTURE_ENV, GL_OPERAND1_RGB, GL_ONE_MINUS_SRC_COLOR );
-					glTexEnvi( GL_TEXTURE_ENV, GL_RGB_SCALE, 1 );
-				}
+				glAlphaFunc( GL_GREATER, regs[ pStage->alphaTestRegister ] );
 
-				// for vertex color and modulated color, we need to enable a second
-				// texture stage
-				if ( color[0] != 1 || color[1] != 1 || color[2] != 1 || color[3] != 1 ) {
-					GL_SelectTexture( 1 );
+				// bind the texture
+				pStage->texture.image->Bind();
 
-					globalImages->whiteImage->Bind();
-					GL_TexEnv( GL_COMBINE );
+				// set texture matrix and texGens
+				RB_PrepareStageTexturing( pStage, surf, ac );
 
-					glTexEnvfv( GL_TEXTURE_ENV, GL_TEXTURE_ENV_COLOR, color );
+				// draw it
+				RB_DrawElementsWithCounters( tri );
 
-					glTexEnvi( GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_MODULATE );
-					glTexEnvi( GL_TEXTURE_ENV, GL_SRC0_RGB, GL_PREVIOUS );
-					glTexEnvi( GL_TEXTURE_ENV, GL_SRC1_RGB, GL_CONSTANT );
-					glTexEnvi( GL_TEXTURE_ENV, GL_OPERAND0_RGB, GL_SRC_COLOR );
-					glTexEnvi( GL_TEXTURE_ENV, GL_OPERAND1_RGB, GL_SRC_COLOR );
-					glTexEnvi( GL_TEXTURE_ENV, GL_RGB_SCALE, 1 );
-
-					glTexEnvi( GL_TEXTURE_ENV, GL_COMBINE_ALPHA, GL_MODULATE );
-					glTexEnvi( GL_TEXTURE_ENV, GL_SRC0_ALPHA, GL_PREVIOUS );
-					glTexEnvi( GL_TEXTURE_ENV, GL_SRC1_ALPHA, GL_CONSTANT );
-					glTexEnvi( GL_TEXTURE_ENV, GL_OPERAND0_ALPHA, GL_SRC_ALPHA );
-					glTexEnvi( GL_TEXTURE_ENV, GL_OPERAND1_ALPHA, GL_SRC_ALPHA );
-					glTexEnvi( GL_TEXTURE_ENV, GL_ALPHA_SCALE, 1 );
-
-					GL_SelectTexture( 0 );
-				}
-			}
+				RB_FinishStageTexturing( pStage, surf, ac );
 #endif
+				break;
+			}
+			case SL_BUMP: {
+				// ignore stage that fails the condition
+				if ( !regs[ pStage->conditionRegister ] ) {
+					break;
+				}
 
-			// bind the texture
-			RB_BindVariableStageImage( &pStage->texture, regs );
+				// draw any previous interaction
+				didDraw = didDraw || RB_T_SubmittInteraction( &inter, RB_T_DrawInteractionAsFillDepthBufferWithNormals );
 
-			// set the state
-			//GL_State( pStage->drawStateBits );
-			GL_State(0);
-		
-			RB_PrepareStageTexturing( pStage, surf, ac );
+				if ( pStage->hasAlphaTest ) {
+					inter.alphaTest = regs[ pStage->alphaTestRegister ];
+				} else {
+					inter.alphaTest = 0;
+				}
 
-			// draw it
-			RB_DrawElementsWithCounters( tri );
+				inter.diffuseImage = NULL;
+				inter.specularImage = NULL;
+				R_SetDrawInteraction( pStage, regs, &inter.bumpImage, inter.bumpMatrix, NULL );
+				break;
+			}
+			case SL_DIFFUSE: {
+				// ignore stage that fails the condition
+				if ( !regs[ pStage->conditionRegister ] ) {
+					break;
+				}
+				if ( inter.diffuseImage ) {
+					didDraw = didDraw || RB_T_SubmittInteraction( &inter, RB_T_DrawInteractionAsFillDepthBufferWithNormals );
+				}
+				R_SetDrawInteraction( pStage, regs, &inter.diffuseImage, inter.diffuseMatrix, inter.diffuseColor.ToFloatPtr() );
+				inter.vertexColor = pStage->vertexColor;
+				
+				if ( pStage->hasAlphaTest ) {
+					if ( regs[ pStage->alphaTestRegister ] > inter.alphaTest ) {
+						inter.alphaTest = regs[ pStage->alphaTestRegister ];
+					}
+				}
+				break;
+			}
+			case SL_SPECULAR: {
+				// ignore stage that fails the condition
+				if ( !regs[ pStage->conditionRegister ] ) {
+					break;
+				}
+				if ( inter.specularImage ) {
+					didDraw = didDraw || RB_T_SubmittInteraction( &inter, RB_T_DrawInteractionAsFillDepthBufferWithNormals );
+				}
+				R_SetDrawInteraction( pStage, regs, &inter.specularImage, inter.specularMatrix, inter.specularColor.ToFloatPtr() );
+				inter.vertexColor = pStage->vertexColor;
 
-			RB_FinishStageTexturing( pStage, surf, ac );
-		
-			if ( pStage->vertexColor != SVC_IGNORE ) {
-				glDisableClientState( GL_COLOR_ARRAY );
-
-				GL_SelectTexture( 1 );
-				GL_TexEnv( GL_MODULATE );
-				globalImages->BindNull();
-				GL_SelectTexture( 0 );
-				GL_TexEnv( GL_MODULATE );
+				if ( pStage->hasAlphaTest ) {
+					if ( regs[ pStage->alphaTestRegister ] > inter.alphaTest ) {
+						inter.alphaTest = regs[ pStage->alphaTestRegister ];
+					}
+				}
+				break;
 			}
 		}
 	}
-#endif
-#endif
+
+	// draw the final interaction
+	didDraw = didDraw || RB_T_SubmittInteraction( &inter, RB_T_DrawInteractionAsFillDepthBufferWithNormals );
+
+	if ( !didDraw ) {
+		inter.alphaTest = 0;
+		inter.bumpImage = globalImages->flatNormalMap;
+		inter.diffuseImage = NULL;
+		inter.specularImage = NULL;
+
+		RB_T_SubmittInteraction( &inter, RB_T_DrawInteractionAsFillDepthBufferWithNormals );
+	}
 
 	// reset polygon offset
 	if ( shader->TestMaterialFlag(MF_POLYGONOFFSET) ) {
@@ -793,8 +889,8 @@ void RB_T_FillDepthBufferWithNormals( const drawSurf_t *surf ) {
 	if ( shader->GetSort() == SS_SUBVIEW ) {
 		GL_State( GLS_DEPTHFUNC_LESS );
 	}
-
 }
+// Techyon END
 
 
 /*
@@ -856,7 +952,6 @@ void RB_STD_FillDepthBuffer( drawSurf_t **drawSurfs, int numDrawSurfs ) {
 	if(/*tr.backEndRenderer == BE_EXP &&*/ r_useDeferredShading.GetBool())
 	{
 		RB_RenderDrawSurfListWithFunction( drawSurfs, numDrawSurfs, RB_T_FillDepthBufferWithNormals );
-		//RB_RenderDrawSurfListWithFunction( drawSurfs, numDrawSurfs, RB_T_FillDepthBufferWithNormals );
 
 		glDisableVertexAttribArrayARB( VA_INDEX_TEXCOORD0 );
 		glDisableVertexAttribArrayARB( VA_INDEX_TANGENT );

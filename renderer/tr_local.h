@@ -504,6 +504,30 @@ typedef struct {
 	idVec4				specularMatrix[2];
 } drawInteraction_t;
 
+// Techyon BEGIN
+// RB: this struct helps to render bump,diffuse,specular combinations required for deferred shading
+// and all kind of precomputed light techniques like lightmaps
+typedef struct {
+	const drawSurf_t *	surf;
+
+	idImage *			lightImage;
+	idImage *			lightFalloffImage;
+	idImage *			bumpImage;
+	idImage *			diffuseImage;
+	idImage *			specularImage;
+
+	idVec4				diffuseColor;	// may have a light color baked into it, will be < tr.backEndRendererMaxLight
+	idVec4				specularColor;	// may have a light color baked into it, will be < tr.backEndRendererMaxLight
+	stageVertexColor_t	vertexColor;	// applies to both diffuse and specular
+
+	float				alphaTest;
+
+	// these are loaded into the vertex program
+	idVec4				bumpMatrix[2];
+	idVec4				diffuseMatrix[2];
+	idVec4				specularMatrix[2];
+} drawInteractionMaterialOnly_t;
+// Techyon END
 
 /*
 =============================================================
@@ -972,6 +996,10 @@ extern idCVar r_skipSpecular;			// use black for specular
 extern idCVar r_skipDiffuse;			// use black for diffuse
 extern idCVar r_skipOverlays;			// skip overlay surfaces
 extern idCVar r_skipROQ;
+// Techyon BEGIN
+extern idCVar r_skipDeferredLighting;
+extern idCVar r_skipPostLighting;
+// Techyon END
 
 extern idCVar r_ignoreGLErrors;
 
@@ -1353,6 +1381,11 @@ void RB_DrawView( const void *data );
 void RB_DetermineLightScale( void );
 void RB_STD_LightScale( void );
 void RB_BeginDrawingView (void);
+
+// Techyon BEGIN
+void R_SetDrawInteraction( const shaderStage_t *surfaceStage, const float *surfaceRegs,
+						  idImage **image, idVec4 matrix[2], float color[4] );
+// Techyon END
 
 /*
 ============================================================
