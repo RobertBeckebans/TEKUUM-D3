@@ -960,7 +960,10 @@ void    RB_RenderShadowBuffer( viewLight_t	*vLight, int side ) {
 
 	// TODO vLight->shadowLOD
 	glViewport( 0, 0, shadowMapResolutions[vLight->shadowLOD], shadowMapResolutions[vLight->shadowLOD] );
-	glScissor( 0, 0, shadowMapResolutions[vLight->shadowLOD], shadowMapResolutions[vLight->shadowLOD] );
+
+	if ( r_useScissor.GetBool() ) {
+		glScissor( 0, 0, shadowMapResolutions[vLight->shadowLOD], shadowMapResolutions[vLight->shadowLOD] );
+	}
 
 	//glDisable( GL_STENCIL_TEST );
 	glStencilFunc( GL_ALWAYS, 0, 255 );
@@ -1601,6 +1604,17 @@ static void RB_EXP_DrawLightDeferred( viewLight_t *vLight )
 			continue;
 		}
 
+		idPlane lightProject[4];
+		for ( int i = 0 ; i < 4 ; i++ ) {
+			lightProject[i] = vLight->lightDef->lightProject[i];
+		}
+
+		// now multiply the texgen by the light texture matrix
+		if ( lightStage->texture.hasMatrix ) {
+			RB_GetShaderTextureMatrix( lightRegs, &lightStage->texture, backEnd.lightTextureMatrix );
+			RB_BakeTextureMatrixIntoTexgen( lightProject, backEnd.lightTextureMatrix );
+		}
+
 #if 1
 		bool shadowCompare = (!r_sb_noShadows.GetBool() && r_shadows.GetBool() && vLight->lightShader->LightCastsShadows() && !vLight->lightDef->parms.noShadows);
 #else
@@ -1624,10 +1638,10 @@ static void RB_EXP_DrawLightDeferred( viewLight_t *vLight )
 
 		gl_deferredLightingShader->SetUniform_LightRadius(vLight->lightDef->frustumTris->bounds.GetRadius());
 
-		gl_deferredLightingShader->SetUniform_LightProjectS(vLight->lightDef->lightProject[0].ToVec4());
-		gl_deferredLightingShader->SetUniform_LightProjectT(vLight->lightDef->lightProject[1].ToVec4());
-		gl_deferredLightingShader->SetUniform_LightProjectQ(vLight->lightDef->lightProject[2].ToVec4());
-		gl_deferredLightingShader->SetUniform_LightFalloffS(vLight->lightDef->lightProject[3].ToVec4());
+		gl_deferredLightingShader->SetUniform_LightProjectS(lightProject[0].ToVec4());
+		gl_deferredLightingShader->SetUniform_LightProjectT(lightProject[1].ToVec4());
+		gl_deferredLightingShader->SetUniform_LightProjectQ(lightProject[2].ToVec4());
+		gl_deferredLightingShader->SetUniform_LightFalloffS(lightProject[3].ToVec4());
 
 		gl_deferredLightingShader->SetUniform_InvertedFramebufferResolution(backEnd.viewDef->viewport);
 		gl_deferredLightingShader->SetUniform_NonPowerOfTwoScale(backEnd.viewDef->viewport, 
