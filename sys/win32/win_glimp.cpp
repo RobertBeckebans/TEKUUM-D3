@@ -194,6 +194,17 @@ GLW_GetWGLExtensionsWithFakeWindow
 */
 void GLW_CheckWGLExtensions( HDC hDC ) {
 	
+	GLenum glewResult = glewInit();
+	if(GLEW_OK != glewResult)
+	{
+		// glewInit failed, something is seriously wrong
+		common->Printf( "^GLW_CheckWGLExtensions() - GLEW could not load OpenGL subsystem: %s", glewGetErrorString(glewResult));
+	}
+	else
+	{
+		common->Printf( "Using GLEW %s\n", glewGetString(GLEW_VERSION));
+	}
+
 	if ( WGLEW_ARB_extensions_string ) {
 		glConfig.wgl_extensions_string = (const char *) wglGetExtensionsStringARB(hDC);
 	} else {
@@ -230,8 +241,6 @@ GLW_GetWGLExtensionsWithFakeWindow
 ==================
 */
 // Techyon BEGIN
-// unused
-/*
 static void GLW_GetWGLExtensionsWithFakeWindow( void ) {
 	HWND	hWnd;
     MSG		msg;
@@ -261,7 +270,6 @@ static void GLW_GetWGLExtensionsWithFakeWindow( void ) {
         DispatchMessage( &msg );
     }
 }
-*/
 // Techyon END
 
 //=============================================================================
@@ -323,7 +331,7 @@ static bool GLW_InitDriver( glimpParms_t parms ) {
 	}
 
 	// the multisample path uses the wgl 
-	if ( wglChoosePixelFormatARB && parms.multiSamples > 1 ) {
+	if ( WGLEW_ARB_pixel_format && parms.multiSamples > 1 ) {
 		int		iAttributes[20];
 		FLOAT	fAttributes[] = {0, 0};
 		UINT	numFormats;
@@ -753,7 +761,7 @@ bool GLimp_Init( glimpParms_t parms ) {
 
 	// getting the wgl extensions involves creating a fake window to get a context,
 	// which is pretty disgusting, and seems to mess with the AGP VAR allocation
-	//GLW_GetWGLExtensionsWithFakeWindow();
+	GLW_GetWGLExtensionsWithFakeWindow();
 
 	// try to change to fullscreen
 	if ( parms.fullScreen ) {
