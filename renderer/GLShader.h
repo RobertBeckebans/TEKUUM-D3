@@ -2570,48 +2570,26 @@ public:
 	GLShader_forwardLighting();
 };
 
-/*
-class GLShader_forwardLighting_directionalSun:
+class GLShader_postLighting:
 public GLShader,
-public u_DiffuseTextureMatrix,
-public u_NormalTextureMatrix,
-public u_SpecularTextureMatrix,
-public u_AlphaTest,
-public u_ColorModulate,
-public u_Color,
-public u_ViewOrigin,
-public u_LightDir,
-public u_LightColor,
-public u_LightRadius,
-public u_LightScale,
-public u_LightWrapAround,
-public u_LightAttenuationMatrix,
-public u_ShadowTexelSize,
-public u_ShadowBlur,
-public u_ShadowMatrix,
-public u_ShadowParallelSplitDistances,
 public u_ModelMatrix,
-public u_ViewMatrix,
-public u_ModelViewProjectionMatrix,
-public u_BoneMatrix,
-public u_VertexInterpolation,
-public u_PortalPlane,
-public u_DepthScale,
-public GLDeformStage,
-public GLCompileMacro_USE_PORTAL_CLIPPING,
-public GLCompileMacro_USE_ALPHA_TESTING,
-public GLCompileMacro_USE_VERTEX_SKINNING,
-public GLCompileMacro_USE_VERTEX_ANIMATION,
-public GLCompileMacro_USE_DEFORM_VERTEXES,
-public GLCompileMacro_USE_NORMAL_MAPPING,
-public GLCompileMacro_USE_PARALLAX_MAPPING,
-public GLCompileMacro_USE_SHADOWING//,
-//public GLCompileMacro_TWOSIDED
+public u_DiffuseMatrixS,
+public u_DiffuseMatrixT,
+public u_BumpMatrixS,
+public u_BumpMatrixT,
+public u_SpecularMatrixS,
+public u_SpecularMatrixT,
+public u_Color,
+public u_ColorModulate,
+public u_DiffuseColor,
+public u_SpecularColor,
+public u_InvertedFramebufferResolution,
+public u_NonPowerOfTwoScale,
+public u_Viewport
 {
 public:
-	GLShader_forwardLighting_directionalSun();
+	GLShader_postLighting();
 };
-*/
 
 
 class GLShader_shadowVolume:
@@ -2670,6 +2648,7 @@ public:
 extern GLShader_geometricFill* gl_geometricFillShader;
 extern GLShader_deferredLighting* gl_deferredLightingShader;
 extern GLShader_forwardLighting* gl_forwardLightingShader;
+extern GLShader_postLighting* gl_postLightingShader;
 extern GLShader_shadowVolume* gl_shadowVolumeShader;
 extern GLShader_shadowMap* gl_shadowMapShader;
 //extern GLShader_screen* gl_screenShader;

@@ -529,6 +529,14 @@ static void	RB_T_DrawInteractionAsFillDepthBufferWithNormals( const drawInteract
 	gl_geometricFillShader->BindProgram();
 
 	// load all the vertex program parameters
+
+	gl_geometricFillShader->SetUniform_GlobalViewOrigin(backEnd.viewDef->renderView.vieworg);
+//	gl_geometricFillShader->SetUniform_AmbientColor(ambientColor);
+
+	gl_geometricFillShader->SetUniform_ModelMatrix(make_idMat4(din->surf->space->modelMatrix));
+
+	gl_geometricFillShader->SetUniform_NormalImage(0);
+
 	gl_geometricFillShader->SetUniform_BumpMatrixS(din->bumpMatrix[0]);
 	gl_geometricFillShader->SetUniform_BumpMatrixT(din->bumpMatrix[1]);
 
@@ -716,21 +724,6 @@ void RB_T_FillDepthBufferWithNormals( const drawSurf_t *surf ) {
 	//if ( shader->Coverage() == MC_OPAQUE ) {
 	//	drawSolid = true;
 	//}
-	
-	gl_geometricFillShader->SetNormalMapping(true);
-	//gl_geometricFillShader->SetParallaxMapping(normalMapping && r_parallaxMapping->integer && tess.surfaceShader->parallax);
-	//gl_geometricFillShader->SetReflectiveSpecular(false);//normalMapping && tr.cubeHashTable != NULL);
-
-	gl_geometricFillShader->BindProgram();
-
-	gl_geometricFillShader->SetUniform_GlobalViewOrigin(backEnd.viewDef->renderView.vieworg);
-//	gl_geometricFillShader->SetUniform_AmbientColor(ambientColor);
-
-	gl_geometricFillShader->SetUniform_ModelMatrix(make_idMat4(surf->space->modelMatrix));
-
-	gl_geometricFillShader->SetUniform_NormalImage(0);
-
-
 
 	drawInteractionMaterialOnly_t inter;
 
@@ -2201,6 +2194,10 @@ void	RB_STD_DrawView( void ) {
 		break;
 	case BE_EXP:
 		RB_Exp_DrawInteractions();
+		if(r_useDeferredShading.GetBool())
+		{
+			RB_EXP_ResolveLightFromLightBuffer( drawSurfs, numDrawSurfs );
+		}
 		break;
 	case BE_NV20:
 		RB_NV20_DrawInteractions();

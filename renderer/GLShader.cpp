@@ -34,6 +34,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 GLShader_geometricFill* gl_geometricFillShader = NULL;
 GLShader_deferredLighting* gl_deferredLightingShader = NULL;
 GLShader_forwardLighting* gl_forwardLightingShader = NULL;
+GLShader_postLighting* gl_postLightingShader = NULL;
 GLShader_shadowVolume* gl_shadowVolumeShader = NULL;
 GLShader_shadowMap* gl_shadowMapShader = NULL;
 //GLShader_screen* gl_screenShader = NULL;
@@ -1422,6 +1423,117 @@ GLShader_forwardLighting::GLShader_forwardLighting():
 	compile_time.Stop();
 	common->Printf("...compiled %i forwardLighting shader permutations in %5.2f seconds\n", numCompiled, compile_time.Milliseconds() / 1000.0);
 }
+
+
+
+GLShader_postLighting::GLShader_postLighting():
+		GLShader("postLighting", VA_POSITION | VA_TEXCOORD),
+		u_ModelMatrix(this),
+		u_DiffuseMatrixS(this),
+		u_DiffuseMatrixT(this),
+		u_BumpMatrixS(this),
+		u_BumpMatrixT(this),
+		u_SpecularMatrixS(this),
+		u_SpecularMatrixT(this),
+		u_Color(this),
+		u_ColorModulate(this),
+		u_DiffuseColor(this),
+		u_SpecularColor(this),
+		u_InvertedFramebufferResolution(this),
+		u_NonPowerOfTwoScale(this),
+		u_Viewport(this)
+{
+	common->Printf("/// -------------------------------------------------\n");
+	common->Printf("/// creating postLighting shaders --------\n");
+
+	idTimer compile_time;
+	compile_time.Start();	
+
+	//idStr vertexInlines = "vertexSkinning vertexAnimation ";
+	idStrList vertexInlines;
+	/*
+	if(glConfig.driverType == GLDRV_OPENGL3 && r_vboDeformVertexes->integer)
+	{
+		vertexInlines += "deformVertexes ";
+	}
+	*/
+
+	idStrList fragmentInlines; // reliefMapping
+
+	idStr vertexShaderText = BuildGPUShaderText("postLighting", vertexInlines, GL_VERTEX_SHADER_ARB);
+	idStr fragmentShaderText = BuildGPUShaderText("postLighting", fragmentInlines, GL_FRAGMENT_SHADER_ARB);
+
+	size_t numPermutations = (1 << _compileMacros.Num());	// same as 2^n, n = no. compile macros
+	size_t numCompiled = 0;
+	common->Printf("...compiling postLighting shaders\n");
+	common->Printf("0%%  10   20   30   40   50   60   70   80   90   100%%\n");
+	common->Printf("|----|----|----|----|----|----|----|----|----|----|\n");
+	size_t tics = 0;
+	size_t nextTicCount = 0;
+	for(size_t i = 0; i < numPermutations; i++)
+	{
+		if((i + 1) >= nextTicCount)
+		{
+			size_t ticsNeeded = (size_t)(((double)(i + 1) / numPermutations) * 50.0);
+
+			do { common->Printf("*"); } while ( ++tics < ticsNeeded );
+
+			nextTicCount = (size_t)((tics / 50.0) * numPermutations);
+			if(i == (numPermutations - 1))
+			{
+				if(tics < 51)
+					common->Printf("*");
+				common->Printf("\n");
+			}
+		}
+
+		idStrList compileMacros;
+		if(GetCompileMacrosString(i, compileMacros))
+		{
+			//compileMacros.Append("TWOSIDED");
+			//compileMacros.Append("HALF_LAMBERT");
+
+			//common->DPrintf("Compile macros: '%s'\n", compileMacros.To);
+		
+			shaderProgram_t *shaderProgram = new shaderProgram_t();
+			_shaderPrograms.Append(shaderProgram);
+
+			CompileAndLinkGPUShaderProgram(	shaderProgram,
+											"postLighting",
+											vertexShaderText,
+											fragmentShaderText,
+											compileMacros);
+
+			UpdateShaderProgramUniformLocations(shaderProgram);
+
+			shaderProgram->u_CurrentLightImage = glGetUniformLocationARB(shaderProgram->program, "u_CurrentLightImage");
+			shaderProgram->u_DiffuseImage = glGetUniformLocationARB(shaderProgram->program, "u_DiffuseImage");
+			shaderProgram->u_SpecularImage = glGetUniformLocationARB(shaderProgram->program, "u_SpecularImage");
+
+			glUseProgramObjectARB(shaderProgram->program);
+			glUniform1iARB(shaderProgram->u_CurrentLightImage, 0);
+			glUniform1iARB(shaderProgram->u_DiffuseImage, 1);
+			glUniform1iARB(shaderProgram->u_SpecularImage, 2);
+			glUseProgramObjectARB(0);
+
+			ValidateProgram(shaderProgram->program);
+			//ShowProgramUniforms(shaderProgram->program);
+			GL_CheckErrors();
+
+			numCompiled++;
+		}
+		else
+		{
+			_shaderPrograms.Append(NULL);
+		}
+	}
+
+	SelectProgram();
+
+	compile_time.Stop();
+	common->Printf("...compiled %i postLighting shader permutations in %5.2f seconds\n", numCompiled, compile_time.Milliseconds() / 1000.0);
+}
+
 
 
 GLShader_shadowVolume::GLShader_shadowVolume():

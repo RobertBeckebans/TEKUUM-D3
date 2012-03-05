@@ -1853,6 +1853,7 @@ void            GL_BindNullProgram(void);
 
 void			R_Exp_Init( void );
 void			RB_Exp_DrawInteractions( void );
+void			RB_EXP_ResolveLightFromLightBuffer( drawSurf_t **drawSurfs, int numDrawSurfs );
 
 // Techyon END
 

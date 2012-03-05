@@ -433,6 +433,13 @@ void R_ReloadShaders_f( const idCmdArgs &args ) {
 		}
 		gl_forwardLightingShader = new GLShader_forwardLighting();
 
+		if(gl_postLightingShader)
+		{
+			delete gl_postLightingShader;
+			gl_postLightingShader = NULL;
+		}
+		gl_postLightingShader = new GLShader_postLighting();
+
 		if(gl_shadowVolumeShader)
 		{
 			delete gl_shadowVolumeShader;

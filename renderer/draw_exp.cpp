@@ -3079,6 +3079,19 @@ void    RB_Exp_DrawInteractions( void ) {
 
 	//RB_EXP_FXAA();
 
+	if(r_useDeferredShading.GetBool() && !r_skipDeferredLighting.GetBool())
+	{
+		GL_SelectTexture( 0 );
+
+		globalImages->currentLightImage->CopyFramebuffer( backEnd.viewDef->viewport.x1,
+			backEnd.viewDef->viewport.y1,  backEnd.viewDef->viewport.x2 -  backEnd.viewDef->viewport.x1 + 1,
+			backEnd.viewDef->viewport.y2 -  backEnd.viewDef->viewport.y1 + 1, !glConfig.textureNonPowerOfTwoAvailable, false );
+
+		// TODO restore original colors
+		glClearColor( 0.0f, 0.0f, 0.0f, 0.0f );
+		glClear( GL_COLOR_BUFFER_BIT );
+	}
+
 //	RB_EXP_Bloom();
 //	RB_EXP_GammaDither();
 
@@ -3092,7 +3105,354 @@ void    RB_Exp_DrawInteractions( void ) {
 	}
 	GL_State( 0 );
 
+	GL_BindNullProgram();
+
+	// these haven't been state saved
+	for ( int i = 0 ; i < 8 ; i++ ) {
+		backEnd.glState.tmu[i].current2DMap = -1;
+		backEnd.glState.tmu[i].current3DMap = -1;
+		backEnd.glState.tmu[i].currentCubeMap = -1;
+	}
+
+	GL_CheckErrors();
+}
+
+
+// ======================================================================================
+
+static void	RB_T_DrawInteractionWithLightbuffer( const drawInteractionMaterialOnly_t *din ) 
+{
+	// choose and bind the vertex program
+	//gl_postLightingShader->SetNormalMapping(!r_skipBump.GetBool());
+	gl_postLightingShader->BindProgram();
+
+	// load all the vertex program parameters
+	//gl_postLightingShader->SetUniform_GlobalViewOrigin(backEnd.viewDef->renderView.vieworg);
+//	gl_postLightingShader->SetUniform_AmbientColor(ambientColor);
+
+	gl_postLightingShader->SetUniform_InvertedFramebufferResolution(backEnd.viewDef->viewport);
+	gl_postLightingShader->SetUniform_NonPowerOfTwoScale(backEnd.viewDef->viewport, 
+															globalImages->currentLightImage->uploadWidth, 
+															globalImages->currentLightImage->uploadHeight);
+
+	gl_postLightingShader->SetUniform_Viewport(backEnd.viewDef->viewport);
+
+	gl_postLightingShader->SetUniform_ModelMatrix(make_idMat4(din->surf->space->modelMatrix));
+
+	gl_postLightingShader->SetUniform_BumpMatrixS(din->bumpMatrix[0]);
+	gl_postLightingShader->SetUniform_BumpMatrixT(din->bumpMatrix[1]);
+
+	gl_postLightingShader->SetUniform_DiffuseMatrixS(din->diffuseMatrix[0]);
+	gl_postLightingShader->SetUniform_DiffuseMatrixT(din->diffuseMatrix[1]);
+
+	gl_postLightingShader->SetUniform_SpecularMatrixS(din->specularMatrix[0]);
+	gl_postLightingShader->SetUniform_SpecularMatrixT(din->specularMatrix[1]);
+
+	static const idVec4 zero( 0, 0, 0, 0 );
+	static const idVec4 one( 1, 1, 1, 1 );
+	static const idVec4 negOne( -1, -1, -1, -1 );
+
+	switch ( din->vertexColor ) {
+	case SVC_IGNORE:
+		gl_postLightingShader->SetUniform_ColorModulate(zero);
+		gl_postLightingShader->SetUniform_Color(one);
+		break;
+	case SVC_MODULATE:
+		gl_postLightingShader->SetUniform_ColorModulate(one);
+		gl_postLightingShader->SetUniform_Color(zero);
+		break;
+	case SVC_INVERSE_MODULATE:
+		gl_postLightingShader->SetUniform_ColorModulate(negOne);
+		gl_postLightingShader->SetUniform_Color(one);
+		break;
+	}
+
+	// set the constant colors
+	gl_postLightingShader->SetUniform_DiffuseColor(din->diffuseColor);
+	gl_postLightingShader->SetUniform_SpecularColor(din->specularColor);
+
+	// set the textures
+
+	// texture 0 will be the per-surface bump map
+	//gl_postLightingShader->SetUniform_NormalImage(0);
+	//GL_SelectTexture(0);
+	//din->bumpImage->Bind();
+
+	// texture 1 is the per-surface diffuse map
+	//gl_postLightingShader->SetUniform_DiffuseImage(1);
+	GL_SelectTexture(1);
+	din->diffuseImage->Bind();
+
+	// texture 2 is the per-surface specular map
+	//gl_postLightingShader->SetUniform_SpecularImage(2);
+	GL_SelectTexture(2);
+	din->specularImage->Bind();
+
+	// draw it
+	RB_DrawElementsWithCounters( din->surf->geo );
+}
+
+static bool RB_T_SubmittInteraction( drawInteractionMaterialOnly_t *din, void (*DrawInteraction)(const drawInteractionMaterialOnly_t *) ) {
+	if ( !din->bumpImage ) {
+		return false;
+	}
+
+	if ( !din->diffuseImage || r_skipDiffuse.GetBool() ) {
+		din->diffuseImage = globalImages->blackImage;
+	}
+	if ( !din->specularImage || r_skipSpecular.GetBool() ) {
+		din->specularImage = globalImages->blackImage;
+	}
+	if ( !din->bumpImage || r_skipBump.GetBool() ) {
+		din->bumpImage = globalImages->flatNormalMap;
+	}
+
+	// if we wouldn't draw anything, don't call the Draw function
+	//if ( 
+	//	( ( din->diffuseColor[0] > 0 || din->diffuseColor[1] > 0 || din->diffuseColor[2] > 0 ) && din->diffuseImage != globalImages->blackImage )
+	//	|| ( ( din->specularColor[0] > 0 || din->specularColor[1] > 0 || din->specularColor[2] > 0 ) && din->specularImage != globalImages->blackImage ) ) 
+	{
+		/*
+		if (din->alphaTest > 0.0f) {
+			glEnable( GL_ALPHA_TEST );
+			glAlphaFunc( GL_GREATER, din->alphaTest );
+		}
+		*/
+
+		DrawInteraction( din );
+
+		/*
+		if (din->alphaTest > 0.0f) {
+			glDisable( GL_ALPHA_TEST );
+		}
+		*/
+		return true;
+	}
+}
+
+/*
+==================
+RB_T_PostLightGeometry
+==================
+*/
+static void RB_T_PostLightGeometry( const drawSurf_t *surf ) {
+	int			stage;
+	const idMaterial	*shader;
+	const shaderStage_t *pStage;
+	const float	*regs;
+	float		color[4];
+	const srfTriangles_t	*tri;
+
+	tri = surf->geo;
+	shader = surf->material;
+
 	
+	if ( !shader->IsDrawn() ) {
+		return;
+	}
+
+	// some deforms may disable themselves by setting numIndexes = 0
+	if ( !tri->numIndexes ) {
+		return;
+	}
+
+	// translucent surfaces don't put anything in the depth buffer and don't
+	// test against it, which makes them fail the mirror clip plane operation
+	if ( shader->Coverage() == MC_TRANSLUCENT ) {
+		return;
+	}
+
+	if ( !tri->ambientCache ) {
+		common->Printf( "RB_T_PostLightGeometry: !tri->ambientCache\n" );
+		return;
+	}
+
+	// get the expressions for conditionals / color / texcoords
+	regs = surf->shaderRegisters;
+
+	// if all stages of a material have been conditioned off, don't do anything
+	for ( stage = 0; stage < shader->GetNumStages() ; stage++ ) {		
+		pStage = shader->GetStage(stage);
+		
+		// check the stage enable condition
+		if ( regs[ pStage->conditionRegister ] != 0 ) {
+			break;
+		}
+	}
+	if ( stage == shader->GetNumStages() ) {
+		return;
+	}
+
+	// set polygon offset if necessary
+	if ( shader->TestMaterialFlag(MF_POLYGONOFFSET) ) {
+		glEnable( GL_POLYGON_OFFSET_FILL );
+		glPolygonOffset( r_offsetFactor.GetFloat(), r_offsetUnits.GetFloat() * shader->GetPolygonOffset() );
+	}
+
+	idDrawVert *ac = (idDrawVert *)vertexCache.Position( tri->ambientCache );
+	glVertexPointer( 3, GL_FLOAT, sizeof( idDrawVert ), ac->xyz.ToFloatPtr() );
+	glVertexAttribPointerARB( VA_INDEX_TEXCOORD0, 2, GL_FLOAT, false, sizeof( idDrawVert ), ac->st.ToFloatPtr() );
+	glVertexAttribPointerARB( VA_INDEX_NORMAL, 3, GL_FLOAT, false, sizeof( idDrawVert ), ac->normal.ToFloatPtr() );
+	glVertexAttribPointerARB( VA_INDEX_BITANGENT, 3, GL_FLOAT, false, sizeof( idDrawVert ), ac->tangents[1].ToFloatPtr() );
+	glVertexAttribPointerARB( VA_INDEX_TANGENT, 3, GL_FLOAT, false, sizeof( idDrawVert ), ac->tangents[0].ToFloatPtr() );
+	glColorPointer( 4, GL_UNSIGNED_BYTE, sizeof( idDrawVert ), ac->color );
+	
+	drawInteractionMaterialOnly_t inter;
+
+	inter.surf = surf;
+
+	inter.bumpImage = NULL;
+	inter.specularImage = NULL;
+	inter.diffuseImage = NULL;
+	inter.diffuseColor[0] = inter.diffuseColor[1] = inter.diffuseColor[2] = inter.diffuseColor[3] = 0;
+	inter.specularColor[0] = inter.specularColor[1] = inter.specularColor[2] = inter.specularColor[3] = 0;
+
+	bool	didDraw = false;
+
+	for ( stage = 0; stage < shader->GetNumStages() ; stage++ ) 
+	{		
+		pStage = shader->GetStage(stage);
+		
+		switch( pStage->lighting ) {
+			case SL_AMBIENT: {
+				// ignore ambient stages while drawing interactions
+				break;
+			}
+			case SL_BUMP: {
+				// ignore stage that fails the condition
+				if ( !regs[ pStage->conditionRegister ] ) {
+					break;
+				}
+
+				// draw any previous interaction
+				didDraw = didDraw || RB_T_SubmittInteraction( &inter, RB_T_DrawInteractionWithLightbuffer );
+
+				if ( pStage->hasAlphaTest ) {
+					inter.alphaTest = regs[ pStage->alphaTestRegister ];
+				} else {
+					inter.alphaTest = 0;
+				}
+
+				inter.diffuseImage = NULL;
+				inter.specularImage = NULL;
+				R_SetDrawInteraction( pStage, regs, &inter.bumpImage, inter.bumpMatrix, NULL );
+				break;
+			}
+			case SL_DIFFUSE: {
+				// ignore stage that fails the condition
+				if ( !regs[ pStage->conditionRegister ] ) {
+					break;
+				}
+				if ( inter.diffuseImage ) {
+					didDraw = didDraw || RB_T_SubmittInteraction( &inter, RB_T_DrawInteractionWithLightbuffer );
+				}
+				R_SetDrawInteraction( pStage, regs, &inter.diffuseImage, inter.diffuseMatrix, inter.diffuseColor.ToFloatPtr() );
+				inter.vertexColor = pStage->vertexColor;
+				
+				if ( pStage->hasAlphaTest ) {
+					if ( regs[ pStage->alphaTestRegister ] > inter.alphaTest ) {
+						inter.alphaTest = regs[ pStage->alphaTestRegister ];
+					}
+				}
+				break;
+			}
+			case SL_SPECULAR: {
+				// ignore stage that fails the condition
+				if ( !regs[ pStage->conditionRegister ] ) {
+					break;
+				}
+				if ( inter.specularImage ) {
+					didDraw = didDraw || RB_T_SubmittInteraction( &inter, RB_T_DrawInteractionWithLightbuffer );
+				}
+				R_SetDrawInteraction( pStage, regs, &inter.specularImage, inter.specularMatrix, inter.specularColor.ToFloatPtr() );
+				inter.vertexColor = pStage->vertexColor;
+
+				if ( pStage->hasAlphaTest ) {
+					if ( regs[ pStage->alphaTestRegister ] > inter.alphaTest ) {
+						inter.alphaTest = regs[ pStage->alphaTestRegister ];
+					}
+				}
+				break;
+			}
+		}
+	}
+
+	// draw the final interaction
+	didDraw = didDraw || RB_T_SubmittInteraction( &inter, RB_T_DrawInteractionWithLightbuffer );
+
+	/*
+	if ( !didDraw ) {
+		inter.alphaTest = 0;
+		inter.bumpImage = globalImages->flatNormalMap;
+		inter.diffuseImage = NULL;
+		inter.specularImage = NULL;
+
+		RB_T_SubmittInteraction( &inter, RB_T_DrawInteractionWithLightbuffer );
+	}
+	*/
+
+	// reset polygon offset
+	if ( shader->TestMaterialFlag(MF_POLYGONOFFSET) ) {
+		glDisable( GL_POLYGON_OFFSET_FILL );
+	}
+
+	// reset blending
+	if ( shader->GetSort() == SS_SUBVIEW ) {
+		GL_State( GLS_DEPTHFUNC_LESS );
+	}
+}
+
+
+void RB_EXP_ResolveLightFromLightBuffer( drawSurf_t **drawSurfs, int numDrawSurfs ) 
+{
+	// if we are just doing 2D rendering, no need to fill the color buffer
+	if ( !backEnd.viewDef->viewEntitys ) {
+		return;
+	}
+
+	if ( r_skipPostLighting.GetBool() ) {
+		return;
+	}
+
+	RB_LogComment( "---------- RB_EXP_ResolveLightFromLightBuffer ----------\n" );
+
+	// the first texture will be used for the light buffer
+	GL_SelectTexture( 0 );
+	globalImages->currentLightImage->Bind();
+
+	glDisableClientState( GL_TEXTURE_COORD_ARRAY );
+
+	glEnableVertexAttribArrayARB( VA_INDEX_TEXCOORD0 );
+	glEnableVertexAttribArrayARB( VA_INDEX_TANGENT );
+	glEnableVertexAttribArrayARB( VA_INDEX_BITANGENT );
+	glEnableVertexAttribArrayARB( VA_INDEX_NORMAL );
+	glEnableClientState( GL_COLOR_ARRAY );
+
+	// decal surfaces may enable polygon offset
+	glPolygonOffset( r_offsetFactor.GetFloat(), r_offsetUnits.GetFloat() );
+
+	GL_State( GLS_DEPTHFUNC_LESS );
+
+	RB_RenderDrawSurfListWithFunction( drawSurfs, numDrawSurfs, RB_T_PostLightGeometry );
+
+	glDisableVertexAttribArrayARB( VA_INDEX_TEXCOORD0 );
+	glDisableVertexAttribArrayARB( VA_INDEX_TANGENT );
+	glDisableVertexAttribArrayARB( VA_INDEX_BITANGENT );
+	glDisableVertexAttribArrayARB( VA_INDEX_NORMAL );
+	glDisableClientState( GL_COLOR_ARRAY );
+
+	glColor4f(1, 1, 1, 1);
+
+	// FIXME
+	GL_SelectTexture( 0 );
+	glEnableClientState( GL_TEXTURE_COORD_ARRAY );
+
+	// experimental transfer function
+	for ( int i = 8 ; i >= 0 ; i-- ) {
+		GL_SelectTextureNoClient( i );
+		globalImages->BindNull();
+	}
+	GL_State( 0 );
 
 	GL_BindNullProgram();
 
@@ -3103,14 +3463,10 @@ void    RB_Exp_DrawInteractions( void ) {
 		backEnd.glState.tmu[i].currentCubeMap = -1;
 	}
 
-	// take it out of texture compare mode so I can testImage it for debugging
-	//shadowImage[0]->BindFragment();
-	//glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE_ARB, GL_NONE );
-
 	GL_CheckErrors();
 }
 
-
+// ======================================================================================
 
 /*
 ==================
