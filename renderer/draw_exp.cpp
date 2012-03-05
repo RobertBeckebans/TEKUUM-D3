@@ -1231,6 +1231,7 @@ GL_SelectTexture( 0 );
 void RB_EXP_CoverScreen( void ) 
 {
 	// draw a full screen quad
+	glPushMatrix();
 	glMatrixMode( GL_PROJECTION );
 	glLoadIdentity(); 
 	glOrtho( 0, 1, 0, 1, -1, 1 );
@@ -1243,6 +1244,8 @@ void RB_EXP_CoverScreen( void )
 	glVertex2f( 1, 1 );
 	glVertex2f( 1, 0 );
 	glEnd();
+
+	glPopMatrix();
 }
 
 /*
@@ -1567,6 +1570,8 @@ static void RB_EXP_DrawLightDeferred( viewLight_t *vLight )
 	}
 
 	// change the scissor if needed
+#if 0
+	// scissor values out of range
 	if ( r_useScissor.GetBool() && !backEnd.currentScissor.Equals( vLight->scissorRect ) ) {
 		backEnd.currentScissor = vLight->scissorRect;
 		glScissor( backEnd.viewDef->viewport.x1 + backEnd.currentScissor.x1, 
@@ -1574,6 +1579,7 @@ static void RB_EXP_DrawLightDeferred( viewLight_t *vLight )
 			backEnd.currentScissor.x2 + 1 - backEnd.currentScissor.x1,
 			backEnd.currentScissor.y2 + 1 - backEnd.currentScissor.y1 );
 	}
+#endif
 
 	for ( int lightStageNum = 0 ; lightStageNum < lightShader->GetNumStages() ; lightStageNum++ ) 
 	{
@@ -2640,6 +2646,53 @@ r_testGamma.SetBool( false );
 	glDisable(GL_FRAGMENT_PROGRAM_ARB);
 }
 
+static void RB_EXP_FXAA()
+{
+	if ( !r_useFXAA.GetBool() ) {
+		return;
+	}
+
+	RB_LogComment( "---------- RB_EXP_FXAA ----------\n" );
+
+	//RB_EXP_SetNativeBuffer();
+
+	gl_FXAAShader->BindProgram();
+
+	gl_FXAAShader->SetUniform_InvertedFramebufferResolution(backEnd.viewDef->viewport);
+	gl_FXAAShader->SetUniform_FxaaInvertedFramebufferResolutionOpt(backEnd.viewDef->viewport);
+	gl_FXAAShader->SetUniform_NonPowerOfTwoScale(backEnd.viewDef->viewport, 
+															globalImages->currentNormalsImage->uploadWidth, 
+															globalImages->currentNormalsImage->uploadHeight);
+
+	gl_FXAAShader->SetUniform_Viewport(backEnd.viewDef->viewport);
+
+
+	// bind u_CurrentRenderImage
+#if 1
+	globalImages->currentRenderImage->CopyFramebuffer( backEnd.viewDef->viewport.x1,
+			backEnd.viewDef->viewport.y1,  backEnd.viewDef->viewport.x2 -  backEnd.viewDef->viewport.x1 + 1,
+			backEnd.viewDef->viewport.y2 -  backEnd.viewDef->viewport.y1 + 1, !glConfig.textureNonPowerOfTwoAvailable, false );
+#endif
+	gl_FXAAShader->SetUniform_CurrentRenderImage(2);
+	GL_SelectTextureNoClient(2);
+
+	//int stateBits = backEnd.glState.glStateBits;
+	//GL_State(GLS_DEPTHMASK);
+
+
+	//glDisable( GL_STENCIL_TEST );
+	//glDisable( GL_SCISSOR_TEST );
+	//glDisable( GL_DEPTH_TEST );
+
+	RB_EXP_CoverScreen();
+
+	//glEnable( GL_DEPTH_TEST );
+	//glEnable( GL_STENCIL_TEST );
+
+	//GL_State(stateBits);
+	GL_BindNullProgram();
+}
+
 /*
 ==================
 RB_EXP_Bloom
@@ -2868,6 +2921,8 @@ void    RB_Exp_DrawInteractions( void ) {
 	{
 		//R_EXP_RenderViewDepthImage();
 
+		RB_EXP_FXAA();
+
 		globalImages->currentNormalsImage->CopyFramebuffer( backEnd.viewDef->viewport.x1,
 			backEnd.viewDef->viewport.y1,  backEnd.viewDef->viewport.x2 -  backEnd.viewDef->viewport.x1 + 1,
 			backEnd.viewDef->viewport.y2 -  backEnd.viewDef->viewport.y1 + 1, !glConfig.textureNonPowerOfTwoAvailable, false );
@@ -2876,7 +2931,7 @@ void    RB_Exp_DrawInteractions( void ) {
 			backEnd.viewDef->viewport.y1,  backEnd.viewDef->viewport.x2 -  backEnd.viewDef->viewport.x1 + 1,
 			backEnd.viewDef->viewport.y2 -  backEnd.viewDef->viewport.y1 + 1 );
 
-		glClearColor( 0.0f, 0.0f,  0.0f, 0.0f );
+		glClearColor( 0.0f, 0.0f, 0.0f, 0.0f );
 		glClear( GL_COLOR_BUFFER_BIT );
 	}
 
@@ -3015,6 +3070,18 @@ void    RB_Exp_DrawInteractions( void ) {
 
 	GL_CheckErrors();
 
+	if(r_useHighDynamicRange.GetBool())
+	{
+		RB_CalculateHDRAdaptation();
+
+		RB_EXP_GammaDither();
+	}
+
+	//RB_EXP_FXAA();
+
+//	RB_EXP_Bloom();
+//	RB_EXP_GammaDither();
+
 	GL_SelectTexture( 0 );
 	glEnableClientState( GL_TEXTURE_COORD_ARRAY );
 
@@ -3025,15 +3092,7 @@ void    RB_Exp_DrawInteractions( void ) {
 	}
 	GL_State( 0 );
 
-	if(r_useHighDynamicRange.GetBool())
-	{
-		RB_CalculateHDRAdaptation();
-
-		RB_EXP_GammaDither();
-	}
-
-//	RB_EXP_Bloom();
-//	RB_EXP_GammaDither();
+	
 
 	GL_BindNullProgram();
 
@@ -3064,9 +3123,8 @@ void R_Exp_Init( void ) {
 	common->Printf( "---------- R_Exp_Init ----------\n" );
 
 	if ( !glConfig.ARBVertexProgramAvailable || !glConfig.ARBFragmentProgramAvailable || 
-		!WGLEW_ARB_pbuffer ||
-		!WGLEW_ARB_pixel_format ||
-		!WGLEW_ARB_render_texture ||
+		!glConfig.framebufferObjectAvailable ||
+		!glConfig.framebufferBlitAvailable ||
 		!GLEW_ARB_texture_float ||
 		!GLEW_ARB_texture_rg) {
 		common->Printf( "Not available.\n" );

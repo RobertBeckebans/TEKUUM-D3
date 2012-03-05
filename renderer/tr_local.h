@@ -1092,6 +1092,9 @@ extern idCVar r_evsm_postProcess;
 extern idCVar r_useHighDynamicRange;
 extern idCVar r_useDeferredShading;
 
+extern idCVar r_useFXAA;
+extern idCVar r_fxaaQualityPreset;
+
 // Techyon END
 
 /*
@@ -1822,6 +1825,9 @@ typedef struct shaderProgram_s
 
 	int32_t         u_InvertedFramebufferResolution;
 	idVec2			t_InvertedFramebufferResolution;
+
+	int32_t			u_FxaaInvertedFramebufferResolutionOpt;
+	idVec4			t_FxaaInvertedFramebufferResolutionOpt;
 
 	int32_t			u_NonPowerOfTwoScale;
 	idVec2			t_NonPowerOfTwoScale;

@@ -38,6 +38,7 @@ GLShader_shadowVolume* gl_shadowVolumeShader = NULL;
 GLShader_shadowMap* gl_shadowMapShader = NULL;
 //GLShader_screen* gl_screenShader = NULL;
 //GLShader_portal* gl_portalShader = NULL;
+GLShader_FXAA* gl_FXAAShader = NULL;
 GLShader_toneMapping* gl_toneMappingShader = NULL;
 //GLShader_contrast* gl_contrastShader = NULL;
 //GLShader_cameraEffects* gl_cameraEffectsShader = NULL;
@@ -440,8 +441,65 @@ idStr	GLShader::BuildGPUShaderText(	const char *mainShaderName,
 
 	//if(r_useDeferredShading.GetBool())
 	{
-		shaderText += va("#ifndef r_DeferredLighting\n#define r_DeferredLighting 1\n#endif\n");
+		shaderText += "#ifndef r_DeferredLighting\n#define r_DeferredLighting 1\n#endif\n";
 	}
+
+
+
+	/*
+	(1.)
+	In the shader source,
+	setup defines for the desired configuration.
+	Example,
+
+	#define FXAA_PC 1
+	#define FXAA_HLSL_3 1
+	#define FXAA_QUALITY__PRESET 12
+	#define FXAA_QUALITY__EDGE_THRESHOLD (1.0/6.0)
+	#define FXAA_QUALITY__EDGE_THRESHOLD_MIN (1.0/12.0)
+
+	(5.)
+	Setup engine to provide "rcpFrame" and "rcpFrameOpt" constants.
+	Not using constants will result in a performance loss.
+
+	  // {x_} = 1.0/screenWidthInPixels
+	  // {_y} = 1.0/screenHeightInPixels
+	  float2 rcpFrame
+
+	  // This must be from a constant/uniform.
+	  // {x___} = 2.0/screenWidthInPixels
+	  // {_y__} = 2.0/screenHeightInPixels
+	  // {__z_} = 0.5/screenWidthInPixels
+	  // {___w} = 0.5/screenHeightInPixels
+	  float4 rcpFrameOpt
+	*/
+
+#if 1
+	shaderText += "#ifndef FXAA_PC\n#define FXAA_PC 1\n#endif\n";
+#if 0
+	// TODO
+	if(glConfig.driverType == GLDRV_OPENGL3)
+	{
+		shaderText += "#ifndef FXAA_GLSL_130\n#define FXAA_GLSL_130 1\n#endif\n";
+	}
+	else
+#endif
+	{
+		//if(GLEW_EXT_gpu_shader4) {
+		//	shaderText += "#extension GL_EXT_gpu_shader4 : enable";
+		//} else {
+			shaderText += "#ifndef FXAA_FAST_PIXEL_OFFSET\n#define FXAA_FAST_PIXEL_OFFSET 1\n#endif\n";
+		//}
+
+		shaderText += "#ifndef FXAA_GLSL_120\n#define FXAA_GLSL_120 1\n#endif\n";
+	}
+
+
+	shaderText += "#ifndef FXAA_PC\n#define FXAA_PC 1\n#endif\n";
+	//shaderText += va("#ifndef FXAA_QUALITY__PRESET\n#define FXAA_QUALITY__PRESET %i\n#endif\n", r_fxaaQualityPreset.GetInteger());
+	//shaderText += va("#ifndef FXAA_QUALITY__EDGE_THRESHOLD\n#define FXAA_QUALITY__EDGE_THRESHOLD %1.1f\n#endif\n", r_sb_softShadows.GetFloat() + 1.0f);
+#endif
+
 
 	/*
 	if(r_deferredShading->integer && glConfig2.maxColorAttachments >= 4 && glConfig2.textureFloatAvailable &&
@@ -500,6 +558,8 @@ idStr	GLShader::BuildGPUShaderText(	const char *mainShaderName,
 													r_rimExponent->value));
 	}
 	*/
+
+
 
 	// OK we added a lot of stuff but if we do something bad in the GLSL shaders then we want the proper line
 	// so we have to reset the line counting
@@ -702,7 +762,7 @@ void GLShader::CompileGPUShader(GLhandleARB program, const idStr& programName, c
 	glGetObjectParameterivARB(shader, GL_OBJECT_COMPILE_STATUS_ARB, &compiled);
 	if(!compiled)
 	{
-		PrintShaderSource(shader);
+		//PrintShaderSource(shader);
 		PrintInfoLog(shader, false);
 		common->Error("Couldn't compile %s %s", (shaderType == GL_VERTEX_SHADER_ARB ? "vertex shader" : "fragment shader"), programName.c_str());
 		return;
@@ -1553,6 +1613,86 @@ void GLShader_shadowMap::CreatePreIncludeText(idStr& preIncludeText)
 }
 
 
+
+GLShader_FXAA::GLShader_FXAA():
+		GLShader("FXAA", VA_POSITION),
+		u_CurrentRenderImage(this),
+		u_InvertedFramebufferResolution(this),
+		u_FxaaInvertedFramebufferResolutionOpt(this),
+		u_NonPowerOfTwoScale(this),
+		u_Viewport(this)
+{
+	common->Printf("/// -------------------------------------------------\n");
+	common->Printf("/// creating FXAA shaders --------\n");
+
+	idTimer compile_time;
+	compile_time.Start();
+
+	idStrList vertexInlines;
+	idStrList fragmentInlines;
+
+	idStr vertexShaderText = BuildGPUShaderText("FXAA", vertexInlines, GL_VERTEX_SHADER_ARB);
+	idStr fragmentShaderText = BuildGPUShaderText("FXAA", fragmentInlines, GL_FRAGMENT_SHADER_ARB);
+
+	size_t numPermutations = (1 << _compileMacros.Num());	// same as 2^n, n = no. compile macros
+	size_t numCompiled = 0;
+	common->Printf("...compiling FXAA shaders\n");
+	common->Printf("0%%  10   20   30   40   50   60   70   80   90   100%%\n");
+	common->Printf("|----|----|----|----|----|----|----|----|----|----|\n");
+	size_t tics = 0;
+	size_t nextTicCount = 0;
+	for(size_t i = 0; i < numPermutations; i++)
+	{
+		if((i + 1) >= nextTicCount)
+		{
+			size_t ticsNeeded = (size_t)(((double)(i + 1) / numPermutations) * 50.0);
+
+			do { common->Printf("*"); } while ( ++tics < ticsNeeded );
+
+			nextTicCount = (size_t)((tics / 50.0) * numPermutations);
+			if(i == (numPermutations - 1))
+			{
+				if(tics < 51)
+					common->Printf("*");
+				common->Printf("\n");
+			}
+		}
+
+		idStrList compileMacros;
+		if(GetCompileMacrosString(i, compileMacros))
+		{
+			//common->DPrintf("Compile macros: '%s'\n", compileMacros.To);
+		
+			shaderProgram_t *shaderProgram = new shaderProgram_t();
+			_shaderPrograms.Append(shaderProgram);
+
+			CompileAndLinkGPUShaderProgram(	shaderProgram,
+											"FXAA",
+											vertexShaderText,
+											fragmentShaderText,
+											compileMacros);
+
+			UpdateShaderProgramUniformLocations(shaderProgram);
+
+			//SetUniform_CurrentImage(0);
+
+			ValidateProgram(shaderProgram->program);
+			//ShowProgramUniforms(shaderProgram->program);
+			GL_CheckErrors();
+
+			numCompiled++;
+		}
+		else
+		{
+			_shaderPrograms.Append(NULL);
+		}
+	}
+
+	SelectProgram();
+
+	compile_time.Stop();
+	common->Printf("...compiled %i FXAA shader permutations in %5.2f seconds\n", numCompiled, compile_time.Milliseconds() / 1000.0);
+}
 
 GLShader_toneMapping::GLShader_toneMapping():
 		GLShader("toneMapping", VA_POSITION),

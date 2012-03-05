@@ -177,6 +177,9 @@ int Sys_Milliseconds( void ) {
 
 	gettimeofday(&tp, NULL);
 
+	TODO
+	clock_gettime(CLOCK_MONOTONIC, )
+
 	if (!sys_timeBase) {
 		sys_timeBase = tp.tv_sec;
 		return tp.tv_usec / 1000;

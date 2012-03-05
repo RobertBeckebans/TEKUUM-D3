@@ -62,7 +62,7 @@ void GL_BindNullProgram(void)
 		RB_LogComment("--- GL_BindNullProgram ---\n");
 	}
 
-	if(backEnd.glState.currentProgram)
+	//if(backEnd.glState.currentProgram)
 	{
 		glUseProgramObjectARB(0);
 		backEnd.glState.currentProgram = NULL;
@@ -446,6 +446,15 @@ void R_ReloadShaders_f( const idCmdArgs &args ) {
 			gl_shadowMapShader = NULL;
 		}
 		gl_shadowMapShader = new GLShader_shadowMap();
+
+#if 1
+		if(gl_FXAAShader)
+		{
+			delete gl_FXAAShader;
+			gl_FXAAShader = NULL;
+		}
+		gl_FXAAShader = new GLShader_FXAA();
+#endif
 
 		if(gl_toneMappingShader)
 		{

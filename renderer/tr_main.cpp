@@ -1017,7 +1017,7 @@ static void R_SetupProjection( bool infiniteFarClip )
 	tr.viewDef->projectionMatrix[2] = 0;
 	tr.viewDef->projectionMatrix[6] = 0;
 
-	if(infiniteFarClip)
+	if(infiniteFarClip || zFar <= 0)
 	{
 		tr.viewDef->projectionMatrix[10] = -0.999f;
 		tr.viewDef->projectionMatrix[14] = -2.0f * zNear;

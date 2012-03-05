@@ -27,7 +27,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 // *INDENT-OFF*
 
-#define USE_UNIFORM_FIREWALL
+//#define USE_UNIFORM_FIREWALL
 #define LOG_GLSL_UNIFORMS
 
 class GLUniform;
@@ -2300,6 +2300,51 @@ public:
 	}
 };
 
+class u_FxaaInvertedFramebufferResolutionOpt:
+GLUniform
+{
+public:
+	u_FxaaInvertedFramebufferResolutionOpt(GLShader* shader):
+	  GLUniform(shader)
+	{
+	}
+
+	const char* GetName() const { return "u_FxaaInvertedFramebufferResolutionOpt"; }
+	void				UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
+	{
+		shaderProgram->u_FxaaInvertedFramebufferResolutionOpt = glGetUniformLocationARB(shaderProgram->program, GetName());
+	}
+
+	void SetUniform_FxaaInvertedFramebufferResolutionOpt(const idVec4& v)
+	{
+		shaderProgram_t* program = _shader->GetProgram();
+
+#if defined(USE_UNIFORM_FIREWALL)
+		if(program->t_FxaaInvertedFramebufferResolutionOpt == v)
+			return;
+
+		program->t_FxaaInvertedFramebufferResolutionOpt = v;
+#endif
+
+#if defined(LOG_GLSL_UNIFORMS)
+		if(r_logFile.GetBool())
+		{
+			RB_LogComment("--- SetUniform_FxaaInvertedFramebufferResolutionOpt( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name.c_str(), v[0], v[1], v[2], v[3]);
+		}
+#endif
+
+		glUniform4fARB(program->u_FxaaInvertedFramebufferResolutionOpt, v[0], v[1], v[2], v[3]);
+	}
+
+	void SetUniform_FxaaInvertedFramebufferResolutionOpt(const idScreenRect& viewport)
+	{
+		int	width = viewport.x2 - viewport.x1 + 1;
+		int	height = viewport.y2 - viewport.y1 + 1;
+
+		SetUniform_FxaaInvertedFramebufferResolutionOpt(idVec4(2.0f / (float) width, 2.0f / (float) height, 0.5f / (float) width, 0.5f / (float) height));
+	}
+};
+
 class u_NonPowerOfTwoScale:
 GLUniform
 {
@@ -2596,6 +2641,18 @@ private:
 	void			CreatePreIncludeText(idStr& preIncludeText);
 };
 
+class GLShader_FXAA:
+public GLShader,
+public u_CurrentRenderImage,
+public u_InvertedFramebufferResolution,
+public u_FxaaInvertedFramebufferResolutionOpt,
+public u_NonPowerOfTwoScale,
+public u_Viewport
+{
+public:
+	GLShader_FXAA();
+};
+
 class GLShader_toneMapping:
 public GLShader,
 public u_CurrentRenderImage,
@@ -2617,6 +2674,7 @@ extern GLShader_shadowVolume* gl_shadowVolumeShader;
 extern GLShader_shadowMap* gl_shadowMapShader;
 //extern GLShader_screen* gl_screenShader;
 //extern GLShader_portal* gl_portalShader;
+extern GLShader_FXAA* gl_FXAAShader;
 extern GLShader_toneMapping* gl_toneMappingShader;
 //extern GLShader_contrast* gl_contrastShader;
 //extern GLShader_cameraEffects* gl_cameraEffectsShader;
