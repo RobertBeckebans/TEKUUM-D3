@@ -1592,7 +1592,7 @@ static void RB_EXP_DrawLightDeferred( viewLight_t *vLight )
 		gl_deferredLightingShader->SetMacro_LIGHT_PROJ(!vLight->lightDef->parms.pointLight);
 		gl_deferredLightingShader->SetShadowing(shadowCompare);
 		gl_deferredLightingShader->SetNormalMapping(!r_skipBump.GetBool() || vLight->lightShader->IsAmbientLight());
-		gl_deferredLightingShader->SetFrustumClipping(true); // FIXME expensive
+		gl_deferredLightingShader->SetFrustumClipping(/*vLight->viewInsideLight ||*/ r_deferredShadingGPUFrustumCulling.GetBool()); // FIXME expensive
 		gl_deferredLightingShader->BindProgram();
 
 		// load all the vertex program parameters
@@ -2651,6 +2651,7 @@ r_testGamma.SetBool( false );
 
 static void RB_EXP_FXAA()
 {
+#if 0
 	if ( !r_useFXAA.GetBool() ) {
 		return;
 	}
@@ -2694,6 +2695,7 @@ static void RB_EXP_FXAA()
 
 	//GL_State(stateBits);
 	GL_BindNullProgram();
+#endif
 }
 
 /*

@@ -248,7 +248,7 @@ idCVar r_materialOverride( "r_materialOverride", "", CVAR_RENDERER, "overrides a
 idCVar r_debugRenderToTexture( "r_debugRenderToTexture", "0", CVAR_RENDERER | CVAR_INTEGER, "" );
 
 // Techyon BEGIN
-idCVar r_sb_mode( "r_sb_mode", "3", CVAR_RENDERER | CVAR_INTEGER, "0 = ESM16, 1 = ESM32, 2 = VSM16, 3 = VSM32, 4 = EVSM32" );
+idCVar r_sb_mode( "r_sb_mode", "0", CVAR_RENDERER | CVAR_INTEGER, "0 = ESM16, 1 = ESM32, 2 = VSM16, 3 = VSM32, 4 = EVSM32" );
 idCVar r_sb_debug( "r_sb_debug", "0", CVAR_RENDERER | CVAR_INTEGER, "" );
 
 idCVar r_sb_randomize( "r_sb_randomize", "1", CVAR_RENDERER | CVAR_BOOL, "randomly offset jitter texture each draw" );
@@ -267,6 +267,7 @@ idCVar r_esmOverDarkeningFactor( "r_esmOverDarkeningFactor", "80", CVAR_RENDERER
 idCVar r_evsm_postProcess( "r_evsm_postProcess", "0", CVAR_RENDERER | CVAR_BOOL, "don't use the expensive RGBA32F MRT" );
 
 idCVar r_useDeferredShading( "r_useDeferredShading", "0", CVAR_RENDERER | CVAR_BOOL, "enable light pre pass deferred shading" );
+idCVar r_deferredShadingGPUFrustumCulling( "r_deferredShadingGPUFrustumCulling", "0", CVAR_RENDERER | CVAR_BOOL, "WARNING EXPENSIVE: cull each pixel world position using the light frustum" );
 
 idCVar r_useFXAA( "r_useFXAA", "0", CVAR_RENDERER | CVAR_BOOL, "enable Fast Approximate Anti-Aliasing" );
 idCVar r_fxaaQualityPreset( "r_fxaaQualityPreset", "12", CVAR_RENDERER | CVAR_INTEGER, "default medium dither (10=fastest, 15=highest quality)",  10, 15, idCmdSystem::ArgCompletion_Integer<10,15>);

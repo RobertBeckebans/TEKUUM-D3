@@ -454,7 +454,7 @@ void R_ReloadShaders_f( const idCmdArgs &args ) {
 		}
 		gl_shadowMapShader = new GLShader_shadowMap();
 
-#if 1
+#if 0
 		if(gl_FXAAShader)
 		{
 			delete gl_FXAAShader;

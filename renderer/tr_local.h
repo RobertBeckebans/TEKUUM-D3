@@ -1091,6 +1091,7 @@ extern idCVar r_evsm_postProcess;
 
 extern idCVar r_useHighDynamicRange;
 extern idCVar r_useDeferredShading;
+extern idCVar r_deferredShadingGPUFrustumCulling;
 
 extern idCVar r_useFXAA;
 extern idCVar r_fxaaQualityPreset;
