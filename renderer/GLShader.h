@@ -1954,6 +1954,57 @@ public:
 	}
 };
 
+
+class u_LightFrustum:
+GLUniform
+{
+public:
+	u_LightFrustum(GLShader* shader):
+	  GLUniform(shader)
+	{
+	}
+
+	const char* GetName() const { return "u_LightFrustum"; }
+	void				UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
+	{
+		shaderProgram->u_LightFrustum = glGetUniformLocationARB(shaderProgram->program, GetName());
+	}
+
+	void SetUniform_LightFrustum(const idPlane lightFrustum[6])
+	{
+		shaderProgram_t* program = _shader->GetProgram();
+
+#if 0
+		if(memcmp(program->t_LightFrustum, m))
+			return;
+#endif
+
+#if defined(LOG_GLSL_UNIFORMS)
+		if(r_logFile.GetBool())
+		{
+			RB_LogComment("--- SetUniform_LightFrustum( program = %s, "
+								"( %5.3f, %5.3f, %5.3f, %5.3f )\n"
+								"( %5.3f, %5.3f, %5.3f, %5.3f )\n"
+								"( %5.3f, %5.3f, %5.3f, %5.3f )\n"
+								"( %5.3f, %5.3f, %5.3f, %5.3f )\n"
+								"( %5.3f, %5.3f, %5.3f, %5.3f )\n"
+								"( %5.3f, %5.3f, %5.3f, %5.3f ) ) ---\n",
+								program->name.c_str(),
+								lightFrustum[0][0], lightFrustum[0][1], lightFrustum[0][2], lightFrustum[0][3],
+								lightFrustum[1][0], lightFrustum[1][1], lightFrustum[1][2], lightFrustum[1][3],
+								lightFrustum[2][0], lightFrustum[2][1], lightFrustum[2][2], lightFrustum[2][3],
+								lightFrustum[3][0], lightFrustum[3][1], lightFrustum[3][2], lightFrustum[3][3],
+								lightFrustum[4][0], lightFrustum[4][1], lightFrustum[4][2], lightFrustum[4][3],
+								lightFrustum[5][0], lightFrustum[5][1], lightFrustum[5][2], lightFrustum[5][3]
+								);
+		}
+#endif
+
+		glUniform4fvARB(program->u_LightFrustum, 6, lightFrustum[0].ToFloatPtr());
+	}
+};
+
+
 class u_ShadowTexelSize:
 GLUniform
 {
@@ -2504,6 +2555,7 @@ public u_LightProjectS,
 public u_LightProjectT,
 public u_LightProjectQ,
 public u_LightFalloffS,
+public u_LightFrustum,
 public u_ShadowMatrix,
 public u_ShadowTexelSize,
 public u_ShadowBlur,
@@ -2516,6 +2568,7 @@ public u_Viewport,
 public GLCompileMacro_USE_NORMAL_MAPPING,
 //public GLCompileMacro_USE_PARALLAX_MAPPING,
 public GLCompileMacro_USE_SHADOWING,
+public GLCompileMacro_USE_FRUSTUM_CLIPPING,
 //public GLCompileMacro_LIGHT_DIRECTIONAL,
 public GLCompileMacro_LIGHT_PROJ
 {

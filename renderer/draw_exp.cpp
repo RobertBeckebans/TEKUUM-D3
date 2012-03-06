@@ -1581,47 +1581,7 @@ static void RB_EXP_DrawLightDeferred( viewLight_t *vLight )
 	}
 #endif
 
-	for ( int lightStageNum = 0 ; lightStageNum < lightShader->GetNumStages() ; lightStageNum++ ) 
-	{
-		const shaderStage_t	*lightStage = lightShader->GetStage( lightStageNum );
-
-		// ignore stages that fail the condition
-		if ( !lightRegs[ lightStage->conditionRegister ] ) {
-			continue;
-		}
-
-		idVec4 lightColor;
-
-		// backEnd.lightScale is calculated so that lightColor[] will never exceed
-		// tr.backEndRendererMaxLight
-#if 0
-		lightColor[0] = backEnd.lightScale * lightRegs[ lightStage->color.registers[0] ];
-		lightColor[1] = backEnd.lightScale * lightRegs[ lightStage->color.registers[1] ];
-		lightColor[2] = backEnd.lightScale * lightRegs[ lightStage->color.registers[2] ];
-#else
-		lightColor[0] = lightRegs[ lightStage->color.registers[0] ];
-		lightColor[1] = lightRegs[ lightStage->color.registers[1] ];
-		lightColor[2] = lightRegs[ lightStage->color.registers[2] ];
-#endif
-		lightColor[3] = lightRegs[ lightStage->color.registers[3] ];
-
-		// if we wouldn't draw anything, don't call the Draw function
-		if (lightColor.LengthSqr() == 0) {
-			continue;
-		}
-
-		idPlane lightProject[4];
-		for ( int i = 0 ; i < 4 ; i++ ) {
-			lightProject[i] = vLight->lightDef->lightProject[i];
-		}
-
-		// now multiply the texgen by the light texture matrix
-		if ( lightStage->texture.hasMatrix ) {
-			RB_GetShaderTextureMatrix( lightRegs, &lightStage->texture, backEnd.lightTextureMatrix );
-			RB_BakeTextureMatrixIntoTexgen( lightProject, backEnd.lightTextureMatrix );
-		}
-
-#if 1
+	#if 1
 		bool shadowCompare = (!r_sb_noShadows.GetBool() && r_shadows.GetBool() && vLight->lightShader->LightCastsShadows() && !vLight->lightDef->parms.noShadows);
 #else
 		bool shadowCompare = false;
@@ -1632,6 +1592,7 @@ static void RB_EXP_DrawLightDeferred( viewLight_t *vLight )
 		gl_deferredLightingShader->SetMacro_LIGHT_PROJ(!vLight->lightDef->parms.pointLight);
 		gl_deferredLightingShader->SetShadowing(shadowCompare);
 		gl_deferredLightingShader->SetNormalMapping(!r_skipBump.GetBool() || vLight->lightShader->IsAmbientLight());
+		gl_deferredLightingShader->SetFrustumClipping(true); // FIXME expensive
 		gl_deferredLightingShader->BindProgram();
 
 		// load all the vertex program parameters
@@ -1640,14 +1601,9 @@ static void RB_EXP_DrawLightDeferred( viewLight_t *vLight )
 		gl_deferredLightingShader->SetUniform_GlobalViewOrigin(backEnd.viewDef->renderView.vieworg);
 		gl_deferredLightingShader->SetUniform_GlobalLightOrigin(vLight->lightDef->globalLightOrigin);
 
-		gl_deferredLightingShader->SetUniform_LightColor(lightColor);
-
 		gl_deferredLightingShader->SetUniform_LightRadius(vLight->lightDef->frustumTris->bounds.GetRadius());
 
-		gl_deferredLightingShader->SetUniform_LightProjectS(lightProject[0].ToVec4());
-		gl_deferredLightingShader->SetUniform_LightProjectT(lightProject[1].ToVec4());
-		gl_deferredLightingShader->SetUniform_LightProjectQ(lightProject[2].ToVec4());
-		gl_deferredLightingShader->SetUniform_LightFalloffS(lightProject[3].ToVec4());
+		gl_deferredLightingShader->SetUniform_LightFrustum(vLight->lightDef->frustum);
 
 		gl_deferredLightingShader->SetUniform_InvertedFramebufferResolution(backEnd.viewDef->viewport);
 		gl_deferredLightingShader->SetUniform_NonPowerOfTwoScale(backEnd.viewDef->viewport, 
@@ -1747,6 +1703,53 @@ static void RB_EXP_DrawLightDeferred( viewLight_t *vLight )
 		// texture 2 will be the light falloff texture
 		GL_SelectTextureNoClient( 2 );
 		vLight->falloffImage->Bind();
+
+	for ( int lightStageNum = 0 ; lightStageNum < lightShader->GetNumStages() ; lightStageNum++ ) 
+	{
+		const shaderStage_t	*lightStage = lightShader->GetStage( lightStageNum );
+
+		// ignore stages that fail the condition
+		if ( !lightRegs[ lightStage->conditionRegister ] ) {
+			continue;
+		}
+
+		idVec4 lightColor;
+
+		// backEnd.lightScale is calculated so that lightColor[] will never exceed
+		// tr.backEndRendererMaxLight
+#if 0
+		lightColor[0] = backEnd.lightScale * lightRegs[ lightStage->color.registers[0] ];
+		lightColor[1] = backEnd.lightScale * lightRegs[ lightStage->color.registers[1] ];
+		lightColor[2] = backEnd.lightScale * lightRegs[ lightStage->color.registers[2] ];
+#else
+		lightColor[0] = lightRegs[ lightStage->color.registers[0] ];
+		lightColor[1] = lightRegs[ lightStage->color.registers[1] ];
+		lightColor[2] = lightRegs[ lightStage->color.registers[2] ];
+#endif
+		lightColor[3] = lightRegs[ lightStage->color.registers[3] ];
+
+		// if we wouldn't draw anything, don't call the Draw function
+		if (lightColor.LengthSqr() == 0) {
+			continue;
+		}
+
+		idPlane lightProject[4];
+		for ( int i = 0 ; i < 4 ; i++ ) {
+			lightProject[i] = vLight->lightDef->lightProject[i];
+		}
+
+		// now multiply the texgen by the light texture matrix
+		if ( lightStage->texture.hasMatrix ) {
+			RB_GetShaderTextureMatrix( lightRegs, &lightStage->texture, backEnd.lightTextureMatrix );
+			RB_BakeTextureMatrixIntoTexgen( lightProject, backEnd.lightTextureMatrix );
+		}
+
+		gl_deferredLightingShader->SetUniform_LightColor(lightColor);
+
+		gl_deferredLightingShader->SetUniform_LightProjectS(lightProject[0].ToVec4());
+		gl_deferredLightingShader->SetUniform_LightProjectT(lightProject[1].ToVec4());
+		gl_deferredLightingShader->SetUniform_LightProjectQ(lightProject[2].ToVec4());
+		gl_deferredLightingShader->SetUniform_LightFalloffS(lightProject[3].ToVec4());
 
 		// texture 3 will be the light projection texture
 		GL_SelectTextureNoClient( 3 );
@@ -3058,9 +3061,12 @@ void    RB_Exp_DrawInteractions( void ) {
 		{
 			RB_EXP_CreateDrawInteractions( vLight->localInteractions );
 			RB_EXP_CreateDrawInteractions( vLight->globalInteractions );
+
+			// RB: FIXME translucent interactions should be rendered in a complete different loop
+			backEnd.depthFunc = GLS_DEPTHFUNC_LESS;
+			RB_EXP_CreateDrawInteractions( vLight->translucentInteractions );
 		}
-		backEnd.depthFunc = GLS_DEPTHFUNC_LESS;
-		RB_EXP_CreateDrawInteractions( vLight->translucentInteractions );
+
 		backEnd.depthFunc = GLS_DEPTHFUNC_EQUAL;
 	}
 
@@ -3088,8 +3094,10 @@ void    RB_Exp_DrawInteractions( void ) {
 			backEnd.viewDef->viewport.y2 -  backEnd.viewDef->viewport.y1 + 1, !glConfig.textureNonPowerOfTwoAvailable, false );
 
 		// TODO restore original colors
-		glClearColor( 0.0f, 0.0f, 0.0f, 0.0f );
-		glClear( GL_COLOR_BUFFER_BIT );
+		if ( !r_skipPostLighting.GetBool() ) {
+			glClearColor( 0.0f, 0.0f, 0.0f, 0.0f );
+			glClear( GL_COLOR_BUFFER_BIT );
+		}
 	}
 
 //	RB_EXP_Bloom();
@@ -3256,10 +3264,12 @@ static void RB_T_PostLightGeometry( const drawSurf_t *surf ) {
 		return;
 	}
 
-	// translucent surfaces don't put anything in the depth buffer and don't
-	// test against it, which makes them fail the mirror clip plane operation
-	if ( shader->Coverage() == MC_TRANSLUCENT ) {
-		return;
+	if ( shader->Coverage() == MC_TRANSLUCENT /* != C_PERFORATED */ ) {
+		GL_State( GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE | GLS_DEPTHMASK | GLS_DEPTHFUNC_LESS );
+	} else {
+		// only draw on the alpha tested pixels that made it to the depth buffer
+		// GL_State( GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE | GLS_DEPTHMASK | GLS_DEPTHFUNC_EQUAL );
+		GL_State( GLS_DEPTHMASK | backEnd.depthFunc );
 	}
 
 	if ( !tri->ambientCache ) {
@@ -3347,6 +3357,10 @@ static void RB_T_PostLightGeometry( const drawSurf_t *surf ) {
 					didDraw = didDraw || RB_T_SubmittInteraction( &inter, RB_T_DrawInteractionWithLightbuffer );
 				}
 				R_SetDrawInteraction( pStage, regs, &inter.diffuseImage, inter.diffuseMatrix, inter.diffuseColor.ToFloatPtr() );
+				inter.diffuseColor[0] *= backEnd.lightScale;
+				inter.diffuseColor[1] *= backEnd.lightScale;
+				inter.diffuseColor[2] *= backEnd.lightScale;
+				inter.diffuseColor[3] *= backEnd.lightScale;
 				inter.vertexColor = pStage->vertexColor;
 				
 				if ( pStage->hasAlphaTest ) {
@@ -3365,6 +3379,10 @@ static void RB_T_PostLightGeometry( const drawSurf_t *surf ) {
 					didDraw = didDraw || RB_T_SubmittInteraction( &inter, RB_T_DrawInteractionWithLightbuffer );
 				}
 				R_SetDrawInteraction( pStage, regs, &inter.specularImage, inter.specularMatrix, inter.specularColor.ToFloatPtr() );
+				inter.specularColor[0] *= backEnd.lightScale;
+				inter.specularColor[1] *= backEnd.lightScale;
+				inter.specularColor[2] *= backEnd.lightScale;
+				inter.specularColor[3] *= backEnd.lightScale;
 				inter.vertexColor = pStage->vertexColor;
 
 				if ( pStage->hasAlphaTest ) {
@@ -3380,7 +3398,7 @@ static void RB_T_PostLightGeometry( const drawSurf_t *surf ) {
 	// draw the final interaction
 	didDraw = didDraw || RB_T_SubmittInteraction( &inter, RB_T_DrawInteractionWithLightbuffer );
 
-	/*
+#if 0
 	if ( !didDraw ) {
 		inter.alphaTest = 0;
 		inter.bumpImage = globalImages->flatNormalMap;
@@ -3389,16 +3407,11 @@ static void RB_T_PostLightGeometry( const drawSurf_t *surf ) {
 
 		RB_T_SubmittInteraction( &inter, RB_T_DrawInteractionWithLightbuffer );
 	}
-	*/
+#endif
 
 	// reset polygon offset
 	if ( shader->TestMaterialFlag(MF_POLYGONOFFSET) ) {
 		glDisable( GL_POLYGON_OFFSET_FILL );
-	}
-
-	// reset blending
-	if ( shader->GetSort() == SS_SUBVIEW ) {
-		GL_State( GLS_DEPTHFUNC_LESS );
 	}
 }
 
@@ -3431,7 +3444,8 @@ void RB_EXP_ResolveLightFromLightBuffer( drawSurf_t **drawSurfs, int numDrawSurf
 	// decal surfaces may enable polygon offset
 	glPolygonOffset( r_offsetFactor.GetFloat(), r_offsetUnits.GetFloat() );
 
-	GL_State( GLS_DEPTHFUNC_LESS );
+	//GL_State( GLS_DEPTHFUNC_LESS );
+	//GL_State( GLS_DEPTHMASK | backEnd.depthFunc );
 
 	RB_RenderDrawSurfListWithFunction( drawSurfs, numDrawSurfs, RB_T_PostLightGeometry );
 

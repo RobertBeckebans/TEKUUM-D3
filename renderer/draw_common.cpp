@@ -540,10 +540,10 @@ static void	RB_T_DrawInteractionAsFillDepthBufferWithNormals( const drawInteract
 	gl_geometricFillShader->SetUniform_BumpMatrixS(din->bumpMatrix[0]);
 	gl_geometricFillShader->SetUniform_BumpMatrixT(din->bumpMatrix[1]);
 
-#if 1
 	gl_geometricFillShader->SetUniform_DiffuseMatrixS(din->diffuseMatrix[0]);
 	gl_geometricFillShader->SetUniform_DiffuseMatrixT(din->diffuseMatrix[1]);
 
+#if 0
 	gl_geometricFillShader->SetUniform_SpecularMatrixS(din->specularMatrix[0]);
 	gl_geometricFillShader->SetUniform_SpecularMatrixT(din->specularMatrix[1]);
 #endif
@@ -574,12 +574,12 @@ static void	RB_T_DrawInteractionAsFillDepthBufferWithNormals( const drawInteract
 	GL_SelectTexture(0);
 	din->bumpImage->Bind();
 
-#if 1
 	// texture 1 is the per-surface diffuse map
 	gl_geometricFillShader->SetUniform_DiffuseImage(1);
 	GL_SelectTexture(1);
 	din->diffuseImage->Bind();
 
+#if 0
 	// texture 2 is the per-surface specular map
 	gl_geometricFillShader->SetUniform_SpecularImage(2);
 	GL_SelectTexture(2);
@@ -598,9 +598,11 @@ static bool RB_T_SubmittInteraction( drawInteractionMaterialOnly_t *din, void (*
 	if ( !din->diffuseImage || r_skipDiffuse.GetBool() ) {
 		din->diffuseImage = globalImages->blackImage;
 	}
+#if 0
 	if ( !din->specularImage || r_skipSpecular.GetBool() ) {
 		din->specularImage = globalImages->blackImage;
 	}
+#endif
 	if ( !din->bumpImage || r_skipBump.GetBool() ) {
 		din->bumpImage = globalImages->flatNormalMap;
 	}

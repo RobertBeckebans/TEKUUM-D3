@@ -1133,6 +1133,7 @@ GLShader_deferredLighting::GLShader_deferredLighting():
 		u_LightProjectT(this),
 		u_LightProjectQ(this),
 		u_LightFalloffS(this),
+		u_LightFrustum(this),
 		u_ShadowMatrix(this),
 		u_ShadowTexelSize(this),
 		u_ShadowBlur(this),
@@ -1144,6 +1145,7 @@ GLShader_deferredLighting::GLShader_deferredLighting():
 		u_Viewport(this),
 		GLCompileMacro_USE_NORMAL_MAPPING(this),
 		//GLCompileMacro_USE_PARALLAX_MAPPING(this),
+		GLCompileMacro_USE_FRUSTUM_CLIPPING(this),
 		GLCompileMacro_USE_SHADOWING(this),
 		//GLCompileMacro_LIGHT_DIRECTIONAL(this),
 		GLCompileMacro_LIGHT_PROJ(this)
