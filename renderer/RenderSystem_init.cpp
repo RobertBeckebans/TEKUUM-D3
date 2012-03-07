@@ -252,7 +252,7 @@ idCVar r_sb_mode( "r_sb_mode", "0", CVAR_RENDERER | CVAR_INTEGER, "0 = ESM16, 1 
 idCVar r_sb_debug( "r_sb_debug", "0", CVAR_RENDERER | CVAR_INTEGER, "" );
 
 idCVar r_sb_randomize( "r_sb_randomize", "1", CVAR_RENDERER | CVAR_BOOL, "randomly offset jitter texture each draw" );
-idCVar r_sb_softShadows( "r_sb_softShadows", "0", CVAR_RENDERER | CVAR_FLOAT, "randomly offset jitter texture each draw" );
+idCVar r_sb_softShadows( "r_sb_softShadows", "2", CVAR_RENDERER | CVAR_FLOAT, "randomly offset jitter texture each draw" );
 
 idCVar r_shadowLodScale( "r_shadowLodScale", "0.8", CVAR_RENDERER | CVAR_FLOAT, "" );
 idCVar r_shadowLodBias( "r_shadowLodBias", "0", CVAR_RENDERER | CVAR_FLOAT, "" );
