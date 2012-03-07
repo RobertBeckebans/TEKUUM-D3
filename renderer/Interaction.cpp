@@ -899,7 +899,13 @@ void idInteraction::CreateInteraction( const idRenderModel *model ) {
 		// generate a lighted surface and add it
 		if ( shader->ReceivesLighting() ) {
 			if ( tri->ambientViewCount == tr.viewCount ) {
-				sint->lightTris = R_CreateLightTris( entityDef, tri, lightDef, shader, sint->cullInfo );
+				// Techyon BEGIN
+				if ( r_useDeferredShading.GetBool() ) {
+					sint->lightTris = LIGHT_TRIS_DEFERRED;
+				} else {
+					sint->lightTris = R_CreateLightTris( entityDef, tri, lightDef, shader, sint->cullInfo );
+				}
+				// Techyon END
 			} else {
 				// this will be calculated when sint->ambientTris is actually in view
 				sint->lightTris = LIGHT_TRIS_DEFERRED;
@@ -1104,7 +1110,13 @@ void idInteraction::AddActiveInteraction( void ) {
 			// make sure we have created this interaction, which may have been deferred
 			// on a previous use that only needed the shadow
 			if ( sint->lightTris == LIGHT_TRIS_DEFERRED ) {
-				sint->lightTris = R_CreateLightTris( vEntity->entityDef, sint->ambientTris, vLight->lightDef, sint->shader, sint->cullInfo );
+				// Techyon BEGIN
+				if ( r_useDeferredShading.GetBool() ) {
+					sint->lightTris = NULL;
+				} else {
+					sint->lightTris = R_CreateLightTris( vEntity->entityDef, sint->ambientTris, vLight->lightDef, sint->shader, sint->cullInfo );
+				}
+				// Techyon END
 				R_FreeInteractionCullInfo( sint->cullInfo );
 			}
 
