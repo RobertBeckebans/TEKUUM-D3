@@ -106,6 +106,27 @@ int idImage::BitsForInternalFormat( int internalFormat ) const {
 		return 4;			// not sure
 	case GL_COMPRESSED_RGBA_ARB:
 		return 8;			// not sure
+// Techyon BEGIN
+	case GL_DEPTH_COMPONENT16:
+		return 16;
+	case GL_DEPTH_COMPONENT24:
+		return 24;
+	case GL_DEPTH_COMPONENT32:
+		return 32;
+	case GL_RGBA16F:
+		return 64;
+	case GL_R16F:
+		return 16;
+	case GL_RG16F:
+		return 32;
+	case GL_RGBA32F:
+		return 128;
+	case GL_R32F:
+		return 32;
+	case GL_RG32F:
+		return 64;
+// Techyon END
+
 #endif // #if !defined(USE_GLES1)
 	default:
 		common->Error( "R_BitsForInternalFormat: BAD FORMAT:%i", internalFormat );
@@ -2368,69 +2389,100 @@ void idImage::Print() const {
 #if defined(USE_GLES1)
 	case 3:
 	case GL_RGB:
-		common->Printf( "RGB   " );
+		common->Printf( "RGB     " );
 		break;
 	case GL_RGBA:
 	case 4:
-		common->Printf( "RGBA  " );
+		common->Printf( "RGBA    " );
 		break;
 #else
 	case GL_INTENSITY8:
 	case 1:
-		common->Printf( "I     " );
+		common->Printf( "I       " );
 		break;
 	case 2:
 	case GL_LUMINANCE8_ALPHA8:
-		common->Printf( "LA    " );
+		common->Printf( "LA      " );
 		break;
 	case 3:
-		common->Printf( "RGB   " );
+		common->Printf( "RGB     " );
 		break;
 	case 4:
-		common->Printf( "RGBA  " );
+		common->Printf( "RGBA    " );
 		break;
 	case GL_LUMINANCE8:
-		common->Printf( "L     " );
+		common->Printf( "L       " );
 		break;
 	case GL_ALPHA8:
-		common->Printf( "A     " );
+		common->Printf( "A       " );
 		break;
 	case GL_RGBA8:
-		common->Printf( "RGBA8 " );
+		common->Printf( "RGBA8   " );
 		break;
 	case GL_RGB8:
-		common->Printf( "RGB8  " );
+		common->Printf( "RGB8    " );
 		break;
 	case GL_COMPRESSED_RGB_S3TC_DXT1_EXT:
-		common->Printf( "DXT1  " );
+		common->Printf( "DXT1    " );
 		break;
 	case GL_COMPRESSED_RGBA_S3TC_DXT1_EXT:
-		common->Printf( "DXT1A " );
+		common->Printf( "DXT1A   " );
 		break;
 	case GL_COMPRESSED_RGBA_S3TC_DXT3_EXT:
-		common->Printf( "DXT3  " );
+		common->Printf( "DXT3    " );
 		break;
 	case GL_COMPRESSED_RGBA_S3TC_DXT5_EXT:
-		common->Printf( "DXT5  " );
+		common->Printf( "DXT5    " );
 		break;
 	case GL_RGBA4:
-		common->Printf( "RGBA4 " );
+		common->Printf( "RGBA4   " );
 		break;
 	case GL_RGB5:
-		common->Printf( "RGB5  " );
+		common->Printf( "RGB5    " );
 		break;
 	case GL_COLOR_INDEX8_EXT:
-		common->Printf( "CI8   " );
+		common->Printf( "CI8     " );
 		break;
 	case GL_COLOR_INDEX:
-		common->Printf( "CI    " );
+		common->Printf( "CI      " );
 		break;
 	case GL_COMPRESSED_RGB_ARB:
-		common->Printf( "RGBC  " );
+		common->Printf( "RGBC    " );
 		break;
 	case GL_COMPRESSED_RGBA_ARB:
-		common->Printf( "RGBAC " );
+		common->Printf( "RGBAC   " );
 		break;
+
+// Techyon BEGIN
+	case GL_DEPTH_COMPONENT16:
+		common->Printf( "DEPTH16 " );
+		break;
+	case GL_DEPTH_COMPONENT24:
+		common->Printf( "DEPTH24 " );
+		break;
+	case GL_DEPTH_COMPONENT32:
+		common->Printf( "DEPTH32 " );
+		break;
+	case GL_RGBA16F:
+		common->Printf( "RGBA16F " );
+		break;
+	case GL_R16F:
+		common->Printf( "R16F    " );
+		break;
+	case GL_RG16F:
+		common->Printf( "RG16F   " );
+		break;
+	case GL_RGBA32F:
+		common->Printf( "RGBA32F " );
+		break;
+	case GL_R32F:
+		common->Printf( "R32F    " );
+		break;
+	case GL_RG32F:
+		common->Printf( "RG32F   " );
+		break;
+// Techyon END
+
 #endif
 	case 0:
 		common->Printf( "      " );
@@ -2443,6 +2495,9 @@ void idImage::Print() const {
 	switch ( repeat ) {
 	case TR_REPEAT:
 		common->Printf( "rept " );
+		break;
+	case TR_CLAMP_TO_BORDER:
+		common->Printf( "bord " );
 		break;
 	case TR_CLAMP_TO_ZERO:
 		common->Printf( "zero " );
