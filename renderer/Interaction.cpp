@@ -914,7 +914,10 @@ void idInteraction::CreateInteraction( const idRenderModel *model ) {
 		}
 
 		// if the interaction has shadows and this surface casts a shadow
-		if ( HasShadows() && shader->SurfaceCastsShadow() && tri->silEdges != NULL ) {
+		// Techyon BEGIN
+		// disabled shadow volume generation for the experimental renderer 
+		if ( tr.backEndRenderer != BE_EXP && HasShadows() && shader->SurfaceCastsShadow() && tri->silEdges != NULL ) {
+		// Techyon END
 
 			// if the light has an optimized shadow volume, don't create shadows for any models that are part of the base areas
 			if ( lightDef->parms.prelightModel == NULL || !model->IsStaticWorldModel() || !r_useOptimizedShadows.GetBool() ) {
