@@ -61,7 +61,7 @@ polygon offset factor causes occasional texture holes from highly angled texture
 
 static	bool		initialized;
 
-#if 0
+#if 1
 static	int shadowMapResolutions[MAX_SHADOWMAPS] = { 1024, 1024, 512, 256, 128 };
 #else
 static	int shadowMapResolutions[MAX_SHADOWMAPS] = { 1024, 512, 256, 128, 64 };
@@ -1129,7 +1129,8 @@ GL_SelectTexture( 0 );
 
 		gl_shadowMapShader->BindProgram();
 		gl_shadowMapShader->SetUniform_GlobalLightOrigin(origin);
-		gl_shadowMapShader->SetUniform_LightRadius(vLight->lightDef->frustumTris->bounds.GetRadius());
+		//gl_shadowMapShader->SetUniform_LightRadius(vLight->lightDef->frustumTris->bounds.GetRadius());
+		gl_shadowMapShader->SetUniform_LightRadius(viewLightAxialSize);
 
 		//
 		// set polygon offset for the rendering
@@ -1255,7 +1256,9 @@ RB_EXP_DrawInteraction
 */
 static void	RB_EXP_DrawInteraction( const drawInteraction_t *din ) {
 	
-	bool shadowCompare = (!r_sb_noShadows.GetBool() && r_shadows.GetBool() && backEnd.vLight->lightShader->LightCastsShadows() && !backEnd.vLight->lightDef->parms.noShadows);
+	bool shadowCompare = (!r_sb_noShadows.GetBool() && r_shadows.GetBool() && 
+						backEnd.vLight->lightShader->LightCastsShadows() && 
+						!backEnd.vLight->lightDef->parms.noShadows && backEnd.vLight->shadowLOD >= 0);
 
 	// choose and bind the vertex program
 	// TODO gl_forwardLightingShader->SetAmbientLighting(backEnd.vLight->lightShader->IsAmbientLight());
@@ -1272,7 +1275,8 @@ static void	RB_EXP_DrawInteraction( const drawInteraction_t *din ) {
 	gl_forwardLightingShader->SetUniform_LocalLightOrigin(din->localLightOrigin.ToVec3());
 	gl_forwardLightingShader->SetUniform_GlobalLightOrigin(din->globalLightOrigin.ToVec3());
 
-	gl_forwardLightingShader->SetUniform_LightRadius(backEnd.vLight->lightDef->frustumTris->bounds.GetRadius());
+	//gl_forwardLightingShader->SetUniform_LightRadius(backEnd.vLight->lightDef->frustumTris->bounds.GetRadius());
+	gl_forwardLightingShader->SetUniform_LightRadius(viewLightAxialSize);
 
 	gl_forwardLightingShader->SetUniform_LightProjectS(din->lightProjection[0]);
 	gl_forwardLightingShader->SetUniform_LightProjectT(din->lightProjection[1]);
@@ -1581,128 +1585,129 @@ static void RB_EXP_DrawLightDeferred( viewLight_t *vLight )
 	}
 #endif
 
-	#if 1
-		bool shadowCompare = (!r_sb_noShadows.GetBool() && r_shadows.GetBool() && vLight->lightShader->LightCastsShadows() && !vLight->lightDef->parms.noShadows);
+#if 1
+	bool shadowCompare = (!r_sb_noShadows.GetBool() && r_shadows.GetBool() && vLight->lightShader->LightCastsShadows() && !vLight->lightDef->parms.noShadows && vLight->shadowLOD >= 0);
 #else
-		bool shadowCompare = false;
+	bool shadowCompare = false;
 #endif
 
-		// choose and bind the vertex program
-		// TODO gl_deferredLightingShader->SetAmbientLighting(vLight->lightShader->IsAmbientLight());
-		gl_deferredLightingShader->SetMacro_LIGHT_PROJ(!vLight->lightDef->parms.pointLight);
-		gl_deferredLightingShader->SetShadowing(shadowCompare);
-		gl_deferredLightingShader->SetNormalMapping(!r_skipBump.GetBool() || vLight->lightShader->IsAmbientLight());
-		gl_deferredLightingShader->SetFrustumClipping(/*vLight->viewInsideLight ||*/ r_deferredShadingGPUFrustumCulling.GetBool()); // FIXME expensive
-		gl_deferredLightingShader->BindProgram();
+	// choose and bind the vertex program
+	// TODO gl_deferredLightingShader->SetAmbientLighting(vLight->lightShader->IsAmbientLight());
+	gl_deferredLightingShader->SetMacro_LIGHT_PROJ(!vLight->lightDef->parms.pointLight);
+	gl_deferredLightingShader->SetShadowing(shadowCompare);
+	gl_deferredLightingShader->SetNormalMapping(!r_skipBump.GetBool() || vLight->lightShader->IsAmbientLight());
+	gl_deferredLightingShader->SetFrustumClipping(/*vLight->viewInsideLight ||*/ r_deferredShadingGPUFrustumCulling.GetBool()); // FIXME expensive
+	gl_deferredLightingShader->BindProgram();
 
-		// load all the vertex program parameters
-		gl_deferredLightingShader->SetUniform_UnprojectMatrix(make_idMat4(backEnd.viewDef->unprojectionMatrix));
+	// load all the vertex program parameters
+	gl_deferredLightingShader->SetUniform_UnprojectMatrix(make_idMat4(backEnd.viewDef->unprojectionMatrix));
 
-		gl_deferredLightingShader->SetUniform_GlobalViewOrigin(backEnd.viewDef->renderView.vieworg);
-		gl_deferredLightingShader->SetUniform_GlobalLightOrigin(vLight->lightDef->globalLightOrigin);
+	gl_deferredLightingShader->SetUniform_GlobalViewOrigin(backEnd.viewDef->renderView.vieworg);
+	gl_deferredLightingShader->SetUniform_GlobalLightOrigin(vLight->lightDef->globalLightOrigin);
 
-		gl_deferredLightingShader->SetUniform_LightRadius(vLight->lightDef->frustumTris->bounds.GetRadius());
+	//gl_deferredLightingShader->SetUniform_LightRadius(vLight->lightDef->frustumTris->bounds.GetRadius());
+	gl_deferredLightingShader->SetUniform_LightRadius(viewLightAxialSize);
 
-		gl_deferredLightingShader->SetUniform_LightFrustum(vLight->lightDef->frustum);
+	gl_deferredLightingShader->SetUniform_LightFrustum(vLight->lightDef->frustum);
 
-		gl_deferredLightingShader->SetUniform_InvertedFramebufferResolution(backEnd.viewDef->viewport);
-		gl_deferredLightingShader->SetUniform_NonPowerOfTwoScale(backEnd.viewDef->viewport, 
-																globalImages->currentNormalsImage->uploadWidth, 
-																globalImages->currentNormalsImage->uploadHeight);
+	gl_deferredLightingShader->SetUniform_InvertedFramebufferResolution(backEnd.viewDef->viewport);
+	gl_deferredLightingShader->SetUniform_NonPowerOfTwoScale(backEnd.viewDef->viewport, 
+															globalImages->currentNormalsImage->uploadWidth, 
+															globalImages->currentNormalsImage->uploadHeight);
 
-		gl_deferredLightingShader->SetUniform_Viewport(backEnd.viewDef->viewport);
+	gl_deferredLightingShader->SetUniform_Viewport(backEnd.viewDef->viewport);
 
-	#if 1
-		if(shadowCompare)
-		{
-			float shadowTexelSize = 1.0f / shadowMapResolutions[backEnd.vLight->shadowLOD];
-			gl_deferredLightingShader->SetUniform_ShadowTexelSize(shadowTexelSize);
-			gl_deferredLightingShader->SetUniform_ShadowBlur(r_sb_samples.GetInteger());
+#if 1
+	if(shadowCompare)
+	{
+		float shadowTexelSize = 1.0f / shadowMapResolutions[backEnd.vLight->shadowLOD];
+		gl_deferredLightingShader->SetUniform_ShadowTexelSize(shadowTexelSize);
+		gl_deferredLightingShader->SetUniform_ShadowBlur(r_sb_samples.GetInteger());
 
-			// calculate depth projection for shadow buffer
-			idVec4	sRow;
-			idVec4	tRow;
-			idVec4	rRow;
-			idVec4	qRow;
-			float	matrix[16];
-			float	matrix2[16];
-			//myGlMultMatrix( din->surf->space->modelMatrix, lightMatrix, matrix );
-			//myGlMultMatrix( matrix, lightProjectionMatrix, matrix2 );
-			myGlMultMatrix( lightMatrix, lightProjectionMatrix, matrix2 );
+		// calculate depth projection for shadow buffer
+		idVec4	sRow;
+		idVec4	tRow;
+		idVec4	rRow;
+		idVec4	qRow;
+		float	matrix[16];
+		float	matrix2[16];
+		//myGlMultMatrix( din->surf->space->modelMatrix, lightMatrix, matrix );
+		//myGlMultMatrix( matrix, lightProjectionMatrix, matrix2 );
+		myGlMultMatrix( lightMatrix, lightProjectionMatrix, matrix2 );
 
-			/*
-			// the final values need to be in 0.0 : 1.0 range instead of -1 : 1
-			sRow[0] = 0.5 * lightBufferSizeFraction[0] * ( matrix2[0] + matrix2[3] );
-			sRow[1] = 0.5 * lightBufferSizeFraction[0] * ( matrix2[4] + matrix2[7] );
-			sRow[2] = 0.5 * lightBufferSizeFraction[0] * ( matrix2[8] + matrix2[11] );
-			sRow[3] = 0.5 * lightBufferSizeFraction[0] * ( matrix2[12] + matrix2[15] );
-			//glProgramEnvParameter4fvARB( GL_VERTEX_PROGRAM_ARB, 18, sRow );
-			tRow[0] = 0.5 * lightBufferSizeFraction[0] * ( matrix2[1] + matrix2[3] );
-			tRow[1] = 0.5 * lightBufferSizeFraction[0] * ( matrix2[5] + matrix2[7] );
-			tRow[2] = 0.5 * lightBufferSizeFraction[0] * ( matrix2[9] + matrix2[11] );
-			tRow[3] = 0.5 * lightBufferSizeFraction[0] * ( matrix2[13] + matrix2[15] );
-			//glProgramEnvParameter4fvARB( GL_VERTEX_PROGRAM_ARB, 19, tRow );
-			rRow[0] = 0.5 * ( matrix2[2] + matrix2[3] );
-			rRow[1] = 0.5 * ( matrix2[6] + matrix2[7] );
-			rRow[2] = 0.5 * ( matrix2[10] + matrix2[11] );
-			rRow[3] = 0.5 * ( matrix2[14] + matrix2[15] );
-			//glProgramEnvParameter4fvARB( GL_VERTEX_PROGRAM_ARB, 20, rRow );
-			qRow[0] = matrix2[3];
-			qRow[1] = matrix2[7];
-			qRow[2] = matrix2[11];
-			qRow[3] = matrix2[15];
-			//glProgramEnvParameter4fvARB( GL_VERTEX_PROGRAM_ARB, 21, qRow );
-			*/
+		/*
+		// the final values need to be in 0.0 : 1.0 range instead of -1 : 1
+		sRow[0] = 0.5 * lightBufferSizeFraction[0] * ( matrix2[0] + matrix2[3] );
+		sRow[1] = 0.5 * lightBufferSizeFraction[0] * ( matrix2[4] + matrix2[7] );
+		sRow[2] = 0.5 * lightBufferSizeFraction[0] * ( matrix2[8] + matrix2[11] );
+		sRow[3] = 0.5 * lightBufferSizeFraction[0] * ( matrix2[12] + matrix2[15] );
+		//glProgramEnvParameter4fvARB( GL_VERTEX_PROGRAM_ARB, 18, sRow );
+		tRow[0] = 0.5 * lightBufferSizeFraction[0] * ( matrix2[1] + matrix2[3] );
+		tRow[1] = 0.5 * lightBufferSizeFraction[0] * ( matrix2[5] + matrix2[7] );
+		tRow[2] = 0.5 * lightBufferSizeFraction[0] * ( matrix2[9] + matrix2[11] );
+		tRow[3] = 0.5 * lightBufferSizeFraction[0] * ( matrix2[13] + matrix2[15] );
+		//glProgramEnvParameter4fvARB( GL_VERTEX_PROGRAM_ARB, 19, tRow );
+		rRow[0] = 0.5 * ( matrix2[2] + matrix2[3] );
+		rRow[1] = 0.5 * ( matrix2[6] + matrix2[7] );
+		rRow[2] = 0.5 * ( matrix2[10] + matrix2[11] );
+		rRow[3] = 0.5 * ( matrix2[14] + matrix2[15] );
+		//glProgramEnvParameter4fvARB( GL_VERTEX_PROGRAM_ARB, 20, rRow );
+		qRow[0] = matrix2[3];
+		qRow[1] = matrix2[7];
+		qRow[2] = matrix2[11];
+		qRow[3] = matrix2[15];
+		//glProgramEnvParameter4fvARB( GL_VERTEX_PROGRAM_ARB, 21, qRow );
+		*/
 
-			//idMat4 shadowMat(sRow, tRow, rRow, qRow);
-			idMat4 shadowMat = make_idMat4(matrix2);//.Transpose();
+		//idMat4 shadowMat(sRow, tRow, rRow, qRow);
+		idMat4 shadowMat = make_idMat4(matrix2);//.Transpose();
 
-			gl_deferredLightingShader->SetUniform_ShadowMatrix(shadowMat);
-		}
-	#endif
+		gl_deferredLightingShader->SetUniform_ShadowMatrix(shadowMat);
+	}
+#endif
 
-		//-----------------------------------------------------
-		// screen power of two correction factor
+	//-----------------------------------------------------
+	// screen power of two correction factor
 
-		idVec4	parm;
-		parm[0] = 1.0 / ( JITTER_SIZE * r_sb_samples.GetInteger() ) ;
-		parm[1] = 1.0 / JITTER_SIZE;
-		parm[2] = 0;
-		parm[3] = 1;
-		gl_deferredLightingShader->SetUniform_PositionToJitterTexScale(parm);
+	idVec4	parm;
+	parm[0] = 1.0 / ( JITTER_SIZE * r_sb_samples.GetInteger() ) ;
+	parm[1] = 1.0 / JITTER_SIZE;
+	parm[2] = 0;
+	parm[3] = 1;
+	gl_deferredLightingShader->SetUniform_PositionToJitterTexScale(parm);
 
-		// jitter tex scale
-		parm[0] = 
-		parm[1] = r_sb_jitterScale.GetFloat() * lightBufferSizeFraction[0];
-		parm[2] = -r_sb_biasScale.GetFloat();
-		parm[3] = 0;
-		gl_deferredLightingShader->SetUniform_JitterTexScale(parm);
+	// jitter tex scale
+	parm[0] = 
+	parm[1] = r_sb_jitterScale.GetFloat() * lightBufferSizeFraction[0];
+	parm[2] = -r_sb_biasScale.GetFloat();
+	parm[3] = 0;
+	gl_deferredLightingShader->SetUniform_JitterTexScale(parm);
 
-		// jitter tex offset
-		if ( r_sb_randomize.GetBool() ) {
-			parm[0] = (rand()&255) / 255.0;
-			parm[1] = (rand()&255) / 255.0;
-		} else {
-			parm[0] = parm[1] = 0;
-		}
-		parm[2] = 0;
-		parm[3] = 0;
-		gl_deferredLightingShader->SetUniform_JitterTexOffset(parm);
-		//-----------------------------------------------------
+	// jitter tex offset
+	if ( r_sb_randomize.GetBool() ) {
+		parm[0] = (rand()&255) / 255.0;
+		parm[1] = (rand()&255) / 255.0;
+	} else {
+		parm[0] = parm[1] = 0;
+	}
+	parm[2] = 0;
+	parm[3] = 0;
+	gl_deferredLightingShader->SetUniform_JitterTexOffset(parm);
+	//-----------------------------------------------------
 
-		// set the textures
+	// set the textures
 
-		// texture 0 will be the _currentNormals
-		GL_SelectTextureNoClient( 0 );
-		globalImages->currentNormalsImage->Bind();
+	// texture 0 will be the _currentNormals
+	GL_SelectTextureNoClient( 0 );
+	globalImages->currentNormalsImage->Bind();
 
-		// texture 1 will be the _currentDepth
-		GL_SelectTextureNoClient( 1 );
-		globalImages->currentDepthImage->Bind();
+	// texture 1 will be the _currentDepth
+	GL_SelectTextureNoClient( 1 );
+	globalImages->currentDepthImage->Bind();
 
-		// texture 2 will be the light falloff texture
-		GL_SelectTextureNoClient( 2 );
-		vLight->falloffImage->Bind();
+	// texture 2 will be the light falloff texture
+	GL_SelectTextureNoClient( 2 );
+	vLight->falloffImage->Bind();
 
 	for ( int lightStageNum = 0 ; lightStageNum < lightShader->GetNumStages() ; lightStageNum++ ) 
 	{
@@ -2906,16 +2911,40 @@ void    RB_Exp_DrawInteractions( void ) {
 	}
 	
 	// set up for either point sampled or percentage-closer filtering for the shadow sampling
-	/*
-	shadowMapImage[]->BindFragment();
-	if ( r_sb_linearFilter.GetBool() ) {
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
-	} else {
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
+#if 0
+	if ( r_sb_linearFilter.GetBool() ) 
+	{
+		for (int i = 0; i < MAX_SHADOWMAPS; i++)
+		{
+			shadowMapImage[i]->BindFragment();
+			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+		}
+
+		for (int i = 0; i < MAX_SHADOWMAPS; i++)
+		{
+			shadowCubeImage[i]->BindFragment();
+			glTexParameterf(GL_TEXTURE_CUBE_MAP_EXT, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+			glTexParameterf(GL_TEXTURE_CUBE_MAP_EXT, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+		}
 	}
-	*/
+	else
+	{
+		for (int i = 0; i < MAX_SHADOWMAPS; i++)
+		{
+			shadowMapImage[i]->BindFragment();
+			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
+			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
+		}
+
+		for (int i = 0; i < MAX_SHADOWMAPS; i++)
+		{
+			shadowCubeImage[i]->BindFragment();
+			glTexParameterf(GL_TEXTURE_CUBE_MAP_EXT, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
+			glTexParameterf(GL_TEXTURE_CUBE_MAP_EXT, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
+		}
+	}
+#endif
 
 	globalImages->BindNull();
 
@@ -3005,7 +3034,7 @@ void    RB_Exp_DrawInteractions( void ) {
 		// and non-cubic lights must take the largest length
 		viewLightAxialSize = R_EXP_CalcLightAxialSize( vLight );
 
-		if ( r_shadows.GetBool() ) {
+		if ( r_shadows.GetBool() && vLight->shadowLOD >= 0 ) {
 			int	side, sideStop;
 
 			if ( vLight->lightDef->parms.pointLight ) {
@@ -3040,7 +3069,7 @@ void    RB_Exp_DrawInteractions( void ) {
 		RB_EXP_SetRenderBuffer( NULL );
 
 		// bind shadow buffer to texture
-		if ( r_shadows.GetBool() ) {
+		if ( r_shadows.GetBool() && vLight->shadowLOD >= 0 ) {
 			if ( vLight->lightDef->parms.pointLight ) 
 			{
 				GL_SelectTextureNoClient( 8 );

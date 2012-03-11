@@ -792,9 +792,9 @@ float R_ProjectRadius(float r, const idVec3 &location)
 	// frustum[4] front plane
 	if ( !tr.viewDef ) {
 
-		dist = -tr.primaryView->frustum[4].Distance(location);
+		dist = tr.primaryView->frustum[4].Distance(location);
 
-		if(dist <= 0) {
+		if(dist > 0) {
 			return 0;
 		}
 
@@ -808,15 +808,15 @@ float R_ProjectRadius(float r, const idVec3 &location)
 		projected[3] = p[0] * tr.primaryView->projectionMatrix[3] +	p[1] * tr.primaryView->projectionMatrix[7] + p[2] * tr.primaryView->projectionMatrix[11] + tr.primaryView->projectionMatrix[15];
 	} else {
 
-		dist = -tr.viewDef->frustum[4].Distance(location);
+		dist = tr.viewDef->frustum[4].Distance(location);
 
-		if(dist <= 0) {
+		if(dist > 0) {
 			return 0;
 		}
 
 		p[0] = 0;
 		p[1] = fabs(r);
-		p[2] = -dist;
+		p[2] = dist;
 
 		projected[0] = p[0] * tr.viewDef->projectionMatrix[0] +	p[1] * tr.viewDef->projectionMatrix[4] + p[2] * tr.viewDef->projectionMatrix[8] + tr.viewDef->projectionMatrix[12];
 		projected[1] = p[0] * tr.viewDef->projectionMatrix[1] + p[1] * tr.viewDef->projectionMatrix[5] + p[2] * tr.viewDef->projectionMatrix[9] + tr.viewDef->projectionMatrix[13];

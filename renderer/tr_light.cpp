@@ -465,6 +465,9 @@ static bool R_PointInFrustum( idVec3 &p, idPlane *planes, int numPlanes ) {
 	return true;
 }
 
+#if !defined(USE_GLES1)
+float	R_EXP_CalcLightAxialSize( viewLight_t *vLight );
+
 // Techyon BEGIN
 static void R_SetViewLightShadowLOD(viewLight_t *vLight)
 {
@@ -479,22 +482,27 @@ static void R_SetViewLightShadowLOD(viewLight_t *vLight)
 
 	if(vLight->lightDef->parms.noShadows)
 	{
-		vLight->shadowLOD = numLods -1;
+		vLight->shadowLOD = -1;
 		return;
 	}
 
 	// compute projected bounding sphere
 	// and use that as a criteria for selecting LOD
-
-	//if ( vLight->lightDef->parms.pointLight ) {
-	//	idBox box( vLight->lightDef->parms.origin, vLight->lightDef->parms.lightRadius, vLight->lightDef->parms.axis );
-	//	radius = box.GetVolume();
-	//} else {
+	/*
+	if ( vLight->lightDef->parms.pointLight ) {
+		idBox box( vLight->lightDef->parms.origin, vLight->lightDef->parms.lightRadius, vLight->lightDef->parms.axis );
+		radius = box.GetVolume() * 0.5f;
+	} else {
 		//idBox box( vLight->lightDef->frustumTris->bounds );
 		//radius = box.GetVolume();
-	//}
+	//
+	}
+	*/
 
-	radius = vLight->lightDef->frustumTris->bounds.GetRadius();
+	radius = R_EXP_CalcLightAxialSize(vLight);
+	
+	//radius = vLight->lightDef->frustumTris->bounds.GetRadius();
+	//radius = projectionBounds.GetRadius();
 
 	if((projectedRadius = R_ProjectRadius(radius, vLight->lightDef->parms.origin)) != 0)
 	{
@@ -533,9 +541,9 @@ static void R_SetViewLightShadowLOD(viewLight_t *vLight)
 	if(lod >= numLods)
 	{
 		// don't draw any shadow
-		//lod = -1;
+		lod = -1;
 
-		lod = numLods - 1;
+		//lod = numLods - 1;
 	}
 
 	// never give ultra quality for point lights
@@ -544,6 +552,7 @@ static void R_SetViewLightShadowLOD(viewLight_t *vLight)
 
 	vLight->shadowLOD = lod;
 }
+#endif // #if !defined(USE_GLES1)
 // Techyon END
 
 /*
@@ -587,10 +596,6 @@ viewLight_t *R_SetLightDefViewLight( idRenderLightLocal *light ) {
 	// see if the light center is in view, which will allow us to cull invisible shadows
 	vLight->viewSeesGlobalLightOrigin = R_PointInFrustum( light->globalLightOrigin, tr.viewDef->frustum, 4 );
 
-// Techyon BEGIN
-	R_SetViewLightShadowLOD(vLight);
-// Techyon END
-
 	// copy data used by backend
 	vLight->globalLightOrigin = light->globalLightOrigin;
 	vLight->lightProject[0] = light->lightProject[0];
@@ -602,6 +607,12 @@ viewLight_t *R_SetLightDefViewLight( idRenderLightLocal *light ) {
 	vLight->falloffImage = light->falloffImage;
 	vLight->lightShader = light->lightShader;
 	vLight->shaderRegisters = NULL;		// allocated and evaluated in R_AddLightSurfaces
+
+// Techyon BEGIN
+#if !defined(USE_GLES1)
+	R_SetViewLightShadowLOD(vLight);
+#endif
+// Techyon END
 
 	// link the view light
 	vLight->next = tr.viewDef->viewLights;

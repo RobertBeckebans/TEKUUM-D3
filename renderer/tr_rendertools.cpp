@@ -1699,10 +1699,22 @@ void RB_ShowLightShadowLODs( void ) {
 	GL_Cull( CT_TWO_SIDED );
 	glDisable( GL_DEPTH_TEST );
 
+	GL_State( GLS_POLYMODE_LINE | GLS_DEPTHMASK  );
+
 	count = 0;
 	for ( vLight = backEnd.viewDef->viewLights ; vLight ; vLight = vLight->next ) {
 		light = vLight->lightDef;
 		count++;
+
+		const idMaterial	*lightShader = vLight->lightShader;
+
+		// do fogging later
+		if ( lightShader->IsFogLight() ) {
+			continue;
+		}
+		if ( lightShader->IsBlendLight() ) {
+			continue;
+		}
 
 		tri = light->frustumTris;
 
@@ -1738,8 +1750,6 @@ void RB_ShowLightShadowLODs( void ) {
 			c = colorMdGrey;
 		}
 		
-		GL_State( GLS_POLYMODE_LINE | GLS_DEPTHMASK  );
-		glDisable( GL_DEPTH_TEST );
 		glColor4f( c[0], c[1], c[2], c[3] );
 		RB_RenderTriangleSurface( tri );
 	}
