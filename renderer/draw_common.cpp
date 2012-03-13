@@ -157,7 +157,9 @@ void RB_PrepareStageTexturing( const shaderStage_t *pStage,  const drawSurf_t *s
 	}
 
 	if ( pStage->texture.texgen == TG_GLASSWARP ) {
-		if ( tr.backEndRenderer == BE_ARB2 /*|| tr.backEndRenderer == BE_NV30*/ ) {
+		// Techyon BEGIN
+		if ( tr.backEndRenderer == BE_ARB2 || tr.backEndRenderer == BE_GLSL || tr.backEndRenderer == BE_EXP ) {
+		// Techyon END
 			glBindProgramARB( GL_FRAGMENT_PROGRAM_ARB, FPROG_GLASSWARP );
 			glEnable( GL_FRAGMENT_PROGRAM_ARB );
 
@@ -197,7 +199,9 @@ void RB_PrepareStageTexturing( const shaderStage_t *pStage,  const drawSurf_t *s
 	}
 
 	if ( pStage->texture.texgen == TG_REFLECT_CUBE ) {
-		if ( tr.backEndRenderer == BE_ARB2 ) {
+		// Techyon BEGIN
+		if ( tr.backEndRenderer == BE_ARB2 || tr.backEndRenderer == BE_GLSL || tr.backEndRenderer == BE_EXP ) {
+		// Techyon END
 			// see if there is also a bump map specified
 			const shaderStage_t *bumpStage = surf->material->GetBumpStage();
 			if ( bumpStage ) {
@@ -281,7 +285,7 @@ void RB_FinishStageTexturing( const shaderStage_t *pStage, const drawSurf_t *sur
 	}
 
 	if ( pStage->texture.texgen == TG_GLASSWARP ) {
-		if ( tr.backEndRenderer == BE_ARB2 /*|| tr.backEndRenderer == BE_NV30*/ ) {
+		if ( tr.backEndRenderer == BE_ARB2 || tr.backEndRenderer == BE_GLSL || tr.backEndRenderer == BE_EXP ) {
 			GL_SelectTexture( 2 );
 			globalImages->BindNull();
 
@@ -299,7 +303,9 @@ void RB_FinishStageTexturing( const shaderStage_t *pStage, const drawSurf_t *sur
 	}
 
 	if ( pStage->texture.texgen == TG_REFLECT_CUBE ) {
-		if ( tr.backEndRenderer == BE_ARB2 ) {
+		// Techyon BEGIN
+		if ( tr.backEndRenderer == BE_ARB2 || tr.backEndRenderer == BE_GLSL || tr.backEndRenderer == BE_EXP ) {
+		// Techyon END
 			// see if there is also a bump map specified
 			const shaderStage_t *bumpStage = surf->material->GetBumpStage();
 			if ( bumpStage ) {
@@ -1200,7 +1206,9 @@ void RB_STD_T_RenderShaderPasses( const drawSurf_t *surf ) {
 			//--------------------------
 
 			// completely skip the stage if we don't have the capability
-			if ( tr.backEndRenderer != BE_ARB2 ) {
+			// Techyon BEGIN
+			if ( tr.backEndRenderer != BE_ARB2 && tr.backEndRenderer != BE_GLSL && tr.backEndRenderer != BE_EXP ) {
+			// Techyon END
 				continue;
 			}
 			if ( r_skipNewAmbient.GetBool() ) {
@@ -1416,7 +1424,9 @@ int RB_STD_DrawShaderPasses( drawSurf_t **drawSurfs, int numDrawSurfs ) {
 		}
 
 		// only dump if in a 3d view
-		if ( backEnd.viewDef->viewEntitys && tr.backEndRenderer == BE_ARB2 ) {
+		// Techyon BEGIN
+		if ( backEnd.viewDef->viewEntitys && (tr.backEndRenderer == BE_ARB2 || tr.backEndRenderer == BE_GLSL || tr.backEndRenderer == BE_EXP) ) {
+		// Techyon END
 			globalImages->currentRenderImage->CopyFramebuffer( backEnd.viewDef->viewport.x1,
 				backEnd.viewDef->viewport.y1,  backEnd.viewDef->viewport.x2 -  backEnd.viewDef->viewport.x1 + 1,
 				backEnd.viewDef->viewport.y2 -  backEnd.viewDef->viewport.y1 + 1, true );
