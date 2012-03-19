@@ -25,7 +25,9 @@ if(MSVC)
 					-D_CRT_NONSTDC_NO_DEPRECATE
 					-D_CRT_SECURE_NO_WARNINGS
 					-D_USE_32BIT_TIME_T
-					-D_MBCS)
+					-D_MBCS
+					-DUSE_OPENAL
+					-DUSE_EXCEPTIONS)
 					
 	if(USE_MFC_TOOLS)
 		add_definitions(-D_AFXDLL)
@@ -50,6 +52,9 @@ file(GLOB FRAMEWORK_ASYNC_SOURCES framework/async/*.cpp)
 
 set(RENDERER_INCLUDES
 	renderer/Cinematic.h
+	renderer/Framebuffer.h
+	renderer/GLShader.h
+	renderer/GLShader_strings.h
 	renderer/GuiModel.h
 	renderer/Image.h
 	renderer/Interaction.h
@@ -68,13 +73,14 @@ set(RENDERER_INCLUDES
 	renderer/RenderWorld.h
 	renderer/RenderWorld_local.h
 	renderer/VertexCache.h
-	renderer/cg_explicit.h
 	renderer/simplex.h
 	renderer/tr_local.h)
 
 
 set(RENDERER_SOURCES
 	renderer/Cinematic.cpp
+	renderer/Framebuffer.cpp
+	renderer/GLShader.cpp
 	renderer/GuiModel.cpp
 	renderer/Image_files.cpp
 	renderer/Image_init.cpp
@@ -105,12 +111,11 @@ set(RENDERER_SOURCES
 	renderer/RenderWorld_load.cpp
 	renderer/RenderWorld_portals.cpp
 	renderer/VertexCache.cpp
-	renderer/cg_explicit.cpp
 	renderer/draw_arb.cpp
 	renderer/draw_arb2.cpp
+	renderer/draw_glsl.cpp
 	renderer/draw_common.cpp
-	#renderer/draw_exp.cpp
-	#renderer/draw_exp_stub.cpp
+	renderer/draw_exp.cpp
 	renderer/draw_nv10.cpp
 	renderer/draw_nv20.cpp
 	renderer/draw_r200.cpp
@@ -121,6 +126,7 @@ set(RENDERER_SOURCES
 	renderer/tr_light.cpp
 	renderer/tr_lightrun.cpp
 	renderer/tr_main.cpp
+	renderer/tr_math.cpp
 	renderer/tr_orderIndexes.cpp
 	renderer/tr_polytope.cpp
 	renderer/tr_render.cpp
@@ -133,68 +139,74 @@ set(RENDERER_SOURCES
 	renderer/tr_turboshadow.cpp)
 
 set(JPEG_INCLUDES
-	renderer/jpeg-6/jchuff.h
-	renderer/jpeg-6/jconfig.h
-	renderer/jpeg-6/jdct.h
-	renderer/jpeg-6/jdhuff.h
-	renderer/jpeg-6/jerror.h
-	renderer/jpeg-6/jinclude.h
-	renderer/jpeg-6/jmemsys.h
-	renderer/jpeg-6/jmorecfg.h
-	renderer/jpeg-6/jpegint.h
-	renderer/jpeg-6/jpeglib.h
-	renderer/jpeg-6/jversion.h)
+	libs/jpeg-6/jchuff.h
+	libs/jpeg-6/jconfig.h
+	libs/jpeg-6/jdct.h
+	libs/jpeg-6/jdhuff.h
+	libs/jpeg-6/jerror.h
+	libs/jpeg-6/jinclude.h
+	libs/jpeg-6/jmemsys.h
+	libs/jpeg-6/jmorecfg.h
+	libs/jpeg-6/jpegint.h
+	libs/jpeg-6/jpeglib.h
+	libs/jpeg-6/jversion.h)
 	
 set(JPEG_SOURCES
-	renderer/jpeg-6/jcapimin.c
-	renderer/jpeg-6/jcapistd.c
-	renderer/jpeg-6/jccoefct.c
-	renderer/jpeg-6/jccolor.c
-	renderer/jpeg-6/jcdctmgr.c
-	renderer/jpeg-6/jchuff.c
-	renderer/jpeg-6/jcinit.c
-	renderer/jpeg-6/jcmainct.c
-	renderer/jpeg-6/jcmarker.c
-	renderer/jpeg-6/jcmaster.c
-	renderer/jpeg-6/jcomapi.c
-	renderer/jpeg-6/jcparam.c
-	renderer/jpeg-6/jcphuff.c
-	renderer/jpeg-6/jcprepct.c
-	renderer/jpeg-6/jcsample.c
-	renderer/jpeg-6/jctrans.c
-	renderer/jpeg-6/jdapimin.c
-	renderer/jpeg-6/jdapistd.c
-	renderer/jpeg-6/jdatadst.c
-	renderer/jpeg-6/jdatasrc.c
-	renderer/jpeg-6/jdcoefct.c
-	renderer/jpeg-6/jdcolor.c
-	renderer/jpeg-6/jddctmgr.c
-	renderer/jpeg-6/jdhuff.c
-	renderer/jpeg-6/jdinput.c
-	renderer/jpeg-6/jdmainct.c
-	renderer/jpeg-6/jdmarker.c
-	renderer/jpeg-6/jdmaster.c
-	renderer/jpeg-6/jdmerge.c
-	renderer/jpeg-6/jdphuff.c
-	renderer/jpeg-6/jdpostct.c
-	renderer/jpeg-6/jdsample.c
-	renderer/jpeg-6/jdtrans.c
-	renderer/jpeg-6/jerror.c
-	renderer/jpeg-6/jfdctflt.c
-	renderer/jpeg-6/jfdctfst.c
-	renderer/jpeg-6/jfdctint.c
-	renderer/jpeg-6/jidctflt.c
-	renderer/jpeg-6/jidctfst.c
-	renderer/jpeg-6/jidctint.c
-	renderer/jpeg-6/jidctred.c
-	#renderer/jpeg-6/jload.c
-	renderer/jpeg-6/jmemmgr.c
-	renderer/jpeg-6/jmemnobs.c
-	#renderer/jpeg-6/jpegtran.c
-	renderer/jpeg-6/jquant1.c
-	renderer/jpeg-6/jquant2.c
-	renderer/jpeg-6/jutils.c)
+	libs/jpeg-6/jcapimin.c
+	libs/jpeg-6/jcapistd.c
+	libs/jpeg-6/jccoefct.c
+	libs/jpeg-6/jccolor.c
+	libs/jpeg-6/jcdctmgr.c
+	libs/jpeg-6/jchuff.c
+	libs/jpeg-6/jcinit.c
+	libs/jpeg-6/jcmainct.c
+	libs/jpeg-6/jcmarker.c
+	libs/jpeg-6/jcmaster.c
+	libs/jpeg-6/jcomapi.c
+	libs/jpeg-6/jcparam.c
+	libs/jpeg-6/jcphuff.c
+	libs/jpeg-6/jcprepct.c
+	libs/jpeg-6/jcsample.c
+	libs/jpeg-6/jctrans.c
+	libs/jpeg-6/jdapimin.c
+	libs/jpeg-6/jdapistd.c
+	libs/jpeg-6/jdatadst.c
+	libs/jpeg-6/jdatasrc.c
+	libs/jpeg-6/jdcoefct.c
+	libs/jpeg-6/jdcolor.c
+	libs/jpeg-6/jddctmgr.c
+	libs/jpeg-6/jdhuff.c
+	libs/jpeg-6/jdinput.c
+	libs/jpeg-6/jdmainct.c
+	libs/jpeg-6/jdmarker.c
+	libs/jpeg-6/jdmaster.c
+	libs/jpeg-6/jdmerge.c
+	libs/jpeg-6/jdphuff.c
+	libs/jpeg-6/jdpostct.c
+	libs/jpeg-6/jdsample.c
+	libs/jpeg-6/jdtrans.c
+	libs/jpeg-6/jerror.c
+	libs/jpeg-6/jfdctflt.c
+	libs/jpeg-6/jfdctfst.c
+	libs/jpeg-6/jfdctint.c
+	libs/jpeg-6/jidctflt.c
+	libs/jpeg-6/jidctfst.c
+	libs/jpeg-6/jidctint.c
+	libs/jpeg-6/jidctred.c
+	#libs/jpeg-6/jload.c
+	libs/jpeg-6/jmemmgr.c
+	libs/jpeg-6/jmemnobs.c
+	#libs/jpeg-6/jpegtran.c
+	libs/jpeg-6/jquant1.c
+	libs/jpeg-6/jquant2.c
+	libs/jpeg-6/jutils.c)
 
+file(GLOB PNG_INCLUDES libs/png/*.h)
+file(GLOB PNG_SOURCES libs/png/*.c)
+
+file(GLOB ZLIB_INCLUDES libs/zlib/*.h)
+file(GLOB ZLIB_SOURCES libs/zlib/*.c)
+	
 set(GLEW_INCLUDES
 	libs/glew/include/GL/glew.h)
 	
@@ -222,34 +234,34 @@ set(SOUND_SOURCES
 	sound/snd_world.cpp)
 	
 set(OGGVORBIS_INCLUDES
-	sound/OggVorbis/ogg/ogg.h
-	sound/OggVorbis/ogg/os_types.h)
+	libs/oggvorbis/ogg/ogg.h
+	libs/oggvorbis/ogg/os_types.h)
 	
 set(OGGVORBIS_SOURCES
-	sound/OggVorbis/oggsrc/bitwise.c
-	sound/OggVorbis/oggsrc/framing.c
+	libs/oggvorbis/oggsrc/bitwise.c
+	libs/oggvorbis/oggsrc/framing.c
 	
-	sound/OggVorbis/vorbissrc/mdct.c
-	sound/OggVorbis/vorbissrc/smallft.c
-	sound/OggVorbis/vorbissrc/block.c
-	sound/OggVorbis/vorbissrc/envelope.c
-	sound/OggVorbis/vorbissrc/windowvb.c
-	sound/OggVorbis/vorbissrc/lsp.c
-	sound/OggVorbis/vorbissrc/lpc.c
-	sound/OggVorbis/vorbissrc/analysis.c
-	sound/OggVorbis/vorbissrc/synthesis.c
-	sound/OggVorbis/vorbissrc/psy.c
-	sound/OggVorbis/vorbissrc/info.c
-	sound/OggVorbis/vorbissrc/floor1.c
-	sound/OggVorbis/vorbissrc/floor0.c
-	sound/OggVorbis/vorbissrc/res0.c
-	sound/OggVorbis/vorbissrc/mapping0.c
-	sound/OggVorbis/vorbissrc/registry.c
-	sound/OggVorbis/vorbissrc/codebook.c
-	sound/OggVorbis/vorbissrc/sharedbook.c
-	sound/OggVorbis/vorbissrc/lookup.c
-	sound/OggVorbis/vorbissrc/bitrate.c
-	sound/OggVorbis/vorbissrc/vorbisfile.c)
+	libs/oggvorbis/vorbissrc/mdct.c
+	libs/oggvorbis/vorbissrc/smallft.c
+	libs/oggvorbis/vorbissrc/block.c
+	libs/oggvorbis/vorbissrc/envelope.c
+	libs/oggvorbis/vorbissrc/windowvb.c
+	libs/oggvorbis/vorbissrc/lsp.c
+	libs/oggvorbis/vorbissrc/lpc.c
+	libs/oggvorbis/vorbissrc/analysis.c
+	libs/oggvorbis/vorbissrc/synthesis.c
+	libs/oggvorbis/vorbissrc/psy.c
+	libs/oggvorbis/vorbissrc/info.c
+	libs/oggvorbis/vorbissrc/floor1.c
+	libs/oggvorbis/vorbissrc/floor0.c
+	libs/oggvorbis/vorbissrc/res0.c
+	libs/oggvorbis/vorbissrc/mapping0.c
+	libs/oggvorbis/vorbissrc/registry.c
+	libs/oggvorbis/vorbissrc/codebook.c
+	libs/oggvorbis/vorbissrc/sharedbook.c
+	libs/oggvorbis/vorbissrc/lookup.c
+	libs/oggvorbis/vorbissrc/bitrate.c
+	libs/oggvorbis/vorbissrc/vorbisfile.c)
 
 file(GLOB SYS_INCLUDES sys/*.h)
 file(GLOB SYS_SOURCES sys/*.cpp)
@@ -551,8 +563,14 @@ source_group("framework\\async" FILES ${FRAMEWORK_ASYNC_SOURCES})
 source_group("renderer" FILES ${RENDERER_INCLUDES})
 source_group("renderer" FILES ${RENDERER_SOURCES})
 
-source_group("renderer\\jpeg-6" FILES ${JPEG_INCLUDES})
-source_group("renderer\\jpeg-6" FILES ${JPEG_SOURCES})
+source_group("libs\\jpeg-6" FILES ${JPEG_INCLUDES})
+source_group("libs\\jpeg-6" FILES ${JPEG_SOURCES})
+
+source_group("libs\\png" FILES ${PNG_INCLUDES})
+source_group("libs\\png" FILES ${PNG_SOURCES})
+
+source_group("libs\\zlib" FILES ${ZLIB_INCLUDES})
+source_group("libs\\zlib" FILES ${ZLIB_SOURCES})
 
 source_group("libs\\glew" FILES ${GLEW_INCLUDES})
 source_group("libs\\glew" FILES ${GLEW_SOURCES})
@@ -560,8 +578,8 @@ source_group("libs\\glew" FILES ${GLEW_SOURCES})
 source_group("sound" FILES ${SOUND_INCLUDES})
 source_group("sound" FILES ${SOUND_SOURCES})
 
-source_group("sound\\oggvorbis" FILES ${OGGVORBIS_INCLUDES})
-source_group("sound\\oggvorbis" FILES ${OGGVORBIS_SOURCES})
+source_group("libs\\oggvorbis" FILES ${OGGVORBIS_INCLUDES})
+source_group("libs\\oggvorbis" FILES ${OGGVORBIS_SOURCES})
 
 source_group("ui" FILES ${UI_INCLUDES})
 source_group("ui" FILES ${UI_SOURCES})
@@ -638,6 +656,8 @@ set(TECHYON_SOURCES
 			${FRAMEWORK_ASYNC_INCLUDES} ${FRAMEWORK_ASYNC_SOURCES} 
 			${RENDERER_INCLUDES} ${RENDERER_SOURCES}
 			${JPEG_INCLUDES} ${JPEG_SOURCES}
+			${PNG_INCLUDES} ${PNG_SOURCES}
+			${ZLIB_INCLUDES} ${ZLIB_SOURCES}
 			${GLEW_INCLUDES} ${GLEW_SOURCES}
 			${SOUND_INCLUDES} ${SOUND_SOURCES}
 			${OGGVORBIS_INCLUDES} ${OGGVORBIS_SOURCES}
@@ -654,13 +674,14 @@ add_definitions(-D__DOOM__
 				-DGLEW_STATIC)
 
 include_directories(
-			curl/include
-			openal/include
-			libs/glew/include)
+			libs/curl/include
+			libs/openal/include
+			libs/glew/include
+			libs/zlib)
 			
 link_directories(
-			${CMAKE_CURRENT_SOURCE_DIR}/curl/lib
-			${CMAKE_CURRENT_SOURCE_DIR}/openal/lib)
+			${CMAKE_CURRENT_SOURCE_DIR}/libs/curl/lib
+			${CMAKE_CURRENT_SOURCE_DIR}/libs/openal/lib)
 
 if(MSVC)
 	find_package(DirectX REQUIRED)
@@ -680,12 +701,12 @@ if(MSVC)
 			# add_definitions(-DUSE_MFC6_WITH_ATL7)
 		# endif()
 		
-		# include_directories(libs/atlmfc/include)
-		# if(CMAKE_CL_64)
-			# link_directories(${CMAKE_CURRENT_SOURCE_DIR}/libs/atlmfc/lib/amd64)
-		# else(CMAKE_CL_64)
-			# link_directories(${CMAKE_CURRENT_SOURCE_DIR}/libs/atlmfc/lib)
-		# endif(CMAKE_CL_64)
+		include_directories(libs/atlmfc/include)
+		if(CMAKE_CL_64)
+			link_directories(${CMAKE_CURRENT_SOURCE_DIR}/libs/atlmfc/lib/amd64)
+		else(CMAKE_CL_64)
+			link_directories(${CMAKE_CURRENT_SOURCE_DIR}/libs/atlmfc/lib)
+		endif(CMAKE_CL_64)
 		
 		add_definitions(-DUSE_MFC_TOOLS)
 		
@@ -770,7 +791,7 @@ if(MSVC)
 	add_custom_command(TARGET Techyon
                    PRE_BUILD
 				   COMMAND nmake ARGS /f Makefile.vc6 CFG=release
-				   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/curl/lib
+				   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/libs/curl/lib
                    COMMENT "Compiling libcURL")
 		
 	add_dependencies(Techyon idlib)

@@ -172,26 +172,6 @@ newoption
 	description = "Only use OpenGL ES 1.0 functions",
 }
 
---newoption
---{
---	trigger = "with-freetype",
---	description = "Compile with freetype support"
---}
-		
---newoption
---{
---	trigger = "with-openal",
---	value = "TYPE",
---	description = "Specify which OpenAL library",
---	allowed = 
---	{
---		{ "none", "No support for OpenAL" },
---		{ "dlopen", "Dynamically load OpenAL library if available" },
---		{ "link", "Link the OpenAL library as normal" },
---		{ "openal-dlopen", "Dynamically load OpenAL library if available" },
---		{ "openal-link", "Link the OpenAL library as normal" }
---	}
---}
 
 --
 -- Use the embed action to convert all of the Lua scripts into C strings, which 
@@ -332,19 +312,6 @@ solution "Techyon"
 --		
 -- Platform specific defaults
 --
-
--- We don't support freetype on VS platform
---if _ACTION and string.sub(_ACTION, 2) == "vs" then
---	_OPTIONS["with-freetype"] = false
---end
-
--- Default to dlopen version of OpenAL
---if not _OPTIONS["with-openal"] then
---	_OPTIONS["with-openal"] = "dlopen"
---end
---if _OPTIONS["with-openal"] then
---	_OPTIONS["with-openal"] = "openal-" .. _OPTIONS["with-openal"]
---end
 
 function FindDirectXSDK()
 	
@@ -571,8 +538,8 @@ project "Techyon"
 		"tools/decl/DialogEntityDefEditor.*",
 		"tools/edit_stub.cpp",
 		"tools/guied/GEWindowWrapper_stub.cpp",
-		"tools/qttest/*",
-		"tools/gtktest/*",
+		--"tools/qttest/*",
+		--"tools/gtktest/*",
 	}
 	includedirs
 	{
@@ -646,11 +613,12 @@ end
 			"renderer/draw_exp.cpp",
 		}
 	
-	configuration { "mfc-tools", "vs*", "x32" }
+	configuration { "mfc-tools", "vs*" }
 		flags       { "MFC" }
 		defines
 		{
 			"USE_MFC_TOOLS",
+			"_AFXDLL"
 		}
 		files
 		{
@@ -670,6 +638,22 @@ end
 		excludes
 		{
 			"sys/win32/rc/doom_nomfc.rc",
+		}
+		includedirs
+		{
+			"libs/atlmfc/include"
+		}
+		
+	configuration { "mfc-tools", "vs*", "x32" }
+		libdirs
+		{
+			"libs/atlmfc/lib"
+		}
+		
+	configuration { "mfc-tools", "vs*", "x64" }
+		libdirs
+		{
+			"libs/atlmfc/lib/amd64"
 		}
 	
 	
@@ -733,7 +717,7 @@ end
 	configuration "gtk-tools"
 		defines
 		{
-			"USE_GTK"
+			"USE_GTK_TOOLS"
 		}
 		includedirs
 		{
@@ -744,7 +728,7 @@ end
 			"tools/gtktest/*.cpp", "tools/gtktest/*.h",
 		}
 		
-	configuration { "gtk-tools", "vs*", "x32" }
+	configuration { "gtk-tools", "vs*" }
 		includedirs
 		{
 			"$(GTKMM_BASEPATH)/include",

@@ -36,7 +36,11 @@ If you have questions concerning this license or the applicable additional terms
 #include "../../sound/snd_local.h"
 #include "win_local.h"
 
-#include "../../openal/idal.cpp"
+// Techyon BEGIN
+#if defined(USE_OPENAL)
+#include "../../libs/openal/idal.cpp"
+#endif
+// Techyon END
 
 #define SAFE_DELETE(p)       { if(p) { delete (p);     (p)=NULL; } }
 #define SAFE_DELETE_ARRAY(p) { if(p) { delete[] (p);   (p)=NULL; } }
