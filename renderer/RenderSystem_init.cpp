@@ -366,7 +366,7 @@ static void R_CheckPortableExtensions( void ) {
 #if defined(USE_GLES1)
 	glConfig.textureNonPowerOfTwoAvailable = false;
 #else
-	glConfig.textureNonPowerOfTwoAvailable = GLEW_ARB_texture_non_power_of_two;
+	glConfig.textureNonPowerOfTwoAvailable = false; //GLEW_ARB_texture_non_power_of_two;
 #endif
 
 	// GL_ARB_texture_compression + GL_S3_s3tc
