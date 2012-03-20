@@ -754,7 +754,7 @@ void idCompiler::NextToken( void ) {
 		}
 
 		Error( "Unknown punctuation '%s'", token.c_str() );
-		break;
+   		break;
 
 	case TT_NAME:
 		return;
@@ -2647,7 +2647,10 @@ void idCompiler::CompileFile( const char *text, const char *filename, bool toCon
 		throw idCompileError( error );
 	}
 #else
-	common->Printf("Error: idCompiler::CompileFile: file %s, line %d: unknown error\n", gameLocal.program.GetFilename( currentFileNumber ), currentLineNumber );
+	// FIXME check for errors
+	if ( error ) {
+		common->Printf("Error: idCompiler::CompileFile: file %s, line %d: unknown error\n", gameLocal.program.GetFilename( currentFileNumber ), currentLineNumber );
+	}
 #endif
 
 	parser.FreeSource();
