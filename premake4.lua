@@ -624,6 +624,7 @@ end
 		{
 			"tools/af/*.cpp", "tools/af/*.h",
 			"tools/comafx/*.cpp", "tools/comafx/*.h",
+			"tools/common/**.cpp", "tools/common/**.h",
 			"tools/decl/*.cpp", "tools/decl/*.h",
 			"tools/guied/*.cpp", "tools/guied/*.h",
 			"tools/materialeditor/*.cpp", "tools/materialeditor/*.h",
