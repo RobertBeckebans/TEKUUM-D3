@@ -116,8 +116,13 @@ returns in megabytes
 ================
 */
 int Sys_GetVideoRam( void ) {
-#ifdef	ID_DEDICATED
+#if defined(ID_DEDICATED)
 	return 0;
+// Techyon BEGIN
+#elif defined(USE_QT_WINDOWING)
+	// FIXME
+	return 512;
+// Techyon END
 #else
 	unsigned int retSize = 64;
 

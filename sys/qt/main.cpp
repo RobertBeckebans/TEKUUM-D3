@@ -62,7 +62,7 @@ int main(int argc, char **argv)
 	// no abort/retry/fail errors
 	//SetErrorMode( SEM_FAILCRITICALERRORS );
 
-	Sys_InitCriticalSections();
+	//Sys_InitCriticalSections();
 
 	// get the initial time base
 	Sys_Milliseconds();
@@ -75,30 +75,22 @@ int main(int argc, char **argv)
 //	Sys_FPU_EnableExceptions( TEST_FPU_EXCEPTIONS );
 	//Sys_FPU_SetPrecision( FPU_PRECISION_DOUBLE_EXTENDED );
 
-	GLenum glewResult = glewInit();
-	if(GLEW_OK != glewResult)
-	{
-		// glewInit failed, something is seriously wrong
-		//common->Printf( "^3GLimp_Init() - GLEW could not load OpenGL subsystem: %s", glewGetErrorString(glewResult));
-		printf( "^3GLimp_Init() - GLEW could not load OpenGL subsystem: %s", glewGetErrorString(glewResult));
-	}
-	else
-	{
-		common->Printf( "Using GLEW %s\n", glewGetString(GLEW_VERSION));
-		printf( "Using GLEW %s\n", glewGetString(GLEW_VERSION));
-	}
-
+	/*
 	if ( argc > 1 ) {
 		common->Init( argc-1, (const char**) &argv[1], NULL );
 	} else {
 		common->Init( 0, NULL, NULL );
 	}
+	*/
 
-	gameMainWindow.resize(glConfig.vidWidth, glConfig.vidHeight);
+	//gameMainWindow.resize(glConfig.vidWidth, glConfig.vidHeight);
+	gameMainWindow.resize(640, 480);
 
+	/*
 #if TEST_FPU_EXCEPTIONS != 0
 	common->Printf( Sys_FPU_GetState() );
 #endif
+	*/
 
 #ifndef	ID_DEDICATED
 	//if ( win32.win_notaskkeys.GetInteger() ) {
@@ -106,9 +98,11 @@ int main(int argc, char **argv)
 	//}
 #endif
 
+	/*
 #if defined(_WIN32)
 	Sys_StartAsyncThread();
 #endif
+	*/
 
 	// hide or show the early console as necessary
 	//if ( win32.win_viewlog.GetInteger() || com_skipRenderer.GetBool() || idAsyncNetwork::serverDedicated.GetInteger() ) {
@@ -549,8 +543,8 @@ void Sys_EndXbox360ControllerInputEvents( void ) { }
 
 #else
 
-int Sys_PollXbox360ControllerInputEvents( void ) { }
-int	Sys_ReturnXbox360ControllerInputEvent( const int n, int &action, int &value, int &value2 ) { }
+int Sys_PollXbox360ControllerInputEvents( void ) { return 0; }
+int	Sys_ReturnXbox360ControllerInputEvent( const int n, int &action, int &value, int &value2 ) { return 0; }
 void Sys_EndXbox360ControllerInputEvents( void ) { }
 
 #endif // #if defined(_WIN32)

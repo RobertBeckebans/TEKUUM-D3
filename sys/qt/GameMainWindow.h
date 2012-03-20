@@ -25,7 +25,6 @@ protected:
     //void resizeGL(int width, int height);
 
 private:
-	void initDoom3Engine(int argc, const char **argv);
 	int  QKeyToDKey(QKeyEvent *event);
 
 signals:

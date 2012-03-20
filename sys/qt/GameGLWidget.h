@@ -9,7 +9,7 @@ class GameGLWidget : public QGLWidget
 	Q_OBJECT
 
 public:
-	GameGLWidget();
+	GameGLWidget(int argc, const char **argv);
 
 protected:
     void keyPressEvent(QKeyEvent *event);
@@ -21,6 +21,10 @@ protected:
     void resizeGL(int width, int height);
 
 private:
+	static bool	initializedDoom3Engine;
+	int				argc;
+	const char**	argv;
+	void	initDoom3Engine(int argc, const char **argv);
 
 signals:
 

@@ -35,9 +35,21 @@ If you have questions concerning this license or the applicable additional terms
 #include "../../renderer/tr_local.h"
 #pragma hdrstop
 
-GameGLWidget::GameGLWidget():
+#if defined(_WIN32)
+//#include "../win32/win_local.h"
+void Sys_StartAsyncThread( void );
+
+#endif
+
+bool GameGLWidget::initializedDoom3Engine = false;
+
+GameGLWidget::GameGLWidget(int argc, const char **argv):
 	QGLWidget(QGLFormat(QGL::SampleBuffers))
 {
+	this->argc = argc;
+	this->argv = argv;
+	initializedDoom3Engine = false;
+
 	timer = new QTimer(this);
 	// every 10 milliseconds = 100 fps
 	timer->setInterval(10);
@@ -67,10 +79,20 @@ void GameGLWidget::initializeGL()
 	glConfig.colorBits = format().redBufferSize() + format().greenBufferSize() + format().blueBufferSize();
 	glConfig.depthBits = format().depthBufferSize();
 	glConfig.stencilBits = format().stencilBufferSize();
+
+	if(!initializedDoom3Engine)
+	{
+		initializedDoom3Engine = true;
+
+		initDoom3Engine(argc, argv);
+	}
 }
 
 void GameGLWidget::paintGL()
 {
+	
+
+
 #ifdef DEBUG
 	Sys_MemFrame();
 #endif
@@ -78,7 +100,9 @@ void GameGLWidget::paintGL()
 	//makeCurrent();
 
 	// run the game
-	common->Frame();
+	if (common != NULL && common->IsInitialized()) {
+		common->Frame();
+	}
 
 	//doneCurrent();
 }
@@ -92,4 +116,74 @@ void GameGLWidget::resizeGL(int width, int height)
 void GameGLWidget::onTimer()
 {
 	updateGL();
+}
+
+void GameGLWidget::initDoom3Engine(int argc, const char **argv)
+{
+	//win32.hInstance = hInstance;
+	//idStr::Copynz( sys_cmdline, lpCmdLine, sizeof( sys_cmdline ) );
+
+	// done before Com/Sys_Init since we need this for error output
+	//Sys_CreateConsole();
+
+	// no abort/retry/fail errors
+	//SetErrorMode( SEM_FAILCRITICALERRORS );
+
+	Sys_InitCriticalSections();
+
+	// get the initial time base
+	Sys_Milliseconds();
+
+#ifdef DEBUG
+	// disable the painfully slow MS heap check every 1024 allocs
+	_CrtSetDbgFlag( 0 );
+#endif
+
+//	Sys_FPU_EnableExceptions( TEST_FPU_EXCEPTIONS );
+	//Sys_FPU_SetPrecision( FPU_PRECISION_DOUBLE_EXTENDED );
+
+	GLenum glewResult = glewInit();
+	if(GLEW_OK != glewResult)
+	{
+		// glewInit failed, something is seriously wrong
+		//common->Printf( "^3GLimp_Init() - GLEW could not load OpenGL subsystem: %s", glewGetErrorString(glewResult));
+		printf( "^3GLimp_Init() - GLEW could not load OpenGL subsystem: %s", glewGetErrorString(glewResult));
+	}
+	else
+	{
+		common->Printf( "Using GLEW %s\n", glewGetString(GLEW_VERSION));
+		printf( "Using GLEW %s\n", glewGetString(GLEW_VERSION));
+	}
+
+	if ( argc > 1 ) {
+		common->Init( argc-1, (const char**) &argv[1], NULL );
+	} else {
+		common->Init( 0, NULL, NULL );
+	}
+
+#if TEST_FPU_EXCEPTIONS != 0
+	common->Printf( Sys_FPU_GetState() );
+#endif
+
+#ifndef	ID_DEDICATED
+	//if ( win32.win_notaskkeys.GetInteger() ) {
+	//	DisableTaskKeys( TRUE, FALSE, /*( win32.win_notaskkeys.GetInteger() == 2 )*/ FALSE );
+	//}
+#endif
+
+#if defined(_WIN32)
+	Sys_StartAsyncThread();
+#endif
+
+	// hide or show the early console as necessary
+	//if ( win32.win_viewlog.GetInteger() || com_skipRenderer.GetBool() || idAsyncNetwork::serverDedicated.GetInteger() ) {
+	//	Sys_ShowConsole( 1, true );
+	// else {
+	//	Sys_ShowConsole( 0, false );
+	//}
+
+#ifdef SET_THREAD_AFFINITY 
+	// give the main thread an affinity for the first cpu
+	SetThreadAffinityMask( GetCurrentThread(), 1 );
+#endif
 }

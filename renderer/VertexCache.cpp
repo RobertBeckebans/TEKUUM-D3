@@ -192,6 +192,8 @@ void idVertexCache::Init() {
 	Mem_Free( junk );
 
 	EndFrame();
+
+	initialized = true;
 }
 
 /*
@@ -203,6 +205,10 @@ the cached data isn't valid
 ===========
 */
 void idVertexCache::PurgeAll() {
+	if ( !initialized ) {
+		return;
+	}
+
 	while( staticHeaders.next != &staticHeaders ) {
 		ActuallyFree( staticHeaders.next );
 	}
