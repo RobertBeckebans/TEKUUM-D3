@@ -3,7 +3,7 @@ project "TypeInfo"
 	targetname  "TypeInfo"
 	language    "C++"
 	kind        "ConsoleApp"
-	flags       { "ExtraWarnings" }
+	flags       { "ExtraWarnings", "NoManifest" }
 	files
 	{
 		"*.cpp", "*.h",
