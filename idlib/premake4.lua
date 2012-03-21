@@ -3,7 +3,7 @@ project "idlib"
 	targetname  "idlib"
 	language    "C++"
 	kind        "StaticLib"
-	flags       { "ExtraWarnings" }
+	flags       { "ExtraWarnings", "NoManifest" }
 	files
 	{
 		--"**.cpp", "**.h",

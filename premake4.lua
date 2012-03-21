@@ -478,7 +478,7 @@ project "Techyon"
 	else
 		kind        "WindowedApp"
 	end
-	flags       { "ExtraWarnings" }
+	flags       { "ExtraWarnings", "NoManifest" }
 	--debugargs	{ "+set com_allowConsole 1 +set fs_game basety" }
 	files
 	{

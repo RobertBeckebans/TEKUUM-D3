@@ -4,7 +4,7 @@ project "game"
 	targetdir 	"../../basety"
 	language    "C++"
 	kind        "SharedLib"
-	flags       { "ExtraWarnings" }
+	flags       { "ExtraWarnings", "NoManifest" }
 	files
 	{
 		"../idlib/**.cpp", "../idlib/**.h",
