@@ -49,40 +49,54 @@ Visualisation code
 */
 
 const char *cm_contentsNameByIndex[] = {
-	"none",							// 0
-	"solid",						// 1
-	"opaque",						// 2
-	"water",						// 3
-	"playerclip",					// 4
-	"monsterclip",					// 5
-	"moveableclip",					// 6
-	"ikclip",						// 7
-	"blood",						// 8
-	"body",							// 9
+// Techyon BEGIN - RB: these flags were out of sync with contentsFlags_t
+	"none",							// -1
+	"solid",						// BIT(0)
+	"opaque",						// 1
+	"water",						// 2
+	"playerclip",					// 3
+	"monsterclip",					// 4
+	"moveableclip",					// 5
+	"ikclip",						// 6
+	"blood",						// 7
+	"body",							// 8
+	"projectile",					// 9
 	"corpse",						// 10
-	"trigger",						// 11
-	"aas_solid",					// 12
-	"aas_obstacle",					// 13
-	"flashlight_trigger",			// 14
+	"rendermodel",					// 11
+	"trigger",						// 12
+	"aas_solid",					// 13
+	"aas_obstacle",					// 14
+	"flashlight_trigger",			// 15
+
+	// RB: added new contents
+	"dynamicportal",				// 16
+// Techyon END
 	NULL
 };
 
 int cm_contentsFlagByIndex[] = {
-	-1,								// 0
-	CONTENTS_SOLID,					// 1
-	CONTENTS_OPAQUE,				// 2
-	CONTENTS_WATER,					// 3
-	CONTENTS_PLAYERCLIP,			// 4
-	CONTENTS_MONSTERCLIP,			// 5
-	CONTENTS_MOVEABLECLIP,			// 6
-	CONTENTS_IKCLIP,				// 7
-	CONTENTS_BLOOD,					// 8
-	CONTENTS_BODY,					// 9
+// Techyon BEGIN - RB: these flags were out of sync with contentsFlags_t
+	-1,								// -1
+	CONTENTS_SOLID,					// BIT(0)
+	CONTENTS_OPAQUE,				// 1
+	CONTENTS_WATER,					// 2
+	CONTENTS_PLAYERCLIP,			// 3
+	CONTENTS_MONSTERCLIP,			// 4
+	CONTENTS_MOVEABLECLIP,			// 5
+	CONTENTS_IKCLIP,				// 6
+	CONTENTS_BLOOD,					// 7
+	CONTENTS_BODY,					// 8
+	CONTENTS_PROJECTILE,			// 9
 	CONTENTS_CORPSE,				// 10
-	CONTENTS_TRIGGER,				// 11
-	CONTENTS_AAS_SOLID,				// 12
-	CONTENTS_AAS_OBSTACLE,			// 13
-	CONTENTS_FLASHLIGHT_TRIGGER,	// 14
+	CONTENTS_RENDERMODEL,			// 11
+	CONTENTS_TRIGGER,				// 12
+	CONTENTS_AAS_SOLID,				// 13
+	CONTENTS_AAS_OBSTACLE,			// 14
+	CONTENTS_FLASHLIGHT_TRIGGER,	// 15
+
+	// RB: added new contents
+	CONTENTS_DYNAMICPORTAL,			// 16
+// Techyon END
 	0
 };
 

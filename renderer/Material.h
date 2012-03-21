@@ -287,6 +287,10 @@ typedef enum {
 	CONTENTS_AAS_OBSTACLE		= BIT(14),	// used to compile an obstacle into AAS that can be enabled/disabled
 	CONTENTS_FLASHLIGHT_TRIGGER	= BIT(15),	// used for triggers that are activated by the flashlight
 
+	// Techyon BEGIN
+	CONTENTS_DYNAMICPORTAL		= BIT(16),	// used for dynamic portals
+	// Techyon END
+
 	// contents used by utils
 	CONTENTS_AREAPORTAL			= BIT(20),	// portal separating renderer areas
 	CONTENTS_NOCSG				= BIT(21),	// don't cut this brush with CSG operations in the editor
