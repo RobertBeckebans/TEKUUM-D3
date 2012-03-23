@@ -2045,6 +2045,210 @@ void idBFGProjectile::Explode( const trace_t &collision, idEntity *ignore ) {
 /*
 ===============================================================================
 
+	tyPortalProjectile
+
+===============================================================================
+*/
+
+CLASS_DECLARATION( idProjectile, tyPortalProjectile )
+END_CLASS
+
+/*
+================
+tyPortalProjectile::tyPortalProjectile
+================
+*/
+tyPortalProjectile::tyPortalProjectile( void ) {
+}
+
+/*
+=================
+tyPortalProjectile::~tyPortalProjectile
+=================
+*/
+tyPortalProjectile::~tyPortalProjectile( void ) {
+}
+
+/*
+================
+tyPortalProjectile::Spawn
+================
+*/
+/*
+void tyPortalProjectile::Spawn( void ) {
+}
+*/
+
+/*
+================
+tyPortalProjectile::Save
+================
+*/
+/*
+void tyPortalProjectile::Save( idSaveGame *savefile ) const {
+	// TODO
+}
+*/
+
+/*
+================
+tyPortalProjectile::Restore
+================
+*/
+/*
+void tyPortalProjectile::Restore( idRestoreGame *savefile ) {
+	// TODO
+}
+*/
+
+/*
+================
+tyPortalProjectile::Explode
+================
+*/
+void tyPortalProjectile::Explode( const trace_t &collision, idEntity *ignore ) {
+	const char *fxname, *light_shader, *sndExplode;
+	float		light_fadetime;
+	idVec3		normal;
+	int			removeTime;
+
+	if ( state == EXPLODED || state == FIZZLED ) {
+		return;
+	}
+
+	// stop sound
+	StopSound( SND_CHANNEL_BODY2, false );
+
+	// play explode sound
+	switch ( ( int ) damagePower ) {
+		case 2: sndExplode = "snd_explode2"; break;
+		case 3: sndExplode = "snd_explode3"; break;
+		case 4: sndExplode = "snd_explode4"; break;
+		default: sndExplode = "snd_explode"; break;
+	}
+	StartSound( sndExplode, SND_CHANNEL_BODY, 0, true, NULL );
+
+	// we need to work out how long the effects last and then remove them at that time
+	// for example, bullets have no real effects
+	if ( smokeFly && smokeFlyTime ) {
+		smokeFlyTime = 0;
+	}
+
+	Hide();
+	FreeLightDef();
+
+	if ( spawnArgs.GetVector( "detonation_axis", "", normal ) ) {
+		GetPhysics()->SetAxis( normal.ToMat3() );
+	}
+	GetPhysics()->SetOrigin( collision.endpos + 2.0f * collision.c.normal );
+
+	// default remove time
+	removeTime = spawnArgs.GetInt( "remove_time", "1500" );
+
+	// change the model, usually to a PRT
+	fxname = NULL;
+	if ( g_testParticle.GetInteger() == TEST_PARTICLE_IMPACT ) {
+		fxname = g_testParticleName.GetString();
+	} else {
+		fxname = spawnArgs.GetString( "model_detonate" );
+	}
+
+	int surfaceType = collision.c.material != NULL ? collision.c.material->GetSurfaceType() : SURFTYPE_METAL;
+	if ( !( fxname && *fxname ) ) {
+		if ( ( surfaceType == SURFTYPE_NONE ) || ( surfaceType == SURFTYPE_METAL ) || ( surfaceType == SURFTYPE_STONE ) ) {
+			fxname = spawnArgs.GetString( "model_smokespark" );
+		} else if ( surfaceType == SURFTYPE_RICOCHET ) {
+			fxname = spawnArgs.GetString( "model_ricochet" );
+		} else {
+			fxname = spawnArgs.GetString( "model_smoke" );
+		}
+	}
+
+	if ( fxname && *fxname ) {
+		SetModel( fxname );
+		renderEntity.shaderParms[SHADERPARM_RED] = 
+		renderEntity.shaderParms[SHADERPARM_GREEN] = 
+		renderEntity.shaderParms[SHADERPARM_BLUE] = 
+		renderEntity.shaderParms[SHADERPARM_ALPHA] = 1.0f;
+		renderEntity.shaderParms[SHADERPARM_TIMEOFFSET] = -MS2SEC( gameLocal.time );
+		renderEntity.shaderParms[SHADERPARM_DIVERSITY] = gameLocal.random.CRandomFloat();
+		Show();
+		removeTime = ( removeTime > 3000 ) ? removeTime : 3000;
+	}
+
+	// explosion light
+	light_shader = spawnArgs.GetString( "mtr_explode_light_shader" );
+	if ( *light_shader ) {
+		renderLight.shader = declManager->FindMaterial( light_shader, false );
+		renderLight.pointLight = true;
+		renderLight.lightRadius[0] =
+		renderLight.lightRadius[1] =
+		renderLight.lightRadius[2] = spawnArgs.GetFloat( "explode_light_radius" );
+		spawnArgs.GetVector( "explode_light_color", "1 1 1", lightColor );
+		renderLight.shaderParms[SHADERPARM_RED] = lightColor.x;
+		renderLight.shaderParms[SHADERPARM_GREEN] = lightColor.y;
+		renderLight.shaderParms[SHADERPARM_BLUE] = lightColor.z;
+		renderLight.shaderParms[SHADERPARM_ALPHA] = 1.0f;
+		renderLight.shaderParms[SHADERPARM_TIMEOFFSET] = -MS2SEC( gameLocal.time );
+		light_fadetime = spawnArgs.GetFloat( "explode_light_fadetime", "0.5" );
+		lightStartTime = gameLocal.time;
+		lightEndTime = gameLocal.time + SEC2MS( light_fadetime );
+		BecomeActive( TH_THINK );
+	}
+
+	fl.takedamage = false;
+	physicsObj.SetContents( 0 );
+	physicsObj.PutToRest();
+
+	state = EXPLODED;
+
+	if ( gameLocal.isClient ) {
+		return;
+	}
+
+	// alert the ai
+	gameLocal.AlertAI( owner.GetEntity() );
+
+	// bind the projectile to the impact entity if necesary
+	/*
+	if ( gameLocal.entities[collision.c.entityNum] && spawnArgs.GetBool( "bindOnImpact" ) ) {
+		Bind( gameLocal.entities[collision.c.entityNum], true );
+	}
+	*/
+
+	// spawn portal instead of debris
+	const idDict *portalDict = gameLocal.FindEntityDefDict( "func_securitycamera", false );
+	if ( portalDict ) 
+	{
+		idEntity *ent;
+		idVec3 dir;
+		idDict args = *portalDict;
+		args.Set( "model", "models/mapobjects/camera/camera01.ase" );
+		args.Set( "name", "cam2" );
+
+		gameLocal.SpawnEntityDef( args, &ent, false );
+		if ( !ent || !ent->IsType( idSecurityCamera::Type ) ) {
+			gameLocal.Error( "'func_securitycamera' is not an idSecurityCamera" );
+		}
+
+		idSecurityCamera *portal = static_cast<idSecurityCamera *>(ent);
+		//debris->Create( owner.GetEntity(), physicsObj.GetOrigin(), dir.ToMat3() );
+		//debris->Launch();
+
+		// set item position
+		portal->GetPhysics()->SetOrigin( physicsObj.GetOrigin() );
+		portal->GetPhysics()->SetAxis( physicsObj.GetAxis() );
+		portal->UpdateVisuals();
+	}
+
+	CancelEvents( &EV_Explode );
+	PostEventMS( &EV_Remove, removeTime );
+}
+
+
+/*
+===============================================================================
+
 	idDebris
 
 ===============================================================================

@@ -224,6 +224,23 @@ private:
 	void					ApplyDamage();
 };
 
+// Techyon BEGIN
+class tyPortalProjectile : public idProjectile {
+public :
+	CLASS_PROTOTYPE( tyPortalProjectile );
+
+							tyPortalProjectile( void );
+							~tyPortalProjectile( void );
+
+//	void					Save( idSaveGame *savefile ) const;
+//	void					Restore( idRestoreGame *savefile );
+
+//	void					Spawn( void );
+//	virtual void			Think( void );
+	virtual void			Explode( const trace_t &collision, idEntity *ignore );
+};
+// Techyon END
+
 /*
 ===============================================================================
 
