@@ -79,7 +79,7 @@ private:
 							
 	int						pvsArea;
 	idPhysics_RigidBody		physicsObj;
-	idTraceModel			trm;
+//	idTraceModel			trm;
 
 	void					StartSweep( void );
 	bool					CanSeePlayer( void );

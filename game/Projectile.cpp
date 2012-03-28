@@ -2217,27 +2217,27 @@ void tyPortalProjectile::Explode( const trace_t &collision, idEntity *ignore ) {
 	*/
 
 	// spawn portal instead of debris
-	const idDict *portalDict = gameLocal.FindEntityDefDict( "func_securitycamera", false );
+	const idDict *portalDict = gameLocal.FindEntityDefDict( "portal", false );
 	if ( portalDict ) 
 	{
 		idEntity *ent;
 		idVec3 dir;
 		idDict args = *portalDict;
-		args.Set( "model", "models/mapobjects/camera/camera01.ase" );
-		args.Set( "name", "cam2" );
+		args.Set( "model", "models/portals/portal_simple.ase" );
+		//args.Set( "name", "cam2" );
 
 		gameLocal.SpawnEntityDef( args, &ent, false );
-		if ( !ent || !ent->IsType( idSecurityCamera::Type ) ) {
-			gameLocal.Error( "'func_securitycamera' is not an idSecurityCamera" );
+		if ( !ent || !ent->IsType( tyPortal::Type ) ) {
+			gameLocal.Error( "'portal' is not an tyPortal" );
 		}
 
-		idSecurityCamera *portal = static_cast<idSecurityCamera *>(ent);
+		tyPortal *portal = static_cast<tyPortal *>(ent);
 		//debris->Create( owner.GetEntity(), physicsObj.GetOrigin(), dir.ToMat3() );
 		//debris->Launch();
 
 		// set item position
 		portal->GetPhysics()->SetOrigin( physicsObj.GetOrigin() );
-		portal->GetPhysics()->SetAxis( physicsObj.GetAxis() );
+		portal->GetPhysics()->SetAxis( collision.c.normal.ToMat3() );
 		portal->UpdateVisuals();
 	}
 

@@ -85,7 +85,7 @@ void tyPortal::Save( idSaveGame *savefile ) const {
 							
 	savefile->WriteInt( pvsArea );
 	savefile->WriteStaticObject( physicsObj );
-	savefile->WriteTraceModel( trm );
+	//savefile->WriteTraceModel( trm );
 }
 
 /*
@@ -113,7 +113,7 @@ void tyPortal::Restore( idRestoreGame *savefile ) {
 							
 	savefile->ReadInt( pvsArea );
 	savefile->ReadStaticObject( physicsObj );
-	savefile->ReadTraceModel( trm );
+	//savefile->ReadTraceModel( trm );
 }
 
 /*
@@ -168,10 +168,12 @@ void tyPortal::Spawn( void ) {
 		str = spawnArgs.GetString( "model" );		// use the visual model
 	}
 
+	/*
 	if ( !collisionModelManager->TrmFromModel( str, trm ) ) {
 		gameLocal.Error( "tyPortal '%s': cannot load collision model %s", name.c_str(), str.c_str() );
 		return;
 	}
+	*/
 
 	GetPhysics()->SetContents( CONTENTS_SOLID );
 	GetPhysics()->SetClipMask( MASK_SOLID | CONTENTS_BODY | CONTENTS_CORPSE | CONTENTS_MOVEABLECLIP );
@@ -528,7 +530,7 @@ void tyPortal::Killed( idEntity *inflictor, idEntity *attacker, int damage, cons
 	}
 
 	physicsObj.SetSelf( this );
-	physicsObj.SetClipModel( new idClipModel( trm ), 0.02f );
+//	physicsObj.SetClipModel( new idClipModel( trm ), 0.02f );
 	physicsObj.SetOrigin( GetPhysics()->GetOrigin() );
 	physicsObj.SetAxis( GetPhysics()->GetAxis() );
 	physicsObj.SetBouncyness( 0.2f );
