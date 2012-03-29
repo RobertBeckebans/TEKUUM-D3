@@ -44,6 +44,9 @@ public:
 	CLASS_PROTOTYPE( tyPortal );
 
 	void					Spawn( void );
+	
+	void					Create( idEntity *owner, tyPortal *otherPortal, const idVec3 &start, const idMat3 &axis );
+
 
 	void					Save( idSaveGame *savefile ) const;
 	void					Restore( idRestoreGame *savefile );
@@ -57,6 +60,8 @@ public:
 
 
 private:
+	idEntityPtr<idEntity>	owner;
+	idEntityPtr<tyPortal>	destinationPortal;
 
 	enum { SCANNING, LOSINGINTEREST, ALERT, ACTIVATED };
 

@@ -65,7 +65,11 @@ END_CLASS
 tyPortal::Save
 ================
 */
-void tyPortal::Save( idSaveGame *savefile ) const {
+void tyPortal::Save( idSaveGame *savefile ) const 
+{
+	owner.Save( savefile );
+	destinationPortal.Save( savefile );
+
 	savefile->WriteFloat( angle );
 	savefile->WriteFloat( sweepAngle );
 	savefile->WriteInt( modelAxis );
@@ -93,7 +97,11 @@ void tyPortal::Save( idSaveGame *savefile ) const {
 tyPortal::Restore
 ================
 */
-void tyPortal::Restore( idRestoreGame *savefile ) {
+void tyPortal::Restore( idRestoreGame *savefile ) 
+{
+	owner.Restore( savefile );
+	destinationPortal.Restore( savefile );
+
 	savefile->ReadFloat( angle );
 	savefile->ReadFloat( sweepAngle );
 	savefile->ReadInt( modelAxis );
@@ -159,7 +167,8 @@ void tyPortal::Spawn( void ) {
 	// if no target specified use ourself
 	str = spawnArgs.GetString( "cameraTarget" );
 	if ( str.Length() == 0 ) {
-		spawnArgs.Set( "cameraTarget", spawnArgs.GetString( "name" ) );
+		const char *name = spawnArgs.GetString( "name" );
+		spawnArgs.Set( "cameraTarget", name );
 	}
 
 	// check if a clip model is set
@@ -177,8 +186,28 @@ void tyPortal::Spawn( void ) {
 
 	GetPhysics()->SetContents( CONTENTS_SOLID );
 	GetPhysics()->SetClipMask( MASK_SOLID | CONTENTS_BODY | CONTENTS_CORPSE | CONTENTS_MOVEABLECLIP );
+	
 	// setup the physics
 	UpdateChangeableSpawnArgs( NULL );
+}
+
+
+void tyPortal::Create( idEntity *owner, tyPortal * otherPortal, const idVec3 &start, const idMat3 &axis ) 
+{
+	Unbind();
+	
+	GetPhysics()->SetOrigin( start );
+	GetPhysics()->SetAxis( axis );
+	GetPhysics()->SetContents( 0 );
+	
+	this->owner = owner;
+
+	if( otherPortal ) {
+		destinationPortal = otherPortal;
+		otherPortal->destinationPortal = this;
+	}
+	
+	UpdateVisuals();
 }
 
 /*
@@ -272,12 +301,39 @@ void tyPortal::DrawFov( void ) {
 tyPortal::GetRenderView
 ================
 */
-renderView_t *tyPortal::GetRenderView() {
-	renderView_t *rv = idEntity::GetRenderView();
-	rv->fov_x = scanFov;
-	rv->fov_y = scanFov;
-	rv->viewaxis = GetAxis().ToAngles().ToMat3();
-	rv->vieworg = GetPhysics()->GetOrigin() + viewOffset;
+renderView_t *tyPortal::GetRenderView() 
+{
+	renderView_t *rv = NULL;
+
+	/*
+	if ( owner.GetEntity() && owner.GetEntity()->IsType( idPlayer::Type ) ) 
+	{
+		idPlayer *player = static_cast<idPlayer*>( owner.GetEntity() );
+
+
+		return player->GetRenderView();
+	}
+	*/
+
+	if( destinationPortal.GetEntity() )
+	{
+		tyPortal *otherPortal = static_cast<tyPortal*>( destinationPortal.GetEntity() );
+
+		rv = idEntity::GetRenderView();
+		rv->fov_x = scanFov;
+		rv->fov_y = scanFov;
+		rv->viewaxis = otherPortal->GetAxis().ToAngles().ToMat3();
+		rv->vieworg = otherPortal->GetPhysics()->GetOrigin() + otherPortal->viewOffset;
+	}
+	else
+	{
+		rv = idEntity::GetRenderView();
+		rv->fov_x = scanFov;
+		rv->fov_y = scanFov;
+		rv->viewaxis = GetAxis().ToAngles().ToMat3();
+		rv->vieworg = GetPhysics()->GetOrigin() + viewOffset;
+	}
+	
 	return rv;
 }
 
@@ -565,16 +621,18 @@ Present is called to allow entities to generate refEntities, lights, etc for the
 ================
 */
 void tyPortal::Present( void ) {
+#if 1
 	// don't present to the renderer if the entity hasn't changed
 	if ( !( thinkFlags & TH_UPDATEVISUALS ) ) {
 		return;
 	}
 	BecomeInactive( TH_UPDATEVISUALS );
+#endif
 
 	// camera target for remote render views
-	if ( cameraTarget ) {
-		renderEntity.remoteRenderView = cameraTarget->GetRenderView();
-	}
+	//if ( cameraTarget ) {
+		renderEntity.remoteRenderView = GetRenderView();
+	//}
 
 	// if set to invisible, skip
 	if ( !renderEntity.hModel || IsHidden() ) {

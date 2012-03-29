@@ -2218,13 +2218,49 @@ void tyPortalProjectile::Explode( const trace_t &collision, idEntity *ignore ) {
 
 	// spawn portal instead of debris
 	const idDict *portalDict = gameLocal.FindEntityDefDict( "portal", false );
-	if ( portalDict ) 
+	if ( portalDict && owner.GetEntity() && owner.GetEntity()->IsType( idPlayer::Type ) ) 
 	{
+		idPlayer *player = static_cast<idPlayer*>( owner.GetEntity() );
+
+		// find first portal belonging to the player
+		idStr portal1Name = player->GetName();
+		portal1Name += "_portal1";
+		idEntity *portal1Entity = gameLocal.FindEntity(portal1Name);
+		bool portal1Open = portal1Entity != NULL;
+
+		// find second portal belonging to the player
+		idStr portal2Name = player->GetName();
+		portal2Name += "_portal2";
+		idEntity *portal2Entity = gameLocal.FindEntity(portal2Name);
+		bool portal2Open = portal2Entity != NULL;
+
+#if 1
+		if( portal2Entity )
+		{
+			if( portal1Entity ) {
+				//portal1Entity->PostEventMS( &EV_Remove, 0 );
+				delete portal1Entity;
+			}
+			
+			//portal2Entity->PostEventMS( &EV_Remove, 0 );
+			delete portal2Entity;
+		}
+#endif
+
 		idEntity *ent;
 		idVec3 dir;
 		idDict args = *portalDict;
 		args.Set( "model", "models/portals/portal_simple.ase" );
-		//args.Set( "name", "cam2" );
+		args.Set( "gui", "guis/cameras/cam_portal.gui" );
+		args.Set( "gui_parm1", "1" );
+
+		if( portal1Open && !portal2Open) {
+			args.Set( "name", portal2Name );
+			args.Set( "cameraTarget", portal2Name );
+		} else {
+			args.Set( "name", portal1Name );
+			args.Set( "cameraTarget", portal1Name );
+		}
 
 		gameLocal.SpawnEntityDef( args, &ent, false );
 		if ( !ent || !ent->IsType( tyPortal::Type ) ) {
@@ -2232,13 +2268,17 @@ void tyPortalProjectile::Explode( const trace_t &collision, idEntity *ignore ) {
 		}
 
 		tyPortal *portal = static_cast<tyPortal *>(ent);
-		//debris->Create( owner.GetEntity(), physicsObj.GetOrigin(), dir.ToMat3() );
-		//debris->Launch();
 
-		// set item position
-		portal->GetPhysics()->SetOrigin( physicsObj.GetOrigin() );
-		portal->GetPhysics()->SetAxis( collision.c.normal.ToMat3() );
-		portal->UpdateVisuals();
+		if(portal1Open && !portal2Open)
+		{
+			tyPortal *destinationPortal = static_cast<tyPortal *>(portal1Entity);
+
+			portal->Create( owner.GetEntity(), destinationPortal, physicsObj.GetOrigin(), collision.c.normal.ToMat3() );
+		}
+		else
+		{
+			portal->Create( owner.GetEntity(), NULL, physicsObj.GetOrigin(), collision.c.normal.ToMat3() );
+		}
 	}
 
 	CancelEvents( &EV_Explode );
