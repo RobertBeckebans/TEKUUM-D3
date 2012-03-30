@@ -46,18 +46,11 @@ If you have questions concerning this license or the applicable additional terms
 	
 ***********************************************************************/
 
-const idEventDef EV_SecurityCam_ReverseSweep( "<reverseSweep>" );
-const idEventDef EV_SecurityCam_ContinueSweep( "<continueSweep>" );
-const idEventDef EV_SecurityCam_Pause( "<pause>" );
-const idEventDef EV_SecurityCam_Alert( "<alert>" );
-const idEventDef EV_SecurityCam_AddLight( "<addLight>" );
+const idEventDef EV_Portal_AddLight( "<addLight>" );
 
 CLASS_DECLARATION( idEntity, tyPortal )
-	EVENT( EV_SecurityCam_ReverseSweep,		tyPortal::Event_ReverseSweep )
-	EVENT( EV_SecurityCam_ContinueSweep,	tyPortal::Event_ContinueSweep )
-	EVENT( EV_SecurityCam_Pause,			tyPortal::Event_Pause )
-	EVENT( EV_SecurityCam_Alert,			tyPortal::Event_Alert )
-	EVENT( EV_SecurityCam_AddLight,			tyPortal::Event_AddLight )
+	EVENT( EV_Portal_AddLight,			tyPortal::Event_AddLight )
+	EVENT( EV_Touch,					tyPortal::Event_Touch )
 END_CLASS
 
 /*
@@ -70,19 +63,10 @@ void tyPortal::Save( idSaveGame *savefile ) const
 	owner.Save( savefile );
 	destinationPortal.Save( savefile );
 
-	savefile->WriteFloat( angle );
-	savefile->WriteFloat( sweepAngle );
 	savefile->WriteInt( modelAxis );
 	savefile->WriteBool( flipAxis );
 	savefile->WriteFloat( scanDist );
 	savefile->WriteFloat( scanFov );
-							
-	savefile->WriteFloat( sweepStart );
-	savefile->WriteFloat( sweepEnd );
-	savefile->WriteBool( negativeSweep );
-	savefile->WriteBool( sweeping );
-	savefile->WriteInt( alertMode );
-	savefile->WriteFloat( stopSweeping );
 	savefile->WriteFloat( scanFovCos );
 
 	savefile->WriteVec3( viewOffset );
@@ -90,6 +74,8 @@ void tyPortal::Save( idSaveGame *savefile ) const
 	savefile->WriteInt( pvsArea );
 	savefile->WriteStaticObject( physicsObj );
 	//savefile->WriteTraceModel( trm );
+
+	savefile->WriteInt( teleportStage );
 }
 
 /*
@@ -102,19 +88,10 @@ void tyPortal::Restore( idRestoreGame *savefile )
 	owner.Restore( savefile );
 	destinationPortal.Restore( savefile );
 
-	savefile->ReadFloat( angle );
-	savefile->ReadFloat( sweepAngle );
 	savefile->ReadInt( modelAxis );
 	savefile->ReadBool( flipAxis );
 	savefile->ReadFloat( scanDist );
 	savefile->ReadFloat( scanFov );
-							
-	savefile->ReadFloat( sweepStart );
-	savefile->ReadFloat( sweepEnd );
-	savefile->ReadBool( negativeSweep );
-	savefile->ReadBool( sweeping );
-	savefile->ReadInt( alertMode );
-	savefile->ReadFloat( stopSweeping );
 	savefile->ReadFloat( scanFovCos );
 
 	savefile->ReadVec3( viewOffset );
@@ -122,6 +99,8 @@ void tyPortal::Restore( idRestoreGame *savefile )
 	savefile->ReadInt( pvsArea );
 	savefile->ReadStaticObject( physicsObj );
 	//savefile->ReadTraceModel( trm );
+
+	savefile->ReadInt( teleportStage );
 }
 
 /*
@@ -132,7 +111,6 @@ tyPortal::Spawn
 void tyPortal::Spawn( void ) {
 	idStr	str;
 
-	sweepAngle	= spawnArgs.GetFloat( "sweepAngle", "90" );
 	health		= spawnArgs.GetInt( "health", "100" );
 	scanFov		= spawnArgs.GetFloat( "scanFov", "90" );
 	scanDist	= spawnArgs.GetFloat( "scanDist", "200" );
@@ -146,17 +124,10 @@ void tyPortal::Spawn( void ) {
 	spawnArgs.GetVector( "viewOffset", "0 0 0", viewOffset );
 
 	if ( spawnArgs.GetBool( "spotLight" ) ) {
-		PostEventMS( &EV_SecurityCam_AddLight, 0 );
+		PostEventMS( &EV_Portal_AddLight, 0 );
 	}
 
-	negativeSweep = ( sweepAngle < 0 ) ? true : false;
-	sweepAngle = abs( sweepAngle );
-
 	scanFovCos = cos( scanFov * idMath::PI / 360.0f );
-
-	angle = GetPhysics()->GetAxis().ToAngles().yaw;
-	StartSweep();
-	SetAlertMode( SCANNING );
 	BecomeActive( TH_THINK );
 
 	if ( health ) {
@@ -164,6 +135,7 @@ void tyPortal::Spawn( void ) {
 	}
 
 	pvsArea = gameLocal.pvs.GetPVSArea( GetPhysics()->GetOrigin() );
+	
 	// if no target specified use ourself
 	str = spawnArgs.GetString( "cameraTarget" );
 	if ( str.Length() == 0 ) {
@@ -186,6 +158,17 @@ void tyPortal::Spawn( void ) {
 
 	GetPhysics()->SetContents( CONTENTS_SOLID );
 	GetPhysics()->SetClipMask( MASK_SOLID | CONTENTS_BODY | CONTENTS_CORPSE | CONTENTS_MOVEABLECLIP );
+
+	// TRIGGER -------------
+	spawnArgs.GetFloat( "wait", "0.5", wait );
+	spawnArgs.GetFloat( "delay", "0.5", delay );
+	nextTriggerTime = 0;
+	// TRIGGER -------------
+
+	// TELEPORTER ----------
+	teleportStage = 0;
+	// TELEPORTER ----------
+
 	
 	// setup the physics
 	UpdateChangeableSpawnArgs( NULL );
@@ -391,18 +374,6 @@ bool tyPortal::CanSeePlayer( void ) {
 	return false;
 }
 
-/*
-================
-tyPortal::SetAlertMode
-================
-*/
-void tyPortal::SetAlertMode( int alert ) {
-	if (alert >= SCANNING && alert <= ACTIVATED) {
-		alertMode = alert;
-	}
-	renderEntity.shaderParms[ SHADERPARM_MODE ] = alertMode;
-	UpdateVisuals();
-}
 
 /*
 ================
@@ -429,47 +400,9 @@ void tyPortal::Think( void ) {
 
 	if ( thinkFlags & TH_THINK ) {
 		if (CanSeePlayer()) {
-			if (alertMode == SCANNING) {
-				float	sightTime;
-
-				SetAlertMode(ALERT);
-				stopSweeping = gameLocal.time;
-				if (sweeping) {
-					CancelEvents( &EV_SecurityCam_Pause );
-				} else {
-					CancelEvents( &EV_SecurityCam_ReverseSweep );
-				}
-				sweeping = false;
-				StopSound( SND_CHANNEL_ANY, false );
-				StartSound( "snd_sight", SND_CHANNEL_BODY, 0, false, NULL );
-
-				sightTime = spawnArgs.GetFloat( "sightTime", "5" );
-				PostEventSec(&EV_SecurityCam_Alert, sightTime);
-			}
+			
 		} else {
-			if (alertMode == ALERT) {
-				float	sightResume;
-
-				SetAlertMode(LOSINGINTEREST);
-				CancelEvents( &EV_SecurityCam_Alert );
-				
-				sightResume = spawnArgs.GetFloat( "sightResume", "1.5" );
-				PostEventSec( &EV_SecurityCam_ContinueSweep, sightResume );
-			}
-
-			if ( sweeping ) {
-				idAngles a = GetPhysics()->GetAxis().ToAngles();
-
-				pct = ( gameLocal.time - sweepStart ) / ( sweepEnd - sweepStart );
-				travel = pct * sweepAngle;
-				if ( negativeSweep ) {
-					a.yaw = angle + travel;
-				} else {
-					a.yaw = angle - travel;
-				}
-
-				SetAngles( a );
-			}
+			
 		}
 	}
 	Present();
@@ -484,93 +417,7 @@ const idVec3 tyPortal::GetAxis( void ) const {
 	return (flipAxis) ? -GetPhysics()->GetAxis()[modelAxis] : GetPhysics()->GetAxis()[modelAxis];
 };
 
-/*
-================
-tyPortal::SweepSpeed
-================
-*/
-float tyPortal::SweepSpeed( void ) const {
-	return spawnArgs.GetFloat( "sweepSpeed", "5" );
-}
 
-/*
-================
-tyPortal::StartSweep
-================
-*/
-void tyPortal::StartSweep( void ) {
-	int speed;
-
-	sweeping = true;
-	sweepStart = gameLocal.time;
-	speed = SEC2MS( SweepSpeed() );
-	sweepEnd = sweepStart + speed;
-   	PostEventMS( &EV_SecurityCam_Pause, speed );
-	StartSound( "snd_moving", SND_CHANNEL_BODY, 0, false, NULL );
-}
-
-/*
-================
-tyPortal::Event_ContinueSweep
-================
-*/
-void tyPortal::Event_ContinueSweep( void ) {
-	float pct = (stopSweeping - sweepStart) / (sweepEnd - sweepStart);
-	float f = gameLocal.time - (sweepEnd - sweepStart) * pct;
-	int speed;
-
-	sweepStart = f;
-	speed = MS2SEC( SweepSpeed() );
-	sweepEnd = sweepStart + speed;
-   	PostEventMS( &EV_SecurityCam_Pause, speed * (1.0 - pct));
-	StartSound( "snd_moving", SND_CHANNEL_BODY, 0, false, NULL );
-	SetAlertMode(SCANNING);
-	sweeping = true;
-}
-
-/*
-================
-tyPortal::Event_Alert
-================
-*/
-void tyPortal::Event_Alert( void ) {
-	float	wait;
-
-	SetAlertMode(ACTIVATED);
-	StopSound( SND_CHANNEL_ANY, false );
-	StartSound( "snd_activate", SND_CHANNEL_BODY, 0, false, NULL );
-	ActivateTargets(this);
-	CancelEvents( &EV_SecurityCam_ContinueSweep );
-
-	wait = spawnArgs.GetFloat( "wait", "20" );
-	PostEventSec( &EV_SecurityCam_ContinueSweep, wait );
-}
-
-/*
-================
-tyPortal::Event_ReverseSweep
-================
-*/
-void tyPortal::Event_ReverseSweep( void ) {
-	angle = GetPhysics()->GetAxis().ToAngles().yaw;
-	negativeSweep = !negativeSweep;
-	StartSweep();
-}
-
-/*
-================
-tyPortal::Event_Pause
-================
-*/
-void tyPortal::Event_Pause( void ) {
-	float	sweepWait;
-
-	sweepWait = spawnArgs.GetFloat( "sweepWait", "0.5" );
-	sweeping = false;
-	StopSound( SND_CHANNEL_ANY, false );
-	StartSound( "snd_stop", SND_CHANNEL_BODY, 0, false, NULL );
-   	PostEventSec( &EV_SecurityCam_ReverseSweep, sweepWait );
-}
 
 /*
 ============
@@ -578,7 +425,7 @@ tyPortal::Killed
 ============
 */
 void tyPortal::Killed( idEntity *inflictor, idEntity *attacker, int damage, const idVec3 &dir, int location ) {
-	sweeping = false;
+	
 	StopSound( SND_CHANNEL_ANY, false );
 	const char *fx = spawnArgs.GetString( "fx_destroyed" );
 	if ( fx[0] != '\0' ) {
@@ -644,5 +491,223 @@ void tyPortal::Present( void ) {
 		modelDefHandle = gameRenderWorld->AddEntityDef( &renderEntity );
 	} else {
 		gameRenderWorld->UpdateEntityDef( modelDefHandle, &renderEntity );
+	}
+}
+
+
+/*
+================
+tyPortal::CheckFacing
+================
+*/
+bool tyPortal::CheckFacing( idEntity *activator ) {
+	if ( spawnArgs.GetBool( "facing" ) ) {
+		if ( !activator->IsType( idPlayer::Type ) ) {
+			return true;
+		}
+		idPlayer *player = static_cast< idPlayer* >( activator );
+		float dot = player->viewAngles.ToForward() * GetPhysics()->GetAxis()[0];
+		float angle = RAD2DEG( idMath::ACos( dot ) );
+		if ( angle  > spawnArgs.GetFloat( "angleLimit", "30" ) ) {
+			return false;
+		}
+	}
+	return true;
+}
+
+/*
+================
+tyPortal::Event_Touch
+================
+*/
+void tyPortal::Event_Touch( idEntity *other, trace_t *trace ) {
+	if( triggerFirst ) {
+		return;
+	}
+
+	bool isPlayer = other->IsType( idPlayer::Type );
+	idPlayer *player = static_cast< idPlayer * >( other );
+	if ( isPlayer ) {
+		if ( !touchClient ) {
+			return;
+		}
+		if ( static_cast< idPlayer * >( other )->spectating ) {
+			return;
+		}
+	} else if ( !touchOther ) {
+		return;
+	}
+
+	if ( nextTriggerTime > gameLocal.time ) {
+		// can't retrigger until the wait is over
+		return;
+	}
+
+	// see if this trigger requires an item
+	if ( !gameLocal.RequirementMet( other, requires, removeItem ) ) {
+		return;
+	}
+
+	if ( !CheckFacing( other ) ) {
+		return;
+	}
+
+	if ( spawnArgs.GetBool( "toggleTriggerFirst" ) ) {
+		triggerFirst = true;
+	}
+
+	nextTriggerTime = gameLocal.time + 1;
+	/*
+	if ( delay > 0 ) {
+		// don't allow it to trigger again until our delay has passed
+		nextTriggerTime += SEC2MS( delay );
+		PostEventSec( &EV_TriggerAction, delay, other );
+	} else {
+	*/
+	if (isPlayer)
+	{
+		TeleportPlayer( player );
+	}
+}
+
+
+/*
+================
+tyPortal::ClientReceiveEvent
+================
+*/
+bool tyPortal::ClientReceiveEvent( int event, int time, const idBitMsg &msg ) {
+	int entityNumber;
+
+	switch( event ) {
+		case EVENT_TELEPORTPLAYER: {
+			entityNumber = msg.ReadBits( GENTITYNUM_BITS );
+			idPlayer *player = static_cast<idPlayer *>( gameLocal.entities[entityNumber] );
+			if ( player != NULL && player->IsType( idPlayer::Type ) ) {
+				Event_TeleportPlayer( player );
+			}
+			return true;
+		}
+		default: {
+			return idEntity::ClientReceiveEvent( event, time, msg );
+		}
+	}
+	return false;
+}
+
+/*
+===============
+tyPortal::Event_TeleportStage
+
+FIXME: add functionality to fx system ( could be done with player scripting too )
+================
+*/
+/*
+void tyPortal::Event_TeleportStage( idEntity *_player ) {
+	idPlayer *player;
+	if ( !_player->IsType( idPlayer::Type ) ) {
+		common->Warning( "idPlayerStart::Event_TeleportStage: entity is not an idPlayer\n" );
+		return;
+	}
+	player = static_cast<idPlayer*>(_player);
+	float teleportDelay = spawnArgs.GetFloat( "teleportDelay" );
+	switch ( teleportStage ) {
+		case 0:
+			player->playerView.Flash( colorWhite, 125 );
+			player->SetInfluenceLevel( INFLUENCE_LEVEL3 );
+			player->SetInfluenceView( spawnArgs.GetString( "mtr_teleportFx" ), NULL, 0.0f, NULL );
+			gameSoundWorld->FadeSoundClasses( 0, -20.0f, teleportDelay );
+			player->StartSound( "snd_teleport_start", SND_CHANNEL_BODY2, 0, false, NULL );
+			teleportStage++;
+			PostEventSec( &EV_TeleportStage, teleportDelay, player );
+			break;
+		case 1:
+			gameSoundWorld->FadeSoundClasses( 0, 0.0f, 0.25f );
+			teleportStage++;
+			PostEventSec( &EV_TeleportStage, 0.25f, player );
+			break;
+		case 2:
+			player->SetInfluenceView( NULL, NULL, 0.0f, NULL );
+			TeleportPlayer( player );
+			player->StopSound( SND_CHANNEL_BODY2, false );
+			player->SetInfluenceLevel( INFLUENCE_NONE );
+			teleportStage = 0;
+			break;
+		default:
+			break;
+	}
+}
+*/
+
+/*
+===============
+tyPortal::TeleportPlayer
+================
+*/
+void tyPortal::TeleportPlayer( idPlayer *player ) 
+{
+	float pushVel = spawnArgs.GetFloat( "push", "300" );
+	float f = spawnArgs.GetFloat( "visualEffect", "0" );
+	const char *viewName = spawnArgs.GetString( "visualView", "" );
+	idEntity *ent = viewName ? gameLocal.FindEntity( viewName ) : NULL;
+
+	if ( f && ent ) {
+		// place in private camera view for some time
+		// the entity needs to teleport to where the camera view is to have the PVS right
+		player->Teleport( ent->GetPhysics()->GetOrigin(), ang_zero, this );
+		player->StartSound( "snd_teleport_enter", SND_CHANNEL_ANY, 0, false, NULL );
+		player->SetPrivateCameraView( static_cast<idCamera*>(ent) );
+		
+		// the player entity knows where to spawn from the previous Teleport call
+		if ( !gameLocal.isClient ) {
+			player->PostEventSec( &EV_Player_ExitTeleporter, f );
+		}
+	} else {
+		// direct to exit, Teleport will take care of the killbox
+		player->Teleport( GetPhysics()->GetOrigin(), GetPhysics()->GetAxis().ToAngles(), NULL );
+
+		// multiplayer hijacked this entity, so only push the player in multiplayer
+		if ( gameLocal.isMultiplayer ) {
+			player->GetPhysics()->SetLinearVelocity( GetPhysics()->GetAxis()[0] * pushVel );
+		}
+	}
+}
+
+/*
+===============
+tyPortal::Event_TeleportPlayer
+================
+*/
+void tyPortal::Event_TeleportPlayer( idEntity *activator ) {
+	idPlayer *player;
+
+	if ( activator->IsType( idPlayer::Type ) ) {
+		player = static_cast<idPlayer*>( activator );
+	} else {
+		player = gameLocal.GetLocalPlayer();
+	}
+	if ( player ) {
+		/*
+		if ( spawnArgs.GetBool( "visualFx" ) ) {
+
+			teleportStage = 0;
+			Event_TeleportStage( player );
+
+		} else 
+		*/
+		{
+
+			if ( gameLocal.isServer ) {
+				idBitMsg	msg;
+				byte		msgBuf[MAX_EVENT_PARAM_SIZE];
+
+				msg.Init( msgBuf, sizeof( msgBuf ) );
+				msg.BeginWriting();
+				msg.WriteBits( player->entityNumber, GENTITYNUM_BITS );
+				ServerSendEvent( EVENT_TELEPORTPLAYER, &msg, false, -1 );
+			}
+
+			TeleportPlayer( player );
+		}
 	}
 }

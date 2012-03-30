@@ -43,6 +43,11 @@ class tyPortal : public idEntity {
 public:
 	CLASS_PROTOTYPE( tyPortal );
 
+	enum {
+		EVENT_TELEPORTPLAYER = idEntity::EVENT_MAXEVENTS,
+		EVENT_MAXEVENTS
+	};
+
 	void					Spawn( void );
 	
 	void					Create( idEntity *owner, tyPortal *otherPortal, const idVec3 &start, const idMat3 &axis );
@@ -58,26 +63,16 @@ public:
 	virtual bool			Pain( idEntity *inflictor, idEntity *attacker, int damage, const idVec3 &dir, int location );
 	virtual void			Present( void );
 
+	virtual bool			ClientReceiveEvent( int event, int time, const idBitMsg &msg );
 
 private:
 	idEntityPtr<idEntity>	owner;
 	idEntityPtr<tyPortal>	destinationPortal;
 
-	enum { SCANNING, LOSINGINTEREST, ALERT, ACTIVATED };
-
-	float					angle;
-	float					sweepAngle;
 	int						modelAxis;
 	bool					flipAxis;
 	float					scanDist;
 	float					scanFov;
-							
-	float					sweepStart;
-	float					sweepEnd;
-	bool					negativeSweep;
-	bool					sweeping;
-	int						alertMode;
-	float					stopSweeping;
 	float					scanFovCos;
 
 	idVec3					viewOffset;
@@ -86,17 +81,31 @@ private:
 	idPhysics_RigidBody		physicsObj;
 //	idTraceModel			trm;
 
-	void					StartSweep( void );
 	bool					CanSeePlayer( void );
-	void					SetAlertMode( int status );
 	void					DrawFov( void );
 	const idVec3			GetAxis( void ) const;
-	float					SweepSpeed( void ) const;
 
-	void					Event_ReverseSweep( void );
-	void					Event_ContinueSweep( void );
-	void					Event_Pause( void );
-	void					Event_Alert( void );
+	float					wait;
+	float					random;
+	float					delay;
+	float					random_delay;
+	int						nextTriggerTime;
+	idStr					requires;
+	int						removeItem;
+	bool					touchClient;
+	bool					touchOther;
+	bool					triggerFirst;
+	bool					triggerWithSelf;
+
+	bool					CheckFacing( idEntity *activator );
+	void					Event_Touch( idEntity *other, trace_t *trace );
+
+
+	int						teleportStage;
+
+	void					Event_TeleportPlayer( idEntity *activator );
+	void					Event_TeleportStage( idEntity *player );
+	void					TeleportPlayer( idPlayer *player );
 	void					Event_AddLight( void );
 };
 
