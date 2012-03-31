@@ -41,19 +41,9 @@ project "game"
 	--
 	configuration { "vs*", "x32" }
 		targetname  "gamex86"
-		prebuildcommands
-		{
-		   "cd ../../bin/win32",
-		   "TypeInfo.exe",
-		}
-	
+		
 	configuration { "vs*", "x64" }
 		targetname  "gamex86_64"
-		prebuildcommands
-		{
-		   "cd ../../bin/win64",
-		   "TypeInfo.exe",
-		}
 	
 	--
 	-- Options Configurations
@@ -63,6 +53,20 @@ project "game"
 		{
 			"ID_DEBUG_MEMORY",
 			"ID_REDIRECT_NEWDELETE",
+		}
+		
+	configuration { "vs*", "x32", "debug-memory" }
+		prebuildcommands
+		{
+		   "cd ../../bin/win32",
+		   "TypeInfo.exe",
+		}
+	
+	configuration { "vs*", "x64", "debug-memory" }
+		prebuildcommands
+		{
+		   "cd ../../bin/win64",
+		   "TypeInfo.exe",
 		}
 	
 	configuration "lightmaps"
