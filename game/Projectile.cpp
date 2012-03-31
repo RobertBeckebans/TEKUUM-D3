@@ -2251,15 +2251,16 @@ void tyPortalProjectile::Explode( const trace_t &collision, idEntity *ignore ) {
 		idVec3 dir;
 		idDict args = *portalDict;
 		args.Set( "model", "models/portals/portal_simple.ase" );
+		args.Set( "clipmodel", "models/portals/portal_simple_clip.ase" );
 		args.Set( "gui", "guis/cameras/cam_portal.gui" );
 		args.Set( "gui_parm1", "1" );
 
 		if( portal1Open && !portal2Open) {
 			args.Set( "name", portal2Name );
-			args.Set( "cameraTarget", portal2Name );
+			//args.Set( "cameraTarget", portal2Name );
 		} else {
 			args.Set( "name", portal1Name );
-			args.Set( "cameraTarget", portal1Name );
+			//args.Set( "cameraTarget", portal1Name );
 		}
 
 		gameLocal.SpawnEntityDef( args, &ent, false );

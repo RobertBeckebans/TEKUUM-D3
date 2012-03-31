@@ -86,16 +86,10 @@ private:
 	const idVec3			GetAxis( void ) const;
 
 	float					wait;
-	float					random;
 	float					delay;
-	float					random_delay;
 	int						nextTriggerTime;
 	idStr					requires;
 	int						removeItem;
-	bool					touchClient;
-	bool					touchOther;
-	bool					triggerFirst;
-	bool					triggerWithSelf;
 
 	bool					CheckFacing( idEntity *activator );
 	void					Event_Touch( idEntity *other, trace_t *trace );

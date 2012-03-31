@@ -149,15 +149,17 @@ void tyPortal::Spawn( void ) {
 		str = spawnArgs.GetString( "model" );		// use the visual model
 	}
 
-	/*
+#if 0
 	if ( !collisionModelManager->TrmFromModel( str, trm ) ) {
 		gameLocal.Error( "tyPortal '%s': cannot load collision model %s", name.c_str(), str.c_str() );
 		return;
 	}
-	*/
+#endif
 
-	GetPhysics()->SetContents( CONTENTS_SOLID );
-	GetPhysics()->SetClipMask( MASK_SOLID | CONTENTS_BODY | CONTENTS_CORPSE | CONTENTS_MOVEABLECLIP );
+	GetPhysics()->GetClipModel()->Link( gameLocal.clip );
+
+	GetPhysics()->SetContents( CONTENTS_TRIGGER );
+	//GetPhysics()->SetClipMask( MASK_SOLID | CONTENTS_BODY | CONTENTS_CORPSE | CONTENTS_MOVEABLECLIP );
 
 	// TRIGGER -------------
 	spawnArgs.GetFloat( "wait", "0.5", wait );
@@ -181,15 +183,18 @@ void tyPortal::Create( idEntity *owner, tyPortal * otherPortal, const idVec3 &st
 	
 	GetPhysics()->SetOrigin( start );
 	GetPhysics()->SetAxis( axis );
-	GetPhysics()->SetContents( 0 );
 	
 	this->owner = owner;
 
 	if( otherPortal ) {
 		destinationPortal = otherPortal;
+
 		otherPortal->destinationPortal = this;
+		otherPortal->spawnArgs.Set( "cameraTarget", otherPortal->GetName() );
+		otherPortal->UpdateChangeableSpawnArgs( NULL );
 	}
 	
+	UpdateChangeableSpawnArgs( NULL );
 	UpdateVisuals();
 }
 
@@ -477,9 +482,9 @@ void tyPortal::Present( void ) {
 #endif
 
 	// camera target for remote render views
-	//if ( cameraTarget ) {
+	if ( cameraTarget ) {
 		renderEntity.remoteRenderView = GetRenderView();
-	//}
+	}
 
 	// if set to invisible, skip
 	if ( !renderEntity.hModel || IsHidden() ) {
@@ -521,24 +526,25 @@ tyPortal::Event_Touch
 ================
 */
 void tyPortal::Event_Touch( idEntity *other, trace_t *trace ) {
-	if( triggerFirst ) {
-		return;
-	}
+	//if( triggerFirst ) {
+	//	return;
+	//}
 
 	bool isPlayer = other->IsType( idPlayer::Type );
 	idPlayer *player = static_cast< idPlayer * >( other );
 	if ( isPlayer ) {
-		if ( !touchClient ) {
-			return;
-		}
+		//if ( !touchClient ) {
+		//	return;
+		//}
 		if ( static_cast< idPlayer * >( other )->spectating ) {
 			return;
 		}
-	} else if ( !touchOther ) {
-		return;
-	}
+	} 
+	//else if ( !touchOther ) {
+	//	return;
+	//}
 
-	if ( nextTriggerTime > gameLocal.time ) {
+	if ( nextTriggerTime > gameLocal.time || (destinationPortal.GetEntity() && destinationPortal.GetEntity()->nextTriggerTime > gameLocal.time) ) {
 		// can't retrigger until the wait is over
 		return;
 	}
@@ -552,11 +558,11 @@ void tyPortal::Event_Touch( idEntity *other, trace_t *trace ) {
 		return;
 	}
 
-	if ( spawnArgs.GetBool( "toggleTriggerFirst" ) ) {
-		triggerFirst = true;
-	}
+	//if ( spawnArgs.GetBool( "toggleTriggerFirst" ) ) {
+	//	triggerFirst = true;
+	//}
 
-	nextTriggerTime = gameLocal.time + 1;
+	nextTriggerTime = gameLocal.time + SEC2MS( delay );
 	/*
 	if ( delay > 0 ) {
 		// don't allow it to trigger again until our delay has passed
@@ -564,9 +570,9 @@ void tyPortal::Event_Touch( idEntity *other, trace_t *trace ) {
 		PostEventSec( &EV_TriggerAction, delay, other );
 	} else {
 	*/
-	if (isPlayer)
+	if (isPlayer && destinationPortal.GetEntity())
 	{
-		TeleportPlayer( player );
+		destinationPortal.GetEntity()->TeleportPlayer( player );
 	}
 }
 
@@ -667,9 +673,9 @@ void tyPortal::TeleportPlayer( idPlayer *player )
 		player->Teleport( GetPhysics()->GetOrigin(), GetPhysics()->GetAxis().ToAngles(), NULL );
 
 		// multiplayer hijacked this entity, so only push the player in multiplayer
-		if ( gameLocal.isMultiplayer ) {
+		//if ( gameLocal.isMultiplayer ) {
 			player->GetPhysics()->SetLinearVelocity( GetPhysics()->GetAxis()[0] * pushVel );
-		}
+		//}
 	}
 }
 
