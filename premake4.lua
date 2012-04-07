@@ -172,6 +172,12 @@ newoption
 	description = "Only use OpenGL ES 1.0 functions",
 }
 
+newoption
+{
+	trigger = "monolith",
+	description = "Embed game logic into main executable"
+}
+
 
 --
 -- Use the embed action to convert all of the Lua scripts into C strings, which 
@@ -561,7 +567,7 @@ project "Techyon"
 		--"idlib",
 	}
 	
-if not _OPTIONS["android"] then
+if not _OPTIONS["android"] and not _OPTIONS["monolith"] then
 	defines
 	{
 		"__DOOM_DLL__",
@@ -611,6 +617,17 @@ end
 			"renderer/GLShader.cpp",
 			"renderer/draw_glsl.cpp",
 			"renderer/draw_exp.cpp",
+		}
+		
+	configuration "monolith"
+		files
+		{
+			"game/**.c", "game/**.cpp", "game/**.h",
+		}
+		excludes
+		{
+			"game/gamesys/Callbacks.cpp",
+			"game/EndLevel.cpp", "game/EndLevel.h",
 		}
 	
 	configuration { "mfc-tools", "vs*" }
@@ -1108,6 +1125,6 @@ if(os.is("windows")) then
 	include "TypeInfo"
 end
 
-if not _OPTIONS["android"] then
+if not _OPTIONS["android"] and not _OPTIONS["monolith"] then
 	include "game"
 end
