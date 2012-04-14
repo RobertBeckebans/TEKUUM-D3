@@ -177,7 +177,9 @@ void idForce_Field::Evaluate( int time ) {
 		idPhysics *physics = entity->GetPhysics();
 
 		if ( playerOnly ) {
-			if ( !physics->IsType( idPhysics_Player::Type ) ) {
+			// Techyon BEGIN - RB: added check for tyPhysics_Player::Type
+			if ( !physics->IsType( idPhysics_Player::Type ) && !physics->IsType( tyPhysics_Player::Type ) ) {
+			// Techyon END
 				continue;
 			}
 		} else if ( monsterOnly ) {

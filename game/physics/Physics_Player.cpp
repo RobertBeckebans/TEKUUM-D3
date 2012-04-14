@@ -504,7 +504,7 @@ Flying out of the water
 void idPhysics_Player::WaterJumpMove( void ) {
 
 	// waterjump has no control, but falls
-	idPhysics_Player::SlideMove( true, true, false, false );
+	SlideMove( true, true, false, false );
 
 	// add gravity
 	current.velocity += gravityNormal * frametime;
@@ -528,14 +528,14 @@ void idPhysics_Player::WaterMove( void ) {
 	float	scale;
 	float	vel;
 
-	if ( idPhysics_Player::CheckWaterJump() ) {
-		idPhysics_Player::WaterJumpMove();
+	if ( CheckWaterJump() ) {
+		WaterJumpMove();
 		return;
 	}
 
-	idPhysics_Player::Friction();
+	Friction();
 
-	scale = idPhysics_Player::CmdScale( command );
+	scale = CmdScale( command );
 
 	// user intentions
 	if ( !scale ) {
@@ -552,7 +552,7 @@ void idPhysics_Player::WaterMove( void ) {
 		wishspeed = playerSpeed * PM_SWIMSCALE;
 	}
 
-	idPhysics_Player::Accelerate( wishdir, wishspeed, PM_WATERACCELERATE );
+	Accelerate( wishdir, wishspeed, PM_WATERACCELERATE );
 
 	// make sure we can go up slopes easily under water
 	if ( groundPlane && ( current.velocity * groundTrace.c.normal ) < 0.0f ) {
@@ -564,7 +564,7 @@ void idPhysics_Player::WaterMove( void ) {
 		current.velocity *= vel;
 	}
 
-	idPhysics_Player::SlideMove( false, true, false, false );
+	SlideMove( false, true, false, false );
 }
 
 /*
@@ -579,9 +579,9 @@ void idPhysics_Player::FlyMove( void ) {
 	float	scale;
 
 	// normal slowdown
-	idPhysics_Player::Friction();
+	Friction();
 
-	scale = idPhysics_Player::CmdScale( command );
+	scale = CmdScale( command );
 
 	if ( !scale ) {
 		wishvel = vec3_origin;
@@ -593,9 +593,9 @@ void idPhysics_Player::FlyMove( void ) {
 	wishdir = wishvel;
 	wishspeed = wishdir.Normalize();
 
-	idPhysics_Player::Accelerate( wishdir, wishspeed, PM_FLYACCELERATE );
+	Accelerate( wishdir, wishspeed, PM_FLYACCELERATE );
 
-	idPhysics_Player::SlideMove( false, false, false, false );
+	SlideMove( false, false, false, false );
 }
 
 /*
@@ -609,9 +609,9 @@ void idPhysics_Player::AirMove( void ) {
 	float		wishspeed;
 	float		scale;
 
-	idPhysics_Player::Friction();
+	Friction();
 
-	scale = idPhysics_Player::CmdScale( command );
+	scale = CmdScale( command );
 
 	// project moves down to flat plane
 	viewForward -= (viewForward * gravityNormal) * gravityNormal;
@@ -626,7 +626,7 @@ void idPhysics_Player::AirMove( void ) {
 	wishspeed *= scale;
 
 	// not on ground, so little effect on velocity
-	idPhysics_Player::Accelerate( wishdir, wishspeed, PM_AIRACCELERATE );
+	Accelerate( wishdir, wishspeed, PM_AIRACCELERATE );
 
 	// we may have a ground plane that is very steep, even
 	// though we don't have a groundentity
@@ -635,7 +635,7 @@ void idPhysics_Player::AirMove( void ) {
 		current.velocity.ProjectOntoPlane( groundTrace.c.normal, OVERCLIP );
 	}
 
-	idPhysics_Player::SlideMove( true, false, false, false );
+	SlideMove( true, false, false, false );
 }
 
 /*
@@ -654,24 +654,24 @@ void idPhysics_Player::WalkMove( void ) {
 
 	if ( waterLevel > WATERLEVEL_WAIST && ( viewForward * groundTrace.c.normal ) > 0.0f ) {
 		// begin swimming
-		idPhysics_Player::WaterMove();
+		WaterMove();
 		return;
 	}
 
-	if ( idPhysics_Player::CheckJump() ) {
+	if ( CheckJump() ) {
 		// jumped away
 		if ( waterLevel > WATERLEVEL_FEET ) {
-			idPhysics_Player::WaterMove();
+			WaterMove();
 		}
 		else {
-			idPhysics_Player::AirMove();
+			AirMove();
 		}
 		return;
 	}
 
-	idPhysics_Player::Friction();
+	Friction();
 
-	scale = idPhysics_Player::CmdScale( command );
+	scale = CmdScale( command );
 
 	// project moves down to flat plane
 	viewForward -= (viewForward * gravityNormal) * gravityNormal;
@@ -708,7 +708,7 @@ void idPhysics_Player::WalkMove( void ) {
 		accelerate = PM_ACCELERATE;
 	}
 
-	idPhysics_Player::Accelerate( wishdir, wishspeed, accelerate );
+	Accelerate( wishdir, wishspeed, accelerate );
 
 	if ( ( groundMaterial && groundMaterial->GetSurfaceFlags() & SURF_SLICK ) || current.movementFlags & PMF_TIME_KNOCKBACK ) {
 		current.velocity += gravityVector * frametime;
@@ -739,7 +739,7 @@ void idPhysics_Player::WalkMove( void ) {
 
 	gameLocal.push.InitSavingPushedEntityPositions();
 
-	idPhysics_Player::SlideMove( false, true, true, true );
+	SlideMove( false, true, true, true );
 }
 
 /*
@@ -799,14 +799,14 @@ void idPhysics_Player::NoclipMove( void ) {
 	}
 
 	// accelerate
-	scale = idPhysics_Player::CmdScale( command );
+	scale = CmdScale( command );
 
 	wishdir = scale * (viewForward * command.forwardmove + viewRight * command.rightmove);
 	wishdir -= scale * gravityNormal * command.upmove;
 	wishspeed = wishdir.Normalize();
 	wishspeed *= scale;
 
-	idPhysics_Player::Accelerate( wishdir, wishspeed, PM_ACCELERATE );
+	Accelerate( wishdir, wishspeed, PM_ACCELERATE );
 
 	// move
 	current.origin += frametime * current.velocity;
@@ -828,9 +828,9 @@ void idPhysics_Player::SpectatorMove( void ) {
 
 	// fly movement
 
-	idPhysics_Player::Friction();
+	Friction();
 
-	scale = idPhysics_Player::CmdScale( command );
+	scale = CmdScale( command );
 
 	if ( !scale ) {
 		wishvel = vec3_origin;
@@ -841,9 +841,9 @@ void idPhysics_Player::SpectatorMove( void ) {
 	wishdir = wishvel;
 	wishspeed = wishdir.Normalize();
 
-	idPhysics_Player::Accelerate( wishdir, wishspeed, PM_FLYACCELERATE );
+	Accelerate( wishdir, wishspeed, PM_FLYACCELERATE );
 
-	idPhysics_Player::SlideMove( false, false, false, false );
+	SlideMove( false, false, false, false );
 }
 
 /*
@@ -868,7 +868,7 @@ void idPhysics_Player::LadderMove( void ) {
 		upscale = -1.0f;
 	}
 
-	scale = idPhysics_Player::CmdScale( command );
+	scale = CmdScale( command );
 	wishvel = -0.9f * gravityNormal * upscale * scale * (float)command.forwardmove;
 
 	// strafe
@@ -892,11 +892,11 @@ void idPhysics_Player::LadderMove( void ) {
 	}
 
 	// do strafe friction
-	idPhysics_Player::Friction();
+	Friction();
 
 	// accelerate
 	wishspeed = wishvel.Normalize();
-	idPhysics_Player::Accelerate( wishvel, wishspeed, PM_ACCELERATE );
+	Accelerate( wishvel, wishspeed, PM_ACCELERATE );
 
 	// cap the vertical velocity
 	upscale = current.velocity * -gravityNormal;
@@ -922,7 +922,7 @@ void idPhysics_Player::LadderMove( void ) {
 		}
 	}
 
-	idPhysics_Player::SlideMove( false, ( command.forwardmove > 0 ), false, false );
+	SlideMove( false, ( command.forwardmove > 0 ), false, false );
 }
 
 /*
@@ -987,7 +987,7 @@ void idPhysics_Player::CheckGround( void ) {
 	contents = gameLocal.clip.Contents( current.origin, clipModel, clipModel->GetAxis(), -1, self );
 	if ( contents & MASK_SOLID ) {
 		// do something corrective if stuck in solid
-		idPhysics_Player::CorrectAllSolid( groundTrace, contents );
+		CorrectAllSolid( groundTrace, contents );
 	}
 
 	// if the trace didn't hit anything, we are in free fall
@@ -1359,14 +1359,14 @@ void idPhysics_Player::MovePlayer( int msec ) {
 	// fly in spectator mode
 	if ( current.movementType == PM_SPECTATOR ) {
 		SpectatorMove();
-		idPhysics_Player::DropTimers();
+		DropTimers();
 		return;
 	}
 
 	// special no clip mode
 	if ( current.movementType == PM_NOCLIP ) {
-		idPhysics_Player::NoclipMove();
-		idPhysics_Player::DropTimers();
+		NoclipMove();
+		DropTimers();
 		return;
 	}
 
@@ -1378,49 +1378,49 @@ void idPhysics_Player::MovePlayer( int msec ) {
 	}
 
 	// set watertype and waterlevel
-	idPhysics_Player::SetWaterLevel();
+	SetWaterLevel();
 
 	// check for ground
-	idPhysics_Player::CheckGround();
+	CheckGround();
 
 	// check if up against a ladder
-	idPhysics_Player::CheckLadder();
+	CheckLadder();
 
 	// set clip model size
-	idPhysics_Player::CheckDuck();
+	CheckDuck();
 
 	// handle timers
-	idPhysics_Player::DropTimers();
+	DropTimers();
 
 	// move
 	if ( current.movementType == PM_DEAD ) {
 		// dead
-		idPhysics_Player::DeadMove();
+		DeadMove();
 	}
 	else if ( ladder ) {
 		// going up or down a ladder
-		idPhysics_Player::LadderMove();
+		LadderMove();
 	}
 	else if ( current.movementFlags & PMF_TIME_WATERJUMP ) {
 		// jumping out of water
-		idPhysics_Player::WaterJumpMove();
+		WaterJumpMove();
 	}
 	else if ( waterLevel > 1 ) {
 		// swimming
-		idPhysics_Player::WaterMove();
+		WaterMove();
 	}
 	else if ( walking ) {
 		// walking on ground
-		idPhysics_Player::WalkMove();
+		WalkMove();
 	}
 	else {
 		// airborne
-		idPhysics_Player::AirMove();
+		AirMove();
 	}
 
 	// set watertype, waterlevel and groundentity
-	idPhysics_Player::SetWaterLevel();
-	idPhysics_Player::CheckGround();
+	SetWaterLevel();
+	CheckGround();
 
 	// move the player velocity back into the world frame
 	current.velocity += current.pushVelocity;
@@ -1735,7 +1735,7 @@ bool idPhysics_Player::Evaluate( int timeStepMSec, int endTimeMSec ) {
 
 	ActivateContactEntities();
 
-	idPhysics_Player::MovePlayer( timeStepMSec );
+	MovePlayer( timeStepMSec );
 
 	clipModel->Link( gameLocal.clip, self, 0, current.origin, clipModel->GetAxis() );
 
@@ -2043,3 +2043,30 @@ void idPhysics_Player::ReadFromSnapshot( const idBitMsgDelta &msg ) {
 	}
 }
 
+
+
+
+
+
+
+
+// Techyon BEGIN
+CLASS_DECLARATION( idPhysics_Player, tyPhysics_Player )
+END_CLASS
+
+tyPhysics_Player::tyPhysics_Player( void ) 
+{
+	
+}
+
+void tyPhysics_Player::Save( idSaveGame *savefile ) const 
+{
+	
+}
+
+void tyPhysics_Player::Restore( idRestoreGame *savefile ) 
+{
+	
+}
+
+// Techyon END

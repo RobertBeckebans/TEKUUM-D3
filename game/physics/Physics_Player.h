@@ -130,7 +130,7 @@ public:	// common physics interface
 	void					WriteToSnapshot( idBitMsgDelta &msg ) const;
 	void					ReadFromSnapshot( const idBitMsgDelta &msg );
 
-private:
+protected: // Techyon was private
 	// player physics state
 	playerPState_t			current;
 	playerPState_t			saved;
@@ -167,7 +167,7 @@ private:
 	waterLevel_t			waterLevel;
 	int						waterType;
 
-private:
+protected: // Techyon was private
 	float					CmdScale( const usercmd_t &cmd ) const;
 	void					Accelerate( const idVec3 &wishdir, const float wishspeed, const float accel );
 	bool					SlideMove( bool gravity, bool stepUp, bool stepDown, bool push );
@@ -191,5 +191,20 @@ private:
 	void					DropTimers( void );
 	void					MovePlayer( int msec );
 };
+
+
+
+// Techyon BEGIN
+class tyPhysics_Player : public idPhysics_Player
+{
+public:
+	CLASS_PROTOTYPE( tyPhysics_Player );
+
+							tyPhysics_Player( void );
+
+	void					Save( idSaveGame *savefile ) const;
+	void					Restore( idRestoreGame *savefile );
+};
+// Techyon END
 
 #endif /* !__PHYSICS_PLAYER_H__ */
