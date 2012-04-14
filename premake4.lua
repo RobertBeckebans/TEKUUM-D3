@@ -628,6 +628,13 @@ end
 		{
 			"game/gamesys/Callbacks.cpp",
 			"game/EndLevel.cpp", "game/EndLevel.h",
+			"game/gamesys/GameTypeInfo.h",
+		}
+		
+	configuration { "monolith", "debug-memory" }
+		files
+		{
+			"game/gamesys/GameTypeInfo.h",
 		}
 	
 	configuration { "mfc-tools", "vs*" }
@@ -1121,7 +1128,7 @@ end -- if not _OPTIONS["android"]
 		}
 
 -- FIXME
-if(os.is("windows")) then
+if os.is("windows") and _OPTIONS["debug-memory"] then
 	include "TypeInfo"
 end
 

@@ -23,6 +23,7 @@ project "game"
 		"../idlib/bv/Frustum_gcc.cpp",
 		"gamesys/Callbacks.cpp",
 		"EndLevel.cpp", "EndLevel.h",
+		"gamesys/GameTypeInfo.h",
 	}
 	includedirs
 	{
@@ -49,6 +50,10 @@ project "game"
 	-- Options Configurations
 	--
 	configuration "debug-memory"
+		files
+		{
+			"gamesys/GameTypeInfo.h",
+		}
 		defines
 		{
 			"ID_DEBUG_MEMORY",
