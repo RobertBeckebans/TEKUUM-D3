@@ -252,6 +252,7 @@ typedef struct
 {
 	int action;
 	int value;
+	int value2;
 } pollGamepadEvent_t;
 
 #define MAX_POLL_EVENTS 50
@@ -259,13 +260,14 @@ typedef struct
 static pollGamepadEvent_t s_pollGamepadEvents[MAX_POLL_EVENTS + POLL_EVENTS_HEADROOM];
 static int s_pollGamepadEventsCount;
 
-static bool IN_AddGamepadPollEvent(int action, int value)
+static bool IN_AddGamepadPollEvent(int action, int value, int value2)
 {
 	if (s_pollGamepadEventsCount >= MAX_POLL_EVENTS + POLL_EVENTS_HEADROOM)
 		common->FatalError( "pollGamepadEventsCount exceeded MAX_POLL_EVENT + POLL_EVENTS_HEADROOM\n");
 
 	s_pollGamepadEvents[s_pollGamepadEventsCount].action = action;
 	s_pollGamepadEvents[s_pollGamepadEventsCount++].value = value;
+	s_pollGamepadEvents[s_pollGamepadEventsCount++].value2 = value2;
 
 	if (s_pollGamepadEventsCount >= MAX_POLL_EVENTS) {
 		common->DPrintf("WARNING: reached MAX_POLL_EVENT pollGamepadEventsCount\n");
@@ -284,7 +286,7 @@ static void IN_XBox360Axis(int action, float thumbAxis, float scale)
 	float threshold = 0.15f; //win32.in_xbox360ControllerThreshold.GetFloat();
 	if(f > -threshold && f < threshold)
 	{
-		IN_AddGamepadPollEvent(action, 0);
+		IN_AddGamepadPollEvent(action, 0, 0);
 	}
 	else
 	{
@@ -337,7 +339,7 @@ int Sys_PollXbox360ControllerInputEvents( void )
 	return 0;
 }
 
-int	Sys_ReturnXbox360ControllerInputEvent( const int n, int &action, int &value )
+int	Sys_ReturnXbox360ControllerInputEvent( const int n, int &action, int &value, int &value2 )
 {
 	if ( n>= s_pollGamepadEventsCount ) {
 		return 0;
@@ -345,6 +347,7 @@ int	Sys_ReturnXbox360ControllerInputEvent( const int n, int &action, int &value 
 
 	action = s_pollGamepadEvents[ n ].action;
 	value = s_pollGamepadEvents[ n ].value;
+	value2 = s_pollGamepadEvents[ n ].value2;
 
 	return 1;
 }
