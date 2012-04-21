@@ -103,7 +103,11 @@ idCVar g_decals(					"g_decals",					"1",			CVAR_GAME | CVAR_ARCHIVE | CVAR_BOOL
 idCVar g_knockback(					"g_knockback",				"1000",			CVAR_GAME | CVAR_INTEGER, "" );
 idCVar g_skill(						"g_skill",					"1",			CVAR_GAME | CVAR_INTEGER, "" );
 idCVar g_nightmare(					"g_nightmare",				"0",			CVAR_GAME | CVAR_ARCHIVE | CVAR_BOOL, "if nightmare mode is allowed" );
-idCVar g_gravity(					"g_gravity",		DEFAULT_GRAVITY_STRING, CVAR_GAME | CVAR_FLOAT, "" );
+// Techyon RB: changed g_gravity to 3d vector
+idCVar g_gravityX(					"g_gravityX",				"0",			CVAR_GAME | CVAR_FLOAT, "" );
+idCVar g_gravityY(					"g_gravityY",				"0",			CVAR_GAME | CVAR_FLOAT, "" );
+idCVar g_gravityZ(					"g_gravityZ",		DEFAULT_GRAVITY_STRING, CVAR_GAME | CVAR_FLOAT, "" );
+// Techyon END
 idCVar g_skipFX(					"g_skipFX",					"0",			CVAR_GAME | CVAR_BOOL, "" );
 idCVar g_skipParticles(				"g_skipParticles",			"0",			CVAR_GAME | CVAR_BOOL, "" );
 

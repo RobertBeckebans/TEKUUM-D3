@@ -40,7 +40,11 @@ extern idCVar	g_monsters;
 extern idCVar	g_decals;
 extern idCVar	g_knockback;
 extern idCVar	g_skill;
-extern idCVar	g_gravity;
+// Techyon BEGIN
+extern idCVar	g_gravityX;
+extern idCVar	g_gravityY;
+extern idCVar	g_gravityZ;
+// Techyon END
 extern idCVar	g_skipFX;
 extern idCVar	g_skipParticles;
 extern idCVar	g_bloodEffects;

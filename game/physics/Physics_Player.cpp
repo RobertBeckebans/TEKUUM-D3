@@ -2069,4 +2069,132 @@ void tyPhysics_Player::Restore( idRestoreGame *savefile )
 	
 }
 
+void tyPhysics_Player::CheckGround( void ) 
+{
+	int i, contents;
+	idVec3 point;
+	bool hadGroundContacts;
+
+	hadGroundContacts = HasGroundContacts();
+
+	// set the clip model origin before getting the contacts
+	clipModel->SetPosition( current.origin, clipModel->GetAxis() );
+
+	EvaluateContacts();
+
+	// setup a ground trace from the contacts
+	groundTrace.endpos = current.origin;
+	groundTrace.endAxis = clipModel->GetAxis();
+	if ( contacts.Num() )
+	{
+		groundTrace.fraction = 0.0f;
+		groundTrace.c = contacts[0];
+		for ( i = 1; i < contacts.Num(); i++ ) 
+		{
+			groundTrace.c.normal += contacts[i].normal;
+		}
+		groundTrace.c.normal.Normalize();
+	} 
+	else 
+	{
+		groundTrace.fraction = 1.0f;
+	}
+
+	contents = gameLocal.clip.Contents( current.origin, clipModel, clipModel->GetAxis(), -1, self );
+	if ( contents & MASK_SOLID ) {
+		// do something corrective if stuck in solid
+		CorrectAllSolid( groundTrace, contents );
+	}
+
+	// if the trace didn't hit anything, we are in free fall
+	if ( groundTrace.fraction == 1.0f ) {
+		groundPlane = false;
+		walking = false;
+		groundEntityPtr = NULL;
+		return;
+	}
+
+	groundMaterial = groundTrace.c.material;
+	groundEntityPtr = gameLocal.entities[ groundTrace.c.entityNum ];
+
+	// check for wallwalking
+	if( groundMaterial && groundMaterial->GetSurfaceType() & SURFTYPE_WALLWALK )
+	{
+		if ( debugLevel ) {
+			gameLocal.Printf( "%i:wallwalk\n", c_pmove );
+		}
+
+		wallwalking = true;
+		wallwalkNormal = groundTrace.c.normal;
+	}
+
+	// check if getting thrown off the ground
+	if ( (current.velocity * -gravityNormal) > 0.0f && ( current.velocity * groundTrace.c.normal ) > 10.0f ) {
+		if ( debugLevel ) {
+			gameLocal.Printf( "%i:kickoff\n", c_pmove );
+		}
+
+		groundPlane = false;
+		walking = false;
+		return;
+	}
+	
+	// slopes that are too steep will not be considered onground
+	if ( ( groundTrace.c.normal * -gravityNormal ) < MIN_WALK_NORMAL ) {
+		if ( debugLevel ) {
+			gameLocal.Printf( "%i:steep\n", c_pmove );
+		}
+
+		// FIXME: if they can't slide down the slope, let them walk (sharp crevices)
+
+		// make sure we don't die from sliding down a steep slope
+		if ( current.velocity * gravityNormal > 150.0f ) {
+			current.velocity -= ( current.velocity * gravityNormal - 150.0f ) * gravityNormal;
+		}
+
+		groundPlane = true;
+		walking = false;
+		return;
+	}
+
+	groundPlane = true;
+	walking = true;
+
+	// hitting solid ground will end a waterjump
+	if ( current.movementFlags & PMF_TIME_WATERJUMP ) {
+		current.movementFlags &= ~( PMF_TIME_WATERJUMP | PMF_TIME_LAND );
+		current.movementTime = 0;
+	}
+
+	// if the player didn't have ground contacts the previous frame
+	if ( !hadGroundContacts ) {
+
+		// don't do landing time if we were just going down a slope
+		if ( (current.velocity * -gravityNormal) < -200.0f ) {
+			// don't allow another jump for a little while
+			current.movementFlags |= PMF_TIME_LAND;
+			current.movementTime = 250;
+		}
+	}
+
+	// let the entity know about the collision
+	self->Collide( groundTrace, current.velocity );
+
+	if ( groundEntityPtr.GetEntity() ) 
+	{
+		impactInfo_t info;
+		groundEntityPtr.GetEntity()->GetImpactInfo( self, groundTrace.c.id, groundTrace.c.point, &info );
+		if ( info.invMass != 0.0f ) {
+			groundEntityPtr.GetEntity()->ApplyImpulse( self, groundTrace.c.id, groundTrace.c.point, current.velocity / ( info.invMass * 10.0f ) );
+		}
+	}
+}
+
+void tyPhysics_Player::WalkMove( void )
+{
+	idPhysics_Player::WalkMove();
+}
+
+
+
 // Techyon END

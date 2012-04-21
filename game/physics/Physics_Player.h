@@ -176,13 +176,13 @@ protected: // Techyon was private
 	void					WaterMove( void );
 	void					FlyMove( void );
 	void					AirMove( void );
-	void					WalkMove( void );
+	virtual void			WalkMove( void );
 	void					DeadMove( void );
 	void					NoclipMove( void );
 	void					SpectatorMove( void );
 	void					LadderMove( void );
 	void					CorrectAllSolid( trace_t &trace, int contents );
-	void					CheckGround( void );
+	virtual void			CheckGround( void );
 	void					CheckDuck( void );
 	void					CheckLadder( void );
 	bool					CheckJump( void );
@@ -204,6 +204,15 @@ public:
 
 	void					Save( idSaveGame *savefile ) const;
 	void					Restore( idRestoreGame *savefile );
+
+private:
+	// walk movement
+	bool					wallwalking;
+	idVec3					wallwalkNormal;
+
+private:
+	void					WalkMove( void );
+	void					CheckGround( void );
 };
 // Techyon END
 

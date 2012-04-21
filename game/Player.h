@@ -517,7 +517,9 @@ private:
 	jointHandle_t			chestJoint;
 	jointHandle_t			headJoint;
 
-	idPhysics_Player		physicsObj;			// player physics
+// Techyon BEGIN
+	tyPhysics_Player		physicsObj;			// player physics
+// Techyon END
 
 	idList<aasLocation_t>	aasLocation;		// for AI tracking the player
 
