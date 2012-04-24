@@ -54,6 +54,10 @@ const float PM_NOCLIPFRICTION	= 12.0f;
 const float MIN_WALK_NORMAL		= 0.7f;		// can't walk on very steep slopes
 const float OVERCLIP			= 1.001f;
 
+// Techyon RB: added local gravity interpolation
+const int PM_TIME_GRAVITY_CHANGE = 700;
+// Techyon END
+
 // movementFlags
 const int PMF_DUCKED			= 1;		// set when ducking
 const int PMF_JUMPED			= 2;		// set when the player jumped this frame
@@ -2069,6 +2073,35 @@ void tyPhysics_Player::Restore( idRestoreGame *savefile )
 	
 }
 
+void tyPhysics_Player::SetGravity( const idVec3 &newGravity ) 
+{
+	if ( newGravity != gravityVector )
+	{
+		oldGravityVector = gravityVector;
+		oldGravityNormal = gravityNormal;
+
+		wishGravityVector = newGravity;
+		wishGravityNormal = newGravity;
+		wishGravityNormal.Normalize();
+		
+		wishGravityTime = gameLocal.time;
+	}
+}
+
+void tyPhysics_Player::UpdateGravity( void )
+{
+	if ( wishGravityVector != gravityVector )
+	{
+		idVec3 lerpGravityVector;
+		
+		float lerp = ( float )( gameLocal.time - wishGravityTime ) / ( float )( ( wishGravityTime + PM_TIME_GRAVITY_CHANGE ) - wishGravityTime );
+		lerpGravityVector.Lerp(oldGravityVector, wishGravityVector, lerp);
+
+		idPhysics_Actor::SetGravity( lerpGravityVector );
+		SetClipModelAxis();
+	}
+}
+
 void tyPhysics_Player::CheckGround( void ) 
 {
 	int i, contents;
@@ -2089,12 +2122,12 @@ void tyPhysics_Player::CheckGround( void )
 	{
 		groundTrace.fraction = 0.0f;
 		groundTrace.c = contacts[0];
-		for ( i = 1; i < contacts.Num(); i++ ) 
+		for ( i = 1; i < contacts.Num(); i++ )
 		{
 			groundTrace.c.normal += contacts[i].normal;
 		}
 		groundTrace.c.normal.Normalize();
-	} 
+	}
 	else 
 	{
 		groundTrace.fraction = 1.0f;
@@ -2107,7 +2140,8 @@ void tyPhysics_Player::CheckGround( void )
 	}
 
 	// if the trace didn't hit anything, we are in free fall
-	if ( groundTrace.fraction == 1.0f ) {
+	if ( groundTrace.fraction == 1.0f )
+	{
 		groundPlane = false;
 		walking = false;
 		groundEntityPtr = NULL;
@@ -2125,7 +2159,14 @@ void tyPhysics_Player::CheckGround( void )
 		}
 
 		wallwalking = true;
-		wallwalkNormal = groundTrace.c.normal;
+		wallwalkNormal = -groundTrace.c.normal;
+		wallwalkNormal.Normalize();
+
+		SetGravity( wallwalkNormal * gravityVector.Length() );
+	}
+	else
+	{
+		SetGravity( gameLocal.GetGravity() );
 	}
 
 	// check if getting thrown off the ground
@@ -2195,6 +2236,130 @@ void tyPhysics_Player::WalkMove( void )
 	idPhysics_Player::WalkMove();
 }
 
+void tyPhysics_Player::MovePlayer( int msec ) 
+{
+	// this counter lets us debug movement problems with a journal
+	// by setting a conditional breakpoint for the previous frame
+	c_pmove++;
+
+	walking = false;
+	groundPlane = false;
+	ladder = false;
+
+	// determine the time
+	framemsec = msec;
+	frametime = framemsec * 0.001f;
+
+	// default speed
+	playerSpeed = walkSpeed;
+
+	// remove jumped and stepped up flag
+	current.movementFlags &= ~(PMF_JUMPED|PMF_STEPPED_UP|PMF_STEPPED_DOWN);
+	current.stepUp = 0.0f;
+
+	if ( command.upmove < 10 )
+	{
+		// not holding jump
+		current.movementFlags &= ~PMF_JUMP_HELD;
+	}
+
+	// if no movement at all
+	if ( current.movementType == PM_FREEZE )
+	{
+		return;
+	}
+
+	// move the player velocity into the frame of a pusher
+	current.velocity -= current.pushVelocity;
+
+	// view vectors
+	viewAngles.ToVectors( &viewForward, NULL, NULL );
+	viewForward *= clipModelAxis;
+	viewRight = gravityNormal.Cross( viewForward );
+	viewRight.Normalize();
+
+	// fly in spectator mode
+	if ( current.movementType == PM_SPECTATOR )
+	{
+		SpectatorMove();
+		DropTimers();
+		return;
+	}
+
+	// special no clip mode
+	if ( current.movementType == PM_NOCLIP )
+	{
+		NoclipMove();
+		DropTimers();
+		return;
+	}
+
+	// no control when dead
+	if ( current.movementType == PM_DEAD )
+	{
+		command.forwardmove = 0;
+		command.rightmove = 0;
+		command.upmove = 0;
+	}
+
+	// set local gravity if changed
+	UpdateGravity();
+
+	// set watertype and waterlevel
+	SetWaterLevel();
+
+	// check for ground
+	CheckGround();
+
+	// check if up against a ladder
+	CheckLadder();
+
+	// set clip model size
+	CheckDuck();
+
+	// handle timers
+	DropTimers();
+
+	// move
+	if ( current.movementType == PM_DEAD )
+	{
+		// dead
+		DeadMove();
+	}
+	else if ( ladder )
+	{
+		// going up or down a ladder
+		LadderMove();
+	}
+	else if ( current.movementFlags & PMF_TIME_WATERJUMP )
+	{
+		// jumping out of water
+		WaterJumpMove();
+	}
+	else if ( waterLevel > 1 )
+	{
+		// swimming
+		WaterMove();
+	}
+	else if ( walking )
+	{
+		// walking on ground
+		WalkMove();
+	}
+	else
+	{
+		// airborne
+		AirMove();
+	}
+
+	// set watertype, waterlevel and groundentity
+	SetWaterLevel();
+	CheckGround();
+
+	// move the player velocity back into the world frame
+	current.velocity += current.pushVelocity;
+	current.pushVelocity.Zero();
+}
 
 
 // Techyon END

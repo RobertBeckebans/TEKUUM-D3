@@ -189,7 +189,7 @@ protected: // Techyon was private
 	bool					CheckWaterJump( void );
 	void					SetWaterLevel( void );
 	void					DropTimers( void );
-	void					MovePlayer( int msec );
+	virtual void			MovePlayer( int msec );
 };
 
 
@@ -205,14 +205,26 @@ public:
 	void					Save( idSaveGame *savefile ) const;
 	void					Restore( idRestoreGame *savefile );
 
+	void					SetGravity( const idVec3 &wishGravity );
+
 private:
+	// gravity flipping
+	idVec3					oldGravityVector;
+	idVec3					oldGravityNormal;
+
+	idVec3					wishGravityVector;
+	idVec3					wishGravityNormal;
+	int						wishGravityTime;
+
 	// walk movement
 	bool					wallwalking;
 	idVec3					wallwalkNormal;
 
 private:
+	void					UpdateGravity( void );
 	void					WalkMove( void );
 	void					CheckGround( void );
+	void					MovePlayer( int msec );
 };
 // Techyon END
 
