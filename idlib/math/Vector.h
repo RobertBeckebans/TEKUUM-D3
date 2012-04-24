@@ -384,6 +384,10 @@ public:
 
 	void			Lerp( const idVec3 &v1, const idVec3 &v2, const float l );
 	void			SLerp( const idVec3 &v1, const idVec3 &v2, const float l );
+
+// Techyon BEGIN
+	float			AngleTo( const idVec3 &v ) const;
+// Techyon END
 };
 
 extern idVec3 vec3_origin;
@@ -797,6 +801,27 @@ ID_INLINE bool idVec3::ProjectAlongPlane( const idVec3 &normal, const float epsi
 	(*this) -= cross;
 	return true;
 }
+
+// Techyon RB: added helper function
+
+// returns the angle between this and the normalized vector in the range [0 <= angle <= 180]
+ID_INLINE float idVec3::AngleTo( const idVec3 &v ) const
+{
+	float thisLen, vLen;
+
+	thisLen = Length();
+	vLen = v.Length();
+
+	if ( thisLen <= 0  || vLen <= 0 )
+		return 0;
+
+	// complete dot product of two vectors a, b is |a| * |b| * cos(angle)
+	// this results in:
+	//
+	// angle = acos( (a * b) / (|a| * |b|) )
+	return RAD2DEG( idMath::ACos( (*this * v ) / (thisLen * vLen) ) );
+}
+// Techyon END
 
 
 //===============================================================
