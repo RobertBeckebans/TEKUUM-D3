@@ -99,7 +99,7 @@ public:
 	const idVec3 &			PlayerGetOrigin( void ) const;	// != GetOrigin
 
 public:	// common physics interface
-	bool					Evaluate( int timeStepMSec, int endTimeMSec );
+	virtual bool			Evaluate( int timeStepMSec, int endTimeMSec );
 	void					UpdateTime( int endTimeMSec );
 	int						GetTime( void ) const;
 
@@ -181,7 +181,7 @@ protected: // Techyon was private
 	void					NoclipMove( void );
 	void					SpectatorMove( void );
 	void					LadderMove( void );
-	void					CorrectAllSolid( trace_t &trace, int contents );
+	virtual void			CorrectAllSolid( trace_t &trace, int contents );
 	virtual void			CheckGround( void );
 	void					CheckDuck( void );
 	void					CheckLadder( void );
@@ -206,6 +206,10 @@ public:
 	void					Restore( idRestoreGame *savefile );
 
 	void					SetGravity( const idVec3 &wishGravity );
+	bool					IsGravityFlipping( void );
+
+public:	// common physics interface
+	bool					Evaluate( int timeStepMSec, int endTimeMSec );
 
 private:
 	// gravity flipping
@@ -223,6 +227,7 @@ private:
 private:
 	void					UpdateGravity( void );
 	void					WalkMove( void );
+	void					CorrectAllSolid( trace_t &trace, int contents );
 	void					CheckGround( void );
 	void					MovePlayer( int msec );
 };

@@ -125,7 +125,7 @@ Handles user intended acceleration
 ==============
 */
 void idPhysics_Player::Accelerate( const idVec3 &wishdir, const float wishspeed, const float accel ) {
-#if 1
+#if 0
 	// q2 style
 	float addspeed, accelspeed, currentspeed;
 
@@ -2073,8 +2073,62 @@ void tyPhysics_Player::Restore( idRestoreGame *savefile )
 	
 }
 
+bool tyPhysics_Player::Evaluate( int timeStepMSec, int endTimeMSec ) 
+{
+	idVec3 masterOrigin, oldOrigin;
+	idMat3 masterAxis;
+
+	waterLevel = WATERLEVEL_NONE;
+	waterType = 0;
+	oldOrigin = current.origin;
+
+	clipModel->Unlink();
+
+	// if bound to a master
+	if ( masterEntity )
+	{
+		self->GetMasterPosition( masterOrigin, masterAxis );
+		current.origin = masterOrigin + current.localOrigin * masterAxis;
+		clipModel->Link( gameLocal.clip, self, 0, current.origin, clipModel->GetAxis() );
+		current.velocity = ( current.origin - oldOrigin ) / ( timeStepMSec * 0.001f );
+		masterDeltaYaw = masterYaw;
+		masterYaw = masterAxis[0].ToYaw();
+		masterDeltaYaw = masterYaw - masterDeltaYaw;
+		return true;
+	}
+
+	ActivateContactEntities();
+
+	MovePlayer( timeStepMSec );
+
+	clipModel->Link( gameLocal.clip, self, 0, current.origin, clipModel->GetAxis() );
+
+	if ( pm_showPhysics.GetInteger() == 1 )
+	{
+		// show contact points
+		for ( int i = 1; i < contacts.Num(); i++ )
+		{
+			const idVec3& start = contacts[i].point;
+			idVec3 end = start + contacts[i].normal * 5;
+
+			gameRenderWorld->DebugArrow( colorRed, start, end, 1 );
+		}
+
+		// show clip model orientation
+		//gameRenderWorld->DebugAxis( current.origin, clipModel->GetAxis() );
+	}
+
+	if ( IsOutsideWorld() )
+	{
+		gameLocal.Warning( "clip model outside world bounds for entity '%s' at (%s)", self->name.c_str(), current.origin.ToString(0) );
+	}
+
+	return true; //( current.origin != oldOrigin );
+}
+
 void tyPhysics_Player::SetGravity( const idVec3 &newGravity ) 
 {
+#if 1
 	if ( newGravity != gravityVector )
 	{
 		oldGravityVector = gravityVector;
@@ -2086,6 +2140,18 @@ void tyPhysics_Player::SetGravity( const idVec3 &newGravity )
 		
 		wishGravityTime = gameLocal.time;
 	}
+#else
+	idPhysics_Actor::SetGravity( newGravity );
+	SetClipModelAxis();
+#endif
+}
+
+bool tyPhysics_Player::IsGravityFlipping( void )
+{
+	if ( wishGravityNormal.AngleTo( gravityNormal ) > 45 )
+		return true;
+
+	return false;
 }
 
 void tyPhysics_Player::UpdateGravity( void )
@@ -2099,6 +2165,77 @@ void tyPhysics_Player::UpdateGravity( void )
 
 		idPhysics_Actor::SetGravity( lerpGravityVector );
 		SetClipModelAxis();
+	}
+}
+
+void tyPhysics_Player::CorrectAllSolid( trace_t &trace, int contents ) 
+{
+	if ( debugLevel ) 
+	{
+		gameLocal.Printf( "%i:allsolid\n", c_pmove );
+	}
+
+	// jitter around to find a free spot
+#if 1
+	for ( int i = -1; i <= 1; i++ )
+	{
+		for ( int j = -1; j <= 1; j++ )
+		{
+			for ( int k = -1; k <= 1; k++ )
+			{
+				idVec3 point = current.origin;
+				point.x += (float) i;
+				point.y += (float) j;
+				point.z += (float) k;
+
+				// set the clip model origin before getting the contacts
+				clipModel->SetPosition( point, clipModel->GetAxis() );
+
+				EvaluateContacts();
+
+				// setup a ground trace from the contacts
+				trace.endpos = point;
+				trace.endAxis = clipModel->GetAxis();
+				if ( contacts.Num() )
+				{
+					trace.fraction = 0.0f;
+					trace.c = contacts[0];
+					for ( i = 1; i < contacts.Num(); i++ )
+					{
+						trace.c.normal += contacts[i].normal;
+					}
+					trace.c.normal.Normalize();
+				}
+				else 
+				{
+					trace.fraction = 1.0f;
+				}
+
+				contents = gameLocal.clip.Contents( point, clipModel, clipModel->GetAxis(), -1, self );
+				if ( !( contents & MASK_SOLID ) ) 
+				{
+					current.origin = point;
+					return;
+				}
+			}
+		}
+	}
+#endif
+
+	if ( trace.fraction >= 1.0f )
+	{
+		memset( &trace, 0, sizeof( trace ) );
+		trace.endpos = current.origin;
+		trace.endAxis = clipModelAxis;
+		trace.fraction = 0.0f;
+		trace.c.dist = current.origin.z;
+		trace.c.normal.Set( 0, 0, 1 );
+		trace.c.point = current.origin;
+		trace.c.entityNum = ENTITYNUM_WORLD;
+		trace.c.id = 0;
+		trace.c.type = CONTACT_TRMVERTEX;
+		trace.c.material = NULL;
+		trace.c.contents = contents;
 	}
 }
 
@@ -2134,7 +2271,8 @@ void tyPhysics_Player::CheckGround( void )
 	}
 
 	contents = gameLocal.clip.Contents( current.origin, clipModel, clipModel->GetAxis(), -1, self );
-	if ( contents & MASK_SOLID ) {
+	if ( contents & MASK_SOLID ) 
+	{
 		// do something corrective if stuck in solid
 		CorrectAllSolid( groundTrace, contents );
 	}
@@ -2144,7 +2282,10 @@ void tyPhysics_Player::CheckGround( void )
 	{
 		groundPlane = false;
 		walking = false;
+		wallwalking = false;
 		groundEntityPtr = NULL;
+
+		SetGravity( gameLocal.GetGravity() );
 		return;
 	}
 
@@ -2154,9 +2295,9 @@ void tyPhysics_Player::CheckGround( void )
 	// check for wallwalking
 	if( groundMaterial && groundMaterial->GetSurfaceType() & SURFTYPE_WALLWALK )
 	{
-		if ( debugLevel ) {
-			gameLocal.Printf( "%i:wallwalk\n", c_pmove );
-		}
+		//if ( debugLevel ) {
+		//	gameLocal.Printf( "%i:wallwalk\n", c_pmove );
+		//}
 
 		wallwalking = true;
 		wallwalkNormal = -groundTrace.c.normal;
@@ -2166,22 +2307,24 @@ void tyPhysics_Player::CheckGround( void )
 	}
 	else
 	{
+		wallwalking = false;
 		SetGravity( gameLocal.GetGravity() );
 	}
 
 	// check if getting thrown off the ground
-	if ( (current.velocity * -gravityNormal) > 0.0f && ( current.velocity * groundTrace.c.normal ) > 10.0f ) {
+	if ( (current.velocity * -gravityNormal) > 0.0f && ( current.velocity * groundTrace.c.normal ) > 10.0f && !wallwalking ) {
 		if ( debugLevel ) {
 			gameLocal.Printf( "%i:kickoff\n", c_pmove );
 		}
 
 		groundPlane = false;
 		walking = false;
+		wallwalking = false;
 		return;
 	}
 	
 	// slopes that are too steep will not be considered onground
-	if ( ( groundTrace.c.normal * -gravityNormal ) < MIN_WALK_NORMAL ) {
+	if ( ( groundTrace.c.normal * -gravityNormal ) < MIN_WALK_NORMAL && !wallwalking ) {
 		if ( debugLevel ) {
 			gameLocal.Printf( "%i:steep\n", c_pmove );
 		}
@@ -2243,6 +2386,7 @@ void tyPhysics_Player::MovePlayer( int msec )
 	c_pmove++;
 
 	walking = false;
+	wallwalking = false;
 	groundPlane = false;
 	ladder = false;
 
@@ -2341,7 +2485,7 @@ void tyPhysics_Player::MovePlayer( int msec )
 		// swimming
 		WaterMove();
 	}
-	else if ( walking )
+	else if ( walking )// && !IsGravityFlipping() )
 	{
 		// walking on ground
 		WalkMove();

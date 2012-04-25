@@ -200,6 +200,9 @@ extern idCVar	pm_thirdPerson;
 extern idCVar	pm_thirdPersonDeath;
 extern idCVar	pm_modelView;
 extern idCVar	pm_airTics;
+// Techyon BEGIN
+extern idCVar	pm_showPhysics;
+// Techyon END
 
 extern idCVar	g_showPlayerShadow;
 extern idCVar	g_showHud;
