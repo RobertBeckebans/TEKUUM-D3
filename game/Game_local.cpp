@@ -2061,6 +2061,7 @@ void idGameLocal::UpdateGravity( void ) {
 	// Techyon RB: changed gravity to 3 vectors
 	if ( g_gravityX.IsModified() || g_gravityY.IsModified() || g_gravityZ.IsModified() ) {
 		
+		/*
 		if ( g_gravityX.GetFloat() == 0.0f ) {
 			g_gravityX.SetFloat( 1.0f );
 		}
@@ -2070,8 +2071,9 @@ void idGameLocal::UpdateGravity( void ) {
 		}
 
 		if ( g_gravityZ.GetFloat() == 0.0f ) {
-			g_gravityZ.SetFloat( 1.0f );
+			g_gravityZ.SetFloat( -1.0f );
 		}
+		*/
 
         gravity.Set( g_gravityX.GetFloat(), g_gravityY.GetFloat(), g_gravityZ.GetFloat() );
 
