@@ -561,3 +561,23 @@ unsigned char Sys_MapCharForKey( int _key ) {
 	}
 	return buf[ 0 ];
 }
+
+//=====================================================================================
+
+// Techyon BEGIN
+
+int Sys_PollXbox360ControllerInputEvents( void )
+{
+	// TODO
+	return 0;
+}
+
+int	Sys_ReturnXbox360ControllerInputEvent( const int n, int &action, int &value, int &value2 )
+{
+	// TODO
+	return 0;
+}
+
+void Sys_EndXbox360ControllerInputEvents( void ) { }
+
+// Techyon END

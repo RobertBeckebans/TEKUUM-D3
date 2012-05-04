@@ -32,7 +32,7 @@ If you have questions concerning this license or the applicable additional terms
 #include "Image.h"
 #include "MegaTexture.h"
 #if !defined(USE_GLES1)
-#include "FrameBuffer.h"
+#include "Framebuffer.h"
 #endif
 
 class idRenderWorldLocal;

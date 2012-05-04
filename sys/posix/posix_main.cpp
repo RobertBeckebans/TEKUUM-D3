@@ -177,8 +177,10 @@ int Sys_Milliseconds( void ) {
 
 	gettimeofday(&tp, NULL);
 
-	TODO
-	clock_gettime(CLOCK_MONOTONIC, )
+	// Techyon BEGIN
+	//TODO
+	//clock_gettime(CLOCK_MONOTONIC, )
+	// Techyon END
 
 	if (!sys_timeBase) {
 		sys_timeBase = tp.tv_sec;
