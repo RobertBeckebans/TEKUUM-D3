@@ -253,6 +253,12 @@ void idVertexCache::Alloc( void *data, int size, vertCache_t **buffer, bool inde
 			if( !virtualMemory ) {
 				glGenBuffers( 1, & block->vbo );
 			}
+			// Techyon RB: block->vbo != 0 is possible with bad drivers which don't support GL_ARB_vertex_buffer_object
+			else
+			{
+				block->vbo = 0;
+			}
+			// Techyon END
 		}
 	}
 
