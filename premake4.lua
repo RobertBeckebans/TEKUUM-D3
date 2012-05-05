@@ -952,7 +952,7 @@ if not _OPTIONS["android"] then
 		{
 			"`pkg-config --cflags x11`",
 			"`pkg-config --cflags xext`",
-			"`pkg-config --cflags xxf86dga`",
+			"`pkg-config --cflags xf86dgaproto`",
 			"`pkg-config --cflags xxf86vm`",
 			--"`pkg-config --cflags sdl`",
 			--"`pkg-config --cflags libcurl`",
@@ -961,7 +961,7 @@ if not _OPTIONS["android"] then
 		{
 			"`pkg-config --libs x11`",
 			"`pkg-config --libs xext`",
-			"`pkg-config --libs xxf86dga`",
+			"`pkg-config --libs xf86dgaproto`",
 			"`pkg-config --libs xxf86vm`",
 			--"`pkg-config --libs sdl`",
 			--"`pkg-config --libs libcurl`",
