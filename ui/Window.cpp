@@ -777,8 +777,17 @@ const char *idWindow::HandleEvent(const sysEvent_t *event, bool *updateVisuals) 
 				}
 				if (event->evValue2 && !actionDownRun) {
 					actionDownRun = RunScript( ON_ACTION );
+
+					// TECHYON MF: keep mouse events more consistent
+					RouteMouseCoords(0.0f, 0.0f);
+					// TECHYON END
+					
 				} else if (!actionUpRun) {
 					actionUpRun = RunScript( ON_ACTIONRELEASE );
+
+					// TECHYON MF: keep mouse events more consistent
+					RouteMouseCoords(0.0f, 0.0f);
+					// TECHYON END
 				}
 			} else if (event->evValue == K_MOUSE2) {
 
