@@ -33,11 +33,13 @@ If you have questions concerning this license or the applicable additional terms
 #include "tr_local.h"
 
 #ifdef BUILD_FREETYPE
-#include "../ft2/fterrors.h"
-#include "../ft2/ftsystem.h"
-#include "../ft2/ftimage.h"
-#include "../ft2/freetype.h"
-#include "../ft2/ftoutln.h"
+// Techyon RB: changed to local includes
+//#include <freetype/fterrors.h>
+#include <freetype/ftsystem.h>
+#include <freetype/ftimage.h>
+#include <freetype/freetype.h>
+#include <freetype/ftoutln.h>
+// Techyon END
 
 #define _FLOOR(x)  ((x) & -64)
 #define _CEIL(x)   (((x)+63) & -64)
@@ -46,6 +48,9 @@ If you have questions concerning this license or the applicable additional terms
 FT_Library ftLibrary = NULL;  
 #endif
 
+// Techyon RB: changed 256 constants used below to FONT_SIZE
+const int FONT_SIZE = 256;
+// Techyon END
 
 #ifdef BUILD_FREETYPE
 
@@ -63,7 +68,9 @@ void R_GetGlyphInfo(FT_GlyphSlot glyph, int *left, int *right, int *width, int *
 	*top    = _CEIL( glyph->metrics.horiBearingY );
 	*bottom = _FLOOR( glyph->metrics.horiBearingY - glyph->metrics.height );
 	*height = _TRUNC( *top - *bottom );
-	*pitch  = ( qtrue ? (*width+3) & -4 : (*width+7) >> 3 );
+
+	//*pitch  = ( qtrue ? (*width+3) & -4 : (*width+7) >> 3 );
+	*pitch  = (*width+3) & -4;
 }
 
 /*
@@ -80,14 +87,20 @@ FT_Bitmap *R_RenderGlyph(FT_GlyphSlot glyph, glyphInfo_t* glyphOut) {
 	if ( glyph->format == ft_glyph_format_outline ) {
 		size   = pitch*height; 
 
-		bit2 = Mem_Alloc(sizeof(FT_Bitmap));
+		// Techyon RB: added missing cast
+		bit2 = (FT_Bitmap*) Mem_Alloc(sizeof(FT_Bitmap));
+		// Techyon END
 
 		bit2->width      = width;
 		bit2->rows       = height;
 		bit2->pitch      = pitch;
 		bit2->pixel_mode = ft_pixel_mode_grays;
 		//bit2->pixel_mode = ft_pixel_mode_mono;
-		bit2->buffer     = Mem_Alloc(pitch*height);
+
+		// Techyon RB: added missing cast
+		bit2->buffer     = (byte*) Mem_Alloc(pitch*height);
+		// Techyon END
+
 		bit2->num_grays = 256;
 
 		memset( bit2->buffer, 0, size );
@@ -114,7 +127,7 @@ FT_Bitmap *R_RenderGlyph(FT_GlyphSlot glyph, glyphInfo_t* glyphOut) {
 RE_ConstructGlyphInfo
 ============
 */
-glyphInfo_t *RE_ConstructGlyphInfo( unsigned char *imageOut, int *xOut, int *yOut, int *maxHeight, FT_Face face, const unsigned char c, qboolean calcHeight ) {
+static glyphInfo_t *RE_ConstructGlyphInfo( unsigned char *imageOut, int *xOut, int *yOut, int *maxHeight, FT_Face face, const unsigned char c, bool calcHeight ) {
 	int i;
 	static glyphInfo_t glyph;
 	unsigned char *src, *dst;
@@ -122,6 +135,7 @@ glyphInfo_t *RE_ConstructGlyphInfo( unsigned char *imageOut, int *xOut, int *yOu
 	FT_Bitmap *bitmap = NULL;
 
 	memset(&glyph, 0, sizeof(glyphInfo_t));
+	
 	// make sure everything is here
 	if (face != NULL) {
 		FT_Load_Glyph(face, FT_Get_Char_Index( face, c), FT_LOAD_DEFAULT );
@@ -155,27 +169,38 @@ glyphInfo_t *RE_ConstructGlyphInfo( unsigned char *imageOut, int *xOut, int *yOu
 		scaled_height = glyph.height;
 
 		// we need to make sure we fit
-		if (*xOut + scaled_width + 1 >= 255) {
-			if (*yOut + *maxHeight + 1 >= 255) {
+		// Techyon RB: changed constants to FONT_SIZE -1
+		if (*xOut + scaled_width + 1 >= (FONT_SIZE -1)) 
+		{
+			// RB: fixed wrong yOut
+			if (*yOut + (*maxHeight + 1) * 2 >= (FONT_SIZE -1)) 
+			{
 				*yOut = -1;
 				*xOut = -1;
 				Mem_Free(bitmap->buffer);
 				Mem_Free(bitmap);
 				return &glyph;
-			} else {
-			*xOut = 0;
-			*yOut += *maxHeight + 1;
 			}
-		} else if (*yOut + *maxHeight + 1 >= 255) {
+			else 
+			{
+				*xOut = 0;
+				*yOut += *maxHeight + 1;
+			}
+		}
+		else if (*yOut + *maxHeight + 1 >= (FONT_SIZE -1)) 
+		{
 			*yOut = -1;
 			*xOut = -1;
 			Mem_Free(bitmap->buffer);
 			Mem_Free(bitmap);
 			return &glyph;
 		}
+		// Techyon END
 
 		src = bitmap->buffer;
-		dst = imageOut + (*yOut * 256) + *xOut;
+		// Techyon RB: changed constant to FONT_SIZE
+		dst = imageOut + (*yOut * FONT_SIZE) + *xOut;
+		// Techyon END
 
 		if (bitmap->pixel_mode == ft_pixel_mode_mono) {
 			for (i = 0; i < glyph.height; i++) {
@@ -200,14 +225,18 @@ glyphInfo_t *RE_ConstructGlyphInfo( unsigned char *imageOut, int *xOut, int *yOu
 				}
 
 				src += glyph.pitch;
-				dst += 256;
+				// Techyon RB: changed constant to FONT_SIZE
+				dst += FONT_SIZE;
+				// Techyon END
 
 			}
 		} else {
 			for (i = 0; i < glyph.height; i++) {
 				memcpy( dst, src, glyph.pitch );
 				src += glyph.pitch;
-				dst += 256;
+				// Techyon RB: changed constant to FONT_SIZE
+				dst += FONT_SIZE;
+				// Techyon END
 			}
 		}
 
@@ -216,10 +245,13 @@ glyphInfo_t *RE_ConstructGlyphInfo( unsigned char *imageOut, int *xOut, int *yOu
 
 		glyph.imageHeight = scaled_height;
 		glyph.imageWidth = scaled_width;
-		glyph.s = (float)*xOut / 256;
-		glyph.t = (float)*yOut / 256;
-		glyph.s2 = glyph.s + (float)scaled_width / 256;
-		glyph.t2 = glyph.t + (float)scaled_height / 256;
+		
+		// Techyon RB: changed constants to FONT_SIZE
+		glyph.s = (float)*xOut / FONT_SIZE;
+		glyph.t = (float)*yOut / FONT_SIZE;
+		glyph.s2 = glyph.s + (float)scaled_width / FONT_SIZE;
+		glyph.t2 = glyph.t + (float)scaled_height / FONT_SIZE;
+		// Techyon END
 
 		*xOut += scaled_width + 1;
 	}
@@ -288,13 +320,17 @@ bool idRenderSystemLocal::RegisterFont( const char *fontName, fontInfoEx_t &font
 	unsigned char *out, *imageBuff;
 	glyphInfo_t *glyph;
 	idImage *image;
-	idMaterial *h;
+	const idMaterial *h;
 	float max;
 #endif
 	void *faceData;
 	ID_TIME_T ftime;
 	int i, len, fontCount;
-	char name[1024];
+	idStr name;
+
+	// Techyon RB: added dpi
+	float dpi = 72;
+	// Techyon END
 
 	int pointSize = 12;
 /*
@@ -315,6 +351,7 @@ bool idRenderSystemLocal::RegisterFont( const char *fontName, fontInfoEx_t &font
 
 	memset( &font, 0, sizeof( font ) );
 
+	bool allPointSizesLoaded = true;
 	for ( fontCount = 0; fontCount < 3; fontCount++ ) {
 
 		if ( fontCount == 0) {
@@ -328,7 +365,7 @@ bool idRenderSystemLocal::RegisterFont( const char *fontName, fontInfoEx_t &font
 		float glyphScale = 1.0f; 		// change the scale to be relative to 1 based on 72 dpi ( so dpi of 144 means a scale of .5 )
 		glyphScale *= 48.0f / pointSize;
 
-		idStr::snPrintf( name, sizeof(name), "%s/fontImage_%i.dat", fontName, pointSize );
+		sprintf( name, "%s/fontImage_%i.dat", fontName, pointSize );
 
 		fontInfo_t *outFont;
 		if ( fontCount == 0 ) {
@@ -345,8 +382,10 @@ bool idRenderSystemLocal::RegisterFont( const char *fontName, fontInfoEx_t &font
 
 		len = fileSystem->ReadFile( name, NULL, &ftime );
 		if ( len != sizeof( fontInfo_t ) ) {
-			common->Warning( "RegisterFont: couldn't find font: '%s'", name );
-			return false;
+			common->Warning( "RegisterFont: couldn't find font: '%s'", name.c_str() );
+			//return false;
+			allPointSizesLoaded = false;
+			break;
 		}
 
 		fileSystem->ReadFile( name, &faceData, &ftime );
@@ -373,10 +412,12 @@ bool idRenderSystemLocal::RegisterFont( const char *fontName, fontInfoEx_t &font
 
 		int mw = 0;
 		int mh = 0;
-		for (i = GLYPH_START; i < GLYPH_END; i++) {
-			idStr::snPrintf(name, sizeof(name), "%s/%s", fontName, outFont->glyphs[i].shaderName);
+		for (i = GLYPH_START; i < GLYPH_END; i++) 
+		{
+			sprintf( name, "%s/%s", fontName, outFont->glyphs[i].shaderName);
 			outFont->glyphs[i].glyph = declManager->FindMaterial(name);
 			outFont->glyphs[i].glyph->SetSort( SS_GUI );
+			
 			if (mh < outFont->glyphs[i].height) {
 				mh = outFont->glyphs[i].height;
 			}
@@ -384,6 +425,7 @@ bool idRenderSystemLocal::RegisterFont( const char *fontName, fontInfoEx_t &font
 				mw = outFont->glyphs[i].xSkip;
 			}
 		}
+		
 		if (fontCount == 0) {
 			font.maxWidthSmall = mw;
 			font.maxHeightSmall = mh;
@@ -394,38 +436,45 @@ bool idRenderSystemLocal::RegisterFont( const char *fontName, fontInfoEx_t &font
 			font.maxWidthLarge = mw;
 			font.maxHeightLarge = mh;
 		}
+		
 		fileSystem->FreeFile( faceData );
 	}
 
 	//memcpy( &registeredFont[registeredFontCount++], &font, sizeof( fontInfoEx_t ) );
 
-	return true ;
+	if ( allPointSizesLoaded ) {
+		return true ;
+	}
 
 #ifndef BUILD_FREETYPE
-    common->Warning( "RegisterFont: couldn't load FreeType code %s", name );
+    common->Warning( "RegisterFont: couldn't load FreeType code %s", name.c_str() );
+	return false;
 #else
 
 	if (ftLibrary == NULL) {
 		common->Warning( "RegisterFont: FreeType not initialized." );
-		return;
+		return false;
 	}
 
-	len = fileSystem->ReadFile(fontName, &faceData, &ftime);
+	name = fontName;
+	name.StripFileExtension();
+	name.SetFileExtension(".ttf");
+	len = fileSystem->ReadFile(name, &faceData, &ftime);
 	if ( len <= 0 ) {
 		common->Warning( "RegisterFont: Unable to read font file" );
-		return;
+		return false;
 	}
 
 	// allocate on the stack first in case we fail
-	if ( FT_New_Memory_Face( ftLibrary, faceData, len, 0, &face ) ) {
+	if ( FT_New_Memory_Face( ftLibrary, (const FT_Byte*) faceData, len, 0, &face ) ) {
 		common->Warning( "RegisterFont: FreeType2, unable to allocate new face." );
-		return;
+		return false;
 	}
 
 
 	if ( FT_Set_Char_Size( face, pointSize << 6, pointSize << 6, dpi, dpi) ) {
 		common->Warning( "RegisterFont: FreeType2, Unable to set face char size." );
-		return;
+		return false;
 	}
 
 	// font = registeredFonts[registeredFontCount++];
@@ -433,88 +482,201 @@ bool idRenderSystemLocal::RegisterFont( const char *fontName, fontInfoEx_t &font
 	// make a 256x256 image buffer, once it is full, register it, clean it and keep going 
 	// until all glyphs are rendered
 
-	out = Mem_Alloc( 1024*1024 );
+	// Techyon RB: added missing cast
+	out = (byte*) Mem_Alloc( 1024*1024 );
 	if ( out == NULL ) {
 		common->Warning( "RegisterFont: Mem_Alloc failure during output image creation." );
-		return;
-	}
-	memset( out, 0, 1024*1024 );
-
-	maxHeight = 0;
-
-	for (i = GLYPH_START; i < GLYPH_END; i++) {
-		glyph = RE_ConstructGlyphInfo(out, &xOut, &yOut, &maxHeight, face, (unsigned char)i, qtrue);
+		return false;
 	}
 
-	xOut = 0;
-	yOut = 0;
-	i = GLYPH_START;
-	lastStart = i;
-	imageNumber = 0;
+	for ( fontCount = 0; fontCount < 3; fontCount++ )
+	{
+		if ( fontCount == 0)
+		{
+			pointSize = 12;
+		}
+		else if ( fontCount == 1 )
+		{
+			pointSize = 24;
+		}
+		else
+		{
+			pointSize = 48;
+		}
 
-	while ( i <= GLYPH_END ) {
+		// we also need to adjust the scale based on point size relative to 48 points as the ui scaling is based on a 48 point font
+		float glyphScale = 1.0f; 		// change the scale to be relative to 1 based on 72 dpi ( so dpi of 144 means a scale of .5 )
+		glyphScale *= 48.0f / pointSize;
 
-		glyph = RE_ConstructGlyphInfo(out, &xOut, &yOut, &maxHeight, face, (unsigned char)i, qfalse);
+		sprintf( name, "%s/fontImage_%i.dat", fontName, pointSize );
 
-		if (xOut == -1 || yOut == -1 || i == GLYPH_END)  {
-			// ran out of room
-			// we need to create an image from the bitmap, set all the handles in the glyphs to this point
-			// 
+		fontInfo_t *outFont;
+		if ( fontCount == 0 )
+		{
+			outFont = &font.fontInfoSmall;
+		}
+		else if ( fontCount == 1 )
+		{
+			outFont = &font.fontInfoMedium;
+		}
+		else
+		{
+			outFont = &font.fontInfoLarge;
+		}
 
-			scaledSize = 256*256;
-			newSize = scaledSize * 4;
-			imageBuff = Mem_Alloc(newSize);
-			left = 0;
-			max = 0;
-			satLevels = 255;
-			for ( k = 0; k < (scaledSize) ; k++ ) {
-				if (max < out[k]) {
-					max = out[k];
+		idStr::Copynz( outFont->name, name, sizeof( outFont->name ) );
+
+		memset( out, 0, 1024*1024 );
+
+		maxHeight = 0;
+
+		for (i = GLYPH_START; i < GLYPH_END; i++) 
+		{
+			glyph = RE_ConstructGlyphInfo(out, &xOut, &yOut, &maxHeight, face, (unsigned char)i, true);
+		}
+
+		xOut = 0;
+		yOut = 0;
+		i = GLYPH_START;
+		lastStart = i;
+		imageNumber = 0;
+
+		while ( i <= GLYPH_END )
+		{
+			glyph = RE_ConstructGlyphInfo(out, &xOut, &yOut, &maxHeight, face, (unsigned char)i, false);
+
+			if (xOut == -1 || yOut == -1 || i == GLYPH_END)
+			{
+				// ran out of room
+				// we need to create an image from the bitmap, set all the handles in the glyphs to this point
+				// 
+
+				// Techyon RB: changed constants to FONT_SIZE
+				scaledSize = FONT_SIZE * FONT_SIZE;
+				newSize = scaledSize * 4;
+				imageBuff = (byte*) Mem_Alloc(newSize);
+				left = 0;
+				max = 0;
+				satLevels = 255;
+				for ( k = 0; k < (scaledSize) ; k++ ) {
+					if (max < out[k]) {
+						max = out[k];
+					}
 				}
-			}
 
-			if (max > 0) {
-				max = 255/max;
-			}
+				if (max > 0) {
+					max = 255/max;
+				}
 
-			for ( k = 0; k < (scaledSize) ; k++ ) {
-				imageBuff[left++] = 255;
-				imageBuff[left++] = 255;
-				imageBuff[left++] = 255;
-				imageBuff[left++] = ((float)out[k] * max);
-			}
+				for ( k = 0; k < (scaledSize) ; k++ ) {
+					imageBuff[left++] = 255;
+					imageBuff[left++] = 255;
+					imageBuff[left++] = 255;
+					imageBuff[left++] = ((float)out[k] * max);
+				}
 
-			idStr::snprintf( name, sizeof(name), "fonts/fontImage_%i_%i.tga", imageNumber++, pointSize );
-			if (r_saveFontData->integer) { 
-				R_WriteTGA(name, imageBuff, 256, 256);
-			}
+				sprintf( name, "%s/fontImage_%i_%i.png", fontName, imageNumber++, pointSize );
+				//if (r_saveFontData->integer) { 
+					//R_WriteTGA(name, imageBuff, 256, 256);
+					R_WritePNG( name, imageBuff, 4, FONT_SIZE, FONT_SIZE, true );
+				//}
 
-			//idStr::snprintf( name, sizeof(name), "fonts/fontImage_%i_%i", imageNumber++, pointSize );
-			image = R_CreateImage(name, imageBuff, 256, 256, qfalse, qfalse, GL_CLAMP);
-			h = RE_RegisterShaderFromImage(name, LIGHTMAP_2D, image, qfalse);
-			for (j = lastStart; j < i; j++) {
-				font.glyphs[j].glyph = h;
-				idStr::Copynz( font.glyphs[j].shaderName, name, sizeof( font.glyphs[j].shaderName ) );
+				//idStr::snprintf( name, sizeof(name), "fonts/fontImage_%i_%i", imageNumber++, pointSize );
+			
+				//image = R_CreateImage(name, imageBuff, FONT_SIZE, FONT_SIZE, qfalse, qfalse, GL_CLAMP);
+
+				image = globalImages->ImageFromFile(name, TF_LINEAR, false, TR_CLAMP_TO_BORDER, TD_HIGH_QUALITY);
+
+				//image->GenerateImage( (byte *)data, BORDER_CLAMP_SIZE, BORDER_CLAMP_SIZE, TF_LINEAR /* TF_NEAREST */, false, TR_CLAMP_TO_BORDER, TD_DEFAULT );
+
+				//sprintf( name, "fontImage_%i_%i.png", imageNumber++, pointSize );
+				h = declManager->FindMaterial(name);
+				h->SetSort( SS_GUI );
+
+				/*
+				for (j = lastStart; j < i; j++) 
+				{
+					font.glyphs[j].glyph = h;
+					idStr::Copynz( font.glyphs[j].shaderName, name, sizeof( font.glyphs[j].shaderName ) );
+				}
+				lastStart = i;
+				*/
+
+				memset( out, 0, 1024*1024 );
+				xOut = 0;
+				yOut = 0;
+				Mem_Free( imageBuff );
+			
+				//i++;
+
+				sprintf( name, "fontImage_%i_%i.png", imageNumber++, pointSize );
+
+				if(i == GLYPH_END)
+				{
+					for(j = lastStart; j <= GLYPH_END; j++)
+					{
+						outFont->glyphs[j].glyph = h;
+						idStr::Copynz( outFont->glyphs[j].shaderName, name, sizeof( outFont->glyphs[j].shaderName ) );
+					}
+					break;
+				}
+				else
+				{
+					for(j = lastStart; j < i; j++)
+					{
+						outFont->glyphs[j].glyph = h;
+						idStr::Copynz( outFont->glyphs[j].shaderName, name, sizeof( outFont->glyphs[j].shaderName ) );
+					}
+					lastStart = i;
+				}
+			} 
+			else 
+			{
+				memcpy( &outFont->glyphs[i], glyph, sizeof( glyphInfo_t ) );
+				i++;
 			}
-			lastStart = i;
-			memset( out, 0, 1024*1024 );
-			xOut = 0;
-			yOut = 0;
-			Mem_Free( imageBuff );
-			i++;
+		}
+
+		/*
+		registeredFont[registeredFontCount].glyphScale = glyphScale;
+		font.glyphScale = glyphScale;
+		memcpy( &registeredFont[registeredFontCount++], &font, sizeof( fontInfo_t ) );
+		*/
+
+		//if ( r_saveFontData->integer ) { 
+			fileSystem->WriteFile( va( "%s/fontImage_%i.dat", fontName, pointSize), outFont, sizeof( fontInfo_t ) );
+		//}
+
+
+		int mw = 0;
+		int mh = 0;
+		for (i = GLYPH_START; i < GLYPH_END; i++) 
+		{
+			sprintf( name, "%s/%s", fontName, outFont->glyphs[i].shaderName);
+			outFont->glyphs[i].glyph = declManager->FindMaterial(name);
+			outFont->glyphs[i].glyph->SetSort( SS_GUI );
+			
+			if (mh < outFont->glyphs[i].height) {
+				mh = outFont->glyphs[i].height;
+			}
+			if (mw < outFont->glyphs[i].xSkip) {
+				mw = outFont->glyphs[i].xSkip;
+			}
+		}
+		
+		if (fontCount == 0) {
+			font.maxWidthSmall = mw;
+			font.maxHeightSmall = mh;
+		} else if (fontCount == 1) {
+			font.maxWidthMedium = mw;
+			font.maxHeightMedium = mh;
 		} else {
-			memcpy( &font.glyphs[i], glyph, sizeof( glyphInfo_t ) );
-			i++;
+			font.maxWidthLarge = mw;
+			font.maxHeightLarge = mh;
 		}
 	}
 
-	registeredFont[registeredFontCount].glyphScale = glyphScale;
-	font.glyphScale = glyphScale;
-	memcpy( &registeredFont[registeredFontCount++], &font, sizeof( fontInfo_t ) );
-
-	if ( r_saveFontData->integer ) { 
-		fileSystem->WriteFile( va( "fonts/fontImage_%i.dat", pointSize), &font, sizeof( fontInfo_t ) );
-	}
+	
 
 	Mem_Free( out );
 

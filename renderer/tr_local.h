@@ -2156,6 +2156,17 @@ idScreenRect R_CalcIntersectionScissor( const idRenderLightLocal * lightDef,
 idMat4 make_idMat4(const float * m);
 
 
+/*
+=============================================================
+
+TR_FONT
+
+=============================================================
+*/
+
+void R_InitFreeType( void );
+void R_DoneFreeType( void );
+
 
 /*
 =============================================================

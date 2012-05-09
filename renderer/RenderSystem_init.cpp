@@ -2254,6 +2254,10 @@ void idRenderSystemLocal::Init( void ) {
 
 	R_InitTriSurfData();
 
+	// Techyon RB: added direct freetype support
+	R_InitFreeType();
+	// Techyon END
+
 	globalImages->Init();
 
 #if !defined(USE_GLES1)
@@ -2303,6 +2307,10 @@ void idRenderSystemLocal::Shutdown( void ) {
 #if !defined(USE_GLES1)
 	Framebuffer::Shutdown();
 #endif
+
+	// Techyon RB: added direct freetype support
+	R_DoneFreeType();
+	// Techyon END
 
 	globalImages->Shutdown();
 
