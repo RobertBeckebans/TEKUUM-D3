@@ -3,6 +3,7 @@
 
 Doom 3 GPL Source Code
 Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company. 
+Copyright (C) 2012 Kitargo UG (haftungsbeschränkt)
 
 This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).  
 
@@ -51,6 +52,8 @@ FT_Library ftLibrary = NULL;
 // Techyon RB: changed 256 constants used below to FONT_SIZE
 const int FONT_SIZE = 256;
 // Techyon END
+
+#define FONT_PNG 1
 
 #ifdef BUILD_FREETYPE
 
@@ -170,10 +173,10 @@ static glyphInfo_t *RE_ConstructGlyphInfo( unsigned char *imageOut, int *xOut, i
 
 		// we need to make sure we fit
 		// Techyon RB: changed constants to FONT_SIZE -1
-		if (*xOut + scaled_width + 1 >= (FONT_SIZE -1)) 
+		if (*xOut + scaled_width + 1 >= (FONT_SIZE -1))
 		{
 			// RB: fixed wrong yOut
-			if (*yOut + (*maxHeight + 1) * 2 >= (FONT_SIZE -1)) 
+			if (*yOut + (*maxHeight + 1) * 2 >= (FONT_SIZE -1))
 			{
 				*yOut = -1;
 				*xOut = -1;
@@ -305,6 +308,56 @@ float readFloat( void ) {
 	return me.ffred;
 }
 
+static void FinalizeFontInfoEx(const char *fontName, fontInfoEx_t &font, fontInfo_t *outFont, int fontCount)
+{
+	idStr name;
+	int mw = 0;
+	int mh = 0;
+	
+	for (int i = GLYPH_START; i < GLYPH_END; i++)
+	{
+		// RB: FIXME find better way
+		if ( idStr::Cmpn( outFont->glyphs[i].shaderName, "fonts/", 6 ) == 0 )
+		{
+			sprintf( name, "%s/%s", fontName, outFont->glyphs[i].shaderName + 6);
+		}
+		else
+		{
+			sprintf( name, "%s/%s", fontName, outFont->glyphs[i].shaderName);
+		}
+
+		outFont->glyphs[i].glyph = declManager->FindMaterial(name);
+		outFont->glyphs[i].glyph->SetSort( SS_GUI );
+			
+		if (mh < outFont->glyphs[i].height)
+		{
+			mh = outFont->glyphs[i].height;
+		}
+
+		if (mw < outFont->glyphs[i].xSkip)
+		{
+			mw = outFont->glyphs[i].xSkip;
+		}
+	}
+		
+	if (fontCount == 0)
+	{
+		font.maxWidthSmall = mw;
+		font.maxHeightSmall = mh;
+	}
+	else if (fontCount == 1)
+	{
+		font.maxWidthMedium = mw;
+		font.maxHeightMedium = mh;
+	}
+	else
+	{
+		font.maxWidthLarge = mw;
+		font.maxHeightLarge = mh;
+	}
+}
+
+
 /*
 ============
 RegisterFont
@@ -378,11 +431,11 @@ bool idRenderSystemLocal::RegisterFont( const char *fontName, fontInfoEx_t &font
 			outFont = &font.fontInfoLarge;
 		}
 
-		idStr::Copynz( outFont->name, name, sizeof( outFont->name ) );
+		idStr::Copynz( outFont->name, name.c_str(), sizeof( outFont->name ) );
 
 		len = fileSystem->ReadFile( name, NULL, &ftime );
 		if ( len != sizeof( fontInfo_t ) ) {
-			common->Warning( "RegisterFont: couldn't find font: '%s'", name.c_str() );
+			//common->Warning( "RegisterFont: couldn't find font: '%s'", name.c_str() );
 			//return false;
 			allPointSizesLoaded = false;
 			break;
@@ -410,32 +463,7 @@ bool idRenderSystemLocal::RegisterFont( const char *fontName, fontInfoEx_t &font
 		}
 		outFont->glyphScale = readFloat();
 
-		int mw = 0;
-		int mh = 0;
-		for (i = GLYPH_START; i < GLYPH_END; i++) 
-		{
-			sprintf( name, "%s/%s", fontName, outFont->glyphs[i].shaderName);
-			outFont->glyphs[i].glyph = declManager->FindMaterial(name);
-			outFont->glyphs[i].glyph->SetSort( SS_GUI );
-			
-			if (mh < outFont->glyphs[i].height) {
-				mh = outFont->glyphs[i].height;
-			}
-			if (mw < outFont->glyphs[i].xSkip) {
-				mw = outFont->glyphs[i].xSkip;
-			}
-		}
-		
-		if (fontCount == 0) {
-			font.maxWidthSmall = mw;
-			font.maxHeightSmall = mh;
-		} else if (fontCount == 1) {
-			font.maxWidthMedium = mw;
-			font.maxHeightMedium = mh;
-		} else {
-			font.maxWidthLarge = mw;
-			font.maxHeightLarge = mh;
-		}
+		FinalizeFontInfoEx(fontName, font, outFont, fontCount);
 		
 		fileSystem->FreeFile( faceData );
 	}
@@ -461,19 +489,7 @@ bool idRenderSystemLocal::RegisterFont( const char *fontName, fontInfoEx_t &font
 	name.SetFileExtension(".ttf");
 	len = fileSystem->ReadFile(name, &faceData, &ftime);
 	if ( len <= 0 ) {
-		common->Warning( "RegisterFont: Unable to read font file" );
-		return false;
-	}
-
-	// allocate on the stack first in case we fail
-	if ( FT_New_Memory_Face( ftLibrary, (const FT_Byte*) faceData, len, 0, &face ) ) {
-		common->Warning( "RegisterFont: FreeType2, unable to allocate new face." );
-		return false;
-	}
-
-
-	if ( FT_Set_Char_Size( face, pointSize << 6, pointSize << 6, dpi, dpi) ) {
-		common->Warning( "RegisterFont: FreeType2, Unable to set face char size." );
+		common->Warning( "RegisterFont: Unable to read font file: '%s'", name.c_str() );
 		return false;
 	}
 
@@ -504,9 +520,19 @@ bool idRenderSystemLocal::RegisterFont( const char *fontName, fontInfoEx_t &font
 			pointSize = 48;
 		}
 
-		// we also need to adjust the scale based on point size relative to 48 points as the ui scaling is based on a 48 point font
-		float glyphScale = 1.0f; 		// change the scale to be relative to 1 based on 72 dpi ( so dpi of 144 means a scale of .5 )
-		glyphScale *= 48.0f / pointSize;
+		// allocate on the stack first in case we fail
+		if ( FT_New_Memory_Face( ftLibrary, (const FT_Byte*) faceData, len, 0, &face ) )
+		{
+			common->Warning( "RegisterFont: FreeType2, unable to allocate new face." );
+			return false;
+		}
+
+
+		if ( FT_Set_Char_Size( face, pointSize << 6, pointSize << 6, dpi, dpi) )
+		{
+			common->Warning( "RegisterFont: FreeType2, Unable to set face char size." );
+			return false;
+		}
 
 		sprintf( name, "%s/fontImage_%i.dat", fontName, pointSize );
 
@@ -524,12 +550,17 @@ bool idRenderSystemLocal::RegisterFont( const char *fontName, fontInfoEx_t &font
 			outFont = &font.fontInfoLarge;
 		}
 
-		idStr::Copynz( outFont->name, name, sizeof( outFont->name ) );
+		// we also need to adjust the scale based on point size relative to 48 points as the ui scaling is based on a 48 point font
+		float glyphScale = 1.0f; 		// change the scale to be relative to 1 based on 72 dpi ( so dpi of 144 means a scale of .5 )
+		glyphScale *= 48.0f / pointSize;
+		outFont->glyphScale = glyphScale;
+
+		idStr::Copynz( outFont->name, name.c_str(), sizeof( outFont->name ) );
 
 		memset( out, 0, 1024*1024 );
 
+		// calculate max height
 		maxHeight = 0;
-
 		for (i = GLYPH_START; i < GLYPH_END; i++) 
 		{
 			glyph = RE_ConstructGlyphInfo(out, &xOut, &yOut, &maxHeight, face, (unsigned char)i, true);
@@ -575,21 +606,18 @@ bool idRenderSystemLocal::RegisterFont( const char *fontName, fontInfoEx_t &font
 					imageBuff[left++] = ((float)out[k] * max);
 				}
 
-				sprintf( name, "%s/fontImage_%i_%i.png", fontName, imageNumber++, pointSize );
 				//if (r_saveFontData->integer) { 
-					//R_WriteTGA(name, imageBuff, 256, 256);
-					R_WritePNG( name, imageBuff, 4, FONT_SIZE, FONT_SIZE, true );
+				#if defined(FONT_PNG)
+				sprintf( name, "%s/fontImage_%i_%i.png", fontName, imageNumber, pointSize );
+				R_WritePNG( name.c_str(), imageBuff, 4, FONT_SIZE, FONT_SIZE, true );
+				#else
+				sprintf( name, "%s/fontImage_%i_%i.tga", fontName, imageNumber, pointSize );
+				R_WriteTGA(name.c_str(), imageBuff, FONT_SIZE, FONT_SIZE, false);
+				#endif
 				//}
 
-				//idStr::snprintf( name, sizeof(name), "fonts/fontImage_%i_%i", imageNumber++, pointSize );
-			
-				//image = R_CreateImage(name, imageBuff, FONT_SIZE, FONT_SIZE, qfalse, qfalse, GL_CLAMP);
+				image = globalImages->ImageFromFile(name.c_str(), TF_LINEAR, false, TR_CLAMP_TO_BORDER, TD_HIGH_QUALITY);
 
-				image = globalImages->ImageFromFile(name, TF_LINEAR, false, TR_CLAMP_TO_BORDER, TD_HIGH_QUALITY);
-
-				//image->GenerateImage( (byte *)data, BORDER_CLAMP_SIZE, BORDER_CLAMP_SIZE, TF_LINEAR /* TF_NEAREST */, false, TR_CLAMP_TO_BORDER, TD_DEFAULT );
-
-				//sprintf( name, "fontImage_%i_%i.png", imageNumber++, pointSize );
 				h = declManager->FindMaterial(name);
 				h->SetSort( SS_GUI );
 
@@ -597,7 +625,7 @@ bool idRenderSystemLocal::RegisterFont( const char *fontName, fontInfoEx_t &font
 				for (j = lastStart; j < i; j++) 
 				{
 					font.glyphs[j].glyph = h;
-					idStr::Copynz( font.glyphs[j].shaderName, name, sizeof( font.glyphs[j].shaderName ) );
+					idStr::Copynz( font.glyphs[j].shaderName, name.c_str(), sizeof( font.glyphs[j].shaderName ) );
 				}
 				lastStart = i;
 				*/
@@ -608,15 +636,22 @@ bool idRenderSystemLocal::RegisterFont( const char *fontName, fontInfoEx_t &font
 				Mem_Free( imageBuff );
 			
 				//i++;
+				
+				// FIXME: get rid of "fonts/"
+				#if defined(FONT_PNG)
+				sprintf( name, "fonts/fontImage_%i_%i.png", imageNumber, pointSize );
+				#else
+				sprintf( name, "fonts/fontImage_%i_%i.tga", imageNumber, pointSize );
+				#endif
 
-				sprintf( name, "fontImage_%i_%i.png", imageNumber++, pointSize );
+				imageNumber++;
 
 				if(i == GLYPH_END)
 				{
 					for(j = lastStart; j <= GLYPH_END; j++)
 					{
 						outFont->glyphs[j].glyph = h;
-						idStr::Copynz( outFont->glyphs[j].shaderName, name, sizeof( outFont->glyphs[j].shaderName ) );
+						idStr::Copynz( outFont->glyphs[j].shaderName, name.c_str(), sizeof( outFont->glyphs[j].shaderName ) );
 					}
 					break;
 				}
@@ -625,7 +660,7 @@ bool idRenderSystemLocal::RegisterFont( const char *fontName, fontInfoEx_t &font
 					for(j = lastStart; j < i; j++)
 					{
 						outFont->glyphs[j].glyph = h;
-						idStr::Copynz( outFont->glyphs[j].shaderName, name, sizeof( outFont->glyphs[j].shaderName ) );
+						idStr::Copynz( outFont->glyphs[j].shaderName, name.c_str(), sizeof( outFont->glyphs[j].shaderName ) );
 					}
 					lastStart = i;
 				}
@@ -647,33 +682,7 @@ bool idRenderSystemLocal::RegisterFont( const char *fontName, fontInfoEx_t &font
 			fileSystem->WriteFile( va( "%s/fontImage_%i.dat", fontName, pointSize), outFont, sizeof( fontInfo_t ) );
 		//}
 
-
-		int mw = 0;
-		int mh = 0;
-		for (i = GLYPH_START; i < GLYPH_END; i++) 
-		{
-			sprintf( name, "%s/%s", fontName, outFont->glyphs[i].shaderName);
-			outFont->glyphs[i].glyph = declManager->FindMaterial(name);
-			outFont->glyphs[i].glyph->SetSort( SS_GUI );
-			
-			if (mh < outFont->glyphs[i].height) {
-				mh = outFont->glyphs[i].height;
-			}
-			if (mw < outFont->glyphs[i].xSkip) {
-				mw = outFont->glyphs[i].xSkip;
-			}
-		}
-		
-		if (fontCount == 0) {
-			font.maxWidthSmall = mw;
-			font.maxHeightSmall = mh;
-		} else if (fontCount == 1) {
-			font.maxWidthMedium = mw;
-			font.maxHeightMedium = mh;
-		} else {
-			font.maxWidthLarge = mw;
-			font.maxHeightLarge = mh;
-		}
+		FinalizeFontInfoEx(fontName, font, outFont, fontCount);
 	}
 
 	
