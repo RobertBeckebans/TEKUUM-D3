@@ -10,6 +10,8 @@
 ===============================================================================
 */
 
-unsigned long MD5_BlockChecksum( const void *data, int length );
+// Techyon RB: 64 bit fix, changed long to int
+unsigned int MD5_BlockChecksum( const void *data, int length );
+// Techyon END
 
 #endif /* !__MD5_H__ */
