@@ -105,8 +105,10 @@ typedef enum {
 } wexpRegister_t;
 
 typedef struct {
-	wexpOpType_t opType;	
-	int	a, b, c, d;
+	wexpOpType_t opType;
+	// Techyon RB: 64 bit fixes, changed int to intptr_t
+	intptr_t	a, b, c, d;
+	// Techyon END
 } wexpOp_t;
 
 struct idRegEntry {
