@@ -308,8 +308,12 @@ void idAudioHardwareALSA::Write( bool flushing ) {
 		return;
 	}
 	// write the max frames you can in one shot - we need to write it all out in Flush() calls before the next Write() happens
-	int pos = (int)m_buffer + ( MIXBUFFER_SAMPLES - m_remainingFrames ) * m_channels * 2;
+
+	// Techyon RB: 64 bit fixes, changed int to intptr_t
+	intptr_t pos = (intptr_t)m_buffer + ( MIXBUFFER_SAMPLES - m_remainingFrames ) * m_channels * 2;
 	snd_pcm_sframes_t frames = id_snd_pcm_writei( m_pcm_handle, (void*)pos, m_remainingFrames );
+	// Techyon END
+
 	if ( frames < 0 ) {
 		if ( frames != -EAGAIN ) {
 			Sys_Printf( "snd_pcm_writei %d frames failed: %s\n", m_remainingFrames, id_snd_strerror( frames ) );

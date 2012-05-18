@@ -396,20 +396,25 @@ Sys_DLL_Load
 TODO: OSX - use the native API instead? NSModule
 =================
 */
-int Sys_DLL_Load( const char *path ) {
+// Techyon RB: 64 bit fixes, changed int to intptr_t
+intptr_t Sys_DLL_Load( const char *path ) {
 	void *handle = dlopen( path, RTLD_NOW );
 	if ( !handle ) {
 		Sys_Printf( "dlopen '%s' failed: %s\n", path, dlerror() );
 	}
-	return (int)handle;
+
+	return (intptr_t)handle;
 }
+// Techyon END
 
 /*
 =================
 Sys_DLL_GetProcAddress
 =================
 */
-void* Sys_DLL_GetProcAddress( int handle, const char *sym ) {
+// Techyon RB: 64 bit fixes, changed int to intptr_t
+void* Sys_DLL_GetProcAddress( intptr_t handle, const char *sym ) {
+// Techyon END
 	const char *error;
 	void *ret = dlsym( (void *)handle, sym );
 	if ((error = dlerror()) != NULL)  {
@@ -423,7 +428,9 @@ void* Sys_DLL_GetProcAddress( int handle, const char *sym ) {
 Sys_DLL_Unload
 =================
 */
-void Sys_DLL_Unload( int handle ) {
+// Techyon RB: 64 bit fixes, changed int to intptr_t
+void Sys_DLL_Unload( intptr_t handle ) {
+// Techyon END
 	dlclose( (void *)handle );
 }
 

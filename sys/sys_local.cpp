@@ -108,17 +108,19 @@ void idSysLocal::ShutdownSymbols( void ) {
 	Sys_ShutdownSymbols();
 }
 
-int idSysLocal::DLL_Load( const char *dllName ) {
+// Techyon RB: 64 bit fixes, changed int to intptr_t
+intptr_t idSysLocal::DLL_Load( const char *dllName ) {
 	return Sys_DLL_Load( dllName );
 }
 
-void *idSysLocal::DLL_GetProcAddress( int dllHandle, const char *procName ) {
+void *idSysLocal::DLL_GetProcAddress( intptr_t dllHandle, const char *procName ) {
 	return Sys_DLL_GetProcAddress( dllHandle, procName );
 }
 
-void idSysLocal::DLL_Unload( int dllHandle ) {
+void idSysLocal::DLL_Unload( intptr_t dllHandle ) {
 	Sys_DLL_Unload( dllHandle );
 }
+// Techyon END
 
 void idSysLocal::DLL_GetFileName( const char *baseName, char *dllName, int maxLength ) {
 #ifdef _WIN32

@@ -105,11 +105,18 @@ If you have questions concerning this license or the applicable additional terms
 // Linux
 #if defined(__linux__)
 
-#ifdef __i386__
+#define BUILD_OS_ID					2
+
+#if defined(__i386__)
 	#define	BUILD_STRING				"linux-x86"
-	#define BUILD_OS_ID					2
 	#define CPUSTRING					"x86"
 	#define CPU_EASYARGS				1
+// Techyon BEGIN
+#elif defined(__x86_64__)
+	#define	BUILD_STRING				"linux-x86_64"
+	#define CPUSTRING					"x86_64"
+	#define CPU_EASYARGS				1
+// Techyon END
 #elif defined(__ppc__)
 	#define	BUILD_STRING				"linux-ppc"
 	#define CPUSTRING					"ppc"
@@ -142,7 +149,7 @@ If you have questions concerning this license or the applicable additional terms
 
 #define BUILD_OS_ID						3
 
-#ifdef __i386__
+#if defined(__i386__)
 	#define	BUILD_STRING				"android-x86"
 	#define CPUSTRING					"x86"
 	#define CPU_EASYARGS				1
@@ -377,9 +384,11 @@ const char *	Sys_GetCallStackCurAddressStr( int depth );
 void			Sys_ShutdownSymbols( void );
 
 // DLL loading, the path should be a fully qualified OS path to the DLL file to be loaded
-int				Sys_DLL_Load( const char *dllName );
-void *			Sys_DLL_GetProcAddress( int dllHandle, const char *procName );
-void			Sys_DLL_Unload( int dllHandle );
+// Techyon RB: 64 bit fixes, changed int to intptr_t
+intptr_t		Sys_DLL_Load( const char *dllName );
+void *			Sys_DLL_GetProcAddress( intptr_t dllHandle, const char *procName );
+void			Sys_DLL_Unload( intptr_t dllHandle );
+// Techyon END
 
 // event generation
 void			Sys_GenerateEvents( void );
@@ -619,9 +628,11 @@ public:
 	virtual const char *	GetCallStackCurStr( int depth ) = 0;
 	virtual void			ShutdownSymbols( void ) = 0;
 
-	virtual int				DLL_Load( const char *dllName ) = 0;
-	virtual void *			DLL_GetProcAddress( int dllHandle, const char *procName ) = 0;
-	virtual void			DLL_Unload( int dllHandle ) = 0;
+	// Techyon RB: 64 bit fixes, changed int to intptr_t
+	virtual intptr_t		DLL_Load( const char *dllName ) = 0;
+	virtual void *			DLL_GetProcAddress( intptr_t dllHandle, const char *procName ) = 0;
+	virtual void			DLL_Unload( intptr_t dllHandle ) = 0;
+	// Techyon END
 	virtual void			DLL_GetFileName( const char *baseName, char *dllName, int maxLength ) = 0;
 
 	virtual sysEvent_t		GenerateMouseButtonEvent( int button, bool down ) = 0;
