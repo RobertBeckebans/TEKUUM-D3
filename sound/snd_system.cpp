@@ -325,7 +325,9 @@ void idSoundSystemLocal::Init() {
 	}
 
 	// make a 16 byte aligned finalMixBuffer
-	finalMixBuffer = (float *) ( ( ( (int)realAccum ) + 15 ) & ~15 );
+	// Techyon RB: 64 bit fix, changed int to intptr_t
+	finalMixBuffer = (float *) ( ( ( (intptr_t)realAccum ) + 15 ) & ~15 );
+	// Techyon END
 
 	graph = NULL;
 
