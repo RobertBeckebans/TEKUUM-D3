@@ -828,7 +828,9 @@ idClass::ProcessEventArgs
 bool idClass::ProcessEventArgs( const idEventDef *ev, int numargs, ... ) {
 	idTypeInfo	*c;
 	int			num;
-	int			data[ D_EVENT_MAXARGS ];
+	// Techyon RB: 64 bit fix, changed int to intptr_t
+	intptr_t	data[ D_EVENT_MAXARGS ];
+	// Techyon END
 	va_list		args;
 	
 	assert( ev );
@@ -936,7 +938,9 @@ bool idClass::ProcessEvent( const idEventDef *ev, idEventArg arg1, idEventArg ar
 idClass::ProcessEventArgPtr
 ================
 */
-bool idClass::ProcessEventArgPtr( const idEventDef *ev, int *data ) {
+// Techyon RB: 64 bit fixes, changed int to intptr_t
+bool idClass::ProcessEventArgPtr( const idEventDef *ev, intptr_t *data ) {
+// Techyon END
 	idTypeInfo	*c;
 	int			num;
 	eventCallback_t	callback;

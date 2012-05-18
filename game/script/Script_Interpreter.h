@@ -93,8 +93,10 @@ public:
 	int					CurrentLine( void ) const;
 	const char			*CurrentFile( void ) const;
 
-	void				Error( char *fmt, ... ) const id_attribute((format(printf,2,3)));
-	void				Warning( char *fmt, ... ) const id_attribute((format(printf,2,3)));
+	// Techyon RB: fixed missing const-ness
+	void				Error( const char *fmt, ... ) const id_attribute((format(printf,2,3)));
+	void				Warning( const char *fmt, ... ) const id_attribute((format(printf,2,3)));
+	// Techyon END
 	void				DisplayInfo( void ) const;
 
 	bool				BeginMultiFrameEvent( idEntity *ent, const idEventDef *event );

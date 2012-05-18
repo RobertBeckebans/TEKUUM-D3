@@ -104,7 +104,9 @@ public:
 								~idEvent();
 
 	static idEvent				*Alloc( const idEventDef *evdef, int numargs, va_list args );
-	static void					CopyArgs( const idEventDef *evdef, int numargs, va_list args, int data[ D_EVENT_MAXARGS ]  );
+	// Techyon RB: 64 bit fix, changed int to intptr_t
+	static void					CopyArgs( const idEventDef *evdef, int numargs, va_list args, intptr_t data[ D_EVENT_MAXARGS ]  );
+	// Techyon END
 	
 	void						Free( void );
 	void						Schedule( idClass *object, const idTypeInfo *cls, int time );

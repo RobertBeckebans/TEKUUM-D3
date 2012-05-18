@@ -2335,7 +2335,9 @@ void idAI::Event_ThrowMoveable( void ) {
 	}
 	if ( moveable ) {
 		moveable->Unbind();
-		moveable->PostEventMS( &EV_SetOwner, 200, NULL );
+		// Techyon RB: 64 bit fixes, changed NULL to 0
+		moveable->PostEventMS( &EV_SetOwner, 200, 0 );
+		// Techyon END
 	}
 }
 
@@ -2356,7 +2358,9 @@ void idAI::Event_ThrowAF( void ) {
 	}
 	if ( af ) {
 		af->Unbind();
-		af->PostEventMS( &EV_SetOwner, 200, NULL );
+		// Techyon RB: 64 bit fixes, changed NULL to 0
+		af->PostEventMS( &EV_SetOwner, 200, 0 );
+		// Techyon END
 	}
 }
 

@@ -294,7 +294,9 @@ void idItem::Spawn( void ) {
 		if ( !ent ) {
 			gameLocal.Error( "Item couldn't find owner '%s'", giveTo.c_str() );
 		}
-		PostEventMS( &EV_Touch, 0, ent, NULL );
+		// Techyon RB: 64 bit fixes, changed NULL to 0
+		PostEventMS( &EV_Touch, 0, ent, 0 );
+		// Techyon END
 	}
 
 	if ( spawnArgs.GetBool( "spin" ) || gameLocal.isMultiplayer ) {
