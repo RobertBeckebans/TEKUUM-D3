@@ -3,9 +3,9 @@
 
 Doom 3 GPL Source Code
 Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company. 
-Copyright (C) 2012 Kitargo UG (haftungsbeschr‰nkt)
+Copyright (C) 2012 Kitargo UG (haftungsbeschr√§nkt)
 
-This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).  
+This file is part of the Doom 3 GPL Source Code ("Doom 3 Source Code").
 
 Doom 3 Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -267,46 +267,6 @@ static glyphInfo_t *RE_ConstructGlyphInfo( unsigned char *imageOut, int *xOut, i
 
 #endif
 
-static int fdOffset;
-static byte	*fdFile;
-
-/*
-============
-readInt
-============
-*/
-int readInt( void ) {
-	int i = fdFile[fdOffset]+(fdFile[fdOffset+1]<<8)+(fdFile[fdOffset+2]<<16)+(fdFile[fdOffset+3]<<24);
-	fdOffset += 4;
-	return i;
-}
-
-typedef union {
-	byte	fred[4];
-	float	ffred;
-} poor;
-
-/*
-============
-readFloat
-============
-*/
-float readFloat( void ) {
-	poor	me;
-#ifdef __ppc__
-	me.fred[0] = fdFile[fdOffset+3];
-	me.fred[1] = fdFile[fdOffset+2];
-	me.fred[2] = fdFile[fdOffset+1];
-	me.fred[3] = fdFile[fdOffset+0];
-#else
-	me.fred[0] = fdFile[fdOffset+0];
-	me.fred[1] = fdFile[fdOffset+1];
-	me.fred[2] = fdFile[fdOffset+2];
-	me.fred[3] = fdFile[fdOffset+3];
-#endif
-	fdOffset += 4;
-	return me.ffred;
-}
 
 static void FinalizeFontInfoEx(const char *fontName, fontInfoEx_t &font, fontInfo_t *outFont, int fontCount)
 {
@@ -357,6 +317,79 @@ static void FinalizeFontInfoEx(const char *fontName, fontInfoEx_t &font, fontInf
 	}
 }
 
+static bool LoadFontInfo( const char *name, fontInfo_t * outFont)
+{
+	idFile *file = fileSystem->OpenFileRead( name );
+
+	if ( file == NULL )
+	{
+		return false;
+	}
+
+	for( int i = 0; i < GLYPHS_PER_FONT; i++ )
+	{
+		file->ReadInt( outFont->glyphs[i].height );
+		file->ReadInt( outFont->glyphs[i].top );
+		file->ReadInt( outFont->glyphs[i].bottom );
+		file->ReadInt( outFont->glyphs[i].pitch );
+		file->ReadInt( outFont->glyphs[i].xSkip );
+		file->ReadInt( outFont->glyphs[i].imageWidth );
+		file->ReadInt( outFont->glyphs[i].imageHeight );
+		file->ReadFloat( outFont->glyphs[i].s );
+		file->ReadFloat( outFont->glyphs[i].t );
+		file->ReadFloat( outFont->glyphs[i].s2 );
+		file->ReadFloat( outFont->glyphs[i].t2 );
+		int junk; /* font.glyphs[i].glyph */
+		file->ReadInt( junk );
+
+		for( int j = 0; j < 32; j++ )
+		{
+			file->ReadChar( outFont->glyphs[i].shaderName[j] );
+		}
+	}
+	file->ReadFloat( outFont->glyphScale );
+
+	fileSystem->CloseFile( file );
+
+	return true;
+}
+
+static bool SaveFontInfo( const char *name, const fontInfo_t * outFont )
+{
+	idFile *file = fileSystem->OpenFileWrite( name );
+
+	if ( file == NULL )
+	{
+		return false;
+	}
+
+	for( int i = 0; i < GLYPHS_PER_FONT; i++ )
+	{
+		file->WriteInt( outFont->glyphs[i].height );
+		file->WriteInt( outFont->glyphs[i].top );
+		file->WriteInt( outFont->glyphs[i].bottom );
+		file->WriteInt( outFont->glyphs[i].pitch );
+		file->WriteInt( outFont->glyphs[i].xSkip );
+		file->WriteInt( outFont->glyphs[i].imageWidth );
+		file->WriteInt( outFont->glyphs[i].imageHeight );
+		file->WriteFloat( outFont->glyphs[i].s );
+		file->WriteFloat( outFont->glyphs[i].t );
+		file->WriteFloat( outFont->glyphs[i].s2 );
+		file->WriteFloat( outFont->glyphs[i].t2 );
+		// write junk, formerly font.glyphs[i].glyph
+		file->WriteInt( 0 );
+
+		for( int j = 0; j < 32; j++ )
+		{
+			file->WriteChar( outFont->glyphs[i].shaderName[j] );
+		}
+	}
+	file->WriteFloat( outFont->glyphScale );
+
+	fileSystem->CloseFile( file );
+
+	return true;
+}
 
 /*
 ============
@@ -369,10 +402,10 @@ bool idRenderSystemLocal::RegisterFont( const char *fontName, fontInfoEx_t &font
 #ifdef BUILD_FREETYPE
 	FT_Face face;
 	int j, k, xOut, yOut, lastStart, imageNumber;
-	int scaledSize, newSize, maxHeight, left, satLevels;
+	int scaledSize, newSize, maxHeight, left;//, satLevels;
 	unsigned char *out, *imageBuff;
 	glyphInfo_t *glyph;
-	idImage *image;
+	//idImage *image;
 	const idMaterial *h;
 	float max;
 #endif
@@ -433,39 +466,12 @@ bool idRenderSystemLocal::RegisterFont( const char *fontName, fontInfoEx_t &font
 
 		idStr::Copynz( outFont->name, name.c_str(), sizeof( outFont->name ) );
 
-		len = fileSystem->ReadFile( name, NULL, &ftime );
-		if ( len != sizeof( fontInfo_t ) ) {
-			//common->Warning( "RegisterFont: couldn't find font: '%s'", name.c_str() );
-			//return false;
+		if ( !LoadFontInfo( name.c_str(), outFont ) ) {
 			allPointSizesLoaded = false;
 			break;
 		}
 
-		fileSystem->ReadFile( name, &faceData, &ftime );
-		fdOffset = 0;
-		fdFile = reinterpret_cast<unsigned char*>(faceData);
-		for( i = 0; i < GLYPHS_PER_FONT; i++ ) {
-			outFont->glyphs[i].height		= readInt();
-			outFont->glyphs[i].top			= readInt();
-			outFont->glyphs[i].bottom		= readInt();
-			outFont->glyphs[i].pitch		= readInt();
-			outFont->glyphs[i].xSkip		= readInt();
-			outFont->glyphs[i].imageWidth	= readInt();
-			outFont->glyphs[i].imageHeight	= readInt();
-			outFont->glyphs[i].s			= readFloat();
-			outFont->glyphs[i].t			= readFloat();
-			outFont->glyphs[i].s2			= readFloat();
-			outFont->glyphs[i].t2			= readFloat();
-			int junk /* font.glyphs[i].glyph */		= readInt();
-			//FIXME: the +6, -6 skips the embedded fonts/ 
-			memcpy( outFont->glyphs[i].shaderName, &fdFile[fdOffset + 6], 32 - 6 );
-			fdOffset += 32;
-		}
-		outFont->glyphScale = readFloat();
-
-		FinalizeFontInfoEx(fontName, font, outFont, fontCount);
-		
-		fileSystem->FreeFile( faceData );
+		FinalizeFontInfoEx( fontName, font, outFont, fontCount );
 	}
 
 	//memcpy( &registeredFont[registeredFontCount++], &font, sizeof( fontInfoEx_t ) );
@@ -588,7 +594,7 @@ bool idRenderSystemLocal::RegisterFont( const char *fontName, fontInfoEx_t &font
 				imageBuff = (byte*) Mem_Alloc(newSize);
 				left = 0;
 				max = 0;
-				satLevels = 255;
+				//satLevels = 255;
 				for ( k = 0; k < (scaledSize) ; k++ ) {
 					if (max < out[k]) {
 						max = out[k];
@@ -616,7 +622,7 @@ bool idRenderSystemLocal::RegisterFont( const char *fontName, fontInfoEx_t &font
 				#endif
 				//}
 
-				image = globalImages->ImageFromFile(name.c_str(), TF_LINEAR, false, TR_CLAMP_TO_BORDER, TD_HIGH_QUALITY);
+				//image = globalImages->ImageFromFile(name.c_str(), TF_LINEAR, false, TR_CLAMP_TO_BORDER, TD_HIGH_QUALITY);
 
 				h = declManager->FindMaterial(name);
 				h->SetSort( SS_GUI );
@@ -679,7 +685,8 @@ bool idRenderSystemLocal::RegisterFont( const char *fontName, fontInfoEx_t &font
 		*/
 
 		//if ( r_saveFontData->integer ) { 
-			fileSystem->WriteFile( va( "%s/fontImage_%i.dat", fontName, pointSize), outFont, sizeof( fontInfo_t ) );
+			//fileSystem->WriteFile( va( "%s/fontImage_%i.dat", fontName, pointSize), outFont, sizeof( fontInfo_t ) );
+			SaveFontInfo( va( "%s/fontImage_%i.dat", fontName, pointSize), outFont );
 		//}
 
 		FinalizeFontInfoEx(fontName, font, outFont, fontCount);
