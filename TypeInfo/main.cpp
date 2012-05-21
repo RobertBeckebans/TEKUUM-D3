@@ -199,6 +199,12 @@ int Sys_ListFiles( const char *directory, const char *extension, idStrList &list
 	return list.Num();
 }
 
+// Techyon BEGIN
+#elif defined(__linux__)
+
+// TODO
+
+// Techyon END
 #else
 
 const char *	Sys_DefaultCDPath( void ) { return ""; }
@@ -245,9 +251,11 @@ const char *	idSysLocal::GetCallStackStr( const address_t *callStack, const int 
 const char *	idSysLocal::GetCallStackCurStr( int depth ) { return ""; }
 void			idSysLocal::ShutdownSymbols( void ) {}
 
-int				idSysLocal::DLL_Load( const char *dllName ) { return 0; }
-void *			idSysLocal::DLL_GetProcAddress( int dllHandle, const char *procName ) { return NULL; }
-void			idSysLocal::DLL_Unload( int dllHandle ) { }
+// Techyon RB: 64 bit fixes, changed int to intptr_t
+intptr_t		idSysLocal::DLL_Load( const char *dllName ) { return 0; }
+void *			idSysLocal::DLL_GetProcAddress( intptr_t dllHandle, const char *procName ) { return NULL; }
+void			idSysLocal::DLL_Unload( intptr_t dllHandle ) { }
+// Techyon END
 void			idSysLocal::DLL_GetFileName( const char *baseName, char *dllName, int maxLength ) { }
 
 sysEvent_t		idSysLocal::GenerateMouseButtonEvent( int button, bool down ) { sysEvent_t ev; memset( &ev, 0, sizeof( ev ) ); return ev; }

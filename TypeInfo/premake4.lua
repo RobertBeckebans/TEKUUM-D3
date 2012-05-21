@@ -74,6 +74,16 @@ project "TypeInfo"
 		
 	configuration { "vs*", "x64" }
 		targetdir 	"../../bin/win64"
+		
+	
+	configuration "linux"
+		targetname  "typeinfo"
+			
+	configuration { "linux", "x32" }
+		targetdir 	"../bin/linux-x86"
+		
+	configuration { "linux", "x64" }
+		targetdir 	"../bin/linux-x86_64"
 
 	
 		
