@@ -296,6 +296,9 @@ solution "Techyon"
 			"-fno-strict-aliasing",
 			
 			"-Wno-unused-variable",
+			
+			-- unhandled enums are fine
+			"-Wno-switch"
 		}
 			
 	configuration { "linux", "Release" }
@@ -1162,7 +1165,8 @@ end -- if not _OPTIONS["android"]
 		}
 
 -- FIXME
-if os.is("windows") and _OPTIONS["debug-memory"] then
+--if os.is("windows") and _OPTIONS["debug-memory"] then
+if _OPTIONS["debug-memory"] then
 	include "TypeInfo"
 end
 
