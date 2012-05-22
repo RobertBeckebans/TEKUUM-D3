@@ -31,8 +31,10 @@ If you have questions concerning this license or the applicable additional terms
 const char * const RESULT_STRING = "<RESULT>";
 
 typedef struct opcode_s {
-	char		*name;
-	char		*opname;
+	// Techyon RB: fixed deprecated conversion from string constant to ‘char*’
+	const char	*name;
+	const char	*opname;
+	// Techyon END
 	int			priority;
 	bool		rightAssociative;
 	idVarDef	*type_a;
@@ -197,7 +199,9 @@ enum {
 class idCompiler {
 private:
 	static bool		punctuationValid[ 256 ];
-	static char		*punctuation[];
+	// Techyon RB: fixed deprecated conversion from string constant to ‘char*’
+	static const char		*punctuation[];
+	// Techyon END
 
 	idParser		parser;
 	idParser		*parserPtr;
@@ -269,7 +273,9 @@ private:
 	void			ParseNamespace( idVarDef *newScope );
 
 public :
-	static opcode_t	opcodes[];
+	// Techyon RB: added const
+	static const opcode_t	opcodes[];
+	// Techyon END
 
 					idCompiler();
 	void			CompileFile( const char *text, const char *filename, bool console );
