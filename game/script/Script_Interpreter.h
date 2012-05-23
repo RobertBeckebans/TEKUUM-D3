@@ -30,7 +30,10 @@ If you have questions concerning this license or the applicable additional terms
 #define __SCRIPT_INTERPRETER_H__
 
 #define MAX_STACK_DEPTH 	64
-#define LOCALSTACK_SIZE 	6144
+
+// Techyon RB: doubled local stack size
+#define LOCALSTACK_SIZE 	(6144 * 2)
+// Techyon END
 
 typedef struct prstack_s {
 	int 				s;
