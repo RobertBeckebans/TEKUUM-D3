@@ -115,7 +115,8 @@ If you have questions concerning this license or the applicable additional terms
 #elif defined(__x86_64__)
 	#define	BUILD_STRING				"linux-x86_64"
 	#define CPUSTRING					"x86_64"
-	#define CPU_EASYARGS				1
+	// RB: no easyargs because of sizeof( int ) != sizeof( intptr_t )
+	#define CPU_EASYARGS				0
 // Techyon END
 #elif defined(__ppc__)
 	#define	BUILD_STRING				"linux-ppc"
