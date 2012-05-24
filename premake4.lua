@@ -194,8 +194,7 @@ newaction {
 
 
 solution "Techyon"
-	--configurations { "Release", "ReleaseWithSymbols", "Debug" }
-	configurations { "Release", "Debug" }
+	configurations { "Release", "ReleaseWithSymbols", "Debug" }
 	
 	if _OPTIONS["android"] then
 		platforms {"armeabi", "armeabi-v7a", "neon", "x32"}
@@ -214,16 +213,19 @@ solution "Techyon"
 			--"EnableSSE",
 			--"StaticRuntime"
 		}
-		
-	-- configuration "ReleaseWithSymbols"
-		-- defines     "NDEBUG"
-		-- flags
-		-- {
-			-- "OptimizeSpeed",
-			-- --"EnableSSE",
-			-- "Symbols",
-			-- --"StaticRuntime"
-		-- }
+	
+	-- OptimizeSpeed and Symbols do not work together with Visual Studio
+	if not os.is("windows") then
+		configuration "ReleaseWithSymbols"
+			defines     "NDEBUG"
+			flags
+			{
+				"OptimizeSpeed",
+				-- --"EnableSSE",
+				"Symbols",
+				-- --"StaticRuntime"
+			}
+	end
 	
 	configuration "Debug"
 		defines     "_DEBUG"
@@ -246,6 +248,22 @@ solution "Techyon"
 		}
 	
 	configuration { "vs*", "Release" }
+		buildoptions
+		{
+			-- turn off Whole Program Optimization
+			"/GL-",
+			
+			-- Inline Function Expansion: Any Suitable (/Ob2)
+			"/Ob2",
+			
+			-- enable Intrinsic Functions
+			"/Oi",
+			
+			-- Omit Frame Pointers
+			"/Oy",
+		}
+			
+	configuration { "vs*", "ReleaseWithSymbols" }
 		buildoptions
 		{
 			-- Produces a program database (PDB) that contains type information and symbolic debugging information for use with the debugger
@@ -272,10 +290,6 @@ solution "Techyon"
 			-- create .pdb file
 			"/DEBUG",
 		}
-		-- links
-		-- { 
-			-- "libcmt",
-		-- }
 			
 	configuration { "linux" }
 		buildoptions
@@ -296,6 +310,7 @@ solution "Techyon"
 			"-fno-strict-aliasing",
 			
 			"-Wno-unused-variable",
+			"-Wno-unused-but-set-variable",
 			
 			-- unhandled enums are fine
 			"-Wno-switch"
@@ -304,6 +319,10 @@ solution "Techyon"
 	configuration { "linux", "Release" }
 		buildoptions
 		{
+			-- enable debug symbols
+			--"-g",
+			--"-ggdb",
+		  
 			-- -finline-functions: implicit at -O3
 			-- -fschedule-insns2: implicit at -O2
 			
