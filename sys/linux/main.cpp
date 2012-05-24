@@ -139,7 +139,9 @@ const char *Sys_EXEPath( void ) {
 	len = readlink( linkpath.c_str(), buf, sizeof( buf ) );
 	if ( len == -1 ) {
 		Sys_Printf("couldn't stat exe path link %s\n", linkpath.c_str());
-		buf[ len ] = '\0';
+		// Techyon RB: fixed array subscript is below array bounds
+		buf[ 0 ] = '\0';
+		// Techyon END
 	}
 	return buf;
 }
