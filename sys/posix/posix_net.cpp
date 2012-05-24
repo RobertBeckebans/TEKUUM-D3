@@ -52,8 +52,10 @@ idCVar net_ip( "net_ip", "localhost", CVAR_SYSTEM, "local IP address" );
 idCVar net_port( "net_port", "", CVAR_SYSTEM | CVAR_INTEGER, "local IP port number" );
 
 typedef struct {
-	unsigned long ip;
-	unsigned long mask;
+	// Techyon RB: 64 bit fixes, changed long to int
+	unsigned int ip;
+	unsigned int mask;
+	// Techyon END
 } net_interface;
 
 #define 		MAX_INTERFACES	32
@@ -115,7 +117,9 @@ static bool ExtractPort( const char *src, char *buf, int bufsize, int *port ) {
 	*p = '\0';
 	*port = strtol( p+1, NULL, 10 );
 	if ( ( *port == 0 && errno == EINVAL ) ||
-		 ( ( *port == LONG_MIN || *port == LONG_MAX ) && errno == ERANGE ) ) {
+			// Techyon RB: 64 bit fixes, changed LONG_ to INT_
+		 ( ( *port == INT_MIN || *port == INT_MAX ) && errno == ERANGE ) ) {
+			// Techyon END
 		return false;
 	}
 	return true;
@@ -207,8 +211,10 @@ Sys_IsLANAddress
 */
 bool Sys_IsLANAddress( const netadr_t adr ) {
 	int i;
-	unsigned long *p_ip;
-	unsigned long ip;
+	// Techyon RB: 64 bit fixes, changed long to int
+	unsigned int *p_ip;
+	unsigned int ip;
+	// Techyon END
 
 #if ID_NOLANADDRESS
 	common->Printf( "Sys_IsLANAddress: ID_NOLANADDRESS\n" );
@@ -228,7 +234,9 @@ bool Sys_IsLANAddress( const netadr_t adr ) {
 	}
 
 	for ( i = 0; i < num_interfaces; i++ ) {
-		p_ip = (unsigned long *)&adr.ip[0];
+		// Techyon RB: 64 bit fixes, changed long to int
+		p_ip = (unsigned int *)&adr.ip[0];
+		// Techyon END
 		ip = ntohl( *p_ip );
 		if( ( netint[i].ip & netint[i].mask ) == ( ip & netint[i].mask ) ) {
 			return true;
@@ -299,8 +307,10 @@ void Sys_InitNetworking(void)
 		if ( !ifp->ifa_netmask )
 			continue;
 		
-		ip = ntohl( *( unsigned long *)&ifp->ifa_addr->sa_data[2] );
-		mask = ntohl( *( unsigned long *)&ifp->ifa_netmask->sa_data[2] );
+		// Techyon RB: 64 bit fixes, changed long to int
+		ip = ntohl( *( unsigned int *)&ifp->ifa_addr->sa_data[2] );
+		mask = ntohl( *( unsigned int *)&ifp->ifa_netmask->sa_data[2] );
+		// Techyon END
 		
 		if ( ip == INADDR_LOOPBACK ) {
 			common->Printf( "loopback\n" );
@@ -348,7 +358,9 @@ void Sys_InitNetworking(void)
 			if ( ifr->ifr_addr.sa_family != AF_INET ) {
 				common->Printf( "not AF_INET\n" );
 			} else {
-				ip = ntohl( *( unsigned long *)&ifr->ifr_addr.sa_data[2] );
+				// Techyon RB: 64 bit fixes, changed long to int
+				ip = ntohl( *( unsigned int *)&ifr->ifr_addr.sa_data[2] );
+				// Techyon END
 				if ( ip == INADDR_LOOPBACK ) {
 					common->Printf( "loopback\n" );
 				} else {
@@ -361,7 +373,9 @@ void Sys_InitNetworking(void)
 				if ( ioctl( s, SIOCGIFNETMASK, ifr ) < 0 ) {
 					common->Printf( " SIOCGIFNETMASK failed: %s\n", strerror( errno ) );
 				} else {
-					mask = ntohl( *( unsigned long *)&ifr->ifr_addr.sa_data[2] );
+					// Techyon RB: 64 bit fixes, changed long to int
+					mask = ntohl( *( unsigned int *)&ifr->ifr_addr.sa_data[2] );
+					// Techyon END
 					if ( ip != INADDR_LOOPBACK ) {
 						common->Printf( "/%d.%d.%d.%d\n",
 										(unsigned char)ifr->ifr_addr.sa_data[2],
