@@ -194,7 +194,7 @@ newaction {
 
 
 solution "Techyon"
-	configurations { "Release", "ReleaseWithSymbols", "Debug" }
+	configurations { "Debug", "Release", "Profile" }
 	
 	if _OPTIONS["android"] then
 		platforms {"armeabi", "armeabi-v7a", "neon", "x32"}
@@ -205,6 +205,15 @@ solution "Techyon"
 	--
 	-- Release/Debug Configurations
 	--
+	configuration "Debug"
+		defines     "_DEBUG"
+		flags
+		{
+			"Symbols",
+			--"StaticRuntime",
+			--"NoRuntimeChecks"
+		}
+	
 	configuration "Release"
 		defines     "NDEBUG"
 		flags      
@@ -216,7 +225,7 @@ solution "Techyon"
 	
 	-- OptimizeSpeed and Symbols do not work together with Visual Studio
 	if not os.is("windows") then
-		configuration "ReleaseWithSymbols"
+		configuration "Profile"
 			defines     "NDEBUG"
 			flags
 			{
@@ -226,15 +235,6 @@ solution "Techyon"
 				-- --"StaticRuntime"
 			}
 	end
-	
-	configuration "Debug"
-		defines     "_DEBUG"
-		flags
-		{
-			"Symbols",
-			--"StaticRuntime",
-			--"NoRuntimeChecks"
-		}
 	
 	
 	configuration { "vs*", "Debug" }
@@ -263,7 +263,7 @@ solution "Techyon"
 			"/Oy",
 		}
 			
-	configuration { "vs*", "ReleaseWithSymbols" }
+	configuration { "vs*", "Profile" }
 		buildoptions
 		{
 			-- Produces a program database (PDB) that contains type information and symbolic debugging information for use with the debugger
@@ -319,10 +319,6 @@ solution "Techyon"
 	configuration { "linux", "Release" }
 		buildoptions
 		{
-			-- enable debug symbols
-			--"-g",
-			--"-ggdb",
-		  
 			-- -finline-functions: implicit at -O3
 			-- -fschedule-insns2: implicit at -O2
 			
@@ -334,7 +330,21 @@ solution "Techyon"
 			-- -fomit-frame-pointer: -O also turns on -fomit-frame-pointer on machines where doing so does not interfere with debugging
 			"-fomit-frame-pointer",
 		}
-	
+			
+	configuration { "linux", "Profile" }
+		buildoptions
+		{
+			-- -finline-functions: implicit at -O3
+			-- -fschedule-insns2: implicit at -O2
+			
+			"-ffast-math",
+			
+			-- no-unsafe-math-optimizations: that should be on by default really. hit some wonko bugs in physics code because of that
+			"-fno-unsafe-math-optimizations",
+			
+			-- -fomit-frame-pointer: -O also turns on -fomit-frame-pointer on machines where doing so does not interfere with debugging
+			"-fomit-frame-pointer",
+		}
 
 
 --		
