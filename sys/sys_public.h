@@ -556,7 +556,9 @@ typedef enum {
 typedef struct {
 	const char *	name;
 	int				threadHandle;
-	unsigned long	threadId;
+	// Techyon RB: 64 bit fix, changed long to int
+	unsigned int	threadId;
+	// Techyon END
 } xthreadInfo;
 
 const int MAX_THREADS				= 10;
