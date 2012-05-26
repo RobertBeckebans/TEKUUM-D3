@@ -89,7 +89,9 @@ private:
 #endif // #if defined(USE_SOUND_OSS)
 // Techyon END
 
-#ifndef NO_ALSA
+// Techyon BEGIN
+#if defined(USE_SOUND_ALSA)
+// Techyon END
 
 // libasound2-dev
 // the new/old API may be a problem if we are going to dynamically load the asound lib?
@@ -190,6 +192,61 @@ private:
 
 };
 
-#endif // NO_ALSA
+// Techyon BEGIN
+#endif // #if defined(USE_SOUND_ALSA)
+// Techyon END
+
+// Techyon BEGIN
+#if defined(USE_SOUND_PULSE)
+
+// libpulse-dev
+#include <pulse/simple.h>
+
+class tyAudioHardwarePulseAudio : public idAudioHardware
+{
+private:
+	// if you can't write MIXBUFFER_SAMPLES all at once to the audio device, split in MIXBUFFER_CHUNKS
+	static const int	MIXBUFFER_CHUNKS = 4;
+
+	pa_simple			*paPlayback;
+	unsigned int		numChannels;
+	void				*mixBuffer;
+	int					mixBufferSize;
+
+	// how many frames remaining to be written to the device
+	int					remainingFrames;
+
+public:
+						tyAudioHardwarePulseAudio() {
+							paPlayback		= NULL;
+							numChannels		= 0;
+							mixBuffer		= NULL;
+							mixBufferSize	= 0;
+							remainingFrames	= 0;
+						}
+						virtual				~tyAudioHardwarePulseAudio();
+
+    bool				Initialize( void );
+
+
+	// Linux driver doesn't support memory map API
+	bool				Lock( void **pDSLockedBuffer, ulong *dwDSLockedBufferSize ) { return false; }
+	bool				Unlock( void *pDSLockedBuffer, dword dwDSLockedBufferSize ) { return false; }
+	bool				GetCurrentPosition( ulong *pdwCurrentWriteCursor ) { return false; }
+
+	bool				Flush();
+	void				Write( bool flushing );
+
+	int					GetNumberOfSpeakers( void ) { return numChannels; }
+	int					GetMixBufferSize( void );
+	short*				GetMixBuffer( void );
+
+private:
+	void				Release();
+	void				InitFailed();
+};
+
+#endif // #if defined(USE_SOUND_PULSE)
+// Techyon END
 
 #endif

@@ -1020,6 +1020,7 @@ if not _OPTIONS["android"] then
 			"`pkg-config --cflags xext`",
 			"`pkg-config --cflags xf86dgaproto`",
 			"`pkg-config --cflags xxf86vm`",
+			"`pkg-config --cflags libpulse-simple`",
 			--"`pkg-config --cflags sdl`",
 			--"`pkg-config --cflags libcurl`",
 		}
@@ -1029,13 +1030,14 @@ if not _OPTIONS["android"] then
 			"`pkg-config --libs xext`",
 			"`pkg-config --libs xf86dgaproto`",
 			"`pkg-config --libs xxf86vm`",
+			"`pkg-config --libs libpulse-simple`",
 			--"`pkg-config --libs sdl`",
 			--"`pkg-config --libs libcurl`",
 		}
 		links
 		{ 
 			"curl",
-			"openal",
+			--"openal",
 		}
 	
 	configuration "linux"
@@ -1053,9 +1055,15 @@ if not _OPTIONS["android"] then
 			"sys/linux/glimp.cpp",
 			"sys/linux/input.cpp",
 			"sys/linux/sound.cpp",
-			"sys/linux/sound_alsa.cpp",
+			--"sys/linux/sound_alsa.cpp",
+			"sys/linux/sound_pulse.cpp",
 			"sys/linux/libXNVCtrl/NVCtrl.c",
+			--"sys/sdl/sdl_sound.cpp", "sys/sdl/sdl_sound.h",
 			"tools/compilers/dmap/optimize_gcc.cpp",
+		}
+		excludes
+		{
+			"sound/snd_efxfile.cpp",
 		}
 		buildoptions
 		{
@@ -1074,7 +1082,9 @@ if not _OPTIONS["android"] then
 		defines
 		{
 			"USE_EXCEPTIONS",
-			"USE_OPENAL",
+			--"USE_OPENAL",
+			"USE_SOUND_PULSE",
+			--"USE_SOUND_SDL",
             "PNG_NO_ASSEMBLER_CODE",
 		}
 			

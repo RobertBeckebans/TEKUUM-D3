@@ -30,11 +30,14 @@ If you have questions concerning this license or the applicable additional terms
 #include <fcntl.h>
 #include <errno.h>
 #include <malloc.h>
+
+#if defined(USE_SOUND_OSS)
 #include <sys/ioctl.h>
 #include <sys/mman.h>
 // OSS sound interface
 // http://www.opensound.com/
 #include <sys/soundcard.h>
+#endif
 
 #include "../../idlib/precompiled.h"
 #include "../../sound/snd_local.h"
@@ -42,21 +45,25 @@ If you have questions concerning this license or the applicable additional terms
 #include "sound.h"
 
 // Techyon BEGIN
-#if defined(USE_SOUND_OSS)
+#if defined(USE_SOUND_SDL)
+#include "../sdl/sdl_sound.h"
+#endif
+
+#if defined(USE_SOUND_ALSA) || defined(USE_SOUND_OSS)
 const char	*s_driverArgs[]	= { "best", "oss", "alsa", NULL };
 #else
 const char	*s_driverArgs[]	= { "best", "alsa", NULL };
 #endif
 // Techyon END
 
-#ifndef NO_ALSA
+#if defined(USE_SOUND_ALSA) || defined(USE_SOUND_OSS)
 static idCVar s_driver( "s_driver", s_driverArgs[0], CVAR_SYSTEM | CVAR_ARCHIVE, "sound driver. 'best' will attempt to use alsa and fallback to OSS if not available", s_driverArgs, idCmdSystem::ArgCompletion_String<s_driverArgs> );
 #else
-static idCVar s_driver( "s_driver", "oss", CVAR_SYSTEM | CVAR_ARCHIVE | CVAR_ROM, "sound driver. only OSS is supported in this build" );
+static idCVar s_driver( "s_driver", "pulse", CVAR_SYSTEM | CVAR_ARCHIVE | CVAR_ROM, "sound driver. only OSS is supported in this build" );
 #endif
 
 idAudioHardware *idAudioHardware::Alloc() {
-#ifndef NO_ALSA
+#if defined(USE_SOUND_ALSA)
 	if ( !strcmp( s_driver.GetString(), "best" ) ) {
 		idAudioHardwareALSA *test = new idAudioHardwareALSA;
 		if ( test->DLOpen() ) {
@@ -80,8 +87,12 @@ idAudioHardware *idAudioHardware::Alloc() {
 #endif
 
 // Techyon BEGIN
-#if defined(USE_SOUND_OSS)
+#if defined(USE_SOUND_SDL)
+	return new tyAudioHardwareSDL;
+#elif defined(USE_SOUND_OSS)
 	return new idAudioHardwareOSS;
+#elif defined(USE_SOUND_PULSE)
+	return new tyAudioHardwarePulseAudio;
 #else
 	return NULL;
 #endif
