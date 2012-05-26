@@ -165,22 +165,49 @@ Sys_Milliseconds
    timeval:tv_sec is an int: 
    assuming this wraps every 0x7fffffff - ~68 years since the Epoch (1970) - we're safe till 2038
    using unsigned long data type to work right with Sys_XTimeToSysTime */
-unsigned long sys_timeBase = 0;
+// Techyon RB: changed long to int
+unsigned int sys_timeBase = 0;
+// Techyon END
 /* current time in ms, using sys_timeBase as origin
    NOTE: sys_timeBase*1000 + curtime -> ms since the Epoch
      0x7fffffff ms - ~24 days
 		 or is it 48 days? the specs say int, but maybe it's casted from unsigned int?
 */
-int Sys_Milliseconds( void ) {
+int Sys_Milliseconds( void )
+{
+	// Techyon RB: clock_gettime should be a good replacement on Android
+	// because gettimeofday() seemed to cause a 64 bit emulation and performance penalty
+#if defined(__ANDROID__)
+#if 0
+	int curtime;
+	struct timespec ts;
+
+	clock_gettime(CLOCK_MONOTONIC, &ts);
+
+	curtime = ts.tv_sec * 1000 + ts.tv_nsec / 1000000;
+
+	return curtime;
+#else
+	int curtime;
+	struct timespec ts;
+
+	clock_gettime(CLOCK_MONOTONIC, &ts);
+
+	if (!sys_timeBase) {
+		sys_timeBase = ts.tv_sec;
+		return ts.tv_nsec / 1000000;
+	}
+
+	curtime = (ts.tv_sec - sys_timeBase) * 1000 + ts.tv_nsec / 1000000;
+
+	return curtime;
+#endif
+// Techyon END
+#else
 	int curtime;
 	struct timeval tp;
 
 	gettimeofday(&tp, NULL);
-
-	// Techyon BEGIN
-	//TODO
-	//clock_gettime(CLOCK_MONOTONIC, )
-	// Techyon END
 
 	if (!sys_timeBase) {
 		sys_timeBase = tp.tv_sec;
@@ -190,6 +217,7 @@ int Sys_Milliseconds( void ) {
 	curtime = (tp.tv_sec - sys_timeBase) * 1000 + tp.tv_usec / 1000;
 
 	return curtime;
+#endif
 }
 
 /*
