@@ -557,7 +557,11 @@ typedef struct {
 	const char *	name;
 	int				threadHandle;
 	// Techyon RB: 64 bit fix, changed long to int
+#if defined(WIN32)
+	unsigned long	threadId;
+#else
 	unsigned int	threadId;
+#endif
 	// Techyon END
 } xthreadInfo;
 
