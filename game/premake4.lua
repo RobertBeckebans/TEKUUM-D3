@@ -61,6 +61,10 @@ project "game"
 		}
 		
 	configuration { "vs*", "x32", "debug-memory" }
+		links
+		{
+			"TypeInfo"
+		}
 		prebuildcommands
 		{
 		   "cd ../../bin/win32",
@@ -68,6 +72,10 @@ project "game"
 		}
 	
 	configuration { "vs*", "x64", "debug-memory" }
+		links
+		{
+			"TypeInfo"
+		}
 		prebuildcommands
 		{
 		   "cd ../../bin/win64",
@@ -84,6 +92,12 @@ project "game"
 	-- Project Configurations
 	-- 
 	configuration "vs*"
+		buildoptions
+		{
+			--"/MT",
+			-- multi processor support
+			"/MP4",
+		}
 		linkoptions
 		{
 			"/DEF:Game.def",
@@ -105,10 +119,6 @@ project "game"
 		   "del game00.pk4",
 		   "zip game00.pk4 gamex86.dll",
 		   "zip game00.pk4 binary.conf",
-		}
-		links
-		{
-			"TypeInfo"
 		}
 	
 	configuration { "linux", "x32" }

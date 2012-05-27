@@ -49,6 +49,9 @@ project "idlib"
 			"ID_DEBUG_MEMORY",
 			"ID_REDIRECT_NEWDELETE",
 		}
+		
+	configuration { "mfc-tools", "vs*" }
+		flags       { "MFC" }
 	
 	configuration "lightmaps"
 		defines
@@ -60,10 +63,11 @@ project "idlib"
 	-- Project Configurations
 	-- 
 	configuration "vs*"
-		flags       { "MFC" }
 		buildoptions
 		{
-			--"/MT"
+			--"/MT",
+			-- multi processor support
+			"/MP4",
 		}
 		defines
 		{

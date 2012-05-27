@@ -931,7 +931,9 @@ end
 		}
 		buildoptions
 		{
-			--"/MT"
+			--"/MT",
+			-- multi processor support
+			"/MP4",
 		}
 		linkoptions
 		{
