@@ -4,7 +4,7 @@ project "game"
 	targetdir 	"../../basety"
 	language    "C++"
 	kind        "SharedLib"
-	flags       { "ExtraWarnings", "NoManifest" }
+	flags       { "ExtraWarnings" }
 	files
 	{
 		"../idlib/**.cpp", "../idlib/**.h",
@@ -49,6 +49,12 @@ project "game"
 	--
 	-- Options Configurations
 	--
+	configuration "standalone"
+		defines
+		{
+			"STANDALONE",
+		}
+	
 	configuration "debug-memory"
 		files
 		{
@@ -92,12 +98,6 @@ project "game"
 	-- Project Configurations
 	-- 
 	configuration "vs*"
-		buildoptions
-		{
-			--"/MT",
-			-- multi processor support
-			"/MP4",
-		}
 		linkoptions
 		{
 			"/DEF:Game.def",

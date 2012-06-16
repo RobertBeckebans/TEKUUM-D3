@@ -3,7 +3,7 @@ project "idlib"
 	targetname  "idlib"
 	language    "C++"
 	kind        "StaticLib"
-	flags       { "ExtraWarnings", "NoManifest" }
+	flags       { "ExtraWarnings" }
 	files
 	{
 		--"**.cpp", "**.h",
@@ -43,6 +43,12 @@ project "idlib"
 	--
 	-- Options Configurations
 	--
+	configuration "standalone"
+		defines
+		{
+			"STANDALONE",
+		}
+	
 	configuration "debug-memory"
 		defines
 		{
@@ -63,12 +69,6 @@ project "idlib"
 	-- Project Configurations
 	-- 
 	configuration "vs*"
-		buildoptions
-		{
-			--"/MT",
-			-- multi processor support
-			"/MP4",
-		}
 		defines
 		{
 			"WIN32",

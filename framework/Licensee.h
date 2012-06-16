@@ -40,10 +40,17 @@ If you have questions concerning this license or the applicable additional terms
 
 // paths
 #define	CD_BASEDIR						"Techyon"
-#ifdef ID_DEMO_BUILD
-	#define BASE_GAMEDIR					"demo"
+
+#if defined(STANDALONE)
+	#if !defined(BASE_GAMEDIR)
+	#define	BASE_GAMEDIR				"basety"
+	#endif
 #else
-	#define	BASE_GAMEDIR					"base"
+	#ifdef ID_DEMO_BUILD
+		#define BASE_GAMEDIR			"demo"
+	#else
+		#define	BASE_GAMEDIR			"base"
+	#endif
 #endif
 
 // filenames

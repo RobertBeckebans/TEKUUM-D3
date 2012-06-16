@@ -3,7 +3,7 @@ project "TypeInfo"
 	targetname  "TypeInfo"
 	language    "C++"
 	kind        "ConsoleApp"
-	flags       { "ExtraWarnings", "NoManifest" }
+	flags       { "ExtraWarnings" }
 	files
 	{
 		"*.cpp", "*.h",
@@ -39,6 +39,12 @@ project "TypeInfo"
 	--
 	-- Options Configurations
 	--
+	configuration "standalone"
+		defines
+		{
+			"STANDALONE",
+		}
+	
 	configuration "debug-memory"
 		defines
 		{

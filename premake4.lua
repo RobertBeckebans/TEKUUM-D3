@@ -178,6 +178,12 @@ newoption
 	description = "Embed game logic into main executable"
 }
 
+newoption
+{
+	trigger = "standalone",
+	description = "Skip Doom 3 base/ folder game logic into main executable"
+}
+
 
 --
 -- Use the embed action to convert all of the Lua scripts into C strings, which 
@@ -236,6 +242,17 @@ solution "Techyon"
 			}
 	end
 	
+	configuration { "vs*" }
+		flags
+		{
+			"NoManifest",
+			"NoMinimalRebuild",
+		}
+		buildoptions
+		{
+			-- multi processor support
+			"/MP",
+		}
 	
 	configuration { "vs*", "Debug" }
 		buildoptions
@@ -516,7 +533,7 @@ project "Techyon"
 	else
 		kind        "WindowedApp"
 	end
-	flags       { "ExtraWarnings", "NoManifest" }
+	flags       { "ExtraWarnings" }
 	--debugargs	{ "+set com_allowConsole 1 +set fs_game basety" }
 	files
 	{
@@ -660,6 +677,12 @@ end
 	--
 	-- Options Configurations
 	--
+	configuration "standalone"
+		defines
+		{
+			"STANDALONE",
+		}
+		
 	configuration "debug-memory"
 		defines
 		{
