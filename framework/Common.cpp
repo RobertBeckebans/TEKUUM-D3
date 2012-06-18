@@ -380,7 +380,11 @@ void idCommonLocal::VPrintf( const char *fmt, va_list args ) {
 	Sys_Printf( "%s", msg );
 
 	// print to script debugger server
-	// DebuggerServerPrint( msg );
+	// Techyon BEGIN
+#if defined(USE_MFC_TOOLS)
+	DebuggerServerPrint( msg );
+#endif
+	// Techyon END
 
 #if 0	// !@#
 #if defined(_DEBUG) && defined(WIN32)
@@ -1180,8 +1184,13 @@ Com_ScriptDebugger_f
 static void Com_ScriptDebugger_f( const idCmdArgs &args ) {
 	// Make sure it wasnt on the command line
 	if ( !( com_editors & EDITOR_DEBUGGER ) ) {
+// Techyon BEGIN
+#if defined(USE_MFC_TOOLS)
+		DebuggerClientLaunch();
+#else
 		common->Printf( "Script debugger is currently disabled\n" );
-		// DebuggerClientLaunch();
+#endif
+// Techyon END
 	}
 }
 
@@ -3132,7 +3141,11 @@ void idCommonLocal::InitGame( void ) {
 	uiManager->Init();
 
 	// startup the script debugger
-	// DebuggerServerInit();
+	// Techyon BEGIN
+#if defined(USE_MFC_TOOLS)
+	DebuggerServerInit();
+#endif
+	// Techyon END
 
 	PrintLoadingMessage( common->GetLanguageDict()->GetString( "#str_04350" ) );
 
@@ -3175,7 +3188,11 @@ void idCommonLocal::ShutdownGame( bool reloading ) {
 	soundSystem->ClearBuffer();
 
 	// shutdown the script debugger
-	// DebuggerServerShutdown();
+	// Techyon BEGIN
+#if defined(USE_MFC_TOOLS)
+	DebuggerServerShutdown();
+#endif
+	// Techyon END
 
 	idAsyncNetwork::client.Shutdown();
 

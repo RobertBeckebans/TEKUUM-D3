@@ -149,7 +149,7 @@ bool rvDebuggerWindow::Create ( HINSTANCE instance )
 	}
 
 	// Cache the client pointer for ease of use
-	mClient = &gDebuggerApp.GetClient();
+	mClient = &gDebuggerApp->GetClient();
 
 	// Create the debugger window
 	mWnd = CreateWindow( DEBUGGERWINDOWCLASS, "", 
@@ -752,7 +752,7 @@ int rvDebuggerWindow::HandleCreate ( WPARAM wparam, LPARAM lparam )
 	LOGFONT		lf;
 	int			i;
 
-	gDebuggerApp.GetOptions().GetWindowPlacement ( "wp_main", mWnd );
+	gDebuggerApp->GetOptions().GetWindowPlacement ( "wp_main", mWnd );
 
 	// Create the main toolbar
 	CreateToolbar ( );
@@ -871,9 +871,9 @@ int rvDebuggerWindow::HandleCreate ( WPARAM wparam, LPARAM lparam )
 	ListView_SetExtendedListViewStyle ( mWndCallstack, LVS_EX_FULLROWSELECT );
 	ListView_SetExtendedListViewStyle ( mWndThreads, LVS_EX_FULLROWSELECT );
 
-	gDebuggerApp.GetOptions().GetColumnWidths ( "cw_callstack", mWndCallstack );
-	gDebuggerApp.GetOptions().GetColumnWidths ( "cw_threads", mWndThreads );
-	gDebuggerApp.GetOptions().GetColumnWidths ( "cw_watch", mWndWatch );
+	gDebuggerApp->GetOptions().GetColumnWidths ( "cw_callstack", mWndCallstack );
+	gDebuggerApp->GetOptions().GetColumnWidths ( "cw_threads", mWndThreads );
+	gDebuggerApp->GetOptions().GetColumnWidths ( "cw_watch", mWndWatch );
 
 	mWndToolTips = CreateWindowEx ( WS_EX_TOPMOST,
 								    TOOLTIPS_CLASS,
@@ -911,7 +911,7 @@ int rvDebuggerWindow::HandleCreate ( WPARAM wparam, LPARAM lparam )
 	// Read in the watches
 	for ( i = 0; ; i ++ )
 	{
-		const char* s = gDebuggerApp.GetOptions().GetString ( va("watch%d", i ) );
+		const char* s = gDebuggerApp->GetOptions().GetString ( va("watch%d", i ) );
 		if ( !s || !s[0] )
 		{
 			break;
@@ -947,7 +947,7 @@ int rvDebuggerWindow::HandleCommand ( WPARAM wparam, LPARAM lparam )
 	if ( LOWORD(wparam) >= ID_DBG_FILE_MRU1 && LOWORD(wparam) < ID_DBG_FILE_MRU1 + rvRegistryOptions::MAX_MRU_SIZE )
 	{
 		idStr filename;
-		filename = gDebuggerApp.GetOptions().GetRecentFile ( gDebuggerApp.GetOptions().GetRecentFileCount() - (LOWORD(wparam)-ID_DBG_FILE_MRU1) - 1 );
+		filename = gDebuggerApp->GetOptions().GetRecentFile ( gDebuggerApp->GetOptions().GetRecentFileCount() - (LOWORD(wparam)-ID_DBG_FILE_MRU1) - 1 );
 		if ( !OpenScript ( filename ) )
 		{
 			MessageBox ( mWnd, va("Failed to open script '%s'", filename.c_str() ), "Quake 4 Script Debugger", MB_OK );
@@ -1163,17 +1163,17 @@ LRESULT CALLBACK rvDebuggerWindow::WndProc ( HWND wnd, UINT msg, WPARAM wparam, 
 
 		case WM_DESTROY:
 		{
-			gDebuggerApp.GetOptions().SetColumnWidths ( "cw_callstack", window->mWndCallstack );
-			gDebuggerApp.GetOptions().SetColumnWidths ( "cw_threads", window->mWndThreads );			
-			gDebuggerApp.GetOptions().SetColumnWidths ( "cw_watch", window->mWndWatch );
-			gDebuggerApp.GetOptions().SetWindowPlacement ( "wp_main", wnd );
+			gDebuggerApp->GetOptions().SetColumnWidths ( "cw_callstack", window->mWndCallstack );
+			gDebuggerApp->GetOptions().SetColumnWidths ( "cw_threads", window->mWndThreads );			
+			gDebuggerApp->GetOptions().SetColumnWidths ( "cw_watch", window->mWndWatch );
+			gDebuggerApp->GetOptions().SetWindowPlacement ( "wp_main", wnd );
 			
 			int i;
 			for ( i = 0; i < window->mWatches.Num ( ); i ++ )
 			{
-				gDebuggerApp.GetOptions().SetString ( va("watch%d", i ), window->mWatches[i]->mVariable );
+				gDebuggerApp->GetOptions().SetString ( va("watch%d", i ), window->mWatches[i]->mVariable );
 			}
-			gDebuggerApp.GetOptions().SetString ( va("watch%d", i ), "" );
+			gDebuggerApp->GetOptions().SetString ( va("watch%d", i ), "" );
 			
 			window->mWnd = NULL;
 			SetWindowLong ( wnd, GWL_USERDATA, 0 );		
@@ -1535,11 +1535,11 @@ rvDebuggerWindow::ProcessNetMessage
 Process an incoming network message
 ================
 */
-void rvDebuggerWindow::ProcessNetMessage ( msg_t* msg )
+void rvDebuggerWindow::ProcessNetMessage ( idBitMsg& msg )
 {
 	unsigned short command;
 		
-	command = (unsigned short)MSG_ReadShort ( msg );
+	command = (unsigned short)msg.ReadShort();
 	
 	switch ( command )
 	{
@@ -1554,9 +1554,9 @@ void rvDebuggerWindow::ProcessNetMessage ( msg_t* msg )
 			char temp2[1024];
 			int	 i;
 						
-			MSG_ReadShort ( msg );
-			MSG_ReadString ( msg, temp, 1024 );
-			MSG_ReadString ( msg, temp2, 1024 );
+			msg.ReadShort();
+			msg.ReadString( temp, 1024 );
+			msg.ReadString( temp2, 1024 );
 			if ( mTooltipVar.Icmp ( temp ) == 0 )
 			{
 				mTooltipValue = temp2;
@@ -1625,7 +1625,7 @@ void rvDebuggerWindow::ProcessNetMessage ( msg_t* msg )
 		
 		case DBMSG_PRINT:
 			SendMessage ( mWndConsole, EM_SETSEL, -1, -1 );
-			SendMessage ( mWndConsole, EM_REPLACESEL, 0, (LPARAM)(const char*)(msg->data) + msg->readcount );	
+			SendMessage ( mWndConsole, EM_REPLACESEL, 0, (LPARAM)(const char*)(msg.GetData()) + msg.GetReadCount() );
 			SendMessage ( mWndConsole, EM_SCROLLCARET, 0, 0 );	
 			break;
 			
@@ -1753,7 +1753,7 @@ bool rvDebuggerWindow::OpenScript ( const char* filename, int lineNumber )
 			return false;
 		}
 
-		gDebuggerApp.GetOptions().AddRecentFile ( filename );
+		gDebuggerApp->GetOptions().AddRecentFile ( filename );
 		UpdateRecentFiles ( );
 
 		mActiveScript = mScripts.Append ( script );
@@ -2119,7 +2119,7 @@ void rvDebuggerWindow::UpdateRecentFiles ( void )
 	}	
 
 	// Make sure there is a separator after the recent files
-	if ( gDebuggerApp.GetOptions().GetRecentFileCount() )
+	if ( gDebuggerApp->GetOptions().GetRecentFileCount() )
 	{
 		MENUITEMINFO info;
 		ZeroMemory ( &info, sizeof(info) );
@@ -2133,11 +2133,11 @@ void rvDebuggerWindow::UpdateRecentFiles ( void )
 	}
 
 	// Add the recent files to the menu now
-	for ( j = 0, i = gDebuggerApp.GetOptions().GetRecentFileCount ( ) - 1; i >= 0; i --, j++ )
+	for ( j = 0, i = gDebuggerApp->GetOptions().GetRecentFileCount ( ) - 1; i >= 0; i --, j++ )
 	{
 		UINT id = ID_DBG_FILE_MRU1 + j;
 		idStr str = va("&%d ", j+1);
-		str.Append ( gDebuggerApp.GetOptions().GetRecentFile ( i ) );
+		str.Append ( gDebuggerApp->GetOptions().GetRecentFile ( i ) );
 		InsertMenu ( mRecentFileMenu, mRecentFileInsertPos+j+1, MF_BYPOSITION|MF_STRING|MF_ENABLED, id, str );
 	}		
 }

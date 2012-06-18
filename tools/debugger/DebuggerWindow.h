@@ -55,8 +55,9 @@ public:
 	bool			Create				( HINSTANCE hInstance );	
 		
 	static bool		Activate			( void );
-
-	void			ProcessNetMessage	( msg_t* msg );
+	// Techyon RB: changed msg_t* to idBitMsg&
+	void			ProcessNetMessage	( idBitMsg &msg );
+	// Techyon END
 
 	void			Printf				( const char* format, ... );
 	

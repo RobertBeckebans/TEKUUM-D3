@@ -133,13 +133,16 @@ bool rvDebuggerScript::Load ( const char* filename )
 
 			idStr scriptFile = va("script/%s_main.script", gamedir.c_str());
 			if(fileSystem->ReadFile(scriptFile.c_str(), NULL) > 0) {
-				mProgram.CompileFile(scriptFile.c_str());
+				mProgram->CompileFile(scriptFile.c_str());
 			}
 
 		}
 		
 		// Make sure the file isnt already compiled before trying to compile it again
-		for ( int f = mProgram->NumFilenames() - 1; f >= 0; f -- )
+		// Techyon RB: moved f out of the for loop
+		int f;
+		for ( f = mProgram->NumFilenames() - 1; f >= 0; f -- )
+		// Techyon END
 		{
 			idStr qpath;
 			qpath = fileSystem->OSPathToRelativePath ( mProgram->GetFilename ( f ) );

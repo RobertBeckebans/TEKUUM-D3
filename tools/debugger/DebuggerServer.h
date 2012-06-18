@@ -42,6 +42,7 @@ If you have questions concerning this license or the applicable additional terms
 
 class idInterpreter;
 class idProgram;
+class function_t;
 
 class rvDebuggerServer
 {
@@ -99,15 +100,17 @@ private:
 	void		SendPacket						( void* data, int datasize );
 
 	// Message handlers
-	void		HandleAddBreakpoint				( msg_t* msg );
-	void		HandleRemoveBreakpoint			( msg_t* msg );
-	void		HandleResume					( msg_t* msg );
-	void		HandleInspectVariable			( msg_t* msg );
-	void		HandleInspectCallstack			( msg_t* msg );
-	void		HandleInspectThreads			( msg_t* msg );
+	// Techyon RB: changed msg_t* to idBitMsg&
+	void		HandleAddBreakpoint				( idBitMsg& msg );
+	void		HandleRemoveBreakpoint			( idBitMsg& msg );
+	void		HandleResume					( idBitMsg& msg );
+	void		HandleInspectVariable			( idBitMsg& msg );
+	void		HandleInspectCallstack			( idBitMsg& msg );
+	void		HandleInspectThreads			( idBitMsg& msg );
 	
 	// MSG helper routines
-	void		MSG_WriteCallstackFunc			( msg_t* msg, const prstack_t* stack );
+	void		MSG_WriteCallstackFunc			( idBitMsg& msg, const struct prstack_s* stack );
+	// Techyon END
 };
 
 /*

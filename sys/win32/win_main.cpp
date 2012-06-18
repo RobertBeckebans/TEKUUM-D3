@@ -1481,7 +1481,11 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 
 	// Launch the script debugger
 	if ( strstr( lpCmdLine, "+debugger" ) ) {
-		// DebuggerClientInit( lpCmdLine );
+		// Techyon BEGIN
+#if defined(USE_MFC_TOOLS)
+		DebuggerClientInit( lpCmdLine );
+#endif
+		// Techyon END
 		return 0;
 	}
 

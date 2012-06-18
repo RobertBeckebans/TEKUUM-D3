@@ -37,9 +37,10 @@ If you have questions concerning this license or the applicable additional terms
 rvDebuggerApp::rvDebuggerApp
 ================
 */
-rvDebuggerApp::rvDebuggerApp ( ) :
-	mOptions ( "Software\\id Software\\DOOM3\\Tools\\Debugger" )
+rvDebuggerApp::rvDebuggerApp ( )
 {
+	mOptions.Init( "Software\\id Software\\DOOM3\\Tools\\Debugger" );
+
 	mInstance		= NULL;
 	mDebuggerWindow = NULL;
 	mAccelerators   = NULL;

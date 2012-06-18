@@ -622,11 +622,7 @@ project "Techyon"
 		"libs/jpeg-6/jload.c",
 		"libs/jpeg-6/jpegtran.c",
 		
-		"tools/common/RenderBumpFlatDialog.*",
-		"tools/debugger/*",
-		"tools/decl/DialogEntityDefEditor.*",
 		"tools/edit_stub.cpp",
-		"tools/guied/GEWindowWrapper_stub.cpp",
 		--"tools/qttest/*",
 		--"tools/gtktest/*",
 	}
@@ -738,6 +734,7 @@ end
 			"tools/af/*.cpp", "tools/af/*.h",
 			"tools/comafx/*.cpp", "tools/comafx/*.h",
 			"tools/common/**.cpp", "tools/common/**.h",
+			"tools/debugger/**.cpp", "tools/debugger/**.h",
 			"tools/decl/*.cpp", "tools/decl/*.h",
 			"tools/guied/*.cpp", "tools/guied/*.h",
 			"tools/materialeditor/*.cpp", "tools/materialeditor/*.h",
@@ -751,6 +748,10 @@ end
 		}
 		excludes
 		{
+			"tools/common/RenderBumpFlatDialog.*",
+			"tools/decl/DialogEntityDefEditor.*",
+			"tools/guied/GEWindowWrapper_stub.cpp",
+		
 			"sys/win32/rc/doom_nomfc.rc",
 		}
 		includedirs

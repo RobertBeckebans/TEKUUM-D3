@@ -256,37 +256,6 @@ ID_INLINE varEval_t idInterpreter::GetVariable( idVarDef *def ) {
 }
 
 /*
-================
-idInterpreter::GetEntity
-================
-*/
-ID_INLINE idEntity *idInterpreter::GetEntity( int entnum ) const{
-	assert( entnum <= MAX_GENTITIES );
-	if ( ( entnum > 0 ) && ( entnum <= MAX_GENTITIES ) ) {
-		return gameLocal.entities[ entnum - 1 ];
-	}
-	return NULL;
-}
-
-/*
-================
-idInterpreter::GetScriptObject
-================
-*/
-ID_INLINE idScriptObject *idInterpreter::GetScriptObject( int entnum ) const {
-	idEntity *ent;
-
-	assert( entnum <= MAX_GENTITIES );
-	if ( ( entnum > 0 ) && ( entnum <= MAX_GENTITIES ) ) {
-		ent = gameLocal.entities[ entnum - 1 ];
-		if ( ent && ent->scriptObject.data ) {
-			return &ent->scriptObject;
-		}
-	}
-	return NULL;
-}
-
-/*
 ====================
 idInterpreter::NextInstruction
 ====================

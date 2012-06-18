@@ -1,3 +1,3 @@
 premake4 clean
-premake4 --mfc-tools vs2010
+premake4 --monolith --mfc-tools vs2010
 pause

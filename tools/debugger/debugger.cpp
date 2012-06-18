@@ -35,7 +35,7 @@ If you have questions concerning this license or the applicable additional terms
 
 DWORD CALLBACK DebuggerThread ( LPVOID param );
 
-rvDebuggerApp					gDebuggerApp;
+rvDebuggerApp*					gDebuggerApp = NULL;
 HWND							gDebuggerWindow = NULL;
 bool							gDebuggerSuspend = false;
 bool							gDebuggerConnnected = false;
@@ -61,12 +61,18 @@ void DebuggerClientInit( const char *cmdline )
 		goto DebuggerClientInitDone;
 	}
 
-	if ( !gDebuggerApp.Initialize ( win32.hInstance ) )
+	gDebuggerApp = new rvDebuggerApp;
+	if ( !gDebuggerApp )
+	{
+		return;
+	}
+
+	if ( !gDebuggerApp->Initialize ( win32.hInstance ) )
 	{
 		goto DebuggerClientInitDone;
 	}
 
-	gDebuggerApp.Run ( );
+	gDebuggerApp->Run ( );
 
 DebuggerClientInitDone:
 

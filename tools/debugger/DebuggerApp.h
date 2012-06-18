@@ -29,7 +29,7 @@ If you have questions concerning this license or the applicable additional terms
 #define DEBUGGERAPP_H_
 
 #include "../../sys/win32/win_local.h"
-#include "../../framework/sync/Msg.h"
+//#include "../../framework/sync/Msg.h"
 
 #ifndef REGISTRYOPTIONS_H_
 #include "../common/RegistryOptions.h"
@@ -56,6 +56,7 @@ class rvDebuggerApp
 public:
 
 	rvDebuggerApp ( );
+	~rvDebuggerApp ( );
 
 	bool				Initialize				( HINSTANCE hInstance );
 	int					Run						( void );
@@ -103,6 +104,6 @@ ID_INLINE rvDebuggerWindow& rvDebuggerApp::GetWindow ( void )
 	return *mDebuggerWindow;
 }
 
-extern rvDebuggerApp gDebuggerApp;
+extern rvDebuggerApp* gDebuggerApp;
 
 #endif // DEBUGGERAPP_H_

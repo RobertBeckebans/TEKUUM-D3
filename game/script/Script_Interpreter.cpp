@@ -1849,3 +1849,36 @@ bool idInterpreter::Execute( void ) {
 
 	return threadDying;
 }
+
+// Techyon RB: moved from Script_Interpreter.h to avoid include problems with the script debugger
+/*
+================
+idInterpreter::GetEntity
+================
+*/
+idEntity *idInterpreter::GetEntity( int entnum ) const{
+	assert( entnum <= MAX_GENTITIES );
+	if ( ( entnum > 0 ) && ( entnum <= MAX_GENTITIES ) ) {
+		return gameLocal.entities[ entnum - 1 ];
+	}
+	return NULL;
+}
+
+/*
+================
+idInterpreter::GetScriptObject
+================
+*/
+idScriptObject *idInterpreter::GetScriptObject( int entnum ) const {
+	idEntity *ent;
+
+	assert( entnum <= MAX_GENTITIES );
+	if ( ( entnum > 0 ) && ( entnum <= MAX_GENTITIES ) ) {
+		ent = gameLocal.entities[ entnum - 1 ];
+		if ( ent && ent->scriptObject.data ) {
+			return &ent->scriptObject;
+		}
+	}
+	return NULL;
+}
+// Techyon END
