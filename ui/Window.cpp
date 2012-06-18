@@ -2462,9 +2462,18 @@ bool idWindow::Parse( idParser *src, bool rebuild) {
 
 			// FIXME: how about we add the var to the desktop instead of this window so it won't get deleted
 			//        when this window is destoyed which even happens during parsing with simple windows ?
-			//definedVars.Append(var);
+
+			// Techyon RB: changed behavior to put the var into the vars list of this window
+#if 0
+			definedVars.Append(var);
+
+			// Read in the vec4
+			regList.AddReg(work, idRegister::VEC4, src, this, var);
+#else
 			gui->GetDesktop()->definedVars.Append( var );
 			gui->GetDesktop()->regList.AddReg( work, idRegister::VEC4, src, gui->GetDesktop(), var );
+#endif
+			// Techyon END
 
 			// store the original vec4 for the editor
 			// If we are in the gui editor then add the float to the defines
