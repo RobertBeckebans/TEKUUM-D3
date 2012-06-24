@@ -258,10 +258,10 @@ solution "Techyon"
 		buildoptions
 		{
 			-- turn off Smaller Type Check
-			"/RTCc-",
+			--"/RTCc-",
 		
 			-- turn off Basic Runtime Checks
-			"/RTC1-",
+			--"/RTC1-",
 		}
 	
 	configuration { "vs*", "Release" }
