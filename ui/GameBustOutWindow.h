@@ -2,9 +2,9 @@
 ===========================================================================
 
 Doom 3 GPL Source Code
-Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company. 
+Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
 
-This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).  
+This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
 
 Doom 3 Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -30,18 +30,20 @@ If you have questions concerning this license or the applicable additional terms
 
 class idGameBustOutWindow;
 
-typedef enum {
+typedef enum
+{
 	POWERUP_NONE = 0,
 	POWERUP_BIGPADDLE,
 	POWERUP_MULTIBALL
 } powerupType_t;
 
-class BOEntity {
+class BOEntity
+{
 public:
 	bool					visible;
 
 	idStr					materialName;
-	const idMaterial *		material;
+	const idMaterial 		*material;
 	float					width, height;
 	idVec4					color;
 	idVec2					position;
@@ -52,27 +54,28 @@ public:
 	bool					removed;
 	bool					fadeOut;
 
-	idGameBustOutWindow *	game;
-	
+	idGameBustOutWindow 	*game;
+
 public:
-							BOEntity(idGameBustOutWindow* _game);
+	BOEntity( idGameBustOutWindow *_game );
 	virtual					~BOEntity();
 
 	virtual void			WriteToSaveGame( idFile *savefile );
-	virtual void			ReadFromSaveGame( idFile *savefile, idGameBustOutWindow* _game );
+	virtual void			ReadFromSaveGame( idFile *savefile, idGameBustOutWindow *_game );
 
-	void					SetMaterial(const char* name);
+	void					SetMaterial( const char *name );
 	void					SetSize( float _width, float _height );
 	void					SetColor( float r, float g, float b, float a );
 	void					SetVisible( bool isVisible );
 
 	virtual void			Update( float timeslice, int guiTime );
-	virtual void			Draw(idDeviceContext *dc);
+	virtual void			Draw( idDeviceContext *dc );
 
 private:
 };
 
-typedef enum {
+typedef enum
+{
 	COLLIDE_NONE = 0,
 	COLLIDE_DOWN,
 	COLLIDE_UP,
@@ -80,7 +83,8 @@ typedef enum {
 	COLLIDE_RIGHT
 } collideDir_t;
 
-class BOBrick {
+class BOBrick
+{
 public:
 	float			x;
 	float			y;
@@ -93,9 +97,9 @@ public:
 	BOEntity		*ent;
 
 public:
-					BOBrick();
-					BOBrick( BOEntity *_ent, float _x, float _y, float _width, float _height );
-					~BOBrick();
+	BOBrick();
+	BOBrick( BOEntity *_ent, float _x, float _y, float _width, float _height );
+	~BOBrick();
 
 	virtual void	WriteToSaveGame( idFile *savefile );
 	virtual void	ReadFromSaveGame( idFile *savefile, idGameBustOutWindow *game );
@@ -108,22 +112,23 @@ private:
 
 #define BOARD_ROWS 12
 
-class idGameBustOutWindow : public idWindow {
+class idGameBustOutWindow : public idWindow
+{
 public:
-	idGameBustOutWindow(idUserInterfaceLocal *gui);
-	idGameBustOutWindow(idDeviceContext *d, idUserInterfaceLocal *gui);
+	idGameBustOutWindow( idUserInterfaceLocal *gui );
+	idGameBustOutWindow( idDeviceContext *d, idUserInterfaceLocal *gui );
 	~idGameBustOutWindow();
 
 	virtual void		WriteToSaveGame( idFile *savefile );
 	virtual void		ReadFromSaveGame( idFile *savefile );
 
-	virtual const char*	HandleEvent(const sysEvent_t *event, bool *updateVisuals);
+	virtual const char	*HandleEvent( const sysEvent_t *event, bool *updateVisuals );
 	virtual void		PostParse();
-	virtual void		Draw(int time, float x, float y);
-	virtual const char*	Activate(bool activate);
-	virtual idWinVar *	GetWinVarByName	(const char *_name, bool winLookup = false, drawWin_t** owner = NULL);
+	virtual void		Draw( int time, float x, float y );
+	virtual const char	*Activate( bool activate );
+	virtual idWinVar 	*GetWinVarByName( const char *_name, bool winLookup = false, drawWin_t **owner = NULL );
 
-	idList<BOEntity*>	entities;
+	idList<BOEntity *>	entities;
 
 private:
 	void				CommonInit();
@@ -141,10 +146,10 @@ private:
 	void				UpdateBall();
 	void				UpdateScore();
 
-	BOEntity *			CreateNewBall();
-	BOEntity *			CreatePowerup( BOBrick *brick );
+	BOEntity 			*CreateNewBall();
+	BOEntity 			*CreatePowerup( BOBrick *brick );
 
-	virtual bool		ParseInternalVar(const char *name, idParser *src);
+	virtual bool		ParseInternalVar( const char *name, idParser *src );
 
 private:
 
@@ -158,7 +163,7 @@ private:
 	bool				gameOver;
 
 	int					numLevels;
-	byte *				levelBoardData;
+	byte 				*levelBoardData;
 	bool				boardDataLoaded;
 
 	int					numBricks;
@@ -176,11 +181,11 @@ private:
 	int					ballsInPlay;
 	bool				ballHitCeiling;
 
-	idList<BOEntity*>	balls;
-	idList<BOEntity*>	powerUps;
+	idList<BOEntity *>	balls;
+	idList<BOEntity *>	powerUps;
 
 	BOBrick				*paddle;
-	idList<BOBrick*>	board[BOARD_ROWS];
+	idList<BOBrick *>	board[BOARD_ROWS];
 };
 
 #endif //__GAME_BUSTOUT_WINDOW_H__
