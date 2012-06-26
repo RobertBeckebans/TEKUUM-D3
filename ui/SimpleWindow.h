@@ -35,41 +35,41 @@ class idSimpleWindow;
 
 typedef struct
 {
-	idWindow *win;
-	idSimpleWindow *simp;
+	idWindow* win;
+	idSimpleWindow* simp;
 } drawWin_t;
 
 class idSimpleWindow
 {
 	friend class idWindow;
 public:
-	idSimpleWindow( idWindow *win );
+	idSimpleWindow( idWindow* win );
 	virtual			~idSimpleWindow();
 	void			Redraw( float x, float y );
 	void			StateChanged( bool redraw );
-
+	
 	idStr			name;
-
-	idWinVar 		*GetWinVarByName( const char *_name );
-	int				GetWinVarOffset( idWinVar *wv, drawWin_t *owner );
+	
+	idWinVar* 		GetWinVarByName( const char* _name );
+	int				GetWinVarOffset( idWinVar* wv, drawWin_t* owner );
 	size_t			Size();
-
-	idWindow		*GetParent( void )
+	
+	idWindow*		GetParent( void )
 	{
 		return mParent;
 	}
-
-	virtual void	WriteToSaveGame( idFile *savefile );
-	virtual void	ReadFromSaveGame( idFile *savefile );
-
+	
+	virtual void	WriteToSaveGame( idFile* savefile );
+	virtual void	ReadFromSaveGame( idFile* savefile );
+	
 protected:
 	void 			CalcClientRect( float xofs, float yofs );
 	void 			SetupTransforms( float x, float y );
-	void 			DrawBackground( const idRectangle &drawRect );
-	void 			DrawBorderAndCaption( const idRectangle &drawRect );
-
-	idUserInterfaceLocal *gui;
-	idDeviceContext *dc;
+	void 			DrawBackground( const idRectangle& drawRect );
+	void 			DrawBorderAndCaption( const idRectangle& drawRect );
+	
+	idUserInterfaceLocal* gui;
+	idDeviceContext* dc;
 	int 			flags;
 	idRectangle 	drawRect;			// overall rect
 	idRectangle 	clientRect;			// client area
@@ -83,7 +83,7 @@ protected:
 	float 			textAlignx;
 	float 			textAligny;
 	int				textShadow;
-
+	
 	idWinStr		text;
 	idWinBool		visible;
 	idWinRectangle	rect;				// overall rect
@@ -95,11 +95,11 @@ protected:
 	idWinFloat		rotate;
 	idWinVec2		shear;
 	idWinBackground	backGroundName;
-
-	const idMaterial *background;
-
-	idWindow 		*mParent;
-
+	
+	const idMaterial* background;
+	
+	idWindow* 		mParent;
+	
 	idWinBool	hideCursor;
 };
 

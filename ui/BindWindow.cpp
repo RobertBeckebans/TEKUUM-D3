@@ -41,14 +41,14 @@ void idBindWindow::CommonInit()
 	waitingOnKey = false;
 }
 
-idBindWindow::idBindWindow( idDeviceContext *d, idUserInterfaceLocal *g ) : idWindow( d, g )
+idBindWindow::idBindWindow( idDeviceContext* d, idUserInterfaceLocal* g ) : idWindow( d, g )
 {
 	dc = d;
 	gui = g;
 	CommonInit();
 }
 
-idBindWindow::idBindWindow( idUserInterfaceLocal *g ) : idWindow( g )
+idBindWindow::idBindWindow( idUserInterfaceLocal* g ) : idWindow( g )
 {
 	gui = g;
 	CommonInit();
@@ -60,17 +60,17 @@ idBindWindow::~idBindWindow()
 }
 
 
-const char *idBindWindow::HandleEvent( const sysEvent_t *event, bool *updateVisuals )
+const char* idBindWindow::HandleEvent( const sysEvent_t* event, bool* updateVisuals )
 {
 	static char ret[ 256 ];
-
+	
 	if( !( event->evType == SE_KEY && event->evValue2 ) )
 	{
 		return "";
 	}
-
+	
 	int key = event->evValue;
-
+	
 	if( waitingOnKey )
 	{
 		waitingOnKey = false;
@@ -93,18 +93,18 @@ const char *idBindWindow::HandleEvent( const sysEvent_t *event, bool *updateVisu
 			return "";
 		}
 	}
-
+	
 	return "";
 }
 
-idWinVar *idBindWindow::GetWinVarByName( const char *_name, bool fixup, drawWin_t **owner )
+idWinVar* idBindWindow::GetWinVarByName( const char* _name, bool fixup, drawWin_t** owner )
 {
 
 	if( idStr::Icmp( _name, "bind" ) == 0 )
 	{
 		return &bindName;
 	}
-
+	
 	return idWindow::GetWinVarByName( _name, fixup, owner );
 }
 
@@ -120,7 +120,7 @@ void idBindWindow::PostParse()
 void idBindWindow::Draw( int time, float x, float y )
 {
 	idVec4 color = foreColor;
-
+	
 	idStr str;
 	if( waitingOnKey )
 	{
@@ -134,7 +134,7 @@ void idBindWindow::Draw( int time, float x, float y )
 	{
 		str = common->GetLanguageDict()->GetString( "#str_07001" );
 	}
-
+	
 	if( waitingOnKey || ( hover && !noEvents && Contains( gui->CursorX(), gui->CursorY() ) ) )
 	{
 		color = hoverColor;
@@ -143,11 +143,11 @@ void idBindWindow::Draw( int time, float x, float y )
 	{
 		hover = false;
 	}
-
+	
 	dc->DrawText( str, textScale, textAlign, color, textRect, false, -1 );
 }
 
-void idBindWindow::Activate( bool activate, idStr &act )
+void idBindWindow::Activate( bool activate, idStr& act )
 {
 	idWindow::Activate( activate, act );
 	bindName.Update();

@@ -34,14 +34,14 @@ If you have questions concerning this license or the applicable additional terms
 class idFieldWindow : public idWindow
 {
 public:
-	idFieldWindow( idUserInterfaceLocal *gui );
-	idFieldWindow( idDeviceContext *d, idUserInterfaceLocal *gui );
+	idFieldWindow( idUserInterfaceLocal* gui );
+	idFieldWindow( idDeviceContext* d, idUserInterfaceLocal* gui );
 	virtual ~idFieldWindow();
-
+	
 	virtual void Draw( int time, float x, float y );
-
+	
 private:
-	virtual bool ParseInternalVar( const char *name, idParser *src );
+	virtual bool ParseInternalVar( const char* name, idParser* src );
 	void CommonInit();
 	void CalcPaintOffset( int len );
 	int cursorPos;

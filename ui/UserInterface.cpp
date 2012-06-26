@@ -37,7 +37,7 @@ If you have questions concerning this license or the applicable additional terms
 extern idCVar r_skipGuiShaders;		// 1 = don't render any gui elements on surfaces
 
 idUserInterfaceManagerLocal	uiManagerLocal;
-idUserInterfaceManager 	*uiManager = &uiManagerLocal;
+idUserInterfaceManager* 	uiManager = &uiManagerLocal;
 
 /*
 ===============================================================================
@@ -60,14 +60,14 @@ void idUserInterfaceManagerLocal::Shutdown()
 	dc.Shutdown();
 }
 
-void idUserInterfaceManagerLocal::Touch( const char *name )
+void idUserInterfaceManagerLocal::Touch( const char* name )
 {
-	idUserInterface *gui = Alloc();
+	idUserInterface* gui = Alloc();
 	gui->InitFromFile( name );
 //	delete gui;
 }
 
-void idUserInterfaceManagerLocal::WritePrecacheCommands( idFile *f )
+void idUserInterfaceManagerLocal::WritePrecacheCommands( idFile* f )
 {
 
 	int c = guis.Num();
@@ -110,12 +110,12 @@ void idUserInterfaceManagerLocal::EndLevelLoad()
 		if( guis[i]->GetRefs() == 0 )
 		{
 			//common->Printf( "purging %s.\n", guis[i]->GetSourceFile() );
-
+			
 			// use this to make sure no materials still reference this gui
 			bool remove = true;
 			for( int j = 0; j < declManager->GetNumDecls( DECL_MATERIAL ); j++ )
 			{
-				const idMaterial *material = static_cast<const idMaterial *>( declManager->DeclByIndex( DECL_MATERIAL, j, false ) );
+				const idMaterial* material = static_cast<const idMaterial*>( declManager->DeclByIndex( DECL_MATERIAL, j, false ) );
 				if( material->GlobalGui() == guis[i] )
 				{
 					remove = false;
@@ -136,7 +136,7 @@ void idUserInterfaceManagerLocal::EndLevelLoad()
 void idUserInterfaceManagerLocal::Reload( bool all )
 {
 	ID_TIME_T ts;
-
+	
 	int c = guis.Num();
 	for( int i = 0; i < c; i++ )
 	{
@@ -148,7 +148,7 @@ void idUserInterfaceManagerLocal::Reload( bool all )
 				continue;
 			}
 		}
-
+		
 		guis[i]->InitFromFile( guis[i]->GetSourceFile() );
 		common->Printf( "reloading %s.\n", guis[i]->GetSourceFile() );
 	}
@@ -163,7 +163,7 @@ void idUserInterfaceManagerLocal::ListGuis() const
 	int unique = 0;
 	for( int i = 0; i < c; i++ )
 	{
-		idUserInterfaceLocal *gui = guis[i];
+		idUserInterfaceLocal* gui = guis[i];
 		size_t sz = gui->Size();
 		bool isUnique = guis[i]->interactive;
 		if( isUnique )
@@ -180,9 +180,9 @@ void idUserInterfaceManagerLocal::ListGuis() const
 	common->Printf( "===========\n  %i total Guis ( %i copies, %i unique ), %.2f total Mbytes", c, copies, unique, total / ( 1024.0f * 1024.0f ) );
 }
 
-bool idUserInterfaceManagerLocal::CheckGui( const char *qpath ) const
+bool idUserInterfaceManagerLocal::CheckGui( const char* qpath ) const
 {
-	idFile *file = fileSystem->OpenFileRead( qpath );
+	idFile* file = fileSystem->OpenFileRead( qpath );
 	if( file )
 	{
 		fileSystem->CloseFile( file );
@@ -191,12 +191,12 @@ bool idUserInterfaceManagerLocal::CheckGui( const char *qpath ) const
 	return false;
 }
 
-idUserInterface *idUserInterfaceManagerLocal::Alloc( void ) const
+idUserInterface* idUserInterfaceManagerLocal::Alloc( void ) const
 {
 	return new idUserInterfaceLocal();
 }
 
-void idUserInterfaceManagerLocal::DeAlloc( idUserInterface *gui )
+void idUserInterfaceManagerLocal::DeAlloc( idUserInterface* gui )
 {
 	if( gui )
 	{
@@ -213,13 +213,13 @@ void idUserInterfaceManagerLocal::DeAlloc( idUserInterface *gui )
 	}
 }
 
-idUserInterface *idUserInterfaceManagerLocal::FindGui( const char *qpath, bool autoLoad, bool needUnique, bool forceNOTUnique )
+idUserInterface* idUserInterfaceManagerLocal::FindGui( const char* qpath, bool autoLoad, bool needUnique, bool forceNOTUnique )
 {
 	int c = guis.Num();
-
+	
 	for( int i = 0; i < c; i++ )
 	{
-		idUserInterfaceLocal *gui = guis[i];
+		idUserInterfaceLocal* gui = guis[i];
 		if( !idStr::Icmp( guis[i]->GetSourceFile(), qpath ) )
 		{
 			if( !forceNOTUnique && ( needUnique || guis[i]->IsInteractive() ) )
@@ -230,10 +230,10 @@ idUserInterface *idUserInterfaceManagerLocal::FindGui( const char *qpath, bool a
 			return guis[i];
 		}
 	}
-
+	
 	if( autoLoad )
 	{
-		idUserInterface *gui = Alloc();
+		idUserInterface* gui = Alloc();
 		if( gui->InitFromFile( qpath ) )
 		{
 			gui->SetUniqued( forceNOTUnique ? false : needUnique );
@@ -247,7 +247,7 @@ idUserInterface *idUserInterfaceManagerLocal::FindGui( const char *qpath, bool a
 	return NULL;
 }
 
-idUserInterface *idUserInterfaceManagerLocal::FindDemoGui( const char *qpath )
+idUserInterface* idUserInterfaceManagerLocal::FindDemoGui( const char* qpath )
 {
 	int c = demoGuis.Num();
 	for( int i = 0; i < c; i++ )
@@ -260,12 +260,12 @@ idUserInterface *idUserInterfaceManagerLocal::FindDemoGui( const char *qpath )
 	return NULL;
 }
 
-idListGUI 	*idUserInterfaceManagerLocal::AllocListGUI( void ) const
+idListGUI* 	idUserInterfaceManagerLocal::AllocListGUI( void ) const
 {
 	return new idListGUILocal();
 }
 
-void idUserInterfaceManagerLocal::FreeListGUI( idListGUI *listgui )
+void idUserInterfaceManagerLocal::FreeListGUI( idListGUI* listgui )
 {
 	delete listgui;
 }
@@ -298,12 +298,12 @@ idUserInterfaceLocal::~idUserInterfaceLocal()
 	desktop = NULL;
 }
 
-const char *idUserInterfaceLocal::Name() const
+const char* idUserInterfaceLocal::Name() const
 {
 	return source;
 }
 
-const char *idUserInterfaceLocal::Comment() const
+const char* idUserInterfaceLocal::Comment() const
 {
 	if( desktop )
 	{
@@ -317,7 +317,7 @@ bool idUserInterfaceLocal::IsInteractive() const
 	return interactive;
 }
 
-bool idUserInterfaceLocal::InitFromFile( const char *qpath, bool rebuild, bool cache )
+bool idUserInterfaceLocal::InitFromFile( const char* qpath, bool rebuild, bool cache )
 {
 
 	if( !( qpath && *qpath ) )
@@ -325,11 +325,11 @@ bool idUserInterfaceLocal::InitFromFile( const char *qpath, bool rebuild, bool c
 		// FIXME: Memory leak!!
 		return false;
 	}
-
+	
 	int sz = sizeof( idWindow );
 	sz = sizeof( idSimpleWindow );
 	loading = true;
-
+	
 	if( rebuild )
 	{
 		delete desktop;
@@ -339,17 +339,17 @@ bool idUserInterfaceLocal::InitFromFile( const char *qpath, bool rebuild, bool c
 	{
 		desktop = new idWindow( this );
 	}
-
+	
 	source = qpath;
 	state.Set( "text", "Test Text!" );
-
+	
 	idParser src( LEXFL_NOFATALERRORS | LEXFL_NOSTRINGCONCAT | LEXFL_ALLOWMULTICHARLITERALS | LEXFL_ALLOWBACKSLASHSTRINGCONCAT );
-
+	
 	//Load the timestamp so reload guis will work correctly
 	fileSystem->ReadFile( qpath, NULL, &timeStamp );
-
+	
 	src.LoadFile( qpath );
-
+	
 	if( src.IsLoaded() )
 	{
 		idToken token;
@@ -366,7 +366,7 @@ bool idUserInterfaceLocal::InitFromFile( const char *qpath, bool rebuild, bool c
 				continue;
 			}
 		}
-
+		
 		state.Set( "name", qpath );
 	}
 	else
@@ -382,36 +382,36 @@ bool idUserInterfaceLocal::InitFromFile( const char *qpath, bool rebuild, bool c
 		desktop->SetupFromState();
 		common->Warning( "Couldn't load gui: '%s'", qpath );
 	}
-
+	
 	interactive = desktop->Interactive();
-
+	
 	if( uiManagerLocal.guis.Find( this ) == NULL )
 	{
 		uiManagerLocal.guis.Append( this );
 	}
-
+	
 	loading = false;
-
+	
 	return true;
 }
 
-const char *idUserInterfaceLocal::HandleEvent( const sysEvent_t *event, int _time, bool *updateVisuals )
+const char* idUserInterfaceLocal::HandleEvent( const sysEvent_t* event, int _time, bool* updateVisuals )
 {
 
 	time = _time;
-
+	
 	if( bindHandler && event->evType == SE_KEY && event->evValue2 == 1 )
 	{
-		const char *ret = bindHandler->HandleEvent( event, updateVisuals );
+		const char* ret = bindHandler->HandleEvent( event, updateVisuals );
 		bindHandler = NULL;
 		return ret;
 	}
-
+	
 	if( event->evType == SE_MOUSE )
 	{
 		cursorX += event->evValue;
 		cursorY += event->evValue2;
-
+		
 		if( cursorX < 0 )
 		{
 			cursorX = 0;
@@ -421,16 +421,16 @@ const char *idUserInterfaceLocal::HandleEvent( const sysEvent_t *event, int _tim
 			cursorY = 0;
 		}
 	}
-
+	
 	if( desktop )
 	{
 		return desktop->HandleEvent( event, updateVisuals );
 	}
-
+	
 	return "";
 }
 
-void idUserInterfaceLocal::HandleNamedEvent( const char *eventName )
+void idUserInterfaceLocal::HandleNamedEvent( const char* eventName )
 {
 	desktop->RunNamedEvent( eventName );
 }
@@ -462,52 +462,52 @@ void idUserInterfaceLocal::DrawCursor()
 	}
 }
 
-const idDict &idUserInterfaceLocal::State() const
+const idDict& idUserInterfaceLocal::State() const
 {
 	return state;
 }
 
-void idUserInterfaceLocal::DeleteStateVar( const char *varName )
+void idUserInterfaceLocal::DeleteStateVar( const char* varName )
 {
 	state.Delete( varName );
 }
 
-void idUserInterfaceLocal::SetStateString( const char *varName, const char *value )
+void idUserInterfaceLocal::SetStateString( const char* varName, const char* value )
 {
 	state.Set( varName, value );
 }
 
-void idUserInterfaceLocal::SetStateBool( const char *varName, const bool value )
+void idUserInterfaceLocal::SetStateBool( const char* varName, const bool value )
 {
 	state.SetBool( varName, value );
 }
 
-void idUserInterfaceLocal::SetStateInt( const char *varName, const int value )
+void idUserInterfaceLocal::SetStateInt( const char* varName, const int value )
 {
 	state.SetInt( varName, value );
 }
 
-void idUserInterfaceLocal::SetStateFloat( const char *varName, const float value )
+void idUserInterfaceLocal::SetStateFloat( const char* varName, const float value )
 {
 	state.SetFloat( varName, value );
 }
 
-const char *idUserInterfaceLocal::GetStateString( const char *varName, const char *defaultString ) const
+const char* idUserInterfaceLocal::GetStateString( const char* varName, const char* defaultString ) const
 {
 	return state.GetString( varName, defaultString );
 }
 
-bool idUserInterfaceLocal::GetStateBool( const char *varName, const char *defaultString ) const
+bool idUserInterfaceLocal::GetStateBool( const char* varName, const char* defaultString ) const
 {
 	return state.GetBool( varName, defaultString );
 }
 
-int idUserInterfaceLocal::GetStateInt( const char *varName, const char *defaultString ) const
+int idUserInterfaceLocal::GetStateInt( const char* varName, const char* defaultString ) const
 {
 	return state.GetInt( varName, defaultString );
 }
 
-float idUserInterfaceLocal::GetStateFloat( const char *varName, const char *defaultString ) const
+float idUserInterfaceLocal::GetStateFloat( const char* varName, const char* defaultString ) const
 {
 	return state.GetFloat( varName, defaultString );
 }
@@ -536,7 +536,7 @@ void idUserInterfaceLocal::StateChanged( int _time, bool redraw )
 	}
 }
 
-const char *idUserInterfaceLocal::Activate( bool activate, int _time )
+const char* idUserInterfaceLocal::Activate( bool activate, int _time )
 {
 	time = _time;
 	active = activate;
@@ -558,12 +558,12 @@ void idUserInterfaceLocal::Trigger( int _time )
 	}
 }
 
-void idUserInterfaceLocal::ReadFromDemoFile( class idDemoFile *f )
+void idUserInterfaceLocal::ReadFromDemoFile( class idDemoFile* f )
 {
 	idStr work;
 	f->ReadDict( state );
 	source = state.GetString( "name" );
-
+	
 	if( desktop == NULL )
 	{
 		f->Log( "creating new gui\n" );
@@ -577,10 +577,10 @@ void idUserInterfaceLocal::ReadFromDemoFile( class idDemoFile *f )
 		f->Log( "re-using gui\n" );
 		desktop->ReadFromDemoFile( f, false );
 	}
-
+	
 	f->ReadFloat( cursorX );
 	f->ReadFloat( cursorY );
-
+	
 	bool add = true;
 	int c = uiManagerLocal.demoGuis.Num();
 	for( int i = 0; i < c; i++ )
@@ -591,14 +591,14 @@ void idUserInterfaceLocal::ReadFromDemoFile( class idDemoFile *f )
 			break;
 		}
 	}
-
+	
 	if( add )
 	{
 		uiManagerLocal.demoGuis.Append( this );
 	}
 }
 
-void idUserInterfaceLocal::WriteToDemoFile( class idDemoFile *f )
+void idUserInterfaceLocal::WriteToDemoFile( class idDemoFile* f )
 {
 	idStr work;
 	f->WriteDict( state );
@@ -606,20 +606,20 @@ void idUserInterfaceLocal::WriteToDemoFile( class idDemoFile *f )
 	{
 		desktop->WriteToDemoFile( f );
 	}
-
+	
 	f->WriteFloat( cursorX );
 	f->WriteFloat( cursorY );
 }
 
-bool idUserInterfaceLocal::WriteToSaveGame( idFile *savefile ) const
+bool idUserInterfaceLocal::WriteToSaveGame( idFile* savefile ) const
 {
 	int len;
-	const idKeyValue *kv;
-	const char *string;
-
+	const idKeyValue* kv;
+	const char* string;
+	
 	int num = state.GetNumKeyVals();
 	savefile->Write( &num, sizeof( num ) );
-
+	
 	for( int i = 0; i < num; i++ )
 	{
 		kv = state.GetKeyVal( i );
@@ -627,13 +627,13 @@ bool idUserInterfaceLocal::WriteToSaveGame( idFile *savefile ) const
 		string = kv->GetKey().c_str();
 		savefile->Write( &len, sizeof( len ) );
 		savefile->Write( string, len );
-
+		
 		len = kv->GetValue().Length();
 		string = kv->GetValue().c_str();
 		savefile->Write( &len, sizeof( len ) );
 		savefile->Write( string, len );
 	}
-
+	
 	savefile->Write( &active, sizeof( active ) );
 	savefile->Write( &interactive, sizeof( interactive ) );
 	savefile->Write( &uniqued, sizeof( uniqued ) );
@@ -647,43 +647,43 @@ bool idUserInterfaceLocal::WriteToSaveGame( idFile *savefile ) const
 	len = returnCmd.Length();
 	savefile->Write( &len, sizeof( len ) );
 	savefile->Write( returnCmd.c_str(), len );
-
+	
 	savefile->Write( &cursorX, sizeof( cursorX ) );
 	savefile->Write( &cursorY, sizeof( cursorY ) );
-
+	
 	desktop->WriteToSaveGame( savefile );
-
+	
 	return true;
 }
 
-bool idUserInterfaceLocal::ReadFromSaveGame( idFile *savefile )
+bool idUserInterfaceLocal::ReadFromSaveGame( idFile* savefile )
 {
 	int num;
 	int i, len;
 	idStr key;
 	idStr value;
-
+	
 	savefile->Read( &num, sizeof( num ) );
-
+	
 	state.Clear();
 	for( i = 0; i < num; i++ )
 	{
 		savefile->Read( &len, sizeof( len ) );
 		key.Fill( ' ', len );
 		savefile->Read( &key[0], len );
-
+		
 		savefile->Read( &len, sizeof( len ) );
 		value.Fill( ' ', len );
 		savefile->Read( &value[0], len );
-
+		
 		state.Set( key, value );
 	}
-
+	
 	savefile->Read( &active, sizeof( active ) );
 	savefile->Read( &interactive, sizeof( interactive ) );
 	savefile->Read( &uniqued, sizeof( uniqued ) );
 	savefile->Read( &time, sizeof( time ) );
-
+	
 	savefile->Read( &len, sizeof( len ) );
 	activateStr.Fill( ' ', len );
 	savefile->Read( &activateStr[0], len );
@@ -693,12 +693,12 @@ bool idUserInterfaceLocal::ReadFromSaveGame( idFile *savefile )
 	savefile->Read( &len, sizeof( len ) );
 	returnCmd.Fill( ' ', len );
 	savefile->Read( &returnCmd[0], len );
-
+	
 	savefile->Read( &cursorX, sizeof( cursorX ) );
 	savefile->Read( &cursorY, sizeof( cursorY ) );
-
+	
 	desktop->ReadFromSaveGame( savefile );
-
+	
 	return true;
 }
 
@@ -712,10 +712,10 @@ size_t idUserInterfaceLocal::Size()
 	return sz;
 }
 
-void idUserInterfaceLocal::RecurseSetKeyBindingNames( idWindow *window )
+void idUserInterfaceLocal::RecurseSetKeyBindingNames( idWindow* window )
 {
 	int i;
-	idWinVar *v = window->GetWinVarByName( "bind" );
+	idWinVar* v = window->GetWinVarByName( "bind" );
 	if( v )
 	{
 		SetStateString( v->GetName(), idKeyInput::KeysFromBinding( v->GetName() ) );
@@ -723,7 +723,7 @@ void idUserInterfaceLocal::RecurseSetKeyBindingNames( idWindow *window )
 	i = 0;
 	while( i < window->GetChildCount() )
 	{
-		idWindow *next = window->GetChild( i );
+		idWindow* next = window->GetChild( i );
 		if( next )
 		{
 			RecurseSetKeyBindingNames( next );

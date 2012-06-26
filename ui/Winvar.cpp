@@ -46,14 +46,14 @@ idWinVar::~idWinVar()
 	name = NULL;
 }
 
-void idWinVar::SetGuiInfo( idDict *gd, const char *_name )
+void idWinVar::SetGuiInfo( idDict* gd, const char* _name )
 {
 	guiDict = gd;
 	SetName( _name );
 }
 
 
-void idWinVar::Init( const char *_name, idWindow *win )
+void idWinVar::Init( const char* _name, idWindow* win )
 {
 	idStr key = _name;
 	guiDict = NULL;
@@ -70,7 +70,7 @@ void idWinVar::Init( const char *_name, idWindow *win )
 	}
 }
 
-void idMultiWinVar::Set( const char *val )
+void idMultiWinVar::Set( const char* val )
 {
 	for( int i = 0; i < Num(); i++ )
 	{
@@ -86,7 +86,7 @@ void idMultiWinVar::Update( void )
 	}
 }
 
-void idMultiWinVar::SetGuiInfo( idDict *dict )
+void idMultiWinVar::SetGuiInfo( idDict* dict )
 {
 	for( int i = 0; i < Num(); i++ )
 	{

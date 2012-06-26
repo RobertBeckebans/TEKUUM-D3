@@ -47,25 +47,25 @@ void idSliderWindow::CommonInit()
 	stepSize = 1.0;
 	thumbMat = declManager->FindMaterial( "_default" );
 	buddyWin = NULL;
-
+	
 	cvar = NULL;
 	cvar_init = false;
 	liveUpdate = true;
-
+	
 	vertical = false;
 	scrollbar = false;
-
+	
 	verticalFlip = false;
 }
 
-idSliderWindow::idSliderWindow( idDeviceContext *d, idUserInterfaceLocal *g ) : idWindow( d, g )
+idSliderWindow::idSliderWindow( idDeviceContext* d, idUserInterfaceLocal* g ) : idWindow( d, g )
 {
 	dc = d;
 	gui = g;
 	CommonInit();
 }
 
-idSliderWindow::idSliderWindow( idUserInterfaceLocal *g ) : idWindow( g )
+idSliderWindow::idSliderWindow( idUserInterfaceLocal* g ) : idWindow( g )
 {
 	gui = g;
 	CommonInit();
@@ -76,7 +76,7 @@ idSliderWindow::~idSliderWindow()
 
 }
 
-bool idSliderWindow::ParseInternalVar( const char *_name, idParser *src )
+bool idSliderWindow::ParseInternalVar( const char* _name, idParser* src )
 {
 	if( idStr::Icmp( _name, "stepsize" ) == 0 || idStr::Icmp( _name, "step" ) == 0 )
 	{
@@ -117,7 +117,7 @@ bool idSliderWindow::ParseInternalVar( const char *_name, idParser *src )
 	return idWindow::ParseInternalVar( _name, src );
 }
 
-idWinVar *idSliderWindow::GetWinVarByName( const char *_name, bool fixup, drawWin_t **owner )
+idWinVar* idSliderWindow::GetWinVarByName( const char* _name, bool fixup, drawWin_t** owner )
 {
 
 	if( idStr::Icmp( _name, "value" ) == 0 )
@@ -136,37 +136,37 @@ idWinVar *idSliderWindow::GetWinVarByName( const char *_name, bool fixup, drawWi
 	{
 		return &cvarGroup;
 	}
-
+	
 	return idWindow::GetWinVarByName( _name, fixup, owner );
 }
 
-const char *idSliderWindow::HandleEvent( const sysEvent_t *event, bool *updateVisuals )
+const char* idSliderWindow::HandleEvent( const sysEvent_t* event, bool* updateVisuals )
 {
 
 	if( !( event->evType == SE_KEY && event->evValue2 ) )
 	{
 		return "";
 	}
-
+	
 	int key = event->evValue;
-
+	
 	if( event->evValue2 && key == K_MOUSE1 )
 	{
 		SetCapture( this );
 		RouteMouseCoords( 0.0f, 0.0f );
 		return "";
 	}
-
+	
 	if( key == K_RIGHTARROW || key == K_KP_RIGHTARROW || ( key == K_MOUSE2 && gui->CursorY() > thumbRect.y ) )
 	{
 		value = value + stepSize;
 	}
-
+	
 	if( key == K_LEFTARROW || key == K_KP_LEFTARROW || ( key == K_MOUSE2 && gui->CursorY() < thumbRect.y ) )
 	{
 		value = value - stepSize;
 	}
-
+	
 	if( buddyWin )
 	{
 		buddyWin->HandleBuddyUpdate( this );
@@ -176,12 +176,12 @@ const char *idSliderWindow::HandleEvent( const sysEvent_t *event, bool *updateVi
 		gui->SetStateFloat( cvarStr, value );
 		UpdateCvar( false );
 	}
-
+	
 	return "";
 }
 
 
-void idSliderWindow::SetBuddy( idWindow *buddy )
+void idSliderWindow::SetBuddy( idWindow* buddy )
 {
 	buddyWin = buddy;
 }
@@ -200,7 +200,7 @@ void idSliderWindow::PostParse()
 	InitCvar();
 }
 
-void idSliderWindow::InitWithDefaults( const char *_name, const idRectangle &_rect, const idVec4 &_foreColor, const idVec4 &_matColor, const char *_background, const char *thumbShader, bool _vertical, bool _scrollbar )
+void idSliderWindow::InitWithDefaults( const char* _name, const idRectangle& _rect, const idVec4& _foreColor, const idVec4& _matColor, const char* _background, const char* thumbShader, bool _vertical, bool _scrollbar )
 {
 	SetInitialState( _name );
 	rect = _rect;
@@ -232,18 +232,18 @@ void idSliderWindow::SetValue( float _value )
 void idSliderWindow::Draw( int time, float x, float y )
 {
 	idVec4 color = foreColor;
-
+	
 	if( !cvar && !buddyWin )
 	{
 		return;
 	}
-
+	
 	if( !thumbWidth || !thumbHeight )
 	{
 		thumbWidth = thumbMat->GetImageWidth();
 		thumbHeight = thumbMat->GetImageHeight();
 	}
-
+	
 	UpdateCvar( true );
 	if( value > high )
 	{
@@ -253,14 +253,14 @@ void idSliderWindow::Draw( int time, float x, float y )
 	{
 		value = low;
 	}
-
+	
 	float range = high - low;
-
+	
 	if( range <= 0.0f )
 	{
 		return;
 	}
-
+	
 	float thumbPos = ( range ) ? ( value - low ) / range : 0.0;
 	if( vertical )
 	{
@@ -282,7 +282,7 @@ void idSliderWindow::Draw( int time, float x, float y )
 	}
 	thumbRect.w = thumbWidth;
 	thumbRect.h = thumbHeight;
-
+	
 	if( hover && !noEvents && Contains( gui->CursorX(), gui->CursorY() ) )
 	{
 		color = hoverColor;
@@ -296,7 +296,7 @@ void idSliderWindow::Draw( int time, float x, float y )
 		color = hoverColor;
 		hover = true;
 	}
-
+	
 	dc->DrawMaterial( thumbRect.x, thumbRect.y, thumbRect.w, thumbRect.h, thumbMat, color );
 	if( flags & WIN_FOCUS )
 	{
@@ -305,18 +305,18 @@ void idSliderWindow::Draw( int time, float x, float y )
 }
 
 
-void idSliderWindow::DrawBackground( const idRectangle &_drawRect )
+void idSliderWindow::DrawBackground( const idRectangle& _drawRect )
 {
 	if( !cvar && !buddyWin )
 	{
 		return;
 	}
-
+	
 	if( high - low <= 0.0f )
 	{
 		return;
 	}
-
+	
 	idRectangle r = _drawRect;
 	if( !scrollbar )
 	{
@@ -334,15 +334,15 @@ void idSliderWindow::DrawBackground( const idRectangle &_drawRect )
 	idWindow::DrawBackground( r );
 }
 
-const char *idSliderWindow::RouteMouseCoords( float xd, float yd )
+const char* idSliderWindow::RouteMouseCoords( float xd, float yd )
 {
 	float pct;
-
+	
 	if( !( flags & WIN_CAPTURE ) )
 	{
 		return "";
 	}
-
+	
 	idRectangle r = drawRect;
 	r.x = actualX;
 	r.y = actualY;
@@ -402,7 +402,7 @@ const char *idSliderWindow::RouteMouseCoords( float xd, float yd )
 			value = high;
 		}
 	}
-
+	
 	if( buddyWin )
 	{
 		buddyWin->HandleBuddyUpdate( this );
@@ -412,12 +412,12 @@ const char *idSliderWindow::RouteMouseCoords( float xd, float yd )
 		gui->SetStateFloat( cvarStr, value );
 	}
 	UpdateCvar( false );
-
+	
 	return "";
 }
 
 
-void idSliderWindow::Activate( bool activate, idStr &act )
+void idSliderWindow::Activate( bool activate, idStr& act )
 {
 	idWindow::Activate( activate, act );
 	if( activate )
@@ -443,7 +443,7 @@ void idSliderWindow::InitCvar( )
 		cvar = NULL;
 		return;
 	}
-
+	
 	cvar = cvarSystem->Find( cvarStr );
 	if( !cvar )
 	{
@@ -487,10 +487,10 @@ void idSliderWindow::UpdateCvar( bool read, bool force )
 idSliderWindow::RunNamedEvent
 ============
 */
-void idSliderWindow::RunNamedEvent( const char *eventName )
+void idSliderWindow::RunNamedEvent( const char* eventName )
 {
 	idStr event, group;
-
+	
 	if( !idStr::Cmpn( eventName, "cvar read ", 10 ) )
 	{
 		event = eventName;

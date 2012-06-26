@@ -39,12 +39,12 @@ idListGUILocal::StateChanged
 void idListGUILocal::StateChanged()
 {
 	int i;
-
+	
 	if( !m_stateUpdates )
 	{
 		return;
 	}
-
+	
 	for( i = 0; i < Num(); i++ )
 	{
 		m_pGUI->SetStateString( va( "%s_item_%i", m_name.c_str(), i ), ( *this )[i].c_str() );
@@ -72,7 +72,7 @@ int idListGUILocal::GetNumSelections()
 idListGUILocal::GetSelection
 ====================
 */
-int idListGUILocal::GetSelection( char *s, int size, int _sel ) const
+int idListGUILocal::GetSelection( char* s, int size, int _sel ) const
 {
 	if( s )
 	{
@@ -112,7 +112,7 @@ void idListGUILocal::SetSelection( int sel )
 idListGUILocal::Add
 ====================
 */
-void idListGUILocal::Add( int id, const idStr &s )
+void idListGUILocal::Add( int id, const idStr& s )
 {
 	int i = m_ids.FindIndex( id );
 	if( i == -1 )
@@ -132,7 +132,7 @@ void idListGUILocal::Add( int id, const idStr &s )
 idListGUILocal::Push
 ====================
 */
-void idListGUILocal::Push( const idStr &s )
+void idListGUILocal::Push( const idStr& s )
 {
 	Append( s );
 	m_ids.Append( m_ids.Num() );

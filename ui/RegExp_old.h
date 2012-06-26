@@ -34,7 +34,7 @@ class idRegister
 {
 public:
 	idRegister() {};
-	idRegister( const char *p, int t )
+	idRegister( const char* p, int t )
 	{
 		name = p;
 		type = t;
@@ -49,10 +49,10 @@ public:
 	static int REGCOUNT[NUMTYPES];
 	idStr name;
 	int regs[4];
-	void SetToRegs( float *registers, idTypedDict *state );
-	void SetToRegList( idList<float> *registers, idTypedDict *state );
-	void GetFromRegs( float *registers, idTypedDict *state );
-	void CopyRegs( idRegister *src )
+	void SetToRegs( float* registers, idTypedDict* state );
+	void SetToRegList( idList<float>* registers, idTypedDict* state );
+	void GetFromRegs( float* registers, idTypedDict* state );
+	void CopyRegs( idRegister* src )
 	{
 		regs[0] = src->regs[0];
 		regs[1] = src->regs[1];
@@ -63,9 +63,9 @@ public:
 	{
 		enabled = b;
 	}
-	void ReadFromDemoFile( idDemoFile *f );
-	void WriteToDemoFile( idDemoFile *f );
-
+	void ReadFromDemoFile( idDemoFile* f );
+	void WriteToDemoFile( idDemoFile* f );
+	
 };
 
 class idRegisterList
@@ -74,19 +74,19 @@ class idRegisterList
 public:
 
 	//
-	void RemoveReg( const char *name );
+	void RemoveReg( const char* name );
 	//
-
-	void AddReg( const char *name, int type, idParser *src, idWindow *win );
-	void AddReg( const char *name, int type, idVec4 data, idWindow *win );
-	idRegister *FindReg( const char *name );
-	int			FindRegIndex( const char *name );
-	void SetToRegs( float *registers, idTypedDict *state );
-	void GetFromRegs( float *registers, idTypedDict *state );
+	
+	void AddReg( const char* name, int type, idParser* src, idWindow* win );
+	void AddReg( const char* name, int type, idVec4 data, idWindow* win );
+	idRegister* FindReg( const char* name );
+	int			FindRegIndex( const char* name );
+	void SetToRegs( float* registers, idTypedDict* state );
+	void GetFromRegs( float* registers, idTypedDict* state );
 	void Reset();
-	void ReadFromDemoFile( idDemoFile *f );
-	void WriteToDemoFile( idDemoFile *f );
-
+	void ReadFromDemoFile( idDemoFile* f );
+	void WriteToDemoFile( idDemoFile* f );
+	
 };
 
 #endif

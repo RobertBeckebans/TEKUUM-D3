@@ -73,14 +73,14 @@ void idChoiceWindow::CommonInit()
 	choices.Clear();
 }
 
-idChoiceWindow::idChoiceWindow( idDeviceContext *d, idUserInterfaceLocal *g ) : idWindow( d, g )
+idChoiceWindow::idChoiceWindow( idDeviceContext* d, idUserInterfaceLocal* g ) : idWindow( d, g )
 {
 	dc = d;
 	gui = g;
 	CommonInit();
 }
 
-idChoiceWindow::idChoiceWindow( idUserInterfaceLocal *g ) : idWindow( g )
+idChoiceWindow::idChoiceWindow( idUserInterfaceLocal* g ) : idWindow( g )
 {
 	gui = g;
 	CommonInit();
@@ -91,10 +91,10 @@ idChoiceWindow::~idChoiceWindow()
 
 }
 
-void idChoiceWindow::RunNamedEvent( const char *eventName )
+void idChoiceWindow::RunNamedEvent( const char* eventName )
 {
 	idStr event, group;
-
+	
 	if( !idStr::Cmpn( eventName, "cvar read ", 10 ) )
 	{
 		event = eventName;
@@ -137,16 +137,16 @@ void idChoiceWindow::UpdateVars( bool read, bool force )
 	}
 }
 
-const char *idChoiceWindow::HandleEvent( const sysEvent_t *event, bool *updateVisuals )
+const char* idChoiceWindow::HandleEvent( const sysEvent_t* event, bool* updateVisuals )
 {
 	int key;
 	bool runAction = false;
 	bool runAction2 = false;
-
+	
 	if( event->evType == SE_KEY )
 	{
 		key = event->evValue;
-
+		
 		if( key == K_RIGHTARROW || key == K_KP_RIGHTARROW || key == K_MOUSE1 )
 		{
 			// never affects the state, but we want to execute script handlers anyway
@@ -162,7 +162,7 @@ const char *idChoiceWindow::HandleEvent( const sysEvent_t *event, bool *updateVi
 			}
 			runAction = true;
 		}
-
+		
 		if( key == K_LEFTARROW || key == K_KP_LEFTARROW || key == K_MOUSE2 )
 		{
 			// never affects the state, but we want to execute script handlers anyway
@@ -178,19 +178,19 @@ const char *idChoiceWindow::HandleEvent( const sysEvent_t *event, bool *updateVi
 			}
 			runAction = true;
 		}
-
+		
 		if( !event->evValue2 )
 		{
 			// is a key release with no action catch
 			return "";
 		}
-
+		
 	}
 	else if( event->evType == SE_CHAR )
 	{
-
+	
 		key = event->evValue;
-
+		
 		int potentialChoice = -1;
 		for( int i = 0; i < choices.Num(); i++ )
 		{
@@ -212,21 +212,21 @@ const char *idChoiceWindow::HandleEvent( const sysEvent_t *event, bool *updateVi
 		{
 			currentChoice = potentialChoice;
 		}
-
+		
 		runAction = true;
 		runAction2 = true;
-
+		
 	}
 	else
 	{
 		return "";
 	}
-
+	
 	if( runAction )
 	{
 		RunScript( ON_ACTION );
 	}
-
+	
 	if( choiceType == 0 )
 	{
 		cvarStr.Set( va( "%i", currentChoice ) );
@@ -239,14 +239,14 @@ const char *idChoiceWindow::HandleEvent( const sysEvent_t *event, bool *updateVi
 	{
 		cvarStr.Set( choices[ currentChoice ] );
 	}
-
+	
 	UpdateVars( false );
-
+	
 	if( runAction2 )
 	{
 		RunScript( ON_ACTIONRELEASE );
 	}
-
+	
 	return cmd;
 }
 
@@ -301,7 +301,7 @@ void idChoiceWindow::UpdateChoice()
 	}
 }
 
-bool idChoiceWindow::ParseInternalVar( const char *_name, idParser *src )
+bool idChoiceWindow::ParseInternalVar( const char* _name, idParser* src )
 {
 	if( idStr::Icmp( _name, "choicetype" ) == 0 )
 	{
@@ -317,7 +317,7 @@ bool idChoiceWindow::ParseInternalVar( const char *_name, idParser *src )
 }
 
 
-idWinVar *idChoiceWindow::GetWinVarByName( const char *_name, bool fixup, drawWin_t **owner )
+idWinVar* idChoiceWindow::GetWinVarByName( const char* _name, bool fixup, drawWin_t** owner )
 {
 	if( idStr::Icmp( _name, "choices" ) == 0 )
 	{
@@ -343,7 +343,7 @@ idWinVar *idChoiceWindow::GetWinVarByName( const char *_name, bool fixup, drawWi
 	{
 		return &updateGroup;
 	}
-
+	
 	return idWindow::GetWinVarByName( _name, fixup, owner );
 }
 
@@ -353,7 +353,7 @@ void idChoiceWindow::UpdateChoicesAndVals( void )
 	idToken token;
 	idStr str2, str3;
 	idLexer src;
-
+	
 	if( latchedChoices.Icmp( choicesStr ) )
 	{
 		choices.Clear();
@@ -439,36 +439,36 @@ void idChoiceWindow::PostParse()
 {
 	idWindow::PostParse();
 	UpdateChoicesAndVals();
-
+	
 	InitVars();
 	UpdateChoice();
 	UpdateVars( false );
-
+	
 	flags |= WIN_CANFOCUS;
 }
 
 void idChoiceWindow::Draw( int time, float x, float y )
 {
 	idVec4 color = foreColor;
-
+	
 	UpdateChoicesAndVals();
 	UpdateChoice();
-
+	
 	// FIXME: It'd be really cool if textAlign worked, but a lot of the guis have it set wrong because it used to not work
 	textAlign = 0;
-
+	
 	if( textShadow )
 	{
 		idStr shadowText = choices[currentChoice];
 		idRectangle shadowRect = textRect;
-
+		
 		shadowText.RemoveColors();
 		shadowRect.x += textShadow;
 		shadowRect.y += textShadow;
-
+		
 		dc->DrawText( shadowText, textScale, textAlign, colorBlack, shadowRect, false, -1 );
 	}
-
+	
 	if( hover && !noEvents && Contains( gui->CursorX(), gui->CursorY() ) )
 	{
 		color = hoverColor;
@@ -481,11 +481,11 @@ void idChoiceWindow::Draw( int time, float x, float y )
 	{
 		color = hoverColor;
 	}
-
+	
 	dc->DrawText( choices[currentChoice], textScale, textAlign, color, textRect, false, -1 );
 }
 
-void idChoiceWindow::Activate( bool activate, idStr &act )
+void idChoiceWindow::Activate( bool activate, idStr& act )
 {
 	idWindow::Activate( activate, act );
 	if( activate )

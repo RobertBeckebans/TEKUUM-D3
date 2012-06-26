@@ -38,7 +38,7 @@ struct idGSWinVar
 		var = NULL;
 		own = false;
 	}
-	idWinVar *var;
+	idWinVar* var;
 	bool own;
 };
 
@@ -48,20 +48,20 @@ class idGuiScript
 {
 	friend class idGuiScriptList;
 	friend class idWindow;
-
+	
 public:
 	idGuiScript();
 	~idGuiScript();
-
-	bool Parse( idParser *src );
-	void Execute( idWindow *win )
+	
+	bool Parse( idParser* src );
+	void Execute( idWindow* win )
 	{
 		if( handler )
 		{
 			handler( win, &parms );
 		}
 	}
-	void FixupParms( idWindow *win );
+	void FixupParms( idWindow* win );
 	size_t Size()
 	{
 		int sz = sizeof( *this );
@@ -71,23 +71,23 @@ public:
 		}
 		return sz;
 	}
-
-	void WriteToSaveGame( idFile *savefile );
-	void ReadFromSaveGame( idFile *savefile );
-
+	
+	void WriteToSaveGame( idFile* savefile );
+	void ReadFromSaveGame( idFile* savefile );
+	
 protected:
 	int conditionReg;
-	idGuiScriptList *ifList;
-	idGuiScriptList *elseList;
+	idGuiScriptList* ifList;
+	idGuiScriptList* elseList;
 	idList<idGSWinVar> parms;
-	void ( *handler )( idWindow *window, idList<idGSWinVar> *src );
-
+	void ( *handler )( idWindow* window, idList<idGSWinVar>* src );
+	
 };
 
 
 class idGuiScriptList
 {
-	idList<idGuiScript *> list;
+	idList<idGuiScript*> list;
 public:
 	idGuiScriptList()
 	{
@@ -97,8 +97,8 @@ public:
 	{
 		list.DeleteContents( true );
 	};
-	void Execute( idWindow *win );
-	void Append( idGuiScript *gs )
+	void Execute( idWindow* win );
+	void Append( idGuiScript* gs )
 	{
 		list.Append( gs );
 	}
@@ -111,12 +111,12 @@ public:
 		}
 		return sz;
 	}
-	void FixupParms( idWindow *win );
-	void ReadFromDemoFile( class idDemoFile *f ) {};
-	void WriteToDemoFile( class idDemoFile *f ) {};
-
-	void WriteToSaveGame( idFile *savefile );
-	void ReadFromSaveGame( idFile *savefile );
+	void FixupParms( idWindow* win );
+	void ReadFromDemoFile( class idDemoFile* f ) {};
+	void WriteToDemoFile( class idDemoFile* f ) {};
+	
+	void WriteToSaveGame( idFile* savefile );
+	void ReadFromSaveGame( idFile* savefile );
 };
 
 #endif // __GUISCRIPT_H

@@ -34,14 +34,14 @@ If you have questions concerning this license or the applicable additional terms
 #include "UserInterfaceLocal.h"
 #include "RenderWindow.h"
 
-idRenderWindow::idRenderWindow( idDeviceContext *d, idUserInterfaceLocal *g ) : idWindow( d, g )
+idRenderWindow::idRenderWindow( idDeviceContext* d, idUserInterfaceLocal* g ) : idWindow( d, g )
 {
 	dc = d;
 	gui = g;
 	CommonInit();
 }
 
-idRenderWindow::idRenderWindow( idUserInterfaceLocal *g ) : idWindow( g )
+idRenderWindow::idRenderWindow( idUserInterfaceLocal* g ) : idWindow( g )
 {
 	gui = g;
 	CommonInit();
@@ -75,11 +75,11 @@ void idRenderWindow::BuildAnimation( int time )
 	{
 		return;
 	}
-
+	
 	if( animName.Length() && animClass.Length() )
 	{
 		worldEntity.numJoints = worldEntity.hModel->NumJoints();
-		worldEntity.joints = ( idJointMat * )Mem_Alloc16( worldEntity.numJoints * sizeof( *worldEntity.joints ) );
+		worldEntity.joints = ( idJointMat* )Mem_Alloc16( worldEntity.numJoints * sizeof( *worldEntity.joints ) );
 		modelAnim = gameEdit->ANIM_GetAnimFromEntityDef( animClass, animName );
 		if( modelAnim )
 		{
@@ -88,7 +88,7 @@ void idRenderWindow::BuildAnimation( int time )
 		}
 	}
 	updateAnimation = false;
-
+	
 }
 
 void idRenderWindow::PreRender()
@@ -160,24 +160,24 @@ void idRenderWindow::Draw( int time, float x, float y )
 {
 	PreRender();
 	Render( time );
-
+	
 	memset( &refdef, 0, sizeof( refdef ) );
 	refdef.vieworg = viewOffset.ToVec3();;
 	//refdef.vieworg.Set(-128, 0, 0);
-
+	
 	refdef.viewaxis.Identity();
 	refdef.shaderParms[0] = 1;
 	refdef.shaderParms[1] = 1;
 	refdef.shaderParms[2] = 1;
 	refdef.shaderParms[3] = 1;
-
+	
 	refdef.x = drawRect.x;
 	refdef.y = drawRect.y;
 	refdef.width = drawRect.w;
 	refdef.height = drawRect.h;
 	refdef.fov_x = 90;
 	refdef.fov_y = 2 * atan( ( float )drawRect.h / drawRect.w ) * idMath::M_RAD2DEG;
-
+	
 	refdef.time = time;
 	world->RenderScene( &refdef );
 }
@@ -189,7 +189,7 @@ void idRenderWindow::PostParse()
 
 //
 //
-idWinVar *idRenderWindow::GetWinVarByName( const char *_name, bool fixup, drawWin_t **owner )
+idWinVar* idRenderWindow::GetWinVarByName( const char* _name, bool fixup, drawWin_t** owner )
 {
 //
 	if( idStr::Icmp( _name, "model" ) == 0 )
@@ -224,14 +224,14 @@ idWinVar *idRenderWindow::GetWinVarByName( const char *_name, bool fixup, drawWi
 	{
 		return &needsRender;
 	}
-
+	
 //
 //
 	return idWindow::GetWinVarByName( _name, fixup, owner );
 //
 }
 
-bool idRenderWindow::ParseInternalVar( const char *_name, idParser *src )
+bool idRenderWindow::ParseInternalVar( const char* _name, idParser* src )
 {
 	if( idStr::Icmp( _name, "animClass" ) == 0 )
 	{

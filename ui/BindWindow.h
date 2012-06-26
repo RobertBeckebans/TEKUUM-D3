@@ -32,11 +32,11 @@ class idUserInterfaceLocal;
 class idBindWindow : public idWindow
 {
 public:
-	idBindWindow( idUserInterfaceLocal *gui );
-	idBindWindow( idDeviceContext *d, idUserInterfaceLocal *gui );
+	idBindWindow( idUserInterfaceLocal* gui );
+	idBindWindow( idDeviceContext* d, idUserInterfaceLocal* gui );
 	virtual ~idBindWindow();
-
-	virtual const char *HandleEvent( const sysEvent_t *event, bool *updateVisuals );
+	
+	virtual const char* HandleEvent( const sysEvent_t* event, bool* updateVisuals );
 	virtual void PostParse();
 	virtual void Draw( int time, float x, float y );
 	virtual size_t Allocated()
@@ -45,10 +45,10 @@ public:
 	};
 //
 //
-	virtual idWinVar *GetWinVarByName( const char *_name, bool winLookup = false, drawWin_t **owner = NULL );
+	virtual idWinVar* GetWinVarByName( const char* _name, bool winLookup = false, drawWin_t** owner = NULL );
 //
-	virtual void Activate( bool activate, idStr &act );
-
+	virtual void Activate( bool activate, idStr& act );
+	
 private:
 	void CommonInit();
 	idWinStr bindName;
