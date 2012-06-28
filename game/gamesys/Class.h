@@ -111,6 +111,7 @@ proper superclass is indicated or the run-time type information will be
 incorrect.  Use this on concrete classes only.
 ================
 */
+// Techyon RB: made exceptions optional
 #if defined(USE_EXCEPTIONS)
 #define CLASS_DECLARATION( nameofsuperclass, nameofclass )											\
 	idTypeInfo nameofclass::Type( #nameofclass, #nameofsuperclass,									\
@@ -145,6 +146,7 @@ idEventFunc<nameofclass> nameofclass::eventCallbacks[] = {
 	}																								\
 idEventFunc<nameofclass> nameofclass::eventCallbacks[] = {
 #endif
+// Techyon END
 
 /*
 ================

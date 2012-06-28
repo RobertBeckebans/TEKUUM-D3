@@ -120,6 +120,7 @@ void idWorldspawn::Restore( idRestoreGame *savefile ) {
 	g_gravityY.SetFloat( 0.0f );
 	g_gravityY.SetFloat( 0.0f );
 	g_gravityZ.SetFloat( -spawnArgs.GetFloat( "gravity", va( "%f", DEFAULT_GRAVITY ) ) );
+	// Techyon END
 
 	// disable stamina on hell levels
 	if ( spawnArgs.GetBool( "no_stamina" ) ) {
