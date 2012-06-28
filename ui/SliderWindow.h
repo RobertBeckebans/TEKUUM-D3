@@ -69,7 +69,9 @@ public:
 	virtual void		Activate( bool activate, idStr& act );
 	virtual void		SetBuddy( idWindow* buddy );
 	
-	void				RunNamedEvent( const char* eventName );
+	// Techyon RB: added parm recurseChildren
+	void				RunNamedEvent( const char* eventName, bool recurseChildren = true );
+	// Techyon END
 	
 private:
 	virtual bool		ParseInternalVar( const char* name, idParser* src );

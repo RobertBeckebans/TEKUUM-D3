@@ -57,7 +57,9 @@ public:
 	virtual void 		HandleBuddyUpdate( idWindow* buddy );
 	virtual void		Activate( bool activate, idStr& act );
 	
-	void				RunNamedEvent( const char* eventName );
+	// Techyon RB: added parm recurseChildren
+	void				RunNamedEvent( const char* eventName, bool recurseChildren = true );
+	// Techyon END
 	
 private:
 

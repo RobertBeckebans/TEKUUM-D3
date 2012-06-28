@@ -708,7 +708,9 @@ bool idWindow::RunTimeEvents( int time )
 idWindow::RunNamedEvent
 ================
 */
-void idWindow::RunNamedEvent( const char* eventName )
+// Techyon RB: added parm recurseChildren
+void idWindow::RunNamedEvent( const char* eventName, bool recurseChildren )
+// Techyon END
 {
 	int i;
 	int c;
@@ -735,12 +737,17 @@ void idWindow::RunNamedEvent( const char* eventName )
 		break;
 	}
 	
-	// Run the event in all the children as well
-	c = children.Num();
-	for( i = 0; i < c; i++ )
+	// Techyon RB: added parm recurseChildren
+	if( recurseChildren )
 	{
-		children[i]->RunNamedEvent( eventName );
+		// Run the event in all the children as well
+		c = children.Num();
+		for( i = 0; i < c; i++ )
+		{
+			children[i]->RunNamedEvent( eventName );
+		}
 	}
+	// Techyon END
 }
 
 /*

@@ -788,7 +788,9 @@ void idEditWindow::UpdateCvar( bool read, bool force )
 idEditWindow::RunNamedEvent
 ============
 */
-void idEditWindow::RunNamedEvent( const char* eventName )
+// Techyon RB: added parm recurseChildren
+void idEditWindow::RunNamedEvent( const char* eventName, bool recurseChildren )
+// Techyon END
 {
 	idStr event, group;
 	

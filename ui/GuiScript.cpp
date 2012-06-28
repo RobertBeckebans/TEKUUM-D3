@@ -295,7 +295,7 @@ void Script_NamedEvent( idWindow* window, idList<idGSWinVar>* src )
 			drawWin_t* win = window->GetGui()->GetDesktop()->FindChildByName( winName );
 			if( win && win->win )
 			{
-				win->win->RunNamedEvent( eventName );
+				win->win->RunNamedEvent( eventName, false );
 			}
 			else
 			{

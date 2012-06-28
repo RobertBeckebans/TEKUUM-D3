@@ -356,7 +356,9 @@ public:
 	
 	idStr cmd;
 	
-	virtual void RunNamedEvent( const char* eventName );
+	// Techyon RB: added parm recurseChildren
+	virtual void RunNamedEvent( const char* eventName, bool recurseChildren = true );
+	// Techyon END
 	
 	void		AddDefinedVar( idWinVar* var );
 	
