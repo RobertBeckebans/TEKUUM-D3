@@ -275,6 +275,41 @@ void Script_Transition( idWindow* window, idList<idGSWinVar>* src )
 	}
 }
 
+// Techyon RB: added "namedEvent" keyword
+/*
+=========================
+Script_NamedEvent
+=========================
+*/
+void Script_NamedEvent( idWindow* window, idList<idGSWinVar>* src )
+{
+	idWinStr* parm = dynamic_cast<idWinStr*>( ( *src )[0].var );
+	if( parm )
+	{
+		idStr key = *parm;
+		int n = key.Find( "::" );
+		if( n > 0 )
+		{
+			idStr winName = key.Left( n );
+			idStr eventName = key.Right( key.Length() - n - 2 );
+			drawWin_t* win = window->GetGui()->GetDesktop()->FindChildByName( winName );
+			if( win && win->win )
+			{
+				win->win->RunNamedEvent( eventName );
+			}
+			else
+			{
+				window->GetGui()->HandleNamedEvent( *parm );
+			}
+		}
+		else
+		{
+			window->GetGui()->HandleNamedEvent( *parm );
+		}
+	}
+}
+// Techyon END
+
 typedef struct
 {
 	const char* name;
@@ -294,7 +329,10 @@ guiCommandDef_t commandList[] =
 	{ "transition", Script_Transition, 4, 6 },
 	{ "localSound", Script_LocalSound, 1, 1 },
 	{ "runScript", Script_RunScript, 1, 1 },
-	{ "evalRegs", Script_EvalRegs, 0, 0 }
+	{ "evalRegs", Script_EvalRegs, 0, 0 },
+// Techyon RB: added "namedEvent" keyword
+	{ "namedEvent", Script_NamedEvent, 1, 1 }
+// Techyon END
 };
 
 int	scriptCommandCount = sizeof( commandList ) / sizeof( guiCommandDef_t );
