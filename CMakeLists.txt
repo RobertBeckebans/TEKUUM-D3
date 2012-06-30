@@ -11,13 +11,28 @@ option(USE_QT_TOOLS
 		
 option(USE_QT_WINDOWING
 		"Run game as Qt app" OFF)
+		
+option(MONOLITH
+		"Embed game logic into main executable" ON)
 
 #if(USE_QT_TOOLS)
 #	set(USE_QT_WINDOWING TRUE)
 #endif()
 
-if(MSVC)
-	#set(CMAKE_USE_RELATIVE_PATHS ON)
+
+if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
+	add_definitions(-pipe)
+	add_definitions(-Wall)
+	
+	#set(CMAKE_C_FLAGS_DEBUG "-D_DEBUG")
+
+elseif(MSVC)
+	
+	# add multiprocessor support
+	set(CMAKE_C_FLAGS_DEBUG "-D_DEBUG /MP")
+	set(CMAKE_C_FLAGS_RELEASE "/MP")
+	set(CMAKE_C_FLAGS_RELWITHDEBINFO "/MP")
+	set(CMAKE_C_FLAGS_MINSIZEREL "/MP")
 
 	add_definitions(-DWIN32 
 					-D_WINDOWS
@@ -39,7 +54,14 @@ if(MSVC)
 	endif()
 endif()
 
+set(CMAKE_CXX_FLAGS_DEBUG ${CMAKE_C_FLAGS_DEBUG})
+set(CMAKE_CXX_FLAGS_RELEASE ${CMAKE_C_FLAGS_RELEASE})
+set(CMAKE_CXX_FLAGS_RELWITHDEBINFO ${CMAKE_C_FLAGS_RELWITHDEBINFO})
+set(CMAKE_CXX_FLAGS_MINSIZEREL ${CMAKE_C_FLAGS_MINSIZEREL})
+
+
 add_subdirectory(idlib)
+
 
 file(GLOB_RECURSE CM_INCLUDES cm/*.h)
 file(GLOB_RECURSE CM_SOURCES cm/*.cpp)
@@ -219,6 +241,42 @@ endif()
 set(GLEW_SOURCES
 	libs/glew/src/glew.c)
 	
+set(FREETYPE_SOURCES
+	libs/freetype/src/autofit/autofit.c
+	libs/freetype/src/bdf/bdf.c
+	libs/freetype/src/cff/cff.c
+	libs/freetype/src/base/ftbase.c
+	libs/freetype/src/base/ftbitmap.c
+	libs/freetype/src/cache/ftcache.c
+	libs/freetype/src/base/ftdebug.c
+	libs/freetype/src/base/ftgasp.c
+	libs/freetype/src/base/ftglyph.c
+	libs/freetype/src/gzip/ftgzip.c
+	libs/freetype/src/base/ftinit.c
+	libs/freetype/src/lzw/ftlzw.c
+	libs/freetype/src/base/ftstroke.c
+	libs/freetype/src/base/ftsystem.c
+	libs/freetype/src/smooth/smooth.c
+	libs/freetype/src/base/ftbbox.c
+	libs/freetype/src/base/ftmm.c
+	libs/freetype/src/base/ftpfr.c
+	libs/freetype/src/base/ftsynth.c
+	libs/freetype/src/base/fttype1.c
+	libs/freetype/src/base/ftwinfnt.c
+	libs/freetype/src/pcf/pcf.c
+	libs/freetype/src/pfr/pfr.c
+	libs/freetype/src/psaux/psaux.c
+	libs/freetype/src/pshinter/pshinter.c
+	libs/freetype/src/psnames/psmodule.c
+	libs/freetype/src/raster/raster.c
+	libs/freetype/src/sfnt/sfnt.c
+	libs/freetype/src/truetype/truetype.c
+	libs/freetype/src/type1/type1.c
+	libs/freetype/src/cid/type1cid.c
+	libs/freetype/src/type42/type42.c
+	libs/freetype/src/winfonts/winfnt.c)
+	
+	
 set(SOUND_INCLUDES
 	sound/snd_local.h
 	sound/sound.h)
@@ -268,6 +326,97 @@ file(GLOB SYS_SOURCES sys/*.cpp)
 
 file(GLOB UI_INCLUDES ui/*.h)
 file(GLOB UI_SOURCES ui/*.cpp)
+
+
+set(GAME_INCLUDES
+	game/AF.h
+	game/AFEntity.h
+	game/Actor.h
+	game/BrittleFracture.h
+	game/Camera.h
+	#game/EndLevel.h
+	game/Entity.h
+	game/Fx.h
+	game/Game.h
+	game/GameEdit.h
+	game/Game_local.h
+	game/IK.h
+	game/Item.h
+	game/Light.h
+	game/Misc.h
+	game/Moveable.h
+	game/Mover.h
+	game/MultiplayerGame.h
+	game/Player.h
+	game/PlayerIcon.h
+	game/PlayerView.h
+	game/Portal.h
+	game/Projectile.h
+	game/Pvs.h
+	game/SecurityCamera.h
+	game/SmokeParticles.h
+	game/Sound.h
+	game/Target.h
+	game/Trigger.h
+	game/Weapon.h
+	game/WorldSpawn.h)
+	
+set(GAME_SOURCES
+	game/AF.cpp
+	game/AFEntity.cpp
+	game/Actor.cpp
+	game/BrittleFracture.cpp
+	game/Camera.cpp
+	#game/EndLevel.cpp
+	game/Entity.cpp
+	game/Fx.cpp
+	game/GameEdit.cpp
+	game/Game_local.cpp
+	game/Game_network.cpp
+	game/IK.cpp
+	game/Item.cpp
+	game/Light.cpp
+	game/Misc.cpp
+	game/Moveable.cpp
+	game/Mover.cpp
+	game/MultiplayerGame.cpp
+	game/Player.cpp
+	game/PlayerIcon.cpp
+	game/PlayerView.cpp
+	game/Portal.cpp
+	game/Projectile.cpp
+	game/Pvs.cpp
+	game/SecurityCamera.cpp
+	game/SmokeParticles.cpp
+	game/Sound.cpp
+	game/Target.cpp
+	game/Trigger.cpp
+	game/Weapon.cpp
+	game/WorldSpawn.cpp)
+
+file(GLOB GAME_AI_INCLUDES game/ai/*.h)
+file(GLOB GAME_AI_SOURCES game/ai/*.cpp)
+
+file(GLOB GAME_ANIM_INCLUDES game/anim/*.h)
+file(GLOB GAME_ANIM_SOURCES game/anim/*.cpp)
+
+file(GLOB GAME_GAMESYS_INCLUDES game/gamesys/*.h)
+set(GAME_GAMESYS_SOURCES
+	#game/gamesys/Callbacks.cpp
+	game/gamesys/Class.cpp
+	game/gamesys/DebugGraph.cpp
+	game/gamesys/Event.cpp
+	game/gamesys/SaveGame.cpp
+	game/gamesys/SysCmds.cpp
+	game/gamesys/SysCvar.cpp
+	game/gamesys/TypeInfo.cpp)
+
+file(GLOB GAME_PHYSICS_INCLUDES game/physics/*.h)
+file(GLOB GAME_PHYSICS_SOURCES game/physics/*.cpp)
+
+file(GLOB GAME_SCRIPT_INCLUDES game/script/*.h)
+file(GLOB GAME_SCRIPT_SOURCES game/script/*.cpp)
+
 
 file(GLOB COMPILER_INCLUDES tools/compilers/*.h)
 
@@ -325,6 +474,9 @@ set(EDITOR_DECL_SOURCES
 	tools/decl/DialogDeclBrowser.cpp
 	tools/decl/DialogDeclEditor.cpp
 	tools/decl/DialogDeclNew.cpp)
+	
+file(GLOB EDITOR_DEBUGGER_INCLUDES tools/debugger/*.h)
+file(GLOB EDITOR_DEBUGGER_SOURCES tools/debugger/*.cpp)
 
 file(GLOB EDITOR_GUIED_INCLUDES tools/guied/*.h)
 set(EDITOR_GUIED_SOURCES
@@ -467,12 +619,14 @@ else(USE_QT_WINDOWING)
 		sys/win32/rc/res/spliter.cur
 		)
 endif(USE_QT_WINDOWING)
-	
+
+
 if(USE_MFC_TOOLS)
 	list(APPEND WIN32_RESOURCES sys/win32/rc/doom.rc)
 else()
 	list(APPEND WIN32_RESOURCES sys/win32/rc/doom_nomfc.rc)
 endif()
+
 
 if(USE_QT_TOOLS)
 
@@ -551,6 +705,7 @@ if(USE_QT_TOOLS)
 	
 endif(USE_QT_TOOLS)
 
+
 source_group("cm" FILES ${CM_INCLUDES})
 source_group("cm" FILES ${CM_SOURCES})
 
@@ -575,6 +730,8 @@ source_group("libs\\zlib" FILES ${ZLIB_SOURCES})
 source_group("libs\\glew" FILES ${GLEW_INCLUDES})
 source_group("libs\\glew" FILES ${GLEW_SOURCES})
 
+source_group("libs\\freetype" FILES ${FREETYPE_SOURCES})
+
 source_group("sound" FILES ${SOUND_INCLUDES})
 source_group("sound" FILES ${SOUND_SOURCES})
 
@@ -586,6 +743,28 @@ source_group("ui" FILES ${UI_SOURCES})
 
 source_group("sys" FILES ${SYS_INCLUDES})
 source_group("sys" FILES ${SYS_SOURCES})
+
+
+source_group("game" FILES ${GAME_INCLUDES})
+source_group("game" FILES ${GAME_SOURCES})
+
+source_group("game\\ai" FILES ${GAME_AI_INCLUDES})
+source_group("game\\ai" FILES ${GAME_AI_SOURCES})
+
+source_group("game\\anim" FILES ${GAME_ANIM_INCLUDES})
+source_group("game\\anim" FILES ${GAME_ANIM_SOURCES})
+
+source_group("game\\gamesys" FILES ${GAME_GAMESYS_INCLUDES})
+source_group("game\\gamesys" FILES ${GAME_GAMESYS_SOURCES})
+
+source_group("game\\physics" FILES ${GAME_PHYSICS_INCLUDES})
+source_group("game\\physics" FILES ${GAME_PHYSICS_SOURCES})
+
+source_group("game\\script" FILES ${GAME_SCRIPT_INCLUDES})
+source_group("game\\script" FILES ${GAME_SCRIPT_SOURCES})
+
+
+
 
 #if(USE_QT_WINDOWING)
 #	source_group("sys\\win32" FILES ${WIN32_INCLUDES})
@@ -625,6 +804,9 @@ source_group("tools\\common\\proptree" FILES ${TOOLS_COMMON_PROPTREE_SOURCES})
 source_group("tools\\af" FILES ${EDITOR_AF_INCLUDES})
 source_group("tools\\af" FILES ${EDITOR_AF_SOURCES})
 
+source_group("tools\\debugger" FILES ${EDITOR_DEBUGGER_INCLUDES})
+source_group("tools\\debugger" FILES ${EDITOR_DEBUGGER_SOURCES})
+
 source_group("tools\\decl" FILES ${EDITOR_DECL_INCLUDES})
 source_group("tools\\decl" FILES ${EDITOR_DECL_SOURCES})
 
@@ -659,6 +841,7 @@ set(TECHYON_SOURCES
 			${PNG_INCLUDES} ${PNG_SOURCES}
 			${ZLIB_INCLUDES} ${ZLIB_SOURCES}
 			${GLEW_INCLUDES} ${GLEW_SOURCES}
+			${FREETYPE_SOURCES}
 			${SOUND_INCLUDES} ${SOUND_SOURCES}
 			${OGGVORBIS_INCLUDES} ${OGGVORBIS_SOURCES}
 			${UI_INCLUDES} ${UI_SOURCES}
@@ -670,13 +853,27 @@ set(TECHYON_SOURCES
 			${COMPILER_ROQVQ_INCLUDES} ${COMPILER_ROQVQ_SOURCES})
 
 add_definitions(-D__DOOM__
-				-D__DOOM_DLL__
-				-DGLEW_STATIC)
+				-DGLEW_STATIC
+				-DBUILD_FREETYPE
+				-DFT2_BUILD_LIBRARY)
+				
+if(MONOLITH)
+	list(APPEND TECHYON_SOURCES
+		${GAME_INCLUDES} ${GAME_SOURCES}
+		${GAME_AI_INCLUDES} ${GAME_AI_SOURCES}
+		${GAME_ANIM_INCLUDES} ${GAME_ANIM_SOURCES}
+		${GAME_GAMESYS_INCLUDES} ${GAME_GAMESYS_SOURCES}
+		${GAME_PHYSICS_INCLUDES} ${GAME_PHYSICS_SOURCES}
+		${GAME_SCRIPT_INCLUDES} ${GAME_SCRIPT_SOURCES})
+else()
+	add_definitions(-D__DOOM_DLL__)
+endif()
 
 include_directories(
 			libs/curl/include
 			libs/openal/include
 			libs/glew/include
+			libs/freetype/include
 			libs/zlib)
 			
 link_directories(
@@ -710,13 +907,14 @@ if(MSVC)
 		
 		add_definitions(-DUSE_MFC_TOOLS)
 		
-		set(TECHYON_SOURCES ${TECHYON_SOURCES}
+		list(APPEND TECHYON_SOURCES
 			${TOOLS_INCLUDES}
 			${TOOLS_COMAFX_INCLUDES} ${TOOLS_COMAFX_SOURCES}
 			${TOOLS_COMMON_INCLUDES} ${TOOLS_COMMON_SOURCES}
 			${TOOLS_COMMON_PROPTREE_INCLUDES} ${TOOLS_COMMON_PROPTREE_SOURCES}
 			
 			${EDITOR_AF_INCLUDES} ${EDITOR_AF_SOURCES}
+			${EDITOR_DEBUGGER_INCLUDES} ${EDITOR_DEBUGGER_SOURCES}
 			${EDITOR_DECL_INCLUDES} ${EDITOR_DECL_SOURCES}
 			${EDITOR_GUIED_INCLUDES} ${EDITOR_GUIED_SOURCES}
 			${EDITOR_MATERIALEDITOR_INCLUDES} ${EDITOR_MATERIALEDITOR_SOURCES}
@@ -736,7 +934,7 @@ if(MSVC)
 		# In order to handle this, the build directory needs to be added to the list of include directories.
 		include_directories(${CMAKE_CURRENT_BINARY_DIR})
 	
-		set(TECHYON_SOURCES ${TECHYON_SOURCES}
+		list(APPEND TECHYON_SOURCES
 			${TOOLS_INCLUDES}
 			
 			${QTTECHYON_INCLUDES}
@@ -763,7 +961,7 @@ if(MSVC)
 			)
 			
 		if(USE_QT_WINDOWING)
-			set(TECHYON_SOURCES ${TECHYON_SOURCES}
+			list(APPEND TECHYON_SOURCES
 				${QTTECHYON_INCLUDES}
 				${QTTECHYON_SOURCES}
 				${QTTECHYON_RESOURCES}
@@ -775,7 +973,7 @@ if(MSVC)
 		endif(USE_QT_WINDOWING)
 	endif()
 	
-	set(TECHYON_SOURCES ${TECHYON_SOURCES}
+	list(APPEND TECHYON_SOURCES
 		${SYS_INCLUDES} ${SYS_SOURCES}
 		${WIN32_INCLUDES} ${WIN32_SOURCES} ${WIN32_RESOURCES})
 		
