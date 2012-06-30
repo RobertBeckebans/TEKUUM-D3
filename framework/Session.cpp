@@ -2478,8 +2478,7 @@ idSessionLocal::UpdateScreen
 */
 void idSessionLocal::UpdateScreen( bool outOfSequence ) {
 
-#ifdef _WIN32
-
+#if defined(USE_MFC_TOOLS)
 	if ( com_editors ) {
 		if ( !Sys_IsWindowVisible() ) {
 			return;
