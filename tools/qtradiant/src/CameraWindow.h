@@ -3,23 +3,24 @@
 
 #include <QWidget>
 
-namespace Ui {
-	class CameraWindow;
+namespace Ui
+{
+class CameraWindow;
 }
 
 class CameraWindow : public QWidget
 {
 	Q_OBJECT
-    
+	
 public:
-	explicit CameraWindow(QWidget *parent = 0);
+	explicit CameraWindow( QWidget* parent = 0 );
 	~CameraWindow();
-    
+	
 protected:
-	void changeEvent(QEvent *e);
-    
+	void changeEvent( QEvent* e );
+	
 private:
-	Ui::CameraWindow *ui;
+	Ui::CameraWindow* ui;
 };
 
 #endif // CAMERAWINDOW_H

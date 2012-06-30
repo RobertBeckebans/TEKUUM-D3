@@ -21,15 +21,15 @@ static QtTest*				s_qtTestEditor = NULL;
 void	QtTestEditorInit()
 {
 	s_qtMain = QApplication::instance();
-	if(s_qtMain == NULL)
+	if( s_qtMain == NULL )
 	{
 		int argc = 0;
-		s_qtMain = new QApplication(argc, NULL);
+		s_qtMain = new QApplication( argc, NULL );
 	}
-
+	
 	s_qtTestEditor = new QtTest();
 	s_qtTestEditor->show();
-
+	
 	com_editors |= EDITOR_QTTEST;
 }
 void	QtTestEditorShutdown()

@@ -1,11 +1,11 @@
 #include "EntitiesDialog.h"
 #include "ui_EntitiesDialog.h"
 
-EntitiesDialog::EntitiesDialog(QWidget *parent) :
-	QDialog(parent),
-	ui(new Ui::EntitiesDialog)
+EntitiesDialog::EntitiesDialog( QWidget* parent ) :
+	QDialog( parent ),
+	ui( new Ui::EntitiesDialog )
 {
-	ui->setupUi(this);
+	ui->setupUi( this );
 }
 
 EntitiesDialog::~EntitiesDialog()
@@ -13,15 +13,16 @@ EntitiesDialog::~EntitiesDialog()
 	delete ui;
 }
 
-void EntitiesDialog::changeEvent(QEvent *e)
+void EntitiesDialog::changeEvent( QEvent* e )
 {
-	QDialog::changeEvent(e);
-	switch (e->type()) {
-	case QEvent::LanguageChange:
-		ui->retranslateUi(this);
-		break;
-	default:
-		break;
+	QDialog::changeEvent( e );
+	switch( e->type() )
+	{
+		case QEvent::LanguageChange:
+			ui->retranslateUi( this );
+			break;
+		default:
+			break;
 	}
 }
 

@@ -3,25 +3,26 @@
 
 #include <QWidget>
 
-namespace Ui {
+namespace Ui
+{
 class InspectorConsoleDock;
 }
 
 class InspectorConsoleDock : public QWidget
 {
-    Q_OBJECT
-    
+	Q_OBJECT
+	
 public:
-    explicit InspectorConsoleDock(QWidget *parent = 0);
-    ~InspectorConsoleDock();
-    
-	void			logMessage(const char* msg);
-
+	explicit InspectorConsoleDock( QWidget* parent = 0 );
+	~InspectorConsoleDock();
+	
+	void			logMessage( const char* msg );
+	
 protected:
-    void changeEvent(QEvent *e);
-    
+	void changeEvent( QEvent* e );
+	
 private:
-    Ui::InspectorConsoleDock *ui;
+	Ui::InspectorConsoleDock* ui;
 };
 
 #endif // INSPECTORCONSOLEDOCK_H

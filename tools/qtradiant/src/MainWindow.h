@@ -13,60 +13,61 @@
 #include "InspectorTexturesDock.h"
 #include "CameraWindow.h"
 
-namespace Ui {
-	class MainWindow;
-	class InspectorConsoleDock;
-	class InspectorEntityDock;
-	class InspectorMediaDock;
-	class InspectorTexturesDock;
-	class CameraWindow;
+namespace Ui
+{
+class MainWindow;
+class InspectorConsoleDock;
+class InspectorEntityDock;
+class InspectorMediaDock;
+class InspectorTexturesDock;
+class CameraWindow;
 }
 
 class MainWindow : public QMainWindow
 {
 	Q_OBJECT
-
+	
 public:
-	explicit MainWindow(QWidget *parent = 0);
+	explicit MainWindow( QWidget* parent = 0 );
 	~MainWindow();
-
+	
 private slots:
 	void on_actionAboutQt_triggered();
-
+	
 	void on_actionAbout_triggered();
-
+	
 	void on_actionMapInfo_triggered();
-
+	
 	void on_actionEntityInfo_triggered();
-
+	
 	void on_actionFindReplace_triggered();
-
+	
 	void on_actionOpen_triggered();
-
+	
 	void on_actionSaveAs_triggered();
-
+	
 	void on_actionSave_triggered();
-
+	
 	void on_actionExit_triggered();
-
+	
 private:
 	QList<QDockWidget*> m_docks;
-	Ui::MainWindow *ui;
-
+	Ui::MainWindow* ui;
+	
 	/*Ui::InspectorConsoleDock  *m_inspectorUi;
 	Ui::InspectorEntityDock   *m_entityUi;
 	Ui::InspectorMediaDock    *m_mediaUi;
 	Ui::InspectorTexturesDock *m_texturesUi;
 	Ui::CameraWindow          *m_cameraUi;*/
-
-	QDockWidget *inspectorConsoleDock;
-	QDockWidget *inspectorEntityDock;
-	QDockWidget *inspectorMediaDock;
-	QDockWidget *inspectorTexturesDock;
-	QDockWidget *cameraWindowDock;
-
-	QLabel *statusCoords;
-
+	
+	QDockWidget* inspectorConsoleDock;
+	QDockWidget* inspectorEntityDock;
+	QDockWidget* inspectorMediaDock;
+	QDockWidget* inspectorTexturesDock;
+	QDockWidget* cameraWindowDock;
+	
+	QLabel* statusCoords;
+	
 public:
 
 	/*InspectorConsoleDock*		GetInspectorConsoleDock() { return inspectorConsoleDock; }
@@ -74,8 +75,8 @@ public:
 	QDockWidget*				GetInspectorMediaDock() { return inspectorMediaDock; }
 	QDockWidget*				GetInspectorTexturesDock() { return inspectorTexturesDock; }
 	QDockWidget*				GetCameraWindow() { return cameraWindow; }*/
-
-	void						logMessage(const char* msg);
+	
+	void						logMessage( const char* msg );
 };
 
 #endif // MAINWINDOW_H

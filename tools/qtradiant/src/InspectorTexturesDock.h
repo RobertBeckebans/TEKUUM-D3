@@ -3,23 +3,24 @@
 
 #include <QWidget>
 
-namespace Ui {
+namespace Ui
+{
 class InspectorTexturesDock;
 }
 
 class InspectorTexturesDock : public QWidget
 {
-    Q_OBJECT
-    
+	Q_OBJECT
+	
 public:
-    explicit InspectorTexturesDock(QWidget *parent = 0);
-    ~InspectorTexturesDock();
-    
+	explicit InspectorTexturesDock( QWidget* parent = 0 );
+	~InspectorTexturesDock();
+	
 protected:
-    void changeEvent(QEvent *e);
-    
+	void changeEvent( QEvent* e );
+	
 private:
-    Ui::InspectorTexturesDock *ui;
+	Ui::InspectorTexturesDock* ui;
 };
 
 #endif // INSPECTORTEXTURESDOCK_H

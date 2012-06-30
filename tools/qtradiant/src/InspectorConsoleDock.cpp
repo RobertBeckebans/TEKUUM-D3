@@ -1,35 +1,36 @@
 #include "InspectorConsoleDock.h"
 #include "ui_InspectorConsoleDock.h"
 
-InspectorConsoleDock::InspectorConsoleDock(QWidget *parent) :
-QWidget(parent),
-ui(new Ui::InspectorConsoleDock)
+InspectorConsoleDock::InspectorConsoleDock( QWidget* parent ) :
+	QWidget( parent ),
+	ui( new Ui::InspectorConsoleDock )
 {
-    ui->setupUi(this);
+	ui->setupUi( this );
 }
 
 InspectorConsoleDock::~InspectorConsoleDock()
 {
-    delete ui;
+	delete ui;
 }
 
-void InspectorConsoleDock::changeEvent(QEvent *e)
+void InspectorConsoleDock::changeEvent( QEvent* e )
 {
-    QWidget::changeEvent(e);
-    switch (e->type()) {
-    case QEvent::LanguageChange:
-        ui->retranslateUi(this);
-        break;
-    default:
-        break;
-    }
+	QWidget::changeEvent( e );
+	switch( e->type() )
+	{
+		case QEvent::LanguageChange:
+			ui->retranslateUi( this );
+			break;
+		default:
+			break;
+	}
 }
 
 
-void InspectorConsoleDock::logMessage(const char* msg)
+void InspectorConsoleDock::logMessage( const char* msg )
 {
-	QString s(msg);
+	QString s( msg );
 	//s = s.trimmed();
-	ui->consoleOutputText->append(s);
+	ui->consoleOutputText->append( s );
 	//ui->consoleOutputText->setVisible(true);
 }

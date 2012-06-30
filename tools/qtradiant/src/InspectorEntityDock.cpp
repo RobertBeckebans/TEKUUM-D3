@@ -1,26 +1,27 @@
 #include "InspectorEntityDock.h"
 #include "ui_InspectorEntityDock.h"
 
-InspectorEntityDock::InspectorEntityDock(QWidget *parent) :
-QWidget(parent),
-ui(new Ui::InspectorEntityDock)
+InspectorEntityDock::InspectorEntityDock( QWidget* parent ) :
+	QWidget( parent ),
+	ui( new Ui::InspectorEntityDock )
 {
-    ui->setupUi(this);
+	ui->setupUi( this );
 }
 
 InspectorEntityDock::~InspectorEntityDock()
 {
-    delete ui;
+	delete ui;
 }
 
-void InspectorEntityDock::changeEvent(QEvent *e)
+void InspectorEntityDock::changeEvent( QEvent* e )
 {
-    QWidget::changeEvent(e);
-    switch (e->type()) {
-    case QEvent::LanguageChange:
-        ui->retranslateUi(this);
-        break;
-    default:
-        break;
-    }
+	QWidget::changeEvent( e );
+	switch( e->type() )
+	{
+		case QEvent::LanguageChange:
+			ui->retranslateUi( this );
+			break;
+		default:
+			break;
+	}
 }

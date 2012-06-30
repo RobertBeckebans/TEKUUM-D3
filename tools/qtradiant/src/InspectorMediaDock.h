@@ -3,23 +3,24 @@
 
 #include <QWidget>
 
-namespace Ui {
+namespace Ui
+{
 class InspectorMediaDock;
 }
 
 class InspectorMediaDock : public QWidget
 {
-    Q_OBJECT
-    
+	Q_OBJECT
+	
 public:
-    explicit InspectorMediaDock(QWidget *parent = 0);
-    ~InspectorMediaDock();
-    
+	explicit InspectorMediaDock( QWidget* parent = 0 );
+	~InspectorMediaDock();
+	
 protected:
-    void changeEvent(QEvent *e);
-    
+	void changeEvent( QEvent* e );
+	
 private:
-    Ui::InspectorMediaDock *ui;
+	Ui::InspectorMediaDock* ui;
 };
 
 #endif // INSPECTORMEDIADOCK_H

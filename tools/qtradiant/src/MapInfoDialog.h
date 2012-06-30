@@ -3,8 +3,9 @@
 
 #include <QDialog>
 
-namespace Ui {
-	class MapInfoDialog;
+namespace Ui
+{
+class MapInfoDialog;
 }
 
 class MapInfoDialog : public QDialog
@@ -12,17 +13,17 @@ class MapInfoDialog : public QDialog
 	Q_OBJECT
 	
 public:
-	explicit MapInfoDialog(QWidget *parent = 0);
+	explicit MapInfoDialog( QWidget* parent = 0 );
 	~MapInfoDialog();
 	
 protected:
-	void changeEvent(QEvent *e);
+	void changeEvent( QEvent* e );
 	
 private slots:
 	void on_buttonBox_rejected();
-
+	
 private:
-	Ui::MapInfoDialog *ui;
+	Ui::MapInfoDialog* ui;
 };
 
 #endif // MAPINFODIALOG_H

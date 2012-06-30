@@ -7,11 +7,11 @@
 class QtTest : public QMainWindow
 {
 	Q_OBJECT
-
+	
 public:
 	//QtTest(QWidget *parent = 0, Qt::WFlags flags = 0);
 	//~QtTest();
-
+	
 private:
 	Ui::QtTestClass ui;
 };

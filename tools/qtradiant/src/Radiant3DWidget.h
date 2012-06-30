@@ -14,13 +14,13 @@ class Radiant3DWidget : public QGLWidget
 {
 	Q_OBJECT
 public:
-	explicit Radiant3DWidget(QWidget *parent = 0);
+	explicit Radiant3DWidget( QWidget* parent = 0 );
 	
 signals:
 
 protected:
 	void initializeGL();
-	void resizeGL(int width, int height);
+	void resizeGL( int width, int height );
 	void paintGL();
 	
 public slots:
@@ -28,7 +28,7 @@ public slots:
 	
 private:
 	float rotx;
-	QTimer *timer;
+	QTimer* timer;
 };
 
 #endif // RADIANT3DWIDGET_H

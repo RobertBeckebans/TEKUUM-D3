@@ -3,23 +3,24 @@
 
 #include <QWidget>
 
-namespace Ui {
+namespace Ui
+{
 class InspectorEntityDock;
 }
 
 class InspectorEntityDock : public QWidget
 {
-    Q_OBJECT
-    
+	Q_OBJECT
+	
 public:
-    explicit InspectorEntityDock(QWidget *parent = 0);
-    ~InspectorEntityDock();
-    
+	explicit InspectorEntityDock( QWidget* parent = 0 );
+	~InspectorEntityDock();
+	
 protected:
-    void changeEvent(QEvent *e);
-    
+	void changeEvent( QEvent* e );
+	
 private:
-    Ui::InspectorEntityDock *ui;
+	Ui::InspectorEntityDock* ui;
 };
 
 #endif // INSPECTORENTITYDOCK_H
