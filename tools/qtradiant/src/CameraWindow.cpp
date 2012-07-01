@@ -1,16 +1,19 @@
 #include "CameraWindow.h"
 #include "ui_CameraWindow.h"
 
+#include "../../sys/qt/GameMainWindow.h"
+
 CameraWindow::CameraWindow( QWidget* parent ) :
-	QWidget( parent ),
-	ui( new Ui::CameraWindow )
+	//QWidget( parent ),
+	Radiant3DWidget( parent, GameMainWindow::getInstance()->getGLWidget() )
+	//ui( new Ui::CameraWindow )
 {
-	ui->setupUi( this );
+	//ui->setupUi( this );
 }
 
 CameraWindow::~CameraWindow()
 {
-	delete ui;
+	//delete ui;
 }
 
 void CameraWindow::changeEvent( QEvent* e )
@@ -19,7 +22,7 @@ void CameraWindow::changeEvent( QEvent* e )
 	switch( e->type() )
 	{
 		case QEvent::LanguageChange:
-			ui->retranslateUi( this );
+			//ui->retranslateUi( this );
 			break;
 		default:
 			break;

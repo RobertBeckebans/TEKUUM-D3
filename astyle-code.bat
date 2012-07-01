@@ -12,4 +12,7 @@ REM ..\bin\win32\UniversalIndentGUI\indenters\astyle.exe -v --options=astyle-opt
 
 ..\bin\win32\UniversalIndentGUI\indenters\astyle.exe -v --options=astyle-options.ini --recursive tools/qtradiant/*.h
 ..\bin\win32\UniversalIndentGUI\indenters\astyle.exe -v --options=astyle-options.ini --recursive tools/qtradiant/*.cpp
+
+..\bin\win32\UniversalIndentGUI\indenters\astyle.exe -v --options=astyle-options.ini --recursive sys/qt/*.h
+..\bin\win32\UniversalIndentGUI\indenters\astyle.exe -v --options=astyle-options.ini --recursive sys/qt/*.cpp
 pause

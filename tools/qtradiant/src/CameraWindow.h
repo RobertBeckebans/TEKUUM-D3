@@ -2,13 +2,14 @@
 #define CAMERAWINDOW_H
 
 #include <QWidget>
+#include "Radiant3DWidget.h"
 
 namespace Ui
 {
 class CameraWindow;
 }
 
-class CameraWindow : public QWidget
+class CameraWindow : public Radiant3DWidget
 {
 	Q_OBJECT
 	

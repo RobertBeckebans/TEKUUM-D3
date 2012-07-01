@@ -14,7 +14,11 @@ class Radiant3DWidget : public QGLWidget
 {
 	Q_OBJECT
 public:
+#if defined(USE_QT_WINDOWING)
+	explicit Radiant3DWidget( QWidget* parent = 0, const QGLWidget* shareWidget = 0 );
+#else
 	explicit Radiant3DWidget( QWidget* parent = 0 );
+#endif
 	
 signals:
 

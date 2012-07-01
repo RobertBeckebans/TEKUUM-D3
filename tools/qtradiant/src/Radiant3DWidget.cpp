@@ -8,9 +8,14 @@ explicit QGLWidget(QGLContext *context, QWidget* parent=0,
                        const QGLWidget* shareWidget = 0, Qt::WindowFlags f=0);
 */
 
+#if defined(USE_QT_WINDOWING)
+Radiant3DWidget::Radiant3DWidget( QWidget* parent, const QGLWidget* shareWidget ) :
+	QGLWidget( QGLFormat( QGL::SampleBuffers ), parent, shareWidget )
+#else
 Radiant3DWidget::Radiant3DWidget( QWidget* parent ) :
 	QGLWidget( QGLFormat( QGL::SampleBuffers ), parent )
 	//QGLWidget(new EngineQGLContext(), parent)
+#endif
 {
 
 	rotx = 0.0f;
@@ -26,12 +31,14 @@ Radiant3DWidget::Radiant3DWidget( QWidget* parent ) :
 void Radiant3DWidget::onTimer()
 {
 	rotx += 1.0f;
-	//updateGL();
+	updateGL();
 }
 
 void Radiant3DWidget::initializeGL()
 {
-#if 0
+#if 1
+	//makeCurrent();
+	
 	qglClearColor( QColor( 0, 0, 32, 0 ) );
 	
 	glClearDepth( 1.0f );
@@ -39,10 +46,10 @@ void Radiant3DWidget::initializeGL()
 	glDepthFunc( GL_LEQUAL );
 	
 	glEnable( GL_TEXTURE_2D );
-	//glEnable(GL_CULL_FACE);
-	//glEnable(GL_LIGHTING);
+	glEnable( GL_CULL_FACE );
+	glEnable( GL_LIGHTING );
 	glEnable( GL_LIGHT0 );
-	glEnable( GL_MULTISAMPLE );
+	//glEnable( GL_MULTISAMPLE );
 	glEnable( GL_BLEND );
 	glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
 	
@@ -50,12 +57,16 @@ void Radiant3DWidget::initializeGL()
 	glHint( GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST );
 	
 	glColor4f( 1.0, 1.0, 1.0, 1.0 );
+	
+	//doneCurrent();
 #endif
 }
 
 void Radiant3DWidget::resizeGL( int width, int height )
 {
-#if 0
+#if 1
+	//makeCurrent();
+	
 	//int size = qMin(width, height);
 	//glViewport((width - size) / 2, (height - size) / 2, size, size);
 	glViewport( 0, 0, width, height );
@@ -72,12 +83,14 @@ void Radiant3DWidget::resizeGL( int width, int height )
 	*/
 	glMatrixMode( GL_MODELVIEW );
 	paintGL();
+	
+	//doneCurrent();
 #endif
 }
 
 void Radiant3DWidget::paintGL()
 {
-#if 0
+#if 1
 	//makeCurrent();
 	
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
