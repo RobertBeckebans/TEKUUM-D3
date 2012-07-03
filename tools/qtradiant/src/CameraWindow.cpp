@@ -4,8 +4,11 @@
 #include "../../sys/qt/GameMainWindow.h"
 
 CameraWindow::CameraWindow( QWidget* parent ) :
-	//QWidget( parent ),
+#if defined(USE_QT_WINDOWING)
 	Radiant3DWidget( parent, GameMainWindow::getInstance()->getGLWidget() )
+#else
+	QWidget( parent )//,
+#endif
 	//ui( new Ui::CameraWindow )
 {
 	//ui->setupUi( this );

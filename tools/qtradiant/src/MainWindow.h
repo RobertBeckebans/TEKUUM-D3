@@ -60,13 +60,16 @@ private:
 	Ui::InspectorTexturesDock *m_texturesUi;
 	Ui::CameraWindow          *m_cameraUi;*/
 	
-	QDockWidget* inspectorConsoleDock;
-	QDockWidget* inspectorEntityDock;
-	QDockWidget* inspectorMediaDock;
-	QDockWidget* inspectorTexturesDock;
-	QDockWidget* cameraWindowDock;
+	QDockWidget*				inspectorConsoleDock;
+	QDockWidget*				inspectorEntityDock;
+	QDockWidget*				inspectorMediaDock;
+	QDockWidget*				inspectorTexturesDock;
+	QDockWidget*				cameraWindowDock;
+#if defined(USE_QT_WINDOWING)
+	QDockWidget*				gameWindowDock;
+#endif
 	
-	QLabel* statusCoords;
+	QLabel*						statusCoords;
 	
 public:
 

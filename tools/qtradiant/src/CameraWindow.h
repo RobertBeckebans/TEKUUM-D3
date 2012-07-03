@@ -9,7 +9,11 @@ namespace Ui
 class CameraWindow;
 }
 
+#if defined(USE_QT_WINDOWING)
 class CameraWindow : public Radiant3DWidget
+#else
+class CameraWindow : public QWidget
+#endif
 {
 	Q_OBJECT
 	

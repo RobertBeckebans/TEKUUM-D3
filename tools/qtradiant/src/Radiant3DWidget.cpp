@@ -46,8 +46,8 @@ void Radiant3DWidget::initializeGL()
 	glDepthFunc( GL_LEQUAL );
 	
 	glEnable( GL_TEXTURE_2D );
-	glEnable( GL_CULL_FACE );
-	glEnable( GL_LIGHTING );
+	//glEnable( GL_CULL_FACE );
+	//glEnable( GL_LIGHTING );
 	glEnable( GL_LIGHT0 );
 	//glEnable( GL_MULTISAMPLE );
 	glEnable( GL_BLEND );

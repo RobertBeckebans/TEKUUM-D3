@@ -10,6 +10,8 @@
 #include "MapInfoDialog.h"
 #include "FindReplaceDialog.h"
 
+#include "../../sys/qt/GameMainWindow.h"
+
 //#include "../../idlib/precompiled.h"
 //#pragma hdrstop
 
@@ -34,6 +36,9 @@ MainWindow::MainWindow( QWidget* parent ) :
 	//inspectorMediaDock    = new QDockWidget(tr("Media"), this);
 	//inspectorTexturesDock = new QDockWidget(tr("Textures"), this);
 	cameraWindowDock = new QDockWidget( tr( "Cam" ), this );
+#if defined(USE_QT_WINDOWING)
+	gameWindowDock = new QDockWidget( tr( "Game" ), this );
+#endif
 	
 	//inspectorConsoleDock->setObjectName("inspectorConsoleDock");
 	//inspectorEntityDock->setObjectName("inspectorEntityDock");
@@ -46,6 +51,9 @@ MainWindow::MainWindow( QWidget* parent ) :
 	//inspectorMediaDock->setWidget(new QWidget(inspectorMediaDock));
 	//inspectorTexturesDock->setWidget(new QWidget(inspectorTexturesDock));
 	cameraWindowDock->setWidget( new CameraWindow( cameraWindowDock ) );
+#if defined(USE_QT_WINDOWING)
+	gameWindowDock->setWidget( GameMainWindow::getInstance() );
+#endif
 	
 	//m_inspectorUi->setupUi(inspectorConsoleDock->widget());
 	//m_entityUi->setupUi(inspectorEntityDock->widget());
@@ -56,6 +64,9 @@ MainWindow::MainWindow( QWidget* parent ) :
 	addDockWidget( Qt::LeftDockWidgetArea, cameraWindowDock );
 	addDockWidget( Qt::LeftDockWidgetArea, inspectorConsoleDock );
 	addDockWidget( Qt::LeftDockWidgetArea, inspectorEntityDock );
+#if defined(USE_QT_WINDOWING)
+	addDockWidget( Qt::RightDockWidgetArea, gameWindowDock );
+#endif
 	//addDockWidget(Qt::LeftDockWidgetArea, inspectorMediaDock);
 	//addDockWidget(Qt::LeftDockWidgetArea, inspectorTexturesDock);
 	
@@ -70,15 +81,15 @@ MainWindow::MainWindow( QWidget* parent ) :
 	//tabifyDockWidget(inspectorMediaDock, inspectorTexturesDock);
 	
 	// setup icons from theme (on linux) or use resource icon
-	ui->actionNewMap->setIcon( QIcon::fromTheme( "document-new",     QIcon( ":/icons/new" ) ) );
-	ui->actionOpen->  setIcon( QIcon::fromTheme( "document-open",    QIcon( ":/icons/open" ) ) );
-	ui->actionSave->  setIcon( QIcon::fromTheme( "document-save",    QIcon( ":/icons/save" ) ) );
-	ui->actionExit->  setIcon( QIcon::fromTheme( "application-exit", QIcon( ":/icons/exit" ) ) );
+	ui->actionNewMap->setIcon( QIcon::fromTheme( "document-new", QIcon( ":/icons/new" ) ) );
+	ui->actionOpen->setIcon( QIcon::fromTheme( "document-open", QIcon( ":/icons/open" ) ) );
+	ui->actionSave->setIcon( QIcon::fromTheme( "document-save", QIcon( ":/icons/save" ) ) );
+	ui->actionExit->setIcon( QIcon::fromTheme( "application-exit", QIcon( ":/icons/exit" ) ) );
 	
-	ui->actionCut->        setIcon( QIcon::fromTheme( "edit-cut",           QIcon( ":/icons/cut" ) ) );
-	ui->actionCopy->       setIcon( QIcon::fromTheme( "edit-copy",          QIcon( ":/icons/copy" ) ) );
-	ui->actionPaste->      setIcon( QIcon::fromTheme( "edit-paste",         QIcon( ":/icons/paste" ) ) );
-	ui->actionDelete->     setIcon( QIcon::fromTheme( "edit-delete",        QIcon( ":/icons/delete" ) ) );
+	ui->actionCut->setIcon( QIcon::fromTheme( "edit-cut", QIcon( ":/icons/cut" ) ) );
+	ui->actionCopy->setIcon( QIcon::fromTheme( "edit-copy", QIcon( ":/icons/copy" ) ) );
+	ui->actionPaste->setIcon( QIcon::fromTheme( "edit-paste", QIcon( ":/icons/paste" ) ) );
+	ui->actionDelete->setIcon( QIcon::fromTheme( "edit-delete", QIcon( ":/icons/delete" ) ) );
 	ui->actionPreferences->setIcon( QIcon::fromTheme( "preferences-system", QIcon( ":/icons/preferences" ) ) );
 	
 	// setup statusbar widgets
