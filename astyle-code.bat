@@ -7,11 +7,8 @@ REM ..\bin\win32\UniversalIndentGUI\indenters\astyle.exe -v --options=astyle-opt
 REM ..\bin\win32\UniversalIndentGUI\indenters\astyle.exe -v --options=astyle-options.ini --recursive game/*.h
 REM ..\bin\win32\UniversalIndentGUI\indenters\astyle.exe -v --options=astyle-options.ini --exclude="game/gamesys/SysCvar.cpp" --exclude="game/gamesys/Callbacks.cpp" --recursive game/*.cpp
 
-..\bin\win32\UniversalIndentGUI\indenters\astyle.exe -v --options=astyle-options.ini --recursive tools/qttest/*.h
-..\bin\win32\UniversalIndentGUI\indenters\astyle.exe -v --options=astyle-options.ini --recursive tools/qttest/*.cpp
-
-..\bin\win32\UniversalIndentGUI\indenters\astyle.exe -v --options=astyle-options.ini --recursive tools/qtradiant/*.h
-..\bin\win32\UniversalIndentGUI\indenters\astyle.exe -v --options=astyle-options.ini --recursive tools/qtradiant/*.cpp
+..\bin\win32\UniversalIndentGUI\indenters\astyle.exe -v --options=astyle-options.ini --recursive tools/*.h
+..\bin\win32\UniversalIndentGUI\indenters\astyle.exe -v --options=astyle-options.ini --recursive tools/*.cpp
 
 ..\bin\win32\UniversalIndentGUI\indenters\astyle.exe -v --options=astyle-options.ini --recursive sys/qt/*.h
 ..\bin\win32\UniversalIndentGUI\indenters\astyle.exe -v --options=astyle-options.ini --recursive sys/qt/*.cpp
