@@ -15,7 +15,7 @@ class PROPTREE_API CPropTreeItemFileEdit : public CPropTreeItemEdit
 public:
 	CPropTreeItemFileEdit();
 	virtual ~CPropTreeItemFileEdit();
-
+	
 	// Operations
 public:
 
@@ -23,7 +23,7 @@ public:
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CPropTreeItemFileEdit)
 	//}}AFX_VIRTUAL
-
+	
 	// Implementation
 public:
 
@@ -31,7 +31,7 @@ public:
 protected:
 	//{{AFX_MSG(CPropTreeItemFileEdit)
 	//}}AFX_MSG
-
+	
 	afx_msg void 				OnInsertFile();
 	afx_msg void 				OnEditUndo();
 	afx_msg void 				OnEditCut();
@@ -39,11 +39,11 @@ protected:
 	afx_msg void 				OnEditPaste();
 	afx_msg void 				OnEditDelete();
 	afx_msg void 				OnEditSelectAll();
-
+	
 	DECLARE_MESSAGE_MAP()
 public:
-	afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);
-	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
+	afx_msg void OnContextMenu( CWnd* pWnd, CPoint point );
+	afx_msg int OnCreate( LPCREATESTRUCT lpCreateStruct );
 };
 
 /////////////////////////////////////////////////////////////////////////////
@@ -51,4 +51,4 @@ public:
 //{{AFX_INSERT_LOCATION}}
 
 
-#endif 
+#endif

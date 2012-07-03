@@ -2,9 +2,9 @@
 ===========================================================================
 
 Doom 3 GPL Source Code
-Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company. 
+Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
 
-This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).  
+This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
 
 Doom 3 Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -48,22 +48,22 @@ class rvDebuggerServer
 {
 public:
 
-	rvDebuggerServer ( );
-	~rvDebuggerServer ( );
-
-	bool		Initialize			( void );
-	void		Shutdown			( void );
+	rvDebuggerServer( );
+	~rvDebuggerServer( );
 	
-	bool		ProcessMessages		( void );
+	bool		Initialize( void );
+	void		Shutdown( void );
 	
-	bool		IsConnected			( void );
+	bool		ProcessMessages( void );
 	
-	void		CheckBreakpoints	( idInterpreter* interpreter, idProgram* program, int instructionPointer );
+	bool		IsConnected( void );
 	
-	void		Print				( const char* text );
-
-	void		OSPathToRelativePath( const char *osPath, idStr &qpath );
-		
+	void		CheckBreakpoints( idInterpreter* interpreter, idProgram* program, int instructionPointer );
+	
+	void		Print( const char* text );
+	
+	void		OSPathToRelativePath( const char* osPath, idStr& qpath );
+	
 protected:
 
 	// protected member variables
@@ -87,29 +87,29 @@ protected:
 	idInterpreter*					mBreakInterpreter;
 	
 	idStr							mLastStatementFile;
-	int								mLastStatementLine;	
+	int								mLastStatementLine;
 	
 private:
 
-	void		ClearBreakpoints				( void );
-
-	void		Break							( idInterpreter* interpreter, idProgram* program, int instructionPointer );
-	void		Resume							( void );
-
-	void		SendMessage						( EDebuggerMessage dbmsg );
-	void		SendPacket						( void* data, int datasize );
-
+	void		ClearBreakpoints( void );
+	
+	void		Break( idInterpreter* interpreter, idProgram* program, int instructionPointer );
+	void		Resume( void );
+	
+	void		SendMessage( EDebuggerMessage dbmsg );
+	void		SendPacket( void* data, int datasize );
+	
 	// Message handlers
 	// Techyon RB: changed msg_t* to idBitMsg&
-	void		HandleAddBreakpoint				( idBitMsg& msg );
-	void		HandleRemoveBreakpoint			( idBitMsg& msg );
-	void		HandleResume					( idBitMsg& msg );
-	void		HandleInspectVariable			( idBitMsg& msg );
-	void		HandleInspectCallstack			( idBitMsg& msg );
-	void		HandleInspectThreads			( idBitMsg& msg );
+	void		HandleAddBreakpoint( idBitMsg& msg );
+	void		HandleRemoveBreakpoint( idBitMsg& msg );
+	void		HandleResume( idBitMsg& msg );
+	void		HandleInspectVariable( idBitMsg& msg );
+	void		HandleInspectCallstack( idBitMsg& msg );
+	void		HandleInspectThreads( idBitMsg& msg );
 	
 	// MSG helper routines
-	void		MSG_WriteCallstackFunc			( idBitMsg& msg, const struct prstack_s* stack );
+	void		MSG_WriteCallstackFunc( idBitMsg& msg, const struct prstack_s* stack );
 	// Techyon END
 };
 
@@ -118,7 +118,7 @@ private:
 rvDebuggerServer::IsConnected
 ================
 */
-ID_INLINE bool rvDebuggerServer::IsConnected ( void )
+ID_INLINE bool rvDebuggerServer::IsConnected( void )
 {
 	return mConnected;
 }
@@ -128,9 +128,9 @@ ID_INLINE bool rvDebuggerServer::IsConnected ( void )
 rvDebuggerServer::SendPacket
 ================
 */
-ID_INLINE void rvDebuggerServer::SendPacket ( void* data, int size )
+ID_INLINE void rvDebuggerServer::SendPacket( void* data, int size )
 {
-	mPort.SendPacket ( mClientAdr, data, size );
+	mPort.SendPacket( mClientAdr, data, size );
 }
 
 #endif // DEBUGGERSERVER_H_

@@ -2,9 +2,9 @@
 ===========================================================================
 
 Doom 3 GPL Source Code
-Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company. 
+Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
 
-This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).  
+This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
 
 Doom 3 Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -48,14 +48,14 @@ class CEntKeyFindReplace : public CDialog
 {
 // Construction
 public:
-	CEntKeyFindReplace(CString* p_strFindKey, 
-					   CString* p_strFindValue, 
-					   CString* p_strReplaceKey, 
-					   CString* p_strReplaceValue, 
-					   bool*	p_bWholeStringMatchOnly,
-					   bool*	p_bSelectAllMatchingEnts,
-					   CWnd*	pParent = NULL);   // standard constructor
-
+	CEntKeyFindReplace( CString* p_strFindKey,
+						CString* p_strFindValue,
+						CString* p_strReplaceKey,
+						CString* p_strReplaceValue,
+						bool*	p_bWholeStringMatchOnly,
+						bool*	p_bSelectAllMatchingEnts,
+						CWnd*	pParent = NULL );  // standard constructor
+						
 // Dialog Data
 	//{{AFX_DATA(CEntKeyFindReplace)
 	enum { IDD = IDD_ENTFINDREPLACE };
@@ -66,15 +66,15 @@ public:
 	BOOL	m_bWholeStringMatchOnly;
 	BOOL	m_bSelectAllMatchingEnts;
 	//}}AFX_DATA
-
-
+	
+	
 // Overrides
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CEntKeyFindReplace)
-	protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
+protected:
+	virtual void DoDataExchange( CDataExchange* pDX );  // DDX/DDV support
 	//}}AFX_VIRTUAL
-
+	
 // Implementation
 protected:
 
@@ -87,14 +87,14 @@ protected:
 	afx_msg void OnValuecopy();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
-
+	
 	CString* m_pStrFindKey;
 	CString* m_pStrFindValue;
 	CString* m_pStrReplaceKey;
 	CString* m_pStrReplaceValue;
 	bool*	 m_pbWholeStringMatchOnly;
 	bool*	 m_pbSelectAllMatchingEnts;
-
+	
 	void CopyFields();
 };
 

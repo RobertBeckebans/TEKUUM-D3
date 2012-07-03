@@ -12,14 +12,14 @@
 class GtkTestEditor : public Gtk::Window
 {
 public:
-							GtkTestEditor(Gtk::Window * parent = NULL);   // standard constructor
-							~GtkTestEditor();
+	GtkTestEditor( Gtk::Window* parent = NULL );  // standard constructor
+	~GtkTestEditor();
 protected:
-							// TODO
+	// TODO
 private:
 	Gtk::Table				_table;
 	Gtk::Button				_closeButton;
-
+	
 private:
 	void					OnCloseButtonClicked();
 };

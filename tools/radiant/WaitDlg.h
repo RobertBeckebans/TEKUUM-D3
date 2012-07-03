@@ -2,9 +2,9 @@
 ===========================================================================
 
 Doom 3 GPL Source Code
-Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company. 
+Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
 
-This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).  
+This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
 
 Doom 3 Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -41,26 +41,26 @@ class CWaitDlg : public CDialog
 {
 // Construction
 public:
-	CWaitDlg(CWnd* pParent = NULL, const char *msg = "Wait...");   // standard constructor
+	CWaitDlg( CWnd* pParent = NULL, const char* msg = "Wait..." ); // standard constructor
 	~CWaitDlg();
-	void SetText(const char *msg, bool append = false);
+	void SetText( const char* msg, bool append = false );
 	void AllowCancel( bool enable );
 	bool CancelPressed( void );
-
+	
 // Dialog Data
 	//{{AFX_DATA(CWaitDlg)
 	enum { IDD = IDD_DLG_WAIT };
 	CString	waitStr;
 	//}}AFX_DATA
-
-
+	
+	
 // Overrides
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CWaitDlg)
-	protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
+protected:
+	virtual void DoDataExchange( CDataExchange* pDX );  // DDX/DDV support
 	//}}AFX_VIRTUAL
-
+	
 // Implementation
 protected:
 
@@ -70,7 +70,7 @@ protected:
 	virtual void OnCancel();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
-
+	
 private:
 	idStr	text;
 	bool	cancelPressed;
