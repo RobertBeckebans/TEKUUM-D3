@@ -2,10 +2,10 @@
 ===========================================================================
 
 Doom 3 GPL Source Code
-Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company. 
+Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
 Copyright (C) 2012 Robert Beckebans
 
-This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).  
+This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
 
 Doom 3 Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -39,44 +39,46 @@ If you have questions concerning this license or the applicable additional terms
 */
 
 
-class tyPortal : public idEntity {
+class tyPortal : public idEntity
+{
 public:
 	CLASS_PROTOTYPE( tyPortal );
-
-	enum {
+	
+	enum
+	{
 		EVENT_TELEPORTPLAYER = idEntity::EVENT_MAXEVENTS,
 		EVENT_MAXEVENTS
 	};
-
+	
 	void					Spawn( void );
 	
-	void					Create( idEntity *owner, tyPortal *otherPortal, const idVec3 &start, const idMat3 &axis );
-
-
-	void					Save( idSaveGame *savefile ) const;
-	void					Restore( idRestoreGame *savefile );
-
+	void					Create( idEntity* owner, tyPortal* otherPortal, const idVec3& start, const idMat3& axis );
+	
+	
+	void					Save( idSaveGame* savefile ) const;
+	void					Restore( idRestoreGame* savefile );
+	
 	virtual void			Think( void );
-
-	virtual renderView_t *	GetRenderView();
-	virtual void			Killed( idEntity *inflictor, idEntity *attacker, int damage, const idVec3 &dir, int location );
-	virtual bool			Pain( idEntity *inflictor, idEntity *attacker, int damage, const idVec3 &dir, int location );
+	
+	virtual renderView_t* 	GetRenderView();
+	virtual void			Killed( idEntity* inflictor, idEntity* attacker, int damage, const idVec3& dir, int location );
+	virtual bool			Pain( idEntity* inflictor, idEntity* attacker, int damage, const idVec3& dir, int location );
 	virtual void			Present( void );
-
-	virtual bool			ClientReceiveEvent( int event, int time, const idBitMsg &msg );
-
+	
+	virtual bool			ClientReceiveEvent( int event, int time, const idBitMsg& msg );
+	
 private:
 	idEntityPtr<idEntity>	owner;
 	idEntityPtr<tyPortal>	destinationPortal;
-
+	
 	int						modelAxis;
 	bool					flipAxis;
 	float					scanDist;
 	float					scanFov;
 	float					scanFovCos;
-
+	
 	idVec3					viewOffset;
-							
+	
 	int						pvsArea;
 	idPhysics_RigidBody		physicsObj;
 //	idTraceModel			trm;
@@ -84,22 +86,22 @@ private:
 	bool					CanSeePlayer( void );
 	void					DrawFov( void );
 	const idVec3			GetAxis( void ) const;
-
+	
 	float					wait;
 	float					delay;
 	int						nextTriggerTime;
 	idStr					requires;
 	int						removeItem;
-
-	bool					CheckFacing( idEntity *activator );
-	void					Event_Touch( idEntity *other, trace_t *trace );
-
-
+	
+	bool					CheckFacing( idEntity* activator );
+	void					Event_Touch( idEntity* other, trace_t* trace );
+	
+	
 	int						teleportStage;
-
-	void					Event_TeleportPlayer( idEntity *activator );
-	void					Event_TeleportStage( idEntity *player );
-	void					TeleportPlayer( idPlayer *player );
+	
+	void					Event_TeleportPlayer( idEntity* activator );
+	void					Event_TeleportStage( idEntity* player );
+	void					TeleportPlayer( idPlayer* player );
 	void					Event_AddLight( void );
 };
 

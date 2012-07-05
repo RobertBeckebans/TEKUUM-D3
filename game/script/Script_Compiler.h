@@ -2,9 +2,9 @@
 ===========================================================================
 
 Doom 3 GPL Source Code
-Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company. 
+Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
 
-This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).  
+This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
 
 Doom 3 Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -28,33 +28,35 @@ If you have questions concerning this license or the applicable additional terms
 #ifndef __SCRIPT_COMPILER_H__
 #define __SCRIPT_COMPILER_H__
 
-const char * const RESULT_STRING = "<RESULT>";
+const char* const RESULT_STRING = "<RESULT>";
 
-typedef struct opcode_s {
+typedef struct opcode_s
+{
 	// Techyon RB: fixed deprecated conversion from string constant to ‘char*’
-	const char	*name;
-	const char	*opname;
+	const char*	name;
+	const char*	opname;
 	// Techyon END
 	int			priority;
 	bool		rightAssociative;
-	idVarDef	*type_a;
-	idVarDef	*type_b;
-	idVarDef	*type_c;
+	idVarDef*	type_a;
+	idVarDef*	type_b;
+	idVarDef*	type_c;
 } opcode_t;
 
 // These opcodes are no longer necessary:
 // OP_PUSH_OBJ:
 // OP_PUSH_OBJENT:
 
-enum {
+enum
+{
 	OP_RETURN,
-
+	
 	OP_UINC_F,
 	OP_UINCP_F,
 	OP_UDEC_F,
 	OP_UDECP_F,
 	OP_COMP_F,
-
+	
 	OP_MUL_F,
 	OP_MUL_V,
 	OP_MUL_FV,
@@ -91,7 +93,7 @@ enum {
 	OP_GE,
 	OP_LT,
 	OP_GT,
-
+	
 	OP_INDIRECT_F,
 	OP_INDIRECT_V,
 	OP_INDIRECT_S,
@@ -100,11 +102,11 @@ enum {
 	OP_INDIRECT_OBJ,
 	
 	OP_ADDRESS,
-
+	
 	OP_EVENTCALL,
 	OP_OBJECTCALL,
 	OP_SYSCALL,
-
+	
 	OP_STORE_F,
 	OP_STORE_V,
 	OP_STORE_S,
@@ -113,13 +115,13 @@ enum {
 	OP_STORE_OBJENT,
 	OP_STORE_OBJ,
 	OP_STORE_ENTOBJ,
-
+	
 	OP_STORE_FTOS,
 	OP_STORE_BTOS,
 	OP_STORE_VTOS,
 	OP_STORE_FTOBOOL,
 	OP_STORE_BOOLTOF,
-
+	
 	OP_STOREP_F,
 	OP_STOREP_V,
 	OP_STOREP_S,
@@ -128,13 +130,13 @@ enum {
 	OP_STOREP_BOOL,
 	OP_STOREP_OBJ,
 	OP_STOREP_OBJENT,
-
+	
 	OP_STOREP_FTOS,
 	OP_STOREP_BTOS,
 	OP_STOREP_VTOS,
 	OP_STOREP_FTOBOOL,
 	OP_STOREP_BOOLTOF,
-
+	
 	OP_UMUL_F,
 	OP_UMUL_V,
 	OP_UDIV_F,
@@ -146,24 +148,24 @@ enum {
 	OP_USUB_V,
 	OP_UAND_F,
 	OP_UOR_F,
-
+	
 	OP_NOT_BOOL,
 	OP_NOT_F,
 	OP_NOT_V,
 	OP_NOT_S,
 	OP_NOT_ENT,
-
+	
 	OP_NEG_F,
 	OP_NEG_V,
-
+	
 	OP_INT_F,
 	OP_IF,
 	OP_IFNOT,
-
+	
 	OP_CALL,
 	OP_THREAD,
 	OP_OBJTHREAD,
-
+	
 	OP_PUSH_F,
 	OP_PUSH_V,
 	OP_PUSH_S,
@@ -175,9 +177,9 @@ enum {
 	OP_PUSH_FTOB,
 	OP_PUSH_VTOS,
 	OP_PUSH_BTOS,
-
+	
 	OP_GOTO,
-
+	
 	OP_AND,
 	OP_AND_BOOLF,
 	OP_AND_FBOOL,
@@ -189,27 +191,28 @@ enum {
 	
 	OP_BITAND,
 	OP_BITOR,
-
+	
 	OP_BREAK,			// placeholder op.  not used in final code
 	OP_CONTINUE,		// placeholder op.  not used in final code
-
+	
 	NUM_OPCODES
 };
 
-class idCompiler {
+class idCompiler
+{
 private:
 	static bool		punctuationValid[ 256 ];
 	// Techyon RB: fixed deprecated conversion from string constant to ‘char*’
-	static const char		*punctuation[];
+	static const char*		punctuation[];
 	// Techyon END
-
+	
 	idParser		parser;
-	idParser		*parserPtr;
+	idParser*		parserPtr;
 	idToken			token;
-					
-	idTypeDef		*immediateType;
+	
+	idTypeDef*		immediateType;
 	eval_t			immediate;
-					
+	
 	bool			eof;
 	bool			console;
 	bool			callthread;
@@ -218,45 +221,45 @@ private:
 	int				currentLineNumber;
 	int				currentFileNumber;
 	int				errorCount;
-					
-	idVarDef		*scope;				// the function being parsed, or NULL
-	const idVarDef	*basetype;			// for accessing fields
-
+	
+	idVarDef*		scope;				// the function being parsed, or NULL
+	const idVarDef*	basetype;			// for accessing fields
+	
 	float			Divide( float numerator, float denominator );
-	void			Error( const char *error, ... ) const id_attribute((format(printf,2,3)));
-	void			Warning( const char *message, ... ) const id_attribute((format(printf,2,3)));
-	idVarDef		*OptimizeOpcode( const opcode_t *op, idVarDef *var_a, idVarDef *var_b );
-	idVarDef		*EmitOpcode( const opcode_t *op, idVarDef *var_a, idVarDef *var_b );
-	idVarDef		*EmitOpcode( int op, idVarDef *var_a, idVarDef *var_b );
-	bool			EmitPush( idVarDef *expression, const idTypeDef *funcArg );
+	void			Error( const char* error, ... ) const id_attribute( ( format( printf, 2, 3 ) ) );
+	void			Warning( const char* message, ... ) const id_attribute( ( format( printf, 2, 3 ) ) );
+	idVarDef*		OptimizeOpcode( const opcode_t* op, idVarDef* var_a, idVarDef* var_b );
+	idVarDef*		EmitOpcode( const opcode_t* op, idVarDef* var_a, idVarDef* var_b );
+	idVarDef*		EmitOpcode( int op, idVarDef* var_a, idVarDef* var_b );
+	bool			EmitPush( idVarDef* expression, const idTypeDef* funcArg );
 	void			NextToken( void );
-	void			ExpectToken( const char *string );
-	bool			CheckToken( const char *string );
-	void			ParseName( idStr &name );
+	void			ExpectToken( const char* string );
+	bool			CheckToken( const char* string );
+	void			ParseName( idStr& name );
 	void			SkipOutOfFunction( void );
 	void			SkipToSemicolon( void );
-	idTypeDef		*CheckType( void );
-	idTypeDef		*ParseType( void );
-	idVarDef		*FindImmediate( const idTypeDef *type, const eval_t *eval, const char *string ) const;
-	idVarDef		*GetImmediate( idTypeDef *type, const eval_t *eval, const char *string );
-	idVarDef		*VirtualFunctionConstant( idVarDef *func );
-	idVarDef		*SizeConstant( int size );
-	idVarDef		*JumpConstant( int value );
-	idVarDef		*JumpDef( int jumpfrom, int jumpto );
-	idVarDef		*JumpTo( int jumpto );
-	idVarDef		*JumpFrom( int jumpfrom );
-	idVarDef		*ParseImmediate( void );
-	idVarDef		*EmitFunctionParms( int op, idVarDef *func, int startarg, int startsize, idVarDef *object );
-	idVarDef		*ParseFunctionCall( idVarDef *func );
-	idVarDef		*ParseObjectCall( idVarDef *object, idVarDef *func );
-	idVarDef		*ParseEventCall( idVarDef *object, idVarDef *func );
-	idVarDef		*ParseSysObjectCall( idVarDef *func );
-	idVarDef		*LookupDef( const char *name, const idVarDef *baseobj );
-	idVarDef		*ParseValue( void );
-	idVarDef		*GetTerm( void );
+	idTypeDef*		CheckType( void );
+	idTypeDef*		ParseType( void );
+	idVarDef*		FindImmediate( const idTypeDef* type, const eval_t* eval, const char* string ) const;
+	idVarDef*		GetImmediate( idTypeDef* type, const eval_t* eval, const char* string );
+	idVarDef*		VirtualFunctionConstant( idVarDef* func );
+	idVarDef*		SizeConstant( int size );
+	idVarDef*		JumpConstant( int value );
+	idVarDef*		JumpDef( int jumpfrom, int jumpto );
+	idVarDef*		JumpTo( int jumpto );
+	idVarDef*		JumpFrom( int jumpfrom );
+	idVarDef*		ParseImmediate( void );
+	idVarDef*		EmitFunctionParms( int op, idVarDef* func, int startarg, int startsize, idVarDef* object );
+	idVarDef*		ParseFunctionCall( idVarDef* func );
+	idVarDef*		ParseObjectCall( idVarDef* object, idVarDef* func );
+	idVarDef*		ParseEventCall( idVarDef* object, idVarDef* func );
+	idVarDef*		ParseSysObjectCall( idVarDef* func );
+	idVarDef*		LookupDef( const char* name, const idVarDef* baseobj );
+	idVarDef*		ParseValue( void );
+	idVarDef*		GetTerm( void );
 	bool			TypeMatches( etype_t type1, etype_t type2 ) const;
-	idVarDef		*GetExpression( int priority );
-	idTypeDef		*GetTypeForEventArg( char argType );
+	idVarDef*		GetExpression( int priority );
+	idTypeDef*		GetTypeForEventArg( char argType );
 	void			PatchLoop( int start, int continuePos );
 	void			ParseReturnStatement( void );
 	void			ParseWhileStatement( void );
@@ -264,21 +267,21 @@ private:
 	void			ParseDoWhileStatement( void );
 	void			ParseIfStatement( void );
 	void			ParseStatement( void );
-	void			ParseObjectDef( const char *objname );
-	idTypeDef		*ParseFunction( idTypeDef *returnType, const char *name );
-	void			ParseFunctionDef( idTypeDef *returnType, const char *name );
-	void			ParseVariableDef( idTypeDef *type, const char *name );
-	void			ParseEventDef( idTypeDef *type, const char *name );
+	void			ParseObjectDef( const char* objname );
+	idTypeDef*		ParseFunction( idTypeDef* returnType, const char* name );
+	void			ParseFunctionDef( idTypeDef* returnType, const char* name );
+	void			ParseVariableDef( idTypeDef* type, const char* name );
+	void			ParseEventDef( idTypeDef* type, const char* name );
 	void			ParseDefs( void );
-	void			ParseNamespace( idVarDef *newScope );
-
+	void			ParseNamespace( idVarDef* newScope );
+	
 public :
 	// Techyon RB: added const
 	static const opcode_t	opcodes[];
 	// Techyon END
-
-					idCompiler();
-	void			CompileFile( const char *text, const char *filename, bool console );
+	
+	idCompiler();
+	void			CompileFile( const char* text, const char* filename, bool console );
 };
 
 #endif /* !__SCRIPT_COMPILER_H__ */

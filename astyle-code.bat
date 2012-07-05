@@ -4,8 +4,8 @@ REM ..\bin\win32\UniversalIndentGUI\indenters\astyle.exe -v --options=astyle-opt
 ..\bin\win32\UniversalIndentGUI\indenters\astyle.exe -v --options=astyle-options.ini --recursive ui/*.h
 ..\bin\win32\UniversalIndentGUI\indenters\astyle.exe -v --options=astyle-options.ini --recursive ui/*.cpp
 
-REM ..\bin\win32\UniversalIndentGUI\indenters\astyle.exe -v --options=astyle-options.ini --recursive game/*.h
-REM ..\bin\win32\UniversalIndentGUI\indenters\astyle.exe -v --options=astyle-options.ini --exclude="game/gamesys/SysCvar.cpp" --exclude="game/gamesys/Callbacks.cpp" --recursive game/*.cpp
+..\bin\win32\UniversalIndentGUI\indenters\astyle.exe -v --options=astyle-options.ini --recursive game/*.h
+..\bin\win32\UniversalIndentGUI\indenters\astyle.exe -v --options=astyle-options.ini --exclude="game/gamesys/SysCvar.cpp" --exclude="game/gamesys/Callbacks.cpp" --recursive game/*.cpp
 
 ..\bin\win32\UniversalIndentGUI\indenters\astyle.exe -v --options=astyle-options.ini --recursive tools/*.h
 ..\bin\win32\UniversalIndentGUI\indenters\astyle.exe -v --options=astyle-options.ini --recursive tools/*.cpp
