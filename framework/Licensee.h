@@ -2,9 +2,9 @@
 ===========================================================================
 
 Doom 3 GPL Source Code
-Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company. 
+Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
 
-This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).  
+This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
 
 Doom 3 Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -42,15 +42,15 @@ If you have questions concerning this license or the applicable additional terms
 #define	CD_BASEDIR						"Techyon"
 
 #if defined(STANDALONE)
-	#if !defined(BASE_GAMEDIR)
-	#define	BASE_GAMEDIR				"basety"
-	#endif
+#if !defined(BASE_GAMEDIR)
+#define	BASE_GAMEDIR					"basety"
+#endif
 #else
-	#ifdef ID_DEMO_BUILD
-		#define BASE_GAMEDIR			"demo"
-	#else
-		#define	BASE_GAMEDIR			"base"
-	#endif
+#ifdef ID_DEMO_BUILD
+#define BASE_GAMEDIR					"demo"
+#else
+#define	BASE_GAMEDIR					"base"
+#endif
 #endif
 
 // filenames
@@ -63,17 +63,17 @@ If you have questions concerning this license or the applicable additional terms
 
 // default idnet host address
 #ifndef IDNET_HOST
-	#define IDNET_HOST					"idnet.ua-corp.com"
+#define IDNET_HOST						"idnet.ua-corp.com"
 #endif
 
 // default idnet master port
 #ifndef IDNET_MASTER_PORT
-	#define IDNET_MASTER_PORT			"27650"
+#define IDNET_MASTER_PORT				"27650"
 #endif
 
 // default network server port
 #ifndef PORT_SERVER
-	#define	PORT_SERVER					27666
+#define	PORT_SERVER						27666
 #endif
 
 // broadcast scan this many ports after PORT_SERVER so a single machine can run multiple servers
@@ -106,9 +106,9 @@ If you have questions concerning this license or the applicable additional terms
 
 // Linux info
 #ifdef ID_DEMO_BUILD
-	#define LINUX_DEFAULT_PATH			"/usr/local/games/techyon-demo"
+#define LINUX_DEFAULT_PATH				"/usr/local/games/techyon-demo"
 #else
-	#define LINUX_DEFAULT_PATH			"/usr/local/games/techyon"
+#define LINUX_DEFAULT_PATH				"/usr/local/games/techyon"
 #endif
 
 // CD Key file info
