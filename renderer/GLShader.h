@@ -36,135 +36,141 @@ class GLCompileMacro;
 class GLShader
 {
 	//friend class GLCompileMacro_USE_ALPHA_TESTING;
-
+	
 private:
-	GLShader& operator = (const GLShader&); 
-
+	GLShader& operator = ( const GLShader& );
+	
 	idStr								_name;
 protected:
 	int									_activeMacros;
-
+	
 	idList<shaderProgram_t*>			_shaderPrograms;
 	shaderProgram_t*					_currentProgram;
-
+	
 	idList<GLUniform*>					_uniforms;
 	idList<GLCompileMacro*>				_compileMacros;
-
+	
 	const uint32_t						_vertexAttribsRequired;
 //	const uint32_t						_vertexAttribsOptional;
 //	const uint32_t						_vertexAttribsUnsupported;
 	uint32_t							_vertexAttribs;	// can be set by uniforms
-
-
-	GLShader(const idStr& name, uint32_t vertexAttribsRequired/*, uint32_t vertexAttribsOptional, uint32_t vertexAttribsUnsupported*/):
-	  _name(name),
-	  _vertexAttribsRequired(vertexAttribsRequired)
-	  //_vertexAttribsOptional(vertexAttribsOptional),
-	  //_vertexAttribsUnsupported(vertexAttribsUnsupported)
+	
+	
+	GLShader( const idStr& name, uint32_t vertexAttribsRequired/*, uint32_t vertexAttribsOptional, uint32_t vertexAttribsUnsupported*/ ):
+		_name( name ),
+		_vertexAttribsRequired( vertexAttribsRequired )
+		//_vertexAttribsOptional(vertexAttribsOptional),
+		//_vertexAttribsUnsupported(vertexAttribsUnsupported)
 	{
 		_activeMacros = 0;
 		_currentProgram = NULL;
 		_vertexAttribs = 0;
-
+		
 		//ri.Printf(PRINT_ALL, "/// -------------------------------------------------\n");
 	}
-
+	
 	~GLShader()
 	{
-		for(int i = 0; i < _shaderPrograms.Num(); i++)
+		for( int i = 0; i < _shaderPrograms.Num(); i++ )
 		{
 			shaderProgram_t* shaderProgram = _shaderPrograms[i];
-			if(shaderProgram != NULL && shaderProgram->program)
+			if( shaderProgram != NULL && shaderProgram->program )
 			{
-				glDeleteObjectARB(shaderProgram->program);
+				glDeleteObjectARB( shaderProgram->program );
 				delete shaderProgram;
 			}
 		}
 	}
-
+	
 public:
 
-	void RegisterUniform(GLUniform* uniform)
+	void RegisterUniform( GLUniform* uniform )
 	{
-		_uniforms.Append(uniform);
+		_uniforms.Append( uniform );
 	}
-
-	void RegisterCompileMacro(GLCompileMacro* compileMacro)
+	
+	void RegisterCompileMacro( GLCompileMacro* compileMacro )
 	{
-		if(_compileMacros.Num() >= 9)
+		if( _compileMacros.Num() >= 9 )
 		{
-			common->Error("Can't register more than 9 compile macros for a single shader");
+			common->Error( "Can't register more than 9 compile macros for a single shader" );
 		}
-
-		_compileMacros.Append(compileMacro);
+		
+		_compileMacros.Append( compileMacro );
 	}
-
-	size_t				GetNumOfCompiledMacros() const				{ return _compileMacros.Num(); }
-	shaderProgram_t*	GetProgram() const							{ return _currentProgram; }
-
+	
+	size_t				GetNumOfCompiledMacros() const
+	{
+		return _compileMacros.Num();
+	}
+	shaderProgram_t*	GetProgram() const
+	{
+		return _currentProgram;
+	}
+	
 protected:
-	bool				GetCompileMacrosString(int permutation, idStrList& compileMacrosOut) const;
-	void				UpdateShaderProgramUniformLocations(shaderProgram_t *shaderProgram) const;
-
-	idStr				BuildGPUShaderText(	const char *mainShader,
+	bool				GetCompileMacrosString( int permutation, idStrList& compileMacrosOut ) const;
+	void				UpdateShaderProgramUniformLocations( shaderProgram_t* shaderProgram ) const;
+	
+	idStr				BuildGPUShaderText(	const char* mainShader,
 											const idStrList& libShaderNames,
 											GLenum shaderType,
-											const char *preIncludeText = NULL) const;
-
-	void				CompileAndLinkGPUShaderProgram(	shaderProgram_t * program,
-														const char *programName,
-														const idStr& vertexShaderText,
-														const idStr& fragmentShaderText,
-														const idStrList& compileMacros) const;
-
+											const char* preIncludeText = NULL ) const;
+											
+	void				CompileAndLinkGPUShaderProgram(	shaderProgram_t* program,
+			const char* programName,
+			const idStr& vertexShaderText,
+			const idStr& fragmentShaderText,
+			const idStrList& compileMacros ) const;
+			
 private:
-	static const char*	FindEmbeddedShaderText(const idStr& shaderName, GLenum shaderType);
-
-	void				CompileGPUShader(GLhandleARB program, const idStr& programName, const idStr& shaderText, GLenum shaderType) const;
-
-	void				PrintShaderText(const idStr& shaderText) const;
-	void				PrintShaderSource(GLhandleARB object) const;
-	void				PrintInfoLog(GLhandleARB object, bool developerOnly) const;
-
-	void				LinkProgram(GLhandleARB program) const;
-	void				BindAttribLocations(GLhandleARB program) const;
-
-protected:
-	void				ValidateProgram(GLhandleARB program) const;
-	void				ShowProgramUniforms(GLhandleARB program) const;
+	static const char*	FindEmbeddedShaderText( const idStr& shaderName, GLenum shaderType );
 	
-
+	void				CompileGPUShader( GLhandleARB program, const idStr& programName, const idStr& shaderText, GLenum shaderType ) const;
+	
+	void				PrintShaderText( const idStr& shaderText ) const;
+	void				PrintShaderSource( GLhandleARB object ) const;
+	void				PrintInfoLog( GLhandleARB object, bool developerOnly ) const;
+	
+	void				LinkProgram( GLhandleARB program ) const;
+	void				BindAttribLocations( GLhandleARB program ) const;
+	
+protected:
+	void				ValidateProgram( GLhandleARB program ) const;
+	void				ShowProgramUniforms( GLhandleARB program ) const;
+	
+	
 public:
 	void				SelectProgram();
 	void				BindProgram();
 	void				SetRequiredVertexPointers();
-
-	bool IsMacroSet(int bit)
+	
+	bool IsMacroSet( int bit )
 	{
-		return (_activeMacros & bit) != 0;
+		return ( _activeMacros & bit ) != 0;
 	}
-
-	void AddMacroBit(int bit)
+	
+	void AddMacroBit( int bit )
 	{
 		_activeMacros |= bit;
 	}
-
-	void DelMacroBit(int bit)
+	
+	void DelMacroBit( int bit )
 	{
 		_activeMacros &= ~bit;
 	}
-
-	bool IsVertexAtttribSet(int bit)
+	
+	bool IsVertexAtttribSet( int bit )
 	{
-		return (_vertexAttribs & bit) != 0;
+		return ( _vertexAttribs & bit ) != 0;
 	}
-
-	void AddVertexAttribBit(int bit)
+	
+	void AddVertexAttribBit( int bit )
 	{
 		_vertexAttribs |= bit;
 	}
-
-	void DelVertexAttribBit(int bit)
+	
+	void DelVertexAttribBit( int bit )
 	{
 		_vertexAttribs &= ~bit;
 	}
@@ -174,16 +180,16 @@ class GLUniform
 {
 protected:
 	GLShader*				_shader;
-
-	GLUniform(GLShader* shader):
-	  _shader(shader)
+	
+	GLUniform( GLShader* shader ):
+		_shader( shader )
 	{
-		_shader->RegisterUniform(this);
+		_shader->RegisterUniform( this );
 	}
-
+	
 public:
 	virtual const char* GetName() const = 0;
-	virtual void UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const = 0;
+	virtual void UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const = 0;
 };
 
 
@@ -191,18 +197,18 @@ class GLCompileMacro
 {
 private:
 	int						_bit;
-
+	
 protected:
 	GLShader*				_shader;
-
-	GLCompileMacro(GLShader* shader):
-	  _shader(shader)
+	
+	GLCompileMacro( GLShader* shader ):
+		_shader( shader )
 	{
-		_bit = BIT(_shader->GetNumOfCompiledMacros());
-		_shader->RegisterCompileMacro(this);
+		_bit = BIT( _shader->GetNumOfCompiledMacros() );
+		_shader->RegisterCompileMacro( this );
 	}
-
-	// RB: This is not good oo design, but it can be a workaround and its cost is more or less only a virtual function call. 
+	
+	// RB: This is not good oo design, but it can be a workaround and its cost is more or less only a virtual function call.
 	// It also works regardless of RTTI is enabled or not.
 	enum EGLCompileMacro
 	{
@@ -224,59 +230,83 @@ protected:
 		LIGHT_PROJ,
 		USE_GBUFFER
 	};
-
+	
 public:
 	virtual const char* GetName() const = 0;
 	virtual EGLCompileMacro GetType() const = 0;
-	virtual bool		HasConflictingMacros(int permutation, const idList<GLCompileMacro*>& macros) const { return false; }
-	virtual bool		MissesRequiredMacros(int permutation, const idList<GLCompileMacro*>& macros) const { return false; }
-	virtual uint32_t	GetRequiredVertexAttributes() const { return 0; }
-
+	virtual bool		HasConflictingMacros( int permutation, const idList<GLCompileMacro*>& macros ) const
+	{
+		return false;
+	}
+	virtual bool		MissesRequiredMacros( int permutation, const idList<GLCompileMacro*>& macros ) const
+	{
+		return false;
+	}
+	virtual uint32_t	GetRequiredVertexAttributes() const
+	{
+		return 0;
+	}
+	
 	void EnableMacro()
 	{
 		int bit = GetBit();
-
-		if(!_shader->IsMacroSet(bit))
+		
+		if( !_shader->IsMacroSet( bit ) )
 		{
-			_shader->AddMacroBit(bit);
+			_shader->AddMacroBit( bit );
 			//_shader->SelectProgram();
 		}
 	}
-
+	
 	void DisableMacro()
 	{
 		int bit = GetBit();
-
-		if(_shader->IsMacroSet(bit))
+		
+		if( _shader->IsMacroSet( bit ) )
 		{
-			_shader->DelMacroBit(bit);
+			_shader->DelMacroBit( bit );
 			//_shader->SelectProgram();
 		}
 	}
-
+	
 public:
-	const int GetBit() { return _bit; }
+	const int GetBit()
+	{
+		return _bit;
+	}
 };
 
 
 class GLCompileMacro_USE_ALPHA_TESTING:
-GLCompileMacro
+	GLCompileMacro
 {
 public:
-	GLCompileMacro_USE_ALPHA_TESTING(GLShader* shader):
-	  GLCompileMacro(shader)
+	GLCompileMacro_USE_ALPHA_TESTING( GLShader* shader ):
+		GLCompileMacro( shader )
 	{
 	}
-
-	const char* GetName() const { return "USE_ALPHA_TESTING"; }
-	EGLCompileMacro GetType() const { return USE_ALPHA_TESTING; }
-
-	void EnableAlphaTesting()		{ EnableMacro(); }
-	void DisableAlphaTesting()		{ DisableMacro(); }
-
-	void SetAlphaTesting(bool enable)
+	
+	const char* GetName() const
 	{
-		if(enable)
+		return "USE_ALPHA_TESTING";
+	}
+	EGLCompileMacro GetType() const
+	{
+		return USE_ALPHA_TESTING;
+	}
+	
+	void EnableAlphaTesting()
+	{
+		EnableMacro();
+	}
+	void DisableAlphaTesting()
+	{
+		DisableMacro();
+	}
+	
+	void SetAlphaTesting( bool enable )
+	{
+		if( enable )
 			EnableMacro();
 		else
 			DisableMacro();
@@ -284,23 +314,35 @@ public:
 };
 
 class GLCompileMacro_USE_PORTAL_CLIPPING:
-GLCompileMacro
+	GLCompileMacro
 {
 public:
-	GLCompileMacro_USE_PORTAL_CLIPPING(GLShader* shader):
-	  GLCompileMacro(shader)
+	GLCompileMacro_USE_PORTAL_CLIPPING( GLShader* shader ):
+		GLCompileMacro( shader )
 	{
 	}
-
-	const char* GetName() const { return "USE_PORTAL_CLIPPING"; }
-	EGLCompileMacro GetType() const { return USE_PORTAL_CLIPPING; }
-
-	void EnablePortalClipping()		{ EnableMacro(); }
-	void DisablePortalClipping()	{ DisableMacro(); }
-
-	void SetPortalClipping(bool enable)
+	
+	const char* GetName() const
 	{
-		if(enable)
+		return "USE_PORTAL_CLIPPING";
+	}
+	EGLCompileMacro GetType() const
+	{
+		return USE_PORTAL_CLIPPING;
+	}
+	
+	void EnablePortalClipping()
+	{
+		EnableMacro();
+	}
+	void DisablePortalClipping()
+	{
+		DisableMacro();
+	}
+	
+	void SetPortalClipping( bool enable )
+	{
+		if( enable )
 			EnableMacro();
 		else
 			DisableMacro();
@@ -308,23 +350,35 @@ public:
 };
 
 class GLCompileMacro_USE_FRUSTUM_CLIPPING:
-GLCompileMacro
+	GLCompileMacro
 {
 public:
-	GLCompileMacro_USE_FRUSTUM_CLIPPING(GLShader* shader):
-	  GLCompileMacro(shader)
+	GLCompileMacro_USE_FRUSTUM_CLIPPING( GLShader* shader ):
+		GLCompileMacro( shader )
 	{
 	}
-
-	const char* GetName() const { return "USE_FRUSTUM_CLIPPING"; }
-	EGLCompileMacro GetType() const { return USE_FRUSTUM_CLIPPING; }
-
-	void EnableFrustumClipping()		{ EnableMacro(); }
-	void DisableFrustumClipping()		{ DisableMacro(); }
-
-	void SetFrustumClipping(bool enable)
+	
+	const char* GetName() const
 	{
-		if(enable)
+		return "USE_FRUSTUM_CLIPPING";
+	}
+	EGLCompileMacro GetType() const
+	{
+		return USE_FRUSTUM_CLIPPING;
+	}
+	
+	void EnableFrustumClipping()
+	{
+		EnableMacro();
+	}
+	void DisableFrustumClipping()
+	{
+		DisableMacro();
+	}
+	
+	void SetFrustumClipping( bool enable )
+	{
+		if( enable )
 			EnableMacro();
 		else
 			DisableMacro();
@@ -332,21 +386,30 @@ public:
 };
 
 class GLCompileMacro_USE_VERTEX_SKINNING:
-GLCompileMacro
+	GLCompileMacro
 {
 public:
-	GLCompileMacro_USE_VERTEX_SKINNING(GLShader* shader):
-	  GLCompileMacro(shader)
+	GLCompileMacro_USE_VERTEX_SKINNING( GLShader* shader ):
+		GLCompileMacro( shader )
 	{
 	}
-
-	const char* GetName() const { return "USE_VERTEX_SKINNING"; }
-	EGLCompileMacro GetType() const { return USE_VERTEX_SKINNING; }
-	bool		HasConflictingMacros(int permutation, const idList<GLCompileMacro*>& macros) const;
-	bool		MissesRequiredMacros(int permutation, const idList<GLCompileMacro*>& macros) const;
-	uint32_t	GetRequiredVertexAttributes() const { return VA_BONE_INDEXES | VA_BONE_WEIGHTS; }
 	
-
+	const char* GetName() const
+	{
+		return "USE_VERTEX_SKINNING";
+	}
+	EGLCompileMacro GetType() const
+	{
+		return USE_VERTEX_SKINNING;
+	}
+	bool		HasConflictingMacros( int permutation, const idList<GLCompileMacro*>& macros ) const;
+	bool		MissesRequiredMacros( int permutation, const idList<GLCompileMacro*>& macros ) const;
+	uint32_t	GetRequiredVertexAttributes() const
+	{
+		return VA_BONE_INDEXES | VA_BONE_WEIGHTS;
+	}
+	
+	
 	void EnableVertexSkinning()
 	{
 		EnableMacro();
@@ -355,10 +418,10 @@ public:
 	{
 		DisableMacro();
 	}
-
-	void SetVertexSkinning(bool enable)
+	
+	void SetVertexSkinning( bool enable )
 	{
-		if(enable)
+		if( enable )
 			EnableVertexSkinning();
 		else
 			DisableVertexSkinning();
@@ -366,33 +429,39 @@ public:
 };
 
 class GLCompileMacro_USE_VERTEX_ANIMATION:
-GLCompileMacro
+	GLCompileMacro
 {
 public:
-	GLCompileMacro_USE_VERTEX_ANIMATION(GLShader* shader):
-	  GLCompileMacro(shader)
+	GLCompileMacro_USE_VERTEX_ANIMATION( GLShader* shader ):
+		GLCompileMacro( shader )
 	{
 	}
-
-	const char* GetName() const { return "USE_VERTEX_ANIMATION"; }
-	EGLCompileMacro GetType() const { return USE_VERTEX_ANIMATION; }
-	bool		HasConflictingMacros(int permutation, const idList<GLCompileMacro*>& macros) const;
+	
+	const char* GetName() const
+	{
+		return "USE_VERTEX_ANIMATION";
+	}
+	EGLCompileMacro GetType() const
+	{
+		return USE_VERTEX_ANIMATION;
+	}
+	bool		HasConflictingMacros( int permutation, const idList<GLCompileMacro*>& macros ) const;
 	uint32_t	GetRequiredVertexAttributes() const;
-
-
+	
+	
 	void EnableVertexAnimation()
 	{
 		EnableMacro();
 	}
-
+	
 	void DisableVertexAnimation()
 	{
 		DisableMacro();
 	}
-
-	void SetVertexAnimation(bool enable)
+	
+	void SetVertexAnimation( bool enable )
 	{
-		if(enable)
+		if( enable )
 			EnableVertexAnimation();
 		else
 			DisableVertexAnimation();
@@ -425,7 +494,7 @@ public:
 			DisableMacro();
 		}
 	}
-	
+
 	void DisableDeformVertexes()
 	{
 		DisableMacro();
@@ -442,18 +511,27 @@ public:
 */
 
 class GLCompileMacro_USE_TCGEN_ENVIRONMENT:
-GLCompileMacro
+	GLCompileMacro
 {
 public:
-	GLCompileMacro_USE_TCGEN_ENVIRONMENT(GLShader* shader):
-	  GLCompileMacro(shader)
+	GLCompileMacro_USE_TCGEN_ENVIRONMENT( GLShader* shader ):
+		GLCompileMacro( shader )
 	{
 	}
-
-	const char* GetName() const { return "USE_TCGEN_ENVIRONMENT"; }
-	EGLCompileMacro GetType() const { return USE_TCGEN_ENVIRONMENT; }
-	uint32_t	GetRequiredVertexAttributes() const { return VA_NORMAL; }
-
+	
+	const char* GetName() const
+	{
+		return "USE_TCGEN_ENVIRONMENT";
+	}
+	EGLCompileMacro GetType() const
+	{
+		return USE_TCGEN_ENVIRONMENT;
+	}
+	uint32_t	GetRequiredVertexAttributes() const
+	{
+		return VA_NORMAL;
+	}
+	
 	void EnableTCGenEnvironment()
 	{
 		EnableMacro();
@@ -463,10 +541,10 @@ public:
 	{
 		DisableMacro();
 	}
-
-	void SetTCGenEnvironment(bool enable)
+	
+	void SetTCGenEnvironment( bool enable )
 	{
-		if(enable)
+		if( enable )
 			EnableMacro();
 		else
 			DisableMacro();
@@ -475,24 +553,39 @@ public:
 
 
 class GLCompileMacro_USE_NORMAL_MAPPING:
-GLCompileMacro
+	GLCompileMacro
 {
 public:
-	GLCompileMacro_USE_NORMAL_MAPPING(GLShader* shader):
-	  GLCompileMacro(shader)
+	GLCompileMacro_USE_NORMAL_MAPPING( GLShader* shader ):
+		GLCompileMacro( shader )
 	{
 	}
-
-	const char* GetName() const { return "USE_NORMAL_MAPPING"; }
-	EGLCompileMacro GetType() const { return USE_NORMAL_MAPPING; }
-	uint32_t	GetRequiredVertexAttributes() const { return VA_NORMAL | VA_TANGENT | VA_BITANGENT; }
-
-	void EnableNormalMapping()	{ EnableMacro(); }
-	void DisableNormalMapping()	{ DisableMacro(); }
-
-	void SetNormalMapping(bool enable)
+	
+	const char* GetName() const
 	{
-		if(enable)
+		return "USE_NORMAL_MAPPING";
+	}
+	EGLCompileMacro GetType() const
+	{
+		return USE_NORMAL_MAPPING;
+	}
+	uint32_t	GetRequiredVertexAttributes() const
+	{
+		return VA_NORMAL | VA_TANGENT | VA_BITANGENT;
+	}
+	
+	void EnableNormalMapping()
+	{
+		EnableMacro();
+	}
+	void DisableNormalMapping()
+	{
+		DisableMacro();
+	}
+	
+	void SetNormalMapping( bool enable )
+	{
+		if( enable )
 			EnableMacro();
 		else
 			DisableMacro();
@@ -501,24 +594,36 @@ public:
 
 
 class GLCompileMacro_USE_PARALLAX_MAPPING:
-GLCompileMacro
+	GLCompileMacro
 {
 public:
-	GLCompileMacro_USE_PARALLAX_MAPPING(GLShader* shader):
-	  GLCompileMacro(shader)
+	GLCompileMacro_USE_PARALLAX_MAPPING( GLShader* shader ):
+		GLCompileMacro( shader )
 	{
 	}
-
-	const char* GetName() const { return "USE_PARALLAX_MAPPING"; }
-	EGLCompileMacro GetType() const { return USE_PARALLAX_MAPPING; }
-	bool		MissesRequiredMacros(int permutation, const idList<GLCompileMacro*>& macros) const;
-
-	void EnableParallaxMapping()	{ EnableMacro(); }
-	void DisableParallaxMapping()	{ DisableMacro(); }
-
-	void SetParallaxMapping(bool enable)
+	
+	const char* GetName() const
 	{
-		if(enable)
+		return "USE_PARALLAX_MAPPING";
+	}
+	EGLCompileMacro GetType() const
+	{
+		return USE_PARALLAX_MAPPING;
+	}
+	bool		MissesRequiredMacros( int permutation, const idList<GLCompileMacro*>& macros ) const;
+	
+	void EnableParallaxMapping()
+	{
+		EnableMacro();
+	}
+	void DisableParallaxMapping()
+	{
+		DisableMacro();
+	}
+	
+	void SetParallaxMapping( bool enable )
+	{
+		if( enable )
 			EnableMacro();
 		else
 			DisableMacro();
@@ -527,24 +632,36 @@ public:
 
 
 class GLCompileMacro_USE_REFLECTIVE_SPECULAR:
-GLCompileMacro
+	GLCompileMacro
 {
 public:
-	GLCompileMacro_USE_REFLECTIVE_SPECULAR(GLShader* shader):
-	  GLCompileMacro(shader)
+	GLCompileMacro_USE_REFLECTIVE_SPECULAR( GLShader* shader ):
+		GLCompileMacro( shader )
 	{
 	}
-
-	const char* GetName() const { return "USE_REFLECTIVE_SPECULAR"; }
-	EGLCompileMacro GetType() const { return USE_REFLECTIVE_SPECULAR; }
-	bool		MissesRequiredMacros(int permutation, const idList<GLCompileMacro*>& macros) const;
-
-	void EnableReflectiveSpecular()		{ EnableMacro(); }
-	void DisableReflectiveSpecular()	{ DisableMacro(); }
-
-	void SetReflectiveSpecular(bool enable)
+	
+	const char* GetName() const
 	{
-		if(enable)
+		return "USE_REFLECTIVE_SPECULAR";
+	}
+	EGLCompileMacro GetType() const
+	{
+		return USE_REFLECTIVE_SPECULAR;
+	}
+	bool		MissesRequiredMacros( int permutation, const idList<GLCompileMacro*>& macros ) const;
+	
+	void EnableReflectiveSpecular()
+	{
+		EnableMacro();
+	}
+	void DisableReflectiveSpecular()
+	{
+		DisableMacro();
+	}
+	
+	void SetReflectiveSpecular( bool enable )
+	{
+		if( enable )
 			EnableMacro();
 		else
 			DisableMacro();
@@ -553,25 +670,40 @@ public:
 
 
 class GLCompileMacro_TWOSIDED:
-GLCompileMacro
+	GLCompileMacro
 {
 public:
-	GLCompileMacro_TWOSIDED(GLShader* shader):
-	  GLCompileMacro(shader)
+	GLCompileMacro_TWOSIDED( GLShader* shader ):
+		GLCompileMacro( shader )
 	{
 	}
-
-	const char* GetName() const { return "TWOSIDED"; }
-	EGLCompileMacro GetType() const { return TWOSIDED; }
-	//bool		MissesRequiredMacros(int permutation, const idList<GLCompileMacro*>& macros) const;
-	uint32_t	GetRequiredVertexAttributes() const { return VA_NORMAL; }
-
-	void EnableMacro_TWOSIDED()		{ EnableMacro(); }
-	void DisableMacro_TWOSIDED()	{ DisableMacro(); }
-
-	void SetMacro_TWOSIDED(cullType_t cullType)
+	
+	const char* GetName() const
 	{
-		if(cullType == CT_TWO_SIDED || cullType == CT_BACK_SIDED)
+		return "TWOSIDED";
+	}
+	EGLCompileMacro GetType() const
+	{
+		return TWOSIDED;
+	}
+	//bool		MissesRequiredMacros(int permutation, const idList<GLCompileMacro*>& macros) const;
+	uint32_t	GetRequiredVertexAttributes() const
+	{
+		return VA_NORMAL;
+	}
+	
+	void EnableMacro_TWOSIDED()
+	{
+		EnableMacro();
+	}
+	void DisableMacro_TWOSIDED()
+	{
+		DisableMacro();
+	}
+	
+	void SetMacro_TWOSIDED( cullType_t cullType )
+	{
+		if( cullType == CT_TWO_SIDED || cullType == CT_BACK_SIDED )
 			EnableMacro();
 		else
 			DisableMacro();
@@ -579,23 +711,35 @@ public:
 };
 
 class GLCompileMacro_EYE_OUTSIDE:
-GLCompileMacro
+	GLCompileMacro
 {
 public:
-	GLCompileMacro_EYE_OUTSIDE(GLShader* shader):
-	  GLCompileMacro(shader)
+	GLCompileMacro_EYE_OUTSIDE( GLShader* shader ):
+		GLCompileMacro( shader )
 	{
 	}
-
-	const char* GetName() const { return "EYE_OUTSIDE"; }
-	EGLCompileMacro GetType() const { return EYE_OUTSIDE; }
-
-	void EnableMacro_EYE_OUTSIDE()		{ EnableMacro(); }
-	void DisableMacro_EYE_OUTSIDE()	{ DisableMacro(); }
-
-	void SetMacro_EYE_OUTSIDE(bool enable)
+	
+	const char* GetName() const
 	{
-		if(enable)
+		return "EYE_OUTSIDE";
+	}
+	EGLCompileMacro GetType() const
+	{
+		return EYE_OUTSIDE;
+	}
+	
+	void EnableMacro_EYE_OUTSIDE()
+	{
+		EnableMacro();
+	}
+	void DisableMacro_EYE_OUTSIDE()
+	{
+		DisableMacro();
+	}
+	
+	void SetMacro_EYE_OUTSIDE( bool enable )
+	{
+		if( enable )
 			EnableMacro();
 		else
 			DisableMacro();
@@ -603,23 +747,35 @@ public:
 };
 
 class GLCompileMacro_BRIGHTPASS_FILTER:
-GLCompileMacro
+	GLCompileMacro
 {
 public:
-	GLCompileMacro_BRIGHTPASS_FILTER(GLShader* shader):
-	  GLCompileMacro(shader)
+	GLCompileMacro_BRIGHTPASS_FILTER( GLShader* shader ):
+		GLCompileMacro( shader )
 	{
 	}
-
-	const char* GetName() const { return "BRIGHTPASS_FILTER"; }
-	EGLCompileMacro GetType() const { return BRIGHTPASS_FILTER; }
-
-	void EnableMacro_BRIGHTPASS_FILTER()		{ EnableMacro(); }
-	void DisableMacro_BRIGHTPASS_FILTER()	{ DisableMacro(); }
-
-	void SetMacro_BRIGHTPASS_FILTER(bool enable)
+	
+	const char* GetName() const
 	{
-		if(enable)
+		return "BRIGHTPASS_FILTER";
+	}
+	EGLCompileMacro GetType() const
+	{
+		return BRIGHTPASS_FILTER;
+	}
+	
+	void EnableMacro_BRIGHTPASS_FILTER()
+	{
+		EnableMacro();
+	}
+	void DisableMacro_BRIGHTPASS_FILTER()
+	{
+		DisableMacro();
+	}
+	
+	void SetMacro_BRIGHTPASS_FILTER( bool enable )
+	{
+		if( enable )
 			EnableMacro();
 		else
 			DisableMacro();
@@ -627,24 +783,36 @@ public:
 };
 
 class GLCompileMacro_LIGHT_DIRECTIONAL:
-GLCompileMacro
+	GLCompileMacro
 {
 public:
-	GLCompileMacro_LIGHT_DIRECTIONAL(GLShader* shader):
-	  GLCompileMacro(shader)
+	GLCompileMacro_LIGHT_DIRECTIONAL( GLShader* shader ):
+		GLCompileMacro( shader )
 	{
 	}
-
-	const char* GetName() const { return "LIGHT_DIRECTIONAL"; }
-	EGLCompileMacro GetType() const { return LIGHT_DIRECTIONAL; }
-	bool		HasConflictingMacros(int permutation, const idList<GLCompileMacro*>& macros) const;
-
-	void EnableMacro_LIGHT_DIRECTIONAL()	{ EnableMacro(); }
-	void DisableMacro_LIGHT_DIRECTIONAL()	{ DisableMacro(); }
-
-	void SetMacro_LIGHT_DIRECTIONAL(bool enable)
+	
+	const char* GetName() const
 	{
-		if(enable)
+		return "LIGHT_DIRECTIONAL";
+	}
+	EGLCompileMacro GetType() const
+	{
+		return LIGHT_DIRECTIONAL;
+	}
+	bool		HasConflictingMacros( int permutation, const idList<GLCompileMacro*>& macros ) const;
+	
+	void EnableMacro_LIGHT_DIRECTIONAL()
+	{
+		EnableMacro();
+	}
+	void DisableMacro_LIGHT_DIRECTIONAL()
+	{
+		DisableMacro();
+	}
+	
+	void SetMacro_LIGHT_DIRECTIONAL( bool enable )
+	{
+		if( enable )
 			EnableMacro();
 		else
 			DisableMacro();
@@ -652,24 +820,36 @@ public:
 };
 
 class GLCompileMacro_LIGHT_PROJ:
-GLCompileMacro
+	GLCompileMacro
 {
 public:
-	GLCompileMacro_LIGHT_PROJ(GLShader* shader):
-	  GLCompileMacro(shader)
+	GLCompileMacro_LIGHT_PROJ( GLShader* shader ):
+		GLCompileMacro( shader )
 	{
 	}
-
-	const char* GetName() const { return "LIGHT_PROJ"; }
-	EGLCompileMacro GetType() const { return LIGHT_PROJ; }
-	//bool		HasConflictingMacros(int permutation, const idList<GLCompileMacro*>& macros) const;
-
-	void EnableMacro_LIGHT_PROJ()	{ EnableMacro(); }
-	void DisableMacro_LIGHT_PROJ()	{ DisableMacro(); }
-
-	void SetMacro_LIGHT_PROJ(bool enable)
+	
+	const char* GetName() const
 	{
-		if(enable)
+		return "LIGHT_PROJ";
+	}
+	EGLCompileMacro GetType() const
+	{
+		return LIGHT_PROJ;
+	}
+	//bool		HasConflictingMacros(int permutation, const idList<GLCompileMacro*>& macros) const;
+	
+	void EnableMacro_LIGHT_PROJ()
+	{
+		EnableMacro();
+	}
+	void DisableMacro_LIGHT_PROJ()
+	{
+		DisableMacro();
+	}
+	
+	void SetMacro_LIGHT_PROJ( bool enable )
+	{
+		if( enable )
 			EnableMacro();
 		else
 			DisableMacro();
@@ -678,23 +858,35 @@ public:
 
 
 class GLCompileMacro_USE_SHADOWING:
-GLCompileMacro
+	GLCompileMacro
 {
 public:
-	GLCompileMacro_USE_SHADOWING(GLShader* shader):
-	  GLCompileMacro(shader)
+	GLCompileMacro_USE_SHADOWING( GLShader* shader ):
+		GLCompileMacro( shader )
 	{
 	}
-
-	const char* GetName() const { return "USE_SHADOWING"; }
-	EGLCompileMacro GetType() const { return USE_SHADOWING; }
-
-	void EnableShadowing()	{ EnableMacro(); }
-	void DisableShadowing()	{ DisableMacro(); }
-
-	void SetShadowing(bool enable)
+	
+	const char* GetName() const
 	{
-		if(enable)
+		return "USE_SHADOWING";
+	}
+	EGLCompileMacro GetType() const
+	{
+		return USE_SHADOWING;
+	}
+	
+	void EnableShadowing()
+	{
+		EnableMacro();
+	}
+	void DisableShadowing()
+	{
+		DisableMacro();
+	}
+	
+	void SetShadowing( bool enable )
+	{
+		if( enable )
 			EnableMacro();
 		else
 			DisableMacro();
@@ -703,23 +895,35 @@ public:
 
 
 class GLCompileMacro_USE_GBUFFER:
-GLCompileMacro
+	GLCompileMacro
 {
 public:
-	GLCompileMacro_USE_GBUFFER(GLShader* shader):
-	  GLCompileMacro(shader)
+	GLCompileMacro_USE_GBUFFER( GLShader* shader ):
+		GLCompileMacro( shader )
 	{
 	}
-
-	const char* GetName() const { return "USE_GBUFFER"; }
-	EGLCompileMacro GetType() const { return USE_GBUFFER; }
-
-	void EnableMacro_USE_GBUFFER()		{ EnableMacro(); }
-	void DisableMacro_USE_GBUFFER()	{ DisableMacro(); }
-
-	void SetMacro_USE_GBUFFER(bool enable)
+	
+	const char* GetName() const
 	{
-		if(enable)
+		return "USE_GBUFFER";
+	}
+	EGLCompileMacro GetType() const
+	{
+		return USE_GBUFFER;
+	}
+	
+	void EnableMacro_USE_GBUFFER()
+	{
+		EnableMacro();
+	}
+	void DisableMacro_USE_GBUFFER()
+	{
+		DisableMacro();
+	}
+	
+	void SetMacro_USE_GBUFFER( bool enable )
+	{
+		if( enable )
 			EnableMacro();
 		else
 			DisableMacro();
@@ -729,847 +933,913 @@ public:
 
 
 class u_CurrentRenderImage:
-GLUniform
+	GLUniform
 {
 public:
-	u_CurrentRenderImage(GLShader* shader):
-	  GLUniform(shader)
+	u_CurrentRenderImage( GLShader* shader ):
+		GLUniform( shader )
 	{
 	}
-
-	const char* GetName() const { return "u_CurrentRenderImage"; }
-	void				UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
+	
+	const char* GetName() const
 	{
-		shaderProgram->u_CurrentRenderImage = glGetUniformLocationARB(shaderProgram->program, GetName());
+		return "u_CurrentRenderImage";
 	}
-
-	void SetUniform_CurrentRenderImage(int value)
+	void				UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
+	{
+		shaderProgram->u_CurrentRenderImage = glGetUniformLocationARB( shaderProgram->program, GetName() );
+	}
+	
+	void SetUniform_CurrentRenderImage( int value )
 	{
 		shaderProgram_t* program = _shader->GetProgram();
-
+		
 #if defined(USE_UNIFORM_FIREWALL)
-		if(program->t_CurrentRenderImage == value)
+		if( program->t_CurrentRenderImage == value )
 			return;
-
+			
 		program->t_CurrentRenderImage = value;
 #endif
-
+		
 #if defined(LOG_GLSL_UNIFORMS)
-		if(r_logFile.GetBool())
+		if( r_logFile.GetBool() )
 		{
-			RB_LogComment("--- SetUniform_CurrentRenderImage( program = %s, value = %f ) ---\n", program->name.c_str(), value);
+			RB_LogComment( "--- SetUniform_CurrentRenderImage( program = %s, value = %f ) ---\n", program->name.c_str(), value );
 		}
 #endif
-		glUniform1iARB(program->u_CurrentRenderImage, value);
+		glUniform1iARB( program->u_CurrentRenderImage, value );
 	}
 };
 
 class u_CurrentNormalsImage:
-GLUniform
+	GLUniform
 {
 public:
-	u_CurrentNormalsImage(GLShader* shader):
-	  GLUniform(shader)
+	u_CurrentNormalsImage( GLShader* shader ):
+		GLUniform( shader )
 	{
 	}
-
-	const char* GetName() const { return "u_CurrentNormalsImage"; }
-	void				UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
+	
+	const char* GetName() const
 	{
-		shaderProgram->u_CurrentNormalsImage = glGetUniformLocationARB(shaderProgram->program, GetName());
+		return "u_CurrentNormalsImage";
 	}
-
-	void SetUniform_CurrentNormalsImage(int value)
+	void				UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
+	{
+		shaderProgram->u_CurrentNormalsImage = glGetUniformLocationARB( shaderProgram->program, GetName() );
+	}
+	
+	void SetUniform_CurrentNormalsImage( int value )
 	{
 		shaderProgram_t* program = _shader->GetProgram();
-
+		
 #if defined(USE_UNIFORM_FIREWALL)
-		if(program->t_CurrentNormalsImage == value)
+		if( program->t_CurrentNormalsImage == value )
 			return;
-
+			
 		program->t_CurrentNormalsImage = value;
 #endif
-
+		
 #if defined(LOG_GLSL_UNIFORMS)
-		if(r_logFile.GetBool())
+		if( r_logFile.GetBool() )
 		{
-			RB_LogComment("--- SetUniform_CurrentNormalsImage( program = %s, value = %f ) ---\n", program->name.c_str(), value);
+			RB_LogComment( "--- SetUniform_CurrentNormalsImage( program = %s, value = %f ) ---\n", program->name.c_str(), value );
 		}
 #endif
-		glUniform1iARB(program->u_CurrentNormalsImage, value);
+		glUniform1iARB( program->u_CurrentNormalsImage, value );
 	}
 };
 
 
 
 class u_CurrentDepthImage:
-GLUniform
+	GLUniform
 {
 public:
-	u_CurrentDepthImage(GLShader* shader):
-	  GLUniform(shader)
+	u_CurrentDepthImage( GLShader* shader ):
+		GLUniform( shader )
 	{
 	}
-
-	const char* GetName() const { return "u_CurrentDepthImage"; }
-	void				UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
+	
+	const char* GetName() const
 	{
-		shaderProgram->u_CurrentDepthImage = glGetUniformLocationARB(shaderProgram->program, GetName());
+		return "u_CurrentDepthImage";
 	}
-
-	void SetUniform_CurrentDepthImage(int value)
+	void				UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
+	{
+		shaderProgram->u_CurrentDepthImage = glGetUniformLocationARB( shaderProgram->program, GetName() );
+	}
+	
+	void SetUniform_CurrentDepthImage( int value )
 	{
 		shaderProgram_t* program = _shader->GetProgram();
-
+		
 #if defined(USE_UNIFORM_FIREWALL)
-		if(program->t_CurrentDepthImage == value)
+		if( program->t_CurrentDepthImage == value )
 			return;
-
+			
 		program->t_CurrentDepthImage = value;
 #endif
-
+		
 #if defined(LOG_GLSL_UNIFORMS)
-		if(r_logFile.GetBool())
+		if( r_logFile.GetBool() )
 		{
-			RB_LogComment("--- SetUniform_CurrentDepthImage( program = %s, value = %f ) ---\n", program->name.c_str(), value);
+			RB_LogComment( "--- SetUniform_CurrentDepthImage( program = %s, value = %f ) ---\n", program->name.c_str(), value );
 		}
 #endif
-		glUniform1iARB(program->u_CurrentDepthImage, value);
+		glUniform1iARB( program->u_CurrentDepthImage, value );
 	}
 };
 
 class u_CurrentLightImage:
-GLUniform
+	GLUniform
 {
 public:
-	u_CurrentLightImage(GLShader* shader):
-	  GLUniform(shader)
+	u_CurrentLightImage( GLShader* shader ):
+		GLUniform( shader )
 	{
 	}
-
-	const char* GetName() const { return "u_CurrentLightImage"; }
-	void				UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
+	
+	const char* GetName() const
 	{
-		shaderProgram->u_CurrentLightImage = glGetUniformLocationARB(shaderProgram->program, GetName());
+		return "u_CurrentLightImage";
 	}
-
-	void SetUniform_CurrentLightImage(int value)
+	void				UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
+	{
+		shaderProgram->u_CurrentLightImage = glGetUniformLocationARB( shaderProgram->program, GetName() );
+	}
+	
+	void SetUniform_CurrentLightImage( int value )
 	{
 		shaderProgram_t* program = _shader->GetProgram();
-
+		
 #if defined(USE_UNIFORM_FIREWALL)
-		if(program->t_CurrentLightImage == value)
+		if( program->t_CurrentLightImage == value )
 			return;
-
+			
 		program->t_CurrentLightImage = value;
 #endif
-
+		
 #if defined(LOG_GLSL_UNIFORMS)
-		if(r_logFile.GetBool())
+		if( r_logFile.GetBool() )
 		{
-			RB_LogComment("--- SetUniform_CurrentLightImage( program = %s, value = %f ) ---\n", program->name.c_str(), value);
+			RB_LogComment( "--- SetUniform_CurrentLightImage( program = %s, value = %f ) ---\n", program->name.c_str(), value );
 		}
 #endif
-		glUniform1iARB(program->u_CurrentLightImage, value);
+		glUniform1iARB( program->u_CurrentLightImage, value );
 	}
 };
 
 
 
 class u_DiffuseImage:
-GLUniform
+	GLUniform
 {
 public:
-	u_DiffuseImage(GLShader* shader):
-	  GLUniform(shader)
+	u_DiffuseImage( GLShader* shader ):
+		GLUniform( shader )
 	{
 	}
-
-	const char* GetName() const { return "u_DiffuseImage"; }
-	void				UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
+	
+	const char* GetName() const
 	{
-		shaderProgram->u_DiffuseImage = glGetUniformLocationARB(shaderProgram->program, GetName());
+		return "u_DiffuseImage";
 	}
-
-	void SetUniform_DiffuseImage(int value)
+	void				UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
+	{
+		shaderProgram->u_DiffuseImage = glGetUniformLocationARB( shaderProgram->program, GetName() );
+	}
+	
+	void SetUniform_DiffuseImage( int value )
 	{
 		shaderProgram_t* program = _shader->GetProgram();
-
+		
 #if defined(USE_UNIFORM_FIREWALL)
-		if(program->t_DiffuseImage == value)
+		if( program->t_DiffuseImage == value )
 			return;
-
+			
 		program->t_DiffuseImage = value;
 #endif
-
+		
 #if defined(LOG_GLSL_UNIFORMS)
-		if(r_logFile.GetBool())
+		if( r_logFile.GetBool() )
 		{
-			RB_LogComment("--- SetUniform_DiffuseImage( program = %s, value = %f ) ---\n", program->name.c_str(), value);
+			RB_LogComment( "--- SetUniform_DiffuseImage( program = %s, value = %f ) ---\n", program->name.c_str(), value );
 		}
 #endif
-		glUniform1iARB(program->u_DiffuseImage, value);
+		glUniform1iARB( program->u_DiffuseImage, value );
 	}
 };
 
 class u_NormalImage:
-GLUniform
+	GLUniform
 {
 public:
-	u_NormalImage(GLShader* shader):
-	  GLUniform(shader)
+	u_NormalImage( GLShader* shader ):
+		GLUniform( shader )
 	{
 	}
-
-	const char* GetName() const { return "u_NormalImage"; }
-	void				UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
+	
+	const char* GetName() const
 	{
-		shaderProgram->u_NormalImage = glGetUniformLocationARB(shaderProgram->program, GetName());
+		return "u_NormalImage";
 	}
-
-	void SetUniform_NormalImage(int value)
+	void				UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
+	{
+		shaderProgram->u_NormalImage = glGetUniformLocationARB( shaderProgram->program, GetName() );
+	}
+	
+	void SetUniform_NormalImage( int value )
 	{
 		shaderProgram_t* program = _shader->GetProgram();
-
+		
 #if defined(USE_UNIFORM_FIREWALL)
-		if(program->t_NormalImage == value)
+		if( program->t_NormalImage == value )
 			return;
-
+			
 		program->t_NormalImage = value;
 #endif
-
+		
 #if defined(LOG_GLSL_UNIFORMS)
-		if(r_logFile.GetBool())
+		if( r_logFile.GetBool() )
 		{
-			RB_LogComment("--- SetUniform_NormalImage( program = %s, value = %f ) ---\n", program->name.c_str(), value);
+			RB_LogComment( "--- SetUniform_NormalImage( program = %s, value = %f ) ---\n", program->name.c_str(), value );
 		}
 #endif
-		glUniform1iARB(program->u_NormalImage, value);
+		glUniform1iARB( program->u_NormalImage, value );
 	}
 };
 
 class u_SpecularImage:
-GLUniform
+	GLUniform
 {
 public:
-	u_SpecularImage(GLShader* shader):
-	  GLUniform(shader)
+	u_SpecularImage( GLShader* shader ):
+		GLUniform( shader )
 	{
 	}
-
-	const char* GetName() const { return "u_SpecularImage"; }
-	void				UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
+	
+	const char* GetName() const
 	{
-		shaderProgram->u_SpecularImage = glGetUniformLocationARB(shaderProgram->program, GetName());
+		return "u_SpecularImage";
 	}
-
-	void SetUniform_SpecularImage(int value)
+	void				UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
+	{
+		shaderProgram->u_SpecularImage = glGetUniformLocationARB( shaderProgram->program, GetName() );
+	}
+	
+	void SetUniform_SpecularImage( int value )
 	{
 		shaderProgram_t* program = _shader->GetProgram();
-
+		
 #if defined(USE_UNIFORM_FIREWALL)
-		if(program->t_SpecularImage == value)
+		if( program->t_SpecularImage == value )
 			return;
-
+			
 		program->t_SpecularImage = value;
 #endif
-
+		
 #if defined(LOG_GLSL_UNIFORMS)
-		if(r_logFile.GetBool())
+		if( r_logFile.GetBool() )
 		{
-			RB_LogComment("--- SetUniform_SpecularImage( program = %s, value = %f ) ---\n", program->name.c_str(), value);
+			RB_LogComment( "--- SetUniform_SpecularImage( program = %s, value = %f ) ---\n", program->name.c_str(), value );
 		}
 #endif
-		glUniform1iARB(program->u_SpecularImage, value);
+		glUniform1iARB( program->u_SpecularImage, value );
 	}
 };
 
 
 
 class u_ModelMatrix:
-GLUniform
+	GLUniform
 {
 public:
-	u_ModelMatrix(GLShader* shader):
-	  GLUniform(shader)
+	u_ModelMatrix( GLShader* shader ):
+		GLUniform( shader )
 	{
 	}
-
-	const char* GetName() const { return "u_ModelMatrix"; }
-	void				UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
+	
+	const char* GetName() const
 	{
-		shaderProgram->u_ModelMatrix = glGetUniformLocationARB(shaderProgram->program, GetName());
+		return "u_ModelMatrix";
 	}
-
-	void SetUniform_ModelMatrix(const idMat4& m)
+	void				UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
+	{
+		shaderProgram->u_ModelMatrix = glGetUniformLocationARB( shaderProgram->program, GetName() );
+	}
+	
+	void SetUniform_ModelMatrix( const idMat4& m )
 	{
 		shaderProgram_t* program = _shader->GetProgram();
-
+		
 #if defined(USE_UNIFORM_FIREWALL)
-		if(program->t_ModelMatrix == m)
+		if( program->t_ModelMatrix == m )
 			return;
-
+			
 		program->t_ModelMatrix = m;
 #endif
-
+		
 #if defined(LOG_GLSL_UNIFORMS)
-		if(r_logFile.GetBool())
+		if( r_logFile.GetBool() )
 		{
-			RB_LogComment("--- SetUniform_ModelMatrix( program = %s, "
-								"( %5.3f, %5.3f, %5.3f, %5.3f )\n"
-								"( %5.3f, %5.3f, %5.3f, %5.3f )\n"
-								"( %5.3f, %5.3f, %5.3f, %5.3f )\n"
-								"( %5.3f, %5.3f, %5.3f, %5.3f ) ) ---\n",
-								program->name.c_str(),
-								m[0][0], m[0][1], m[0][2], m[0][3],
-								m[1][0], m[1][1], m[1][2], m[1][3],
-								m[2][0], m[2][1], m[2][2], m[2][3],
-								m[3][0], m[3][1], m[3][2], m[3][3]);
+			RB_LogComment( "--- SetUniform_ModelMatrix( program = %s, "
+						   "( %5.3f, %5.3f, %5.3f, %5.3f )\n"
+						   "( %5.3f, %5.3f, %5.3f, %5.3f )\n"
+						   "( %5.3f, %5.3f, %5.3f, %5.3f )\n"
+						   "( %5.3f, %5.3f, %5.3f, %5.3f ) ) ---\n",
+						   program->name.c_str(),
+						   m[0][0], m[0][1], m[0][2], m[0][3],
+						   m[1][0], m[1][1], m[1][2], m[1][3],
+						   m[2][0], m[2][1], m[2][2], m[2][3],
+						   m[3][0], m[3][1], m[3][2], m[3][3] );
 		}
 #endif
-
-		glUniformMatrix4fvARB(program->u_ModelMatrix, 1, GL_TRUE, m.ToFloatPtr());
+		
+		glUniformMatrix4fvARB( program->u_ModelMatrix, 1, GL_TRUE, m.ToFloatPtr() );
 	}
 };
 
 
 class u_UnprojectMatrix:
-GLUniform
+	GLUniform
 {
 public:
-	u_UnprojectMatrix(GLShader* shader):
-	  GLUniform(shader)
+	u_UnprojectMatrix( GLShader* shader ):
+		GLUniform( shader )
 	{
 	}
-
-	const char* GetName() const { return "u_UnprojectMatrix"; }
-	void				UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
+	
+	const char* GetName() const
 	{
-		shaderProgram->u_UnprojectMatrix = glGetUniformLocationARB(shaderProgram->program, GetName());
+		return "u_UnprojectMatrix";
 	}
-
-	void SetUniform_UnprojectMatrix(const idMat4& m)
+	void				UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
+	{
+		shaderProgram->u_UnprojectMatrix = glGetUniformLocationARB( shaderProgram->program, GetName() );
+	}
+	
+	void SetUniform_UnprojectMatrix( const idMat4& m )
 	{
 		shaderProgram_t* program = _shader->GetProgram();
-
+		
 #if defined(USE_UNIFORM_FIREWALL)
-		if(program->t_UnprojectMatrix == m)
+		if( program->t_UnprojectMatrix == m )
 			return;
-
+			
 		program->t_UnprojectMatrix = m;
 #endif
-
+		
 #if defined(LOG_GLSL_UNIFORMS)
-		if(r_logFile.GetBool())
+		if( r_logFile.GetBool() )
 		{
-			RB_LogComment("--- SetUniform_UnprojectMatrix( program = %s, "
-								"( %5.3f, %5.3f, %5.3f, %5.3f )\n"
-								"( %5.3f, %5.3f, %5.3f, %5.3f )\n"
-								"( %5.3f, %5.3f, %5.3f, %5.3f )\n"
-								"( %5.3f, %5.3f, %5.3f, %5.3f ) ) ---\n",
-								program->name.c_str(),
-								m[0][0], m[0][1], m[0][2], m[0][3],
-								m[1][0], m[1][1], m[1][2], m[1][3],
-								m[2][0], m[2][1], m[2][2], m[2][3],
-								m[3][0], m[3][1], m[3][2], m[3][3]);
+			RB_LogComment( "--- SetUniform_UnprojectMatrix( program = %s, "
+						   "( %5.3f, %5.3f, %5.3f, %5.3f )\n"
+						   "( %5.3f, %5.3f, %5.3f, %5.3f )\n"
+						   "( %5.3f, %5.3f, %5.3f, %5.3f )\n"
+						   "( %5.3f, %5.3f, %5.3f, %5.3f ) ) ---\n",
+						   program->name.c_str(),
+						   m[0][0], m[0][1], m[0][2], m[0][3],
+						   m[1][0], m[1][1], m[1][2], m[1][3],
+						   m[2][0], m[2][1], m[2][2], m[2][3],
+						   m[3][0], m[3][1], m[3][2], m[3][3] );
 		}
 #endif
-
-		glUniformMatrix4fvARB(program->u_UnprojectMatrix, 1, GL_TRUE, m.ToFloatPtr());
+		
+		glUniformMatrix4fvARB( program->u_UnprojectMatrix, 1, GL_TRUE, m.ToFloatPtr() );
 	}
 };
 
 
 class u_ShadowMatrix:
-GLUniform
+	GLUniform
 {
 public:
-	u_ShadowMatrix(GLShader* shader):
-	  GLUniform(shader)
+	u_ShadowMatrix( GLShader* shader ):
+		GLUniform( shader )
 	{
 	}
-
-	const char* GetName() const { return "u_ShadowMatrix"; }
-	void				UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
+	
+	const char* GetName() const
 	{
-		shaderProgram->u_ShadowMatrix = glGetUniformLocationARB(shaderProgram->program, GetName());
+		return "u_ShadowMatrix";
 	}
-
-	void SetUniform_ShadowMatrix(const idMat4& m)
+	void				UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
+	{
+		shaderProgram->u_ShadowMatrix = glGetUniformLocationARB( shaderProgram->program, GetName() );
+	}
+	
+	void SetUniform_ShadowMatrix( const idMat4& m )
 	{
 		shaderProgram_t* program = _shader->GetProgram();
-
+		
 #if defined(USE_UNIFORM_FIREWALL)
-		if(program->t_ShadowMatrix == m)
+		if( program->t_ShadowMatrix == m )
 			return;
-
+			
 		program->t_ShadowMatrix = m;
 #endif
-
+		
 #if defined(LOG_GLSL_UNIFORMS)
-		if(r_logFile.GetBool())
+		if( r_logFile.GetBool() )
 		{
-			RB_LogComment("--- SetUniform_ShadowMatrix( program = %s, "
-								"( %5.3f, %5.3f, %5.3f, %5.3f )\n"
-								"( %5.3f, %5.3f, %5.3f, %5.3f )\n"
-								"( %5.3f, %5.3f, %5.3f, %5.3f )\n"
-								"( %5.3f, %5.3f, %5.3f, %5.3f ) ) ---\n",
-								program->name.c_str(),
-								m[0][0], m[0][1], m[0][2], m[0][3],
-								m[1][0], m[1][1], m[1][2], m[1][3],
-								m[2][0], m[2][1], m[2][2], m[2][3],
-								m[3][0], m[3][1], m[3][2], m[3][3]);
+			RB_LogComment( "--- SetUniform_ShadowMatrix( program = %s, "
+						   "( %5.3f, %5.3f, %5.3f, %5.3f )\n"
+						   "( %5.3f, %5.3f, %5.3f, %5.3f )\n"
+						   "( %5.3f, %5.3f, %5.3f, %5.3f )\n"
+						   "( %5.3f, %5.3f, %5.3f, %5.3f ) ) ---\n",
+						   program->name.c_str(),
+						   m[0][0], m[0][1], m[0][2], m[0][3],
+						   m[1][0], m[1][1], m[1][2], m[1][3],
+						   m[2][0], m[2][1], m[2][2], m[2][3],
+						   m[3][0], m[3][1], m[3][2], m[3][3] );
 		}
 #endif
-
-		glUniformMatrix4fvARB(program->u_ShadowMatrix, 1, GL_TRUE, m.ToFloatPtr());
+		
+		glUniformMatrix4fvARB( program->u_ShadowMatrix, 1, GL_TRUE, m.ToFloatPtr() );
 	}
 };
 
 
 class u_DiffuseMatrixS:
-GLUniform
+	GLUniform
 {
 public:
-	u_DiffuseMatrixS(GLShader* shader):
-	  GLUniform(shader)
+	u_DiffuseMatrixS( GLShader* shader ):
+		GLUniform( shader )
 	{
 	}
-
-	const char* GetName() const { return "u_DiffuseMatrixS"; }
-	void UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
+	
+	const char* GetName() const
 	{
-		shaderProgram->u_DiffuseMatrixS = glGetUniformLocationARB(shaderProgram->program, GetName());
+		return "u_DiffuseMatrixS";
 	}
-
-	void SetUniform_DiffuseMatrixS(const idVec4& v)
+	void UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
+	{
+		shaderProgram->u_DiffuseMatrixS = glGetUniformLocationARB( shaderProgram->program, GetName() );
+	}
+	
+	void SetUniform_DiffuseMatrixS( const idVec4& v )
 	{
 		shaderProgram_t* program = _shader->GetProgram();
-
+		
 #if defined(USE_UNIFORM_FIREWALL)
-		if(program->t_DiffuseMatrixS == v)
+		if( program->t_DiffuseMatrixS == v )
 			return;
-
+			
 		program->t_DiffuseMatrixS = v;
 #endif
-
+		
 #if defined(LOG_GLSL_UNIFORMS)
-		if(r_logFile.GetBool())
+		if( r_logFile.GetBool() )
 		{
-			RB_LogComment("--- SetUniform_DiffuseMatrixS( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name.c_str(), v[0], v[1], v[2], v[3]);
+			RB_LogComment( "--- SetUniform_DiffuseMatrixS( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name.c_str(), v[0], v[1], v[2], v[3] );
 		}
 #endif
-
-		glUniform4fARB(program->u_DiffuseMatrixS, v[0], v[1], v[2], v[3]);
+		
+		glUniform4fARB( program->u_DiffuseMatrixS, v[0], v[1], v[2], v[3] );
 	}
 };
 
 class u_DiffuseMatrixT:
-GLUniform
+	GLUniform
 {
 public:
-	u_DiffuseMatrixT(GLShader* shader):
-	  GLUniform(shader)
+	u_DiffuseMatrixT( GLShader* shader ):
+		GLUniform( shader )
 	{
 	}
-
-	const char* GetName() const { return "u_DiffuseMatrixT"; }
-	void UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
+	
+	const char* GetName() const
 	{
-		shaderProgram->u_DiffuseMatrixT = glGetUniformLocationARB(shaderProgram->program, GetName());
+		return "u_DiffuseMatrixT";
 	}
-
-	void SetUniform_DiffuseMatrixT(const idVec4& v)
+	void UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
+	{
+		shaderProgram->u_DiffuseMatrixT = glGetUniformLocationARB( shaderProgram->program, GetName() );
+	}
+	
+	void SetUniform_DiffuseMatrixT( const idVec4& v )
 	{
 		shaderProgram_t* program = _shader->GetProgram();
-
+		
 #if defined(USE_UNIFORM_FIREWALL)
-		if(program->t_DiffuseMatrixT == v)
+		if( program->t_DiffuseMatrixT == v )
 			return;
-
+			
 		program->t_DiffuseMatrixT = v;
 #endif
-
+		
 #if defined(LOG_GLSL_UNIFORMS)
-		if(r_logFile.GetBool())
+		if( r_logFile.GetBool() )
 		{
-			RB_LogComment("--- SetUniform_DiffuseMatrixT( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name.c_str(), v[0], v[1], v[2], v[3]);
+			RB_LogComment( "--- SetUniform_DiffuseMatrixT( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name.c_str(), v[0], v[1], v[2], v[3] );
 		}
 #endif
-
-		glUniform4fARB(program->u_DiffuseMatrixT, v[0], v[1], v[2], v[3]);
+		
+		glUniform4fARB( program->u_DiffuseMatrixT, v[0], v[1], v[2], v[3] );
 	}
 };
 
 class u_BumpMatrixS:
-GLUniform
+	GLUniform
 {
 public:
-	u_BumpMatrixS(GLShader* shader):
-	  GLUniform(shader)
+	u_BumpMatrixS( GLShader* shader ):
+		GLUniform( shader )
 	{
 	}
-
-	const char* GetName() const { return "u_BumpMatrixS"; }
-	void UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
+	
+	const char* GetName() const
 	{
-		shaderProgram->u_BumpMatrixS = glGetUniformLocationARB(shaderProgram->program, GetName());
+		return "u_BumpMatrixS";
 	}
-
-	void SetUniform_BumpMatrixS(const idVec4& v)
+	void UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
+	{
+		shaderProgram->u_BumpMatrixS = glGetUniformLocationARB( shaderProgram->program, GetName() );
+	}
+	
+	void SetUniform_BumpMatrixS( const idVec4& v )
 	{
 		shaderProgram_t* program = _shader->GetProgram();
-
+		
 #if defined(USE_UNIFORM_FIREWALL)
-		if(program->t_BumpMatrixS == v)
+		if( program->t_BumpMatrixS == v )
 			return;
-
+			
 		program->t_BumpMatrixS = v;
 #endif
-
+		
 #if defined(LOG_GLSL_UNIFORMS)
-		if(r_logFile.GetBool())
+		if( r_logFile.GetBool() )
 		{
-			RB_LogComment("--- SetUniform_BumpMatrixS( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name.c_str(), v[0], v[1], v[2], v[3]);
+			RB_LogComment( "--- SetUniform_BumpMatrixS( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name.c_str(), v[0], v[1], v[2], v[3] );
 		}
 #endif
-
-		glUniform4fARB(program->u_BumpMatrixS, v[0], v[1], v[2], v[3]);
+		
+		glUniform4fARB( program->u_BumpMatrixS, v[0], v[1], v[2], v[3] );
 	}
 };
 
 class u_BumpMatrixT:
-GLUniform
+	GLUniform
 {
 public:
-	u_BumpMatrixT(GLShader* shader):
-	  GLUniform(shader)
+	u_BumpMatrixT( GLShader* shader ):
+		GLUniform( shader )
 	{
 	}
-
-	const char* GetName() const { return "u_BumpMatrixT"; }
-	void UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
+	
+	const char* GetName() const
 	{
-		shaderProgram->u_BumpMatrixT = glGetUniformLocationARB(shaderProgram->program, GetName());
+		return "u_BumpMatrixT";
 	}
-
-	void SetUniform_BumpMatrixT(const idVec4& v)
+	void UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
+	{
+		shaderProgram->u_BumpMatrixT = glGetUniformLocationARB( shaderProgram->program, GetName() );
+	}
+	
+	void SetUniform_BumpMatrixT( const idVec4& v )
 	{
 		shaderProgram_t* program = _shader->GetProgram();
-
+		
 #if defined(USE_UNIFORM_FIREWALL)
-		if(program->t_BumpMatrixT == v)
+		if( program->t_BumpMatrixT == v )
 			return;
-
+			
 		program->t_BumpMatrixT = v;
 #endif
-
+		
 #if defined(LOG_GLSL_UNIFORMS)
-		if(r_logFile.GetBool())
+		if( r_logFile.GetBool() )
 		{
-			RB_LogComment("--- SetUniform_BumpMatrixT( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name.c_str(), v[0], v[1], v[2], v[3]);
+			RB_LogComment( "--- SetUniform_BumpMatrixT( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name.c_str(), v[0], v[1], v[2], v[3] );
 		}
 #endif
-
-		glUniform4fARB(program->u_BumpMatrixT, v[0], v[1], v[2], v[3]);
+		
+		glUniform4fARB( program->u_BumpMatrixT, v[0], v[1], v[2], v[3] );
 	}
 };
 
 
 class u_SpecularMatrixS:
-GLUniform
+	GLUniform
 {
 public:
-	u_SpecularMatrixS(GLShader* shader):
-	  GLUniform(shader)
+	u_SpecularMatrixS( GLShader* shader ):
+		GLUniform( shader )
 	{
 	}
-
-	const char* GetName() const { return "u_SpecularMatrixS"; }
-	void UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
+	
+	const char* GetName() const
 	{
-		shaderProgram->u_SpecularMatrixS = glGetUniformLocationARB(shaderProgram->program, GetName());
+		return "u_SpecularMatrixS";
 	}
-
-	void SetUniform_SpecularMatrixS(const idVec4& v)
+	void UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
+	{
+		shaderProgram->u_SpecularMatrixS = glGetUniformLocationARB( shaderProgram->program, GetName() );
+	}
+	
+	void SetUniform_SpecularMatrixS( const idVec4& v )
 	{
 		shaderProgram_t* program = _shader->GetProgram();
-
+		
 #if defined(USE_UNIFORM_FIREWALL)
-		if(program->t_SpecularMatrixS == v)
+		if( program->t_SpecularMatrixS == v )
 			return;
-
+			
 		program->t_SpecularMatrixS = v;
 #endif
-
+		
 #if defined(LOG_GLSL_UNIFORMS)
-		if(r_logFile.GetBool())
+		if( r_logFile.GetBool() )
 		{
-			RB_LogComment("--- SetUniform_SpecularMatrixS( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name.c_str(), v[0], v[1], v[2], v[3]);
+			RB_LogComment( "--- SetUniform_SpecularMatrixS( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name.c_str(), v[0], v[1], v[2], v[3] );
 		}
 #endif
-
-		glUniform4fARB(program->u_SpecularMatrixS, v[0], v[1], v[2], v[3]);
+		
+		glUniform4fARB( program->u_SpecularMatrixS, v[0], v[1], v[2], v[3] );
 	}
 };
 
 class u_SpecularMatrixT:
-GLUniform
+	GLUniform
 {
 public:
-	u_SpecularMatrixT(GLShader* shader):
-	  GLUniform(shader)
+	u_SpecularMatrixT( GLShader* shader ):
+		GLUniform( shader )
 	{
 	}
-
-	const char* GetName() const { return "u_SpecularMatrixT"; }
-	void UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
+	
+	const char* GetName() const
 	{
-		shaderProgram->u_SpecularMatrixT = glGetUniformLocationARB(shaderProgram->program, GetName());
+		return "u_SpecularMatrixT";
 	}
-
-	void SetUniform_SpecularMatrixT(const idVec4& v)
+	void UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
+	{
+		shaderProgram->u_SpecularMatrixT = glGetUniformLocationARB( shaderProgram->program, GetName() );
+	}
+	
+	void SetUniform_SpecularMatrixT( const idVec4& v )
 	{
 		shaderProgram_t* program = _shader->GetProgram();
-
+		
 #if defined(USE_UNIFORM_FIREWALL)
-		if(program->t_SpecularMatrixT == v)
+		if( program->t_SpecularMatrixT == v )
 			return;
-
+			
 		program->t_SpecularMatrixT = v;
 #endif
-
+		
 #if defined(LOG_GLSL_UNIFORMS)
-		if(r_logFile.GetBool())
+		if( r_logFile.GetBool() )
 		{
-			RB_LogComment("--- SetUniform_SpecularMatrixT( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name.c_str(), v[0], v[1], v[2], v[3]);
+			RB_LogComment( "--- SetUniform_SpecularMatrixT( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name.c_str(), v[0], v[1], v[2], v[3] );
 		}
 #endif
-
-		glUniform4fARB(program->u_SpecularMatrixT, v[0], v[1], v[2], v[3]);
+		
+		glUniform4fARB( program->u_SpecularMatrixT, v[0], v[1], v[2], v[3] );
 	}
 };
 
 
 class u_Color:
-GLUniform
+	GLUniform
 {
 public:
-	u_Color(GLShader* shader):
-	  GLUniform(shader)
+	u_Color( GLShader* shader ):
+		GLUniform( shader )
 	{
 	}
-
-	const char* GetName() const { return "u_Color"; }
-	void UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
+	
+	const char* GetName() const
 	{
-		shaderProgram->u_Color = glGetUniformLocationARB(shaderProgram->program, GetName());
+		return "u_Color";
 	}
-
-	void SetUniform_Color(const idVec4& v)
+	void UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
+	{
+		shaderProgram->u_Color = glGetUniformLocationARB( shaderProgram->program, GetName() );
+	}
+	
+	void SetUniform_Color( const idVec4& v )
 	{
 		shaderProgram_t* program = _shader->GetProgram();
-
+		
 #if defined(USE_UNIFORM_FIREWALL)
-		if(program->t_Color == v)
+		if( program->t_Color == v )
 			return;
-
+			
 		program->t_Color = v;
 #endif
-
+		
 #if defined(LOG_GLSL_UNIFORMS)
-		if(r_logFile.GetBool())
+		if( r_logFile.GetBool() )
 		{
-			RB_LogComment("--- SetUniform_Color( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name.c_str(), v[0], v[1], v[2], v[3]);
+			RB_LogComment( "--- SetUniform_Color( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name.c_str(), v[0], v[1], v[2], v[3] );
 		}
 #endif
-
-		glUniform4fARB(program->u_Color, v[0], v[1], v[2], v[3]);
+		
+		glUniform4fARB( program->u_Color, v[0], v[1], v[2], v[3] );
 	}
 };
 
 class u_ColorModulate:
-GLUniform
+	GLUniform
 {
 public:
-	u_ColorModulate(GLShader* shader):
-	  GLUniform(shader)
+	u_ColorModulate( GLShader* shader ):
+		GLUniform( shader )
 	{
 	}
-
-	const char* GetName() const { return "u_ColorModulate"; }
-	void UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
+	
+	const char* GetName() const
 	{
-		shaderProgram->u_ColorModulate = glGetUniformLocationARB(shaderProgram->program, GetName());
+		return "u_ColorModulate";
 	}
-
-	void SetUniform_ColorModulate(const idVec4& v)
+	void UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
+	{
+		shaderProgram->u_ColorModulate = glGetUniformLocationARB( shaderProgram->program, GetName() );
+	}
+	
+	void SetUniform_ColorModulate( const idVec4& v )
 	{
 		shaderProgram_t* program = _shader->GetProgram();
-
+		
 #if defined(USE_UNIFORM_FIREWALL)
-		if(program->t_ColorModulate == v)
+		if( program->t_ColorModulate == v )
 			return;
-
+			
 		program->t_ColorModulate = v;
 #endif
-
+		
 #if defined(LOG_GLSL_UNIFORMS)
-		if(r_logFile.GetBool())
+		if( r_logFile.GetBool() )
 		{
-			RB_LogComment("--- SetUniform_ColorModulate( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name.c_str(), v[0], v[1], v[2], v[3]);
+			RB_LogComment( "--- SetUniform_ColorModulate( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name.c_str(), v[0], v[1], v[2], v[3] );
 		}
 #endif
-
-		glUniform4fARB(program->u_ColorModulate, v[0], v[1], v[2], v[3]);
+		
+		glUniform4fARB( program->u_ColorModulate, v[0], v[1], v[2], v[3] );
 	}
 };
 
 class u_AmbientColor:
-GLUniform
+	GLUniform
 {
 public:
-	u_AmbientColor(GLShader* shader):
-	  GLUniform(shader)
+	u_AmbientColor( GLShader* shader ):
+		GLUniform( shader )
 	{
 	}
-
-	const char* GetName() const { return "u_AmbientColor"; }
-	void UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
+	
+	const char* GetName() const
 	{
-		shaderProgram->u_AmbientColor = glGetUniformLocationARB(shaderProgram->program, GetName());
+		return "u_AmbientColor";
 	}
-
-	void SetUniform_AmbientColor(const idVec4& v)
+	void UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
+	{
+		shaderProgram->u_AmbientColor = glGetUniformLocationARB( shaderProgram->program, GetName() );
+	}
+	
+	void SetUniform_AmbientColor( const idVec4& v )
 	{
 		shaderProgram_t* program = _shader->GetProgram();
-
+		
 #if defined(USE_UNIFORM_FIREWALL)
-		if(program->t_AmbientColor == v)
+		if( program->t_AmbientColor == v )
 			return;
-
+			
 		program->t_AmbientColor = v;
 #endif
-
+		
 #if defined(LOG_GLSL_UNIFORMS)
-		if(r_logFile.GetBool())
+		if( r_logFile.GetBool() )
 		{
-			RB_LogComment("--- SetUniform_AmbientColor( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name.c_str(), v[0], v[1], v[2], v[3]);
+			RB_LogComment( "--- SetUniform_AmbientColor( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name.c_str(), v[0], v[1], v[2], v[3] );
 		}
 #endif
-
-		glUniform4fARB(program->u_AmbientColor, v[0], v[1], v[2], v[3]);
+		
+		glUniform4fARB( program->u_AmbientColor, v[0], v[1], v[2], v[3] );
 	}
 };
 
 class u_DiffuseColor:
-GLUniform
+	GLUniform
 {
 public:
-	u_DiffuseColor(GLShader* shader):
-	  GLUniform(shader)
+	u_DiffuseColor( GLShader* shader ):
+		GLUniform( shader )
 	{
 	}
-
-	const char* GetName() const { return "u_DiffuseColor"; }
-	void UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
+	
+	const char* GetName() const
 	{
-		shaderProgram->u_DiffuseColor = glGetUniformLocationARB(shaderProgram->program, GetName());
+		return "u_DiffuseColor";
 	}
-
-	void SetUniform_DiffuseColor(const idVec4& v)
+	void UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
+	{
+		shaderProgram->u_DiffuseColor = glGetUniformLocationARB( shaderProgram->program, GetName() );
+	}
+	
+	void SetUniform_DiffuseColor( const idVec4& v )
 	{
 		shaderProgram_t* program = _shader->GetProgram();
-
+		
 #if defined(USE_UNIFORM_FIREWALL)
-		if(program->t_DiffuseColor == v)
+		if( program->t_DiffuseColor == v )
 			return;
-
+			
 		program->t_DiffuseColor = v;
 #endif
-
+		
 #if defined(LOG_GLSL_UNIFORMS)
-		if(r_logFile.GetBool())
+		if( r_logFile.GetBool() )
 		{
-			RB_LogComment("--- SetUniform_DiffuseColor( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name.c_str(), v[0], v[1], v[2], v[3]);
+			RB_LogComment( "--- SetUniform_DiffuseColor( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name.c_str(), v[0], v[1], v[2], v[3] );
 		}
 #endif
-
-		glUniform4fARB(program->u_DiffuseColor, v[0], v[1], v[2], v[3]);
+		
+		glUniform4fARB( program->u_DiffuseColor, v[0], v[1], v[2], v[3] );
 	}
 };
 
 class u_SpecularColor:
-GLUniform
+	GLUniform
 {
 public:
-	u_SpecularColor(GLShader* shader):
-	  GLUniform(shader)
+	u_SpecularColor( GLShader* shader ):
+		GLUniform( shader )
 	{
 	}
-
-	const char* GetName() const { return "u_SpecularColor"; }
-	void UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
+	
+	const char* GetName() const
 	{
-		shaderProgram->u_SpecularColor = glGetUniformLocationARB(shaderProgram->program, GetName());
+		return "u_SpecularColor";
 	}
-
-	void SetUniform_SpecularColor(const idVec4& v)
+	void UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
+	{
+		shaderProgram->u_SpecularColor = glGetUniformLocationARB( shaderProgram->program, GetName() );
+	}
+	
+	void SetUniform_SpecularColor( const idVec4& v )
 	{
 		shaderProgram_t* program = _shader->GetProgram();
-
+		
 #if defined(USE_UNIFORM_FIREWALL)
-		if(program->t_SpecularColor == v)
+		if( program->t_SpecularColor == v )
 			return;
-
+			
 		program->t_SpecularColor = v;
 #endif
-
+		
 #if defined(LOG_GLSL_UNIFORMS)
-		if(r_logFile.GetBool())
+		if( r_logFile.GetBool() )
 		{
-			RB_LogComment("--- SetUniform_SpecularColor( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name.c_str(), v[0], v[1], v[2], v[3]);
+			RB_LogComment( "--- SetUniform_SpecularColor( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name.c_str(), v[0], v[1], v[2], v[3] );
 		}
 #endif
-
-		glUniform4fARB(program->u_SpecularColor, v[0], v[1], v[2], v[3]);
+		
+		glUniform4fARB( program->u_SpecularColor, v[0], v[1], v[2], v[3] );
 	}
 };
 
 class u_LightColor:
-GLUniform
+	GLUniform
 {
 public:
-	u_LightColor(GLShader* shader):
-	  GLUniform(shader)
+	u_LightColor( GLShader* shader ):
+		GLUniform( shader )
 	{
 	}
-
-	const char* GetName() const { return "u_LightColor"; }
-	void UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
+	
+	const char* GetName() const
 	{
-		shaderProgram->u_LightColor = glGetUniformLocationARB(shaderProgram->program, GetName());
+		return "u_LightColor";
 	}
-
-	void SetUniform_LightColor(const idVec4& v)
+	void UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
+	{
+		shaderProgram->u_LightColor = glGetUniformLocationARB( shaderProgram->program, GetName() );
+	}
+	
+	void SetUniform_LightColor( const idVec4& v )
 	{
 		shaderProgram_t* program = _shader->GetProgram();
-
+		
 #if defined(USE_UNIFORM_FIREWALL)
-		if(program->t_LightColor == v)
+		if( program->t_LightColor == v )
 			return;
-
+			
 		program->t_LightColor = v;
 #endif
-
+		
 #if defined(LOG_GLSL_UNIFORMS)
-		if(r_logFile.GetBool())
+		if( r_logFile.GetBool() )
 		{
-			RB_LogComment("--- SetUniform_LightColor( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name.c_str(), v[0], v[1], v[2], v[3]);
+			RB_LogComment( "--- SetUniform_LightColor( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name.c_str(), v[0], v[1], v[2], v[3] );
 		}
 #endif
-
-		glUniform4fARB(program->u_LightColor, v[0], v[1], v[2], v[3]);
+		
+		glUniform4fARB( program->u_LightColor, v[0], v[1], v[2], v[3] );
 	}
 };
 
@@ -1598,76 +1868,82 @@ public:
 */
 
 class u_LocalViewOrigin:
-GLUniform
+	GLUniform
 {
 public:
-	u_LocalViewOrigin(GLShader* shader):
-	  GLUniform(shader)
+	u_LocalViewOrigin( GLShader* shader ):
+		GLUniform( shader )
 	{
 	}
-
-	const char* GetName() const { return "u_LocalViewOrigin"; }
-	void UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
+	
+	const char* GetName() const
 	{
-		shaderProgram->u_LocalViewOrigin = glGetUniformLocationARB(shaderProgram->program, GetName());
+		return "u_LocalViewOrigin";
 	}
-
-	void SetUniform_LocalViewOrigin(const idVec3 v)
+	void UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
+	{
+		shaderProgram->u_LocalViewOrigin = glGetUniformLocationARB( shaderProgram->program, GetName() );
+	}
+	
+	void SetUniform_LocalViewOrigin( const idVec3 v )
 	{
 		shaderProgram_t* program = _shader->GetProgram();
-
+		
 #if defined(USE_UNIFORM_FIREWALL)
-		if(program->t_LocalViewOrigin == v)
+		if( program->t_LocalViewOrigin == v )
 			return;
-
+			
 		program->t_LocalViewOrigin = v;
 #endif
-
+		
 #if defined(LOG_GLSL_UNIFORMS)
-		if(r_logFile.GetBool())
+		if( r_logFile.GetBool() )
 		{
-			RB_LogComment("--- SetUniform_LocalViewOrigin( program = %s, vector = ( %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name.c_str(), v[0], v[1], v[2]);
+			RB_LogComment( "--- SetUniform_LocalViewOrigin( program = %s, vector = ( %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name.c_str(), v[0], v[1], v[2] );
 		}
 #endif
-
-		glUniform3fARB(program->u_LocalViewOrigin, v[0], v[1], v[2]);
+		
+		glUniform3fARB( program->u_LocalViewOrigin, v[0], v[1], v[2] );
 	}
 };
 
 class u_GlobalViewOrigin:
-GLUniform
+	GLUniform
 {
 public:
-	u_GlobalViewOrigin(GLShader* shader):
-	  GLUniform(shader)
+	u_GlobalViewOrigin( GLShader* shader ):
+		GLUniform( shader )
 	{
 	}
-
-	const char* GetName() const { return "u_GlobalViewOrigin"; }
-	void UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
+	
+	const char* GetName() const
 	{
-		shaderProgram->u_GlobalViewOrigin = glGetUniformLocationARB(shaderProgram->program, GetName());
+		return "u_GlobalViewOrigin";
 	}
-
-	void SetUniform_GlobalViewOrigin(const idVec3 v)
+	void UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
+	{
+		shaderProgram->u_GlobalViewOrigin = glGetUniformLocationARB( shaderProgram->program, GetName() );
+	}
+	
+	void SetUniform_GlobalViewOrigin( const idVec3 v )
 	{
 		shaderProgram_t* program = _shader->GetProgram();
-
+		
 #if defined(USE_UNIFORM_FIREWALL)
-		if(program->t_GlobalViewOrigin == v)
+		if( program->t_GlobalViewOrigin == v )
 			return;
-
+			
 		program->t_GlobalViewOrigin = v;
 #endif
-
+		
 #if defined(LOG_GLSL_UNIFORMS)
-		if(r_logFile.GetBool())
+		if( r_logFile.GetBool() )
 		{
-			RB_LogComment("--- SetUniform_GlobalViewOrigin( program = %s, vector = ( %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name.c_str(), v[0], v[1], v[2]);
+			RB_LogComment( "--- SetUniform_GlobalViewOrigin( program = %s, vector = ( %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name.c_str(), v[0], v[1], v[2] );
 		}
 #endif
-
-		glUniform3fARB(program->u_GlobalViewOrigin, v[0], v[1], v[2]);
+		
+		glUniform3fARB( program->u_GlobalViewOrigin, v[0], v[1], v[2] );
 	}
 };
 
@@ -1695,797 +1971,857 @@ public:
 */
 
 class u_LocalLightOrigin:
-GLUniform
+	GLUniform
 {
 public:
-	u_LocalLightOrigin(GLShader* shader):
-	  GLUniform(shader)
+	u_LocalLightOrigin( GLShader* shader ):
+		GLUniform( shader )
 	{
 	}
-
-	const char* GetName() const { return "u_LocalLightOrigin"; }
-	void UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
+	
+	const char* GetName() const
 	{
-		shaderProgram->u_LocalLightOrigin = glGetUniformLocationARB(shaderProgram->program, GetName());
+		return "u_LocalLightOrigin";
 	}
-
-	void SetUniform_LocalLightOrigin(const idVec3& v)
+	void UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
+	{
+		shaderProgram->u_LocalLightOrigin = glGetUniformLocationARB( shaderProgram->program, GetName() );
+	}
+	
+	void SetUniform_LocalLightOrigin( const idVec3& v )
 	{
 		shaderProgram_t* program = _shader->GetProgram();
-
+		
 #if defined(USE_UNIFORM_FIREWALL)
-		if(program->t_LocalLightOrigin == v)
+		if( program->t_LocalLightOrigin == v )
 			return;
-
+			
 		program->t_LocalLightOrigin = v;
 #endif
-
+		
 #if defined(LOG_GLSL_UNIFORMS)
-		if(r_logFile.GetBool())
+		if( r_logFile.GetBool() )
 		{
-			RB_LogComment("--- SetUniform_LocalLightOrigin( program = %s, vector = ( %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name.c_str(), v[0], v[1], v[2]);
+			RB_LogComment( "--- SetUniform_LocalLightOrigin( program = %s, vector = ( %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name.c_str(), v[0], v[1], v[2] );
 		}
 #endif
-
-		glUniform3fARB(program->u_LocalLightOrigin, v[0], v[1], v[2]);
+		
+		glUniform3fARB( program->u_LocalLightOrigin, v[0], v[1], v[2] );
 	}
 };
 
 class u_GlobalLightOrigin:
-GLUniform
+	GLUniform
 {
 public:
-	u_GlobalLightOrigin(GLShader* shader):
-	  GLUniform(shader)
+	u_GlobalLightOrigin( GLShader* shader ):
+		GLUniform( shader )
 	{
 	}
-
-	const char* GetName() const { return "u_GlobalLightOrigin"; }
-	void UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
+	
+	const char* GetName() const
 	{
-		shaderProgram->u_GlobalLightOrigin = glGetUniformLocationARB(shaderProgram->program, GetName());
+		return "u_GlobalLightOrigin";
 	}
-
-	void SetUniform_GlobalLightOrigin(const idVec3& v)
+	void UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
+	{
+		shaderProgram->u_GlobalLightOrigin = glGetUniformLocationARB( shaderProgram->program, GetName() );
+	}
+	
+	void SetUniform_GlobalLightOrigin( const idVec3& v )
 	{
 		shaderProgram_t* program = _shader->GetProgram();
-
+		
 #if defined(USE_UNIFORM_FIREWALL)
-		if(program->t_GlobalLightOrigin == v)
+		if( program->t_GlobalLightOrigin == v )
 			return;
-
+			
 		program->t_GlobalLightOrigin = v;
 #endif
-
+		
 #if defined(LOG_GLSL_UNIFORMS)
-		if(r_logFile.GetBool())
+		if( r_logFile.GetBool() )
 		{
-			RB_LogComment("--- SetUniform_GlobalLightOrigin( program = %s, vector = ( %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name.c_str(), v[0], v[1], v[2]);
+			RB_LogComment( "--- SetUniform_GlobalLightOrigin( program = %s, vector = ( %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name.c_str(), v[0], v[1], v[2] );
 		}
 #endif
-
-		glUniform3fARB(program->u_GlobalLightOrigin, v[0], v[1], v[2]);
+		
+		glUniform3fARB( program->u_GlobalLightOrigin, v[0], v[1], v[2] );
 	}
 };
 
 class u_LightProjectS:
-GLUniform
+	GLUniform
 {
 public:
-	u_LightProjectS(GLShader* shader):
-	  GLUniform(shader)
+	u_LightProjectS( GLShader* shader ):
+		GLUniform( shader )
 	{
 	}
-
-	const char* GetName() const { return "u_LightProjectS"; }
-	void UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
+	
+	const char* GetName() const
 	{
-		shaderProgram->u_LightProjectS = glGetUniformLocationARB(shaderProgram->program, GetName());
+		return "u_LightProjectS";
 	}
-
-	void SetUniform_LightProjectS(const idVec4& v)
+	void UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
+	{
+		shaderProgram->u_LightProjectS = glGetUniformLocationARB( shaderProgram->program, GetName() );
+	}
+	
+	void SetUniform_LightProjectS( const idVec4& v )
 	{
 		shaderProgram_t* program = _shader->GetProgram();
-
+		
 #if defined(USE_UNIFORM_FIREWALL)
-		if(program->t_LightProjectS == v)
+		if( program->t_LightProjectS == v )
 			return;
-
+			
 		program->t_LightProjectS = v;
 #endif
-
+		
 #if defined(LOG_GLSL_UNIFORMS)
-		if(r_logFile.GetBool())
+		if( r_logFile.GetBool() )
 		{
-			RB_LogComment("--- SetUniform_LightProjectS( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name.c_str(), v[0], v[1], v[2], v[3]);
+			RB_LogComment( "--- SetUniform_LightProjectS( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name.c_str(), v[0], v[1], v[2], v[3] );
 		}
 #endif
-
-		glUniform4fARB(program->u_LightProjectS, v[0], v[1], v[2], v[3]);
+		
+		glUniform4fARB( program->u_LightProjectS, v[0], v[1], v[2], v[3] );
 	}
 };
 
 class u_LightProjectT:
-GLUniform
+	GLUniform
 {
 public:
-	u_LightProjectT(GLShader* shader):
-	  GLUniform(shader)
+	u_LightProjectT( GLShader* shader ):
+		GLUniform( shader )
 	{
 	}
-
-	const char* GetName() const { return "u_LightProjectT"; }
-	void UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
+	
+	const char* GetName() const
 	{
-		shaderProgram->u_LightProjectT = glGetUniformLocationARB(shaderProgram->program, GetName());
+		return "u_LightProjectT";
 	}
-
-	void SetUniform_LightProjectT(const idVec4& v)
+	void UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
+	{
+		shaderProgram->u_LightProjectT = glGetUniformLocationARB( shaderProgram->program, GetName() );
+	}
+	
+	void SetUniform_LightProjectT( const idVec4& v )
 	{
 		shaderProgram_t* program = _shader->GetProgram();
-
+		
 #if defined(USE_UNIFORM_FIREWALL)
-		if(program->t_LightProjectT == v)
+		if( program->t_LightProjectT == v )
 			return;
-
+			
 		program->t_LightProjectT = v;
 #endif
-
+		
 #if defined(LOG_GLSL_UNIFORMS)
-		if(r_logFile.GetBool())
+		if( r_logFile.GetBool() )
 		{
-			RB_LogComment("--- SetUniform_LightProjectT( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name.c_str(), v[0], v[1], v[2], v[3]);
+			RB_LogComment( "--- SetUniform_LightProjectT( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name.c_str(), v[0], v[1], v[2], v[3] );
 		}
 #endif
-
-		glUniform4fARB(program->u_LightProjectT, v[0], v[1], v[2], v[3]);
+		
+		glUniform4fARB( program->u_LightProjectT, v[0], v[1], v[2], v[3] );
 	}
 };
 
 class u_LightProjectQ:
-GLUniform
+	GLUniform
 {
 public:
-	u_LightProjectQ(GLShader* shader):
-	  GLUniform(shader)
+	u_LightProjectQ( GLShader* shader ):
+		GLUniform( shader )
 	{
 	}
-
-	const char* GetName() const { return "u_LightProjectQ"; }
-	void UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
+	
+	const char* GetName() const
 	{
-		shaderProgram->u_LightProjectQ = glGetUniformLocationARB(shaderProgram->program, GetName());
+		return "u_LightProjectQ";
 	}
-
-	void SetUniform_LightProjectQ(const idVec4& v)
+	void UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
+	{
+		shaderProgram->u_LightProjectQ = glGetUniformLocationARB( shaderProgram->program, GetName() );
+	}
+	
+	void SetUniform_LightProjectQ( const idVec4& v )
 	{
 		shaderProgram_t* program = _shader->GetProgram();
-
+		
 #if defined(USE_UNIFORM_FIREWALL)
-		if(program->t_LightProjectQ == v)
+		if( program->t_LightProjectQ == v )
 			return;
-
+			
 		program->t_LightProjectQ = v;
 #endif
-
+		
 #if defined(LOG_GLSL_UNIFORMS)
-		if(r_logFile.GetBool())
+		if( r_logFile.GetBool() )
 		{
-			RB_LogComment("--- SetUniform_LightProjectQ( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name.c_str(), v[0], v[1], v[2], v[3]);
+			RB_LogComment( "--- SetUniform_LightProjectQ( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name.c_str(), v[0], v[1], v[2], v[3] );
 		}
 #endif
-
-		glUniform4fARB(program->u_LightProjectQ, v[0], v[1], v[2], v[3]);
+		
+		glUniform4fARB( program->u_LightProjectQ, v[0], v[1], v[2], v[3] );
 	}
 };
 
 class u_LightFalloffS:
-GLUniform
+	GLUniform
 {
 public:
-	u_LightFalloffS(GLShader* shader):
-	  GLUniform(shader)
+	u_LightFalloffS( GLShader* shader ):
+		GLUniform( shader )
 	{
 	}
-
-	const char* GetName() const { return "u_LightFalloffS"; }
-	void UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
+	
+	const char* GetName() const
 	{
-		shaderProgram->u_LightFalloffS = glGetUniformLocationARB(shaderProgram->program, GetName());
+		return "u_LightFalloffS";
 	}
-
-	void SetUniform_LightFalloffS(const idVec4& v)
+	void UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
+	{
+		shaderProgram->u_LightFalloffS = glGetUniformLocationARB( shaderProgram->program, GetName() );
+	}
+	
+	void SetUniform_LightFalloffS( const idVec4& v )
 	{
 		shaderProgram_t* program = _shader->GetProgram();
-
+		
 #if defined(USE_UNIFORM_FIREWALL)
-		if(program->t_LightFalloffS == v)
+		if( program->t_LightFalloffS == v )
 			return;
-
+			
 		program->t_LightFalloffS = v;
 #endif
-
+		
 #if defined(LOG_GLSL_UNIFORMS)
-		if(r_logFile.GetBool())
+		if( r_logFile.GetBool() )
 		{
-			RB_LogComment("--- SetUniform_LightFalloffS( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name.c_str(), v[0], v[1], v[2], v[3]);
+			RB_LogComment( "--- SetUniform_LightFalloffS( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name.c_str(), v[0], v[1], v[2], v[3] );
 		}
 #endif
-
-		glUniform4fARB(program->u_LightFalloffS, v[0], v[1], v[2], v[3]);
+		
+		glUniform4fARB( program->u_LightFalloffS, v[0], v[1], v[2], v[3] );
 	}
 };
 
 
 class u_LightRadius:
-GLUniform
+	GLUniform
 {
 public:
-	u_LightRadius(GLShader* shader):
-	  GLUniform(shader)
+	u_LightRadius( GLShader* shader ):
+		GLUniform( shader )
 	{
 	}
-
-	const char* GetName() const { return "u_LightRadius"; }
-	void				UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
+	
+	const char* GetName() const
 	{
-		shaderProgram->u_LightRadius = glGetUniformLocationARB(shaderProgram->program, GetName());
+		return "u_LightRadius";
 	}
-
-	void SetUniform_LightRadius(float value)
+	void				UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
+	{
+		shaderProgram->u_LightRadius = glGetUniformLocationARB( shaderProgram->program, GetName() );
+	}
+	
+	void SetUniform_LightRadius( float value )
 	{
 		shaderProgram_t* program = _shader->GetProgram();
-
+		
 #if defined(USE_UNIFORM_FIREWALL)
-		if(program->t_LightRadius == value)
+		if( program->t_LightRadius == value )
 			return;
-
+			
 		program->t_LightRadius = value;
 #endif
-
+		
 #if defined(LOG_GLSL_UNIFORMS)
-		if(r_logFile.GetBool())
+		if( r_logFile.GetBool() )
 		{
-			RB_LogComment("--- SetUniform_LightRadius( program = %s, value = %f ) ---\n", program->name.c_str(), value);
+			RB_LogComment( "--- SetUniform_LightRadius( program = %s, value = %f ) ---\n", program->name.c_str(), value );
 		}
 #endif
-
-		glUniform1fARB(program->u_LightRadius, value);
+		
+		glUniform1fARB( program->u_LightRadius, value );
 	}
 };
 
 
 class u_LightFrustum:
-GLUniform
+	GLUniform
 {
 public:
-	u_LightFrustum(GLShader* shader):
-	  GLUniform(shader)
+	u_LightFrustum( GLShader* shader ):
+		GLUniform( shader )
 	{
 	}
-
-	const char* GetName() const { return "u_LightFrustum"; }
-	void				UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
+	
+	const char* GetName() const
 	{
-		shaderProgram->u_LightFrustum = glGetUniformLocationARB(shaderProgram->program, GetName());
+		return "u_LightFrustum";
 	}
-
-	void SetUniform_LightFrustum(const idPlane lightFrustum[6])
+	void				UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
+	{
+		shaderProgram->u_LightFrustum = glGetUniformLocationARB( shaderProgram->program, GetName() );
+	}
+	
+	void SetUniform_LightFrustum( const idPlane lightFrustum[6] )
 	{
 		shaderProgram_t* program = _shader->GetProgram();
-
+		
 #if 0
-		if(memcmp(program->t_LightFrustum, m))
+		if( memcmp( program->t_LightFrustum, m ) )
 			return;
 #endif
-
+			
 #if defined(LOG_GLSL_UNIFORMS)
-		if(r_logFile.GetBool())
+		if( r_logFile.GetBool() )
 		{
-			RB_LogComment("--- SetUniform_LightFrustum( program = %s, "
-								"( %5.3f, %5.3f, %5.3f, %5.3f )\n"
-								"( %5.3f, %5.3f, %5.3f, %5.3f )\n"
-								"( %5.3f, %5.3f, %5.3f, %5.3f )\n"
-								"( %5.3f, %5.3f, %5.3f, %5.3f )\n"
-								"( %5.3f, %5.3f, %5.3f, %5.3f )\n"
-								"( %5.3f, %5.3f, %5.3f, %5.3f ) ) ---\n",
-								program->name.c_str(),
-								lightFrustum[0][0], lightFrustum[0][1], lightFrustum[0][2], lightFrustum[0][3],
-								lightFrustum[1][0], lightFrustum[1][1], lightFrustum[1][2], lightFrustum[1][3],
-								lightFrustum[2][0], lightFrustum[2][1], lightFrustum[2][2], lightFrustum[2][3],
-								lightFrustum[3][0], lightFrustum[3][1], lightFrustum[3][2], lightFrustum[3][3],
-								lightFrustum[4][0], lightFrustum[4][1], lightFrustum[4][2], lightFrustum[4][3],
-								lightFrustum[5][0], lightFrustum[5][1], lightFrustum[5][2], lightFrustum[5][3]
-								);
+			RB_LogComment( "--- SetUniform_LightFrustum( program = %s, "
+						   "( %5.3f, %5.3f, %5.3f, %5.3f )\n"
+						   "( %5.3f, %5.3f, %5.3f, %5.3f )\n"
+						   "( %5.3f, %5.3f, %5.3f, %5.3f )\n"
+						   "( %5.3f, %5.3f, %5.3f, %5.3f )\n"
+						   "( %5.3f, %5.3f, %5.3f, %5.3f )\n"
+						   "( %5.3f, %5.3f, %5.3f, %5.3f ) ) ---\n",
+						   program->name.c_str(),
+						   lightFrustum[0][0], lightFrustum[0][1], lightFrustum[0][2], lightFrustum[0][3],
+						   lightFrustum[1][0], lightFrustum[1][1], lightFrustum[1][2], lightFrustum[1][3],
+						   lightFrustum[2][0], lightFrustum[2][1], lightFrustum[2][2], lightFrustum[2][3],
+						   lightFrustum[3][0], lightFrustum[3][1], lightFrustum[3][2], lightFrustum[3][3],
+						   lightFrustum[4][0], lightFrustum[4][1], lightFrustum[4][2], lightFrustum[4][3],
+						   lightFrustum[5][0], lightFrustum[5][1], lightFrustum[5][2], lightFrustum[5][3]
+						 );
 		}
 #endif
-
-		glUniform4fvARB(program->u_LightFrustum, 6, lightFrustum[0].ToFloatPtr());
+		
+		glUniform4fvARB( program->u_LightFrustum, 6, lightFrustum[0].ToFloatPtr() );
 	}
 };
 
 
 class u_ShadowTexelSize:
-GLUniform
+	GLUniform
 {
 public:
-	u_ShadowTexelSize(GLShader* shader):
-	  GLUniform(shader)
+	u_ShadowTexelSize( GLShader* shader ):
+		GLUniform( shader )
 	{
 	}
-
-	const char* GetName() const { return "u_ShadowTexelSize"; }
-	void				UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
+	
+	const char* GetName() const
 	{
-		shaderProgram->u_ShadowTexelSize = glGetUniformLocationARB(shaderProgram->program, GetName());
+		return "u_ShadowTexelSize";
 	}
-
-	void SetUniform_ShadowTexelSize(float value)
+	void				UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
+	{
+		shaderProgram->u_ShadowTexelSize = glGetUniformLocationARB( shaderProgram->program, GetName() );
+	}
+	
+	void SetUniform_ShadowTexelSize( float value )
 	{
 		shaderProgram_t* program = _shader->GetProgram();
-
+		
 #if defined(USE_UNIFORM_FIREWALL)
-		if(program->t_ShadowTexelSize == value)
+		if( program->t_ShadowTexelSize == value )
 			return;
-
+			
 		program->t_ShadowTexelSize = value;
 #endif
-
+		
 #if defined(LOG_GLSL_UNIFORMS)
-		if(r_logFile.GetBool())
+		if( r_logFile.GetBool() )
 		{
-			RB_LogComment("--- SetUniform_ShadowTexelSize( program = %s, value = %f ) ---\n", program->name.c_str(), value);
+			RB_LogComment( "--- SetUniform_ShadowTexelSize( program = %s, value = %f ) ---\n", program->name.c_str(), value );
 		}
 #endif
-
-		glUniform1fARB(program->u_ShadowTexelSize, value);
+		
+		glUniform1fARB( program->u_ShadowTexelSize, value );
 	}
 };
 
 class u_ShadowBlur:
-GLUniform
+	GLUniform
 {
 public:
-	u_ShadowBlur(GLShader* shader):
-	  GLUniform(shader)
+	u_ShadowBlur( GLShader* shader ):
+		GLUniform( shader )
 	{
 	}
-
-	const char* GetName() const { return "u_ShadowBlur"; }
-	void				UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
+	
+	const char* GetName() const
 	{
-		shaderProgram->u_ShadowBlur = glGetUniformLocationARB(shaderProgram->program, GetName());
+		return "u_ShadowBlur";
 	}
-
-	void SetUniform_ShadowBlur(float value)
+	void				UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
+	{
+		shaderProgram->u_ShadowBlur = glGetUniformLocationARB( shaderProgram->program, GetName() );
+	}
+	
+	void SetUniform_ShadowBlur( float value )
 	{
 		shaderProgram_t* program = _shader->GetProgram();
-
+		
 #if defined(USE_UNIFORM_FIREWALL)
-		if(program->t_ShadowBlur == value)
+		if( program->t_ShadowBlur == value )
 			return;
-
+			
 		program->t_ShadowBlur = value;
 #endif
-
+		
 #if defined(LOG_GLSL_UNIFORMS)
-		if(r_logFile.GetBool())
+		if( r_logFile.GetBool() )
 		{
-			RB_LogComment("--- SetUniform_ShadowBlur( program = %s, value = %f ) ---\n", program->name.c_str(), value);
+			RB_LogComment( "--- SetUniform_ShadowBlur( program = %s, value = %f ) ---\n", program->name.c_str(), value );
 		}
 #endif
-
-		glUniform1fARB(program->u_ShadowBlur, value);
+		
+		glUniform1fARB( program->u_ShadowBlur, value );
 	}
 };
 
 
 class u_PositionToJitterTexScale:
-GLUniform
+	GLUniform
 {
 public:
-	u_PositionToJitterTexScale(GLShader* shader):
-	  GLUniform(shader)
+	u_PositionToJitterTexScale( GLShader* shader ):
+		GLUniform( shader )
 	{
 	}
-
-	const char* GetName() const { return "u_PositionToJitterTexScale"; }
-	void UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
+	
+	const char* GetName() const
 	{
-		shaderProgram->u_PositionToJitterTexScale = glGetUniformLocationARB(shaderProgram->program, GetName());
+		return "u_PositionToJitterTexScale";
 	}
-
-	void SetUniform_PositionToJitterTexScale(const idVec4& v)
+	void UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
+	{
+		shaderProgram->u_PositionToJitterTexScale = glGetUniformLocationARB( shaderProgram->program, GetName() );
+	}
+	
+	void SetUniform_PositionToJitterTexScale( const idVec4& v )
 	{
 		shaderProgram_t* program = _shader->GetProgram();
-
+		
 #if defined(USE_UNIFORM_FIREWALL)
-		if(program->t_PositionToJitterTexScale == v)
+		if( program->t_PositionToJitterTexScale == v )
 			return;
-
+			
 		program->t_PositionToJitterTexScale = v;
 #endif
-
+		
 #if defined(LOG_GLSL_UNIFORMS)
-		if(r_logFile.GetBool())
+		if( r_logFile.GetBool() )
 		{
-			RB_LogComment("--- SetUniform_PositionToJitterTexScale( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name.c_str(), v[0], v[1], v[2], v[3]);
+			RB_LogComment( "--- SetUniform_PositionToJitterTexScale( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name.c_str(), v[0], v[1], v[2], v[3] );
 		}
 #endif
-
-		glUniform4fARB(program->u_PositionToJitterTexScale, v[0], v[1], v[2], v[3]);
+		
+		glUniform4fARB( program->u_PositionToJitterTexScale, v[0], v[1], v[2], v[3] );
 	}
 };
 
 
 class u_JitterTexScale:
-GLUniform
+	GLUniform
 {
 public:
-	u_JitterTexScale(GLShader* shader):
-	  GLUniform(shader)
+	u_JitterTexScale( GLShader* shader ):
+		GLUniform( shader )
 	{
 	}
-
-	const char* GetName() const { return "u_JitterTexScale"; }
-	void UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
+	
+	const char* GetName() const
 	{
-		shaderProgram->u_JitterTexScale = glGetUniformLocationARB(shaderProgram->program, GetName());
+		return "u_JitterTexScale";
 	}
-
-	void SetUniform_JitterTexScale(const idVec4& v)
+	void UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
+	{
+		shaderProgram->u_JitterTexScale = glGetUniformLocationARB( shaderProgram->program, GetName() );
+	}
+	
+	void SetUniform_JitterTexScale( const idVec4& v )
 	{
 		shaderProgram_t* program = _shader->GetProgram();
-
+		
 #if defined(USE_UNIFORM_FIREWALL)
-		if(program->t_JitterTexScale == v)
+		if( program->t_JitterTexScale == v )
 			return;
-
+			
 		program->t_JitterTexScale = v;
 #endif
-
+		
 #if defined(LOG_GLSL_UNIFORMS)
-		if(r_logFile.GetBool())
+		if( r_logFile.GetBool() )
 		{
-			RB_LogComment("--- SetUniform_JitterTexScale( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name.c_str(), v[0], v[1], v[2], v[3]);
+			RB_LogComment( "--- SetUniform_JitterTexScale( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name.c_str(), v[0], v[1], v[2], v[3] );
 		}
 #endif
-
-		glUniform4fARB(program->u_JitterTexScale, v[0], v[1], v[2], v[3]);
+		
+		glUniform4fARB( program->u_JitterTexScale, v[0], v[1], v[2], v[3] );
 	}
 };
 
 class u_JitterTexOffset:
-GLUniform
+	GLUniform
 {
 public:
-	u_JitterTexOffset(GLShader* shader):
-	  GLUniform(shader)
+	u_JitterTexOffset( GLShader* shader ):
+		GLUniform( shader )
 	{
 	}
-
-	const char* GetName() const { return "u_JitterTexOffset"; }
-	void UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
+	
+	const char* GetName() const
 	{
-		shaderProgram->u_JitterTexOffset = glGetUniformLocationARB(shaderProgram->program, GetName());
+		return "u_JitterTexOffset";
 	}
-
-	void SetUniform_JitterTexOffset(const idVec4& v)
+	void UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
+	{
+		shaderProgram->u_JitterTexOffset = glGetUniformLocationARB( shaderProgram->program, GetName() );
+	}
+	
+	void SetUniform_JitterTexOffset( const idVec4& v )
 	{
 		shaderProgram_t* program = _shader->GetProgram();
-
+		
 #if defined(USE_UNIFORM_FIREWALL)
-		if(program->t_JitterTexOffset == v)
+		if( program->t_JitterTexOffset == v )
 			return;
-
+			
 		program->t_JitterTexOffset = v;
 #endif
-
+		
 #if defined(LOG_GLSL_UNIFORMS)
-		if(r_logFile.GetBool())
+		if( r_logFile.GetBool() )
 		{
-			RB_LogComment("--- SetUniform_JitterTexOffset( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name.c_str(), v[0], v[1], v[2], v[3]);
+			RB_LogComment( "--- SetUniform_JitterTexOffset( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name.c_str(), v[0], v[1], v[2], v[3] );
 		}
 #endif
-
-		glUniform4fARB(program->u_JitterTexOffset, v[0], v[1], v[2], v[3]);
+		
+		glUniform4fARB( program->u_JitterTexOffset, v[0], v[1], v[2], v[3] );
 	}
 };
 
 
 class u_HDRKey:
-GLUniform
+	GLUniform
 {
 public:
-	u_HDRKey(GLShader* shader):
-	  GLUniform(shader)
+	u_HDRKey( GLShader* shader ):
+		GLUniform( shader )
 	{
 	}
-
-	const char* GetName() const { return "u_HDRKey"; }
-	void				UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
+	
+	const char* GetName() const
 	{
-		shaderProgram->u_HDRKey = glGetUniformLocationARB(shaderProgram->program, GetName());
+		return "u_HDRKey";
 	}
-
-	void SetUniform_HDRKey(float value)
+	void				UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
+	{
+		shaderProgram->u_HDRKey = glGetUniformLocationARB( shaderProgram->program, GetName() );
+	}
+	
+	void SetUniform_HDRKey( float value )
 	{
 		shaderProgram_t* program = _shader->GetProgram();
-
+		
 #if defined(USE_UNIFORM_FIREWALL)
-		if(program->t_HDRKey == value)
+		if( program->t_HDRKey == value )
 			return;
-
+			
 		program->t_HDRKey = value;
 #endif
-
+		
 #if defined(LOG_GLSL_UNIFORMS)
-		if(r_logFile.GetBool())
+		if( r_logFile.GetBool() )
 		{
-			RB_LogComment("--- SetUniform_HDRKey( program = %s, value = %f ) ---\n", program->name.c_str(), value);
+			RB_LogComment( "--- SetUniform_HDRKey( program = %s, value = %f ) ---\n", program->name.c_str(), value );
 		}
 #endif
-
-		glUniform1fARB(program->u_HDRKey, value);
+		
+		glUniform1fARB( program->u_HDRKey, value );
 	}
 };
 
 
 class u_HDRAverageLuminance:
-GLUniform
+	GLUniform
 {
 public:
-	u_HDRAverageLuminance(GLShader* shader):
-	  GLUniform(shader)
+	u_HDRAverageLuminance( GLShader* shader ):
+		GLUniform( shader )
 	{
 	}
-
-	const char* GetName() const { return "u_HDRAverageLuminance"; }
-	void				UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
+	
+	const char* GetName() const
 	{
-		shaderProgram->u_HDRAverageLuminance = glGetUniformLocationARB(shaderProgram->program, GetName());
+		return "u_HDRAverageLuminance";
 	}
-
-	void SetUniform_HDRAverageLuminance(float value)
+	void				UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
+	{
+		shaderProgram->u_HDRAverageLuminance = glGetUniformLocationARB( shaderProgram->program, GetName() );
+	}
+	
+	void SetUniform_HDRAverageLuminance( float value )
 	{
 		shaderProgram_t* program = _shader->GetProgram();
-
+		
 #if defined(USE_UNIFORM_FIREWALL)
-		if(program->t_HDRAverageLuminance == value)
+		if( program->t_HDRAverageLuminance == value )
 			return;
-
+			
 		program->t_HDRAverageLuminance = value;
 #endif
-
+		
 #if defined(LOG_GLSL_UNIFORMS)
-		if(r_logFile.GetBool())
+		if( r_logFile.GetBool() )
 		{
-			RB_LogComment("--- SetUniform_HDRAverageLuminance( program = %s, value = %f ) ---\n", program->name.c_str(), value);
+			RB_LogComment( "--- SetUniform_HDRAverageLuminance( program = %s, value = %f ) ---\n", program->name.c_str(), value );
 		}
 #endif
-
-		glUniform1fARB(program->u_HDRAverageLuminance, value);
+		
+		glUniform1fARB( program->u_HDRAverageLuminance, value );
 	}
 };
 
 
 class u_HDRMaxLuminance:
-GLUniform
+	GLUniform
 {
 public:
-	u_HDRMaxLuminance(GLShader* shader):
-	  GLUniform(shader)
+	u_HDRMaxLuminance( GLShader* shader ):
+		GLUniform( shader )
 	{
 	}
-
-	const char* GetName() const { return "u_HDRMaxLuminance"; }
-	void				UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
+	
+	const char* GetName() const
 	{
-		shaderProgram->u_HDRMaxLuminance = glGetUniformLocationARB(shaderProgram->program, GetName());
+		return "u_HDRMaxLuminance";
 	}
-
-	void SetUniform_HDRMaxLuminance(float value)
+	void				UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
+	{
+		shaderProgram->u_HDRMaxLuminance = glGetUniformLocationARB( shaderProgram->program, GetName() );
+	}
+	
+	void SetUniform_HDRMaxLuminance( float value )
 	{
 		shaderProgram_t* program = _shader->GetProgram();
-
+		
 #if defined(USE_UNIFORM_FIREWALL)
-		if(program->t_HDRMaxLuminance == value)
+		if( program->t_HDRMaxLuminance == value )
 			return;
-
+			
 		program->t_HDRMaxLuminance = value;
 #endif
-
+		
 #if defined(LOG_GLSL_UNIFORMS)
-		if(r_logFile.GetBool())
+		if( r_logFile.GetBool() )
 		{
-			RB_LogComment("--- SetUniform_HDRMaxLuminance( program = %s, value = %f ) ---\n", program->name.c_str(), value);
+			RB_LogComment( "--- SetUniform_HDRMaxLuminance( program = %s, value = %f ) ---\n", program->name.c_str(), value );
 		}
 #endif
-
-		glUniform1fARB(program->u_HDRMaxLuminance, value);
+		
+		glUniform1fARB( program->u_HDRMaxLuminance, value );
 	}
 };
 
 class u_InvertedFramebufferResolution:
-GLUniform
+	GLUniform
 {
 public:
-	u_InvertedFramebufferResolution(GLShader* shader):
-	  GLUniform(shader)
+	u_InvertedFramebufferResolution( GLShader* shader ):
+		GLUniform( shader )
 	{
 	}
-
-	const char* GetName() const { return "u_InvertedFramebufferResolution"; }
-	void				UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
+	
+	const char* GetName() const
 	{
-		shaderProgram->u_InvertedFramebufferResolution = glGetUniformLocationARB(shaderProgram->program, GetName());
+		return "u_InvertedFramebufferResolution";
 	}
-
-	void SetUniform_InvertedFramebufferResolution(const idVec2& v)
+	void				UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
+	{
+		shaderProgram->u_InvertedFramebufferResolution = glGetUniformLocationARB( shaderProgram->program, GetName() );
+	}
+	
+	void SetUniform_InvertedFramebufferResolution( const idVec2& v )
 	{
 		shaderProgram_t* program = _shader->GetProgram();
-
+		
 #if defined(USE_UNIFORM_FIREWALL)
-		if(program->t_InvertedFramebufferResolution == v)
+		if( program->t_InvertedFramebufferResolution == v )
 			return;
-
+			
 		program->t_InvertedFramebufferResolution = v;
 #endif
-
+		
 #if defined(LOG_GLSL_UNIFORMS)
-		if(r_logFile.GetBool())
+		if( r_logFile.GetBool() )
 		{
-			RB_LogComment("--- SetUniform_InvertedFramebufferResolution( program = %s, vector = ( %5.3f, %5.3f  ) ) ---\n", program->name.c_str(), v[0], v[1]);
+			RB_LogComment( "--- SetUniform_InvertedFramebufferResolution( program = %s, vector = ( %5.3f, %5.3f  ) ) ---\n", program->name.c_str(), v[0], v[1] );
 		}
 #endif
-
-		glUniform2fARB(program->u_InvertedFramebufferResolution, v[0], v[1]);
+		
+		glUniform2fARB( program->u_InvertedFramebufferResolution, v[0], v[1] );
 	}
-
-	void SetUniform_InvertedFramebufferResolution(const idScreenRect& viewport)
+	
+	void SetUniform_InvertedFramebufferResolution( const idScreenRect& viewport )
 	{
 		int	width = viewport.x2 - viewport.x1 + 1;
 		int	height = viewport.y2 - viewport.y1 + 1;
-
-		SetUniform_InvertedFramebufferResolution(idVec2(1.0f / (float) width, 1.0f / (float) height));
+		
+		SetUniform_InvertedFramebufferResolution( idVec2( 1.0f / ( float ) width, 1.0f / ( float ) height ) );
 	}
 };
 
 class u_FxaaInvertedFramebufferResolutionOpt:
-GLUniform
+	GLUniform
 {
 public:
-	u_FxaaInvertedFramebufferResolutionOpt(GLShader* shader):
-	  GLUniform(shader)
+	u_FxaaInvertedFramebufferResolutionOpt( GLShader* shader ):
+		GLUniform( shader )
 	{
 	}
-
-	const char* GetName() const { return "u_FxaaInvertedFramebufferResolutionOpt"; }
-	void				UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
+	
+	const char* GetName() const
 	{
-		shaderProgram->u_FxaaInvertedFramebufferResolutionOpt = glGetUniformLocationARB(shaderProgram->program, GetName());
+		return "u_FxaaInvertedFramebufferResolutionOpt";
 	}
-
-	void SetUniform_FxaaInvertedFramebufferResolutionOpt(const idVec4& v)
+	void				UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
+	{
+		shaderProgram->u_FxaaInvertedFramebufferResolutionOpt = glGetUniformLocationARB( shaderProgram->program, GetName() );
+	}
+	
+	void SetUniform_FxaaInvertedFramebufferResolutionOpt( const idVec4& v )
 	{
 		shaderProgram_t* program = _shader->GetProgram();
-
+		
 #if defined(USE_UNIFORM_FIREWALL)
-		if(program->t_FxaaInvertedFramebufferResolutionOpt == v)
+		if( program->t_FxaaInvertedFramebufferResolutionOpt == v )
 			return;
-
+			
 		program->t_FxaaInvertedFramebufferResolutionOpt = v;
 #endif
-
+		
 #if defined(LOG_GLSL_UNIFORMS)
-		if(r_logFile.GetBool())
+		if( r_logFile.GetBool() )
 		{
-			RB_LogComment("--- SetUniform_FxaaInvertedFramebufferResolutionOpt( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name.c_str(), v[0], v[1], v[2], v[3]);
+			RB_LogComment( "--- SetUniform_FxaaInvertedFramebufferResolutionOpt( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name.c_str(), v[0], v[1], v[2], v[3] );
 		}
 #endif
-
-		glUniform4fARB(program->u_FxaaInvertedFramebufferResolutionOpt, v[0], v[1], v[2], v[3]);
+		
+		glUniform4fARB( program->u_FxaaInvertedFramebufferResolutionOpt, v[0], v[1], v[2], v[3] );
 	}
-
-	void SetUniform_FxaaInvertedFramebufferResolutionOpt(const idScreenRect& viewport)
+	
+	void SetUniform_FxaaInvertedFramebufferResolutionOpt( const idScreenRect& viewport )
 	{
 		int	width = viewport.x2 - viewport.x1 + 1;
 		int	height = viewport.y2 - viewport.y1 + 1;
-
-		SetUniform_FxaaInvertedFramebufferResolutionOpt(idVec4(2.0f / (float) width, 2.0f / (float) height, 0.5f / (float) width, 0.5f / (float) height));
+		
+		SetUniform_FxaaInvertedFramebufferResolutionOpt( idVec4( 2.0f / ( float ) width, 2.0f / ( float ) height, 0.5f / ( float ) width, 0.5f / ( float ) height ) );
 	}
 };
 
 class u_NonPowerOfTwoScale:
-GLUniform
+	GLUniform
 {
 public:
-	u_NonPowerOfTwoScale(GLShader* shader):
-	  GLUniform(shader)
+	u_NonPowerOfTwoScale( GLShader* shader ):
+		GLUniform( shader )
 	{
 	}
-
-	const char* GetName() const { return "u_NonPowerOfTwoScale"; }
-	void				UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
+	
+	const char* GetName() const
 	{
-		shaderProgram->u_NonPowerOfTwoScale = glGetUniformLocationARB(shaderProgram->program, GetName());
+		return "u_NonPowerOfTwoScale";
 	}
-
-	void SetUniform_NonPowerOfTwoScale(const idVec2& v)
+	void				UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
+	{
+		shaderProgram->u_NonPowerOfTwoScale = glGetUniformLocationARB( shaderProgram->program, GetName() );
+	}
+	
+	void SetUniform_NonPowerOfTwoScale( const idVec2& v )
 	{
 		shaderProgram_t* program = _shader->GetProgram();
-
+		
 #if defined(USE_UNIFORM_FIREWALL)
-		if(program->t_NonPowerOfTwoScale == v)
+		if( program->t_NonPowerOfTwoScale == v )
 			return;
-
+			
 		program->t_NonPowerOfTwoScale = v;
 #endif
-
+		
 #if defined(LOG_GLSL_UNIFORMS)
-		if(r_logFile.GetBool())
+		if( r_logFile.GetBool() )
 		{
-			RB_LogComment("--- SetUniform_NonPowerOfTwoScale( program = %s, vector = ( %5.3f, %5.3f  ) ) ---\n", program->name.c_str(), v[0], v[1]);
+			RB_LogComment( "--- SetUniform_NonPowerOfTwoScale( program = %s, vector = ( %5.3f, %5.3f  ) ) ---\n", program->name.c_str(), v[0], v[1] );
 		}
 #endif
-
-		glUniform2fARB(program->u_NonPowerOfTwoScale, v[0], v[1]);
+		
+		glUniform2fARB( program->u_NonPowerOfTwoScale, v[0], v[1] );
 	}
-
-	void SetUniform_NonPowerOfTwoScale(const idScreenRect& viewport, int uploadWidth, int uploadHeight)
+	
+	void SetUniform_NonPowerOfTwoScale( const idScreenRect& viewport, int uploadWidth, int uploadHeight )
 	{
 		// screen power of two correction factor, assuming the copy to _currentRender
 		// also copied an extra row and column for the bilerp
 		int	w = viewport.x2 - viewport.x1 + 1;
 		int	h = viewport.y2 - viewport.y1 + 1;
-
-		SetUniform_NonPowerOfTwoScale(idVec2( (float)w / uploadWidth, (float)h / uploadHeight ));
+		
+		SetUniform_NonPowerOfTwoScale( idVec2( ( float )w / uploadWidth, ( float )h / uploadHeight ) );
 	}
 };
 
 
 class u_Viewport:
-GLUniform
+	GLUniform
 {
 public:
-	u_Viewport(GLShader* shader):
-	  GLUniform(shader)
+	u_Viewport( GLShader* shader ):
+		GLUniform( shader )
 	{
 	}
-
-	const char* GetName() const { return "u_Viewport"; }
-	void UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
+	
+	const char* GetName() const
 	{
-		shaderProgram->u_Viewport = glGetUniformLocationARB(shaderProgram->program, GetName());
+		return "u_Viewport";
 	}
-
-	void SetUniform_Viewport(const idVec4& v)
+	void UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
+	{
+		shaderProgram->u_Viewport = glGetUniformLocationARB( shaderProgram->program, GetName() );
+	}
+	
+	void SetUniform_Viewport( const idVec4& v )
 	{
 		shaderProgram_t* program = _shader->GetProgram();
-
+		
 #if defined(USE_UNIFORM_FIREWALL)
-		if(program->t_Viewport == v)
+		if( program->t_Viewport == v )
 			return;
-
+			
 		program->t_Viewport = v;
 #endif
-
+		
 #if defined(LOG_GLSL_UNIFORMS)
-		if(r_logFile.GetBool())
+		if( r_logFile.GetBool() )
 		{
-			RB_LogComment("--- SetUniform_Viewport( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name.c_str(), v[0], v[1], v[2], v[3]);
+			RB_LogComment( "--- SetUniform_Viewport( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name.c_str(), v[0], v[1], v[2], v[3] );
 		}
 #endif
-
-		glUniform4fARB(program->u_Viewport, v[0], v[1], v[2], v[3]);
+		
+		glUniform4fARB( program->u_Viewport, v[0], v[1], v[2], v[3] );
 	}
-
-	void SetUniform_Viewport(const idScreenRect& viewport)
+	
+	void SetUniform_Viewport( const idScreenRect& viewport )
 	{
 		int	width = viewport.x2 - viewport.x1 + 1;
 		int	height = viewport.y2 - viewport.y1 + 1;
-
-		SetUniform_Viewport(idVec4(viewport.x1, viewport.y1, (float) width, (float) height));
+		
+		SetUniform_Viewport( idVec4( viewport.x1, viewport.y1, ( float ) width, ( float ) height ) );
 	}
 };
 
@@ -2518,22 +2854,22 @@ public:
 */
 
 class GLShader_geometricFill:
-public GLShader,
-public u_DiffuseImage,
-public u_NormalImage,
-public u_SpecularImage,
-public u_DiffuseMatrixS,
-public u_DiffuseMatrixT,
-public u_BumpMatrixS,
-public u_BumpMatrixT,
-public u_SpecularMatrixS,
-public u_SpecularMatrixT,
-public u_ColorModulate,
-public u_Color,
-public u_DiffuseColor,
-public u_SpecularColor,
-public u_GlobalViewOrigin,
-public u_ModelMatrix,
+	public GLShader,
+	public u_DiffuseImage,
+	public u_NormalImage,
+	public u_SpecularImage,
+	public u_DiffuseMatrixS,
+	public u_DiffuseMatrixT,
+	public u_BumpMatrixS,
+	public u_BumpMatrixT,
+	public u_SpecularMatrixS,
+	public u_SpecularMatrixT,
+	public u_ColorModulate,
+	public u_Color,
+	public u_DiffuseColor,
+	public u_SpecularColor,
+	public u_GlobalViewOrigin,
+	public u_ModelMatrix,
 //public u_DepthScale,
 public GLCompileMacro_USE_NORMAL_MAPPING
 //public GLCompileMacro_USE_PARALLAX_MAPPING,
@@ -2543,29 +2879,29 @@ public:
 };
 
 class GLShader_deferredLighting:
-public GLShader,
-public u_UnprojectMatrix,
-public u_Color,
-public u_ColorModulate,
-public u_LightColor,
-public u_GlobalViewOrigin,
-public u_GlobalLightOrigin,
-public u_LightRadius,
-public u_LightProjectS,
-public u_LightProjectT,
-public u_LightProjectQ,
-public u_LightFalloffS,
-public u_LightFrustum,
-public u_ShadowMatrix,
-public u_ShadowTexelSize,
-public u_ShadowBlur,
-public u_PositionToJitterTexScale,
-public u_JitterTexScale,
-public u_JitterTexOffset,
-public u_InvertedFramebufferResolution,
-public u_NonPowerOfTwoScale,
-public u_Viewport,
-public GLCompileMacro_USE_NORMAL_MAPPING,
+	public GLShader,
+	public u_UnprojectMatrix,
+	public u_Color,
+	public u_ColorModulate,
+	public u_LightColor,
+	public u_GlobalViewOrigin,
+	public u_GlobalLightOrigin,
+	public u_LightRadius,
+	public u_LightProjectS,
+	public u_LightProjectT,
+	public u_LightProjectQ,
+	public u_LightFalloffS,
+	public u_LightFrustum,
+	public u_ShadowMatrix,
+	public u_ShadowTexelSize,
+	public u_ShadowBlur,
+	public u_PositionToJitterTexScale,
+	public u_JitterTexScale,
+	public u_JitterTexOffset,
+	public u_InvertedFramebufferResolution,
+	public u_NonPowerOfTwoScale,
+	public u_Viewport,
+	public GLCompileMacro_USE_NORMAL_MAPPING,
 //public GLCompileMacro_USE_PARALLAX_MAPPING,
 public GLCompileMacro_USE_SHADOWING,
 public GLCompileMacro_USE_FRUSTUM_CLIPPING,
@@ -2577,32 +2913,32 @@ public:
 };
 
 class GLShader_forwardLighting:
-public GLShader,
-public u_ModelMatrix,
-public u_DiffuseMatrixS,
-public u_DiffuseMatrixT,
-public u_BumpMatrixS,
-public u_BumpMatrixT,
-public u_SpecularMatrixS,
-public u_SpecularMatrixT,
-public u_Color,
-public u_ColorModulate,
-public u_DiffuseColor,
-public u_SpecularColor,
-public u_LocalViewOrigin,
-public u_LocalLightOrigin,
-public u_GlobalLightOrigin,
-public u_LightRadius,
-public u_LightProjectS,
-public u_LightProjectT,
-public u_LightProjectQ,
-public u_LightFalloffS,
-public u_ShadowMatrix,
-public u_ShadowTexelSize,
-public u_ShadowBlur,
-public u_PositionToJitterTexScale,
-public u_JitterTexScale,
-public u_JitterTexOffset,
+	public GLShader,
+	public u_ModelMatrix,
+	public u_DiffuseMatrixS,
+	public u_DiffuseMatrixT,
+	public u_BumpMatrixS,
+	public u_BumpMatrixT,
+	public u_SpecularMatrixS,
+	public u_SpecularMatrixT,
+	public u_Color,
+	public u_ColorModulate,
+	public u_DiffuseColor,
+	public u_SpecularColor,
+	public u_LocalViewOrigin,
+	public u_LocalLightOrigin,
+	public u_GlobalLightOrigin,
+	public u_LightRadius,
+	public u_LightProjectS,
+	public u_LightProjectT,
+	public u_LightProjectQ,
+	public u_LightFalloffS,
+	public u_ShadowMatrix,
+	public u_ShadowTexelSize,
+	public u_ShadowBlur,
+	public u_PositionToJitterTexScale,
+	public u_JitterTexScale,
+	public u_JitterTexOffset,
 //public u_BoneMatrix,
 //public u_VertexInterpolation,
 //public u_PortalPlane,
@@ -2624,21 +2960,21 @@ public:
 };
 
 class GLShader_postLighting:
-public GLShader,
-public u_ModelMatrix,
-public u_DiffuseMatrixS,
-public u_DiffuseMatrixT,
-public u_BumpMatrixS,
-public u_BumpMatrixT,
-public u_SpecularMatrixS,
-public u_SpecularMatrixT,
-public u_Color,
-public u_ColorModulate,
-public u_DiffuseColor,
-public u_SpecularColor,
-public u_InvertedFramebufferResolution,
-public u_NonPowerOfTwoScale,
-public u_Viewport
+	public GLShader,
+	public u_ModelMatrix,
+	public u_DiffuseMatrixS,
+	public u_DiffuseMatrixT,
+	public u_BumpMatrixS,
+	public u_BumpMatrixT,
+	public u_SpecularMatrixS,
+	public u_SpecularMatrixT,
+	public u_Color,
+	public u_ColorModulate,
+	public u_DiffuseColor,
+	public u_SpecularColor,
+	public u_InvertedFramebufferResolution,
+	public u_NonPowerOfTwoScale,
+	public u_Viewport
 {
 public:
 	GLShader_postLighting();
@@ -2646,8 +2982,8 @@ public:
 
 
 class GLShader_shadowVolume:
-public GLShader,
-public u_LocalLightOrigin
+	public GLShader,
+	public u_LocalLightOrigin
 //public GLCompileMacro_USE_VERTEX_SKINNING,
 //public GLCompileMacro_USE_VERTEX_ANIMATION,
 //public GLCompileMacro_USE_DEFORM_VERTEXES,
@@ -2657,40 +2993,40 @@ public:
 };
 
 class GLShader_shadowMap:
-public GLShader,
-public u_ModelMatrix,
-public u_GlobalLightOrigin,
-public u_LightRadius
+	public GLShader,
+	public u_ModelMatrix,
+	public u_GlobalLightOrigin,
+	public u_LightRadius
 //public GLCompileMacro_USE_VERTEX_SKINNING,
 //public GLCompileMacro_USE_VERTEX_ANIMATION,
 //public GLCompileMacro_USE_DEFORM_VERTEXES,
 {
 public:
 	GLShader_shadowMap();
-
+	
 private:
-	void			CreatePreIncludeText(idStr& preIncludeText);
+	void			CreatePreIncludeText( idStr& preIncludeText );
 };
 
 class GLShader_FXAA:
-public GLShader,
-public u_CurrentRenderImage,
-public u_InvertedFramebufferResolution,
-public u_FxaaInvertedFramebufferResolutionOpt,
-public u_NonPowerOfTwoScale,
-public u_Viewport
+	public GLShader,
+	public u_CurrentRenderImage,
+	public u_InvertedFramebufferResolution,
+	public u_FxaaInvertedFramebufferResolutionOpt,
+	public u_NonPowerOfTwoScale,
+	public u_Viewport
 {
 public:
 	GLShader_FXAA();
 };
 
 class GLShader_toneMapping:
-public GLShader,
-public u_CurrentRenderImage,
-public u_HDRKey,
-public u_HDRAverageLuminance,
-public u_HDRMaxLuminance,
-public GLCompileMacro_BRIGHTPASS_FILTER
+	public GLShader,
+	public u_CurrentRenderImage,
+	public u_HDRKey,
+	public u_HDRAverageLuminance,
+	public u_HDRMaxLuminance,
+	public GLCompileMacro_BRIGHTPASS_FILTER
 {
 public:
 	GLShader_toneMapping();

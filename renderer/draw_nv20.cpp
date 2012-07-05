@@ -2,9 +2,9 @@
 ===========================================================================
 
 Doom 3 GPL Source Code
-Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company. 
+Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
 
-This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).  
+This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
 
 Doom 3 Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -31,18 +31,19 @@ If you have questions concerning this license or the applicable additional terms
 
 #include "tr_local.h"
 
-typedef enum {
+typedef enum
+{
 	FPROG_BUMP_AND_LIGHT,
 	FPROG_DIFFUSE_COLOR,
 	FPROG_SPECULAR_COLOR,
 	FPROG_DIFFUSE_AND_SPECULAR_COLOR,
-
+	
 	FPROG_NUM_FRAGMENT_PROGRAMS
 } fragmentProgram_t;
 
 GLuint	fragmentDisplayListBase;	// FPROG_NUM_FRAGMENT_PROGRAMS lists
 
-void RB_NV20_DependentSpecularPass( const drawInteraction_t *din );
+void RB_NV20_DependentSpecularPass( const drawInteraction_t* din );
 void RB_NV20_DependentAmbientPass( void );
 
 /*
@@ -58,7 +59,8 @@ GENERAL INTERACTION RENDERING
 GL_SelectTextureNoClient
 ====================
 */
-void GL_SelectTextureNoClient( int unit ) {
+void GL_SelectTextureNoClient( int unit )
+{
 	backEnd.glState.currenttmu = unit;
 	glActiveTextureARB( GL_TEXTURE0_ARB + unit );
 	RB_LogComment( "glActiveTextureARB( %i )\n", unit );
@@ -69,69 +71,71 @@ void GL_SelectTextureNoClient( int unit ) {
 RB_NV20_BumpAndLightFragment
 ==================
 */
-static void RB_NV20_BumpAndLightFragment( void ) {
-	if ( r_useCombinerDisplayLists.GetBool() ) {
+static void RB_NV20_BumpAndLightFragment( void )
+{
+	if( r_useCombinerDisplayLists.GetBool() )
+	{
 		glCallList( fragmentDisplayListBase + FPROG_BUMP_AND_LIGHT );
 		return;
 	}
-
+	
 	// program the nvidia register combiners
 	glCombinerParameteriNV( GL_NUM_GENERAL_COMBINERS_NV, 3 );
-
+	
 	// stage 0 rgb performs the dot product
 	// SPARE0 = TEXTURE0 dot TEXTURE1
-	glCombinerInputNV( GL_COMBINER0_NV, GL_RGB, GL_VARIABLE_A_NV, 
-		GL_TEXTURE1_ARB, GL_EXPAND_NORMAL_NV, GL_RGB );
-	glCombinerInputNV( GL_COMBINER0_NV, GL_RGB, GL_VARIABLE_B_NV, 
-		GL_TEXTURE0_ARB, GL_EXPAND_NORMAL_NV, GL_RGB );
-	glCombinerOutputNV( GL_COMBINER0_NV, GL_RGB, 
-		GL_SPARE0_NV, GL_DISCARD_NV, GL_DISCARD_NV,
-		GL_NONE, GL_NONE, GL_TRUE, GL_FALSE, GL_FALSE );
-
-
+	glCombinerInputNV( GL_COMBINER0_NV, GL_RGB, GL_VARIABLE_A_NV,
+					   GL_TEXTURE1_ARB, GL_EXPAND_NORMAL_NV, GL_RGB );
+	glCombinerInputNV( GL_COMBINER0_NV, GL_RGB, GL_VARIABLE_B_NV,
+					   GL_TEXTURE0_ARB, GL_EXPAND_NORMAL_NV, GL_RGB );
+	glCombinerOutputNV( GL_COMBINER0_NV, GL_RGB,
+						GL_SPARE0_NV, GL_DISCARD_NV, GL_DISCARD_NV,
+						GL_NONE, GL_NONE, GL_TRUE, GL_FALSE, GL_FALSE );
+						
+						
 	// stage 1 rgb multiplies texture 2 and 3 together
 	// SPARE1 = TEXTURE2 * TEXTURE3
-	glCombinerInputNV( GL_COMBINER1_NV, GL_RGB, GL_VARIABLE_A_NV, 
-		GL_TEXTURE2_ARB, GL_UNSIGNED_IDENTITY_NV, GL_RGB );
-	glCombinerInputNV( GL_COMBINER1_NV, GL_RGB, GL_VARIABLE_B_NV, 
-		GL_TEXTURE3_ARB, GL_UNSIGNED_IDENTITY_NV, GL_RGB );
-	glCombinerOutputNV( GL_COMBINER1_NV, GL_RGB, 
-		GL_SPARE1_NV, GL_DISCARD_NV, GL_DISCARD_NV,
-		GL_NONE, GL_NONE, GL_FALSE, GL_FALSE, GL_FALSE );
-
+	glCombinerInputNV( GL_COMBINER1_NV, GL_RGB, GL_VARIABLE_A_NV,
+					   GL_TEXTURE2_ARB, GL_UNSIGNED_IDENTITY_NV, GL_RGB );
+	glCombinerInputNV( GL_COMBINER1_NV, GL_RGB, GL_VARIABLE_B_NV,
+					   GL_TEXTURE3_ARB, GL_UNSIGNED_IDENTITY_NV, GL_RGB );
+	glCombinerOutputNV( GL_COMBINER1_NV, GL_RGB,
+						GL_SPARE1_NV, GL_DISCARD_NV, GL_DISCARD_NV,
+						GL_NONE, GL_NONE, GL_FALSE, GL_FALSE, GL_FALSE );
+						
 	// stage 1 alpha does nohing
-
+	
 	// stage 2 color multiplies spare0 * spare 1 just for debugging
 	// SPARE0 = SPARE0 * SPARE1
-	glCombinerInputNV( GL_COMBINER2_NV, GL_RGB, GL_VARIABLE_A_NV, 
-		GL_SPARE0_NV, GL_UNSIGNED_IDENTITY_NV, GL_RGB );
-	glCombinerInputNV( GL_COMBINER2_NV, GL_RGB, GL_VARIABLE_B_NV, 
-		GL_SPARE1_NV, GL_UNSIGNED_IDENTITY_NV, GL_RGB );
-	glCombinerOutputNV( GL_COMBINER2_NV, GL_RGB, 
-		GL_SPARE0_NV, GL_DISCARD_NV, GL_DISCARD_NV,
-		GL_NONE, GL_NONE, GL_FALSE, GL_FALSE, GL_FALSE );
-
+	glCombinerInputNV( GL_COMBINER2_NV, GL_RGB, GL_VARIABLE_A_NV,
+					   GL_SPARE0_NV, GL_UNSIGNED_IDENTITY_NV, GL_RGB );
+	glCombinerInputNV( GL_COMBINER2_NV, GL_RGB, GL_VARIABLE_B_NV,
+					   GL_SPARE1_NV, GL_UNSIGNED_IDENTITY_NV, GL_RGB );
+	glCombinerOutputNV( GL_COMBINER2_NV, GL_RGB,
+						GL_SPARE0_NV, GL_DISCARD_NV, GL_DISCARD_NV,
+						GL_NONE, GL_NONE, GL_FALSE, GL_FALSE, GL_FALSE );
+						
 	// stage 2 alpha multiples spare0 * spare 1
 	// SPARE0 = SPARE0 * SPARE1
-	glCombinerInputNV( GL_COMBINER2_NV, GL_ALPHA, GL_VARIABLE_A_NV, 
-		GL_SPARE0_NV, GL_UNSIGNED_IDENTITY_NV, GL_BLUE );
-	glCombinerInputNV( GL_COMBINER2_NV, GL_ALPHA, GL_VARIABLE_B_NV, 
-		GL_SPARE1_NV, GL_UNSIGNED_IDENTITY_NV, GL_BLUE );
-	glCombinerOutputNV( GL_COMBINER2_NV, GL_ALPHA, 
-		GL_SPARE0_NV, GL_DISCARD_NV, GL_DISCARD_NV,
-		GL_NONE, GL_NONE, GL_FALSE, GL_FALSE, GL_FALSE );
-
+	glCombinerInputNV( GL_COMBINER2_NV, GL_ALPHA, GL_VARIABLE_A_NV,
+					   GL_SPARE0_NV, GL_UNSIGNED_IDENTITY_NV, GL_BLUE );
+	glCombinerInputNV( GL_COMBINER2_NV, GL_ALPHA, GL_VARIABLE_B_NV,
+					   GL_SPARE1_NV, GL_UNSIGNED_IDENTITY_NV, GL_BLUE );
+	glCombinerOutputNV( GL_COMBINER2_NV, GL_ALPHA,
+						GL_SPARE0_NV, GL_DISCARD_NV, GL_DISCARD_NV,
+						GL_NONE, GL_NONE, GL_FALSE, GL_FALSE, GL_FALSE );
+						
 	// final combiner
 	glFinalCombinerInputNV( GL_VARIABLE_D_NV, GL_SPARE0_NV,
-		GL_UNSIGNED_IDENTITY_NV, GL_RGB );
+							GL_UNSIGNED_IDENTITY_NV, GL_RGB );
 	glFinalCombinerInputNV( GL_VARIABLE_A_NV, GL_ZERO,
-		GL_UNSIGNED_IDENTITY_NV, GL_RGB );
+							GL_UNSIGNED_IDENTITY_NV, GL_RGB );
 	glFinalCombinerInputNV( GL_VARIABLE_B_NV, GL_ZERO,
-		GL_UNSIGNED_IDENTITY_NV, GL_RGB );
+							GL_UNSIGNED_IDENTITY_NV, GL_RGB );
 	glFinalCombinerInputNV( GL_VARIABLE_C_NV, GL_ZERO,
-		GL_UNSIGNED_IDENTITY_NV, GL_RGB );
+							GL_UNSIGNED_IDENTITY_NV, GL_RGB );
 	glFinalCombinerInputNV( GL_VARIABLE_G_NV, GL_SPARE0_NV,
-		GL_UNSIGNED_IDENTITY_NV, GL_ALPHA );
+							GL_UNSIGNED_IDENTITY_NV, GL_ALPHA );
 }
 
 /*
@@ -143,11 +147,12 @@ If the light isn't a monoLightShader, the lightProjection will be skipped, becau
 it will have to be done on an itterated basis
 ==================
 */
-static void RB_NV20_DI_BumpAndLightPass( const drawInteraction_t *din, bool monoLightShader ) {
+static void RB_NV20_DI_BumpAndLightPass( const drawInteraction_t* din, bool monoLightShader )
+{
 	RB_LogComment( "---------- RB_NV_BumpAndLightPass ----------\n" );
-
+	
 	GL_State( GLS_COLORMASK | GLS_DEPTHMASK | backEnd.depthFunc );
-
+	
 	// texture 0 is the normalization cube map
 	// GL_TEXTURE0_ARB will be the normalized vector
 	// towards the light source
@@ -157,12 +162,15 @@ static void RB_NV20_DI_BumpAndLightPass( const drawInteraction_t *din, bool mono
 #else
 	GL_SelectTextureNoClient( 0 );
 #endif
-	if ( din->ambientLight ) {
+	if( din->ambientLight )
+	{
 		globalImages->ambientNormalMap->Bind();
-	} else {
+	}
+	else
+	{
 		globalImages->normalCubeMapImage->Bind();
 	}
-
+	
 	// texture 1 will be the per-surface bump map
 #ifdef MACOS_X
 	GL_SelectTexture( 1 );
@@ -171,7 +179,7 @@ static void RB_NV20_DI_BumpAndLightPass( const drawInteraction_t *din, bool mono
 	GL_SelectTextureNoClient( 1 );
 #endif
 	din->bumpImage->Bind();
-
+	
 	// texture 2 will be the light falloff texture
 #ifdef MACOS_X
 	GL_SelectTexture( 2 );
@@ -180,7 +188,7 @@ static void RB_NV20_DI_BumpAndLightPass( const drawInteraction_t *din, bool mono
 	GL_SelectTextureNoClient( 2 );
 #endif
 	din->lightFalloffImage->Bind();
-
+	
 	// texture 3 will be the light projection texture
 #ifdef MACOS_X
 	GL_SelectTexture( 3 );
@@ -188,17 +196,20 @@ static void RB_NV20_DI_BumpAndLightPass( const drawInteraction_t *din, bool mono
 #else
 	GL_SelectTextureNoClient( 3 );
 #endif
-	if ( monoLightShader ) {
+	if( monoLightShader )
+	{
 		din->lightImage->Bind();
-	} else {
+	}
+	else
+	{
 		// if the projected texture is multi-colored, we
 		// will need to do it in subsequent passes
 		globalImages->whiteImage->Bind();
 	}
-
+	
 	// bind our "fragment program"
 	RB_NV20_BumpAndLightFragment();
-
+	
 	// draw it
 	glBindProgramARB( GL_VERTEX_PROGRAM_ARB, VPROG_NV20_BUMP_AND_LIGHT );
 	RB_DrawElementsWithCounters( din->surf->geo );
@@ -210,46 +221,48 @@ static void RB_NV20_DI_BumpAndLightPass( const drawInteraction_t *din, bool mono
 RB_NV20_DiffuseColorFragment
 ==================
 */
-static void RB_NV20_DiffuseColorFragment( void ) {
-	if ( r_useCombinerDisplayLists.GetBool() ) {
+static void RB_NV20_DiffuseColorFragment( void )
+{
+	if( r_useCombinerDisplayLists.GetBool() )
+	{
 		glCallList( fragmentDisplayListBase + FPROG_DIFFUSE_COLOR );
 		return;
 	}
-
+	
 	// program the nvidia register combiners
 	glCombinerParameteriNV( GL_NUM_GENERAL_COMBINERS_NV, 1 );
-
+	
 	// stage 0 is free, so we always do the multiply of the vertex color
 	// when the vertex color is inverted, glCombinerInputNV(GL_VARIABLE_B_NV) will be changed
-	glCombinerInputNV( GL_COMBINER0_NV, GL_RGB, GL_VARIABLE_A_NV, 
-		GL_TEXTURE0_ARB, GL_UNSIGNED_IDENTITY_NV, GL_RGB );
-	glCombinerInputNV( GL_COMBINER0_NV, GL_RGB, GL_VARIABLE_B_NV, 
-		GL_PRIMARY_COLOR_NV, GL_UNSIGNED_IDENTITY_NV, GL_RGB );
-	glCombinerOutputNV( GL_COMBINER0_NV, GL_RGB, 
-		GL_TEXTURE0_ARB, GL_DISCARD_NV, GL_DISCARD_NV,
-		GL_NONE, GL_NONE, GL_FALSE, GL_FALSE, GL_FALSE );
-
-	glCombinerOutputNV( GL_COMBINER0_NV, GL_ALPHA, 
-		GL_DISCARD_NV, GL_DISCARD_NV, GL_DISCARD_NV,
-		GL_NONE, GL_NONE, GL_FALSE, GL_FALSE, GL_FALSE );
-
-
+	glCombinerInputNV( GL_COMBINER0_NV, GL_RGB, GL_VARIABLE_A_NV,
+					   GL_TEXTURE0_ARB, GL_UNSIGNED_IDENTITY_NV, GL_RGB );
+	glCombinerInputNV( GL_COMBINER0_NV, GL_RGB, GL_VARIABLE_B_NV,
+					   GL_PRIMARY_COLOR_NV, GL_UNSIGNED_IDENTITY_NV, GL_RGB );
+	glCombinerOutputNV( GL_COMBINER0_NV, GL_RGB,
+						GL_TEXTURE0_ARB, GL_DISCARD_NV, GL_DISCARD_NV,
+						GL_NONE, GL_NONE, GL_FALSE, GL_FALSE, GL_FALSE );
+						
+	glCombinerOutputNV( GL_COMBINER0_NV, GL_ALPHA,
+						GL_DISCARD_NV, GL_DISCARD_NV, GL_DISCARD_NV,
+						GL_NONE, GL_NONE, GL_FALSE, GL_FALSE, GL_FALSE );
+						
+						
 	// for GL_CONSTANT_COLOR0_NV * TEXTURE0 * TEXTURE1
 	glFinalCombinerInputNV( GL_VARIABLE_A_NV, GL_CONSTANT_COLOR0_NV,
-		GL_UNSIGNED_IDENTITY_NV, GL_RGB );
+							GL_UNSIGNED_IDENTITY_NV, GL_RGB );
 	glFinalCombinerInputNV( GL_VARIABLE_B_NV, GL_E_TIMES_F_NV,
-		GL_UNSIGNED_IDENTITY_NV, GL_RGB );
+							GL_UNSIGNED_IDENTITY_NV, GL_RGB );
 	glFinalCombinerInputNV( GL_VARIABLE_C_NV, GL_ZERO,
-		GL_UNSIGNED_IDENTITY_NV, GL_RGB );
+							GL_UNSIGNED_IDENTITY_NV, GL_RGB );
 	glFinalCombinerInputNV( GL_VARIABLE_D_NV, GL_ZERO,
-		GL_UNSIGNED_IDENTITY_NV, GL_RGB );
+							GL_UNSIGNED_IDENTITY_NV, GL_RGB );
 	glFinalCombinerInputNV( GL_VARIABLE_E_NV, GL_TEXTURE0_ARB,
-		GL_UNSIGNED_IDENTITY_NV, GL_RGB );
+							GL_UNSIGNED_IDENTITY_NV, GL_RGB );
 	glFinalCombinerInputNV( GL_VARIABLE_F_NV, GL_TEXTURE1_ARB,
-		GL_UNSIGNED_IDENTITY_NV, GL_RGB );
+							GL_UNSIGNED_IDENTITY_NV, GL_RGB );
 	glFinalCombinerInputNV( GL_VARIABLE_G_NV, GL_ZERO,
-		GL_UNSIGNED_IDENTITY_NV, GL_ALPHA );
-
+							GL_UNSIGNED_IDENTITY_NV, GL_ALPHA );
+							
 }
 
 /*
@@ -258,12 +271,13 @@ RB_NV20_DI_DiffuseColorPass
 
 ==================
 */
-static void RB_NV20_DI_DiffuseColorPass( const drawInteraction_t *din ) {
+static void RB_NV20_DI_DiffuseColorPass( const drawInteraction_t* din )
+{
 	RB_LogComment( "---------- RB_NV20_DiffuseColorPass ----------\n" );
-
-	GL_State( GLS_SRCBLEND_DST_ALPHA | GLS_DSTBLEND_ONE | GLS_DEPTHMASK | GLS_ALPHAMASK 
-		| backEnd.depthFunc );
-
+	
+	GL_State( GLS_SRCBLEND_DST_ALPHA | GLS_DSTBLEND_ONE | GLS_DEPTHMASK | GLS_ALPHAMASK
+			  | backEnd.depthFunc );
+			  
 	// texture 0 will be the per-surface diffuse map
 #ifdef MACOS_X
 	GL_SelectTexture( 0 );
@@ -272,7 +286,7 @@ static void RB_NV20_DI_DiffuseColorPass( const drawInteraction_t *din ) {
 	GL_SelectTextureNoClient( 0 );
 #endif
 	din->diffuseImage->Bind();
-
+	
 	// texture 1 will be the light projected texture
 #ifdef MACOS_X
 	GL_SelectTexture( 1 );
@@ -281,7 +295,7 @@ static void RB_NV20_DI_DiffuseColorPass( const drawInteraction_t *din ) {
 	GL_SelectTextureNoClient( 1 );
 #endif
 	din->lightImage->Bind();
-
+	
 	// texture 2 is disabled
 #ifdef MACOS_X
 	GL_SelectTexture( 2 );
@@ -290,7 +304,7 @@ static void RB_NV20_DI_DiffuseColorPass( const drawInteraction_t *din ) {
 	GL_SelectTextureNoClient( 2 );
 #endif
 	globalImages->BindNull();
-
+	
 	// texture 3 is disabled
 #ifdef MACOS_X
 	GL_SelectTexture( 3 );
@@ -299,16 +313,17 @@ static void RB_NV20_DI_DiffuseColorPass( const drawInteraction_t *din ) {
 	GL_SelectTextureNoClient( 3 );
 #endif
 	globalImages->BindNull();
-
+	
 	// bind our "fragment program"
 	RB_NV20_DiffuseColorFragment();
-
+	
 	// override one parameter for inverted vertex color
-	if ( din->vertexColor == SVC_INVERSE_MODULATE ) {
-		glCombinerInputNV( GL_COMBINER0_NV, GL_RGB, GL_VARIABLE_B_NV, 
-			GL_PRIMARY_COLOR_NV, GL_UNSIGNED_INVERT_NV, GL_RGB );
+	if( din->vertexColor == SVC_INVERSE_MODULATE )
+	{
+		glCombinerInputNV( GL_COMBINER0_NV, GL_RGB, GL_VARIABLE_B_NV,
+						   GL_PRIMARY_COLOR_NV, GL_UNSIGNED_INVERT_NV, GL_RGB );
 	}
-
+	
 	// draw it
 	glBindProgramARB( GL_VERTEX_PROGRAM_ARB, VPROG_NV20_DIFFUSE_COLOR );
 	RB_DrawElementsWithCounters( din->surf->geo );
@@ -320,88 +335,90 @@ static void RB_NV20_DI_DiffuseColorPass( const drawInteraction_t *din ) {
 RB_NV20_SpecularColorFragment
 ==================
 */
-static void RB_NV20_SpecularColorFragment( void ) {
-	if ( r_useCombinerDisplayLists.GetBool() ) {
+static void RB_NV20_SpecularColorFragment( void )
+{
+	if( r_useCombinerDisplayLists.GetBool() )
+	{
 		glCallList( fragmentDisplayListBase + FPROG_SPECULAR_COLOR );
 		return;
 	}
-
+	
 	// program the nvidia register combiners
 	glCombinerParameteriNV( GL_NUM_GENERAL_COMBINERS_NV, 4 );
-
+	
 	// we want GL_CONSTANT_COLOR1_NV * PRIMARY_COLOR * TEXTURE2 * TEXTURE3 * specular( TEXTURE0 * TEXTURE1 )
-
+	
 	// stage 0 rgb performs the dot product
 	// GL_SPARE0_NV = ( TEXTURE0 dot TEXTURE1 - 0.5 ) * 2
 	// TEXTURE2 = TEXTURE2 * PRIMARY_COLOR
 	// the scale and bias steepen the specular curve
-	glCombinerInputNV( GL_COMBINER0_NV, GL_RGB, GL_VARIABLE_A_NV, 
-		GL_TEXTURE1_ARB, GL_EXPAND_NORMAL_NV, GL_RGB );
-	glCombinerInputNV( GL_COMBINER0_NV, GL_RGB, GL_VARIABLE_B_NV, 
-		GL_TEXTURE0_ARB, GL_EXPAND_NORMAL_NV, GL_RGB );
-	glCombinerOutputNV( GL_COMBINER0_NV, GL_RGB, 
-		GL_SPARE0_NV, GL_DISCARD_NV, GL_DISCARD_NV,
-		GL_SCALE_BY_TWO_NV, GL_BIAS_BY_NEGATIVE_ONE_HALF_NV, GL_TRUE, GL_FALSE, GL_FALSE );
-
+	glCombinerInputNV( GL_COMBINER0_NV, GL_RGB, GL_VARIABLE_A_NV,
+					   GL_TEXTURE1_ARB, GL_EXPAND_NORMAL_NV, GL_RGB );
+	glCombinerInputNV( GL_COMBINER0_NV, GL_RGB, GL_VARIABLE_B_NV,
+					   GL_TEXTURE0_ARB, GL_EXPAND_NORMAL_NV, GL_RGB );
+	glCombinerOutputNV( GL_COMBINER0_NV, GL_RGB,
+						GL_SPARE0_NV, GL_DISCARD_NV, GL_DISCARD_NV,
+						GL_SCALE_BY_TWO_NV, GL_BIAS_BY_NEGATIVE_ONE_HALF_NV, GL_TRUE, GL_FALSE, GL_FALSE );
+						
 	// stage 0 alpha does nothing
-
+	
 	// stage 1 color takes bump * bump
 	// GL_SPARE0_NV = ( GL_SPARE0_NV * GL_SPARE0_NV - 0.5 ) * 2
 	// the scale and bias steepen the specular curve
-	glCombinerInputNV( GL_COMBINER1_NV, GL_RGB, GL_VARIABLE_A_NV, 
-		GL_SPARE0_NV, GL_UNSIGNED_IDENTITY_NV, GL_RGB );
-	glCombinerInputNV( GL_COMBINER1_NV, GL_RGB, GL_VARIABLE_B_NV, 
-		GL_SPARE0_NV, GL_UNSIGNED_IDENTITY_NV, GL_RGB );
-	glCombinerOutputNV( GL_COMBINER1_NV, GL_RGB, 
-		GL_SPARE0_NV, GL_DISCARD_NV, GL_DISCARD_NV,
-		GL_SCALE_BY_TWO_NV, GL_BIAS_BY_NEGATIVE_ONE_HALF_NV, GL_FALSE, GL_FALSE, GL_FALSE );
-
+	glCombinerInputNV( GL_COMBINER1_NV, GL_RGB, GL_VARIABLE_A_NV,
+					   GL_SPARE0_NV, GL_UNSIGNED_IDENTITY_NV, GL_RGB );
+	glCombinerInputNV( GL_COMBINER1_NV, GL_RGB, GL_VARIABLE_B_NV,
+					   GL_SPARE0_NV, GL_UNSIGNED_IDENTITY_NV, GL_RGB );
+	glCombinerOutputNV( GL_COMBINER1_NV, GL_RGB,
+						GL_SPARE0_NV, GL_DISCARD_NV, GL_DISCARD_NV,
+						GL_SCALE_BY_TWO_NV, GL_BIAS_BY_NEGATIVE_ONE_HALF_NV, GL_FALSE, GL_FALSE, GL_FALSE );
+						
 	// stage 1 alpha does nothing
-
+	
 	// stage 2 color
 	// GL_SPARE0_NV = GL_SPARE0_NV * TEXTURE3
 	// SECONDARY_COLOR = CONSTANT_COLOR * TEXTURE2
-	glCombinerInputNV( GL_COMBINER2_NV, GL_RGB, GL_VARIABLE_A_NV, 
-		GL_SPARE0_NV, GL_UNSIGNED_IDENTITY_NV, GL_RGB );
-	glCombinerInputNV( GL_COMBINER2_NV, GL_RGB, GL_VARIABLE_B_NV, 
-		GL_TEXTURE3_ARB, GL_UNSIGNED_IDENTITY_NV, GL_RGB );
-	glCombinerInputNV( GL_COMBINER2_NV, GL_RGB, GL_VARIABLE_C_NV, 
-		GL_CONSTANT_COLOR1_NV, GL_UNSIGNED_IDENTITY_NV, GL_RGB );
-	glCombinerInputNV( GL_COMBINER2_NV, GL_RGB, GL_VARIABLE_D_NV, 
-		GL_TEXTURE2_ARB, GL_UNSIGNED_IDENTITY_NV, GL_RGB );
-	glCombinerOutputNV( GL_COMBINER2_NV, GL_RGB, 
-		GL_SPARE0_NV, GL_SECONDARY_COLOR_NV, GL_DISCARD_NV,
-		GL_NONE, GL_NONE, GL_FALSE, GL_FALSE, GL_FALSE );
-
+	glCombinerInputNV( GL_COMBINER2_NV, GL_RGB, GL_VARIABLE_A_NV,
+					   GL_SPARE0_NV, GL_UNSIGNED_IDENTITY_NV, GL_RGB );
+	glCombinerInputNV( GL_COMBINER2_NV, GL_RGB, GL_VARIABLE_B_NV,
+					   GL_TEXTURE3_ARB, GL_UNSIGNED_IDENTITY_NV, GL_RGB );
+	glCombinerInputNV( GL_COMBINER2_NV, GL_RGB, GL_VARIABLE_C_NV,
+					   GL_CONSTANT_COLOR1_NV, GL_UNSIGNED_IDENTITY_NV, GL_RGB );
+	glCombinerInputNV( GL_COMBINER2_NV, GL_RGB, GL_VARIABLE_D_NV,
+					   GL_TEXTURE2_ARB, GL_UNSIGNED_IDENTITY_NV, GL_RGB );
+	glCombinerOutputNV( GL_COMBINER2_NV, GL_RGB,
+						GL_SPARE0_NV, GL_SECONDARY_COLOR_NV, GL_DISCARD_NV,
+						GL_NONE, GL_NONE, GL_FALSE, GL_FALSE, GL_FALSE );
+						
 	// stage 2 alpha does nothing
-
-
+	
+	
 	// stage 3 scales the texture by the vertex color
-	glCombinerInputNV( GL_COMBINER3_NV, GL_RGB, GL_VARIABLE_A_NV, 
-		GL_SECONDARY_COLOR_NV, GL_UNSIGNED_IDENTITY_NV, GL_RGB );
-	glCombinerInputNV( GL_COMBINER3_NV, GL_RGB, GL_VARIABLE_B_NV, 
-		GL_PRIMARY_COLOR_NV, GL_UNSIGNED_IDENTITY_NV, GL_RGB );
-	glCombinerOutputNV( GL_COMBINER3_NV, GL_RGB, 
-		GL_SECONDARY_COLOR_NV, GL_DISCARD_NV, GL_DISCARD_NV,
-		GL_NONE, GL_NONE, GL_FALSE, GL_FALSE, GL_FALSE );
-
+	glCombinerInputNV( GL_COMBINER3_NV, GL_RGB, GL_VARIABLE_A_NV,
+					   GL_SECONDARY_COLOR_NV, GL_UNSIGNED_IDENTITY_NV, GL_RGB );
+	glCombinerInputNV( GL_COMBINER3_NV, GL_RGB, GL_VARIABLE_B_NV,
+					   GL_PRIMARY_COLOR_NV, GL_UNSIGNED_IDENTITY_NV, GL_RGB );
+	glCombinerOutputNV( GL_COMBINER3_NV, GL_RGB,
+						GL_SECONDARY_COLOR_NV, GL_DISCARD_NV, GL_DISCARD_NV,
+						GL_NONE, GL_NONE, GL_FALSE, GL_FALSE, GL_FALSE );
+						
 	// stage 3 alpha does nothing
-
+	
 	// final combiner = GL_SPARE0_NV * SECONDARY_COLOR + PRIMARY_COLOR * SECONDARY_COLOR
 	glFinalCombinerInputNV( GL_VARIABLE_A_NV, GL_SPARE0_NV,
-		GL_UNSIGNED_IDENTITY_NV, GL_RGB );
+							GL_UNSIGNED_IDENTITY_NV, GL_RGB );
 	glFinalCombinerInputNV( GL_VARIABLE_B_NV, GL_SECONDARY_COLOR_NV,
-		GL_UNSIGNED_IDENTITY_NV, GL_RGB );
+							GL_UNSIGNED_IDENTITY_NV, GL_RGB );
 	glFinalCombinerInputNV( GL_VARIABLE_C_NV, GL_ZERO,
-		GL_UNSIGNED_IDENTITY_NV, GL_RGB );
+							GL_UNSIGNED_IDENTITY_NV, GL_RGB );
 	glFinalCombinerInputNV( GL_VARIABLE_D_NV, GL_E_TIMES_F_NV,
-		GL_UNSIGNED_IDENTITY_NV, GL_RGB );
+							GL_UNSIGNED_IDENTITY_NV, GL_RGB );
 	glFinalCombinerInputNV( GL_VARIABLE_E_NV, GL_SPARE0_NV,
-		GL_UNSIGNED_IDENTITY_NV, GL_RGB );
+							GL_UNSIGNED_IDENTITY_NV, GL_RGB );
 	glFinalCombinerInputNV( GL_VARIABLE_F_NV, GL_SECONDARY_COLOR_NV,
-		GL_UNSIGNED_IDENTITY_NV, GL_RGB );
+							GL_UNSIGNED_IDENTITY_NV, GL_RGB );
 	glFinalCombinerInputNV( GL_VARIABLE_G_NV, GL_ZERO,
-		GL_UNSIGNED_IDENTITY_NV, GL_ALPHA );
+							GL_UNSIGNED_IDENTITY_NV, GL_ALPHA );
 }
 
 
@@ -411,12 +428,13 @@ RB_NV20_DI_SpecularColorPass
 
 ==================
 */
-static void RB_NV20_DI_SpecularColorPass( const drawInteraction_t *din ) {
+static void RB_NV20_DI_SpecularColorPass( const drawInteraction_t* din )
+{
 	RB_LogComment( "---------- RB_NV20_SpecularColorPass ----------\n" );
-
+	
 	GL_State( GLS_SRCBLEND_DST_ALPHA | GLS_DSTBLEND_ONE | GLS_DEPTHMASK | GLS_ALPHAMASK
-		| backEnd.depthFunc );
-
+			  | backEnd.depthFunc );
+			  
 	// texture 0 is the normalization cube map for the half angle
 #ifdef MACOS_X
 	GL_SelectTexture( 0 );
@@ -425,7 +443,7 @@ static void RB_NV20_DI_SpecularColorPass( const drawInteraction_t *din ) {
 	GL_SelectTextureNoClient( 0 );
 #endif
 	globalImages->normalCubeMapImage->Bind();
-
+	
 	// texture 1 will be the per-surface bump map
 #ifdef MACOS_X
 	GL_SelectTexture( 1 );
@@ -434,7 +452,7 @@ static void RB_NV20_DI_SpecularColorPass( const drawInteraction_t *din ) {
 	GL_SelectTextureNoClient( 1 );
 #endif
 	din->bumpImage->Bind();
-
+	
 	// texture 2 will be the per-surface specular map
 #ifdef MACOS_X
 	GL_SelectTexture( 2 );
@@ -443,7 +461,7 @@ static void RB_NV20_DI_SpecularColorPass( const drawInteraction_t *din ) {
 	GL_SelectTextureNoClient( 2 );
 #endif
 	din->specularImage->Bind();
-
+	
 	// texture 3 will be the light projected texture
 #ifdef MACOS_X
 	GL_SelectTexture( 3 );
@@ -452,16 +470,17 @@ static void RB_NV20_DI_SpecularColorPass( const drawInteraction_t *din ) {
 	GL_SelectTextureNoClient( 3 );
 #endif
 	din->lightImage->Bind();
-
+	
 	// bind our "fragment program"
 	RB_NV20_SpecularColorFragment();
-
+	
 	// override one parameter for inverted vertex color
-	if ( din->vertexColor == SVC_INVERSE_MODULATE ) {
-		glCombinerInputNV( GL_COMBINER3_NV, GL_RGB, GL_VARIABLE_B_NV, 
-			GL_PRIMARY_COLOR_NV, GL_UNSIGNED_INVERT_NV, GL_RGB );
+	if( din->vertexColor == SVC_INVERSE_MODULATE )
+	{
+		glCombinerInputNV( GL_COMBINER3_NV, GL_RGB, GL_VARIABLE_B_NV,
+						   GL_PRIMARY_COLOR_NV, GL_UNSIGNED_INVERT_NV, GL_RGB );
 	}
-
+	
 	// draw it
 	glBindProgramARB( GL_VERTEX_PROGRAM_ARB, VPROG_NV20_SPECULAR_COLOR );
 	RB_DrawElementsWithCounters( din->surf->geo );
@@ -474,77 +493,79 @@ static void RB_NV20_DI_SpecularColorPass( const drawInteraction_t *din ) {
 RB_NV20_DiffuseAndSpecularColorFragment
 ==================
 */
-static void RB_NV20_DiffuseAndSpecularColorFragment( void ) {
-	if ( r_useCombinerDisplayLists.GetBool() ) {
+static void RB_NV20_DiffuseAndSpecularColorFragment( void )
+{
+	if( r_useCombinerDisplayLists.GetBool() )
+	{
 		glCallList( fragmentDisplayListBase + FPROG_DIFFUSE_AND_SPECULAR_COLOR );
 		return;
 	}
-
+	
 	// program the nvidia register combiners
 	glCombinerParameteriNV( GL_NUM_GENERAL_COMBINERS_NV, 3 );
-
+	
 	// GL_CONSTANT_COLOR0_NV will be the diffuse color
 	// GL_CONSTANT_COLOR1_NV will be the specular color
-
+	
 	// stage 0 rgb performs the dot product
 	// GL_SECONDARY_COLOR_NV = ( TEXTURE0 dot TEXTURE1 - 0.5 ) * 2
 	// the scale and bias steepen the specular curve
-	glCombinerInputNV( GL_COMBINER0_NV, GL_RGB, GL_VARIABLE_A_NV, 
-		GL_TEXTURE1_ARB, GL_EXPAND_NORMAL_NV, GL_RGB );
-	glCombinerInputNV( GL_COMBINER0_NV, GL_RGB, GL_VARIABLE_B_NV, 
-		GL_TEXTURE0_ARB, GL_EXPAND_NORMAL_NV, GL_RGB );
-	glCombinerOutputNV( GL_COMBINER0_NV, GL_RGB, 
-		GL_SECONDARY_COLOR_NV, GL_DISCARD_NV, GL_DISCARD_NV,
-		GL_SCALE_BY_TWO_NV, GL_BIAS_BY_NEGATIVE_ONE_HALF_NV, GL_TRUE, GL_FALSE, GL_FALSE );
-
+	glCombinerInputNV( GL_COMBINER0_NV, GL_RGB, GL_VARIABLE_A_NV,
+					   GL_TEXTURE1_ARB, GL_EXPAND_NORMAL_NV, GL_RGB );
+	glCombinerInputNV( GL_COMBINER0_NV, GL_RGB, GL_VARIABLE_B_NV,
+					   GL_TEXTURE0_ARB, GL_EXPAND_NORMAL_NV, GL_RGB );
+	glCombinerOutputNV( GL_COMBINER0_NV, GL_RGB,
+						GL_SECONDARY_COLOR_NV, GL_DISCARD_NV, GL_DISCARD_NV,
+						GL_SCALE_BY_TWO_NV, GL_BIAS_BY_NEGATIVE_ONE_HALF_NV, GL_TRUE, GL_FALSE, GL_FALSE );
+						
 	// stage 0 alpha does nothing
-
+	
 	// stage 1 color takes bump * bump
 	// PRIMARY_COLOR = ( GL_SECONDARY_COLOR_NV * GL_SECONDARY_COLOR_NV - 0.5 ) * 2
 	// the scale and bias steepen the specular curve
-	glCombinerInputNV( GL_COMBINER1_NV, GL_RGB, GL_VARIABLE_A_NV, 
-		GL_SECONDARY_COLOR_NV, GL_UNSIGNED_IDENTITY_NV, GL_RGB );
-	glCombinerInputNV( GL_COMBINER1_NV, GL_RGB, GL_VARIABLE_B_NV, 
-		GL_SECONDARY_COLOR_NV, GL_UNSIGNED_IDENTITY_NV, GL_RGB );
-	glCombinerOutputNV( GL_COMBINER1_NV, GL_RGB, 
-		GL_SECONDARY_COLOR_NV, GL_DISCARD_NV, GL_DISCARD_NV,
-		GL_SCALE_BY_TWO_NV, GL_BIAS_BY_NEGATIVE_ONE_HALF_NV, GL_FALSE, GL_FALSE, GL_FALSE );
-
+	glCombinerInputNV( GL_COMBINER1_NV, GL_RGB, GL_VARIABLE_A_NV,
+					   GL_SECONDARY_COLOR_NV, GL_UNSIGNED_IDENTITY_NV, GL_RGB );
+	glCombinerInputNV( GL_COMBINER1_NV, GL_RGB, GL_VARIABLE_B_NV,
+					   GL_SECONDARY_COLOR_NV, GL_UNSIGNED_IDENTITY_NV, GL_RGB );
+	glCombinerOutputNV( GL_COMBINER1_NV, GL_RGB,
+						GL_SECONDARY_COLOR_NV, GL_DISCARD_NV, GL_DISCARD_NV,
+						GL_SCALE_BY_TWO_NV, GL_BIAS_BY_NEGATIVE_ONE_HALF_NV, GL_FALSE, GL_FALSE, GL_FALSE );
+						
 	// stage 1 alpha does nothing
-
+	
 	// stage 2 color
 	// PRIMARY_COLOR = ( PRIMARY_COLOR * TEXTURE3 ) * 2
 	// SPARE0 = 1.0 * 1.0 (needed for final combiner)
-	glCombinerInputNV( GL_COMBINER2_NV, GL_RGB, GL_VARIABLE_A_NV, 
-		GL_SECONDARY_COLOR_NV, GL_UNSIGNED_IDENTITY_NV, GL_RGB );
-	glCombinerInputNV( GL_COMBINER2_NV, GL_RGB, GL_VARIABLE_B_NV, 
-		GL_TEXTURE3_ARB, GL_UNSIGNED_IDENTITY_NV, GL_RGB );
-	glCombinerInputNV( GL_COMBINER2_NV, GL_RGB, GL_VARIABLE_C_NV, 
-		GL_ZERO, GL_UNSIGNED_INVERT_NV, GL_RGB );
-	glCombinerInputNV( GL_COMBINER2_NV, GL_RGB, GL_VARIABLE_D_NV, 
-		GL_ZERO, GL_UNSIGNED_INVERT_NV, GL_RGB );
-	glCombinerOutputNV( GL_COMBINER2_NV, GL_RGB, 
-		GL_SECONDARY_COLOR_NV, GL_SPARE0_NV, GL_DISCARD_NV,
-		GL_SCALE_BY_TWO_NV, GL_NONE, GL_FALSE, GL_FALSE, GL_FALSE );
-
+	glCombinerInputNV( GL_COMBINER2_NV, GL_RGB, GL_VARIABLE_A_NV,
+					   GL_SECONDARY_COLOR_NV, GL_UNSIGNED_IDENTITY_NV, GL_RGB );
+	glCombinerInputNV( GL_COMBINER2_NV, GL_RGB, GL_VARIABLE_B_NV,
+					   GL_TEXTURE3_ARB, GL_UNSIGNED_IDENTITY_NV, GL_RGB );
+	glCombinerInputNV( GL_COMBINER2_NV, GL_RGB, GL_VARIABLE_C_NV,
+					   GL_ZERO, GL_UNSIGNED_INVERT_NV, GL_RGB );
+	glCombinerInputNV( GL_COMBINER2_NV, GL_RGB, GL_VARIABLE_D_NV,
+					   GL_ZERO, GL_UNSIGNED_INVERT_NV, GL_RGB );
+	glCombinerOutputNV( GL_COMBINER2_NV, GL_RGB,
+						GL_SECONDARY_COLOR_NV, GL_SPARE0_NV, GL_DISCARD_NV,
+						GL_SCALE_BY_TWO_NV, GL_NONE, GL_FALSE, GL_FALSE, GL_FALSE );
+						
 	// stage 2 alpha does nothing
-
+	
 	// final combiner = TEXTURE2_ARB * CONSTANT_COLOR0_NV + PRIMARY_COLOR_NV * CONSTANT_COLOR1_NV
 	// alpha = GL_ZERO
 	glFinalCombinerInputNV( GL_VARIABLE_A_NV, GL_CONSTANT_COLOR1_NV,
-		GL_UNSIGNED_IDENTITY_NV, GL_RGB );
+							GL_UNSIGNED_IDENTITY_NV, GL_RGB );
 	glFinalCombinerInputNV( GL_VARIABLE_B_NV, GL_SECONDARY_COLOR_NV,
-		GL_UNSIGNED_IDENTITY_NV, GL_RGB );
+							GL_UNSIGNED_IDENTITY_NV, GL_RGB );
 	glFinalCombinerInputNV( GL_VARIABLE_C_NV, GL_ZERO,
-		GL_UNSIGNED_IDENTITY_NV, GL_RGB );
+							GL_UNSIGNED_IDENTITY_NV, GL_RGB );
 	glFinalCombinerInputNV( GL_VARIABLE_D_NV, GL_E_TIMES_F_NV,
-		GL_UNSIGNED_IDENTITY_NV, GL_RGB );
+							GL_UNSIGNED_IDENTITY_NV, GL_RGB );
 	glFinalCombinerInputNV( GL_VARIABLE_E_NV, GL_TEXTURE2_ARB,
-		GL_UNSIGNED_IDENTITY_NV, GL_RGB );
+							GL_UNSIGNED_IDENTITY_NV, GL_RGB );
 	glFinalCombinerInputNV( GL_VARIABLE_F_NV, GL_CONSTANT_COLOR0_NV,
-		GL_UNSIGNED_IDENTITY_NV, GL_RGB );
+							GL_UNSIGNED_IDENTITY_NV, GL_RGB );
 	glFinalCombinerInputNV( GL_VARIABLE_G_NV, GL_ZERO,
-		GL_UNSIGNED_IDENTITY_NV, GL_ALPHA );
+							GL_UNSIGNED_IDENTITY_NV, GL_ALPHA );
 }
 
 
@@ -554,11 +575,12 @@ RB_NV20_DI_DiffuseAndSpecularColorPass
 
 ==================
 */
-static void RB_NV20_DI_DiffuseAndSpecularColorPass( const drawInteraction_t *din ) {
+static void RB_NV20_DI_DiffuseAndSpecularColorPass( const drawInteraction_t* din )
+{
 	RB_LogComment( "---------- RB_NV20_DI_DiffuseAndSpecularColorPass ----------\n" );
-
+	
 	GL_State( GLS_SRCBLEND_DST_ALPHA | GLS_DSTBLEND_ONE | GLS_DEPTHMASK | backEnd.depthFunc );
-
+	
 	// texture 0 is the normalization cube map for the half angle
 // still bound from RB_NV_BumpAndLightPass
 //	GL_SelectTextureNoClient( 0 );
@@ -577,7 +599,7 @@ static void RB_NV20_DI_DiffuseAndSpecularColorPass( const drawInteraction_t *din
 	GL_SelectTextureNoClient( 2 );
 #endif
 	din->diffuseImage->Bind();
-
+	
 	// texture 3 is the per-surface specular map
 #ifdef MACOS_X
 	GL_SelectTexture( 3 );
@@ -586,10 +608,10 @@ static void RB_NV20_DI_DiffuseAndSpecularColorPass( const drawInteraction_t *din
 	GL_SelectTextureNoClient( 3 );
 #endif
 	din->specularImage->Bind();
-
+	
 	// bind our "fragment program"
 	RB_NV20_DiffuseAndSpecularColorFragment();
-
+	
 	// draw it
 	glBindProgramARB( GL_VERTEX_PROGRAM_ARB, VPROG_NV20_DIFFUSE_AND_SPECULAR_COLOR );
 	RB_DrawElementsWithCounters( din->surf->geo );
@@ -601,9 +623,10 @@ static void RB_NV20_DI_DiffuseAndSpecularColorPass( const drawInteraction_t *din
 RB_NV20_DrawInteraction
 ==================
 */
-static void	RB_NV20_DrawInteraction( const drawInteraction_t *din ) {
-	const drawSurf_t *surf = din->surf;
-
+static void	RB_NV20_DrawInteraction( const drawInteraction_t* din )
+{
+	const drawSurf_t* surf = din->surf;
+	
 	// load all the vertex program parameters
 	glProgramEnvParameter4fvARB( GL_VERTEX_PROGRAM_ARB, PP_LIGHT_ORIGIN, din->localLightOrigin.ToFloatPtr() );
 	glProgramEnvParameter4fvARB( GL_VERTEX_PROGRAM_ARB, PP_VIEW_ORIGIN, din->localViewOrigin.ToFloatPtr() );
@@ -617,14 +640,15 @@ static void	RB_NV20_DrawInteraction( const drawInteraction_t *din ) {
 	glProgramEnvParameter4fvARB( GL_VERTEX_PROGRAM_ARB, PP_DIFFUSE_MATRIX_T, din->diffuseMatrix[1].ToFloatPtr() );
 	glProgramEnvParameter4fvARB( GL_VERTEX_PROGRAM_ARB, PP_SPECULAR_MATRIX_S, din->specularMatrix[0].ToFloatPtr() );
 	glProgramEnvParameter4fvARB( GL_VERTEX_PROGRAM_ARB, PP_SPECULAR_MATRIX_T, din->specularMatrix[1].ToFloatPtr() );
-
+	
 	// set the constant colors
 	glCombinerParameterfvNV( GL_CONSTANT_COLOR0_NV, din->diffuseColor.ToFloatPtr() );
 	glCombinerParameterfvNV( GL_CONSTANT_COLOR1_NV, din->specularColor.ToFloatPtr() );
-
+	
 	// vertex color passes should be pretty rare (cross-faded bump map surfaces), so always
 	// run them down as three-passes
-	if ( din->vertexColor != SVC_IGNORE ) {
+	if( din->vertexColor != SVC_IGNORE )
+	{
 		glEnableClientState( GL_COLOR_ARRAY );
 		RB_NV20_DI_BumpAndLightPass( din, false );
 		RB_NV20_DI_DiffuseColorPass( din );
@@ -632,23 +656,26 @@ static void	RB_NV20_DrawInteraction( const drawInteraction_t *din ) {
 		glDisableClientState( GL_COLOR_ARRAY );
 		return;
 	}
-
+	
 	glColor3f( 1, 1, 1 );
-
+	
 	// on an ideal card, we would now just bind the textures and call a
 	// single pass vertex / fragment program, but
 	// on NV20, we need to decide which single / dual / tripple pass set of programs to use
-
+	
 	// ambient light could be done as a single pass if we want to optimize for it
-
+	
 	// monochrome light is two passes
 	int		internalFormat = din->lightImage->internalFormat;
-	if ( ( r_useNV20MonoLights.GetInteger() == 2 ) || 
-		( din->lightImage->isMonochrome && r_useNV20MonoLights.GetInteger() ) ) {
+	if( ( r_useNV20MonoLights.GetInteger() == 2 ) ||
+			( din->lightImage->isMonochrome && r_useNV20MonoLights.GetInteger() ) )
+	{
 		// do a two-pass rendering
 		RB_NV20_DI_BumpAndLightPass( din, true );
 		RB_NV20_DI_DiffuseAndSpecularColorPass( din );
-	} else {
+	}
+	else
+	{
 		// general case is three passes
 		// ( bump dot lightDir ) * lightFalloff
 		// diffuse * lightProject
@@ -666,29 +693,32 @@ RB_NV20_CreateDrawInteractions
 
 =============
 */
-static void RB_NV20_CreateDrawInteractions( const drawSurf_t *surf ) {
-	if ( !surf ) {
+static void RB_NV20_CreateDrawInteractions( const drawSurf_t* surf )
+{
+	if( !surf )
+	{
 		return;
 	}
-
+	
 	glEnable( GL_VERTEX_PROGRAM_ARB );
 	glEnable( GL_REGISTER_COMBINERS_NV );
-
+	
 #ifdef MACOS_X
-	GL_SelectTexture(0);
+	GL_SelectTexture( 0 );
 	glDisableClientState( GL_TEXTURE_COORD_ARRAY );
 #else
 	glDisableClientState( GL_TEXTURE_COORD_ARRAY );
-
+	
 	glEnableVertexAttribArrayARB( 8 );
 	glEnableVertexAttribArrayARB( 9 );
 	glEnableVertexAttribArrayARB( 10 );
 	glEnableVertexAttribArrayARB( 11 );
 #endif
-
-	for ( ; surf ; surf=surf->nextOnLight ) {
+	
+	for( ; surf ; surf = surf->nextOnLight )
+	{
 		// set the vertex pointers
-		idDrawVert	*ac = (idDrawVert *)vertexCache.Position( surf->geo->ambientCache );
+		idDrawVert*	ac = ( idDrawVert* )vertexCache.Position( surf->geo->ambientCache );
 		glColorPointer( 4, GL_UNSIGNED_BYTE, sizeof( idDrawVert ), ac->color );
 #ifdef MACOS_X
 		GL_SelectTexture( 0 );
@@ -707,17 +737,17 @@ static void RB_NV20_CreateDrawInteractions( const drawSurf_t *surf ) {
 		glVertexAttribPointerARB( 8, 2, GL_FLOAT, false, sizeof( idDrawVert ), ac->st.ToFloatPtr() );
 #endif
 		glVertexPointer( 3, GL_FLOAT, sizeof( idDrawVert ), ac->xyz.ToFloatPtr() );
-
+		
 		RB_CreateSingleDrawInteractions( surf, RB_NV20_DrawInteraction );
 	}
-
+	
 #ifndef MACOS_X
 	glDisableVertexAttribArrayARB( 8 );
 	glDisableVertexAttribArrayARB( 9 );
 	glDisableVertexAttribArrayARB( 10 );
 	glDisableVertexAttribArrayARB( 11 );
 #endif
-
+	
 	// disable features
 #ifdef MACOS_X
 	GL_SelectTexture( 3 );
@@ -731,22 +761,22 @@ static void RB_NV20_CreateDrawInteractions( const drawSurf_t *surf ) {
 	GL_SelectTexture( 1 );
 	globalImages->BindNull();
 	glDisableClientState( GL_TEXTURE_COORD_ARRAY );
-#else	
+#else
 	GL_SelectTextureNoClient( 3 );
 	globalImages->BindNull();
-
+	
 	GL_SelectTextureNoClient( 2 );
 	globalImages->BindNull();
-
+	
 	GL_SelectTextureNoClient( 1 );
 	globalImages->BindNull();
 #endif
-
+	
 	backEnd.glState.currenttmu = -1;
 	GL_SelectTexture( 0 );
-
+	
 	glEnableClientState( GL_TEXTURE_COORD_ARRAY );
-
+	
 	glDisable( GL_VERTEX_PROGRAM_ARB );
 	glDisable( GL_REGISTER_COMBINERS_NV );
 }
@@ -760,49 +790,59 @@ static void RB_NV20_CreateDrawInteractions( const drawSurf_t *surf ) {
 RB_NV20_DrawInteractions
 ==================
 */
-void RB_NV20_DrawInteractions( void ) {
-	viewLight_t		*vLight;
-
+void RB_NV20_DrawInteractions( void )
+{
+	viewLight_t*		vLight;
+	
 	//
 	// for each light, perform adding and shadowing
 	//
-	for ( vLight = backEnd.viewDef->viewLights ; vLight ; vLight = vLight->next ) {
+	for( vLight = backEnd.viewDef->viewLights ; vLight ; vLight = vLight->next )
+	{
 		// do fogging later
-		if ( vLight->lightShader->IsFogLight() ) {
+		if( vLight->lightShader->IsFogLight() )
+		{
 			continue;
 		}
-		if ( vLight->lightShader->IsBlendLight() ) {
+		if( vLight->lightShader->IsBlendLight() )
+		{
 			continue;
 		}
-		if ( !vLight->localInteractions && !vLight->globalInteractions
-			&& !vLight->translucentInteractions ) {
+		if( !vLight->localInteractions && !vLight->globalInteractions
+				&& !vLight->translucentInteractions )
+		{
 			continue;
 		}
-
+		
 		backEnd.vLight = vLight;
-
+		
 		RB_LogComment( "---------- RB_RenderViewLight 0x%p ----------\n", vLight );
-
+		
 		// clear the stencil buffer if needed
-		if ( vLight->globalShadows || vLight->localShadows ) {
+		if( vLight->globalShadows || vLight->localShadows )
+		{
 			backEnd.currentScissor = vLight->scissorRect;
-			if ( r_useScissor.GetBool() ) {
-				glScissor( backEnd.viewDef->viewport.x1 + backEnd.currentScissor.x1, 
-					backEnd.viewDef->viewport.y1 + backEnd.currentScissor.y1,
-					backEnd.currentScissor.x2 + 1 - backEnd.currentScissor.x1,
-					backEnd.currentScissor.y2 + 1 - backEnd.currentScissor.y1 );
+			if( r_useScissor.GetBool() )
+			{
+				glScissor( backEnd.viewDef->viewport.x1 + backEnd.currentScissor.x1,
+						   backEnd.viewDef->viewport.y1 + backEnd.currentScissor.y1,
+						   backEnd.currentScissor.x2 + 1 - backEnd.currentScissor.x1,
+						   backEnd.currentScissor.y2 + 1 - backEnd.currentScissor.y1 );
 			}
 			glClear( GL_STENCIL_BUFFER_BIT );
-		} else {
+		}
+		else
+		{
 			// no shadows, so no need to read or write the stencil buffer
 			// we might in theory want to use GL_ALWAYS instead of disabling
 			// completely, to satisfy the invarience rules
 			glStencilFunc( GL_ALWAYS, 128, 255 );
 		}
-
+		
 		backEnd.depthFunc = GLS_DEPTHFUNC_EQUAL;
-
-		if ( r_useShadowVertexProgram.GetBool() ) {
+		
+		if( r_useShadowVertexProgram.GetBool() )
+		{
 			glEnable( GL_VERTEX_PROGRAM_ARB );
 			glBindProgramARB( GL_VERTEX_PROGRAM_ARB, VPROG_STENCIL_SHADOW );
 			RB_StencilShadowPass( vLight->globalShadows );
@@ -812,23 +852,26 @@ void RB_NV20_DrawInteractions( void ) {
 			RB_StencilShadowPass( vLight->localShadows );
 			RB_NV20_CreateDrawInteractions( vLight->globalInteractions );
 			glDisable( GL_VERTEX_PROGRAM_ARB );	// if there weren't any globalInteractions, it would have stayed on
-		} else {
+		}
+		else
+		{
 			RB_StencilShadowPass( vLight->globalShadows );
 			RB_NV20_CreateDrawInteractions( vLight->localInteractions );
 			RB_StencilShadowPass( vLight->localShadows );
 			RB_NV20_CreateDrawInteractions( vLight->globalInteractions );
 		}
-
+		
 		// translucent surfaces never get stencil shadowed
-		if ( r_skipTranslucent.GetBool() ) {
+		if( r_skipTranslucent.GetBool() )
+		{
 			continue;
 		}
-
+		
 		glStencilFunc( GL_ALWAYS, 128, 255 );
-
+		
 		backEnd.depthFunc = GLS_DEPTHFUNC_LESS;
 		RB_NV20_CreateDrawInteractions( vLight->translucentInteractions );
-
+		
 		backEnd.depthFunc = GLS_DEPTHFUNC_EQUAL;
 	}
 }
@@ -841,45 +884,47 @@ R_NV20_Init
 
 ==================
 */
-void R_NV20_Init( void ) {
+void R_NV20_Init( void )
+{
 	glConfig.allowNV20Path = false;
-
+	
 	common->Printf( "---------- R_NV20_Init ----------\n" );
-
-	if ( !glConfig.registerCombinersAvailable || !glConfig.ARBVertexProgramAvailable || glConfig.maxTextureUnits < 4 ) {
+	
+	if( !glConfig.registerCombinersAvailable || !glConfig.ARBVertexProgramAvailable || glConfig.maxTextureUnits < 4 )
+	{
 		common->Printf( "Not available.\n" );
 		return;
 	}
-
+	
 	GL_CheckErrors();
-
+	
 	// create our "fragment program" display lists
 	fragmentDisplayListBase = glGenLists( FPROG_NUM_FRAGMENT_PROGRAMS );
-
+	
 	// force them to issue commands to build the list
 	bool temp = r_useCombinerDisplayLists.GetBool();
 	r_useCombinerDisplayLists.SetBool( false );
-
+	
 	glNewList( fragmentDisplayListBase + FPROG_BUMP_AND_LIGHT, GL_COMPILE );
 	RB_NV20_BumpAndLightFragment();
 	glEndList();
-
+	
 	glNewList( fragmentDisplayListBase + FPROG_DIFFUSE_COLOR, GL_COMPILE );
 	RB_NV20_DiffuseColorFragment();
 	glEndList();
-
+	
 	glNewList( fragmentDisplayListBase + FPROG_SPECULAR_COLOR, GL_COMPILE );
 	RB_NV20_SpecularColorFragment();
 	glEndList();
-
+	
 	glNewList( fragmentDisplayListBase + FPROG_DIFFUSE_AND_SPECULAR_COLOR, GL_COMPILE );
 	RB_NV20_DiffuseAndSpecularColorFragment();
 	glEndList();
-
+	
 	r_useCombinerDisplayLists.SetBool( temp );
-
+	
 	common->Printf( "---------------------------------\n" );
-
+	
 	glConfig.allowNV20Path = true;
 }
 
