@@ -62,8 +62,8 @@ typedef enum
 #endif
 	
 #if defined(USE_QT_TOOLS)
-	EDITOR_QTTEST				= BIT( 14 ),
-	EDITOR_QTRADIANT			= BIT( 15 ),
+	EDITOR_QTRADIANT			= BIT( 14 ),
+	EDITOR_QTSTRING				= BIT( 15 ),
 #endif
 	
 // Techyon END

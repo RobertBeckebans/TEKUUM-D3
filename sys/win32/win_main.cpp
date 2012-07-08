@@ -1578,9 +1578,9 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 			}
 			else
 			{
-				if ( com_editors & EDITOR_QTTEST)
+				if ( com_editors & EDITOR_QTSTRING )
 				{
-					QtTestEditorRun();
+					QtStringEditorRun();
 				}
 			}
 #endif

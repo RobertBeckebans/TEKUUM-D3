@@ -1,4 +1,5 @@
-#include "qttest.h"
+#include "QtStringEditor.h"
+
 #include <QtGui/QApplication>
 #include <qlabel.h>
 
@@ -7,8 +8,6 @@
 
 #include "../../game/game.h"
 
-//#include "QtTestEditor.h"
-
 #ifdef ID_DEBUG_MEMORY
 #undef new
 #undef DEBUG_NEW
@@ -16,9 +15,9 @@
 #endif
 
 static QCoreApplication*	s_qtMain = NULL;
-static QtTest*				s_qtTestEditor = NULL;
+static QtStringEditor*		s_qtStringEditor = NULL;
 
-void	QtTestEditorInit()
+void	QtStringEditorInit()
 {
 	s_qtMain = QApplication::instance();
 	if( s_qtMain == NULL )
@@ -27,17 +26,17 @@ void	QtTestEditorInit()
 		s_qtMain = new QApplication( argc, NULL );
 	}
 	
-	s_qtTestEditor = new QtTest();
-	s_qtTestEditor->show();
+	s_qtStringEditor = new QtStringEditor();
+	s_qtStringEditor->show();
 	
-	com_editors |= EDITOR_QTTEST;
+	com_editors |= EDITOR_QTSTRING;
 }
-void	QtTestEditorShutdown()
+void	QtStringEditorShutdown()
 {
 	// TODO
 }
 
-void	QtTestEditorRun()
+void	QtStringEditorRun()
 {
 	//s_qtMain->processEvents();
 }

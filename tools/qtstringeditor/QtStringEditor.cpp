@@ -1,10 +1,10 @@
-#ifndef QTTEST_H
-#define QTTEST_H
+#ifndef QTSTRINGEDITOR_H
+#define QTSTRINGEDITOR_H
 
 #include <QtGui/QMainWindow>
-#include "ui_qttest.h"
+#include "ui_QtStringEditor.h"
 
-class QtTest : public QMainWindow
+class QtStringEditor : public QMainWindow
 {
 	Q_OBJECT
 	
@@ -16,4 +16,4 @@ private:
 	Ui::QtTestClass ui;
 };
 
-#endif // QTTEST1_H
+#endif // QTSTRINGEDITOR_H

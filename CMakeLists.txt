@@ -644,31 +644,34 @@ if(USE_QT_TOOLS)
 	set(QT_USE_QTOPENGL TRUE)
 	set(QT_USE_IMPORTED_TARGETS TRUE)
 	find_package(Qt4 REQUIRED)
-
-	set(EDITOR_QTTEST_INCLUDES
-		tools/qttest/qttest.h)
-		
-	set(EDITOR_QTTEST_SOURCES
-		tools/qttest/main.cpp)
-		
-	set(EDITOR_QTTEST_RESOURCES
-		tools/qttest/qttest.qrc)
-		
-	set(EDITOR_QTTEST_FORMS
-		tools/qttest/qttest.ui)
-		
-	QT4_WRAP_CPP(EDITOR_QTTEST_INCLUDES_MOC ${EDITOR_QTTEST_INCLUDES})
-	QT4_WRAP_UI(EDITOR_QTTEST_FORMS_INCLUDES ${EDITOR_QTTEST_FORMS})
-	QT4_ADD_RESOURCES(EDITOR_QTTEST_RESOURCES_RCC ${EDITOR_QTTEST_RESOURCES})
 	
-	source_group("tools\\qttest\\Header Files" FILES ${EDITOR_QTTEST_INCLUDES})
-	source_group("tools\\qttest\\Source Files" FILES ${EDITOR_QTTEST_SOURCES})
-	source_group("tools\\qttest\\Resource Files" FILES ${EDITOR_QTTEST_RESOURCES})
-	source_group("tools\\qttest\\Form Files" FILES ${EDITOR_QTTEST_FORMS})
 	
-	source_group("tools\\qttest\\Generated Files" FILES ${EDITOR_QTTEST_INCLUDES_MOC})
-	source_group("tools\\qttest\\Generated Files" FILES ${EDITOR_QTTEST_FORMS_INCLUDES})
-	source_group("tools\\qttest\\Generated Files" FILES ${EDITOR_QTTEST_RESOURCES_RCC})
+	
+	set(EDITOR_QTSTRING_INCLUDES
+		tools/qtstringeditor/QtStringEditor.h)
+		
+	set(EDITOR_QTSTRING_SOURCES
+		tools/qtstringeditor/main.cpp)
+		
+	set(EDITOR_QTSTRING_RESOURCES
+		tools/qtstringeditor/QtStringEditor.qrc)
+		
+	set(EDITOR_QTSTRING_FORMS
+		tools/qtstringeditor/QtStringEditor.ui)
+		
+	QT4_WRAP_CPP(EDITOR_QTSTRING_INCLUDES_MOC ${EDITOR_QTSTRING_INCLUDES})
+	QT4_WRAP_UI(EDITOR_QTSTRING_FORMS_INCLUDES ${EDITOR_QTSTRING_FORMS})
+	QT4_ADD_RESOURCES(EDITOR_QTSTRING_RESOURCES_RCC ${EDITOR_QTSTRING_RESOURCES})
+	
+	source_group("tools\\qtstringeditor\\Header Files" FILES ${EDITOR_QTSTRING_INCLUDES})
+	source_group("tools\\qtstringeditor\\Source Files" FILES ${EDITOR_QTSTRING_SOURCES})
+	source_group("tools\\qtstringeditor\\Resource Files" FILES ${EDITOR_QTSTRING_RESOURCES})
+	source_group("tools\\qtstringeditor\\Form Files" FILES ${EDITOR_QTSTRING_FORMS})
+	
+	source_group("tools\\qtstringeditor\\Generated Files" FILES ${EDITOR_QTSTRING_INCLUDES_MOC})
+	source_group("tools\\qtstringeditor\\Generated Files" FILES ${EDITOR_QTSTRING_FORMS_INCLUDES})
+	source_group("tools\\qtstringeditor\\Generated Files" FILES ${EDITOR_QTSTRING_RESOURCES_RCC})
+	
 	
 	
 	file(GLOB EDITOR_QTRADIANT_INCLUDES	tools/qtradiant/src/*.h)
@@ -952,15 +955,6 @@ if(MSVC)
 			${QTTECHYON_SOURCES}
 			${QTTECHYON_RESOURCES}
 			
-			${EDITOR_QTTEST_INCLUDES}
-			${EDITOR_QTTEST_SOURCES}
-			${EDITOR_QTTEST_RESOURCES}
-			${EDITOR_QTTEST_FORMS}
-			
-			${EDITOR_QTTEST_INCLUDES_MOC}
-			${EDITOR_QTTEST_FORMS_INCLUDES}
-			${EDITOR_QTTEST_RESOURCES_RCC}
-			
 			${EDITOR_QTRADIANT_INCLUDES}
 			${EDITOR_QTRADIANT_SOURCES}
 			${EDITOR_QTRADIANT_RESOURCES}
@@ -969,6 +963,15 @@ if(MSVC)
 			${EDITOR_QTRADIANT_INCLUDES_MOC}
 			${EDITOR_QTRADIANT_FORMS_INCLUDES}
 			${EDITOR_QTRADIANT_RESOURCES_RCC}
+			
+			${EDITOR_QTSTRING_INCLUDES}
+			${EDITOR_QTSTRING_SOURCES}
+			${EDITOR_QTSTRING_RESOURCES}
+			${EDITOR_QTSTRING_FORMS}
+			
+			${EDITOR_QTSTRING_INCLUDES_MOC}
+			${EDITOR_QTSTRING_FORMS_INCLUDES}
+			${EDITOR_QTSTRING_RESOURCES_RCC}
 			)
 			
 		if(USE_QT_WINDOWING)

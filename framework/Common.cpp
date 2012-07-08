@@ -1374,24 +1374,22 @@ static void Com_GtkTestEditor_f( const idCmdArgs& args )
 #if defined(USE_QT_TOOLS)
 /*
 =============
-Com_QtTestEditor_f
-=============
-*/
-static void Com_QtTestEditor_f( const idCmdArgs& args )
-{
-
-	QtTestEditorInit();
-}
-
-/*
-=============
 Com_QtRadiant_f
 =============
 */
 static void Com_QtRadiant_f( const idCmdArgs& args )
 {
-
 	QtRadiantInit();
+}
+
+/*
+=============
+Com_QtStringEditor_f
+=============
+*/
+static void Com_QtStringEditor_f( const idCmdArgs& args )
+{
+	QtStringEditorInit();
 }
 #endif // defined(USE_QT_TOOLS)
 
@@ -2790,8 +2788,8 @@ void idCommonLocal::InitCommands( void )
 #endif
 	
 #if defined(USE_QT_TOOLS)
-	cmdSystem->AddCommand( "qtTestEditor", Com_QtTestEditor_f, CMD_FL_TOOL, "launches the QtTest Editor" );
 	cmdSystem->AddCommand( "qtRadiant", Com_QtRadiant_f, CMD_FL_TOOL, "launches the QtRadiant Level Editor" );
+	cmdSystem->AddCommand( "editStrings", Com_QtStringEditor_f, CMD_FL_TOOL, "launches the Qt localization String Editor" );
 #endif
 	// Techyon END
 	
