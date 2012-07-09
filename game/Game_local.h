@@ -73,7 +73,11 @@ class idAI;
 class idSmokeParticles;
 class idEntityFx;
 class idTypeInfo;
+#if defined(USE_LUA)
+class tyLuaProgram;
+#else
 class idProgram;
+#endif
 class idThread;
 class idEditEntities;
 class idLocationEntity;
@@ -96,7 +100,11 @@ void gameError( const char* fmt, ... );
 #include "gamesys/SaveGame.h"
 #include "gamesys/DebugGraph.h"
 
+#if defined(USE_LUA)
+#include "lua/Lua_Program.h"
+#else
 #include "script/Script_Program.h"
+#endif
 
 #include "anim/Anim.h"
 
@@ -280,7 +288,12 @@ public:
 	
 	idRandom				random;					// random number generator used throughout the game
 	
+
+#if defined(USE_LUA)
+	tyLuaProgram			program;
+#else
 	idProgram				program;				// currently loaded script and data space
+#endif
 	idThread* 				frameCommandThread;
 	
 	idClip					clip;					// collision detection
@@ -786,8 +799,12 @@ const int	CINEMATIC_SKIP_DELAY	= SEC2MS( 2.0f );
 #include "ai/AI.h"
 #include "anim/Anim_Testmodel.h"
 
+#if defined(USE_LUA)
+#include "lua/Lua_Thread.h"
+#else
 #include "script/Script_Compiler.h"
 #include "script/Script_Interpreter.h"
 #include "script/Script_Thread.h"
+#endif
 
 #endif	/* !__GAME_LOCAL_H__ */

@@ -76,7 +76,12 @@ void idWorldspawn::Spawn( void )
 	
 	// load script
 	scriptname = gameLocal.GetMapName();
+#if defined(USE_LUA)
+	scriptname.SetFileExtension( ".lua" );
+#else
 	scriptname.SetFileExtension( ".script" );
+#endif
+
 	if( fileSystem->ReadFile( scriptname, NULL, NULL ) > 0 )
 	{
 		gameLocal.program.CompileFile( scriptname );

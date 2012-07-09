@@ -26,7 +26,7 @@ If you have questions concerning this license or the applicable additional terms
 ===========================================================================
 */
 
-#if !defined(USE_LUA)
+#if defined(USE_LUA)
 
 #include "../../idlib/precompiled.h"
 #pragma hdrstop
@@ -237,7 +237,10 @@ bool idThread::BeginMultiFrameEvent( idEntity* ent, const idEventDef* event )
 	{
 		gameLocal.Error( "idThread::BeginMultiFrameEvent called without a current thread" );
 	}
-	return currentThread->interpreter.BeginMultiFrameEvent( ent, event );
+
+	// FIXME
+	//return currentThread->interpreter.BeginMultiFrameEvent( ent, event );
+	return false;
 }
 
 /*
@@ -251,7 +254,9 @@ void idThread::EndMultiFrameEvent( idEntity* ent, const idEventDef* event )
 	{
 		gameLocal.Error( "idThread::EndMultiFrameEvent called without a current thread" );
 	}
-	currentThread->interpreter.EndMultiFrameEvent( ent, event );
+
+	// FIXME
+	//currentThread->interpreter.EndMultiFrameEvent( ent, event );
 }
 
 /*
@@ -280,7 +285,10 @@ idThread::idThread( idEntity* self, const function_t* func )
 	
 	Init();
 	SetThreadName( self->name );
-	interpreter.EnterObjectFunction( self, func, false );
+
+	// FIXME
+	//interpreter.EnterObjectFunction( self, func, false );
+	
 	if( g_debugScript.GetBool() )
 	{
 		gameLocal.Printf( "%d: create thread (%d) '%s'\n", gameLocal.time, threadNum, threadName.c_str() );
@@ -298,7 +306,10 @@ idThread::idThread( const function_t* func )
 	
 	Init();
 	SetThreadName( func->Name() );
-	interpreter.EnterFunction( func, false );
+
+	// FIXME
+	//interpreter.EnterFunction( func, false );
+	
 	if( g_debugScript.GetBool() )
 	{
 		gameLocal.Printf( "%d: create thread (%d) '%s'\n", gameLocal.time, threadNum, threadName.c_str() );
@@ -310,6 +321,7 @@ idThread::idThread( const function_t* func )
 idThread::idThread
 ================
 */
+/*
 idThread::idThread( idInterpreter* source, const function_t* func, int args )
 {
 	Init();
@@ -319,12 +331,14 @@ idThread::idThread( idInterpreter* source, const function_t* func, int args )
 		gameLocal.Printf( "%d: create thread (%d) '%s'\n", gameLocal.time, threadNum, threadName.c_str() );
 	}
 }
+*/
 
 /*
 ================
 idThread::idThread
 ================
 */
+/*
 idThread::idThread( idInterpreter* source, idEntity* self, const function_t* func, int args )
 {
 	assert( self );
@@ -337,6 +351,7 @@ idThread::idThread( idInterpreter* source, idEntity* self, const function_t* fun
 		gameLocal.Printf( "%d: create thread (%d) '%s'\n", gameLocal.time, threadNum, threadName.c_str() );
 	}
 }
+*/
 
 /*
 ================
@@ -377,7 +392,8 @@ idThread::ManualDelete
 */
 void idThread::ManualDelete( void )
 {
-	interpreter.terminateOnExit = false;
+	// FIXME
+	//interpreter.terminateOnExit = false;
 }
 
 /*
@@ -396,7 +412,8 @@ void idThread::Save( idSaveGame* savefile ) const
 	savefile->WriteInt( waitingFor );
 	savefile->WriteInt( waitingUntil );
 	
-	interpreter.Save( savefile );
+	// FIXME
+	//interpreter.Save( savefile );
 	
 	savefile->WriteDict( &spawnArgs );
 	savefile->WriteString( threadName );
@@ -420,7 +437,8 @@ void idThread::Restore( idRestoreGame* savefile )
 	savefile->ReadInt( waitingFor );
 	savefile->ReadInt( waitingUntil );
 	
-	interpreter.Restore( savefile );
+	// FIXME
+	//interpreter.Restore( savefile );
 	
 	savefile->ReadDict( &spawnArgs );
 	savefile->ReadString( threadName );
@@ -458,7 +476,8 @@ void idThread::Init( void )
 	
 	ClearWaitFor();
 	
-	interpreter.SetThread( this );
+	// FIXME
+	//interpreter.SetThread( this );
 }
 
 /*
@@ -492,13 +511,14 @@ idThread::DisplayInfo
 */
 void idThread::DisplayInfo( void )
 {
+#if 0
 	gameLocal.Printf(
 		"%12i: '%s'\n"
-		"        File: %s(%d)\n"
+		//"        File: %s(%d)\n"
 		"     Created: %d (%d ms ago)\n"
 		"      Status: ",
 		threadNum, threadName.c_str(),
-		interpreter.CurrentFile(), interpreter.CurrentLine(),
+		//interpreter.CurrentFile(), interpreter.CurrentLine(),
 		creationTime, gameLocal.time - creationTime );
 		
 	if( interpreter.threadDying )
@@ -535,6 +555,7 @@ void idThread::DisplayInfo( void )
 	interpreter.DisplayInfo();
 	
 	gameLocal.Printf( "\n" );
+#endif
 }
 
 /*
@@ -551,7 +572,8 @@ void idThread::ListThreads_f( const idCmdArgs& args )
 	for( i = 0; i < n; i++ )
 	{
 		//threadList[ i ]->DisplayInfo();
-		gameLocal.Printf( "%3i: %-20s : %s(%d)\n", threadList[ i ]->threadNum, threadList[ i ]->threadName.c_str(), threadList[ i ]->interpreter.CurrentFile(), threadList[ i ]->interpreter.CurrentLine() );
+		//gameLocal.Printf( "%3i: %-20s : %s(%d)\n", threadList[ i ]->threadNum, threadList[ i ]->threadName.c_str(), threadList[ i ]->interpreter.CurrentFile(), threadList[ i ]->interpreter.CurrentLine() );
+		gameLocal.Printf( "%3i: %-20s\n", threadList[ i ]->threadNum, threadList[ i ]->threadName.c_str() );
 	}
 	gameLocal.Printf( "%d active threads\n\n", n );
 }
@@ -651,7 +673,9 @@ void idThread::End( void )
 {
 	// Tell thread to die.  It will exit on its own.
 	Pause();
-	interpreter.threadDying	= true;
+
+	// FIXME
+	//interpreter.threadDying	= true;
 }
 
 /*
@@ -714,6 +738,10 @@ idThread::Execute
 */
 bool idThread::Execute( void )
 {
+	// FIXME
+#if 1
+	return false;
+#else
 	idThread*	oldThread;
 	bool		done;
 	
@@ -727,6 +755,7 @@ bool idThread::Execute( void )
 	
 	lastExecuteTime = gameLocal.time;
 	ClearWaitFor();
+
 	done = interpreter.Execute();
 	if( done )
 	{
@@ -751,6 +780,7 @@ bool idThread::Execute( void )
 	currentThread = oldThread;
 	
 	return done;
+#endif
 }
 
 /*
@@ -785,7 +815,9 @@ NOTE: If this is called from within a event called by this thread, the function 
 void idThread::CallFunction( const function_t* func, bool clearStack )
 {
 	ClearWaitFor();
-	interpreter.EnterFunction( func, clearStack );
+	
+	// FIXME
+	//interpreter.EnterFunction( func, clearStack );
 }
 
 /*
@@ -799,7 +831,9 @@ void idThread::CallFunction( idEntity* self, const function_t* func, bool clearS
 {
 	assert( self );
 	ClearWaitFor();
-	interpreter.EnterObjectFunction( self, func, clearStack );
+
+	// FIXME
+	//interpreter.EnterObjectFunction( self, func, clearStack );
 }
 
 /*
@@ -848,10 +882,13 @@ idThread::ThreadCallback
 */
 void idThread::ThreadCallback( idThread* thread )
 {
+	/*
+	// FIXME
 	if( interpreter.threadDying )
 	{
 		return;
 	}
+	*/
 	
 	if( thread == waitingForThread )
 	{
@@ -884,7 +921,8 @@ void idThread::Error( const char* fmt, ... ) const
 	vsprintf( text, fmt, argptr );
 	va_end( argptr );
 	
-	interpreter.Error( text );
+	// FIXME
+	//interpreter.Error( text );
 }
 
 /*
@@ -901,7 +939,8 @@ void idThread::Warning( const char* fmt, ... ) const
 	vsprintf( text, fmt, argptr );
 	va_end( argptr );
 	
-	interpreter.Warning( text );
+	// FIXME
+	//interpreter.Warning( text );
 }
 
 /*
@@ -974,7 +1013,9 @@ idThread::Pause
 void idThread::Pause( void )
 {
 	ClearWaitFor();
-	interpreter.doneProcessing = true;
+
+	// FIXME
+	//interpreter.doneProcessing = true;
 }
 
 /*
@@ -2071,4 +2112,4 @@ void idThread::Event_InfluenceActive( void )
 	}
 }
 
-#endif // #if !defined(USE_LUA)
+#endif // #if defined(USE_LUA)

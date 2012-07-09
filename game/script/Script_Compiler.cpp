@@ -26,6 +26,8 @@ If you have questions concerning this license or the applicable additional terms
 ===========================================================================
 */
 
+#if !defined(USE_LUA)
+
 #include "../../idlib/precompiled.h"
 #pragma hdrstop
 
@@ -3256,3 +3258,6 @@ void idCompiler::CompileFile( const char* text, const char* filename, bool toCon
 		gameLocal.Printf( "Compiled '%s': %.1f ms\n", filename, compile_time.Milliseconds() );
 	}
 }
+
+
+#endif // #if !defined(USE_LUA)

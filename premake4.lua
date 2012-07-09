@@ -184,6 +184,11 @@ newoption
 	description = "Skip Doom 3 base/ folder game logic into main executable"
 }
 
+newoption
+{
+	trigger = "lua",
+	description = "Replace DoomScript with Lua"
+}
 
 --
 -- Use the embed action to convert all of the Lua scripts into C strings, which 
@@ -720,6 +725,24 @@ end
 		files
 		{
 			"game/gamesys/GameTypeInfo.h",
+		}
+		
+	configuration "lua"
+		defines
+		{
+			"USE_LUA",
+		}
+		files
+		{
+			"libs/lua/src/*.c", "libs/lua/src/*.h",
+		}
+		excludes
+		{
+			"libs/lua/src/luac.c",
+		}
+		includedirs
+		{
+			"libs/lua/src",
 		}
 	
 	configuration { "mfc-tools", "vs*" }

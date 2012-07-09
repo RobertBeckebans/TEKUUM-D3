@@ -26,48 +26,12 @@ If you have questions concerning this license or the applicable additional terms
 ===========================================================================
 */
 
-#if !defined(USE_LUA)
+#if defined(USE_LUA)
 
 #include "../../idlib/precompiled.h"
 #pragma hdrstop
 
 #include "../Game_local.h"
-
-// simple types.  function types are dynamically allocated
-idTypeDef	type_void( ev_void, &def_void, "void", 0, NULL );
-
-// Techyon RB: 64 bit fixes, changed all pointer types to intptr_t
-idTypeDef	type_scriptevent( ev_scriptevent, &def_scriptevent, "scriptevent", sizeof( intptr_t ), NULL );
-idTypeDef	type_namespace( ev_namespace, &def_namespace, "namespace", sizeof( intptr_t ), NULL );
-idTypeDef	type_string( ev_string, &def_string, "string", MAX_STRING_LEN, NULL );
-idTypeDef	type_float( ev_float, &def_float, "float", sizeof( intptr_t ), NULL );
-idTypeDef	type_vector( ev_vector, &def_vector, "vector", E_EVENT_SIZEOF_VEC, NULL );
-idTypeDef	type_entity( ev_entity, &def_entity, "entity", sizeof( intptr_t ), NULL );					// stored as entity number pointer
-idTypeDef	type_field( ev_field, &def_field, "field", sizeof( intptr_t ), NULL );
-idTypeDef	type_function( ev_function, &def_function, "function", sizeof( intptr_t ), &type_void );
-idTypeDef	type_virtualfunction( ev_virtualfunction, &def_virtualfunction, "virtual function", sizeof( intptr_t ), NULL );
-idTypeDef	type_pointer( ev_pointer, &def_pointer, "pointer", sizeof( intptr_t ), NULL );
-idTypeDef	type_object( ev_object, &def_object, "object", sizeof( intptr_t ), NULL );					// stored as entity number pointer
-idTypeDef	type_jumpoffset( ev_jumpoffset, &def_jumpoffset, "<jump>", sizeof( intptr_t ), NULL );		// only used for jump opcodes
-idTypeDef	type_argsize( ev_argsize, &def_argsize, "<argsize>", sizeof( intptr_t ), NULL );				// only used for function call and thread opcodes
-idTypeDef	type_boolean( ev_boolean, &def_boolean, "boolean", sizeof( intptr_t ), NULL );
-// Techyon END
-
-idVarDef	def_void( &type_void );
-idVarDef	def_scriptevent( &type_scriptevent );
-idVarDef	def_namespace( &type_namespace );
-idVarDef	def_string( &type_string );
-idVarDef	def_float( &type_float );
-idVarDef	def_vector( &type_vector );
-idVarDef	def_entity( &type_entity );
-idVarDef	def_field( &type_field );
-idVarDef	def_function( &type_function );
-idVarDef	def_virtualfunction( &type_virtualfunction );
-idVarDef	def_pointer( &type_pointer );
-idVarDef	def_object( &type_object );
-idVarDef	def_jumpoffset( &type_jumpoffset );		// only used for jump opcodes
-idVarDef	def_argsize( &type_argsize );
-idVarDef	def_boolean( &type_boolean );
 
 /***********************************************************************
 
@@ -123,8 +87,8 @@ function_t::Clear
 void function_t::Clear( void )
 {
 	eventdef		= NULL;
-	def				= NULL;
-	type			= NULL;
+//	def				= NULL;
+//	type			= NULL;
 	firstStatement	= 0;
 	numStatements	= 0;
 	parmTotal		= 0;
@@ -134,882 +98,6 @@ void function_t::Clear( void )
 	parmSize.Clear();
 }
 
-/***********************************************************************
-
-  idTypeDef
-
-***********************************************************************/
-
-/*
-================
-idTypeDef::idTypeDef
-================
-*/
-idTypeDef::idTypeDef( etype_t etype, idVarDef* edef, const char* ename, int esize, idTypeDef* aux )
-{
-	name		= ename;
-	type		= etype;
-	def			= edef;
-	size		= esize;
-	auxType		= aux;
-	
-	parmTypes.SetGranularity( 1 );
-	parmNames.SetGranularity( 1 );
-	functions.SetGranularity( 1 );
-}
-
-/*
-================
-idTypeDef::idTypeDef
-================
-*/
-idTypeDef::idTypeDef( const idTypeDef& other )
-{
-	*this = other;
-}
-
-/*
-================
-idTypeDef::operator=
-================
-*/
-void idTypeDef::operator=( const idTypeDef& other )
-{
-	type		= other.type;
-	def			= other.def;
-	name		= other.name;
-	size		= other.size;
-	auxType		= other.auxType;
-	parmTypes	= other.parmTypes;
-	parmNames	= other.parmNames;
-	functions	= other.functions;
-}
-
-/*
-================
-idTypeDef::Allocated
-================
-*/
-size_t idTypeDef::Allocated( void ) const
-{
-	size_t memsize;
-	int i;
-	
-	memsize = name.Allocated() + parmTypes.Allocated() + parmNames.Allocated() + functions.Allocated();
-	for( i = 0; i < parmTypes.Num(); i++ )
-	{
-		memsize += parmNames[ i ].Allocated();
-	}
-	
-	return memsize;
-}
-
-/*
-================
-idTypeDef::Inherits
-
-Returns true if basetype is an ancestor of this type.
-================
-*/
-bool idTypeDef::Inherits( const idTypeDef* basetype ) const
-{
-	idTypeDef* superType;
-	
-	if( type != ev_object )
-	{
-		return false;
-	}
-	
-	if( this == basetype )
-	{
-		return true;
-	}
-	for( superType = auxType; superType != NULL; superType = superType->auxType )
-	{
-		if( superType == basetype )
-		{
-			return true;
-		}
-	}
-	
-	return false;
-}
-
-/*
-================
-idTypeDef::MatchesType
-
-Returns true if both types' base types and parameters match
-================
-*/
-bool idTypeDef::MatchesType( const idTypeDef& matchtype ) const
-{
-	int i;
-	
-	if( this == &matchtype )
-	{
-		return true;
-	}
-	
-	if( ( type != matchtype.type ) || ( auxType != matchtype.auxType ) )
-	{
-		return false;
-	}
-	
-	if( parmTypes.Num() != matchtype.parmTypes.Num() )
-	{
-		return false;
-	}
-	
-	for( i = 0; i < matchtype.parmTypes.Num(); i++ )
-	{
-		if( parmTypes[ i ] != matchtype.parmTypes[ i ] )
-		{
-			return false;
-		}
-	}
-	
-	return true;
-}
-
-/*
-================
-idTypeDef::MatchesVirtualFunction
-
-Returns true if both functions' base types and parameters match
-================
-*/
-bool idTypeDef::MatchesVirtualFunction( const idTypeDef& matchfunc ) const
-{
-	int i;
-	
-	if( this == &matchfunc )
-	{
-		return true;
-	}
-	
-	if( ( type != matchfunc.type ) || ( auxType != matchfunc.auxType ) )
-	{
-		return false;
-	}
-	
-	if( parmTypes.Num() != matchfunc.parmTypes.Num() )
-	{
-		return false;
-	}
-	
-	if( parmTypes.Num() > 0 )
-	{
-		if( !parmTypes[ 0 ]->Inherits( matchfunc.parmTypes[ 0 ] ) )
-		{
-			return false;
-		}
-	}
-	
-	for( i = 1; i < matchfunc.parmTypes.Num(); i++ )
-	{
-		if( parmTypes[ i ] != matchfunc.parmTypes[ i ] )
-		{
-			return false;
-		}
-	}
-	
-	return true;
-}
-
-/*
-================
-idTypeDef::AddFunctionParm
-
-Adds a new parameter for a function type.
-================
-*/
-void idTypeDef::AddFunctionParm( idTypeDef* parmtype, const char* name )
-{
-	if( type != ev_function )
-	{
-#if defined(USE_EXCEPTIONS)
-		throw idCompileError( "idTypeDef::AddFunctionParm : tried to add parameter on non-function type" );
-#else
-		gameLocal.Error( "idTypeDef::AddFunctionParm : tried to add parameter on non-function type" );
-#endif
-	}
-	
-	parmTypes.Append( parmtype );
-	idStr& parmName = parmNames.Alloc();
-	parmName = name;
-}
-
-/*
-================
-idTypeDef::AddField
-
-Adds a new field to an object type.
-================
-*/
-void idTypeDef::AddField( idTypeDef* fieldtype, const char* name )
-{
-	if( type != ev_object )
-	{
-#if defined(USE_EXCEPTIONS)
-		throw idCompileError( "idTypeDef::AddField : tried to add field to non-object type" );
-#else
-		gameLocal.Error( "idTypeDef::AddField : tried to add field to non-object type" );
-#endif
-	}
-	
-	parmTypes.Append( fieldtype );
-	idStr& parmName = parmNames.Alloc();
-	parmName = name;
-	
-	if( fieldtype->FieldType()->Inherits( &type_object ) )
-	{
-		size += type_object.Size();
-	}
-	else
-	{
-		size += fieldtype->FieldType()->Size();
-	}
-}
-
-/*
-================
-idTypeDef::SetName
-================
-*/
-void idTypeDef::SetName( const char* newname )
-{
-	name = newname;
-}
-
-/*
-================
-idTypeDef::Name
-================
-*/
-const char* idTypeDef::Name( void ) const
-{
-	return name;
-}
-
-/*
-================
-idTypeDef::Type
-================
-*/
-etype_t idTypeDef::Type( void ) const
-{
-	return type;
-}
-
-/*
-================
-idTypeDef::Size
-================
-*/
-int idTypeDef::Size( void ) const
-{
-	return size;
-}
-
-/*
-================
-idTypeDef::SuperClass
-
-If type is an object, then returns the object's superclass
-================
-*/
-idTypeDef* idTypeDef::SuperClass( void ) const
-{
-	if( type != ev_object )
-	{
-#if defined(USE_EXCEPTIONS)
-		throw idCompileError( "idTypeDef::SuperClass : tried to get superclass of a non-object type" );
-#else
-		gameLocal.Error( "idTypeDef::SuperClass : tried to get superclass of a non-object type" );
-#endif
-	}
-	
-	return auxType;
-}
-
-/*
-================
-idTypeDef::ReturnType
-
-If type is a function, then returns the function's return type
-================
-*/
-idTypeDef* idTypeDef::ReturnType( void ) const
-{
-	if( type != ev_function )
-	{
-#if defined(USE_EXCEPTIONS)
-		throw idCompileError( "idTypeDef::ReturnType: tried to get return type on non-function type" );
-#else
-		gameLocal.Error( "idTypeDef::ReturnType: tried to get return type on non-function type" );
-#endif
-	}
-	
-	return auxType;
-}
-
-/*
-================
-idTypeDef::SetReturnType
-
-If type is a function, then sets the function's return type
-================
-*/
-void idTypeDef::SetReturnType( idTypeDef* returntype )
-{
-	if( type != ev_function )
-	{
-#if defined(USE_EXCEPTIONS)
-		throw idCompileError( "idTypeDef::SetReturnType: tried to set return type on non-function type" );
-#else
-		gameLocal.Error( "idTypeDef::SetReturnType: tried to set return type on non-function type" );
-#endif
-	}
-	
-	auxType = returntype;
-}
-
-/*
-================
-idTypeDef::FieldType
-
-If type is a field, then returns it's type
-================
-*/
-idTypeDef* idTypeDef::FieldType( void ) const
-{
-	if( type != ev_field )
-	{
-#if defined(USE_EXCEPTIONS)
-		throw idCompileError( "idTypeDef::FieldType: tried to get field type on non-field type" );
-#else
-		gameLocal.Error( "idTypeDef::FieldType: tried to get field type on non-field type" );
-#endif
-	}
-	
-	return auxType;
-}
-
-/*
-================
-idTypeDef::SetFieldType
-
-If type is a field, then sets the function's return type
-================
-*/
-void idTypeDef::SetFieldType( idTypeDef* fieldtype )
-{
-	if( type != ev_field )
-	{
-#if defined(USE_EXCEPTIONS)
-		throw idCompileError( "idTypeDef::SetFieldType: tried to set return type on non-function type" );
-#else
-		gameLocal.Error( "idTypeDef::SetFieldType: tried to set return type on non-function type" );
-#endif
-	}
-	
-	auxType = fieldtype;
-}
-
-/*
-================
-idTypeDef::PointerType
-
-If type is a pointer, then returns the type it points to
-================
-*/
-idTypeDef* idTypeDef::PointerType( void ) const
-{
-	if( type != ev_pointer )
-	{
-#if defined(USE_EXCEPTIONS)
-		throw idCompileError( "idTypeDef::PointerType: tried to get pointer type on non-pointer" );
-#else
-		gameLocal.Error( "idTypeDef::PointerType: tried to get pointer type on non-pointer" );
-#endif
-	}
-	
-	return auxType;
-}
-
-/*
-================
-idTypeDef::SetPointerType
-
-If type is a pointer, then sets the pointer's type
-================
-*/
-void idTypeDef::SetPointerType( idTypeDef* pointertype )
-{
-	if( type != ev_pointer )
-	{
-#if defined(USE_EXCEPTIONS)
-		throw idCompileError( "idTypeDef::SetPointerType: tried to set type on non-pointer" );
-#else
-		gameLocal.Error( "idTypeDef::SetPointerType: tried to set type on non-pointer" );
-#endif
-	}
-	
-	auxType = pointertype;
-}
-
-/*
-================
-idTypeDef::NumParameters
-================
-*/
-int idTypeDef::NumParameters( void ) const
-{
-	return parmTypes.Num();
-}
-
-/*
-================
-idTypeDef::GetParmType
-================
-*/
-idTypeDef* idTypeDef::GetParmType( int parmNumber ) const
-{
-	assert( parmNumber >= 0 );
-	assert( parmNumber < parmTypes.Num() );
-	return parmTypes[ parmNumber ];
-}
-
-/*
-================
-idTypeDef::GetParmName
-================
-*/
-const char* idTypeDef::GetParmName( int parmNumber ) const
-{
-	assert( parmNumber >= 0 );
-	assert( parmNumber < parmTypes.Num() );
-	return parmNames[ parmNumber ];
-}
-
-/*
-================
-idTypeDef::NumFunctions
-================
-*/
-int idTypeDef::NumFunctions( void ) const
-{
-	return functions.Num();
-}
-
-/*
-================
-idTypeDef::GetFunctionNumber
-================
-*/
-int idTypeDef::GetFunctionNumber( const function_t* func ) const
-{
-	int i;
-	
-	for( i = 0; i < functions.Num(); i++ )
-	{
-		if( functions[ i ] == func )
-		{
-			return i;
-		}
-	}
-	return -1;
-}
-
-/*
-================
-idTypeDef::GetFunction
-================
-*/
-const function_t* idTypeDef::GetFunction( int funcNumber ) const
-{
-	assert( funcNumber >= 0 );
-	assert( funcNumber < functions.Num() );
-	return functions[ funcNumber ];
-}
-
-/*
-================
-idTypeDef::AddFunction
-================
-*/
-void idTypeDef::AddFunction( const function_t* func )
-{
-	int i;
-	
-	for( i = 0; i < functions.Num(); i++ )
-	{
-		if( !strcmp( functions[ i ]->def->Name(), func->def->Name() ) )
-		{
-			if( func->def->TypeDef()->MatchesVirtualFunction( *functions[ i ]->def->TypeDef() ) )
-			{
-				functions[ i ] = func;
-				return;
-			}
-		}
-	}
-	functions.Append( func );
-}
-
-/***********************************************************************
-
-  idVarDef
-
-***********************************************************************/
-
-/*
-================
-idVarDef::idVarDef()
-================
-*/
-idVarDef::idVarDef( idTypeDef* typeptr )
-{
-	typeDef		= typeptr;
-	num			= 0;
-	scope		= NULL;
-	numUsers	= 0;
-	initialized = idVarDef::uninitialized;
-	memset( &value, 0, sizeof( value ) );
-	name		= NULL;
-	next		= NULL;
-}
-
-/*
-============
-idVarDef::~idVarDef
-============
-*/
-idVarDef::~idVarDef()
-{
-	if( name )
-	{
-		name->RemoveDef( this );
-	}
-}
-
-/*
-============
-idVarDef::Name
-============
-*/
-const char* idVarDef::Name( void ) const
-{
-	return name->Name();
-}
-
-/*
-============
-idVarDef::GlobalName
-============
-*/
-const char* idVarDef::GlobalName( void ) const
-{
-	if( scope != &def_namespace )
-	{
-		return va( "%s::%s", scope->GlobalName(), name->Name() );
-	}
-	else
-	{
-		return name->Name();
-	}
-}
-
-/*
-============
-idVarDef::DepthOfScope
-============
-*/
-int idVarDef::DepthOfScope( const idVarDef* otherScope ) const
-{
-	const idVarDef* def;
-	int depth;
-	
-	depth = 1;
-	for( def = otherScope; def != NULL; def = def->scope )
-	{
-		if( def == scope )
-		{
-			return depth;
-		}
-		depth++;
-	}
-	
-	return 0;
-}
-
-/*
-============
-idVarDef::SetFunction
-============
-*/
-void idVarDef::SetFunction( function_t* func )
-{
-	assert( typeDef );
-	initialized = initializedConstant;
-	assert( typeDef->Type() == ev_function );
-	value.functionPtr = func;
-}
-
-/*
-============
-idVarDef::SetObject
-============
-*/
-void idVarDef::SetObject( idScriptObject* object )
-{
-	assert( typeDef );
-	initialized = initialized;
-	assert( typeDef->Inherits( &type_object ) );
-	*value.objectPtrPtr = object;
-}
-
-/*
-============
-idVarDef::SetValue
-============
-*/
-void idVarDef::SetValue( const eval_t& _value, bool constant )
-{
-	assert( typeDef );
-	if( constant )
-	{
-		initialized = initializedConstant;
-	}
-	else
-	{
-		initialized = initializedVariable;
-	}
-	
-	switch( typeDef->Type() )
-	{
-		case ev_pointer :
-		case ev_boolean :
-		case ev_field :
-			*value.intPtr = _value._int;
-			break;
-			
-		case ev_jumpoffset :
-			value.jumpOffset = _value._int;
-			break;
-			
-		case ev_argsize :
-			value.argSize = _value._int;
-			break;
-			
-		case ev_entity :
-			*value.entityNumberPtr = _value.entity;
-			break;
-			
-		case ev_string :
-			idStr::Copynz( value.stringPtr, _value.stringPtr, MAX_STRING_LEN );
-			break;
-			
-		case ev_float :
-			*value.floatPtr = _value._float;
-			break;
-			
-		case ev_vector :
-			value.vectorPtr->x = _value.vector[ 0 ];
-			value.vectorPtr->y = _value.vector[ 1 ];
-			value.vectorPtr->z = _value.vector[ 2 ];
-			break;
-			
-		case ev_function :
-			value.functionPtr = _value.function;
-			break;
-			
-		case ev_virtualfunction :
-			value.virtualFunction = _value._int;
-			break;
-			
-		case ev_object :
-			*value.entityNumberPtr = _value.entity;
-			break;
-			
-		default :
-#if defined(USE_EXCEPTIONS)
-			throw idCompileError( va( "weird type on '%s'", Name() ) );
-#else
-			gameLocal.Error( "weird type on '%s'", Name() );
-#endif
-			break;
-	}
-}
-
-/*
-============
-idVarDef::SetString
-============
-*/
-void idVarDef::SetString( const char* string, bool constant )
-{
-	if( constant )
-	{
-		initialized = initializedConstant;
-	}
-	else
-	{
-		initialized = initializedVariable;
-	}
-	
-	assert( typeDef && ( typeDef->Type() == ev_string ) );
-	idStr::Copynz( value.stringPtr, string, MAX_STRING_LEN );
-}
-
-/*
-============
-idVarDef::PrintInfo
-============
-*/
-void idVarDef::PrintInfo( idFile* file, int instructionPointer ) const
-{
-	statement_t*	jumpst;
-	int			jumpto;
-	etype_t		etype;
-	int			i;
-	int			len;
-	const char*	ch;
-	
-	if( initialized == initializedConstant )
-	{
-		file->Printf( "const " );
-	}
-	
-	etype = typeDef->Type();
-	switch( etype )
-	{
-		case ev_jumpoffset :
-			jumpto = instructionPointer + value.jumpOffset;
-			jumpst = &gameLocal.program.GetStatement( jumpto );
-			file->Printf( "address %d [%s(%d)]", jumpto, gameLocal.program.GetFilename( jumpst->file ), jumpst->linenumber );
-			break;
-			
-		case ev_function :
-			if( value.functionPtr->eventdef )
-			{
-				file->Printf( "event %s", GlobalName() );
-			}
-			else
-			{
-				file->Printf( "function %s", GlobalName() );
-			}
-			break;
-			
-		case ev_field :
-			file->Printf( "field %d", value.ptrOffset );
-			break;
-			
-		case ev_argsize:
-			file->Printf( "args %d", value.argSize );
-			break;
-			
-		default:
-			file->Printf( "%s ", typeDef->Name() );
-			if( initialized == initializedConstant )
-			{
-				switch( etype )
-				{
-					case ev_string :
-						file->Printf( "\"" );
-						len = strlen( value.stringPtr );
-						ch = value.stringPtr;
-						for( i = 0; i < len; i++, ch++ )
-						{
-							if( idStr::CharIsPrintable( *ch ) )
-							{
-								file->Printf( "%c", *ch );
-							}
-							else if( *ch == '\n' )
-							{
-								file->Printf( "\\n" );
-							}
-							else
-							{
-								file->Printf( "\\x%.2x", static_cast<int>( *ch ) );
-							}
-						}
-						file->Printf( "\"" );
-						break;
-						
-					case ev_vector :
-						file->Printf( "'%s'", value.vectorPtr->ToString() );
-						break;
-						
-					case ev_float :
-						file->Printf( "%f", *value.floatPtr );
-						break;
-						
-					case ev_virtualfunction :
-						file->Printf( "vtable[ %d ]", value.virtualFunction );
-						break;
-						
-					default :
-						file->Printf( "%d", *value.intPtr );
-						break;
-				}
-			}
-			else if( initialized == stackVariable )
-			{
-				file->Printf( "stack[%d]", value.stackOffset );
-			}
-			else
-			{
-				file->Printf( "global[%d]", num );
-			}
-			break;
-	}
-}
-
-/***********************************************************************
-
-  idVarDef
-
-***********************************************************************/
-
-/*
-============
-idVarDefName::AddDef
-============
-*/
-void idVarDefName::AddDef( idVarDef* def )
-{
-	assert( def->next == NULL );
-	def->name = this;
-	def->next = defs;
-	defs = def;
-}
-
-/*
-============
-idVarDefName::RemoveDef
-============
-*/
-void idVarDefName::RemoveDef( idVarDef* def )
-{
-	if( defs == def )
-	{
-		defs = def->next;
-	}
-	else
-	{
-		for( idVarDef* d = defs; d->next != NULL; d = d->next )
-		{
-			if( d->next == def )
-			{
-				d->next = def->next;
-				break;
-			}
-		}
-	}
-	def->next = NULL;
-	def->name = NULL;
-}
 
 /***********************************************************************
 
@@ -1025,7 +113,7 @@ idScriptObject::idScriptObject
 idScriptObject::idScriptObject()
 {
 	data = NULL;
-	type = &type_object;
+//	type = &type_object;
 }
 
 /*
@@ -1051,7 +139,7 @@ void idScriptObject::Free( void )
 	}
 	
 	data = NULL;
-	type = &type_object;
+//	type = &type_object;
 }
 
 /*
@@ -1065,6 +153,10 @@ void idScriptObject::Save( idSaveGame* savefile ) const
 	int size;
 	// Techyon END
 	
+	// FIXME
+	savefile->WriteString( "" );
+
+	/*
 	if( type == &type_object && data == NULL )
 	{
 		// Write empty string for uninitialized object
@@ -1077,6 +169,7 @@ void idScriptObject::Save( idSaveGame* savefile ) const
 		savefile->WriteInt( size );
 		savefile->Write( data, size );
 	}
+	*/
 }
 
 /*
@@ -1107,10 +200,15 @@ void idScriptObject::Restore( idRestoreGame* savefile )
 	// Techyon RB: 64 bit fix, changed size_t to int
 	savefile->ReadInt( size );
 	// Techyon END
+
+	// FIXME
+	/*
 	if( size != type->Size() )
 	{
 		savefile->Error( "idScriptObject::Restore: size of object '%s' doesn't match size in save game.", typeName.c_str() );
 	}
+
+	*/
 	
 	savefile->Read( data, size );
 }
@@ -1124,6 +222,7 @@ Allocates an object and initializes memory.
 */
 bool idScriptObject::SetType( const char* typeName )
 {
+#if 0
 	size_t size;
 	idTypeDef* newtype;
 	
@@ -1158,7 +257,11 @@ bool idScriptObject::SetType( const char* typeName )
 	ClearObject();
 	
 	return true;
+#else
+	return false;
+#endif
 }
+
 
 /*
 ============
@@ -1169,6 +272,7 @@ Resets the memory for the script object without changing its type.
 */
 void idScriptObject::ClearObject( void )
 {
+	/*
 	size_t size;
 	
 	if( type != &type_object )
@@ -1177,6 +281,7 @@ void idScriptObject::ClearObject( void )
 		size = type->Size();
 		memset( data, 0, size );
 	}
+	*/
 }
 
 /*
@@ -1186,7 +291,9 @@ idScriptObject::HasObject
 */
 bool idScriptObject::HasObject( void ) const
 {
-	return ( type != &type_object );
+	// FIXME
+	//return ( type != &type_object );
+	return false;
 }
 
 /*
@@ -1194,10 +301,12 @@ bool idScriptObject::HasObject( void ) const
 idScriptObject::GetTypeDef
 ============
 */
+/*
 idTypeDef* idScriptObject::GetTypeDef( void ) const
 {
 	return type;
 }
+*/
 
 /*
 ============
@@ -1206,7 +315,10 @@ idScriptObject::GetTypeName
 */
 const char* idScriptObject::GetTypeName( void ) const
 {
-	return type->Name();
+	// FIXME
+	return "<FIXME>";
+
+	//return type->Name();
 }
 
 /*
@@ -1244,12 +356,15 @@ const function_t* idScriptObject::GetFunction( const char* name ) const
 {
 	const function_t* func;
 	
+	/*
+	FIXME
 	if( type == &type_object )
 	{
 		return NULL;
 	}
+	*/
 	
-	func = gameLocal.program.FindFunction( name, type );
+	func = gameLocal.program.FindFunction( name/*, type*/ );
 	return func;
 }
 
@@ -1258,6 +373,7 @@ const function_t* idScriptObject::GetFunction( const char* name ) const
 idScriptObject::GetVariable
 ============
 */
+/*
 byte* idScriptObject::GetVariable( const char* name, etype_t etype ) const
 {
 	int				i;
@@ -1308,19 +424,21 @@ byte* idScriptObject::GetVariable( const char* name, etype_t etype ) const
 	
 	return NULL;
 }
+*/
 
 /***********************************************************************
 
-  idProgram
+  tyLuaProgram
 
 ***********************************************************************/
 
 /*
 ============
-idProgram::AllocType
+tyLuaProgram::AllocType
 ============
 */
-idTypeDef* idProgram::AllocType( idTypeDef& type )
+/*
+idTypeDef* tyLuaProgram::AllocType( idTypeDef& type )
 {
 	idTypeDef* newtype;
 	
@@ -1329,13 +447,15 @@ idTypeDef* idProgram::AllocType( idTypeDef& type )
 	
 	return newtype;
 }
+*/
 
 /*
 ============
-idProgram::AllocType
+tyLuaProgram::AllocType
 ============
 */
-idTypeDef* idProgram::AllocType( etype_t etype, idVarDef* edef, const char* ename, int esize, idTypeDef* aux )
+/*
+idTypeDef* tyLuaProgram::AllocType( etype_t etype, idVarDef* edef, const char* ename, int esize, idTypeDef* aux )
 {
 	idTypeDef* newtype;
 	
@@ -1344,16 +464,18 @@ idTypeDef* idProgram::AllocType( etype_t etype, idVarDef* edef, const char* enam
 	
 	return newtype;
 }
+*/
 
 /*
 ============
-idProgram::GetType
+tyLuaProgram::GetType
 
 Returns a preexisting complex type that matches the parm, or allocates
 a new one and copies it out.
 ============
 */
-idTypeDef* idProgram::GetType( idTypeDef& type, bool allocate )
+/*
+idTypeDef* tyLuaProgram::GetType( idTypeDef& type, bool allocate )
 {
 	int i;
 	
@@ -1374,15 +496,17 @@ idTypeDef* idProgram::GetType( idTypeDef& type, bool allocate )
 	// allocate a new one
 	return AllocType( type );
 }
+*/
 
 /*
 ============
-idProgram::FindType
+tyLuaProgram::FindType
 
 Returns a preexisting complex type that matches the name, or returns NULL if not found
 ============
 */
-idTypeDef* idProgram::FindType( const char* name )
+/*
+idTypeDef* tyLuaProgram::FindType( const char* name )
 {
 	idTypeDef*	check;
 	int			i;
@@ -1398,13 +522,15 @@ idTypeDef* idProgram::FindType( const char* name )
 	
 	return NULL;
 }
+*/
 
 /*
 ============
-idProgram::GetDefList
+tyLuaProgram::GetDefList
 ============
 */
-idVarDef* idProgram::GetDefList( const char* name ) const
+/*
+idVarDef* tyLuaProgram::GetDefList( const char* name ) const
 {
 	int i, hash;
 	
@@ -1418,13 +544,15 @@ idVarDef* idProgram::GetDefList( const char* name ) const
 	}
 	return NULL;
 }
+*/
 
 /*
 ============
-idProgram::AddDefToNameList
+tyLuaProgram::AddDefToNameList
 ============
 */
-void idProgram::AddDefToNameList( idVarDef* def, const char* name )
+/*
+void tyLuaProgram::AddDefToNameList( idVarDef* def, const char* name )
 {
 	int i, hash;
 	
@@ -1443,9 +571,11 @@ void idProgram::AddDefToNameList( idVarDef* def, const char* name )
 	}
 	varDefNames[i]->AddDef( def );
 }
+*/
 
 // Techyon RB: moved from AllocDef
-byte* idProgram::ReserveDefMemory( int size )
+/*
+byte* tyLuaProgram::ReserveDefMemory( int size )
 {
 	byte* mem = &variables[ numVariables ];
 	numVariables += size;
@@ -1462,10 +592,12 @@ byte* idProgram::ReserveDefMemory( int size )
 	
 	return mem;
 }
+*/
 // Techyon END
 
 // Techyon RB: moved from AllocDef
-idVarDef* idProgram::AllocVarDef( idTypeDef* type, const char* name, idVarDef* scope )
+/*
+idVarDef* tyLuaProgram::AllocVarDef( idTypeDef* type, const char* name, idVarDef* scope )
 {
 	// allocate a new def
 	idVarDef* def = new idVarDef( type );
@@ -1478,15 +610,17 @@ idVarDef* idProgram::AllocVarDef( idTypeDef* type, const char* name, idVarDef* s
 	
 	return def;
 }
+*/
 // Techyon END
 
 
 /*
 ============
-idProgram::AllocDef
+tyLuaProgram::AllocDef
 ============
 */
-idVarDef* idProgram::AllocDef( idTypeDef* type, const char* name, idVarDef* scope, bool constant )
+/*
+idVarDef* tyLuaProgram::AllocDef( idTypeDef* type, const char* name, idVarDef* scope, bool constant )
 {
 	idVarDef*	def;
 	idStr		element;
@@ -1621,15 +755,17 @@ idVarDef* idProgram::AllocDef( idTypeDef* type, const char* name, idVarDef* scop
 	
 	return def;
 }
+*/
 
 /*
 ============
-idProgram::GetDef
+tyLuaProgram::GetDef
 
 If type is NULL, it will match any type
 ============
 */
-idVarDef* idProgram::GetDef( const idTypeDef* type, const char* name, const idVarDef* scope ) const
+/*
+idVarDef* tyLuaProgram::GetDef( const idTypeDef* type, const char* name, const idVarDef* scope ) const
 {
 	idVarDef*		def;
 	idVarDef*		bestDef;
@@ -1678,13 +814,15 @@ idVarDef* idProgram::GetDef( const idTypeDef* type, const char* name, const idVa
 	
 	return bestDef;
 }
+*/
 
 /*
 ============
-idProgram::FreeDef
+tyLuaProgram::FreeDef
 ============
 */
-void idProgram::FreeDef( idVarDef* def, const idVarDef* scope )
+/*
+void tyLuaProgram::FreeDef( idVarDef* def, const idVarDef* scope )
 {
 	idVarDef* e;
 	int i;
@@ -1723,13 +861,15 @@ void idProgram::FreeDef( idVarDef* def, const idVarDef* scope )
 	
 	delete def;
 }
+*/
 
 /*
 ============
-idProgram::FindFreeResultDef
+tyLuaProgram::FindFreeResultDef
 ============
 */
-idVarDef* idProgram::FindFreeResultDef( idTypeDef* type, const char* name, idVarDef* scope, const idVarDef* a, const idVarDef* b )
+/*
+idVarDef* tyLuaProgram::FindFreeResultDef( idTypeDef* type, const char* name, idVarDef* scope, const idVarDef* a, const idVarDef* b )
 {
 	idVarDef* def;
 	
@@ -1756,10 +896,11 @@ idVarDef* idProgram::FindFreeResultDef( idTypeDef* type, const char* name, idVar
 	
 	return AllocDef( type, name, scope, false );
 }
+*/
 
 /*
 ================
-idProgram::FindFunction
+tyLuaProgram::FindFunction
 
 Searches for the specified function in the currently loaded script.  A full namespace should be
 specified if not in the global namespace.
@@ -1768,8 +909,9 @@ Returns 0 if function not found.
 Returns >0 if function found.
 ================
 */
-function_t* idProgram::FindFunction( const char* name ) const
+function_t* tyLuaProgram::FindFunction( const char* name ) const
 {
+#if 0
 	int			start;
 	int			pos;
 	idVarDef*	namespaceDef;
@@ -1814,6 +956,7 @@ function_t* idProgram::FindFunction( const char* name ) const
 	{
 		return def->value.functionPtr;
 	}
+#endif
 	
 	// is not a function, or is an eventdef
 	return NULL;
@@ -1821,7 +964,7 @@ function_t* idProgram::FindFunction( const char* name ) const
 
 /*
 ================
-idProgram::FindFunction
+tyLuaProgram::FindFunction
 
 Searches for the specified object function in the currently loaded script.
 
@@ -1829,7 +972,8 @@ Returns 0 if function not found.
 Returns >0 if function found.
 ================
 */
-function_t* idProgram::FindFunction( const char* name, const idTypeDef* type ) const
+/*
+function_t* tyLuaProgram::FindFunction( const char* name, const idTypeDef* type ) const
 {
 	const idVarDef*	tdef;
 	const idVarDef*	def;
@@ -1847,13 +991,15 @@ function_t* idProgram::FindFunction( const char* name, const idTypeDef* type ) c
 	
 	return NULL;
 }
+*/
 
 /*
 ================
-idProgram::AllocFunction
+tyLuaProgram::AllocFunction
 ================
 */
-function_t& idProgram::AllocFunction( idVarDef* def )
+/*
+function_t& tyLuaProgram::AllocFunction( idVarDef* def )
 {
 	if( functions.Num() >= functions.Max() )
 	{
@@ -1881,14 +1027,18 @@ function_t& idProgram::AllocFunction( idVarDef* def )
 	
 	return func;
 }
+*/
 
 /*
 ================
-idProgram::SetEntity
+tyLuaProgram::SetEntity
 ================
 */
-void idProgram::SetEntity( const char* name, idEntity* ent )
+void tyLuaProgram::SetEntity( const char* name, idEntity* ent )
 {
+	/*
+	FIXME
+
 	idVarDef*	def;
 	idStr		defName( "$" );
 	
@@ -1907,14 +1057,16 @@ void idProgram::SetEntity( const char* name, idEntity* ent )
 			*def->value.entityNumberPtr = ent->entityNumber + 1;
 		}
 	}
+	*/
 }
 
 /*
 ================
-idProgram::AllocStatement
+tyLuaProgram::AllocStatement
 ================
 */
-statement_t* idProgram::AllocStatement( void )
+/*
+statement_t* tyLuaProgram::AllocStatement( void )
 {
 	if( statements.Num() >= statements.Max() )
 	{
@@ -1926,44 +1078,35 @@ statement_t* idProgram::AllocStatement( void )
 	}
 	return statements.Alloc();
 }
+*/
 
 /*
 ==============
-idProgram::BeginCompilation
+tyLuaProgram::BeginCompilation
 
 called before compiling a batch of files, clears the pr struct
 ==============
 */
-void idProgram::BeginCompilation( void )
+void tyLuaProgram::BeginCompilation( void )
 {
-	statement_t*	statement;
-	
 	FreeData();
 	
 #if defined(USE_EXCEPTIONS)
 	try
 #endif
 	{
-		// make the first statement a return for a "NULL" function
-		statement = AllocStatement();
-		statement->linenumber	= 0;
-		statement->file 		= 0;
-		statement->op			= OP_RETURN;
-		statement->a			= NULL;
-		statement->b			= NULL;
-		statement->c			= NULL;
-		
-		// define NULL
-		//AllocDef( &type_void, "<NULL>", &def_namespace, true );
-		
-		// define the return def
-		returnDef = AllocDef( &type_vector, "<RETURN>", &def_namespace, false );
-		
-		// define the return def for strings
-		returnStringDef = AllocDef( &type_string, "<RETURN>", &def_namespace, false );
-		
-		// define the sys object
-		sysDef = AllocDef( &type_void, "sys", &def_namespace, true );
+		// TODO improve
+		luaState = luaL_newstate();
+
+		// register Lua standard libs
+		luaopen_base( luaState );
+		luaopen_string( luaState );
+
+		// TODO register custom libs
+		//luaopen_sys( luaState );
+		//luaopen_entity( luaState );
+		//luaopen_dmath( luaState );
+		//luaopen_vector( luaState );
 	}
 #if defined(USE_EXCEPTIONS)
 	catch( idCompileError& err )
@@ -1975,11 +1118,12 @@ void idProgram::BeginCompilation( void )
 
 /*
 ==============
-idProgram::DisassembleStatement
+tyLuaProgram::DisassembleStatement
 ==============
 */
-void idProgram::DisassembleStatement( idFile* file, int instructionPointer ) const
+void tyLuaProgram::DisassembleStatement( idFile* file, int instructionPointer ) const
 {
+#if 0
 	// Techyon RB: added const
 	const opcode_t*		op;
 	// Techyon END
@@ -2008,15 +1152,17 @@ void idProgram::DisassembleStatement( idFile* file, int instructionPointer ) con
 	}
 	
 	file->Printf( "\n" );
+#endif
 }
 
 /*
 ==============
-idProgram::Disassemble
+tyLuaProgram::Disassemble
 ==============
 */
-void idProgram::Disassemble( void ) const
+void tyLuaProgram::Disassemble( void ) const
 {
+#if 0
 	int					i;
 	int					instructionPointer;
 	const function_t*	func;
@@ -2044,23 +1190,24 @@ void idProgram::Disassemble( void ) const
 	}
 	
 	fileSystem->CloseFile( file );
+#endif
 }
 
 /*
 ==============
-idProgram::FinishCompilation
+tyLuaProgram::FinishCompilation
 
 Called after all files are compiled to check for errors
 ==============
 */
-void idProgram::FinishCompilation( void )
+void tyLuaProgram::FinishCompilation( void )
 {
 	int	i;
 	
 	top_functions	= functions.Num();
-	top_statements	= statements.Num();
-	top_types		= types.Num();
-	top_defs		= varDefs.Num();
+//	top_statements	= statements.Num();
+//	top_types		= types.Num();
+//	top_defs		= varDefs.Num();
 	top_files		= fileList.Num();
 	
 	variableDefaults.Clear();
@@ -2074,12 +1221,12 @@ void idProgram::FinishCompilation( void )
 
 /*
 ==============
-idProgram::CompileStats
+tyLuaProgram::CompileStats
 
 called after all files are compiled to report memory usage.
 ==============
 */
-void idProgram::CompileStats( void )
+void tyLuaProgram::CompileStats( void )
 {
 	int	memused;
 	int	memallocated;
@@ -2099,15 +1246,15 @@ void idProgram::CompileStats( void )
 	}
 	stringspace += fileList.Size();
 	
-	numdefs = varDefs.Num();
-	memused = varDefs.Num() * sizeof( idVarDef );
-	memused += types.Num() * sizeof( idTypeDef );
+//	numdefs = varDefs.Num();
+	memused = 0; //varDefs.Num() * sizeof( idVarDef );
+//	memused += types.Num() * sizeof( idTypeDef );
 	memused += stringspace;
 	
-	for( i = 0; i < types.Num(); i++ )
-	{
-		memused += types[ i ]->Allocated();
-	}
+//	for( i = 0; i < types.Num(); i++ )
+//	{
+//		memused += types[ i ]->Allocated();
+//	}
 	
 	funcMem = functions.MemoryUsed();
 	for( i = 0; i < functions.Num(); i++ )
@@ -2115,29 +1262,30 @@ void idProgram::CompileStats( void )
 		funcMem += functions[ i ].Allocated();
 	}
 	
-	memallocated = funcMem + memused + sizeof( idProgram );
+	memallocated = funcMem + memused + sizeof( tyLuaProgram );
 	
-	memused += statements.MemoryUsed();
+//	memused += statements.MemoryUsed();
 	memused += functions.MemoryUsed();	// name and filename of functions are shared, so no need to include them
 	memused += sizeof( variables );
 	
 	gameLocal.Printf( "\nMemory usage:\n" );
 	gameLocal.Printf( "     Strings: %d, %d bytes\n", fileList.Num(), stringspace );
-	gameLocal.Printf( "  Statements: %d, %d bytes\n", statements.Num(), statements.MemoryUsed() );
+//	gameLocal.Printf( "  Statements: %d, %d bytes\n", statements.Num(), statements.MemoryUsed() );
 	gameLocal.Printf( "   Functions: %d, %d bytes\n", functions.Num(), funcMem );
 	gameLocal.Printf( "   Variables: %d bytes\n", numVariables );
 	gameLocal.Printf( "    Mem used: %d bytes\n", memused );
-	gameLocal.Printf( " Static data: %d bytes\n", sizeof( idProgram ) );
+	gameLocal.Printf( " Static data: %d bytes\n", sizeof( tyLuaProgram ) );
 	gameLocal.Printf( "   Allocated: %d bytes\n", memallocated );
 	gameLocal.Printf( " Thread size: %d bytes\n\n", sizeof( idThread ) );
 }
 
 /*
 ================
-idProgram::CompileText
+tyLuaProgram::CompileText
 ================
 */
-bool idProgram::CompileText( const char* source, const char* text, bool console )
+/*
+bool tyLuaProgram::CompileText( const char* source, const char* text, bool console )
 {
 	idCompiler	compiler;
 	int			i;
@@ -2193,13 +1341,15 @@ bool idProgram::CompileText( const char* source, const char* text, bool console 
 	
 	return true;
 }
+*/
 
 /*
 ================
-idProgram::CompileFunction
+tyLuaProgram::CompileFunction
 ================
 */
-const function_t* idProgram::CompileFunction( const char* functionName, const char* text )
+/*
+const function_t* tyLuaProgram::CompileFunction( const char* functionName, const char* text )
 {
 	bool result;
 	
@@ -2217,13 +1367,14 @@ const function_t* idProgram::CompileFunction( const char* functionName, const ch
 	
 	return FindFunction( functionName );
 }
+*/
 
 /*
 ================
-idProgram::CompileFile
+tyLuaProgram::CompileFile
 ================
 */
-void idProgram::CompileFile( const char* filename )
+void tyLuaProgram::CompileFile( const char* filename )
 {
 	char* src;
 	bool result;
@@ -2233,7 +1384,8 @@ void idProgram::CompileFile( const char* filename )
 		gameLocal.Error( "Couldn't load %s\n", filename );
 	}
 	
-	result = CompileText( filename, src, false );
+	//result = CompileText( filename, src, false );
+	result = luaL_loadbuffer( luaState, src, strlen(src), filename );
 	
 	fileSystem->FreeFile( src );
 	
@@ -2242,32 +1394,43 @@ void idProgram::CompileFile( const char* filename )
 		Disassemble();
 	}
 	
-	if( !result )
+	if( result )
 	{
 		gameLocal.Error( "Compile failed in file %s.", filename );
+	}
+
+	if( lua_pcall( luaState, 0, 0, 0 ) )
+	{
+		gameLocal.Error( "Cannot pcall: %s", lua_tostring( luaState, -1 ) );
 	}
 }
 
 /*
 ================
-idProgram::FreeData
+tyLuaProgram::FreeData
 ================
 */
-void idProgram::FreeData( void )
+void tyLuaProgram::FreeData( void )
 {
 	int i;
+
+	if( luaState )
+	{
+		lua_close( luaState );
+		luaState = NULL;
+	}
 	
 	// free the defs
-	varDefs.DeleteContents( true );
-	varDefNames.DeleteContents( true );
-	varDefNameHash.Free();
+//	varDefs.DeleteContents( true );
+//	varDefNames.DeleteContents( true );
+//	varDefNameHash.Free();
 	
-	returnDef		= NULL;
-	returnStringDef = NULL;
-	sysDef			= NULL;
+//	returnDef		= NULL;
+//	returnStringDef = NULL;
+//	sysDef			= NULL;
 	
 	// free any special types we've created
-	types.DeleteContents( true );
+//	types.DeleteContents( true );
 	
 	filenum = 0;
 	
@@ -2282,7 +1445,7 @@ void idProgram::FreeData( void )
 	
 	filename.Clear();
 	fileList.Clear();
-	statements.Clear();
+//	statements.Clear();
 	functions.Clear();
 	
 	top_functions	= 0;
@@ -2296,12 +1459,12 @@ void idProgram::FreeData( void )
 
 /*
 ================
-idProgram::Startup
+tyLuaProgram::Startup
 ================
 */
-void idProgram::Startup( const char* defaultScript )
+void tyLuaProgram::Startup( const char* defaultScript )
 {
-	gameLocal.Printf( "Initializing scripts\n" );
+	gameLocal.Printf( "Initializing Lua scripts\n" );
 	
 	// make sure all data is freed up
 	idThread::Restart();
@@ -2320,10 +1483,10 @@ void idProgram::Startup( const char* defaultScript )
 
 /*
 ================
-idProgram::Save
+tyLuaProgram::Save
 ================
 */
-void idProgram::Save( idSaveGame* savefile ) const
+void tyLuaProgram::Save( idSaveGame* savefile ) const
 {
 	int i;
 	int currentFileNum = top_files;
@@ -2358,10 +1521,10 @@ void idProgram::Save( idSaveGame* savefile ) const
 
 /*
 ================
-idProgram::Restore
+tyLuaProgram::Restore
 ================
 */
-bool idProgram::Restore( idRestoreGame* savefile )
+bool tyLuaProgram::Restore( idRestoreGame* savefile )
 {
 	int i, num, index;
 	bool result = true;
@@ -2402,11 +1565,15 @@ bool idProgram::Restore( idRestoreGame* savefile )
 
 /*
 ================
-idProgram::CalculateChecksum
+tyLuaProgram::CalculateChecksum
 ================
 */
-int idProgram::CalculateChecksum( void ) const
+int tyLuaProgram::CalculateChecksum( void ) const
 {
+	// TODO
+#if 1
+	return 0;
+#else
 	int i, result;
 	
 	typedef struct
@@ -2462,16 +1629,17 @@ int idProgram::CalculateChecksum( void ) const
 	delete [] statementList;
 	
 	return result;
+#endif
 }
 
 /*
 ==============
-idProgram::Restart
+tyLuaProgram::Restart
 
 Restores all variables to their initial value
 ==============
 */
-void idProgram::Restart( void )
+void tyLuaProgram::Restart( void )
 {
 	int i;
 	
@@ -2482,17 +1650,17 @@ void idProgram::Restart( void )
 	// have typed "script" from the console, free up any types and vardefs that
 	// have been allocated after the initial startup
 	//
-	for( i = top_types; i < types.Num(); i++ )
-	{
-		delete types[ i ];
-	}
-	types.SetNum( top_types, false );
+//	for( i = top_types; i < types.Num(); i++ )
+//	{
+//		delete types[ i ];
+//	}
+//	types.SetNum( top_types, false );
 	
-	for( i = top_defs; i < varDefs.Num(); i++ )
-	{
-		delete varDefs[ i ];
-	}
-	varDefs.SetNum( top_defs, false );
+//	for( i = top_defs; i < varDefs.Num(); i++ )
+//	{
+//		delete varDefs[ i ];
+//	}
+//	varDefs.SetNum( top_defs, false );
 	
 	for( i = top_functions; i < functions.Num(); i++ )
 	{
@@ -2500,7 +1668,7 @@ void idProgram::Restart( void )
 	}
 	functions.SetNum( top_functions	);
 	
-	statements.SetNum( top_statements );
+//	statements.SetNum( top_statements );
 	fileList.SetNum( top_files, false );
 	filename.Clear();
 	
@@ -2514,10 +1682,10 @@ void idProgram::Restart( void )
 
 /*
 ================
-idProgram::GetFilenum
+tyLuaProgram::GetFilenum
 ================
 */
-int idProgram::GetFilenum( const char* name )
+int tyLuaProgram::GetFilenum( const char* name )
 {
 	if( filename == name )
 	{
@@ -2544,31 +1712,34 @@ int idProgram::GetFilenum( const char* name )
 
 /*
 ================
-idProgram::idProgram
+tyLuaProgram::tyLuaProgram
 ================
 */
-idProgram::idProgram()
+tyLuaProgram::tyLuaProgram()
+{
+	luaState = NULL;
+
+	FreeData();
+}
+
+/*
+================
+tyLuaProgram::~tyLuaProgram
+================
+*/
+tyLuaProgram::~tyLuaProgram()
 {
 	FreeData();
 }
 
 /*
 ================
-idProgram::~idProgram
+tyLuaProgram::ReturnEntity
 ================
 */
-idProgram::~idProgram()
+void tyLuaProgram::ReturnEntity( idEntity* ent )
 {
-	FreeData();
-}
-
-/*
-================
-idProgram::ReturnEntity
-================
-*/
-void idProgram::ReturnEntity( idEntity* ent )
-{
+	/*
 	if( ent )
 	{
 		*returnDef->value.entityNumberPtr = ent->entityNumber + 1;
@@ -2577,7 +1748,8 @@ void idProgram::ReturnEntity( idEntity* ent )
 	{
 		*returnDef->value.entityNumberPtr = 0;
 	}
+	*/
 }
 
 
-#endif // #if !defined(USE_LUA)
+#endif // #if defined(USE_LUA)
