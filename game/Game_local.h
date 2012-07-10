@@ -101,7 +101,7 @@ void gameError( const char* fmt, ... );
 #include "gamesys/DebugGraph.h"
 
 #if defined(USE_LUA)
-#include "lua/Lua_Program.h"
+#include "lua/LuaProgram.h"
 #else
 #include "script/Script_Program.h"
 #endif
@@ -800,7 +800,7 @@ const int	CINEMATIC_SKIP_DELAY	= SEC2MS( 2.0f );
 #include "anim/Anim_Testmodel.h"
 
 #if defined(USE_LUA)
-#include "lua/Lua_Thread.h"
+#include "lua/LuaThread.h"
 #else
 #include "script/Script_Compiler.h"
 #include "script/Script_Interpreter.h"
