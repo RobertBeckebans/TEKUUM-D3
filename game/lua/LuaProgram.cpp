@@ -911,6 +911,16 @@ Returns >0 if function found.
 */
 function_t* tyLuaProgram::FindFunction( const char* name ) const
 {
+	lua_getglobal( luaState, name );
+	if(	!lua_isfunction( luaState, -1 ) )
+	{
+		lua_pop( luaState, 1 );
+		gameLocal.Printf( "FindFunction: %s should be a function\n", name );
+        return NULL;
+    }
+
+	lua_pop( luaState, 1 );
+
 #if 0
 	int			start;
 	int			pos;
@@ -1098,9 +1108,11 @@ void tyLuaProgram::BeginCompilation( void )
 		// TODO improve
 		luaState = luaL_newstate();
 
+		luaL_openlibs( luaState );
+
 		// register Lua standard libs
-		luaopen_base( luaState );
-		luaopen_string( luaState );
+		//luaopen_base( luaState );
+		//luaopen_string( luaState );
 
 		// TODO register custom libs
 		//luaopen_sys( luaState );

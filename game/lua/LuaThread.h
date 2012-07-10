@@ -31,10 +31,13 @@ If you have questions concerning this license or the applicable additional terms
 
 extern const idEventDef EV_Thread_Execute;
 extern const idEventDef EV_Thread_SetCallback;
-extern const idEventDef EV_Thread_TerminateThread;
-extern const idEventDef EV_Thread_Pause;
+
 extern const idEventDef EV_Thread_Wait;
 extern const idEventDef EV_Thread_WaitFrame;
+
+/*
+extern const idEventDef EV_Thread_TerminateThread;
+extern const idEventDef EV_Thread_Pause;
 extern const idEventDef EV_Thread_WaitFor;
 extern const idEventDef EV_Thread_WaitForThread;
 extern const idEventDef EV_Thread_Print;
@@ -73,10 +76,13 @@ extern const idEventDef EV_Thread_FadeIn;
 extern const idEventDef EV_Thread_FadeOut;
 extern const idEventDef EV_Thread_FadeTo;
 extern const idEventDef EV_Thread_Restart;
+*/
 
 class idThread : public idClass
 {
 private:
+	lua_State*					luaThread;
+
 	static idThread*			currentThread;
 	
 	idThread*					waitingForThread;
@@ -105,13 +111,16 @@ private:
 	void						Event_Execute( void );
 	void						Event_SetThreadName( const char* name );
 	
+
 	//
 	// script callable Events
 	//
-	void						Event_TerminateThread( int num );
-	void						Event_Pause( void );
 	void						Event_Wait( float time );
 	void						Event_WaitFrame( void );
+
+	/*
+	void						Event_TerminateThread( int num );
+	void						Event_Pause( void );
 	void						Event_WaitFor( idEntity* ent );
 	void						Event_WaitForThread( int num );
 	void						Event_Print( const char* text );
@@ -184,11 +193,13 @@ private:
 	void						Event_DebugBounds( const idVec3& color, const idVec3& mins, const idVec3& maxs, const float lifetime );
 	void						Event_DrawText( const char* text, const idVec3& origin, float scale, const idVec3& color, const int align, const float lifetime );
 	void						Event_InfluenceActive( void );
+	*/
 	
 public:
 	CLASS_PROTOTYPE( idThread );
 	
 	idThread();
+	idThread( idEntity* self, const char* funcName );
 	idThread( idEntity* self, const function_t* func );
 	idThread( const function_t* func );
 //	idThread( idInterpreter* source, const function_t* func, int args );

@@ -37,10 +37,12 @@ const idEventDef EV_Thread_Execute( "<execute>", NULL );
 const idEventDef EV_Thread_SetCallback( "<script_setcallback>", NULL );
 
 // script callable events
-const idEventDef EV_Thread_TerminateThread( "terminate", "d" );
-const idEventDef EV_Thread_Pause( "pause", NULL );
 const idEventDef EV_Thread_Wait( "wait", "f" );
 const idEventDef EV_Thread_WaitFrame( "waitFrame" );
+
+/*
+const idEventDef EV_Thread_TerminateThread( "terminate", "d" );
+const idEventDef EV_Thread_Pause( "pause", NULL );
 const idEventDef EV_Thread_WaitFor( "waitFor", "e" );
 const idEventDef EV_Thread_WaitForThread( "waitForThread", "d" );
 const idEventDef EV_Thread_Print( "print", "s" );
@@ -112,13 +114,15 @@ const idEventDef EV_Thread_DebugCircle( "debugCircle", "vvvfdf" );
 const idEventDef EV_Thread_DebugBounds( "debugBounds", "vvvf" );
 const idEventDef EV_Thread_DrawText( "drawText", "svfvdf" );
 const idEventDef EV_Thread_InfluenceActive( "influenceActive", NULL, 'd' );
+*/
 
 CLASS_DECLARATION( idClass, idThread )
 EVENT( EV_Thread_Execute,				idThread::Event_Execute )
-EVENT( EV_Thread_TerminateThread,		idThread::Event_TerminateThread )
-EVENT( EV_Thread_Pause,					idThread::Event_Pause )
 EVENT( EV_Thread_Wait,					idThread::Event_Wait )
 EVENT( EV_Thread_WaitFrame,				idThread::Event_WaitFrame )
+/*
+EVENT( EV_Thread_TerminateThread,		idThread::Event_TerminateThread )
+EVENT( EV_Thread_Pause,					idThread::Event_Pause )
 EVENT( EV_Thread_WaitFor,				idThread::Event_WaitFor )
 EVENT( EV_Thread_WaitForThread,			idThread::Event_WaitForThread )
 EVENT( EV_Thread_Print,					idThread::Event_Print )
@@ -192,6 +196,7 @@ EVENT( EV_Thread_DebugCircle,			idThread::Event_DebugCircle )
 EVENT( EV_Thread_DebugBounds,			idThread::Event_DebugBounds )
 EVENT( EV_Thread_DrawText,				idThread::Event_DrawText )
 EVENT( EV_Thread_InfluenceActive,		idThread::Event_InfluenceActive )
+*/
 END_CLASS
 
 
@@ -200,7 +205,7 @@ END_CLASS
   Script callable events
 
 ***********************************************************************/
-
+#if 0
 /*
 ================
 idThread::Event_TerminateThread
@@ -223,6 +228,7 @@ void idThread::Event_Pause( void )
 {
 	Pause();
 }
+#endif
 
 /*
 ================
@@ -244,6 +250,7 @@ void idThread::Event_WaitFrame( void )
 	WaitFrame();
 }
 
+#if 0
 /*
 ================
 idThread::Event_WaitFor
@@ -1250,5 +1257,7 @@ void idThread::Event_InfluenceActive( void )
 		idThread::ReturnInt( false );
 	}
 }
+
+#endif // #if 0
 
 #endif // #if defined(USE_LUA)

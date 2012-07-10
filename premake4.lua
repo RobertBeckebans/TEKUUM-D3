@@ -738,6 +738,7 @@ end
 		}
 		excludes
 		{
+			"libs/lua/src/linit.c",
 			"libs/lua/src/luac.c",
 		}
 		includedirs

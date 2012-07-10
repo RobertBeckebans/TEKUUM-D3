@@ -119,6 +119,27 @@ idThread::idThread()
 idThread::idThread
 ================
 */
+idThread::idThread( idEntity* self, const char* funcName )
+{
+	assert( self );
+	
+	Init();
+	SetThreadName( self->name );
+
+	// FIXME
+	//interpreter.EnterObjectFunction( self, func, false );
+	
+	if( g_debugScript.GetBool() )
+	{
+		gameLocal.Printf( "%d: create thread (%d) '%s'\n", gameLocal.time, threadNum, threadName.c_str() );
+	}
+}
+
+/*
+================
+idThread::idThread
+================
+*/
 idThread::idThread( idEntity* self, const function_t* func )
 {
 	assert( self );
@@ -208,6 +229,7 @@ idThread::~idThread()
 	{
 		gameLocal.Printf( "%d: end thread (%d) '%s'\n", gameLocal.time, threadNum, threadName.c_str() );
 	}
+
 	threadList.Remove( this );
 	n = threadList.Num();
 	for( i = 0; i < n; i++ )
@@ -316,6 +338,8 @@ void idThread::Init( void )
 	
 	ClearWaitFor();
 	
+	luaThread = lua_newthread( gameLocal.program.GetLuaState() );
+
 	// FIXME
 	//interpreter.SetThread( this );
 }
@@ -578,10 +602,6 @@ idThread::Execute
 */
 bool idThread::Execute( void )
 {
-	// FIXME
-#if 1
-	return false;
-#else
 	idThread*	oldThread;
 	bool		done;
 	
@@ -596,10 +616,36 @@ bool idThread::Execute( void )
 	lastExecuteTime = gameLocal.time;
 	ClearWaitFor();
 
-	done = interpreter.Execute();
+	// FIXME
+
+	//done = interpreter.Execute();
+	int status = lua_resume( luaThread, gameLocal.program.GetLuaState(), 0 );
+	switch( status )
+	{
+		case LUA_OK:
+		{
+			End();
+			/*
+			if( interpreter.terminateOnExit )
+			{
+				PostEventMS( &EV_Remove, 0 );
+			}
+			*/
+
+			done = true;
+			break;
+		}
+
+		case LUA_YIELD:
+			done = false;
+			break;
+	};
+
+	/*
 	if( done )
 	{
 		End();
+		
 		if( interpreter.terminateOnExit )
 		{
 			PostEventMS( &EV_Remove, 0 );
@@ -616,11 +662,11 @@ bool idThread::Execute( void )
 			PostEventMS( &EV_Thread_Execute, gameLocal.msec );
 		}
 	}
+	*/
 	
 	currentThread = oldThread;
 	
 	return done;
-#endif
 }
 
 /*
@@ -853,6 +899,8 @@ idThread::Pause
 void idThread::Pause( void )
 {
 	ClearWaitFor();
+
+	lua_yield( luaThread, 0 );
 
 	// FIXME
 	//interpreter.doneProcessing = true;

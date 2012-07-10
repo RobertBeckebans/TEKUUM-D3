@@ -564,7 +564,7 @@ public:
 	
 	// Techyon BEGIN
 private:
-	byte*										ReserveDefMemory( int size );
+//	byte*										ReserveDefMemory( int size );
 //	idVarDef*									AllocVarDef( idTypeDef* type, const char* name, idVarDef* scope );
 public:
 	// Techyon END
@@ -593,6 +593,8 @@ public:
 	}
 	*/
 	
+	lua_State*									GetLuaState();
+
 	int 										GetReturnedInteger( void );
 	
 	void										ReturnFloat( float value );
@@ -606,6 +608,11 @@ public:
 		return fileList.Num( );
 	}
 };
+
+ID_INLINE lua_State* tyLuaProgram::GetLuaState( void )
+{
+	return luaState;
+}
 
 /*
 ================
