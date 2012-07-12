@@ -249,13 +249,14 @@ void idSoundWorldLocal::ProcessDemoCommand( idDemoFile *readDemo ) {
 		return;
 	}
 
-	soundDemoCommand_t	dc;
-
-	if ( !readDemo->ReadInt( (int&)dc ) ) {
+	// Techyon RB: fixed bad (int&) cast on Linux 64 bit
+	int	dc;
+	if ( !readDemo->ReadInt( dc ) ) {
 		return;
 	}
 
-	switch( dc ) {
+	switch( (soundDemoCommand_t) dc ) {
+	// Techyon END
 	case SCMD_STATE:
 		// we need to protect this from the async thread
 		// other instances of calling idSoundWorldLocal::ReadFromSaveGame do this while the sound code is muted
@@ -1215,10 +1216,17 @@ void idSoundWorldLocal::WriteToSaveGameSoundChannel( idFile *saveGame, idSoundCh
 	saveGame->WriteInt( ch->triggerGame44kHzTime );
 	WriteToSaveGameSoundShaderParams( saveGame, &ch->parms );
 	// Techyon RB: 64 bit fixes, changed int to intptr_t
-	saveGame->WriteInt( (intptr_t)ch->leadinSample );
+#if defined(__x86_64__)
+	saveGame->WriteInt( 0 /* (intptr_t)ch->leadinSample */ );
 	saveGame->WriteInt( ch->triggerChannel );
-	saveGame->WriteInt( (intptr_t)ch->soundShader );
-	saveGame->WriteInt( (intptr_t)ch->decoder );
+	saveGame->WriteInt( (int&)ch->soundShader );
+	saveGame->WriteInt( 0 /* (intptr_t)ch->decoder */ );
+#else
+	saveGame->WriteInt( ch->leadinSample );
+	saveGame->WriteInt( ch->triggerChannel );
+	saveGame->WriteInt( ch->soundShader );
+	saveGame->WriteInt( ch->decoder );
+#endif
 	// Techyon END
 	saveGame->WriteFloat(ch->diversity );
 	saveGame->WriteFloat(ch->lastVolume );
@@ -1314,7 +1322,9 @@ void idSoundWorldLocal::ReadFromSaveGame( idFile *savefile ) {
 
 			idSoundChannel *chan = &def->channels[channel];
 
-			if ( chan->decoder != NULL ) {
+			// Techyon RB: we set the chan->decoder to NULL so allocate a new decoder
+			if ( chan->decoder == NULL ) {
+			// Techyon END
 				// The pointer in the save file is not valid, so we grab a new one
 				chan->decoder = idSampleDecoder::Alloc();
 			}
@@ -1392,10 +1402,37 @@ void idSoundWorldLocal::ReadFromSaveGameSoundChannel( idFile *saveGame, idSoundC
 	saveGame->ReadInt( ch->trigger44kHzTime );
 	saveGame->ReadInt( ch->triggerGame44kHzTime );
 	ReadFromSaveGameSoundShaderParams( saveGame, &ch->parms );
+	
+	// Techyon RB: 64 bit fixes
+#if defined(__x86_64__)
+	int dummy, soundShader;
+
+	saveGame->ReadInt( dummy );
+	ch->leadinSample = NULL;
+	saveGame->ReadInt( ch->triggerChannel );
+	saveGame->ReadInt( (int&)ch->soundShader );
+	saveGame->ReadInt( dummy );
+	ch->decoder = NULL;
+
+#if 0
+	idStr soundShaderStr;
+	if ( soundShader && saveGame->ReadString( soundShaderStr ) ) {
+		ch->soundShader = declManager->FindSound( soundShaderStr );
+	} else {
+		ch->soundShader = NULL;
+	}
+#else
+	//ch->soundShader = NULL;
+#endif
+
+#else
 	saveGame->ReadInt( (int&)ch->leadinSample );
 	saveGame->ReadInt( ch->triggerChannel );
 	saveGame->ReadInt( (int&)ch->soundShader );
-	saveGame->ReadInt( (int&)ch->decoder );
+	saveGame->ReadInt( (int&)ch->decoder );	
+
+#endif
+	// Techyon END
 	saveGame->ReadFloat(ch->diversity );
 	saveGame->ReadFloat(ch->lastVolume );
 	for (int m = 0; m < 6; m++)

@@ -979,7 +979,9 @@ void idSoundEmitterLocal::StopSound( const s_channelType channel ) {
 		chan->ALStop();
 
 		// if this was an onDemand sound, purge the sample now
-		if ( chan->leadinSample->onDemand ) {
+		// Techyon RB: added missing chan->leadinSample != NULL test
+		if ( chan->leadinSample != NULL && chan->leadinSample->onDemand ) {
+		// Techyon END
 			chan->leadinSample->PurgeSoundSample();
 		}
 
