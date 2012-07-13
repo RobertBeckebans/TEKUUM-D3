@@ -739,6 +739,7 @@ end
 		excludes
 		{
 			"libs/lua/src/linit.c",
+			"libs/lua/src/lua.c",
 			"libs/lua/src/luac.c",
 		}
 		includedirs
@@ -1124,6 +1125,7 @@ if not _OPTIONS["android"] then
 			"GL",
 			"dl",
 			"idlib",
+			"rt",
 		}
 		linkoptions
 		{
