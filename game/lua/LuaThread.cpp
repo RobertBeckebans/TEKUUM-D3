@@ -624,26 +624,52 @@ bool idThread::Execute( void )
 	
 	//done = interpreter.Execute();
 	int status = lua_resume( luaThread, gameLocal.program.GetLuaState(), 0 );
+	//int status = lua_status( luaThread );
 	switch( status )
 	{
-		case LUA_OK:
-		{
-			End();
-			/*
-			if( interpreter.terminateOnExit )
-			{
-				PostEventMS( &EV_Remove, 0 );
-			}
-			*/
-			
-			done = true;
-			break;
-		}
-		
 		case LUA_YIELD:
+			//lua_pushliteral( L, "suspended" );
 			done = false;
 			break;
-	};
+		case LUA_OK:
+		{
+			//End();
+
+			lua_Debug ar;
+
+			/* does it have frames? */
+			if( lua_getstack( luaThread, 0, &ar ) > 0 ) 
+			{
+				//lua_pushliteral( L, "normal" ); /* it is running */
+				done = false;
+			}
+			else if( lua_gettop( luaThread ) == 0 )
+			{
+				//lua_pushliteral( L, "dead" );
+				done = true;
+			}
+			else
+			{
+				//lua_pushliteral( L, "suspended" ); /* initial state */
+				done = true;
+			}
+			break;
+		}
+		default:  /* some error occurred */
+			//lua_pushliteral( L, "dead" );
+			done = true;
+			break;
+	}
+
+	if( done )
+	{
+		//End();
+	
+		//if( interpreter.terminateOnExit )
+		{
+			PostEventMS( &EV_Remove, 0 );
+		}
+	}
 	
 	/*
 	if( done )
