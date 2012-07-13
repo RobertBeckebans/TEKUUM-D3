@@ -219,9 +219,14 @@
 @@ luai_writestringerror defines how to print error messages.
 ** (A format string with one argument is enough for Lua...)
 */
+// Techyon RB: use engine common->Error instead of stderr
+#if 0
 #define luai_writestringerror(s,p) \
 	(fprintf(stderr, (s), (p)), fflush(stderr))
-
+#else
+void luai_writestringerror( const char* fmt, ... );
+#endif
+// Techyon END
 
 /*
 @@ LUAI_MAXSHORTLEN is the maximum length for short strings, that is,

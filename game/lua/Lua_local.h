@@ -34,7 +34,7 @@ If you have questions concerning this license or the applicable additional terms
 
 extern "C"
 {
-int			luaopen_sys( lua_State* L );
+	int			luaopen_sys( lua_State* L );
 }
 
 

@@ -77,7 +77,7 @@ bool idThread::BeginMultiFrameEvent( idEntity* ent, const idEventDef* event )
 	{
 		gameLocal.Error( "idThread::BeginMultiFrameEvent called without a current thread" );
 	}
-
+	
 	// FIXME
 	//return currentThread->interpreter.BeginMultiFrameEvent( ent, event );
 	return false;
@@ -94,7 +94,7 @@ void idThread::EndMultiFrameEvent( idEntity* ent, const idEventDef* event )
 	{
 		gameLocal.Error( "idThread::EndMultiFrameEvent called without a current thread" );
 	}
-
+	
 	// FIXME
 	//currentThread->interpreter.EndMultiFrameEvent( ent, event );
 }
@@ -125,7 +125,7 @@ idThread::idThread( idEntity* self, const char* funcName )
 	
 	Init();
 	SetThreadName( self->name );
-
+	
 	// FIXME
 	//interpreter.EnterObjectFunction( self, func, false );
 	
@@ -146,9 +146,11 @@ idThread::idThread( idEntity* self, const function_t* func )
 	
 	Init();
 	SetThreadName( self->name );
-
+	
 	// FIXME
 	//interpreter.EnterObjectFunction( self, func, false );
+	
+	lua_getglobal( luaThread, func->Name() );
 	
 	if( g_debugScript.GetBool() )
 	{
@@ -167,9 +169,11 @@ idThread::idThread( const function_t* func )
 	
 	Init();
 	SetThreadName( func->Name() );
-
+	
 	// FIXME
 	//interpreter.EnterFunction( func, false );
+	
+	lua_getglobal( luaThread, func->Name() );
 	
 	if( g_debugScript.GetBool() )
 	{
@@ -203,7 +207,7 @@ idThread::idThread
 idThread::idThread( idInterpreter* source, idEntity* self, const function_t* func, int args )
 {
 	assert( self );
-	
+
 	Init();
 	SetThreadName( self->name );
 	interpreter.ThreadCall( source, func, args );
@@ -229,7 +233,7 @@ idThread::~idThread()
 	{
 		gameLocal.Printf( "%d: end thread (%d) '%s'\n", gameLocal.time, threadNum, threadName.c_str() );
 	}
-
+	
 	threadList.Remove( this );
 	n = threadList.Num();
 	for( i = 0; i < n; i++ )
@@ -339,7 +343,7 @@ void idThread::Init( void )
 	ClearWaitFor();
 	
 	luaThread = lua_newthread( gameLocal.program.GetLuaState() );
-
+	
 	// FIXME
 	//interpreter.SetThread( this );
 }
@@ -537,7 +541,7 @@ void idThread::End( void )
 {
 	// Tell thread to die.  It will exit on its own.
 	Pause();
-
+	
 	// FIXME
 	//interpreter.threadDying	= true;
 }
@@ -615,9 +619,9 @@ bool idThread::Execute( void )
 	
 	lastExecuteTime = gameLocal.time;
 	ClearWaitFor();
-
+	
 	// FIXME
-
+	
 	//done = interpreter.Execute();
 	int status = lua_resume( luaThread, gameLocal.program.GetLuaState(), 0 );
 	switch( status )
@@ -631,21 +635,21 @@ bool idThread::Execute( void )
 				PostEventMS( &EV_Remove, 0 );
 			}
 			*/
-
+			
 			done = true;
 			break;
 		}
-
+		
 		case LUA_YIELD:
 			done = false;
 			break;
 	};
-
+	
 	/*
 	if( done )
 	{
 		End();
-		
+	
 		if( interpreter.terminateOnExit )
 		{
 			PostEventMS( &EV_Remove, 0 );
@@ -717,7 +721,7 @@ void idThread::CallFunction( idEntity* self, const function_t* func, bool clearS
 {
 	assert( self );
 	ClearWaitFor();
-
+	
 	// FIXME
 	//interpreter.EnterObjectFunction( self, func, clearStack );
 }
@@ -807,8 +811,7 @@ void idThread::Error( const char* fmt, ... ) const
 	vsprintf( text, fmt, argptr );
 	va_end( argptr );
 	
-	// FIXME
-	//interpreter.Error( text );
+	common->Error( "Thread '%s': %s\n", GetThreadName(), text );
 }
 
 /*
@@ -825,8 +828,7 @@ void idThread::Warning( const char* fmt, ... ) const
 	vsprintf( text, fmt, argptr );
 	va_end( argptr );
 	
-	// FIXME
-	//interpreter.Warning( text );
+	common->Warning( "Thread '%s' : %s", GetThreadName(), text );
 }
 
 /*
@@ -899,9 +901,9 @@ idThread::Pause
 void idThread::Pause( void )
 {
 	ClearWaitFor();
-
+	
 	lua_yield( luaThread, 0 );
-
+	
 	// FIXME
 	//interpreter.doneProcessing = true;
 }

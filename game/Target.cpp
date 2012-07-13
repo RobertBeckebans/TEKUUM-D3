@@ -1658,7 +1658,7 @@ void idTarget_CallObjectFunction::Event_Activate( idEntity* activator )
 				gameLocal.Error( "Function '%s' on entity '%s' is the wrong type for function call from '%s'", funcName, ent->name.c_str(), name.c_str() );
 			}
 #endif
-
+			
 			// create a thread and call the function
 			thread = new idThread();
 			thread->CallFunction( ent, func, true );

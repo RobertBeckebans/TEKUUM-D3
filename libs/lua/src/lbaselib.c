@@ -12,14 +12,15 @@
 #include <string.h>
 
 #define lbaselib_c
-#define LUA_LIB
+//#define LUA_LIB
 
 #include "lua.h"
 
 #include "lauxlib.h"
 #include "lualib.h"
 
-
+// Techyon BEGIN
+#if defined(LUA_LIB)
 static int luaB_print( lua_State* L )
 {
 	int n = lua_gettop( L ); /* number of arguments */
@@ -43,6 +44,8 @@ static int luaB_print( lua_State* L )
 	luai_writeline();
 	return 0;
 }
+#endif
+// Techyon END
 
 
 #define SPACECHARS	" \f\n\r\t\v"
@@ -493,7 +496,9 @@ static const luaL_Reg base_funcs[] =
 	{"next", luaB_next},
 	{"pairs", luaB_pairs},
 	{"pcall", luaB_pcall},
+#if defined(LUA_LIB)
 	{"print", luaB_print},
+#endif
 	{"rawequal", luaB_rawequal},
 	{"rawlen", luaB_rawlen},
 	{"rawget", luaB_rawget},

@@ -56,36 +56,28 @@ class function_t
 public:
 	function_t();
 	
-	size_t				Allocated( void ) const;
+//	size_t				Allocated( void ) const;
 	void				SetName( const char* name );
 	const char*			Name( void ) const;
 	void				Clear( void );
 	
 private:
 	idStr 				name;
-public:
-	const idEventDef*	eventdef;
-//	idVarDef*			def;
-//	const idTypeDef*	type;
-	int 				firstStatement;
-	int 				numStatements;
-	int 				parmTotal;
-	int 				locals; 			// total ints of parms + locals
-	int					filenum; 			// source file defined in
-	idList<int>			parmSize;
+	/*
+	public:
+		const idEventDef*	eventdef;
+	//	idVarDef*			def;
+	//	const idTypeDef*	type;
+		int 				firstStatement;
+		int 				numStatements;
+		int 				parmTotal;
+		int 				locals; 			// total ints of parms + locals
+		int					filenum; 			// source file defined in
+		idList<int>			parmSize;
+	*/
 };
 
-/*
-typedef union eval_s
-{
-	const char*			stringPtr;
-	float				_float;
-	float				vector[ 3 ];
-	function_t*			function;
-	int 				_int;
-	int 				entity;
-} eval_t;
-*/
+
 
 /***********************************************************************
 
@@ -102,48 +94,48 @@ private:
 	etype_t						type;
 	idStr 						name;
 	int							size;
-	
+
 	// function types are more complex
 	idTypeDef*					auxType;					// return type
 	idList<idTypeDef*>			parmTypes;
 	idStrList					parmNames;
 	idList<const function_t*>	functions;
-	
+
 public:
 //	idVarDef*					def;						// a def that points to this type
-	
+
 	idTypeDef( const idTypeDef& other );
 //	idTypeDef( etype_t etype, idVarDef* edef, const char* ename, int esize, idTypeDef* aux );
 	void				operator=( const idTypeDef& other );
 	size_t				Allocated( void ) const;
-	
+
 	bool				Inherits( const idTypeDef* basetype ) const;
 	bool				MatchesType( const idTypeDef& matchtype ) const;
 	bool				MatchesVirtualFunction( const idTypeDef& matchfunc ) const;
 	void				AddFunctionParm( idTypeDef* parmtype, const char* name );
 	void				AddField( idTypeDef* fieldtype, const char* name );
-	
+
 	void				SetName( const char* newname );
 	const char*			Name( void ) const;
-	
+
 	etype_t				Type( void ) const;
 	int					Size( void ) const;
-	
+
 	idTypeDef*			SuperClass( void ) const;
-	
+
 	idTypeDef*			ReturnType( void ) const;
 	void				SetReturnType( idTypeDef* type );
-	
+
 	idTypeDef*			FieldType( void ) const;
 	void				SetFieldType( idTypeDef* type );
-	
+
 	idTypeDef*			PointerType( void ) const;
 	void				SetPointerType( idTypeDef* type );
-	
+
 	int					NumParameters( void ) const;
 	idTypeDef*			GetParmType( int parmNumber ) const;
 	const char*			GetParmName( int parmNumber ) const;
-	
+
 	int					NumFunctions( void ) const;
 	int					GetFunctionNumber( const function_t* func ) const;
 	const function_t*	GetFunction( int funcNumber ) const;
@@ -164,7 +156,7 @@ class idScriptObject
 {
 private:
 //	idTypeDef*					type;
-	
+
 public:
 	byte*						data;
 	
@@ -312,181 +304,6 @@ public:
 	idCompileError( const char* text ) : idException( text ) {}
 };
 
-/***********************************************************************
-
-idVarDef
-
-Define the name, type, and location of variables, functions, and objects
-defined in script.
-
-***********************************************************************/
-
-/*
-typedef union varEval_s
-{
-	idScriptObject**			objectPtrPtr;
-	char*					stringPtr;
-	float*					floatPtr;
-	idVec3*					vectorPtr;
-	function_t*				functionPtr;
-	int*					 intPtr;
-	byte*					bytePtr;
-	int*					 entityNumberPtr;
-	int						virtualFunction;
-	int						jumpOffset;
-	int						stackOffset;		// offset in stack for local variables
-	int						argSize;
-	varEval_s*				evalPtr;
-	int						ptrOffset;
-} varEval_t;
-
-class idVarDefName;
-
-class idVarDef
-{
-	friend class idVarDefName;
-	
-public:
-	int						num;
-	varEval_t				value;
-	idVarDef* 				scope; 			// function, namespace, or object the var was defined in
-	int						numUsers;		// number of users if this is a constant
-	
-	typedef enum
-	{
-		uninitialized, initializedVariable, initializedConstant, stackVariable
-	} initialized_t;
-	
-	initialized_t			initialized;
-	
-public:
-	idVarDef( idTypeDef* typeptr = NULL );
-	~idVarDef();
-	
-	const char* 			Name( void ) const;
-	const char* 			GlobalName( void ) const;
-	
-	void					SetTypeDef( idTypeDef* _type )
-	{
-		typeDef = _type;
-	}
-	idTypeDef* 				TypeDef( void ) const
-	{
-		return typeDef;
-	}
-	etype_t					Type( void ) const
-	{
-		return ( typeDef != NULL ) ? typeDef->Type() : ev_void;
-	}
-	
-	int						DepthOfScope( const idVarDef* otherScope ) const;
-	
-	void					SetFunction( function_t* func );
-	void					SetObject( idScriptObject* object );
-	void					SetValue( const eval_t& value, bool constant );
-	void					SetString( const char* string, bool constant );
-	
-	idVarDef* 				Next( void ) const
-	{
-		return next;    // next var def with same name
-	}
-	
-	void					PrintInfo( idFile* file, int instructionPointer ) const;
-	
-private:
-	idTypeDef* 				typeDef;
-	idVarDefName* 			name;		// name of this var
-	idVarDef* 				next;		// next var with the same name
-};
-*/
-
-/***********************************************************************
-
-  idVarDefName
-
-***********************************************************************/
-
-/*
-class idVarDefName
-{
-public:
-	idVarDefName( void )
-	{
-		defs = NULL;
-	}
-	idVarDefName( const char* n )
-	{
-		name = n;
-		defs = NULL;
-	}
-	
-	const char* 			Name( void ) const
-	{
-		return name;
-	}
-	idVarDef* 				GetDefs( void ) const
-	{
-		return defs;
-	}
-	
-	void					AddDef( idVarDef* def );
-	void					RemoveDef( idVarDef* def );
-	
-private:
-	idStr					name;
-	idVarDef* 				defs;
-};
-*/
-
-/***********************************************************************
-
-  Variable and type defintions
-
-***********************************************************************/
-
-/*
-extern	idTypeDef	type_void;
-extern	idTypeDef	type_scriptevent;
-extern	idTypeDef	type_namespace;
-extern	idTypeDef	type_string;
-extern	idTypeDef	type_float;
-extern	idTypeDef	type_vector;
-extern	idTypeDef	type_entity;
-extern  idTypeDef	type_field;
-extern	idTypeDef	type_function;
-extern	idTypeDef	type_virtualfunction;
-extern  idTypeDef	type_pointer;
-extern	idTypeDef	type_object;
-extern	idTypeDef	type_jumpoffset;	// only used for jump opcodes
-extern	idTypeDef	type_argsize;		// only used for function call and thread opcodes
-extern	idTypeDef	type_boolean;
-
-extern	idVarDef	def_void;
-extern	idVarDef	def_scriptevent;
-extern	idVarDef	def_namespace;
-extern	idVarDef	def_string;
-extern	idVarDef	def_float;
-extern	idVarDef	def_vector;
-extern	idVarDef	def_entity;
-extern	idVarDef	def_field;
-extern	idVarDef	def_function;
-extern	idVarDef	def_virtualfunction;
-extern	idVarDef	def_pointer;
-extern	idVarDef	def_object;
-extern	idVarDef	def_jumpoffset;		// only used for jump opcodes
-extern	idVarDef	def_argsize;		// only used for function call and thread opcodes
-extern	idVarDef	def_boolean;
-
-typedef struct statement_s
-{
-	unsigned short	op;
-	idVarDef*		a;
-	idVarDef*		b;
-	idVarDef*		c;
-	unsigned short	linenumber;
-	unsigned short	file;
-} statement_t;
-*/
 
 /***********************************************************************
 
@@ -503,7 +320,7 @@ class tyLuaProgram
 {
 private:
 	lua_State*									luaState;
-
+	
 	idStrList									fileList;
 	idStr 										filename;
 	int											filenum;
@@ -517,9 +334,9 @@ private:
 //	idList<idVarDefName*>						varDefNames;
 	idHashIndex									varDefNameHash;
 //	idList<idVarDef*>							varDefs;
-	
+
 //	idVarDef*									sysDef;
-	
+
 	int											top_functions;
 	int											top_statements;
 	int											top_types;
@@ -531,7 +348,7 @@ private:
 public:
 //	idVarDef*									returnDef;
 //	idVarDef*									returnStringDef;
-	
+
 	tyLuaProgram();
 	~tyLuaProgram();
 	
@@ -540,6 +357,9 @@ public:
 	bool										Restore( idRestoreGame* savefile );
 	int											CalculateChecksum( void ) const;		// Used to insure program code has not
 	//    changed between savegames
+	
+	static void*								LuaAlloc( void* ud, void* ptr, size_t osize, size_t nsize );
+	static int									LuaPanic( lua_State* L );
 	
 	void										Startup( const char* defaultScript );
 	void										Restart( void );
@@ -561,7 +381,7 @@ public:
 //	idTypeDef*									AllocType( etype_t etype, idVarDef* edef, const char* ename, int esize, idTypeDef* aux );
 //	idTypeDef*									GetType( idTypeDef& type, bool allocate );
 //	idTypeDef*									FindType( const char* name );
-	
+
 	// Techyon BEGIN
 private:
 //	byte*										ReserveDefMemory( int size );
@@ -575,15 +395,18 @@ public:
 //	idVarDef*									FindFreeResultDef( idTypeDef* type, const char* name, idVarDef* scope, const idVarDef* a, const idVarDef* b );
 //	idVarDef*									GetDefList( const char* name ) const;
 //	void										AddDefToNameList( idVarDef* def, const char* name );
-	
-	function_t*									FindFunction( const char* name ) const;						// returns NULL if function not found
+
+	function_t*									FindFunction( const char* name );						// returns NULL if function not found
 //	function_t*									FindFunction( const char* name, const idTypeDef* type ) const;	// returns NULL if function not found
-//	function_t&									AllocFunction( idVarDef* def );
+
+private:
+	function_t&									AllocFunction( const char* name );
 //	function_t*									GetFunction( int index );
 //	int											GetFunctionIndex( const function_t* func );
-	
-	void										SetEntity( const char* name, idEntity* ent );
 
+public:
+	void										SetEntity( const char* name, idEntity* ent );
+	
 	/*
 	statement_t*								AllocStatement( void );
 	statement_t&								GetStatement( int index );
@@ -594,7 +417,7 @@ public:
 	*/
 	
 	lua_State*									GetLuaState();
-
+	
 	int 										GetReturnedInteger( void );
 	
 	void										ReturnFloat( float value );

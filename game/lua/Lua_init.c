@@ -12,6 +12,7 @@
 ** it to suit your needs.
 */
 
+#if defined(USE_LUA)
 
 #define linit_c
 #define LUA_LIB
@@ -81,5 +82,6 @@ LUALIB_API void luaL_openlibs( lua_State* L )
 	lua_pop( L, 1 ); /* remove _PRELOAD table */
 }
 
+#endif // #if defined(USE_LUA)
 
 

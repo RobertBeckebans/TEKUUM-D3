@@ -81,7 +81,7 @@ void idWorldspawn::Spawn( void )
 #else
 	scriptname.SetFileExtension( ".script" );
 #endif
-
+	
 	if( fileSystem->ReadFile( scriptname, NULL, NULL ) > 0 )
 	{
 		gameLocal.program.CompileFile( scriptname );

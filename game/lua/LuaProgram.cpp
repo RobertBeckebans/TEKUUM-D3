@@ -54,10 +54,12 @@ function_t::function_t()
 function_t::Allocated
 ================
 */
+/*
 size_t function_t::Allocated( void ) const
 {
 	return name.Allocated() + parmSize.Allocated();
 }
+*/
 
 /*
 ================
@@ -86,16 +88,18 @@ function_t::Clear
 */
 void function_t::Clear( void )
 {
-	eventdef		= NULL;
+//	eventdef		= NULL;
 //	def				= NULL;
 //	type			= NULL;
+	/*
 	firstStatement	= 0;
 	numStatements	= 0;
 	parmTotal		= 0;
 	locals			= 0;
 	filenum			= 0;
+	*/
 	name.Clear();
-	parmSize.Clear();
+//	parmSize.Clear();
 }
 
 
@@ -155,7 +159,7 @@ void idScriptObject::Save( idSaveGame* savefile ) const
 	
 	// FIXME
 	savefile->WriteString( "" );
-
+	
 	/*
 	if( type == &type_object && data == NULL )
 	{
@@ -200,14 +204,14 @@ void idScriptObject::Restore( idRestoreGame* savefile )
 	// Techyon RB: 64 bit fix, changed size_t to int
 	savefile->ReadInt( size );
 	// Techyon END
-
+	
 	// FIXME
 	/*
 	if( size != type->Size() )
 	{
 		savefile->Error( "idScriptObject::Restore: size of object '%s' doesn't match size in save game.", typeName.c_str() );
 	}
-
+	
 	*/
 	
 	savefile->Read( data, size );
@@ -317,7 +321,7 @@ const char* idScriptObject::GetTypeName( void ) const
 {
 	// FIXME
 	return "<FIXME>";
-
+	
 	//return type->Name();
 }
 
@@ -380,12 +384,12 @@ byte* idScriptObject::GetVariable( const char* name, etype_t etype ) const
 	int				pos;
 	const idTypeDef*	t;
 	const idTypeDef*	parm;
-	
+
 	if( type == &type_object )
 	{
 		return NULL;
 	}
-	
+
 	t = type;
 	do
 	{
@@ -408,7 +412,7 @@ byte* idScriptObject::GetVariable( const char* name, etype_t etype ) const
 				}
 				return &data[ pos ];
 			}
-			
+
 			if( parm->FieldType()->Inherits( &type_object ) )
 			{
 				pos += type_object.Size();
@@ -421,7 +425,7 @@ byte* idScriptObject::GetVariable( const char* name, etype_t etype ) const
 		t = t->SuperClass();
 	}
 	while( t && ( t != &type_object ) );
-	
+
 	return NULL;
 }
 */
@@ -441,10 +445,10 @@ tyLuaProgram::AllocType
 idTypeDef* tyLuaProgram::AllocType( idTypeDef& type )
 {
 	idTypeDef* newtype;
-	
+
 	newtype	= new idTypeDef( type );
 	types.Append( newtype );
-	
+
 	return newtype;
 }
 */
@@ -458,10 +462,10 @@ tyLuaProgram::AllocType
 idTypeDef* tyLuaProgram::AllocType( etype_t etype, idVarDef* edef, const char* ename, int esize, idTypeDef* aux )
 {
 	idTypeDef* newtype;
-	
+
 	newtype	= new idTypeDef( etype, edef, ename, esize, aux );
 	types.Append( newtype );
-	
+
 	return newtype;
 }
 */
@@ -478,7 +482,7 @@ a new one and copies it out.
 idTypeDef* tyLuaProgram::GetType( idTypeDef& type, bool allocate )
 {
 	int i;
-	
+
 	//FIXME: linear search == slow
 	for( i = types.Num() - 1; i >= 0; i-- )
 	{
@@ -487,12 +491,12 @@ idTypeDef* tyLuaProgram::GetType( idTypeDef& type, bool allocate )
 			return types[ i ];
 		}
 	}
-	
+
 	if( !allocate )
 	{
 		return NULL;
 	}
-	
+
 	// allocate a new one
 	return AllocType( type );
 }
@@ -510,7 +514,7 @@ idTypeDef* tyLuaProgram::FindType( const char* name )
 {
 	idTypeDef*	check;
 	int			i;
-	
+
 	for( i = types.Num() - 1; i >= 0; i-- )
 	{
 		check = types[ i ];
@@ -519,7 +523,7 @@ idTypeDef* tyLuaProgram::FindType( const char* name )
 			return check;
 		}
 	}
-	
+
 	return NULL;
 }
 */
@@ -533,7 +537,7 @@ tyLuaProgram::GetDefList
 idVarDef* tyLuaProgram::GetDefList( const char* name ) const
 {
 	int i, hash;
-	
+
 	hash = varDefNameHash.GenerateKey( name, true );
 	for( i = varDefNameHash.First( hash ); i != -1; i = varDefNameHash.Next( i ) )
 	{
@@ -555,7 +559,7 @@ tyLuaProgram::AddDefToNameList
 void tyLuaProgram::AddDefToNameList( idVarDef* def, const char* name )
 {
 	int i, hash;
-	
+
 	hash = varDefNameHash.GenerateKey( name, true );
 	for( i = varDefNameHash.First( hash ); i != -1; i = varDefNameHash.Next( i ) )
 	{
@@ -587,9 +591,9 @@ byte* tyLuaProgram::ReserveDefMemory( int size )
 		gameLocal.Error( "Exceeded global memory size (%zd bytes)", sizeof( variables ) );
 #endif
 	}
-	
+
 	memset( mem, 0, size );
-	
+
 	return mem;
 }
 */
@@ -604,10 +608,10 @@ idVarDef* tyLuaProgram::AllocVarDef( idTypeDef* type, const char* name, idVarDef
 	def->scope		= scope;
 	def->numUsers	= 1;
 	def->num		= varDefs.Append( def );
-	
+
 	// add the def to the list with defs with this name and set the name pointer
 	AddDefToNameList( def, name );
-	
+
 	return def;
 }
 */
@@ -627,10 +631,10 @@ idVarDef* tyLuaProgram::AllocDef( idTypeDef* type, const char* name, idVarDef* s
 	idVarDef*	def_x;
 	idVarDef*	def_y;
 	idVarDef*	def_z;
-	
+
 	// allocate a new def
 	def = AllocVarDef( type, name, scope );
-	
+
 	if( ( type->Type() == ev_vector ) || ( ( type->Type() == ev_field ) && ( type->FieldType()->Type() == ev_vector ) ) )
 	{
 		//
@@ -647,22 +651,22 @@ idVarDef* tyLuaProgram::AllocDef( idTypeDef* type, const char* name, idVarDef* s
 		else if( scope->TypeDef()->Inherits( &type_object ) )
 		{
 			idTypeDef	newtype( ev_field, NULL, "float field", 0, &type_float );
-			
+
 			// Techyon RB: changed local type to ftype
 			idTypeDef*	ftype = GetType( newtype, true );
-			
+
 			// set the value to the variable's position in the object
 			def->value.ptrOffset = scope->TypeDef()->Size();
-			
+
 			// make automatic defs for the vectors elements
 			// origin can be accessed as origin_x, origin_y, and origin_z
 			sprintf( element, "%s_x", def->Name() );
 			def_x = AllocDef( ftype, element, scope, constant );
-			
+
 			sprintf( element, "%s_y", def->Name() );
 			def_y = AllocDef( ftype, element, scope, constant );
 			def_y->value.ptrOffset = def_x->value.ptrOffset + sizeof( float );
-			
+
 			sprintf( element, "%s_z", def->Name() );
 			def_z = AllocDef( ftype, element, scope, constant );
 			def_z->value.ptrOffset = def_y->value.ptrOffset + sizeof( float );
@@ -673,18 +677,18 @@ idVarDef* tyLuaProgram::AllocDef( idTypeDef* type, const char* name, idVarDef* s
 			// Techyon RB: from dhewm3
 			idTypeDef	newtype( ev_float, &def_float, "vector float", 0, NULL );
 			idTypeDef*	ftype = GetType( newtype, true );
-			
+
 			// make automatic defs for the vectors elements
 			// origin can be accessed as origin_x, origin_y, and origin_z
 			sprintf( element, "%s_x", def->Name() );
 			def_x = AllocVarDef( ftype, element, scope );
-			
+
 			sprintf( element, "%s_y", def->Name() );
 			def_y = AllocVarDef( ftype, element, scope );
-			
+
 			sprintf( element, "%s_z", def->Name() );
 			def_z = AllocVarDef( ftype, element, scope );
-			
+
 			// get the memory for the full vector and point the _x, _y and _z
 			// defs at the vector member offsets
 			if( scope->Type() == ev_function )
@@ -693,7 +697,7 @@ idVarDef* tyLuaProgram::AllocDef( idTypeDef* type, const char* name, idVarDef* s
 				def->value.stackOffset	= scope->value.functionPtr->locals;
 				def->initialized		= idVarDef::stackVariable;
 				scope->value.functionPtr->locals += type->Size();
-				
+
 				def_x->value.stackOffset = def->value.stackOffset;
 				def_y->value.stackOffset = def_x->value.stackOffset + sizeof( float );
 				def_z->value.stackOffset = def_y->value.stackOffset + sizeof( float );
@@ -706,7 +710,7 @@ idVarDef* tyLuaProgram::AllocDef( idTypeDef* type, const char* name, idVarDef* s
 				def_y->value.bytePtr	= def_x->value.bytePtr + sizeof( float );
 				def_z->value.bytePtr	= def_y->value.bytePtr + sizeof( float );
 			}
-			
+
 			def_x->initialized = def->initialized;
 			def_y->initialized = def->initialized;
 			def_z->initialized = def->initialized;
@@ -730,7 +734,7 @@ idVarDef* tyLuaProgram::AllocDef( idTypeDef* type, const char* name, idVarDef* s
 		// we have to have them go backwards on the stack
 		def->value.stackOffset	= scope->value.functionPtr->locals;
 		def->initialized		= idVarDef::stackVariable;
-		
+
 		if( type->Inherits( &type_object ) )
 		{
 			// objects only have their entity number on the stack, not the entire object
@@ -749,10 +753,10 @@ idVarDef* tyLuaProgram::AllocDef( idTypeDef* type, const char* name, idVarDef* s
 		// Techyon BEGIN
 		def->value.bytePtr = ReserveDefMemory( def->TypeDef()->Size() );
 		// Techyon END
-		
+
 		//memset( def->value.bytePtr, 0, def->TypeDef()->Size() );
 	}
-	
+
 	return def;
 }
 */
@@ -771,7 +775,7 @@ idVarDef* tyLuaProgram::GetDef( const idTypeDef* type, const char* name, const i
 	idVarDef*		bestDef;
 	int				bestDepth;
 	int				depth;
-	
+
 	bestDepth = 0;
 	bestDef = NULL;
 	for( def = GetDefList( name ); def != NULL; def = def->Next() )
@@ -794,14 +798,14 @@ idVarDef* tyLuaProgram::GetDef( const idTypeDef* type, const char* name, const i
 		{
 			depth = 1;
 		}
-		
+
 		if( !bestDef || ( depth < bestDepth ) )
 		{
 			bestDepth = depth;
 			bestDef = def;
 		}
 	}
-	
+
 	// see if the name is already in use for another type
 	if( bestDef && type && ( bestDef->TypeDef() != type ) )
 	{
@@ -811,7 +815,7 @@ idVarDef* tyLuaProgram::GetDef( const idTypeDef* type, const char* name, const i
 		gameLocal.Error( "Type mismatch on redeclaration of %s", name );
 #endif
 	}
-	
+
 	return bestDef;
 }
 */
@@ -826,25 +830,25 @@ void tyLuaProgram::FreeDef( idVarDef* def, const idVarDef* scope )
 {
 	idVarDef* e;
 	int i;
-	
+
 	if( def->Type() == ev_vector )
 	{
 		idStr name;
-		
+
 		sprintf( name, "%s_x", def->Name() );
 		e = GetDef( NULL, name, scope );
 		if( e )
 		{
 			FreeDef( e, scope );
 		}
-		
+
 		sprintf( name, "%s_y", def->Name() );
 		e = GetDef( NULL, name, scope );
 		if( e )
 		{
 			FreeDef( e, scope );
 		}
-		
+
 		sprintf( name, "%s_z", def->Name() );
 		e = GetDef( NULL, name, scope );
 		if( e )
@@ -852,13 +856,13 @@ void tyLuaProgram::FreeDef( idVarDef* def, const idVarDef* scope )
 			FreeDef( e, scope );
 		}
 	}
-	
+
 	varDefs.RemoveIndex( def->num );
 	for( i = def->num; i < varDefs.Num(); i++ )
 	{
 		varDefs[ i ]->num = i;
 	}
-	
+
 	delete def;
 }
 */
@@ -872,7 +876,7 @@ tyLuaProgram::FindFreeResultDef
 idVarDef* tyLuaProgram::FindFreeResultDef( idTypeDef* type, const char* name, idVarDef* scope, const idVarDef* a, const idVarDef* b )
 {
 	idVarDef* def;
-	
+
 	for( def = GetDefList( name ); def != NULL; def = def->Next() )
 	{
 		if( def == a || def == b )
@@ -893,7 +897,7 @@ idVarDef* tyLuaProgram::FindFreeResultDef( idTypeDef* type, const char* name, id
 		}
 		return def;
 	}
-	
+
 	return AllocDef( type, name, scope, false );
 }
 */
@@ -909,18 +913,33 @@ Returns 0 if function not found.
 Returns >0 if function found.
 ================
 */
-function_t* tyLuaProgram::FindFunction( const char* name ) const
+function_t* tyLuaProgram::FindFunction( const char* name )
 {
 	lua_getglobal( luaState, name );
 	if(	!lua_isfunction( luaState, -1 ) )
 	{
 		lua_pop( luaState, 1 );
 		gameLocal.Printf( "FindFunction: %s should be a function\n", name );
-        return NULL;
-    }
-
+		return NULL;
+	}
+	
 	lua_pop( luaState, 1 );
-
+	
+	// FIXME replace slow linear lookup
+	int i;
+	for( i = 0; i < functions.Num(); i++ )
+	{
+		const function_t* func = &functions[ i ];
+		if( idStr::Cmp( name, func->Name() ) == 0 )
+		{
+			// skip eventdefs
+			continue;
+		}
+	}
+	
+	AllocFunction( name );
+	return &functions[ i ];
+	
 #if 0
 	int			start;
 	int			pos;
@@ -987,7 +1006,7 @@ function_t* tyLuaProgram::FindFunction( const char* name, const idTypeDef* type 
 {
 	const idVarDef*	tdef;
 	const idVarDef*	def;
-	
+
 	// look for the function
 	def = NULL;
 	for( tdef = type->def; tdef != &def_object; tdef = tdef->TypeDef()->SuperClass()->def )
@@ -998,7 +1017,7 @@ function_t* tyLuaProgram::FindFunction( const char* name, const idTypeDef* type 
 			return def->value.functionPtr;
 		}
 	}
-	
+
 	return NULL;
 }
 */
@@ -1008,8 +1027,7 @@ function_t* tyLuaProgram::FindFunction( const char* name, const idTypeDef* type 
 tyLuaProgram::AllocFunction
 ================
 */
-/*
-function_t& tyLuaProgram::AllocFunction( idVarDef* def )
+function_t& tyLuaProgram::AllocFunction( const char* name )
 {
 	if( functions.Num() >= functions.Max() )
 	{
@@ -1022,22 +1040,23 @@ function_t& tyLuaProgram::AllocFunction( idVarDef* def )
 	
 	// fill in the dfunction
 	function_t& func	= *functions.Alloc();
-	func.eventdef		= NULL;
-	func.def			= def;
-	func.type			= def->TypeDef();
+//	func.eventdef		= NULL;
+//	func.def			= def;
+//	func.type			= def->TypeDef();
+	/*
 	func.firstStatement	= 0;
 	func.numStatements	= 0;
 	func.parmTotal		= 0;
 	func.locals			= 0;
 	func.filenum		= filenum;
 	func.parmSize.SetGranularity( 1 );
-	func.SetName( def->GlobalName() );
+	*/
+	func.SetName( name );
 	
-	def->SetFunction( &func );
-	
+//	def->SetFunction( &func );
+
 	return func;
 }
-*/
 
 /*
 ================
@@ -1048,7 +1067,7 @@ void tyLuaProgram::SetEntity( const char* name, idEntity* ent )
 {
 	/*
 	FIXME
-
+	
 	idVarDef*	def;
 	idStr		defName( "$" );
 	
@@ -1090,6 +1109,29 @@ statement_t* tyLuaProgram::AllocStatement( void )
 }
 */
 
+void* tyLuaProgram::LuaAlloc( void* ud, void* ptr, size_t osize, size_t nsize )
+{
+	( void )ud;
+	( void )osize; /* not used */
+	if( nsize == 0 )
+	{
+		free( ptr );
+		return NULL;
+	}
+	else
+		return realloc( ptr, nsize );
+}
+
+int tyLuaProgram::LuaPanic( lua_State* L )
+{
+	//luai_writestringerror( "PANIC: unprotected error in call to Lua API (%s)\n", lua_tostring( L, -1 ) );
+	gameLocal.Error( "PANIC: unprotected error in call to Lua API (%s)\n", lua_tostring( L, -1 ) );
+	return 0;  /* return to Lua to abort */
+}
+
+
+
+
 /*
 ==============
 tyLuaProgram::BeginCompilation
@@ -1106,14 +1148,19 @@ void tyLuaProgram::BeginCompilation( void )
 #endif
 	{
 		// TODO improve
-		luaState = luaL_newstate();
-
+		//luaState = luaL_newstate();
+		luaState = lua_newstate( LuaAlloc, NULL );
+		if( luaState )
+		{
+			lua_atpanic( luaState, &LuaPanic );
+		}
+		
 		luaL_openlibs( luaState );
-
+		
 		// register Lua standard libs
 		//luaopen_base( luaState );
 		//luaopen_string( luaState );
-
+		
 		// TODO register custom libs
 		//luaopen_sys( luaState );
 		//luaopen_entity( luaState );
@@ -1267,11 +1314,11 @@ void tyLuaProgram::CompileStats( void )
 //	{
 //		memused += types[ i ]->Allocated();
 //	}
-	
+
 	funcMem = functions.MemoryUsed();
 	for( i = 0; i < functions.Num(); i++ )
 	{
-		funcMem += functions[ i ].Allocated();
+//		funcMem += functions[ i ].Allocated();
 	}
 	
 	memallocated = funcMem + memused + sizeof( tyLuaProgram );
@@ -1303,17 +1350,17 @@ bool tyLuaProgram::CompileText( const char* source, const char* text, bool conso
 	int			i;
 	idVarDef*	def;
 	idStr		ospath;
-	
+
 	// use a full os path for GetFilenum since it calls OSPathToRelativePath to convert filenames from the parser
 	ospath = fileSystem->RelativePathToOSPath( source );
 	filenum = GetFilenum( ospath );
-	
+
 #if defined(USE_EXCEPTIONS)
 	try
 #endif
 	{
 		compiler.CompileFile( text, filename, console );
-		
+
 		// check to make sure all functions prototyped have code
 		for( i = 0; i < varDefs.Num(); i++ )
 		{
@@ -1345,12 +1392,12 @@ bool tyLuaProgram::CompileText( const char* source, const char* text, bool conso
 		}
 	};
 #endif
-	
+
 	if( !console )
 	{
 		CompileStats();
 	}
-	
+
 	return true;
 }
 */
@@ -1364,19 +1411,19 @@ tyLuaProgram::CompileFunction
 const function_t* tyLuaProgram::CompileFunction( const char* functionName, const char* text )
 {
 	bool result;
-	
+
 	result = CompileText( functionName, text, false );
-	
+
 	if( g_disasm.GetBool() )
 	{
 		Disassemble();
 	}
-	
+
 	if( !result )
 	{
 		gameLocal.Error( "Compile failed." );
 	}
-	
+
 	return FindFunction( functionName );
 }
 */
@@ -1389,7 +1436,6 @@ tyLuaProgram::CompileFile
 void tyLuaProgram::CompileFile( const char* filename )
 {
 	char* src;
-	bool result;
 	
 	if( fileSystem->ReadFile( filename, ( void** )&src, NULL ) < 0 )
 	{
@@ -1397,7 +1443,12 @@ void tyLuaProgram::CompileFile( const char* filename )
 	}
 	
 	//result = CompileText( filename, src, false );
-	result = luaL_loadbuffer( luaState, src, strlen(src), filename );
+	int result = luaL_loadbuffer( luaState, src, strlen( src ), filename );
+	if( result == LUA_ERRSYNTAX )
+	{
+		lua_pop( luaState, 1 );
+		gameLocal.Error( "Compile of file %s failed: %s ", filename, lua_tostring( luaState, -1 ) );
+	}
 	
 	fileSystem->FreeFile( src );
 	
@@ -1410,7 +1461,7 @@ void tyLuaProgram::CompileFile( const char* filename )
 	{
 		gameLocal.Error( "Compile failed in file %s.", filename );
 	}
-
+	
 	if( lua_pcall( luaState, 0, 0, 0 ) )
 	{
 		gameLocal.Error( "Cannot pcall: %s", lua_tostring( luaState, -1 ) );
@@ -1425,7 +1476,7 @@ tyLuaProgram::FreeData
 void tyLuaProgram::FreeData( void )
 {
 	int i;
-
+	
 	if( luaState )
 	{
 		lua_close( luaState );
@@ -1436,14 +1487,14 @@ void tyLuaProgram::FreeData( void )
 //	varDefs.DeleteContents( true );
 //	varDefNames.DeleteContents( true );
 //	varDefNameHash.Free();
-	
+
 //	returnDef		= NULL;
 //	returnStringDef = NULL;
 //	sysDef			= NULL;
-	
+
 	// free any special types we've created
 //	types.DeleteContents( true );
-	
+
 	filenum = 0;
 	
 	numVariables = 0;
@@ -1606,7 +1657,7 @@ int tyLuaProgram::CalculateChecksum( void ) const
 	for( i = 0; i < statements.Num(); i++ )
 	{
 		statementList[i].op = statements[i].op;
-		
+	
 		if( statements[i].a )
 		{
 			statementList[i].a = statements[i].a->num;
@@ -1631,7 +1682,7 @@ int tyLuaProgram::CalculateChecksum( void ) const
 		{
 			statementList[i].c = -1;
 		}
-		
+	
 		statementList[i].linenumber = statements[i].linenumber;
 		statementList[i].file = statements[i].file;
 	}
@@ -1667,13 +1718,13 @@ void tyLuaProgram::Restart( void )
 //		delete types[ i ];
 //	}
 //	types.SetNum( top_types, false );
-	
+
 //	for( i = top_defs; i < varDefs.Num(); i++ )
 //	{
 //		delete varDefs[ i ];
 //	}
 //	varDefs.SetNum( top_defs, false );
-	
+
 	for( i = top_functions; i < functions.Num(); i++ )
 	{
 		functions[ i ].Clear();
@@ -1730,7 +1781,7 @@ tyLuaProgram::tyLuaProgram
 tyLuaProgram::tyLuaProgram()
 {
 	luaState = NULL;
-
+	
 	FreeData();
 }
 

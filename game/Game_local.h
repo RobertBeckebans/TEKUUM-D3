@@ -288,7 +288,7 @@ public:
 	
 	idRandom				random;					// random number generator used throughout the game
 	
-
+	
 #if defined(USE_LUA)
 	tyLuaProgram			program;
 #else

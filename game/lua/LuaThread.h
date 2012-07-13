@@ -82,14 +82,14 @@ class idThread : public idClass
 {
 private:
 	lua_State*					luaThread;
-
+	
 	static idThread*			currentThread;
 	
 	idThread*					waitingForThread;
 	int							waitingFor;
 	int							waitingUntil;
 //	idInterpreter				interpreter;
-	
+
 	idDict						spawnArgs;
 	
 	int 						threadNum;
@@ -111,13 +111,13 @@ private:
 	void						Event_Execute( void );
 	void						Event_SetThreadName( const char* name );
 	
-
+	
 	//
 	// script callable Events
 	//
 	void						Event_Wait( float time );
 	void						Event_WaitFrame( void );
-
+	
 	/*
 	void						Event_TerminateThread( int num );
 	void						Event_Pause( void );
@@ -204,7 +204,7 @@ public:
 	idThread( const function_t* func );
 //	idThread( idInterpreter* source, const function_t* func, int args );
 //	idThread( idInterpreter* source, idEntity* self, const function_t* func, int args );
-	
+
 	virtual						~idThread();
 	
 	// tells the thread manager not to delete this thread when it ends
@@ -280,7 +280,7 @@ public:
 	void						SetThreadNum( int num );
 	int 						GetThreadNum( void );
 	void						SetThreadName( const char* name );
-	const char*					GetThreadName( void );
+	const char*					GetThreadName( void ) const;
 	
 	void						Error( const char* fmt, ... ) const id_attribute( ( format( printf, 2, 3 ) ) );
 	void						Warning( const char* fmt, ... ) const id_attribute( ( format( printf, 2, 3 ) ) );
@@ -332,7 +332,7 @@ ID_INLINE int idThread::GetThreadNum( void )
 idThread::GetThreadName
 ================
 */
-ID_INLINE const char* idThread::GetThreadName( void )
+ID_INLINE const char* idThread::GetThreadName( void ) const
 {
 	return threadName.c_str();
 }
