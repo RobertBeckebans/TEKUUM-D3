@@ -26,8 +26,6 @@ If you have questions concerning this license or the applicable additional terms
 ===========================================================================
 */
 
-#if !defined(USE_LUA)
-
 #include "../../idlib/precompiled.h"
 #pragma hdrstop
 
@@ -2578,6 +2576,3 @@ void idProgram::ReturnEntity( idEntity* ent )
 		*returnDef->value.entityNumberPtr = 0;
 	}
 }
-
-
-#endif // #if !defined(USE_LUA)

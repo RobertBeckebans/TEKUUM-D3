@@ -38,12 +38,8 @@ If you have questions concerning this license or the applicable additional terms
 */
 
 // default scripts
-#if defined(USE_LUA)
-#define SCRIPT_DEFAULT				"script/lua/doom_main.lua"
-#else
 #define SCRIPT_DEFAULTDEFS			"script/doom_defs.script"
 #define SCRIPT_DEFAULT				"script/doom_main.script"
-#endif
 #define SCRIPT_DEFAULTFUNC			"doom_main"
 
 typedef struct

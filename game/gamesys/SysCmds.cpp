@@ -170,7 +170,6 @@ Cmd_Script_f
 */
 void Cmd_Script_f( const idCmdArgs& args )
 {
-#if !defined(USE_LUA)
 	const char* 	script;
 	idStr			text;
 	idStr			funcname;
@@ -203,7 +202,6 @@ void Cmd_Script_f( const idCmdArgs& args )
 			thread->Start();
 		}
 	}
-#endif
 }
 
 /*

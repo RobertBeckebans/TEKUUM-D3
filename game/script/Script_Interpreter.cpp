@@ -26,8 +26,6 @@ If you have questions concerning this license or the applicable additional terms
 ===========================================================================
 */
 
-#if !defined(USE_LUA)
-
 #include "../../idlib/precompiled.h"
 #pragma hdrstop
 
@@ -2116,5 +2114,3 @@ idScriptObject* idInterpreter::GetScriptObject( int entnum ) const
 	return NULL;
 }
 // Techyon END
-
-#endif // #if !defined(USE_LUA)

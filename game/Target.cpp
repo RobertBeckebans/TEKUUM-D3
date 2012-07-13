@@ -1645,20 +1645,14 @@ void idTarget_CallObjectFunction::Event_Activate( idEntity* activator )
 			{
 				gameLocal.Error( "Function '%s' not found on entity '%s' for function call from '%s'", funcName, ent->name.c_str(), name.c_str() );
 			}
-#if defined(USE_LUA)
-			// TODO
-#else
 			if( func->type->NumParameters() != 1 )
 			{
 				gameLocal.Error( "Function '%s' on entity '%s' has the wrong number of parameters for function call from '%s'", funcName, ent->name.c_str(), name.c_str() );
 			}
-			
 			if( !ent->scriptObject.GetTypeDef()->Inherits( func->type->GetParmType( 0 ) ) )
 			{
 				gameLocal.Error( "Function '%s' on entity '%s' is the wrong type for function call from '%s'", funcName, ent->name.c_str(), name.c_str() );
 			}
-#endif
-			
 			// create a thread and call the function
 			thread = new idThread();
 			thread->CallFunction( ent, func, true );

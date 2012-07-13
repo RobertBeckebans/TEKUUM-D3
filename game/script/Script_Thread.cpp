@@ -26,8 +26,6 @@ If you have questions concerning this license or the applicable additional terms
 ===========================================================================
 */
 
-#if !defined(USE_LUA)
-
 #include "../../idlib/precompiled.h"
 #pragma hdrstop
 
@@ -2070,5 +2068,3 @@ void idThread::Event_InfluenceActive( void )
 		idThread::ReturnInt( false );
 	}
 }
-
-#endif // #if !defined(USE_LUA)

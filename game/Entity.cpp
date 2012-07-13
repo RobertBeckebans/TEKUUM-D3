@@ -5194,17 +5194,14 @@ void idEntity::Event_CallFunction( const char* funcname )
 		gameLocal.Error( "Unknown function '%s' in '%s'", funcname, scriptObject.GetTypeName() );
 	}
 	
-#if !defined(USE_LUA)
 	if( func->type->NumParameters() != 1 )
 	{
 		gameLocal.Error( "Function '%s' has the wrong number of parameters for 'callFunction'", funcname );
 	}
-	
 	if( !scriptObject.GetTypeDef()->Inherits( func->type->GetParmType( 0 ) ) )
 	{
 		gameLocal.Error( "Function '%s' is the wrong type for 'callFunction'", funcname );
 	}
-#endif
 	
 	// function args will be invalid after this call
 	thread->CallFunction( this, func, false );
