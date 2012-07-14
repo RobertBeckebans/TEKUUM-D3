@@ -76,7 +76,9 @@ const idEventDef EV_Player_ExitTeleporter( "exitTeleporter" );
 const idEventDef EV_Player_StopAudioLog( "stopAudioLog" );
 const idEventDef EV_Player_HideTip( "hideTip" );
 const idEventDef EV_Player_LevelTrigger( "levelTrigger" );
-const idEventDef EV_SpectatorTouch( "spectatorTouch", "et" );
+// Techyon RB: changed to internal event
+const idEventDef EV_SpectatorTouch( "<spectatorTouch>", "et" );
+// Techyon END
 const idEventDef EV_Player_GetIdealWeapon( "getIdealWeapon", NULL, 's' );
 
 CLASS_DECLARATION( idActor, idPlayer )
