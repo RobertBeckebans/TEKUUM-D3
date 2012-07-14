@@ -301,6 +301,9 @@ public:
 	static idTypeInfo* 			GetClass( const char* name );
 	static void					DisplayInfo_f( const idCmdArgs& args );
 	static void					ListClasses_f( const idCmdArgs& args );
+	// Techyon BEGIN
+	static void					ExportScriptEvents_f( const idCmdArgs& args );
+	// Techyon END
 	static idClass* 			CreateInstance( const char* name );
 	static int					GetNumTypes( void )
 	{
