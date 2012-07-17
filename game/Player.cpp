@@ -4951,7 +4951,11 @@ void idPlayer::UpdateLocation( void )
 		}
 		else
 		{
+#if defined(STANDALONE)
+			hud->SetStateString( "location", common->GetLanguageDict()->GetString( "#str_idPlayer_UpdateLocation_Unidentified" ) );
+#else
 			hud->SetStateString( "location", common->GetLanguageDict()->GetString( "#str_02911" ) );
+#endif
 		}
 	}
 }
