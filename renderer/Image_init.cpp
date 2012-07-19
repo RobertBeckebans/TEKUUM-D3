@@ -566,7 +566,7 @@ static void CreateSquareLight( void )
 		}
 	}
 	
-	R_WriteTGA( "lights/squarelight.tga", buffer, width, height );
+	R_WritePNG( "lights/squarelight.png", buffer, 4, width, height );
 	
 	R_StaticFree( buffer );
 }
@@ -595,7 +595,7 @@ static void CreateFlashOff( void )
 		}
 	}
 	
-	R_WriteTGA( "lights/flashoff.tga", buffer, width, height );
+	R_WritePNG( "lights/flashoff.png", buffer, 4, width, height );
 	
 	R_StaticFree( buffer );
 }
@@ -2280,6 +2280,9 @@ void idImageManager::Init()
 	
 	// set default texture filter modes
 	ChangeTextureFilter();
+
+	//CreateSquareLight();
+	//CreateFlashOff();
 	
 	// create built in images
 	defaultImage = ImageFromFunction( "_default", R_DefaultImage );
