@@ -584,6 +584,7 @@ void RB_T_FillDepthBuffer( const drawSurf_t* surf )
 }
 
 // Techyon BEGIN
+#if !defined(USE_GLES1)
 static void	RB_T_DrawInteractionAsFillDepthBufferWithNormals( const drawInteractionMaterialOnly_t* din )
 {
 	// choose and bind the vertex program
@@ -991,6 +992,7 @@ void RB_T_FillDepthBufferWithNormals( const drawSurf_t* surf )
 		GL_State( GLS_DEPTHFUNC_LESS );
 	}
 }
+#endif // #if !defined(USE_GLES1)
 // Techyon END
 
 
@@ -1035,8 +1037,8 @@ void RB_STD_FillDepthBuffer( drawSurf_t** drawSurfs, int numDrawSurfs )
 		glEnableVertexAttribArrayARB( VA_INDEX_BITANGENT );
 		glEnableVertexAttribArrayARB( VA_INDEX_NORMAL );
 	}
-#endif
 	else
+#endif
 	{
 		glEnableClientState( GL_TEXTURE_COORD_ARRAY );
 	}

@@ -102,8 +102,45 @@ If you have questions concerning this license or the applicable additional terms
 #endif
 
 
+// Techyon BEGIN
+
+// Android
+#if defined(__ANDROID__)
+
+#define BUILD_OS_ID						3
+
+#if defined(__i386__)
+	#define	BUILD_STRING				"android-x86"
+	#define CPUSTRING					"x86"
+	#define CPU_EASYARGS				1
+#elif defined(__ARMEL__)
+	#define	BUILD_STRING				"android-arm"
+	#define CPUSTRING					"arm"
+	#define CPU_EASYARGS				0
+#endif
+
+#define _alloca							alloca
+#define _alloca16( x )					((void *)((((uintptr_t)alloca( (x)+15 )) + 15) & ~15))
+
+#define ALIGN16( x )					x
+#define PACKED							__attribute__((packed))
+
+#define PATHSEPERATOR_STR				"/"
+#define PATHSEPERATOR_CHAR				'/'
+
+#define __cdecl
+#define ASSERT							assert
+
+#define ID_INLINE						inline
+#define ID_STATIC_TEMPLATE
+
+#define assertmem( x, y )
+
+//#endif
+
 // Linux
-#if defined(__linux__)
+#elif defined(__linux__)
+// Techyon END
 
 #define BUILD_OS_ID					2
 
@@ -143,42 +180,6 @@ If you have questions concerning this license or the applicable additional terms
 
 #endif
 
-// Techyon BEGIN
-
-// Android
-#if defined(__ANDROID__)
-
-#define BUILD_OS_ID						3
-
-#if defined(__i386__)
-	#define	BUILD_STRING				"android-x86"
-	#define CPUSTRING					"x86"
-	#define CPU_EASYARGS				1
-#elif defined(__ARMEL__)
-	#define	BUILD_STRING				"android-arm"
-	#define CPUSTRING					"arm"
-	#define CPU_EASYARGS				0
-#endif
-
-#define _alloca							alloca
-#define _alloca16( x )					((void *)((((uintptr_t)alloca( (x)+15 )) + 15) & ~15))
-
-#define ALIGN16( x )					x
-#define PACKED							__attribute__((packed))
-
-#define PATHSEPERATOR_STR				"/"
-#define PATHSEPERATOR_CHAR				'/'
-
-#define __cdecl
-#define ASSERT							assert
-
-#define ID_INLINE						inline
-#define ID_STATIC_TEMPLATE
-
-#define assertmem( x, y )
-
-#endif
-// Techyon END
 
 #ifdef __GNUC__
 #define id_attribute(x) __attribute__(x)

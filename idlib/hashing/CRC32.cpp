@@ -13,7 +13,7 @@
 #ifdef CREATE_CRC_TABLE
 
 // Techyon RB: 64 bit fix, changed long to int
-static unsigned int crctable[256];
+static unsigned int id_crctable[256];
 // Techyon END
 
 /*
@@ -41,7 +41,7 @@ static unsigned int crctable[256];
    combinations of CRC register values and incoming bytes.
 */
 
-void make_crc_table( void )
+static void id_make_crc_table( void )
 {
 	int i, j;
 	// Techyon RB: 64 bit fix, changed long to int
@@ -77,7 +77,7 @@ void make_crc_table( void )
   Table of CRC-32's of all single-byte values (made by make_crc_table)
 */
 // Techyon RB: 64 bit fix, changed long to int
-static unsigned int crctable[256] =
+static unsigned int id_crctable[256] =
 {
 // Techyon END
 	0x00000000L, 0x77073096L, 0xee0e612cL, 0x990951baL,
@@ -156,7 +156,7 @@ void CRC32_InitChecksum( unsigned int& crcvalue )
 
 void CRC32_Update( unsigned int& crcvalue, const byte data )
 {
-	crcvalue = crctable[( crcvalue ^ data ) & 0xff ] ^ ( crcvalue >> 8 );
+	crcvalue = id_crctable[( crcvalue ^ data ) & 0xff ] ^ ( crcvalue >> 8 );
 }
 
 void CRC32_UpdateChecksum( unsigned int& crcvalue, const void* data, int length )
@@ -167,7 +167,7 @@ void CRC32_UpdateChecksum( unsigned int& crcvalue, const void* data, int length 
 	crc = crcvalue;
 	while( length-- )
 	{
-		crc = crctable[( crc ^ ( *buf++ ) ) & 0xff ] ^ ( crc >> 8 );
+		crc = id_crctable[( crc ^ ( *buf++ ) ) & 0xff ] ^ ( crc >> 8 );
 	}
 	crcvalue = crc;
 }

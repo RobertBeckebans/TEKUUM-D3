@@ -130,6 +130,7 @@ typedef enum
 	TD_BUMP,				// may be compressed with 8 bit lookup
 	TD_HIGH_QUALITY,		// either 32 bit or a component format, no loss at all
 	
+#if !defined(USE_GLES1)
 	// internal FBO targets
 	TD_FBO_RGBA16F,
 	TD_FBO_R16F,
@@ -141,6 +142,7 @@ typedef enum
 	TD_FBO_DEPTH16,
 	TD_FBO_DEPTH24,
 	TD_FBO_DEPTH32,
+#endif
 	
 } textureDepth_t;
 

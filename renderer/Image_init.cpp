@@ -432,6 +432,7 @@ static void R_RGB8Image( idImage* image )
 						  TF_DEFAULT, false, TR_REPEAT, TD_HIGH_QUALITY );
 }
 
+#if !defined(USE_GLES1)
 static void R_Depth16Image( idImage* image )
 {
 	image->GenerateImage( NULL, DEFAULT_SIZE, DEFAULT_SIZE,
@@ -449,6 +450,7 @@ static void R_Depth32Image( idImage* image )
 	image->GenerateImage( NULL, DEFAULT_SIZE, DEFAULT_SIZE,
 						  TF_NEAREST, false, TR_CLAMP, TD_FBO_DEPTH32 );
 }
+#endif // #if !defined(USE_GLES1)
 
 static void R_AlphaNotchImage( idImage* image )
 {
@@ -2280,7 +2282,7 @@ void idImageManager::Init()
 	
 	// set default texture filter modes
 	ChangeTextureFilter();
-
+	
 	//CreateSquareLight();
 	//CreateFlashOff();
 	

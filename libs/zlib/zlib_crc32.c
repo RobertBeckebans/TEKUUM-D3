@@ -203,7 +203,7 @@ local void write_table(out, table)
 /* ========================================================================
  * Tables of CRC-32s of all single-byte values, made by make_crc_table().
  */
-#include "crc32.h"
+#include "zlib_crc32.h"
 #endif /* DYNAMIC_CRC_TABLE */
 
 /* =========================================================================

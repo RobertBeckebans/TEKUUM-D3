@@ -766,6 +766,7 @@ void idImage::GenerateImage( const byte* pic, int width, int height,
 	Bind();
 	
 // Techyon BEGIN
+#if !defined(USE_GLES1)
 	if( depth > TD_HIGH_QUALITY )
 	{
 	
@@ -789,6 +790,7 @@ void idImage::GenerateImage( const byte* pic, int width, int height,
 		GL_CheckErrors();
 		return;
 	}
+#endif
 // Techyon END
 
 	// Optionally modify our width/height based on options/hardware

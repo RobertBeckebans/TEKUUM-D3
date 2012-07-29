@@ -295,7 +295,7 @@ static void IN_XBox360Axis(int action, float thumbAxis, float scale)
 		//	common->Printf("xbox axis %i = %f\n", action, f);
 		//}
 
-		IN_AddGamepadPollEvent(action, f * scale);
+		IN_AddGamepadPollEvent(action, f * scale, 0);
 	}
 #endif
 }
