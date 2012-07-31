@@ -1857,6 +1857,45 @@ void Com_ReloadEngine_f( const idCmdArgs& args )
 	}
 }
 
+// Techyon RB: development tool
+static void Com_GenerateSinCosTables_f( const idCmdArgs& args )
+{
+	int i;
+	float angle;
+	int numSteps = 180;
+
+	idFile* file = fileSystem->OpenFileByMode( "materials/generated.mtr", FS_WRITE );
+
+	file->Printf( "table sinTable { {\n" );
+	for( i = 0, angle = 0; i < numSteps; i++, angle += ( ( 2 * M_PI ) / ( float ) numSteps ) )
+	{
+		if( i % 10 == 0 )
+			file->Printf( "\n" );
+
+		file->Printf( "%f", idMath::Sin( angle ) );
+
+		if( i < numSteps - 1 )
+			file->Printf( "," );
+	}
+	file->Printf( " } }\n" );
+
+	file->Printf( "table cosTable { {\n" );
+		for( i = 0, angle = 0; i < numSteps; i++, angle += ( (2 * M_PI ) / ( float ) numSteps ) )
+		{
+			if( i % 10 == 0 )
+				file->Printf( "\n" );
+
+			file->Printf( "%f", idMath::Cos( angle ) );
+
+			if( i < numSteps - 1 )
+						file->Printf( "," );
+		}
+		file->Printf( " } }\n" );
+
+	fileSystem->CloseFile( file );
+}
+// Techyon END
+
 /*
 ===============
 idCommonLocal::GetLanguageDict
@@ -2791,6 +2830,9 @@ void idCommonLocal::InitCommands( void )
 	cmdSystem->AddCommand( "qtRadiant", Com_QtRadiant_f, CMD_FL_TOOL, "launches the QtRadiant Level Editor" );
 	cmdSystem->AddCommand( "editStrings", Com_QtStringEditor_f, CMD_FL_TOOL, "launches the Qt localization String Editor" );
 #endif
+
+	cmdSystem->AddCommand( "generateMaterialTables", Com_GenerateSinCosTables_f, CMD_FL_SYSTEM | CMD_FL_CHEAT, "generates tables required by the engine to run" );
+
 	// Techyon END
 	
 	cmdSystem->AddCommand( "printMemInfo", PrintMemInfo_f, CMD_FL_SYSTEM, "prints memory debugging data" );
