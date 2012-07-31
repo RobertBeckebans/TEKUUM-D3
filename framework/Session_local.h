@@ -252,7 +252,9 @@ public:
 	idUserInterface* 	guiRestartMenu;
 	idUserInterface* 	guiLoading;
 	idUserInterface* 	guiIntro;
+#if !defined(STANDALONE)
 	idUserInterface* 	guiGameOver;
+#endif
 	idUserInterface* 	guiTest;
 	idUserInterface* 	guiTakeNotes;
 	
