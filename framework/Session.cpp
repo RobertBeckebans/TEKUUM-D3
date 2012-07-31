@@ -1043,7 +1043,11 @@ void idSessionLocal::StartPlayingRenderDemo( idStr demoName )
 	// bring up the loading screen manually, since demos won't
 	// call ExecuteMapChange()
 	guiLoading = uiManager->FindGui( "guis/map/loading.gui", true, false, true );
+#if defined(STANDALONE)
+	guiLoading->SetStateString( "demo", common->GetLanguageDict()->GetString( "#str_idSessionLocal_StartPlayingRenderDemo_Loading" ) );
+#else
 	guiLoading->SetStateString( "demo", common->GetLanguageDict()->GetString( "#str_02087" ) );
+#endif
 	readDemo = new idDemoFile;
 	demoName.DefaultFileExtension( ".demo" );
 	if( !readDemo->OpenForReading( demoName ) )
