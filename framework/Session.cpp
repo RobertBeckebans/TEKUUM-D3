@@ -398,8 +398,8 @@ idSessionLocal::idSessionLocal()
 									  = guiTest = guiMsg = guiMsgRestore = guiTakeNotes = NULL;
 #else
 	guiInGame = guiMainMenu = guiIntro \
-								  = guiRestartMenu = guiLoading = guiGameOver = guiActive \
-										  = guiTest = guiMsg = guiMsgRestore = guiTakeNotes = NULL;
+							  = guiRestartMenu = guiLoading = guiGameOver = guiActive \
+									  = guiTest = guiMsg = guiMsgRestore = guiTakeNotes = NULL;
 #endif
 									  
 	menuSoundWorld = NULL;
