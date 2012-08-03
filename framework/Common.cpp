@@ -2877,7 +2877,12 @@ void idCommonLocal::InitRenderSystem( void )
 	}
 	
 	renderSystem->InitOpenGL();
+	
+#if defined(STANDALONE)
+	PrintLoadingMessage( common->GetLanguageDict()->GetString( "#str_idCommonLocal_InitRenderSystem_Loading" ) );
+#else
 	PrintLoadingMessage( common->GetLanguageDict()->GetString( "#str_04343" ) );
+#endif
 }
 
 /*
@@ -3508,7 +3513,11 @@ void idCommonLocal::InitGame( void )
 	// initialize string database right off so we can use it for loading messages
 	InitLanguageDict();
 	
+#if defined(STANDALONE)
+	PrintLoadingMessage( common->GetLanguageDict()->GetString( "#str_idCommonLocal_InitGame_Initialising_events" ) );
+#else
 	PrintLoadingMessage( common->GetLanguageDict()->GetString( "#str_04344" ) );
+#endif
 	
 	// load the font, etc
 	console->LoadGraphics();
@@ -3516,7 +3525,11 @@ void idCommonLocal::InitGame( void )
 	// init journalling, etc
 	eventLoop->Init();
 	
+#if defined(STANDALONE)
+	PrintLoadingMessage( common->GetLanguageDict()->GetString( "#str_idCommonLocal_InitGame_Executing_startup_commands" ) );
+#else
 	PrintLoadingMessage( common->GetLanguageDict()->GetString( "#str_04345" ) );
+#endif
 	
 	// exec the startup scripts
 	cmdSystem->BufferCommandText( CMD_EXEC_APPEND, "exec editor.cfg\n" );
@@ -3547,12 +3560,20 @@ void idCommonLocal::InitGame( void )
 	// init the user command input code
 	usercmdGen->Init();
 	
+#if defined(STANDALONE)
+	PrintLoadingMessage( common->GetLanguageDict()->GetString( "#str_idCommonLocal_InitGame_Initialising_sound" ) );
+#else
 	PrintLoadingMessage( common->GetLanguageDict()->GetString( "#str_04346" ) );
+#endif
 	
 	// start the sound system, but don't do any hardware operations yet
 	soundSystem->Init();
 	
+#if defined(STANDALONE)
+	PrintLoadingMessage( common->GetLanguageDict()->GetString( "#str_idCommonLocal_InitGame_Initialising_network" ) );
+#else
 	PrintLoadingMessage( common->GetLanguageDict()->GetString( "#str_04347" ) );
+#endif
 	
 	// init async network
 	idAsyncNetwork::Init();
@@ -3569,12 +3590,21 @@ void idCommonLocal::InitGame( void )
 	else
 	{
 		// init OpenGL, which will open a window and connect sound and input hardware
+#if defined(STANDALONE)
+		PrintLoadingMessage( common->GetLanguageDict()->GetString( "#str_idCommonLocal_InitGame_Initialising_render_system" ) );
+#else
 		PrintLoadingMessage( common->GetLanguageDict()->GetString( "#str_04348" ) );
+#endif
+	
 		InitRenderSystem();
 	}
 #endif
 	
+#if defined(STANDALONE)
+	PrintLoadingMessage( common->GetLanguageDict()->GetString( "#str_idCommonLocal_InitGame_Initialising_user_interface" ) );
+#else
 	PrintLoadingMessage( common->GetLanguageDict()->GetString( "#str_04349" ) );
+#endif
 	
 	// initialize the user interfaces
 	uiManager->Init();
@@ -3586,12 +3616,20 @@ void idCommonLocal::InitGame( void )
 #endif
 	// Techyon END
 	
+#if defined(STANDALONE)
+	PrintLoadingMessage( common->GetLanguageDict()->GetString( "#str_idCommonLocal_InitGame_Loading_game" ) );
+#else
 	PrintLoadingMessage( common->GetLanguageDict()->GetString( "#str_04350" ) );
+#endif
 	
 	// load the game dll
 	LoadGameDLL();
 	
+#if defined(STANDALONE)
+	PrintLoadingMessage( common->GetLanguageDict()->GetString( "#str_idCommonLocal_InitGame_Initialising_menus" ) );
+#else
 	PrintLoadingMessage( common->GetLanguageDict()->GetString( "#str_04351" ) );
+#endif
 	
 	// init the session
 	session->Init();

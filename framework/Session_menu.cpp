@@ -82,7 +82,11 @@ void idSessionLocal::StartMenu( bool playIntro )
 	}
 	else
 	{
+#if defined(STANDALONE)
+		guiMainMenu->SetStateString( "game_list", common->GetLanguageDict()->GetString( "#str_idSessionLocal_StartMenu_GameTitle" ) );
+#else
 		guiMainMenu->SetStateString( "game_list", common->GetLanguageDict()->GetString( "#str_07212" ) );
+#endif
 	}
 	
 	console->Close();

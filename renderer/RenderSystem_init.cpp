@@ -523,7 +523,11 @@ static void R_CheckPortableExtensions( void )
 	if( !glConfig.multitextureAvailable || !glConfig.textureEnvCombineAvailable || !glConfig.cubeMapAvailable
 			|| !glConfig.envDot3Available )
 	{
+#if defined(STANDALONE)
+		common->Error( common->GetLanguageDict()->GetString( "#str_R_CheckPortableExtensions_BadVideoCardDriver" ) );
+#else
 		common->Error( common->GetLanguageDict()->GetString( "#str_06780" ) );
+#endif
 	}
 	
 	// GL_EXT_depth_bounds_test
