@@ -10,23 +10,23 @@ function FindAndroidNDK()
 		includedirs 
 		{
 			--"$(NDK)/platforms/android-8/arch-arm/usr/include",
-			--"$(NDK)/prebuilt/windows/lib/gcc/arm-linux-androideabi/4.6/include",
+			--"$(NDK)/prebuilt/windows/lib/gcc/arm-linux-androideabi/4.4.3/include",
 			--"$(NDK)/sources/cxx-stl/stlport/stlport",
 		}
 		
 		--if os.is("windows") then
 			--gcc =
 			--{
-			--	cc = "${NDK}/toolchains/arm-linux-androideabi-4.6/prebuilt/windows/bin/arm-linux-androideabi-gcc",
-			--	cxx = "${NDK}/toolchains/arm-linux-androideabi-4.6/prebuilt/windows/bin/arm-linux-androideabi-gcc",
-			--	ar = "${NDK}/toolchains/arm-linux-androideabi-4.6/prebuilt/windows/bin/arm-linux-androideabi-ar",
+			--	cc = "${NDK}/toolchains/arm-linux-androideabi-4.4.3/prebuilt/windows/bin/arm-linux-androideabi-gcc",
+			--	cxx = "${NDK}/toolchains/arm-linux-androideabi-4.4.3/prebuilt/windows/bin/arm-linux-androideabi-gcc",
+			--	ar = "${NDK}/toolchains/arm-linux-androideabi-4.4.3/prebuilt/windows/bin/arm-linux-androideabi-ar",
 			--}
 		--elseif os.is("linux") then
 			--gcc =
 			--{
-			--	cc = "${NDK}/toolchains/arm-linux-androideabi-4.6/prebuilt/linux-x86/bin/arm-linux-androideabi-gcc",
-			--	cxx = "${NDK}/toolchains/arm-linux-androideabi-4.6/prebuilt/linux-x86/bin/arm-linux-androideabi-gcc",
-			--	ar = "${NDK}/toolchains/arm-linux-androideabi-4.6/prebuilt/linux-x86/bin/arm-linux-androideabi-ar",
+			--	cc = "${NDK}/toolchains/arm-linux-androideabi-4.4.3/prebuilt/linux-x86/bin/arm-linux-androideabi-gcc",
+			--	cxx = "${NDK}/toolchains/arm-linux-androideabi-4.4.3/prebuilt/linux-x86/bin/arm-linux-androideabi-gcc",
+			--	ar = "${NDK}/toolchains/arm-linux-androideabi-4.4.3/prebuilt/linux-x86/bin/arm-linux-androideabi-ar",
 			--}
 		--end
 		
@@ -77,34 +77,35 @@ function newplatform(plf)
 end
 
 newplatform {
-	name = "armeabi",
-	description = "Android armeabi",
-	gcc = {
-		cc = "${NDK}/toolchains/arm-linux-androideabi-4.6/prebuilt/windows/bin/arm-linux-androideabi-gcc",
-		cxx = "${NDK}/toolchains/arm-linux-androideabi-4.6/prebuilt/windows/bin/arm-linux-androideabi-g++",
-		ar = "${NDK}/toolchains/arm-linux-androideabi-4.6/prebuilt/windows/bin/arm-linux-androideabi-ar",
-	}
+    name = "armeabi",
+    description = "Android armeabi",
+    gcc = {
+        cc = "${NDK}/toolchains/arm-linux-androideabi-4.4.3/prebuilt/windows/bin/arm-linux-androideabi-gcc",
+		cxx = "${NDK}/toolchains/arm-linux-androideabi-4.4.3/prebuilt/windows/bin/arm-linux-androideabi-g++",
+		ar = "${NDK}/toolchains/arm-linux-androideabi-4.4.3/prebuilt/windows/bin/arm-linux-androideabi-ar",
+    }
 }
 
 newplatform {
-	name = "armeabi-v7a",
-	description = "Android armeabi-v7a",
-	gcc = {
-		cc = "${NDK}/toolchains/arm-linux-androideabi-4.6/prebuilt/windows/bin/arm-linux-androideabi-gcc",
-		cxx = "${NDK}/toolchains/arm-linux-androideabi-4.6/prebuilt/windows/bin/arm-linux-androideabi-g++",
-		ar = "${NDK}/toolchains/arm-linux-androideabi-4.6/prebuilt/windows/bin/arm-linux-androideabi-ar",
-	}
+    name = "armeabi-v7a",
+    description = "Android armeabi-v7a",
+    gcc = {
+        cc = "${NDK}/toolchains/arm-linux-androideabi-4.4.3/prebuilt/windows/bin/arm-linux-androideabi-gcc",
+		cxx = "${NDK}/toolchains/arm-linux-androideabi-4.4.3/prebuilt/windows/bin/arm-linux-androideabi-g++",
+		ar = "${NDK}/toolchains/arm-linux-androideabi-4.4.3/prebuilt/windows/bin/arm-linux-androideabi-ar",
+    }
 }
 
 newplatform {
   name = "neon",
    description = "Android neon",
    gcc = {
-	   cc = "${NDK}/toolchains/arm-linux-androideabi-4.6/prebuilt/windows/bin/arm-linux-androideabi-gcc",
-		cxx = "${NDK}/toolchains/arm-linux-androideabi-4.6/prebuilt/windows/bin/arm-linux-androideabi-g++",
-		ar = "${NDK}/toolchains/arm-linux-androideabi-4.6/prebuilt/windows/bin/arm-linux-androideabi-ar",
+       cc = "${NDK}/toolchains/arm-linux-androideabi-4.4.3/prebuilt/windows/bin/arm-linux-androideabi-gcc",
+		cxx = "${NDK}/toolchains/arm-linux-androideabi-4.4.3/prebuilt/windows/bin/arm-linux-androideabi-g++",
+		ar = "${NDK}/toolchains/arm-linux-androideabi-4.4.3/prebuilt/windows/bin/arm-linux-androideabi-ar",
    }
 }
+
 
 --
 -- Options
@@ -505,7 +506,7 @@ end
 		includedirs
 		{
 			"$(NDK)/platforms/android-8/arch-arm/usr/include",
-			"$(NDK)/prebuilt/windows/lib/gcc/arm-linux-androideabi/4.6/include",
+			"$(NDK)/prebuilt/windows/lib/gcc/arm-linux-androideabi/4.4.3/include",
 			"$(NDK)/sources/cxx-stl/stlport/stlport",
 		}
 		defines
@@ -1152,7 +1153,7 @@ end -- if not _OPTIONS["android"]
 		includedirs 
 		{
 			"$(NDK)/platforms/android-8/arch-arm/usr/include",
-			"$(NDK)/prebuilt/windows/lib/gcc/arm-linux-androideabi/4.6/include",
+			"$(NDK)/prebuilt/windows/lib/gcc/arm-linux-androideabi/4.4.3/include",
 			"$(NDK)/sources/cxx-stl/stlport/stlport",
 		}
 		buildoptions
@@ -1231,7 +1232,7 @@ end -- if not _OPTIONS["android"]
 		linkoptions
 		{
 			"-nostdlib",
-			--"--no-undefined",
+			"--no-undefined",
 		}
 		--prebuildcommands
 		--{
