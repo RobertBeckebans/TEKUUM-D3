@@ -1468,10 +1468,15 @@ void idSoundWorldLocal::ReadFromSaveGame( idFile* savefile )
 			
 			idSoundChannel* chan = &def->channels[channel];
 			
-			// Techyon RB: we set the chan->decoder to NULL so allocate a new decoder
+			// Techyon BEGIN
+#if defined(__x86_64__)
+			// RB: we set the chan->decoder to NULL so allocate a new decoder
 			if( chan->decoder == NULL )
-			{
+#else
+			if( chan->decoder != NULL )
+#endif
 				// Techyon END
+			{
 				// The pointer in the save file is not valid, so we grab a new one
 				chan->decoder = idSampleDecoder::Alloc();
 			}
