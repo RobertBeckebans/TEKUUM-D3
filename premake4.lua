@@ -1242,9 +1242,35 @@ end -- if not _OPTIONS["android"]
 		
 	configuration "armeabi"
 		targetdir 	"../android/libs/armeabi"
+		buildoptions
+		{
+			"-march=armv5te -mtune=xscale -msoft-float -fpic -mthumb -ffunction-sections -funwind-tables -fstack-protector -fno-short-enums"
+		}
+		defines
+		{
+			"__ARM_ARCH_5__",
+			"__ARM_ARCH_5T__",
+			"__ARM_ARCH_5E__",
+			"__ARM_ARCH_5TE__"
+		}
+		
+	configuration "armeabi-v7a"
+		targetname  "techyon-v7a"
+		targetdir 	"../android/libs/armeabi"
+		buildoptions
+		{
+			"-march=armv7-a -mfloat-abi=softfp -mfpu=vfp -fpic -mthumb -ffunction-sections -funwind-tables -fstack-protector -fno-short-enums"
+		}
+		defines
+		{
+			"__ARM_ARCH_5__",
+			"__ARM_ARCH_5T__",
+			"__ARM_ARCH_5E__",
+			"__ARM_ARCH_5TE__"
+		}
 	
 	configuration "neon"
-		targetname  "techyon_neon"
+		targetname  "techyon-neon"
 		targetdir 	"../android/libs/armeabi"
 		buildoptions
 		{
