@@ -1761,7 +1761,7 @@ void R_DeriveUnsmoothedTangents( srfTriangles_t* tri )
 		return;
 	}
 	
-#if 1
+#if !defined(USE_GLES1)
 	
 	SIMDProcessor->DeriveUnsmoothedTangents( tri->verts, tri->dominantTris, tri->numVerts );
 	
