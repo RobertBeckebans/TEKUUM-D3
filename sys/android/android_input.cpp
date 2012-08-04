@@ -266,8 +266,9 @@ static bool IN_AddGamepadPollEvent(int action, int value, int value2)
 		common->FatalError( "pollGamepadEventsCount exceeded MAX_POLL_EVENT + POLL_EVENTS_HEADROOM\n");
 
 	s_pollGamepadEvents[s_pollGamepadEventsCount].action = action;
-	s_pollGamepadEvents[s_pollGamepadEventsCount++].value = value;
-	s_pollGamepadEvents[s_pollGamepadEventsCount++].value2 = value2;
+	s_pollGamepadEvents[s_pollGamepadEventsCount].value = value;
+	s_pollGamepadEvents[s_pollGamepadEventsCount].value2 = value2;
+	s_pollGamepadEventsCount++;
 
 	if (s_pollGamepadEventsCount >= MAX_POLL_EVENTS) {
 		common->DPrintf("WARNING: reached MAX_POLL_EVENT pollGamepadEventsCount\n");
