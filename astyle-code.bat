@@ -28,4 +28,6 @@ REM ..\bin\win32\UniversalIndentGUI\indenters\astyle.exe -v --options=astyle-opt
 ..\bin\win32\UniversalIndentGUI\indenters\astyle.exe -v --options=astyle-options.ini --recursive ui/*.h
 ..\bin\win32\UniversalIndentGUI\indenters\astyle.exe -v --options=astyle-options.ini --recursive ui/*.cpp
 
+..\bin\win32\UniversalIndentGUI\indenters\astyle.exe -v --options=astyle-options.ini --recursive ../android/src/*.java
+
 pause
