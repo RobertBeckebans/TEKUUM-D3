@@ -352,7 +352,7 @@ static void R_SpecularTexGen( drawSurf_t* surf, const idVec3& globalLightOrigin,
 	int	size = tri->numVerts * sizeof( idVec4 );
 	idVec4* texCoords = ( idVec4* ) _alloca16( size );
 	
-#if 1
+#if !defined(USE_GLES1)
 	
 	SIMDProcessor->CreateSpecularTextureCoords( texCoords, localLightOrigin, localViewOrigin,
 			tri->verts, tri->numVerts, tri->indexes, tri->numIndexes );

@@ -138,7 +138,9 @@ void idGuiModel::ReadFromDemo( idDemoFile* demo )
 	indexes.SetNum( i, false );
 	for( j = 0; j < i; j++ )
 	{
-		demo->ReadInt( indexes[j] );
+		int index;
+		demo->ReadInt( index );
+		indexes[j] = index;
 	}
 	
 	i = surfaces.Num();

@@ -929,7 +929,7 @@ void R_DeriveFacePlanes( srfTriangles_t* tri )
 	}
 	planes = tri->facePlanes;
 	
-#if 1
+#if !defined(USE_GLES1)
 	
 	SIMDProcessor->DeriveTriPlanes( planes, tri->verts, tri->numVerts, tri->indexes, tri->numIndexes );
 	
