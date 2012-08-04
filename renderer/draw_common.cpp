@@ -407,6 +407,10 @@ void RB_T_FillDepthBuffer( const drawSurf_t* surf )
 	tri = surf->geo;
 	shader = surf->material;
 	
+#if defined(__ANDROID__)
+	GL_CheckErrors();
+#endif
+	
 	// update the clip plane if needed
 	if( backEnd.viewDef->numClipPlanes && surf->space != backEnd.currentSpace )
 	{
@@ -464,12 +468,20 @@ void RB_T_FillDepthBuffer( const drawSurf_t* surf )
 		return;
 	}
 	
+#if defined(__ANDROID__)
+	GL_CheckErrors();
+#endif
+	
 	// set polygon offset if necessary
 	if( shader->TestMaterialFlag( MF_POLYGONOFFSET ) )
 	{
 		glEnable( GL_POLYGON_OFFSET_FILL );
 		glPolygonOffset( r_offsetFactor.GetFloat(), r_offsetUnits.GetFloat() * shader->GetPolygonOffset() );
 	}
+	
+#if defined(__ANDROID__)
+	GL_CheckErrors();
+#endif
 	
 	// subviews will just down-modulate the color buffer by overbright
 	if( shader->GetSort() == SS_SUBVIEW )
@@ -507,7 +519,16 @@ void RB_T_FillDepthBuffer( const drawSurf_t* surf )
 		// draw a normal opaque surface
 		bool	didDraw = false;
 		
+#if defined(__ANDROID__)
+		GL_CheckErrors();
+#endif
+		
 		glEnable( GL_ALPHA_TEST );
+		
+#if defined(__ANDROID__)
+		GL_CheckErrors();
+#endif
+		
 		// perforated surfaces may have multiple alpha tested stages
 		for( stage = 0; stage < shader->GetNumStages() ; stage++ )
 		{
@@ -551,7 +572,17 @@ void RB_T_FillDepthBuffer( const drawSurf_t* surf )
 			
 			RB_FinishStageTexturing( pStage, surf, ac );
 		}
+		
+#if defined(__ANDROID__)
+		GL_CheckErrors();
+#endif
+		
 		glDisable( GL_ALPHA_TEST );
+		
+#if defined(__ANDROID__)
+		GL_CheckErrors();
+#endif
+		
 		if( !didDraw )
 		{
 			drawSolid = true;
@@ -568,6 +599,7 @@ void RB_T_FillDepthBuffer( const drawSurf_t* surf )
 		RB_DrawElementsWithCounters( tri );
 	}
 	
+	GL_CheckErrors();
 	
 	// reset polygon offset
 	if( shader->TestMaterialFlag( MF_POLYGONOFFSET ) )
@@ -575,11 +607,19 @@ void RB_T_FillDepthBuffer( const drawSurf_t* surf )
 		glDisable( GL_POLYGON_OFFSET_FILL );
 	}
 	
+#if defined(__ANDROID__)
+	GL_CheckErrors();
+#endif
+	
 	// reset blending
 	if( shader->GetSort() == SS_SUBVIEW )
 	{
 		GL_State( GLS_DEPTHFUNC_LESS );
 	}
+	
+#if defined(__ANDROID__)
+	GL_CheckErrors();
+#endif
 	
 }
 
@@ -1019,15 +1059,28 @@ void RB_STD_FillDepthBuffer( drawSurf_t** drawSurfs, int numDrawSurfs )
 	{
 		GL_SelectTexture( 1 );
 		globalImages->alphaNotchImage->Bind();
+		
+#if defined(__ANDROID__)
+		GL_CheckErrors();
+#endif
 		glDisableClientState( GL_TEXTURE_COORD_ARRAY );
+		
+#if defined(__ANDROID__)
+		GL_CheckErrors();
+#endif
+		
 #if !defined(USE_GLES1)
 		glEnable( GL_TEXTURE_GEN_S );
 		glTexCoord2f( 1, 0.5 );
 #endif
 	}
 	
+	GL_CheckErrors();
+	
 	// the first texture will be used for alpha tested surfaces
 	GL_SelectTexture( 0 );
+	
+	GL_CheckErrors();
 	
 #if !defined(USE_GLES1)
 	if( r_useDeferredShading.GetBool() )
@@ -1046,7 +1099,15 @@ void RB_STD_FillDepthBuffer( drawSurf_t** drawSurfs, int numDrawSurfs )
 	// decal surfaces may enable polygon offset
 	glPolygonOffset( r_offsetFactor.GetFloat(), r_offsetUnits.GetFloat() );
 	
+#if defined(__ANDROID__)
+	GL_CheckErrors();
+#endif
+	
 	GL_State( GLS_DEPTHFUNC_LESS );
+	
+#if defined(__ANDROID__)
+	GL_CheckErrors();
+#endif
 	
 	// Enable stencil test if we are going to be using it for shadows.
 	// If we didn't do this, it would be legal behavior to get z fighting
@@ -1070,6 +1131,9 @@ void RB_STD_FillDepthBuffer( drawSurf_t** drawSurfs, int numDrawSurfs )
 #endif
 	{
 		RB_RenderDrawSurfListWithFunction( drawSurfs, numDrawSurfs, RB_T_FillDepthBuffer );
+#if defined(__ANDROID__)
+		GL_CheckErrors();
+#endif
 	}
 	
 	if( backEnd.viewDef->numClipPlanes )
@@ -1082,6 +1146,7 @@ void RB_STD_FillDepthBuffer( drawSurf_t** drawSurfs, int numDrawSurfs )
 		GL_SelectTexture( 0 );
 	}
 	
+	GL_CheckErrors();
 }
 
 /*
@@ -2428,8 +2493,12 @@ void	RB_STD_DrawView( void )
 	}
 #endif
 	
+	GL_CheckErrors();
+	
 	// clear the z buffer, set the projection matrix, etc
 	RB_BeginDrawingView();
+	
+	GL_CheckErrors();
 	
 	// decide how much overbrighting we are going to do
 	RB_DetermineLightScale();
@@ -2437,6 +2506,8 @@ void	RB_STD_DrawView( void )
 	// fill the depth buffer and clear color buffer to black except on
 	// subviews
 	RB_STD_FillDepthBuffer( drawSurfs, numDrawSurfs );
+	
+	GL_CheckErrors();
 	
 	// main light renderer
 	switch( tr.backEndRenderer )
@@ -2473,14 +2544,22 @@ void	RB_STD_DrawView( void )
 	// disable stencil shadow test
 	glStencilFunc( GL_ALWAYS, 128, 255 );
 	
+	GL_CheckErrors();
+	
 	// uplight the entire screen to crutch up not having better blending range
 	RB_STD_LightScale();
+	
+	GL_CheckErrors();
 	
 	// now draw any non-light dependent shading passes
 	int	processed = RB_STD_DrawShaderPasses( drawSurfs, numDrawSurfs );
 	
+	GL_CheckErrors();
+	
 	// fob and blend lights
 	RB_STD_FogAllLights();
+	
+	GL_CheckErrors();
 	
 	// now draw any post-processing effects using _currentRender
 	if( processed < numDrawSurfs )
@@ -2488,6 +2567,9 @@ void	RB_STD_DrawView( void )
 		RB_STD_DrawShaderPasses( drawSurfs + processed, numDrawSurfs - processed );
 	}
 	
+	GL_CheckErrors();
+	
 	RB_RenderDebugTools( drawSurfs, numDrawSurfs );
 	
+	GL_CheckErrors();
 }

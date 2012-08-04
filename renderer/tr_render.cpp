@@ -89,7 +89,10 @@ RB_DrawElementsWithCounters
 */
 void RB_DrawElementsWithCounters( const srfTriangles_t* tri )
 {
-
+#if defined(__ANDROID__)
+	GL_CheckErrors();
+#endif
+	
 	backEnd.pc.c_drawElements++;
 	backEnd.pc.c_drawIndexes += tri->numIndexes;
 	backEnd.pc.c_drawVertexes += tri->numVerts;
@@ -119,6 +122,10 @@ void RB_DrawElementsWithCounters( const srfTriangles_t* tri )
 						GL_INDEX_TYPE,
 						( int* )vertexCache.Position( tri->indexCache ) );
 		backEnd.pc.c_vboIndexes += tri->numIndexes;
+		
+#if defined(__ANDROID__)
+		GL_CheckErrors();
+#endif
 	}
 	else
 	{
@@ -136,6 +143,10 @@ void RB_DrawElementsWithCounters( const srfTriangles_t* tri )
 						r_singleTriangle.GetBool() ? 3 : tri->numIndexes,
 						GL_INDEX_TYPE,
 						tri->indexes );
+						
+#if defined(__ANDROID__)
+		GL_CheckErrors();
+#endif
 	}
 }
 

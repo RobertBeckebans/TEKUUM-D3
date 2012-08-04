@@ -49,6 +49,10 @@ void RB_SetDefaultGLState( void )
 	
 	RB_LogComment( "--- R_SetDefaultGLState ---\n" );
 	
+#if defined(__ANDROID__)
+	GL_CheckErrors();
+#endif
+	
 	glClearDepth( 1.0f );
 	glColor4f( 1, 1, 1, 1 );
 	
@@ -114,6 +118,10 @@ void RB_SetDefaultGLState( void )
 			glDisable( GL_TEXTURE_CUBE_MAP_EXT );
 		}
 	}
+	
+#if defined(__ANDROID__)
+	GL_CheckErrors();
+#endif
 }
 
 
@@ -167,8 +175,22 @@ void GL_SelectTexture( int unit )
 		return;
 	}
 	
+#if defined(__ANDROID__)
+	GL_CheckErrors();
+#endif
+	
 	glActiveTexture( GL_TEXTURE0 + unit );
+	
+#if defined(__ANDROID__)
+	GL_CheckErrors();
+#endif
+	
 	glClientActiveTexture( GL_TEXTURE0 + unit );
+	
+#if defined(__ANDROID__)
+	GL_CheckErrors();
+#endif
+	
 	RB_LogComment( "glActiveTextureARB( %i );\nglClientActiveTextureARB( %i );\n", unit, unit );
 	
 	backEnd.glState.currenttmu = unit;
@@ -300,6 +322,10 @@ void GL_State( int stateBits )
 		}
 	}
 	
+#if defined(__ANDROID__)
+	GL_CheckErrors();
+#endif
+	
 	//
 	// check depthFunc bits
 	//
@@ -319,6 +345,7 @@ void GL_State( int stateBits )
 		}
 	}
 	
+	GL_CheckErrors();
 	
 	//
 	// check blend bits
@@ -397,6 +424,10 @@ void GL_State( int stateBits )
 		glBlendFunc( srcFactor, dstFactor );
 	}
 	
+#if defined(__ANDROID__)
+	GL_CheckErrors();
+#endif
+	
 	//
 	// check depthmask
 	//
@@ -412,6 +443,10 @@ void GL_State( int stateBits )
 		}
 	}
 	
+#if defined(__ANDROID__)
+	GL_CheckErrors();
+#endif
+	
 	//
 	// check colormask
 	//
@@ -424,6 +459,8 @@ void GL_State( int stateBits )
 		a = ( stateBits & GLS_ALPHAMASK ) ? 0 : 1;
 		glColorMask( r, g, b, a );
 	}
+	
+	GL_CheckErrors();
 	
 	//
 	// fill/line mode
@@ -441,6 +478,8 @@ void GL_State( int stateBits )
 		}
 	}
 #endif
+	
+	
 	
 	//
 	// alpha test
@@ -469,6 +508,10 @@ void GL_State( int stateBits )
 				break;
 		}
 	}
+	
+#if defined(__ANDROID__)
+	GL_CheckErrors();
+#endif
 	
 	backEnd.glState.glStateBits = stateBits;
 }
@@ -534,6 +577,10 @@ static void	RB_SetBuffer( const void* data )
 	
 	cmd = ( const setBufferCommand_t* )data;
 	
+#if defined(__ANDROID__)
+	GL_CheckErrors();
+#endif
+	
 	backEnd.frameCount = cmd->frameCount;
 	
 #if !defined(USE_GLES1)
@@ -564,6 +611,8 @@ static void	RB_SetBuffer( const void* data )
 		}
 		glClear( GL_COLOR_BUFFER_BIT );
 	}
+	
+	GL_CheckErrors();
 }
 
 /*
@@ -642,6 +691,10 @@ RB_SwapBuffers
 */
 const void	RB_SwapBuffers( const void* data )
 {
+#if defined(__ANDROID__)
+	GL_CheckErrors();
+#endif
+	
 	// texture swapping test
 	if( r_showImages.GetInteger() != 0 )
 	{
@@ -661,6 +714,10 @@ const void	RB_SwapBuffers( const void* data )
 	{
 		GLimp_SwapBuffers();
 	}
+	
+#if defined(__ANDROID__)
+	GL_CheckErrors();
+#endif
 }
 
 /*
@@ -676,6 +733,8 @@ const void	RB_CopyRender( const void* data )
 	
 	cmd = ( const copyRenderCommand_t* )data;
 	
+	GL_CheckErrors();
+	
 	if( r_skipCopyTexture.GetBool() )
 	{
 		return;
@@ -685,8 +744,12 @@ const void	RB_CopyRender( const void* data )
 	
 	if( cmd->image )
 	{
+#if !defined(__ANDROID__)
 		cmd->image->CopyFramebuffer( cmd->x, cmd->y, cmd->imageWidth, cmd->imageHeight, false );
+#endif
 	}
+	
+	GL_CheckErrors();
 }
 
 /*

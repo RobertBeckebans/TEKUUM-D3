@@ -746,6 +746,10 @@ void idRenderSystemLocal::BeginFrame( int windowWidth, int windowHeight )
 		return;
 	}
 	
+#if defined(__ANDROID__)
+	GL_CheckErrors();
+#endif
+	
 	// determine which back end we will use
 	SetBackEndRenderer();
 	
