@@ -578,12 +578,14 @@ typedef enum
 typedef struct
 {
 	const char* 	name;
-	int				threadHandle;
+
 	// Techyon RB: 64 bit fix, changed long to int
 #if defined(WIN32)
 	unsigned long	threadId;
+	int				threadHandle;
 #else
 	unsigned int	threadId;
+	unsigned long	threadHandle;
 #endif
 	// Techyon END
 } xthreadInfo;
