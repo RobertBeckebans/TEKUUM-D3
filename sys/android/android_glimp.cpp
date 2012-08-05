@@ -35,10 +35,10 @@ idCVar sys_videoRam( "sys_videoRam", "0", CVAR_SYSTEM | CVAR_ARCHIVE | CVAR_INTE
 
 // JNI
 
-void JE_SetResolution(int width, int height)
+void JE_SetResolution( int width, int height )
 {
 	common->Printf( "JNI_SetResolution( %i, %i )\n", width, height );
-
+	
 	glConfig.vidWidth = width;
 	glConfig.vidHeight = height;
 }
@@ -46,25 +46,25 @@ void JE_SetResolution(int width, int height)
 bool GLimp_Init( glimpParms_t parms )
 {
 	common->Printf( "----- GLimp_Init -----\n" );
-
+	
 	//const char *glstring;
-
+	
 	glConfig.isFullscreen = true;
-
+	
 	// FIXME check these with egl functions
 	glConfig.colorBits = 16;
 	glConfig.depthBits = 24;
 	glConfig.stencilBits = 8;
-
+	
 	//glstring = (const char *) glGetString(GL_VENDOR);
 	//common->Printf("GL_VENDOR: %s\n", glstring);
-
+	
 	//glstring = (const char *) glGetString(GL_RENDERER);
 	//common->Printf("GL_RENDERER: %s\n", glstring);
-
+	
 	//glstring = (const char *) glGetString(GL_EXTENSIONS);
 	//common->Printf("GL_EXTENSIONS: %s\n", glstring);
-
+	
 	return true;
 }
 
@@ -72,7 +72,7 @@ bool GLimp_Init( glimpParms_t parms )
 bool GLimp_SetScreenParms( glimpParms_t parms )
 {
 	common->Printf( "----- GLimp_SetScreenParms -----\n" );
-
+	
 	return true;
 }
 
@@ -86,35 +86,42 @@ void GLimp_SwapBuffers( void )
 	//s_requestRender();
 }
 
-void GLimp_SetGamma(unsigned short red[256], unsigned short green[256], unsigned short blue[256]) {
-	common->DPrintf("GLimp_SetGamma stub\n");
+void GLimp_SetGamma( unsigned short red[256], unsigned short green[256], unsigned short blue[256] )
+{
+	common->DPrintf( "GLimp_SetGamma stub\n" );
 }
 
 
-void GLimp_WakeBackEnd(void *a) {
-	common->DPrintf("GLimp_WakeBackEnd stub\n");
+void GLimp_WakeBackEnd( void* a )
+{
+	common->DPrintf( "GLimp_WakeBackEnd stub\n" );
 }
 
-void GLimp_FrontEndSleep() {
-	common->DPrintf("GLimp_FrontEndSleep stub\n");
+void GLimp_FrontEndSleep()
+{
+	common->DPrintf( "GLimp_FrontEndSleep stub\n" );
 }
 
-void *GLimp_BackEndSleep() {
-	common->DPrintf("GLimp_BackEndSleep stub\n");
+void* GLimp_BackEndSleep()
+{
+	common->DPrintf( "GLimp_BackEndSleep stub\n" );
 	return 0;
 }
 
-bool GLimp_SpawnRenderThread(void (*a) ()) {
-	common->DPrintf("GLimp_SpawnRenderThread stub\n");
+bool GLimp_SpawnRenderThread( void ( *a )() )
+{
+	common->DPrintf( "GLimp_SpawnRenderThread stub\n" );
 	return false;
 }
 
-void GLimp_ActivateContext() {
-	common->DPrintf("GLimp_ActivateContext stub\n");
+void GLimp_ActivateContext()
+{
+	common->DPrintf( "GLimp_ActivateContext stub\n" );
 }
 
-void GLimp_DeactivateContext() {
-	common->DPrintf("GLimp_DeactivateContext stub\n");
+void GLimp_DeactivateContext()
+{
+	common->DPrintf( "GLimp_DeactivateContext stub\n" );
 }
 
 /*
@@ -125,24 +132,27 @@ open your own display connection for the query and close it
 using the one shared with GLimp_Init is not stable
 ================
 */
-int Sys_GetVideoRam( void ) {
+int Sys_GetVideoRam( void )
+{
 	static int run_once = 0;
 	int major, minor, value;
-
-	if ( run_once ) {
+	
+	if( run_once )
+	{
 		return run_once;
 	}
-
-	if ( sys_videoRam.GetInteger() ) {
+	
+	if( sys_videoRam.GetInteger() )
+	{
 		run_once = sys_videoRam.GetInteger();
 		return sys_videoRam.GetInteger();
 	}
-
+	
 	// try a few strategies to guess the amount of video ram
 	common->Printf( "guessing video ram ( use +set sys_videoRam to force ) ..\n" );
-
+	
 	// TODO
-
+	
 	// try ATI /proc read ( for the lack of a better option )
 	/*
 	int fd;
@@ -176,7 +186,7 @@ int Sys_GetVideoRam( void ) {
 		}
 	}
 	*/
-
+	
 	common->Printf( "guess failed, return default low-end VRAM setting ( 64MB VRAM )\n" );
 	run_once = 64;
 	return run_once;

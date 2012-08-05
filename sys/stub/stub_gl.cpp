@@ -2,9 +2,9 @@
 ===========================================================================
 
 Doom 3 GPL Source Code
-Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company. 
+Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
 
-This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).  
+This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
 
 Doom 3 Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -30,18 +30,30 @@ If you have questions concerning this license or the applicable additional terms
 
 #include "../../renderer/tr_local.h"
 
-void GLimp_WakeBackEnd(void*a) {};
-void GLimp_EnableLogging(bool) {};
+void GLimp_WakeBackEnd( void* a ) {};
+void GLimp_EnableLogging( bool ) {};
 void GLimp_FrontEndSleep() {};
 void GLimp_ActivateContext() {};
 void GLimp_DeactivateContext() {};
-bool GLimp_SpawnRenderThread(void (*a)()) {return false;};
+bool GLimp_SpawnRenderThread( void ( *a )() )
+{
+	return false;
+};
 
 static void StubFunction( void ) {};
-GLExtension_t GLimp_ExtensionPointer( const char *a) { return StubFunction; };
+GLExtension_t GLimp_ExtensionPointer( const char* a )
+{
+	return StubFunction;
+};
 
-bool GLimp_Init(glimpParms_t a) {return true;};
-void GLimp_SetGamma(unsigned short*a, unsigned short*b, unsigned short*c) {};
+bool GLimp_Init( glimpParms_t a )
+{
+	return true;
+};
+void GLimp_SetGamma( unsigned short* a, unsigned short* b, unsigned short* c ) {};
 void GLimp_Shutdown() {};
 void GLimp_SwapBuffers() {};
-void *GLimp_BackEndSleep() {return 0;};
+void* GLimp_BackEndSleep()
+{
+	return 0;
+};

@@ -87,6 +87,19 @@ project "game"
 		   "cd ../../bin/win64",
 		   "TypeInfo.exe",
 		}
+		
+	configuration { "linux", "debug-memory" }
+		links
+		{
+			"TypeInfo"
+		}
+		
+	configuration { "linux", "x64", "debug-memory" }
+		prebuildcommands
+		{
+		   "cd ../../bin/linux-x86_64",
+		   "./typeInfo",
+		}
 	
 	configuration "lightmaps"
 		defines

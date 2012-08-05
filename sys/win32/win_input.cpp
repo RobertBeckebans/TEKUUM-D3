@@ -2,10 +2,10 @@
 ===========================================================================
 
 Doom 3 GPL Source Code
-Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company. 
+Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
 Copyright (C) 2012 Robert Beckebans
 
-This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).  
+This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
 
 Doom 3 Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -38,7 +38,8 @@ If you have questions concerning this license or the applicable additional terms
 #define CHAR_FIRSTREPEAT 200
 #define CHAR_REPEAT 100
 
-typedef struct MYDATA {
+typedef struct MYDATA
+{
 	LONG  lX;                   // X axis goes here
 	LONG  lY;                   // Y axis goes here
 	LONG  lZ;                   // Z axis goes here
@@ -48,211 +49,217 @@ typedef struct MYDATA {
 	BYTE  bButtonD;             // Another button goes here
 } MYDATA;
 
-static DIOBJECTDATAFORMAT rgodf[] = {
-  { &GUID_XAxis,    FIELD_OFFSET(MYDATA, lX),       DIDFT_AXIS | DIDFT_ANYINSTANCE,   0,},
-  { &GUID_YAxis,    FIELD_OFFSET(MYDATA, lY),       DIDFT_AXIS | DIDFT_ANYINSTANCE,   0,},
-  { &GUID_ZAxis,    FIELD_OFFSET(MYDATA, lZ),       0x80000000 | DIDFT_AXIS | DIDFT_ANYINSTANCE,   0,},
-  { 0,              FIELD_OFFSET(MYDATA, bButtonA), DIDFT_BUTTON | DIDFT_ANYINSTANCE, 0,},
-  { 0,              FIELD_OFFSET(MYDATA, bButtonB), DIDFT_BUTTON | DIDFT_ANYINSTANCE, 0,},
-  { 0,              FIELD_OFFSET(MYDATA, bButtonC), 0x80000000 | DIDFT_BUTTON | DIDFT_ANYINSTANCE, 0,},
-  { 0,              FIELD_OFFSET(MYDATA, bButtonD), 0x80000000 | DIDFT_BUTTON | DIDFT_ANYINSTANCE, 0,},
+static DIOBJECTDATAFORMAT rgodf[] =
+{
+	{ &GUID_XAxis,    FIELD_OFFSET( MYDATA, lX ),       DIDFT_AXIS | DIDFT_ANYINSTANCE,   0,},
+	{ &GUID_YAxis,    FIELD_OFFSET( MYDATA, lY ),       DIDFT_AXIS | DIDFT_ANYINSTANCE,   0,},
+	{ &GUID_ZAxis,    FIELD_OFFSET( MYDATA, lZ ),       0x80000000 | DIDFT_AXIS | DIDFT_ANYINSTANCE,   0,},
+	{ 0,              FIELD_OFFSET( MYDATA, bButtonA ), DIDFT_BUTTON | DIDFT_ANYINSTANCE, 0,},
+	{ 0,              FIELD_OFFSET( MYDATA, bButtonB ), DIDFT_BUTTON | DIDFT_ANYINSTANCE, 0,},
+	{ 0,              FIELD_OFFSET( MYDATA, bButtonC ), 0x80000000 | DIDFT_BUTTON | DIDFT_ANYINSTANCE, 0,},
+	{ 0,              FIELD_OFFSET( MYDATA, bButtonD ), 0x80000000 | DIDFT_BUTTON | DIDFT_ANYINSTANCE, 0,},
 };
 
 //==========================================================================
 
-static const unsigned char s_scantokey[256] = { 
+static const unsigned char s_scantokey[256] =
+{
 //  0            1       2          3          4       5            6         7
 //  8            9       A          B          C       D            E         F
-	0,           27,    '1',       '2',        '3',    '4',         '5',      '6', 
+	0,           27,    '1',       '2',        '3',    '4',         '5',      '6',
 	'7',        '8',    '9',       '0',        '-',    '=',          K_BACKSPACE, 9, // 0
-	'q',        'w',    'e',       'r',        't',    'y',         'u',      'i', 
-	'o',        'p',    '[',       ']',        K_ENTER,K_CTRL,      'a',      's',   // 1
-	'd',        'f',    'g',       'h',        'j',    'k',         'l',      ';', 
+	'q',        'w',    'e',       'r',        't',    'y',         'u',      'i',
+	'o',        'p',    '[',       ']',        K_ENTER, K_CTRL,      'a',      's',  // 1
+	'd',        'f',    'g',       'h',        'j',    'k',         'l',      ';',
 	'\'',       '`',    K_SHIFT,   '\\',       'z',    'x',         'c',      'v',   // 2
-	'b',        'n',    'm',       ',',        '.',    '/',         K_SHIFT,  K_KP_STAR, 
-	K_ALT,      ' ',    K_CAPSLOCK,K_F1,       K_F2,   K_F3,        K_F4,     K_F5,  // 3
-	K_F6,       K_F7,   K_F8,      K_F9,       K_F10,  K_PAUSE,     K_SCROLL, K_HOME, 
-	K_UPARROW,  K_PGUP, K_KP_MINUS,K_LEFTARROW,K_KP_5, K_RIGHTARROW,K_KP_PLUS,K_END, // 4
-	K_DOWNARROW,K_PGDN, K_INS,     K_DEL,      0,      0,           0,        K_F11, 
+	'b',        'n',    'm',       ',',        '.',    '/',         K_SHIFT,  K_KP_STAR,
+	K_ALT,      ' ',    K_CAPSLOCK, K_F1,       K_F2,   K_F3,        K_F4,     K_F5, // 3
+	K_F6,       K_F7,   K_F8,      K_F9,       K_F10,  K_PAUSE,     K_SCROLL, K_HOME,
+	K_UPARROW,  K_PGUP, K_KP_MINUS, K_LEFTARROW, K_KP_5, K_RIGHTARROW, K_KP_PLUS, K_END, // 4
+	K_DOWNARROW, K_PGDN, K_INS,     K_DEL,      0,      0,           0,        K_F11,
 	K_F12,      0,      0,         K_LWIN,     K_RWIN, K_MENU,      0,        0,     // 5
-	0,          0,      0,         0,          0,      0,           0,        0, 
+	0,          0,      0,         0,          0,      0,           0,        0,
 	0,          0,      0,         0,          0,      0,           0,        0,     // 6
-	0,          0,      0,         0,          0,      0,           0,        0, 
+	0,          0,      0,         0,          0,      0,           0,        0,
 	0,          0,      0,         0,          0,      0,           0,        0,      // 7
 // shifted
-	0,           27,    '!',       '@',        '#',    '$',         '%',      '^', 
+	0,           27,    '!',       '@',        '#',    '$',         '%',      '^',
 	'&',        '*',    '(',       ')',        '_',    '+',          K_BACKSPACE, 9, // 0
-	'q',        'w',    'e',       'r',        't',    'y',         'u',      'i', 
-	'o',        'p',    '[',       ']',        K_ENTER,K_CTRL,      'a',      's',   // 1
-	'd',        'f',    'g',       'h',        'j',    'k',         'l',      ';', 
+	'q',        'w',    'e',       'r',        't',    'y',         'u',      'i',
+	'o',        'p',    '[',       ']',        K_ENTER, K_CTRL,      'a',      's',  // 1
+	'd',        'f',    'g',       'h',        'j',    'k',         'l',      ';',
 	'\'',       '~',    K_SHIFT,   '\\',       'z',    'x',         'c',      'v',   // 2
-	'b',        'n',    'm',       ',',        '.',    '/',         K_SHIFT,  K_KP_STAR, 
-	K_ALT,      ' ',    K_CAPSLOCK,K_F1,       K_F2,   K_F3,        K_F4,     K_F5,  // 3
-	K_F6,       K_F7,   K_F8,      K_F9,       K_F10,  K_PAUSE,     K_SCROLL, K_HOME, 
-	K_UPARROW,  K_PGUP, K_KP_MINUS,K_LEFTARROW,K_KP_5, K_RIGHTARROW,K_KP_PLUS,K_END, // 4
-	K_DOWNARROW,K_PGDN, K_INS,     K_DEL,      0,      0,           0,        K_F11, 
+	'b',        'n',    'm',       ',',        '.',    '/',         K_SHIFT,  K_KP_STAR,
+	K_ALT,      ' ',    K_CAPSLOCK, K_F1,       K_F2,   K_F3,        K_F4,     K_F5, // 3
+	K_F6,       K_F7,   K_F8,      K_F9,       K_F10,  K_PAUSE,     K_SCROLL, K_HOME,
+	K_UPARROW,  K_PGUP, K_KP_MINUS, K_LEFTARROW, K_KP_5, K_RIGHTARROW, K_KP_PLUS, K_END, // 4
+	K_DOWNARROW, K_PGDN, K_INS,     K_DEL,      0,      0,           0,        K_F11,
 	K_F12,      0,      0,         K_LWIN,     K_RWIN, K_MENU,      0,        0,     // 5
-	0,          0,      0,         0,          0,      0,           0,        0, 
+	0,          0,      0,         0,          0,      0,           0,        0,
 	0,          0,      0,         0,          0,      0,           0,        0,     // 6
-	0,          0,      0,         0,          0,      0,           0,        0, 
+	0,          0,      0,         0,          0,      0,           0,        0,
 	0,          0,      0,         0,          0,      0,           0,        0      // 7
-}; 
+};
 
-static const unsigned char s_scantokey_german[256] = {
+static const unsigned char s_scantokey_german[256] =
+{
 //  0            1       2          3          4       5            6         7
 //  8            9       A          B          C       D            E         F
-	0,           27,    '1',       '2',        '3',    '4',         '5',      '6', 
+	0,           27,    '1',       '2',        '3',    '4',         '5',      '6',
 	'7',        '8',    '9',       '0',        '?',    '\'',        K_BACKSPACE, 9,  // 0
-	'q',        'w',    'e',       'r',        't',    'z',         'u',      'i', 
-	'o',        'p',    '=',       '+',        K_ENTER,K_CTRL,      'a',      's',   // 1
-	'd',        'f',    'g',       'h',        'j',    'k',         'l',      '[', 
+	'q',        'w',    'e',       'r',        't',    'z',         'u',      'i',
+	'o',        'p',    '=',       '+',        K_ENTER, K_CTRL,      'a',      's',  // 1
+	'd',        'f',    'g',       'h',        'j',    'k',         'l',      '[',
 	']',        '`',    K_SHIFT,   '#',        'y',    'x',         'c',      'v',   // 2
-	'b',        'n',    'm',       ',',        '.',    '-',         K_SHIFT,  K_KP_STAR, 
-	K_ALT,      ' ',    K_CAPSLOCK,K_F1,       K_F2,   K_F3,        K_F4,     K_F5,  // 3
-	K_F6,       K_F7,   K_F8,      K_F9,       K_F10,  K_PAUSE,     K_SCROLL, K_HOME, 
-	K_UPARROW,  K_PGUP, K_KP_MINUS,K_LEFTARROW,K_KP_5, K_RIGHTARROW,K_KP_PLUS,K_END, // 4
-	K_DOWNARROW,K_PGDN, K_INS,     K_DEL,      0,      0,           '<',      K_F11, 
+	'b',        'n',    'm',       ',',        '.',    '-',         K_SHIFT,  K_KP_STAR,
+	K_ALT,      ' ',    K_CAPSLOCK, K_F1,       K_F2,   K_F3,        K_F4,     K_F5, // 3
+	K_F6,       K_F7,   K_F8,      K_F9,       K_F10,  K_PAUSE,     K_SCROLL, K_HOME,
+	K_UPARROW,  K_PGUP, K_KP_MINUS, K_LEFTARROW, K_KP_5, K_RIGHTARROW, K_KP_PLUS, K_END, // 4
+	K_DOWNARROW, K_PGDN, K_INS,     K_DEL,      0,      0,           '<',      K_F11,
 	K_F12,      0,      0,         K_LWIN,     K_RWIN, K_MENU,      0,        0,     // 5
-	0,          0,      0,         0,          0,      0,           0,        0, 
+	0,          0,      0,         0,          0,      0,           0,        0,
 	0,          0,      0,         0,          0,      0,           0,        0,     // 6
-	0,          0,      0,         0,          0,      0,           0,        0, 
+	0,          0,      0,         0,          0,      0,           0,        0,
 	0,          0,      0,         0,          0,      0,           0,        0,      // 7
 // shifted
-	0,           27,    '1',       '2',        '3',    '4',         '5',      '6', 
+	0,           27,    '1',       '2',        '3',    '4',         '5',      '6',
 	'7',        '8',    '9',       '0',        '?',    '\'',        K_BACKSPACE, 9,  // 0
-	'q',        'w',    'e',       'r',        't',    'z',         'u',      'i', 
-	'o',        'p',    '=',       '+',        K_ENTER,K_CTRL,      'a',      's',   // 1
-	'd',        'f',    'g',       'h',        'j',    'k',         'l',      '[', 
+	'q',        'w',    'e',       'r',        't',    'z',         'u',      'i',
+	'o',        'p',    '=',       '+',        K_ENTER, K_CTRL,      'a',      's',  // 1
+	'd',        'f',    'g',       'h',        'j',    'k',         'l',      '[',
 	']',        '`',    K_SHIFT,   '#',        'y',    'x',         'c',      'v',   // 2
-	'b',        'n',    'm',       ',',        '.',    '-',         K_SHIFT,  K_KP_STAR, 
-	K_ALT,      ' ',    K_CAPSLOCK,K_F1,       K_F2,   K_F3,        K_F4,     K_F5,  // 3
-	K_F6,       K_F7,   K_F8,      K_F9,       K_F10,  K_PAUSE,     K_SCROLL, K_HOME, 
-	K_UPARROW,  K_PGUP, K_KP_MINUS,K_LEFTARROW,K_KP_5, K_RIGHTARROW,K_KP_PLUS,K_END, // 4
-	K_DOWNARROW,K_PGDN, K_INS,     K_DEL,      0,      0,           '<',      K_F11, 
+	'b',        'n',    'm',       ',',        '.',    '-',         K_SHIFT,  K_KP_STAR,
+	K_ALT,      ' ',    K_CAPSLOCK, K_F1,       K_F2,   K_F3,        K_F4,     K_F5, // 3
+	K_F6,       K_F7,   K_F8,      K_F9,       K_F10,  K_PAUSE,     K_SCROLL, K_HOME,
+	K_UPARROW,  K_PGUP, K_KP_MINUS, K_LEFTARROW, K_KP_5, K_RIGHTARROW, K_KP_PLUS, K_END, // 4
+	K_DOWNARROW, K_PGDN, K_INS,     K_DEL,      0,      0,           '<',      K_F11,
 	K_F12,      0,      0,         K_LWIN,     K_RWIN, K_MENU,      0,        0,     // 5
-	0,          0,      0,         0,          0,      0,           0,        0, 
+	0,          0,      0,         0,          0,      0,           0,        0,
 	0,          0,      0,         0,          0,      0,           0,        0,     // 6
-	0,          0,      0,         0,          0,      0,           0,        0, 
+	0,          0,      0,         0,          0,      0,           0,        0,
 	0,          0,      0,         0,          0,      0,           0,        0      // 7
-}; 
+};
 
-static const unsigned char s_scantokey_french[256] = {
+static const unsigned char s_scantokey_french[256] =
+{
 //  0            1       2          3          4       5            6         7
 //  8            9       A          B          C       D            E         F
-	0,           27,    '1',       '2',        '3',    '4',         '5',      '6', 
-	'7',        '8',    '9',       '0',        ')',    '=',         K_BACKSPACE, 9, // 0 
-	'a',        'z',    'e',       'r',        't',    'y',         'u',      'i', 
-	'o',        'p',    '^',       '$',        K_ENTER,K_CTRL,      'q',      's',      // 1 
-	'd',        'f',    'g',       'h',        'j',    'k',         'l',      'm', 
-	'ù',        '`',    K_SHIFT,   '*',        'w',    'x',         'c',      'v',      // 2 
+	0,           27,    '1',       '2',        '3',    '4',         '5',      '6',
+	'7',        '8',    '9',       '0',        ')',    '=',         K_BACKSPACE, 9, // 0
+	'a',        'z',    'e',       'r',        't',    'y',         'u',      'i',
+	'o',        'p',    '^',       '$',        K_ENTER, K_CTRL,      'q',      's',     // 1
+	'd',        'f',    'g',       'h',        'j',    'k',         'l',      'm',
+	'ù',        '`',    K_SHIFT,   '*',        'w',    'x',         'c',      'v',      // 2
 	'b',        'n',    ',',       ';',        ':',    '!',         K_SHIFT,  K_KP_STAR,
-	K_ALT,      ' ',    K_CAPSLOCK,K_F1,       K_F2,   K_F3,        K_F4,     K_F5,  // 3
-	K_F6,       K_F7,   K_F8,      K_F9,       K_F10,  K_PAUSE,     K_SCROLL, K_HOME, 
-	K_UPARROW,  K_PGUP, K_KP_MINUS,K_LEFTARROW,K_KP_5, K_RIGHTARROW,K_KP_PLUS,K_END, // 4
-	K_DOWNARROW,K_PGDN, K_INS,     K_DEL,      0,      0,           '<',      K_F11, 
+	K_ALT,      ' ',    K_CAPSLOCK, K_F1,       K_F2,   K_F3,        K_F4,     K_F5, // 3
+	K_F6,       K_F7,   K_F8,      K_F9,       K_F10,  K_PAUSE,     K_SCROLL, K_HOME,
+	K_UPARROW,  K_PGUP, K_KP_MINUS, K_LEFTARROW, K_KP_5, K_RIGHTARROW, K_KP_PLUS, K_END, // 4
+	K_DOWNARROW, K_PGDN, K_INS,     K_DEL,      0,      0,           '<',      K_F11,
 	K_F12,      0,      0,         K_LWIN,     K_RWIN, K_MENU,      0,        0,     // 5
-	0,          0,      0,         0,          0,      0,           0,        0, 
+	0,          0,      0,         0,          0,      0,           0,        0,
 	0,          0,      0,         0,          0,      0,           0,        0,     // 6
-	0,          0,      0,         0,          0,      0,           0,        0, 
+	0,          0,      0,         0,          0,      0,           0,        0,
 	0,          0,      0,         0,          0,      0,           0,        0,      // 7
 // shifted
-	0,           27,    '&',       'é',        '\"',    '\'',         '(',      '-', 
-	'è',        '_',    'ç',       'à',        '°',    '+',         K_BACKSPACE, 9, // 0 
-	'a',        'z',    'e',       'r',        't',    'y',         'u',      'i', 
-	'o',        'p',    '^',       '$',        K_ENTER,K_CTRL,      'q',      's',      // 1 
-	'd',        'f',    'g',       'h',        'j',    'k',         'l',      'm', 
-	'ù',        0,    K_SHIFT,   '*',        'w',    'x',         'c',      'v',      // 2 
+	0,           27,    '&',       'é',        '\"',    '\'',         '(',      '-',
+	'è',        '_',    'ç',       'à',        '°',    '+',         K_BACKSPACE, 9, // 0
+	'a',        'z',    'e',       'r',        't',    'y',         'u',      'i',
+	'o',        'p',    '^',       '$',        K_ENTER, K_CTRL,      'q',      's',     // 1
+	'd',        'f',    'g',       'h',        'j',    'k',         'l',      'm',
+	'ù',        0,    K_SHIFT,   '*',        'w',    'x',         'c',      'v',      // 2
 	'b',        'n',    ',',       ';',        ':',    '!',         K_SHIFT,  K_KP_STAR,
-	K_ALT,      ' ',    K_CAPSLOCK,K_F1,       K_F2,   K_F3,        K_F4,     K_F5,  // 3
-	K_F6,       K_F7,   K_F8,      K_F9,       K_F10,  K_PAUSE,     K_SCROLL, K_HOME, 
-	K_UPARROW,  K_PGUP, K_KP_MINUS,K_LEFTARROW,K_KP_5, K_RIGHTARROW,K_KP_PLUS,K_END, // 4
-	K_DOWNARROW,K_PGDN, K_INS,     K_DEL,      0,      0,           '<',      K_F11, 
+	K_ALT,      ' ',    K_CAPSLOCK, K_F1,       K_F2,   K_F3,        K_F4,     K_F5, // 3
+	K_F6,       K_F7,   K_F8,      K_F9,       K_F10,  K_PAUSE,     K_SCROLL, K_HOME,
+	K_UPARROW,  K_PGUP, K_KP_MINUS, K_LEFTARROW, K_KP_5, K_RIGHTARROW, K_KP_PLUS, K_END, // 4
+	K_DOWNARROW, K_PGDN, K_INS,     K_DEL,      0,      0,           '<',      K_F11,
 	K_F12,      0,      0,         K_LWIN,     K_RWIN, K_MENU,      0,        0,     // 5
-	0,          0,      0,         0,          0,      0,           0,        0, 
+	0,          0,      0,         0,          0,      0,           0,        0,
 	0,          0,      0,         0,          0,      0,           0,        0,     // 6
-	0,          0,      0,         0,          0,      0,           0,        0, 
+	0,          0,      0,         0,          0,      0,           0,        0,
 	0,          0,      0,         0,          0,      0,           0,        0      // 7
-}; 
+};
 
-static const unsigned char s_scantokey_spanish[256] = { 
+static const unsigned char s_scantokey_spanish[256] =
+{
 //  0            1       2          3          4       5            6         7
 //  8            9       A          B          C       D            E         F
-	0,           27,    '1',       '2',        '3',    '4',         '5',      '6', 
-	'7',        '8',    '9',       '0',        '\'',   '¡',         K_BACKSPACE, 9,  // 0 
-	'q',        'w',    'e',       'r',        't',    'y',         'u',      'i', 
-	'o',        'p',    '`',       '+',        K_ENTER,K_CTRL,      'a',      's',   // 1 
-	'd',        'f',    'g',       'h',        'j',    'k',         'l',      'ñ', 
-	'´',        'º',    K_SHIFT,   'ç',        'z',    'x',         'c',      'v',   // 2 
-	'b',        'n',    'm',       ',',        '.',    '-',         K_SHIFT,  K_KP_STAR, 
-	K_ALT,      ' ',    K_CAPSLOCK,K_F1,       K_F2,   K_F3,        K_F4,     K_F5,  // 3
-	K_F6,       K_F7,   K_F8,      K_F9,       K_F10,  K_PAUSE,     K_SCROLL, K_HOME, 
-	K_UPARROW,  K_PGUP, K_KP_MINUS,K_LEFTARROW,K_KP_5, K_RIGHTARROW,K_KP_PLUS,K_END, // 4
-	K_DOWNARROW,K_PGDN, K_INS,     K_DEL,      0,      0,           '<',      K_F11, 
+	0,           27,    '1',       '2',        '3',    '4',         '5',      '6',
+	'7',        '8',    '9',       '0',        '\'',   '¡',         K_BACKSPACE, 9,  // 0
+	'q',        'w',    'e',       'r',        't',    'y',         'u',      'i',
+	'o',        'p',    '`',       '+',        K_ENTER, K_CTRL,      'a',      's',  // 1
+	'd',        'f',    'g',       'h',        'j',    'k',         'l',      'ñ',
+	'´',        'º',    K_SHIFT,   'ç',        'z',    'x',         'c',      'v',   // 2
+	'b',        'n',    'm',       ',',        '.',    '-',         K_SHIFT,  K_KP_STAR,
+	K_ALT,      ' ',    K_CAPSLOCK, K_F1,       K_F2,   K_F3,        K_F4,     K_F5, // 3
+	K_F6,       K_F7,   K_F8,      K_F9,       K_F10,  K_PAUSE,     K_SCROLL, K_HOME,
+	K_UPARROW,  K_PGUP, K_KP_MINUS, K_LEFTARROW, K_KP_5, K_RIGHTARROW, K_KP_PLUS, K_END, // 4
+	K_DOWNARROW, K_PGDN, K_INS,     K_DEL,      0,      0,           '<',      K_F11,
 	K_F12,      0,      0,         K_LWIN,     K_RWIN, K_MENU,      0,        0,     // 5
-	0,          0,      0,         0,          0,      0,           0,        0, 
+	0,          0,      0,         0,          0,      0,           0,        0,
 	0,          0,      0,         0,          0,      0,           0,        0,     // 6
-	0,          0,      0,         0,          0,      0,           0,        0, 
+	0,          0,      0,         0,          0,      0,           0,        0,
 	0,          0,      0,         0,          0,      0,           0,        0,      // 7
 // shifted
-	0,           27,    '!',       '\"',        '·',    '$',         '%',      '&', 
-	'/',        '(',    ')',       '=',        '?',   '¿',         K_BACKSPACE, 9,  // 0 
-	'q',        'w',    'e',       'r',        't',    'y',         'u',      'i', 
-	'o',        'p',    '^',       '*',        K_ENTER,K_CTRL,      'a',      's',   // 1 
-	'd',        'f',    'g',       'h',        'j',    'k',         'l',      'Ñ', 
-	'¨',        'ª',    K_SHIFT,   'Ç',        'z',    'x',         'c',      'v',   // 2 
-	'b',        'n',    'm',       ',',        '.',    '-',         K_SHIFT,  K_KP_STAR, 
-	K_ALT,      ' ',    K_CAPSLOCK,K_F1,       K_F2,   K_F3,        K_F4,     K_F5,  // 3
-	K_F6,       K_F7,   K_F8,      K_F9,       K_F10,  K_PAUSE,     K_SCROLL, K_HOME, 
-	K_UPARROW,  K_PGUP, K_KP_MINUS,K_LEFTARROW,K_KP_5, K_RIGHTARROW,K_KP_PLUS,K_END, // 4
-	K_DOWNARROW,K_PGDN, K_INS,     K_DEL,      0,      0,           '<',      K_F11, 
+	0,           27,    '!',       '\"',        '·',    '$',         '%',      '&',
+	'/',        '(',    ')',       '=',        '?',   '¿',         K_BACKSPACE, 9,  // 0
+	'q',        'w',    'e',       'r',        't',    'y',         'u',      'i',
+	'o',        'p',    '^',       '*',        K_ENTER, K_CTRL,      'a',      's',  // 1
+	'd',        'f',    'g',       'h',        'j',    'k',         'l',      'Ñ',
+	'¨',        'ª',    K_SHIFT,   'Ç',        'z',    'x',         'c',      'v',   // 2
+	'b',        'n',    'm',       ',',        '.',    '-',         K_SHIFT,  K_KP_STAR,
+	K_ALT,      ' ',    K_CAPSLOCK, K_F1,       K_F2,   K_F3,        K_F4,     K_F5, // 3
+	K_F6,       K_F7,   K_F8,      K_F9,       K_F10,  K_PAUSE,     K_SCROLL, K_HOME,
+	K_UPARROW,  K_PGUP, K_KP_MINUS, K_LEFTARROW, K_KP_5, K_RIGHTARROW, K_KP_PLUS, K_END, // 4
+	K_DOWNARROW, K_PGDN, K_INS,     K_DEL,      0,      0,           '<',      K_F11,
 	K_F12,      0,      0,         K_LWIN,     K_RWIN, K_MENU,      0,        0,     // 5
-	0,          0,      0,         0,          0,      0,           0,        0, 
+	0,          0,      0,         0,          0,      0,           0,        0,
 	0,          0,      0,         0,          0,      0,           0,        0,     // 6
-	0,          0,      0,         0,          0,      0,           0,        0, 
+	0,          0,      0,         0,          0,      0,           0,        0,
 	0,          0,      0,         0,          0,      0,           0,        0      // 7
-}; 
+};
 
-static const unsigned char s_scantokey_italian[256] = { 
+static const unsigned char s_scantokey_italian[256] =
+{
 //  0            1       2          3          4       5            6         7
 //  8            9       A          B          C       D            E         F
-		0,           27,    '1',       '2',        '3',    '4',         '5',      '6', 
-		'7',        '8',    '9',       '0',        '\'',   'ì',         K_BACKSPACE, 9,  // 0 
-		'q',        'w',    'e',       'r',        't',    'y',         'u',      'i', 
-		'o',        'p',    'è',       '+',        K_ENTER,K_CTRL,      'a',      's',   // 1 
-		'd',        'f',    'g',       'h',        'j',    'k',         'l',      'ò', 
-		'à',        '\\',    K_SHIFT,   'ù',        'z',    'x',         'c',      'v',   // 2 
-		'b',        'n',    'm',       ',',        '.',    '-',         K_SHIFT,  K_KP_STAR, 
-		K_ALT,      ' ',    K_CAPSLOCK,K_F1,       K_F2,   K_F3,        K_F4,     K_F5,  // 3
-		K_F6,       K_F7,   K_F8,      K_F9,       K_F10,  K_PAUSE,     K_SCROLL, K_HOME, 
-		K_UPARROW,  K_PGUP, K_KP_MINUS,K_LEFTARROW,K_KP_5, K_RIGHTARROW,K_KP_PLUS,K_END, // 4
-		K_DOWNARROW,K_PGDN, K_INS,     K_DEL,      0,      0,           '<',      K_F11, 
-		K_F12,      0,      0,         K_LWIN,     K_RWIN, K_MENU,      0,        0,     // 5
-		0,          0,      0,         0,          0,      0,           0,        0, 
-		0,          0,      0,         0,          0,      0,           0,        0,     // 6
-		0,          0,      0,         0,          0,      0,           0,        0, 
-		0,          0,      0,         0,          0,      0,           0,        0,      // 7
+	0,           27,    '1',       '2',        '3',    '4',         '5',      '6',
+	'7',        '8',    '9',       '0',        '\'',   'ì',         K_BACKSPACE, 9,  // 0
+	'q',        'w',    'e',       'r',        't',    'y',         'u',      'i',
+	'o',        'p',    'è',       '+',        K_ENTER, K_CTRL,      'a',      's',  // 1
+	'd',        'f',    'g',       'h',        'j',    'k',         'l',      'ò',
+	'à',        '\\',    K_SHIFT,   'ù',        'z',    'x',         'c',      'v',   // 2
+	'b',        'n',    'm',       ',',        '.',    '-',         K_SHIFT,  K_KP_STAR,
+	K_ALT,      ' ',    K_CAPSLOCK, K_F1,       K_F2,   K_F3,        K_F4,     K_F5, // 3
+	K_F6,       K_F7,   K_F8,      K_F9,       K_F10,  K_PAUSE,     K_SCROLL, K_HOME,
+	K_UPARROW,  K_PGUP, K_KP_MINUS, K_LEFTARROW, K_KP_5, K_RIGHTARROW, K_KP_PLUS, K_END, // 4
+	K_DOWNARROW, K_PGDN, K_INS,     K_DEL,      0,      0,           '<',      K_F11,
+	K_F12,      0,      0,         K_LWIN,     K_RWIN, K_MENU,      0,        0,     // 5
+	0,          0,      0,         0,          0,      0,           0,        0,
+	0,          0,      0,         0,          0,      0,           0,        0,     // 6
+	0,          0,      0,         0,          0,      0,           0,        0,
+	0,          0,      0,         0,          0,      0,           0,        0,      // 7
 // shifted
-		0,           27,    '!',       '\"',        '£',    '$',         '%',      '&', 
-		'/',        '(',    ')',       '=',        '?',   '^',         K_BACKSPACE, 9,  // 0 
-		'q',        'w',    'e',       'r',        't',    'y',         'u',      'i', 
-		'o',        'p',    'é',       '*',        K_ENTER,K_CTRL,      'a',      's',   // 1 
-		'd',        'f',    'g',       'h',        'j',    'k',         'l',      'ç', 
-		'°',        '|',    K_SHIFT,   '§',        'z',    'x',         'c',      'v',   // 2 
-		'b',        'n',    'm',       ',',        '.',    '-',         K_SHIFT,  K_KP_STAR, 
-		K_ALT,      ' ',    K_CAPSLOCK,K_F1,       K_F2,   K_F3,        K_F4,     K_F5,  // 3
-		K_F6,       K_F7,   K_F8,      K_F9,       K_F10,  K_PAUSE,     K_SCROLL, K_HOME, 
-		K_UPARROW,  K_PGUP, K_KP_MINUS,K_LEFTARROW,K_KP_5, K_RIGHTARROW,K_KP_PLUS,K_END, // 4
-		K_DOWNARROW,K_PGDN, K_INS,     K_DEL,      0,      0,           '<',      K_F11, 
-		K_F12,      0,      0,         K_LWIN,     K_RWIN, K_MENU,      0,        0,     // 5
-		0,          0,      0,         0,          0,      0,           0,        0, 
-		0,          0,      0,         0,          0,      0,           0,        0,     // 6
-		0,          0,      0,         0,          0,      0,           0,        0, 
-		0,          0,      0,         0,          0,      0,           0,        0		 // 7
-
+	0,           27,    '!',       '\"',        '£',    '$',         '%',      '&',
+	'/',        '(',    ')',       '=',        '?',   '^',         K_BACKSPACE, 9,  // 0
+	'q',        'w',    'e',       'r',        't',    'y',         'u',      'i',
+	'o',        'p',    'é',       '*',        K_ENTER, K_CTRL,      'a',      's',  // 1
+	'd',        'f',    'g',       'h',        'j',    'k',         'l',      'ç',
+	'°',        '|',    K_SHIFT,   '§',        'z',    'x',         'c',      'v',   // 2
+	'b',        'n',    'm',       ',',        '.',    '-',         K_SHIFT,  K_KP_STAR,
+	K_ALT,      ' ',    K_CAPSLOCK, K_F1,       K_F2,   K_F3,        K_F4,     K_F5, // 3
+	K_F6,       K_F7,   K_F8,      K_F9,       K_F10,  K_PAUSE,     K_SCROLL, K_HOME,
+	K_UPARROW,  K_PGUP, K_KP_MINUS, K_LEFTARROW, K_KP_5, K_RIGHTARROW, K_KP_PLUS, K_END, // 4
+	K_DOWNARROW, K_PGDN, K_INS,     K_DEL,      0,      0,           '<',      K_F11,
+	K_F12,      0,      0,         K_LWIN,     K_RWIN, K_MENU,      0,        0,     // 5
+	0,          0,      0,         0,          0,      0,           0,        0,
+	0,          0,      0,         0,          0,      0,           0,        0,     // 6
+	0,          0,      0,         0,          0,      0,           0,        0,
+	0,          0,      0,         0,          0,      0,           0,        0		 // 7
 	
-}; 
+	
+};
 
-static const unsigned char *keyScanTable = s_scantokey;	
+static const unsigned char* keyScanTable = s_scantokey;
 
 // this should be part of the scantables and the scan tables should be 512 bytes
 // (256 scan codes, shifted and unshifted).  Changing everything to use 512 byte
@@ -264,11 +271,12 @@ static unsigned char	rightAltKey = K_ALT;
 
 #define NUM_OBJECTS (sizeof(rgodf) / sizeof(rgodf[0]))
 
-static DIDATAFORMAT	df = {
-	sizeof(DIDATAFORMAT),       // this structure
-	sizeof(DIOBJECTDATAFORMAT), // size of object data format
+static DIDATAFORMAT	df =
+{
+	sizeof( DIDATAFORMAT ),     // this structure
+	sizeof( DIOBJECTDATAFORMAT ), // size of object data format
 	DIDF_RELAXIS,               // absolute axis coordinates
-	sizeof(MYDATA),             // device data size
+	sizeof( MYDATA ),           // device data size
 	NUM_OBJECTS,                // number of objects
 	rgodf,                      // and here they are
 };
@@ -281,100 +289,107 @@ DIRECT INPUT KEYBOARD CONTROL
 ============================================================
 */
 
-bool IN_StartupKeyboard( void ) {
-    HRESULT hr;
-    bool    bExclusive;
-    bool    bForeground;
-    bool    bImmediate;
-    bool    bDisableWindowsKey;
-    DWORD   dwCoopFlags;
-
-	if (!win32.g_pdi) {
-		common->Printf("keyboard: DirectInput has not been started\n");
+bool IN_StartupKeyboard( void )
+{
+	HRESULT hr;
+	bool    bExclusive;
+	bool    bForeground;
+	bool    bImmediate;
+	bool    bDisableWindowsKey;
+	DWORD   dwCoopFlags;
+	
+	if( !win32.g_pdi )
+	{
+		common->Printf( "keyboard: DirectInput has not been started\n" );
 		return false;
 	}
-
-	if (win32.g_pKeyboard) {
+	
+	if( win32.g_pKeyboard )
+	{
 		win32.g_pKeyboard->Release();
 		win32.g_pKeyboard = NULL;
 	}
-
-    // Detrimine where the buffer would like to be allocated 
-    bExclusive         = false;
-    bForeground        = true;
-    bImmediate         = false;
-    bDisableWindowsKey = true;
-
-    if( bExclusive )
-        dwCoopFlags = DISCL_EXCLUSIVE;
-    else
-        dwCoopFlags = DISCL_NONEXCLUSIVE;
-
-    if( bForeground )
-        dwCoopFlags |= DISCL_FOREGROUND;
-    else
-        dwCoopFlags |= DISCL_BACKGROUND;
-
-    // Disabling the windows key is only allowed only if we are in foreground nonexclusive
-    if( bDisableWindowsKey && !bExclusive && bForeground )
-        dwCoopFlags |= DISCL_NOWINKEY;
-
-    // Obtain an interface to the system keyboard device.
-    if( FAILED( hr = win32.g_pdi->CreateDevice( GUID_SysKeyboard, &win32.g_pKeyboard, NULL ) ) ) {
-		common->Printf("keyboard: couldn't find a keyboard device\n");
-        return false;
+	
+	// Detrimine where the buffer would like to be allocated
+	bExclusive         = false;
+	bForeground        = true;
+	bImmediate         = false;
+	bDisableWindowsKey = true;
+	
+	if( bExclusive )
+		dwCoopFlags = DISCL_EXCLUSIVE;
+	else
+		dwCoopFlags = DISCL_NONEXCLUSIVE;
+		
+	if( bForeground )
+		dwCoopFlags |= DISCL_FOREGROUND;
+	else
+		dwCoopFlags |= DISCL_BACKGROUND;
+		
+	// Disabling the windows key is only allowed only if we are in foreground nonexclusive
+	if( bDisableWindowsKey && !bExclusive && bForeground )
+		dwCoopFlags |= DISCL_NOWINKEY;
+		
+	// Obtain an interface to the system keyboard device.
+	if( FAILED( hr = win32.g_pdi->CreateDevice( GUID_SysKeyboard, &win32.g_pKeyboard, NULL ) ) )
+	{
+		common->Printf( "keyboard: couldn't find a keyboard device\n" );
+		return false;
 	}
-    
-    // Set the data format to "keyboard format" - a predefined data format 
-    //
-    // A data format specifies which controls on a device we
-    // are interested in, and how they should be reported.
-    //
-    // This tells DirectInput that we will be passing an array
-    // of 256 bytes to IDirectInputDevice::GetDeviceState.
-    if( FAILED( hr = win32.g_pKeyboard->SetDataFormat( &c_dfDIKeyboard ) ) )
-        return false;
-    
-    // Set the cooperativity level to let DirectInput know how
-    // this device should interact with the system and with other
-    // DirectInput applications.
-    hr = win32.g_pKeyboard->SetCooperativeLevel( win32.hWnd, dwCoopFlags );
-    if( hr == DIERR_UNSUPPORTED && !bForeground && bExclusive ) {
-        common->Printf("keyboard: SetCooperativeLevel() returned DIERR_UNSUPPORTED.\nFor security reasons, background exclusive keyboard access is not allowed.\n");
-        return false;
-    }
-
-    if( FAILED(hr) ) {
-        return false;
+	
+	// Set the data format to "keyboard format" - a predefined data format
+	//
+	// A data format specifies which controls on a device we
+	// are interested in, and how they should be reported.
+	//
+	// This tells DirectInput that we will be passing an array
+	// of 256 bytes to IDirectInputDevice::GetDeviceState.
+	if( FAILED( hr = win32.g_pKeyboard->SetDataFormat( &c_dfDIKeyboard ) ) )
+		return false;
+		
+	// Set the cooperativity level to let DirectInput know how
+	// this device should interact with the system and with other
+	// DirectInput applications.
+	hr = win32.g_pKeyboard->SetCooperativeLevel( win32.hWnd, dwCoopFlags );
+	if( hr == DIERR_UNSUPPORTED && !bForeground && bExclusive )
+	{
+		common->Printf( "keyboard: SetCooperativeLevel() returned DIERR_UNSUPPORTED.\nFor security reasons, background exclusive keyboard access is not allowed.\n" );
+		return false;
 	}
-
-    if( !bImmediate ) {
-        // IMPORTANT STEP TO USE BUFFERED DEVICE DATA!
-        //
-        // DirectInput uses unbuffered I/O (buffer size = 0) by default.
-        // If you want to read buffered data, you need to set a nonzero
-        // buffer size.
-        //
-        // Set the buffer size to DINPUT_BUFFERSIZE (defined above) elements.
-        //
-        // The buffer size is a DWORD property associated with the device.
-        DIPROPDWORD dipdw;
-
-        dipdw.diph.dwSize       = sizeof(DIPROPDWORD);
-        dipdw.diph.dwHeaderSize = sizeof(DIPROPHEADER);
-        dipdw.diph.dwObj        = 0;
-        dipdw.diph.dwHow        = DIPH_DEVICE;
-        dipdw.dwData            = DINPUT_BUFFERSIZE; // Arbitary buffer size
-
-        if( FAILED( hr = win32.g_pKeyboard->SetProperty( DIPROP_BUFFERSIZE, &dipdw.diph ) ) )
-            return false;
-    }
-
-    // Acquire the newly created device
-    win32.g_pKeyboard->Acquire();
-
-	common->Printf( "keyboard: DirectInput initialized.\n");
-    return true;
+	
+	if( FAILED( hr ) )
+	{
+		return false;
+	}
+	
+	if( !bImmediate )
+	{
+		// IMPORTANT STEP TO USE BUFFERED DEVICE DATA!
+		//
+		// DirectInput uses unbuffered I/O (buffer size = 0) by default.
+		// If you want to read buffered data, you need to set a nonzero
+		// buffer size.
+		//
+		// Set the buffer size to DINPUT_BUFFERSIZE (defined above) elements.
+		//
+		// The buffer size is a DWORD property associated with the device.
+		DIPROPDWORD dipdw;
+		
+		dipdw.diph.dwSize       = sizeof( DIPROPDWORD );
+		dipdw.diph.dwHeaderSize = sizeof( DIPROPHEADER );
+		dipdw.diph.dwObj        = 0;
+		dipdw.diph.dwHow        = DIPH_DEVICE;
+		dipdw.dwData            = DINPUT_BUFFERSIZE; // Arbitary buffer size
+		
+		if( FAILED( hr = win32.g_pKeyboard->SetProperty( DIPROP_BUFFERSIZE, &dipdw.diph ) ) )
+			return false;
+	}
+	
+	// Acquire the newly created device
+	win32.g_pKeyboard->Acquire();
+	
+	common->Printf( "keyboard: DirectInput initialized.\n" );
+	return true;
 }
 
 /*
@@ -389,9 +404,12 @@ FIXME: scan code tables should include the upper 128 scan codes instead
 	   special-case is for right alt.
 =======
 */
-int IN_DIMapKey (int key) {
-	if ( key>=128 ) {
-		switch ( key ) {
+int IN_DIMapKey( int key )
+{
+	if( key >= 128 )
+	{
+		switch( key )
+		{
 			case DIK_HOME:
 				return K_HOME;
 			case DIK_UPARROW:
@@ -435,8 +453,11 @@ int IN_DIMapKey (int key) {
 			default:
 				return 0;
 		}
-	} else {
-		switch (key) {
+	}
+	else
+	{
+		switch( key )
+		{
 			case DIK_NUMPAD7:
 				return K_KP_HOME;
 			case DIK_NUMPAD8:
@@ -479,8 +500,10 @@ int IN_DIMapKey (int key) {
 IN_DeactivateKeyboard
 ==========================
 */
-void IN_DeactivateKeyboard( void ) {
-	if (!win32.g_pKeyboard) {
+void IN_DeactivateKeyboard( void )
+{
+	if( !win32.g_pKeyboard )
+	{
 		return;
 	}
 	win32.g_pKeyboard->Unacquire( );
@@ -500,22 +523,25 @@ IN_InitDirectInput
 ========================
 */
 
-void IN_InitDirectInput( void ) {
-    HRESULT		hr;
-
+void IN_InitDirectInput( void )
+{
+	HRESULT		hr;
+	
 	common->Printf( "Initializing DirectInput...\n" );
-
-	if ( win32.g_pdi != NULL ) {
+	
+	if( win32.g_pdi != NULL )
+	{
 		win32.g_pdi->Release();			// if the previous window was destroyed we need to do this
 		win32.g_pdi = NULL;
 	}
-
-    // Register with the DirectInput subsystem and get a pointer
-    // to a IDirectInput interface we can use.
-    // Create the base DirectInput object
-	if ( FAILED( hr = DirectInput8Create( GetModuleHandle(NULL), DIRECTINPUT_VERSION, IID_IDirectInput8, (void**)&win32.g_pdi, NULL ) ) ) {
-		common->Printf ("DirectInputCreate failed\n");
-    }
+	
+	// Register with the DirectInput subsystem and get a pointer
+	// to a IDirectInput interface we can use.
+	// Create the base DirectInput object
+	if( FAILED( hr = DirectInput8Create( GetModuleHandle( NULL ), DIRECTINPUT_VERSION, IID_IDirectInput8, ( void** )&win32.g_pdi, NULL ) ) )
+	{
+		common->Printf( "DirectInputCreate failed\n" );
+	}
 }
 
 /*
@@ -523,69 +549,75 @@ void IN_InitDirectInput( void ) {
 IN_InitDIMouse
 ========================
 */
-bool IN_InitDIMouse( void ) {
-    HRESULT		hr;
-
-	if ( win32.g_pdi == NULL) {
+bool IN_InitDIMouse( void )
+{
+	HRESULT		hr;
+	
+	if( win32.g_pdi == NULL )
+	{
 		return false;
 	}
-
+	
 	// obtain an interface to the system mouse device.
-	hr = win32.g_pdi->CreateDevice( GUID_SysMouse, &win32.g_pMouse, NULL);
-
-	if (FAILED(hr)) {
-		common->Printf ("mouse: Couldn't open DI mouse device\n");
+	hr = win32.g_pdi->CreateDevice( GUID_SysMouse, &win32.g_pMouse, NULL );
+	
+	if( FAILED( hr ) )
+	{
+		common->Printf( "mouse: Couldn't open DI mouse device\n" );
 		return false;
 	}
-
-    // Set the data format to "mouse format" - a predefined data format 
-    //
-    // A data format specifies which controls on a device we
-    // are interested in, and how they should be reported.
-    //
-    // This tells DirectInput that we will be passing a
-    // DIMOUSESTATE2 structure to IDirectInputDevice::GetDeviceState.
-    if( FAILED( hr = win32.g_pMouse->SetDataFormat( &c_dfDIMouse2 ) ) ) {
-		common->Printf ("mouse: Couldn't set DI mouse format\n");
+	
+	// Set the data format to "mouse format" - a predefined data format
+	//
+	// A data format specifies which controls on a device we
+	// are interested in, and how they should be reported.
+	//
+	// This tells DirectInput that we will be passing a
+	// DIMOUSESTATE2 structure to IDirectInputDevice::GetDeviceState.
+	if( FAILED( hr = win32.g_pMouse->SetDataFormat( &c_dfDIMouse2 ) ) )
+	{
+		common->Printf( "mouse: Couldn't set DI mouse format\n" );
 		return false;
 	}
-    
+	
 	// set the cooperativity level.
-	hr = win32.g_pMouse->SetCooperativeLevel( win32.hWnd, DISCL_EXCLUSIVE | DISCL_FOREGROUND);
-
-	if (FAILED(hr)) {
-		common->Printf ("mouse: Couldn't set DI coop level\n");
+	hr = win32.g_pMouse->SetCooperativeLevel( win32.hWnd, DISCL_EXCLUSIVE | DISCL_FOREGROUND );
+	
+	if( FAILED( hr ) )
+	{
+		common->Printf( "mouse: Couldn't set DI coop level\n" );
 		return false;
 	}
-
-
-    // IMPORTANT STEP TO USE BUFFERED DEVICE DATA!
-    //
-    // DirectInput uses unbuffered I/O (buffer size = 0) by default.
-    // If you want to read buffered data, you need to set a nonzero
-    // buffer size.
-    //
-    // Set the buffer size to SAMPLE_BUFFER_SIZE (defined above) elements.
-    //
-    // The buffer size is a DWORD property associated with the device.
-    DIPROPDWORD dipdw;
-    dipdw.diph.dwSize       = sizeof(DIPROPDWORD);
-    dipdw.diph.dwHeaderSize = sizeof(DIPROPHEADER);
-    dipdw.diph.dwObj        = 0;
-    dipdw.diph.dwHow        = DIPH_DEVICE;
-    dipdw.dwData            = DINPUT_BUFFERSIZE; // Arbitary buffer size
-
-    if( FAILED( hr = win32.g_pMouse->SetProperty( DIPROP_BUFFERSIZE, &dipdw.diph ) ) ) {
-		common->Printf ("mouse: Couldn't set DI buffersize\n");
+	
+	
+	// IMPORTANT STEP TO USE BUFFERED DEVICE DATA!
+	//
+	// DirectInput uses unbuffered I/O (buffer size = 0) by default.
+	// If you want to read buffered data, you need to set a nonzero
+	// buffer size.
+	//
+	// Set the buffer size to SAMPLE_BUFFER_SIZE (defined above) elements.
+	//
+	// The buffer size is a DWORD property associated with the device.
+	DIPROPDWORD dipdw;
+	dipdw.diph.dwSize       = sizeof( DIPROPDWORD );
+	dipdw.diph.dwHeaderSize = sizeof( DIPROPHEADER );
+	dipdw.diph.dwObj        = 0;
+	dipdw.diph.dwHow        = DIPH_DEVICE;
+	dipdw.dwData            = DINPUT_BUFFERSIZE; // Arbitary buffer size
+	
+	if( FAILED( hr = win32.g_pMouse->SetProperty( DIPROP_BUFFERSIZE, &dipdw.diph ) ) )
+	{
+		common->Printf( "mouse: Couldn't set DI buffersize\n" );
 		return false;
 	}
-
+	
 	IN_ActivateMouse();
-
+	
 	// clear any pending samples
 	Sys_PollMouseInputEvents();
-
-	common->Printf( "mouse: DirectInput initialized.\n");
+	
+	common->Printf( "mouse: DirectInput initialized.\n" );
 	return true;
 }
 
@@ -595,29 +627,34 @@ bool IN_InitDIMouse( void ) {
 IN_ActivateMouse
 ==========================
 */
-void IN_ActivateMouse( void ) {
+void IN_ActivateMouse( void )
+{
 	int i;
 	HRESULT hr;
-
-	if ( !win32.in_mouse.GetBool() || win32.mouseGrabbed || !win32.g_pMouse ) {
+	
+	if( !win32.in_mouse.GetBool() || win32.mouseGrabbed || !win32.g_pMouse )
+	{
 		return;
 	}
-
+	
 	win32.mouseGrabbed = true;
-	for ( i = 0; i < 10; i++ ) {
-		if ( ::ShowCursor( false ) < 0 ) {
+	for( i = 0; i < 10; i++ )
+	{
+		if( ::ShowCursor( false ) < 0 )
+		{
 			break;
 		}
 	}
-
+	
 	// we may fail to reacquire if the window has been recreated
 	hr = win32.g_pMouse->Acquire();
-	if (FAILED(hr)) {
+	if( FAILED( hr ) )
+	{
 		return;
 	}
-
+	
 	// set the cooperativity level.
-	hr = win32.g_pMouse->SetCooperativeLevel( win32.hWnd, DISCL_EXCLUSIVE | DISCL_FOREGROUND);
+	hr = win32.g_pMouse->SetCooperativeLevel( win32.hWnd, DISCL_EXCLUSIVE | DISCL_FOREGROUND );
 }
 
 /*
@@ -625,17 +662,21 @@ void IN_ActivateMouse( void ) {
 IN_DeactivateMouse
 ==========================
 */
-void IN_DeactivateMouse( void ) {
+void IN_DeactivateMouse( void )
+{
 	int i;
-
-	if (!win32.g_pMouse || !win32.mouseGrabbed ) {
+	
+	if( !win32.g_pMouse || !win32.mouseGrabbed )
+	{
 		return;
 	}
-
+	
 	win32.g_pMouse->Unacquire();
-
-	for ( i = 0; i < 10; i++ ) {
-		if ( ::ShowCursor( true ) >= 0 ) {
+	
+	for( i = 0; i < 10; i++ )
+	{
+		if( ::ShowCursor( true ) >= 0 )
+		{
 			break;
 		}
 	}
@@ -647,8 +688,10 @@ void IN_DeactivateMouse( void ) {
 IN_DeactivateMouseIfWindowed
 ==========================
 */
-void IN_DeactivateMouseIfWindowed( void ) {
-	if ( !win32.cdsFullscreen ) {
+void IN_DeactivateMouseIfWindowed( void )
+{
+	if( !win32.cdsFullscreen )
+	{
 		IN_DeactivateMouse();
 	}
 }
@@ -667,20 +710,24 @@ void IN_DeactivateMouseIfWindowed( void ) {
 Sys_ShutdownInput
 ===========
 */
-void Sys_ShutdownInput( void ) {
+void Sys_ShutdownInput( void )
+{
 	IN_DeactivateMouse();
 	IN_DeactivateKeyboard();
-	if ( win32.g_pKeyboard ) {
+	if( win32.g_pKeyboard )
+	{
 		win32.g_pKeyboard->Release();
 		win32.g_pKeyboard = NULL;
 	}
-
-    if ( win32.g_pMouse ) {
+	
+	if( win32.g_pMouse )
+	{
 		win32.g_pMouse->Release();
 		win32.g_pMouse = NULL;
 	}
-
-    if ( win32.g_pdi ) {
+	
+	if( win32.g_pdi )
+	{
 		win32.g_pdi->Release();
 		win32.g_pdi = NULL;
 	}
@@ -691,18 +738,22 @@ void Sys_ShutdownInput( void ) {
 Sys_InitInput
 ===========
 */
-void Sys_InitInput( void ) {
-	common->Printf ("\n------- Input Initialization -------\n");
+void Sys_InitInput( void )
+{
+	common->Printf( "\n------- Input Initialization -------\n" );
 	IN_InitDirectInput();
-	if ( win32.in_mouse.GetBool() ) {
+	if( win32.in_mouse.GetBool() )
+	{
 		IN_InitDIMouse();
 		// don't grab the mouse on initialization
 		Sys_GrabMouseCursor( false );
-	} else {
-		common->Printf ("Mouse control not active.\n");
+	}
+	else
+	{
+		common->Printf( "Mouse control not active.\n" );
 	}
 	IN_StartupKeyboard();
-	common->Printf ("------------------------------------\n");
+	common->Printf( "------------------------------------\n" );
 	win32.in_mouse.ClearModified();
 }
 
@@ -711,27 +762,38 @@ void Sys_InitInput( void ) {
 Sys_InitScanTable
 ===========
 */
-void Sys_InitScanTable( void ) {
+void Sys_InitScanTable( void )
+{
 	idStr lang = cvarSystem->GetCVarString( "sys_lang" );
-	if ( lang.Length() == 0 ) {
+	if( lang.Length() == 0 )
+	{
 		lang = "english";
 	}
-	if ( lang.Icmp( "english" ) == 0 ) {
+	if( lang.Icmp( "english" ) == 0 )
+	{
 		keyScanTable = s_scantokey;
-		// the only reason that english right alt binds as K_ALT is so that 
+		// the only reason that english right alt binds as K_ALT is so that
 		// users who were using right-alt before the patch don't suddenly find
 		// that only left-alt is working.
 		rightAltKey = K_ALT;
-	} else if ( lang.Icmp( "spanish" ) == 0 ) {
+	}
+	else if( lang.Icmp( "spanish" ) == 0 )
+	{
 		keyScanTable = s_scantokey_spanish;
 		rightAltKey = K_RIGHT_ALT;
-	} else if ( lang.Icmp( "french" ) == 0 ) {
+	}
+	else if( lang.Icmp( "french" ) == 0 )
+	{
 		keyScanTable = s_scantokey_french;
 		rightAltKey = K_RIGHT_ALT;
-	} else if ( lang.Icmp( "german" ) == 0 ) {
+	}
+	else if( lang.Icmp( "german" ) == 0 )
+	{
 		keyScanTable = s_scantokey_german;
 		rightAltKey = K_RIGHT_ALT;
-	} else if ( lang.Icmp( "italian" ) == 0 ) {
+	}
+	else if( lang.Icmp( "italian" ) == 0 )
+	{
 		keyScanTable = s_scantokey_italian;
 		rightAltKey = K_RIGHT_ALT;
 	}
@@ -742,7 +804,8 @@ void Sys_InitScanTable( void ) {
 Sys_GetScanTable
 ==================
 */
-const unsigned char *Sys_GetScanTable( void ) {
+const unsigned char* Sys_GetScanTable( void )
+{
 	return keyScanTable;
 }
 
@@ -751,7 +814,8 @@ const unsigned char *Sys_GetScanTable( void ) {
 Sys_GetConsoleKey
 ===============
 */
-unsigned char Sys_GetConsoleKey( bool shifted ) {
+unsigned char Sys_GetConsoleKey( bool shifted )
+{
 	return keyScanTable[41 + ( shifted ? 128 : 0 )];
 }
 
@@ -762,33 +826,44 @@ IN_Frame
 Called every frame, even if not generating commands
 ==================
 */
-void IN_Frame( void ) {
+void IN_Frame( void )
+{
 	bool	shouldGrab = true;
-
-	if ( !win32.in_mouse.GetBool() ) {
+	
+	if( !win32.in_mouse.GetBool() )
+	{
 		shouldGrab = false;
 	}
 	// if fullscreen, we always want the mouse
-	if ( !win32.cdsFullscreen ) {
-		if ( win32.mouseReleased ) {
+	if( !win32.cdsFullscreen )
+	{
+		if( win32.mouseReleased )
+		{
 			shouldGrab = false;
 		}
-		if ( win32.movingWindow ) {
+		if( win32.movingWindow )
+		{
 			shouldGrab = false;
 		}
-		if ( !win32.activeApp ) {
+		if( !win32.activeApp )
+		{
 			shouldGrab = false;
 		}
 	}
-
-	if ( shouldGrab != win32.mouseGrabbed ) {
-		if ( win32.mouseGrabbed ) {
+	
+	if( shouldGrab != win32.mouseGrabbed )
+	{
+		if( win32.mouseGrabbed )
+		{
 			IN_DeactivateMouse();
-		} else {
+		}
+		else
+		{
 			IN_ActivateMouse();
-
+			
 #if 0	// if we can't reacquire, try reinitializing
-			if ( !IN_InitDIMouse() ) {
+			if( !IN_InitDIMouse() )
+			{
 				win32.in_mouse.SetBool( false );
 				return;
 			}
@@ -798,10 +873,12 @@ void IN_Frame( void ) {
 }
 
 
-void	Sys_GrabMouseCursor( bool grabIt ) {
+void	Sys_GrabMouseCursor( bool grabIt )
+{
 #ifndef	ID_DEDICATED
 	win32.mouseReleased = !grabIt;
-	if ( !grabIt ) {
+	if( !grabIt )
+	{
 		// release it right now
 		IN_Frame();
 	}
@@ -810,7 +887,7 @@ void	Sys_GrabMouseCursor( bool grabIt ) {
 
 //=====================================================================================
 
-static DIDEVICEOBJECTDATA polled_didod[ DINPUT_BUFFERSIZE ];  // Receives buffered data 
+static DIDEVICEOBJECTDATA polled_didod[ DINPUT_BUFFERSIZE ];  // Receives buffered data
 
 static int diFetch;
 static byte toggleFetch[2][ 256 ];
@@ -825,46 +902,50 @@ static byte toggleFetch[2][ 256 ];
 Sys_PollKeyboardInputEvents
 ====================
 */
-int Sys_PollKeyboardInputEvents( void ) {
-    DWORD              dwElements;
-    HRESULT            hr;
-
-    if( win32.g_pKeyboard == NULL ) {
-        return 0;
+int Sys_PollKeyboardInputEvents( void )
+{
+	DWORD              dwElements;
+	HRESULT            hr;
+	
+	if( win32.g_pKeyboard == NULL )
+	{
+		return 0;
 	}
-    
-    dwElements = DINPUT_BUFFERSIZE;
-    hr = win32.g_pKeyboard->GetDeviceData( sizeof(DIDEVICEOBJECTDATA),
-                                     polled_didod, &dwElements, 0 );
-    if( hr != DI_OK ) 
-    {
-        // We got an error or we got DI_BUFFEROVERFLOW.
-        //
-        // Either way, it means that continuous contact with the
-        // device has been lost, either due to an external
-        // interruption, or because the buffer overflowed
-        // and some events were lost.
-        hr = win32.g_pKeyboard->Acquire();
-
+	
+	dwElements = DINPUT_BUFFERSIZE;
+	hr = win32.g_pKeyboard->GetDeviceData( sizeof( DIDEVICEOBJECTDATA ),
+										   polled_didod, &dwElements, 0 );
+	if( hr != DI_OK )
+	{
+		// We got an error or we got DI_BUFFEROVERFLOW.
+		//
+		// Either way, it means that continuous contact with the
+		// device has been lost, either due to an external
+		// interruption, or because the buffer overflowed
+		// and some events were lost.
+		hr = win32.g_pKeyboard->Acquire();
 		
-
+		
+		
 		// nuke the garbage
-		if (!FAILED(hr)) {
+		if( !FAILED( hr ) )
+		{
 			//Bug 951: The following command really clears the garbage input.
 			//The original will still process keys in the buffer and was causing
 			//some problems.
-			win32.g_pKeyboard->GetDeviceData( sizeof(DIDEVICEOBJECTDATA), NULL, &dwElements, 0 );
+			win32.g_pKeyboard->GetDeviceData( sizeof( DIDEVICEOBJECTDATA ), NULL, &dwElements, 0 );
 			dwElements = 0;
 		}
-        // hr may be DIERR_OTHERAPPHASPRIO or other errors.  This
-        // may occur when the app is minimized or in the process of 
-        // switching, so just try again later 
-    }
-
-    if( FAILED(hr) ) {
-        return 0;
+		// hr may be DIERR_OTHERAPPHASPRIO or other errors.  This
+		// may occur when the app is minimized or in the process of
+		// switching, so just try again later
 	}
-
+	
+	if( FAILED( hr ) )
+	{
+		return 0;
+	}
+	
 	return dwElements;
 }
 
@@ -878,42 +959,48 @@ Fake events by getting the entire device state
 and checking transitions
 ====================
 */
-int Sys_PollKeyboardInputEvents( void ) {
-    HRESULT            hr;
+int Sys_PollKeyboardInputEvents( void )
+{
+	HRESULT            hr;
 
-    if( win32.g_pKeyboard == NULL ) {
-        return 0;
+	if( win32.g_pKeyboard == NULL )
+	{
+		return 0;
 	}
-    
+
 	hr = win32.g_pKeyboard->GetDeviceState( sizeof( toggleFetch[ diFetch ] ), toggleFetch[ diFetch ] );
-    if( hr != DI_OK ) 
-    {
-        // We got an error or we got DI_BUFFEROVERFLOW.
-        //
-        // Either way, it means that continuous contact with the
-        // device has been lost, either due to an external
-        // interruption, or because the buffer overflowed
-        // and some events were lost.
-        hr = win32.g_pKeyboard->Acquire();
+	if( hr != DI_OK )
+	{
+		// We got an error or we got DI_BUFFEROVERFLOW.
+		//
+		// Either way, it means that continuous contact with the
+		// device has been lost, either due to an external
+		// interruption, or because the buffer overflowed
+		// and some events were lost.
+		hr = win32.g_pKeyboard->Acquire();
 
 		// nuke the garbage
-		if (!FAILED(hr)) {
+		if( !FAILED( hr ) )
+		{
 			hr = win32.g_pKeyboard->GetDeviceState( sizeof( toggleFetch[ diFetch ] ), toggleFetch[ diFetch ] );
 		}
-        // hr may be DIERR_OTHERAPPHASPRIO or other errors.  This
-        // may occur when the app is minimized or in the process of 
-        // switching, so just try again later 
-    }
+		// hr may be DIERR_OTHERAPPHASPRIO or other errors.  This
+		// may occur when the app is minimized or in the process of
+		// switching, so just try again later
+	}
 
-    if( FAILED(hr) ) {
-        return 0;
+	if( FAILED( hr ) )
+	{
+		return 0;
 	}
 
 	// build faked events
 	int		numChanges = 0;
 
-	for ( int i = 0 ; i < 256 ; i++ ) {
-		if ( toggleFetch[0][i] != toggleFetch[1][i] ) {
+	for( int i = 0 ; i < 256 ; i++ )
+	{
+		if( toggleFetch[0][i] != toggleFetch[1][i] )
+		{
 			polled_didod[ numChanges ].dwOfs = i;
 			polled_didod[ numChanges ].dwData = toggleFetch[ diFetch ][i] ? 0x80 : 0;
 			numChanges++;
@@ -932,10 +1019,12 @@ int Sys_PollKeyboardInputEvents( void ) {
 Sys_PollKeyboardInputEvents
 ====================
 */
-int Sys_ReturnKeyboardInputEvent( const int n, int &ch, bool &state ) {
+int Sys_ReturnKeyboardInputEvent( const int n, int& ch, bool& state )
+{
 	ch = IN_DIMapKey( polled_didod[ n ].dwOfs );
-	state = (polled_didod[ n ].dwData & 0x80) == 0x80;
-	if ( ch == K_PRINT_SCR || ch == K_CTRL || ch == K_ALT || ch == K_RIGHT_ALT ) {
+	state = ( polled_didod[ n ].dwData & 0x80 ) == 0x80;
+	if( ch == K_PRINT_SCR || ch == K_CTRL || ch == K_ALT || ch == K_RIGHT_ALT )
+	{
 		// for windows, add a keydown event for print screen here, since
 		// windows doesn't send keydown events to the WndProc for this key.
 		// ctrl and alt are handled here to get around windows sending ctrl and
@@ -946,35 +1035,43 @@ int Sys_ReturnKeyboardInputEvent( const int n, int &ch, bool &state ) {
 }
 
 
-void Sys_EndKeyboardInputEvents( void ) {
+void Sys_EndKeyboardInputEvents( void )
+{
 }
 
-void Sys_QueMouseEvents( int dwElements ) {
+void Sys_QueMouseEvents( int dwElements )
+{
 	int i, value;
-
-	for( i = 0; i < dwElements; i++ ) {
-		if ( polled_didod[i].dwOfs >= DIMOFS_BUTTON0 && polled_didod[i].dwOfs <= DIMOFS_BUTTON7 ) {
-			value = (polled_didod[i].dwData & 0x80) == 0x80;
+	
+	for( i = 0; i < dwElements; i++ )
+	{
+		if( polled_didod[i].dwOfs >= DIMOFS_BUTTON0 && polled_didod[i].dwOfs <= DIMOFS_BUTTON7 )
+		{
+			value = ( polled_didod[i].dwData & 0x80 ) == 0x80;
 			Sys_QueEvent( polled_didod[i].dwTimeStamp, SE_KEY, K_MOUSE1 + ( polled_didod[i].dwOfs - DIMOFS_BUTTON0 ), value, 0, NULL );
-		} else {
-			switch (polled_didod[i].dwOfs) {
-			case DIMOFS_X:
-				value = polled_didod[i].dwData;
-				Sys_QueEvent( polled_didod[i].dwTimeStamp, SE_MOUSE, value, 0, 0, NULL );
-				break;
-			case DIMOFS_Y:
-				value = polled_didod[i].dwData;
-				Sys_QueEvent( polled_didod[i].dwTimeStamp, SE_MOUSE, 0, value, 0, NULL );
-				break;
-			case DIMOFS_Z:
-				value = ( (int) polled_didod[i].dwData ) / WHEEL_DELTA;
-				int key = value < 0 ? K_MWHEELDOWN : K_MWHEELUP;
-				value = abs( value );
-				while( value-- > 0 ) {
-					Sys_QueEvent( polled_didod[i].dwTimeStamp, SE_KEY, key, true, 0, NULL );
-					Sys_QueEvent( polled_didod[i].dwTimeStamp, SE_KEY, key, false, 0, NULL );
-				}
-				break;
+		}
+		else
+		{
+			switch( polled_didod[i].dwOfs )
+			{
+				case DIMOFS_X:
+					value = polled_didod[i].dwData;
+					Sys_QueEvent( polled_didod[i].dwTimeStamp, SE_MOUSE, value, 0, 0, NULL );
+					break;
+				case DIMOFS_Y:
+					value = polled_didod[i].dwData;
+					Sys_QueEvent( polled_didod[i].dwTimeStamp, SE_MOUSE, 0, value, 0, NULL );
+					break;
+				case DIMOFS_Z:
+					value = ( ( int ) polled_didod[i].dwData ) / WHEEL_DELTA;
+					int key = value < 0 ? K_MWHEELDOWN : K_MWHEELUP;
+					value = abs( value );
+					while( value-- > 0 )
+					{
+						Sys_QueEvent( polled_didod[i].dwTimeStamp, SE_KEY, key, true, 0, NULL );
+						Sys_QueEvent( polled_didod[i].dwTimeStamp, SE_KEY, key, false, 0, NULL );
+					}
+					break;
 			}
 		}
 	}
@@ -982,44 +1079,52 @@ void Sys_QueMouseEvents( int dwElements ) {
 
 //=====================================================================================
 
-int Sys_PollMouseInputEvents( void ) {
+int Sys_PollMouseInputEvents( void )
+{
 	DWORD				dwElements;
 	HRESULT				hr;
-
-	if ( !win32.g_pMouse || !win32.mouseGrabbed ) {
+	
+	if( !win32.g_pMouse || !win32.mouseGrabbed )
+	{
 		return 0;
 	}
-
-    dwElements = DINPUT_BUFFERSIZE;
-    hr = win32.g_pMouse->GetDeviceData( sizeof(DIDEVICEOBJECTDATA), polled_didod, &dwElements, 0 );
-
-    if( hr != DI_OK ) {
-        hr = win32.g_pMouse->Acquire();
+	
+	dwElements = DINPUT_BUFFERSIZE;
+	hr = win32.g_pMouse->GetDeviceData( sizeof( DIDEVICEOBJECTDATA ), polled_didod, &dwElements, 0 );
+	
+	if( hr != DI_OK )
+	{
+		hr = win32.g_pMouse->Acquire();
 		// clear the garbage
-		if (!FAILED(hr)) {
-			win32.g_pMouse->GetDeviceData( sizeof(DIDEVICEOBJECTDATA), polled_didod, &dwElements, 0 );
+		if( !FAILED( hr ) )
+		{
+			win32.g_pMouse->GetDeviceData( sizeof( DIDEVICEOBJECTDATA ), polled_didod, &dwElements, 0 );
 		}
-    }
-
-    if( FAILED(hr) ) {
-        return 0;
 	}
-
+	
+	if( FAILED( hr ) )
+	{
+		return 0;
+	}
+	
 	Sys_QueMouseEvents( dwElements );
-
+	
 	return dwElements;
 }
 
-int Sys_ReturnMouseInputEvent( const int n, int &action, int &value ) {
+int Sys_ReturnMouseInputEvent( const int n, int& action, int& value )
+{
 	int diaction = polled_didod[n].dwOfs;
-
-	if ( diaction >= DIMOFS_BUTTON0 && diaction <= DIMOFS_BUTTON7 ) {
-		value = (polled_didod[n].dwData & 0x80) == 0x80;
+	
+	if( diaction >= DIMOFS_BUTTON0 && diaction <= DIMOFS_BUTTON7 )
+	{
+		value = ( polled_didod[n].dwData & 0x80 ) == 0x80;
 		action = M_ACTION1 + ( diaction - DIMOFS_BUTTON0 );
 		return 1;
 	}
-
-	switch( diaction ) {
+	
+	switch( diaction )
+	{
 		case DIMOFS_X:
 			value = polled_didod[n].dwData;
 			action = M_DELTAX;
@@ -1030,10 +1135,11 @@ int Sys_ReturnMouseInputEvent( const int n, int &action, int &value ) {
 			return 1;
 		case DIMOFS_Z:
 			// mouse wheel actions are impulses, without a specific up / down
-			value = ( (int) polled_didod[n].dwData ) / WHEEL_DELTA;
+			value = ( ( int ) polled_didod[n].dwData ) / WHEEL_DELTA;
 			action = M_DELTAZ;
 			// a value of zero here should never happen
-			if ( value == 0 ) {
+			if( value == 0 )
+			{
 				return 0;
 			}
 			return 1;
@@ -1043,8 +1149,9 @@ int Sys_ReturnMouseInputEvent( const int n, int &action, int &value ) {
 
 void Sys_EndMouseInputEvents( void ) { }
 
-unsigned char Sys_MapCharForKey( int key ) {
-	return (unsigned char)key;
+unsigned char Sys_MapCharForKey( int key )
+{
+	return ( unsigned char )key;
 }
 
 
@@ -1063,278 +1170,323 @@ typedef struct
 static pollGamepadEvent_t s_pollGamepadEvents[MAX_POLL_EVENTS + POLL_EVENTS_HEADROOM];
 static int s_pollGamepadEventsCount;
 
-static bool IN_AddGamepadPollEvent(int action, int value, int value2) 
+static bool IN_AddGamepadPollEvent( int action, int value, int value2 )
 {
-	if (s_pollGamepadEventsCount >= MAX_POLL_EVENTS + POLL_EVENTS_HEADROOM)
-		common->FatalError( "pollGamepadEventsCount exceeded MAX_POLL_EVENT + POLL_EVENTS_HEADROOM\n");
-
+	if( s_pollGamepadEventsCount >= MAX_POLL_EVENTS + POLL_EVENTS_HEADROOM )
+		common->FatalError( "pollGamepadEventsCount exceeded MAX_POLL_EVENT + POLL_EVENTS_HEADROOM\n" );
+		
 	s_pollGamepadEvents[s_pollGamepadEventsCount].action = action;
 	s_pollGamepadEvents[s_pollGamepadEventsCount].value = value;
 	s_pollGamepadEvents[s_pollGamepadEventsCount].value2 = value2;
 	s_pollGamepadEventsCount++;
 	
-	if (s_pollGamepadEventsCount >= MAX_POLL_EVENTS) {
-		common->DPrintf("WARNING: reached MAX_POLL_EVENT pollGamepadEventsCount\n");
+	if( s_pollGamepadEventsCount >= MAX_POLL_EVENTS )
+	{
+		common->DPrintf( "WARNING: reached MAX_POLL_EVENT pollGamepadEventsCount\n" );
 		return false;
 	}
-
+	
 	return true;
 }
 
-static void IN_XBox360Axis(int action, short thumbAxis, float scale)
+static void IN_XBox360Axis( int action, short thumbAxis, float scale )
 {
-	float           f = ((float)thumbAxis) / 32767.0f;
-
+	float           f = ( ( float )thumbAxis ) / 32767.0f;
+	
 	float threshold = win32.in_xbox360ControllerThreshold.GetFloat();
-	if(f > -threshold && f < threshold)
+	if( f > -threshold && f < threshold )
 	{
-		IN_AddGamepadPollEvent(action, 0, 0);
+		IN_AddGamepadPollEvent( action, 0, 0 );
 	}
 	else
 	{
-		if(win32.in_xbox360ControllerDebug.GetBool())
+		if( win32.in_xbox360ControllerDebug.GetBool() )
 		{
-			common->Printf("xbox axis %i = %f\n", action, f);
+			common->Printf( "xbox axis %i = %f\n", action, f );
 		}
-
-		IN_AddGamepadPollEvent(action, f * scale, 0);
+		
+		IN_AddGamepadPollEvent( action, f * scale, 0 );
 	}
 }
 
-static void IN_XBox360TriggerToButton(byte triggerAxis, byte oldTriggerAxis, int key, float expectedStartValue, float threshold)
+static void IN_XBox360TriggerToButton( byte triggerAxis, byte oldTriggerAxis, int key, float expectedStartValue, float threshold )
 {
-	float           f = ((float)triggerAxis) / 255.0f;
-	float           fOld = ((float)triggerAxis) / 255.0f;
-
-	if(f > (expectedStartValue + threshold + win32.in_xbox360ControllerThreshold.GetFloat()))
+	float           f = ( ( float )triggerAxis ) / 255.0f;
+	float           fOld = ( ( float )triggerAxis ) / 255.0f;
+	
+	if( f > ( expectedStartValue + threshold + win32.in_xbox360ControllerThreshold.GetFloat() ) )
 	{
-		IN_AddGamepadPollEvent(GP_BUTTON, key, 1);
+		IN_AddGamepadPollEvent( GP_BUTTON, key, 1 );
 		Sys_QueEvent( GetTickCount(), SE_KEY, key, 1, 0, NULL );
-
-		if(win32.in_xbox360ControllerDebug.GetBool())
+		
+		if( win32.in_xbox360ControllerDebug.GetBool() )
 		{
-			common->Printf("xbox trigger to key press = Q:0x%02x(%s), value = %f\n", key, idKeyInput::KeyNumToString(key, false), f);
+			common->Printf( "xbox trigger to key press = Q:0x%02x(%s), value = %f\n", key, idKeyInput::KeyNumToString( key, false ), f );
 		}
 	}
 	else
 	{
-		IN_AddGamepadPollEvent(GP_BUTTON, key, 0);
+		IN_AddGamepadPollEvent( GP_BUTTON, key, 0 );
 		Sys_QueEvent( GetTickCount(), SE_KEY, key, 0, 0, NULL );
-
-		if(win32.in_xbox360ControllerDebug.GetBool())
+		
+		if( win32.in_xbox360ControllerDebug.GetBool() )
 		{
-			common->Printf("xbox trigger to key release = Q:0x%02x(%s), value = %f\n", key, idKeyInput::KeyNumToString(key, false), f);
+			common->Printf( "xbox trigger to key release = Q:0x%02x(%s), value = %f\n", key, idKeyInput::KeyNumToString( key, false ), f );
 		}
 	}
 }
 
 int Sys_PollXbox360ControllerInputEvents( void )
 {
-	if (!win32.in_xbox360Controller.GetBool())
+	if( !win32.in_xbox360Controller.GetBool() )
 		return 0;
-
+		
 	s_pollGamepadEventsCount = 0;
-
+	
 	XINPUT_STATE state;
-	DWORD dwResult = XInputGetState(0, &state);
-
-	if(dwResult == ERROR_SUCCESS)
+	DWORD dwResult = XInputGetState( 0, &state );
+	
+	if( dwResult == ERROR_SUCCESS )
 	{
 		win32.g_ControllerAvailable = true;
-
-		// always send the axis 
+		
+		// always send the axis
 		
 		// use left analog stick for strafing
-		IN_XBox360Axis(GP_AXIS_SIDE, state.Gamepad.sThumbLX, 127);
-		IN_XBox360Axis(GP_AXIS_FORWARD, state.Gamepad.sThumbLY, 127);
-
+		IN_XBox360Axis( GP_AXIS_SIDE, state.Gamepad.sThumbLX, 127 );
+		IN_XBox360Axis( GP_AXIS_FORWARD, state.Gamepad.sThumbLY, 127 );
+		
 		// use right analog stick for viewing
-		IN_XBox360Axis(GP_AXIS_YAW, state.Gamepad.sThumbRX, -127);
-		IN_XBox360Axis(GP_AXIS_PITCH, state.Gamepad.sThumbRY, -127);
-
-		if(state.dwPacketNumber == win32.g_Controller.dwPacketNumber) {
+		IN_XBox360Axis( GP_AXIS_YAW, state.Gamepad.sThumbRX, -127 );
+		IN_XBox360Axis( GP_AXIS_PITCH, state.Gamepad.sThumbRY, -127 );
+		
+		if( state.dwPacketNumber == win32.g_Controller.dwPacketNumber )
+		{
 			// no changes since last frame so skip the buttons
 			return s_pollGamepadEventsCount;
 		}
-
-		if(state.Gamepad.bLeftTrigger != win32.g_Controller.Gamepad.bLeftTrigger)
+		
+		if( state.Gamepad.bLeftTrigger != win32.g_Controller.Gamepad.bLeftTrigger )
 		{
-			IN_XBox360TriggerToButton(state.Gamepad.bLeftTrigger, win32.g_Controller.Gamepad.bLeftTrigger, K_XINPUT_GAMEPAD_LT, 0, 0);
+			IN_XBox360TriggerToButton( state.Gamepad.bLeftTrigger, win32.g_Controller.Gamepad.bLeftTrigger, K_XINPUT_GAMEPAD_LT, 0, 0 );
 		}
-
-		if(state.Gamepad.bRightTrigger != win32.g_Controller.Gamepad.bRightTrigger)
+		
+		if( state.Gamepad.bRightTrigger != win32.g_Controller.Gamepad.bRightTrigger )
 		{
-			IN_XBox360TriggerToButton(state.Gamepad.bRightTrigger, win32.g_Controller.Gamepad.bRightTrigger, K_XINPUT_GAMEPAD_RT, 0, 0);
+			IN_XBox360TriggerToButton( state.Gamepad.bRightTrigger, win32.g_Controller.Gamepad.bRightTrigger, K_XINPUT_GAMEPAD_RT, 0, 0 );
 		}
-
+		
 		WORD diff = state.Gamepad.wButtons ^ win32.g_Controller.Gamepad.wButtons;
-		if(diff)
+		if( diff )
 		{
-			if(diff & XINPUT_GAMEPAD_DPAD_UP) 
+			if( diff & XINPUT_GAMEPAD_DPAD_UP )
 			{
-				if(state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_UP) {
-					IN_AddGamepadPollEvent(GP_BUTTON, K_XINPUT_GAMEPAD_DPAD_UP, 1);
+				if( state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_UP )
+				{
+					IN_AddGamepadPollEvent( GP_BUTTON, K_XINPUT_GAMEPAD_DPAD_UP, 1 );
 					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_DPAD_UP, 1, 0, NULL );
-				} else {
-					IN_AddGamepadPollEvent(GP_BUTTON, K_XINPUT_GAMEPAD_DPAD_UP, 0);
+				}
+				else
+				{
+					IN_AddGamepadPollEvent( GP_BUTTON, K_XINPUT_GAMEPAD_DPAD_UP, 0 );
 					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_DPAD_UP, 0, 0, NULL );
 				}
 			}
-
-			if(diff & XINPUT_GAMEPAD_DPAD_DOWN) 
+			
+			if( diff & XINPUT_GAMEPAD_DPAD_DOWN )
 			{
-				if(state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_DOWN) {
-					IN_AddGamepadPollEvent(GP_BUTTON, K_XINPUT_GAMEPAD_DPAD_DOWN, 1);
+				if( state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_DOWN )
+				{
+					IN_AddGamepadPollEvent( GP_BUTTON, K_XINPUT_GAMEPAD_DPAD_DOWN, 1 );
 					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_DPAD_DOWN, 1, 0, NULL );
-				} else {
-					IN_AddGamepadPollEvent(GP_BUTTON, K_XINPUT_GAMEPAD_DPAD_DOWN, 0);
+				}
+				else
+				{
+					IN_AddGamepadPollEvent( GP_BUTTON, K_XINPUT_GAMEPAD_DPAD_DOWN, 0 );
 					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_DPAD_DOWN, 0, 0, NULL );
 				}
 			}
-
-			if(diff & XINPUT_GAMEPAD_DPAD_LEFT) 
+			
+			if( diff & XINPUT_GAMEPAD_DPAD_LEFT )
 			{
-				if(state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_LEFT) {
-					IN_AddGamepadPollEvent(GP_BUTTON, K_XINPUT_GAMEPAD_DPAD_LEFT, 1);
+				if( state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_LEFT )
+				{
+					IN_AddGamepadPollEvent( GP_BUTTON, K_XINPUT_GAMEPAD_DPAD_LEFT, 1 );
 					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_DPAD_LEFT, 1, 0, NULL );
-				} else {
-					IN_AddGamepadPollEvent(GP_BUTTON, K_XINPUT_GAMEPAD_DPAD_LEFT, 0);
+				}
+				else
+				{
+					IN_AddGamepadPollEvent( GP_BUTTON, K_XINPUT_GAMEPAD_DPAD_LEFT, 0 );
 					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_DPAD_LEFT, 0, 0, NULL );
 				}
 			}
-
-			if(diff & XINPUT_GAMEPAD_DPAD_RIGHT) 
+			
+			if( diff & XINPUT_GAMEPAD_DPAD_RIGHT )
 			{
-				if(state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_RIGHT) {
-					IN_AddGamepadPollEvent(GP_BUTTON, K_XINPUT_GAMEPAD_DPAD_RIGHT, 1);
+				if( state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_RIGHT )
+				{
+					IN_AddGamepadPollEvent( GP_BUTTON, K_XINPUT_GAMEPAD_DPAD_RIGHT, 1 );
 					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_DPAD_RIGHT, 1, 0, NULL );
-				} else {
-					IN_AddGamepadPollEvent(GP_BUTTON, K_XINPUT_GAMEPAD_DPAD_RIGHT, 0);
+				}
+				else
+				{
+					IN_AddGamepadPollEvent( GP_BUTTON, K_XINPUT_GAMEPAD_DPAD_RIGHT, 0 );
 					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_DPAD_RIGHT, 0, 0, NULL );
 				}
 			}
-
-			if(diff & XINPUT_GAMEPAD_START) 
+			
+			if( diff & XINPUT_GAMEPAD_START )
 			{
-				if(state.Gamepad.wButtons & XINPUT_GAMEPAD_START) {
-					IN_AddGamepadPollEvent(GP_BUTTON, K_XINPUT_GAMEPAD_START, 1);
+				if( state.Gamepad.wButtons & XINPUT_GAMEPAD_START )
+				{
+					IN_AddGamepadPollEvent( GP_BUTTON, K_XINPUT_GAMEPAD_START, 1 );
 					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_START, 1, 0, NULL );
-				} else {
-					IN_AddGamepadPollEvent(GP_BUTTON, K_XINPUT_GAMEPAD_START, 0);
+				}
+				else
+				{
+					IN_AddGamepadPollEvent( GP_BUTTON, K_XINPUT_GAMEPAD_START, 0 );
 					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_START, 0, 0, NULL );
 				}
 			}
-
-			if(diff & XINPUT_GAMEPAD_BACK) 
+			
+			if( diff & XINPUT_GAMEPAD_BACK )
 			{
-				if(state.Gamepad.wButtons & XINPUT_GAMEPAD_BACK) {
-					IN_AddGamepadPollEvent(GP_BUTTON, K_XINPUT_GAMEPAD_BACK, 1);
+				if( state.Gamepad.wButtons & XINPUT_GAMEPAD_BACK )
+				{
+					IN_AddGamepadPollEvent( GP_BUTTON, K_XINPUT_GAMEPAD_BACK, 1 );
 					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_BACK, 1, 0, NULL );
-				} else {
-					IN_AddGamepadPollEvent(GP_BUTTON, K_XINPUT_GAMEPAD_BACK, 0);
+				}
+				else
+				{
+					IN_AddGamepadPollEvent( GP_BUTTON, K_XINPUT_GAMEPAD_BACK, 0 );
 					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_BACK, 0, 0, NULL );
 				}
 			}
-
-			if(diff & XINPUT_GAMEPAD_LEFT_THUMB) 
+			
+			if( diff & XINPUT_GAMEPAD_LEFT_THUMB )
 			{
-				if(state.Gamepad.wButtons & XINPUT_GAMEPAD_LEFT_THUMB) {
-					IN_AddGamepadPollEvent(GP_BUTTON, K_XINPUT_GAMEPAD_LS, 1);
+				if( state.Gamepad.wButtons & XINPUT_GAMEPAD_LEFT_THUMB )
+				{
+					IN_AddGamepadPollEvent( GP_BUTTON, K_XINPUT_GAMEPAD_LS, 1 );
 					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_LS, 1, 0, NULL );
-				} else {
-					IN_AddGamepadPollEvent(GP_BUTTON, K_XINPUT_GAMEPAD_LS, 0);
+				}
+				else
+				{
+					IN_AddGamepadPollEvent( GP_BUTTON, K_XINPUT_GAMEPAD_LS, 0 );
 					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_LS, 0, 0, NULL );
 				}
 			}
-
-			if(diff & XINPUT_GAMEPAD_RIGHT_THUMB) 
+			
+			if( diff & XINPUT_GAMEPAD_RIGHT_THUMB )
 			{
-				if(state.Gamepad.wButtons & XINPUT_GAMEPAD_RIGHT_THUMB) {
-					IN_AddGamepadPollEvent(GP_BUTTON, K_XINPUT_GAMEPAD_RS, 1);
+				if( state.Gamepad.wButtons & XINPUT_GAMEPAD_RIGHT_THUMB )
+				{
+					IN_AddGamepadPollEvent( GP_BUTTON, K_XINPUT_GAMEPAD_RS, 1 );
 					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_RS, 1, 0, NULL );
-				} else {
-					IN_AddGamepadPollEvent(GP_BUTTON, K_XINPUT_GAMEPAD_RS, 0);
+				}
+				else
+				{
+					IN_AddGamepadPollEvent( GP_BUTTON, K_XINPUT_GAMEPAD_RS, 0 );
 					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_RS, 0, 0, NULL );
 				}
 			}
-
-			if(diff & XINPUT_GAMEPAD_LEFT_SHOULDER) 
+			
+			if( diff & XINPUT_GAMEPAD_LEFT_SHOULDER )
 			{
-				if(state.Gamepad.wButtons & XINPUT_GAMEPAD_LEFT_SHOULDER) {
-					IN_AddGamepadPollEvent(GP_BUTTON, K_XINPUT_GAMEPAD_LB, 1);
+				if( state.Gamepad.wButtons & XINPUT_GAMEPAD_LEFT_SHOULDER )
+				{
+					IN_AddGamepadPollEvent( GP_BUTTON, K_XINPUT_GAMEPAD_LB, 1 );
 					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_LB, 1, 0, NULL );
-				} else {
-					IN_AddGamepadPollEvent(GP_BUTTON, K_XINPUT_GAMEPAD_LB, 0);
+				}
+				else
+				{
+					IN_AddGamepadPollEvent( GP_BUTTON, K_XINPUT_GAMEPAD_LB, 0 );
 					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_LB, 0, 0, NULL );
 				}
 			}
-
-			if(diff & XINPUT_GAMEPAD_RIGHT_SHOULDER) 
+			
+			if( diff & XINPUT_GAMEPAD_RIGHT_SHOULDER )
 			{
-				if(state.Gamepad.wButtons & XINPUT_GAMEPAD_RIGHT_SHOULDER) {
-					IN_AddGamepadPollEvent(GP_BUTTON, K_XINPUT_GAMEPAD_RB, 1);
+				if( state.Gamepad.wButtons & XINPUT_GAMEPAD_RIGHT_SHOULDER )
+				{
+					IN_AddGamepadPollEvent( GP_BUTTON, K_XINPUT_GAMEPAD_RB, 1 );
 					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_RB, 1, 0, NULL );
-				} else {
-					IN_AddGamepadPollEvent(GP_BUTTON, K_XINPUT_GAMEPAD_RB, 0);
+				}
+				else
+				{
+					IN_AddGamepadPollEvent( GP_BUTTON, K_XINPUT_GAMEPAD_RB, 0 );
 					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_RB, 0, 0, NULL );
 				}
 			}
-
-			if(diff & XINPUT_GAMEPAD_A) 
+			
+			if( diff & XINPUT_GAMEPAD_A )
 			{
-				if(state.Gamepad.wButtons & XINPUT_GAMEPAD_A) {
-					IN_AddGamepadPollEvent(GP_BUTTON, K_XINPUT_GAMEPAD_A, 1);
+				if( state.Gamepad.wButtons & XINPUT_GAMEPAD_A )
+				{
+					IN_AddGamepadPollEvent( GP_BUTTON, K_XINPUT_GAMEPAD_A, 1 );
 					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_A, 1, 0, NULL );
-				} else {
-					IN_AddGamepadPollEvent(GP_BUTTON, K_XINPUT_GAMEPAD_A, 0);
+				}
+				else
+				{
+					IN_AddGamepadPollEvent( GP_BUTTON, K_XINPUT_GAMEPAD_A, 0 );
 					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_A, 0, 0, NULL );
 				}
 			}
-
-			if(diff & XINPUT_GAMEPAD_B) 
+			
+			if( diff & XINPUT_GAMEPAD_B )
 			{
-				if(state.Gamepad.wButtons & XINPUT_GAMEPAD_B) {
-					IN_AddGamepadPollEvent(GP_BUTTON, K_XINPUT_GAMEPAD_B, 1);
+				if( state.Gamepad.wButtons & XINPUT_GAMEPAD_B )
+				{
+					IN_AddGamepadPollEvent( GP_BUTTON, K_XINPUT_GAMEPAD_B, 1 );
 					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_B, 1, 0, NULL );
-				} else {
-					IN_AddGamepadPollEvent(GP_BUTTON, K_XINPUT_GAMEPAD_B, 0);
+				}
+				else
+				{
+					IN_AddGamepadPollEvent( GP_BUTTON, K_XINPUT_GAMEPAD_B, 0 );
 					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_B, 0, 0, NULL );
 				}
 			}
-
-			if(diff & XINPUT_GAMEPAD_X) 
+			
+			if( diff & XINPUT_GAMEPAD_X )
 			{
-				if(state.Gamepad.wButtons & XINPUT_GAMEPAD_X) {
-					IN_AddGamepadPollEvent(GP_BUTTON, K_XINPUT_GAMEPAD_X, 1);
+				if( state.Gamepad.wButtons & XINPUT_GAMEPAD_X )
+				{
+					IN_AddGamepadPollEvent( GP_BUTTON, K_XINPUT_GAMEPAD_X, 1 );
 					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_X, 1, 0, NULL );
-				} else {
-					IN_AddGamepadPollEvent(GP_BUTTON, K_XINPUT_GAMEPAD_X, 0);
+				}
+				else
+				{
+					IN_AddGamepadPollEvent( GP_BUTTON, K_XINPUT_GAMEPAD_X, 0 );
 					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_X, 0, 0, NULL );
 				}
 			}
-
-			if(diff & XINPUT_GAMEPAD_Y) 
+			
+			if( diff & XINPUT_GAMEPAD_Y )
 			{
-				if(state.Gamepad.wButtons & XINPUT_GAMEPAD_Y) {
-					IN_AddGamepadPollEvent(GP_BUTTON, K_XINPUT_GAMEPAD_Y, 1);
+				if( state.Gamepad.wButtons & XINPUT_GAMEPAD_Y )
+				{
+					IN_AddGamepadPollEvent( GP_BUTTON, K_XINPUT_GAMEPAD_Y, 1 );
 					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_Y, 1, 0, NULL );
-				} else {
-					IN_AddGamepadPollEvent(GP_BUTTON, K_XINPUT_GAMEPAD_Y, 0);
+				}
+				else
+				{
+					IN_AddGamepadPollEvent( GP_BUTTON, K_XINPUT_GAMEPAD_Y, 0 );
 					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_Y, 0, 0, NULL );
 				}
 			}
 		}
-
+		
 		win32.g_Controller = state;
 		return s_pollGamepadEventsCount;
 	}
-
+	
 	return 0;
 }
 
-int	Sys_ReturnXbox360ControllerInputEvent( const int n, int &action, int &value, int &value2 )
+int	Sys_ReturnXbox360ControllerInputEvent( const int n, int& action, int& value, int& value2 )
 {
-	if ( n>= s_pollGamepadEventsCount ) {
+	if( n >= s_pollGamepadEventsCount )
+	{
 		return 0;
 	}
 	
