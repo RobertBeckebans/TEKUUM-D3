@@ -92,7 +92,8 @@ If you have questions concerning this license or the applicable additional terms
 
 // <= Doom v1.1: 1. no DS_VERSION token ( default )
 // Doom v1.2: 2
-#define RENDERDEMO_VERSION				2
+// RB: Techyon uses a different renderdemo version because of some 64 bit fixes
+#define RENDERDEMO_VERSION				3
 
 // editor info
 #define EDITOR_DEFAULT_PROJECT			"doom.qe4"
