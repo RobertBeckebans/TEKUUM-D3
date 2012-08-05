@@ -61,6 +61,41 @@ Sys_AsyncThread
 */
 void Sys_AsyncThread( void )
 {
+// Techyon RB: disabled multi tick compensate because it feels very laggy on Linux 3.x kernels
+#if 1
+	int now;
+	int next;
+	int want_sleep;
+	int ticked;
+
+	now = Sys_Milliseconds();
+	next = now + USERCMD_MSEC;
+	ticked = 0;
+	while( 1 )
+	{
+		now = Sys_Milliseconds();
+
+		// sleep 1ms less than true target
+		want_sleep = ( next - now - 1 ) * 1000;
+
+		if( want_sleep > 0 )
+		{
+			usleep( want_sleep );
+		}
+
+		now = Sys_Milliseconds();
+		next = now + USERCMD_MSEC;
+
+		common->Async();
+		ticked++;
+
+		Sys_TriggerEvent( TRIGGER_EVENT_ONE );
+
+		// thread exit
+		pthread_testcancel();
+	}
+
+#else
 	int now;
 	int next;
 	int	want_sleep;
@@ -117,6 +152,8 @@ void Sys_AsyncThread( void )
 		// thread exit
 		pthread_testcancel();
 	}
+#endif
+// Techyon END
 }
 
 /*
