@@ -1952,7 +1952,11 @@ idModList* idFileSystemLocal::ListMods( void )
 		
 		dirs.Remove( "." );
 		dirs.Remove( ".." );
-		dirs.Remove( "base" );
+
+		// Techyon RB: replaced "base" with BASE_GAMEDIR
+		dirs.Remove( BASE_GAMEDIR );
+		// Techyon END
+
 		dirs.Remove( "pb" );
 		
 		// see if there are any pk4 files in each directory
