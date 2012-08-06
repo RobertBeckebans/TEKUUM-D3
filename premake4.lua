@@ -17,16 +17,16 @@ function FindAndroidNDK()
 		--if os.is("windows") then
 			--gcc =
 			--{
-			--	cc = "${NDK}/toolchains/arm-linux-androideabi-4.4.3/prebuilt/windows/bin/arm-linux-androideabi-gcc",
-			--	cxx = "${NDK}/toolchains/arm-linux-androideabi-4.4.3/prebuilt/windows/bin/arm-linux-androideabi-gcc",
-			--	ar = "${NDK}/toolchains/arm-linux-androideabi-4.4.3/prebuilt/windows/bin/arm-linux-androideabi-ar",
+			--	cc = "$(NDK)/toolchains/arm-linux-androideabi-4.6/prebuilt/linux-x86/bin/arm-linux-androideabi-gcc",
+			--	cxx = "$(NDK)/toolchains/arm-linux-androideabi-4.6/prebuilt/linux-x86/bin/arm-linux-androideabi-gcc",
+			--	ar = "$(NDK)/toolchains/arm-linux-androideabi-4.6/prebuilt/linux-x86/bin/arm-linux-androideabi-ar",
 			--}
 		--elseif os.is("linux") then
 			--gcc =
 			--{
-			--	cc = "${NDK}/toolchains/arm-linux-androideabi-4.4.3/prebuilt/linux-x86/bin/arm-linux-androideabi-gcc",
-			--	cxx = "${NDK}/toolchains/arm-linux-androideabi-4.4.3/prebuilt/linux-x86/bin/arm-linux-androideabi-gcc",
-			--	ar = "${NDK}/toolchains/arm-linux-androideabi-4.4.3/prebuilt/linux-x86/bin/arm-linux-androideabi-ar",
+			--	cc = "$(NDK)/toolchains/arm-linux-androideabi-4.4.3/prebuilt/linux-x86/bin/arm-linux-androideabi-gcc",
+			--	cxx = "$(NDK)/toolchains/arm-linux-androideabi-4.4.3/prebuilt/linux-x86/bin/arm-linux-androideabi-gcc",
+			--	ar = "$(NDK)/toolchains/arm-linux-androideabi-4.4.3/prebuilt/linux-x86/bin/arm-linux-androideabi-ar",
 			--}
 		--end
 		
@@ -76,33 +76,36 @@ function newplatform(plf)
     --other compilers (?)
 end
 
-newplatform {
+newplatform 
+{
     name = "armeabi",
     description = "Android armeabi",
     gcc = {
-        cc = "${NDK}/toolchains/arm-linux-androideabi-4.4.3/prebuilt/windows/bin/arm-linux-androideabi-gcc",
-		cxx = "${NDK}/toolchains/arm-linux-androideabi-4.4.3/prebuilt/windows/bin/arm-linux-androideabi-g++",
-		ar = "${NDK}/toolchains/arm-linux-androideabi-4.4.3/prebuilt/windows/bin/arm-linux-androideabi-ar",
+		cc = "$(NDK)/toolchains/arm-linux-androideabi-4.6/prebuilt/linux-x86/bin/arm-linux-androideabi-gcc",
+		cxx = "$(NDK)/toolchains/arm-linux-androideabi-4.6/prebuilt/linux-x86/bin/arm-linux-androideabi-g++",
+		ar = "$(NDK)/toolchains/arm-linux-androideabi-4.6/prebuilt/linux-x86/bin/arm-linux-androideabi-ar",
     }
 }
 
-newplatform {
+newplatform
+{
     name = "armeabi-v7a",
     description = "Android armeabi-v7a",
     gcc = {
-        cc = "${NDK}/toolchains/arm-linux-androideabi-4.4.3/prebuilt/windows/bin/arm-linux-androideabi-gcc",
-		cxx = "${NDK}/toolchains/arm-linux-androideabi-4.4.3/prebuilt/windows/bin/arm-linux-androideabi-g++",
-		ar = "${NDK}/toolchains/arm-linux-androideabi-4.4.3/prebuilt/windows/bin/arm-linux-androideabi-ar",
+		cc = "$(NDK)/toolchains/arm-linux-androideabi-4.6/prebuilt/linux-x86/bin/arm-linux-androideabi-gcc",
+		cxx = "$(NDK)/toolchains/arm-linux-androideabi-4.6/prebuilt/linux-x86/bin/arm-linux-androideabi-g++",
+		ar = "$(NDK)/toolchains/arm-linux-androideabi-4.6/prebuilt/linux-x86/bin/arm-linux-androideabi-ar",
     }
 }
 
-newplatform {
-  name = "neon",
-   description = "Android neon",
-   gcc = {
-       cc = "${NDK}/toolchains/arm-linux-androideabi-4.4.3/prebuilt/windows/bin/arm-linux-androideabi-gcc",
-		cxx = "${NDK}/toolchains/arm-linux-androideabi-4.4.3/prebuilt/windows/bin/arm-linux-androideabi-g++",
-		ar = "${NDK}/toolchains/arm-linux-androideabi-4.4.3/prebuilt/windows/bin/arm-linux-androideabi-ar",
+newplatform
+{
+	name = "neon",
+	description = "Android neon",
+	gcc = {
+		cc = "$(NDK)/toolchains/arm-linux-androideabi-4.6/prebuilt/linux-x86/bin/arm-linux-androideabi-gcc",
+		cxx = "$(NDK)/toolchains/arm-linux-androideabi-4.6/prebuilt/linux-x86/bin/arm-linux-androideabi-g++",
+		ar = "$(NDK)/toolchains/arm-linux-androideabi-4.6/prebuilt/linux-x86/bin/arm-linux-androideabi-ar",
    }
 }
 
@@ -502,10 +505,12 @@ end
 
 	--configuration { "linux", "android" }
 	
+--[[
 	configuration "android"
 		includedirs
 		{
 			"$(NDK)/platforms/android-8/arch-arm/usr/include",
+			--"$(NDK)/prebuilt/windows/lib/gcc/arm-linux-androideabi/4.4.3/include",
 			"$(NDK)/prebuilt/windows/lib/gcc/arm-linux-androideabi/4.4.3/include",
 			"$(NDK)/sources/cxx-stl/stlport/stlport",
 		}
@@ -513,6 +518,7 @@ end
 		{
 			"ANDROID",
 		}
+]]
 	
 if not _OPTIONS["android"] then
 	include "idlib"
@@ -705,6 +711,7 @@ end
 		excludes
 		{
 			"renderer/GLShader.cpp",
+			"renderer/Framebuffer.cpp",
 			"renderer/draw_glsl.cpp",
 			"renderer/draw_exp.cpp",
 		}
@@ -1150,12 +1157,6 @@ end -- if not _OPTIONS["android"]
 
 	configuration "android"
 		targetname  "techyon"
-		includedirs 
-		{
-			"$(NDK)/platforms/android-8/arch-arm/usr/include",
-			"$(NDK)/prebuilt/windows/lib/gcc/arm-linux-androideabi/4.4.3/include",
-			"$(NDK)/sources/cxx-stl/stlport/stlport",
-		}
 		buildoptions
 		{
 			-- shut up about: the mangling of 'va_list' has changed in GCC 4.4
@@ -1199,22 +1200,23 @@ end -- if not _OPTIONS["android"]
 			"libs/glew/include/GL/glew.h",
 			"sound/snd_efxfile.cpp",
 		}
-		includedirs
-		{
-			--"curl/include",
-			--"openal/include",
-			--"libs/sdl/include",
-		}
 		defines
 		{
+			"ANDROID",
 			"USE_GLES1",
 			"PNG_NO_ASSEMBLER_CODE",
+		}
+		includedirs
+		{
+			"$(NDK)/platforms/android-8/arch-arm/usr/include",
+			--"$(NDK)/prebuilt/windows/lib/gcc/arm-linux-androideabi/4.4.3/include",
+			"$(NDK)/sources/cxx-stl/stlport/stlport",
 		}
 		libdirs
 		{
 			"$(NDK)/platforms/android-8/arch-arm/usr/lib",
-			"$(NDK)/sources/cxx-stl/gnu-libstdc++/libs/armeabi",
-			"$(NDK)/sources/cxx-stl/stlport/libs/armeabi",
+			--"$(NDK)/sources/cxx-stl/gnu-libstdc++/libs/armeabi",
+			--"$(NDK)/sources/cxx-stl/stlport/libs/armeabi",
 		}
 		links
 		{
@@ -1232,7 +1234,7 @@ end -- if not _OPTIONS["android"]
 		linkoptions
 		{
 			"-nostdlib",
-			"--no-undefined",
+			--"--no-undefined",
 		}
 		--prebuildcommands
 		--{
@@ -1244,7 +1246,8 @@ end -- if not _OPTIONS["android"]
 		targetdir 	"../android/libs/armeabi"
 		buildoptions
 		{
-			"-march=armv5te -mtune=xscale -msoft-float -fpic -mthumb -ffunction-sections -funwind-tables -fstack-protector -fno-short-enums"
+			"-march=armv5te -mtune=xscale -msoft-float -fpic -mthumb -ffunction-sections -funwind-tables -fstack-protector -fno-short-enums",
+			"-fuse-ld=gold",
 		}
 		defines
 		{
@@ -1252,6 +1255,15 @@ end -- if not _OPTIONS["android"]
 			"__ARM_ARCH_5T__",
 			"__ARM_ARCH_5E__",
 			"__ARM_ARCH_5TE__"
+		}
+		libdirs
+		{
+			"$(NDK)/sources/cxx-stl/gnu-libstdc++/4.6/libs/armeabi",
+			"$(NDK)/sources/cxx-stl/stlport/libs/armeabi",
+		}
+		linkoptions
+		{
+			"-fuse-ld=gold",
 		}
 		
 	configuration "armeabi-v7a"
@@ -1268,6 +1280,11 @@ end -- if not _OPTIONS["android"]
 			"__ARM_ARCH_5E__",
 			"__ARM_ARCH_5TE__"
 		}
+		libdirs
+		{
+			"$(NDK)/sources/cxx-stl/gnu-libstdc++/4.6/libs/armeabi-v7a",
+			"$(NDK)/sources/cxx-stl/stlport/libs/armeabi-v7a",
+		}
 	
 	configuration "neon"
 		targetname  "techyon-neon"
@@ -1279,6 +1296,11 @@ end -- if not _OPTIONS["android"]
 		defines
 		{
 			"__MATH_NEON",
+		}
+		libdirs
+		{
+			"$(NDK)/sources/cxx-stl/gnu-libstdc++/4.6/libs/armeabi",
+			"$(NDK)/sources/cxx-stl/stlport/libs/armeabi",
 		}
 
 -- FIXME
