@@ -37,16 +37,11 @@ PROBLEM: compressed textures may break the zero clamp rule!
 
 static bool FormatIsDXT( int internalFormat )
 {
-#if !defined(USE_GLES1)
-	if( internalFormat < GL_COMPRESSED_RGB_S3TC_DXT1_EXT
-			|| internalFormat > GL_COMPRESSED_RGBA_S3TC_DXT5_EXT )
+	if( internalFormat < GL_COMPRESSED_RGB_S3TC_DXT1_EXT || internalFormat > GL_COMPRESSED_RGBA_S3TC_DXT5_EXT )
 	{
 		return false;
 	}
 	return true;
-#else
-	return false;
-#endif
 }
 
 int MakePowerOfTwo( int num )
@@ -73,6 +68,14 @@ int idImage::BitsForInternalFormat( int internalFormat ) const
 #if defined(USE_GLES1)
 		case GL_RGBA:
 			return 32;
+		case GL_COMPRESSED_RGB_S3TC_DXT1_EXT:
+			return 4;
+		case GL_COMPRESSED_RGBA_S3TC_DXT1_EXT:
+			return 4;
+		case GL_COMPRESSED_RGBA_S3TC_DXT3_EXT:
+			return 8;
+		case GL_COMPRESSED_RGBA_S3TC_DXT5_EXT:
+			return 8;
 #else
 		case GL_INTENSITY8:
 		case 1:
@@ -469,16 +472,18 @@ GLenum idImage::SelectInternalFormat( const byte** dataPtrs, int numDataPtrs, in
 	if( !needAlpha )
 	{
 #if defined(USE_GLES1)
-		return GL_RGBA;			// two bytes
+		return GL_RGBA;			// four bytes
 #else
 		if( minimumDepth == TD_HIGH_QUALITY )
 		{
 			return GL_RGB8;			// four bytes
 		}
+		
 		if( glConfig.textureCompressionAvailable )
 		{
 			return GL_COMPRESSED_RGB_S3TC_DXT1_EXT;	// half byte
 		}
+		
 		return GL_RGB5;			// two bytes
 #endif
 	}
@@ -487,7 +492,7 @@ GLenum idImage::SelectInternalFormat( const byte** dataPtrs, int numDataPtrs, in
 	if( !rgbaDiffer )
 	{
 #if defined(USE_GLES1)
-		return GL_RGBA;			// two bytes
+		return GL_RGBA;			// four bytes
 #else
 		if( minimumDepth != TD_HIGH_QUALITY && glConfig.textureCompressionAvailable )
 		{
@@ -1653,7 +1658,7 @@ to be worth caching
 */
 bool idImage::ShouldImageBePartialCached()
 {
-	if( !glConfig.textureCompressionAvailable )
+	if( !glConfig.s3tcTextureCompressionAvailable )
 	{
 		return false;
 	}
@@ -1721,7 +1726,7 @@ If fullLoad is false, only the small mip levels of the image will be loaded
 */
 bool idImage::CheckPrecompressedImage( bool fullLoad )
 {
-	if( !glConfig.isInitialized || !glConfig.textureCompressionAvailable )
+	if( !glConfig.isInitialized || !glConfig.s3tcTextureCompressionAvailable )
 	{
 		return false;
 	}
@@ -1796,7 +1801,7 @@ bool idImage::CheckPrecompressedImage( bool fullLoad )
 	
 	fileSystem->CloseFile( f );
 	
-	unsigned long magic = LittleLong( *( unsigned long* )data );
+	unsigned int magic = LittleLong( *( unsigned int* )data );
 	ddsFileHeader_t*	_header = ( ddsFileHeader_t* )( data + 4 );
 	int ddspf_dwFlags = LittleLong( _header->ddspf.dwFlags );
 	
@@ -1815,6 +1820,15 @@ bool idImage::CheckPrecompressedImage( bool fullLoad )
 		return false;
 	}
 	
+#if defined(USE_GLES1)
+	// don't support BGRA textures
+	if( !( ddspf_dwFlags & DDSF_FOURCC ) )
+	{
+		R_StaticFree( data );
+		return false;
+	}
+#endif
+	
 	// upload all the levels
 	UploadPrecompressedImage( data, len );
 	
@@ -1827,14 +1841,14 @@ bool idImage::CheckPrecompressedImage( bool fullLoad )
 ===================
 UploadPrecompressedImage
 
-This can be called by the front end during nromal loading,
+This can be called by the front end during normal loading,
 or by the backend after a background read of the file
 has completed
 ===================
 */
 void idImage::UploadPrecompressedImage( byte* data, int len )
 {
-#if !defined(USE_GLES1)
+#if 1 //!defined(USE_GLES1)
 	ddsFileHeader_t*	header = ( ddsFileHeader_t* )( data + 4 );
 	
 	// ( not byte swapping dwReserved1 dwReserved2 )
@@ -1894,15 +1908,24 @@ void idImage::UploadPrecompressedImage( byte* data, int len )
 				return;
 		}
 	}
+#if !defined(USE_GLES1)
 	else if( ( header->ddspf.dwFlags & DDSF_RGBA ) && header->ddspf.dwRGBBitCount == 32 )
 	{
 		externalFormat = GL_BGRA_EXT;
+#if defined(USE_GLES1)
+		internalFormat = GL_RGBA;
+#else
 		internalFormat = GL_RGBA8;
+#endif
 	}
 	else if( ( header->ddspf.dwFlags & DDSF_RGB ) && header->ddspf.dwRGBBitCount == 32 )
 	{
 		externalFormat = GL_BGRA_EXT;
+#if defined(USE_GLES1)
+		internalFormat = GL_RGBA;
+#else
 		internalFormat = GL_RGBA8;
+#endif
 	}
 	else if( ( header->ddspf.dwFlags & DDSF_RGB ) && header->ddspf.dwRGBBitCount == 24 )
 	{
@@ -1914,7 +1937,11 @@ void idImage::UploadPrecompressedImage( byte* data, int len )
 		else
 		{
 			externalFormat = GL_BGR_EXT;
+#if defined(USE_GLES1)
+			internalFormat = GL_RGBA;
+#else
 			internalFormat = GL_RGB8;
+#endif
 		}
 	}
 	else if( header->ddspf.dwRGBBitCount == 8 )
@@ -1922,6 +1949,7 @@ void idImage::UploadPrecompressedImage( byte* data, int len )
 		externalFormat = GL_ALPHA;
 		internalFormat = GL_ALPHA8;
 	}
+#endif // !defined(USE_GLES1)
 	else
 	{
 		common->Warning( "Invalid uncompressed internal format\n" );
@@ -1974,7 +2002,7 @@ void idImage::UploadPrecompressedImage( byte* data, int len )
 		{
 			if( FormatIsDXT( internalFormat ) )
 			{
-				glCompressedTexImage2DARB( GL_TEXTURE_2D, i - skipMip, internalFormat, uw, uh, 0, size, imagedata );
+				glCompressedTexImage2D( GL_TEXTURE_2D, i - skipMip, internalFormat, uw, uh, 0, size, imagedata );
 			}
 			else
 			{
@@ -2022,7 +2050,7 @@ void	idImage::ActuallyLoadImage( bool checkForPrecompressed, bool fromBackEnd )
 	// if we are a partial image, we are only going to load from a compressed file
 	if( isPartialImage )
 	{
-#if !defined(USE_GLES1)
+#if 1 //!defined(USE_GLES1)
 		if( CheckPrecompressedImage( false ) )
 		{
 			return;
@@ -2065,7 +2093,7 @@ void	idImage::ActuallyLoadImage( bool checkForPrecompressed, bool fromBackEnd )
 	{
 		// see if we have a pre-generated image file that is
 		// already image processed and compressed
-#if !defined(USE_GLES1)
+#if 1 //!defined(USE_GLES1)
 		if( checkForPrecompressed && globalImages->image_usePrecompressedTextures.GetBool() )
 		{
 			if( CheckPrecompressedImage( true ) )
@@ -2734,6 +2762,18 @@ void idImage::Print() const
 		case GL_RGBA:
 		case 4:
 			common->Printf( "RGBA    " );
+			break;
+		case GL_COMPRESSED_RGB_S3TC_DXT1_EXT:
+			common->Printf( "DXT1    " );
+			break;
+		case GL_COMPRESSED_RGBA_S3TC_DXT1_EXT:
+			common->Printf( "DXT1A   " );
+			break;
+		case GL_COMPRESSED_RGBA_S3TC_DXT3_EXT:
+			common->Printf( "DXT3    " );
+			break;
+		case GL_COMPRESSED_RGBA_S3TC_DXT5_EXT:
+			common->Printf( "DXT5    " );
 			break;
 #else
 		case GL_INTENSITY8:

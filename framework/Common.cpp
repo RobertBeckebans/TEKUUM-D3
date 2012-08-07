@@ -1594,7 +1594,15 @@ static void Com_Crash_f( const idCmdArgs& args )
 		return;
 	}
 	
+// Techyon RB: added platform specific break point tools
+#if defined(MSVC)
+	__debugbreak();
+#elif defined(__GNUC__)
+	__builtin_trap();
+#else
 	* ( int* ) 0 = 0x12345678;
+#endif
+// Techyon END
 }
 
 /*

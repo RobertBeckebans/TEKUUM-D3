@@ -84,7 +84,7 @@ idCVar r_zfar( "r_zfar", "1024", CVAR_RENDERER | CVAR_FLOAT, "far Z clip plane d
 #if defined(__ANDROID__)
 idCVar r_ignoreGLErrors( "r_ignoreGLErrors", "0", CVAR_RENDERER | CVAR_BOOL, "ignore GL errors" );
 #else
-idCVar r_ignoreGLErrors( "r_ignoreGLErrors", "1", CVAR_RENDERER | CVAR_BOOL, "ignore GL errors" );
+idCVar r_ignoreGLErrors( "r_ignoreGLErrors", "0", CVAR_RENDERER | CVAR_BOOL, "ignore GL errors" );
 #endif
 idCVar r_finish( "r_finish", "0", CVAR_RENDERER | CVAR_BOOL, "force a call to glFinish() every frame" );
 idCVar r_swapInterval( "r_swapInterval", "0", CVAR_RENDERER | CVAR_ARCHIVE | CVAR_INTEGER, "changes wglSwapIntarval" );
@@ -128,7 +128,7 @@ idCVar r_skipBump( "r_skipBump", "0", CVAR_RENDERER | CVAR_BOOL | CVAR_ARCHIVE, 
 #endif
 idCVar r_skipDiffuse( "r_skipDiffuse", "0", CVAR_RENDERER | CVAR_BOOL, "use black for diffuse" );
 #if defined(__ANDROID__)
-idCVar r_skipROQ( "r_skipROQ", "1", CVAR_RENDERER | CVAR_BOOL, "skip ROQ decoding" );
+idCVar r_skipROQ( "r_skipROQ", "0", CVAR_RENDERER | CVAR_BOOL, "skip ROQ decoding" );
 #else
 idCVar r_skipROQ( "r_skipROQ", "0", CVAR_RENDERER | CVAR_BOOL, "skip ROQ decoding" );
 #endif
@@ -350,7 +350,7 @@ static void R_CheckPortableExtensions( void )
 #endif
 	
 	// GL_ARB_texture_cube_map
-#if defined(USE_GLES1)
+#if defined(USE_GLES1) && defined(__ANDROID__)
 	glConfig.cubeMapAvailable = R_CheckExtension( "GL_OES_texture_cube_map" );
 #else
 	glConfig.cubeMapAvailable = GLEW_ARB_texture_cube_map;
@@ -380,16 +380,15 @@ static void R_CheckPortableExtensions( void )
 	// GL_ARB_texture_compression + GL_S3_s3tc
 	// DRI drivers may have GL_ARB_texture_compression but no GL_EXT_texture_compression_s3tc
 #if defined(USE_GLES1)
-	// RB: TODO
-	glConfig.textureCompressionAvailable = false;
+	glConfig.s3tcTextureCompressionAvailable = R_CheckExtension( "GL_EXT_texture_compression_s3tc" );
 #else
 	if( GLEW_ARB_texture_compression && GLEW_EXT_texture_compression_s3tc )
 	{
-		glConfig.textureCompressionAvailable = true;
+		glConfig.s3tcTextureCompressionAvailable = true;
 	}
 	else
 	{
-		glConfig.textureCompressionAvailable = false;
+		glConfig.s3tcTextureCompressionAvailable = false;
 	}
 #endif
 	
@@ -743,6 +742,11 @@ void R_InitOpenGL( void )
 	glConfig.renderer_string = ( const char* )glGetString( GL_RENDERER );
 	glConfig.version_string = ( const char* )glGetString( GL_VERSION );
 	glConfig.extensions_string = ( const char* )glGetString( GL_EXTENSIONS );
+	
+	common->Printf( "\nGL_VENDOR: %s\n", glConfig.vendor_string );
+	common->Printf( "GL_RENDERER: %s\n", glConfig.renderer_string );
+	common->Printf( "GL_VERSION: %s\n", glConfig.version_string );
+	common->Printf( "GL_EXTENSIONS: %s\n", glConfig.extensions_string );
 	
 	// OpenGL driver constants
 	glGetIntegerv( GL_MAX_TEXTURE_SIZE, &temp );
@@ -2213,6 +2217,11 @@ static void GfxInfo_f( const idCmdArgs& args )
 	else
 	{
 		common->Printf( "Vertex cache is SLOW\n" );
+	}
+	
+	if( glConfig.s3tcTextureCompressionAvailable )
+	{
+		common->Printf( "S3TC texture compression available\n" );
 	}
 }
 

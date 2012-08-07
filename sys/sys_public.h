@@ -578,7 +578,7 @@ typedef enum
 typedef struct
 {
 	const char* 	name;
-
+	
 	// Techyon RB: 64 bit fix, changed long to int
 #if defined(WIN32)
 	unsigned long	threadId;

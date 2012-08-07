@@ -67,34 +67,34 @@ void Sys_AsyncThread( void )
 	int next;
 	int want_sleep;
 	int ticked;
-
+	
 	now = Sys_Milliseconds();
 	next = now + USERCMD_MSEC;
 	ticked = 0;
 	while( 1 )
 	{
 		now = Sys_Milliseconds();
-
+		
 		// sleep 1ms less than true target
 		want_sleep = ( next - now - 1 ) * 1000;
-
+		
 		if( want_sleep > 0 )
 		{
 			usleep( want_sleep );
 		}
-
+		
 		now = Sys_Milliseconds();
 		next = now + USERCMD_MSEC;
-
+		
 		common->Async();
 		ticked++;
-
+		
 		Sys_TriggerEvent( TRIGGER_EVENT_ONE );
-
+		
 		// thread exit
 		pthread_testcancel();
 	}
-
+	
 #else
 	int now;
 	int next;
@@ -114,11 +114,11 @@ void Sys_AsyncThread( void )
 		{
 			usleep( want_sleep ); // sleep 1ms less than true target
 		}
-		
+	
 		// compensate if we slept too long
 		now = Sys_Milliseconds();
 		to_ticked = now >> 4;
-		
+	
 		// show ticking statistics - every 100 ticks, print a summary
 #if 0
 #define STAT_BUF 100
@@ -142,7 +142,7 @@ void Sys_AsyncThread( void )
 			counter = 0;
 		}
 #endif
-		
+	
 		while( ticked < to_ticked )
 		{
 			common->Async();
