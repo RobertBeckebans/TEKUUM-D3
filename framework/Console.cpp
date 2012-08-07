@@ -1214,7 +1214,14 @@ void idConsoleLocal::DrawSolidConsole( float frac )
 	
 	renderSystem->SetColor( idStr::ColorForIndex( C_COLOR_CYAN ) );
 	
-	idStr version = va( "%s.%i", ENGINE_VERSION, BUILD_NUMBER );
+	// Techyon BEGIN
+#if defined( _DEBUG )
+	idStr version = va( "%s.%i-debug %s", ENGINE_VERSION, BUILD_NUMBER, BUILD_STRING );
+#else
+	idStr version = va( "%s.%i %s", ENGINE_VERSION, BUILD_NUMBER, BUILD_STRING );
+#endif
+	// Techyon END
+	
 	i = version.Length();
 	
 	for( x = 0; x < i; x++ )

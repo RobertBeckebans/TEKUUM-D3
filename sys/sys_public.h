@@ -110,11 +110,20 @@ If you have questions concerning this license or the applicable additional terms
 #define BUILD_OS_ID						3
 
 #if defined(__i386__)
-#define	BUILD_STRING				"android-x86"
+#define BUILD_STRING				"android-x86"
 #define CPUSTRING					"x86"
 #define CPU_EASYARGS				1
 #elif defined(__ARMEL__)
-#define	BUILD_STRING				"android-arm"
+
+#if defined(__ARM_ARCH_7__) || defined(__ARM_ARCH_7A__)
+#define BUILD_STRING				"android-armv7a"
+#elif defined(__MATH_NEON)
+#define BUILD_STRING				"android-neon"
+#else//lif defined(__ARM_ARCH_5__)
+#define BUILD_STRING				"android-armv5"
+#endif
+
+
 #define CPUSTRING					"arm"
 #define CPU_EASYARGS				0
 #endif
