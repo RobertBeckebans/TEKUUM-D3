@@ -385,7 +385,7 @@ GLenum idImage::SelectInternalFormat( const byte** dataPtrs, int numDataPtrs, in
 			// image_useNormalCompression should only be set to 1 on nv_10 and nv_20 paths
 			return GL_COLOR_INDEX8_EXT;
 		}
-		else if( globalImages->image_useCompression.GetBool() && globalImages->image_useNormalCompression.GetInteger() && glConfig.textureCompressionAvailable )
+		else if( globalImages->image_useCompression.GetBool() && globalImages->image_useNormalCompression.GetInteger() && glConfig.s3tcTextureCompressionAvailable )
 		{
 			// image_useNormalCompression == 2 uses rxgb format which produces really good quality for medium settings
 			return GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
@@ -410,7 +410,7 @@ GLenum idImage::SelectInternalFormat( const byte** dataPtrs, int numDataPtrs, in
 #if defined(USE_GLES1)
 		return GL_RGBA;
 #else
-		if( glConfig.textureCompressionAvailable )
+		if( glConfig.s3tcTextureCompressionAvailable )
 		{
 			return GL_COMPRESSED_RGB_S3TC_DXT1_EXT;
 		}
@@ -434,7 +434,7 @@ GLenum idImage::SelectInternalFormat( const byte** dataPtrs, int numDataPtrs, in
 		}
 #else
 		// we might intentionally have an alpha channel for alpha tested textures
-		if( glConfig.textureCompressionAvailable )
+		if( glConfig.s3tcTextureCompressionAvailable )
 		{
 			if( !needAlpha )
 			{
@@ -479,7 +479,7 @@ GLenum idImage::SelectInternalFormat( const byte** dataPtrs, int numDataPtrs, in
 			return GL_RGB8;			// four bytes
 		}
 		
-		if( glConfig.textureCompressionAvailable )
+		if( glConfig.s3tcTextureCompressionAvailable )
 		{
 			return GL_COMPRESSED_RGB_S3TC_DXT1_EXT;	// half byte
 		}
@@ -494,7 +494,7 @@ GLenum idImage::SelectInternalFormat( const byte** dataPtrs, int numDataPtrs, in
 #if defined(USE_GLES1)
 		return GL_RGBA;			// four bytes
 #else
-		if( minimumDepth != TD_HIGH_QUALITY && glConfig.textureCompressionAvailable )
+		if( minimumDepth != TD_HIGH_QUALITY && glConfig.s3tcTextureCompressionAvailable )
 		{
 			return GL_COMPRESSED_RGBA_S3TC_DXT3_EXT;	// one byte
 		}
@@ -520,7 +520,7 @@ GLenum idImage::SelectInternalFormat( const byte** dataPtrs, int numDataPtrs, in
 	{
 		return GL_RGBA8;	// four bytes
 	}
-	if( glConfig.textureCompressionAvailable )
+	if( glConfig.s3tcTextureCompressionAvailable )
 	{
 		return GL_COMPRESSED_RGBA_S3TC_DXT3_EXT;	// one byte
 	}
