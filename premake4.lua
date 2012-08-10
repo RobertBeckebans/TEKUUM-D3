@@ -3,52 +3,9 @@
 -- 
 
 function FindAndroidNDK()
-	
-	configuration {}
+
 	local ndkdir = os.getenv("NDK")
 	if (ndkdir) then
-		includedirs 
-		{
-			--"$(NDK)/platforms/android-8/arch-arm/usr/include",
-			--"$(NDK)/prebuilt/windows/lib/gcc/arm-linux-androideabi/4.4.3/include",
-			--"$(NDK)/sources/cxx-stl/stlport/stlport",
-		}
-		
-		--if os.is("windows") then
-			--gcc =
-			--{
-			--	cc = "$(NDK)/toolchains/arm-linux-androideabi-4.6/prebuilt/linux-x86/bin/arm-linux-androideabi-gcc",
-			--	cxx = "$(NDK)/toolchains/arm-linux-androideabi-4.6/prebuilt/linux-x86/bin/arm-linux-androideabi-gcc",
-			--	ar = "$(NDK)/toolchains/arm-linux-androideabi-4.6/prebuilt/linux-x86/bin/arm-linux-androideabi-ar",
-			--}
-		--elseif os.is("linux") then
-			--gcc =
-			--{
-			--	cc = "$(NDK)/toolchains/arm-linux-androideabi-4.4.3/prebuilt/linux-x86/bin/arm-linux-androideabi-gcc",
-			--	cxx = "$(NDK)/toolchains/arm-linux-androideabi-4.4.3/prebuilt/linux-x86/bin/arm-linux-androideabi-gcc",
-			--	ar = "$(NDK)/toolchains/arm-linux-androideabi-4.4.3/prebuilt/linux-x86/bin/arm-linux-androideabi-ar",
-			--}
-		--end
-		
-		defines
-		{
-			--"ANDROID",
-		}
-		-- TODO configuration "neon"
-		
-		--configuration "x32"
-		--	libdirs 
-		--	{
-		--	"$(WINDDK_DIR)/lib/mfc/i386",
-		--	"$(WINDDK_DIR)/lib/atl/i386"
-		--	}
-		--configuration "x64"
-		--	libdirs 
-		--	{
-		--	"$(WINDDK_DIR)/lib/mfc/amd64",
-		--	"$(WINDDK_DIR)/lib/atl/amd64"
-		--	}
-		configuration {}
 		print("Found Android Native Development Kit at '" .. ndkdir .. "'")
 		return true
 	end
@@ -81,9 +38,9 @@ newplatform
     name = "armeabi",
     description = "Android armeabi",
     gcc = {
-		cc = "$(NDK)/toolchains/arm-linux-androideabi-4.6/prebuilt/linux-x86/bin/arm-linux-androideabi-gcc",
-		cxx = "$(NDK)/toolchains/arm-linux-androideabi-4.6/prebuilt/linux-x86/bin/arm-linux-androideabi-g++",
-		ar = "$(NDK)/toolchains/arm-linux-androideabi-4.6/prebuilt/linux-x86/bin/arm-linux-androideabi-ar",
+		cc = "$(NDK)/toolchains/arm-linux-androideabi-4.6/prebuilt/windows/bin/arm-linux-androideabi-gcc",
+		cxx = "$(NDK)/toolchains/arm-linux-androideabi-4.6/prebuilt/windows/bin/arm-linux-androideabi-g++",
+		ar = "$(NDK)/toolchains/arm-linux-androideabi-4.6/prebuilt/windows/bin/arm-linux-androideabi-ar",
     }
 }
 
@@ -92,9 +49,9 @@ newplatform
     name = "armeabi-v7a",
     description = "Android armeabi-v7a",
     gcc = {
-		cc = "$(NDK)/toolchains/arm-linux-androideabi-4.6/prebuilt/linux-x86/bin/arm-linux-androideabi-gcc",
-		cxx = "$(NDK)/toolchains/arm-linux-androideabi-4.6/prebuilt/linux-x86/bin/arm-linux-androideabi-g++",
-		ar = "$(NDK)/toolchains/arm-linux-androideabi-4.6/prebuilt/linux-x86/bin/arm-linux-androideabi-ar",
+		cc = "$(NDK)/toolchains/arm-linux-androideabi-4.6/prebuilt/windows/bin/arm-linux-androideabi-gcc",
+		cxx = "$(NDK)/toolchains/arm-linux-androideabi-4.6/prebuilt/windows/bin/arm-linux-androideabi-g++",
+		ar = "$(NDK)/toolchains/arm-linux-androideabi-4.6/prebuilt/windows/bin/arm-linux-androideabi-ar",
     }
 }
 
@@ -103,9 +60,9 @@ newplatform
 	name = "neon",
 	description = "Android neon",
 	gcc = {
-		cc = "$(NDK)/toolchains/arm-linux-androideabi-4.6/prebuilt/linux-x86/bin/arm-linux-androideabi-gcc",
-		cxx = "$(NDK)/toolchains/arm-linux-androideabi-4.6/prebuilt/linux-x86/bin/arm-linux-androideabi-g++",
-		ar = "$(NDK)/toolchains/arm-linux-androideabi-4.6/prebuilt/linux-x86/bin/arm-linux-androideabi-ar",
+		cc = "$(NDK)/toolchains/arm-linux-androideabi-4.6/prebuilt/windows/bin/arm-linux-androideabi-gcc",
+		cxx = "$(NDK)/toolchains/arm-linux-androideabi-4.6/prebuilt/windows/bin/arm-linux-androideabi-g++",
+		ar = "$(NDK)/toolchains/arm-linux-androideabi-4.6/prebuilt/windows/bin/arm-linux-androideabi-ar",
    }
 }
 
@@ -502,23 +459,6 @@ end
 if _OPTIONS["android"] then
 	foundAndroidNDK = FindAndroidNDK()
 end
-
-	--configuration { "linux", "android" }
-	
---[[
-	configuration "android"
-		includedirs
-		{
-			"$(NDK)/platforms/android-8/arch-arm/usr/include",
-			--"$(NDK)/prebuilt/windows/lib/gcc/arm-linux-androideabi/4.4.3/include",
-			"$(NDK)/prebuilt/windows/lib/gcc/arm-linux-androideabi/4.4.3/include",
-			"$(NDK)/sources/cxx-stl/stlport/stlport",
-		}
-		defines
-		{
-			"ANDROID",
-		}
-]]
 	
 if not _OPTIONS["android"] then
 	include "idlib"
