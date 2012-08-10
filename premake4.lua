@@ -1148,19 +1148,20 @@ end -- if not _OPTIONS["android"]
 		}
 		includedirs
 		{
-			"$(NDK)/platforms/android-8/arch-arm/usr/include",
+			"$(NDK)/platforms/android-9/arch-arm/usr/include",
 			--"$(NDK)/prebuilt/windows/lib/gcc/arm-linux-androideabi/4.4.3/include",
 			"$(NDK)/sources/cxx-stl/stlport/stlport",
 		}
 		libdirs
 		{
-			"$(NDK)/platforms/android-8/arch-arm/usr/lib",
+			"$(NDK)/platforms/android-9/arch-arm/usr/lib",
 			--"$(NDK)/sources/cxx-stl/gnu-libstdc++/libs/armeabi",
 			--"$(NDK)/sources/cxx-stl/stlport/libs/armeabi",
 		}
 		links
 		{
 			"GLESv1_CM",
+			"OpenSLES",
 			"m",
 			"c",
 			"log",
