@@ -43,6 +43,8 @@ If you have questions concerning this license or the applicable additional terms
  * limitations under the License.
  *
  */
+#if defined(USE_AUDIOTARGET)
+
 #include <stdio.h>
 #include <unistd.h>
 #include <fcntl.h>
@@ -246,6 +248,13 @@ void tyAudioHardwareAudioTarget::Write( bool flushing )
 #endif
 }
 
+#else
+void JE_RequestAudioData( void )
+{
+	// stub
+}
+
+#endif // #if defined(USE_AUDIOTARGET)
 
 
 

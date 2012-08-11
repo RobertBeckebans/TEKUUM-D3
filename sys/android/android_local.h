@@ -31,6 +31,7 @@ If you have questions concerning this license or the applicable additional terms
 
 extern glconfig_t glConfig;
 
+#if defined(USE_AUDIOTARGET)
 class tyAudioHardwareAudioTarget : public idAudioHardware
 {
 private:
@@ -89,6 +90,7 @@ private:
 };
 
 extern tyAudioHardwareAudioTarget* g_audioHardwareAudioTarget;
+#endif
 
 void JE_SetResolution( int width, int height );
 
