@@ -31,6 +31,64 @@ If you have questions concerning this license or the applicable additional terms
 
 extern glconfig_t glConfig;
 
+class tyAudioHardwareAudioTarget : public idAudioHardware
+{
+private:
+	unsigned int				numChannels;
+	void*						mixBuffer;
+	int							mixBufferSize;
+	
+public:
+
+	// how many chunks we have left to write in cases where we need to split
+	int							writeChunks;
+	
+	// how many chunks we can write to the audio device without blocking
+	//int						freeWriteChunks;
+	
+	tyAudioHardwareAudioTarget()
+	{
+		numChannels = 0;
+		mixBuffer = NULL;
+		mixBufferSize = 0;
+		//remainingFrames	= 0;
+		writeChunks = 0;
+	}
+	virtual				~tyAudioHardwareAudioTarget();
+	
+	bool				Initialize( void );
+	
+	
+	// Linux driver doesn't support memory map API
+	bool				Lock( void** pDSLockedBuffer, ulong* dwDSLockedBufferSize )
+	{
+		return false;
+	}
+	bool				Unlock( void* pDSLockedBuffer, dword dwDSLockedBufferSize )
+	{
+		return false;
+	}
+	bool				GetCurrentPosition( ulong* pdwCurrentWriteCursor )
+	{
+		return false;
+	}
+	
+	bool				Flush();
+	void				Write( bool flushing );
+	
+	int					GetNumberOfSpeakers( void )
+	{
+		return numChannels;
+	}
+	int					GetMixBufferSize( void );
+	short*				GetMixBuffer( void );
+	
+private:
+	void				Release();
+	void				InitFailed();
+};
+
+extern tyAudioHardwareAudioTarget* g_audioHardwareAudioTarget;
 
 void JE_SetResolution( int width, int height );
 
