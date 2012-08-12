@@ -49,6 +49,10 @@ void RB_SetDefaultGLState( void )
 	
 	RB_LogComment( "--- R_SetDefaultGLState ---\n" );
 	
+	// make sure our GL state vector is set correctly
+	memset( &backEnd.glState, 0, sizeof( backEnd.glState ) );
+	backEnd.glState.forceGlState = true;
+	
 #if defined(__ANDROID__)
 	GL_CheckErrors();
 #endif
@@ -61,22 +65,22 @@ void RB_SetDefaultGLState( void )
 	glEnableClientState( GL_TEXTURE_COORD_ARRAY );
 	glDisableClientState( GL_COLOR_ARRAY );
 	
-	//
-	// make sure our GL state vector is set correctly
-	//
-	memset( &backEnd.glState, 0, sizeof( backEnd.glState ) );
-	backEnd.glState.forceGlState = true;
-	
 	glColorMask( 1, 1, 1, 1 );
 	
 	glEnable( GL_DEPTH_TEST );
 	glEnable( GL_BLEND );
 	glEnable( GL_SCISSOR_TEST );
 	glEnable( GL_CULL_FACE );
+	
+#if !defined(USE_GLES2)
 	glDisable( GL_LIGHTING );
+	glShadeModel( GL_SMOOTH );
+#endif
+	
 #if !defined(USE_GLES1)
 	glDisable( GL_LINE_STIPPLE );
 #endif
+	
 	glDisable( GL_STENCIL_TEST );
 	
 #if !defined(USE_GLES1)
@@ -86,7 +90,6 @@ void RB_SetDefaultGLState( void )
 	glDepthFunc( GL_ALWAYS );
 	
 	glCullFace( GL_FRONT_AND_BACK );
-	glShadeModel( GL_SMOOTH );
 	
 	if( r_useScissor.GetBool() )
 	{
@@ -104,7 +107,11 @@ void RB_SetDefaultGLState( void )
 		glTexGenf( GL_R, GL_TEXTURE_GEN_MODE, GL_OBJECT_LINEAR );
 		glTexGenf( GL_Q, GL_TEXTURE_GEN_MODE, GL_OBJECT_LINEAR );
 #endif
+		
+#if !defined(USE_GLES2)
 		GL_TexEnv( GL_MODULATE );
+#endif
+		
 		glDisable( GL_TEXTURE_2D );
 		
 #if !defined(USE_GLES1)
@@ -185,7 +192,9 @@ void GL_SelectTexture( int unit )
 	GL_CheckErrors();
 #endif
 	
+#if !defined(USE_GLES2)
 	glClientActiveTexture( GL_TEXTURE0 + unit );
+#endif
 	
 #if defined(__ANDROID__)
 	GL_CheckErrors();
@@ -255,6 +264,7 @@ void GL_Cull( int cullType )
 GL_TexEnv
 ====================
 */
+#if !defined(USE_GLES2)
 void GL_TexEnv( int env )
 {
 	tmu_t*	tmu;
@@ -281,6 +291,7 @@ void GL_TexEnv( int env )
 			break;
 	}
 }
+#endif
 
 /*
 =================
@@ -484,6 +495,7 @@ void GL_State( int stateBits )
 	//
 	// alpha test
 	//
+#if !defined(USE_GLES2)
 	if( diff & GLS_ATEST_BITS )
 	{
 		switch( stateBits & GLS_ATEST_BITS )
@@ -508,6 +520,7 @@ void GL_State( int stateBits )
 				break;
 		}
 	}
+#endif
 	
 #if defined(__ANDROID__)
 	GL_CheckErrors();

@@ -164,15 +164,62 @@ const int MAX_EXPRESSION_REGISTERS = 4096;
 
 #if defined(__ANDROID__)
 
-#if defined(USE_GLES1)
+#if defined(USE_GLES2)
+#include <GLES2/gl2.h>
+#include <GLES2/gl2ext.h>
+#elif defined(USE_GLES1)
 #include <GLES/gl.h>
 #include <GLES/glext.h>
+#endif
 
-// OpenGL core
+
+
+#if defined(USE_GLES2)
+
+#define glClearDepth glClearDepthf
+#define glDepthRange glDepthRangef
+
+#define glLoadIdentity esLoadIdentity
+#define glLoadMatrixf esLoadMatrixf
+#define glMatrixMode esMatrixMode
+#define glOrtho esOrthof
+#define glPushMatrix esPushMatrix
+#define glPopMatrix glPopMatrix
+
+#define glEnableClientState esEnableClientState
+#define glDisableClientState esDisableClientState
+
+#define glVertexPointer esVertexPointer
+#define glNormalPointer esNormalPointer
+#define glTexCoordPointer esTexCoordPointer
+#define glColorPointer esColorPointer
+
+#define glColor4f esColor4f
+
+
+#define GL_MODELVIEW 0x1700
+#define GL_PROJECTION 0x1701
+
+#define GL_VERTEX_ARRAY 0x8074
+#define GL_NORMAL_ARRAY 0x8075
+#define GL_COLOR_ARRAY 0x8076
+#define GL_TEXTURE_COORD_ARRAY 0x8078
+
+
+#define GL_TEXTURE_CUBE_MAP_EXT GL_TEXTURE_CUBE_MAP
+#define GL_TEXTURE_BINDING_CUBE_MAP_EXT GL_TEXTURE_BINDING_CUBE_MAP
+#define GL_TEXTURE_CUBE_MAP_POSITIVE_X_EXT GL_TEXTURE_CUBE_MAP_POSITIVE_X
+#define GL_TEXTURE_CUBE_MAP_NEGATIVE_X_EXT GL_TEXTURE_CUBE_MAP_NEGATIVE_X
+#define GL_TEXTURE_CUBE_MAP_POSITIVE_Y_EXT GL_TEXTURE_CUBE_MAP_POSITIVE_Y
+#define GL_TEXTURE_CUBE_MAP_NEGATIVE_Y_EXT GL_TEXTURE_CUBE_MAP_NEGATIVE_Y
+#define GL_TEXTURE_CUBE_MAP_POSITIVE_Z_EXT GL_TEXTURE_CUBE_MAP_POSITIVE_Z
+#define GL_TEXTURE_CUBE_MAP_NEGATIVE_Z_EXT GL_TEXTURE_CUBE_MAP_NEGATIVE_Z
+
+#elif defined(USE_GLES1)
+
 #define glClearDepth glClearDepthf
 #define glDepthRange glDepthRangef
 #define glOrtho glOrthof
-
 
 #define GL_TEXTURE_CUBE_MAP_EXT GL_TEXTURE_CUBE_MAP_OES
 #define GL_TEXTURE_BINDING_CUBE_MAP_EXT GL_TEXTURE_BINDING_CUBE_MAP_OES
@@ -182,6 +229,8 @@ const int MAX_EXPRESSION_REGISTERS = 4096;
 #define GL_TEXTURE_CUBE_MAP_NEGATIVE_Y_EXT GL_TEXTURE_CUBE_MAP_NEGATIVE_Y_OES
 #define GL_TEXTURE_CUBE_MAP_POSITIVE_Z_EXT GL_TEXTURE_CUBE_MAP_POSITIVE_Z_OES
 #define GL_TEXTURE_CUBE_MAP_NEGATIVE_Z_EXT GL_TEXTURE_CUBE_MAP_NEGATIVE_Z_OES
+
+#endif
 
 /* -------------------- GL_EXT_texture_compression_s3tc -------------------- */
 
@@ -195,9 +244,8 @@ const int MAX_EXPRESSION_REGISTERS = 4096;
 
 #endif /* GL_EXT_texture_compression_s3tc */
 
-#endif
+#endif // defined(__ANDROID__)
 
-#endif
 // Techyon END
 #include "../renderer/Cinematic.h"
 #include "../renderer/Material.h"

@@ -76,7 +76,7 @@ protected:
 			shaderProgram_t* shaderProgram = _shaderPrograms[i];
 			if( shaderProgram != NULL && shaderProgram->program )
 			{
-				glDeleteObjectARB( shaderProgram->program );
+				glDeleteProgram( shaderProgram->program );
 				delete shaderProgram;
 			}
 		}
@@ -126,18 +126,18 @@ protected:
 private:
 	static const char*	FindEmbeddedShaderText( const idStr& shaderName, GLenum shaderType );
 	
-	void				CompileGPUShader( GLhandleARB program, const idStr& programName, const idStr& shaderText, GLenum shaderType ) const;
+	void				CompileGPUShader( uint32_t program, const idStr& programName, const idStr& shaderText, GLenum shaderType ) const;
 	
 	void				PrintShaderText( const idStr& shaderText ) const;
-	void				PrintShaderSource( GLhandleARB object ) const;
-	void				PrintInfoLog( GLhandleARB object, bool developerOnly ) const;
+	void				PrintShaderSource( uint32_t object ) const;
+	void				PrintInfoLog( uint32_t object, bool developerOnly ) const;
 	
-	void				LinkProgram( GLhandleARB program ) const;
-	void				BindAttribLocations( GLhandleARB program ) const;
+	void				LinkProgram( uint32_t program ) const;
+	void				BindAttribLocations( uint32_t program ) const;
 	
 protected:
-	void				ValidateProgram( GLhandleARB program ) const;
-	void				ShowProgramUniforms( GLhandleARB program ) const;
+	void				ValidateProgram( uint32_t program ) const;
+	void				ShowProgramUniforms( uint32_t program ) const;
 	
 	
 public:
@@ -947,7 +947,7 @@ public:
 	}
 	void				UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
 	{
-		shaderProgram->u_CurrentRenderImage = glGetUniformLocationARB( shaderProgram->program, GetName() );
+		shaderProgram->u_CurrentRenderImage = glGetUniformLocation( shaderProgram->program, GetName() );
 	}
 	
 	void SetUniform_CurrentRenderImage( int value )
@@ -964,10 +964,10 @@ public:
 #if defined(LOG_GLSL_UNIFORMS)
 		if( r_logFile.GetBool() )
 		{
-			RB_LogComment( "--- SetUniform_CurrentRenderImage( program = %s, value = %f ) ---\n", program->name.c_str(), value );
+			RB_LogComment( "--- SetUniform_CurrentRenderImage( program = %s, value = %d ) ---\n", program->name.c_str(), value );
 		}
 #endif
-		glUniform1iARB( program->u_CurrentRenderImage, value );
+		glUniform1i( program->u_CurrentRenderImage, value );
 	}
 };
 
@@ -986,7 +986,7 @@ public:
 	}
 	void				UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
 	{
-		shaderProgram->u_CurrentNormalsImage = glGetUniformLocationARB( shaderProgram->program, GetName() );
+		shaderProgram->u_CurrentNormalsImage = glGetUniformLocation( shaderProgram->program, GetName() );
 	}
 	
 	void SetUniform_CurrentNormalsImage( int value )
@@ -1003,10 +1003,10 @@ public:
 #if defined(LOG_GLSL_UNIFORMS)
 		if( r_logFile.GetBool() )
 		{
-			RB_LogComment( "--- SetUniform_CurrentNormalsImage( program = %s, value = %f ) ---\n", program->name.c_str(), value );
+			RB_LogComment( "--- SetUniform_CurrentNormalsImage( program = %s, value = %d ) ---\n", program->name.c_str(), value );
 		}
 #endif
-		glUniform1iARB( program->u_CurrentNormalsImage, value );
+		glUniform1i( program->u_CurrentNormalsImage, value );
 	}
 };
 
@@ -1027,7 +1027,7 @@ public:
 	}
 	void				UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
 	{
-		shaderProgram->u_CurrentDepthImage = glGetUniformLocationARB( shaderProgram->program, GetName() );
+		shaderProgram->u_CurrentDepthImage = glGetUniformLocation( shaderProgram->program, GetName() );
 	}
 	
 	void SetUniform_CurrentDepthImage( int value )
@@ -1044,10 +1044,10 @@ public:
 #if defined(LOG_GLSL_UNIFORMS)
 		if( r_logFile.GetBool() )
 		{
-			RB_LogComment( "--- SetUniform_CurrentDepthImage( program = %s, value = %f ) ---\n", program->name.c_str(), value );
+			RB_LogComment( "--- SetUniform_CurrentDepthImage( program = %s, value = %d ) ---\n", program->name.c_str(), value );
 		}
 #endif
-		glUniform1iARB( program->u_CurrentDepthImage, value );
+		glUniform1i( program->u_CurrentDepthImage, value );
 	}
 };
 
@@ -1066,7 +1066,7 @@ public:
 	}
 	void				UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
 	{
-		shaderProgram->u_CurrentLightImage = glGetUniformLocationARB( shaderProgram->program, GetName() );
+		shaderProgram->u_CurrentLightImage = glGetUniformLocation( shaderProgram->program, GetName() );
 	}
 	
 	void SetUniform_CurrentLightImage( int value )
@@ -1083,10 +1083,10 @@ public:
 #if defined(LOG_GLSL_UNIFORMS)
 		if( r_logFile.GetBool() )
 		{
-			RB_LogComment( "--- SetUniform_CurrentLightImage( program = %s, value = %f ) ---\n", program->name.c_str(), value );
+			RB_LogComment( "--- SetUniform_CurrentLightImage( program = %s, value = %d ) ---\n", program->name.c_str(), value );
 		}
 #endif
-		glUniform1iARB( program->u_CurrentLightImage, value );
+		glUniform1i( program->u_CurrentLightImage, value );
 	}
 };
 
@@ -1107,7 +1107,7 @@ public:
 	}
 	void				UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
 	{
-		shaderProgram->u_DiffuseImage = glGetUniformLocationARB( shaderProgram->program, GetName() );
+		shaderProgram->u_DiffuseImage = glGetUniformLocation( shaderProgram->program, GetName() );
 	}
 	
 	void SetUniform_DiffuseImage( int value )
@@ -1124,10 +1124,10 @@ public:
 #if defined(LOG_GLSL_UNIFORMS)
 		if( r_logFile.GetBool() )
 		{
-			RB_LogComment( "--- SetUniform_DiffuseImage( program = %s, value = %f ) ---\n", program->name.c_str(), value );
+			RB_LogComment( "--- SetUniform_DiffuseImage( program = %s, value = %d ) ---\n", program->name.c_str(), value );
 		}
 #endif
-		glUniform1iARB( program->u_DiffuseImage, value );
+		glUniform1i( program->u_DiffuseImage, value );
 	}
 };
 
@@ -1146,7 +1146,7 @@ public:
 	}
 	void				UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
 	{
-		shaderProgram->u_NormalImage = glGetUniformLocationARB( shaderProgram->program, GetName() );
+		shaderProgram->u_NormalImage = glGetUniformLocation( shaderProgram->program, GetName() );
 	}
 	
 	void SetUniform_NormalImage( int value )
@@ -1163,10 +1163,10 @@ public:
 #if defined(LOG_GLSL_UNIFORMS)
 		if( r_logFile.GetBool() )
 		{
-			RB_LogComment( "--- SetUniform_NormalImage( program = %s, value = %f ) ---\n", program->name.c_str(), value );
+			RB_LogComment( "--- SetUniform_NormalImage( program = %s, value = %d ) ---\n", program->name.c_str(), value );
 		}
 #endif
-		glUniform1iARB( program->u_NormalImage, value );
+		glUniform1i( program->u_NormalImage, value );
 	}
 };
 
@@ -1185,7 +1185,7 @@ public:
 	}
 	void				UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
 	{
-		shaderProgram->u_SpecularImage = glGetUniformLocationARB( shaderProgram->program, GetName() );
+		shaderProgram->u_SpecularImage = glGetUniformLocation( shaderProgram->program, GetName() );
 	}
 	
 	void SetUniform_SpecularImage( int value )
@@ -1202,10 +1202,10 @@ public:
 #if defined(LOG_GLSL_UNIFORMS)
 		if( r_logFile.GetBool() )
 		{
-			RB_LogComment( "--- SetUniform_SpecularImage( program = %s, value = %f ) ---\n", program->name.c_str(), value );
+			RB_LogComment( "--- SetUniform_SpecularImage( program = %s, value = %d ) ---\n", program->name.c_str(), value );
 		}
 #endif
-		glUniform1iARB( program->u_SpecularImage, value );
+		glUniform1i( program->u_SpecularImage, value );
 	}
 };
 
@@ -1226,7 +1226,7 @@ public:
 	}
 	void				UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
 	{
-		shaderProgram->u_ModelMatrix = glGetUniformLocationARB( shaderProgram->program, GetName() );
+		shaderProgram->u_ModelMatrix = glGetUniformLocation( shaderProgram->program, GetName() );
 	}
 	
 	void SetUniform_ModelMatrix( const idMat4& m )
@@ -1256,7 +1256,7 @@ public:
 		}
 #endif
 		
-		glUniformMatrix4fvARB( program->u_ModelMatrix, 1, GL_TRUE, m.ToFloatPtr() );
+		glUniformMatrix4fv( program->u_ModelMatrix, 1, GL_TRUE, m.ToFloatPtr() );
 	}
 };
 
@@ -1276,7 +1276,7 @@ public:
 	}
 	void				UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
 	{
-		shaderProgram->u_UnprojectMatrix = glGetUniformLocationARB( shaderProgram->program, GetName() );
+		shaderProgram->u_UnprojectMatrix = glGetUniformLocation( shaderProgram->program, GetName() );
 	}
 	
 	void SetUniform_UnprojectMatrix( const idMat4& m )
@@ -1306,7 +1306,7 @@ public:
 		}
 #endif
 		
-		glUniformMatrix4fvARB( program->u_UnprojectMatrix, 1, GL_TRUE, m.ToFloatPtr() );
+		glUniformMatrix4fv( program->u_UnprojectMatrix, 1, GL_TRUE, m.ToFloatPtr() );
 	}
 };
 
@@ -1326,7 +1326,7 @@ public:
 	}
 	void				UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
 	{
-		shaderProgram->u_ShadowMatrix = glGetUniformLocationARB( shaderProgram->program, GetName() );
+		shaderProgram->u_ShadowMatrix = glGetUniformLocation( shaderProgram->program, GetName() );
 	}
 	
 	void SetUniform_ShadowMatrix( const idMat4& m )
@@ -1356,7 +1356,7 @@ public:
 		}
 #endif
 		
-		glUniformMatrix4fvARB( program->u_ShadowMatrix, 1, GL_TRUE, m.ToFloatPtr() );
+		glUniformMatrix4fv( program->u_ShadowMatrix, 1, GL_TRUE, m.ToFloatPtr() );
 	}
 };
 
@@ -1376,7 +1376,7 @@ public:
 	}
 	void UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
 	{
-		shaderProgram->u_DiffuseMatrixS = glGetUniformLocationARB( shaderProgram->program, GetName() );
+		shaderProgram->u_DiffuseMatrixS = glGetUniformLocation( shaderProgram->program, GetName() );
 	}
 	
 	void SetUniform_DiffuseMatrixS( const idVec4& v )
@@ -1397,7 +1397,7 @@ public:
 		}
 #endif
 		
-		glUniform4fARB( program->u_DiffuseMatrixS, v[0], v[1], v[2], v[3] );
+		glUniform4f( program->u_DiffuseMatrixS, v[0], v[1], v[2], v[3] );
 	}
 };
 
@@ -1416,7 +1416,7 @@ public:
 	}
 	void UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
 	{
-		shaderProgram->u_DiffuseMatrixT = glGetUniformLocationARB( shaderProgram->program, GetName() );
+		shaderProgram->u_DiffuseMatrixT = glGetUniformLocation( shaderProgram->program, GetName() );
 	}
 	
 	void SetUniform_DiffuseMatrixT( const idVec4& v )
@@ -1437,7 +1437,7 @@ public:
 		}
 #endif
 		
-		glUniform4fARB( program->u_DiffuseMatrixT, v[0], v[1], v[2], v[3] );
+		glUniform4f( program->u_DiffuseMatrixT, v[0], v[1], v[2], v[3] );
 	}
 };
 
@@ -1456,7 +1456,7 @@ public:
 	}
 	void UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
 	{
-		shaderProgram->u_BumpMatrixS = glGetUniformLocationARB( shaderProgram->program, GetName() );
+		shaderProgram->u_BumpMatrixS = glGetUniformLocation( shaderProgram->program, GetName() );
 	}
 	
 	void SetUniform_BumpMatrixS( const idVec4& v )
@@ -1477,7 +1477,7 @@ public:
 		}
 #endif
 		
-		glUniform4fARB( program->u_BumpMatrixS, v[0], v[1], v[2], v[3] );
+		glUniform4f( program->u_BumpMatrixS, v[0], v[1], v[2], v[3] );
 	}
 };
 
@@ -1496,7 +1496,7 @@ public:
 	}
 	void UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
 	{
-		shaderProgram->u_BumpMatrixT = glGetUniformLocationARB( shaderProgram->program, GetName() );
+		shaderProgram->u_BumpMatrixT = glGetUniformLocation( shaderProgram->program, GetName() );
 	}
 	
 	void SetUniform_BumpMatrixT( const idVec4& v )
@@ -1517,7 +1517,7 @@ public:
 		}
 #endif
 		
-		glUniform4fARB( program->u_BumpMatrixT, v[0], v[1], v[2], v[3] );
+		glUniform4f( program->u_BumpMatrixT, v[0], v[1], v[2], v[3] );
 	}
 };
 
@@ -1537,7 +1537,7 @@ public:
 	}
 	void UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
 	{
-		shaderProgram->u_SpecularMatrixS = glGetUniformLocationARB( shaderProgram->program, GetName() );
+		shaderProgram->u_SpecularMatrixS = glGetUniformLocation( shaderProgram->program, GetName() );
 	}
 	
 	void SetUniform_SpecularMatrixS( const idVec4& v )
@@ -1558,7 +1558,7 @@ public:
 		}
 #endif
 		
-		glUniform4fARB( program->u_SpecularMatrixS, v[0], v[1], v[2], v[3] );
+		glUniform4f( program->u_SpecularMatrixS, v[0], v[1], v[2], v[3] );
 	}
 };
 
@@ -1577,7 +1577,7 @@ public:
 	}
 	void UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
 	{
-		shaderProgram->u_SpecularMatrixT = glGetUniformLocationARB( shaderProgram->program, GetName() );
+		shaderProgram->u_SpecularMatrixT = glGetUniformLocation( shaderProgram->program, GetName() );
 	}
 	
 	void SetUniform_SpecularMatrixT( const idVec4& v )
@@ -1598,7 +1598,7 @@ public:
 		}
 #endif
 		
-		glUniform4fARB( program->u_SpecularMatrixT, v[0], v[1], v[2], v[3] );
+		glUniform4f( program->u_SpecularMatrixT, v[0], v[1], v[2], v[3] );
 	}
 };
 
@@ -1618,7 +1618,7 @@ public:
 	}
 	void UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
 	{
-		shaderProgram->u_Color = glGetUniformLocationARB( shaderProgram->program, GetName() );
+		shaderProgram->u_Color = glGetUniformLocation( shaderProgram->program, GetName() );
 	}
 	
 	void SetUniform_Color( const idVec4& v )
@@ -1639,7 +1639,7 @@ public:
 		}
 #endif
 		
-		glUniform4fARB( program->u_Color, v[0], v[1], v[2], v[3] );
+		glUniform4f( program->u_Color, v[0], v[1], v[2], v[3] );
 	}
 };
 
@@ -1658,7 +1658,7 @@ public:
 	}
 	void UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
 	{
-		shaderProgram->u_ColorModulate = glGetUniformLocationARB( shaderProgram->program, GetName() );
+		shaderProgram->u_ColorModulate = glGetUniformLocation( shaderProgram->program, GetName() );
 	}
 	
 	void SetUniform_ColorModulate( const idVec4& v )
@@ -1679,7 +1679,7 @@ public:
 		}
 #endif
 		
-		glUniform4fARB( program->u_ColorModulate, v[0], v[1], v[2], v[3] );
+		glUniform4f( program->u_ColorModulate, v[0], v[1], v[2], v[3] );
 	}
 };
 
@@ -1698,7 +1698,7 @@ public:
 	}
 	void UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
 	{
-		shaderProgram->u_AmbientColor = glGetUniformLocationARB( shaderProgram->program, GetName() );
+		shaderProgram->u_AmbientColor = glGetUniformLocation( shaderProgram->program, GetName() );
 	}
 	
 	void SetUniform_AmbientColor( const idVec4& v )
@@ -1719,7 +1719,7 @@ public:
 		}
 #endif
 		
-		glUniform4fARB( program->u_AmbientColor, v[0], v[1], v[2], v[3] );
+		glUniform4f( program->u_AmbientColor, v[0], v[1], v[2], v[3] );
 	}
 };
 
@@ -1738,7 +1738,7 @@ public:
 	}
 	void UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
 	{
-		shaderProgram->u_DiffuseColor = glGetUniformLocationARB( shaderProgram->program, GetName() );
+		shaderProgram->u_DiffuseColor = glGetUniformLocation( shaderProgram->program, GetName() );
 	}
 	
 	void SetUniform_DiffuseColor( const idVec4& v )
@@ -1759,7 +1759,7 @@ public:
 		}
 #endif
 		
-		glUniform4fARB( program->u_DiffuseColor, v[0], v[1], v[2], v[3] );
+		glUniform4f( program->u_DiffuseColor, v[0], v[1], v[2], v[3] );
 	}
 };
 
@@ -1778,7 +1778,7 @@ public:
 	}
 	void UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
 	{
-		shaderProgram->u_SpecularColor = glGetUniformLocationARB( shaderProgram->program, GetName() );
+		shaderProgram->u_SpecularColor = glGetUniformLocation( shaderProgram->program, GetName() );
 	}
 	
 	void SetUniform_SpecularColor( const idVec4& v )
@@ -1799,7 +1799,7 @@ public:
 		}
 #endif
 		
-		glUniform4fARB( program->u_SpecularColor, v[0], v[1], v[2], v[3] );
+		glUniform4f( program->u_SpecularColor, v[0], v[1], v[2], v[3] );
 	}
 };
 
@@ -1818,7 +1818,7 @@ public:
 	}
 	void UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
 	{
-		shaderProgram->u_LightColor = glGetUniformLocationARB( shaderProgram->program, GetName() );
+		shaderProgram->u_LightColor = glGetUniformLocation( shaderProgram->program, GetName() );
 	}
 	
 	void SetUniform_LightColor( const idVec4& v )
@@ -1839,7 +1839,7 @@ public:
 		}
 #endif
 		
-		glUniform4fARB( program->u_LightColor, v[0], v[1], v[2], v[3] );
+		glUniform4f( program->u_LightColor, v[0], v[1], v[2], v[3] );
 	}
 };
 
@@ -1857,7 +1857,7 @@ public:
 	const char* GetName() const { return "u_AlphaTest"; }
 	void				UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
 	{
-		shaderProgram->u_AlphaTest = glGetUniformLocationARB(shaderProgram->program, GetName());
+		shaderProgram->u_AlphaTest = glGetUniformLocation(shaderProgram->program, GetName());
 	}
 
 	void SetUniform_AlphaTest(uint32_t stateBits)
@@ -1882,7 +1882,7 @@ public:
 	}
 	void UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
 	{
-		shaderProgram->u_LocalViewOrigin = glGetUniformLocationARB( shaderProgram->program, GetName() );
+		shaderProgram->u_LocalViewOrigin = glGetUniformLocation( shaderProgram->program, GetName() );
 	}
 	
 	void SetUniform_LocalViewOrigin( const idVec3 v )
@@ -1903,7 +1903,7 @@ public:
 		}
 #endif
 		
-		glUniform3fARB( program->u_LocalViewOrigin, v[0], v[1], v[2] );
+		glUniform3f( program->u_LocalViewOrigin, v[0], v[1], v[2] );
 	}
 };
 
@@ -1922,7 +1922,7 @@ public:
 	}
 	void UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
 	{
-		shaderProgram->u_GlobalViewOrigin = glGetUniformLocationARB( shaderProgram->program, GetName() );
+		shaderProgram->u_GlobalViewOrigin = glGetUniformLocation( shaderProgram->program, GetName() );
 	}
 	
 	void SetUniform_GlobalViewOrigin( const idVec3 v )
@@ -1943,7 +1943,7 @@ public:
 		}
 #endif
 		
-		glUniform3fARB( program->u_GlobalViewOrigin, v[0], v[1], v[2] );
+		glUniform3f( program->u_GlobalViewOrigin, v[0], v[1], v[2] );
 	}
 };
 
@@ -1960,7 +1960,7 @@ public:
 	const char* GetName() const { return "u_LightDir"; }
 	void				UpdateShaderProgramUniformLocation(shaderProgram_t *shaderProgram) const
 	{
-		shaderProgram->u_LightDir = glGetUniformLocationARB(shaderProgram->program, GetName());
+		shaderProgram->u_LightDir = glGetUniformLocation(shaderProgram->program, GetName());
 	}
 
 	void SetUniform_LightDir(const vec3_t v)
@@ -1985,7 +1985,7 @@ public:
 	}
 	void UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
 	{
-		shaderProgram->u_LocalLightOrigin = glGetUniformLocationARB( shaderProgram->program, GetName() );
+		shaderProgram->u_LocalLightOrigin = glGetUniformLocation( shaderProgram->program, GetName() );
 	}
 	
 	void SetUniform_LocalLightOrigin( const idVec3& v )
@@ -2006,7 +2006,7 @@ public:
 		}
 #endif
 		
-		glUniform3fARB( program->u_LocalLightOrigin, v[0], v[1], v[2] );
+		glUniform3f( program->u_LocalLightOrigin, v[0], v[1], v[2] );
 	}
 };
 
@@ -2025,7 +2025,7 @@ public:
 	}
 	void UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
 	{
-		shaderProgram->u_GlobalLightOrigin = glGetUniformLocationARB( shaderProgram->program, GetName() );
+		shaderProgram->u_GlobalLightOrigin = glGetUniformLocation( shaderProgram->program, GetName() );
 	}
 	
 	void SetUniform_GlobalLightOrigin( const idVec3& v )
@@ -2046,7 +2046,7 @@ public:
 		}
 #endif
 		
-		glUniform3fARB( program->u_GlobalLightOrigin, v[0], v[1], v[2] );
+		glUniform3f( program->u_GlobalLightOrigin, v[0], v[1], v[2] );
 	}
 };
 
@@ -2065,7 +2065,7 @@ public:
 	}
 	void UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
 	{
-		shaderProgram->u_LightProjectS = glGetUniformLocationARB( shaderProgram->program, GetName() );
+		shaderProgram->u_LightProjectS = glGetUniformLocation( shaderProgram->program, GetName() );
 	}
 	
 	void SetUniform_LightProjectS( const idVec4& v )
@@ -2086,7 +2086,7 @@ public:
 		}
 #endif
 		
-		glUniform4fARB( program->u_LightProjectS, v[0], v[1], v[2], v[3] );
+		glUniform4f( program->u_LightProjectS, v[0], v[1], v[2], v[3] );
 	}
 };
 
@@ -2105,7 +2105,7 @@ public:
 	}
 	void UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
 	{
-		shaderProgram->u_LightProjectT = glGetUniformLocationARB( shaderProgram->program, GetName() );
+		shaderProgram->u_LightProjectT = glGetUniformLocation( shaderProgram->program, GetName() );
 	}
 	
 	void SetUniform_LightProjectT( const idVec4& v )
@@ -2126,7 +2126,7 @@ public:
 		}
 #endif
 		
-		glUniform4fARB( program->u_LightProjectT, v[0], v[1], v[2], v[3] );
+		glUniform4f( program->u_LightProjectT, v[0], v[1], v[2], v[3] );
 	}
 };
 
@@ -2145,7 +2145,7 @@ public:
 	}
 	void UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
 	{
-		shaderProgram->u_LightProjectQ = glGetUniformLocationARB( shaderProgram->program, GetName() );
+		shaderProgram->u_LightProjectQ = glGetUniformLocation( shaderProgram->program, GetName() );
 	}
 	
 	void SetUniform_LightProjectQ( const idVec4& v )
@@ -2166,7 +2166,7 @@ public:
 		}
 #endif
 		
-		glUniform4fARB( program->u_LightProjectQ, v[0], v[1], v[2], v[3] );
+		glUniform4f( program->u_LightProjectQ, v[0], v[1], v[2], v[3] );
 	}
 };
 
@@ -2185,7 +2185,7 @@ public:
 	}
 	void UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
 	{
-		shaderProgram->u_LightFalloffS = glGetUniformLocationARB( shaderProgram->program, GetName() );
+		shaderProgram->u_LightFalloffS = glGetUniformLocation( shaderProgram->program, GetName() );
 	}
 	
 	void SetUniform_LightFalloffS( const idVec4& v )
@@ -2206,7 +2206,7 @@ public:
 		}
 #endif
 		
-		glUniform4fARB( program->u_LightFalloffS, v[0], v[1], v[2], v[3] );
+		glUniform4f( program->u_LightFalloffS, v[0], v[1], v[2], v[3] );
 	}
 };
 
@@ -2226,7 +2226,7 @@ public:
 	}
 	void				UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
 	{
-		shaderProgram->u_LightRadius = glGetUniformLocationARB( shaderProgram->program, GetName() );
+		shaderProgram->u_LightRadius = glGetUniformLocation( shaderProgram->program, GetName() );
 	}
 	
 	void SetUniform_LightRadius( float value )
@@ -2247,7 +2247,7 @@ public:
 		}
 #endif
 		
-		glUniform1fARB( program->u_LightRadius, value );
+		glUniform1f( program->u_LightRadius, value );
 	}
 };
 
@@ -2267,7 +2267,7 @@ public:
 	}
 	void				UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
 	{
-		shaderProgram->u_LightFrustum = glGetUniformLocationARB( shaderProgram->program, GetName() );
+		shaderProgram->u_LightFrustum = glGetUniformLocation( shaderProgram->program, GetName() );
 	}
 	
 	void SetUniform_LightFrustum( const idPlane lightFrustum[6] )
@@ -2300,7 +2300,7 @@ public:
 		}
 #endif
 		
-		glUniform4fvARB( program->u_LightFrustum, 6, lightFrustum[0].ToFloatPtr() );
+		glUniform4fv( program->u_LightFrustum, 6, lightFrustum[0].ToFloatPtr() );
 	}
 };
 
@@ -2320,7 +2320,7 @@ public:
 	}
 	void				UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
 	{
-		shaderProgram->u_ShadowTexelSize = glGetUniformLocationARB( shaderProgram->program, GetName() );
+		shaderProgram->u_ShadowTexelSize = glGetUniformLocation( shaderProgram->program, GetName() );
 	}
 	
 	void SetUniform_ShadowTexelSize( float value )
@@ -2341,7 +2341,7 @@ public:
 		}
 #endif
 		
-		glUniform1fARB( program->u_ShadowTexelSize, value );
+		glUniform1f( program->u_ShadowTexelSize, value );
 	}
 };
 
@@ -2360,7 +2360,7 @@ public:
 	}
 	void				UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
 	{
-		shaderProgram->u_ShadowBlur = glGetUniformLocationARB( shaderProgram->program, GetName() );
+		shaderProgram->u_ShadowBlur = glGetUniformLocation( shaderProgram->program, GetName() );
 	}
 	
 	void SetUniform_ShadowBlur( float value )
@@ -2381,7 +2381,7 @@ public:
 		}
 #endif
 		
-		glUniform1fARB( program->u_ShadowBlur, value );
+		glUniform1f( program->u_ShadowBlur, value );
 	}
 };
 
@@ -2401,7 +2401,7 @@ public:
 	}
 	void UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
 	{
-		shaderProgram->u_PositionToJitterTexScale = glGetUniformLocationARB( shaderProgram->program, GetName() );
+		shaderProgram->u_PositionToJitterTexScale = glGetUniformLocation( shaderProgram->program, GetName() );
 	}
 	
 	void SetUniform_PositionToJitterTexScale( const idVec4& v )
@@ -2422,7 +2422,7 @@ public:
 		}
 #endif
 		
-		glUniform4fARB( program->u_PositionToJitterTexScale, v[0], v[1], v[2], v[3] );
+		glUniform4f( program->u_PositionToJitterTexScale, v[0], v[1], v[2], v[3] );
 	}
 };
 
@@ -2442,7 +2442,7 @@ public:
 	}
 	void UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
 	{
-		shaderProgram->u_JitterTexScale = glGetUniformLocationARB( shaderProgram->program, GetName() );
+		shaderProgram->u_JitterTexScale = glGetUniformLocation( shaderProgram->program, GetName() );
 	}
 	
 	void SetUniform_JitterTexScale( const idVec4& v )
@@ -2463,7 +2463,7 @@ public:
 		}
 #endif
 		
-		glUniform4fARB( program->u_JitterTexScale, v[0], v[1], v[2], v[3] );
+		glUniform4f( program->u_JitterTexScale, v[0], v[1], v[2], v[3] );
 	}
 };
 
@@ -2482,7 +2482,7 @@ public:
 	}
 	void UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
 	{
-		shaderProgram->u_JitterTexOffset = glGetUniformLocationARB( shaderProgram->program, GetName() );
+		shaderProgram->u_JitterTexOffset = glGetUniformLocation( shaderProgram->program, GetName() );
 	}
 	
 	void SetUniform_JitterTexOffset( const idVec4& v )
@@ -2503,7 +2503,7 @@ public:
 		}
 #endif
 		
-		glUniform4fARB( program->u_JitterTexOffset, v[0], v[1], v[2], v[3] );
+		glUniform4f( program->u_JitterTexOffset, v[0], v[1], v[2], v[3] );
 	}
 };
 
@@ -2523,7 +2523,7 @@ public:
 	}
 	void				UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
 	{
-		shaderProgram->u_HDRKey = glGetUniformLocationARB( shaderProgram->program, GetName() );
+		shaderProgram->u_HDRKey = glGetUniformLocation( shaderProgram->program, GetName() );
 	}
 	
 	void SetUniform_HDRKey( float value )
@@ -2544,7 +2544,7 @@ public:
 		}
 #endif
 		
-		glUniform1fARB( program->u_HDRKey, value );
+		glUniform1f( program->u_HDRKey, value );
 	}
 };
 
@@ -2564,7 +2564,7 @@ public:
 	}
 	void				UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
 	{
-		shaderProgram->u_HDRAverageLuminance = glGetUniformLocationARB( shaderProgram->program, GetName() );
+		shaderProgram->u_HDRAverageLuminance = glGetUniformLocation( shaderProgram->program, GetName() );
 	}
 	
 	void SetUniform_HDRAverageLuminance( float value )
@@ -2585,7 +2585,7 @@ public:
 		}
 #endif
 		
-		glUniform1fARB( program->u_HDRAverageLuminance, value );
+		glUniform1f( program->u_HDRAverageLuminance, value );
 	}
 };
 
@@ -2605,7 +2605,7 @@ public:
 	}
 	void				UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
 	{
-		shaderProgram->u_HDRMaxLuminance = glGetUniformLocationARB( shaderProgram->program, GetName() );
+		shaderProgram->u_HDRMaxLuminance = glGetUniformLocation( shaderProgram->program, GetName() );
 	}
 	
 	void SetUniform_HDRMaxLuminance( float value )
@@ -2626,7 +2626,7 @@ public:
 		}
 #endif
 		
-		glUniform1fARB( program->u_HDRMaxLuminance, value );
+		glUniform1f( program->u_HDRMaxLuminance, value );
 	}
 };
 
@@ -2645,7 +2645,7 @@ public:
 	}
 	void				UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
 	{
-		shaderProgram->u_InvertedFramebufferResolution = glGetUniformLocationARB( shaderProgram->program, GetName() );
+		shaderProgram->u_InvertedFramebufferResolution = glGetUniformLocation( shaderProgram->program, GetName() );
 	}
 	
 	void SetUniform_InvertedFramebufferResolution( const idVec2& v )
@@ -2666,7 +2666,7 @@ public:
 		}
 #endif
 		
-		glUniform2fARB( program->u_InvertedFramebufferResolution, v[0], v[1] );
+		glUniform2f( program->u_InvertedFramebufferResolution, v[0], v[1] );
 	}
 	
 	void SetUniform_InvertedFramebufferResolution( const idScreenRect& viewport )
@@ -2693,7 +2693,7 @@ public:
 	}
 	void				UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
 	{
-		shaderProgram->u_FxaaInvertedFramebufferResolutionOpt = glGetUniformLocationARB( shaderProgram->program, GetName() );
+		shaderProgram->u_FxaaInvertedFramebufferResolutionOpt = glGetUniformLocation( shaderProgram->program, GetName() );
 	}
 	
 	void SetUniform_FxaaInvertedFramebufferResolutionOpt( const idVec4& v )
@@ -2714,7 +2714,7 @@ public:
 		}
 #endif
 		
-		glUniform4fARB( program->u_FxaaInvertedFramebufferResolutionOpt, v[0], v[1], v[2], v[3] );
+		glUniform4f( program->u_FxaaInvertedFramebufferResolutionOpt, v[0], v[1], v[2], v[3] );
 	}
 	
 	void SetUniform_FxaaInvertedFramebufferResolutionOpt( const idScreenRect& viewport )
@@ -2741,7 +2741,7 @@ public:
 	}
 	void				UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
 	{
-		shaderProgram->u_NonPowerOfTwoScale = glGetUniformLocationARB( shaderProgram->program, GetName() );
+		shaderProgram->u_NonPowerOfTwoScale = glGetUniformLocation( shaderProgram->program, GetName() );
 	}
 	
 	void SetUniform_NonPowerOfTwoScale( const idVec2& v )
@@ -2762,7 +2762,7 @@ public:
 		}
 #endif
 		
-		glUniform2fARB( program->u_NonPowerOfTwoScale, v[0], v[1] );
+		glUniform2f( program->u_NonPowerOfTwoScale, v[0], v[1] );
 	}
 	
 	void SetUniform_NonPowerOfTwoScale( const idScreenRect& viewport, int uploadWidth, int uploadHeight )
@@ -2792,7 +2792,7 @@ public:
 	}
 	void UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
 	{
-		shaderProgram->u_Viewport = glGetUniformLocationARB( shaderProgram->program, GetName() );
+		shaderProgram->u_Viewport = glGetUniformLocation( shaderProgram->program, GetName() );
 	}
 	
 	void SetUniform_Viewport( const idVec4& v )
@@ -2813,7 +2813,7 @@ public:
 		}
 #endif
 		
-		glUniform4fARB( program->u_Viewport, v[0], v[1], v[2], v[3] );
+		glUniform4f( program->u_Viewport, v[0], v[1], v[2], v[3] );
 	}
 	
 	void SetUniform_Viewport( const idScreenRect& viewport )

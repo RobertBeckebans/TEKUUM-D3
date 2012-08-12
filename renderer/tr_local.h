@@ -1602,14 +1602,14 @@ enum
 };
 
 // RB: shaderProgram_t represents a compiled GLSL shader including vertex, fragment and geometry shader parts
-#if !defined(USE_GLES1)
+#if !defined(USE_GLES1) || defined(USE_GLES2)
 typedef struct shaderProgram_s
 {
 	idStr			name;
 	//char            name[MAX_OSPATH];
 	char*           compileMacros;
 	
-	GLhandleARB     program;
+	uint32_t		program;
 	uint32_t        attribs;	// vertex array attributes
 	
 	// uniform parameters
@@ -1879,7 +1879,7 @@ void			RB_GLSL_DrawInteractions( void );
 void			R_ReloadShaders_f( const idCmdArgs& args );
 int				R_FindShader( GLenum target, const char* program );
 
-#if !defined(USE_GLES1)
+#if !defined(USE_GLES1) || defined(USE_GLES2)
 void            GL_BindProgram( shaderProgram_t* program );
 void            GL_BindNullProgram( void );
 #endif
@@ -2223,6 +2223,32 @@ void			MatrixMultiplyScale( matrix_t m, float x, float y, float z );
 void            MatrixFromPlanes( matrix_t m, const idPlane frustum[6] );
 void			MatrixPerspectiveProjectionFovXYRH( matrix_t m, float fovX, float fovY, float near, float far );
 void			MatrixPerspectiveProjectionFovXYInfiniteRH( matrix_t m, float fovX, float fovY, float near );
+
+
+/*
+=============================================================
+
+TR_LEGACY
+
+=============================================================
+*/
+
+void			esLoadIdentity( void );
+void			esLoadMatrixf( const GLfloat* m );
+void			esMatrixMode( GLenum mode );
+void			esOrthof( GLfloat left, GLfloat right, GLfloat bottom, GLfloat top, GLfloat zNear, GLfloat zFar );
+void			esPushMatrix( void );
+void			esPopMatrix( void );
+
+void			esEnableClientState( GLenum array );
+void			esDisableClientState( GLenum array );
+
+void			esVertexPointer( GLint size, GLenum type, GLsizei stride, const GLvoid* pointer );
+void			esNormalPointer( GLenum type, GLsizei stride, const GLvoid* pointer );
+void			esTexCoordPointer( GLint size, GLenum type, GLsizei stride, const GLvoid* pointer );
+void			esColorPointer( GLint size, GLenum type, GLsizei stride, const GLvoid* pointer );
+
+void			esColor4f( GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha );
 
 #include "RenderWorld_local.h"
 #include "GuiModel.h"

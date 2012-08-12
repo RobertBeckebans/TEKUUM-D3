@@ -4,8 +4,8 @@
 
 typedef struct
 {
-	char* name;
-	char* shaderText;
+	const char* name;
+	const char* shaderText;
 } glslShaderDef_t;
 
 static const glslShaderDef_t glsl_shaders[] =

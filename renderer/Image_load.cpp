@@ -570,10 +570,13 @@ void idImage::SetImageFilterAndRepeat() const
 			glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, 1 );
 		}
 	}
+	
+#if !defined(USE_GLES2)
 	if( glConfig.textureLODBiasAvailable )
 	{
 		glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_LOD_BIAS_EXT, globalImages->textureLODBias );
 	}
+#endif
 	
 	// set the wrap/clamp modes
 	switch( repeat )

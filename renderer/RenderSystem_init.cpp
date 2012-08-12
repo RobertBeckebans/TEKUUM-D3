@@ -309,7 +309,21 @@ static void R_CheckPortableExtensions( void )
 	glConfig.glVersion = atof( glConfig.version_string );
 	
 	// GL_ARB_multitexture
-#if defined(USE_GLES1)
+#if defined(USE_GLES2)
+	glConfig.multitextureAvailable = true;
+	
+	glGetIntegerv( GL_MAX_TEXTURE_IMAGE_UNITS, ( GLint* )&glConfig.maxTextureUnits );
+	
+	if( glConfig.maxTextureUnits > MAX_MULTITEXTURE_UNITS )
+	{
+		glConfig.maxTextureUnits = MAX_MULTITEXTURE_UNITS;
+	}
+	if( glConfig.maxTextureUnits < 2 )
+	{
+		glConfig.multitextureAvailable = false;	// shouldn't ever happen
+	}
+	
+#elif defined(USE_GLES1)
 	glConfig.multitextureAvailable = true;
 	
 	glGetIntegerv( GL_MAX_TEXTURE_UNITS, ( GLint* )&glConfig.maxTextureUnits );
@@ -863,12 +877,14 @@ bool GL_CheckErrors_( const char* filename, int line )
 			case GL_INVALID_OPERATION:
 				strcpy( s, "GL_INVALID_OPERATION" );
 				break;
+#if !defined(USE_GLES2)
 			case GL_STACK_OVERFLOW:
 				strcpy( s, "GL_STACK_OVERFLOW" );
 				break;
 			case GL_STACK_UNDERFLOW:
 				strcpy( s, "GL_STACK_UNDERFLOW" );
 				break;
+#endif
 			case GL_OUT_OF_MEMORY:
 				strcpy( s, "GL_OUT_OF_MEMORY" );
 				break;

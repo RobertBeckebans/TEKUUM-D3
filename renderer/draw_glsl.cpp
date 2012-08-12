@@ -50,7 +50,7 @@ void GL_BindProgram( shaderProgram_t* program )
 	
 	if( backEnd.glState.currentProgram != program )
 	{
-		glUseProgramObjectARB( program->program );
+		glUseProgram( program->program );
 		backEnd.glState.currentProgram = program;
 	}
 }
@@ -64,7 +64,7 @@ void GL_BindNullProgram( void )
 	
 	//if(backEnd.glState.currentProgram)
 	{
-		glUseProgramObjectARB( 0 );
+		glUseProgram( 0 );
 		backEnd.glState.currentProgram = NULL;
 	}
 }
@@ -85,7 +85,7 @@ GL_SelectTextureNoClient
 static void GL_SelectTextureNoClient( int unit )
 {
 	backEnd.glState.currenttmu = unit;
-	glActiveTextureARB( GL_TEXTURE0_ARB + unit );
+	glActiveTexture( GL_TEXTURE0 + unit );
 	RB_LogComment( "glActiveTextureARB( %i )\n", unit );
 }
 
@@ -189,10 +189,10 @@ static void RB_GLSL_CreateDrawInteractions( const drawSurf_t* surf )
 	GL_State( GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE | GLS_DEPTHMASK | backEnd.depthFunc );
 	
 	// enable the vertex arrays
-	glEnableVertexAttribArrayARB( VA_INDEX_TEXCOORD0 );
-	glEnableVertexAttribArrayARB( VA_INDEX_TANGENT );
-	glEnableVertexAttribArrayARB( VA_INDEX_BITANGENT );
-	glEnableVertexAttribArrayARB( VA_INDEX_NORMAL );
+	glEnableVertexAttribArray( VA_INDEX_TEXCOORD0 );
+	glEnableVertexAttribArray( VA_INDEX_TANGENT );
+	glEnableVertexAttribArray( VA_INDEX_BITANGENT );
+	glEnableVertexAttribArray( VA_INDEX_NORMAL );
 	glEnableClientState( GL_COLOR_ARRAY );
 	
 	// texture 0 is the normalization cube map for the vector towards the light
@@ -223,10 +223,10 @@ static void RB_GLSL_CreateDrawInteractions( const drawSurf_t* surf )
 		// set the vertex pointers
 		idDrawVert*	ac = ( idDrawVert* )vertexCache.Position( surf->geo->ambientCache );
 		glColorPointer( 4, GL_UNSIGNED_BYTE, sizeof( idDrawVert ), ac->color );
-		glVertexAttribPointerARB( VA_INDEX_NORMAL, 3, GL_FLOAT, false, sizeof( idDrawVert ), ac->normal.ToFloatPtr() );
-		glVertexAttribPointerARB( VA_INDEX_BITANGENT, 3, GL_FLOAT, false, sizeof( idDrawVert ), ac->tangents[1].ToFloatPtr() );
-		glVertexAttribPointerARB( VA_INDEX_TANGENT, 3, GL_FLOAT, false, sizeof( idDrawVert ), ac->tangents[0].ToFloatPtr() );
-		glVertexAttribPointerARB( VA_INDEX_TEXCOORD0, 2, GL_FLOAT, false, sizeof( idDrawVert ), ac->st.ToFloatPtr() );
+		glVertexAttribPointer( VA_INDEX_NORMAL, 3, GL_FLOAT, false, sizeof( idDrawVert ), ac->normal.ToFloatPtr() );
+		glVertexAttribPointer( VA_INDEX_BITANGENT, 3, GL_FLOAT, false, sizeof( idDrawVert ), ac->tangents[1].ToFloatPtr() );
+		glVertexAttribPointer( VA_INDEX_TANGENT, 3, GL_FLOAT, false, sizeof( idDrawVert ), ac->tangents[0].ToFloatPtr() );
+		glVertexAttribPointer( VA_INDEX_TEXCOORD0, 2, GL_FLOAT, false, sizeof( idDrawVert ), ac->st.ToFloatPtr() );
 		glVertexPointer( 3, GL_FLOAT, sizeof( idDrawVert ), ac->xyz.ToFloatPtr() );
 		
 		// this may cause RB_GLSL_DrawInteraction to be exacuted multiple
@@ -234,10 +234,10 @@ static void RB_GLSL_CreateDrawInteractions( const drawSurf_t* surf )
 		RB_CreateSingleDrawInteractions( surf, RB_GLSL_DrawInteraction );
 	}
 	
-	glDisableVertexAttribArrayARB( VA_INDEX_TEXCOORD0 );
-	glDisableVertexAttribArrayARB( VA_INDEX_TANGENT );
-	glDisableVertexAttribArrayARB( VA_INDEX_BITANGENT );
-	glDisableVertexAttribArrayARB( VA_INDEX_NORMAL );
+	glDisableVertexAttribArray( VA_INDEX_TEXCOORD0 );
+	glDisableVertexAttribArray( VA_INDEX_TANGENT );
+	glDisableVertexAttribArray( VA_INDEX_BITANGENT );
+	glDisableVertexAttribArray( VA_INDEX_NORMAL );
 	glDisableClientState( GL_COLOR_ARRAY );
 	
 	// disable features
@@ -437,7 +437,9 @@ void R_ReloadShaders_f( const idCmdArgs& args )
 
 	common->Printf( "----- R_ReloadShaders -----\n" );
 	
+#if !defined(USE_GLES2)
 	if( GLEW_ARB_fragment_shader && GLEW_ARB_vertex_shader && GLEW_ARB_shader_objects && GLEW_ARB_shading_language_100 )
+#endif
 	{
 		if( gl_geometricFillShader )
 		{
@@ -512,11 +514,13 @@ void R_GLSL_Init( void )
 	
 	common->Printf( "---------- R_GLSL_Init ----------\n" );
 	
+#if !defined(USE_GLES2)
 	if( !GLEW_ARB_fragment_shader || !GLEW_ARB_vertex_shader || !GLEW_ARB_shader_objects || !GLEW_ARB_shading_language_100 )
 	{
 		common->Printf( "Not available.\n" );
 		return;
 	}
+#endif
 	
 	common->Printf( "Available.\n" );
 	

@@ -199,7 +199,7 @@ const char*	GLShader::FindEmbeddedShaderText( const idStr& shaderName, GLenum sh
 {
 	const char* name;
 	
-	if( shaderType == GL_VERTEX_SHADER_ARB )
+	if( shaderType == GL_VERTEX_SHADER )
 	{
 		name = va( "%s_vs", shaderName.c_str() );
 	}
@@ -240,7 +240,7 @@ idStr	GLShader::BuildGPUShaderText(	const char* mainShaderName,
 	{
 		const idStr& libName = libShaderNames[i];
 		
-		if( shaderType == GL_VERTEX_SHADER_ARB )
+		if( shaderType == GL_VERTEX_SHADER )
 		{
 			fileName = va( "shaders/glsl/%s_vs.glsl", libName.c_str() );
 			common->Printf( "...loading vertex shader '%s'\n", fileName.c_str() );
@@ -276,7 +276,7 @@ idStr	GLShader::BuildGPUShaderText(	const char* mainShaderName,
 	shaderText += libsShaderText;
 	
 	// load main() program
-	if( shaderType == GL_VERTEX_SHADER_ARB )
+	if( shaderType == GL_VERTEX_SHADER )
 	{
 		fileName = va( "shaders/glsl/%s_vs.glsl", mainShaderName );
 		common->Printf( "...loading vertex shader '%s'\n", fileName.c_str() );
@@ -609,7 +609,7 @@ idStr	GLShader::BuildGPUShaderText(	const char* mainShaderName,
 		
 		glslopt_shader_type glsloptShaderType;
 		
-		if( shaderType == GL_FRAGMENT_SHADER_ARB )
+		if( shaderType == GL_FRAGMENT_SHADER_ )
 			glsloptShaderType = kGlslOptShaderFragment;
 		else
 			glsloptShaderType = kGlslOptShaderVertex;
@@ -634,7 +634,7 @@ idStr	GLShader::BuildGPUShaderText(	const char* mainShaderName,
 			
 			ri.Printf( PRINT_WARNING, " END-- ---------------------------------------------------\n", filename );
 			
-			glShaderSourceARB( shader, 1, ( const GLcharARB** )&newSource, &length );
+			glShaderSource( shader, 1, ( const GLchar** )&newSource, &length );
 			shaderText = idStr( newSource, length );
 		}
 		else
@@ -688,7 +688,7 @@ void GLShader::CompileAndLinkGPUShaderProgram(	shaderProgram_t* program,
 		program->compileMacros = NULL;
 	}
 	
-	program->program = glCreateProgramObjectARB();
+	program->program = glCreateProgram();
 	program->attribs = _vertexAttribsRequired;// | _vertexAttribsOptional;
 	
 	
@@ -703,7 +703,7 @@ void GLShader::CompileAndLinkGPUShaderProgram(	shaderProgram_t* program,
 		vertexHeader += "#version 130\n";
 		fragmentHeader += "#version 130\n";
 	
-		if(shaderType == GL_VERTEX_SHADER_ARB)
+		if(shaderType == GL_VERTEX_SHADER_)
 		{
 			vertexHeader += "#define attribute in\n";
 			vertexHeader += "#define varying out\n";
@@ -743,36 +743,36 @@ void GLShader::CompileAndLinkGPUShaderProgram(	shaderProgram_t* program,
 	idStr vertexShaderTextWithMacros = vertexHeader + macrosString + vertexShaderText;
 	idStr fragmentShaderTextWithMacros = fragmentHeader + macrosString + fragmentShaderText;
 	
-	CompileGPUShader( program->program, programName, vertexShaderTextWithMacros, GL_VERTEX_SHADER_ARB );
-	CompileGPUShader( program->program, programName, fragmentShaderTextWithMacros, GL_FRAGMENT_SHADER_ARB );
+	CompileGPUShader( program->program, programName, vertexShaderTextWithMacros, GL_VERTEX_SHADER );
+	CompileGPUShader( program->program, programName, fragmentShaderTextWithMacros, GL_FRAGMENT_SHADER );
 	
 	BindAttribLocations( program->program ); //, _vertexAttribsRequired | _vertexAttribsOptional);
 	LinkProgram( program->program );
 }
 
-void GLShader::CompileGPUShader( GLhandleARB program, const idStr& programName, const idStr& shaderText, GLenum shaderType ) const
+void GLShader::CompileGPUShader( uint32_t program, const idStr& programName, const idStr& shaderText, GLenum shaderType ) const
 {
-	GLhandleARB shader = glCreateShaderObjectARB( shaderType );
+	uint32_t shader = glCreateShader( shaderType );
 	
 	GL_CheckErrors();
 	
 	int shaderTextSize = shaderText.Length();
 	const char* shaderTextPtr = shaderText.c_str();
-	glShaderSourceARB( shader, 1, ( const GLcharARB** )&shaderTextPtr, &shaderTextSize );
+	glShaderSource( shader, 1, ( const GLchar** )&shaderTextPtr, &shaderTextSize );
 	
 	// compile shader
-	glCompileShaderARB( shader );
+	glCompileShader( shader );
 	
 	GL_CheckErrors();
 	
 	// check if shader compiled
 	GLint compiled;
-	glGetObjectParameterivARB( shader, GL_OBJECT_COMPILE_STATUS_ARB, &compiled );
+	glGetShaderiv( shader, GL_COMPILE_STATUS, &compiled );
 	if( !compiled )
 	{
 		//PrintShaderSource(shader);
 		PrintInfoLog( shader, false );
-		common->Error( "Couldn't compile %s %s", ( shaderType == GL_VERTEX_SHADER_ARB ? "vertex shader" : "fragment shader" ), programName.c_str() );
+		common->Error( "Couldn't compile %s %s", ( shaderType == GL_VERTEX_SHADER ? "vertex shader" : "fragment shader" ), programName.c_str() );
 		return;
 	}
 	
@@ -780,11 +780,11 @@ void GLShader::CompileGPUShader( GLhandleARB program, const idStr& programName, 
 	//common->Printf("%s\n", GLSL_PrintShaderSource(shader));
 	
 	// attach shader to program
-	glAttachObjectARB( program, shader );
+	glAttachShader( program, shader );
 	GL_CheckErrors();
 	
 	// delete shader, no longer needed
-	glDeleteObjectARB( shader );
+	glDeleteShader( shader );
 	GL_CheckErrors();
 }
 
@@ -799,18 +799,18 @@ void GLShader::PrintShaderText( const idStr& shaderText ) const
 	}
 }
 
-void GLShader::PrintShaderSource( GLhandleARB object ) const
+void GLShader::PrintShaderSource( uint32_t object ) const
 {
 	char*           msg;
 	static char     msgPart[1024];
 	int             maxLength = 0;
 	int             i;
 	
-	glGetObjectParameterivARB( object, GL_OBJECT_SHADER_SOURCE_LENGTH_ARB, &maxLength );
+	glGetShaderiv( object, GL_SHADER_SOURCE_LENGTH, &maxLength );
 	
 	msg = ( char* ) Mem_Alloc( maxLength );
 	
-	glGetShaderSourceARB( object, maxLength, &maxLength, msg );
+	glGetShaderSource( object, maxLength, &maxLength, msg );
 	
 	for( i = 0; i < maxLength; i += 1024 )
 	{
@@ -821,18 +821,18 @@ void GLShader::PrintShaderSource( GLhandleARB object ) const
 	Mem_Free( msg );
 }
 
-void GLShader::PrintInfoLog( GLhandleARB object, bool developerOnly ) const
+void GLShader::PrintInfoLog( uint32_t object, bool developerOnly ) const
 {
 	char*           msg;
 	static char     msgPart[1024];
 	int             maxLength = 0;
 	int             i;
 	
-	glGetObjectParameterivARB( object, GL_OBJECT_INFO_LOG_LENGTH_ARB, &maxLength );
+	glGetShaderiv( object, GL_INFO_LOG_LENGTH, &maxLength );
 	
 	msg = ( char* ) Mem_Alloc( maxLength );
 	
-	glGetInfoLogARB( object, maxLength, &maxLength, msg );
+	glGetShaderInfoLog( object, maxLength, &maxLength, msg );
 	
 	if( developerOnly )
 	{
@@ -856,13 +856,13 @@ void GLShader::PrintInfoLog( GLhandleARB object, bool developerOnly ) const
 	Mem_Free( msg );
 }
 
-void GLShader::LinkProgram( GLhandleARB program ) const
+void GLShader::LinkProgram( uint32_t program ) const
 {
 	GLint           linked;
 	
-	glLinkProgramARB( program );
+	glLinkProgram( program );
 	
-	glGetObjectParameterivARB( program, GL_OBJECT_LINK_STATUS_ARB, &linked );
+	glGetProgramiv( program, GL_LINK_STATUS, &linked );
 	if( !linked )
 	{
 		PrintInfoLog( program, false );
@@ -870,13 +870,13 @@ void GLShader::LinkProgram( GLhandleARB program ) const
 	}
 }
 
-void GLShader::ValidateProgram( GLhandleARB program ) const
+void GLShader::ValidateProgram( uint32_t program ) const
 {
 	GLint           validated;
 	
-	glValidateProgramARB( program );
+	glValidateProgram( program );
 	
-	glGetObjectParameterivARB( program, GL_OBJECT_VALIDATE_STATUS_ARB, &validated );
+	glGetProgramiv( program, GL_VALIDATE_STATUS, &validated );
 	if( !validated )
 	{
 		PrintInfoLog( program, false );
@@ -884,80 +884,80 @@ void GLShader::ValidateProgram( GLhandleARB program ) const
 	}
 }
 
-void GLShader::ShowProgramUniforms( GLhandleARB program ) const
+void GLShader::ShowProgramUniforms( uint32_t program ) const
 {
 	int             i, count, size;
 	GLenum			type;
 	char            uniformName[1000];
 	
 	// install the executables in the program object as part of current state.
-	glUseProgramObjectARB( program );
+	glUseProgram( program );
 	
 	// check for GL Errors
 	
 	// query the number of active uniforms
-	glGetObjectParameterivARB( program, GL_OBJECT_ACTIVE_UNIFORMS_ARB, &count );
+	glGetProgramiv( program, GL_ACTIVE_UNIFORMS, &count );
 	
 	// Loop over each of the active uniforms, and set their value
 	for( i = 0; i < count; i++ )
 	{
-		glGetActiveUniformARB( program, i, sizeof( uniformName ), NULL, &size, &type, uniformName );
+		glGetActiveUniform( program, i, sizeof( uniformName ), NULL, &size, &type, uniformName );
 		
 		common->Printf( "active uniform: '%s'\n", uniformName );
 	}
 	
-	glUseProgramObjectARB( 0 );
+	glUseProgram( 0 );
 }
 
-void GLShader::BindAttribLocations( GLhandleARB program ) const
+void GLShader::BindAttribLocations( uint32_t program ) const
 {
 	//if(attribs & VA_POSITION)
-	glBindAttribLocationARB( program, VA_INDEX_POSITION, "va_Position" );
+	glBindAttribLocation( program, VA_INDEX_POSITION, "va_Position" );
 	
 	//if(attribs & VA_TEXCOORD)
-	glBindAttribLocationARB( program, VA_INDEX_TEXCOORD0, "va_TexCoord0" );
+	glBindAttribLocation( program, VA_INDEX_TEXCOORD0, "va_TexCoord0" );
 	
 	//if(attribs & VA_LIGHTCOORD)
-	glBindAttribLocationARB( program, VA_INDEX_TEXCOORD1, "va_TexCoord1" );
+	glBindAttribLocation( program, VA_INDEX_TEXCOORD1, "va_TexCoord1" );
 	
 //  if(attribs & VA_TEXCOORD2)
-//      glBindAttribLocationARB(program, VA_INDEX_TEXCOORD2, "va_TexCoord2");
+//      glBindAttribLocation(program, VA_INDEX_TEXCOORD2, "va_TexCoord2");
 
 //  if(attribs & VA_TEXCOORD3)
-//      glBindAttribLocationARB(program, VA_INDEX_TEXCOORD3, "va_TexCoord3");
+//      glBindAttribLocation(program, VA_INDEX_TEXCOORD3, "va_TexCoord3");
 
 	//if(attribs & VA_TANGENT)
-	glBindAttribLocationARB( program, VA_INDEX_TANGENT, "va_Tangent" );
+	glBindAttribLocation( program, VA_INDEX_TANGENT, "va_Tangent" );
 	
 	//if(attribs & VA_BITANGENT)
-	glBindAttribLocationARB( program, VA_INDEX_BITANGENT, "va_Bitangent" );
+	glBindAttribLocation( program, VA_INDEX_BITANGENT, "va_Bitangent" );
 	
 	//if(attribs & VA_NORMAL)
-	glBindAttribLocationARB( program, VA_INDEX_NORMAL, "va_Normal" );
+	glBindAttribLocation( program, VA_INDEX_NORMAL, "va_Normal" );
 	
 	//if(attribs & VA_COLOR)
-	glBindAttribLocationARB( program, VA_INDEX_COLOR, "va_Color" );
+	glBindAttribLocation( program, VA_INDEX_COLOR, "va_Color" );
 	
 	//if(attribs & VA_LIGHTDIRECTION)
-//		glBindAttribLocationARB(program, VA_INDEX_LIGHTDIRECTION, "va_LightDirection");
+//		glBindAttribLocation(program, VA_INDEX_LIGHTDIRECTION, "va_LightDirection");
 
 	//if(glConfig2.vboVertexSkinningAvailable)
 	{
-		glBindAttribLocationARB( program, VA_INDEX_BONE_INDEXES, "va_BoneIndexes" );
-		glBindAttribLocationARB( program, VA_INDEX_BONE_WEIGHTS, "va_BoneWeights" );
+		glBindAttribLocation( program, VA_INDEX_BONE_INDEXES, "va_BoneIndexes" );
+		glBindAttribLocation( program, VA_INDEX_BONE_WEIGHTS, "va_BoneWeights" );
 	}
 	
 	//if(attribs & VA_POSITION2)
-	glBindAttribLocationARB( program, VA_INDEX_POSITION2, "va_Position2" );
+	glBindAttribLocation( program, VA_INDEX_POSITION2, "va_Position2" );
 	
 	//if(attribs & VA_TANGENT2)
-	glBindAttribLocationARB( program, VA_INDEX_TANGENT2, "va_Tangent2" );
+	glBindAttribLocation( program, VA_INDEX_TANGENT2, "va_Tangent2" );
 	
 	//if(attribs & VA_BINORMAL2)
-	glBindAttribLocationARB( program, VA_INDEX_BINORMAL2, "va_Binormal2" );
+	glBindAttribLocation( program, VA_INDEX_BINORMAL2, "va_Binormal2" );
 	
 	//if(attribs & VA_NORMAL2)
-	glBindAttribLocationARB( program, VA_INDEX_NORMAL2, "va_Normal2" );
+	glBindAttribLocation( program, VA_INDEX_NORMAL2, "va_Normal2" );
 }
 
 void GLShader::SelectProgram()
@@ -1064,8 +1064,8 @@ GLShader_geometricFill::GLShader_geometricFill():
 	
 	idStrList fragmentInlines; // reliefMapping
 	
-	idStr vertexShaderText = BuildGPUShaderText( "geometricFill", vertexInlines, GL_VERTEX_SHADER_ARB );
-	idStr fragmentShaderText = BuildGPUShaderText( "geometricFill", fragmentInlines, GL_FRAGMENT_SHADER_ARB );
+	idStr vertexShaderText = BuildGPUShaderText( "geometricFill", vertexInlines, GL_VERTEX_SHADER );
+	idStr fragmentShaderText = BuildGPUShaderText( "geometricFill", fragmentInlines, GL_FRAGMENT_SHADER );
 	
 	size_t numPermutations = ( 1 << _compileMacros.Num() );	// same as 2^n, n = no. compile macros
 	size_t numCompiled = 0;
@@ -1178,8 +1178,8 @@ GLShader_deferredLighting::GLShader_deferredLighting():
 	
 	idStrList fragmentInlines; // reliefMapping
 	
-	idStr vertexShaderText = BuildGPUShaderText( "deferredLighting", vertexInlines, GL_VERTEX_SHADER_ARB );
-	idStr fragmentShaderText = BuildGPUShaderText( "deferredLighting", fragmentInlines, GL_FRAGMENT_SHADER_ARB );
+	idStr vertexShaderText = BuildGPUShaderText( "deferredLighting", vertexInlines, GL_VERTEX_SHADER );
+	idStr fragmentShaderText = BuildGPUShaderText( "deferredLighting", fragmentInlines, GL_FRAGMENT_SHADER );
 	
 	size_t numPermutations = ( 1 << _compileMacros.Num() );	// same as 2^n, n = no. compile macros
 	size_t numCompiled = 0;
@@ -1228,37 +1228,37 @@ GLShader_deferredLighting::GLShader_deferredLighting():
 											
 			UpdateShaderProgramUniformLocations( shaderProgram );
 			
-			shaderProgram->u_CurrentNormalsImage = glGetUniformLocationARB( shaderProgram->program, "u_CurrentNormalsImage" );
-			shaderProgram->u_CurrentDepthImage = glGetUniformLocationARB( shaderProgram->program, "u_CurrentDepthImage" );
-			shaderProgram->u_LightFalloffImage = glGetUniformLocationARB( shaderProgram->program, "u_LightFalloffImage" );
-			shaderProgram->u_LightImage = glGetUniformLocationARB( shaderProgram->program, "u_LightImage" );
-			shaderProgram->u_JitterImage = glGetUniformLocationARB( shaderProgram->program, "u_JitterImage" );
+			shaderProgram->u_CurrentNormalsImage = glGetUniformLocation( shaderProgram->program, "u_CurrentNormalsImage" );
+			shaderProgram->u_CurrentDepthImage = glGetUniformLocation( shaderProgram->program, "u_CurrentDepthImage" );
+			shaderProgram->u_LightFalloffImage = glGetUniformLocation( shaderProgram->program, "u_LightFalloffImage" );
+			shaderProgram->u_LightImage = glGetUniformLocation( shaderProgram->program, "u_LightImage" );
+			shaderProgram->u_JitterImage = glGetUniformLocation( shaderProgram->program, "u_JitterImage" );
 			//if(r_sb_mode.GetInteger() >= SHADOWING_ESM16)
 			{
-				shaderProgram->u_ShadowCubeImage = glGetUniformLocationARB( shaderProgram->program, "u_ShadowCubeImage" );
-				shaderProgram->u_ShadowImage0 = glGetUniformLocationARB( shaderProgram->program, "u_ShadowImage0" );
-				shaderProgram->u_ShadowImage1 = glGetUniformLocationARB( shaderProgram->program, "u_ShadowImage1" );
-				shaderProgram->u_ShadowImage2 = glGetUniformLocationARB( shaderProgram->program, "u_ShadowImage2" );
-				shaderProgram->u_ShadowImage3 = glGetUniformLocationARB( shaderProgram->program, "u_ShadowImage3" );
-				shaderProgram->u_ShadowImage4 = glGetUniformLocationARB( shaderProgram->program, "u_ShadowImage4" );
+				shaderProgram->u_ShadowCubeImage = glGetUniformLocation( shaderProgram->program, "u_ShadowCubeImage" );
+				shaderProgram->u_ShadowImage0 = glGetUniformLocation( shaderProgram->program, "u_ShadowImage0" );
+				shaderProgram->u_ShadowImage1 = glGetUniformLocation( shaderProgram->program, "u_ShadowImage1" );
+				shaderProgram->u_ShadowImage2 = glGetUniformLocation( shaderProgram->program, "u_ShadowImage2" );
+				shaderProgram->u_ShadowImage3 = glGetUniformLocation( shaderProgram->program, "u_ShadowImage3" );
+				shaderProgram->u_ShadowImage4 = glGetUniformLocation( shaderProgram->program, "u_ShadowImage4" );
 			}
 			
-			glUseProgramObjectARB( shaderProgram->program );
-			glUniform1iARB( shaderProgram->u_CurrentNormalsImage, 0 );
-			glUniform1iARB( shaderProgram->u_CurrentDepthImage, 1 );
-			glUniform1iARB( shaderProgram->u_LightFalloffImage, 2 );
-			glUniform1iARB( shaderProgram->u_LightImage, 3 );
-			glUniform1iARB( shaderProgram->u_JitterImage, 6 );
+			glUseProgram( shaderProgram->program );
+			glUniform1i( shaderProgram->u_CurrentNormalsImage, 0 );
+			glUniform1i( shaderProgram->u_CurrentDepthImage, 1 );
+			glUniform1i( shaderProgram->u_LightFalloffImage, 2 );
+			glUniform1i( shaderProgram->u_LightImage, 3 );
+			glUniform1i( shaderProgram->u_JitterImage, 6 );
 			//if(r_sb_mode.GetInteger() >= SHADOWING_ESM16)
 			{
-				glUniform1iARB( shaderProgram->u_ShadowCubeImage, 8 );
-				glUniform1iARB( shaderProgram->u_ShadowImage0, 7 );
-				glUniform1iARB( shaderProgram->u_ShadowImage1, 9 );
-				glUniform1iARB( shaderProgram->u_ShadowImage2, 10 );
-				glUniform1iARB( shaderProgram->u_ShadowImage3, 11 );
-				glUniform1iARB( shaderProgram->u_ShadowImage4, 12 );
+				glUniform1i( shaderProgram->u_ShadowCubeImage, 8 );
+				glUniform1i( shaderProgram->u_ShadowImage0, 7 );
+				glUniform1i( shaderProgram->u_ShadowImage1, 9 );
+				glUniform1i( shaderProgram->u_ShadowImage2, 10 );
+				glUniform1i( shaderProgram->u_ShadowImage3, 11 );
+				glUniform1i( shaderProgram->u_ShadowImage4, 12 );
 			}
-			glUseProgramObjectARB( 0 );
+			glUseProgram( 0 );
 			
 			ValidateProgram( shaderProgram->program );
 			//ShowProgramUniforms(shaderProgram->program);
@@ -1341,8 +1341,8 @@ GLShader_forwardLighting::GLShader_forwardLighting():
 	
 	idStrList fragmentInlines; // reliefMapping
 	
-	idStr vertexShaderText = BuildGPUShaderText( "forwardLighting", vertexInlines, GL_VERTEX_SHADER_ARB );
-	idStr fragmentShaderText = BuildGPUShaderText( "forwardLighting", fragmentInlines, GL_FRAGMENT_SHADER_ARB );
+	idStr vertexShaderText = BuildGPUShaderText( "forwardLighting", vertexInlines, GL_VERTEX_SHADER );
+	idStr fragmentShaderText = BuildGPUShaderText( "forwardLighting", fragmentInlines, GL_FRAGMENT_SHADER );
 	
 	size_t numPermutations = ( 1 << _compileMacros.Num() );	// same as 2^n, n = no. compile macros
 	size_t numCompiled = 0;
@@ -1391,41 +1391,41 @@ GLShader_forwardLighting::GLShader_forwardLighting():
 											
 			UpdateShaderProgramUniformLocations( shaderProgram );
 			
-			shaderProgram->u_NormalCubeMapImage	= glGetUniformLocationARB( shaderProgram->program, "u_NormalCubeMapImage" );
-			shaderProgram->u_NormalImage = glGetUniformLocationARB( shaderProgram->program, "u_NormalImage" );
-			shaderProgram->u_LightFalloffImage = glGetUniformLocationARB( shaderProgram->program, "u_LightFalloffImage" );
-			shaderProgram->u_LightImage = glGetUniformLocationARB( shaderProgram->program, "u_LightImage" );
-			shaderProgram->u_DiffuseImage = glGetUniformLocationARB( shaderProgram->program, "u_DiffuseImage" );
-			shaderProgram->u_SpecularImage = glGetUniformLocationARB( shaderProgram->program, "u_SpecularImage" );
-			shaderProgram->u_JitterImage = glGetUniformLocationARB( shaderProgram->program, "u_JitterImage" );
+			shaderProgram->u_NormalCubeMapImage	= glGetUniformLocation( shaderProgram->program, "u_NormalCubeMapImage" );
+			shaderProgram->u_NormalImage = glGetUniformLocation( shaderProgram->program, "u_NormalImage" );
+			shaderProgram->u_LightFalloffImage = glGetUniformLocation( shaderProgram->program, "u_LightFalloffImage" );
+			shaderProgram->u_LightImage = glGetUniformLocation( shaderProgram->program, "u_LightImage" );
+			shaderProgram->u_DiffuseImage = glGetUniformLocation( shaderProgram->program, "u_DiffuseImage" );
+			shaderProgram->u_SpecularImage = glGetUniformLocation( shaderProgram->program, "u_SpecularImage" );
+			shaderProgram->u_JitterImage = glGetUniformLocation( shaderProgram->program, "u_JitterImage" );
 			//if(r_sb_mode.GetInteger() >= SHADOWING_ESM16)
 			{
-				shaderProgram->u_ShadowCubeImage = glGetUniformLocationARB( shaderProgram->program, "u_ShadowCubeImage" );
-				shaderProgram->u_ShadowImage0 = glGetUniformLocationARB( shaderProgram->program, "u_ShadowImage0" );
-				shaderProgram->u_ShadowImage1 = glGetUniformLocationARB( shaderProgram->program, "u_ShadowImage1" );
-				shaderProgram->u_ShadowImage2 = glGetUniformLocationARB( shaderProgram->program, "u_ShadowImage2" );
-				shaderProgram->u_ShadowImage3 = glGetUniformLocationARB( shaderProgram->program, "u_ShadowImage3" );
-				shaderProgram->u_ShadowImage4 = glGetUniformLocationARB( shaderProgram->program, "u_ShadowImage4" );
+				shaderProgram->u_ShadowCubeImage = glGetUniformLocation( shaderProgram->program, "u_ShadowCubeImage" );
+				shaderProgram->u_ShadowImage0 = glGetUniformLocation( shaderProgram->program, "u_ShadowImage0" );
+				shaderProgram->u_ShadowImage1 = glGetUniformLocation( shaderProgram->program, "u_ShadowImage1" );
+				shaderProgram->u_ShadowImage2 = glGetUniformLocation( shaderProgram->program, "u_ShadowImage2" );
+				shaderProgram->u_ShadowImage3 = glGetUniformLocation( shaderProgram->program, "u_ShadowImage3" );
+				shaderProgram->u_ShadowImage4 = glGetUniformLocation( shaderProgram->program, "u_ShadowImage4" );
 			}
 			
-			glUseProgramObjectARB( shaderProgram->program );
-			glUniform1iARB( shaderProgram->u_NormalCubeMapImage, 0 );
-			glUniform1iARB( shaderProgram->u_NormalImage, 1 );
-			glUniform1iARB( shaderProgram->u_LightFalloffImage, 2 );
-			glUniform1iARB( shaderProgram->u_LightImage, 3 );
-			glUniform1iARB( shaderProgram->u_DiffuseImage, 4 );
-			glUniform1iARB( shaderProgram->u_SpecularImage, 5 );
-			glUniform1iARB( shaderProgram->u_JitterImage, 6 );
+			glUseProgram( shaderProgram->program );
+			glUniform1i( shaderProgram->u_NormalCubeMapImage, 0 );
+			glUniform1i( shaderProgram->u_NormalImage, 1 );
+			glUniform1i( shaderProgram->u_LightFalloffImage, 2 );
+			glUniform1i( shaderProgram->u_LightImage, 3 );
+			glUniform1i( shaderProgram->u_DiffuseImage, 4 );
+			glUniform1i( shaderProgram->u_SpecularImage, 5 );
+			glUniform1i( shaderProgram->u_JitterImage, 6 );
 			//if(r_sb_mode.GetInteger() >= SHADOWING_ESM16)
 			{
-				glUniform1iARB( shaderProgram->u_ShadowCubeImage, 8 );
-				glUniform1iARB( shaderProgram->u_ShadowImage0, 7 );
-				glUniform1iARB( shaderProgram->u_ShadowImage1, 9 );
-				glUniform1iARB( shaderProgram->u_ShadowImage2, 10 );
-				glUniform1iARB( shaderProgram->u_ShadowImage3, 11 );
-				glUniform1iARB( shaderProgram->u_ShadowImage4, 12 );
+				glUniform1i( shaderProgram->u_ShadowCubeImage, 8 );
+				glUniform1i( shaderProgram->u_ShadowImage0, 7 );
+				glUniform1i( shaderProgram->u_ShadowImage1, 9 );
+				glUniform1i( shaderProgram->u_ShadowImage2, 10 );
+				glUniform1i( shaderProgram->u_ShadowImage3, 11 );
+				glUniform1i( shaderProgram->u_ShadowImage4, 12 );
 			}
-			glUseProgramObjectARB( 0 );
+			glUseProgram( 0 );
 			
 			ValidateProgram( shaderProgram->program );
 			//ShowProgramUniforms(shaderProgram->program);
@@ -1481,8 +1481,8 @@ GLShader_postLighting::GLShader_postLighting():
 	
 	idStrList fragmentInlines; // reliefMapping
 	
-	idStr vertexShaderText = BuildGPUShaderText( "postLighting", vertexInlines, GL_VERTEX_SHADER_ARB );
-	idStr fragmentShaderText = BuildGPUShaderText( "postLighting", fragmentInlines, GL_FRAGMENT_SHADER_ARB );
+	idStr vertexShaderText = BuildGPUShaderText( "postLighting", vertexInlines, GL_VERTEX_SHADER );
+	idStr fragmentShaderText = BuildGPUShaderText( "postLighting", fragmentInlines, GL_FRAGMENT_SHADER );
 	
 	size_t numPermutations = ( 1 << _compileMacros.Num() );	// same as 2^n, n = no. compile macros
 	size_t numCompiled = 0;
@@ -1531,15 +1531,15 @@ GLShader_postLighting::GLShader_postLighting():
 											
 			UpdateShaderProgramUniformLocations( shaderProgram );
 			
-			shaderProgram->u_CurrentLightImage = glGetUniformLocationARB( shaderProgram->program, "u_CurrentLightImage" );
-			shaderProgram->u_DiffuseImage = glGetUniformLocationARB( shaderProgram->program, "u_DiffuseImage" );
-			shaderProgram->u_SpecularImage = glGetUniformLocationARB( shaderProgram->program, "u_SpecularImage" );
+			shaderProgram->u_CurrentLightImage = glGetUniformLocation( shaderProgram->program, "u_CurrentLightImage" );
+			shaderProgram->u_DiffuseImage = glGetUniformLocation( shaderProgram->program, "u_DiffuseImage" );
+			shaderProgram->u_SpecularImage = glGetUniformLocation( shaderProgram->program, "u_SpecularImage" );
 			
-			glUseProgramObjectARB( shaderProgram->program );
-			glUniform1iARB( shaderProgram->u_CurrentLightImage, 0 );
-			glUniform1iARB( shaderProgram->u_DiffuseImage, 1 );
-			glUniform1iARB( shaderProgram->u_SpecularImage, 2 );
-			glUseProgramObjectARB( 0 );
+			glUseProgram( shaderProgram->program );
+			glUniform1i( shaderProgram->u_CurrentLightImage, 0 );
+			glUniform1i( shaderProgram->u_DiffuseImage, 1 );
+			glUniform1i( shaderProgram->u_SpecularImage, 2 );
+			glUseProgram( 0 );
 			
 			ValidateProgram( shaderProgram->program );
 			//ShowProgramUniforms(shaderProgram->program);
@@ -1585,8 +1585,8 @@ GLShader_shadowVolume::GLShader_shadowVolume():
 	
 	idStrList fragmentInlines;
 	
-	idStr vertexShaderText = BuildGPUShaderText( "shadowVolume", vertexInlines, GL_VERTEX_SHADER_ARB );
-	idStr fragmentShaderText = BuildGPUShaderText( "shadowVolume", fragmentInlines, GL_FRAGMENT_SHADER_ARB );
+	idStr vertexShaderText = BuildGPUShaderText( "shadowVolume", vertexInlines, GL_VERTEX_SHADER );
+	idStr fragmentShaderText = BuildGPUShaderText( "shadowVolume", fragmentInlines, GL_FRAGMENT_SHADER );
 	
 	size_t numPermutations = ( 1 << _compileMacros.Num() );	// same as 2^n, n = no. compile macros
 	size_t numCompiled = 0;
@@ -1684,8 +1684,8 @@ GLShader_shadowMap::GLShader_shadowMap():
 	idStr preIncludeText;
 	CreatePreIncludeText( preIncludeText );
 	
-	idStr vertexShaderText = BuildGPUShaderText( "shadowMap", vertexInlines, GL_VERTEX_SHADER_ARB, preIncludeText.c_str() );
-	idStr fragmentShaderText = BuildGPUShaderText( "shadowMap", fragmentInlines, GL_FRAGMENT_SHADER_ARB, preIncludeText.c_str() );
+	idStr vertexShaderText = BuildGPUShaderText( "shadowMap", vertexInlines, GL_VERTEX_SHADER, preIncludeText.c_str() );
+	idStr fragmentShaderText = BuildGPUShaderText( "shadowMap", fragmentInlines, GL_FRAGMENT_SHADER, preIncludeText.c_str() );
 	
 	size_t numPermutations = ( 1 << _compileMacros.Num() );	// same as 2^n, n = no. compile macros
 	size_t numCompiled = 0;
@@ -1776,8 +1776,8 @@ GLShader_FXAA::GLShader_FXAA():
 	idStrList vertexInlines;
 	idStrList fragmentInlines;
 	
-	idStr vertexShaderText = BuildGPUShaderText( "FXAA", vertexInlines, GL_VERTEX_SHADER_ARB );
-	idStr fragmentShaderText = BuildGPUShaderText( "FXAA", fragmentInlines, GL_FRAGMENT_SHADER_ARB );
+	idStr vertexShaderText = BuildGPUShaderText( "FXAA", vertexInlines, GL_VERTEX_SHADER );
+	idStr fragmentShaderText = BuildGPUShaderText( "FXAA", fragmentInlines, GL_FRAGMENT_SHADER );
 	
 	size_t numPermutations = ( 1 << _compileMacros.Num() );	// same as 2^n, n = no. compile macros
 	size_t numCompiled = 0;
@@ -1860,8 +1860,8 @@ GLShader_toneMapping::GLShader_toneMapping():
 	idStrList vertexInlines;
 	idStrList fragmentInlines;
 	
-	idStr vertexShaderText = BuildGPUShaderText( "toneMapping", vertexInlines, GL_VERTEX_SHADER_ARB );
-	idStr fragmentShaderText = BuildGPUShaderText( "toneMapping", fragmentInlines, GL_FRAGMENT_SHADER_ARB );
+	idStr vertexShaderText = BuildGPUShaderText( "toneMapping", vertexInlines, GL_VERTEX_SHADER );
+	idStr fragmentShaderText = BuildGPUShaderText( "toneMapping", fragmentInlines, GL_FRAGMENT_SHADER );
 	
 	size_t numPermutations = ( 1 << _compileMacros.Num() );	// same as 2^n, n = no. compile macros
 	size_t numCompiled = 0;

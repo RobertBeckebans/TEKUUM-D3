@@ -523,7 +523,9 @@ void RB_T_FillDepthBuffer( const drawSurf_t* surf )
 		GL_CheckErrors();
 #endif
 		
+#if !defined(USE_GLES2)
 		glEnable( GL_ALPHA_TEST );
+#endif
 		
 #if defined(__ANDROID__)
 		GL_CheckErrors();
@@ -559,7 +561,9 @@ void RB_T_FillDepthBuffer( const drawSurf_t* surf )
 			}
 			glColor4f( color[0], color[1], color[2], color[3] );
 			
+#if !defined(USE_GLES2)
 			glAlphaFunc( GL_GREATER, regs[ pStage->alphaTestRegister ] );
+#endif
 			
 			// bind the texture
 			pStage->texture.image->Bind();
@@ -577,7 +581,9 @@ void RB_T_FillDepthBuffer( const drawSurf_t* surf )
 		GL_CheckErrors();
 #endif
 		
+#if !defined(USE_GLES2)
 		glDisable( GL_ALPHA_TEST );
+#endif
 		
 #if defined(__ANDROID__)
 		GL_CheckErrors();
@@ -1538,6 +1544,7 @@ void RB_STD_T_RenderShaderPasses( const drawSurf_t* surf )
 			glColorPointer( 4, GL_UNSIGNED_BYTE, sizeof( idDrawVert ), ( void* )&ac->color );
 			glEnableClientState( GL_COLOR_ARRAY );
 			
+#if !defined(USE_GLES2)
 			if( pStage->vertexColor == SVC_INVERSE_MODULATE )
 			{
 				GL_TexEnv( GL_COMBINE );
@@ -1576,7 +1583,31 @@ void RB_STD_T_RenderShaderPasses( const drawSurf_t* surf )
 				
 				GL_SelectTexture( 0 );
 			}
+#endif
 		}
+		
+#if 0 //defined(USE_GLES2)
+		// TODO
+		static const idVec4 zero( 0, 0, 0, 0 );
+		static const idVec4 one( 1, 1, 1, 1 );
+		static const idVec4 negOne( -1, -1, -1, -1 );
+		
+		switch( pStage->vertexColor )
+		{
+			case SVC_IGNORE:
+				gl_genericShader->SetUniform_ColorModulate( zero );
+				gl_genericShader->SetUniform_Color( one );
+				break;
+			case SVC_MODULATE:
+				gl_genericShader->SetUniform_ColorModulate( one );
+				gl_genericShader->SetUniform_Color( zero );
+				break;
+			case SVC_INVERSE_MODULATE:
+				gl_genericShader->SetUniform_ColorModulate( negOne );
+				gl_genericShader->SetUniform_Color( one );
+				break;
+		}
+#endif
 		
 		// bind the texture
 		RB_BindVariableStageImage( &pStage->texture, regs );
@@ -1595,11 +1626,13 @@ void RB_STD_T_RenderShaderPasses( const drawSurf_t* surf )
 		{
 			glDisableClientState( GL_COLOR_ARRAY );
 			
+#if !defined(USE_GLES2)
 			GL_SelectTexture( 1 );
 			GL_TexEnv( GL_MODULATE );
 			globalImages->BindNull();
 			GL_SelectTexture( 0 );
 			GL_TexEnv( GL_MODULATE );
+#endif
 		}
 	}
 	

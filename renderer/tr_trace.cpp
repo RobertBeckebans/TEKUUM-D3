@@ -428,7 +428,10 @@ void RB_ShowTrace( drawSurf_t** drawSurfs, int numDrawSurfs )
 	
 	// check and draw the surfaces
 	glDisableClientState( GL_TEXTURE_COORD_ARRAY );
+	
+#if !defined(USE_GLES2)
 	GL_TexEnv( GL_MODULATE );
+#endif
 	
 	globalImages->whiteImage->Bind();
 	

@@ -1151,10 +1151,13 @@ void idImageManager::ChangeTextureFilter( void )
 		{
 			glTexParameterf( texEnum, GL_TEXTURE_MAX_ANISOTROPY_EXT, globalImages->textureAnisotropy );
 		}
+		
+#if !defined(USE_GLES2)
 		if( glConfig.textureLODBiasAvailable )
 		{
 			glTexParameterf( texEnum, GL_TEXTURE_LOD_BIAS_EXT, globalImages->textureLODBias );
 		}
+#endif
 	}
 }
 
