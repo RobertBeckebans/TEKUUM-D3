@@ -109,7 +109,7 @@ public:
 	}
 	
 protected:
-	bool				GetCompileMacrosString( int permutation, idStrList& compileMacrosOut ) const;
+	bool				GetCompileMacrosStringList( int permutation, idStrList& compileMacrosOut ) const;
 	void				UpdateShaderProgramUniformLocations( shaderProgram_t* shaderProgram ) const;
 	
 	idStr				BuildGPUShaderText(	const char* mainShader,
@@ -123,6 +123,14 @@ protected:
 			const idStr& fragmentShaderText,
 			const idStrList& compileMacros ) const;
 			
+	void				CompilePermutations();
+	virtual void		GetVertexShaderLibNames( idStrList& vertexInlines ) const {}
+	virtual void		GetFragmentShaderLibNames( idStrList& fragmentInlines ) const {}
+	virtual void		GetConstantCompileMacros( idStrList& compileMacros ) const {}
+	
+	// TODO remove
+	virtual void		SetShaderProgramUniforms( shaderProgram_t* shaderProgram ) const {}
+	
 private:
 	static const char*	FindEmbeddedShaderText( const idStr& shaderName, GLenum shaderType );
 	
@@ -2910,6 +2918,10 @@ public GLCompileMacro_LIGHT_PROJ
 {
 public:
 	GLShader_deferredLighting();
+	
+private:
+	void		GetConstantCompileMacros( idStrList& compileMacros ) const;
+	void		SetShaderProgramUniforms( shaderProgram_t* shaderProgram ) const;
 };
 
 class GLShader_forwardLighting:
@@ -2957,6 +2969,10 @@ public GLCompileMacro_LIGHT_PROJ
 {
 public:
 	GLShader_forwardLighting();
+	
+private:
+	void		GetConstantCompileMacros( idStrList& compileMacros ) const;
+	void		SetShaderProgramUniforms( shaderProgram_t* shaderProgram ) const;
 };
 
 class GLShader_postLighting:
@@ -2978,6 +2994,9 @@ class GLShader_postLighting:
 {
 public:
 	GLShader_postLighting();
+	
+private:
+	void		SetShaderProgramUniforms( shaderProgram_t* shaderProgram ) const;
 };
 
 
@@ -3005,7 +3024,7 @@ public:
 	GLShader_shadowMap();
 	
 private:
-	void			CreatePreIncludeText( idStr& preIncludeText );
+//	void			CreatePreIncludeText( idStr& preIncludeText );
 };
 
 class GLShader_FXAA:
