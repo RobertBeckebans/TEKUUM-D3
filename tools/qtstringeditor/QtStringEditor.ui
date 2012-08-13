@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>QtTest</string>
+   <string>String Editor</string>
   </property>
   <widget class="QWidget" name="centralWidget">
    <widget class="QLabel" name="label">
@@ -50,7 +50,7 @@
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <resources>
-  <include location="qttest.qrc"/>
+  <include location="QtStringEditor.qrc"/>
  </resources>
  <connections/>
 </ui>
