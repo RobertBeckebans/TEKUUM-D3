@@ -693,6 +693,7 @@ typedef struct
 } tmu_t;
 
 const int MAX_MULTITEXTURE_UNITS = 16;
+const int MAX_GLSTACK = 5;
 typedef struct
 {
 	tmu_t		tmu[MAX_MULTITEXTURE_UNITS];
@@ -701,6 +702,14 @@ typedef struct
 	int			faceCulling;
 	int			glStateBits;
 	bool		forceGlState;		// the next GL_State will ignore glStateBits and set everything
+	
+	int			matrixMode;
+	int			stackIndex;
+	matrix_t	modelViewMatrix[MAX_GLSTACK];
+	matrix_t	projectionMatrix[MAX_GLSTACK];
+	matrix_t	modelViewProjectionMatrix[MAX_GLSTACK];
+	matrix_t	textureMatrix[MAX_MULTITEXTURE_UNITS];
+	
 	struct shaderProgram_s*   currentProgram;
 #if !defined(USE_GLES1)
 	Framebuffer* framebuffer;

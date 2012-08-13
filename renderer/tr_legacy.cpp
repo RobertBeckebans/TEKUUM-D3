@@ -14,67 +14,99 @@ Copyright (C) 2012 Robert Beckebans
 
 #if defined(USE_GLES2)
 
-void			esLoadIdentity( void )
+void esLoadIdentity( void )
+{
+	MatrixIdentity( backEnd.glState.modelViewMatrix[ backEnd.glState.stackIndex ] );
+}
+
+void esLoadMatrixf( const GLfloat* m )
+{
+	if( backEnd.glState.matrixMode == GL_MODELVIEW )
+	{
+		MatrixCopy( m, backEnd.glState.modelViewMatrix[ backEnd.glState.stackIndex ] );
+	}
+	else if( backEnd.glState.matrixMode == GL_PROJECTION )
+	{
+		MatrixCopy( m, backEnd.glState.projectionMatrix[ backEnd.glState.stackIndex ] );
+	}
+	else if( backEnd.glState.matrixMode == GL_TEXTURE )
+	{
+		MatrixCopy( m, backEnd.glState.textureMatrix[ backEnd.glState.currenttmu ] );
+	}
+}
+
+void esMatrixMode( GLenum mode )
+{
+	if( mode != GL_MODELVIEW && mode != GL_PROJECTION && mode != GL_TEXTURE )
+	{
+		common->Error( "esMatrixMode: mode = %i is not GL_MODELVIEW, GL_PROJECTION or GL_TEXTURE", mode );
+	}
+	
+	backEnd.glState.matrixMode = mode;
+}
+
+void esOrthof( GLfloat left, GLfloat right, GLfloat bottom, GLfloat top, GLfloat zNear, GLfloat zFar )
 {
 	// TODO
 }
 
-void			esLoadMatrixf( const GLfloat* m )
+void esPushMatrix( void )
+{
+	backEnd.glState.stackIndex++;
+	
+	if( backEnd.glState.stackIndex >= MAX_GLSTACK )
+	{
+		backEnd.glState.stackIndex = MAX_GLSTACK - 1;
+		common->Error( "esPushMatrix: stack overflow = %i", backEnd.glState.stackIndex );
+	}
+	
+	MatrixCopy( backEnd.glState.modelViewMatrix[ backEnd.glState.stackIndex - 1 ], backEnd.glState.modelViewMatrix[ backEnd.glState.stackIndex ] );
+	MatrixCopy( backEnd.glState.projectionMatrix[ backEnd.glState.stackIndex - 1 ], backEnd.glState.projectionMatrix[ backEnd.glState.stackIndex ] );
+	MatrixCopy( backEnd.glState.modelViewProjectionMatrix[ backEnd.glState.stackIndex - 1 ], backEnd.glState.modelViewProjectionMatrix[ backEnd.glState.stackIndex ] );
+}
+
+void esPopMatrix( void )
+{
+	backEnd.glState.stackIndex--;
+	
+	if( backEnd.glState.stackIndex < 0 )
+	{
+		backEnd.glState.stackIndex = 0;
+		common->Error( "esPopMatrix: stack underflow" );
+	}
+}
+
+void esEnableClientState( GLenum array )
 {
 	// TODO
 }
 
-void			esMatrixMode( GLenum mode )
+void esDisableClientState( GLenum array )
 {
 	// TODO
 }
 
-void			esOrthof( GLfloat left, GLfloat right, GLfloat bottom, GLfloat top, GLfloat zNear, GLfloat zFar )
+void esVertexPointer( GLint size, GLenum type, GLsizei stride, const GLvoid* pointer )
 {
 	// TODO
 }
 
-void			esPushMatrix( void )
+void esNormalPointer( GLenum type, GLsizei stride, const GLvoid* pointer )
 {
 	// TODO
 }
 
-void			esPopMatrix( void )
+void esTexCoordPointer( GLint size, GLenum type, GLsizei stride, const GLvoid* pointer )
 {
 	// TODO
 }
 
-void			esEnableClientState( GLenum array )
+void esColorPointer( GLint size, GLenum type, GLsizei stride, const GLvoid* pointer )
 {
 	// TODO
 }
 
-void			esDisableClientState( GLenum array )
-{
-	// TODO
-}
-
-void			esVertexPointer( GLint size, GLenum type, GLsizei stride, const GLvoid* pointer )
-{
-	// TODO
-}
-
-void			esNormalPointer( GLenum type, GLsizei stride, const GLvoid* pointer )
-{
-	// TODO
-}
-
-void			esTexCoordPointer( GLint size, GLenum type, GLsizei stride, const GLvoid* pointer )
-{
-	// TODO
-}
-
-void			esColorPointer( GLint size, GLenum type, GLsizei stride, const GLvoid* pointer )
-{
-	// TODO
-}
-
-void			esColor4f( GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha )
+void esColor4f( GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha )
 {
 	// TODO
 }

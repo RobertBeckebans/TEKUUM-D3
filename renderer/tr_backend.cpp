@@ -45,13 +45,20 @@ may touch, including the editor.
 */
 void RB_SetDefaultGLState( void )
 {
-	int		i;
-	
 	RB_LogComment( "--- R_SetDefaultGLState ---\n" );
 	
 	// make sure our GL state vector is set correctly
 	memset( &backEnd.glState, 0, sizeof( backEnd.glState ) );
 	backEnd.glState.forceGlState = true;
+	
+	backEnd.glState.matrixMode = GL_MODELVIEW;
+	backEnd.glState.stackIndex = 0;
+	for( int i = 0; i < MAX_GLSTACK; i++ )
+	{
+		MatrixIdentity( backEnd.glState.modelViewMatrix[i] );
+		MatrixIdentity( backEnd.glState.projectionMatrix[i] );
+		MatrixIdentity( backEnd.glState.modelViewProjectionMatrix[i] );
+	}
 	
 #if defined(__ANDROID__)
 	GL_CheckErrors();
@@ -96,7 +103,7 @@ void RB_SetDefaultGLState( void )
 		glScissor( 0, 0, glConfig.vidWidth, glConfig.vidHeight );
 	}
 	
-	for( i = glConfig.maxTextureUnits - 1 ; i >= 0 ; i-- )
+	for( int i = glConfig.maxTextureUnits - 1 ; i >= 0 ; i-- )
 	{
 		GL_SelectTexture( i );
 		

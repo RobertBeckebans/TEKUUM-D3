@@ -1575,7 +1575,11 @@ void RenderBumpFlat_f( const idCmdArgs& args )
 	glCullFace( GL_FRONT );
 	glDisable( GL_STENCIL_TEST );
 	glDisable( GL_SCISSOR_TEST );
+	
+#if !defined(USE_GLES2)
 	glDisable( GL_ALPHA_TEST );
+#endif
+	
 	glDisable( GL_BLEND );
 	glEnable( GL_DEPTH_TEST );
 	glDisable( GL_TEXTURE_2D );
