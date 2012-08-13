@@ -645,12 +645,13 @@ bool Swap_IsBigEndian( void )
 void AssertFailed( const char* file, int line, const char* expression )
 {
 	idLib::sys->DebugPrintf( "\n\nASSERTION FAILED!\n%s(%d): '%s'\n", file, line, expression );
+	
+	// Techyon RB: changed x86 specific __asm int 0x03 to generic breakpoint builders
 #ifdef _WIN32
-	__asm int 0x03
-// Techyon BEGIN - RB: FIXME android support
-#elif defined( __linux__ ) && !defined(__ANDROID__)
-// Techyon END
-	__asm__ __volatile__( "int $0x03" );
+	__debugbreak();
+#elif defined( __linux__ )
+	__builtin_trap();
+	// Techyon END
 #elif defined( MACOS_X )
 	kill( getpid(), SIGINT );
 #endif
