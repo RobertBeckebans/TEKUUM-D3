@@ -189,6 +189,12 @@ static void ASE_KeyMAP_DIFFUSE( const char* token )
 		// convert the 3DSMax material pathname to a qpath
 		matname.BackSlashesToSlashes();
 		qpath = fileSystem->OSPathToRelativePath( matname );
+// Techyon RB: only use relative paths
+		if( qpath.IsEmpty() )
+		{
+			qpath = matname;
+		}
+// Techyon END
 		idStr::Copynz( ase.currentMaterial->name, qpath, sizeof( ase.currentMaterial->name ) );
 	}
 	else if( !strcmp( token, "*UVW_U_OFFSET" ) )
