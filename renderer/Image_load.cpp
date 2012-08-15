@@ -1317,7 +1317,11 @@ void idImage::ImageProgramStringToCompressedFileName( const char* imageProg, cha
 	const char*	s;
 	char*	f;
 	
+#if defined(STANDALONE)
+	strcpy( fileName, "generated/dds/" );
+#else
 	strcpy( fileName, "dds/" );
+#endif
 	f = fileName + strlen( fileName );
 	
 	int depth = 0;
@@ -1461,7 +1465,9 @@ void idImage::WritePrecompressedImage()
 	
 	if( globalImages->image_useOffLineCompression.GetBool() && FormatIsDXT( altInternalFormat ) )
 	{
-		idStr outFile = fileSystem->RelativePathToOSPath( filename, "fs_basepath" );
+		// Techyon RB: use generated/ folder
+		idStr outFile = fileSystem->RelativePathToOSPath( filename, "fs_devpath" );
+		// Techyon END
 		idStr inFile = outFile;
 		inFile.StripFileExtension();
 		inFile.SetFileExtension( "tga" );

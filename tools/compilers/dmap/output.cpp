@@ -725,8 +725,10 @@ void WriteOutputFile( void )
 	// write the file
 	common->Printf( "----- WriteOutputFile -----\n" );
 	
-	sprintf( qpath, "%s." PROC_FILE_EXT, dmapGlobals.mapFileBase );
-	
+// Techyon RB: added generated/
+	sprintf( qpath, "generated/%s." PROC_FILE_EXT, dmapGlobals.mapFileBase );
+// Techyon END
+
 	common->Printf( "writing %s\n", qpath.c_str() );
 	// _D3XP used fs_cdpath
 	procFile = fileSystem->OpenFileWrite( qpath, "fs_devpath" );

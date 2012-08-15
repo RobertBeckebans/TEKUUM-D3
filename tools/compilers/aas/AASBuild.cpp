@@ -881,6 +881,10 @@ bool idAASBuild::Build( const idStr& fileName, const idAASSettings* settings )
 	}
 	
 	// write the file
+	
+// Techyon RB: added generated/
+	name = "generated/" + name;
+// Techyon END
 	name.SetFileExtension( aasSettings->fileExtension );
 	file->Write( name, mapFile->GetGeometryCRC() );
 	
