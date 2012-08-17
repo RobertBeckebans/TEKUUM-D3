@@ -2306,17 +2306,37 @@ END_CLASS
 
 tyPhysics_Player::tyPhysics_Player( void )
 {
-
+	SetGravity( gravityVector );
 }
 
 void tyPhysics_Player::Save( idSaveGame* savefile ) const
 {
-
+	// gravity flipping
+	savefile->WriteVec3( oldGravityVector );
+	savefile->WriteVec3( oldGravityNormal );
+	
+	savefile->WriteVec3( wishGravityVector );
+	savefile->WriteVec3( wishGravityNormal );
+	savefile->WriteInt( wishGravityTime );
+	
+	// walk movement
+	savefile->WriteBool( wallwalking );
+	savefile->WriteVec3( wallwalkNormal );
 }
 
 void tyPhysics_Player::Restore( idRestoreGame* savefile )
 {
-
+	// gravity flipping
+	savefile->ReadVec3( oldGravityVector );
+	savefile->ReadVec3( oldGravityNormal );
+	
+	savefile->ReadVec3( wishGravityVector );
+	savefile->ReadVec3( wishGravityNormal );
+	savefile->ReadInt( wishGravityTime );
+	
+	// walk movement
+	savefile->ReadBool( wallwalking );
+	savefile->ReadVec3( wallwalkNormal );
 }
 
 bool tyPhysics_Player::Evaluate( int timeStepMSec, int endTimeMSec )
@@ -2405,9 +2425,23 @@ void tyPhysics_Player::UpdateGravity( void )
 	if( wishGravityVector != gravityVector )
 	{
 		idVec3 lerpGravityVector;
+		idAngles lerpGravityAngles;
 		
 		float lerp = ( float )( gameLocal.time - wishGravityTime ) / ( float )( ( wishGravityTime + PM_TIME_GRAVITY_CHANGE ) - wishGravityTime );
+		
 		lerpGravityVector.Lerp( oldGravityVector, wishGravityVector, lerp );
+		idAngles oldGravityAngles = oldGravityVector.ToAngles();
+		idAngles wishGravityAngles = wishGravityVector.ToAngles();
+		
+		//lerpGravityAngles.
+		
+		/*
+		idVec3 forward;
+		viewAngles.ToVectors( &forward, NULL, NULL );
+		viewForward *= clipModelAxis;
+		viewRight = gravityNormal.Cross( forward );
+		viewRight.Normalize();
+		*/
 		
 		idPhysics_Actor::SetGravity( lerpGravityVector );
 		SetClipModelAxis();
@@ -2539,7 +2573,7 @@ void tyPhysics_Player::CheckGround( void )
 	groundEntityPtr = gameLocal.entities[ groundTrace.c.entityNum ];
 	
 	// check for wallwalking
-	if( groundMaterial && groundMaterial->GetSurfaceType() & SURFTYPE_WALLWALK )
+	if( groundMaterial && ( groundMaterial->GetSurfaceType() & SURFTYPE_WALLWALK ) != 0 )
 	{
 		//if ( debugLevel ) {
 		//	gameLocal.Printf( "%i:wallwalk\n", c_pmove );
