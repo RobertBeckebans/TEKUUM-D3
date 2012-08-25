@@ -218,6 +218,11 @@ solution "Techyon"
 			-- multi processor support
 			"/MP",
 		}
+		defines
+		{
+			-- the C++ Standard Library forbids macroizing keywords
+			"_ALLOW_KEYWORD_MACROS"
+		}
 	
 	configuration { "vs*", "Debug" }
 		buildoptions
