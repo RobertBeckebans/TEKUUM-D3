@@ -146,9 +146,15 @@ newoption
 
 newoption
 {
-	trigger = "lua",
-	description = "Replace DoomScript with Lua"
+	trigger = "xinput",
+	description = "Support the Xbox 360 controller"
 }
+
+--newoption
+--{
+--	trigger = "lua",
+--	description = "Replace DoomScript with Lua"
+--}
 
 --
 -- Use the embed action to convert all of the Lua scripts into C strings, which 
@@ -221,7 +227,7 @@ solution "Techyon"
 		defines
 		{
 			-- the C++ Standard Library forbids macroizing keywords
-			"_ALLOW_KEYWORD_MACROS"
+			--"_ALLOW_KEYWORD_MACROS"
 		}
 	
 	configuration { "vs*", "Debug" }
@@ -450,10 +456,12 @@ function FindGtkmmSDK()
 	return false
 end
 
-if _ACTION == "vs2010" then	
-	foundDirectSDK = FindDirectXSDK()
+if _ACTION == "vs2010" then
+	if _OPTIONS["xinput"] then
+		foundDirectSDK = FindDirectXSDK()
+	end
 	--foundPlatformSDK = FindPlatformSDK()
-	foundWinDDK = FindWinDDK()
+	--foundWinDDK = FindWinDDK()
 	--foundQtSDK = FindQtSDK()
 	
 	if _OPTIONS["gtk-tools"] then
@@ -965,7 +973,17 @@ end
 		-- { 
 			-- "libcmtd",
 		-- }
-		
+	
+	configuration { "vs2010", "xinput" }
+		defines
+		{
+			"USE_XINPUT",
+		}
+		links
+		{
+			"Xinput"
+		}
+
 	configuration { "vs*", "x32" }
 		targetdir 	"../bin/win32"
 		libdirs
@@ -986,12 +1004,11 @@ end
 			"dinput8",
 			"dsound",
 			"dxguid",
-			"DxErr",
+			--"DxErr",
 			"eaxguid",
 			"iphlpapi",
 			"winmm",
 			"ws2_32",
-			"Xinput",
 		}
 		prebuildcommands
 		{

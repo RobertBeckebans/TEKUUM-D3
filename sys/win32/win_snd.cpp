@@ -29,7 +29,13 @@ If you have questions concerning this license or the applicable additional terms
 #pragma hdrstop
 
 // DirectX SDK
-#include <DxErr.h>
+// Techyon BEGIN
+//#include <DxErr.h>
+
+#if !defined(DXTRACE_ERR)
+#define DXTRACE_ERR(str, hr)	( hr )
+#endif
+// Techyon END
 
 #include <ks.h>
 #include <ksmedia.h>

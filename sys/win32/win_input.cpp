@@ -1158,6 +1158,23 @@ unsigned char Sys_MapCharForKey( int key )
 //=====================================================================================
 
 // Techyon BEGIN
+#if !defined(USE_XINPUT)
+//#if _MSC_VER > 1000
+
+int Sys_PollXbox360ControllerInputEvents( void )
+{
+	return 0;
+}
+
+int	Sys_ReturnXbox360ControllerInputEvent( const int n, int& action, int& value, int& value2 )
+{
+	return 0;
+}
+
+void Sys_EndXbox360ControllerInputEvents( void ) { }
+
+#else
+
 typedef struct
 {
 	int action;
@@ -1498,5 +1515,7 @@ int	Sys_ReturnXbox360ControllerInputEvent( const int n, int& action, int& value,
 }
 
 void Sys_EndXbox360ControllerInputEvents( void ) { }
+
+#endif // #if !defined(USE_XINPUT)
 
 // Techyon END
