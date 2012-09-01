@@ -141,7 +141,7 @@ newoption
 newoption
 {
 	trigger = "standalone",
-	description = "Skip Doom 3 base/ folder game logic into main executable"
+	description = "Skip Doom 3 base/ folder"
 }
 
 newoption

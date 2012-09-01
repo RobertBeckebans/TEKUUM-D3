@@ -14,6 +14,9 @@ option(USE_QT_WINDOWING
 		
 option(MONOLITH
 		"Embed game logic into main executable" ON)
+		
+option(STANDALONE
+		"Skip Doom 3 base/ folder" ON)
 
 #if(USE_QT_TOOLS)
 #	set(USE_QT_WINDOWING TRUE)
@@ -70,6 +73,9 @@ elseif(MSVC)
 	endif()
 endif()
 
+if(STANDALONE)
+	add_definitions(-DSTANDALONE)
+endif()
 
 add_subdirectory(idlib)
 
