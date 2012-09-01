@@ -1,5 +1,5 @@
 #include "Radiant3DWidget.h"
-#include "EngineQGLContext.h"
+//#include "EngineQGLContext.h"
 //#include "glext.h"
 #include <gl/GLU.h>
 

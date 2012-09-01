@@ -44,7 +44,7 @@ void Sys_StartAsyncThread( void );
 bool GameGLWidget::initializedDoom3Engine = false;
 
 GameGLWidget::GameGLWidget( int argc, const char** argv ):
-	QGLWidget( QGLFormat( QGL::SampleBuffers ) )
+	QGLWidget( QGLFormat( QGL::AlphaChannel | QGL::StencilBuffer ) )
 {
 	this->argc = argc;
 	this->argv = argv;
@@ -78,7 +78,7 @@ void GameGLWidget::initializeGL()
 {
 	//makeCurrent();
 	
-	glConfig.colorBits = format().redBufferSize() + format().greenBufferSize() + format().blueBufferSize();
+	glConfig.colorBits = format().redBufferSize() + format().greenBufferSize() + format().blueBufferSize() + format().alphaBufferSize();
 	glConfig.depthBits = format().depthBufferSize();
 	glConfig.stencilBits = format().stencilBufferSize();
 	
