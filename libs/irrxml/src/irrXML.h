@@ -1,4 +1,5 @@
 // Copyright (C) 2002-2005 Nikolaus Gebhardt
+// Copyright (C) 2012 Robert Beckebans (id Tech 4 integration)
 // This file is part of the "Irrlicht Engine" and the "irrXML" project.
 // For conditions of distribution and use, see copyright notice in irrlicht.h and/or irrXML.h
 
@@ -148,6 +149,8 @@
 	separate version of it, to be able to use it in non Irrlicht projects. With
 	irrXML 1.0, this has now been done.
 */
+
+class idFile;
 
 namespace irr
 {
@@ -421,7 +424,7 @@ namespace io
 	\return Returns a pointer to the created xml parser. This pointer should be 
 	deleted using 'delete' after no longer needed. Returns 0 if an error occured
 	and the file could not be opened. */
-	IrrXMLReader* createIrrXMLReader(FILE* file);
+	IrrXMLReader* createIrrXMLReader(idFile* file);
 
 	//! Creates an instance of an UFT-8 or ASCII character xml parser. 
 	/** This means that all character data will be returned in 8 bit ASCII or UTF-8. The file to read can 
@@ -458,7 +461,7 @@ namespace io
 	\return Returns a pointer to the created xml parser. This pointer should be 
 	deleted using 'delete' after no longer needed. Returns 0 if an error occured
 	and the file could not be opened. */
-	IrrXMLReaderUTF16* createIrrXMLReaderUTF16(FILE* file);
+	IrrXMLReaderUTF16* createIrrXMLReaderUTF16(idFile* file);
 
 	//! Creates an instance of an UFT-16 xml parser. 
 	/** This means that all character data will be returned in UTF-16. The file to read can 
@@ -495,7 +498,7 @@ namespace io
 	\return Returns a pointer to the created xml parser. This pointer should be 
 	deleted using 'delete' after no longer needed. Returns 0 if an error occured
 	and the file could not be opened. */
-	IrrXMLReaderUTF32* createIrrXMLReaderUTF32(FILE* file);
+	IrrXMLReaderUTF32* createIrrXMLReaderUTF32(idFile* file);
 
 	//! Creates an instance of an UFT-32 xml parser. 
 	/** This means that

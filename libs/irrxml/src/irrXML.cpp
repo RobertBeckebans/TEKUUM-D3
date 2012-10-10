@@ -1,6 +1,10 @@
 // Copyright (C) 2002-2005 Nikolaus Gebhardt
+// Copyright (C) 2012 Robert Beckebans (id Tech 4 integration)
 // This file is part of the "Irrlicht Engine" and the "irrXML" project.
 // For conditions of distribution and use, see copyright notice in irrlicht.h and/or irrXML.h
+
+#include "../../idlib/precompiled.h"
+#pragma hdrstop
 
 #include "irrXML.h"
 #include "irrString.h"
@@ -13,50 +17,53 @@ namespace irr
 namespace io
 {
 
-//! Implementation of the file read callback for ordinary files
+// Techyon RB: changed CFileReadCallback to use the idlib filesystem
 class CFileReadCallBack : public IFileReadCallBack
 {
 public:
 
 	//! construct from filename
 	CFileReadCallBack(const char* filename)
-		: File(0), Size(0), Close(true)
+		: _file(0), _size(0), _close(true)
 	{
 		// open file
-		File = fopen(filename, "rb");
-
-		if (File)
+		_file = idLib::fileSystem->OpenFileRead( filename );
+		if( _file )
+		{
 			getFileSize();
+		}
 	}
 
 	//! construct from FILE pointer
-	CFileReadCallBack(FILE* file)
-		: File(file), Size(0), Close(false)
+	CFileReadCallBack(idFile* file)
+		: _file(file), _size(0), _close(false)
 	{
-		if (File)
+		if( _file )
 			getFileSize();
 	}
 
 	//! destructor
 	virtual ~CFileReadCallBack()
 	{
-		if (Close && File)
-			fclose(File);
+		if( _close && _file )
+		{
+			idLib::fileSystem->CloseFile( _file );
+		}
 	}
 
 	//! Reads an amount of bytes from the file.
 	virtual int read(void* buffer, int sizeToRead)
 	{
-		if (!File)
+		if( !_file )
 			return 0;
 
-		return (int)fread(buffer, 1, sizeToRead, File);
+		return _file->Read( buffer, sizeToRead );
 	}
 
 	//! Returns size of file in bytes
 	virtual int getSize()
 	{
-		return Size;
+		return _size;
 	}
 
 private:
@@ -64,17 +71,15 @@ private:
 	//! retrieves the file size of the open file
 	void getFileSize()
 	{
-		fseek(File, 0, SEEK_END);
-		Size = ftell(File);
-		fseek(File, 0, SEEK_SET);
+		_size = _file->Length();
 	}
 
-	FILE* File;
-	int Size;
-	bool Close;
+	idFile* _file;
+	int _size;
+	bool _close;
 
-}; // end class CFileReadCallBack
-
+};
+// Techyon END
 
 
 // FACTORY FUNCTIONS:
@@ -88,7 +93,7 @@ IrrXMLReader* createIrrXMLReader(const char* filename)
 
 
 //! Creates an instance of an UFT-8 or ASCII character xml parser. 
-IrrXMLReader* createIrrXMLReader(FILE* file)
+IrrXMLReader* createIrrXMLReader(idFile* file)
 {
 	return new CXMLReaderImpl<char, IXMLBase>(new CFileReadCallBack(file)); 
 }
@@ -109,7 +114,7 @@ IrrXMLReaderUTF16* createIrrXMLReaderUTF16(const char* filename)
 
 
 //! Creates an instance of an UTF-16 xml parser. 
-IrrXMLReaderUTF16* createIrrXMLReaderUTF16(FILE* file)
+IrrXMLReaderUTF16* createIrrXMLReaderUTF16(idFile* file)
 {
 	return new CXMLReaderImpl<char16, IXMLBase>(new CFileReadCallBack(file)); 
 }
@@ -130,7 +135,7 @@ IrrXMLReaderUTF32* createIrrXMLReaderUTF32(const char* filename)
 
 
 //! Creates an instance of an UTF-32 xml parser. 
-IrrXMLReaderUTF32* createIrrXMLReaderUTF32(FILE* file)
+IrrXMLReaderUTF32* createIrrXMLReaderUTF32(idFile* file)
 {
 	return new CXMLReaderImpl<char32, IXMLBase>(new CFileReadCallBack(file)); 
 }
