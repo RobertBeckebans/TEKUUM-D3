@@ -3,6 +3,7 @@
 
 Doom 3 GPL Source Code
 Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2012 Robert Beckebans
 
 This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
 
@@ -34,6 +35,7 @@ If you have questions concerning this license or the applicable additional terms
 #include "Model_ase.h"
 #include "Model_lwo.h"
 #include "Model_ma.h"
+#include "Model_ColladaParser.h"
 
 idCVar idRenderModelStatic::r_mergeModelSurfaces( "r_mergeModelSurfaces", "1", CVAR_BOOL | CVAR_RENDERER, "combine model surfaces with the same material" );
 idCVar idRenderModelStatic::r_slopVertex( "r_slopVertex", "0.01", CVAR_RENDERER, "merge xyz coordinates this far apart" );
@@ -315,6 +317,13 @@ void idRenderModelStatic::InitFromFile( const char* fileName )
 		loaded		= LoadASE( name );
 		reloadable	= true;
 	}
+// Techyon RB: added dae
+	else if( extension.Icmp( "dae" ) == 0 )
+	{
+		loaded		= LoadDAE( name );
+		reloadable	= true;
+	}
+// Techyon END
 	else if( extension.Icmp( "lwo" ) == 0 )
 	{
 		loaded		= LoadLWO( name );
@@ -2422,6 +2431,25 @@ bool idRenderModelStatic::LoadFLT( const char* fileName )
 	return true;
 }
 
+
+// Techyon RB: added COLLADA support
+bool idRenderModelStatic::LoadDAE( const char* fileName )
+{
+	try
+	{
+		Assimp::ColladaParser parser( fileName ); 
+	}
+	catch( idException& e )
+	{
+		common->Warning( "%s", e.error );
+	}
+	
+	// TODO
+	//ConvertDAEToModelSurfaces( ase );
+	
+	return false;
+}
+// Techyon END
 
 //=============================================================================
 

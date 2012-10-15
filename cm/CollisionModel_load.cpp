@@ -3429,7 +3429,9 @@ cm_model_t* idCollisionModelManagerLocal::LoadRenderModel( const char* fileName 
 	
 	// only load ASE and LWO models
 	idStr( fileName ).ExtractFileExtension( extension );
-	if( ( extension.Icmp( "ase" ) != 0 ) && ( extension.Icmp( "lwo" ) != 0 ) && ( extension.Icmp( "ma" ) != 0 ) )
+// Techyon RB: added .dae
+	if( ( extension.Icmp( "ase" ) != 0 ) && ( extension.Icmp( "lwo" ) != 0 ) && ( extension.Icmp( "ma" ) != 0 ) && ( extension.Icmp( "dae" ) != 0 ) )
+// Techyon END
 	{
 		return NULL;
 	}

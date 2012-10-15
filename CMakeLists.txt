@@ -104,6 +104,8 @@ set(RENDERER_INCLUDES
 	renderer/ModelManager.h
 	renderer/ModelOverlay.h
 	renderer/Model_ase.h
+	renderer/Model_ColladaHelper.h
+	renderer/Model_ColladaParser.h
 	renderer/Model_local.h
 	renderer/Model_lwo.h
 	renderer/Model_ma.h
@@ -135,6 +137,7 @@ set(RENDERER_SOURCES
 	renderer/ModelOverlay.cpp
 	renderer/Model_ase.cpp
 	renderer/Model_beam.cpp
+	renderer/Model_ColladaParser.cpp
 	renderer/Model_liquid.cpp
 	renderer/Model_lwo.cpp
 	renderer/Model_ma.cpp
@@ -177,6 +180,10 @@ set(RENDERER_SOURCES
 	renderer/tr_trisurf.cpp
 	renderer/tr_turboshadow.cpp)
 
+
+file(GLOB IRRXML_INCLUDES libs/irrxml/src/*.h)
+file(GLOB IRRXML_SOURCES libs/irrxml/src/*.cpp)
+	
 set(JPEG_INCLUDES
 	libs/jpeg-6/jchuff.h
 	libs/jpeg-6/jconfig.h
@@ -738,6 +745,10 @@ source_group("framework\\async" FILES ${FRAMEWORK_ASYNC_SOURCES})
 source_group("renderer" FILES ${RENDERER_INCLUDES})
 source_group("renderer" FILES ${RENDERER_SOURCES})
 
+
+source_group("libs\\irrxml" FILES ${IRRXML_INCLUDES})
+source_group("libs\\irrxml" FILES ${IRRXML_SOURCES})
+
 source_group("libs\\jpeg-6" FILES ${JPEG_INCLUDES})
 source_group("libs\\jpeg-6" FILES ${JPEG_SOURCES})
 
@@ -857,6 +868,7 @@ set(TECHYON_SOURCES
 			${FRAMEWORK_INCLUDES} ${FRAMEWORK_SOURCES}
 			${FRAMEWORK_ASYNC_INCLUDES} ${FRAMEWORK_ASYNC_SOURCES} 
 			${RENDERER_INCLUDES} ${RENDERER_SOURCES}
+			${IRRXML_INCLUDES} ${IRRXML_SOURCES}
 			${JPEG_INCLUDES} ${JPEG_SOURCES}
 			${PNG_INCLUDES} ${PNG_SOURCES}
 			${ZLIB_INCLUDES} ${ZLIB_SOURCES}

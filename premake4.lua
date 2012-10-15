@@ -510,6 +510,8 @@ project "Techyon"
 		"libs/png/*.c", "libs/png/*.h",
 		"libs/zlib/*.c", "libs/zlib/*.h",
 		
+		"libs/irrxml/src/*.cpp", "libs/irrxml/src/*.h",
+		
 		"sound/*.cpp", "sound/*.h",
 		
 		"libs/oggvorbis/ogg/*.h",

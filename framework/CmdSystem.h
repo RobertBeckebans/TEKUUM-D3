@@ -170,7 +170,9 @@ ID_INLINE void idCmdSystem::ArgCompletion_MapName( const idCmdArgs& args, void( 
 
 ID_INLINE void idCmdSystem::ArgCompletion_ModelName( const idCmdArgs& args, void( *callback )( const char* s ) )
 {
-	cmdSystem->ArgCompletion_FolderExtension( args, callback, "models/", false, ".lwo", ".ase", ".md5mesh", ".ma", NULL );
+// Techyon BEGIN
+	cmdSystem->ArgCompletion_FolderExtension( args, callback, "models/", false, ".lwo", ".ase", ".md5mesh", ".ma", ".dae", NULL );
+// Techyon END
 }
 
 ID_INLINE void idCmdSystem::ArgCompletion_SoundName( const idCmdArgs& args, void( *callback )( const char* s ) )
@@ -180,7 +182,9 @@ ID_INLINE void idCmdSystem::ArgCompletion_SoundName( const idCmdArgs& args, void
 
 ID_INLINE void idCmdSystem::ArgCompletion_ImageName( const idCmdArgs& args, void( *callback )( const char* s ) )
 {
-	cmdSystem->ArgCompletion_FolderExtension( args, callback, "/", false, ".tga", ".dds", ".jpg", ".pcx", NULL );
+// Techyon BEGIN
+	cmdSystem->ArgCompletion_FolderExtension( args, callback, "/", false, ".tga", ".dds", ".jpg", ".pcx", ".png", NULL );
+// Techyon END
 }
 
 ID_INLINE void idCmdSystem::ArgCompletion_VideoName( const idCmdArgs& args, void( *callback )( const char* s ) )
