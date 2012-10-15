@@ -265,7 +265,7 @@ void Sys_GrabMouseCursor( bool grabIt ) {}
 
 //=====================================================================================
 
-#if defined(_WIN32)
+#if defined(USE_XINPUT)
 
 static idCVar in_xbox360Controller( "in_xbox360Controller", "1", CVAR_SYSTEM | CVAR_BOOL, "enable Xbox 360 controller" );
 static idCVar in_xbox360ControllerDebug( "in_xbox360ControllerDebug", "0", CVAR_SYSTEM | CVAR_BOOL, "enable Xbox 360 controller debugging" );

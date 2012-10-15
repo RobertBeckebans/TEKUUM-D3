@@ -901,8 +901,21 @@ link_directories(
 			${CMAKE_CURRENT_SOURCE_DIR}/libs/openal/lib)
 
 if(MSVC)
-	find_package(DirectX REQUIRED)
-	include_directories(${DirectX_INCLUDE_DIR})
+
+	if(MSVC_VERSION EQUAL 1700)
+		set(DirectX_LIBRARIES
+			dinput8
+			dsound
+			dxguid
+			#dxerr
+			#Xinput
+			)
+		#add_definitions(-DUSE_XINPUT)
+	else()
+		find_package(DirectX REQUIRED)
+		include_directories(${DirectX_INCLUDE_DIR})
+		add_definitions(-DUSE_XINPUT)
+	endif()
 	
 	if(USE_MFC_TOOLS)
 		# find_package(MFC REQUIRED)
