@@ -48,8 +48,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../libs/irrxml/src/irrXML.h"
 #include "Model_ColladaHelper.h"
 
-namespace Assimp
-{
+
 
 // ------------------------------------------------------------------------------------------
 /** Parser helper class for the Collada loader.
@@ -80,31 +79,31 @@ protected:
 	
 	/** Reads the animation library */
 //	void ReadAnimationLibrary();
-	
+
 	/** Reads an animation into the given parent structure */
 //	void ReadAnimation( Collada::Animation* pParent );
-	
+
 	/** Reads an animation sampler into the given anim channel */
 //	void ReadAnimationSampler( Collada::AnimationChannel& pChannel );
-	
+
 	/** Reads the skeleton controller library */
 //	void ReadControllerLibrary();
-	
+
 	/** Reads a controller into the given mesh structure */
 //	void ReadController( Collada::Controller& pController );
-	
+
 	/** Reads the joint definitions for the given controller */
 //	void ReadControllerJoints( Collada::Controller& pController );
-	
+
 	/** Reads the joint weights for the given controller */
 //	void ReadControllerWeights( Collada::Controller& pController );
-	
+
 	/** Reads the image library contents */
 //	void ReadImageLibrary();
-	
+
 	/** Reads an image entry into the given image */
 //	void ReadImage( Collada::Image& pImage );
-	
+
 	/** Reads the material library */
 	void ReadMaterialLibrary();
 	
@@ -113,37 +112,37 @@ protected:
 	
 	/** Reads the camera library */
 //	void ReadCameraLibrary();
-	
+
 	/** Reads a camera entry into the given camera */
 //	void ReadCamera( Collada::Camera& pCamera );
-	
+
 	/** Reads the light library */
 //	void ReadLightLibrary();
-	
+
 	/** Reads a light entry into the given light */
 //	void ReadLight( Collada::Light& pLight );
-	
+
 	/** Reads the effect library */
 //	void ReadEffectLibrary();
-	
+
 	/** Reads an effect entry into the given effect*/
 //	void ReadEffect( Collada::Effect& pEffect );
-	
+
 	/** Reads an COMMON effect profile */
 //	void ReadEffectProfileCommon( Collada::Effect& pEffect );
-	
+
 	/** Read sampler properties */
 //	void ReadSamplerProperties( Collada::Sampler& pSampler );
-	
+
 	/** Reads an effect entry containing a color or a texture defining that color */
 //	void ReadEffectColor( idVec4& pColor, Collada::Sampler& pSampler );
-	
+
 	/** Reads an effect entry containing a float */
 //	void ReadEffectFloat( float& pFloat );
-	
+
 	/** Reads an effect parameter specification of any kind */
 //	void ReadEffectParam( Collada::EffectParam& pParam );
-	
+
 	/** Reads the geometry library contents */
 	void ReadGeometryLibrary();
 	
@@ -211,8 +210,8 @@ protected:
 	
 	/** Skips all data until the end node of the given element */
 	void SkipElement( const char* pElement );
-
-	bool SkipSpacesAndLineEnd( const char* in, const char** out);
+	
+	bool SkipSpacesAndLineEnd( const char* in, const char** out );
 	
 	/** Compares the current xml element name to the given string and returns true if equal */
 	bool IsElement( const char* pName ) const;
@@ -328,9 +327,9 @@ inline bool ColladaParser::IsElement( const char* pName ) const
 	return idStr::Cmp( mReader->getNodeName(), pName ) == 0;
 }
 
-inline bool ColladaParser::SkipSpacesAndLineEnd( const char* in, const char** out)
+inline bool ColladaParser::SkipSpacesAndLineEnd( const char* in, const char** out )
 {
-	while (*in == ' ' || *in == '\t' ||	*in == '\r' || *in == '\n' )
+	while( *in == ' ' || *in == '\t' ||	*in == '\r' || *in == '\n' )
 		in++;
 	*out = in;
 	return *in != '\0';
@@ -342,13 +341,12 @@ template <typename Type>
 const Type* ColladaParser::ResolveLibraryReference( const idHashTable<Type>& pLibrary, const idStr& pURL ) const
 {
 	Type* element = NULL;
-
+	
 	if( !pLibrary.Get( pURL, &element ) )
 		ThrowException( va( "Unable to resolve library reference \"%s\".", pURL ) );
-	
+		
 	return element;
 }
 
-} // end of namespace Assimp
 
 #endif // __MODEL_COLLADAPARSER_H__

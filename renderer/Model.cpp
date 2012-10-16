@@ -31,6 +31,7 @@ If you have questions concerning this license or the applicable additional terms
 #pragma hdrstop
 
 #include "tr_local.h"
+
 #include "Model_local.h"
 #include "Model_ase.h"
 #include "Model_lwo.h"
@@ -798,11 +799,7 @@ void idRenderModelStatic::FinishSurfaces()
 	}
 }
 
-/*
-=================
-idRenderModelStatic::ConvertASEToModelSurfaces
-=================
-*/
+
 typedef struct matchVert_s
 {
 	struct matchVert_s*	next;
@@ -811,6 +808,421 @@ typedef struct matchVert_s
 	idVec3	normal;
 } matchVert_t;
 
+bool idRenderModelStatic::ConvertDAEToModelSurfaces( const ColladaParser* dae )
+{
+#if 1
+	Collada::Node**		object;
+	Collada::Mesh**		mesh;
+	Collada::MeshInstance* meshInstance;
+	Collada::Material**	material;
+	const idMaterial*	im1, *im2;
+	srfTriangles_t*		tri;
+	int					objectNum;
+	int					i, j, k;
+	int					v, tv;
+	int* 				vRemap;
+	int* 				tvRemap;
+	matchVert_t* 		mvTable;	// all of the match verts
+	matchVert_t** 		mvHash;		// points inside mvTable for each xyz index
+	matchVert_t* 		lastmv;
+	matchVert_t* 		mv;
+	idVec3				normal;
+	float				uOffset, vOffset, textureSin, textureCos;
+	float				uTiling, vTiling;
+	int* 				mergeTo;
+	byte* 				color;
+	static byte	identityColor[4] = { 255, 255, 255, 255 };
+	modelSurface_t		surf, *modelSurf;
+	
+	
+	if( dae->mNodeLibrary.Num() < 1 )
+	{
+		return false;
+	}
+	
+	timeStamp = dae->mReader->getTimestamp();
+	
+	// the modeling programs can save out multiple surfaces with a common
+	// material, but we would like to mege them together where possible
+	// meaning that this->NumSurfaces() <= ase->objects.currentElements
+	mergeTo = ( int* )_alloca( dae->mNodeLibrary.Num() * sizeof( *mergeTo ) );
+	surf.geometry = NULL;
+	//if( dae->mMaterialLibrary.Num() == 0 )
+	{
+		// if we don't have any materials, dump everything into a single surface
+		surf.shader = tr.defaultMaterial;
+		surf.id = 0;
+		this->AddSurface( surf );
+		for( i = 0 ; i < dae->mNodeLibrary.Num() ; i++ )
+		{
+			mergeTo[i] = 0;
+		}
+	}
+	/*
+	else if( !r_mergeModelSurfaces.GetBool() )
+	{
+		// don't merge any
+		for( i = 0 ; i < dae->mNodeLibrary.Num() ; i++ )
+		{
+			mergeTo[i] = i;
+			object = *( dae->mNodeLibrary.GetIndex( i ) ); //object = ase->objects[i];
+			material = dae->mMaterialLibrary.Get( )//material = ase->materials[object->materialRef];
+			surf.shader = declManager->FindMaterial( material->name );
+			surf.id = this->NumSurfaces();
+			this->AddSurface( surf );
+		}
+	}
+	else
+	{
+		// search for material matches
+		for( i = 0 ; i < ase->objects.Num() ; i++ )
+		{
+			object = ase->objects[i];
+			material = ase->materials[object->materialRef];
+			im1 = declManager->FindMaterial( material->name );
+			if( im1->IsDiscrete() )
+			{
+				// flares, autosprites, etc
+				j = this->NumSurfaces();
+			}
+			else
+			{
+				for( j = 0 ; j < this->NumSurfaces() ; j++ )
+				{
+					modelSurf = &this->surfaces[j];
+					im2 = modelSurf->shader;
+					if( im1 == im2 )
+					{
+						// merge this
+						mergeTo[i] = j;
+						break;
+					}
+				}
+			}
+			if( j == this->NumSurfaces() )
+			{
+				// didn't merge
+				mergeTo[i] = j;
+				surf.shader = im1;
+				surf.id = this->NumSurfaces();
+				this->AddSurface( surf );
+			}
+		}
+	}
+	*/
+	
+	idVectorSubset<idVec3, 3> vertexSubset;
+	idVectorSubset<idVec2, 2> texCoordSubset;
+	
+	// build the surfaces
+	for( objectNum = 0 ; objectNum < dae->mNodeLibrary.Num() ; objectNum++ )
+	{
+		object = ( dae->mNodeLibrary.GetIndex( objectNum ) ); //object = ase->objects[objectNum];
+		
+		if( ( *object )->mMeshes.Num() <= 0 )
+			continue;
+			
+		meshInstance = &( *object )->mMeshes[0]; //mesh = &object->mesh;
+		
+#if 0
+		if( meshInstance->mMaterials.Num() )
+		{
+			const Collada::SemanticMappingTable* mappingTable = meshInstance->mMaterials.GetIndex( 0 );
+			idStr materialId = mappingTable->mMatName;
+			
+			if( dae->mMaterialLibrary.Get( materialId, &material ) )
+			{
+				im1 = declManager->FindMaterial( ( *material )->mEffect );
+			}
+			else
+			{
+				im1 = declManager->FindMaterial( "_default" );
+			}
+		}
+		else
+#endif
+		{
+			im1 = declManager->FindMaterial( "_default" );
+		}
+		
+		// TODO
+		bool normalsParsed = false; //mesh->normalsParsed;
+		
+		// completely ignore any explict normals on surfaces with a renderbump command
+		// which will guarantee the best contours and least vertexes.
+		const char* rb = im1->GetRenderBump();
+		if( rb && rb[0] )
+		{
+			normalsParsed = false;
+		}
+		
+		// It seems like the tools our artists are using often generate
+		// verts and texcoords slightly separated that should be merged
+		// note that we really should combine the surfaces with common materials
+		// before doing this operation, because we can miss a slop combination
+		// if they are in different surfaces
+		
+		idStr meshId = ( meshInstance )->mMeshOrController;
+		dae->mMeshLibrary.Get( meshId, &mesh );
+		
+		vRemap = ( int* )R_StaticAlloc( ( *mesh )->mPositions.Num() * sizeof( vRemap[0] ) );
+		
+		if( fastLoad )
+		{
+			// renderbump doesn't care about vertex count
+			for( j = 0; j < ( *mesh )->mPositions.Num(); j++ )
+			{
+				vRemap[j] = j;
+			}
+		}
+		else
+		{
+			float vertexEpsilon = r_slopVertex.GetFloat();
+			float expand = 2 * 32 * vertexEpsilon;
+			idVec3 mins, maxs;
+			
+			SIMDProcessor->MinMax( mins, maxs, &( *mesh )->mPositions[0], ( *mesh )->mPositions.Num() );
+			mins -= idVec3( expand, expand, expand );
+			maxs += idVec3( expand, expand, expand );
+			vertexSubset.Init( mins, maxs, 32, 1024 );
+			for( j = 0; j < ( *mesh )->mPositions.Num(); j++ )
+			{
+				vRemap[j] = vertexSubset.FindVector( &( *mesh )->mPositions[0], j, vertexEpsilon );
+			}
+		}
+		
+		tvRemap = ( int* )R_StaticAlloc( ( *mesh )->mTexCoords.Num() * sizeof( tvRemap[0] ) );
+		
+		if( fastLoad )
+		{
+			// renderbump doesn't care about vertex count
+			for( j = 0; j < ( *mesh )->mTexCoords.Num(); j++ )
+			{
+				tvRemap[j] = j;
+			}
+		}
+		else
+		{
+			float texCoordEpsilon = r_slopTexCoord.GetFloat();
+			float expand = 2 * 32 * texCoordEpsilon;
+			idVec2 mins, maxs;
+			
+			SIMDProcessor->MinMax( mins, maxs, &( *mesh )->mTexCoords[0], ( *mesh )->mTexCoords.Num() );
+			mins -= idVec2( expand, expand );
+			maxs += idVec2( expand, expand );
+			texCoordSubset.Init( mins, maxs, 32, 1024 );
+			for( j = 0; j < ( *mesh )->mTexCoords.Num(); j++ )
+			{
+				tvRemap[j] = texCoordSubset.FindVector( &( *mesh )->mTexCoords[0], j, texCoordEpsilon );
+			}
+		}
+		
+		// we need to find out how many unique vertex / texcoord combinations
+		// there are, because ASE tracks them separately but we need them unified
+		
+		// the maximum possible number of combined vertexes is the number of indexes
+		mvTable = ( matchVert_t* )R_ClearedStaticAlloc( ( *mesh )->mFacePosIndices.Num() * sizeof( mvTable[0] ) );
+		
+		// we will have a hash chain based on the xyz values
+		mvHash = ( matchVert_t** )R_ClearedStaticAlloc( ( *mesh )->mPositions.Num() * sizeof( mvHash[0] ) );
+		
+		// allocate triangle surface
+		tri = R_AllocStaticTriSurf();
+		tri->numVerts = 0;
+		tri->numIndexes = 0;
+		R_AllocStaticTriSurfIndexes( tri, ( *mesh )->mFacePosIndices.Num() ); //mesh->numFaces * 3 );
+		tri->generateNormals = !normalsParsed;
+		
+		// init default normal, color and tex coord index
+		normal.Zero();
+		color = identityColor;
+		tv = 0;
+		
+		// find all the unique combinations
+		float normalEpsilon = 1.0f - r_slopNormal.GetFloat();
+		
+		//for( j = 0; j < mesh->numFaces; j++ )
+		//for( j = 0; j < ( ( *mesh )->mFacePosIndices.Num() / 3 ); j++ )
+		
+		for( j = 0; j < ( *mesh )->mFacePosIndices.Num(); j++ )
+		{
+			//for( k = 0; k < 3; k++ )
+			{
+				//v = mesh->faces[j].vertexNum[k];
+				
+				v = ( *mesh )->mFacePosIndices[j];
+				
+				if( v < 0 || v >= ( *mesh )->mPositions.Num() )
+				{
+					common->Error( "ConvertDAEToModelSurfaces: bad vertex index in ASE file %s", name.c_str() );
+				}
+				
+				// collapse the position if it was slightly offset
+				v = vRemap[v];
+				
+#if 0
+				// we may or may not have texcoords to compare
+				if( mesh->numTVFaces == mesh->numFaces && mesh->numTVertexes != 0 )
+				{
+					tv = mesh->faces[j].tVertexNum[k];
+					if( tv < 0 || tv >= mesh->numTVertexes )
+					{
+						common->Error( "ConvertASEToModelSurfaces: bad tex coord index in ASE file %s", name.c_str() );
+					}
+					
+					// collapse the tex coord if it was slightly offset
+					tv = tvRemap[tv];
+				}
+				
+				
+				// we may or may not have normals to compare
+				if( normalsParsed )
+				{
+					normal = mesh->faces[j].vertexNormals[k];
+				}
+				
+				// we may or may not have colors to compare
+				if( mesh->colorsParsed )
+				{
+					color = mesh->faces[j].vertexColors[k];
+				}
+#endif
+				// find a matching vert
+				for( lastmv = NULL, mv = mvHash[v]; mv != NULL; lastmv = mv, mv = mv->next )
+				{
+#if 0
+					if( mv->tv != tv )
+					{
+						continue;
+					}
+					if( *( unsigned* )mv->color != *( unsigned* )color )
+					{
+						continue;
+					}
+					if( !normalsParsed )
+					{
+						// if we are going to create the normals, just
+						// matching texcoords is enough
+						break;
+					}
+					if( mv->normal * normal > normalEpsilon )
+					{
+						break;		// we already have this one
+					}
+#endif
+				}
+				
+				if( !mv )
+				{
+					// allocate a new match vert and link to hash chain
+					mv = &mvTable[ tri->numVerts ];
+					mv->v = v;
+					mv->tv = v; // FIXME //mv->tv = tv;
+					mv->normal = normal;
+					// FIXME *( unsigned* )mv->color = *( unsigned* )color;
+					mv->next = NULL;
+					
+					if( lastmv )
+					{
+						lastmv->next = mv;
+					}
+					else
+					{
+						mvHash[v] = mv;
+					}
+					tri->numVerts++;
+				}
+				
+				tri->indexes[tri->numIndexes] = mv - mvTable;
+				tri->numIndexes++;
+			}
+		}
+		
+		// allocate space for the indexes and copy them
+		if( tri->numIndexes > ( *mesh )->mFacePosIndices.Num() )// mesh->numFaces * 3 )
+		{
+			common->FatalError( "ConvertDAEToModelSurfaces: index miscount in DAE file %s", name.c_str() );
+		}
+		if( tri->numVerts > ( *mesh )->mFacePosIndices.Num() ) //mesh->numFaces * 3 )
+		{
+			common->FatalError( "ConvertDAEToModelSurfaces: vertex miscount in DAE file %s", name.c_str() );
+		}
+		
+		// an ASE allows the texture coordinates to be scaled, translated, and rotated
+		//if( ase->materials.Num() == 0 )
+		{
+			uOffset = vOffset = 0.0f;
+			uTiling = vTiling = 1.0f;
+			textureSin = 0.0f;
+			textureCos = 1.0f;
+		}
+		/*
+		else
+		{
+			material = ase->materials[object->materialRef];
+			uOffset = -material->uOffset;
+			vOffset = material->vOffset;
+			uTiling = material->uTiling;
+			vTiling = material->vTiling;
+			textureSin = idMath::Sin( material->angle );
+			textureCos = idMath::Cos( material->angle );
+		}
+		*/
+		
+		// now allocate and generate the combined vertexes
+		R_AllocStaticTriSurfVerts( tri, tri->numVerts );
+		for( j = 0; j < tri->numVerts; j++ )
+		{
+			mv = &mvTable[j];
+			tri->verts[ j ].Clear();
+			tri->verts[ j ].xyz = ( *mesh )->mPositions[ mv->v ];
+			tri->verts[ j ].normal = mv->normal;
+			*( unsigned* )tri->verts[j].color = *( unsigned* )mv->color;
+			
+			/*
+			FIXME
+			if( mesh->numTVFaces == mesh->numFaces && mesh->numTVertexes != 0 )
+			{
+				const idVec2& tv = mesh->tvertexes[ mv->tv ];
+				float u = tv.x * uTiling + uOffset;
+				float v = tv.y * vTiling + vOffset;
+				tri->verts[ j ].st[0] = u * textureCos + v * textureSin;
+				tri->verts[ j ].st[1] = u * -textureSin + v * textureCos;
+			}
+			*/
+		}
+		
+		R_StaticFree( mvTable );
+		R_StaticFree( mvHash );
+		R_StaticFree( tvRemap );
+		R_StaticFree( vRemap );
+		
+		// see if we need to merge with a previous surface of the same material
+		modelSurf = &this->surfaces[mergeTo[ objectNum ]];
+		srfTriangles_t*	mergeTri = modelSurf->geometry;
+		if( !mergeTri )
+		{
+			modelSurf->geometry = tri;
+		}
+		else
+		{
+			modelSurf->geometry = R_MergeTriangles( mergeTri, tri );
+			R_FreeStaticTriSurf( tri );
+			R_FreeStaticTriSurf( mergeTri );
+		}
+	}
+	
+	return true;
+#else
+	return false;
+#endif
+}
+
+/*
+=================
+idRenderModelStatic::ConvertASEToModelSurfaces
+=================
+*/
 bool idRenderModelStatic::ConvertASEToModelSurfaces( const struct aseModel_s* ase )
 {
 	aseObject_t* 	object;
@@ -2435,19 +2847,27 @@ bool idRenderModelStatic::LoadFLT( const char* fileName )
 // Techyon RB: added COLLADA support
 bool idRenderModelStatic::LoadDAE( const char* fileName )
 {
+	bool loaded = false;
+	
 	try
 	{
-		Assimp::ColladaParser parser( fileName ); 
+		idTimer timer;
+		timer.Start();
+		
+		ColladaParser parser( fileName );
+		
+		loaded = ConvertDAEToModelSurfaces( &parser );
+		
+		timer.Stop();
+		
+		common->Printf( "...loaded '%s' in %5.2f seconds\n", fileName, timer.Milliseconds() / 1000.0 );
 	}
 	catch( idException& e )
 	{
 		common->Warning( "%s", e.error );
 	}
 	
-	// TODO
-	//ConvertDAEToModelSurfaces( ase );
-	
-	return false;
+	return loaded;
 }
 // Techyon END
 

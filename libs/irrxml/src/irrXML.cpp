@@ -66,6 +66,11 @@ public:
 		return _size;
 	}
 
+	virtual ID_TIME_T getTimestamp() const
+	{
+		return _file->Timestamp();
+	}
+
 private:
 
 	//! retrieves the file size of the open file
@@ -77,7 +82,6 @@ private:
 	idFile* _file;
 	int _size;
 	bool _close;
-
 };
 // Techyon END
 

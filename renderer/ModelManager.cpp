@@ -319,7 +319,7 @@ idRenderModel* idRenderModelManagerLocal::GetModel( const char* modelName, bool 
 	
 	// Techyon RB: added dae
 	if( ( extension.Icmp( "ase" ) == 0 ) || ( extension.Icmp( "lwo" ) == 0 ) || ( extension.Icmp( "flt" ) == 0 ) || ( extension.Icmp( "dae" ) == 0 ) )
-	// Techyon END
+		// Techyon END
 	{
 		model = new idRenderModelStatic;
 		model->InitFromFile( modelName );

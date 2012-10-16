@@ -37,6 +37,8 @@ public:
 		if (!callback)
 			return;
 
+		timestamp = callback->getTimestamp();
+
 		storeTargetFormat();
 
 		// read whole xml file
@@ -77,6 +79,11 @@ public:
 
 		_IRR_IMPLEMENT_MANAGED_MARSHALLING_BUGFIX;
 		return false;
+	}
+
+	virtual ID_TIME_T getTimestamp() const
+	{
+		return timestamp;
 	}
 
 
@@ -787,6 +794,8 @@ private:
 	core::array< core::string<char_type> > SpecialCharacters; // see createSpecialCharacterList()
 
 	core::array<SAttribute> Attributes; // attributes of current element
+
+	ID_TIME_T timestamp;
 	
 }; // end CXMLReaderImpl
 

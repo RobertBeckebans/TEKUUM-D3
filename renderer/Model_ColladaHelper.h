@@ -43,8 +43,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef __MODEL_COLLADAHELPER_H__
 #define __MODEL_COLLADAHELPER_H__
 
-namespace Assimp
-{
 namespace Collada
 {
 
@@ -199,7 +197,8 @@ struct MeshInstance
 	idStr mMeshOrController;
 	
 	///< Map of materials by the subgroup ID they're applied to
-	idHashTable<SemanticMappingTable> mMaterials;
+	//idHashTable<SemanticMappingTable> mMaterials;
+	idStrList mMaterials;
 };
 
 /** A reference to a camera inside a node*/
@@ -347,18 +346,18 @@ struct Mesh
 	idList<idVec3> mNormals;
 	idList<idVec3> mTangents;
 	idList<idVec3> mBitangents;
-	idList<idVec3> mTexCoords;
-	idList<idVec4>  mColors;
+	idList<idVec2> mTexCoords;
+	idList<idVec4> mColors;
 	
 	//unsigned int mNumUVComponents[AI_MAX_NUMBER_OF_TEXTURECOORDS];
 	
 	// Faces. Stored are only the number of vertices for each face.
 	// 1 == point, 2 == line, 3 == triangle, 4+ == poly
-	idList<size_t> mFaceSize;
+	idList<int> mFaceSize;
 	
 	// Position indices for all faces in the sequence given in mFaceSize -
 	// necessary for bone weight assignment
-	idList<size_t> mFacePosIndices;
+	idList<int> mFacePosIndices;
 	
 	// Submeshes in this mesh, each with a given material
 	idList<SubMesh> mSubMeshes;
@@ -619,6 +618,5 @@ struct ChannelEntry
 };
 
 } // end of namespace Collada
-} // end of namespace Assimp
 
 #endif // __MODEL_COLLADAHELPER_H__

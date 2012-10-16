@@ -227,6 +227,8 @@ namespace io
 
 		//! Returns size of file in bytes
 		virtual int getSize() = 0;
+
+		virtual ID_TIME_T getTimestamp() const  = 0;
 	};
 
 	//! Empty class to be used as parent class for IrrXMLReader.
@@ -283,6 +285,8 @@ namespace io
 		//! Reads forward to the next xml node. 
 		/** \return Returns false, if there was no further node.  */
 		virtual bool read() = 0;
+
+		virtual ID_TIME_T getTimestamp() const = 0;
 
 		//! Returns the type of the current XML node.
 		virtual EXML_NODE getNodeType() const = 0;

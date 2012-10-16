@@ -37,6 +37,8 @@ If you have questions concerning this license or the applicable additional terms
 ===============================================================================
 */
 
+class ColladaParser;
+
 class idRenderModelStatic : public idRenderModel
 {
 public:
@@ -94,8 +96,9 @@ public:
 	bool						LoadMA( const char* filename );
 // Techyon RB: added COLLADA support
 	bool						LoadDAE( const char* fileName );
-// Techyon END
 	
+	bool						ConvertDAEToModelSurfaces( const ColladaParser* dae );
+// Techyon END
 	bool						ConvertASEToModelSurfaces( const struct aseModel_s* ase );
 	bool						ConvertLWOToModelSurfaces( const struct st_lwObject* lwo );
 	bool						ConvertMAToModelSurfaces( const struct maModel_s* ma );
