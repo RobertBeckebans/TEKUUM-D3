@@ -343,7 +343,7 @@ const Type* ColladaParser::ResolveLibraryReference( const idHashTable<Type>& pLi
 	Type* element = NULL;
 	
 	if( !pLibrary.Get( pURL, &element ) )
-		ThrowException( va( "Unable to resolve library reference \"%s\".", pURL ) );
+		ThrowException( va( "Unable to resolve library reference \"%s\".", pURL.c_str() ) );
 		
 	return element;
 }

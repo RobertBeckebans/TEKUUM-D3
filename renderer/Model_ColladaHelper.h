@@ -448,7 +448,7 @@ struct Sampler
 		,	mMirrorU()
 		,	mMirrorV()
 		//,	mOp( aiTextureOp_Multiply )
-		,	mUVId( UINT_MAX )
+		//,	mUVId( UINT_MAX )
 		,	mWeighting( 1.f )
 		,	mMixWithPrevious( 1.f )
 	{}
@@ -483,7 +483,7 @@ struct Sampler
 	
 	/** Name of source UV channel
 	 */
-	idStr mUVChannel;
+	//idStr mUVChannel;
 	
 	/** Resolved UV channel index or UINT_MAX if not known
 	 */

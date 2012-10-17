@@ -2163,7 +2163,7 @@ void ColladaParser::ReadIndexData( Mesh* pMesh )
 		else if( mReader->getNodeType() == irr::io::EXN_ELEMENT_END )
 		{
 			if( mReader->getNodeName() != elementName )
-				ThrowException( va( "Expected end of \"%s\" element.", elementName ) );
+				ThrowException( va( "Expected end of \"%s\" element.", elementName.c_str() ) );
 				
 			break;
 		}
@@ -2176,7 +2176,7 @@ void ColladaParser::ReadInputChannel( idList<InputChannel>& poChannels )
 {
 	InputChannel channel;
 	
-	// read semantic
+	// read semantictype filter text
 	int attrSemantic = GetAttribute( "semantic" );
 	idStr semantic = mReader->getAttributeValue( attrSemantic );
 	channel.mType = GetTypeForSemantic( semantic );
@@ -2223,7 +2223,7 @@ void ColladaParser::ReadPrimitives( Mesh* pMesh, idList<InputChannel>& pPerIndex
 	// determine number of indices coming per vertex
 	// find the offset index for all per-vertex channels
 	size_t numOffsets = 1;
-	size_t perVertexOffset = SIZE_MAX; // invalid value
+	size_t perVertexOffset = (size_t) -1; //SIZE_MAX; // invalid value
 	for( int i = 0; i < pPerIndexChannels.Num(); i++ )
 	{
 		const InputChannel& channel = pPerIndexChannels[i];
@@ -3178,7 +3178,7 @@ Collada::InputType ColladaParser::GetTypeForSemantic( const idStr& pSemantic )
 	else if( pSemantic == "TANGENT" || pSemantic == "TEXTANGENT" )
 		return IT_Tangent;
 		
-	common->Warning( "Unknown vertex input type \"%s\". Ignoring.", pSemantic );
+	common->Warning( "Unknown vertex input type \"%s\". Ignoring.", pSemantic.c_str() );
 	return IT_Invalid;
 }
 
