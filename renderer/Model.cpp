@@ -1042,19 +1042,20 @@ bool idRenderModelStatic::ConvertDAEToModelSurfaces( const ColladaParser* dae )
 		float normalEpsilon = 1.0f - r_slopNormal.GetFloat();
 		
 		//for( j = 0; j < mesh->numFaces; j++ )
-		//for( j = 0; j < ( ( *mesh )->mFacePosIndices.Num() / 3 ); j++ )
-		
-		for( j = 0; j < ( *mesh )->mFacePosIndices.Num(); j++ )
+		for( j = 0; j < ( ( *mesh )->mFacePosIndices.Num() / 3 ); j++ )
+			//for( j = 0; j < ( *mesh )->mFacePosIndices.Num(); j++ )
 		{
-			//for( k = 0; k < 3; k++ )
+			// construct triangles in reverse order
+			for( k = 2; k >= 0; k-- )
 			{
 				//v = mesh->faces[j].vertexNum[k];
 				
-				v = ( *mesh )->mFacePosIndices[j];
+				//v = ( *mesh )->mFacePosIndices[j];
+				v = j * 3 + k;
 				
 				if( v < 0 || v >= ( *mesh )->mPositions.Num() )
 				{
-					common->Error( "ConvertDAEToModelSurfaces: bad vertex index in ASE file %s", name.c_str() );
+					common->Error( "ConvertDAEToModelSurfaces: bad vertex index in DAE file %s", name.c_str() );
 				}
 				
 				// collapse the position if it was slightly offset
@@ -1067,7 +1068,7 @@ bool idRenderModelStatic::ConvertDAEToModelSurfaces( const ColladaParser* dae )
 					tv = mesh->faces[j].tVertexNum[k];
 					if( tv < 0 || tv >= mesh->numTVertexes )
 					{
-						common->Error( "ConvertASEToModelSurfaces: bad tex coord index in ASE file %s", name.c_str() );
+						common->Error( "ConvertDAEToModelSurfaces: bad tex coord index in DAE file %s", name.c_str() );
 					}
 					
 					// collapse the tex coord if it was slightly offset

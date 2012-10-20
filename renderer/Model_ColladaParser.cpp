@@ -1849,16 +1849,16 @@ void ColladaParser::ReadDataArray()
 			
 			for( unsigned int a = 0; a < count; a++ )
 			{
-				if( !lexer.ReadToken( &token ) )
+				bool errorFlag = false;
+				float number = lexer.ParseFloat( &errorFlag );
+				
+				if( errorFlag )
 				{
 					ThrowException( "ColladaParser::ReadDataArray: Expected more values while reading float_array contents." );
 					break;
 				}
 				
-				if( token.IsNumeric() )
-				{
-					data->mValues[a] = atof( token );
-				}
+				data->mValues[a] = number;
 			}
 		}
 		
@@ -2223,7 +2223,7 @@ void ColladaParser::ReadPrimitives( Mesh* pMesh, idList<InputChannel>& pPerIndex
 	// determine number of indices coming per vertex
 	// find the offset index for all per-vertex channels
 	size_t numOffsets = 1;
-	size_t perVertexOffset = (size_t) -1; //SIZE_MAX; // invalid value
+	size_t perVertexOffset = ( size_t ) - 1; //SIZE_MAX; // invalid value
 	for( int i = 0; i < pPerIndexChannels.Num(); i++ )
 	{
 		const InputChannel& channel = pPerIndexChannels[i];

@@ -126,7 +126,7 @@ protected:
 	bool						fastLoad;				// don't generate tangents and shadow data
 	bool						reloadable;				// if not, reloadModels won't check timestamp
 	bool						levelLoadReferenced;	// for determining if it needs to be freed
-	ID_TIME_T						timeStamp;
+	ID_TIME_T					timeStamp;
 	
 	static idCVar				r_mergeModelSurfaces;	// combine model surfaces with the same material
 	static idCVar				r_slopVertex;			// merge xyz coordinates this far apart
