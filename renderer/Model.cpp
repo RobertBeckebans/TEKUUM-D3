@@ -847,7 +847,8 @@ bool idRenderModelStatic::ConvertDAEToModelSurfaces( const ColladaParser* dae )
 	// meaning that this->NumSurfaces() <= ase->objects.currentElements
 	mergeTo = ( int* )_alloca( dae->mNodeLibrary.Num() * sizeof( *mergeTo ) );
 	surf.geometry = NULL;
-	//if( dae->mMaterialLibrary.Num() == 0 )
+	
+	if( dae->mMaterialLibrary.Num() == 0 )
 	{
 		// if we don't have any materials, dump everything into a single surface
 		surf.shader = tr.defaultMaterial;
@@ -858,16 +859,29 @@ bool idRenderModelStatic::ConvertDAEToModelSurfaces( const ColladaParser* dae )
 			mergeTo[i] = 0;
 		}
 	}
-	/*
 	else if( !r_mergeModelSurfaces.GetBool() )
 	{
 		// don't merge any
 		for( i = 0 ; i < dae->mNodeLibrary.Num() ; i++ )
 		{
 			mergeTo[i] = i;
-			object = *( dae->mNodeLibrary.GetIndex( i ) ); //object = ase->objects[i];
-			material = dae->mMaterialLibrary.Get( )//material = ase->materials[object->materialRef];
-			surf.shader = declManager->FindMaterial( material->name );
+			object = dae->mNodeLibrary.GetIndex( i ); //object = ase->objects[i];
+			
+			if( ( *object )->mMeshes.Num() <= 0 )
+				continue;
+				
+			meshInstance = &( *object )->mMeshes[0]; //mesh = &object->mesh;
+			
+			idStr matName = "_default";
+			if( meshInstance->mMaterials.Num() > 0 )
+			{
+				matName = meshInstance->mMaterials[ 0 ]; //material = ase->materials[object->materialRef];
+				
+				matName.Replace( "_", "/" );
+				matName.StripTrailingOnce( "-material" );
+			}
+			
+			surf.shader = declManager->FindMaterial( matName );
 			surf.id = this->NumSurfaces();
 			this->AddSurface( surf );
 		}
@@ -875,11 +889,25 @@ bool idRenderModelStatic::ConvertDAEToModelSurfaces( const ColladaParser* dae )
 	else
 	{
 		// search for material matches
-		for( i = 0 ; i < ase->objects.Num() ; i++ )
+		for( i = 0 ; i < dae->mNodeLibrary.Num() ; i++ )
 		{
-			object = ase->objects[i];
-			material = ase->materials[object->materialRef];
-			im1 = declManager->FindMaterial( material->name );
+			object = dae->mNodeLibrary.GetIndex( i );
+			
+			if( ( *object )->mMeshes.Num() <= 0 )
+				continue;
+				
+			meshInstance = &( *object )->mMeshes[0]; //mesh = &object->mesh;
+			
+			idStr matName = "_default";
+			if( meshInstance->mMaterials.Num() > 0 )
+			{
+				matName = meshInstance->mMaterials[ 0 ]; //material = ase->materials[object->materialRef];
+				
+				matName.Replace( "_", "/" );
+				matName.StripTrailingOnce( "-material" );
+			}
+			
+			im1 = declManager->FindMaterial( matName );
 			if( im1->IsDiscrete() )
 			{
 				// flares, autosprites, etc
@@ -909,7 +937,6 @@ bool idRenderModelStatic::ConvertDAEToModelSurfaces( const ColladaParser* dae )
 			}
 		}
 	}
-	*/
 	
 	idVectorSubset<idVec3, 3> vertexSubset;
 	idVectorSubset<idVec2, 2> texCoordSubset;
@@ -924,6 +951,7 @@ bool idRenderModelStatic::ConvertDAEToModelSurfaces( const ColladaParser* dae )
 			
 		meshInstance = &( *object )->mMeshes[0]; //mesh = &object->mesh;
 		
+		idStr matName = "_default";
 #if 0
 		if( meshInstance->mMaterials.Num() )
 		{
@@ -932,29 +960,20 @@ bool idRenderModelStatic::ConvertDAEToModelSurfaces( const ColladaParser* dae )
 			
 			if( dae->mMaterialLibrary.Get( materialId, &material ) )
 			{
-				im1 = declManager->FindMaterial( ( *material )->mEffect );
-			}
-			else
-			{
-				im1 = declManager->FindMaterial( "_default" );
+				matName = ( *material )->mEffect;
 			}
 		}
-		else
+#else
+		if( meshInstance->mMaterials.Num() > 0 )
+		{
+			matName = meshInstance->mMaterials[ 0 ]; //material = ase->materials[object->materialRef];
+		
+			matName.Replace( "_", "/" );
+			matName.StripTrailingOnce( "-material" );
+		}
+		
 #endif
-		{
-			im1 = declManager->FindMaterial( "_default" );
-		}
-		
-		// TODO
-		bool normalsParsed = false; //mesh->normalsParsed;
-		
-		// completely ignore any explict normals on surfaces with a renderbump command
-		// which will guarantee the best contours and least vertexes.
-		const char* rb = im1->GetRenderBump();
-		if( rb && rb[0] )
-		{
-			normalsParsed = false;
-		}
+		im1 = declManager->FindMaterial( matName );
 		
 		// It seems like the tools our artists are using often generate
 		// verts and texcoords slightly separated that should be merged
@@ -965,8 +984,49 @@ bool idRenderModelStatic::ConvertDAEToModelSurfaces( const ColladaParser* dae )
 		idStr meshId = ( meshInstance )->mMeshOrController;
 		dae->mMeshLibrary.Get( meshId, &mesh );
 		
+		bool normalsParsed = ( * mesh )->mNormals.Num() > 0; //mesh->normalsParsed;
+		
+		// completely ignore any explict normals on surfaces with a renderbump command
+		// which will guarantee the best contours and least vertexes.
+		const char* rb = im1->GetRenderBump();
+		if( rb && rb[0] )
+		{
+			normalsParsed = false;
+		}
+		
+		
+		// TODO calculate nodeTransforms recursively using the scene hierarchy
+		
+		// transform vertex positions and normals
+		idMat4 nodeTransform = dae->CalculateResultTransform( ( *object )->mTransforms );
+		
+		for( j = 0; j < ( *mesh )->mPositions.Num(); j++ )
+		{
+			const idVec3& p = ( *mesh )->mPositions[j];
+			
+			( *mesh )->mPositions[ j ] = nodeTransform * p;
+		}
+		
+		for( j = 0; j < ( *mesh )->mNormals.Num(); j++ )
+		{
+			const idVec3& n = ( *mesh )->mNormals[j];
+			
+			idVec4 n2( n.x, n.y, n.z, 0 );
+			n2 = nodeTransform * n2;
+			n2.Normalize();
+			
+			( *mesh )->mNormals[ j ] = n2.ToVec3();
+		}
+		
+		
 		vRemap = ( int* )R_StaticAlloc( ( *mesh )->mPositions.Num() * sizeof( vRemap[0] ) );
 		
+#if 1
+		for( j = 0; j < ( *mesh )->mPositions.Num(); j++ )
+		{
+			vRemap[j] = j;
+		}
+#else
 		if( fastLoad )
 		{
 			// renderbump doesn't care about vertex count
@@ -980,7 +1040,7 @@ bool idRenderModelStatic::ConvertDAEToModelSurfaces( const ColladaParser* dae )
 			float vertexEpsilon = r_slopVertex.GetFloat();
 			float expand = 2 * 32 * vertexEpsilon;
 			idVec3 mins, maxs;
-			
+		
 			SIMDProcessor->MinMax( mins, maxs, &( *mesh )->mPositions[0], ( *mesh )->mPositions.Num() );
 			mins -= idVec3( expand, expand, expand );
 			maxs += idVec3( expand, expand, expand );
@@ -990,9 +1050,16 @@ bool idRenderModelStatic::ConvertDAEToModelSurfaces( const ColladaParser* dae )
 				vRemap[j] = vertexSubset.FindVector( &( *mesh )->mPositions[0], j, vertexEpsilon );
 			}
 		}
+#endif
 		
 		tvRemap = ( int* )R_StaticAlloc( ( *mesh )->mTexCoords.Num() * sizeof( tvRemap[0] ) );
 		
+#if 1
+		for( j = 0; j < ( *mesh )->mTexCoords.Num(); j++ )
+		{
+			tvRemap[j] = j;
+		}
+#else
 		if( fastLoad )
 		{
 			// renderbump doesn't care about vertex count
@@ -1006,7 +1073,7 @@ bool idRenderModelStatic::ConvertDAEToModelSurfaces( const ColladaParser* dae )
 			float texCoordEpsilon = r_slopTexCoord.GetFloat();
 			float expand = 2 * 32 * texCoordEpsilon;
 			idVec2 mins, maxs;
-			
+		
 			SIMDProcessor->MinMax( mins, maxs, &( *mesh )->mTexCoords[0], ( *mesh )->mTexCoords.Num() );
 			mins -= idVec2( expand, expand );
 			maxs += idVec2( expand, expand );
@@ -1016,6 +1083,7 @@ bool idRenderModelStatic::ConvertDAEToModelSurfaces( const ColladaParser* dae )
 				tvRemap[j] = texCoordSubset.FindVector( &( *mesh )->mTexCoords[0], j, texCoordEpsilon );
 			}
 		}
+#endif
 		
 		// we need to find out how many unique vertex / texcoord combinations
 		// there are, because ASE tracks them separately but we need them unified
@@ -1041,12 +1109,12 @@ bool idRenderModelStatic::ConvertDAEToModelSurfaces( const ColladaParser* dae )
 		// find all the unique combinations
 		float normalEpsilon = 1.0f - r_slopNormal.GetFloat();
 		
-		//for( j = 0; j < mesh->numFaces; j++ )
 		for( j = 0; j < ( ( *mesh )->mFacePosIndices.Num() / 3 ); j++ )
 			//for( j = 0; j < ( *mesh )->mFacePosIndices.Num(); j++ )
 		{
 			// construct triangles in reverse order
 			for( k = 2; k >= 0; k-- )
+				//for( k = 0; k < 3; k++ )
 			{
 				//v = mesh->faces[j].vertexNum[k];
 				
@@ -1061,12 +1129,14 @@ bool idRenderModelStatic::ConvertDAEToModelSurfaces( const ColladaParser* dae )
 				// collapse the position if it was slightly offset
 				v = vRemap[v];
 				
-#if 0
+#if 1
 				// we may or may not have texcoords to compare
-				if( mesh->numTVFaces == mesh->numFaces && mesh->numTVertexes != 0 )
+				//if( mesh->numTVFaces == mesh->numFaces && mesh->numTVertexes != 0 )
+				if( ( *mesh )->mTexCoords.Num() )
 				{
-					tv = mesh->faces[j].tVertexNum[k];
-					if( tv < 0 || tv >= mesh->numTVertexes )
+					tv = j * 3 + k; //tv = mesh->faces[j].tVertexNum[k];
+					
+					if( tv < 0 || tv >= ( *mesh )->mTexCoords.Num() )
 					{
 						common->Error( "ConvertDAEToModelSurfaces: bad tex coord index in DAE file %s", name.c_str() );
 					}
@@ -1079,13 +1149,13 @@ bool idRenderModelStatic::ConvertDAEToModelSurfaces( const ColladaParser* dae )
 				// we may or may not have normals to compare
 				if( normalsParsed )
 				{
-					normal = mesh->faces[j].vertexNormals[k];
+					normal = ( *mesh )->mNormals[ v ]; //mesh->faces[j].vertexNormals[k];
 				}
 				
 				// we may or may not have colors to compare
-				if( mesh->colorsParsed )
+				if( ( *mesh )->mColors.Num() > 0 )
 				{
-					color = mesh->faces[j].vertexColors[k];
+					color = ( byte* ) & ( *mesh )->mColors[ v ]; //mesh->faces[j].vertexColors[k];
 				}
 #endif
 				// find a matching vert
@@ -1096,16 +1166,19 @@ bool idRenderModelStatic::ConvertDAEToModelSurfaces( const ColladaParser* dae )
 					{
 						continue;
 					}
+					
 					if( *( unsigned* )mv->color != *( unsigned* )color )
 					{
 						continue;
 					}
+					
 					if( !normalsParsed )
 					{
 						// if we are going to create the normals, just
 						// matching texcoords is enough
 						break;
 					}
+					
 					if( mv->normal * normal > normalEpsilon )
 					{
 						break;		// we already have this one
@@ -1118,9 +1191,9 @@ bool idRenderModelStatic::ConvertDAEToModelSurfaces( const ColladaParser* dae )
 					// allocate a new match vert and link to hash chain
 					mv = &mvTable[ tri->numVerts ];
 					mv->v = v;
-					mv->tv = v; // FIXME //mv->tv = tv;
+					mv->tv = tv;
 					mv->normal = normal;
-					// FIXME *( unsigned* )mv->color = *( unsigned* )color;
+					*( unsigned* )mv->color = *( unsigned* )color;
 					mv->next = NULL;
 					
 					if( lastmv )
@@ -1180,17 +1253,15 @@ bool idRenderModelStatic::ConvertDAEToModelSurfaces( const ColladaParser* dae )
 			tri->verts[ j ].normal = mv->normal;
 			*( unsigned* )tri->verts[j].color = *( unsigned* )mv->color;
 			
-			/*
-			FIXME
-			if( mesh->numTVFaces == mesh->numFaces && mesh->numTVertexes != 0 )
+			//if( mesh->numTVFaces == mesh->numFaces && mesh->numTVertexes != 0 )
+			if( ( *mesh )->mTexCoords.Num() > 0 )
 			{
-				const idVec2& tv = mesh->tvertexes[ mv->tv ];
+				const idVec2& tv = ( *mesh )->mTexCoords[ mv->tv ];
 				float u = tv.x * uTiling + uOffset;
 				float v = tv.y * vTiling + vOffset;
 				tri->verts[ j ].st[0] = u * textureCos + v * textureSin;
 				tri->verts[ j ].st[1] = u * -textureSin + v * textureCos;
 			}
-			*/
 		}
 		
 		R_StaticFree( mvTable );

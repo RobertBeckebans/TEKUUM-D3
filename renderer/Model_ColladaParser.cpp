@@ -4,6 +4,7 @@ Open Asset Import Library (assimp)
 ---------------------------------------------------------------------------
 
 Copyright (c) 2006-2012, assimp team
+Copyright (C) 2012 Robert Beckebans (id Tech 4 integration)
 
 All rights reserved.
 
@@ -2506,14 +2507,9 @@ void ColladaParser::ExtractDataObjectFromChannel( const InputChannel& pInput, si
 					}
 				}
 				
-				// ignore all bitangent streams except 0 - there can be only one bitangent
-				if( pInput.mIndex == 0 )
-				{
-					pMesh->mTexCoords.Append( idVec2( obj[0], obj[1] ) ); //, obj[2] ) );
-				}
-				else
-					common->Error( "Collada: just one vertex texture stream supported" );
-					
+				// RB: invert t component
+				pMesh->mTexCoords.Append( idVec2( obj[0], 1.0f - obj[1] ) ); //, obj[2] ) );
+				
 				/*
 				if( pMesh->mTexCoords[pInput.mIndex].Num() < pMesh->mPositions.Num() - 1 )
 				{
@@ -2543,11 +2539,11 @@ void ColladaParser::ExtractDataObjectFromChannel( const InputChannel& pInput, si
 					
 					for( int i = 0; i < numMissing; i++ )
 					{
-						pMesh->mColors.Append( idVec4( 0, 0, 0, 1 ) );
+						pMesh->mColors.Append( PackColor( idVec4( 0, 0, 0, 1 ) ) );
 					}
 				}
 				
-				pMesh->mColors.Append( idVec4( obj[0], obj[1], obj[2], obj[3] ) );
+				pMesh->mColors.Append( PackColor( idVec4( obj[0], obj[1], obj[2], obj[3] ) ) );
 				
 				/*
 				if( pMesh->mColors[pInput.mIndex].size() < pMesh->mPositions.size() - 1 )
@@ -3088,6 +3084,7 @@ const char* ColladaParser::TestTextContent()
 idMat4 ColladaParser::CalculateResultTransform( const idList<Transform>& pTransforms ) const
 {
 	idMat4 res;
+	res.Identity();
 	
 	for( int i = 0; i < pTransforms.Num(); i++ )
 	{
