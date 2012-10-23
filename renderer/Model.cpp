@@ -819,7 +819,7 @@ bool idRenderModelStatic::ConvertDAEToModelSurfaces( const ColladaParser* dae )
 	srfTriangles_t*		tri;
 	int					objectNum;
 	int					i, j, k;
-	int					v, tv;
+	int					index, v, tv;
 	int* 				vRemap;
 	int* 				tvRemap;
 	matchVert_t* 		mvTable;	// all of the match verts
@@ -1021,7 +1021,7 @@ bool idRenderModelStatic::ConvertDAEToModelSurfaces( const ColladaParser* dae )
 		
 		vRemap = ( int* )R_StaticAlloc( ( *mesh )->mPositions.Num() * sizeof( vRemap[0] ) );
 		
-#if 1
+#if 0
 		for( j = 0; j < ( *mesh )->mPositions.Num(); j++ )
 		{
 			vRemap[j] = j;
@@ -1054,7 +1054,7 @@ bool idRenderModelStatic::ConvertDAEToModelSurfaces( const ColladaParser* dae )
 		
 		tvRemap = ( int* )R_StaticAlloc( ( *mesh )->mTexCoords.Num() * sizeof( tvRemap[0] ) );
 		
-#if 1
+#if 0
 		for( j = 0; j < ( *mesh )->mTexCoords.Num(); j++ )
 		{
 			tvRemap[j] = j;
@@ -1119,22 +1119,22 @@ bool idRenderModelStatic::ConvertDAEToModelSurfaces( const ColladaParser* dae )
 				//v = mesh->faces[j].vertexNum[k];
 				
 				//v = ( *mesh )->mFacePosIndices[j];
-				v = j * 3 + k;
+				index = j * 3 + k;
 				
-				if( v < 0 || v >= ( *mesh )->mPositions.Num() )
+				if( index < 0 || index >= ( *mesh )->mPositions.Num() )
 				{
 					common->Error( "ConvertDAEToModelSurfaces: bad vertex index in DAE file %s", name.c_str() );
 				}
 				
 				// collapse the position if it was slightly offset
-				v = vRemap[v];
+				v = vRemap[ index ];
 				
 #if 1
 				// we may or may not have texcoords to compare
 				//if( mesh->numTVFaces == mesh->numFaces && mesh->numTVertexes != 0 )
 				if( ( *mesh )->mTexCoords.Num() )
 				{
-					tv = j * 3 + k; //tv = mesh->faces[j].tVertexNum[k];
+					tv = index; //tv = mesh->faces[j].tVertexNum[k];
 					
 					if( tv < 0 || tv >= ( *mesh )->mTexCoords.Num() )
 					{
@@ -1149,19 +1149,19 @@ bool idRenderModelStatic::ConvertDAEToModelSurfaces( const ColladaParser* dae )
 				// we may or may not have normals to compare
 				if( normalsParsed )
 				{
-					normal = ( *mesh )->mNormals[ v ]; //mesh->faces[j].vertexNormals[k];
+					normal = ( *mesh )->mNormals[ index ]; //mesh->faces[j].vertexNormals[k];
 				}
 				
 				// we may or may not have colors to compare
 				if( ( *mesh )->mColors.Num() > 0 )
 				{
-					color = ( byte* ) & ( *mesh )->mColors[ v ]; //mesh->faces[j].vertexColors[k];
+					color = ( byte* ) & ( *mesh )->mColors[ index ]; //mesh->faces[j].vertexColors[k];
 				}
 #endif
 				// find a matching vert
 				for( lastmv = NULL, mv = mvHash[v]; mv != NULL; lastmv = mv, mv = mv->next )
 				{
-#if 0
+#if 1
 					if( mv->tv != tv )
 					{
 						continue;
