@@ -986,7 +986,9 @@ void CDialogTextures::addModels( bool rootItems )
 {
 	idFileList* files;
 	
-	files = fileSystem->ListFilesTree( "models", ".ase|.lwo|.ma", true );
+	// Techyon RB: added .dae
+	files = fileSystem->ListFilesTree( "models", ".ase|.lwo|.ma|.dae", true );
+	// Techyon END
 	
 	if( files->GetNumFiles() )
 	{

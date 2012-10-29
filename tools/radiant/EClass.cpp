@@ -122,7 +122,9 @@ bool LoadModel( const char* pLocation, eclass_t* e, idVec3& vMin, idVec3& vMax, 
 	vMin[0] = vMin[1] = vMin[2] = 999999;
 	vMax[0] = vMax[1] = vMax[2] = -999999;
 	
-	if( strstr( pLocation, ".ase" ) != NULL )	// FIXME: not correct!
+	// Techyon RB: added other model formats
+	if( strstr( pLocation, ".ase" ) != NULL || strstr( pLocation, ".dae" ) != NULL )	// FIXME: not correct!
+	// Techyon END
 	{
 		idBounds b;
 		e->modelHandle = renderModelManager->FindModel( pLocation );

@@ -124,12 +124,20 @@ void CPreviewDlg::BuildTree()
 		files = fileSystem->ListFilesTree( "models", ".lwo" );
 		AddStrList( "base", files->GetList(), MODELS );
 		fileSystem->FreeFileList( files );
+		
 		files = fileSystem->ListFilesTree( "models", ".ase" );
 		AddStrList( "base", files->GetList(), MODELS );
 		fileSystem->FreeFileList( files );
+		
 		files = fileSystem->ListFilesTree( "models", ".ma" );
 		AddStrList( "base", files->GetList(), MODELS );
 		fileSystem->FreeFileList( files );
+
+		// Techyon RB: added .dae
+		files = fileSystem->ListFilesTree( "models", ".dae" );
+		AddStrList( "base", files->GetList(), MODELS );
+		fileSystem->FreeFileList( files );
+		// Techyon END
 	}
 	else if( currentMode == SOUNDS )
 	{
