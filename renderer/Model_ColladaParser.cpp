@@ -2398,7 +2398,17 @@ void ColladaParser::ReadPrimitives( Mesh* pMesh, idList<InputChannel>& pPerIndex
 			pMesh->mFacePosIndices.Append( vindex[perVertexOffset] );
 		}
 	}
-	
+
+	// add dummy texcoords if there were no uvmap
+	if( pMesh->mTexCoords.Num() < pMesh->mPositions.Num() ) //- 1 )
+	{
+		int numMissing = pMesh->mPositions.Num() - pMesh->mTexCoords.Num(); // - 1;
+					
+		for( int i = 0; i < numMissing; i++ )
+		{
+			pMesh->mTexCoords.Append( idVec2( 0, 0 ) );
+		}
+	}
 	
 	// if I ever get my hands on that guy who invented this steaming pile of indirection...
 	TestClosing( "p" );
