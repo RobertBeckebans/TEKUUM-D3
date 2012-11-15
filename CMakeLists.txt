@@ -60,7 +60,7 @@ elseif(MSVC)
 					-D_CRT_SECURE_NO_WARNINGS
 					-D_USE_32BIT_TIME_T
 					-D_MBCS
-					-DUSE_OPENAL
+					#-DUSE_OPENAL
 					-DUSE_EXCEPTIONS)
 					
 	if(USE_MFC_TOOLS)
@@ -308,7 +308,7 @@ set(SOUND_INCLUDES
 set(SOUND_SOURCES
 	sound/snd_cache.cpp
 	sound/snd_decoder.cpp
-	sound/snd_efxfile.cpp
+	#sound/snd_efxfile.cpp
 	sound/snd_emitter.cpp
 	sound/snd_shader.cpp
 	sound/snd_system.cpp
@@ -903,7 +903,7 @@ endif()
 
 include_directories(
 			libs/curl/include
-			libs/openal/include
+			#libs/openal/include
 			libs/glew/include
 			libs/freetype/include
 			libs/zlib)
@@ -920,9 +920,9 @@ if(MSVC)
 			dsound
 			dxguid
 			#dxerr
-			#Xinput
+			Xinput
 			)
-		#add_definitions(-DUSE_XINPUT)
+		add_definitions(-DUSE_XINPUT)
 	else()
 		find_package(DirectX REQUIRED)
 		include_directories(${DirectX_INCLUDE_DIR})
@@ -1043,7 +1043,7 @@ if(MSVC)
 		${DirectX_LIBRARIES}
 		${QT_LIBRARIES}
 		libcurl 
-		openal32 
+		#openal32 
 		opengl32
 		glu32
 		dbghelp
