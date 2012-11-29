@@ -172,9 +172,9 @@ void R_WritePalTGA( const char* filename, const byte* data, const byte* palette,
 static void LoadBMP( const char* name, byte** pic, int* width, int* height, ID_TIME_T* timestamp );
 static void LoadTGA( const char* name, byte** pic, int* width, int* height, ID_TIME_T* timestamp );
 static void LoadJPG( const char* name, byte** pic, int* width, int* height, ID_TIME_T* timestamp );
-// Techyon BEGIN
+// RB begin
 static void LoadPNG( const char* name, byte** pic, int* width, int* height, ID_TIME_T* timestamp );
-// Techyon END
+// RB end
 
 
 /*
@@ -1345,7 +1345,7 @@ void R_LoadImage( const char* cname, byte** pic, int* width, int* height, ID_TIM
 	name.ExtractFileExtension( ext );
 	idStr origName = name;
 	
-// Techyon BEGIN
+// RB begin
 #if 0
 	if( ext == "tga" )
 	{
@@ -1402,7 +1402,7 @@ void R_LoadImage( const char* cname, byte** pic, int* width, int* height, ID_TIM
 		}
 	}
 #endif
-// Techyon END
+// RB end
 
 	if( ( width && *width < 1 ) || ( height && *height < 1 ) )
 	{

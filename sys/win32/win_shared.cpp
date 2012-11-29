@@ -47,11 +47,11 @@ If you have questions concerning this license or the applicable additional terms
 #pragma comment (lib, "wbemuuid.lib")
 #endif
 
-// Techyon BEGIN
+// RB begin
 #if !defined(USE_MFC_TOOLS)
 #include "win_nanoafx.h"
 #endif
-// Techyon END
+// RB end
 
 /*
 ================
@@ -118,11 +118,11 @@ returns in megabytes
 int Sys_GetVideoRam( void ) {
 #if defined(ID_DEDICATED)
 	return 0;
-// Techyon BEGIN
+// RB begin
 #elif defined(USE_QT_WINDOWING)
 	// FIXME
 	return 512;
-// Techyon END
+// RB end
 #else
 	unsigned int retSize = 64;
 

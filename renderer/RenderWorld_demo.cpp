@@ -99,7 +99,7 @@ bool		idRenderWorldLocal::ProcessDemoCommand( idDemoFile* readDemo, renderView_t
 		return false;
 	}
 	
-	// Techyon RB: fixed bad (int&) cast on Linux 64 bit
+	// RB: fixed bad (int&) cast on Linux 64 bit
 	int				dc;
 	qhandle_t		h;
 	
@@ -111,7 +111,7 @@ bool		idRenderWorldLocal::ProcessDemoCommand( idDemoFile* readDemo, renderView_t
 	
 	switch( ( demoCommand_t ) dc )
 	{
-			// Techyon END
+			// RB end
 		case DC_LOADMAP:
 			// read the initial data
 			demoHeader_t	header;
@@ -157,14 +157,14 @@ bool		idRenderWorldLocal::ProcessDemoCommand( idDemoFile* readDemo, renderView_t
 			for( int i = 0; i < MAX_GLOBAL_SHADER_PARMS; i++ )
 				readDemo->ReadFloat( renderView->shaderParms[i] );
 				
-			// Techyon RB: fixed bad (int&) cast on Linux 64 bit
+			// RB: fixed bad (int&) cast on Linux 64 bit
 			renderView->globalMaterial = NULL;
 			int dummy;
 			if( !readDemo->ReadInt( dummy ) )
 			{
 				return false;
 			}
-			// Techyon END
+			// RB end
 			
 			if( r_showDemo.GetBool() )
 			{
@@ -492,14 +492,14 @@ void	idRenderWorldLocal::WriteRenderLight( qhandle_t handle, const renderLight_t
 	session->writeDemo->WriteVec3( light->up );
 	session->writeDemo->WriteVec3( light->start );
 	session->writeDemo->WriteVec3( light->end );
-	// Techyon RB: fixed bad (int&) casts on Linux 64 bit
+	// RB: fixed bad (int&) casts on Linux 64 bit
 	session->writeDemo->WriteInt( light->prelightModel != NULL ? 1 : 0 );
 	session->writeDemo->WriteInt( light->lightId );
 	session->writeDemo->WriteInt( light->shader != NULL ? 1 : 0 );
 	for( int i = 0; i < MAX_ENTITY_SHADER_PARMS; i++ )
 		session->writeDemo->WriteFloat( light->shaderParms[i] );
 	session->writeDemo->WriteInt( light->referenceSound != NULL ? 1 : 0 );
-	// Techyon END
+	// RB end
 	
 	if( light->prelightModel )
 	{
@@ -530,9 +530,9 @@ void	idRenderWorldLocal::ReadRenderLight( )
 {
 	renderLight_t	light;
 	int				index;
-	// Techyon RB: fixed bad (int&) casts on Linux 64 bit
+	// RB: fixed bad (int&) casts on Linux 64 bit
 	int				prelightModel, shader, referenceSound;
-	// Techyon END
+	// RB end
 	
 	session->readDemo->ReadInt( index );
 	if( index < 0 )
@@ -555,7 +555,7 @@ void	idRenderWorldLocal::ReadRenderLight( )
 	session->readDemo->ReadVec3( light.up );
 	session->readDemo->ReadVec3( light.start );
 	session->readDemo->ReadVec3( light.end );
-	// Techyon RB: fixed bad (int&) casts on Linux 64 bit
+	// RB: fixed bad (int&) casts on Linux 64 bit
 	session->readDemo->ReadInt( prelightModel );
 	session->readDemo->ReadInt( light.lightId );
 	session->readDemo->ReadInt( shader );
@@ -591,7 +591,7 @@ void	idRenderWorldLocal::ReadRenderLight( )
 	{
 		light.referenceSound = NULL;
 	}
-	// Techyon END
+	// RB end
 	
 	UpdateLightDef( index, &light );
 	
@@ -620,7 +620,7 @@ void	idRenderWorldLocal::WriteRenderEntity( qhandle_t handle, const renderEntity
 	session->writeDemo->WriteInt( DC_UPDATE_ENTITYDEF );
 	session->writeDemo->WriteInt( handle );
 	
-	// Techyon RB: fixed bad (int&) casts on Linux 64 bit
+	// RB: fixed bad (int&) casts on Linux 64 bit
 	session->writeDemo->WriteInt( ent->hModel != NULL ? 1 : 0 );
 	session->writeDemo->WriteInt( ent->entityNum );
 	session->writeDemo->WriteInt( ent->bodyId );
@@ -645,7 +645,7 @@ void	idRenderWorldLocal::WriteRenderEntity( qhandle_t handle, const renderEntity
 	session->writeDemo->WriteInt( 0 ); // FIXME ent->remoteRenderView );
 	session->writeDemo->WriteInt( ent->numJoints );
 	session->writeDemo->WriteInt( 0 ); // (int&)ent->joints );
-	// Techyon END
+	// RB end
 	session->writeDemo->WriteFloat( ent->modelDepthHack );
 	session->writeDemo->WriteBool( ent->noSelfShadow );
 	session->writeDemo->WriteBool( ent->noShadow );
@@ -727,7 +727,7 @@ void	idRenderWorldLocal::ReadRenderEntity()
 {
 	renderEntity_t		ent;
 	int				index, i;
-	// Techyon RB: fixed bad (int&) casts on Linux 64 bit
+	// RB: fixed bad (int&) casts on Linux 64 bit
 	int				dummy, hModel, customShader, referenceShader, customSkin, referenceSound;
 	int				gui[MAX_RENDERENTITY_GUI];
 	//int				remoteRenderView;
@@ -839,7 +839,7 @@ void	idRenderWorldLocal::ReadRenderEntity()
 	{
 		ent.joints = NULL;
 	}
-	// Techyon END
+	// RB end
 	
 	ent.callbackData = NULL;
 	

@@ -44,7 +44,7 @@ If you have questions concerning this license or the applicable additional terms
 #include "../posix/posix_public.h"
 #include "sound.h"
 
-// Techyon BEGIN
+// RB begin
 #if defined(USE_SOUND_SDL)
 #include "../sdl/sdl_sound.h"
 #endif
@@ -54,7 +54,7 @@ const char*	s_driverArgs[]	= { "best", "oss", "alsa", NULL };
 #else
 const char*	s_driverArgs[]	= { "best", "alsa", NULL };
 #endif
-// Techyon END
+// RB end
 
 #if defined(USE_SOUND_ALSA) || defined(USE_SOUND_OSS)
 static idCVar s_driver( "s_driver", s_driverArgs[0], CVAR_SYSTEM | CVAR_ARCHIVE, "sound driver. 'best' will attempt to use alsa and fallback to OSS if not available", s_driverArgs, idCmdSystem::ArgCompletion_String<s_driverArgs> );
@@ -76,13 +76,13 @@ idAudioHardware* idAudioHardware::Alloc()
 		common->Printf( "Alsa is not available\n" );
 		delete test;
 		
-		// Techyon BEGIN
+		// RB begin
 #if defined(USE_SOUND_OSS)
 		return new idAudioHardwareOSS;
 #else
 		return NULL;
 #endif
-		// Techyon END
+		// RB end
 	}
 	if( !strcmp( s_driver.GetString(), "alsa" ) )
 	{
@@ -90,7 +90,7 @@ idAudioHardware* idAudioHardware::Alloc()
 	}
 #endif
 	
-// Techyon BEGIN
+// RB begin
 #if defined(USE_SOUND_SDL)
 	return new tyAudioHardwareSDL;
 #elif defined(USE_SOUND_OSS)
@@ -100,7 +100,7 @@ idAudioHardware* idAudioHardware::Alloc()
 #else
 	return NULL;
 #endif
-// Techyon END
+// RB end
 }
 
 
@@ -113,7 +113,7 @@ idAudioHardware::~idAudioHardware
 */
 idAudioHardware::~idAudioHardware() { }
 
-// Techyon BEGIN
+// RB begin
 #if defined(USE_SOUND_OSS)
 
 /*
@@ -474,7 +474,7 @@ void idAudioHardwareOSS::Write( bool flushing )
 }
 
 #endif // #if defined(USE_SOUND_OSS)
-// Techyon END
+// RB end
 
 /*
  ===============

@@ -34,7 +34,7 @@ If you have questions concerning this license or the applicable additional terms
 // simple types.  function types are dynamically allocated
 idTypeDef	type_void( ev_void, &def_void, "void", 0, NULL );
 
-// Techyon RB: 64 bit fixes, changed all pointer types to intptr_t
+// RB: 64 bit fixes, changed all pointer types to intptr_t
 idTypeDef	type_scriptevent( ev_scriptevent, &def_scriptevent, "scriptevent", sizeof( intptr_t ), NULL );
 idTypeDef	type_namespace( ev_namespace, &def_namespace, "namespace", sizeof( intptr_t ), NULL );
 idTypeDef	type_string( ev_string, &def_string, "string", MAX_STRING_LEN, NULL );
@@ -49,7 +49,7 @@ idTypeDef	type_object( ev_object, &def_object, "object", sizeof( intptr_t ), NUL
 idTypeDef	type_jumpoffset( ev_jumpoffset, &def_jumpoffset, "<jump>", sizeof( intptr_t ), NULL );		// only used for jump opcodes
 idTypeDef	type_argsize( ev_argsize, &def_argsize, "<argsize>", sizeof( intptr_t ), NULL );				// only used for function call and thread opcodes
 idTypeDef	type_boolean( ev_boolean, &def_boolean, "boolean", sizeof( intptr_t ), NULL );
-// Techyon END
+// RB end
 
 idVarDef	def_void( &type_void );
 idVarDef	def_scriptevent( &type_scriptevent );
@@ -1059,9 +1059,9 @@ idScriptObject::Save
 */
 void idScriptObject::Save( idSaveGame* savefile ) const
 {
-	// Techyon RB: 64 bit fix, changed size_t to int
+	// RB: 64 bit fix, changed size_t to int
 	int size;
-	// Techyon END
+	// RB end
 	
 	if( type == &type_object && data == NULL )
 	{
@@ -1085,9 +1085,9 @@ idScriptObject::Restore
 void idScriptObject::Restore( idRestoreGame* savefile )
 {
 	idStr typeName;
-	// Techyon RB: 64 bit fix, changed size_t to int
+	// RB: 64 bit fix, changed size_t to int
 	int size;
-	// Techyon END
+	// RB end
 	
 	savefile->ReadString( typeName );
 	
@@ -1102,9 +1102,9 @@ void idScriptObject::Restore( idRestoreGame* savefile )
 		savefile->Error( "idScriptObject::Restore: failed to restore object of type '%s'.", typeName.c_str() );
 	}
 	
-	// Techyon RB: 64 bit fix, changed size_t to int
+	// RB: 64 bit fix, changed size_t to int
 	savefile->ReadInt( size );
-	// Techyon END
+	// RB end
 	if( size != type->Size() )
 	{
 		savefile->Error( "idScriptObject::Restore: size of object '%s' doesn't match size in save game.", typeName.c_str() );
@@ -1442,7 +1442,7 @@ void idProgram::AddDefToNameList( idVarDef* def, const char* name )
 	varDefNames[i]->AddDef( def );
 }
 
-// Techyon RB: moved from AllocDef
+// RB: moved from AllocDef
 byte* idProgram::ReserveDefMemory( int size )
 {
 	byte* mem = &variables[ numVariables ];
@@ -1460,9 +1460,9 @@ byte* idProgram::ReserveDefMemory( int size )
 	
 	return mem;
 }
-// Techyon END
+// RB end
 
-// Techyon RB: moved from AllocDef
+// RB: moved from AllocDef
 idVarDef* idProgram::AllocVarDef( idTypeDef* type, const char* name, idVarDef* scope )
 {
 	// allocate a new def
@@ -1476,7 +1476,7 @@ idVarDef* idProgram::AllocVarDef( idTypeDef* type, const char* name, idVarDef* s
 	
 	return def;
 }
-// Techyon END
+// RB end
 
 
 /*
@@ -1512,7 +1512,7 @@ idVarDef* idProgram::AllocDef( idTypeDef* type, const char* name, idVarDef* scop
 		{
 			idTypeDef	newtype( ev_field, NULL, "float field", 0, &type_float );
 			
-			// Techyon RB: changed local type to ftype
+			// RB: changed local type to ftype
 			idTypeDef*	ftype = GetType( newtype, true );
 			
 			// set the value to the variable's position in the object
@@ -1530,11 +1530,11 @@ idVarDef* idProgram::AllocDef( idTypeDef* type, const char* name, idVarDef* scop
 			sprintf( element, "%s_z", def->Name() );
 			def_z = AllocDef( ftype, element, scope, constant );
 			def_z->value.ptrOffset = def_y->value.ptrOffset + sizeof( float );
-			// Techyon END
+			// RB end
 		}
 		else
 		{
-			// Techyon RB: from dhewm3
+			// RB: from dhewm3
 			idTypeDef	newtype( ev_float, &def_float, "vector float", 0, NULL );
 			idTypeDef*	ftype = GetType( newtype, true );
 			
@@ -1574,7 +1574,7 @@ idVarDef* idProgram::AllocDef( idTypeDef* type, const char* name, idVarDef* scop
 			def_x->initialized = def->initialized;
 			def_y->initialized = def->initialized;
 			def_z->initialized = def->initialized;
-			// Techyon END
+			// RB end
 		}
 	}
 	else if( scope->TypeDef()->Inherits( &type_object ) )
@@ -1610,9 +1610,9 @@ idVarDef* idProgram::AllocDef( idTypeDef* type, const char* name, idVarDef* scop
 		//
 		// global variable
 		//
-		// Techyon BEGIN
+		// RB begin
 		def->value.bytePtr = ReserveDefMemory( def->TypeDef()->Size() );
-		// Techyon END
+		// RB end
 		
 		//memset( def->value.bytePtr, 0, def->TypeDef()->Size() );
 	}
@@ -1978,9 +1978,9 @@ idProgram::DisassembleStatement
 */
 void idProgram::DisassembleStatement( idFile* file, int instructionPointer ) const
 {
-	// Techyon RB: added const
+	// RB: added const
 	const opcode_t*		op;
-	// Techyon END
+	// RB end
 	const statement_t*	statement;
 	
 	statement = &statements[ instructionPointer ];

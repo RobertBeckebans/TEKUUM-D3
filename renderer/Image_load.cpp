@@ -115,7 +115,7 @@ int idImage::BitsForInternalFormat( int internalFormat ) const
 			return 4;			// not sure
 		case GL_COMPRESSED_RGBA_ARB:
 			return 8;			// not sure
-// Techyon BEGIN
+// RB begin
 		case GL_DEPTH_COMPONENT16:
 			return 16;
 		case GL_DEPTH_COMPONENT24:
@@ -134,7 +134,7 @@ int idImage::BitsForInternalFormat( int internalFormat ) const
 			return 32;
 		case GL_RG32F:
 			return 64;
-// Techyon END
+// RB end
 			
 #endif // #if !defined(USE_GLES1)
 		default:
@@ -269,7 +269,7 @@ GLenum idImage::SelectInternalFormat( const byte** dataPtrs, int numDataPtrs, in
 	int		rgbOr, rgbAnd, aOr, aAnd;
 	int		rgbDiffer, rgbaDiffer;
 	
-// Techyon BEGIN
+// RB begin
 #if !defined(USE_GLES1)
 	if( minimumDepth > TD_HIGH_QUALITY )
 	{
@@ -308,7 +308,7 @@ GLenum idImage::SelectInternalFormat( const byte** dataPtrs, int numDataPtrs, in
 		}
 	}
 #endif
-// Techyon END
+// RB end
 
 	// determine if the rgb channels are all the same
 	// and if either all rgb or all alpha are 255
@@ -745,7 +745,7 @@ void idImage::GenerateImage( const byte* pic, int width, int height,
 		preserveBorder = false;
 	}
 	
-// Techyon BEGIN
+// RB begin
 	if( glConfig.textureNonPowerOfTwoAvailable )
 	{
 		scaled_width = width;
@@ -762,7 +762,7 @@ void idImage::GenerateImage( const byte* pic, int width, int height,
 			common->Error( "R_CreateImage: not a power of 2 image" );
 		}
 	}
-// Techyon END
+// RB end
 
 	// generate the texture number
 	glGenTextures( 1, &texnum );
@@ -773,7 +773,7 @@ void idImage::GenerateImage( const byte* pic, int width, int height,
 	type = TT_2D;
 	Bind();
 	
-// Techyon BEGIN
+// RB begin
 #if !defined(USE_GLES1)
 	if( depth > TD_HIGH_QUALITY )
 	{
@@ -799,7 +799,7 @@ void idImage::GenerateImage( const byte* pic, int width, int height,
 		return;
 	}
 #endif
-// Techyon END
+// RB end
 
 	// Optionally modify our width/height based on options/hardware
 	GetDownsize( scaled_width, scaled_height );
@@ -1235,7 +1235,7 @@ void idImage::GenerateCubeImage( const byte* pic[6], int size,
 	
 	// upload the base level
 	
-// Techyon BEGIN
+// RB begin
 	if( depth > TD_HIGH_QUALITY )
 	{
 	
@@ -1262,7 +1262,7 @@ void idImage::GenerateCubeImage( const byte* pic[6], int size,
 						  GL_RGBA, GL_UNSIGNED_BYTE, pic[i] );
 		}
 	}
-// Techyon END
+// RB end
 
 	// create and upload the mip map levels
 	int		miplevel;
@@ -1465,9 +1465,9 @@ void idImage::WritePrecompressedImage()
 	
 	if( globalImages->image_useOffLineCompression.GetBool() && FormatIsDXT( altInternalFormat ) )
 	{
-		// Techyon RB: use generated/ folder
+		// RB: use generated/ folder
 		idStr outFile = fileSystem->RelativePathToOSPath( filename, "fs_devpath" );
-		// Techyon END
+		// RB end
 		idStr inFile = outFile;
 		inFile.StripFileExtension();
 		inFile.SetFileExtension( "tga" );
@@ -2163,11 +2163,11 @@ void idImage::PurgeImage()
 	if( texnum != TEXTURE_NOT_LOADED )
 	{
 		// sometimes is NULL when exiting with an error
-// Techyon BEGIN - no checks if functions are NULL with GLEW
+// RB begin - no checks if functions are NULL with GLEW
 		//if ( glDeleteTextures ) {
 		glDeleteTextures( 1, &texnum );	// this should be the ONLY place it is ever called!
 		//}
-// Techyon END
+// RB end
 		texnum = TEXTURE_NOT_LOADED;
 	}
 	
@@ -2409,7 +2409,7 @@ void idImage::CopyFramebuffer( int x, int y, int imageWidth, int imageHeight, bo
 	// if the size isn't a power of 2, the image must be increased in size
 	int	potWidth, potHeight;
 	
-// Techyon BEGIN
+// RB begin
 	if( glConfig.textureNonPowerOfTwoAvailable )
 	{
 		potWidth = imageWidth;
@@ -2420,7 +2420,7 @@ void idImage::CopyFramebuffer( int x, int y, int imageWidth, int imageHeight, bo
 		potWidth = MakePowerOfTwo( imageWidth );
 		potHeight = MakePowerOfTwo( imageHeight );
 	}
-// Techyon END
+// RB end
 
 	GetDownsize( imageWidth, imageHeight );
 	GetDownsize( potWidth, potHeight );
@@ -2481,7 +2481,7 @@ void idImage::CopyFramebuffer( int x, int y, int imageWidth, int imageHeight, bo
 		glCopyTexSubImage2D( GL_TEXTURE_2D, 0, 0, imageHeight, x, y + imageHeight - 1, imageWidth, 1 );
 	}
 	
-// Techyon BEGIN
+// RB begin
 	if( useNearestFilter )
 	{
 		glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
@@ -2492,7 +2492,7 @@ void idImage::CopyFramebuffer( int x, int y, int imageWidth, int imageHeight, bo
 		glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
 		glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
 	}
-// Techyon END
+// RB end
 
 	glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
 	glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
@@ -2515,7 +2515,7 @@ void idImage::CopyDepthbuffer( int x, int y, int imageWidth, int imageHeight )
 	// if the size isn't a power of 2, the image must be increased in size
 	int	potWidth, potHeight;
 	
-// Techyon BEGIN
+// RB begin
 	if( glConfig.textureNonPowerOfTwoAvailable )
 	{
 		potWidth = imageWidth;
@@ -2526,7 +2526,7 @@ void idImage::CopyDepthbuffer( int x, int y, int imageWidth, int imageHeight )
 		potWidth = MakePowerOfTwo( imageWidth );
 		potHeight = MakePowerOfTwo( imageHeight );
 	}
-// Techyon END
+// RB end
 
 	if( uploadWidth != potWidth || uploadHeight != potHeight )
 	{
@@ -2842,7 +2842,7 @@ void idImage::Print() const
 			common->Printf( "RGBAC   " );
 			break;
 			
-// Techyon BEGIN
+// RB begin
 		case GL_DEPTH_COMPONENT16:
 			common->Printf( "DEPTH16 " );
 			break;
@@ -2870,7 +2870,7 @@ void idImage::Print() const
 		case GL_RG32F:
 			common->Printf( "RG32F   " );
 			break;
-// Techyon END
+// RB end
 			
 #endif
 		case 0:

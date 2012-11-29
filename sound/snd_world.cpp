@@ -272,7 +272,7 @@ void idSoundWorldLocal::ProcessDemoCommand( idDemoFile* readDemo )
 		return;
 	}
 	
-	// Techyon RB: fixed bad (int&) cast on Linux 64 bit
+	// RB: fixed bad (int&) cast on Linux 64 bit
 	int	dc;
 	if( !readDemo->ReadInt( dc ) )
 	{
@@ -281,7 +281,7 @@ void idSoundWorldLocal::ProcessDemoCommand( idDemoFile* readDemo )
 	
 	switch( ( soundDemoCommand_t ) dc )
 	{
-			// Techyon END
+			// RB end
 		case SCMD_STATE:
 			// we need to protect this from the async thread
 			// other instances of calling idSoundWorldLocal::ReadFromSaveGame do this while the sound code is muted
@@ -458,18 +458,18 @@ void idSoundWorldLocal::MixLoop( int current44kHz, int numSpeakers, float* final
 	if( listenerArea == -1 )
 	{
 	
-		// Techyon BEGIN
+		// RB begin
 #if defined(USE_OPENAL)
 		if( idSoundSystemLocal::useOpenAL )
 			alListenerf( AL_GAIN, 0.0f );
 #endif
-		// Techyon END
+		// RB end
 		return;
 	}
 	
 	// update the listener position and orientation
 	
-	// Techyon BEGIN
+	// RB begin
 #if defined(USE_OPENAL)
 	if( idSoundSystemLocal::useOpenAL )
 	{
@@ -534,7 +534,7 @@ void idSoundWorldLocal::MixLoop( int current44kHz, int numSpeakers, float* final
 #endif
 	}
 #endif
-	// Techyon END
+	// RB end
 	
 	
 	// debugging option to mute all but a single soundEmitter
@@ -591,14 +591,14 @@ void idSoundWorldLocal::MixLoop( int current44kHz, int numSpeakers, float* final
 		}
 	}
 	
-	// Techyon BEGIN
+	// RB begin
 #if defined(USE_OPENAL)
 	if( !idSoundSystemLocal::useOpenAL && enviroSuitActive )
 	{
 		soundSystemLocal.DoEnviroSuit( finalMixBuffer, MIXBUFFER_SAMPLES, numSpeakers );
 	}
 #endif
-	// Techyon END
+	// RB end
 }
 
 //==============================================================================
@@ -663,9 +663,9 @@ void idSoundWorldLocal::AVIUpdate()
 	}
 	
 	float	mix[MIXBUFFER_SAMPLES * 6 + 16];
-	// Techyon RB: 64 bit fix, changed int to intptr_t
+	// RB: 64 bit fix, changed int to intptr_t
 	float*	mix_p = ( float* )( ( ( intptr_t )mix + 15 ) & ~15 );	// SIMD align
-	// Techyon END
+	// RB end
 	
 	SIMDProcessor->Memset( mix_p, 0, MIXBUFFER_SAMPLES * sizeof( float )*numSpeakers );
 	
@@ -1353,7 +1353,7 @@ void idSoundWorldLocal::WriteToSaveGameSoundChannel( idFile* saveGame, idSoundCh
 	saveGame->WriteInt( ch->trigger44kHzTime );
 	saveGame->WriteInt( ch->triggerGame44kHzTime );
 	WriteToSaveGameSoundShaderParams( saveGame, &ch->parms );
-	// Techyon RB: 64 bit fixes, changed int to intptr_t
+	// RB: 64 bit fixes, changed int to intptr_t
 #if defined(__x86_64__)
 	// FIXME
 	saveGame->WriteInt( 0 /* (intptr_t)ch->leadinSample */ );
@@ -1366,7 +1366,7 @@ void idSoundWorldLocal::WriteToSaveGameSoundChannel( idFile* saveGame, idSoundCh
 	saveGame->WriteInt( ( intptr_t ) ch->soundShader );
 	saveGame->WriteInt( ( intptr_t ) ch->decoder );
 #endif
-	// Techyon END
+	// RB end
 	saveGame->WriteFloat( ch->diversity );
 	saveGame->WriteFloat( ch->lastVolume );
 	for( int m = 0; m < 6; m++ )
@@ -1468,14 +1468,14 @@ void idSoundWorldLocal::ReadFromSaveGame( idFile* savefile )
 			
 			idSoundChannel* chan = &def->channels[channel];
 			
-			// Techyon BEGIN
+			// RB begin
 #if defined(__x86_64__)
 			// RB: we set the chan->decoder to NULL so allocate a new decoder
 			if( chan->decoder == NULL )
 #else
 			if( chan->decoder != NULL )
 #endif
-				// Techyon END
+				// RB end
 			{
 				// The pointer in the save file is not valid, so we grab a new one
 				chan->decoder = idSampleDecoder::Alloc();
@@ -1501,11 +1501,11 @@ void idSoundWorldLocal::ReadFromSaveGame( idFile* savefile )
 			// make sure we start up the hardware voice if needed
 			chan->triggered = chan->triggerState;
 			
-			// Techyon BEGIN
+			// RB begin
 #if defined(USE_OPENAL)
 			chan->openalStreamingOffset = currentSoundTime - chan->trigger44kHzTime;
 #endif
-			// Techyon END
+			// RB end
 			
 			// adjust the hardware fade time
 			if( chan->channelFade.fadeStart44kHz != 0 )
@@ -1564,7 +1564,7 @@ void idSoundWorldLocal::ReadFromSaveGameSoundChannel( idFile* saveGame, idSoundC
 	saveGame->ReadInt( ch->triggerGame44kHzTime );
 	ReadFromSaveGameSoundShaderParams( saveGame, &ch->parms );
 	
-	// Techyon RB: 64 bit fixes
+	// RB: 64 bit fixes
 #if defined(__x86_64__)
 	int dummy, soundShader;
 	
@@ -1596,7 +1596,7 @@ void idSoundWorldLocal::ReadFromSaveGameSoundChannel( idFile* saveGame, idSoundC
 	saveGame->ReadInt( ( int& )ch->decoder );
 	
 #endif
-	// Techyon END
+	// RB end
 	saveGame->ReadFloat( ch->diversity );
 	saveGame->ReadFloat( ch->lastVolume );
 	for( int m = 0; m < 6; m++ )
@@ -1990,15 +1990,15 @@ void idSoundWorldLocal::AddChannelContribution( idSoundEmitterLocal* sound, idSo
 	//
 	int offset = current44kHz - chan->trigger44kHzTime;
 	float inputSamples[MIXBUFFER_SAMPLES * 2 + 16];
-	// Techyon RB: 64 bit fix, changed int to intptr_t
+	// RB: 64 bit fix, changed int to intptr_t
 	float* alignedInputSamples = ( float* )( ( ( ( intptr_t )inputSamples ) + 15 ) & ~15 );
-	// Techyon END
+	// RB end
 	
 	//
 	// allocate and initialize hardware source
 	//
 	
-	// Techyon BEGIN
+	// RB begin
 #if defined(USE_OPENAL)
 	if( idSoundSystemLocal::useOpenAL && sound->removeStatus < REMOVE_STATUS_SAMPLEFINISHED )
 	{
@@ -2115,7 +2115,7 @@ void idSoundWorldLocal::AddChannelContribution( idSoundEmitterLocal* sound, idSo
 	}
 	else
 #endif // #if defined(USE_OPENAL)
-		// Techyon END
+		// RB end
 	{
 	
 		if( slowmoActive && !chan->disallowSlow )

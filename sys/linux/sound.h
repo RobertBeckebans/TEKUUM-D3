@@ -28,9 +28,9 @@ If you have questions concerning this license or the applicable additional terms
 #ifndef ID_SND_BACKENDS
 #define ID_SND_BACKENDS
 
-// Techyon BEGIN
+// RB begin
 #if defined(USE_SOUND_OSS)
-// Techyon END
+// RB end
 
 class idAudioHardwareOSS : public idAudioHardware
 {
@@ -99,13 +99,13 @@ private:
 	void		ExtractOSSVersion( int version, idStr& str ) const;
 };
 
-// Techyon BEGIN
+// RB begin
 #endif // #if defined(USE_SOUND_OSS)
-// Techyon END
+// RB end
 
-// Techyon BEGIN
+// RB begin
 #if defined(USE_SOUND_ALSA)
-// Techyon END
+// RB end
 
 // libasound2-dev
 // the new/old API may be a problem if we are going to dynamically load the asound lib?
@@ -220,11 +220,11 @@ private:
 	
 };
 
-// Techyon BEGIN
+// RB begin
 #endif // #if defined(USE_SOUND_ALSA)
-// Techyon END
+// RB end
 
-// Techyon BEGIN
+// RB begin
 #if defined(USE_SOUND_PULSE)
 
 // libpulse-dev
@@ -288,6 +288,6 @@ private:
 };
 
 #endif // #if defined(USE_SOUND_PULSE)
-// Techyon END
+// RB end
 
 #endif

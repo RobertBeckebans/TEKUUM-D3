@@ -142,9 +142,9 @@ private:
 	
 	int				frameBytes;				// for each of NUM_VERTEX_FRAMES frames
 	
-// Techyon BEGIN
+// RB begin
 	bool			initialized;			// RB: bugfix, don't purge vertex cache without initalization
-// Techyon END
+// RB end
 };
 
 extern	idVertexCache	vertexCache;

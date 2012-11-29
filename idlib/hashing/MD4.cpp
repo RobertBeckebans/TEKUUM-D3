@@ -38,9 +38,9 @@ typedef unsigned char* POINTER;
 typedef unsigned short int UINT2;
 
 /* UINT4 defines a four byte word */
-// Techyon RB: 64 bit fix, changed long int to int
+// RB: 64 bit fix, changed long int to int
 typedef unsigned int UINT4;
-// Techyon END
+// RB end
 
 
 /* MD4 context. */
@@ -262,7 +262,7 @@ void MD4_Final( MD4_CTX* context, unsigned char digest[16] )
 MD4_BlockChecksum
 ===============
 */
-// Techyon RB: 64 bit fixes, changed long to int
+// RB: 64 bit fixes, changed long to int
 unsigned int MD4_BlockChecksum( const void* data, int length )
 {
 	unsigned int	digest[4];
@@ -277,5 +277,5 @@ unsigned int MD4_BlockChecksum( const void* data, int length )
 	
 	return val;
 }
-// Techyon END
+// RB end
 

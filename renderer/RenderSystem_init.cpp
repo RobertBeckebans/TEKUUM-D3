@@ -77,9 +77,9 @@ idCVar r_useStateCaching( "r_useStateCaching", "1", CVAR_RENDERER | CVAR_BOOL, "
 idCVar r_useInfiniteFarZ( "r_useInfiniteFarZ", "1", CVAR_RENDERER | CVAR_BOOL, "use the no-far-clip-plane trick" );
 
 idCVar r_znear( "r_znear", "3", CVAR_RENDERER | CVAR_FLOAT, "near Z clip plane distance", 0.001f, 200.0f );
-// Techyon BEGIN
+// RB begin
 idCVar r_zfar( "r_zfar", "1024", CVAR_RENDERER | CVAR_FLOAT, "far Z clip plane distance", 0.001f, 32000.0f );
-// Techyon END
+// RB end
 
 #if defined(__ANDROID__)
 idCVar r_ignoreGLErrors( "r_ignoreGLErrors", "0", CVAR_RENDERER | CVAR_BOOL, "ignore GL errors" );
@@ -133,10 +133,10 @@ idCVar r_skipROQ( "r_skipROQ", "0", CVAR_RENDERER | CVAR_BOOL, "skip ROQ decodin
 idCVar r_skipROQ( "r_skipROQ", "0", CVAR_RENDERER | CVAR_BOOL, "skip ROQ decoding" );
 #endif
 
-// Techyon BEGIN
+// RB begin
 idCVar r_skipDeferredLighting( "r_skipDeferredLighting", "0", CVAR_RENDERER | CVAR_BOOL, "skip all light pre-pass drawing" );
 idCVar r_skipPostLighting( "r_skipPostLighting", "0", CVAR_RENDERER | CVAR_BOOL, "skip forward shading using the pre-pass light buffer" );
-// Techyon END
+// RB end
 
 idCVar r_ignore( "r_ignore", "0", CVAR_RENDERER, "used for random debugging without defining new vars" );
 idCVar r_ignore2( "r_ignore2", "0", CVAR_RENDERER, "used for random debugging without defining new vars" );
@@ -251,7 +251,7 @@ idCVar r_materialOverride( "r_materialOverride", "", CVAR_RENDERER, "overrides a
 
 idCVar r_debugRenderToTexture( "r_debugRenderToTexture", "0", CVAR_RENDERER | CVAR_INTEGER, "" );
 
-// Techyon BEGIN
+// RB begin
 idCVar r_sb_mode( "r_sb_mode", "0", CVAR_RENDERER | CVAR_INTEGER, "0 = ESM16, 1 = ESM32, 2 = VSM16, 3 = VSM32, 4 = EVSM32" );
 idCVar r_sb_debug( "r_sb_debug", "0", CVAR_RENDERER | CVAR_INTEGER, "" );
 
@@ -276,7 +276,7 @@ idCVar r_deferredShadingGPUFrustumCulling( "r_deferredShadingGPUFrustumCulling",
 idCVar r_useFXAA( "r_useFXAA", "0", CVAR_RENDERER | CVAR_BOOL, "enable Fast Approximate Anti-Aliasing" );
 idCVar r_fxaaQualityPreset( "r_fxaaQualityPreset", "12", CVAR_RENDERER | CVAR_INTEGER, "default medium dither (10=fastest, 15=highest quality)",  10, 15, idCmdSystem::ArgCompletion_Integer<10, 15> );
 
-// Techyon END
+// RB end
 
 
 /*
@@ -303,7 +303,7 @@ bool R_CheckExtension( char* name )
 R_CheckPortableExtensions
 ==================
 */
-// Techyon BEGIN - replaced QGL with GLEW
+// RB begin - replaced QGL with GLEW
 static void R_CheckPortableExtensions( void )
 {
 	glConfig.glVersion = atof( glConfig.version_string );
@@ -611,7 +611,7 @@ static void R_CheckPortableExtensions( void )
 	}
 #endif
 }
-// Techyon END
+// RB end
 
 
 /*
@@ -2551,9 +2551,9 @@ void idRenderSystemLocal::Init( void )
 	
 	R_InitTriSurfData();
 	
-	// Techyon RB: added direct freetype support
+	// RB: added direct freetype support
 	R_InitFreeType();
-	// Techyon END
+	// RB end
 	
 	globalImages->Init();
 	
@@ -2607,9 +2607,9 @@ void idRenderSystemLocal::Shutdown( void )
 	Framebuffer::Shutdown();
 #endif
 	
-	// Techyon RB: added direct freetype support
+	// RB: added direct freetype support
 	R_DoneFreeType();
-	// Techyon END
+	// RB end
 	
 	globalImages->Shutdown();
 	

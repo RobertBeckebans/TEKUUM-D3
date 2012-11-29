@@ -155,14 +155,14 @@ const char* Sys_GetThreadName(int *index) {
 	return "main";
 }
 
-// Techyon BEGIN
+// RB begin
 void Sys_InitCriticalSections()
 {
 	for ( int i = 0; i < MAX_CRITICAL_SECTIONS; i++ ) {
 		InitializeCriticalSection( &win32.criticalSections[i] );
 	}
 }
-// Techyon END
+// RB end
 
 /*
 ==================
@@ -531,7 +531,7 @@ Sys_DefaultBasePath
 */
 const char *Sys_DefaultBasePath( void ) {
 
-// Techyon BEGIN
+// RB begin
 	static char basePath[MAX_OSPATH];
 	idStr cwdPath;
 	
@@ -553,7 +553,7 @@ const char *Sys_DefaultBasePath( void ) {
 	return basePath;
 
 	//return Sys_Cwd();
-// Techyon END
+// RB end
 }
 
 /*
@@ -817,9 +817,9 @@ void Sys_PumpEvents( void ) {
 			win32.sysMsgTime = msg.time;
 		}
 
-// Techyon BEGIN
+// RB begin
 #if defined(USE_MFC_TOOLS)
-// Techyon END
+// RB end
 		if ( GUIEditorHandleMessage ( &msg ) ) {	
 			continue;
 		}
@@ -1436,9 +1436,9 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 	// no abort/retry/fail errors
 	SetErrorMode( SEM_FAILCRITICALERRORS );
 
-// Techyon BEGIN
+// RB begin
 	Sys_InitCriticalSections();
-// Techyon END
+// RB end
 
 	// get the initial time base
 	Sys_Milliseconds();
@@ -1481,11 +1481,11 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 
 	// Launch the script debugger
 	if ( strstr( lpCmdLine, "+debugger" ) ) {
-		// Techyon BEGIN
+		// RB begin
 #if defined(USE_MFC_TOOLS)
 		DebuggerClientInit( lpCmdLine );
 #endif
-		// Techyon END
+		// RB end
 		return 0;
 	}
 
@@ -1562,7 +1562,7 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 			}
 #endif // #if defined(USE_MFC_TOOLS)
 
-// Techyon BEGIN
+// RB begin
 #if defined(USE_GTK_TOOLS)
 			if ( com_editors & EDITOR_GTKTEST)
 			{
@@ -1587,7 +1587,7 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 		}
 
 #endif // #if defined(USE_MFC_TOOLS) || defined(USE_GTK_TOOLS) || defined(USE_QT_TOOLS)
-// Techyon END
+// RB end
 
 		// run the game
 		common->Frame();

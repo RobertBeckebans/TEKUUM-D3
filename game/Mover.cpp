@@ -5186,9 +5186,9 @@ void idPendulum::Spawn( void )
 			length = 8;
 		}
 		
-		// Techyon RB: changed g_gravity to 3d vector, FIXME find down direction
+		// RB: changed g_gravity to 3d vector, FIXME find down direction
 		freq = 1 / ( idMath::TWO_PI ) * idMath::Sqrt( idMath::Fabs( g_gravityZ.GetFloat() ) / ( 3 * length ) );
-		// Techyon END
+		// RB end
 	}
 	
 	physicsObj.SetSelf( this );

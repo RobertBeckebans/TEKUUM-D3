@@ -1157,7 +1157,7 @@ unsigned char Sys_MapCharForKey( int key )
 
 //=====================================================================================
 
-// Techyon BEGIN
+// RB begin
 #if !defined(USE_XINPUT)
 //#if _MSC_VER > 1000
 
@@ -1518,4 +1518,4 @@ void Sys_EndXbox360ControllerInputEvents( void ) { }
 
 #endif // #if !defined(USE_XINPUT)
 
-// Techyon END
+// RB end

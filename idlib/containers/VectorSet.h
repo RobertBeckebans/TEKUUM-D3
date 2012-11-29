@@ -170,9 +170,9 @@ ID_INLINE int idVectorSet<type, dimension>::FindVector( const type& v, const flo
 	}
 	
 	hash.Add( hashKey, idList<type>::Num() );
-	// Techyon RB: compile fix for Fedora 17
+	// RB: compile fix for Fedora 17
 	this->Append( v );
-	// Techyon END
+	// RB end
 	return idList<type>::Num() - 1;
 }
 

@@ -298,7 +298,7 @@ int idSimpleWindow::GetWinVarOffset( idWinVar* wv, drawWin_t* owner )
 {
 	int ret = -1;
 	
-	// Techyon RB: 64 bit fixes, changed oldschool offsets using ptrdiff_t
+	// RB: 64 bit fixes, changed oldschool offsets using ptrdiff_t
 	if( wv == &rect )
 	{
 		ret = ( ptrdiff_t )&rect - ( ptrdiff_t )this;
@@ -333,7 +333,7 @@ int idSimpleWindow::GetWinVarOffset( idWinVar* wv, drawWin_t* owner )
 	{
 		ret = ( ptrdiff_t )&rotate - ( ptrdiff_t )this;
 	}
-	// Techyon END
+	// RB end
 	
 	if( ret != -1 )
 	{

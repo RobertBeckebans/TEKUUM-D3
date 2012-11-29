@@ -67,7 +67,7 @@ Sys_AsyncThread
 */
 void Sys_AsyncThread( void )
 {
-// Techyon RB: disabled multi tick compensate because it feels very laggy on Linux 3.x kernels
+// RB: disabled multi tick compensate because it feels very laggy on Linux 3.x kernels
 #if 1
 	int now;
 	int next;
@@ -154,7 +154,7 @@ void Sys_AsyncThread( void )
 		}
 	}
 #endif
-// Techyon END
+// RB end
 }
 
 /*
@@ -183,9 +183,9 @@ const char* Sys_EXEPath( void )
 	if( len == -1 )
 	{
 		Sys_Printf( "couldn't stat exe path link %s\n", linkpath.c_str() );
-		// Techyon RB: fixed array subscript is below array bounds
+		// RB: fixed array subscript is below array bounds
 		buf[ 0 ] = '\0';
-		// Techyon END
+		// RB end
 	}
 	return buf;
 }

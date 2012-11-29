@@ -40,11 +40,11 @@ extern idCVar	g_monsters;
 extern idCVar	g_decals;
 extern idCVar	g_knockback;
 extern idCVar	g_skill;
-// Techyon BEGIN
+// RB begin
 extern idCVar	g_gravityX;
 extern idCVar	g_gravityY;
 extern idCVar	g_gravityZ;
-// Techyon END
+// RB end
 extern idCVar	g_skipFX;
 extern idCVar	g_skipParticles;
 extern idCVar	g_bloodEffects;
@@ -200,9 +200,9 @@ extern idCVar	pm_thirdPerson;
 extern idCVar	pm_thirdPersonDeath;
 extern idCVar	pm_modelView;
 extern idCVar	pm_airTics;
-// Techyon BEGIN
+// RB begin
 extern idCVar	pm_showPhysics;
-// Techyon END
+// RB end
 
 extern idCVar	g_showPlayerShadow;
 extern idCVar	g_showHud;

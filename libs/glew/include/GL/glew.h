@@ -14666,7 +14666,7 @@ GLEWAPI GLenum glewInit ();
 GLEWAPI GLboolean glewIsSupported (const char* name);
 #define glewIsExtensionSupported(x) glewIsSupported(x)
 
-// Techyon BEGIN
+// RB begin
 #if defined(__cplusplus)
 #define GLEW_GET_VAR(x) ((*(const GLboolean*)&x) == GL_TRUE)
 #else

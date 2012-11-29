@@ -43,11 +43,11 @@ If you have questions concerning this license or the applicable additional terms
 //
 //===============================================================
 
-// Techyon RB: 64 bit fix, changed int to intptr_t
+// RB: 64 bit fix, changed int to intptr_t
 #define SMALL_HEADER_SIZE		( (intptr_t) ( sizeof( byte ) + sizeof( byte ) ) )
 #define MEDIUM_HEADER_SIZE		( (intptr_t) ( sizeof( mediumHeapEntry_s ) + sizeof( byte ) ) )
 #define LARGE_HEADER_SIZE		( (intptr_t) ( sizeof( dword * ) + sizeof( byte ) ) )
-// Techyon END
+// RB end
 
 #define ALIGN_SIZE( bytes )		( ( (bytes) + ALIGN - 1 ) & ~(ALIGN - 1) )
 #define SMALL_ALIGN( bytes )	( ALIGN_SIZE( (bytes) + SMALL_HEADER_SIZE ) - SMALL_HEADER_SIZE )
@@ -348,7 +348,7 @@ void idHeap::Free( void* p )
 idHeap::Allocate16
 ================
 */
-// Techyon RB: 64 bit fixes, changed int to intptr_t and 4 to sizeof(intptr_t)
+// RB: 64 bit fixes, changed int to intptr_t and 4 to sizeof(intptr_t)
 void* idHeap::Allocate16( const dword bytes )
 {
 	byte* ptr, *alignedPtr;
@@ -378,19 +378,19 @@ void* idHeap::Allocate16( const dword bytes )
 	*( ( intptr_t* )( alignedPtr - sizeof( intptr_t ) ) ) = ( intptr_t ) ptr;
 	return ( void* ) alignedPtr;
 }
-// Techyon END
+// RB end
 
 /*
 ================
 idHeap::Free16
 ================
 */
-// Techyon RB: 64 bit fixes, changed int to intptr_t and 4 to sizeof(intptr_t)
+// RB: 64 bit fixes, changed int to intptr_t and 4 to sizeof(intptr_t)
 void idHeap::Free16( void* p )
 {
 	free( ( void* ) * ( ( intptr_t* )( ( ( byte* ) p ) - sizeof( intptr_t ) ) ) );
 }
-// Techyon END
+// RB end
 
 /*
 ================
@@ -429,9 +429,9 @@ dword idHeap::Msize( void* p )
 		}
 		case LARGE_ALLOC:
 		{
-			// Techyon RB: 64 bit fix, changed dword to intptr_t
+			// RB: 64 bit fix, changed dword to intptr_t
 			return ( ( idHeap::page_s* )( *( ( intptr_t* )( ( ( byte* )p ) - ALIGN_SIZE( LARGE_HEADER_SIZE ) ) ) ) )->dataSize - ALIGN_SIZE( LARGE_HEADER_SIZE );
-			// Techyon END
+			// RB end
 		}
 		default:
 		{
@@ -555,9 +555,9 @@ idHeap::page_s* idHeap::AllocatePage( dword bytes )
 			}
 		}
 		
-		// Techyon RB: 64 bit fix, changed dword to intptr_t
+		// RB: 64 bit fix, changed dword to intptr_t
 		p->data		= ( void* ) ALIGN_SIZE( ( intptr_t )( ( byte* )( p ) ) + sizeof( idHeap::page_s ) );
-		// Techyon END
+		// RB end
 		p->dataSize	= size - sizeof( idHeap::page_s );
 		p->firstFree = NULL;
 		p->largestFree = 0;
@@ -614,12 +614,12 @@ idHeap::SmallAllocate
 void* idHeap::SmallAllocate( dword bytes )
 {
 	// we need the at least sizeof( dword ) bytes for the free list
-	// Techyon RB: 64 bit fix, changed dword to intptr_t
+	// RB: 64 bit fix, changed dword to intptr_t
 	if( bytes < sizeof( intptr_t ) )
 	{
 		bytes = sizeof( intptr_t );
 	}
-	// Techyon END
+	// RB end
 	
 	// increase the number of bytes if necessary to make sure the next small allocation is aligned
 	bytes = SMALL_ALIGN( bytes );
@@ -627,9 +627,9 @@ void* idHeap::SmallAllocate( dword bytes )
 	byte* smallBlock = ( byte* )( smallFirstFree[bytes / ALIGN] );
 	if( smallBlock )
 	{
-		// Techyon RB: 64 bit fix, changed dword to intptr_t
+		// RB: 64 bit fix, changed dword to intptr_t
 		intptr_t* link = ( intptr_t* )( smallBlock + SMALL_HEADER_SIZE );
-		// Techyon END
+		// RB end
 		smallBlock[1] = SMALL_ALLOC;					// allocation identifier
 		smallFirstFree[bytes / ALIGN] = ( void* )( *link );
 		return ( void* )( link );
@@ -672,9 +672,9 @@ void idHeap::SmallFree( void* ptr )
 	
 	byte* d = ( ( byte* )ptr ) - SMALL_HEADER_SIZE;
 	
-	// Techyon RB: 64 bit fix, changed dword to intptr_t
+	// RB: 64 bit fix, changed dword to intptr_t
 	intptr_t* dt = ( intptr_t* )ptr;
-	// Techyon END
+	// RB end
 	
 	// index into the table with free small memory blocks
 	dword ix = *d;
@@ -685,9 +685,9 @@ void idHeap::SmallFree( void* ptr )
 		idLib::common->FatalError( "SmallFree: invalid memory block" );
 	}
 	
-	// Techyon RB: 64 bit fix, changed dword to intptr_t
+	// RB: 64 bit fix, changed dword to intptr_t
 	*dt = ( intptr_t )smallFirstFree[ix];	// write next index
-	// Techyon END
+	// RB end
 	
 	smallFirstFree[ix] = ( void* )d;		// link
 }
@@ -1064,10 +1064,10 @@ void* idHeap::LargeAllocate( dword bytes )
 	
 	byte* 	d	= ( byte* )( p->data ) + ALIGN_SIZE( LARGE_HEADER_SIZE );
 	
-	// Techyon RB: 64 bit fix, changed dword to intptr_t
+	// RB: 64 bit fix, changed dword to intptr_t
 	intptr_t* 	dw	= ( intptr_t* )( d - ALIGN_SIZE( LARGE_HEADER_SIZE ) );
 	dw[0]		= ( intptr_t )p;			// write pointer back to page table
-	// Techyon END
+	// RB end
 	d[-1]		= LARGE_ALLOC;			// allocation identifier
 	
 	// link to 'large used page list'
@@ -1097,9 +1097,9 @@ void idHeap::LargeFree( void* ptr )
 	( ( byte* )( ptr ) )[-1] = INVALID_ALLOC;
 	
 	// get page pointer
-	// Techyon RB: 64 bit fix, changed dword to intptr_t
+	// RB: 64 bit fix, changed dword to intptr_t
 	pg = ( idHeap::page_s* )( *( ( intptr_t* )( ( ( byte* )ptr ) - ALIGN_SIZE( LARGE_HEADER_SIZE ) ) ) );
-	// Techyon END
+	// RB end
 	
 	// unlink from doubly linked list
 	if( pg->prev )
@@ -1278,9 +1278,9 @@ void* Mem_Alloc16( const int size )
 	void* mem = mem_heap->Allocate16( size );
 	
 	// make sure the memory is 16 byte aligned
-	// Techyon RB: 64 bit fix, changed int to intptr_t
+	// RB: 64 bit fix, changed int to intptr_t
 	assert( ( ( ( intptr_t )mem ) & 15 ) == 0 );
-	// Techyon END
+	// RB end
 	
 	return mem;
 }
@@ -1306,9 +1306,9 @@ void Mem_Free16( void* ptr )
 	}
 	
 	// make sure the memory is 16 byte aligned
-	// Techyon RB: 64 bit fix, changed int to intptr_t
+	// RB: 64 bit fix, changed int to intptr_t
 	assert( ( ( ( intptr_t )ptr ) & 15 ) == 0 );
-	// Techyon END
+	// RB end
 	
 	mem_heap->Free16( ptr );
 }
@@ -1960,9 +1960,9 @@ void* Mem_Alloc16( const int size, const char* fileName, const int lineNumber )
 	void* mem = Mem_AllocDebugMemory( size, fileName, lineNumber, true );
 
 	// make sure the memory is 16 byte aligned
-	// Techyon RB: 64 bit fix, changed int to intptr_t
+	// RB: 64 bit fix, changed int to intptr_t
 	assert( ( ( ( intptr_t )mem ) & 15 ) == 0 );
-	// Techyon END
+	// RB end
 
 	return mem;
 }
@@ -1980,9 +1980,9 @@ void Mem_Free16( void* ptr, const char* fileName, const int lineNumber )
 	}
 
 	// make sure the memory is 16 byte aligned
-	// Techyon RB: 64 bit fix, changed int to intptr_t
+	// RB: 64 bit fix, changed int to intptr_t
 	assert( ( ( ( intptr_t )ptr ) & 15 ) == 0 );
-	// Techyon END
+	// RB end
 
 	Mem_FreeDebugMemory( ptr, fileName, lineNumber, true );
 }

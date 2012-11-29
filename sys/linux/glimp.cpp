@@ -26,9 +26,9 @@ If you have questions concerning this license or the applicable additional terms
 ===========================================================================
 */
 
-// Techyon BEGIN
+// RB begin
 #include <GL/glxew.h>
-// Techyon END
+// RB end
 
 #include "../../idlib/precompiled.h"
 #include "../../renderer/tr_local.h"

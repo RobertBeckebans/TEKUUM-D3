@@ -34,13 +34,13 @@ If you have questions concerning this license or the applicable additional terms
 #include "tr_local.h"
 
 #ifdef BUILD_FREETYPE
-// Techyon RB: changed to local includes
+// RB: changed to local includes
 //#include <freetype/fterrors.h>
 #include <freetype/ftsystem.h>
 #include <freetype/ftimage.h>
 #include <freetype/freetype.h>
 #include <freetype/ftoutln.h>
-// Techyon END
+// RB end
 
 #define _FLOOR(x)  ((x) & -64)
 #define _CEIL(x)   (((x)+63) & -64)
@@ -49,9 +49,9 @@ If you have questions concerning this license or the applicable additional terms
 FT_Library ftLibrary = NULL;
 #endif
 
-// Techyon RB: changed 256 constants used below to FONT_SIZE
+// RB: changed 256 constants used below to FONT_SIZE
 const int FONT_SIZE = 256;
-// Techyon END
+// RB end
 
 #define FONT_PNG 1
 
@@ -93,9 +93,9 @@ FT_Bitmap* R_RenderGlyph( FT_GlyphSlot glyph, glyphInfo_t* glyphOut )
 	{
 		size   = pitch * height;
 		
-		// Techyon RB: added missing cast
+		// RB: added missing cast
 		bit2 = ( FT_Bitmap* ) Mem_Alloc( sizeof( FT_Bitmap ) );
-		// Techyon END
+		// RB end
 		
 		bit2->width      = width;
 		bit2->rows       = height;
@@ -103,9 +103,9 @@ FT_Bitmap* R_RenderGlyph( FT_GlyphSlot glyph, glyphInfo_t* glyphOut )
 		bit2->pixel_mode = ft_pixel_mode_grays;
 		//bit2->pixel_mode = ft_pixel_mode_mono;
 		
-		// Techyon RB: added missing cast
+		// RB: added missing cast
 		bit2->buffer     = ( byte* ) Mem_Alloc( pitch * height );
-		// Techyon END
+		// RB end
 		
 		bit2->num_grays = 256;
 		
@@ -183,7 +183,7 @@ static glyphInfo_t* RE_ConstructGlyphInfo( unsigned char* imageOut, int* xOut, i
 		scaled_height = glyph.height;
 		
 		// we need to make sure we fit
-		// Techyon RB: changed constants to FONT_SIZE -1
+		// RB: changed constants to FONT_SIZE -1
 		if( *xOut + scaled_width + 1 >= ( FONT_SIZE - 1 ) )
 		{
 			// RB: fixed wrong yOut
@@ -209,12 +209,12 @@ static glyphInfo_t* RE_ConstructGlyphInfo( unsigned char* imageOut, int* xOut, i
 			Mem_Free( bitmap );
 			return &glyph;
 		}
-		// Techyon END
+		// RB end
 		
 		src = bitmap->buffer;
-		// Techyon RB: changed constant to FONT_SIZE
+		// RB: changed constant to FONT_SIZE
 		dst = imageOut + ( *yOut * FONT_SIZE ) + *xOut;
-		// Techyon END
+		// RB end
 		
 		if( bitmap->pixel_mode == ft_pixel_mode_mono )
 		{
@@ -245,9 +245,9 @@ static glyphInfo_t* RE_ConstructGlyphInfo( unsigned char* imageOut, int* xOut, i
 				}
 				
 				src += glyph.pitch;
-				// Techyon RB: changed constant to FONT_SIZE
+				// RB: changed constant to FONT_SIZE
 				dst += FONT_SIZE;
-				// Techyon END
+				// RB end
 				
 			}
 		}
@@ -257,9 +257,9 @@ static glyphInfo_t* RE_ConstructGlyphInfo( unsigned char* imageOut, int* xOut, i
 			{
 				memcpy( dst, src, glyph.pitch );
 				src += glyph.pitch;
-				// Techyon RB: changed constant to FONT_SIZE
+				// RB: changed constant to FONT_SIZE
 				dst += FONT_SIZE;
-				// Techyon END
+				// RB end
 			}
 		}
 		
@@ -269,12 +269,12 @@ static glyphInfo_t* RE_ConstructGlyphInfo( unsigned char* imageOut, int* xOut, i
 		glyph.imageHeight = scaled_height;
 		glyph.imageWidth = scaled_width;
 		
-		// Techyon RB: changed constants to FONT_SIZE
+		// RB: changed constants to FONT_SIZE
 		glyph.s = ( float ) * xOut / FONT_SIZE;
 		glyph.t = ( float ) * yOut / FONT_SIZE;
 		glyph.s2 = glyph.s + ( float )scaled_width / FONT_SIZE;
 		glyph.t2 = glyph.t + ( float )scaled_height / FONT_SIZE;
-		// Techyon END
+		// RB end
 		
 		*xOut += scaled_width + 1;
 	}
@@ -435,9 +435,9 @@ bool idRenderSystemLocal::RegisterFont( const char* fontName, fontInfoEx_t& font
 	int i, len, fontCount;
 	idStr name;
 	
-	// Techyon RB: added dpi
+	// RB: added dpi
 	float dpi = 72;
-	// Techyon END
+	// RB end
 	
 	int pointSize = 12;
 	/*
@@ -538,7 +538,7 @@ bool idRenderSystemLocal::RegisterFont( const char* fontName, fontInfoEx_t& font
 	// make a 256x256 image buffer, once it is full, register it, clean it and keep going
 	// until all glyphs are rendered
 	
-	// Techyon RB: added missing cast
+	// RB: added missing cast
 	out = ( byte* ) Mem_Alloc( 1024 * 1024 );
 	if( out == NULL )
 	{
@@ -623,7 +623,7 @@ bool idRenderSystemLocal::RegisterFont( const char* fontName, fontInfoEx_t& font
 				// we need to create an image from the bitmap, set all the handles in the glyphs to this point
 				//
 	
-				// Techyon RB: changed constants to FONT_SIZE
+				// RB: changed constants to FONT_SIZE
 				scaledSize = FONT_SIZE * FONT_SIZE;
 				newSize = scaledSize * 4;
 				imageBuff = ( byte* ) Mem_Alloc( newSize );

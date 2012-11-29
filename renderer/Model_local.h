@@ -94,11 +94,11 @@ public:
 	bool						LoadLWO( const char* fileName );
 	bool						LoadFLT( const char* fileName );
 	bool						LoadMA( const char* filename );
-// Techyon RB: added COLLADA support
+// RB: added COLLADA support
 	bool						LoadDAE( const char* fileName );
 	
 	bool						ConvertDAEToModelSurfaces( const ColladaParser* dae );
-// Techyon END
+// RB end
 	bool						ConvertASEToModelSurfaces( const struct aseModel_s* ase );
 	bool						ConvertLWOToModelSurfaces( const struct st_lwObject* lwo );
 	bool						ConvertMAToModelSurfaces( const struct maModel_s* ma );

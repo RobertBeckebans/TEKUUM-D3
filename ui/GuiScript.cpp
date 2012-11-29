@@ -275,7 +275,7 @@ void Script_Transition( idWindow* window, idList<idGSWinVar>* src )
 	}
 }
 
-// Techyon RB: added "namedEvent" keyword
+// RB: added "namedEvent" keyword
 /*
 =========================
 Script_NamedEvent
@@ -308,7 +308,7 @@ void Script_NamedEvent( idWindow* window, idList<idGSWinVar>* src )
 		}
 	}
 }
-// Techyon END
+// RB end
 
 typedef struct
 {
@@ -330,9 +330,9 @@ guiCommandDef_t commandList[] =
 	{ "localSound", Script_LocalSound, 1, 1 },
 	{ "runScript", Script_RunScript, 1, 1 },
 	{ "evalRegs", Script_EvalRegs, 0, 0 },
-// Techyon RB: added "namedEvent" keyword
+// RB: added "namedEvent" keyword
 	{ "namedEvent", Script_NamedEvent, 1, 1 }
-// Techyon END
+// RB end
 };
 
 int	scriptCommandCount = sizeof( commandList ) / sizeof( guiCommandDef_t );

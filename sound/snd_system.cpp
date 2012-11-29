@@ -84,13 +84,13 @@ idCVar idSoundSystemLocal::s_muteEAXReverb( "s_muteEAXReverb", "0", CVAR_SOUND |
 idCVar idSoundSystemLocal::s_decompressionLimit( "s_decompressionLimit", "6", CVAR_SOUND | CVAR_INTEGER | CVAR_ROM, "specifies maximum uncompressed sample length in seconds" );
 #endif
 
-// Techyon BEGIN
+// RB begin
 #if defined(USE_OPENAL)
 bool idSoundSystemLocal::useOpenAL = false;
 bool idSoundSystemLocal::useEAXReverb = false;
 int idSoundSystemLocal::EAXAvailable = -1;
 #endif
-// Techyon END
+// RB end
 
 idSoundSystemLocal	soundSystemLocal;
 idSoundSystem*	soundSystem  = &soundSystemLocal;
@@ -357,9 +357,9 @@ void idSoundSystemLocal::Init()
 	}
 	
 	// make a 16 byte aligned finalMixBuffer
-	// Techyon RB: 64 bit fix, changed int to intptr_t
+	// RB: 64 bit fix, changed int to intptr_t
 	finalMixBuffer = ( float* )( ( ( ( intptr_t )realAccum ) + 15 ) & ~15 );
-	// Techyon END
+	// RB end
 	
 	graph = NULL;
 	
@@ -373,7 +373,7 @@ void idSoundSystemLocal::Init()
 	common->StartupVariable( "s_useOpenAL", true );
 	common->StartupVariable( "s_useEAXReverb", true );
 	
-	// Techyon BEGIN
+	// RB begin
 #if defined(USE_OPENAL)
 	if( idSoundSystemLocal::s_useOpenAL.GetBool() || idSoundSystemLocal::s_useEAXReverb.GetBool() )
 	{
@@ -476,7 +476,7 @@ void idSoundSystemLocal::Init()
 	useOpenAL = idSoundSystemLocal::s_useOpenAL.GetBool();
 	useEAXReverb = idSoundSystemLocal::s_useEAXReverb.GetBool();
 #endif
-	// Techyon END
+	// RB end
 	
 	cmdSystem->AddCommand( "listSounds", ListSounds_f, CMD_FL_SOUND, "lists all sounds" );
 	cmdSystem->AddCommand( "listSoundDecoders", ListSoundDecoders_f, CMD_FL_SOUND, "list active sound decoders" );
@@ -497,7 +497,7 @@ void idSoundSystemLocal::Shutdown()
 {
 	ShutdownHW();
 	
-	// Techyon BEGIN
+	// RB begin
 #if defined(USE_OPENAL)
 	
 	// EAX or not, the list needs to be cleared
@@ -531,13 +531,13 @@ void idSoundSystemLocal::Shutdown()
 		}
 	}
 #endif
-	// Techyon END
+	// RB end
 	
 	// destroy all the sounds (hardware buffers as well)
 	delete soundCache;
 	soundCache = NULL;
 	
-	// Techyon BEGIN
+	// RB begin
 #if defined(USE_OPENAL)
 	// destroy openal device and context
 	if( useOpenAL )
@@ -553,7 +553,7 @@ void idSoundSystemLocal::Shutdown()
 	
 	Sys_FreeOpenAL();
 #endif
-	// Techyon END
+	// RB end
 	
 	idSampleDecoder::Shutdown();
 }
@@ -579,11 +579,11 @@ bool idSoundSystemLocal::InitHW()
 		return false;
 	}
 	
-	// Techyon BEGIN
+	// RB begin
 #if defined(USE_OPENAL)
 	if( !useOpenAL )
 #endif
-		// Techyon END
+		// RB end
 	{
 		if( !snd_audio_hw->Initialize() )
 		{
@@ -732,7 +732,7 @@ int idSoundSystemLocal::AsyncUpdate( int inTime )
 	dword dwCurrentBlock;
 	
 	// If not using openal, get actual playback position from sound hardware
-	// Techyon BEGIN
+	// RB begin
 #if defined(USE_OPENAL)
 	if( useOpenAL )
 	{
@@ -742,7 +742,7 @@ int idSoundSystemLocal::AsyncUpdate( int inTime )
 	}
 	else
 #endif
-		// Techyon END
+		// RB end
 	{
 		// and here in bytes
 		// get the current byte position in the buffer where the sound hardware is currently reading
@@ -768,11 +768,11 @@ int idSoundSystemLocal::AsyncUpdate( int inTime )
 	short* fBlock = NULL;
 	ulong fBlockLen = 0;
 	
-	// Techyon BEGIN
+	// RB begin
 #if defined(USE_OPENAL)
 	if( !useOpenAL )
 #endif
-		// Techyon END
+		// RB end
 	{
 		snd_audio_hw->Lock( ( void** )&fBlock, &fBlockLen );
 		if( !fBlock )
@@ -817,7 +817,7 @@ int idSoundSystemLocal::AsyncUpdate( int inTime )
 		soundStats.missedWindow++;
 	}
 	
-	// Techyon BEGIN
+	// RB begin
 #if defined(USE_OPENAL)
 	if( useOpenAL )
 	{
@@ -826,7 +826,7 @@ int idSoundSystemLocal::AsyncUpdate( int inTime )
 	}
 	else
 #endif
-		// Techyon END
+		// RB end
 	{
 		// clear the buffer for all the mixing output
 		SIMDProcessor->Memset( finalMixBuffer, 0, MIXBUFFER_SAMPLES * sizeof( float ) * numSpeakers );
@@ -838,7 +838,7 @@ int idSoundSystemLocal::AsyncUpdate( int inTime )
 		currentSoundWorld->MixLoop( newSoundTime, numSpeakers, finalMixBuffer );
 	}
 	
-	// Techyon BEGIN
+	// RB begin
 #if defined(USE_OPENAL)
 	if( useOpenAL )
 	{
@@ -847,7 +847,7 @@ int idSoundSystemLocal::AsyncUpdate( int inTime )
 	}
 	else
 #endif
-		// Techyon END
+		// RB end
 	{
 		short* dest = fBlock + nextWriteSamples * numSpeakers;
 		
@@ -889,11 +889,11 @@ int idSoundSystemLocal::AsyncUpdateWrite( int inTime )
 		return 0;
 	}
 	
-	// Techyon BEGIN
+	// RB begin
 #if defined(USE_OPENAL)
 	if( !useOpenAL )
 #endif
-		// Techyon END
+		// RB end
 	{
 		snd_audio_hw->Flush();
 	}
@@ -918,7 +918,7 @@ int idSoundSystemLocal::AsyncUpdateWrite( int inTime )
 	int sampleTime = dwCurrentBlock * MIXBUFFER_SAMPLES;
 	int numSpeakers = snd_audio_hw->GetNumberOfSpeakers();
 	
-	// Techyon BEGIN
+	// RB begin
 #if defined(USE_OPENAL)
 	if( useOpenAL )
 	{
@@ -927,7 +927,7 @@ int idSoundSystemLocal::AsyncUpdateWrite( int inTime )
 	}
 	else
 #endif
-		// Techyon END
+		// RB end
 	{
 		// clear the buffer for all the mixing output
 		SIMDProcessor->Memset( finalMixBuffer, 0, MIXBUFFER_SAMPLES * sizeof( float ) * numSpeakers );
@@ -939,7 +939,7 @@ int idSoundSystemLocal::AsyncUpdateWrite( int inTime )
 		currentSoundWorld->MixLoop( sampleTime, numSpeakers, finalMixBuffer );
 	}
 	
-	// Techyon BEGIN
+	// RB begin
 #if defined(USE_OPENAL)
 	if( useOpenAL )
 	{
@@ -948,7 +948,7 @@ int idSoundSystemLocal::AsyncUpdateWrite( int inTime )
 	}
 	else
 #endif
-		// Techyon END
+		// RB end
 	{
 		short* dest = snd_audio_hw->GetMixBuffer();
 		
@@ -1349,7 +1349,7 @@ void idSoundSystemLocal::BeginLevelLoad()
 	}
 	soundCache->BeginLevelLoad();
 	
-	// Techyon BEGIN
+	// RB begin
 #if defined(USE_OPENAL)
 	if( efxloaded )
 	{
@@ -1357,7 +1357,7 @@ void idSoundSystemLocal::BeginLevelLoad()
 		efxloaded = false;
 	}
 #endif
-	// Techyon END
+	// RB end
 }
 
 /*
@@ -1373,7 +1373,7 @@ void idSoundSystemLocal::EndLevelLoad( const char* mapstring )
 	}
 	soundCache->EndLevelLoad();
 	
-	// Techyon BEGIN
+	// RB begin
 #if defined(USE_OPENAL)
 	idStr efxname( "efxs/" );
 	idStr mapname( mapstring );
@@ -1393,7 +1393,7 @@ void idSoundSystemLocal::EndLevelLoad( const char* mapstring )
 		common->Printf( "sound: missing %s\n", efxname.c_str() );
 	}
 #endif
-	// Techyon END
+	// RB end
 }
 
 /*
@@ -1401,7 +1401,7 @@ void idSoundSystemLocal::EndLevelLoad( const char* mapstring )
 idSoundSystemLocal::AllocOpenALSource
 ===================
 */
-// Techyon BEGIN
+// RB begin
 #if defined(USE_OPENAL)
 ALuint idSoundSystemLocal::AllocOpenALSource( idSoundChannel* chan, bool looping, bool stereo )
 {
@@ -1541,7 +1541,7 @@ void idSoundSystemLocal::FreeOpenALSource( ALuint handle )
 	}
 }
 #endif // #if defined(USE_OPENAL)
-// Techyon END
+// RB end
 
 /*
 ============================================================
@@ -1639,11 +1639,11 @@ void idSoundSystemLocal::DoEnviroSuit( float* samples, int numSamples, int numSp
 	float out[10000], *out_p = out + 2;
 	float in[10000], *in_p = in + 2;
 	
-	// Techyon BEGIN
+	// RB begin
 #if defined(USE_OPENAL)
 	assert( !idSoundSystemLocal::useOpenAL );
 #endif
-	// Techyon END
+	// RB end
 	
 	if( !fxList.Num() )
 	{

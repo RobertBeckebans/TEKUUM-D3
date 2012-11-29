@@ -278,7 +278,7 @@ static	void DrawAllEdges( void )
 	
 	Draw_ClearWindow();
 	
-	// Techyon BEGIN
+	// RB begin
 #if !defined(USE_GLES1)
 	glBegin( GL_LINES );
 	for( i = 0 ; i < numOptEdges ; i++ )
@@ -294,7 +294,7 @@ static	void DrawAllEdges( void )
 	}
 	glEnd();
 #endif
-	// Techyon END
+	// RB end
 	
 	glFlush();
 	
@@ -318,7 +318,7 @@ static void DrawVerts( optIsland_t* island )
 	glEnable( GL_BLEND );
 	glBlendFunc( GL_ONE, GL_ONE );
 	
-	// Techyon BEGIN
+	// RB begin
 #if !defined(USE_GLES1)
 	glColor3f( 0.3f, 0.3f, 0.3f );
 	glPointSize( 3 );
@@ -329,7 +329,7 @@ static void DrawVerts( optIsland_t* island )
 	}
 	glEnd();
 #endif
-	// Techyon END
+	// RB end
 	
 	glDisable( GL_BLEND );
 	glFlush();
@@ -351,7 +351,7 @@ static	void DrawEdges( optIsland_t* island )
 	
 	Draw_ClearWindow();
 	
-	// Techyon BEGIN
+	// RB begin
 #if !defined(USE_GLES1)
 	glBegin( GL_LINES );
 	for( edge = island->edges ; edge ; edge = edge->islandLink )
@@ -367,7 +367,7 @@ static	void DrawEdges( optIsland_t* island )
 	}
 	glEnd();
 #endif
-	// Techyon END
+	// RB end
 	
 	glFlush();
 	
@@ -571,7 +571,7 @@ static	bool TryAddNewEdge( optVertex_t* v1, optVertex_t* v2, optIsland_t* island
 	
 	if( dmapGlobals.drawflag )
 	{
-		// Techyon BEGIN
+		// RB begin
 #if !defined(USE_GLES1)
 		glBegin( GL_LINES );
 		glColor3f( 0, ( 128 + orandom.RandomInt( 127 ) ) / 255.0, 0 );
@@ -579,7 +579,7 @@ static	bool TryAddNewEdge( optVertex_t* v1, optVertex_t* v2, optIsland_t* island
 		glVertex3fv( v2->pv.ToFloatPtr() );
 		glEnd();
 #endif
-		// Techyon END
+		// RB end
 		
 		glFlush();
 	}
@@ -821,7 +821,7 @@ static	void RemoveIfColinear( optVertex_t* ov, optIsland_t* island )
 	
 	if( dmapGlobals.drawflag )
 	{
-		// Techyon BEGIN
+		// RB begin
 #if !defined(USE_GLES1)
 		glBegin( GL_LINES );
 		glColor3f( 1, 1, 0 );
@@ -837,7 +837,7 @@ static	void RemoveIfColinear( optVertex_t* ov, optIsland_t* island )
 		glEnd();
 		glFlush();
 #endif
-		// Techyon END
+		// RB end
 	}
 	
 	// replace the two edges with a single edge
@@ -1138,7 +1138,7 @@ static void CreateOptTri( optVertex_t* first, optEdge_t* e1, optEdge_t* e2, optI
 //DrawEdges( island );
 
 	// identify the third edge
-	// Techyon BEGIN
+	// RB begin
 #if !defined(USE_GLES1)
 	if( dmapGlobals.drawflag )
 	{
@@ -1156,7 +1156,7 @@ static void CreateOptTri( optVertex_t* first, optEdge_t* e1, optEdge_t* e2, optI
 		glFlush();
 	}
 #endif
-	// Techyon END
+	// RB end
 	
 	for( opposite = second->edges ; opposite ; )
 	{
@@ -1184,7 +1184,7 @@ static void CreateOptTri( optVertex_t* first, optEdge_t* e1, optEdge_t* e2, optI
 		return;
 	}
 	
-	// Techyon BEGIN
+	// RB begin
 #if !defined(USE_GLES1)
 	if( dmapGlobals.drawflag )
 	{
@@ -1196,7 +1196,7 @@ static void CreateOptTri( optVertex_t* first, optEdge_t* e1, optEdge_t* e2, optI
 		glFlush();
 	}
 #endif
-	// Techyon END
+	// RB end
 	
 	// create new triangle
 	optTri = ( optTri_t* )Mem_Alloc( sizeof( *optTri ) );
@@ -1209,7 +1209,7 @@ static void CreateOptTri( optVertex_t* first, optEdge_t* e1, optEdge_t* e2, optI
 	
 	if( dmapGlobals.drawflag )
 	{
-		// Techyon BEGIN
+		// RB begin
 #if !defined(USE_GLES1)
 		glColor3f( 1, 1, 1 );
 		glPointSize( 4 );
@@ -1218,7 +1218,7 @@ static void CreateOptTri( optVertex_t* first, optEdge_t* e1, optEdge_t* e2, optI
 		glEnd();
 		glFlush();
 #endif
-		// Techyon END
+		// RB end
 	}
 	
 	// find the midpoint, and scan through all the original triangles to
@@ -1248,7 +1248,7 @@ static void CreateOptTri( optVertex_t* first, optEdge_t* e1, optEdge_t* e2, optI
 		{
 			glColor4f( 0, ( 128 + orandom.RandomInt( 127 ) ) / 255.0, 0, 1 );
 		}
-		// Techyon BEGIN
+		// RB begin
 #if !defined(USE_GLES1)
 		glBegin( GL_TRIANGLES );
 		glVertex3fv( optTri->v[0]->pv.ToFloatPtr() );
@@ -1263,7 +1263,7 @@ static void CreateOptTri( optVertex_t* first, optEdge_t* e1, optEdge_t* e2, optI
 		glEnd();
 		glFlush();
 #endif
-		// Techyon END
+		// RB end
 	}
 	
 	// link the triangle to it's edges
@@ -1641,7 +1641,7 @@ static void DrawOriginalEdges( int numOriginalEdges, originalEdges_t* originalEd
 	}
 	Draw_ClearWindow();
 	
-	// Techyon BEGIN
+	// RB begin
 #if !defined(USE_GLES1)
 	glBegin( GL_LINES );
 	for( i = 0 ; i < numOriginalEdges ; i++ )
@@ -1654,7 +1654,7 @@ static void DrawOriginalEdges( int numOriginalEdges, originalEdges_t* originalEd
 	glEnd();
 	glFlush();
 #endif
-	// Techyon END
+	// RB end
 }
 
 
@@ -1788,7 +1788,7 @@ void SplitOriginalEdgesAtCrossings( optimizeGroup_t* opt )
 		{
 			DrawOriginalEdges( numOriginalEdges, originalEdges );
 			
-			// Techyon BEGIN
+			// RB begin
 #if !defined(USE_GLES1)
 			glBegin( GL_LINES );
 			glColor3f( 0, 1, 0 );
@@ -1798,7 +1798,7 @@ void SplitOriginalEdgesAtCrossings( optimizeGroup_t* opt )
 			glEnd();
 			glFlush();
 #endif
-			// Techyon END
+			// RB end
 		}
 		for( j = i + 1 ; j < numOriginalEdges ; j++ )
 		{

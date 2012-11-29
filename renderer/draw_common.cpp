@@ -166,10 +166,10 @@ void RB_PrepareStageTexturing( const shaderStage_t* pStage,  const drawSurf_t* s
 	
 	if( pStage->texture.texgen == TG_GLASSWARP )
 	{
-		// Techyon BEGIN
+		// RB begin
 		if( tr.backEndRenderer == BE_ARB2 || tr.backEndRenderer == BE_GLSL || tr.backEndRenderer == BE_EXP )
 		{
-			// Techyon END
+			// RB end
 			glBindProgramARB( GL_FRAGMENT_PROGRAM_ARB, FPROG_GLASSWARP );
 			glEnable( GL_FRAGMENT_PROGRAM_ARB );
 			
@@ -210,10 +210,10 @@ void RB_PrepareStageTexturing( const shaderStage_t* pStage,  const drawSurf_t* s
 	
 	if( pStage->texture.texgen == TG_REFLECT_CUBE )
 	{
-		// Techyon BEGIN
+		// RB begin
 		if( tr.backEndRenderer == BE_ARB2 || tr.backEndRenderer == BE_GLSL || tr.backEndRenderer == BE_EXP )
 		{
-			// Techyon END
+			// RB end
 			// see if there is also a bump map specified
 			const shaderStage_t* bumpStage = surf->material->GetBumpStage();
 			if( bumpStage )
@@ -329,10 +329,10 @@ void RB_FinishStageTexturing( const shaderStage_t* pStage, const drawSurf_t* sur
 	
 	if( pStage->texture.texgen == TG_REFLECT_CUBE )
 	{
-		// Techyon BEGIN
+		// RB begin
 		if( tr.backEndRenderer == BE_ARB2 || tr.backEndRenderer == BE_GLSL || tr.backEndRenderer == BE_EXP )
 		{
-			// Techyon END
+			// RB end
 			// see if there is also a bump map specified
 			const shaderStage_t* bumpStage = surf->material->GetBumpStage();
 			if( bumpStage )
@@ -629,7 +629,7 @@ void RB_T_FillDepthBuffer( const drawSurf_t* surf )
 	
 }
 
-// Techyon BEGIN
+// RB begin
 #if !defined(USE_GLES1)
 static void	RB_T_DrawInteractionAsFillDepthBufferWithNormals( const drawInteractionMaterialOnly_t* din )
 {
@@ -1039,7 +1039,7 @@ void RB_T_FillDepthBufferWithNormals( const drawSurf_t* surf )
 	}
 }
 #endif // #if !defined(USE_GLES1)
-// Techyon END
+// RB end
 
 
 /*
@@ -1408,10 +1408,10 @@ void RB_STD_T_RenderShaderPasses( const drawSurf_t* surf )
 			//--------------------------
 			
 			// completely skip the stage if we don't have the capability
-			// Techyon BEGIN
+			// RB begin
 			if( tr.backEndRenderer != BE_ARB2 && tr.backEndRenderer != BE_GLSL && tr.backEndRenderer != BE_EXP )
 			{
-				// Techyon END
+				// RB end
 				continue;
 			}
 			if( r_skipNewAmbient.GetBool() )
@@ -1676,10 +1676,10 @@ int RB_STD_DrawShaderPasses( drawSurf_t** drawSurfs, int numDrawSurfs )
 		}
 		
 		// only dump if in a 3d view
-		// Techyon BEGIN
+		// RB begin
 		if( backEnd.viewDef->viewEntitys && ( tr.backEndRenderer == BE_ARB2 || tr.backEndRenderer == BE_GLSL || tr.backEndRenderer == BE_EXP ) )
 		{
-			// Techyon END
+			// RB end
 			globalImages->currentRenderImage->CopyFramebuffer( backEnd.viewDef->viewport.x1,
 					backEnd.viewDef->viewport.y1,  backEnd.viewDef->viewport.x2 -  backEnd.viewDef->viewport.x1 + 1,
 					backEnd.viewDef->viewport.y2 -  backEnd.viewDef->viewport.y1 + 1, true );

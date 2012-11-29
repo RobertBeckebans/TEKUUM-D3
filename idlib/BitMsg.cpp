@@ -608,9 +608,9 @@ int idBitMsg::ReadDeltaByteCounter( int oldValue ) const
 	}
 	newValue = ReadBits( i );
 	
-	// Techyon RB: fixed missing parentheses
+	// RB: fixed missing parentheses
 	return ( ( oldValue & ~( ( 1 << i ) - 1 ) ) | newValue );
-	// Techyon END
+	// RB end
 }
 
 /*
@@ -629,9 +629,9 @@ int idBitMsg::ReadDeltaShortCounter( int oldValue ) const
 	}
 	newValue = ReadBits( i );
 	
-	// Techyon RB: fixed missing parentheses
+	// RB: fixed missing parentheses
 	return ( ( oldValue & ~( ( 1 << i ) - 1 ) ) | newValue );
-	// Techyon END
+	// RB end
 }
 
 /*
@@ -650,9 +650,9 @@ int idBitMsg::ReadDeltaLongCounter( int oldValue ) const
 	}
 	newValue = ReadBits( i );
 	
-	// Techyon RB: fixed missing parentheses
+	// RB: fixed missing parentheses
 	return ( ( oldValue & ~( ( 1 << i ) - 1 ) ) | newValue );
-	// Techyon END
+	// RB end
 }
 
 /*

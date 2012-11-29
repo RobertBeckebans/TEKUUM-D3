@@ -31,9 +31,9 @@ If you have questions concerning this license or the applicable additional terms
 
 #define MAX_STACK_DEPTH 	64
 
-// Techyon RB: doubled local stack size
+// RB: doubled local stack size
 #define LOCALSTACK_SIZE 	(6144 * 2)
-// Techyon END
+// RB end
 
 typedef struct prstack_s
 {
@@ -65,13 +65,13 @@ private:
 	
 	void				PopParms( int numParms );
 	void				PushString( const char* string );
-	// Techyon BEGIN
+	// RB begin
 	// RB: 64 bit fix, changed int to intptr_t
 	void				Push( intptr_t value );
 	
 	// RB: added PushVector for new E_EVENT_SIZEOF_VEC
 	void				PushVector( const idVec3& vector );
-	// Techyon END
+	// RB end
 	const char*			FloatToString( float value );
 	void				AppendString( idVarDef* def, const char* from );
 	void				SetString( idVarDef* def, const char* from );
@@ -104,10 +104,10 @@ public:
 	int					CurrentLine( void ) const;
 	const char*			CurrentFile( void ) const;
 	
-	// Techyon RB: fixed missing const-ness
+	// RB: fixed missing const-ness
 	void				Error( const char* fmt, ... ) const id_attribute( ( format( printf, 2, 3 ) ) );
 	void				Warning( const char* fmt, ... ) const id_attribute( ( format( printf, 2, 3 ) ) );
-	// Techyon END
+	// RB end
 	void				DisplayInfo( void ) const;
 	
 	bool				BeginMultiFrameEvent( idEntity* ent, const idEventDef* event );
@@ -150,7 +150,7 @@ ID_INLINE void idInterpreter::PopParms( int numParms )
 idInterpreter::Push
 ====================
 */
-// Techyon RB: 64 bit fix, changed int to intptr_t
+// RB: 64 bit fix, changed int to intptr_t
 ID_INLINE void idInterpreter::Push( intptr_t value )
 {
 	if( localstackUsed + sizeof( intptr_t ) > LOCALSTACK_SIZE )
@@ -160,9 +160,9 @@ ID_INLINE void idInterpreter::Push( intptr_t value )
 	*( intptr_t* )&localstack[ localstackUsed ] = value;
 	localstackUsed += sizeof( intptr_t );
 }
-// Techyon END
+// RB end
 
-// Techyon BEGIN
+// RB begin
 /*
 ====================
 idInterpreter::PushVector
@@ -177,7 +177,7 @@ ID_INLINE void idInterpreter::PushVector( const idVec3& vector )
 	*( idVec3* )&localstack[ localstackUsed ] = vector;
 	localstackUsed += E_EVENT_SIZEOF_VEC;
 }
-// Techyon END
+// RB end
 
 
 /*

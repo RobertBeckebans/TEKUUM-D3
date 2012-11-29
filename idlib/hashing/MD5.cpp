@@ -261,9 +261,9 @@ void MD5_Final( MD5_CTX* ctx, unsigned char digest[16] )
 	MD5_Transform( ctx->state, ( unsigned int* ) ctx->in );
 	memcpy( digest, ctx->state, 16 );
 	
-	// Techyon RB: 64 bit fix, changed ctx to MD5_CTX
+	// RB: 64 bit fix, changed ctx to MD5_CTX
 	memset( ctx, 0, sizeof( MD5_CTX ) );        /* In case it's sensitive */
-	// Techyon END
+	// RB end
 }
 
 /*
@@ -271,7 +271,7 @@ void MD5_Final( MD5_CTX* ctx, unsigned char digest[16] )
 MD5_BlockChecksum
 ===============
 */
-// Techyon RB: 64 bit fixes, changed long to int
+// RB: 64 bit fixes, changed long to int
 unsigned int MD5_BlockChecksum( const void* data, int length )
 {
 	unsigned int	digest[4];
@@ -286,5 +286,5 @@ unsigned int MD5_BlockChecksum( const void* data, int length )
 	
 	return val;
 }
-// Techyon END
+// RB end
 

@@ -479,9 +479,9 @@ idActor::idActor( void )
 	
 	waitState			= "";
 	
-	// Techyon RB: fixed converting to non-pointer type ‘int’ from NULL
+	// RB: fixed converting to non-pointer type ‘int’ from NULL
 	blink_anim			= 0;
-	// Techyon END
+	// RB end
 	blink_time			= 0;
 	blink_min			= 0;
 	blink_max			= 0;
@@ -3502,10 +3502,10 @@ idActor::Event_HasAnim
 */
 void idActor::Event_HasAnim( int channel, const char* animname )
 {
-	// Techyon RB: fixed converting to non-pointer type ‘int’ from NULL
+	// RB: fixed converting to non-pointer type ‘int’ from NULL
 	if( GetAnim( channel, animname ) != 0 )
 	{
-		// Techyon END
+		// RB end
 		idThread::ReturnFloat( 1.0f );
 	}
 	else

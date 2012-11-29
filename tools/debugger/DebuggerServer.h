@@ -100,7 +100,7 @@ private:
 	void		SendPacket( void* data, int datasize );
 	
 	// Message handlers
-	// Techyon RB: changed msg_t* to idBitMsg&
+	// RB: changed msg_t* to idBitMsg&
 	void		HandleAddBreakpoint( idBitMsg& msg );
 	void		HandleRemoveBreakpoint( idBitMsg& msg );
 	void		HandleResume( idBitMsg& msg );
@@ -110,7 +110,7 @@ private:
 	
 	// MSG helper routines
 	void		MSG_WriteCallstackFunc( idBitMsg& msg, const struct prstack_s* stack );
-	// Techyon END
+	// RB end
 };
 
 /*

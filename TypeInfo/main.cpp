@@ -182,7 +182,7 @@ const char* Sys_DefaultCDPath( void )
 
 const char* Sys_DefaultBasePath( void )
 {
-// Techyon BEGIN
+// RB begin
 	static char basePath[MAX_OSPATH];
 	idStr cwdPath;
 	
@@ -201,7 +201,7 @@ const char* Sys_DefaultBasePath( void )
 	return basePath;
 	
 	//return Sys_Cwd();
-// Techyon END
+// RB end
 }
 
 const char* Sys_DefaultSavePath( void )
@@ -262,12 +262,12 @@ int Sys_ListFiles( const char* directory, const char* extension, idStrList& list
 	return list.Num();
 }
 
-// Techyon BEGIN
+// RB begin
 #elif defined(__linux__)
 
 // TODO
 
-// Techyon END
+// RB end
 #else
 
 const char* 	Sys_DefaultCDPath( void )
@@ -359,7 +359,7 @@ const char* 	idSysLocal::GetCallStackCurStr( int depth )
 }
 void			idSysLocal::ShutdownSymbols( void ) {}
 
-// Techyon RB: 64 bit fixes, changed int to intptr_t
+// RB: 64 bit fixes, changed int to intptr_t
 intptr_t		idSysLocal::DLL_Load( const char* dllName )
 {
 	return 0;
@@ -369,7 +369,7 @@ void* 			idSysLocal::DLL_GetProcAddress( intptr_t dllHandle, const char* procNam
 	return NULL;
 }
 void			idSysLocal::DLL_Unload( intptr_t dllHandle ) { }
-// Techyon END
+// RB end
 void			idSysLocal::DLL_GetFileName( const char* baseName, char* dllName, int maxLength ) { }
 
 sysEvent_t		idSysLocal::GenerateMouseButtonEvent( int button, bool down )

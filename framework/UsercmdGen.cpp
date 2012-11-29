@@ -364,18 +364,18 @@ private:
 	void			AdjustAngles( void );
 	void			KeyMove( void );
 	void			JoystickMove( void );
-// Techyon BEGIN
+// RB begin
 	void			Xbox360ControllerMove();
-// Techyon END
+// RB end
 	void			MouseMove( void );
 	void			CmdButtons( void );
 	
 	void			Mouse( void );
 	void			Keyboard( void );
 	void			Joystick( void );
-// Techyon BEGIN
+// RB begin
 	void			Xbox360Controller( void );
-// Techyon END
+// RB end
 
 	void			Key( int keyNum, bool down );
 	
@@ -763,7 +763,7 @@ void idUsercmdGenLocal::JoystickMove( void )
 #endif
 }
 
-// Techyon BEGIN
+// RB begin
 void idUsercmdGenLocal::Xbox360ControllerMove( void )
 {
 	float	anglespeed;
@@ -790,7 +790,7 @@ void idUsercmdGenLocal::Xbox360ControllerMove( void )
 		//cmd.buttons |= BUTTON_RUN;
 	}
 }
-// Techyon END
+// RB end
 
 /*
 ==============
@@ -896,10 +896,10 @@ void idUsercmdGenLocal::MakeCurrent( void )
 		// get basic movement from joystick
 		JoystickMove();
 		
-// Techyon BEGIN
+// RB begin
 		// get basic movement from xbox 360 controller
 		Xbox360ControllerMove();
-// Techyon END
+// RB end
 
 		// check to make sure the angles haven't wrapped
 		if( viewangles[PITCH] - oldAngles[PITCH] > 90 )
@@ -1320,9 +1320,9 @@ usercmd_t idUsercmdGenLocal::GetDirectUsercmd( void )
 	// process the system joystick events
 	Joystick();
 	
-// Techyon BEGIN
+// RB begin
 	Xbox360Controller();
-// Techyon END
+// RB end
 
 	// create the usercmd
 	MakeCurrent();

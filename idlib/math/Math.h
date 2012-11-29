@@ -63,7 +63,7 @@ If you have questions concerning this license or the applicable additional terms
 #define	ANGLE2BYTE(x)			( idMath::FtoiFast( (x) * 256.0f / 360.0f ) & 255 )
 #define	BYTE2ANGLE(x)			( (x) * ( 360.0f / 256.0f ) )
 
-// Techyon RB: 64 bit fixes, changed long to int
+// RB: 64 bit fixes, changed long to int
 #define FLOATSIGNBITSET(f)		((*(const unsigned int *)&(f)) >> 31)
 #define FLOATSIGNBITNOTSET(f)	((~(*(const unsigned int *)&(f))) >> 31)
 #define FLOATNOTZERO(f)			((*(const unsigned int *)&(f)) & ~(1<<31) )
@@ -75,7 +75,7 @@ If you have questions concerning this license or the applicable additional terms
 #define FLOAT_IS_IND(x)			((*(const unsigned int *)&x) == 0xffc00000)
 #define	FLOAT_IS_DENORMAL(x)	(((*(const unsigned int *)&x) & 0x7f800000) == 0x00000000 && \
 								 ((*(const unsigned int *)&x) & 0x007fffff) != 0x00000000 )
-// Techyon END
+// RB end
 
 #define IEEE_FLT_MANTISSA_BITS	23
 #define IEEE_FLT_EXPONENT_BITS	8
@@ -214,10 +214,10 @@ public:
 	static int					Ftoi( float f );			// float to int conversion
 	static int					FtoiFast( float f );		// fast float to int conversion but uses current FPU round mode (default round nearest)
 	
-	// Techyon RB: 64 bit fixes, changed long to int
+	// RB: 64 bit fixes, changed long to int
 	static unsigned int			Ftol( float f );			// float to long conversion
 	static unsigned int			FtolFast( float );			// fast float to long conversion but uses current FPU round mode (default round nearest)
-	// Techyon END
+	// RB end
 	
 	static signed char			ClampChar( int i );
 	static signed short			ClampShort( int i );
@@ -271,7 +271,7 @@ private:
 	static bool					initialized;
 };
 
-// Techyon RB: 64 bit fixes, changed long to int
+// RB: 64 bit fixes, changed long to int
 ID_INLINE float idMath::RSqrt( float x )
 {
 
@@ -285,7 +285,7 @@ ID_INLINE float idMath::RSqrt( float x )
 	r = r * ( 1.5f - r * r * y );
 	return r;
 }
-// Techyon END
+// RB end
 
 ID_INLINE float idMath::InvSqrt16( float x )
 {
@@ -1010,7 +1010,7 @@ ID_INLINE int idMath::FtoiFast( float f )
 #endif
 }
 
-// Techyon RB: 64 bit fixes, changed long to int
+// RB: 64 bit fixes, changed long to int
 ID_INLINE unsigned int idMath::Ftol( float f )
 {
 	return ( unsigned int ) f;
@@ -1046,7 +1046,7 @@ ID_INLINE unsigned int idMath::FtolFast( float f )
 	return ( unsigned int ) f;
 #endif
 }
-// Techyon END
+// RB end
 
 ID_INLINE signed char idMath::ClampChar( int i )
 {

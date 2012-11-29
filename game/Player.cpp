@@ -76,9 +76,9 @@ const idEventDef EV_Player_ExitTeleporter( "exitTeleporter" );
 const idEventDef EV_Player_StopAudioLog( "stopAudioLog" );
 const idEventDef EV_Player_HideTip( "hideTip" );
 const idEventDef EV_Player_LevelTrigger( "levelTrigger" );
-// Techyon RB: changed to internal event
+// RB: changed to internal event
 const idEventDef EV_SpectatorTouch( "<spectatorTouch>", "et" );
-// Techyon END
+// RB end
 const idEventDef EV_Player_GetIdealWeapon( "getIdealWeapon", NULL, 's' );
 
 CLASS_DECLARATION( idActor, idPlayer )
@@ -7096,10 +7096,10 @@ void idPlayer::UpdateHud( void )
 				inventory.nextItemNum = 1;
 			}
 			int i;
-			// Techyon RB: fixed left operand of comma operator has no effect
+			// RB: fixed left operand of comma operator has no effect
 			for( i = 0; i < 5 && i < c; i++ )
 			{
-				// Techyon END
+				// RB end
 				hud->SetStateString( va( "itemtext%i", inventory.nextItemNum ), inventory.pickupItemNames[0].name );
 				hud->SetStateString( va( "itemicon%i", inventory.nextItemNum ), inventory.pickupItemNames[0].icon );
 				hud->HandleNamedEvent( va( "itemPickup%i", inventory.nextItemNum++ ) );

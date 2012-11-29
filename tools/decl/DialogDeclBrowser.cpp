@@ -453,13 +453,13 @@ BOOL DialogDeclBrowser::OnInitDialog()
 	
 	GetClientRect( initialRect );
 	
-// Techyon BEGIN
+// RB begin
 #if _MFC_VER >= 0x0A00
 	statusBar.CreateEx( SBARS_SIZEGRIP, WS_CHILD | WS_VISIBLE | CBRS_BOTTOM, initialRect, this, AFX_IDW_STATUS_BAR );
 #else
 	statusBar.Create( WS_CHILD | WS_VISIBLE | CBRS_BOTTOM, initialRect, this, AFX_IDW_STATUS_BAR );
 #endif
-// Techyon END
+// RB end
 
 	baseDeclTree.Create( 0, initialRect, this, IDC_DECLBROWSER_BASE_TREE );
 	
@@ -618,7 +618,7 @@ DialogDeclBrowser::OnToolTipNotify
 BOOL DialogDeclBrowser::OnToolTipNotify( UINT id, NMHDR* pNMHDR, LRESULT* pResult )
 {
 
-	// Techyon BEGIN
+	// RB begin
 #if _MFC_VER >= 0x0A00
 	// need to handle both ANSI and UNICODE versions of the message
 	TOOLTIPTEXTA* pTTTA = ( TOOLTIPTEXTA* )pNMHDR;
@@ -676,7 +676,7 @@ BOOL DialogDeclBrowser::OnToolTipNotify( UINT id, NMHDR* pNMHDR, LRESULT* pResul
 	// FIXME with MFC6
 	return FALSE;
 #endif
-// Techyon END
+// RB end
 }
 
 /*

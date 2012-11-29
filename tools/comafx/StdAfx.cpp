@@ -110,7 +110,7 @@ DefaultOnToolTipNotify
 BOOL DefaultOnToolTipNotify( const toolTip_t* toolTips, UINT id, NMHDR* pNMHDR, LRESULT* pResult )
 {
 
-	// Techyon BEGIN
+	// RB begin
 #if _MFC_VER >= 0x0A00
 	
 	// need to handle both ANSI and UNICODE versions of the message
@@ -154,7 +154,7 @@ BOOL DefaultOnToolTipNotify( const toolTip_t* toolTips, UINT id, NMHDR* pNMHDR, 
 	// FIXME with MFC6
 	return FALSE;
 #endif
-// Techyon END
+// RB end
 }
 
 
@@ -185,13 +185,13 @@ bool EditControlEnterHit( CEdit* edit )
 		{
 			if( strIn[i] >= ' ' )
 			{
-// Techyon BEGIN
+// RB begin
 #if _MFC_VER >= 0x0A00
 				strOut.AppendChar( strIn[i] );
 #else
 				strOut += strIn[i];
 #endif
-// Techyon END
+// RB end
 			}
 		}
 		edit->SetWindowText( strOut );
@@ -221,36 +221,36 @@ float EditVerifyFloat( CEdit* edit, bool allowNegative )
 		if( allowNegative && strOut.GetLength() == 0 && strIn[i] == '-' )
 		{
 		
-			// Techyon BEGIN
+			// RB begin
 #if _MFC_VER >= 0x0A00
 			strOut.AppendChar( '-' );
 #else
 			strOut += '-';
 #endif
-			// Techyon END
+			// RB end
 		}
 		// the string may contain one dot
 		else if( !dot && strIn[i] == '.' )
 		{
 		
-			// Techyon BEGIN
+			// RB begin
 #if _MFC_VER >= 0x0A00
 			strOut.AppendChar( strIn[i] );
 #else
 			strOut += strIn[i];
 #endif
-			// Techyon END
+			// RB end
 			dot = true;
 		}
 		else if( strIn[i] >= '0' && strIn[i] <= '9' )
 		{
-			// Techyon BEGIN
+			// RB begin
 #if _MFC_VER >= 0x0A00
 			strOut.AppendChar( strIn[i] );
 #else
 			strOut += strIn[i];
 #endif
-			// Techyon END
+			// RB end
 		}
 	}
 	edit->SetWindowText( strOut );
@@ -288,13 +288,13 @@ void SpinFloatString( CString& str, bool up )
 	}
 	if( digitIndex == -1 )
 	{
-		// Techyon BEGIN
+		// RB begin
 #if _MFC_VER >= 0x0A00
 		str.SetString( "1" );
 #else
 		str = "1";
 #endif
-		// Techyon END
+		// RB end
 		
 		return;
 	}
@@ -340,7 +340,7 @@ void SpinFloatString( CString& str, bool up )
 			{
 				str.SetAt( digitIndex, '0' );
 				
-				// Techyon BEGIN
+				// RB begin
 #if _MFC_VER >= 0x0A00
 				str.AppendChar( '9' );
 #else

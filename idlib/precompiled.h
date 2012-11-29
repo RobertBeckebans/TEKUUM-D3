@@ -58,19 +58,19 @@ If you have questions concerning this license or the applicable additional terms
 #include "../tools/comafx/StdAfx.h"			// this will go away when MFC goes away
 #endif
 
-// Techyon BEGIN
+// RB begin
 #elif defined(USE_MFC_TOOLS)
-// Techyon END
+// RB end
 
 #include "../tools/comafx/StdAfx.h"
 
 #endif
 
-// Techyon BEGIN
+// RB begin
 #if !defined(_WINSOCKAPI_)
 #include <winsock2.h>
 #endif
-// Techyon END
+// RB end
 
 #include <mmsystem.h>
 #include <mmreg.h>
@@ -89,9 +89,9 @@ If you have questions concerning this license or the applicable additional terms
 #pragma warning(disable : 4714)				// function marked as __forceinline not inlined
 #pragma warning(disable : 4996)				// unsafe string operations
 
-// Techyon BEGIN
+// RB begin
 #pragma warning(disable : 4189)				// local variable is initialized but not referenced
-// Techyon END
+// RB end
 
 #include <malloc.h>							// no malloc.h on mac or unix
 #include <windows.h>						// for qgl.h
@@ -117,9 +117,9 @@ If you have questions concerning this license or the applicable additional terms
 #include <errno.h>
 #include <math.h>
 
-// Techyon BEGIN
+// RB begin
 #include <stdint.h>
-// Techyon END
+// RB end
 
 //-----------------------------------------------------
 
@@ -156,7 +156,7 @@ const int MAX_EXPRESSION_OPS = 4096;
 const int MAX_EXPRESSION_REGISTERS = 4096;
 
 // renderer
-// Techyon BEGIN
+// RB begin
 #if !defined(ID_TYPEINFO) && !defined(__ANDROID__)
 #include "../libs/glew/include/GL/glew.h"
 //#include "../renderer/qgl.h"
@@ -246,7 +246,7 @@ const int MAX_EXPRESSION_REGISTERS = 4096;
 
 #endif // defined(__ANDROID__)
 
-// Techyon END
+// RB end
 #include "../renderer/Cinematic.h"
 #include "../renderer/Material.h"
 #include "../renderer/Model.h"

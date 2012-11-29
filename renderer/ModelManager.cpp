@@ -317,9 +317,9 @@ idRenderModel* idRenderModelManagerLocal::GetModel( const char* modelName, bool 
 	
 	canonical.ExtractFileExtension( extension );
 	
-	// Techyon RB: added dae
+	// RB: added dae
 	if( ( extension.Icmp( "ase" ) == 0 ) || ( extension.Icmp( "lwo" ) == 0 ) || ( extension.Icmp( "flt" ) == 0 ) || ( extension.Icmp( "dae" ) == 0 ) )
-		// Techyon END
+		// RB end
 	{
 		model = new idRenderModelStatic;
 		model->InitFromFile( modelName );

@@ -54,9 +54,9 @@ const float PM_NOCLIPFRICTION	= 12.0f;
 const float MIN_WALK_NORMAL		= 0.7f;		// can't walk on very steep slopes
 const float OVERCLIP			= 1.001f;
 
-// Techyon RB: added local gravity interpolation
+// RB: added local gravity interpolation
 const int PM_TIME_GRAVITY_CHANGE = 700;
-// Techyon END
+// RB end
 
 // movementFlags
 const int PMF_DUCKED			= 1;		// set when ducking
@@ -2300,7 +2300,7 @@ void idPhysics_Player::ReadFromSnapshot( const idBitMsgDelta& msg )
 
 
 
-// Techyon BEGIN
+// RB begin
 CLASS_DECLARATION( idPhysics_Player, tyPhysics_Player )
 END_CLASS
 
@@ -2795,4 +2795,4 @@ void tyPhysics_Player::MovePlayer( int msec )
 }
 
 
-// Techyon END
+// RB end

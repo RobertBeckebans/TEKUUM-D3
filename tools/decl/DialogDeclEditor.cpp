@@ -305,13 +305,13 @@ BOOL DialogDeclEditor::OnInitDialog()
 	m_hAccel = ::LoadAccelerators( AfxGetResourceHandle(), MAKEINTRESOURCE( IDR_ACCELERATOR_DECLEDITOR ) );
 	
 	// create status bar
-// Techyon BEGIN
+// RB begin
 #if _MFC_VER >= 0x0A00
 	statusBar.CreateEx( SBARS_SIZEGRIP, WS_CHILD | WS_VISIBLE | CBRS_BOTTOM, initialRect, this, AFX_IDW_STATUS_BAR );
 #else
 	statusBar.Create( WS_CHILD | WS_VISIBLE | CBRS_BOTTOM, initialRect, this, AFX_IDW_STATUS_BAR );
 #endif
-// Techyon END
+// RB end
 
 	declEdit.Init();
 	

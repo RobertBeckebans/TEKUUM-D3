@@ -64,7 +64,7 @@ typedef enum
 
 static const int	MAX_TEXTURE_LEVELS = 14;
 
-// Techyon RB: 64 bit fixes, changed long to int
+// RB: 64 bit fixes, changed long to int
 // surface description flags
 const unsigned int DDSF_CAPS           = 0x00000001l;
 const unsigned int DDSF_HEIGHT         = 0x00000002l;
@@ -119,7 +119,7 @@ typedef struct
 	unsigned int dwCaps2;
 	unsigned int dwReserved2[3];
 } ddsFileHeader_t;
-// Techyon END
+// RB end
 
 // increasing numeric values imply more information is stored
 typedef enum
@@ -197,10 +197,10 @@ public:
 								   textureFilter_t filter, bool allowDownSize,
 								   textureDepth_t depth );
 								   
-// Techyon BEGIN
+// RB begin
 	// RB: added useNearestFilter to allow high quality post process effects
 	void		CopyFramebuffer( int x, int y, int width, int height, bool useOversizedBuffer, bool useNearestFilter = false );
-// Techyon END
+// RB end
 
 #if !defined(USE_GLES1)
 	void		CopyDepthbuffer( int x, int y, int width, int height );
@@ -245,10 +245,10 @@ public:
 	
 	// data commonly accessed is grouped here
 	
-// Techyon BEGIN
+// RB begin
 	// RB: textures returned by OpenGL are always > 0
 	static const GLuint TEXTURE_NOT_LOADED = 0;
-// Techyon END
+// RB end
 
 	GLuint				texnum;					// gl texture binding, will be TEXTURE_NOT_LOADED if not loaded
 	textureType_t		type;
@@ -333,9 +333,9 @@ void	R_WriteTGA( const char* filename, const byte* data, int width, int height, 
 void	R_WritePalTGA( const char* filename, const byte* data, const byte* palette, int width, int height, bool flipVertical = false );
 // data is in top-to-bottom raster order unless flipVertical is set
 
-// Techyon BEGIN
+// RB begin
 void	R_WritePNG( const char* filename, const byte* data, int bytesPerPixel, int width, int height, bool flipVertical = false, const char* basePath = "fs_savepath" );
-// Techyon END
+// RB end
 
 
 class idImageManager
@@ -449,13 +449,13 @@ public:
 	idImage* 			scratchImage2;
 	idImage* 			accumImage;
 	idImage* 			currentRenderImage;			// for SS_POST_PROCESS shaders
-// Techyon BEGIN
+// RB begin
 #if !defined(USE_GLES1)
 	idImage* 			currentDepthImage;			// for any kind of post process shaders like SSAO
 	idImage* 			currentNormalsImage;		// for light pre-pass deferred shading
 	idImage* 			currentLightImage;			// for light pre-pass deferred shading
 #endif
-// Techyon END
+// RB end
 	idImage* 			scratchCubeMapImage;
 	idImage* 			specularTableImage;			// 1D intensity texture with our specular function
 	idImage* 			specular2DTableImage;		// 2D intensity texture with our specular function with variable specularity

@@ -256,9 +256,9 @@ public:
 	idWinding* 				frustumWindings[6];		// used for culling
 	srfTriangles_t* 		frustumTris;			// triangulated frustumWindings[]
 	
-// Techyon BEGIN
+// RB begin
 	matrix_t				projectionMatrix;
-// Techyon END
+// RB end
 
 	int						numShadowFrustums;		// one for projected lights, usually six for point lights
 	shadowFrustum_t			shadowFrustums[6];
@@ -369,9 +369,9 @@ typedef struct viewLight_s
 	const float*				shaderRegisters;			// shader registers used by backend
 	idImage* 				falloffImage;				// falloff image used by backend
 	
-// Techyon BEGIN
+// RB begin
 	int						shadowLOD;					// shadowmap resolution index
-// Techyon END
+// RB end
 
 	const struct drawSurf_s*	globalShadows;				// shadow everything
 	const struct drawSurf_s*	localInteractions;			// don't get local shadows
@@ -406,9 +406,9 @@ typedef struct viewEntity_s
 	
 	float				modelMatrix[16];		// local coords to global coords
 	float				modelViewMatrix[16];	// local coords to eye coords
-// Techyon BEGIN
+// RB begin
 	matrix_t			unflippedViewMatrix;	// local coords to eye coords in Doom coordinate system
-// Techyon END
+// RB end
 } viewEntity_t;
 
 
@@ -420,10 +420,10 @@ typedef struct viewDef_s
 	// specified in the call to DrawScene()
 	renderView_t		renderView;
 	
-// Techyon BEGIN
+// RB begin
 	matrix_t			projectionMatrix;
 	matrix_t			unprojectionMatrix;		// transform pixel window space to world space
-// Techyon END
+// RB end
 	viewEntity_t		worldSpace;
 	
 	idRenderWorldLocal* renderWorld;
@@ -505,10 +505,10 @@ typedef struct
 	// (not a bool just to avoid an uninitialized memory check of the pad region by valgrind)
 	
 	// these are loaded into the vertex program
-// Techyon BEGIN
+// RB begin
 	idVec4				globalLightOrigin;
 	idVec4				globalViewOrigin;
-// Techyon END
+// RB end
 	idVec4				localLightOrigin;
 	idVec4				localViewOrigin;
 	idVec4				lightProjection[4];	// in local coordinates, possibly with a texture matrix baked in
@@ -517,7 +517,7 @@ typedef struct
 	idVec4				specularMatrix[2];
 } drawInteraction_t;
 
-// Techyon BEGIN
+// RB begin
 // RB: this struct helps to render bump,diffuse,specular combinations required for deferred shading
 // and all kind of precomputed light techniques like lightmaps
 typedef struct
@@ -541,7 +541,7 @@ typedef struct
 	idVec4				diffuseMatrix[2];
 	idVec4				specularMatrix[2];
 } drawInteractionMaterialOnly_t;
-// Techyon END
+// RB end
 
 /*
 =============================================================
@@ -768,14 +768,14 @@ typedef struct
 	
 	bool				currentRenderCopied;	// true if any material has already referenced _currentRender
 	
-// Techyon BEGIN
+// RB begin
 	bool				showTrisEnabled;	// use colors to see what objects are hardware accelerated
 	
 	float				hdrAverageLuminance;
 	float				hdrMaxLuminance;
 	float				hdrTime;
 	float				hdrKey;
-// Techyon END
+// RB end
 
 	// our OpenGL state deltas
 	glstate_t			glState;
@@ -1034,10 +1034,10 @@ extern idCVar r_skipSpecular;			// use black for specular
 extern idCVar r_skipDiffuse;			// use black for diffuse
 extern idCVar r_skipOverlays;			// skip overlay surfaces
 extern idCVar r_skipROQ;
-// Techyon BEGIN
+// RB begin
 extern idCVar r_skipDeferredLighting;
 extern idCVar r_skipPostLighting;
-// Techyon END
+// RB end
 
 extern idCVar r_ignoreGLErrors;
 
@@ -1114,7 +1114,7 @@ extern idCVar r_materialOverride;		// override all materials
 
 extern idCVar r_debugRenderToTexture;
 
-// Techyon BEGIN
+// RB begin
 extern idCVar r_sb_mode;
 extern idCVar r_sb_debug;
 extern idCVar r_sb_randomize;
@@ -1134,7 +1134,7 @@ extern idCVar r_deferredShadingGPUFrustumCulling;
 extern idCVar r_useFXAA;
 extern idCVar r_fxaaQualityPreset;
 
-// Techyon END
+// RB end
 
 /*
 ====================================================================
@@ -1146,10 +1146,10 @@ GL wrapper/helper functions
 
 void	GL_SelectTexture( int unit );
 
-// Techyon BEGIN
+// RB begin
 bool	GL_CheckErrors_( const char* filename, int line );
 #define         GL_CheckErrors()	GL_CheckErrors_(__FILE__, __LINE__)
-// Techyon END
+// RB end
 
 void	GL_ClearStateDelta( void );
 void	GL_State( int stateVector );
@@ -1312,9 +1312,9 @@ void R_SetViewMatrix( viewDef_t* viewDef );
 
 void myGlMultMatrix( const float* a, const float* b, float* out );
 
-// Techyon BEGIN
+// RB begin
 float R_ProjectRadius( float r, const idVec3& location );
-// Techyon END
+// RB end
 
 /*
 ============================================================
@@ -1425,10 +1425,10 @@ void RB_DetermineLightScale( void );
 void RB_STD_LightScale( void );
 void RB_BeginDrawingView( void );
 
-// Techyon BEGIN
+// RB begin
 void R_SetDrawInteraction( const shaderStage_t* surfaceStage, const float* surfaceRegs,
 						   idImage** image, idVec4 matrix[2], float color[4] );
-// Techyon END
+// RB end
 
 /*
 ============================================================
@@ -1549,7 +1549,7 @@ typedef enum
 
 
 
-// Techyon BEGIN
+// RB begin
 
 // Vertex attributes
 enum
@@ -1897,7 +1897,7 @@ void			R_Exp_Init( void );
 void			RB_Exp_DrawInteractions( void );
 void			RB_EXP_ResolveLightFromLightBuffer( drawSurf_t** drawSurfs, int numDrawSurfs );
 
-// Techyon END
+// RB end
 
 
 /*

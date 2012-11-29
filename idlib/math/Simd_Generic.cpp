@@ -593,7 +593,7 @@ void VPCALL idSIMD_Generic::MinMax( idVec3& min, idVec3& max, const idDrawVert* 
 #undef OPER
 }
 
-// Techyon RB: added short version of MinMax for OpenGL ES
+// RB: added short version of MinMax for OpenGL ES
 /*
 ============
 idSIMD_Generic::MinMax
@@ -607,7 +607,7 @@ void VPCALL idSIMD_Generic::MinMax( idVec3& min, idVec3& max, const idDrawVert* 
 	UNROLL1( OPER )
 #undef OPER
 }
-// Techyon END
+// RB end
 
 /*
 ============
@@ -2875,7 +2875,7 @@ void VPCALL idSIMD_Generic::DeriveTriPlanes( idPlane* planes, const idDrawVert* 
 	}
 }
 
-// Techyon RB: added short version of DeriveTangents for OpenGL ES
+// RB: added short version of DeriveTangents for OpenGL ES
 /*
 ============
 idSIMD_Generic::DeriveTangents
@@ -3007,7 +3007,7 @@ void VPCALL idSIMD_Generic::DeriveTangents( idPlane* planes, idDrawVert* verts, 
 		}
 	}
 }
-// Techyon END
+// RB end
 
 /*
 ============

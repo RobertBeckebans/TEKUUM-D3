@@ -710,9 +710,9 @@ void idAI::Restore( idRestoreGame* savefile )
 	// Set the AAS if the character has the correct gravity vector
 	idVec3 gravity = spawnArgs.GetVector( "gravityDir", "0 0 -1" );
 	
-	// Techyon RB: changed g_gravity to 3d vector, FIXME double check this
+	// RB: changed g_gravity to 3d vector, FIXME double check this
 	gravity *= -g_gravityZ.GetFloat();
-	// Techyon END
+	// RB end
 	
 	if( gravity == gameLocal.GetGravity() )
 	{
@@ -938,9 +938,9 @@ void idAI::Spawn( void )
 	{
 		idVec3 gravity = spawnArgs.GetVector( "gravityDir", "0 0 -1" );
 		
-		// Techyon RB: changed g_gravity to 3d vector, FIXME double check this
+		// RB: changed g_gravity to 3d vector, FIXME double check this
 		gravity *= -g_gravityZ.GetFloat();
-		// Techyon END
+		// RB end
 		
 		physicsObj.SetGravity( gravity );
 	}

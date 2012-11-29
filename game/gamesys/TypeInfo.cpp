@@ -30,9 +30,9 @@ If you have questions concerning this license or the applicable additional terms
 #define private		public
 #define protected	public
 
-// Techyon RB: required for Visual Studio 2012
+// RB: required for Visual Studio 2012
 #define _ALLOW_KEYWORD_MACROS
-// Techyon END
+// RB end
 
 #include "../../idlib/precompiled.h"
 #pragma hdrstop

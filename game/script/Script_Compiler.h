@@ -32,10 +32,10 @@ const char* const RESULT_STRING = "<RESULT>";
 
 typedef struct opcode_s
 {
-	// Techyon RB: fixed deprecated conversion from string constant to ‘char*’
+	// RB begin
 	const char*	name;
 	const char*	opname;
-	// Techyon END
+	// RB end
 	int			priority;
 	bool		rightAssociative;
 	idVarDef*	type_a;
@@ -202,9 +202,9 @@ class idCompiler
 {
 private:
 	static bool		punctuationValid[ 256 ];
-	// Techyon RB: fixed deprecated conversion from string constant to ‘char*’
+	// RB begin
 	static const char*		punctuation[];
-	// Techyon END
+	// RB end
 	
 	idParser		parser;
 	idParser*		parserPtr;
@@ -276,9 +276,9 @@ private:
 	void			ParseNamespace( idVarDef* newScope );
 	
 public :
-	// Techyon RB: added const
+	// RB: added const
 	static const opcode_t	opcodes[];
-	// Techyon END
+	// RB end
 	
 	idCompiler();
 	void			CompileFile( const char* text, const char* filename, bool console );

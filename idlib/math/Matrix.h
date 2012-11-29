@@ -2828,9 +2828,9 @@ ID_INLINE void idMatX::SetData( int rows, int columns, float* data )
 	{
 		Mem_Free16( mat );
 	}
-	// Techyon RB: 64 bit fix, changed int to intptr_t
+	// RB: 64 bit fix, changed int to intptr_t
 	assert( ( ( ( intptr_t ) data ) & 15 ) == 0 ); // data must be 16 byte aligned
-	// Techyon END
+	// RB end
 	
 	mat = data;
 	alloced = -1;

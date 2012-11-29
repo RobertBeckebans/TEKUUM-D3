@@ -260,10 +260,10 @@ void idCollisionModelManagerLocal::WriteCollisionModelsToFile( const char* filen
 	idFile* fp;
 	idStr name;
 	
-// Techyon RB: added generated/
+// RB: added generated/
 	name = "generated/";
 	name += filename;
-// Techyon END
+// RB end
 	name.SetFileExtension( CM_FILE_EXT );
 	
 	common->Printf( "writing %s\n", name.c_str() );

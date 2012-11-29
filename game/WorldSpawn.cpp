@@ -64,9 +64,9 @@ void idWorldspawn::Spawn( void )
 	assert( gameLocal.world == NULL );
 	gameLocal.world = this;
 	
-	// Techyon RB: changed gravity sign
+	// RB: changed gravity sign
 	g_gravityZ.SetFloat( -spawnArgs.GetFloat( "gravity", va( "-%f", DEFAULT_GRAVITY ) ) );
-	// Techyon END
+	// RB end
 	
 	// disable stamina on hell levels
 	if( spawnArgs.GetBool( "no_stamina" ) )
@@ -124,11 +124,11 @@ void idWorldspawn::Restore( idRestoreGame* savefile )
 {
 	assert( gameLocal.world == this );
 	
-	// Techyon RB: changed g_gravity to 3d vector
+	// RB: changed g_gravity to 3d vector
 	g_gravityY.SetFloat( 0.0f );
 	g_gravityY.SetFloat( 0.0f );
 	g_gravityZ.SetFloat( -spawnArgs.GetFloat( "gravity", va( "%f", DEFAULT_GRAVITY ) ) );
-	// Techyon END
+	// RB end
 	
 	// disable stamina on hell levels
 	if( spawnArgs.GetBool( "no_stamina" ) )

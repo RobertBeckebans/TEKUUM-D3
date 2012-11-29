@@ -68,13 +68,13 @@ If you have questions concerning this license or the applicable additional terms
 #define ID_ALLOW_CHEATS 0
 #endif
 
-// Techyon BEGIN
+// RB begin
 #if !defined(__ANDROID__)
 #ifndef ID_ENABLE_CURL
 #define ID_ENABLE_CURL 1
 #endif
 #endif
-// Techyon END
+// RB end
 
 // fake a pure client. useful to connect an all-debug client to a server
 #ifndef ID_FAKE_PURE
@@ -97,11 +97,11 @@ If you have questions concerning this license or the applicable additional terms
 
 // don't define ID_ALLOW_TOOLS when we don't want tool code in the executable.
 
-// Techyon BEGIN
+// RB begin
 //#if defined( _WIN32 ) && !defined( ID_DEDICATED ) && !defined( ID_DEMO_BUILD )
 //	#define	ID_ALLOW_TOOLS
 //#endif
-// Techyon END
+// RB end
 
 // don't do backtraces in release builds.
 // atm, we have no useful way to reconstruct the trace, so let's leave it off
@@ -116,7 +116,7 @@ If you have questions concerning this license or the applicable additional terms
 #endif
 #endif
 
-// Techyon BEGIN
+// RB begin
 #if defined(USE_CDKEY)
 #ifndef ID_ENFORCE_KEY
 #	if !defined( ID_DEDICATED ) && !defined( ID_DEMO_BUILD )
@@ -126,7 +126,7 @@ If you have questions concerning this license or the applicable additional terms
 #	endif
 #endif
 #endif // #if defined(USE_CDKEY)
-// Techyon END
+// RB end
 
 #ifndef ID_OPENAL
 #	if ( defined(_WIN32) || defined(MACOS_X) ) && !defined( ID_DEDICATED ) && defined(USE_OPENAL)

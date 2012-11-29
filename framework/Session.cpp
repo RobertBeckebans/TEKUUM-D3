@@ -2439,10 +2439,10 @@ idSessionLocal::ProcessEvent
 bool idSessionLocal::ProcessEvent( const sysEvent_t* event )
 {
 	// hitting escape anywhere brings up the menu
-// Techyon BEGIN - Xbox 360 controller support
+// RB begin - Xbox 360 controller support
 	if( !guiActive && event->evType == SE_KEY && event->evValue2 == 1 && ( event->evValue == K_ESCAPE || event->evValue == K_XINPUT_GAMEPAD_START ) )
 	{
-// Techyon END
+// RB end
 		console->Close();
 		if( game )
 		{
@@ -2963,7 +2963,7 @@ void idSessionLocal::Frame()
 		minTic = latchedTicNumber;
 	}
 	
-// Techyon BEGIN
+// RB begin
 #if !defined(USE_QT_WINDOWING)
 	// FIXME: deserves a cleanup and abstraction
 #if defined( _WIN32 )
@@ -2992,7 +2992,7 @@ void idSessionLocal::Frame()
 #endif
 	
 #endif // #if !defined(USE_QT_WINDOWING)
-// Techyon END
+// RB end
 
 #if defined(USE_CDKEY)
 	if( authEmitTimeout )

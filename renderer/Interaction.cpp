@@ -749,10 +749,10 @@ idInteraction::HasShadows
 */
 ID_INLINE bool idInteraction::HasShadows( void ) const
 {
-// Techyon BEGIN
+// RB begin
 	// RB: added check for r_shadows 0
 	return ( r_shadows.GetBool() && !lightDef->parms.noShadows && !entityDef->parms.noShadow && lightDef->lightShader->LightCastsShadows() );
-// Techyon END
+// RB end
 }
 
 /*
@@ -1033,7 +1033,7 @@ void idInteraction::CreateInteraction( const idRenderModel* model )
 		{
 			if( tri->ambientViewCount == tr.viewCount )
 			{
-				// Techyon BEGIN
+				// RB begin
 				if( r_useDeferredShading.GetBool() )
 				{
 					sint->lightTris = LIGHT_TRIS_DEFERRED;
@@ -1042,7 +1042,7 @@ void idInteraction::CreateInteraction( const idRenderModel* model )
 				{
 					sint->lightTris = R_CreateLightTris( entityDef, tri, lightDef, shader, sint->cullInfo );
 				}
-				// Techyon END
+				// RB end
 			}
 			else
 			{
@@ -1053,11 +1053,11 @@ void idInteraction::CreateInteraction( const idRenderModel* model )
 		}
 		
 		// if the interaction has shadows and this surface casts a shadow
-		// Techyon BEGIN
+		// RB begin
 		// disabled shadow volume generation for the experimental renderer
 		if( tr.backEndRenderer != BE_EXP && HasShadows() && shader->SurfaceCastsShadow() && tri->silEdges != NULL )
 		{
-			// Techyon END
+			// RB end
 			
 			// if the light has an optimized shadow volume, don't create shadows for any models that are part of the base areas
 			if( lightDef->parms.prelightModel == NULL || !model->IsStaticWorldModel() || !r_useOptimizedShadows.GetBool() )
@@ -1285,7 +1285,7 @@ void idInteraction::AddActiveInteraction( void )
 			// on a previous use that only needed the shadow
 			if( sint->lightTris == LIGHT_TRIS_DEFERRED )
 			{
-				// Techyon BEGIN
+				// RB begin
 				if( r_useDeferredShading.GetBool() )
 				{
 					sint->lightTris = NULL;
@@ -1294,7 +1294,7 @@ void idInteraction::AddActiveInteraction( void )
 				{
 					sint->lightTris = R_CreateLightTris( vEntity->entityDef, sint->ambientTris, vLight->lightDef, sint->shader, sint->cullInfo );
 				}
-				// Techyon END
+				// RB end
 				R_FreeInteractionCullInfo( sint->cullInfo );
 			}
 			
@@ -1365,25 +1365,25 @@ void idInteraction::AddActiveInteraction( void )
 					}
 					else if( !lightDef->parms.noShadows && sint->shader->TestMaterialFlag( MF_NOSELFSHADOW ) )
 					{
-						// Techyon BEGIN
+						// RB begin
 						// TODO support post process blend and fog lights
 						if( ( tr.backEndRenderer != BE_EXP ) || !r_useDeferredShading.GetBool() || lightDef->lightShader->IsBlendLight() || lightDef->lightShader->IsFogLight() )
 						{
 							R_LinkLightSurf( &vLight->localInteractions, lightTris,
 											 vEntity, lightDef, shader, lightScissor, false );
 						}
-						// Techyon END
+						// RB end
 					}
 					else
 					{
-						// Techyon BEGIN
+						// RB begin
 						// TODO support post process blend and fog lights
 						if( ( tr.backEndRenderer != BE_EXP ) || !r_useDeferredShading.GetBool() || lightDef->lightShader->IsBlendLight() || lightDef->lightShader->IsFogLight() )
 						{
 							R_LinkLightSurf( &vLight->globalInteractions, lightTris,
 											 vEntity, lightDef, shader, lightScissor, false );
 						}
-						// Techyon END
+						// RB end
 					}
 				}
 			}
@@ -1393,10 +1393,10 @@ void idInteraction::AddActiveInteraction( void )
 		
 		// the shadows will always have to be added, unless we can tell they
 		// are from a surface in an unconnected area
-// Techyon BEGIN
+// RB begin
 		if( shadowTris && ( tr.backEndRenderer != BE_EXP ) )
 		{
-// Techyon END
+// RB end
 
 			// check for view specific shadow suppression (player shadows, etc)
 			if( !r_skipSuppress.GetBool() )

@@ -345,7 +345,7 @@ idLangDict::GetHashKey
 */
 int idLangDict::GetHashKey( const char* str ) const
 {
-// Techyon RB: use the complete hash key generator so we can use labels which are more common like with .NET WPF programming
+// RB: use the complete hash key generator so we can use labels which are more common like with .NET WPF programming
 // e.g. #str_GUI_MainMenu_CreditsBtnText_Text instead of #str_02218
 #if 0
 	int hashKey = 0;
@@ -359,5 +359,5 @@ int idLangDict::GetHashKey( const char* str ) const
 	int hashKey = hash.GenerateKey( str, false );
 	return hashKey;
 #endif
-// Techyon END
+// RB end
 }

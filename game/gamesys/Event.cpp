@@ -97,21 +97,21 @@ idEventDef::idEventDef( const char* command, const char* formatspec, char return
 		{
 			case D_EVENT_FLOAT :
 				bits |= 1 << i;
-				// Techyon RB: 64 bit fix, changed sizeof( float ) to sizeof( intptr_t )
+				// RB: 64 bit fix, changed sizeof( float ) to sizeof( intptr_t )
 				argsize += sizeof( intptr_t );
-				// Techyon END
+				// RB end
 				break;
 				
 			case D_EVENT_INTEGER :
-				// Techyon RB: 64 bit fix, changed sizeof( int ) to sizeof( intptr_t )
+				// RB: 64 bit fix, changed sizeof( int ) to sizeof( intptr_t )
 				argsize += sizeof( intptr_t );
-				// Techyon END
+				// RB end
 				break;
 				
 			case D_EVENT_VECTOR :
-				// Techyon RB: 64 bit fix, changed sizeof( idVec3 ) to E_EVENT_SIZEOF_VEC
+				// RB: 64 bit fix, changed sizeof( idVec3 ) to E_EVENT_SIZEOF_VEC
 				argsize += E_EVENT_SIZEOF_VEC;
-				// Techyon END
+				// RB end
 				break;
 				
 			case D_EVENT_STRING :
@@ -119,15 +119,15 @@ idEventDef::idEventDef( const char* command, const char* formatspec, char return
 				break;
 				
 			case D_EVENT_ENTITY :
-				// Techyon RB: 64 bit fix, sizeof( idEntityPtr<idEntity> ) to sizeof( intptr_t )
+				// RB: 64 bit fix, sizeof( idEntityPtr<idEntity> ) to sizeof( intptr_t )
 				argsize += sizeof( intptr_t );
-				// Techyon END
+				// RB end
 				break;
 				
 			case D_EVENT_ENTITY_NULL :
-				// Techyon RB: 64 bit fix, sizeof( idEntityPtr<idEntity> ) to sizeof( intptr_t )
+				// RB: 64 bit fix, sizeof( idEntityPtr<idEntity> ) to sizeof( intptr_t )
 				argsize += sizeof( intptr_t );
-				// Techyon END
+				// RB end
 				break;
 				
 			case D_EVENT_TRACE :
@@ -373,10 +373,10 @@ idEvent* idEvent::Alloc( const idEventDef* evdef, int numargs, va_list args )
 idEvent::CopyArgs
 ================
 */
-// Techyon RB: 64 bit fixes, changed int to intptr_t
+// RB: 64 bit fixes, changed int to intptr_t
 void idEvent::CopyArgs( const idEventDef* evdef, int numargs, va_list args, intptr_t data[ D_EVENT_MAXARGS ] )
 {
-// Techyon END
+// RB end
 	int			i;
 	const char*	format;
 	idEventArg*	arg;
@@ -525,9 +525,9 @@ void idEvent::ServiceEvents( void )
 {
 	idEvent*		event;
 	int			num;
-	// Techyon RB: 64 bit fixes, changed int to intptr_t
+	// RB: 64 bit fixes, changed int to intptr_t
 	intptr_t	args[ D_EVENT_MAXARGS ];
-	// Techyon END
+	// RB end
 	int			offset;
 	int			i;
 	int			numargs;
@@ -701,9 +701,9 @@ void idEvent::Save( idSaveGame* savefile )
 	byte* dataPtr;
 	bool validTrace;
 	const char*	format;
-	// Techyon RB: for missing D_EVENT_STRING
+	// RB: for missing D_EVENT_STRING
 	idStr s;
-	// Techyon END
+	// RB end
 	
 	savefile->WriteInt( EventQueue.Num() );
 	
@@ -723,31 +723,31 @@ void idEvent::Save( idSaveGame* savefile )
 			{
 				case D_EVENT_FLOAT :
 					savefile->WriteFloat( *reinterpret_cast<float*>( dataPtr ) );
-					// Techyon RB: 64 bit fix, changed sizeof( float ) to sizeof( intptr_t )
+					// RB: 64 bit fix, changed sizeof( float ) to sizeof( intptr_t )
 					size += sizeof( intptr_t );
-					// Techyon END
+					// RB end
 					break;
 				case D_EVENT_INTEGER :
-					// Techyon RB: 64 bit fix, changed sizeof( int ) to sizeof( intptr_t )
+					// RB: 64 bit fix, changed sizeof( int ) to sizeof( intptr_t )
 					savefile->WriteInt( *reinterpret_cast<int*>( dataPtr ) );
 					size += sizeof( intptr_t );
 					break;
-					// Techyon END
+					// RB end
 				case D_EVENT_ENTITY :
 				case D_EVENT_ENTITY_NULL :
-					// Techyon RB: 64 bit fix, changed alignment to sizeof( intptr_t )
+					// RB: 64 bit fix, changed alignment to sizeof( intptr_t )
 					reinterpret_cast< idEntityPtr<idEntity> * >( dataPtr )->Save( savefile );
 					size += sizeof( intptr_t );
-					// Techyon END
+					// RB end
 					break;
 				case D_EVENT_VECTOR :
 					savefile->WriteVec3( *reinterpret_cast<idVec3*>( dataPtr ) );
-					// Techyon RB: 64 bit fix, changed sizeof( int ) to E_EVENT_SIZEOF_VEC
+					// RB: 64 bit fix, changed sizeof( int ) to E_EVENT_SIZEOF_VEC
 					size += E_EVENT_SIZEOF_VEC;
-					// Techyon END
+					// RB end
 					break;
 #if 1
-					// Techyon RB: added missing D_EVENT_STRING case
+					// RB: added missing D_EVENT_STRING case
 				case D_EVENT_STRING :
 					s.Clear();
 					s.Append( reinterpret_cast<char*>( dataPtr ) );
@@ -755,7 +755,7 @@ void idEvent::Save( idSaveGame* savefile )
 					//size += s.Length();
 					size += MAX_STRING_LEN;
 					break;
-					// Techyon END
+					// RB end
 #endif
 				case D_EVENT_TRACE :
 					validTrace = *reinterpret_cast<bool*>( dataPtr );
@@ -796,9 +796,9 @@ void idEvent::Restore( idRestoreGame* savefile )
 	byte* dataPtr;
 	idEvent*	event;
 	const char*	format;
-	// Techyon RB: for missing D_EVENT_STRING
+	// RB: for missing D_EVENT_STRING
 	idStr s;
-	// Techyon END
+	// RB end
 	
 	savefile->ReadInt( num );
 	
@@ -837,9 +837,9 @@ void idEvent::Restore( idRestoreGame* savefile )
 		savefile->ReadInt( argsize );
 		if( argsize != event->eventdef->GetArgSize() )
 		{
-			// Techyon RB: fixed wrong formatting
+			// RB: fixed wrong formatting
 			savefile->Error( "idEvent::Restore: arg size (%zd) doesn't match saved arg size(%zd) on event '%s'", event->eventdef->GetArgSize(), argsize, event->eventdef->GetName() );
-			// Techyon END
+			// RB end
 		}
 		if( argsize )
 		{
@@ -853,31 +853,31 @@ void idEvent::Restore( idRestoreGame* savefile )
 				{
 					case D_EVENT_FLOAT :
 						savefile->ReadFloat( *reinterpret_cast<float*>( dataPtr ) );
-						// Techyon RB: 64 bit fix, changed sizeof( float ) to sizeof( intptr_t )
+						// RB: 64 bit fix, changed sizeof( float ) to sizeof( intptr_t )
 						size += sizeof( intptr_t );
-						// Techyon END
+						// RB end
 						break;
 					case D_EVENT_INTEGER :
-						// Techyon RB: 64 bit fix
+						// RB: 64 bit fix
 						savefile->ReadInt( *reinterpret_cast<int*>( dataPtr ) );
 						size += sizeof( intptr_t );
 						break;
-						// Techyon END
+						// RB end
 					case D_EVENT_ENTITY :
 					case D_EVENT_ENTITY_NULL :
-						// Techyon RB: 64 bit fix, changed alignment to sizeof( intptr_t )
+						// RB: 64 bit fix, changed alignment to sizeof( intptr_t )
 						reinterpret_cast<idEntityPtr<idEntity> *>( dataPtr )->Restore( savefile );
 						size += sizeof( intptr_t );
-						// Techyon END
+						// RB end
 						break;
 					case D_EVENT_VECTOR :
 						savefile->ReadVec3( *reinterpret_cast<idVec3*>( dataPtr ) );
-						// Techyon RB: 64 bit fix, changed sizeof( int ) to E_EVENT_SIZEOF_VEC
+						// RB: 64 bit fix, changed sizeof( int ) to E_EVENT_SIZEOF_VEC
 						size += E_EVENT_SIZEOF_VEC;
-						// Techyon END
+						// RB end
 						break;
 #if 1
-						// Techyon RB: added missing D_EVENT_STRING case
+						// RB: added missing D_EVENT_STRING case
 					case D_EVENT_STRING :
 						savefile->ReadString( s );
 						//idStr::Copynz(reinterpret_cast<char *>( dataPtr ), s, s.Length() );
@@ -885,7 +885,7 @@ void idEvent::Restore( idRestoreGame* savefile )
 						idStr::Copynz( reinterpret_cast<char*>( dataPtr ), s, MAX_STRING_LEN );
 						size += MAX_STRING_LEN;
 						break;
-						// Techyon END
+						// RB end
 #endif
 					case D_EVENT_TRACE :
 						savefile->ReadBool( *reinterpret_cast<bool*>( dataPtr ) );
@@ -1013,9 +1013,9 @@ void CreateEventCallbackHandler( void )
 				}
 				else
 				{
-					// Techyon RB: 64 bit fix, changed int to intptr_t
+					// RB: 64 bit fix, changed int to intptr_t
 					string1 += "const intptr_t";
-					// Techyon END
+					// RB end
 					string2 += va( "data[ %d ]", k );
 				}
 				

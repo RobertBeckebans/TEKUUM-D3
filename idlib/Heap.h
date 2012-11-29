@@ -191,10 +191,10 @@ public:
 private:
 	typedef struct element_s
 	{
-		// Techyon RB: 64 bit fix, changed swapped order of t and next
+		// RB: 64 bit fix, changed swapped order of t and next
 		type				t;
 		struct element_s* 	next;
-		// Techyon END
+		// RB end
 	} element_t;
 	typedef struct block_s
 	{
@@ -247,10 +247,10 @@ type* idBlockAlloc<type, blockSize>::Alloc( void )
 template<class type, int blockSize>
 void idBlockAlloc<type, blockSize>::Free( type* t )
 {
-	// Techyon RB: 64 bit fix, changed swapped order of t and next
+	// RB: 64 bit fix, changed swapped order of t and next
 	//element_t *element = (element_t *)( ( (unsigned char *) t ) - ( (int) &((element_t *)0)->t ) );
 	element_t* element = ( element_t* ) t;
-	// Techyon END
+	// RB end
 	element->next = free;
 	free = element;
 	active--;

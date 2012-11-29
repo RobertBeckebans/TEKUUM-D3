@@ -708,9 +708,9 @@ bool idWindow::RunTimeEvents( int time )
 idWindow::RunNamedEvent
 ================
 */
-// Techyon RB: added parm recurseChildren
+// RB: added parm recurseChildren
 void idWindow::RunNamedEvent( const char* eventName, bool recurseChildren )
-// Techyon END
+// RB end
 {
 	int i;
 	int c;
@@ -737,7 +737,7 @@ void idWindow::RunNamedEvent( const char* eventName, bool recurseChildren )
 		break;
 	}
 	
-	// Techyon RB: added parm recurseChildren
+	// RB: added parm recurseChildren
 	if( recurseChildren )
 	{
 		// Run the event in all the children as well
@@ -747,7 +747,7 @@ void idWindow::RunNamedEvent( const char* eventName, bool recurseChildren )
 			children[i]->RunNamedEvent( eventName );
 		}
 	}
-	// Techyon END
+	// RB end
 }
 
 /*
@@ -895,18 +895,18 @@ const char* idWindow::HandleEvent( const sysEvent_t* event, bool* updateVisuals 
 				{
 					actionDownRun = RunScript( ON_ACTION );
 					
-					// TECHYON MF: keep mouse events more consistent
+					// MF begin: keep mouse events more consistent
 					RouteMouseCoords( 0.0f, 0.0f );
-					// TECHYON END
+					// MF end
 					
 				}
 				else if( !actionUpRun )
 				{
 					actionUpRun = RunScript( ON_ACTIONRELEASE );
 					
-					// TECHYON MF: keep mouse events more consistent
+					// MF begin: keep mouse events more consistent
 					RouteMouseCoords( 0.0f, 0.0f );
-					// TECHYON END
+					// MF end
 				}
 			}
 			else if( event->evValue == K_MOUSE2 )
@@ -2045,7 +2045,7 @@ idWindow::GetWinVarOffset
 */
 int idWindow::GetWinVarOffset( idWinVar* wv, drawWin_t* owner )
 {
-	// Techyon RB: 64 bit fixes, changed oldschool offsets using ptrdiff_t
+	// RB: 64 bit fixes, changed oldschool offsets using ptrdiff_t
 	int ret = -1;
 	
 	if( wv == &rect )
@@ -2096,7 +2096,7 @@ int idWindow::GetWinVarOffset( idWinVar* wv, drawWin_t* owner )
 		//ret = (int)&( ( idWindow * ) 0 )->rotate;
 		ret = ( ptrdiff_t )&rotate - ( ptrdiff_t )this;
 	}
-	// Techyon END
+	// RB end
 	
 	if( ret != -1 )
 	{
@@ -2592,9 +2592,9 @@ bool idWindow::Parse( idParser* src, bool rebuild )
 	bool ret = true;
 	
 	// attach a window wrapper to the window if the gui editor is running
-// Techyon BEGIN
+// RB begin
 #if defined(USE_MFC_TOOLS)
-// Techyon END
+// RB end
 	if( com_editors & EDITOR_GUI )
 	{
 		new rvGEWindowWrapper( this, rvGEWindowWrapper::WT_NORMAL );
@@ -2803,9 +2803,9 @@ bool idWindow::Parse( idParser* src, bool rebuild )
 			
 			// If we are in the gui editor then add the internal var to the
 			// the wrapper
-// Techyon BEGIN
+// RB begin
 #if defined(USE_MFC_TOOLS)
-// Techyon END
+// RB end
 			if( com_editors & EDITOR_GUI )
 			{
 				idStr str;
@@ -2847,9 +2847,9 @@ bool idWindow::Parse( idParser* src, bool rebuild )
 			// add the script to the wrappers script list
 			// If we are in the gui editor then add the internal var to the
 			// the wrapper
-// Techyon BEGIN
+// RB begin
 #if defined(USE_MFC_TOOLS)
-// Techyon END
+// RB end
 			if( com_editors & EDITOR_GUI )
 			{
 				idStr str;
@@ -2887,9 +2887,9 @@ bool idWindow::Parse( idParser* src, bool rebuild )
 			regList.AddReg( work, idRegister::FLOAT, src, this, varf );
 			
 			// If we are in the gui editor then add the float to the defines
-// Techyon BEGIN
+// RB begin
 #if defined(USE_MFC_TOOLS)
-// Techyon END
+// RB end
 			if( com_editors & EDITOR_GUI )
 			{
 				idStr str;
@@ -2915,7 +2915,7 @@ bool idWindow::Parse( idParser* src, bool rebuild )
 			// FIXME: how about we add the var to the desktop instead of this window so it won't get deleted
 			//        when this window is destoyed which even happens during parsing with simple windows ?
 			
-			// Techyon RB: changed behavior to put the var into the vars list of this window
+			// RB: changed behavior to put the var into the vars list of this window
 #if 0
 			definedVars.Append( var );
 			
@@ -2925,13 +2925,13 @@ bool idWindow::Parse( idParser* src, bool rebuild )
 			gui->GetDesktop()->definedVars.Append( var );
 			gui->GetDesktop()->regList.AddReg( work, idRegister::VEC4, src, gui->GetDesktop(), var );
 #endif
-			// Techyon END
+			// RB end
 			
 			// store the original vec4 for the editor
 			// If we are in the gui editor then add the float to the defines
-// Techyon BEGIN
+// RB begin
 #if defined(USE_MFC_TOOLS)
-// Techyon END
+// RB end
 			if( com_editors & EDITOR_GUI )
 			{
 				idStr str;
@@ -2959,9 +2959,9 @@ bool idWindow::Parse( idParser* src, bool rebuild )
 			regList.AddReg( work, idRegister::FLOAT, src, this, varf );
 			
 			// If we are in the gui editor then add the float to the defines
-// Techyon BEGIN
+// RB begin
 #if defined(USE_MFC_TOOLS)
-// Techyon END
+// RB end
 			if( com_editors & EDITOR_GUI )
 			{
 				idStr str;
@@ -2977,9 +2977,9 @@ bool idWindow::Parse( idParser* src, bool rebuild )
 			// add the script to the wrappers script list
 			// If we are in the gui editor then add the internal var to the
 			// the wrapper
-// Techyon BEGIN
+// RB begin
 #if defined(USE_MFC_TOOLS)
-// Techyon END
+// RB end
 			if( com_editors & EDITOR_GUI )
 			{
 				idStr str;
@@ -3002,9 +3002,9 @@ bool idWindow::Parse( idParser* src, bool rebuild )
 			// gui editor support
 			// If we are in the gui editor then add the internal var to the
 			// the wrapper
-// Techyon BEGIN
+// RB begin
 #if defined(USE_MFC_TOOLS)
-// Techyon END
+// RB end
 			if( com_editors & EDITOR_GUI )
 			{
 				idStr str;
@@ -3019,9 +3019,9 @@ bool idWindow::Parse( idParser* src, bool rebuild )
 			// hook into the main window parsing for the gui editor
 			// If we are in the gui editor then add the internal var to the
 			// the wrapper
-// Techyon BEGIN
+// RB begin
 #if defined(USE_MFC_TOOLS)
-// Techyon END
+// RB end
 			if( com_editors & EDITOR_GUI )
 			{
 				idStr str;
@@ -3049,9 +3049,9 @@ bool idWindow::Parse( idParser* src, bool rebuild )
 	// hook into the main window parsing for the gui editor
 	// If we are in the gui editor then add the internal var to the
 	// the wrapper
-// Techyon BEGIN
+// RB begin
 #if defined(USE_MFC_TOOLS)
-// Techyon END
+// RB end
 	if( com_editors & EDITOR_GUI )
 	{
 		rvGEWindowWrapper::GetWrapper( this )->Finish( );
@@ -3384,9 +3384,9 @@ Returns a register index
 int idWindow::ParseTerm( idParser* src,	idWinVar* var, int component )
 {
 	idToken token;
-	// Techyon RB: 64 bit fixes, changed int to intptr_t
+	// RB: 64 bit fixes, changed int to intptr_t
 	intptr_t		a, b;
-	// Techyon END
+	// RB end
 	
 	src->ReadToken( &token );
 	
@@ -3437,9 +3437,9 @@ int idWindow::ParseTerm( idParser* src,	idWinVar* var, int component )
 	}
 	if( var )
 	{
-		// Techyon RB: 64 bit fixes, changed int to intptr_t
+		// RB: 64 bit fixes, changed int to intptr_t
 		a = ( intptr_t )var;
-		// Techyon END
+		// RB end
 		
 		//assert(dynamic_cast<idWinVec4*>(var));
 		var->Init( token, this );
@@ -3487,9 +3487,9 @@ int idWindow::ParseTerm( idParser* src,	idWinVar* var, int component )
 		// ugly but used for post parsing to fixup named vars
 		char* p = new char[token.Length() + 1];
 		strcpy( p, token );
-		// Techyon RB: 64 bit fixes, changed int to intptr_t
+		// RB: 64 bit fixes, changed int to intptr_t
 		a = ( intptr_t )p;
-		// Techyon RB: 64 bit fixes, changed int to intptr_t
+		// RB: 64 bit fixes, changed int to intptr_t
 		b = -2;
 		return EmitOp( a, b, WOP_TYPE_VAR );
 	}
@@ -4496,7 +4496,7 @@ void idWindow::FixupTransitions()
 		
 		if( dw && ( dw->win || dw->simp ) )
 		{
-			// Techyon RB: 64 bit fixes, changed oldschool offsets using ptrdiff_t
+			// RB: 64 bit fixes, changed oldschool offsets using ptrdiff_t
 			if( dw->win )
 			{
 				if( transitions[i].offset == ( ptrdiff_t )&rect - ( ptrdiff_t )this )
@@ -4559,7 +4559,7 @@ void idWindow::FixupTransitions()
 					transitions[i].data = &dw->simp->rotate;
 				}
 			}
-			// Techyon END
+			// RB end
 		}
 		if( transitions[i].data == NULL )
 		{
@@ -4627,9 +4627,9 @@ void idWindow::FixupParms()
 			const char* p = ( const char* )( ops[i].a );
 			idWinVar* var = GetWinVarByName( p, true );
 			delete []p;
-			// Techyon RB: 64 bit fix, changed int to intptr_t
+			// RB: 64 bit fix, changed int to intptr_t
 			ops[i].a = ( intptr_t )var;
-			// Techyon END
+			// RB end
 			ops[i].b = -1;
 		}
 	}

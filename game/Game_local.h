@@ -730,7 +730,7 @@ typedef enum
 #define	MASK_SHOT_BOUNDINGBOX		(CONTENTS_SOLID|CONTENTS_BODY)
 
 const float DEFAULT_GRAVITY			= 1066.0f;
-#define DEFAULT_GRAVITY_STRING		"-1066"	// Techyon RB: added - sign because of 3 directions gravity
+#define DEFAULT_GRAVITY_STRING		"-1066"	// RB: added - sign because of 3 directions gravity
 const idVec3 DEFAULT_GRAVITY_VEC3( 0, 0, -DEFAULT_GRAVITY );
 
 const int	CINEMATIC_SKIP_DELAY	= SEC2MS( 2.0f );
@@ -779,9 +779,9 @@ const int	CINEMATIC_SKIP_DELAY	= SEC2MS( 2.0f );
 #include "Fx.h"
 #include "SecurityCamera.h"
 #include "BrittleFracture.h"
-// Techyon BEGIN
+// RB begin
 #include "Portal.h"
-// Techyon END
+// RB end
 
 #include "ai/AI.h"
 #include "anim/Anim_Testmodel.h"

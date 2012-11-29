@@ -307,9 +307,9 @@ typedef enum
 	CONTENTS_AAS_OBSTACLE		= BIT( 14 ),	// used to compile an obstacle into AAS that can be enabled/disabled
 	CONTENTS_FLASHLIGHT_TRIGGER	= BIT( 15 ),	// used for triggers that are activated by the flashlight
 	
-	// Techyon BEGIN
+	// RB begin
 	CONTENTS_DYNAMICPORTAL		= BIT( 16 ),	// used for dynamic portals
-	// Techyon END
+	// RB end
 	
 	// contents used by utils
 	CONTENTS_AREAPORTAL			= BIT( 20 ),	// portal separating renderer areas
@@ -334,9 +334,9 @@ typedef enum
 	SURFTYPE_GLASS,
 	SURFTYPE_PLASTIC,
 	SURFTYPE_RICOCHET,
-// Techyon BEGIN
+// RB begin
 	SURFTYPE_WALLWALK,
-// Techyon END
+// RB end
 	SURFTYPE_11,
 	SURFTYPE_12,
 	SURFTYPE_13,

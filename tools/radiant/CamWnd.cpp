@@ -1876,9 +1876,9 @@ void Select_ToOBJ()
 
 void Select_ToCM()
 {
-	// Techyon RB: added .dae
+	// RB: added .dae
 	CFileDialog dlgFile( FALSE, "lwo, ase, dae", NULL, 0, "(*.lwo)|*.lwo|(*.ase)|*.ase|(*.ma)|*.ma|(*.dae)|*.dae||", g_pParentWnd );
-	// Techyon END
+	// RB end
 	
 	if( dlgFile.DoModal() == IDOK )
 	{

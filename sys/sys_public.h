@@ -102,7 +102,7 @@ If you have questions concerning this license or the applicable additional terms
 #endif
 
 
-// Techyon BEGIN
+// RB begin
 
 // Android
 #if defined(__ANDROID__)
@@ -149,7 +149,7 @@ If you have questions concerning this license or the applicable additional terms
 
 // Linux
 #elif defined(__linux__)
-// Techyon END
+// RB end
 
 #define BUILD_OS_ID					2
 
@@ -157,13 +157,13 @@ If you have questions concerning this license or the applicable additional terms
 #define	BUILD_STRING				"linux-x86"
 #define CPUSTRING					"x86"
 #define CPU_EASYARGS				1
-// Techyon BEGIN
+// RB begin
 #elif defined(__x86_64__)
 #define	BUILD_STRING				"linux-x86_64"
 #define CPUSTRING					"x86_64"
 // RB: no easyargs because of sizeof( int ) != sizeof( intptr_t )
 #define CPU_EASYARGS				0
-// Techyon END
+// RB end
 #elif defined(__ppc__)
 #define	BUILD_STRING				"linux-ppc"
 #define CPUSTRING					"ppc"
@@ -276,7 +276,7 @@ typedef enum
 	M_DELTAZ
 } sys_mEvents;
 
-// Techyon BEGIN
+// RB begin
 typedef enum
 {
 	GP_AXIS_SIDE,
@@ -287,7 +287,7 @@ typedef enum
 	GP_AXIS_PITCH,
 	GP_BUTTON,
 } sysGamePadEvent_t;
-// Techyon END
+// RB end
 
 typedef struct sysEvent_s
 {
@@ -405,11 +405,11 @@ const char* 	Sys_GetCallStackCurAddressStr( int depth );
 void			Sys_ShutdownSymbols( void );
 
 // DLL loading, the path should be a fully qualified OS path to the DLL file to be loaded
-// Techyon RB: 64 bit fixes, changed int to intptr_t
+// RB: 64 bit fixes, changed int to intptr_t
 intptr_t		Sys_DLL_Load( const char* dllName );
 void* 			Sys_DLL_GetProcAddress( intptr_t dllHandle, const char* procName );
 void			Sys_DLL_Unload( intptr_t dllHandle );
-// Techyon END
+// RB end
 
 // event generation
 void			Sys_GenerateEvents( void );
@@ -438,12 +438,12 @@ int				Sys_PollMouseInputEvents( void );
 int				Sys_ReturnMouseInputEvent( const int n, int& action, int& value );
 void			Sys_EndMouseInputEvents( void );
 
-// Techyon BEGIN
+// RB begin
 // gamepad input polling
 int				Sys_PollXbox360ControllerInputEvents( void );
 int				Sys_ReturnXbox360ControllerInputEvent( const int n, int& action, int& value, int& value2 );
 void			Sys_EndXbox360ControllerInputEvents( void );
-// Techyon END
+// RB end
 
 // when the console is down, or the game is about to perform a lengthy
 // operation like map loading, the system can release the mouse cursor
@@ -588,7 +588,7 @@ typedef struct
 {
 	const char* 	name;
 	
-	// Techyon RB: 64 bit fix, changed long to int
+	// RB: 64 bit fix, changed long to int
 #if defined(WIN32)
 	unsigned long	threadId;
 	int				threadHandle;
@@ -596,7 +596,7 @@ typedef struct
 	unsigned int	threadId;
 	unsigned long	threadHandle;
 #endif
-	// Techyon END
+	// RB end
 } xthreadInfo;
 
 const int MAX_THREADS				= 10;
@@ -620,9 +620,9 @@ enum
 	CRITICAL_SECTION_THREE
 };
 
-// Techyon BEGIN
+// RB begin
 void				Sys_InitCriticalSections();
-// Techyon END
+// RB end
 void				Sys_EnterCriticalSection( int index = CRITICAL_SECTION_ZERO );
 void				Sys_LeaveCriticalSection( int index = CRITICAL_SECTION_ZERO );
 
@@ -672,11 +672,11 @@ public:
 	virtual const char* 	GetCallStackCurStr( int depth ) = 0;
 	virtual void			ShutdownSymbols( void ) = 0;
 	
-	// Techyon RB: 64 bit fixes, changed int to intptr_t
+	// RB: 64 bit fixes, changed int to intptr_t
 	virtual intptr_t		DLL_Load( const char* dllName ) = 0;
 	virtual void* 			DLL_GetProcAddress( intptr_t dllHandle, const char* procName ) = 0;
 	virtual void			DLL_Unload( intptr_t dllHandle ) = 0;
-	// Techyon END
+	// RB end
 	virtual void			DLL_GetFileName( const char* baseName, char* dllName, int maxLength ) = 0;
 	
 	virtual sysEvent_t		GenerateMouseButtonEvent( int button, bool down ) = 0;

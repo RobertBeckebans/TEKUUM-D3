@@ -146,7 +146,7 @@ RB_LogComment
 */
 void RB_LogComment( const char* fmt, ... )
 {
-// Techyon BEGIN
+// RB begin
 #if !defined(USE_GLES1)
 	va_list		argptr;
 	char		msg[4096];
@@ -163,7 +163,7 @@ void RB_LogComment( const char* fmt, ... )
 	
 	glStringMarkerGREMEDY( strlen( msg ), msg );
 #endif
-// Techyon END
+// RB end
 }
 
 

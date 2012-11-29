@@ -1226,7 +1226,7 @@ maModel_t* MA_Load( const char* fileName )
 		return NULL;
 	}
 	
-// Techyon BEGIN
+// RB begin
 #if defined(USE_EXCEPTIONS)
 	try
 #endif

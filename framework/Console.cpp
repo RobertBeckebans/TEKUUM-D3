@@ -821,14 +821,14 @@ bool	idConsoleLocal::ProcessEvent( const sysEvent_t* event, bool forceAccept )
 	bool consoleKey;
 	consoleKey = event->evType == SE_KEY && ( event->evValue == Sys_GetConsoleKey( false ) || event->evValue == Sys_GetConsoleKey( true ) );
 	
-// Techyon BEGIN
+// RB begin
 	/*
 	if ( !consoleKey && (idKeyInput::IsDown( K_SHIFT ) && event->evValue == K_ESCAPE && event->evValue2 != 0) )
 	{
 		consoleKey = true;
 	}
 	*/
-// Techyon END
+// RB end
 
 #if ID_CONSOLE_LOCK
 	// If the console's not already down, and we have it turned off, check for ctrl+alt
@@ -959,7 +959,7 @@ void idConsoleLocal::Print( const char* txt )
 	int		c, l;
 	int		color;
 	
-// Techyon BEGIN
+// RB begin
 #if defined(USE_MFC_TOOLS)
 	RadiantPrint( txt );
 	
@@ -975,7 +975,7 @@ void idConsoleLocal::Print( const char* txt )
 	}
 #endif
 	
-// Techyon END
+// RB end
 
 	color = idStr::ColorIndex( C_COLOR_CYAN );
 	
@@ -1214,13 +1214,13 @@ void idConsoleLocal::DrawSolidConsole( float frac )
 	
 	renderSystem->SetColor( idStr::ColorForIndex( C_COLOR_CYAN ) );
 	
-	// Techyon BEGIN
+	// RB begin
 #if defined( _DEBUG )
 	idStr version = va( "%s.%i-debug %s", ENGINE_VERSION, BUILD_NUMBER, BUILD_STRING );
 #else
 	idStr version = va( "%s.%i %s", ENGINE_VERSION, BUILD_NUMBER, BUILD_STRING );
 #endif
-	// Techyon END
+	// RB end
 	
 	i = version.Length();
 	

@@ -829,7 +829,7 @@ idPhysics_StaticMulti::GetGravity
 */
 const idVec3& idPhysics_StaticMulti::GetGravity( void ) const
 {
-	// Techyon RB: changed g_gravity to 3d vector
+	// RB: changed g_gravity to 3d vector
 	static idVec3 gravity( g_gravityX.GetFloat(), g_gravityY.GetFloat(), g_gravityZ.GetFloat() );
 	
 	return gravity;

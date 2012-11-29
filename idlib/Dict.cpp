@@ -267,9 +267,9 @@ idDict::Checksum
 */
 int	idDict::Checksum( void ) const
 {
-	// Techyon RB: 64 bit fix, changed long to int
+	// RB: 64 bit fix, changed long to int
 	unsigned int ret;
-	// Techyon END
+	// RB end
 	int i, n;
 	
 	idList<idKeyValue> sorted = args;
@@ -538,9 +538,9 @@ int idDict::FindKeyIndex( const char* key ) const
 	if( key == NULL || key[0] == '\0' )
 	{
 		idLib::common->DWarning( "idDict::FindKeyIndex: empty key" );
-		// Techyon RB: 64 bit fix, changed NULL to -1
+		// RB: 64 bit fix, changed NULL to -1
 		return -1;
-		// Techyon END
+		// RB end
 	}
 	
 	int hash = argHash.GenerateKey( key, false );
@@ -734,10 +734,10 @@ idDict::ShowMemoryUsage_f
 */
 void idDict::ShowMemoryUsage_f( const idCmdArgs& args )
 {
-	// Techyon RB: 64 bit fix, changed %5d to %5zd for size_t conversion
+	// RB: 64 bit fix, changed %5d to %5zd for size_t conversion
 	idLib::common->Printf( "%5zd KB in %d keys\n", globalKeys.Size() >> 10, globalKeys.Num() );
 	idLib::common->Printf( "%5zd KB in %d values\n", globalValues.Size() >> 10, globalValues.Num() );
-	// Techyon END
+	// RB end
 }
 
 /*

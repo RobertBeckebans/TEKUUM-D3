@@ -127,12 +127,12 @@ private:
 	void		UpdateWatches( void );
 	
 	// Network message handlers
-	// Techyon RB: changed msg_t* to idBitMsg&
+	// RB: changed msg_t* to idBitMsg&
 	void		HandleBreak( idBitMsg& msg );
 	void		HandleInspectCallstack( idBitMsg& msg );
 	void		HandleInspectThreads( idBitMsg& msg );
 	void		HandleInspectVariable( idBitMsg& msg );
-	// Techyon END
+	// RB end
 };
 
 /*

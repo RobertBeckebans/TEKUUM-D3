@@ -189,9 +189,9 @@ void idAASLocal::CalculateAreaTravelTimes( void )
 		}
 	}
 	
-	// Techyon RB: 64 bit fixes, changed unsigned int to ptrdiff_t
+	// RB: 64 bit fixes, changed unsigned int to ptrdiff_t
 	assert( ( ( ptrdiff_t ) bytePtr - ( ptrdiff_t ) areaTravelTimes ) <= numAreaTravelTimes * sizeof( unsigned short ) );
-	// Techyon END
+	// RB end
 	
 }
 

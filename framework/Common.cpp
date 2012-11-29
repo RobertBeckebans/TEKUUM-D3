@@ -76,7 +76,7 @@ idCVar com_asyncSound( "com_asyncSound", "1", CVAR_INTEGER | CVAR_SYSTEM, ASYNCS
 #endif
 idCVar com_forceGenericSIMD( "com_forceGenericSIMD", "0", CVAR_BOOL | CVAR_SYSTEM | CVAR_NOCHEAT, "force generic platform independent SIMD" );
 idCVar com_developer( "developer", "0", CVAR_BOOL | CVAR_SYSTEM | CVAR_NOCHEAT, "developer mode" );
-// Techyon BEGIN
+// RB begin
 // defaulted to 1
 idCVar com_allowConsole( "com_allowConsole", "1", CVAR_BOOL | CVAR_SYSTEM | CVAR_NOCHEAT, "allow toggling console with the tilde key" );
 idCVar com_speeds( "com_speeds", "0", CVAR_BOOL | CVAR_SYSTEM | CVAR_NOCHEAT, "show engine timings" );
@@ -89,7 +89,7 @@ idCVar com_showFPS( "com_showFPS", "0", CVAR_BOOL | CVAR_SYSTEM | CVAR_ARCHIVE |
 idCVar com_showMemoryUsage( "com_showMemoryUsage", "0", CVAR_BOOL | CVAR_SYSTEM | CVAR_NOCHEAT, "show total and per frame memory usage" );
 idCVar com_logFile( "logFile", "0", CVAR_SYSTEM | CVAR_NOCHEAT, "1 = buffer log, 2 = flush after each print", 0, 2, idCmdSystem::ArgCompletion_Integer<0, 2> );
 #endif
-// Techyon END
+// RB end
 idCVar com_showAsyncStats( "com_showAsyncStats", "0", CVAR_BOOL | CVAR_SYSTEM | CVAR_NOCHEAT, "show async network stats" );
 idCVar com_showSoundDecoders( "com_showSoundDecoders", "0", CVAR_BOOL | CVAR_SYSTEM | CVAR_NOCHEAT, "show sound decoders" );
 idCVar com_timestampPrints( "com_timestampPrints", "0", CVAR_SYSTEM, "print time with each console print, 1 = msec, 2 = sec", 0, 2, idCmdSystem::ArgCompletion_Integer<0, 2> );
@@ -409,11 +409,11 @@ void idCommonLocal::VPrintf( const char* fmt, va_list args )
 	Sys_Printf( "%s", msg );
 	
 	// print to script debugger server
-	// Techyon BEGIN
+	// RB begin
 #if defined(USE_MFC_TOOLS)
 	DebuggerServerPrint( msg );
 #endif
-	// Techyon END
+	// RB end
 	
 #if 0	// !@#
 #if defined(_DEBUG) && defined(WIN32)
@@ -881,9 +881,9 @@ idCommonLocal::Quit
 void idCommonLocal::Quit( void )
 {
 
-// Techyon BEGIN
+// RB begin
 #if defined(USE_MFC_TOOLS)
-// Techyon END
+// RB end
 	if( com_editors & EDITOR_RADIANT )
 	{
 		RadiantInit();
@@ -1123,9 +1123,9 @@ idCommonLocal::InitTool
 */
 void idCommonLocal::InitTool( const toolFlag_t tool, const idDict* dict )
 {
-// Techyon BEGIN
+// RB begin
 #if defined(USE_MFC_TOOLS)
-// Techyon END
+// RB end
 	if( tool & EDITOR_SOUND )
 	{
 		SoundEditorInit( dict );
@@ -1299,9 +1299,9 @@ int	idCommonLocal::KeyState( int key )
 //============================================================================
 
 
-// Techyon BEGIN
+// RB begin
 #if defined(USE_MFC_TOOLS)
-// Techyon END
+// RB end
 /*
 ==================
 Com_Editor_f
@@ -1324,13 +1324,13 @@ static void Com_ScriptDebugger_f( const idCmdArgs& args )
 	// Make sure it wasnt on the command line
 	if( !( com_editors & EDITOR_DEBUGGER ) )
 	{
-// Techyon BEGIN
+// RB begin
 #if defined(USE_MFC_TOOLS)
 		DebuggerClientLaunch();
 #else
 		common->Printf( "Script debugger is currently disabled\n" );
 #endif
-// Techyon END
+// RB end
 	}
 }
 
@@ -1358,7 +1358,7 @@ static void Com_MaterialEditor_f( const idCmdArgs& args )
 
 #endif // defined(USE_MFC_TOOLS)
 
-// Techyon BEGIN
+// RB begin
 #if defined(USE_GTK_TOOLS)
 /*
 =============
@@ -1397,7 +1397,7 @@ static void Com_QtStringEditor_f( const idCmdArgs& args )
 
 
 
-// Techyon END
+// RB end
 
 /*
 ============
@@ -1442,9 +1442,9 @@ static void PrintMemInfo_f( const idCmdArgs& args )
 	fileSystem->CloseFile( f );
 }
 
-// Techyon BEGIN
+// RB begin
 #if defined(USE_MFC_TOOLS)
-// Techyon END
+// RB end
 /*
 ==================
 Com_EditLights_f
@@ -1596,7 +1596,7 @@ static void Com_Crash_f( const idCmdArgs& args )
 		return;
 	}
 	
-// Techyon RB: added platform specific break point tools
+// RB: added platform specific break point tools
 #if defined(MSVC)
 	__debugbreak();
 #elif defined(__GNUC__)
@@ -1604,7 +1604,7 @@ static void Com_Crash_f( const idCmdArgs& args )
 #else
 	* ( int* ) 0 = 0x12345678;
 #endif
-// Techyon END
+// RB end
 }
 
 /*
@@ -1867,7 +1867,7 @@ void Com_ReloadEngine_f( const idCmdArgs& args )
 	}
 }
 
-// Techyon RB: development tool
+// RB: development tool
 static void Com_GenerateSinCosTables_f( const idCmdArgs& args )
 {
 	int i;
@@ -1904,7 +1904,7 @@ static void Com_GenerateSinCosTables_f( const idCmdArgs& args )
 	
 	fileSystem->CloseFile( file );
 }
-// Techyon END
+// RB end
 
 /*
 ===============
@@ -2812,9 +2812,9 @@ void idCommonLocal::InitCommands( void )
 	cmdSystem->AddCommand( "roq", RoQFileEncode_f, CMD_FL_TOOL, "encodes a roq file" );
 #endif
 	
-// Techyon BEGIN
+// RB begin
 #if defined(USE_MFC_TOOLS)
-// Techyon END
+// RB end
 	// editors
 	cmdSystem->AddCommand( "editor", Com_Editor_f, CMD_FL_TOOL, "launches the level editor Radiant" );
 	cmdSystem->AddCommand( "editLights", Com_EditLights_f, CMD_FL_TOOL, "launches the in-game Light Editor" );
@@ -2831,7 +2831,7 @@ void idCommonLocal::InitCommands( void )
 	cmdSystem->AddCommand( "materialEditor", Com_MaterialEditor_f, CMD_FL_TOOL, "launches the Material Editor" );
 #endif
 	
-	// Techyon BEGIN
+	// RB begin
 #if defined(USE_GTK_TOOLS)
 	cmdSystem->AddCommand( "gtkTestEditor", Com_GtkTestEditor_f, CMD_FL_TOOL, "launches the GtkTest Editor" );
 #endif
@@ -2843,7 +2843,7 @@ void idCommonLocal::InitCommands( void )
 	
 	cmdSystem->AddCommand( "generateMaterialTables", Com_GenerateSinCosTables_f, CMD_FL_SYSTEM | CMD_FL_CHEAT, "generates tables required by the engine to run" );
 	
-	// Techyon END
+	// RB end
 	
 	cmdSystem->AddCommand( "printMemInfo", PrintMemInfo_f, CMD_FL_SYSTEM, "prints memory debugging data" );
 	
@@ -2937,12 +2937,12 @@ idCommonLocal::Frame
 void idCommonLocal::Frame( void )
 {
 
-// Techyon BEGIN
+// RB begin
 #if defined(USE_EXCEPTIONS)
 	try
 #endif
 	{
-// Techyon END
+// RB end
 
 		// pump all the events
 		Sys_GenerateEvents();
@@ -3003,14 +3003,14 @@ void idCommonLocal::Frame( void )
 		}
 	}
 	
-// Techyon BEGIN
+// RB begin
 #if defined(USE_EXCEPTIONS)
 	catch( idException& )
 	{
 		return;			// an ERP_DROP was thrown
 	}
 #endif
-// Techyon END
+// RB end
 }
 
 /*
@@ -3314,12 +3314,12 @@ idCommonLocal::Init
 void idCommonLocal::Init( int argc, const char** argv, const char* cmdline )
 {
 
-// Techyon BEGIN
+// RB begin
 #if defined(USE_EXCEPTIONS)
 	try
 #endif
 	{
-// Techyon END
+// RB end
 
 		// set interface pointers used by idLib
 		idLib::sys			= sys;
@@ -3420,14 +3420,14 @@ void idCommonLocal::Init( int argc, const char** argv, const char* cmdline )
 		com_fullyInitialized = true;
 	}
 	
-// Techyon BEGIN
+// RB begin
 #if defined(USE_EXCEPTIONS)
 	catch( idException& )
 	{
 		Sys_Error( "Error during initialization" );
 	}
 #endif
-// Techyon END
+// RB end
 }
 
 
@@ -3620,11 +3620,11 @@ void idCommonLocal::InitGame( void )
 	uiManager->Init();
 	
 	// startup the script debugger
-	// Techyon BEGIN
+	// RB begin
 #if defined(USE_MFC_TOOLS)
 	DebuggerServerInit();
 #endif
-	// Techyon END
+	// RB end
 	
 #if defined(STANDALONE)
 	PrintLoadingMessage( common->GetLanguageDict()->GetString( "#str_idCommonLocal_InitGame_Loading_game" ) );
@@ -3678,11 +3678,11 @@ void idCommonLocal::ShutdownGame( bool reloading )
 	soundSystem->ClearBuffer();
 	
 	// shutdown the script debugger
-	// Techyon BEGIN
+	// RB begin
 #if defined(USE_MFC_TOOLS)
 	DebuggerServerShutdown();
 #endif
-	// Techyon END
+	// RB end
 	
 	idAsyncNetwork::client.Shutdown();
 	

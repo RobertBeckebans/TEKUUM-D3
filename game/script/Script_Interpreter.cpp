@@ -496,10 +496,10 @@ idInterpreter::Error
 Aborts the currently executing function
 ============
 */
-// Techyon RB: fixed missing const-ness
+// RB: fixed missing const-ness
 void idInterpreter::Error( const char* fmt, ... ) const
 {
-// Techyon END
+// RB end
 	va_list argptr;
 	char	text[ 1024 ];
 	
@@ -527,10 +527,10 @@ idInterpreter::Warning
 Prints file and line number information with warning.
 ============
 */
-// Techyon RB: fixed missing const-ness
+// RB: fixed missing const-ness
 void idInterpreter::Warning( const char* fmt, ... ) const
 {
-// Techyon END
+// RB end
 	va_list argptr;
 	char	text[ 1024 ];
 	
@@ -806,9 +806,9 @@ void idInterpreter::CallEvent( const function_t* func, int argsize )
 	varEval_t			var;
 	int 				pos;
 	int 				start;
-	// Techyon RB: 64 bit fixes, changed int to intptr_t
+	// RB: 64 bit fixes, changed int to intptr_t
 	intptr_t			data[ D_EVENT_MAXARGS ];
-	// Techyon END
+	// RB end
 	const idEventDef*	evdef;
 	const char*			format;
 	
@@ -873,10 +873,10 @@ void idInterpreter::CallEvent( const function_t* func, int argsize )
 		{
 			case D_EVENT_INTEGER :
 				var.intPtr = ( int* )&localstack[ start + pos ];
-				// Techyon RB: fixed data alignment
+				// RB: fixed data alignment
 				//data[ i ] = int( *var.floatPtr );
 				( *( int* )&data[ i ] ) = int( *var.floatPtr );
-				// Techyon END
+				// RB end
 				break;
 				
 			case D_EVENT_FLOAT :
@@ -1001,9 +1001,9 @@ void idInterpreter::CallSysEvent( const function_t* func, int argsize )
 	varEval_t			source;
 	int 				pos;
 	int 				start;
-	// Techyon RB: 64 bit fixes, changed int to intptr_t
+	// RB: 64 bit fixes, changed int to intptr_t
 	intptr_t			data[ D_EVENT_MAXARGS ];
-	// Techyon END
+	// RB end
 	const idEventDef*	evdef;
 	const char*			format;
 	
@@ -2046,14 +2046,14 @@ bool idInterpreter::Execute( void )
 				
 			case OP_PUSH_V:
 				var_a = GetVariable( st->a );
-				// Techyon RB: 64 bit fix, changed individual pushes with PushVector
+				// RB: 64 bit fix, changed individual pushes with PushVector
 				/*
 				Push( *reinterpret_cast<int *>( &var_a.vectorPtr->x ) );
 				Push( *reinterpret_cast<int *>( &var_a.vectorPtr->y ) );
 				Push( *reinterpret_cast<int *>( &var_a.vectorPtr->z ) );
 				*/
 				PushVector( *var_a.vectorPtr );
-				// Techyon END
+				// RB end
 				break;
 				
 			case OP_PUSH_OBJ:
@@ -2077,7 +2077,7 @@ bool idInterpreter::Execute( void )
 	return threadDying;
 }
 
-// Techyon RB: moved from Script_Interpreter.h to avoid include problems with the script debugger
+// RB: moved from Script_Interpreter.h to avoid include problems with the script debugger
 /*
 ================
 idInterpreter::GetEntity
@@ -2113,4 +2113,4 @@ idScriptObject* idInterpreter::GetScriptObject( int entnum ) const
 	}
 	return NULL;
 }
-// Techyon END
+// RB end

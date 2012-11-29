@@ -41,7 +41,7 @@ typedef enum
 {
 	EDITOR_NONE					= 0,
 	
-// Techyon BEGIN
+// RB begin
 //#if defined(USE_MFC_TOOLS)
 	EDITOR_RADIANT				= BIT( 1 ),
 	EDITOR_GUI					= BIT( 2 ),
@@ -66,7 +66,7 @@ typedef enum
 	EDITOR_QTSTRING				= BIT( 15 ),
 #endif
 	
-// Techyon END
+// RB end
 
 } toolFlag_t;
 

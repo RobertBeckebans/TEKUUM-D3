@@ -646,12 +646,12 @@ void AssertFailed( const char* file, int line, const char* expression )
 {
 	idLib::sys->DebugPrintf( "\n\nASSERTION FAILED!\n%s(%d): '%s'\n", file, line, expression );
 	
-	// Techyon RB: changed x86 specific __asm int 0x03 to generic breakpoint builders
+	// RB: changed x86 specific __asm int 0x03 to generic breakpoint builders
 #ifdef _WIN32
 	__debugbreak();
 #elif defined( __linux__ )
 	__builtin_trap();
-	// Techyon END
+	// RB end
 #elif defined( MACOS_X )
 	kill( getpid(), SIGINT );
 #endif

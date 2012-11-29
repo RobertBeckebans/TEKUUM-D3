@@ -329,11 +329,11 @@ idSoundSample::idSoundSample()
 	objectMemSize = 0;
 	nonCacheData = NULL;
 	amplitudeData = NULL;
-	// Techyon BEGIN
+	// RB begin
 #if defined(USE_OPENAL)
 	openalBuffer = NULL;
 #endif
-	// Techyon END
+	// RB end
 	hardwareBuffer = false;
 	defaultSound = false;
 	onDemand = false;
@@ -405,7 +405,7 @@ void idSoundSample::MakeDefault( void )
 		ncd[i * 2 + 1] = sample;
 	}
 	
-	// Techyon BEGIN
+	// RB begin
 #if defined(USE_OPENAL)
 	if( idSoundSystemLocal::useOpenAL )
 	{
@@ -428,7 +428,7 @@ void idSoundSample::MakeDefault( void )
 		}
 	}
 #endif
-	// Techyon END
+	// RB end
 	
 	defaultSound = true;
 }
@@ -560,7 +560,7 @@ void idSoundSample::Load( void )
 	// optionally convert it to 22kHz to save memory
 	CheckForDownSample();
 	
-	// Techyon BEGIN
+	// RB begin
 #if defined(USE_OPENAL)
 	// create hardware audio buffers
 	if( idSoundSystemLocal::useOpenAL )
@@ -718,7 +718,7 @@ void idSoundSample::Load( void )
 		}
 	}
 #endif // defined(USE_OPENAL)
-// Techyon END
+// RB end
 
 
 	fh.Close();
@@ -733,7 +733,7 @@ void idSoundSample::PurgeSoundSample()
 {
 	purged = true;
 	
-	// Techyon BEGIN
+	// RB begin
 #if defined(USE_OPENAL)
 	if( hardwareBuffer && idSoundSystemLocal::useOpenAL )
 	{
@@ -750,7 +750,7 @@ void idSoundSample::PurgeSoundSample()
 		}
 	}
 #endif
-	// Techyon END
+	// RB end
 	
 	if( amplitudeData )
 	{

@@ -62,11 +62,11 @@ public:
 	virtual bool			LockMemory( void* ptr, int bytes );
 	virtual bool			UnlockMemory( void* ptr, int bytes );
 	
-	// Techyon RB: 64 bit fixes, changed int to intptr_t
+	// RB: 64 bit fixes, changed int to intptr_t
 	virtual intptr_t		DLL_Load( const char* dllName );
 	virtual void* 			DLL_GetProcAddress( intptr_t dllHandle, const char* procName );
 	virtual void			DLL_Unload( intptr_t dllHandle );
-	// Techyon END
+	// RB end
 	virtual void			DLL_GetFileName( const char* baseName, char* dllName, int maxLength );
 	
 	virtual sysEvent_t		GenerateMouseButtonEvent( int button, bool down );

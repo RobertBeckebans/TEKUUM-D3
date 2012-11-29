@@ -109,9 +109,9 @@ typedef enum
 typedef struct
 {
 	wexpOpType_t opType;
-	// Techyon RB: 64 bit fixes, changed int to intptr_t
+	// RB: 64 bit fixes, changed int to intptr_t
 	intptr_t	a, b, c, d;
-	// Techyon END
+	// RB end
 } wexpOp_t;
 
 struct idRegEntry
@@ -356,9 +356,9 @@ public:
 	
 	idStr cmd;
 	
-	// Techyon RB: added parm recurseChildren
+	// RB: added parm recurseChildren
 	virtual void RunNamedEvent( const char* eventName, bool recurseChildren = true );
-	// Techyon END
+	// RB end
 	
 	void		AddDefinedVar( idWinVar* var );
 	

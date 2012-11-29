@@ -950,13 +950,13 @@ void MEMainFrame::OnEditRedo()
 		if( focus->IsKindOf( RUNTIME_CLASS( CRichEditCtrl ) ) )
 		{
 		
-// Techyon BEGIN
+// RB begin
 #if _MFC_VER >= 0x0A00
 			m_materialEditView->m_textView.Redo();
 #else
 			// FIXME with old MFC code
 #endif
-// Techyon END
+// RB end
 			return;
 		}
 	}
@@ -1006,13 +1006,13 @@ void MEMainFrame::OnEditRedoUpdate( CCmdUI* pCmdUI )
 	{
 		if( focus->IsKindOf( RUNTIME_CLASS( CRichEditCtrl ) ) )
 		{
-// Techyon BEGIN
+// RB begin
 #if _MFC_VER >= 0x0A00
 			pCmdUI->Enable( m_materialEditView->m_textView.CanRedo() );
 #else
 			// FIXME with old MFC code
 #endif
-// Techyon END
+// RB end
 			return;
 		}
 	}

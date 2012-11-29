@@ -42,11 +42,11 @@ If you have questions concerning this license or the applicable additional terms
 #include <signal.h>
 #include <fcntl.h>
 
-// Techyon BEGIN
+// RB begin
 #if defined(__ANDROID__)
 #include <android/log.h>
 #endif
-// Techyon END
+// RB end
 
 #include "posix_public.h"
 
@@ -176,9 +176,9 @@ Sys_Milliseconds
    timeval:tv_sec is an int:
    assuming this wraps every 0x7fffffff - ~68 years since the Epoch (1970) - we're safe till 2038
    using unsigned long data type to work right with Sys_XTimeToSysTime */
-// Techyon RB: changed long to int
+// RB: changed long to int
 unsigned int sys_timeBase = 0;
-// Techyon END
+// RB end
 /* current time in ms, using sys_timeBase as origin
    NOTE: sys_timeBase*1000 + curtime -> ms since the Epoch
      0x7fffffff ms - ~24 days
@@ -186,7 +186,7 @@ unsigned int sys_timeBase = 0;
 */
 int Sys_Milliseconds( void )
 {
-	// Techyon RB: clock_gettime should be a good replacement on Android
+	// RB: clock_gettime should be a good replacement on Android
 	// because gettimeofday() seemed to cause a 64 bit emulation and performance penalty
 #if defined(__ANDROID__)
 #if 0
@@ -214,7 +214,7 @@ int Sys_Milliseconds( void )
 	
 	return curtime;
 #endif
-// Techyon END
+// RB end
 #else
 	int curtime;
 	struct timeval tp;
@@ -458,7 +458,7 @@ Sys_DLL_Load
 TODO: OSX - use the native API instead? NSModule
 =================
 */
-// Techyon RB: 64 bit fixes, changed int to intptr_t
+// RB: 64 bit fixes, changed int to intptr_t
 intptr_t Sys_DLL_Load( const char* path )
 {
 	void* handle = dlopen( path, RTLD_NOW );
@@ -469,17 +469,17 @@ intptr_t Sys_DLL_Load( const char* path )
 	
 	return ( intptr_t )handle;
 }
-// Techyon END
+// RB end
 
 /*
 =================
 Sys_DLL_GetProcAddress
 =================
 */
-// Techyon RB: 64 bit fixes, changed int to intptr_t
+// RB: 64 bit fixes, changed int to intptr_t
 void* Sys_DLL_GetProcAddress( intptr_t handle, const char* sym )
 {
-// Techyon END
+// RB end
 	const char* error;
 	void* ret = dlsym( ( void* )handle, sym );
 	if( ( error = dlerror() ) != NULL )
@@ -494,10 +494,10 @@ void* Sys_DLL_GetProcAddress( intptr_t handle, const char* sym )
 Sys_DLL_Unload
 =================
 */
-// Techyon RB: 64 bit fixes, changed int to intptr_t
+// RB: 64 bit fixes, changed int to intptr_t
 void Sys_DLL_Unload( intptr_t handle )
 {
-// Techyon END
+// RB end
 	dlclose( ( void* )handle );
 }
 
@@ -540,7 +540,7 @@ void Sys_Sleep( int msec )
 	
 	// use nanosleep? keep sleeping if signal interrupt?
 	
-	// Techyon BEGIN
+	// RB begin
 #if defined(__ANDROID__)
 	usleep( msec * 1000 );
 #else
@@ -824,11 +824,11 @@ void tty_Show()
 		{
 			write( STDOUT_FILENO, buf, strlen( buf ) );
 			
-			// Techyon BEGIN
+			// RB begin
 #if defined(__ANDROID__)
 			//__android_log_print(ANDROID_LOG_DEBUG, "Techyon_DEBUG", "%s", buf);
 #endif
-			// Techyon END
+			// RB end
 			
 			int back = strlen( buf ) - input_field.GetCursor();
 			while( back > 0 )

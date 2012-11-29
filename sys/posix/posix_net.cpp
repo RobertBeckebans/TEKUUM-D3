@@ -53,10 +53,10 @@ idCVar net_port( "net_port", "", CVAR_SYSTEM | CVAR_INTEGER, "local IP port numb
 
 typedef struct
 {
-	// Techyon RB: 64 bit fixes, changed long to int
+	// RB: 64 bit fixes, changed long to int
 	unsigned int ip;
 	unsigned int mask;
-	// Techyon END
+	// RB end
 } net_interface;
 
 #define 		MAX_INTERFACES	32
@@ -130,10 +130,10 @@ static bool ExtractPort( const char* src, char* buf, int bufsize, int* port )
 	*p = '\0';
 	*port = strtol( p + 1, NULL, 10 );
 	if( ( *port == 0 && errno == EINVAL ) ||
-			// Techyon RB: 64 bit fixes, changed LONG_ to INT_
+			// RB: 64 bit fixes, changed LONG_ to INT_
 			( ( *port == INT_MIN || *port == INT_MAX ) && errno == ERANGE ) )
 	{
-		// Techyon END
+		// RB end
 		return false;
 	}
 	return true;
@@ -244,10 +244,10 @@ Sys_IsLANAddress
 bool Sys_IsLANAddress( const netadr_t adr )
 {
 	int i;
-	// Techyon RB: 64 bit fixes, changed long to int
+	// RB: 64 bit fixes, changed long to int
 	unsigned int* p_ip;
 	unsigned int ip;
-	// Techyon END
+	// RB end
 	
 #if ID_NOLANADDRESS
 	common->Printf( "Sys_IsLANAddress: ID_NOLANADDRESS\n" );
@@ -271,9 +271,9 @@ bool Sys_IsLANAddress( const netadr_t adr )
 	
 	for( i = 0; i < num_interfaces; i++ )
 	{
-		// Techyon RB: 64 bit fixes, changed long to int
+		// RB: 64 bit fixes, changed long to int
 		p_ip = ( unsigned int* )&adr.ip[0];
-		// Techyon END
+		// RB end
 		ip = ntohl( *p_ip );
 		if( ( netint[i].ip & netint[i].mask ) == ( ip & netint[i].mask ) )
 		{
@@ -352,10 +352,10 @@ void Sys_InitNetworking( void )
 		if( !ifp->ifa_netmask )
 			continue;
 			
-		// Techyon RB: 64 bit fixes, changed long to int
+		// RB: 64 bit fixes, changed long to int
 		ip = ntohl( *( unsigned int* )&ifp->ifa_addr->sa_data[2] );
 		mask = ntohl( *( unsigned int* )&ifp->ifa_netmask->sa_data[2] );
-		// Techyon END
+		// RB end
 		
 		if( ip == INADDR_LOOPBACK )
 		{
@@ -414,9 +414,9 @@ void Sys_InitNetworking( void )
 			}
 			else
 			{
-				// Techyon RB: 64 bit fixes, changed long to int
+				// RB: 64 bit fixes, changed long to int
 				ip = ntohl( *( unsigned int* )&ifr->ifr_addr.sa_data[2] );
-				// Techyon END
+				// RB end
 				if( ip == INADDR_LOOPBACK )
 				{
 					common->Printf( "loopback\n" );
@@ -435,9 +435,9 @@ void Sys_InitNetworking( void )
 				}
 				else
 				{
-					// Techyon RB: 64 bit fixes, changed long to int
+					// RB: 64 bit fixes, changed long to int
 					mask = ntohl( *( unsigned int* )&ifr->ifr_addr.sa_data[2] );
-					// Techyon END
+					// RB end
 					if( ip != INADDR_LOOPBACK )
 					{
 						common->Printf( "/%d.%d.%d.%d\n",

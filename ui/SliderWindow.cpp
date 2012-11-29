@@ -487,9 +487,9 @@ void idSliderWindow::UpdateCvar( bool read, bool force )
 idSliderWindow::RunNamedEvent
 ============
 */
-// Techyon RB: added parm recurseChildren
+// RB: added parm recurseChildren
 void idSliderWindow::RunNamedEvent( const char* eventName, bool recurseChildren )
-// Techyon END
+// RB end
 {
 	idStr event, group;
 	

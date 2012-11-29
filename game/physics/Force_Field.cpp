@@ -193,10 +193,10 @@ void idForce_Field::Evaluate( int time )
 		
 		if( playerOnly )
 		{
-			// Techyon BEGIN - RB: added check for tyPhysics_Player::Type
+			// RB: added check for tyPhysics_Player::Type
 			if( !physics->IsType( idPhysics_Player::Type ) && !physics->IsType( tyPhysics_Player::Type ) )
 			{
-				// Techyon END
+				// RB end
 				continue;
 			}
 		}

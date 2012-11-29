@@ -865,7 +865,7 @@ void R_TransformClipToDevice( const idPlane& clip, const viewDef_t* view, idVec3
 R_ProjectRadius
 ================
 */
-// Techyon BEGIN
+// RB begin
 float R_ProjectRadius( float r, const idVec3& location )
 {
 	float           pr;
@@ -920,7 +920,7 @@ float R_ProjectRadius( float r, const idVec3& location )
 		
 	return pr;
 }
-// Techyon END
+// RB end
 
 /*
 ==========================
@@ -1039,9 +1039,9 @@ void R_SetViewMatrix( viewDef_t* viewDef )
 	// to OpenGL's coordinate system (looking down -Z)
 	myGlMultMatrix( viewerMatrix, s_flipMatrix, world->modelViewMatrix );
 	
-// Techyon BEGIN
+// RB begin
 	MatrixCopy( viewerMatrix, world->unflippedViewMatrix );
-// Techyon END
+// RB end
 }
 
 /*
@@ -1146,7 +1146,7 @@ static void R_SetupProjection( bool infiniteFarClip )
 #endif
 }
 
-// Techyon BEGIN
+// RB begin
 /*
 =================
 R_SetupUnprojection
@@ -1201,7 +1201,7 @@ static void R_SetupUnprojection( void )
 	
 #endif
 }
-// Techyon END
+// RB end
 
 /*
 =================
@@ -1378,11 +1378,11 @@ void R_RenderView( viewDef_t* parms )
 	// portal-to-screen scissor box calculations
 	R_SetupProjection( true );
 	
-// Techyon BEGIN
+// RB begin
 	// we need a unprojection matrix to calculate the vertex position based on the depth image value
 	// for some post process shaders
 	R_SetupUnprojection();
-// Techyon END
+// RB end
 
 	// identify all the visible portalAreas, and the entityDefs and
 	// lightDefs that are in them and pass culling.

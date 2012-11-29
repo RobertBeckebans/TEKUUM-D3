@@ -17,7 +17,7 @@ namespace irr
 namespace io
 {
 
-// Techyon RB: changed CFileReadCallback to use the idlib filesystem
+// RB: changed CFileReadCallback to use the idlib filesystem
 class CFileReadCallBack : public IFileReadCallBack
 {
 public:
@@ -83,7 +83,7 @@ private:
 	int _size;
 	bool _close;
 };
-// Techyon END
+// RB end
 
 
 // FACTORY FUNCTIONS:

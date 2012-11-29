@@ -48,9 +48,9 @@ If you have questions concerning this license or the applicable additional terms
 #include "rc/doom_resource.h"
 #include "../../renderer/tr_local.h"
 
-// Techyon BEGIN
+// RB begin
 #include <GL/wglew.h>
-// Techyon END
+// RB end
 
 static void		GLW_InitExtensions( void );
 
@@ -255,7 +255,7 @@ void GLW_CheckWGLExtensions( HDC hDC )
 GLW_GetWGLExtensionsWithFakeWindow
 ==================
 */
-// Techyon BEGIN
+// RB begin
 static void GLW_GetWGLExtensionsWithFakeWindow( void )
 {
 	HWND	hWnd;
@@ -288,7 +288,7 @@ static void GLW_GetWGLExtensionsWithFakeWindow( void )
 		DispatchMessage( &msg );
 	}
 }
-// Techyon END
+// RB end
 
 //=============================================================================
 
@@ -778,7 +778,7 @@ If there is any failure, the renderer will revert back to safe
 parameters and try again.
 ===================
 */
-// Techyon BEGIN - removed QGL usage
+// RB begin - removed QGL usage
 bool GLimp_Init( glimpParms_t parms )
 {
 	//const char	*driverName;
@@ -859,7 +859,7 @@ bool GLimp_Init( glimpParms_t parms )
 	
 	return true;
 }
-// Techyon END
+// RB end
 
 
 /*

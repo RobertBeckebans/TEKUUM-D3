@@ -459,9 +459,9 @@ const char* idVec6::ToString( int precision ) const
 //===============================================================
 
 float	idVecX::temp[VECX_MAX_TEMP + 4];
-// Techyon RB: 64 bit fix, changed int to intptr_t
+// RB: 64 bit fix, changed int to intptr_t
 float* 	idVecX::tempPtr = ( float* )( ( ( intptr_t ) idVecX::temp + 15 ) & ~15 );
-// Techyon END
+// RB end
 int		idVecX::tempIndex = 0;
 
 /*

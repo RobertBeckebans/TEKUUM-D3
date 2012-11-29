@@ -432,9 +432,9 @@ public:
 	void			Lerp( const idVec3& v1, const idVec3& v2, const float l );
 	void			SLerp( const idVec3& v1, const idVec3& v2, const float l );
 	
-// Techyon BEGIN
+// RB begin
 	float			AngleTo( const idVec3& v ) const;
-// Techyon END
+// RB end
 };
 
 extern idVec3 vec3_origin;
@@ -952,7 +952,7 @@ ID_INLINE bool idVec3::ProjectAlongPlane( const idVec3& normal, const float epsi
 	return true;
 }
 
-// Techyon RB: added helper function
+// RB: added helper function
 
 // returns the angle between this and the normalized vector in the range [0 <= angle <= 180]
 ID_INLINE float idVec3::AngleTo( const idVec3& v ) const
@@ -971,7 +971,7 @@ ID_INLINE float idVec3::AngleTo( const idVec3& v ) const
 	// angle = acos( (a * b) / (|a| * |b|) )
 	return RAD2DEG( idMath::ACos( ( *this * v ) / ( thisLen * vLen ) ) );
 }
-// Techyon END
+// RB end
 
 
 //===============================================================
@@ -2073,9 +2073,9 @@ ID_INLINE void idVecX::SetData( int length, float* data )
 		Mem_Free16( p );
 	}
 	
-	// Techyon RB: 64 bit fix, changed int to uintptr_t
+	// RB: 64 bit fix, changed int to uintptr_t
 	assert( ( ( ( uintptr_t ) data ) & 15 ) == 0 ); // data must be 16 byte aligned
-	// Techyon END
+	// RB end
 	
 	p = data;
 	size = length;

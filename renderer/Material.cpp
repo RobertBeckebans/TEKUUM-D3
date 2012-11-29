@@ -299,9 +299,9 @@ static infoParm_t	infoParms[] =
 	{"ricochet",	0,	SURFTYPE_RICOCHET,	0 },	// behaves like metal but causes a ricochet sound
 	
 	// unassigned surface types
-// Techyon BEGIN
+// RB begin
 	{"wallwalk",	0,	SURFTYPE_WALLWALK,	0 },
-// Techyon END
+// RB end
 	{"surftype11",	0,	SURFTYPE_11,	0 },
 	{"surftype12",	0,	SURFTYPE_12,	0 },
 	{"surftype13",	0,	SURFTYPE_13,	0 },

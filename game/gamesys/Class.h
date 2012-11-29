@@ -59,9 +59,9 @@ class idEventArg
 {
 public:
 	int			type;
-	// Techyon RB: 64 bit fix, changed int to intptr_t
+	// RB: 64 bit fix, changed int to intptr_t
 	intptr_t	value;
-	// Techyon END
+	// RB end
 	
 	idEventArg()
 	{
@@ -78,7 +78,7 @@ public:
 		type = D_EVENT_FLOAT;
 		value = *reinterpret_cast<int*>( &data );
 	};
-	// Techyon RB: 64 bit fixes, changed int to intptr_t
+	// RB: 64 bit fixes, changed int to intptr_t
 	idEventArg( idVec3& data )
 	{
 		type = D_EVENT_VECTOR;
@@ -104,7 +104,7 @@ public:
 		type = D_EVENT_TRACE;
 		value = reinterpret_cast<intptr_t>( data );
 	};
-	// Techyon END
+	// RB end
 };
 
 class idAllocError : public idException
@@ -146,7 +146,7 @@ proper superclass is indicated or the run-time type information will be
 incorrect.  Use this on concrete classes only.
 ================
 */
-// Techyon RB: made exceptions optional
+// RB: made exceptions optional
 #if defined(USE_EXCEPTIONS)
 #define CLASS_DECLARATION( nameofsuperclass, nameofclass )											\
 	idTypeInfo nameofclass::Type( #nameofclass, #nameofsuperclass,									\
@@ -181,7 +181,7 @@ idEventFunc<nameofclass> nameofclass::eventCallbacks[] = {
 	}																								\
 idEventFunc<nameofclass> nameofclass::eventCallbacks[] = {
 #endif
-// Techyon END
+// RB end
 
 /*
 ================
@@ -288,9 +288,9 @@ public:
 	bool						ProcessEvent( const idEventDef* ev, idEventArg arg1, idEventArg arg2, idEventArg arg3, idEventArg arg4, idEventArg arg5, idEventArg arg6, idEventArg arg7 );
 	bool						ProcessEvent( const idEventDef* ev, idEventArg arg1, idEventArg arg2, idEventArg arg3, idEventArg arg4, idEventArg arg5, idEventArg arg6, idEventArg arg7, idEventArg arg8 );
 	
-	// Techyon RB: 64 bit fix, changed int to intptr_t
+	// RB: 64 bit fix, changed int to intptr_t
 	bool						ProcessEventArgPtr( const idEventDef* ev, intptr_t* data );
-	// Techyon END
+	// RB end
 	void						CancelEvents( const idEventDef* ev );
 	
 	void						Event_Remove( void );
@@ -301,9 +301,9 @@ public:
 	static idTypeInfo* 			GetClass( const char* name );
 	static void					DisplayInfo_f( const idCmdArgs& args );
 	static void					ListClasses_f( const idCmdArgs& args );
-	// Techyon BEGIN
+	// RB begin
 	static void					ExportScriptEvents_f( const idCmdArgs& args );
-	// Techyon END
+	// RB end
 	static idClass* 			CreateInstance( const char* name );
 	static int					GetNumTypes( void )
 	{

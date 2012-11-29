@@ -38,7 +38,7 @@ If you have questions concerning this license or the applicable additional terms
 */
 
 
-// Techyon BEGIN
+// RB begin
 #if defined(USE_MFC_TOOLS)
 
 class	idProgram;
@@ -135,6 +135,6 @@ void	QtStringEditorInit();
 void	QtStringEditorShutdown();
 void	QtStringEditorRun();
 #endif
-// Techyon END
+// RB end
 
 #endif /* !__EDIT_PUBLIC_H__ */

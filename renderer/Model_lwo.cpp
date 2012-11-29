@@ -1313,9 +1313,9 @@ int sgetI1( unsigned char** bp )
 	i = **bp;
 	if( i > 127 ) i -= 256;
 	flen += 1;
-	// Techyon RB: 64 bit fix, changed *bp++ to *bp += 1
+	// RB: 64 bit fix, changed *bp++ to *bp += 1
 	*bp += 1;
-	// Techyon END
+	// RB end
 	return i;
 }
 
@@ -1353,9 +1353,9 @@ unsigned char sgetU1( unsigned char** bp )
 	if( flen == FLEN_ERROR ) return 0;
 	c = **bp;
 	flen += 1;
-	// Techyon RB: 64 bit fix, changed *bp++ to *bp += 1
+	// RB: 64 bit fix, changed *bp++ to *bp += 1
 	*bp += 1;
-	// Techyon END
+	// RB end
 	return c;
 }
 
@@ -1788,10 +1788,10 @@ static int add_clip( char* s, lwClip** clist, int* nclips )
 	clip->saturation.val = 1.0f;
 	clip->gamma.val = 1.0f;
 	
-	// Techyon RB: fixed missing parenthesis
+	// RB: fixed missing parenthesis
 	if( ( p = strstr( s, "(sequence)" ) ) )
 	{
-		// Techyon END
+		// RB end
 		p[ -1 ] = 0;
 		clip->type = ID_ISEQ;
 		clip->source.seq.prefix = s;
@@ -1803,9 +1803,9 @@ static int add_clip( char* s, lwClip** clist, int* nclips )
 		clip->source.still.name = s;
 	}
 	
-	// Techyon RB: fixed unused value
+	// RB: fixed unused value
 	*nclips += 1;
-	// Techyon END
+	// RB end
 	clip->index = *nclips;
 	
 	lwListAdd( ( void** )clist, clip );
@@ -2228,10 +2228,10 @@ int lwGetPolygons5( idFile* fp, int cksize, lwPolygonList* plist, int ptoffset )
 	lwPolygon* pp;
 	lwPolVert* pv;
 	unsigned char* buf, *bp;
-	// Techyon RB: fixed int to pointer cast
+	// RB: fixed int to pointer cast
 	int i, nv, nverts, npols;
 	ptrdiff_t j;
-	// Techyon END
+	// RB end
 	
 	
 	if( cksize == 0 ) return 1;
@@ -2807,10 +2807,10 @@ int lwResolvePolySurfaces( lwPolygonList* polygon, lwTagList* tlist,
 						   lwSurface** surf, int* nsurfs )
 {
 	lwSurface** s, *st;
-	// Techyon RB: fixed int to pointer cast
+	// RB: fixed int to pointer cast
 	int i;
 	ptrdiff_t index;
-	// Techyon END
+	// RB end
 	
 	if( tlist->count == 0 ) return 1;
 	
@@ -2833,9 +2833,9 @@ int lwResolvePolySurfaces( lwPolygonList* polygon, lwTagList* tlist,
 	
 	for( i = 0; i < polygon->count; i++ )
 	{
-		// Techyon RB: fixed int to pointer cast
+		// RB: fixed int to pointer cast
 		index = ( ptrdiff_t ) polygon->pol[ i ].surf;
-		// Techyon END
+		// RB end
 		if( index < 0 || index > tlist->count ) return 0;
 		if( !s[ index ] )
 		{
@@ -3005,10 +3005,10 @@ Read polygon tags from a PTAG chunk in an LWO2 file.
 int lwGetPolygonTags( idFile* fp, int cksize, lwTagList* tlist, lwPolygonList* plist )
 {
 	unsigned int type;
-	// Techyon RB: fixed int to pointer cast
+	// RB: fixed int to pointer cast
 	int rlen = 0, i;
 	ptrdiff_t j;
-	// Techyon END
+	// RB end
 	
 	set_flen( 0 );
 	type = getU4( fp );

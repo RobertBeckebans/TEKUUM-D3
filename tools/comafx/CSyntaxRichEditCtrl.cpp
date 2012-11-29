@@ -710,7 +710,7 @@ void CSyntaxRichEditCtrl::HighlightSyntax( int startCharIndex, int endCharIndex 
 	
 	// get text length
 	
-// Techyon BEGIN
+// RB begin
 #if _MFC_VER >= 0x0A00
 	GetTextRange( 0, GetTextLength(), text );
 #else
@@ -719,7 +719,7 @@ void CSyntaxRichEditCtrl::HighlightSyntax( int startCharIndex, int endCharIndex 
 	es.pfnCallback = MEditStreamOutCallback;
 	StreamIn( SF_RTF, es );
 #endif
-// Techyon END
+// RB end
 
 	textLength = text.GetLength();
 	
@@ -1238,13 +1238,13 @@ void CSyntaxRichEditCtrl::AutoCompleteShow( int charIndex )
 	
 	autoCompleteStart = charIndex;
 	
-// Techyon BEGIN
+// RB begin
 #if _MFC_VER >= 0x0A00
 	point = PosFromChar( charIndex );
 #else
 	point = GetCharPos( charIndex );
 #endif
-// Techyon END
+// RB end
 
 	GetClientRect( rect );
 	if( point.y < rect.bottom - AUTOCOMPLETE_OFFSET - AUTOCOMPLETE_HEIGHT )
@@ -1290,13 +1290,13 @@ void CSyntaxRichEditCtrl::ToolTipShow( int charIndex, const char* string )
 	p1 = funcParmToolTip.PosFromChar( 0 );
 	p2 = funcParmToolTip.PosFromChar( strlen( string ) - 1 );
 	
-// Techyon BEGIN
+// RB begin
 #if _MFC_VER >= 0x0A00
 	point = PosFromChar( charIndex );
 #else
 	point = GetCharPos( charIndex );
 #endif
-// Techyon END
+// RB end
 
 	GetClientRect( rect );
 	if( point.y < rect.bottom - FUNCPARMTOOLTIP_OFFSET - FUNCPARMTOOLTIP_HEIGHT )
@@ -1525,13 +1525,13 @@ bool CSyntaxRichEditCtrl::GetNameForMousePosition( idStr& name ) const
 	int charIndex, startCharIndex, endCharIndex, type;
 	idStr text;
 	
-// Techyon BEGIN
+// RB begin
 #if _MFC_VER >= 0x0A00
 	charIndex = CharFromPos( mousePoint );
 #else
 	return false;
 #endif
-// Techyon END
+// RB end
 
 	for( startCharIndex = charIndex; startCharIndex > 0; startCharIndex-- )
 	{
@@ -1606,7 +1606,7 @@ CSyntaxRichEditCtrl::OnToolTipNotify
 BOOL CSyntaxRichEditCtrl::OnToolTipNotify( UINT id, NMHDR* pNMHDR, LRESULT* pResult )
 {
 
-// Techyon BEGIN
+// RB begin
 #if _MFC_VER >= 0x0A00
 
 	TOOLTIPTEXTA* pTTTA = ( TOOLTIPTEXTA* )pNMHDR;
@@ -1684,7 +1684,7 @@ BOOL CSyntaxRichEditCtrl::OnToolTipNotify( UINT id, NMHDR* pNMHDR, LRESULT* pRes
 	// FIXME with old MFC
 	return FALSE;
 #endif
-// Techyon END
+// RB end
 }
 
 /*
@@ -2106,7 +2106,7 @@ void CSyntaxRichEditCtrl::OnMouseMove( UINT nFlags, CPoint point )
 	{
 		mousePoint = point;
 		
-// Techyon BEGIN
+// RB begin
 #if _MFC_VER >= 0x0A00
 		// remove tool tip and activate the tool tip control, otherwise
 		// tool tips stop working until the mouse moves over another window first
@@ -2116,7 +2116,7 @@ void CSyntaxRichEditCtrl::OnMouseMove( UINT nFlags, CPoint point )
 #else
 		// FIXME with old MFC
 #endif
-// Techyon END
+// RB end
 	}
 }
 
@@ -2261,7 +2261,7 @@ void CSyntaxRichEditCtrl::OnAutoCompleteListBoxDblClk()
 }
 
 
-// Techyon BEGIN
+// RB begin
 DWORD CSyntaxRichEditCtrl::MEditStreamInCallback( DWORD dwCookie, LPBYTE pbBuff, LONG cb, LONG* pcb )
 {
 	CString* psBuffer = ( CString* )dwCookie;
@@ -2298,4 +2298,4 @@ DWORD CSyntaxRichEditCtrl::MEditStreamOutCallback( DWORD dwCookie, LPBYTE pbBuff
 	sThisWrite.ReleaseBuffer();
 	return 0;
 }
-// Techyon END
+// RB end

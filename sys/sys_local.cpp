@@ -125,7 +125,7 @@ void idSysLocal::ShutdownSymbols( void )
 	Sys_ShutdownSymbols();
 }
 
-// Techyon RB: 64 bit fixes, changed int to intptr_t
+// RB: 64 bit fixes, changed int to intptr_t
 intptr_t idSysLocal::DLL_Load( const char* dllName )
 {
 	return Sys_DLL_Load( dllName );
@@ -140,7 +140,7 @@ void idSysLocal::DLL_Unload( intptr_t dllHandle )
 {
 	Sys_DLL_Unload( dllHandle );
 }
-// Techyon END
+// RB end
 
 void idSysLocal::DLL_GetFileName( const char* baseName, char* dllName, int maxLength )
 {

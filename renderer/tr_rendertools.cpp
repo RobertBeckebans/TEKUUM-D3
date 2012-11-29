@@ -2817,9 +2817,9 @@ void RB_RenderDebugTools( drawSurf_t** drawSurfs, int numDrawSurfs )
 	RB_ShowNormals( drawSurfs, numDrawSurfs );
 	RB_ShowViewEntitys( backEnd.viewDef->viewEntitys );
 	RB_ShowLights();
-// Techyon BEGIN
+// RB begin
 	RB_ShowLightShadowLODs();
-// Techyon END
+// RB end
 
 	RB_ShowTextureVectors( drawSurfs, numDrawSurfs );
 	RB_ShowDominantTris( drawSurfs, numDrawSurfs );

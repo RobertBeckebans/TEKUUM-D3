@@ -555,13 +555,13 @@ private:
 	jointHandle_t			chestJoint;
 	jointHandle_t			headJoint;
 	
-// Techyon BEGIN
+// RB begin
 #if defined(STANDALONE)
 	tyPhysics_Player		physicsObj;			// player physics
 #else
 	idPhysics_Player		physicsObj;
 #endif
-// Techyon END
+// RB end
 
 	idList<aasLocation_t>	aasLocation;		// for AI tracking the player
 	

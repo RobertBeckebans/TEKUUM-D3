@@ -261,10 +261,10 @@ void tyAudioHardwarePulseAudio::Write( bool flushing )
 	 */
 	
 	/*
-	// Techyon RB: 64 bit fixes, changed int to intptr_t
+	// RB: 64 bit fixes, changed int to intptr_t
 	intptr_t pos = (intptr_t)mixBuffer + ( MIXBUFFER_SAMPLES - remainingFrames ) * numChannels * 2;
 	snd_pcm_sframes_t frames = id_snd_pcm_writei( m_pcm_handle, (void*)pos, m_remainingFrames );
-	// Techyon END
+	// RB end
 	
 	if ( frames < 0 ) {
 		if ( frames != -EAGAIN ) {

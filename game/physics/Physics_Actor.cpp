@@ -42,9 +42,9 @@ idPhysics_Actor::idPhysics_Actor
 idPhysics_Actor::idPhysics_Actor( void )
 {
 	clipModel = NULL;
-	// Techyon BEGIN
+	// RB begin
 	clipModelAxis.Identity();
-	// Techyon END
+	// RB end
 	SetClipModelAxis();
 	mass = 100.0f;
 	invMass = 1.0f / mass;
@@ -117,7 +117,7 @@ idPhysics_Actor::SetClipModelAxis
 */
 void idPhysics_Actor::SetClipModelAxis( void )
 {
-	// Techyon RB: changed orientation to gravity vector
+	// RB: changed orientation to gravity vector
 	// to avoid problems with instant direction flipping
 	idMat3 prevClipModelAxis = clipModelAxis;
 	
@@ -158,7 +158,7 @@ void idPhysics_Actor::SetClipModelAxis( void )
 		clipModelAxis[1] = -clipModelAxis[1];
 #endif
 	}
-	// Techyon END
+	// RB end
 	
 	if( clipModel )
 	{

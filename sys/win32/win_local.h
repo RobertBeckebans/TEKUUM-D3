@@ -34,10 +34,10 @@ If you have questions concerning this license or the applicable additional terms
 
 #include <windows.h>
 #include <XInput.h>
-// Techyon BEGIN
+// RB begin
 #include "../../libs/glew/include/GL/wglew.h"
 //#include "../../renderer/wglext.h"		// windows OpenGL extensions
-// Techyon END
+// RB end
 
 
 #define	MAX_OSPATH			256
@@ -130,11 +130,11 @@ typedef struct
 	static idCVar	sys_arch;
 	static idCVar	sys_cpustring;
 	static idCVar	in_mouse;
-	// Techyon BEGIN
+	// RB begin
 	static idCVar	in_xbox360Controller;
 	static idCVar	in_xbox360ControllerDebug;
 	static idCVar	in_xbox360ControllerThreshold;
-	// Techyon END
+	// RB end
 	static idCVar	win_allowAltTab;
 	static idCVar	win_notaskkeys;
 	static idCVar	win_username;
@@ -154,10 +154,10 @@ typedef struct
 	LPDIRECTINPUT8			g_pdi;
 	LPDIRECTINPUTDEVICE8	g_pMouse;
 	LPDIRECTINPUTDEVICE8	g_pKeyboard;
-// Techyon BEGIN
+// RB begin
 	bool					g_ControllerAvailable;
 	XINPUT_STATE			g_Controller; //[MAX_XBOX360_GAMEPADS];
-// Techyon END
+// RB end
 
 
 	HANDLE			renderCommandsEvent;

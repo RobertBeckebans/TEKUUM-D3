@@ -42,9 +42,9 @@ If you have questions concerning this license or the applicable additional terms
 #include <afxcmn.h>			// MFC support for Windows Common Controls
 #endif // _AFX_NO_AFXCMN_SUPPORT
 
-// Techyon BEGIN
+// RB begin
 #include <atlbase.h>
-// Techyon END
+// RB end
 
 void InitAfx( void );
 

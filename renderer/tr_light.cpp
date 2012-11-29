@@ -500,7 +500,7 @@ static bool R_PointInFrustum( idVec3& p, idPlane* planes, int numPlanes )
 #if !defined(USE_GLES1)
 float	R_EXP_CalcLightAxialSize( viewLight_t* vLight );
 
-// Techyon BEGIN
+// RB begin
 static void R_SetViewLightShadowLOD( viewLight_t* vLight )
 {
 	float           radius;
@@ -585,7 +585,7 @@ static void R_SetViewLightShadowLOD( viewLight_t* vLight )
 	vLight->shadowLOD = lod;
 }
 #endif // #if !defined(USE_GLES1)
-// Techyon END
+// RB end
 
 /*
 =============
@@ -647,11 +647,11 @@ viewLight_t* R_SetLightDefViewLight( idRenderLightLocal* light )
 	vLight->lightShader = light->lightShader;
 	vLight->shaderRegisters = NULL;		// allocated and evaluated in R_AddLightSurfaces
 	
-// Techyon BEGIN
+// RB begin
 #if !defined(USE_GLES1)
 	R_SetViewLightShadowLOD( vLight );
 #endif
-// Techyon END
+// RB end
 
 	// link the view light
 	vLight->next = tr.viewDef->viewLights;

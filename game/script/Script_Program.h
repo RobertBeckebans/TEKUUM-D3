@@ -540,12 +540,12 @@ public:
 	idTypeDef*									GetType( idTypeDef& type, bool allocate );
 	idTypeDef*									FindType( const char* name );
 	
-	// Techyon BEGIN
+	// RB begin
 private:
 	byte*										ReserveDefMemory( int size );
 	idVarDef*									AllocVarDef( idTypeDef* type, const char* name, idVarDef* scope );
 public:
-	// Techyon END
+	// RB end
 	
 	idVarDef*									AllocDef( idTypeDef* type, const char* name, idVarDef* scope, bool constant );
 	idVarDef*									GetDef( const idTypeDef* type, const char* name, const idVarDef* scope ) const;

@@ -1015,7 +1015,7 @@ RenderBumpTriangles
 */
 static void RenderBumpTriangles( srfTriangles_t* lowMesh, renderBump_t* rb )
 {
-	// Techyon BEGIN
+	// RB begin
 #if !defined(USE_GLES1)
 	int		i, j;
 	
@@ -1087,7 +1087,7 @@ static void RenderBumpTriangles( srfTriangles_t* lowMesh, renderBump_t* rb )
 	
 	Mem_Free( lowMeshNormals );
 #endif
-	// Techyon END
+	// RB end
 }
 
 
@@ -1627,7 +1627,7 @@ void RenderBumpFlat_f( const idCmdArgs& args )
 			glClearColor( 0.5, 0.5, 0.5, 0 );
 			glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 			
-			// Techyon BEGIN
+			// RB begin
 #if !defined(USE_GLES1)
 			glBegin( GL_TRIANGLES );
 			for( i = 0 ; i < highPolyModel->NumSurfaces() ; i++ )
@@ -1724,7 +1724,7 @@ void RenderBumpFlat_f( const idCmdArgs& args )
 			
 			glEnd();
 #endif
-			// Techyon END
+			// RB end
 			
 			glFlush();
 			GLimp_SwapBuffers();

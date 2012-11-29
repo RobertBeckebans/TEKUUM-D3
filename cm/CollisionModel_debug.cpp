@@ -50,7 +50,7 @@ Visualisation code
 
 const char* cm_contentsNameByIndex[] =
 {
-// Techyon BEGIN - RB: these flags were out of sync with contentsFlags_t
+// RB: these flags were out of sync with contentsFlags_t
 	"none",							// -1
 	"solid",						// BIT(0)
 	"opaque",						// 1
@@ -71,13 +71,13 @@ const char* cm_contentsNameByIndex[] =
 	
 	// RB: added new contents
 	"dynamicportal",				// 16
-// Techyon END
+// RB end
 	NULL
 };
 
 int cm_contentsFlagByIndex[] =
 {
-// Techyon BEGIN - RB: these flags were out of sync with contentsFlags_t
+// RB: these flags were out of sync with contentsFlags_t
 	-1,								// -1
 	CONTENTS_SOLID,					// BIT(0)
 	CONTENTS_OPAQUE,				// 1
@@ -98,7 +98,7 @@ int cm_contentsFlagByIndex[] =
 	
 	// RB: added new contents
 	CONTENTS_DYNAMICPORTAL,			// 16
-// Techyon END
+// RB end
 	0
 };
 

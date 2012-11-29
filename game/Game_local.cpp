@@ -64,13 +64,13 @@ idAnimManager				animationLib;
 idGameLocal					gameLocal;
 idGame* 					game = &gameLocal;	// statically pointed at an idGameLocal
 
-// Techyon BEGIN - RB: added wallwalk
+// RB: added wallwalk
 const char* idGameLocal::sufaceTypeNames[ MAX_SURFACE_TYPES ] =
 {
 	"none",	"metal", "stone", "flesh", "wood", "cardboard", "liquid", "glass", "plastic",
 	"ricochet", "wallwalk", "surftype11", "surftype12", "surftype13", "surftype14", "surftype15"
 };
-// Techyon END
+// RB end
 
 /*
 ===========
@@ -976,9 +976,9 @@ void idGameLocal::LoadMap( const char* mapName, int randseed )
 		editEntities = new idEditEntities;
 	}
 	
-	// Techyon RB: changed g_gravity to 3d vector
+	// RB: changed g_gravity to 3d vector
 	gravity.Set( g_gravityX.GetFloat(), g_gravityY.GetFloat(), g_gravityZ.GetFloat() );
-	// Techyon END
+	// RB end
 	
 	spawnArgs.Clear();
 	
@@ -2293,7 +2293,7 @@ void idGameLocal::UpdateGravity( void )
 {
 	idEntity* ent;
 	
-	// Techyon RB: changed gravity to 3 vectors
+	// RB: changed gravity to 3 vectors
 	if( g_gravityX.IsModified() || g_gravityY.IsModified() || g_gravityZ.IsModified() )
 	{
 	
@@ -2329,7 +2329,7 @@ void idGameLocal::UpdateGravity( void )
 		g_gravityY.ClearModified();
 		g_gravityZ.ClearModified();
 	}
-	// Techyon END
+	// RB end
 }
 
 /*

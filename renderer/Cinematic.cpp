@@ -56,15 +56,15 @@ public:
 	virtual void			ResetTime( int time );
 	
 private:
-	// Techyon RB: 64 bit fixes, changed long to int
+	// RB: 64 bit fixes, changed long to int
 	size_t					mcomp[256];
-	// Techyon END
+	// RB end
 	byte** 					qStatus[2];
 	idStr					fileName;
 	int						CIN_WIDTH, CIN_HEIGHT;
 	idFile* 				iFile;
 	cinStatus_t				status;
-	// Techyon RB: 64 bit fixes, changed long to int
+	// RB: 64 bit fixes, changed long to int
 	int						tfps;
 	int						RoQPlayed;
 	int						ROQSize;
@@ -84,7 +84,7 @@ private:
 	int						t[2];
 	int						roqFPS;
 	int						drawX, drawY;
-	// Techyon END
+	// RB end
 	
 	int						animationLength;
 	int						startTime;
@@ -109,7 +109,7 @@ private:
 	void					blit4_32( byte* src, byte* dst, int spl );
 	void					blit2_32( byte* src, byte* dst, int spl );
 	
-	// Techyon RB: 64 bit fixes, changed long to int
+	// RB: 64 bit fixes, changed long to int
 	unsigned short			yuv_to_rgb( int y, int u, int v );
 	unsigned int			yuv_to_rgb24( int y, int u, int v );
 	
@@ -119,7 +119,7 @@ private:
 	void					readQuadInfo( byte* qData );
 	void					RoQPrepMcomp( int xoff, int yoff );
 	void					RoQReset();
-	// Techyon END
+	// RB end
 };
 
 const int DEFAULT_CIN_WIDTH		= 512;
@@ -139,13 +139,13 @@ const int ZA_SOUND_MONO			= 0x1020;
 const int ZA_SOUND_STEREO		= 0x1021;
 
 // temporary buffers used by all cinematics
-// Techyon RB: 64 bit fixes, changed long to int
+// RB: 64 bit fixes, changed long to int
 static int				ROQ_YY_tab[256];
 static int				ROQ_UB_tab[256];
 static int				ROQ_UG_tab[256];
 static int				ROQ_VG_tab[256];
 static int				ROQ_VR_tab[256];
-// Techyon END
+// RB end
 static byte* 			file = NULL;
 static unsigned short* 	vq2 = NULL;
 static unsigned short* 	vq4 = NULL;
@@ -160,7 +160,7 @@ static unsigned short* 	vq8 = NULL;
 idCinematicLocal::InitCinematic
 ==============
 */
-// Techyon RB: 64 bit fixes, changed long to int
+// RB: 64 bit fixes, changed long to int
 void idCinematic::InitCinematic( void )
 {
 	float t_ub, t_vr, t_ug, t_vg;
@@ -187,7 +187,7 @@ void idCinematic::InitCinematic( void )
 	vq4 = ( word* )Mem_Alloc( 256 * 64 * 4 * sizeof( word ) );
 	vq8 = ( word* )Mem_Alloc( 256 * 256 * 4 * sizeof( word ) );
 }
-// Techyon END
+// RB end
 
 /*
 ==============
@@ -1081,7 +1081,7 @@ void idCinematicLocal::blitVQQuad32fs( byte** status, unsigned char* data )
 idCinematicLocal::yuv_to_rgb
 ==============
 */
-// Techyon RB: 64 bit fixes, changed long to int
+// RB: 64 bit fixes, changed long to int
 unsigned short idCinematicLocal::yuv_to_rgb( int y, int u, int v )
 {
 	int r, g, b, YY = ( int )( ROQ_YY_tab[( y )] );
@@ -1099,7 +1099,7 @@ unsigned short idCinematicLocal::yuv_to_rgb( int y, int u, int v )
 	
 	return ( unsigned short )( ( r << 11 ) + ( g << 5 ) + ( b ) );
 }
-// Techyon END
+// RB end
 
 
 /*
@@ -1107,7 +1107,7 @@ unsigned short idCinematicLocal::yuv_to_rgb( int y, int u, int v )
 idCinematicLocal::yuv_to_rgb24
 ==============
 */
-// Techyon RB: 64 bit fixes, changed long to int
+// RB: 64 bit fixes, changed long to int
 unsigned int idCinematicLocal::yuv_to_rgb24( int y, int u, int v )
 {
 	int r, g, b, YY = ( int )( ROQ_YY_tab[( y )] );
@@ -1125,14 +1125,14 @@ unsigned int idCinematicLocal::yuv_to_rgb24( int y, int u, int v )
 	
 	return LittleLong( ( r ) + ( g << 8 ) + ( b << 16 ) );
 }
-// Techyon END
+// RB end
 
 /*
 ==============
 idCinematicLocal::decodeCodeBook
 ==============
 */
-// Techyon RB: 64 bit fixes, changed long to int
+// RB: 64 bit fixes, changed long to int
 void idCinematicLocal::decodeCodeBook( byte* input, unsigned short roq_flags )
 {
 	int	i, j, two, four;
@@ -1356,14 +1356,14 @@ void idCinematicLocal::decodeCodeBook( byte* input, unsigned short roq_flags )
 		}
 	}
 }
-// Techyon END
+// RB end
 
 /*
 ==============
 idCinematicLocal::recurseQuad
 ==============
 */
-// Techyon RB: 64 bit fixes, changed long to int
+// RB: 64 bit fixes, changed long to int
 void idCinematicLocal::recurseQuad( int startX, int startY, int quadSize, int xOff, int yOff )
 {
 	byte* scroff;
@@ -1397,14 +1397,14 @@ void idCinematicLocal::recurseQuad( int startX, int startY, int quadSize, int xO
 		recurseQuad( startX + quadSize, startY + quadSize , quadSize, xOff, yOff );
 	}
 }
-// Techyon END
+// RB end
 
 /*
 ==============
 idCinematicLocal::setupQuad
 ==============
 */
-// Techyon RB: 64 bit fixes, changed long to int
+// RB: 64 bit fixes, changed long to int
 void idCinematicLocal::setupQuad( int xOff, int yOff )
 {
 	int numQuadCels, i, x, y;
@@ -1432,7 +1432,7 @@ void idCinematicLocal::setupQuad( int xOff, int yOff )
 		qStatus[1][i] = temp;			  // eoq
 	}
 }
-// Techyon END
+// RB end
 
 /*
 ==============
@@ -1460,10 +1460,10 @@ void idCinematicLocal::readQuadInfo( byte* qData )
 	half = false;
 	smootheddouble = false;
 	
-	// Techyon RB: 64 bit fixes, changed unsigned int to ptrdiff_t
+	// RB: 64 bit fixes, changed unsigned int to ptrdiff_t
 	t[0] = ( 0 - ( ptrdiff_t )image ) + ( ptrdiff_t )image + screenDelta;
 	t[1] = ( 0 - ( ( ptrdiff_t )image + screenDelta ) ) + ( ptrdiff_t )image;
-	// Techyon END
+	// RB end
 	
 	drawX = CIN_WIDTH;
 	drawY = CIN_HEIGHT;
@@ -1474,7 +1474,7 @@ void idCinematicLocal::readQuadInfo( byte* qData )
 idCinematicLocal::RoQPrepMcomp
 ==============
 */
-// Techyon RB: 64 bit fixes, changed long to int
+// RB: 64 bit fixes, changed long to int
 void idCinematicLocal::RoQPrepMcomp( int xoff, int yoff )
 {
 	int i, j, x, y, temp, temp2;
@@ -1497,7 +1497,7 @@ void idCinematicLocal::RoQPrepMcomp( int xoff, int yoff )
 		}
 	}
 }
-// Techyon END
+// RB end
 
 /*
 ==============

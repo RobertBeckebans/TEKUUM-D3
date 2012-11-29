@@ -232,7 +232,7 @@ private:
 	void					ApplyDamage();
 };
 
-// Techyon BEGIN
+// RB begin
 class tyPortalProjectile : public idProjectile
 {
 public :
@@ -248,7 +248,7 @@ public :
 //	virtual void			Think( void );
 	virtual void			Explode( const trace_t& collision, idEntity* ignore );
 };
-// Techyon END
+// RB end
 
 /*
 ===============================================================================

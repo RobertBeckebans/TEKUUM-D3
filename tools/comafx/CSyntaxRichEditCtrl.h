@@ -235,10 +235,10 @@ protected:
 	void					BracedSectionShow( void );
 	void					BracedSectionHide( void );
 	
-// Techyon BEGIN
+// RB begin
 	static DWORD __stdcall	MEditStreamInCallback( DWORD dwCookie, LPBYTE pbBuff, LONG cb, LONG* pcb );
 	static DWORD __stdcall	MEditStreamOutCallback( DWORD dwCookie, LPBYTE pbBuff, LONG cb, LONG* pcb );
-// Techyon END
+// RB end
 };
 
 #endif /* !__CSYNTAXRICHEDITCTR_H__ */

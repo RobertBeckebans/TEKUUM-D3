@@ -3020,9 +3020,9 @@ const char* idMat6::ToString( int precision ) const
 //===============================================================
 
 float	idMatX::temp[MATX_MAX_TEMP + 4];
-// Techyon RB: 64 bit fix, changed int to intptr_t
+// RB: 64 bit fix, changed int to intptr_t
 float* 	idMatX::tempPtr = ( float* )( ( ( intptr_t ) idMatX::temp + 15 ) & ~15 );
-// Techyon END
+// RB end
 int		idMatX::tempIndex = 0;
 
 

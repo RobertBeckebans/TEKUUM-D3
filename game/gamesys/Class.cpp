@@ -381,7 +381,7 @@ void idClass::ListClasses_f( const idCmdArgs& args )
 }
 
 
-// Techyon RB: development tool
+// RB: development tool
 void idClass::ExportScriptEvents_f( const idCmdArgs& args )
 {
 	idFile* file = fileSystem->OpenFileByMode( "script/doom_events.script", FS_WRITE );
@@ -525,7 +525,7 @@ void idClass::ExportScriptEvents_f( const idCmdArgs& args )
 	
 	fileSystem->CloseFile( file );
 }
-// Techyon END
+// RB end
 
 
 /*
@@ -1071,9 +1071,9 @@ bool idClass::ProcessEventArgs( const idEventDef* ev, int numargs, ... )
 {
 	idTypeInfo*	c;
 	int			num;
-	// Techyon RB: 64 bit fix, changed int to intptr_t
+	// RB: 64 bit fix, changed int to intptr_t
 	intptr_t	data[ D_EVENT_MAXARGS ];
-	// Techyon END
+	// RB end
 	va_list		args;
 	
 	assert( ev );
@@ -1191,10 +1191,10 @@ bool idClass::ProcessEvent( const idEventDef* ev, idEventArg arg1, idEventArg ar
 idClass::ProcessEventArgPtr
 ================
 */
-// Techyon RB: 64 bit fixes, changed int to intptr_t
+// RB: 64 bit fixes, changed int to intptr_t
 bool idClass::ProcessEventArgPtr( const idEventDef* ev, intptr_t* data )
 {
-// Techyon END
+// RB end
 	idTypeInfo*	c;
 	int			num;
 	eventCallback_t	callback;
@@ -1248,7 +1248,7 @@ bool idClass::ProcessEventArgPtr( const idEventDef* ev, intptr_t* data )
 	
 	assert( D_EVENT_MAXARGS == 8 );
 	
-	// Techyon RB: 64 bit fixes, changed int to intptr_t
+	// RB: 64 bit fixes, changed int to intptr_t
 	switch( ev->GetNumArgs() )
 	{
 		case 0 :
@@ -1299,7 +1299,7 @@ bool idClass::ProcessEventArgPtr( const idEventDef* ev, intptr_t* data )
 			gameLocal.Warning( "Invalid formatspec on event '%s'", ev->GetName() );
 			break;
 	}
-	// Techyon END
+	// RB end
 	
 #endif
 	

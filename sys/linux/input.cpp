@@ -654,7 +654,7 @@ unsigned char Sys_MapCharForKey( int _key )
 
 //=====================================================================================
 
-// Techyon BEGIN
+// RB begin
 
 int Sys_PollXbox360ControllerInputEvents( void )
 {
@@ -670,4 +670,4 @@ int	Sys_ReturnXbox360ControllerInputEvent( const int n, int& action, int& value,
 
 void Sys_EndXbox360ControllerInputEvents( void ) { }
 
-// Techyon END
+// RB end

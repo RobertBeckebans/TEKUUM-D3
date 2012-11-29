@@ -29,24 +29,24 @@ If you have questions concerning this license or the applicable additional terms
 #pragma hdrstop
 
 // DirectX SDK
-// Techyon BEGIN
+// RB begin
 //#include <DxErr.h>
 
 #if !defined(DXTRACE_ERR)
 #define DXTRACE_ERR(str, hr)	( hr )
 #endif
-// Techyon END
+// RB end
 
 #include <ks.h>
 #include <ksmedia.h>
 #include "../../sound/snd_local.h"
 #include "win_local.h"
 
-// Techyon BEGIN
+// RB begin
 #if defined(USE_OPENAL)
 #include "../../libs/openal/idal.cpp"
 #endif
-// Techyon END
+// RB end
 
 #define SAFE_DELETE(p)       { if(p) { delete (p);     (p)=NULL; } }
 #define SAFE_DELETE_ARRAY(p) { if(p) { delete[] (p);   (p)=NULL; } }

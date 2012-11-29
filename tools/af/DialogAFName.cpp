@@ -148,13 +148,13 @@ void EditVerifyName( CEdit* edit )
 		{
 		
 		
-			// Techyon BEGIN
+			// RB begin
 #if _MFC_VER >= 0x0A00
 			strOut.AppendChar( strIn[i] );
 #else
 			strOut += strIn[i];
 #endif
-			// Techyon END
+			// RB end
 		}
 	}
 	edit->SetWindowText( strOut );
@@ -178,14 +178,14 @@ void DialogAFName::OnBnClickedOk()
 	UpdateData( TRUE );
 	if( m_combo && m_combo->FindStringExact( -1, m_editName ) != -1 )
 	{
-// Techyon BEGIN
+// RB begin
 #if _MFC_VER >= 0x0A00
 		MessageBox( va( "The name %s is already used.", m_editName.GetBuffer() ), "Name", MB_OK );
 #else
 		//std::string s((LPCTSTR)m_editName);
 		MessageBox( va( "The name %s is already used.", m_editName.GetBuffer( 0 ) ), "Name", MB_OK );
 #endif
-// Techyon END
+// RB end
 
 	}
 	else

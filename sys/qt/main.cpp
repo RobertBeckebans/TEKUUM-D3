@@ -274,7 +274,7 @@ static idCVar in_xbox360ControllerThreshold( "in_xbox360ControllerThreshold", "0
 static bool					g_ControllerAvailable;
 static XINPUT_STATE			g_Controller;
 
-// Techyon BEGIN
+// RB begin
 typedef struct
 {
 	int action;

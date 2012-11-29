@@ -318,13 +318,13 @@ void idRenderModelStatic::InitFromFile( const char* fileName )
 		loaded		= LoadASE( name );
 		reloadable	= true;
 	}
-// Techyon RB: added dae
+// RB: added dae
 	else if( extension.Icmp( "dae" ) == 0 )
 	{
 		loaded		= LoadDAE( name );
 		reloadable	= true;
 	}
-// Techyon END
+// RB end
 	else if( extension.Icmp( "lwo" ) == 0 )
 	{
 		loaded		= LoadLWO( name );
@@ -2916,7 +2916,7 @@ bool idRenderModelStatic::LoadFLT( const char* fileName )
 }
 
 
-// Techyon RB: added COLLADA support
+// RB: added COLLADA support
 bool idRenderModelStatic::LoadDAE( const char* fileName )
 {
 	bool loaded = false;
@@ -2941,7 +2941,7 @@ bool idRenderModelStatic::LoadDAE( const char* fileName )
 	
 	return loaded;
 }
-// Techyon END
+// RB end
 
 //=============================================================================
 

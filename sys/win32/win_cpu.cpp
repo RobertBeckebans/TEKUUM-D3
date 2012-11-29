@@ -581,7 +581,7 @@ cpuid_t Sys_GetCPUId( void ) {
 		flags |= CPUID_CMOV;
 	}
 
-// Techyon BEGIN
+// RB begin
 	// RB: this crashes if compiled with whole program optimization /GL and /LTCG
 #if 0
 	// check for Denormals-Are-Zero mode
@@ -589,7 +589,7 @@ cpuid_t Sys_GetCPUId( void ) {
 		flags |= CPUID_DAZ;
 	}
 #endif
-// Techyon END
+// RB end
 
 	return (cpuid_t)flags;
 }

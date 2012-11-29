@@ -141,10 +141,10 @@ bool rvDebuggerScript::Load( const char* filename )
 		}
 		
 		// Make sure the file isnt already compiled before trying to compile it again
-		// Techyon RB: moved f out of the for loop
+		// RB: moved f out of the for loop
 		int f;
 		for( f = mProgram->NumFilenames() - 1; f >= 0; f -- )
-			// Techyon END
+			// RB end
 		{
 			idStr qpath;
 			qpath = fileSystem->OSPathToRelativePath( mProgram->GetFilename( f ) );

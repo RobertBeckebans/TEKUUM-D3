@@ -208,14 +208,14 @@ void idSoundChannel::Clear( void )
 	
 	triggered = false;
 	
-	// Techyon BEGIN
+	// RB begin
 #if defined(USE_OPENAL)
 	openalSource = NULL;
 	openalStreamingOffset = 0;
 	openalStreamingBuffer[0] = openalStreamingBuffer[1] = openalStreamingBuffer[2] = 0;
 	lastopenalStreamingBuffer[0] = lastopenalStreamingBuffer[1] = lastopenalStreamingBuffer[2] = 0;
 #endif
-	// Techyon END
+	// RB end
 }
 
 /*
@@ -255,7 +255,7 @@ idSoundChannel::ALStop
 void idSoundChannel::ALStop( void )
 {
 
-	// Techyon BEGIN
+	// RB begin
 #if defined(USE_OPENAL)
 	if( idSoundSystemLocal::useOpenAL )
 	{
@@ -288,7 +288,7 @@ void idSoundChannel::ALStop( void )
 		}
 	}
 #endif
-	// Techyon END
+	// RB end
 }
 
 /*
@@ -531,7 +531,7 @@ void idSoundEmitterLocal::CheckForCompletion( int current44kHzTime )
 			if( !( chan->parms.soundShaderFlags & SSF_LOOPING ) )
 			{
 			
-				// Techyon BEGIN
+				// RB begin
 #if defined(USE_OPENAL)
 				ALint state = AL_PLAYING;
 				
@@ -540,7 +540,7 @@ void idSoundEmitterLocal::CheckForCompletion( int current44kHzTime )
 					alGetSourcei( chan->openalSource, AL_SOURCE_STATE, &state );
 				}
 #endif
-				// Techyon END
+				// RB end
 				
 				idSlowChannel slow = GetSlowChannel( chan );
 				
@@ -558,11 +558,11 @@ void idSoundEmitterLocal::CheckForCompletion( int current44kHzTime )
 					}
 				}
 				else if( ( chan->trigger44kHzTime + chan->leadinSample->LengthIn44kHzSamples() < current44kHzTime )
-						 // Techyon BEGIN
+						 // RB begin
 #if defined(USE_OPENAL)
 						 || ( state == AL_STOPPED )
 #endif
-						 // Techyon END
+						 // RB end
 					   )
 				{
 					chan->Stop();
@@ -997,11 +997,11 @@ int idSoundEmitterLocal::StartSound( const idSoundShader* shader, const s_channe
 	// the sound will start mixing in the next async mix block
 	chan->triggered = true;
 	
-	// Techyon BEGIN
+	// RB begin
 #if defined(USE_OPENAL)
 	chan->openalStreamingOffset = 0;
 #endif
-	// Techyon END
+	// RB end
 	
 	chan->trigger44kHzTime = start44kHz;
 	chan->parms = chanParms;
@@ -1140,10 +1140,10 @@ void idSoundEmitterLocal::StopSound( const s_channelType channel )
 		chan->ALStop();
 		
 		// if this was an onDemand sound, purge the sample now
-		// Techyon RB: added missing chan->leadinSample != NULL test
+		// RB: added missing chan->leadinSample != NULL test
 		if( chan->leadinSample != NULL && chan->leadinSample->onDemand )
 		{
-			// Techyon END
+			// RB end
 			chan->leadinSample->PurgeSoundSample();
 		}
 		
