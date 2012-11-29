@@ -141,7 +141,7 @@ void DialogAF::LoadFile( idDeclAF* af )
 DialogAF::LoadFile
 ================
 */
-void DialogAF::SaveFile( void )
+void DialogAF::SaveFile()
 {
 	if( !file )
 	{
@@ -158,7 +158,7 @@ void DialogAF::SaveFile( void )
 DialogAF::SetFileModified
 ================
 */
-void DialogAF::SetFileModified( void )
+void DialogAF::SetFileModified()
 {
 	if( file )
 	{
@@ -172,7 +172,7 @@ void DialogAF::SetFileModified( void )
 DialogAF::ReloadFile
 ================
 */
-void DialogAF::ReloadFile( void )
+void DialogAF::ReloadFile()
 {
 	LoadFile( file );
 }
@@ -182,7 +182,7 @@ void DialogAF::ReloadFile( void )
 DialogAF::InitAFList
 ================
 */
-void DialogAF::InitAFList( void )
+void DialogAF::InitAFList()
 {
 	int i, c;
 	
@@ -237,7 +237,7 @@ DialogAF::SetTabChildPos
   position the child dialog box
 ================
 */
-void DialogAF::SetTabChildPos( void )
+void DialogAF::SetTabChildPos()
 {
 	if( wndTabDisplay )
 	{
@@ -371,7 +371,7 @@ void AFEditorInit( const idDict* spawnArgs )
 AFEditorRun
 ================
 */
-void AFEditorRun( void )
+void AFEditorRun()
 {
 
 // RB begin
@@ -396,7 +396,7 @@ void AFEditorRun( void )
 AFEditorShutdown
 ================
 */
-void AFEditorShutdown( void )
+void AFEditorShutdown()
 {
 	delete g_AFDialog;
 	g_AFDialog = NULL;
@@ -676,7 +676,7 @@ void DialogAF::OnBnClickedCancel()
 AFDialogSetFileModified
 ================
 */
-void AFDialogSetFileModified( void )
+void AFDialogSetFileModified()
 {
 	if( g_AFDialog )
 	{
@@ -689,7 +689,7 @@ void AFDialogSetFileModified( void )
 AFDialogReloadFile
 ================
 */
-void AFDialogReloadFile( void )
+void AFDialogReloadFile()
 {
 	if( g_AFDialog )
 	{

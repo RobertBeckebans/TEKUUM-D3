@@ -41,7 +41,7 @@ static unsigned int id_crctable[256];
    combinations of CRC register values and incoming bytes.
 */
 
-static void id_make_crc_table( void )
+static void id_make_crc_table()
 {
 	int i, j;
 	// RB: 64 bit fix, changed long to int

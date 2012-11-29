@@ -52,7 +52,7 @@ If you have questions concerning this license or the applicable additional terms
 #include <GL/wglew.h>
 // RB end
 
-static void		GLW_InitExtensions( void );
+static void		GLW_InitExtensions();
 
 
 /*
@@ -60,7 +60,7 @@ static void		GLW_InitExtensions( void );
 GLimp_GetOldGammaRamp
 ========================
 */
-static void GLimp_SaveGamma( void )
+static void GLimp_SaveGamma()
 {
 	HDC			hDC;
 	BOOL		success;
@@ -76,7 +76,7 @@ static void GLimp_SaveGamma( void )
 GLimp_RestoreGamma
 ========================
 */
-static void GLimp_RestoreGamma( void )
+static void GLimp_RestoreGamma()
 {
 	HDC hDC;
 	BOOL success;
@@ -256,7 +256,7 @@ GLW_GetWGLExtensionsWithFakeWindow
 ==================
 */
 // RB begin
-static void GLW_GetWGLExtensionsWithFakeWindow( void )
+static void GLW_GetWGLExtensionsWithFakeWindow()
 {
 	HWND	hWnd;
 	MSG		msg;
@@ -456,7 +456,7 @@ static bool GLW_InitDriver( glimpParms_t parms )
 GLW_CreateWindowClasses
 ====================
 */
-static void GLW_CreateWindowClasses( void )
+static void GLW_CreateWindowClasses()
 {
 	WNDCLASS wc;
 	
@@ -956,7 +956,7 @@ This routine does all OS specific shutdown procedures for the OpenGL
 subsystem.
 ===================
 */
-void GLimp_Shutdown( void )
+void GLimp_Shutdown()
 {
 	const char* success[] = { "failed", "success" };
 	int retVal;
@@ -1020,7 +1020,7 @@ void GLimp_Shutdown( void )
 GLimp_SwapBuffers
 =====================
 */
-void GLimp_SwapBuffers( void )
+void GLimp_SwapBuffers()
 {
 	//
 	// wglSwapinterval is a windows-private extension,
@@ -1057,7 +1057,7 @@ GLimp_ActivateContext
 
 ===================
 */
-void GLimp_ActivateContext( void )
+void GLimp_ActivateContext()
 {
 	if( !wglMakeCurrent( win32.hDC, win32.hGLRC ) )
 	{
@@ -1071,7 +1071,7 @@ GLimp_DeactivateContext
 
 ===================
 */
-void GLimp_DeactivateContext( void )
+void GLimp_DeactivateContext()
 {
 	glFinish();
 	if( !wglMakeCurrent( win32.hDC, NULL ) )
@@ -1094,7 +1094,7 @@ GLimp_RenderThreadWrapper
 
 ===================
 */
-static void GLimp_RenderThreadWrapper( void )
+static void GLimp_RenderThreadWrapper()
 {
 	win32.glimpRenderThread();
 	
@@ -1109,7 +1109,7 @@ GLimp_SpawnRenderThread
 Returns false if the system only has a single processor
 =======================
 */
-bool GLimp_SpawnRenderThread( void ( *function )( void ) )
+bool GLimp_SpawnRenderThread( void ( *function )() )
 {
 	SYSTEM_INFO info;
 	
@@ -1159,7 +1159,7 @@ GLimp_BackEndSleep
 
 ===================
 */
-void* GLimp_BackEndSleep( void )
+void* GLimp_BackEndSleep()
 {
 	void*	data;
 	
@@ -1193,7 +1193,7 @@ GLimp_FrontEndSleep
 
 ===================
 */
-void GLimp_FrontEndSleep( void )
+void GLimp_FrontEndSleep()
 {
 #ifdef DEBUG_PRINTS
 	OutputDebugString( "-->GLimp_FrontEndSleep\n" );

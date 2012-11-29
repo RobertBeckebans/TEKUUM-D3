@@ -222,7 +222,7 @@ void DialogDeclBrowser::AddGUIsToTree( CPathTreeCtrl& tree )
 DialogDeclBrowser::InitBaseDeclTree
 ================
 */
-void DialogDeclBrowser::InitBaseDeclTree( void )
+void DialogDeclBrowser::InitBaseDeclTree()
 {
 	int i;
 	
@@ -294,7 +294,7 @@ const idDecl* DialogDeclBrowser::GetDeclFromTreeItem( HTREEITEM item ) const
 DialogDeclBrowser::GetSelectedDecl
 ================
 */
-const idDecl* DialogDeclBrowser::GetSelectedDecl( void ) const
+const idDecl* DialogDeclBrowser::GetSelectedDecl() const
 {
 	return GetDeclFromTreeItem( declTree.GetSelectedItem() );
 }
@@ -304,7 +304,7 @@ const idDecl* DialogDeclBrowser::GetSelectedDecl( void ) const
 DialogDeclBrowser::EditSelected
 ================
 */
-void DialogDeclBrowser::EditSelected( void ) const
+void DialogDeclBrowser::EditSelected() const
 {
 	int id, index;
 	idDict spawnArgs;
@@ -527,7 +527,7 @@ void DeclBrowserInit( const idDict* spawnArgs )
 DeclBrowserRun
 ================
 */
-void DeclBrowserRun( void )
+void DeclBrowserRun()
 {
 #if _MSC_VER >= 1300 && _MFC_VER >= 0x0A00
 	MSG* msg = AfxGetCurrentMessage();
@@ -549,7 +549,7 @@ void DeclBrowserRun( void )
 DeclBrowserShutdown
 ================
 */
-void DeclBrowserShutdown( void )
+void DeclBrowserShutdown()
 {
 	delete g_DeclDialog;
 	g_DeclDialog = NULL;
@@ -560,7 +560,7 @@ void DeclBrowserShutdown( void )
 DeclBrowserReloadDeclarations
 ================
 */
-void DeclBrowserReloadDeclarations( void )
+void DeclBrowserReloadDeclarations()
 {
 	if( g_DeclDialog )
 	{
@@ -573,7 +573,7 @@ void DeclBrowserReloadDeclarations( void )
 DialogDeclBrowser::ReloadDeclarations
 ================
 */
-void DialogDeclBrowser::ReloadDeclarations( void )
+void DialogDeclBrowser::ReloadDeclarations()
 {
 	InitBaseDeclTree();
 	OnBnClickedFind();

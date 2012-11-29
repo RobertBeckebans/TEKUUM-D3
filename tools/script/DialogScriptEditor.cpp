@@ -127,7 +127,7 @@ BOOL DialogScriptEditor::PreTranslateMessage( MSG* pMsg )
 DialogScriptEditor::UpdateStatusBar
 ================
 */
-void DialogScriptEditor::UpdateStatusBar( void )
+void DialogScriptEditor::UpdateStatusBar()
 {
 	int line, column, character;
 	
@@ -140,7 +140,7 @@ void DialogScriptEditor::UpdateStatusBar( void )
 DialogScriptEditor::InitScriptEvents
 ================
 */
-void DialogScriptEditor::InitScriptEvents( void )
+void DialogScriptEditor::InitScriptEvents()
 {
 	int index;
 	idParser src;
@@ -456,7 +456,7 @@ void ScriptEditorInit( const idDict* spawnArgs )
 ScriptEditorRun
 ================
 */
-void ScriptEditorRun( void )
+void ScriptEditorRun()
 {
 #if _MSC_VER >= 1300 && _MFC_VER >= 0x0A00
 	MSG* msg = AfxGetCurrentMessage();
@@ -478,7 +478,7 @@ void ScriptEditorRun( void )
 ScriptEditorShutdown
 ================
 */
-void ScriptEditorShutdown( void )
+void ScriptEditorShutdown()
 {
 	delete g_ScriptDialog;
 	g_ScriptDialog = NULL;

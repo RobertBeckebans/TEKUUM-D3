@@ -76,12 +76,12 @@ bool GLimp_SetScreenParms( glimpParms_t parms )
 	return true;
 }
 
-void GLimp_Shutdown( void )
+void GLimp_Shutdown()
 {
 
 }
 
-void GLimp_SwapBuffers( void )
+void GLimp_SwapBuffers()
 {
 	//s_requestRender();
 }
@@ -132,7 +132,7 @@ open your own display connection for the query and close it
 using the one shared with GLimp_Init is not stable
 ================
 */
-int Sys_GetVideoRam( void )
+int Sys_GetVideoRam()
 {
 	static int run_once = 0;
 	int major, minor, value;

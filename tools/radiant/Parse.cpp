@@ -121,7 +121,7 @@ skipspace:
 	return true;
 }
 
-void WINAPI UngetToken( void )
+void WINAPI UngetToken()
 {
 	unget = true;
 }
@@ -134,7 +134,7 @@ TokenAvailable
 Returns true if there is another token on the line
 ==============
 */
-bool TokenAvailable( void )
+bool TokenAvailable()
 {
 	const char*    search_p;
 	

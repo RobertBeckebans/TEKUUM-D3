@@ -87,7 +87,7 @@ Launches another instance of the running executable with +debugger appended
 to the end to indicate that the debugger should start up.
 ================
 */
-void DebuggerClientLaunch( void )
+void DebuggerClientLaunch()
 {
 	if( renderSystem->IsFullScreen() )
 	{
@@ -149,7 +149,7 @@ DebuggerServerInit
 Starts up the debugger server
 ================
 */
-bool DebuggerServerInit( void )
+bool DebuggerServerInit()
 {
 	// Dont do this if we are in the debugger already
 	if( com_editors & EDITOR_DEBUGGER )
@@ -185,7 +185,7 @@ DebuggerServerShutdown
 Shuts down the debugger server
 ================
 */
-void DebuggerServerShutdown( void )
+void DebuggerServerShutdown()
 {
 	if( gDebuggerServerThread )
 	{

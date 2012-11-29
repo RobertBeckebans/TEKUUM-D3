@@ -203,7 +203,7 @@ void JE_QueueConsoleEvent( const char* s )
 	}
 }
 
-int JE_IsConsoleActive( void )
+int JE_IsConsoleActive()
 {
 	if( console && console->Active() )
 		return 1;
@@ -211,9 +211,9 @@ int JE_IsConsoleActive( void )
 	return 0;
 }
 
-void Sys_InitInput( void ) {}
+void Sys_InitInput() {}
 
-void Sys_ShutdownInput( void ) {}
+void Sys_ShutdownInput() {}
 
 unsigned char Sys_MapCharForKey( int key )
 {
@@ -222,7 +222,7 @@ unsigned char Sys_MapCharForKey( int key )
 
 
 // keyboard input polling
-int				Sys_PollKeyboardInputEvents( void )
+int				Sys_PollKeyboardInputEvents()
 {
 	return 0;
 }
@@ -230,10 +230,10 @@ int				Sys_ReturnKeyboardInputEvent( const int n, int& ch, bool& state )
 {
 	return 0;
 }
-void			Sys_EndKeyboardInputEvents( void ) {}
+void			Sys_EndKeyboardInputEvents() {}
 
 // mouse input polling
-int				Sys_PollMouseInputEvents( void )
+int				Sys_PollMouseInputEvents()
 {
 	return 0;
 }
@@ -241,7 +241,7 @@ int				Sys_ReturnMouseInputEvent( const int n, int& action, int& value )
 {
 	return 0;
 }
-void			Sys_EndMouseInputEvents( void ) {}
+void			Sys_EndMouseInputEvents() {}
 
 //=====================================================================================
 
@@ -318,7 +318,7 @@ static void IN_XBox360Axis( int action, float thumbAxis, float scale )
 #endif
 }
 
-int Sys_PollXbox360ControllerInputEvents( void )
+int Sys_PollXbox360ControllerInputEvents()
 {
 #if 1
 	s_pollGamepadEventsCount = 0;
@@ -371,7 +371,7 @@ int	Sys_ReturnXbox360ControllerInputEvent( const int n, int& action, int& value,
 	return 1;
 }
 
-void Sys_EndXbox360ControllerInputEvents( void ) { }
+void Sys_EndXbox360ControllerInputEvents() { }
 
 
 void Sys_GrabMouseCursor( bool grabIt ) {}

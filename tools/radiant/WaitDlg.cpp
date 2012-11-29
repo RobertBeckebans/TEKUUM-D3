@@ -126,7 +126,7 @@ void CWaitDlg::AllowCancel( bool enable )
 	}
 }
 
-bool CWaitDlg::CancelPressed( void )
+bool CWaitDlg::CancelPressed()
 {
 #if _MSC_VER >= 1300 && _MFC_VER >= 0x0A00
 	MSG* msg = AfxGetCurrentMessage();

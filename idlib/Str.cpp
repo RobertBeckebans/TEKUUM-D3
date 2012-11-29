@@ -126,7 +126,7 @@ void idStr::ReAllocate( int amount, bool keepold )
 idStr::FreeData
 ============
 */
-void idStr::FreeData( void )
+void idStr::FreeData()
 {
 	if( data && data != baseBuffer )
 	{
@@ -755,7 +755,7 @@ idStr idStr::Mid( int start, int len ) const
 idStr::StripTrailingWhitespace
 ============
 */
-void idStr::StripTrailingWhitespace( void )
+void idStr::StripTrailingWhitespace()
 {
 	int i;
 	
@@ -774,7 +774,7 @@ idStr::StripQuotes
 Removes the quotes from the beginning and end of the string
 ============
 */
-idStr& idStr::StripQuotes( void )
+idStr& idStr::StripQuotes()
 {
 	if( data[0] != '\"' )
 	{
@@ -809,7 +809,7 @@ idStr& idStr::StripQuotes( void )
 idStr::FileNameHash
 ============
 */
-int idStr::FileNameHash( void ) const
+int idStr::FileNameHash() const
 {
 	int		i;
 	long	hash;
@@ -840,7 +840,7 @@ int idStr::FileNameHash( void ) const
 idStr::BackSlashesToSlashes
 ============
 */
-idStr& idStr::BackSlashesToSlashes( void )
+idStr& idStr::BackSlashesToSlashes()
 {
 	int i;
 	
@@ -875,7 +875,7 @@ idStr& idStr::SetFileExtension( const char* extension )
 idStr::StripFileExtension
 ============
 */
-idStr& idStr::StripFileExtension( void )
+idStr& idStr::StripFileExtension()
 {
 	int i;
 	
@@ -896,7 +896,7 @@ idStr& idStr::StripFileExtension( void )
 idStr::StripAbsoluteFileExtension
 ============
 */
-idStr& idStr::StripAbsoluteFileExtension( void )
+idStr& idStr::StripAbsoluteFileExtension()
 {
 	int i;
 	
@@ -1003,7 +1003,7 @@ void idStr::AppendPath( const char* text )
 idStr::StripFilename
 ==================
 */
-idStr& idStr::StripFilename( void )
+idStr& idStr::StripFilename()
 {
 	int pos;
 	
@@ -1027,7 +1027,7 @@ idStr& idStr::StripFilename( void )
 idStr::StripPath
 ==================
 */
-idStr& idStr::StripPath( void )
+idStr& idStr::StripPath()
 {
 	int pos;
 	
@@ -1889,7 +1889,7 @@ void idStr::SetUnit( const char* format, float value, int unit, Measure_t measur
 idStr::InitMemory
 ================
 */
-void idStr::InitMemory( void )
+void idStr::InitMemory()
 {
 #ifdef USE_STRING_DATA_ALLOCATOR
 	stringDataAllocator.Init();
@@ -1901,7 +1901,7 @@ void idStr::InitMemory( void )
 idStr::ShutdownMemory
 ================
 */
-void idStr::ShutdownMemory( void )
+void idStr::ShutdownMemory()
 {
 #ifdef USE_STRING_DATA_ALLOCATOR
 	stringDataAllocator.Shutdown();
@@ -1913,7 +1913,7 @@ void idStr::ShutdownMemory( void )
 idStr::PurgeMemory
 ================
 */
-void idStr::PurgeMemory( void )
+void idStr::PurgeMemory()
 {
 #ifdef USE_STRING_DATA_ALLOCATOR
 	stringDataAllocator.FreeEmptyBaseBlocks();

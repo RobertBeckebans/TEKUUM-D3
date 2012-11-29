@@ -88,7 +88,7 @@ function_t::function_t()
 function_t::Allocated
 ================
 */
-size_t function_t::Allocated( void ) const
+size_t function_t::Allocated() const
 {
 	return name.Allocated() + parmSize.Allocated();
 }
@@ -108,7 +108,7 @@ void function_t::SetName( const char* name )
 function_t::Name
 ================
 */
-const char* function_t::Name( void ) const
+const char* function_t::Name() const
 {
 	return name;
 }
@@ -118,7 +118,7 @@ const char* function_t::Name( void ) const
 function_t::Clear
 ================
 */
-void function_t::Clear( void )
+void function_t::Clear()
 {
 	eventdef		= NULL;
 	def				= NULL;
@@ -188,7 +188,7 @@ void idTypeDef::operator=( const idTypeDef& other )
 idTypeDef::Allocated
 ================
 */
-size_t idTypeDef::Allocated( void ) const
+size_t idTypeDef::Allocated() const
 {
 	size_t memsize;
 	int i;
@@ -385,7 +385,7 @@ void idTypeDef::SetName( const char* newname )
 idTypeDef::Name
 ================
 */
-const char* idTypeDef::Name( void ) const
+const char* idTypeDef::Name() const
 {
 	return name;
 }
@@ -395,7 +395,7 @@ const char* idTypeDef::Name( void ) const
 idTypeDef::Type
 ================
 */
-etype_t idTypeDef::Type( void ) const
+etype_t idTypeDef::Type() const
 {
 	return type;
 }
@@ -405,7 +405,7 @@ etype_t idTypeDef::Type( void ) const
 idTypeDef::Size
 ================
 */
-int idTypeDef::Size( void ) const
+int idTypeDef::Size() const
 {
 	return size;
 }
@@ -417,7 +417,7 @@ idTypeDef::SuperClass
 If type is an object, then returns the object's superclass
 ================
 */
-idTypeDef* idTypeDef::SuperClass( void ) const
+idTypeDef* idTypeDef::SuperClass() const
 {
 	if( type != ev_object )
 	{
@@ -438,7 +438,7 @@ idTypeDef::ReturnType
 If type is a function, then returns the function's return type
 ================
 */
-idTypeDef* idTypeDef::ReturnType( void ) const
+idTypeDef* idTypeDef::ReturnType() const
 {
 	if( type != ev_function )
 	{
@@ -480,7 +480,7 @@ idTypeDef::FieldType
 If type is a field, then returns it's type
 ================
 */
-idTypeDef* idTypeDef::FieldType( void ) const
+idTypeDef* idTypeDef::FieldType() const
 {
 	if( type != ev_field )
 	{
@@ -522,7 +522,7 @@ idTypeDef::PointerType
 If type is a pointer, then returns the type it points to
 ================
 */
-idTypeDef* idTypeDef::PointerType( void ) const
+idTypeDef* idTypeDef::PointerType() const
 {
 	if( type != ev_pointer )
 	{
@@ -562,7 +562,7 @@ void idTypeDef::SetPointerType( idTypeDef* pointertype )
 idTypeDef::NumParameters
 ================
 */
-int idTypeDef::NumParameters( void ) const
+int idTypeDef::NumParameters() const
 {
 	return parmTypes.Num();
 }
@@ -596,7 +596,7 @@ const char* idTypeDef::GetParmName( int parmNumber ) const
 idTypeDef::NumFunctions
 ================
 */
-int idTypeDef::NumFunctions( void ) const
+int idTypeDef::NumFunctions() const
 {
 	return functions.Num();
 }
@@ -696,7 +696,7 @@ idVarDef::~idVarDef()
 idVarDef::Name
 ============
 */
-const char* idVarDef::Name( void ) const
+const char* idVarDef::Name() const
 {
 	return name->Name();
 }
@@ -706,7 +706,7 @@ const char* idVarDef::Name( void ) const
 idVarDef::GlobalName
 ============
 */
-const char* idVarDef::GlobalName( void ) const
+const char* idVarDef::GlobalName() const
 {
 	if( scope != &def_namespace )
 	{
@@ -1041,7 +1041,7 @@ idScriptObject::~idScriptObject()
 idScriptObject::Free
 ============
 */
-void idScriptObject::Free( void )
+void idScriptObject::Free()
 {
 	if( data )
 	{
@@ -1165,7 +1165,7 @@ idScriptObject::ClearObject
 Resets the memory for the script object without changing its type.
 ============
 */
-void idScriptObject::ClearObject( void )
+void idScriptObject::ClearObject()
 {
 	size_t size;
 	
@@ -1182,7 +1182,7 @@ void idScriptObject::ClearObject( void )
 idScriptObject::HasObject
 ============
 */
-bool idScriptObject::HasObject( void ) const
+bool idScriptObject::HasObject() const
 {
 	return ( type != &type_object );
 }
@@ -1192,7 +1192,7 @@ bool idScriptObject::HasObject( void ) const
 idScriptObject::GetTypeDef
 ============
 */
-idTypeDef* idScriptObject::GetTypeDef( void ) const
+idTypeDef* idScriptObject::GetTypeDef() const
 {
 	return type;
 }
@@ -1202,7 +1202,7 @@ idTypeDef* idScriptObject::GetTypeDef( void ) const
 idScriptObject::GetTypeName
 ============
 */
-const char* idScriptObject::GetTypeName( void ) const
+const char* idScriptObject::GetTypeName() const
 {
 	return type->Name();
 }
@@ -1212,7 +1212,7 @@ const char* idScriptObject::GetTypeName( void ) const
 idScriptObject::GetConstructor
 ============
 */
-const function_t* idScriptObject::GetConstructor( void ) const
+const function_t* idScriptObject::GetConstructor() const
 {
 	const function_t* func;
 	
@@ -1225,7 +1225,7 @@ const function_t* idScriptObject::GetConstructor( void ) const
 idScriptObject::GetDestructor
 ============
 */
-const function_t* idScriptObject::GetDestructor( void ) const
+const function_t* idScriptObject::GetDestructor() const
 {
 	const function_t* func;
 	
@@ -1912,7 +1912,7 @@ void idProgram::SetEntity( const char* name, idEntity* ent )
 idProgram::AllocStatement
 ================
 */
-statement_t* idProgram::AllocStatement( void )
+statement_t* idProgram::AllocStatement()
 {
 	if( statements.Num() >= statements.Max() )
 	{
@@ -1932,7 +1932,7 @@ idProgram::BeginCompilation
 called before compiling a batch of files, clears the pr struct
 ==============
 */
-void idProgram::BeginCompilation( void )
+void idProgram::BeginCompilation()
 {
 	statement_t*	statement;
 	
@@ -2013,7 +2013,7 @@ void idProgram::DisassembleStatement( idFile* file, int instructionPointer ) con
 idProgram::Disassemble
 ==============
 */
-void idProgram::Disassemble( void ) const
+void idProgram::Disassemble() const
 {
 	int					i;
 	int					instructionPointer;
@@ -2051,7 +2051,7 @@ idProgram::FinishCompilation
 Called after all files are compiled to check for errors
 ==============
 */
-void idProgram::FinishCompilation( void )
+void idProgram::FinishCompilation()
 {
 	int	i;
 	
@@ -2077,7 +2077,7 @@ idProgram::CompileStats
 called after all files are compiled to report memory usage.
 ==============
 */
-void idProgram::CompileStats( void )
+void idProgram::CompileStats()
 {
 	int	memused;
 	int	memallocated;
@@ -2251,7 +2251,7 @@ void idProgram::CompileFile( const char* filename )
 idProgram::FreeData
 ================
 */
-void idProgram::FreeData( void )
+void idProgram::FreeData()
 {
 	int i;
 	
@@ -2403,7 +2403,7 @@ bool idProgram::Restore( idRestoreGame* savefile )
 idProgram::CalculateChecksum
 ================
 */
-int idProgram::CalculateChecksum( void ) const
+int idProgram::CalculateChecksum() const
 {
 	int i, result;
 	
@@ -2469,7 +2469,7 @@ idProgram::Restart
 Restores all variables to their initial value
 ==============
 */
-void idProgram::Restart( void )
+void idProgram::Restart()
 {
 	int i;
 	

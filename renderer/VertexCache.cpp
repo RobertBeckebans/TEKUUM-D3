@@ -597,7 +597,7 @@ void idVertexCache::EndFrame()
 idVertexCache::List
 =============
 */
-void idVertexCache::List( void )
+void idVertexCache::List()
 {
 	int	numActive = 0;
 	int	numDeferred = 0;

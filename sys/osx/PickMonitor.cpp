@@ -433,7 +433,7 @@ static pascal OSStatus PickMonitorHandler( EventHandlerCallRef inHandler, EventR
 //-----------------------------------------------------------------------------
 // Returns true if more than one monitor is available to choose from.
 
-Boolean CanUserPickMonitor( void )
+Boolean CanUserPickMonitor()
 {
 	GDHandle dev = GetDeviceList();
 	OSErr err = noErr;

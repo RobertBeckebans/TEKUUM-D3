@@ -594,7 +594,7 @@ we should also look at surface evaluations, which would let surfaces
 overbright past 1.0
 =================
 */
-void RB_DetermineLightScale( void )
+void RB_DetermineLightScale()
 {
 	viewLight_t*			vLight;
 	const idMaterial*	shader;
@@ -658,7 +658,7 @@ Any mirrored or portaled views have already been drawn, so prepare
 to actually render the visible surfaces for this view
 =================
 */
-void RB_BeginDrawingView( void )
+void RB_BeginDrawingView()
 {
 	// set the modelview matrix for the viewer
 	glMatrixMode( GL_PROJECTION );

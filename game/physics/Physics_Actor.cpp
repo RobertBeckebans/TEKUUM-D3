@@ -39,7 +39,7 @@ END_CLASS
 idPhysics_Actor::idPhysics_Actor
 ================
 */
-idPhysics_Actor::idPhysics_Actor( void )
+idPhysics_Actor::idPhysics_Actor()
 {
 	clipModel = NULL;
 	// RB begin
@@ -59,7 +59,7 @@ idPhysics_Actor::idPhysics_Actor( void )
 idPhysics_Actor::~idPhysics_Actor
 ================
 */
-idPhysics_Actor::~idPhysics_Actor( void )
+idPhysics_Actor::~idPhysics_Actor()
 {
 	if( clipModel )
 	{
@@ -115,7 +115,7 @@ void idPhysics_Actor::Restore( idRestoreGame* savefile )
 idPhysics_Actor::SetClipModelAxis
 ================
 */
-void idPhysics_Actor::SetClipModelAxis( void )
+void idPhysics_Actor::SetClipModelAxis()
 {
 	// RB: changed orientation to gravity vector
 	// to avoid problems with instant direction flipping
@@ -171,7 +171,7 @@ void idPhysics_Actor::SetClipModelAxis( void )
 idPhysics_Actor::GetGravityAxis
 ================
 */
-const idMat3& idPhysics_Actor::GetGravityAxis( void ) const
+const idMat3& idPhysics_Actor::GetGravityAxis() const
 {
 	return clipModelAxis;
 }
@@ -181,7 +181,7 @@ const idMat3& idPhysics_Actor::GetGravityAxis( void ) const
 idPhysics_Actor::GetMasterDeltaYaw
 ================
 */
-float idPhysics_Actor::GetMasterDeltaYaw( void ) const
+float idPhysics_Actor::GetMasterDeltaYaw() const
 {
 	return masterDeltaYaw;
 }
@@ -191,7 +191,7 @@ float idPhysics_Actor::GetMasterDeltaYaw( void ) const
 idPhysics_Actor::GetGroundEntity
 ================
 */
-idEntity* idPhysics_Actor::GetGroundEntity( void ) const
+idEntity* idPhysics_Actor::GetGroundEntity() const
 {
 	return groundEntityPtr.GetEntity();
 }
@@ -231,7 +231,7 @@ idClipModel* idPhysics_Actor::GetClipModel( int id ) const
 idPhysics_Actor::GetNumClipModels
 ================
 */
-int idPhysics_Actor::GetNumClipModels( void ) const
+int idPhysics_Actor::GetNumClipModels() const
 {
 	return 1;
 }
@@ -303,7 +303,7 @@ const idBounds& idPhysics_Actor::GetAbsBounds( int id ) const
 idPhysics_Actor::IsPushable
 ================
 */
-bool idPhysics_Actor::IsPushable( void ) const
+bool idPhysics_Actor::IsPushable() const
 {
 	return ( masterEntity == NULL );
 }
@@ -405,7 +405,7 @@ int idPhysics_Actor::ClipContents( const idClipModel* model ) const
 idPhysics_Actor::DisableClip
 ================
 */
-void idPhysics_Actor::DisableClip( void )
+void idPhysics_Actor::DisableClip()
 {
 	clipModel->Disable();
 }
@@ -415,7 +415,7 @@ void idPhysics_Actor::DisableClip( void )
 idPhysics_Actor::EnableClip
 ================
 */
-void idPhysics_Actor::EnableClip( void )
+void idPhysics_Actor::EnableClip()
 {
 	clipModel->Enable();
 }
@@ -425,7 +425,7 @@ void idPhysics_Actor::EnableClip( void )
 idPhysics_Actor::UnlinkClip
 ================
 */
-void idPhysics_Actor::UnlinkClip( void )
+void idPhysics_Actor::UnlinkClip()
 {
 	clipModel->Unlink();
 }
@@ -435,7 +435,7 @@ void idPhysics_Actor::UnlinkClip( void )
 idPhysics_Actor::LinkClip
 ================
 */
-void idPhysics_Actor::LinkClip( void )
+void idPhysics_Actor::LinkClip()
 {
 	clipModel->Link( gameLocal.clip, self, 0, clipModel->GetOrigin(), clipModel->GetAxis() );
 }
@@ -445,7 +445,7 @@ void idPhysics_Actor::LinkClip( void )
 idPhysics_Actor::EvaluateContacts
 ================
 */
-bool idPhysics_Actor::EvaluateContacts( void )
+bool idPhysics_Actor::EvaluateContacts()
 {
 
 	// get all the ground contacts

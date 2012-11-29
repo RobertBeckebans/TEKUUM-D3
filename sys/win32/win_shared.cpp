@@ -58,7 +58,7 @@ If you have questions concerning this license or the applicable additional terms
 Sys_Milliseconds
 ================
 */
-int Sys_Milliseconds( void ) {
+int Sys_Milliseconds() {
 	int sys_curtime;
 	static int sys_timeBase;
 	static bool	initialized = false;
@@ -79,7 +79,7 @@ Sys_GetSystemRam
 	returns amount of physical memory in MB
 ================
 */
-int Sys_GetSystemRam( void ) {
+int Sys_GetSystemRam() {
 	MEMORYSTATUSEX statex;
 	statex.dwLength = sizeof ( statex );
 	GlobalMemoryStatusEx (&statex);
@@ -115,7 +115,7 @@ Sys_GetVideoRam
 returns in megabytes
 ================
 */
-int Sys_GetVideoRam( void ) {
+int Sys_GetVideoRam() {
 #if defined(ID_DEDICATED)
 	return 0;
 // RB begin
@@ -247,7 +247,7 @@ void Sys_SetPhysicalWorkMemory( int minBytes, int maxBytes ) {
 Sys_GetCurrentUser
 ================
 */
-char *Sys_GetCurrentUser( void ) {
+char *Sys_GetCurrentUser() {
 	static char s_userName[1024];
 	unsigned long size = sizeof( s_userName );
 
@@ -456,7 +456,7 @@ void Sym_Init( long addr ) {
 Sym_Shutdown
 ==================
 */
-void Sym_Shutdown( void ) {
+void Sym_Shutdown() {
 	module_t *m;
 	symbol_t *s;
 
@@ -564,7 +564,7 @@ void Sym_Init( long addr ) {
 Sym_Shutdown
 ==================
 */
-void Sym_Shutdown( void ) {
+void Sym_Shutdown() {
 	SymUnloadModule( GetCurrentProcess(), lastAllocationBase );
 	SymCleanup( GetCurrentProcess() );
 	lastAllocationBase = -1;
@@ -636,7 +636,7 @@ void Sym_Init( long addr ) {
 Sym_Shutdown
 ==================
 */
-void Sym_Shutdown( void ) {
+void Sym_Shutdown() {
 }
 
 /*
@@ -784,6 +784,6 @@ const char *Sys_GetCallStackCurAddressStr( int depth ) {
 Sys_ShutdownSymbols
 ==================
 */
-void Sys_ShutdownSymbols( void ) {
+void Sys_ShutdownSymbols() {
 	Sym_Shutdown();
 }

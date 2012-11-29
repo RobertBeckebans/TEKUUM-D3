@@ -14,7 +14,7 @@ Copyright (C) 2012 Robert Beckebans
 
 #if defined(USE_GLES2)
 
-void esLoadIdentity( void )
+void esLoadIdentity()
 {
 	MatrixIdentity( backEnd.glState.modelViewMatrix[ backEnd.glState.stackIndex ] );
 }
@@ -50,7 +50,7 @@ void esOrthof( GLfloat left, GLfloat right, GLfloat bottom, GLfloat top, GLfloat
 	// TODO
 }
 
-void esPushMatrix( void )
+void esPushMatrix()
 {
 	backEnd.glState.stackIndex++;
 	
@@ -65,7 +65,7 @@ void esPushMatrix( void )
 	MatrixCopy( backEnd.glState.modelViewProjectionMatrix[ backEnd.glState.stackIndex - 1 ], backEnd.glState.modelViewProjectionMatrix[ backEnd.glState.stackIndex ] );
 }
 
-void esPopMatrix( void )
+void esPopMatrix()
 {
 	backEnd.glState.stackIndex--;
 	

@@ -55,7 +55,7 @@ jniImport_t		ji;
 Sys_InitScanTable
 ===========
 */
-void Sys_InitScanTable( void )
+void Sys_InitScanTable()
 {
 	common->DPrintf( "TODO: Sys_InitScanTable\n" );
 }
@@ -65,7 +65,7 @@ void Sys_InitScanTable( void )
 Sys_AsyncThread
 =================
 */
-void Sys_AsyncThread( void )
+void Sys_AsyncThread()
 {
 // RB: disabled multi tick compensate because it feels very laggy on Linux 3.x kernels
 #if 1
@@ -162,7 +162,7 @@ void Sys_AsyncThread( void )
  Sys_DefaultSavePath
  ==============
  */
-const char* Sys_DefaultSavePath( void )
+const char* Sys_DefaultSavePath()
 {
 	return cvarSystem->GetCVarString( "fs_basepath" );
 }
@@ -171,7 +171,7 @@ const char* Sys_DefaultSavePath( void )
 Sys_EXEPath
 ==============
 */
-const char* Sys_EXEPath( void )
+const char* Sys_EXEPath()
 {
 	static char	buf[ 1024 ];
 	idStr		linkpath;
@@ -201,7 +201,7 @@ Get the default base path
 Try to be intelligent: if there is no BASE_GAMEDIR, try the next path
 ================
 */
-const char* Sys_DefaultBasePath( void )
+const char* Sys_DefaultBasePath()
 {
 	struct stat st;
 	idStr testbase;
@@ -257,7 +257,7 @@ unsigned char Sys_GetConsoleKey( bool shifted )
 Sys_Shutdown
 ===============
 */
-void Sys_Shutdown( void )
+void Sys_Shutdown()
 {
 	basepath.Clear();
 	savepath.Clear();
@@ -269,7 +269,7 @@ void Sys_Shutdown( void )
 Sys_GetProcessorId
 ===============
 */
-cpuid_t Sys_GetProcessorId( void )
+cpuid_t Sys_GetProcessorId()
 {
 	return CPUID_GENERIC;
 }
@@ -279,7 +279,7 @@ cpuid_t Sys_GetProcessorId( void )
 Sys_GetProcessorString
 ===============
 */
-const char* Sys_GetProcessorString( void )
+const char* Sys_GetProcessorString()
 {
 	return "generic";
 }
@@ -309,7 +309,7 @@ void Sys_FPE_handler( int signum, siginfo_t* info, void* context )
 Sys_GetClockticks
 ===============
 */
-double Sys_GetClockTicks( void )
+double Sys_GetClockTicks()
 {
 #if defined( __i386__ )
 	unsigned long lo, hi;
@@ -338,7 +338,7 @@ double Sys_GetClockTicks( void )
 MeasureClockTicks
 ===============
 */
-double MeasureClockTicks( void )
+double MeasureClockTicks()
 {
 	double t0, t1;
 	
@@ -353,7 +353,7 @@ double MeasureClockTicks( void )
 Sys_ClockTicksPerSecond
 ===============
 */
-double Sys_ClockTicksPerSecond( void )
+double Sys_ClockTicksPerSecond()
 {
 	static bool		init = false;
 	static double	ret;
@@ -417,7 +417,7 @@ Sys_GetSystemRam
 returns in megabytes
 ================
 */
-int Sys_GetSystemRam( void )
+int Sys_GetSystemRam()
 {
 	long	count, page_size;
 	int		mb;
@@ -572,7 +572,7 @@ void idSysLocal::OpenURL( const char* url, bool quit )
  Sys_DoPreferences
  ==================
  */
-void Sys_DoPreferences( void ) { }
+void Sys_DoPreferences() { }
 
 /*
 ================
@@ -689,7 +689,7 @@ int JE_Main( int argc, char** argv )
 	return 0;
 }
 
-void JE_DrawFrame( void )
+void JE_DrawFrame()
 {
 	//__android_log_print(ANDROID_LOG_DEBUG, "Techyon", "JNI_NextFrame()");
 	

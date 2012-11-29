@@ -745,7 +745,7 @@ bool idRenderSystemLocal::RegisterFont( const char* fontName, fontInfoEx_t& font
 R_InitFreeType
 ============
 */
-void R_InitFreeType( void )
+void R_InitFreeType()
 {
 #ifdef BUILD_FREETYPE
 	if( FT_Init_FreeType( &ftLibrary ) )
@@ -761,7 +761,7 @@ void R_InitFreeType( void )
 R_DoneFreeType
 ============
 */
-void R_DoneFreeType( void )
+void R_DoneFreeType()
 {
 #ifdef BUILD_FREETYPE
 	if( ftLibrary )

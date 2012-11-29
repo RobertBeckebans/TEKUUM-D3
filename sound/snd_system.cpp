@@ -642,7 +642,7 @@ bool idSoundSystemLocal::ShutdownHW()
 idSoundSystemLocal::GetCurrent44kHzTime
 ===============
 */
-int idSoundSystemLocal::GetCurrent44kHzTime( void ) const
+int idSoundSystemLocal::GetCurrent44kHzTime() const
 {
 	if( snd_audio_hw )
 	{
@@ -661,7 +661,7 @@ int idSoundSystemLocal::GetCurrent44kHzTime( void ) const
 idSoundSystemLocal::ClearBuffer
 ===================
 */
-void idSoundSystemLocal::ClearBuffer( void )
+void idSoundSystemLocal::ClearBuffer()
 {
 
 	// check to make sure hardware actually exists
@@ -1330,7 +1330,7 @@ void idSoundSystemLocal::SetPlayingSoundWorld( idSoundWorld* soundWorld )
 idSoundSystemLocal::GetPlayingSoundWorld
 ===================
 */
-idSoundWorld* idSoundSystemLocal::GetPlayingSoundWorld( void )
+idSoundWorld* idSoundSystemLocal::GetPlayingSoundWorld()
 {
 	return currentSoundWorld;
 }
@@ -1726,7 +1726,7 @@ void idSoundSystemLocal::PrintMemInfo( MemInfo_t* mi )
 idSoundSystemLocal::EAXAvailable
 ===============
 */
-int idSoundSystemLocal::IsEAXAvailable( void )
+int idSoundSystemLocal::IsEAXAvailable()
 {
 #if !ID_OPENAL
 	return -1;

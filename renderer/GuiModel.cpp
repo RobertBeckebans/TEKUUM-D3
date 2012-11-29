@@ -238,7 +238,7 @@ idGuiModel::EmitFullScreen
 Creates a view that covers the screen and emit the surfaces
 ================
 */
-void idGuiModel::EmitFullScreen( void )
+void idGuiModel::EmitFullScreen()
 {
 	viewDef_t*	viewDef;
 	

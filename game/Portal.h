@@ -50,7 +50,7 @@ public:
 		EVENT_MAXEVENTS
 	};
 	
-	void					Spawn( void );
+	void					Spawn();
 	
 	void					Create( idEntity* owner, tyPortal* otherPortal, const idVec3& start, const idMat3& axis );
 	
@@ -58,12 +58,12 @@ public:
 	void					Save( idSaveGame* savefile ) const;
 	void					Restore( idRestoreGame* savefile );
 	
-	virtual void			Think( void );
+	virtual void			Think();
 	
 	virtual renderView_t* 	GetRenderView();
 	virtual void			Killed( idEntity* inflictor, idEntity* attacker, int damage, const idVec3& dir, int location );
 	virtual bool			Pain( idEntity* inflictor, idEntity* attacker, int damage, const idVec3& dir, int location );
-	virtual void			Present( void );
+	virtual void			Present();
 	
 	virtual bool			ClientReceiveEvent( int event, int time, const idBitMsg& msg );
 	
@@ -83,9 +83,9 @@ private:
 	idPhysics_RigidBody		physicsObj;
 //	idTraceModel			trm;
 
-	bool					CanSeePlayer( void );
-	void					DrawFov( void );
-	const idVec3			GetAxis( void ) const;
+	bool					CanSeePlayer();
+	void					DrawFov();
+	const idVec3			GetAxis() const;
 	
 	float					wait;
 	float					delay;
@@ -102,7 +102,7 @@ private:
 	void					Event_TeleportPlayer( idEntity* activator );
 	void					Event_TeleportStage( idEntity* player );
 	void					TeleportPlayer( idPlayer* player );
-	void					Event_AddLight( void );
+	void					Event_AddLight();
 };
 
 #endif /* !__GAME_PORTAL_H__ */

@@ -1039,7 +1039,7 @@ void set_flen( int i )
 	flen = i;
 }
 
-int get_flen( void )
+int get_flen()
 {
 	return flen;
 }
@@ -3836,7 +3836,7 @@ lwDefaultSurface()
 Allocate and initialize a surface.
 ====================================================================== */
 
-lwSurface* lwDefaultSurface( void )
+lwSurface* lwDefaultSurface()
 {
 	lwSurface* surf;
 	

@@ -206,7 +206,7 @@ void R_ShowColoredScreenRect( const idScreenRect& rect, int colorIndex )
 R_ToggleSmpFrame
 ====================
 */
-void R_ToggleSmpFrame( void )
+void R_ToggleSmpFrame()
 {
 	if( r_lockSurfaces.GetBool() )
 	{
@@ -245,7 +245,7 @@ void R_ToggleSmpFrame( void )
 R_ShutdownFrameData
 =====================
 */
-void R_ShutdownFrameData( void )
+void R_ShutdownFrameData()
 {
 	frameData_t* frame;
 	frameMemoryBlock_t* block;
@@ -274,7 +274,7 @@ void R_ShutdownFrameData( void )
 R_InitFrameData
 =====================
 */
-void R_InitFrameData( void )
+void R_InitFrameData()
 {
 	int size;
 	frameData_t* frame;
@@ -304,7 +304,7 @@ void R_InitFrameData( void )
 R_CountFrameData
 ================
 */
-int R_CountFrameData( void )
+int R_CountFrameData()
 {
 	frameData_t*		frame;
 	frameMemoryBlock_t*	block;
@@ -1153,7 +1153,7 @@ R_SetupUnprojection
 create a matrix with similar functionality like gluUnproject, project from window space to world space
 =================
 */
-static void R_SetupUnprojection( void )
+static void R_SetupUnprojection()
 {
 	static const float	s_flipMatrix[16] =
 	{
@@ -1211,7 +1211,7 @@ Setup that culling frustum planes for the current view
 FIXME: derive from modelview matrix times projection matrix
 =================
 */
-static void R_SetupViewFrustum( void )
+static void R_SetupViewFrustum()
 {
 	int		i;
 	float	xs, xc;
@@ -1262,7 +1262,7 @@ static void R_SetupViewFrustum( void )
 R_ConstrainViewFrustum
 ===================
 */
-static void R_ConstrainViewFrustum( void )
+static void R_ConstrainViewFrustum()
 {
 	idBounds bounds;
 	
@@ -1323,7 +1323,7 @@ static int R_QsortSurfaces( const void* a, const void* b )
 R_SortDrawSurfs
 =================
 */
-static void R_SortDrawSurfs( void )
+static void R_SortDrawSurfs()
 {
 	// sort the drawsurfs by sort type, then orientation, then shader
 	qsort( tr.viewDef->drawSurfs, tr.viewDef->numDrawSurfs, sizeof( tr.viewDef->drawSurfs[0] ),

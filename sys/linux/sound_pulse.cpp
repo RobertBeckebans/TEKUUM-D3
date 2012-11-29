@@ -71,7 +71,7 @@ void tyAudioHardwarePulseAudio::InitFailed()
 tyAudioHardwarePulseAudio::Initialize
 =====================
 */
-bool tyAudioHardwarePulseAudio::Initialize( void )
+bool tyAudioHardwarePulseAudio::Initialize()
 {
 	int err;
 	char driverName[128];
@@ -186,7 +186,7 @@ short* tyAudioHardwarePulseAudio::GetMixBuffer()
 tyAudioHardwarePulseAudio::Flush
 ===============
 */
-bool tyAudioHardwarePulseAudio::Flush( void )
+bool tyAudioHardwarePulseAudio::Flush()
 {
 	int error;
 	

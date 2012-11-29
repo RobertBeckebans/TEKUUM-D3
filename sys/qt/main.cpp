@@ -40,7 +40,7 @@ If you have questions concerning this license or the applicable additional terms
 #if defined(_WIN32)
 #include <XInput.h>
 //#include "../win32/win_local.h"
-void Sys_StartAsyncThread( void );
+void Sys_StartAsyncThread();
 
 #endif
 
@@ -156,9 +156,9 @@ void			Sys_ShowConsole( int visLevel, bool quitOnClose )
 {
 }
 
-void Sys_InitInput( void ) {}
+void Sys_InitInput() {}
 
-void Sys_ShutdownInput( void ) {}
+void Sys_ShutdownInput() {}
 
 // event generation
 #define	MAX_QUED_EVENTS		256
@@ -168,9 +168,9 @@ static sysEvent_t	eventQue[MAX_QUED_EVENTS];
 static int			eventHead = 0;
 static int			eventTail = 0;
 
-void Sys_GenerateEvents( void ) {}
+void Sys_GenerateEvents() {}
 
-void Sys_ClearEvents( void )
+void Sys_ClearEvents()
 {
 	eventHead = eventTail = 0;
 }
@@ -209,7 +209,7 @@ void Sys_QueEvent( int time, sysEventType_t type, int value, int value2, int ptr
 	ev->evPtr = ptr;
 }
 
-sysEvent_t Sys_GetEvent( void )
+sysEvent_t Sys_GetEvent()
 {
 	sysEvent_t	ev;
 	
@@ -231,7 +231,7 @@ unsigned char Sys_GetConsoleKey( bool shifted )
 	return Qt::Key_AsciiCircum;
 }
 
-void Sys_InitScanTable( void ) {}
+void Sys_InitScanTable() {}
 
 unsigned char Sys_MapCharForKey( int key )
 {
@@ -239,7 +239,7 @@ unsigned char Sys_MapCharForKey( int key )
 }
 
 // keyboard input polling
-int				Sys_PollKeyboardInputEvents( void )
+int				Sys_PollKeyboardInputEvents()
 {
 	return 0;
 }
@@ -247,10 +247,10 @@ int				Sys_ReturnKeyboardInputEvent( const int n, int& ch, bool& state )
 {
 	return 0;
 }
-void			Sys_EndKeyboardInputEvents( void ) {}
+void			Sys_EndKeyboardInputEvents() {}
 
 // mouse input polling
-int				Sys_PollMouseInputEvents( void )
+int				Sys_PollMouseInputEvents()
 {
 	return 0;
 }
@@ -258,7 +258,7 @@ int				Sys_ReturnMouseInputEvent( const int n, int& action, int& value )
 {
 	return 0;
 }
-void			Sys_EndMouseInputEvents( void ) {}
+void			Sys_EndMouseInputEvents() {}
 
 
 void Sys_GrabMouseCursor( bool grabIt ) {}
@@ -353,7 +353,7 @@ static void IN_XBox360TriggerToButton( byte triggerAxis, byte oldTriggerAxis, in
 	}
 }
 
-int Sys_PollXbox360ControllerInputEvents( void )
+int Sys_PollXbox360ControllerInputEvents()
 {
 	if( !in_xbox360Controller.GetBool() )
 		return 0;
@@ -614,11 +614,11 @@ int	Sys_ReturnXbox360ControllerInputEvent( const int n, int& action, int& value,
 	return 1;
 }
 
-void Sys_EndXbox360ControllerInputEvents( void ) { }
+void Sys_EndXbox360ControllerInputEvents() { }
 
 #else
 
-int Sys_PollXbox360ControllerInputEvents( void )
+int Sys_PollXbox360ControllerInputEvents()
 {
 	return 0;
 }
@@ -626,6 +626,6 @@ int	Sys_ReturnXbox360ControllerInputEvent( const int n, int& action, int& value,
 {
 	return 0;
 }
-void Sys_EndXbox360ControllerInputEvents( void ) { }
+void Sys_EndXbox360ControllerInputEvents() { }
 
 #endif // #if defined(_WIN32)

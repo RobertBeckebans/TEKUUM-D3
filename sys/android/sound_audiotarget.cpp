@@ -67,7 +67,7 @@ tyAudioHardwareAudioTarget* g_audioHardwareAudioTarget = NULL;
 
 static int s_readChunk = 0;
 
-void JE_RequestAudioData( void )
+void JE_RequestAudioData()
 {
 	common->Printf( "JE_RequestAudioData()\n" );
 	
@@ -123,7 +123,7 @@ void tyAudioHardwareAudioTarget::InitFailed()
 tyAudioHardwareAudioTarget::Initialize
 =====================
 */
-bool tyAudioHardwareAudioTarget::Initialize( void )
+bool tyAudioHardwareAudioTarget::Initialize()
 {
 	common->Printf( "------ AudioTarget Sound Initialization -----\n" );
 	
@@ -181,7 +181,7 @@ short* tyAudioHardwareAudioTarget::GetMixBuffer()
 tyAudioHardwareAudioTarget::Flush
 ===============
 */
-bool tyAudioHardwareAudioTarget::Flush( void )
+bool tyAudioHardwareAudioTarget::Flush()
 {
 	int error;
 	
@@ -249,7 +249,7 @@ void tyAudioHardwareAudioTarget::Write( bool flushing )
 }
 
 #else
-void JE_RequestAudioData( void )
+void JE_RequestAudioData()
 {
 	// stub
 }

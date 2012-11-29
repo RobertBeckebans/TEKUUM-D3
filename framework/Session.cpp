@@ -53,7 +53,7 @@ const int PREVIEW_Y = 31;
 const int PREVIEW_WIDTH = 398;
 const int PREVIEW_HEIGHT = 298;
 
-void RandomizeStack( void )
+void RandomizeStack()
 {
 	// attempt to force uninitialized stack memory bugs
 	int		bytes = 4000000;
@@ -221,7 +221,7 @@ idSessionLocal::MaybeWaitOnCDKey
 ===============
 */
 #if defined(USE_CDKEY)
-bool idSessionLocal::MaybeWaitOnCDKey( void )
+bool idSessionLocal::MaybeWaitOnCDKey()
 {
 	if( authEmitTimeout > 0 )
 	{
@@ -601,7 +601,7 @@ void idSessionLocal::ShowLoadingGui()
 idSessionLocal::ClearWipe
 ================
 */
-void idSessionLocal::ClearWipe( void )
+void idSessionLocal::ClearWipe()
 {
 	wipeHold = false;
 	wipeStopTic = 0;
@@ -3445,7 +3445,7 @@ idSessionLocal::ReadCDKey
 =================
 */
 #if defined(USE_CDKEY)
-void idSessionLocal::ReadCDKey( void )
+void idSessionLocal::ReadCDKey()
 {
 	idStr filename;
 	idFile* f;
@@ -3493,7 +3493,7 @@ idSessionLocal::WriteCDKey
 ================
 */
 #if defined(USE_CDKEY)
-void idSessionLocal::WriteCDKey( void )
+void idSessionLocal::WriteCDKey()
 {
 	idStr filename;
 	idFile* f;
@@ -3586,7 +3586,7 @@ we toggled some key state to CDKEY_CHECKING. send a standalone auth packet to va
 ===============
 */
 #if defined(USE_CDKEY)
-void idSessionLocal::EmitGameAuth( void )
+void idSessionLocal::EmitGameAuth()
 {
 	// make sure the auth reply is empty, we use it to indicate an auth reply
 	authMsg.Empty();
@@ -3796,7 +3796,7 @@ bool idSessionLocal::CDKeysAreValid( bool strict )
 idSessionLocal::WaitingForGameAuth
 ===============
 */
-bool idSessionLocal::WaitingForGameAuth( void )
+bool idSessionLocal::WaitingForGameAuth()
 {
 #if defined(USE_CDKEY)
 	return authEmitTimeout != 0;
@@ -3865,7 +3865,7 @@ const char* idSessionLocal::GetCurrentMapName()
 idSessionLocal::GetSaveGameVersion
 ===============
 */
-int idSessionLocal::GetSaveGameVersion( void )
+int idSessionLocal::GetSaveGameVersion()
 {
 	return savegameVersion;
 }
@@ -3876,7 +3876,7 @@ idSessionLocal::GetAuthMsg
 ===============
 */
 #if defined(USE_CDKEY)
-const char* idSessionLocal::GetAuthMsg( void )
+const char* idSessionLocal::GetAuthMsg()
 {
 	return authMsg.c_str();
 }

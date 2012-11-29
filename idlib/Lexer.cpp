@@ -316,7 +316,7 @@ Reads spaces, tabs, C-like comments etc.
 When a newline character is found the scripts line counter is increased.
 ================
 */
-int idLexer::ReadWhiteSpace( void )
+int idLexer::ReadWhiteSpace()
 {
 	while( 1 )
 	{
@@ -1335,7 +1335,7 @@ int idLexer::SkipUntilString( const char* string )
 idLexer::SkipRestOfLine
 ================
 */
-int idLexer::SkipRestOfLine( void )
+int idLexer::SkipRestOfLine()
 {
 	idToken token;
 	
@@ -1472,7 +1472,7 @@ const char*	idLexer::ReadRestOfLine( idStr& out )
 idLexer::ParseInt
 ================
 */
-int idLexer::ParseInt( void )
+int idLexer::ParseInt()
 {
 	idToken token;
 	
@@ -1498,7 +1498,7 @@ int idLexer::ParseInt( void )
 idLexer::ParseBool
 ================
 */
-bool idLexer::ParseBool( void )
+bool idLexer::ParseBool()
 {
 	idToken token;
 	
@@ -1838,7 +1838,7 @@ int idLexer::GetLastWhiteSpace( idStr& whiteSpace ) const
 idLexer::GetLastWhiteSpaceStart
 ================
 */
-int idLexer::GetLastWhiteSpaceStart( void ) const
+int idLexer::GetLastWhiteSpaceStart() const
 {
 	return whiteSpaceStart_p - buffer;
 }
@@ -1848,7 +1848,7 @@ int idLexer::GetLastWhiteSpaceStart( void ) const
 idLexer::GetLastWhiteSpaceEnd
 ================
 */
-int idLexer::GetLastWhiteSpaceEnd( void ) const
+int idLexer::GetLastWhiteSpaceEnd() const
 {
 	return whiteSpaceEnd_p - buffer;
 }
@@ -1858,7 +1858,7 @@ int idLexer::GetLastWhiteSpaceEnd( void ) const
 idLexer::Reset
 ================
 */
-void idLexer::Reset( void )
+void idLexer::Reset()
 {
 	// pointer in script buffer
 	idLexer::script_p = idLexer::buffer;
@@ -1882,7 +1882,7 @@ void idLexer::Reset( void )
 idLexer::EndOfFile
 ================
 */
-int idLexer::EndOfFile( void )
+int idLexer::EndOfFile()
 {
 	return idLexer::script_p >= idLexer::end_p;
 }
@@ -1892,7 +1892,7 @@ int idLexer::EndOfFile( void )
 idLexer::NumLinesCrossed
 ================
 */
-int idLexer::NumLinesCrossed( void )
+int idLexer::NumLinesCrossed()
 {
 	return idLexer::line - idLexer::lastline;
 }
@@ -1998,7 +1998,7 @@ int idLexer::LoadMemory( const char* ptr, int length, const char* name, int star
 idLexer::FreeSource
 ================
 */
-void idLexer::FreeSource( void )
+void idLexer::FreeSource()
 {
 #ifdef PUNCTABLE
 	if( idLexer::punctuationtable && idLexer::punctuationtable != default_punctuationtable )
@@ -2028,7 +2028,7 @@ void idLexer::FreeSource( void )
 idLexer::idLexer
 ================
 */
-idLexer::idLexer( void )
+idLexer::idLexer()
 {
 	idLexer::loaded = false;
 	idLexer::filename = "";
@@ -2106,7 +2106,7 @@ idLexer::idLexer( const char* ptr, int length, const char* name, int flags )
 idLexer::~idLexer
 ================
 */
-idLexer::~idLexer( void )
+idLexer::~idLexer()
 {
 	idLexer::FreeSource();
 }
@@ -2126,7 +2126,7 @@ void idLexer::SetBaseFolder( const char* path )
 idLexer::HadError
 ================
 */
-bool idLexer::HadError( void ) const
+bool idLexer::HadError() const
 {
 	return hadError;
 }

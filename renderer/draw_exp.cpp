@@ -162,7 +162,7 @@ RB_CreateBloomTable
 ====================
 */
 static const int	BLOOM_RADIUS = 8;
-static void RB_CreateBloomTable( void )
+static void RB_CreateBloomTable()
 {
 	float	bloom[BLOOM_RADIUS];
 	float	total = 0;
@@ -536,7 +536,7 @@ static void R_CreateRandom256Image( idImage* image )
 R_Exp_Allocate
 ==================
 */
-void R_Exp_Allocate( void )
+void R_Exp_Allocate()
 {
 	int				width, height;
 	
@@ -1286,7 +1286,7 @@ void    RB_RenderShadowBuffer( viewLight_t*	vLight, int side )
 	GL_CheckErrors();
 }
 
-void RB_EXP_CoverScreen( void )
+void RB_EXP_CoverScreen()
 {
 	// draw a full screen quad
 	glPushMatrix();
@@ -2336,7 +2336,7 @@ Bilerp might even be aprorpiate, although it would cause issues at edges
 void RB_T_FillDepthBuffer( const drawSurf_t* surf );
 
 #if 0
-void R_EXP_RenderViewDepthImage( void )
+void R_EXP_RenderViewDepthImage()
 {
 
 
@@ -2417,7 +2417,7 @@ RB_EXP_SetNativeBuffer
 This is always the back buffer, and scissor is set full screen
 ==================
 */
-void RB_EXP_SetNativeBuffer( void )
+void RB_EXP_SetNativeBuffer()
 {
 	// set the normal screen drawable current
 	Framebuffer::BindNull();
@@ -2485,7 +2485,7 @@ RB_shadowResampleAlpha
 ==================
 */
 #if 0
-void	RB_shadowResampleAlpha( void )
+void	RB_shadowResampleAlpha()
 {
 	viewAlphaImage->Bind();
 	// we could make this a subimage, but it isn't relevent once we have render-to-texture
@@ -2586,7 +2586,7 @@ void	RB_shadowResampleAlpha( void )
 RB_EXP_ReadFloatBuffer
 ==================
 */
-void RB_EXP_ReadFloatBuffer( void )
+void RB_EXP_ReadFloatBuffer()
 {
 	int		pixels = glConfig.vidWidth * glConfig.vidHeight;
 	float*	buf = ( float* )R_StaticAlloc( pixels * 4 * sizeof( float ) );
@@ -2749,14 +2749,14 @@ static void RB_CalculateHDRAdaptation()
 }
 
 
-void RB_TestGamma( void );
+void RB_TestGamma();
 
 /*
 ==================
 RB_EXP_GammaDither
 ==================
 */
-void	RB_EXP_GammaDither( void )
+void	RB_EXP_GammaDither()
 {
 	if( !r_useHighDynamicRange.GetBool() )
 	{
@@ -2853,7 +2853,7 @@ RB_EXP_Bloom
 ==================
 */
 #if 0
-void	RB_EXP_Bloom( void )
+void	RB_EXP_Bloom()
 {
 	if( !r_useHighDynamicRange.GetBool() )
 	{
@@ -3008,7 +3008,7 @@ static void AssertCvarRange( idCVar* cv, float minVal, float maxVal )
 RB_Exp_DrawInteractions
 ==================
 */
-void    RB_Exp_DrawInteractions( void )
+void    RB_Exp_DrawInteractions()
 {
 
 	GL_CheckErrors();
@@ -3742,7 +3742,7 @@ void RB_EXP_ResolveLightFromLightBuffer( drawSurf_t** drawSurfs, int numDrawSurf
 R_Exp_Init
 ==================
 */
-void R_Exp_Init( void )
+void R_Exp_Init()
 {
 	glConfig.allowExpPath = false;
 	

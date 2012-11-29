@@ -103,7 +103,7 @@ int idParser::RemoveGlobalDefine( const char* name )
 idParser::RemoveAllGlobalDefines
 ================
 */
-void idParser::RemoveAllGlobalDefines( void )
+void idParser::RemoveAllGlobalDefines()
 {
 	define_t* define;
 	
@@ -699,7 +699,7 @@ int idParser::MergeTokens( idToken* t1, idToken* t2 )
 idParser::AddBuiltinDefines
 ================
 */
-void idParser::AddBuiltinDefines( void )
+void idParser::AddBuiltinDefines()
 {
 	int i;
 	define_t* define;
@@ -737,7 +737,7 @@ void idParser::AddBuiltinDefines( void )
 idParser::CopyFirstDefine
 ================
 */
-define_t* idParser::CopyFirstDefine( void )
+define_t* idParser::CopyFirstDefine()
 {
 	int i;
 	
@@ -1059,7 +1059,7 @@ int idParser::ReadLine( idToken* token )
 idParser::Directive_include
 ================
 */
-int idParser::Directive_include( void )
+int idParser::Directive_include()
 {
 	idLexer* script;
 	idToken token;
@@ -1156,7 +1156,7 @@ int idParser::Directive_include( void )
 idParser::Directive_undef
 ================
 */
-int idParser::Directive_undef( void )
+int idParser::Directive_undef()
 {
 	idToken token;
 	define_t* define, *lastdefine;
@@ -1208,7 +1208,7 @@ int idParser::Directive_undef( void )
 idParser::Directive_define
 ================
 */
-int idParser::Directive_define( void )
+int idParser::Directive_define()
 {
 	idToken token, *t, *last;
 	define_t* define;
@@ -1363,7 +1363,7 @@ int idParser::AddDefine( const char* string )
 idParser::AddGlobalDefinesToSource
 ================
 */
-void idParser::AddGlobalDefinesToSource( void )
+void idParser::AddGlobalDefinesToSource()
 {
 	define_t* define, *newdefine;
 	
@@ -1407,7 +1407,7 @@ int idParser::Directive_if_def( int type )
 idParser::Directive_ifdef
 ================
 */
-int idParser::Directive_ifdef( void )
+int idParser::Directive_ifdef()
 {
 	return idParser::Directive_if_def( INDENT_IFDEF );
 }
@@ -1417,7 +1417,7 @@ int idParser::Directive_ifdef( void )
 idParser::Directive_ifndef
 ================
 */
-int idParser::Directive_ifndef( void )
+int idParser::Directive_ifndef()
 {
 	return idParser::Directive_if_def( INDENT_IFNDEF );
 }
@@ -1427,7 +1427,7 @@ int idParser::Directive_ifndef( void )
 idParser::Directive_else
 ================
 */
-int idParser::Directive_else( void )
+int idParser::Directive_else()
 {
 	int type, skip;
 	
@@ -1451,7 +1451,7 @@ int idParser::Directive_else( void )
 idParser::Directive_endif
 ================
 */
-int idParser::Directive_endif( void )
+int idParser::Directive_endif()
 {
 	int type, skip;
 	
@@ -2311,7 +2311,7 @@ int idParser::DollarEvaluate( signed long int* intvalue, double* floatvalue, int
 idParser::Directive_elif
 ================
 */
-int idParser::Directive_elif( void )
+int idParser::Directive_elif()
 {
 	signed long int value;
 	int type, skip;
@@ -2336,7 +2336,7 @@ int idParser::Directive_elif( void )
 idParser::Directive_if
 ================
 */
-int idParser::Directive_if( void )
+int idParser::Directive_if()
 {
 	signed long int value;
 	int skip;
@@ -2355,7 +2355,7 @@ int idParser::Directive_if( void )
 idParser::Directive_line
 ================
 */
-int idParser::Directive_line( void )
+int idParser::Directive_line()
 {
 	idToken token;
 	
@@ -2371,7 +2371,7 @@ int idParser::Directive_line( void )
 idParser::Directive_error
 ================
 */
-int idParser::Directive_error( void )
+int idParser::Directive_error()
 {
 	idToken token;
 	
@@ -2389,7 +2389,7 @@ int idParser::Directive_error( void )
 idParser::Directive_warning
 ================
 */
-int idParser::Directive_warning( void )
+int idParser::Directive_warning()
 {
 	idToken token;
 	
@@ -2407,7 +2407,7 @@ int idParser::Directive_warning( void )
 idParser::Directive_pragma
 ================
 */
-int idParser::Directive_pragma( void )
+int idParser::Directive_pragma()
 {
 	idToken token;
 	
@@ -2423,7 +2423,7 @@ int idParser::Directive_pragma( void )
 idParser::UnreadSignToken
 ================
 */
-void idParser::UnreadSignToken( void )
+void idParser::UnreadSignToken()
 {
 	idToken token;
 	
@@ -2443,7 +2443,7 @@ void idParser::UnreadSignToken( void )
 idParser::Directive_eval
 ================
 */
-int idParser::Directive_eval( void )
+int idParser::Directive_eval()
 {
 	signed long int value;
 	idToken token;
@@ -2476,7 +2476,7 @@ int idParser::Directive_eval( void )
 idParser::Directive_evalfloat
 ================
 */
-int idParser::Directive_evalfloat( void )
+int idParser::Directive_evalfloat()
 {
 	double value;
 	idToken token;
@@ -2509,7 +2509,7 @@ int idParser::Directive_evalfloat( void )
 idParser::ReadDirective
 ================
 */
-int idParser::ReadDirective( void )
+int idParser::ReadDirective()
 {
 	idToken token;
 	
@@ -2610,7 +2610,7 @@ int idParser::ReadDirective( void )
 idParser::DollarDirective_evalint
 ================
 */
-int idParser::DollarDirective_evalint( void )
+int idParser::DollarDirective_evalint()
 {
 	signed long int value;
 	idToken token;
@@ -2645,7 +2645,7 @@ int idParser::DollarDirective_evalint( void )
 idParser::DollarDirective_evalfloat
 ================
 */
-int idParser::DollarDirective_evalfloat( void )
+int idParser::DollarDirective_evalfloat()
 {
 	double value;
 	idToken token;
@@ -2680,7 +2680,7 @@ int idParser::DollarDirective_evalfloat( void )
 idParser::ReadDollarDirective
 ================
 */
-int idParser::ReadDollarDirective( void )
+int idParser::ReadDollarDirective()
 {
 	idToken token;
 	
@@ -3029,7 +3029,7 @@ int idParser::SkipUntilString( const char* string )
 idParser::SkipRestOfLine
 ================
 */
-int idParser::SkipRestOfLine( void )
+int idParser::SkipRestOfLine()
 {
 	idToken token;
 	
@@ -3250,7 +3250,7 @@ int idParser::ReadTokenOnLine( idToken* token )
 idParser::ParseInt
 ================
 */
-int idParser::ParseInt( void )
+int idParser::ParseInt()
 {
 	idToken token;
 	
@@ -3276,7 +3276,7 @@ int idParser::ParseInt( void )
 idParser::ParseBool
 ================
 */
-bool idParser::ParseBool( void )
+bool idParser::ParseBool()
 {
 	idToken token;
 	
@@ -3293,7 +3293,7 @@ bool idParser::ParseBool( void )
 idParser::ParseFloat
 ================
 */
-float idParser::ParseFloat( void )
+float idParser::ParseFloat()
 {
 	idToken token;
 	
@@ -3421,7 +3421,7 @@ int idParser::GetLastWhiteSpace( idStr& whiteSpace ) const
 idParser::SetMarker
 ================
 */
-void idParser::SetMarker( void )
+void idParser::SetMarker()
 {
 	marker_p = NULL;
 }
@@ -3522,7 +3522,7 @@ void idParser::SetFlags( int flags )
 idParser::GetFlags
 ================
 */
-int idParser::GetFlags( void ) const
+int idParser::GetFlags() const
 {
 	return idParser::flags;
 }
@@ -3796,7 +3796,7 @@ idParser::idParser( const char* ptr, int length, const char* name, int flags )
 idParser::~idParser
 ================
 */
-idParser::~idParser( void )
+idParser::~idParser()
 {
 	idParser::FreeSource( false );
 }

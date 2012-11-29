@@ -622,7 +622,7 @@ static void RB_RenderViewLight( viewLight_t* vLight )
 RB_ARB_DrawInteractions
 ==================
 */
-void RB_ARB_DrawInteractions( void )
+void RB_ARB_DrawInteractions()
 {
 	glEnable( GL_STENCIL_TEST );
 	

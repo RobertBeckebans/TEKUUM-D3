@@ -511,7 +511,7 @@ static void R_AmbientNormalImage( idImage* image )
 }
 
 
-static void CreateSquareLight( void )
+static void CreateSquareLight()
 {
 	byte*		buffer;
 	int			x, y;
@@ -573,7 +573,7 @@ static void CreateSquareLight( void )
 	R_StaticFree( buffer );
 }
 
-static void CreateFlashOff( void )
+static void CreateFlashOff()
 {
 	byte*		buffer;
 	int			x, y;
@@ -608,7 +608,7 @@ static void CreateFlashOff( void )
 CreatePitFogImage
 ===============
 */
-void CreatePitFogImage( void )
+void CreatePitFogImage()
 {
 	byte	data[16][16][4];
 	int		i, j;
@@ -650,7 +650,7 @@ void CreatePitFogImage( void )
 CreatealphaSquareImage
 ===============
 */
-void CreatealphaSquareImage( void )
+void CreatealphaSquareImage()
 {
 	byte	data[16][16][4];
 	int		i, j;
@@ -1063,7 +1063,7 @@ This resets filtering on all loaded images
 New images will automatically pick up the current values.
 ===============
 */
-void idImageManager::ChangeTextureFilter( void )
+void idImageManager::ChangeTextureFilter()
 {
 	int		i;
 	idImage*	glt;
@@ -1533,7 +1533,7 @@ SetNormalPalette
 Create a 256 color palette to be used by compressed normal maps
 ==================
 */
-void idImageManager::SetNormalPalette( void )
+void idImageManager::SetNormalPalette()
 {
 	int		i, j;
 	idVec3	v;

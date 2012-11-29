@@ -186,7 +186,7 @@ void SoundEditorInit( const idDict* spawnArgs )
 	}
 }
 
-void SoundEditorRun( void )
+void SoundEditorRun()
 {
 #if _MSC_VER >= 1300 && _MFC_VER >= 0x0A00
 	MSG* msg = AfxGetCurrentMessage();
@@ -203,7 +203,7 @@ void SoundEditorRun( void )
 	}
 }
 
-void SoundEditorShutdown( void )
+void SoundEditorShutdown()
 {
 	delete g_SoundDialog;
 	g_SoundDialog = NULL;

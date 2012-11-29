@@ -37,7 +37,7 @@ If you have questions concerning this license or the applicable additional terms
 
 #if defined(_WIN32)
 //#include "../win32/win_local.h"
-void Sys_StartAsyncThread( void );
+void Sys_StartAsyncThread();
 
 #endif
 

@@ -55,7 +55,7 @@ void GL_BindProgram( shaderProgram_t* program )
 	}
 }
 
-void GL_BindNullProgram( void )
+void GL_BindNullProgram()
 {
 	if( r_logFile.GetBool() )
 	{
@@ -271,7 +271,7 @@ static void RB_GLSL_CreateDrawInteractions( const drawSurf_t* surf )
 RB_GLSL_DrawInteractions
 ==================
 */
-void RB_GLSL_DrawInteractions( void )
+void RB_GLSL_DrawInteractions()
 {
 	viewLight_t*		vLight;
 	const idMaterial*	lightShader;
@@ -508,7 +508,7 @@ void R_ReloadShaders_f( const idCmdArgs& args )
 R_GLSL_Init
 ==================
 */
-void R_GLSL_Init( void )
+void R_GLSL_Init()
 {
 	glConfig.allowARB2Path = false;
 	

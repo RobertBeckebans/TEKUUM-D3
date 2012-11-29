@@ -40,7 +40,7 @@ bool GLimp_SpawnRenderThread( void ( *a )() )
 	return false;
 };
 
-static void StubFunction( void ) {};
+static void StubFunction() {};
 GLExtension_t GLimp_ExtensionPointer( const char* a )
 {
 	return StubFunction;

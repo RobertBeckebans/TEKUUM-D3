@@ -51,12 +51,12 @@ public:
 	rvDebuggerServer( );
 	~rvDebuggerServer( );
 	
-	bool		Initialize( void );
-	void		Shutdown( void );
+	bool		Initialize();
+	void		Shutdown();
 	
-	bool		ProcessMessages( void );
+	bool		ProcessMessages();
 	
-	bool		IsConnected( void );
+	bool		IsConnected();
 	
 	void		CheckBreakpoints( idInterpreter* interpreter, idProgram* program, int instructionPointer );
 	
@@ -91,10 +91,10 @@ protected:
 	
 private:
 
-	void		ClearBreakpoints( void );
+	void		ClearBreakpoints();
 	
 	void		Break( idInterpreter* interpreter, idProgram* program, int instructionPointer );
-	void		Resume( void );
+	void		Resume();
 	
 	void		SendMessage( EDebuggerMessage dbmsg );
 	void		SendPacket( void* data, int datasize );
@@ -118,7 +118,7 @@ private:
 rvDebuggerServer::IsConnected
 ================
 */
-ID_INLINE bool rvDebuggerServer::IsConnected( void )
+ID_INLINE bool rvDebuggerServer::IsConnected()
 {
 	return mConnected;
 }

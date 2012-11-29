@@ -206,7 +206,7 @@ static const int	MAX_KEYS = 256;
 class idKey
 {
 public:
-	idKey( void )
+	idKey()
 	{
 		down = false;
 		repeats = 0;
@@ -280,7 +280,7 @@ void idKeyInput::ArgCompletion_KeyName( const idCmdArgs& args, void( *callback )
 idKeyInput::GetOverstrikeMode
 ===================
 */
-bool idKeyInput::GetOverstrikeMode( void )
+bool idKeyInput::GetOverstrikeMode()
 {
 	return key_overstrikeMode;
 }
@@ -863,7 +863,7 @@ bool idKeyInput::ExecKeyBinding( int keynum )
 idKeyInput::ClearStates
 ===================
 */
-void idKeyInput::ClearStates( void )
+void idKeyInput::ClearStates()
 {
 	int i;
 	
@@ -885,7 +885,7 @@ void idKeyInput::ClearStates( void )
 idKeyInput::Init
 ===================
 */
-void idKeyInput::Init( void )
+void idKeyInput::Init()
 {
 
 	keys = new idKey[MAX_KEYS];
@@ -903,7 +903,7 @@ void idKeyInput::Init( void )
 idKeyInput::Shutdown
 ===================
 */
-void idKeyInput::Shutdown( void )
+void idKeyInput::Shutdown()
 {
 	delete [] keys;
 	keys = NULL;

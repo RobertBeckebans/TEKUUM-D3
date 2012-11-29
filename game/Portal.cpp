@@ -108,7 +108,7 @@ void tyPortal::Restore( idRestoreGame* savefile )
 tyPortal::Spawn
 ================
 */
-void tyPortal::Spawn( void )
+void tyPortal::Spawn()
 {
 	idStr	str;
 	
@@ -211,7 +211,7 @@ void tyPortal::Create( idEntity* owner, tyPortal* otherPortal, const idVec3& sta
 tyPortal::Event_AddLight
 ================
 */
-void tyPortal::Event_AddLight( void )
+void tyPortal::Event_AddLight()
 {
 	idDict	args;
 	idVec3	right, up, target, temp;
@@ -253,7 +253,7 @@ void tyPortal::Event_AddLight( void )
 tyPortal::DrawFov
 ================
 */
-void tyPortal::DrawFov( void )
+void tyPortal::DrawFov()
 {
 	int i;
 	float radius, a, s, c, halfRadius;
@@ -341,7 +341,7 @@ renderView_t* tyPortal::GetRenderView()
 tyPortal::CanSeePlayer
 ================
 */
-bool tyPortal::CanSeePlayer( void )
+bool tyPortal::CanSeePlayer()
 {
 	int i;
 	float dist;
@@ -403,7 +403,7 @@ bool tyPortal::CanSeePlayer( void )
 tyPortal::Think
 ================
 */
-void tyPortal::Think( void )
+void tyPortal::Think()
 {
 	float pct;
 	float travel;
@@ -444,7 +444,7 @@ void tyPortal::Think( void )
 tyPortal::GetAxis
 ================
 */
-const idVec3 tyPortal::GetAxis( void ) const
+const idVec3 tyPortal::GetAxis() const
 {
 	return ( flipAxis ) ? -GetPhysics()->GetAxis()[modelAxis] : GetPhysics()->GetAxis()[modelAxis];
 };
@@ -503,7 +503,7 @@ tyPortal::Present
 Present is called to allow entities to generate refEntities, lights, etc for the renderer.
 ================
 */
-void tyPortal::Present( void )
+void tyPortal::Present()
 {
 #if 1
 	// don't present to the renderer if the entity hasn't changed

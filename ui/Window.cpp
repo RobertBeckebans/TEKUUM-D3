@@ -4815,7 +4815,7 @@ idWindow::GetChildCount
 Returns the number of children
 ================
 */
-int idWindow::GetChildCount( void )
+int idWindow::GetChildCount()
 {
 	return drawWindows.Num( );
 }
@@ -4960,7 +4960,7 @@ Set the window do a default window with no text, no background and
 default colors, etc..
 ================
 */
-void idWindow::SetDefaults( void )
+void idWindow::SetDefaults()
 {
 	forceAspectWidth = 640.0f;
 	forceAspectHeight = 480.0f;

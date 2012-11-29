@@ -57,7 +57,7 @@ public:
 	}
 	virtual				~tyAudioHardwareAudioTarget();
 	
-	bool				Initialize( void );
+	bool				Initialize();
 	
 	
 	// Linux driver doesn't support memory map API
@@ -77,12 +77,12 @@ public:
 	bool				Flush();
 	void				Write( bool flushing );
 	
-	int					GetNumberOfSpeakers( void )
+	int					GetNumberOfSpeakers()
 	{
 		return numChannels;
 	}
-	int					GetMixBufferSize( void );
-	short*				GetMixBuffer( void );
+	int					GetMixBufferSize();
+	short*				GetMixBuffer();
 	
 private:
 	void				Release();
@@ -100,9 +100,9 @@ void JE_QueueTrackballEvent( int action, float dx, float dy );
 void JE_QueueJoystickEvent( int axis, float dy );
 void JE_QueueConsoleEvent( const char* cmd );
 
-void JE_RequestAudioData( void );
+void JE_RequestAudioData();
 
-int JE_IsConsoleActive( void );
+int JE_IsConsoleActive();
 
 
 #endif

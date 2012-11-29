@@ -119,7 +119,7 @@ public:
 	}
 	virtual				~tyAudioHardwareSLES();
 	
-	bool				Initialize( void );
+	bool				Initialize();
 	
 	
 	// Linux driver doesn't support memory map API
@@ -139,12 +139,12 @@ public:
 	bool				Flush();
 	void				Write( bool flushing );
 	
-	int					GetNumberOfSpeakers( void )
+	int					GetNumberOfSpeakers()
 	{
 		return numChannels;
 	}
-	int					GetMixBufferSize( void );
-	short*				GetMixBuffer( void );
+	int					GetMixBufferSize();
+	short*				GetMixBuffer();
 	
 private:
 	void				Release();
@@ -247,7 +247,7 @@ void tyAudioHardwareSLES::InitFailed()
 tyAudioHardwareSLES::Initialize
 =====================
 */
-bool tyAudioHardwareSLES::Initialize( void )
+bool tyAudioHardwareSLES::Initialize()
 {
 	common->Printf( "------ OpenSL Sound Initialization -----\n" );
 	
@@ -306,7 +306,7 @@ short* tyAudioHardwareSLES::GetMixBuffer()
 tyAudioHardwareSLES::Flush
 ===============
 */
-bool tyAudioHardwareSLES::Flush( void )
+bool tyAudioHardwareSLES::Flush()
 {
 	int error;
 	
@@ -436,7 +436,7 @@ void tyAudioHardwareSLES::Write( bool flushing )
 }
 
 // create the engine and output mix objects
-void tyAudioHardwareSLES::CreateEngine( void )
+void tyAudioHardwareSLES::CreateEngine()
 {
 	SLresult result;
 	
@@ -465,7 +465,7 @@ void tyAudioHardwareSLES::CreateEngine( void )
 
 
 // create buffer queue audio player
-void tyAudioHardwareSLES::CreateBufferQueueAudioPlayer( void )
+void tyAudioHardwareSLES::CreateBufferQueueAudioPlayer()
 {
 	SLresult result;
 	

@@ -94,7 +94,7 @@ the mouse/keyboard seperation is API legacy
 ===========================================================================
 */
 
-int Sys_PollKeyboardInputEvents( void )
+int Sys_PollKeyboardInputEvents()
 {
 	return poll_keyboard_event_count;
 }
@@ -110,13 +110,13 @@ int Sys_ReturnKeyboardInputEvent( const int n, int& key, bool& state )
 	return 1;
 }
 
-void Sys_EndKeyboardInputEvents( void )
+void Sys_EndKeyboardInputEvents()
 {
 	//isn't this were it's supposed to be, was missing some key strokes with it set below
 	poll_keyboard_event_count = 0;
 }
 
-int Sys_PollMouseInputEvents( void )
+int Sys_PollMouseInputEvents()
 {
 #if 0 //moved to the Sys_End functions
 	poll_keyboard_event_count = 0;
@@ -140,7 +140,7 @@ int	Sys_ReturnMouseInputEvent( const int n, int& action, int& value )
 	return 1;
 }
 
-void Sys_EndMouseInputEvents( void )
+void Sys_EndMouseInputEvents()
 {
 	// moved out of the Sys_PollMouseInputEvents
 	poll_mouse_event_count = 0;

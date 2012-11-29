@@ -35,7 +35,7 @@ If you have questions concerning this license or the applicable additional terms
 idToken::NumberValue
 ================
 */
-void idToken::NumberValue( void )
+void idToken::NumberValue()
 {
 	int i, pow, div, c;
 	const char* p;
@@ -204,7 +204,7 @@ void idToken::NumberValue( void )
 idToken::ClearTokenWhiteSpace
 ================
 */
-void idToken::ClearTokenWhiteSpace( void )
+void idToken::ClearTokenWhiteSpace()
 {
 	whiteSpaceStart_p = NULL;
 	whiteSpaceEnd_p = NULL;

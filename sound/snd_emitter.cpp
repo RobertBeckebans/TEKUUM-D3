@@ -138,7 +138,7 @@ void GeneratePermutedList( int* list, int listLength, int permute )
 	PermuteList_r( list, listLength, permute, maxPermute );
 }
 
-void TestPermutations( void )
+void TestPermutations()
 {
 	int	list[SOUND_MAX_LIST_WAVS];
 	
@@ -167,7 +167,7 @@ void TestPermutations( void )
 idSoundChannel::idSoundChannel
 ===================
 */
-idSoundChannel::idSoundChannel( void )
+idSoundChannel::idSoundChannel()
 {
 	decoder = NULL;
 	Clear();
@@ -178,7 +178,7 @@ idSoundChannel::idSoundChannel( void )
 idSoundChannel::~idSoundChannel
 ===================
 */
-idSoundChannel::~idSoundChannel( void )
+idSoundChannel::~idSoundChannel()
 {
 	Clear();
 }
@@ -188,7 +188,7 @@ idSoundChannel::~idSoundChannel( void )
 idSoundChannel::Clear
 ===================
 */
-void idSoundChannel::Clear( void )
+void idSoundChannel::Clear()
 {
 	int j;
 	
@@ -223,7 +223,7 @@ void idSoundChannel::Clear( void )
 idSoundChannel::Start
 ===================
 */
-void idSoundChannel::Start( void )
+void idSoundChannel::Start()
 {
 	triggerState = true;
 	if( decoder == NULL )
@@ -237,7 +237,7 @@ void idSoundChannel::Start( void )
 idSoundChannel::Stop
 ===================
 */
-void idSoundChannel::Stop( void )
+void idSoundChannel::Stop()
 {
 	triggerState = false;
 	if( decoder != NULL )
@@ -252,7 +252,7 @@ void idSoundChannel::Stop( void )
 idSoundChannel::ALStop
 ===================
 */
-void idSoundChannel::ALStop( void )
+void idSoundChannel::ALStop()
 {
 
 	// RB begin
@@ -393,7 +393,7 @@ idSoundEmitterLocal::idSoundEmitterLocal
 
 ===============
 */
-idSoundEmitterLocal::idSoundEmitterLocal( void )
+idSoundEmitterLocal::idSoundEmitterLocal()
 {
 	soundWorld = NULL;
 	Clear();
@@ -404,7 +404,7 @@ idSoundEmitterLocal::idSoundEmitterLocal( void )
 idSoundEmitterLocal::~idSoundEmitterLocal
 ===============
 */
-idSoundEmitterLocal::~idSoundEmitterLocal( void )
+idSoundEmitterLocal::~idSoundEmitterLocal()
 {
 	Clear();
 }
@@ -414,7 +414,7 @@ idSoundEmitterLocal::~idSoundEmitterLocal( void )
 idSoundEmitterLocal::Clear
 ===============
 */
-void idSoundEmitterLocal::Clear( void )
+void idSoundEmitterLocal::Clear()
 {
 	int i;
 	
@@ -1228,7 +1228,7 @@ void idSoundEmitterLocal::FadeSound( const s_channelType channel, float to, floa
 idSoundEmitterLocal::CurrentlyPlaying
 ===================
 */
-bool idSoundEmitterLocal::CurrentlyPlaying( void ) const
+bool idSoundEmitterLocal::CurrentlyPlaying() const
 {
 	return playing;
 }
@@ -1238,7 +1238,7 @@ bool idSoundEmitterLocal::CurrentlyPlaying( void ) const
 idSoundEmitterLocal::Index
 ===================
 */
-int	idSoundEmitterLocal::Index( void ) const
+int	idSoundEmitterLocal::Index() const
 {
 	return index;
 }
@@ -1251,7 +1251,7 @@ this is called from the main thread by the material shader system
 to allow lights and surface flares to vary with the sound amplitude
 ===================
 */
-float idSoundEmitterLocal::CurrentAmplitude( void )
+float idSoundEmitterLocal::CurrentAmplitude()
 {
 	if( idSoundSystemLocal::s_constantAmplitude.GetFloat() >= 0.0f )
 	{

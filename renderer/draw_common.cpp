@@ -1170,7 +1170,7 @@ RB_SetProgramEnvironment
 Sets variables that can be used by all vertex programs
 ==================
 */
-void RB_SetProgramEnvironment( void )
+void RB_SetProgramEnvironment()
 {
 #if !defined(USE_GLES1)
 	float	parm[4];
@@ -1253,7 +1253,7 @@ RB_SetProgramEnvironmentSpace
 Sets variables related to the current space that can be used by all vertex programs
 ==================
 */
-void RB_SetProgramEnvironmentSpace( void )
+void RB_SetProgramEnvironmentSpace()
 {
 #if !defined(USE_GLES1)
 	if( !glConfig.ARBVertexProgramAvailable )
@@ -2356,7 +2356,7 @@ static void RB_FogPass( const drawSurf_t* drawSurfs,  const drawSurf_t* drawSurf
 RB_STD_FogAllLights
 ==================
 */
-void RB_STD_FogAllLights( void )
+void RB_STD_FogAllLights()
 {
 	viewLight_t*	vLight;
 	
@@ -2431,7 +2431,7 @@ Perform extra blending passes to multiply the entire buffer by
 a floating point value
 ==================
 */
-void RB_STD_LightScale( void )
+void RB_STD_LightScale()
 {
 #if !defined(USE_GLES1)
 	float	v, f;
@@ -2507,7 +2507,7 @@ RB_STD_DrawView
 
 =============
 */
-void	RB_STD_DrawView( void )
+void	RB_STD_DrawView()
 {
 	drawSurf_t** 	drawSurfs;
 	int			numDrawSurfs;

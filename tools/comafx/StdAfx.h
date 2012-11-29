@@ -46,7 +46,7 @@ If you have questions concerning this license or the applicable additional terms
 #include <atlbase.h>
 // RB end
 
-void InitAfx( void );
+void InitAfx();
 
 // tool tips
 typedef struct toolTip_s

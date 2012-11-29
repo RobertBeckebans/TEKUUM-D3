@@ -139,7 +139,7 @@ void PDAEditorInit( const idDict* spawnArgs )
 	}
 }
 
-void PDAEditorRun( void )
+void PDAEditorRun()
 {
 #if _MSC_VER >= 1300 && _MFC_VER >= 0x0A00
 	MSG* msg = AfxGetCurrentMessage();
@@ -156,7 +156,7 @@ void PDAEditorRun( void )
 	}
 }
 
-void PDAEditorShutdown( void )
+void PDAEditorShutdown()
 {
 	delete g_PDAEditorDialog;
 	g_PDAEditorDialog = NULL;
