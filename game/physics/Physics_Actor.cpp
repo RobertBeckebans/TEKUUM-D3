@@ -131,6 +131,7 @@ void idPhysics_Actor::SetClipModelAxis()
 #endif
 	{
 #if 1
+		// project old forward vector along new gravity up normal
 		idVec3 oldForward = prevClipModelAxis[0];
 		idVec3 up = -gravityNormal;
 		idVec3 forward = oldForward - ( ( oldForward * up ) * up );

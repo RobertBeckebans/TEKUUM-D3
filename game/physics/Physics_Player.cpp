@@ -2456,7 +2456,7 @@ void tyPhysics_Player::CorrectAllSolid( trace_t& trace, int contents )
 	}
 	
 	// jitter around to find a free spot
-#if 1
+#if 0
 	for( int i = -1; i <= 1; i++ )
 	{
 		for( int j = -1; j <= 1; j++ )
@@ -2533,6 +2533,10 @@ void tyPhysics_Player::CheckGround()
 	EvaluateContacts();
 	
 	// setup a ground trace from the contacts
+#if 1
+	gameLocal.clip.Translation( groundTrace, current.origin, current.origin + gravityNormal * CONTACT_EPSILON,
+										 clipModel, clipModel->GetAxis(), -1, self );
+#else
 	groundTrace.endpos = current.origin;
 	groundTrace.endAxis = clipModel->GetAxis();
 	if( contacts.Num() )
@@ -2549,6 +2553,7 @@ void tyPhysics_Player::CheckGround()
 	{
 		groundTrace.fraction = 1.0f;
 	}
+#endif
 	
 	contents = gameLocal.clip.Contents( current.origin, clipModel, clipModel->GetAxis(), -1, self );
 	if( contents & MASK_SOLID )
