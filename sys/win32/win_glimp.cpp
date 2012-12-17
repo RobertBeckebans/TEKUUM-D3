@@ -255,7 +255,6 @@ void GLW_CheckWGLExtensions( HDC hDC )
 GLW_GetWGLExtensionsWithFakeWindow
 ==================
 */
-// RB begin
 static void GLW_GetWGLExtensionsWithFakeWindow()
 {
 	HWND	hWnd;
@@ -288,7 +287,6 @@ static void GLW_GetWGLExtensionsWithFakeWindow()
 		DispatchMessage( &msg );
 	}
 }
-// RB end
 
 //=============================================================================
 
@@ -1049,12 +1047,9 @@ SMP acceleration
 ===========================================================
 */
 
-//#define	REALLOC_DC
-
 /*
 ===================
 GLimp_ActivateContext
-
 ===================
 */
 void GLimp_ActivateContext()
@@ -1068,7 +1063,6 @@ void GLimp_ActivateContext()
 /*
 ===================
 GLimp_DeactivateContext
-
 ===================
 */
 void GLimp_DeactivateContext()
@@ -1078,20 +1072,11 @@ void GLimp_DeactivateContext()
 	{
 		win32.wglErrors++;
 	}
-#ifdef REALLOC_DC
-	// makeCurrent NULL frees the DC, so get another
-	if( ( win32.hDC = GetDC( win32.hWnd ) ) == NULL )
-	{
-		win32.wglErrors++;
-	}
-#endif
-	
 }
 
 /*
 ===================
 GLimp_RenderThreadWrapper
-
 ===================
 */
 static void GLimp_RenderThreadWrapper()
@@ -1156,7 +1141,6 @@ bool GLimp_SpawnRenderThread( void ( *function )() )
 /*
 ===================
 GLimp_BackEndSleep
-
 ===================
 */
 void* GLimp_BackEndSleep()
@@ -1190,7 +1174,6 @@ void* GLimp_BackEndSleep()
 /*
 ===================
 GLimp_FrontEndSleep
-
 ===================
 */
 void GLimp_FrontEndSleep()
@@ -1210,7 +1193,6 @@ volatile bool	renderThreadActive;
 /*
 ===================
 GLimp_WakeBackEnd
-
 ===================
 */
 void GLimp_WakeBackEnd( void* data )
@@ -1254,25 +1236,4 @@ void GLimp_WakeBackEnd( void* data )
 #endif
 }
 
-//===================================================================
 
-/*
-===================
-GLimp_ExtensionPointer
-
-Returns a function pointer for an OpenGL extension entry point
-===================
-*/
-/*
-GLExtension_t GLimp_ExtensionPointer( const char *name ) {
-	void	(*proc)(void);
-
-	proc = (GLExtension_t)qwglGetProcAddress( name );
-
-	if ( !proc ) {
-		common->Printf( "Couldn't find proc address for: %s\n", name );
-	}
-
-	return proc;
-}
-*/

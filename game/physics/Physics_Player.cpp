@@ -2535,7 +2535,7 @@ void tyPhysics_Player::CheckGround()
 	// setup a ground trace from the contacts
 #if 1
 	gameLocal.clip.Translation( groundTrace, current.origin, current.origin + gravityNormal * CONTACT_EPSILON,
-										 clipModel, clipModel->GetAxis(), -1, self );
+								clipModel, clipModel->GetAxis(), -1, self );
 #else
 	groundTrace.endpos = current.origin;
 	groundTrace.endAxis = clipModel->GetAxis();
@@ -2554,7 +2554,7 @@ void tyPhysics_Player::CheckGround()
 		groundTrace.fraction = 1.0f;
 	}
 #endif
-	
+								
 	contents = gameLocal.clip.Contents( current.origin, clipModel, clipModel->GetAxis(), -1, self );
 	if( contents & MASK_SOLID )
 	{

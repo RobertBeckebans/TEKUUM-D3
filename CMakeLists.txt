@@ -16,7 +16,7 @@ option(MONOLITH
 		"Embed game logic into main executable" ON)
 		
 option(STANDALONE
-		"Skip Doom 3 base/ folder" ON)
+		"Skip Doom 3 base/ folder" OFF)
 
 #if(USE_QT_TOOLS)
 #	set(USE_QT_WINDOWING TRUE)
@@ -162,20 +162,20 @@ set(RENDERER_SOURCES
 	renderer/draw_nv20.cpp
 	renderer/draw_r200.cpp
 	renderer/tr_backend.cpp
-	renderer/tr_deform.cpp
+	renderer/tr_frontend_deform.cpp
 	renderer/tr_font.cpp
-	renderer/tr_guisurf.cpp
+	renderer/tr_frontend_guisurf.cpp
 	renderer/tr_light.cpp
 	renderer/tr_lightrun.cpp
-	renderer/tr_main.cpp
+	renderer/tr_frontend_main.cpp
 	renderer/tr_math.cpp
 	renderer/tr_orderIndexes.cpp
 	renderer/tr_polytope.cpp
 	renderer/tr_render.cpp
-	renderer/tr_rendertools.cpp
+	renderer/tr_backend_rendertools.cpp
 	renderer/tr_shadowbounds.cpp
 	renderer/tr_stencilshadow.cpp
-	renderer/tr_subview.cpp
+	renderer/tr_frontend_subview.cpp
 	renderer/tr_trace.cpp
 	renderer/tr_trisurf.cpp
 	renderer/tr_turboshadow.cpp)

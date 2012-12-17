@@ -1322,7 +1322,7 @@ void R_LoadImage( const char* cname, byte** pic, int* width, int* height, ID_TIM
 	}
 	if( timestamp )
 	{
-		*timestamp = 0xFFFFFFFF;
+		*timestamp = FILE_NOT_FOUND_TIMESTAMP;
 	}
 	if( width )
 	{
