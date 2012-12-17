@@ -899,6 +899,10 @@ public:
 	viewDef_t* 				primaryView;
 	// many console commands need to know which world they should operate on
 	
+	const idMaterial* 		whiteMaterial;
+	const idMaterial* 		charSetMaterial;
+	const idMaterial* 		defaultPointLight;
+	const idMaterial* 		defaultProjectedLight;
 	const idMaterial* 		defaultMaterial;
 	idImage* 				testImage;
 	idCinematic* 			testVideo;

@@ -152,6 +152,7 @@ set(RENDERER_SOURCES
 	renderer/RenderWorld_demo.cpp
 	renderer/RenderWorld_load.cpp
 	renderer/RenderWorld_portals.cpp
+	renderer/RenderWorld_defs.cpp
 	renderer/VertexCache.cpp
 	renderer/draw_arb.cpp
 	renderer/draw_arb2.cpp
@@ -162,20 +163,19 @@ set(RENDERER_SOURCES
 	renderer/draw_nv20.cpp
 	renderer/draw_r200.cpp
 	renderer/tr_backend.cpp
-	renderer/tr_frontend_deform.cpp
+	renderer/tr_backend_draw.cpp
+	renderer/tr_backend_rendertools.cpp
 	renderer/tr_font.cpp
+	renderer/tr_frontend_deform.cpp
 	renderer/tr_frontend_guisurf.cpp
-	renderer/tr_light.cpp
-	renderer/tr_lightrun.cpp
 	renderer/tr_frontend_main.cpp
+	renderer/tr_frontend_subview.cpp
+	renderer/tr_light.cpp
 	renderer/tr_math.cpp
 	renderer/tr_orderIndexes.cpp
 	renderer/tr_polytope.cpp
-	renderer/tr_render.cpp
-	renderer/tr_backend_rendertools.cpp
 	renderer/tr_shadowbounds.cpp
 	renderer/tr_stencilshadow.cpp
-	renderer/tr_frontend_subview.cpp
 	renderer/tr_trace.cpp
 	renderer/tr_trisurf.cpp
 	renderer/tr_turboshadow.cpp)

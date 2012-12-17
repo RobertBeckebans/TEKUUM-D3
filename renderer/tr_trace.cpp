@@ -33,6 +33,180 @@ If you have questions concerning this license or the applicable additional terms
 
 //#define TEST_TRACE
 
+
+
+/*
+=================
+RB_DrawExpandedTriangles
+=================
+*/
+void RB_DrawExpandedTriangles( const srfTriangles_t* tri, const float radius, const idVec3& vieworg )
+{
+#if !defined(USE_GLES1)
+	int i, j, k;
+	idVec3 dir[6], normal, point;
+	
+	for( i = 0; i < tri->numIndexes; i += 3 )
+	{
+	
+		idVec3 p[3] = { tri->verts[ tri->indexes[ i + 0 ] ].xyz, tri->verts[ tri->indexes[ i + 1 ] ].xyz, tri->verts[ tri->indexes[ i + 2 ] ].xyz };
+		
+		dir[0] = p[0] - p[1];
+		dir[1] = p[1] - p[2];
+		dir[2] = p[2] - p[0];
+		
+		normal = dir[0].Cross( dir[1] );
+		
+		if( normal * p[0] < normal * vieworg )
+		{
+			continue;
+		}
+		
+		dir[0] = normal.Cross( dir[0] );
+		dir[1] = normal.Cross( dir[1] );
+		dir[2] = normal.Cross( dir[2] );
+		
+		dir[0].Normalize();
+		dir[1].Normalize();
+		dir[2].Normalize();
+		
+		glBegin( GL_LINE_LOOP );
+		
+		for( j = 0; j < 3; j++ )
+		{
+			k = ( j + 1 ) % 3;
+			
+			dir[4] = ( dir[j] + dir[k] ) * 0.5f;
+			dir[4].Normalize();
+			
+			dir[3] = ( dir[j] + dir[4] ) * 0.5f;
+			dir[3].Normalize();
+			
+			dir[5] = ( dir[4] + dir[k] ) * 0.5f;
+			dir[5].Normalize();
+			
+			point = p[k] + dir[j] * radius;
+			glVertex3f( point[0], point[1], point[2] );
+			
+			point = p[k] + dir[3] * radius;
+			glVertex3f( point[0], point[1], point[2] );
+			
+			point = p[k] + dir[4] * radius;
+			glVertex3f( point[0], point[1], point[2] );
+			
+			point = p[k] + dir[5] * radius;
+			glVertex3f( point[0], point[1], point[2] );
+			
+			point = p[k] + dir[k] * radius;
+			glVertex3f( point[0], point[1], point[2] );
+		}
+		
+		glEnd();
+	}
+#endif
+}
+
+/*
+================
+RB_ShowTrace
+
+Debug visualization
+================
+*/
+void RB_ShowTrace( drawSurf_t** drawSurfs, int numDrawSurfs )
+{
+	int						i;
+	const srfTriangles_t*	tri;
+	const drawSurf_t*		surf;
+	idVec3					start, end;
+	idVec3					localStart, localEnd;
+	localTrace_t			hit;
+	float					radius;
+	
+	if( r_showTrace.GetInteger() == 0 )
+	{
+		return;
+	}
+	
+	if( r_showTrace.GetInteger() == 2 )
+	{
+		radius = 5.0f;
+	}
+	else
+	{
+		radius = 0.0f;
+	}
+	
+	// determine the points of the trace
+	start = backEnd.viewDef->renderView.vieworg;
+	end = start + 4000 * backEnd.viewDef->renderView.viewaxis[0];
+	
+	// check and draw the surfaces
+	glDisableClientState( GL_TEXTURE_COORD_ARRAY );
+	
+#if !defined(USE_GLES2)
+	GL_TexEnv( GL_MODULATE );
+#endif
+	
+	globalImages->whiteImage->Bind();
+	
+	// find how many are ambient
+	for( i = 0 ; i < numDrawSurfs ; i++ )
+	{
+		surf = drawSurfs[i];
+		tri = surf->geo;
+		
+		if( tri == NULL || tri->verts == NULL )
+		{
+			continue;
+		}
+		
+		// transform the points into local space
+		R_GlobalPointToLocal( surf->space->modelMatrix, start, localStart );
+		R_GlobalPointToLocal( surf->space->modelMatrix, end, localEnd );
+		
+		// check the bounding box
+		if( !tri->bounds.Expand( radius ).LineIntersection( localStart, localEnd ) )
+		{
+			continue;
+		}
+		
+		glLoadMatrixf( surf->space->modelViewMatrix );
+		
+		// highlight the surface
+		GL_State( GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA );
+		
+		glColor4f( 1, 0, 0, 0.25 );
+#if defined(USE_GLES1)
+		RB_DrawElementsWithCounters( tri );
+#else
+		RB_DrawElementsImmediate( tri );
+#endif
+		
+		// draw the bounding box
+		GL_State( GLS_DEPTHFUNC_ALWAYS );
+		
+		glColor4f( 1, 1, 1, 1 );
+		RB_DrawBounds( tri->bounds );
+		
+		if( radius != 0.0f )
+		{
+			// draw the expanded triangles
+			glColor4f( 0.5f, 0.5f, 1.0f, 1.0f );
+			RB_DrawExpandedTriangles( tri, radius, localStart );
+		}
+		
+		// check the exact surfaces
+		hit = R_LocalTrace( localStart, localEnd, radius, tri );
+		if( hit.fraction < 1.0 )
+		{
+			glColor4f( 1, 1, 1, 1 );
+			RB_DrawBounds( idBounds( hit.point ).Expand( 1 ) );
+		}
+	}
+}
+
+
 /*
 =================
 R_LocalTrace
@@ -318,175 +492,4 @@ localTrace_t R_LocalTrace( const idVec3& start, const idVec3& end, const float r
 #endif
 					
 	return hit;
-}
-
-/*
-=================
-RB_DrawExpandedTriangles
-=================
-*/
-void RB_DrawExpandedTriangles( const srfTriangles_t* tri, const float radius, const idVec3& vieworg )
-{
-#if !defined(USE_GLES1)
-	int i, j, k;
-	idVec3 dir[6], normal, point;
-	
-	for( i = 0; i < tri->numIndexes; i += 3 )
-	{
-	
-		idVec3 p[3] = { tri->verts[ tri->indexes[ i + 0 ] ].xyz, tri->verts[ tri->indexes[ i + 1 ] ].xyz, tri->verts[ tri->indexes[ i + 2 ] ].xyz };
-		
-		dir[0] = p[0] - p[1];
-		dir[1] = p[1] - p[2];
-		dir[2] = p[2] - p[0];
-		
-		normal = dir[0].Cross( dir[1] );
-		
-		if( normal * p[0] < normal * vieworg )
-		{
-			continue;
-		}
-		
-		dir[0] = normal.Cross( dir[0] );
-		dir[1] = normal.Cross( dir[1] );
-		dir[2] = normal.Cross( dir[2] );
-		
-		dir[0].Normalize();
-		dir[1].Normalize();
-		dir[2].Normalize();
-		
-		glBegin( GL_LINE_LOOP );
-		
-		for( j = 0; j < 3; j++ )
-		{
-			k = ( j + 1 ) % 3;
-			
-			dir[4] = ( dir[j] + dir[k] ) * 0.5f;
-			dir[4].Normalize();
-			
-			dir[3] = ( dir[j] + dir[4] ) * 0.5f;
-			dir[3].Normalize();
-			
-			dir[5] = ( dir[4] + dir[k] ) * 0.5f;
-			dir[5].Normalize();
-			
-			point = p[k] + dir[j] * radius;
-			glVertex3f( point[0], point[1], point[2] );
-			
-			point = p[k] + dir[3] * radius;
-			glVertex3f( point[0], point[1], point[2] );
-			
-			point = p[k] + dir[4] * radius;
-			glVertex3f( point[0], point[1], point[2] );
-			
-			point = p[k] + dir[5] * radius;
-			glVertex3f( point[0], point[1], point[2] );
-			
-			point = p[k] + dir[k] * radius;
-			glVertex3f( point[0], point[1], point[2] );
-		}
-		
-		glEnd();
-	}
-#endif
-}
-
-/*
-================
-RB_ShowTrace
-
-Debug visualization
-================
-*/
-void RB_ShowTrace( drawSurf_t** drawSurfs, int numDrawSurfs )
-{
-	int						i;
-	const srfTriangles_t*	tri;
-	const drawSurf_t*		surf;
-	idVec3					start, end;
-	idVec3					localStart, localEnd;
-	localTrace_t			hit;
-	float					radius;
-	
-	if( r_showTrace.GetInteger() == 0 )
-	{
-		return;
-	}
-	
-	if( r_showTrace.GetInteger() == 2 )
-	{
-		radius = 5.0f;
-	}
-	else
-	{
-		radius = 0.0f;
-	}
-	
-	// determine the points of the trace
-	start = backEnd.viewDef->renderView.vieworg;
-	end = start + 4000 * backEnd.viewDef->renderView.viewaxis[0];
-	
-	// check and draw the surfaces
-	glDisableClientState( GL_TEXTURE_COORD_ARRAY );
-	
-#if !defined(USE_GLES2)
-	GL_TexEnv( GL_MODULATE );
-#endif
-	
-	globalImages->whiteImage->Bind();
-	
-	// find how many are ambient
-	for( i = 0 ; i < numDrawSurfs ; i++ )
-	{
-		surf = drawSurfs[i];
-		tri = surf->geo;
-		
-		if( tri == NULL || tri->verts == NULL )
-		{
-			continue;
-		}
-		
-		// transform the points into local space
-		R_GlobalPointToLocal( surf->space->modelMatrix, start, localStart );
-		R_GlobalPointToLocal( surf->space->modelMatrix, end, localEnd );
-		
-		// check the bounding box
-		if( !tri->bounds.Expand( radius ).LineIntersection( localStart, localEnd ) )
-		{
-			continue;
-		}
-		
-		glLoadMatrixf( surf->space->modelViewMatrix );
-		
-		// highlight the surface
-		GL_State( GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA );
-		
-		glColor4f( 1, 0, 0, 0.25 );
-#if defined(USE_GLES1)
-		RB_DrawElementsWithCounters( tri );
-#else
-		RB_DrawElementsImmediate( tri );
-#endif
-		
-		// draw the bounding box
-		GL_State( GLS_DEPTHFUNC_ALWAYS );
-		
-		glColor4f( 1, 1, 1, 1 );
-		RB_DrawBounds( tri->bounds );
-		
-		if( radius != 0.0f )
-		{
-			// draw the expanded triangles
-			glColor4f( 0.5f, 0.5f, 1.0f, 1.0f );
-			RB_DrawExpandedTriangles( tri, radius, localStart );
-		}
-		
-		// check the exact surfaces
-		hit = R_LocalTrace( localStart, localEnd, radius, tri );
-		if( hit.fraction < 1.0 )
-		{
-			glColor4f( 1, 1, 1, 1 );
-			RB_DrawBounds( idBounds( hit.point ).Expand( 1 ) );
-		}
-	}
 }
