@@ -1,25 +1,26 @@
 /*
 ===========================================================================
 
-Doom 3 GPL Source Code
-Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Doom 3 BFG Edition GPL Source Code
+Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2012 Robert Beckebans
 
-This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
+This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
-Doom 3 Source Code is free software: you can redistribute it and/or modify
+Doom 3 BFG Edition Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Doom 3 Source Code is distributed in the hope that it will be useful,
+Doom 3 BFG Edition Source Code is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Doom 3 Source Code.  If not, see <http://www.gnu.org/licenses/>.
+along with Doom 3 BFG Edition Source Code.  If not, see <http://www.gnu.org/licenses/>.
 
-In addition, the Doom 3 Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 Source Code.  If not, please request a copy in writing from id Software at the address below.
+In addition, the Doom 3 BFG Edition Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 BFG Edition Source Code.  If not, please request a copy in writing from id Software at the address below.
 
 If you have questions concerning this license or the applicable additional terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 
@@ -45,7 +46,7 @@ idVec4	g_color_table[16] =
 	idVec4( 1.0f, 1.0f, 0.0f, 1.0f ), // S_COLOR_YELLOW
 	idVec4( 0.0f, 0.0f, 1.0f, 1.0f ), // S_COLOR_BLUE
 	idVec4( 0.0f, 1.0f, 1.0f, 1.0f ), // S_COLOR_CYAN
-	idVec4( 1.0f, 0.0f, 1.0f, 1.0f ), // S_COLOR_MAGENTA
+	idVec4( 1.0f, 0.5f, 0.0f, 1.0f ), // S_COLOR_ORANGE
 	idVec4( 1.0f, 1.0f, 1.0f, 1.0f ), // S_COLOR_WHITE
 	idVec4( 0.5f, 0.5f, 0.5f, 1.0f ), // S_COLOR_GRAY
 	idVec4( 0.0f, 0.0f, 0.0f, 1.0f ), // S_COLOR_BLACK
@@ -96,12 +97,12 @@ void idStr::ReAllocate( int amount, bool keepold )
 	{
 		newsize = amount + STR_ALLOC_GRAN - mod;
 	}
-	alloced = newsize;
+	SetAlloced( newsize );
 	
 #ifdef USE_STRING_DATA_ALLOCATOR
-	newbuffer = stringDataAllocator.Alloc( alloced );
+	newbuffer = stringDataAllocator.Alloc( GetAlloced() );
 #else
-	newbuffer = new char[ alloced ];
+	newbuffer = new( TAG_STRING ) char[ GetAlloced() ];
 #endif
 	if( keepold && data )
 	{
@@ -128,6 +129,11 @@ idStr::FreeData
 */
 void idStr::FreeData()
 {
+	if( IsStatic() )
+	{
+		return;
+	}
+	
 	if( data && data != baseBuffer )
 	{
 #ifdef USE_STRING_DATA_ALLOCATOR
@@ -152,7 +158,7 @@ void idStr::operator=( const char* text )
 	
 	if( !text )
 	{
-		// safe behaviour if NULL
+		// safe behavior if NULL
 		EnsureAlloced( 1, false );
 		data[ 0 ] = '\0';
 		len = 0;
@@ -183,7 +189,9 @@ void idStr::operator=( const char* text )
 		return;
 	}
 	
-	l = strlen( text );
+	// RB: 64 bit fixes,  conversion from 'size_t' to 'int', possible loss of data
+	l = ( int )strlen( text );
+	// RB end
 	EnsureAlloced( l + 1, false );
 	strcpy( data, text );
 	len = l;
@@ -202,7 +210,9 @@ int idStr::FindChar( const char* str, const char c, int start, int end )
 	
 	if( end == -1 )
 	{
-		end = strlen( str ) - 1;
+		// RB: 64 bit fixes,  conversion from 'size_t' to 'int', possible loss of data
+		end = ( int )strlen( str ) - 1;
+		// RB end
 	}
 	for( i = start; i <= end; i++ )
 	{
@@ -225,11 +235,14 @@ int idStr::FindText( const char* str, const char* text, bool casesensitive, int 
 {
 	int l, i, j;
 	
+	// RB: 64 bit fixes,  conversion from 'size_t' to 'int', possible loss of data
 	if( end == -1 )
 	{
-		end = strlen( str );
+		end = ( int )strlen( str );
 	}
-	l = end - strlen( text );
+	l = end - ( int )strlen( text );
+	// RB end
+	
 	for( i = start; i <= l; i++ )
 	{
 		if( casesensitive )
@@ -522,6 +535,163 @@ const char* idStr::FloatArrayToString( const float* array, const int length, con
 }
 
 /*
+========================
+idStr::CStyleQuote
+========================
+*/
+const char* idStr::CStyleQuote( const char* str )
+{
+	static int index = 0;
+	static char buffers[4][16384];	// in case called by nested functions
+	unsigned int i;
+	char* buf;
+	
+	buf = buffers[index];
+	index = ( index + 1 ) & 3;
+	
+	buf[0] = '\"';
+	for( i = 1; i < sizeof( buffers[0] ) - 2; i++ )
+	{
+		int c = *str++;
+		switch( c )
+		{
+			case '\0':
+				buf[i++] = '\"';
+				buf[i] = '\0';
+				return buf;
+			case '\\':
+				buf[i++] = '\\';
+				buf[i] = '\\';
+				break;
+			case '\n':
+				buf[i++] = '\\';
+				buf[i] = 'n';
+				break;
+			case '\r':
+				buf[i++] = '\\';
+				buf[i] = 'r';
+				break;
+			case '\t':
+				buf[i++] = '\\';
+				buf[i] = 't';
+				break;
+			case '\v':
+				buf[i++] = '\\';
+				buf[i] = 'v';
+				break;
+			case '\b':
+				buf[i++] = '\\';
+				buf[i] = 'b';
+				break;
+			case '\f':
+				buf[i++] = '\\';
+				buf[i] = 'f';
+				break;
+			case '\a':
+				buf[i++] = '\\';
+				buf[i] = 'a';
+				break;
+			case '\'':
+				buf[i++] = '\\';
+				buf[i] = '\'';
+				break;
+			case '\"':
+				buf[i++] = '\\';
+				buf[i] = '\"';
+				break;
+			case '\?':
+				buf[i++] = '\\';
+				buf[i] = '\?';
+				break;
+			default:
+				buf[i] = c;
+				break;
+		}
+	}
+	buf[i++] = '\"';
+	buf[i] = '\0';
+	return buf;
+}
+
+/*
+========================
+idStr::CStyleUnQuote
+========================
+*/
+const char* idStr::CStyleUnQuote( const char* str )
+{
+	if( str[0] != '\"' )
+	{
+		return str;
+	}
+	
+	static int index = 0;
+	static char buffers[4][16384];	// in case called by nested functions
+	unsigned int i;
+	char* buf;
+	
+	buf = buffers[index];
+	index = ( index + 1 ) & 3;
+	
+	str++;
+	for( i = 0; i < sizeof( buffers[0] ) - 1; i++ )
+	{
+		int c = *str++;
+		if( c == '\0' )
+		{
+			break;
+		}
+		else if( c == '\\' )
+		{
+			c = *str++;
+			switch( c )
+			{
+				case '\\':
+					buf[i] = '\\';
+					break;
+				case 'n':
+					buf[i] = '\n';
+					break;
+				case 'r':
+					buf[i] = '\r';
+					break;
+				case 't':
+					buf[i] = '\t';
+					break;
+				case 'v':
+					buf[i] = '\v';
+					break;
+				case 'b':
+					buf[i] = '\b';
+					break;
+				case 'f':
+					buf[i] = '\f';
+					break;
+				case 'a':
+					buf[i] = '\a';
+					break;
+				case '\'':
+					buf[i] = '\'';
+					break;
+				case '\"':
+					buf[i] = '\"';
+					break;
+				case '\?':
+					buf[i] = '\?';
+					break;
+			}
+		}
+		else
+		{
+			buf[i] = c;
+		}
+	}
+	assert( buf[i - 1] == '\"' );
+	buf[i - 1] = '\0';
+	return buf;
+}
+
+/*
 ============
 idStr::Last
 
@@ -541,6 +711,58 @@ int idStr::Last( const char c ) const
 	}
 	
 	return -1;
+}
+
+/*
+========================
+idStr::Format
+
+perform a threadsafe sprintf to the string
+========================
+*/
+void idStr::Format( const char* fmt, ... )
+{
+	va_list argptr;
+	char text[MAX_PRINT_MSG];
+	
+	va_start( argptr, fmt );
+	int len = idStr::vsnPrintf( text, sizeof( text ) - 1, fmt, argptr );
+	va_end( argptr );
+	text[ sizeof( text ) - 1 ] = '\0';
+	
+	if( ( size_t )len >= sizeof( text ) - 1 )
+	{
+		idLib::common->FatalError( "Tried to set a large buffer using %s", fmt );
+	}
+	*this = text;
+}
+
+/*
+========================
+idStr::FormatInt
+
+Formats integers with commas for readability.
+========================
+*/
+idStr idStr::FormatInt( const int num, bool isCash )
+{
+	idStr val = va( "%d", num );
+	int len = val.Length();
+	for( int i = 0 ; i < ( ( len - 1 ) / 3 ); i++ )
+	{
+		int pos = val.Length() - ( ( i + 1 ) * 3 + i );
+		if( pos > 1 || val[0] != '-' )
+		{
+			val.Insert( ',', pos );
+		}
+	}
+	
+	if( isCash )
+	{
+		val.Insert( '$', val[0] == '-' ? 1 : 0 );
+	}
+	
+	return val;
 }
 
 /*
@@ -566,7 +788,9 @@ void idStr::StripLeading( const char* string )
 {
 	int l;
 	
-	l = strlen( string );
+	// RB: 64 bit fixes,  conversion from 'size_t' to 'int', possible loss of data
+	l = ( int )strlen( string );
+	// RB end
 	if( l > 0 )
 	{
 		while( !Cmpn( string, l ) )
@@ -586,7 +810,9 @@ bool idStr::StripLeadingOnce( const char* string )
 {
 	int l;
 	
-	l = strlen( string );
+	// RB: 64 bit fixes,  conversion from 'size_t' to 'int', possible loss of data
+	l = ( int )strlen( string );
+	// RB end
 	if( ( l > 0 ) && !Cmpn( string, l ) )
 	{
 		memmove( data, data + l, len - l + 1 );
@@ -621,7 +847,9 @@ void idStr::StripTrailing( const char* string )
 {
 	int l;
 	
-	l = strlen( string );
+	// RB: 64 bit fixes,  conversion from 'size_t' to 'int', possible loss of data
+	l = ( int )strlen( string );
+	// RB end
 	if( l > 0 )
 	{
 		while( ( len >= l ) && !Cmpn( string, data + len - l, l ) )
@@ -641,7 +869,9 @@ bool idStr::StripTrailingOnce( const char* string )
 {
 	int l;
 	
-	l = strlen( string );
+	// RB: 64 bit fixes,  conversion from 'size_t' to 'int', possible loss of data
+	l = ( int )strlen( string );
+	// RB end
 	if( ( l > 0 ) && ( len >= l ) && !Cmpn( string, data + len - l, l ) )
 	{
 		len -= l;
@@ -656,19 +886,37 @@ bool idStr::StripTrailingOnce( const char* string )
 idStr::Replace
 ============
 */
-void idStr::Replace( const char* old, const char* nw )
+bool  idStr::ReplaceChar( const char old, const char nw )
 {
-	int		oldLen, newLen, i, j, count;
-	idStr	oldString( data );
-	
-	oldLen = strlen( old );
-	newLen = strlen( nw );
+	bool replaced = false;
+	for( int i = 0; i < Length(); i++ )
+	{
+		if( data[i] == old )
+		{
+			data[i] = nw;
+			replaced = true;
+		}
+	}
+	return replaced;
+}
+
+/*
+============
+idStr::Replace
+============
+*/
+bool idStr::Replace( const char* old, const char* nw )
+{
+	// RB: 64 bit fixes,  conversion from 'size_t' to 'int', possible loss of data
+	int oldLen = ( int )strlen( old );
+	int newLen = ( int )strlen( nw );
+	// RB end
 	
 	// Work out how big the new string will be
-	count = 0;
-	for( i = 0; i < oldString.Length(); i++ )
+	int count = 0;
+	for( int i = 0; i < Length(); i++ )
 	{
-		if( !idStr::Cmpn( &oldString[i], old, oldLen ) )
+		if( idStr::Cmpn( &data[i], old, oldLen ) == 0 )
 		{
 			count++;
 			i += oldLen - 1;
@@ -677,12 +925,15 @@ void idStr::Replace( const char* old, const char* nw )
 	
 	if( count )
 	{
+		idStr oldString( data );
+		
 		EnsureAlloced( len + ( ( newLen - oldLen ) * count ) + 2, false );
 		
 		// Replace the old data with the new data
-		for( i = 0, j = 0; i < oldString.Length(); i++ )
+		int j = 0;
+		for( int i = 0; i < oldString.Length(); i++ )
 		{
-			if( !idStr::Cmpn( &oldString[i], old, oldLen ) )
+			if( idStr::Cmpn( &oldString[i], old, oldLen ) == 0 )
 			{
 				memcpy( data + j, nw, newLen );
 				i += oldLen - 1;
@@ -695,8 +946,12 @@ void idStr::Replace( const char* old, const char* nw )
 			}
 		}
 		data[j] = 0;
-		len = strlen( data );
+		// RB: 64 bit fixes,  conversion from 'size_t' to 'int', possible loss of data
+		len = ( int )strlen( data );
+		// RB end
+		return true;
 	}
+	return false;
 }
 
 /*
@@ -812,7 +1067,7 @@ idStr::FileNameHash
 int idStr::FileNameHash() const
 {
 	int		i;
-	long	hash;
+	int		hash; // DG: use int instead of long for 64bit compatibility
 	char	letter;
 	
 	hash = 0;
@@ -828,7 +1083,7 @@ int idStr::FileNameHash() const
 		{
 			letter = '/';
 		}
-		hash += ( long )( letter ) * ( i + 119 );
+		hash += ( long )( letter ) * ( i + 119 ); // DG: use int instead of long for 64bit compatibility
 		i++;
 	}
 	hash &= ( FILE_HASH_SIZE - 1 );
@@ -849,6 +1104,25 @@ idStr& idStr::BackSlashesToSlashes()
 		if( data[ i ] == '\\' )
 		{
 			data[ i ] = '/';
+		}
+	}
+	return *this;
+}
+
+/*
+============
+idStr::SlashesToBackSlashes
+============
+*/
+idStr& idStr::SlashesToBackSlashes()
+{
+	int i;
+	
+	for( i = 0; i < len; i++ )
+	{
+		if( data[ i ] == '/' )
+		{
+			data[ i ] = '\\';
 		}
 	}
 	return *this;
@@ -968,7 +1242,9 @@ void idStr::AppendPath( const char* text )
 	if( text && text[i] )
 	{
 		pos = len;
-		EnsureAlloced( len + strlen( text ) + 2 );
+		// RB: 64 bit fixes,  conversion from 'size_t' to 'int', possible loss of data
+		EnsureAlloced( len + ( int )strlen( text ) + 2 );
+		// RB end
 		
 		if( pos )
 		{
@@ -1169,7 +1445,7 @@ bool idStr::IsNumeric( const char* s )
 	dot = false;
 	for( i = 0; s[i]; i++ )
 	{
-		if( !isdigit( s[i] ) )
+		if( !isdigit( ( const unsigned char )s[i] ) )
 		{
 			if( ( s[ i ] == '.' ) && !dot )
 			{
@@ -1648,12 +1924,249 @@ void idStr::Append( char* dest, int size, const char* src )
 {
 	int		l1;
 	
-	l1 = strlen( dest );
+	// RB: 64 bit fixes,  conversion from 'size_t' to 'int', possible loss of data
+	l1 = ( int )strlen( dest );
+	// RB end
 	if( l1 >= size )
 	{
 		idLib::common->Error( "idStr::Append: already overflowed" );
 	}
 	idStr::Copynz( dest + l1, src, size - l1 );
+}
+
+/*
+========================
+idStr::IsValidUTF8
+========================
+*/
+bool idStr::IsValidUTF8( const uint8* s, const int maxLen, utf8Encoding_t& encoding )
+{
+	struct local_t
+	{
+		static int GetNumEncodedUTF8Bytes( const uint8 c )
+		{
+			if( c < 0x80 )
+			{
+				return 1;
+			}
+			else if( ( c >> 5 ) == 0x06 )
+			{
+				// 2 byte encoding - the next byte must begin with
+				return 2;
+			}
+			else if( ( c >> 4 ) == 0x0E )
+			{
+				// 3 byte encoding
+				return 3;
+			}
+			else if( ( c >> 5 ) == 0x1E )
+			{
+				// 4 byte encoding
+				return 4;
+			}
+			// this isnt' a valid UTF-8 precursor character
+			return 0;
+		}
+		static bool RemainingCharsAreUTF8FollowingBytes( const uint8* s, const int curChar, const int maxLen, const int num )
+		{
+			if( maxLen - curChar < num )
+			{
+				return false;
+			}
+			for( int i = curChar + 1; i <= curChar + num; i++ )
+			{
+				if( s[ i ] == '\0' )
+				{
+					return false;
+				}
+				if( ( s[ i ] >> 6 ) != 0x02 )
+				{
+					return false;
+				}
+			}
+			return true;
+		}
+	};
+	
+	// check for byte-order-marker
+	encoding = UTF8_PURE_ASCII;
+	utf8Encoding_t utf8Type = UTF8_ENCODED_NO_BOM;
+	if( maxLen > 3 && s[ 0 ] == 0xEF && s[ 1 ] == 0xBB && s[ 2 ] == 0xBF )
+	{
+		utf8Type = UTF8_ENCODED_BOM;
+	}
+	
+	for( int i = 0; s[ i ] != '\0' && i < maxLen; i++ )
+	{
+		int numBytes = local_t::GetNumEncodedUTF8Bytes( s[ i ] );
+		if( numBytes == 1 )
+		{
+			continue;	// just low ASCII
+		}
+		else if( numBytes == 2 )
+		{
+			// 2 byte encoding - the next byte must begin with bit pattern 10
+			if( !local_t::RemainingCharsAreUTF8FollowingBytes( s, i, maxLen, 1 ) )
+			{
+				return false;
+			}
+			// skip over UTF-8 character
+			i += 1;
+			encoding = utf8Type;
+		}
+		else if( numBytes == 3 )
+		{
+			// 3 byte encoding - the next 2 bytes must begin with bit pattern 10
+			if( !local_t::RemainingCharsAreUTF8FollowingBytes( s, i, maxLen, 2 ) )
+			{
+				return false;
+			}
+			// skip over UTF-8 character
+			i += 2;
+			encoding = utf8Type;
+		}
+		else if( numBytes == 4 )
+		{
+			// 4 byte encoding - the next 3 bytes must begin with bit pattern 10
+			if( !local_t::RemainingCharsAreUTF8FollowingBytes( s, i, maxLen, 3 ) )
+			{
+				return false;
+			}
+			// skip over UTF-8 character
+			i += 3;
+			encoding = utf8Type;
+		}
+		else
+		{
+			// this isnt' a valid UTF-8 character
+			if( utf8Type == UTF8_ENCODED_BOM )
+			{
+				encoding = UTF8_INVALID_BOM;
+			}
+			else
+			{
+				encoding = UTF8_INVALID;
+			}
+			return false;
+		}
+	}
+	return true;
+}
+
+/*
+========================
+idStr::UTF8Length
+========================
+*/
+int idStr::UTF8Length( const byte* s )
+{
+	int mbLen = 0;
+	int charLen = 0;
+	while( s[ mbLen ] != '\0' )
+	{
+		uint32 cindex;
+		cindex = s[ mbLen ];
+		if( cindex < 0x80 )
+		{
+			mbLen++;
+		}
+		else
+		{
+			int trailing = 0;
+			if( cindex >= 0xc0 )
+			{
+				static const byte trailingBytes[ 64 ] =
+				{
+					1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+					2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5
+				};
+				trailing = trailingBytes[ cindex - 0xc0 ];
+			}
+			mbLen += trailing + 1;
+		}
+		charLen++;
+	}
+	return charLen;
+}
+
+
+/*
+========================
+idStr::AppendUTF8Char
+========================
+*/
+void idStr::AppendUTF8Char( uint32 c )
+{
+	if( c < 0x80 )
+	{
+		Append( ( char )c );
+	}
+	else if( c < 0x800 )      // 11 bits
+	{
+		Append( ( char )( 0xC0 | ( c >> 6 ) ) );
+		Append( ( char )( 0x80 | ( c & 0x3F ) ) );
+	}
+	else if( c < 0x10000 )      // 16 bits
+	{
+		Append( ( char )( 0xE0 | ( c >> 12 ) ) );
+		Append( ( char )( 0x80 | ( ( c >> 6 ) & 0x3F ) ) );
+		Append( ( char )( 0x80 | ( c & 0x3F ) ) );
+	}
+	else if( c < 0x200000 )  	// 21 bits
+	{
+		Append( ( char )( 0xF0 | ( c >> 18 ) ) );
+		Append( ( char )( 0x80 | ( ( c >> 12 ) & 0x3F ) ) );
+		Append( ( char )( 0x80 | ( ( c >> 6 ) & 0x3F ) ) );
+		Append( ( char )( 0x80 | ( c & 0x3F ) ) );
+	}
+	else
+	{
+		// UTF-8 can encode up to 6 bytes. Why don't we support that?
+		// This is an invalid Unicode character
+		Append( '?' );
+	}
+}
+
+/*
+========================
+idStr::UTF8Char
+========================
+*/
+uint32 idStr::UTF8Char( const byte* s, int& idx )
+{
+	if( idx >= 0 )
+	{
+		while( s[ idx ] != '\0' )
+		{
+			uint32 cindex = s[ idx ];
+			if( cindex < 0x80 )
+			{
+				idx++;
+				return cindex;
+			}
+			int trailing = 0;
+			if( cindex >= 0xc0 )
+			{
+				static const byte trailingBytes[ 64 ] =
+				{
+					1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+					2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5
+				};
+				trailing = trailingBytes[ cindex - 0xc0 ];
+			}
+			static const uint32 trailingMask[ 6 ] = { 0x0000007f, 0x0000001f, 0x0000000f, 0x00000007, 0x00000003, 0x00000001 };
+			cindex &= trailingMask[ trailing  ];
+			while( trailing-- > 0 )
+			{
+				cindex <<= 6;
+				cindex += s[ ++idx ] & 0x0000003f;
+			}
+			idx++;
+			return cindex;
+		}
+	}
+	idx++;
+	return 0;	// return a null terminator if out of range
 }
 
 /*
@@ -1766,6 +2279,7 @@ int idStr::vsnPrintf( char* dest, int size, const char* fmt, va_list argptr )
 {
 	int ret;
 	
+// RB begin
 #ifdef _WIN32
 #undef _vsnprintf
 	ret = _vsnprintf( dest, size - 1, fmt, argptr );
@@ -1775,6 +2289,8 @@ int idStr::vsnPrintf( char* dest, int size, const char* fmt, va_list argptr )
 	ret = vsnprintf( dest, size, fmt, argptr );
 #define vsnprintf	use_idStr_vsnPrintf
 #endif
+// RB end
+
 	dest[size - 1] = '\0';
 	if( ret < 0 || ret >= size )
 	{

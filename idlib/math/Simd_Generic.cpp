@@ -45,10 +45,8 @@ If you have questions concerning this license or the applicable additional terms
 
 #ifdef _DEBUG
 #define NODEFAULT	default: assert( 0 )
-#elif _WIN32
-#define NODEFAULT	default: __assume( 0 )
 #else
-#define NODEFAULT
+#define NODEFAULT	default: __assume( 0 )
 #endif
 
 
@@ -3151,7 +3149,7 @@ idSIMD_Generic::DeriveUnsmoothedTangents
 */
 #define DERIVE_UNSMOOTHED_BITANGENT
 
-void VPCALL idSIMD_Generic::DeriveUnsmoothedTangents( idDrawVert* verts, const dominantTri_s* dominantTris, const int numVerts )
+void VPCALL idSIMD_Generic::DeriveUnsmoothedTangents( idDrawVert* verts, const dominantTri_t* dominantTris, const int numVerts )
 {
 	int i;
 	
@@ -3165,7 +3163,7 @@ void VPCALL idSIMD_Generic::DeriveUnsmoothedTangents( idDrawVert* verts, const d
 		float t0, t1, t2;
 		float t3, t4, t5;
 		
-		const dominantTri_s& dt = dominantTris[i];
+		const dominantTri_t& dt = dominantTris[i];
 		
 		a = verts + i;
 		b = verts + dt.v2;

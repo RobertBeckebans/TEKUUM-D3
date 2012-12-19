@@ -1238,7 +1238,7 @@ maModel_t* MA_Load( const char* fileName )
 #if defined(USE_EXCEPTIONS)
 	catch( idException& e )
 	{
-		common->Warning( "%s", e.error );
+		common->Warning( "%s", e.GetError() );
 		if( maGlobal.model )
 		{
 			MA_Free( maGlobal.model );

@@ -1966,7 +1966,7 @@ void idProgram::BeginCompilation()
 #if defined(USE_EXCEPTIONS)
 	catch( idCompileError& err )
 	{
-		gameLocal.Error( "%s", err.error );
+		gameLocal.Error( "%s", err.GetError() );
 	}
 #endif
 }
@@ -2174,12 +2174,12 @@ bool idProgram::CompileText( const char* source, const char* text, bool console 
 	{
 		if( console )
 		{
-			gameLocal.Printf( "%s\n", err.error );
+			gameLocal.Printf( "%s\n", err.GetError() );
 			return false;
 		}
 		else
 		{
-			gameLocal.Error( "%s\n", err.error );
+			gameLocal.Error( "%s\n", err.GetError() );
 		}
 	};
 #endif

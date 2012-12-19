@@ -477,7 +477,7 @@ private:
 	int						d3xp;	// 0: didn't check, -1: not installed, 1: installed
 	
 private:
-	void					ReplaceSeparators( idStr& path, char sep = PATHSEPERATOR_CHAR );
+	void					ReplaceSeparators( idStr& path, char sep = PATHSEPARATOR_CHAR );
 	long					HashFileName( const char* fname ) const;
 	int						ListOSFiles( const char* directory, const char* extension, idStrList& list );
 	FILE* 					OpenOSFile( const char* name, const char* mode, idStr* caseSensitiveName = NULL );
@@ -655,7 +655,7 @@ FILE* idFileSystemLocal::OpenOSFile( const char* fileName, const char* mode, idS
 	{
 		fpath = fileName;
 		fpath.StripFilename();
-		fpath.StripTrailing( PATHSEPERATOR_CHAR );
+		fpath.StripTrailing( PATHSEPARATOR_CHAR );
 		if( ListOSFiles( fpath, NULL, list ) == -1 )
 		{
 			return NULL;
@@ -663,7 +663,7 @@ FILE* idFileSystemLocal::OpenOSFile( const char* fileName, const char* mode, idS
 		
 		for( i = 0; i < list.Num(); i++ )
 		{
-			entry = fpath + PATHSEPERATOR_CHAR + list[i];
+			entry = fpath + PATHSEPARATOR_CHAR + list[i];
 			if( !entry.Icmp( fileName ) )
 			{
 				fp = fopen( entry, mode );
@@ -708,7 +708,7 @@ FILE* idFileSystemLocal::OpenOSFileCorrectName( idStr& path, const char* mode )
 	if( f )
 	{
 		path.StripFilename();
-		path += PATHSEPERATOR_STR;
+		path += PATHSEPARATOR_STR;
 		path += caseName;
 	}
 	return f;
@@ -755,12 +755,12 @@ void idFileSystemLocal::CreateOSPath( const char* OSPath )
 	idStr path( OSPath );
 	for( ofs = &path[ 1 ]; *ofs ; ofs++ )
 	{
-		if( *ofs == PATHSEPERATOR_CHAR )
+		if( *ofs == PATHSEPARATOR_CHAR )
 		{
 			// create the directory
 			*ofs = 0;
 			Sys_Mkdir( path );
-			*ofs = PATHSEPERATOR_CHAR;
+			*ofs = PATHSEPARATOR_CHAR;
 		}
 	}
 }
@@ -3744,7 +3744,7 @@ idFile* idFileSystemLocal::OpenFileReadFlags( const char* relativePath, int sear
 				copypath = BuildOSPath( fs_savepath.GetString(), dir->gamedir, relativePath );
 				netpath.ExtractFileName( name );
 				copypath.StripFilename( );
-				copypath += PATHSEPERATOR_STR;
+				copypath += PATHSEPARATOR_STR;
 				copypath += name;
 				
 				bool isFromCDPath = !dir->path.Cmp( fs_cdpath.GetString() );

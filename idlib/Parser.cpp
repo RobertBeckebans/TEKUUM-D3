@@ -3487,7 +3487,7 @@ void idParser::SetIncludePath( const char* path )
 	if( idParser::includepath[idParser::includepath.Length() - 1] != '\\' &&
 			idParser::includepath[idParser::includepath.Length() - 1] != '/' )
 	{
-		idParser::includepath += PATHSEPERATOR_STR;
+		idParser::includepath += PATHSEPARATOR_STR;
 	}
 }
 

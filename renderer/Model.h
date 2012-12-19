@@ -44,19 +44,7 @@ If you have questions concerning this license or the applicable additional terms
 #define MD5_CAMERA_EXT			"md5camera"
 #define MD5_VERSION				10
 
-// using shorts for triangle indexes can save a significant amount of traffic, but
-// to support the large models that renderBump loads, they need to be 32 bits
-#if defined(USE_GLES1)
 
-#define GL_INDEX_TYPE		GL_UNSIGNED_SHORT
-typedef short glIndex_t;
-
-#else
-
-#define GL_INDEX_TYPE		GL_UNSIGNED_INT
-typedef int glIndex_t;
-
-#endif
 
 
 typedef struct
@@ -67,11 +55,11 @@ typedef struct
 } silEdge_t;
 
 // this is used for calculating unsmoothed normals and tangents for deformed models
-typedef struct dominantTri_s
+struct dominantTri_t
 {
 	glIndex_t					v2, v3;
 	float						normalizationScale[3];
-} dominantTri_t;
+};
 
 typedef struct lightingCache_s
 {

@@ -125,7 +125,7 @@ public:
 	virtual void VPCALL DeriveTangents( idPlane* planes, idDrawVert* verts, const int numVerts, const short* indexes, const int numIndexes );
 // RB end
 	virtual void VPCALL DeriveTangents( idPlane* planes, idDrawVert* verts, const int numVerts, const int* indexes, const int numIndexes );
-	virtual void VPCALL DeriveUnsmoothedTangents( idDrawVert* verts, const dominantTri_s* dominantTris, const int numVerts );
+	virtual void VPCALL DeriveUnsmoothedTangents( idDrawVert* verts, const dominantTri_t* dominantTris, const int numVerts );
 	virtual void VPCALL NormalizeTangents( idDrawVert* verts, const int numVerts );
 	virtual void VPCALL CreateTextureSpaceLightVectors( idVec3* lightVectors, const idVec3& lightOrigin, const idDrawVert* verts, const int numVerts, const int* indexes, const int numIndexes );
 	virtual void VPCALL CreateSpecularTextureCoords( idVec4* texCoords, const idVec3& lightOrigin, const idVec3& viewOrigin, const idDrawVert* verts, const int numVerts, const int* indexes, const int numIndexes );

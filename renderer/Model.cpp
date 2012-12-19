@@ -2936,7 +2936,7 @@ bool idRenderModelStatic::LoadDAE( const char* fileName )
 	}
 	catch( idException& e )
 	{
-		common->Warning( "%s", e.error );
+		common->Warning( "%s", e.GetError() );
 	}
 	
 	return loaded;

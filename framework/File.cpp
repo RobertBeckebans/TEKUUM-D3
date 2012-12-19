@@ -1,25 +1,26 @@
 /*
 ===========================================================================
 
-Doom 3 GPL Source Code
-Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Doom 3 BFG Edition GPL Source Code
+Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2012 Robert Beckebans
 
-This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
+This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
-Doom 3 Source Code is free software: you can redistribute it and/or modify
+Doom 3 BFG Edition Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Doom 3 Source Code is distributed in the hope that it will be useful,
+Doom 3 BFG Edition Source Code is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Doom 3 Source Code.  If not, see <http://www.gnu.org/licenses/>.
+along with Doom 3 BFG Edition Source Code.  If not, see <http://www.gnu.org/licenses/>.
 
-In addition, the Doom 3 Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 Source Code.  If not, please request a copy in writing from id Software at the address below.
+In addition, the Doom 3 BFG Edition Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 BFG Edition Source Code.  If not, please request a copy in writing from id Software at the address below.
 
 If you have questions concerning this license or the applicable additional terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 
@@ -31,8 +32,6 @@ If you have questions concerning this license or the applicable additional terms
 
 #include "Unzip.h"
 
-#define	MAX_PRINT_MSG		4096
-
 /*
 =================
 FS_WriteFloatString
@@ -40,8 +39,9 @@ FS_WriteFloatString
 */
 int FS_WriteFloatString( char* buf, const char* fmt, va_list argPtr )
 {
-	long i;
-	unsigned long u;
+	// DG: replaced long with int for 64bit compatibility in the whole function
+	int i;
+	unsigned int u;
 	double f;
 	char* str;
 	int index;
@@ -85,27 +85,27 @@ int FS_WriteFloatString( char* buf, const char* fmt, va_list argPtr )
 						break;
 					case 'd':
 					case 'i':
-						i = va_arg( argPtr, long );
+						i = va_arg( argPtr, int );
 						index += sprintf( buf + index, format.c_str(), i );
 						break;
 					case 'u':
-						u = va_arg( argPtr, unsigned long );
+						u = va_arg( argPtr, unsigned int );
 						index += sprintf( buf + index, format.c_str(), u );
 						break;
 					case 'o':
-						u = va_arg( argPtr, unsigned long );
+						u = va_arg( argPtr, unsigned int );
 						index += sprintf( buf + index, format.c_str(), u );
 						break;
 					case 'x':
-						u = va_arg( argPtr, unsigned long );
+						u = va_arg( argPtr, unsigned int );
 						index += sprintf( buf + index, format.c_str(), u );
 						break;
 					case 'X':
-						u = va_arg( argPtr, unsigned long );
+						u = va_arg( argPtr, unsigned int );
 						index += sprintf( buf + index, format.c_str(), u );
 						break;
 					case 'c':
-						i = va_arg( argPtr, long );
+						i = va_arg( argPtr, int );
 						index += sprintf( buf + index, format.c_str(), ( char ) i );
 						break;
 					case 's':
@@ -113,7 +113,7 @@ int FS_WriteFloatString( char* buf, const char* fmt, va_list argPtr )
 						index += sprintf( buf + index, format.c_str(), str );
 						break;
 					case '%':
-						index += sprintf( buf + index, format.c_str() );
+						index += sprintf( buf + index, format.c_str() ); //-V618
 						break;
 					default:
 						common->Error( "FS_WriteFloatString: invalid format %s", format.c_str() );
@@ -151,6 +151,7 @@ int FS_WriteFloatString( char* buf, const char* fmt, va_list argPtr )
 	}
 	
 	return index;
+	// DG end
 }
 
 /*
@@ -166,7 +167,7 @@ idFile
 idFile::GetName
 =================
 */
-const char* idFile::GetName()
+const char* idFile::GetName() const
 {
 	return "";
 }
@@ -176,7 +177,7 @@ const char* idFile::GetName()
 idFile::GetFullPath
 =================
 */
-const char* idFile::GetFullPath()
+const char* idFile::GetFullPath() const
 {
 	return "";
 }
@@ -208,7 +209,7 @@ int idFile::Write( const void* buffer, int len )
 idFile::Length
 =================
 */
-int idFile::Length()
+int idFile::Length() const
 {
 	return 0;
 }
@@ -218,7 +219,7 @@ int idFile::Length()
 idFile::Timestamp
 =================
 */
-ID_TIME_T idFile::Timestamp()
+ID_TIME_T idFile::Timestamp() const
 {
 	return 0;
 }
@@ -228,7 +229,7 @@ ID_TIME_T idFile::Timestamp()
 idFile::Tell
 =================
 */
-int idFile::Tell()
+int idFile::Tell() const
 {
 	return 0;
 }
@@ -590,9 +591,7 @@ int idFile::WriteBool( const bool value )
  */
 int idFile::WriteString( const char* value )
 {
-	int len;
-	
-	len = strlen( value );
+	int len = strlen( value );
 	WriteInt( len );
 	return Write( value, len );
 }
@@ -740,6 +739,23 @@ idFile_Memory::idFile_Memory( const char* name, const char* data, int length )
 
 /*
 =================
+idFile_Memory::TakeDataOwnership
+
+this also makes the file read only
+=================
+*/
+void idFile_Memory::TakeDataOwnership()
+{
+	if( filePtr != NULL && fileSize > 0 )
+	{
+		maxSize = 0;
+		mode = ( 1 << FS_READ );
+		allocated = fileSize;
+	}
+}
+
+/*
+=================
 idFile_Memory::~idFile_Memory
 =================
 */
@@ -822,9 +838,48 @@ int idFile_Memory::Write( const void* buffer, int len )
 idFile_Memory::Length
 =================
 */
-int idFile_Memory::Length()
+int idFile_Memory::Length() const
 {
 	return fileSize;
+}
+
+/*
+========================
+idFile_Memory::SetLength
+========================
+*/
+void idFile_Memory::SetLength( size_t len )
+{
+	PreAllocate( len );
+	fileSize = len;
+}
+
+/*
+========================
+idFile_Memory::PreAllocate
+========================
+*/
+void idFile_Memory::PreAllocate( size_t len )
+{
+	if( len > allocated )
+	{
+		if( maxSize != 0 )
+		{
+			idLib::Error( "idFile_Memory::SetLength: exceeded maximum size %d", maxSize );
+		}
+		char* newPtr = ( char* )Mem_Alloc( len );
+		if( allocated > 0 )
+		{
+			memcpy( newPtr, filePtr, allocated );
+		}
+		allocated = len;
+		curPtr = newPtr + ( curPtr - filePtr );
+		if( filePtr != NULL )
+		{
+			Mem_Free( filePtr );
+		}
+		filePtr = newPtr;
+	}
 }
 
 /*
@@ -832,7 +887,7 @@ int idFile_Memory::Length()
 idFile_Memory::Timestamp
 =================
 */
-ID_TIME_T idFile_Memory::Timestamp()
+ID_TIME_T idFile_Memory::Timestamp() const
 {
 	return 0;
 }
@@ -842,7 +897,7 @@ ID_TIME_T idFile_Memory::Timestamp()
 idFile_Memory::Tell
 =================
 */
-int idFile_Memory::Tell()
+int idFile_Memory::Tell() const
 {
 	return ( curPtr - filePtr );
 }
@@ -912,6 +967,21 @@ int idFile_Memory::Seek( long offset, fsOrigin_t origin )
 }
 
 /*
+========================
+idFile_Memory::SetMaxLength
+========================
+*/
+void idFile_Memory::SetMaxLength( size_t len )
+{
+	size_t oldLength = fileSize;
+	
+	SetLength( len );
+	
+	maxSize = len;
+	fileSize = oldLength;
+}
+
+/*
 =================
 idFile_Memory::MakeReadOnly
 =================
@@ -919,6 +989,17 @@ idFile_Memory::MakeReadOnly
 void idFile_Memory::MakeReadOnly()
 {
 	mode = ( 1 << FS_READ );
+	Rewind();
+}
+
+/*
+========================
+idFile_Memory::MakeWritable
+========================
+*/
+void idFile_Memory::MakeWritable()
+{
+	mode = ( 1 << FS_WRITE );
 	Rewind();
 }
 
@@ -961,6 +1042,22 @@ void idFile_Memory::SetData( const char* data, int length )
 	curPtr = const_cast<char*>( data );
 }
 
+/*
+========================
+idFile_Memory::TruncateData
+========================
+*/
+void idFile_Memory::TruncateData( size_t len )
+{
+	if( len > allocated )
+	{
+		idLib::Error( "idFile_Memory::TruncateData: len (%d) exceeded allocated size (%d)", len, allocated );
+	}
+	else
+	{
+		fileSize = len;
+	}
+}
 
 /*
 =================================================================================
@@ -1043,7 +1140,7 @@ int idFile_BitMsg::Write( const void* buffer, int len )
 idFile_BitMsg::Length
 =================
 */
-int idFile_BitMsg::Length()
+int idFile_BitMsg::Length() const
 {
 	return msg->GetSize();
 }
@@ -1053,7 +1150,7 @@ int idFile_BitMsg::Length()
 idFile_BitMsg::Timestamp
 =================
 */
-ID_TIME_T idFile_BitMsg::Timestamp()
+ID_TIME_T idFile_BitMsg::Timestamp() const
 {
 	return 0;
 }
@@ -1063,9 +1160,9 @@ ID_TIME_T idFile_BitMsg::Timestamp()
 idFile_BitMsg::Tell
 =================
 */
-int idFile_BitMsg::Tell()
+int idFile_BitMsg::Tell() const
 {
-	if( mode & FS_READ )
+	if( mode == FS_READ )
 	{
 		return msg->GetReadCount();
 	}
@@ -1289,7 +1386,7 @@ void idFile_Permanent::Flush()
 idFile_Permanent::Tell
 =================
 */
-int idFile_Permanent::Tell()
+int idFile_Permanent::Tell() const
 {
 	return ftell( o );
 }
@@ -1299,7 +1396,7 @@ int idFile_Permanent::Tell()
 idFile_Permanent::Length
 ================
 */
-int idFile_Permanent::Length()
+int idFile_Permanent::Length() const
 {
 	return fileSize;
 }
@@ -1309,9 +1406,10 @@ int idFile_Permanent::Length()
 idFile_Permanent::Timestamp
 ================
 */
-ID_TIME_T idFile_Permanent::Timestamp()
+ID_TIME_T idFile_Permanent::Timestamp() const
 {
-	return Sys_FileTimeStamp( o );
+	ID_TIME_T ts = Sys_FileTimeStamp( o );
+	return ts;
 }
 
 /*
@@ -1436,7 +1534,7 @@ void idFile_InZip::Flush()
 idFile_InZip::Tell
 =================
 */
-int idFile_InZip::Tell()
+int idFile_InZip::Tell() const
 {
 	return unztell( z );
 }
@@ -1446,7 +1544,7 @@ int idFile_InZip::Tell()
 idFile_InZip::Length
 ================
 */
-int idFile_InZip::Length()
+int idFile_InZip::Length() const
 {
 	return fileSize;
 }
@@ -1456,7 +1554,7 @@ int idFile_InZip::Length()
 idFile_InZip::Timestamp
 ================
 */
-ID_TIME_T idFile_InZip::Timestamp()
+ID_TIME_T idFile_InZip::Timestamp() const
 {
 	return 0;
 }

@@ -1,25 +1,26 @@
 /*
 ===========================================================================
 
-Doom 3 GPL Source Code
-Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Doom 3 BFG Edition GPL Source Code
+Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2012 Robert Beckebans
 
-This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
+This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
-Doom 3 Source Code is free software: you can redistribute it and/or modify
+Doom 3 BFG Edition Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Doom 3 Source Code is distributed in the hope that it will be useful,
+Doom 3 BFG Edition Source Code is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Doom 3 Source Code.  If not, see <http://www.gnu.org/licenses/>.
+along with Doom 3 BFG Edition Source Code.  If not, see <http://www.gnu.org/licenses/>.
 
-In addition, the Doom 3 Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 Source Code.  If not, please request a copy in writing from id Software at the address below.
+In addition, the Doom 3 BFG Edition Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 BFG Edition Source Code.  If not, please request a copy in writing from id Software at the address below.
 
 If you have questions concerning this license or the applicable additional terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 
@@ -36,6 +37,17 @@ If you have questions concerning this license or the applicable additional terms
 
 ===============================================================================
 */
+
+#define ASSERT_ENUM_STRING( string, index )		( 1 / (int)!( string - index ) ) ? #string : ""
+
+enum utf8Encoding_t
+{
+	UTF8_PURE_ASCII,		// no characters with values > 127
+	UTF8_ENCODED_BOM,		// characters > 128 encoded with UTF8, but no byte-order-marker at the beginning
+	UTF8_ENCODED_NO_BOM,	// characters > 128 encoded with UTF8, with a byte-order-marker at the beginning
+	UTF8_INVALID,			// has values > 127 but isn't valid UTF8
+	UTF8_INVALID_BOM		// has a byte-order-marker at the beginning, but isn't valuid UTF8 -- it's messed up
+};
 
 // these library functions should not be used for cross platform compatibility
 #define strcmp			idStr::Cmp		// use_idStr_Cmp
@@ -62,6 +74,9 @@ If you have questions concerning this license or the applicable additional terms
 #define StrCmpNI		use_idStr_Icmpn
 
 #define stricmp			idStr::Icmp		// use_idStr_Icmp
+
+#undef strcasecmp // DG: redefining this without undefining it causes tons of compiler warnings
+
 #define _stricmp		use_idStr_Icmp
 #define strcasecmp		use_idStr_Icmp
 #define strnicmp		use_idStr_Icmpn
@@ -86,7 +101,7 @@ const int C_COLOR_GREEN				= '2';
 const int C_COLOR_YELLOW			= '3';
 const int C_COLOR_BLUE				= '4';
 const int C_COLOR_CYAN				= '5';
-const int C_COLOR_MAGENTA			= '6';
+const int C_COLOR_ORANGE			= '6';
 const int C_COLOR_WHITE				= '7';
 const int C_COLOR_GRAY				= '8';
 const int C_COLOR_BLACK				= '9';
@@ -98,7 +113,7 @@ const int C_COLOR_BLACK				= '9';
 #define S_COLOR_YELLOW				"^3"
 #define S_COLOR_BLUE				"^4"
 #define S_COLOR_CYAN				"^5"
-#define S_COLOR_MAGENTA				"^6"
+#define S_COLOR_ORANGE				"^6"
 #define S_COLOR_WHITE				"^7"
 #define S_COLOR_GRAY				"^8"
 #define S_COLOR_BLACK				"^9"
@@ -209,6 +224,24 @@ public:
 	void				CapLength( int );
 	void				Fill( const char ch, int newlen );
 	
+	ID_INLINE int			UTF8Length();
+	ID_INLINE uint32		UTF8Char( int& idx );
+	static int				UTF8Length( const byte* s );
+	static ID_INLINE uint32 UTF8Char( const char* s, int& idx );
+	static uint32			UTF8Char( const byte* s, int& idx );
+	void					AppendUTF8Char( uint32 c );
+	ID_INLINE void			ConvertToUTF8();
+	static bool				IsValidUTF8( const uint8* s, const int maxLen, utf8Encoding_t& encoding );
+	static ID_INLINE bool	IsValidUTF8( const char* s, const int maxLen, utf8Encoding_t& encoding )
+	{
+		return IsValidUTF8( ( const uint8* )s, maxLen, encoding );
+	}
+	static ID_INLINE bool	IsValidUTF8( const uint8* s, const int maxLen );
+	static ID_INLINE bool	IsValidUTF8( const char* s, const int maxLen )
+	{
+		return IsValidUTF8( ( const uint8* )s, maxLen );
+	}
+	
 	int					Find( const char c, int start = 0, int end = -1 ) const;
 	int					Find( const char* text, bool casesensitive = true, int start = 0, int end = -1 ) const;
 	bool				Filter( const char* filter, bool casesensitive ) const;
@@ -219,6 +252,12 @@ public:
 	idStr				Left( int len ) const;							// return the leftmost 'len' characters
 	idStr				Right( int len ) const;							// return the rightmost 'len' characters
 	idStr				Mid( int start, int len ) const;				// return 'len' characters starting at 'start'
+	void				Format( VERIFY_FORMAT_STRING const char* fmt, ... );					// perform a threadsafe sprintf to the string
+	static idStr		FormatInt( const int num, bool isCash = false );			// formats an integer as a value with commas
+	static idStr		FormatCash( const int num )
+	{
+		return FormatInt( num, true );
+	}
 	void				StripLeading( const char c );					// strip char from front as many times as the char occurs
 	void				StripLeading( const char* string );				// strip string from front as many times as the string occurs
 	bool				StripLeadingOnce( const char* string );			// strip string from front just once if it occurs
@@ -229,11 +268,14 @@ public:
 	void				Strip( const char* string );					// strip string from front and end as many times as the string occurs
 	void				StripTrailingWhitespace();				// strip trailing white space characters
 	idStr& 				StripQuotes();							// strip quotes around string
-	void				Replace( const char* old, const char* nw );
+	bool				Replace( const char* old, const char* nw );
+	bool				ReplaceChar( const char old, const char nw );
+	ID_INLINE void		CopyRange( const char* text, int start, int end );
 	
 	// file name methods
 	int					FileNameHash() const;						// hash key for the filename (skips extension)
 	idStr& 				BackSlashesToSlashes();					// convert slashes
+	idStr& 				SlashesToBackSlashes();					// convert slashes
 	idStr& 				SetFileExtension( const char* extension );		// set the given file extension
 	idStr& 				StripFileExtension();						// remove any file extension
 	idStr& 				StripAbsoluteFileExtension();				// remove any file extension looking from front (useful if there are multiple .'s)
@@ -275,6 +317,8 @@ public:
 	static void			StripMediaName( const char* name, idStr& mediaName );
 	static bool			CheckExtension( const char* name, const char* ext );
 	static const char* 	FloatArrayToString( const float* array, const int length, const int precision );
+	static const char* 	CStyleQuote( const char* str );
+	static const char* 	CStyleUnQuote( const char* str );
 	
 	// hash keys
 	static int			Hash( const char* string );
@@ -317,45 +361,133 @@ public:
 protected:
 	int					len;
 	char* 				data;
-	int					alloced;
+	int					allocedAndFlag;	// top bit is used to store a flag that indicates if the string data is static or not
 	char				baseBuffer[ STR_ALLOC_BASE ];
 	
-	void				Init();										// initialize string using base buffer
 	void				EnsureAlloced( int amount, bool keepold = true );	// ensure string data buffer is large anough
+	
+	// sets the data point to the specified buffer... note that this ignores makes the passed buffer empty and ignores
+	// anything currently in the idStr's dynamic buffer.  This method is intended to be called only from a derived class's constructor.
+	ID_INLINE void		SetStaticBuffer( char* buffer, const int bufferLength );
+	
+private:
+	// initialize string using base buffer... call ONLY FROM CONSTRUCTOR
+	ID_INLINE void		Construct();
+	
+	static const uint32	STATIC_BIT	= 31;
+	static const uint32	STATIC_MASK	= 1u << STATIC_BIT;
+	static const uint32	ALLOCED_MASK = STATIC_MASK - 1;
+	
+	
+	ID_INLINE int		GetAlloced() const
+	{
+		return allocedAndFlag & ALLOCED_MASK;
+	}
+	ID_INLINE void		SetAlloced( const int a )
+	{
+		allocedAndFlag = ( allocedAndFlag & STATIC_MASK ) | ( a & ALLOCED_MASK );
+	}
+	
+	ID_INLINE bool		IsStatic() const
+	{
+		return ( allocedAndFlag & STATIC_MASK ) != 0;
+	}
+	ID_INLINE void		SetStatic( const bool isStatic )
+	{
+		allocedAndFlag = ( allocedAndFlag & ALLOCED_MASK ) | ( isStatic << STATIC_BIT );
+	}
+	
+public:
+	static const int	INVALID_POSITION = -1;
 };
 
 char* 					va( const char* fmt, ... ) id_attribute( ( format( printf, 1, 2 ) ) );
 
+/*
+================================================================================================
 
-ID_INLINE void idStr::EnsureAlloced( int amount, bool keepold )
+	Sort routines for sorting idList<idStr>
+
+================================================================================================
+*/
+
+#if 0
+class idSort_Str : public idSort_Quick< idStr, idSort_Str >
 {
-	if( amount > alloced )
+public:
+	int Compare( const idStr& a, const idStr& b ) const
 	{
-		ReAllocate( amount, keepold );
+		return a.Icmp( b );
 	}
-}
+};
 
-ID_INLINE void idStr::Init()
+class idSort_PathStr : public idSort_Quick< idStr, idSort_PathStr >
 {
-	len = 0;
-	alloced = STR_ALLOC_BASE;
+public:
+	int Compare( const idStr& a, const idStr& b ) const
+	{
+		return a.IcmpPath( b );
+	}
+};
+#endif
+
+/*
+========================
+idStr::Construct
+========================
+*/
+ID_INLINE void idStr::Construct()
+{
+	SetStatic( false );
+	SetAlloced( STR_ALLOC_BASE );
 	data = baseBuffer;
+	len = 0;
 	data[ 0 ] = '\0';
 #ifdef ID_DEBUG_UNINITIALIZED_MEMORY
 	memset( baseBuffer, 0, sizeof( baseBuffer ) );
 #endif
 }
 
+
+ID_INLINE void idStr::EnsureAlloced( int amount, bool keepold )
+{
+	// static string's can't reallocate
+	if( IsStatic() )
+	{
+		release_assert( amount <= GetAlloced() );
+		return;
+	}
+	if( amount > GetAlloced() )
+	{
+		ReAllocate( amount, keepold );
+	}
+}
+
+/*
+========================
+idStr::SetStaticBuffer
+========================
+*/
+ID_INLINE void idStr::SetStaticBuffer( char* buffer, const int bufferLength )
+{
+	// this should only be called on a freshly constructed idStr
+	assert( data == baseBuffer );
+	data = buffer;
+	len = 0;
+	SetAlloced( bufferLength );
+	SetStatic( true );
+}
+
 ID_INLINE idStr::idStr()
 {
-	Init();
+	Construct();
 }
 
 ID_INLINE idStr::idStr( const idStr& text )
 {
+	Construct();
 	int l;
 	
-	Init();
 	l = text.Length();
 	EnsureAlloced( l + 1 );
 	strcpy( data, text.data );
@@ -364,10 +496,10 @@ ID_INLINE idStr::idStr( const idStr& text )
 
 ID_INLINE idStr::idStr( const idStr& text, int start, int end )
 {
+	Construct();
 	int i;
 	int l;
 	
-	Init();
 	if( end > text.Length() )
 	{
 		end = text.Length();
@@ -400,12 +532,14 @@ ID_INLINE idStr::idStr( const idStr& text, int start, int end )
 
 ID_INLINE idStr::idStr( const char* text )
 {
+	Construct();
 	int l;
 	
-	Init();
 	if( text )
 	{
-		l = strlen( text );
+		// RB: 64 bit fixes,  conversion from 'size_t' to 'int', possible loss of data
+		l = ( int )strlen( text );
+		// RB end
 		EnsureAlloced( l + 1 );
 		strcpy( data, text );
 		len = l;
@@ -414,10 +548,12 @@ ID_INLINE idStr::idStr( const char* text )
 
 ID_INLINE idStr::idStr( const char* text, int start, int end )
 {
+	Construct();
 	int i;
-	int l = strlen( text );
+	// RB: 64 bit fixes,  conversion from 'size_t' to 'int', possible loss of data
+	int l = ( int )strlen( text );
+	// RB end
 	
-	Init();
 	if( end > l )
 	{
 		end = l;
@@ -450,7 +586,7 @@ ID_INLINE idStr::idStr( const char* text, int start, int end )
 
 ID_INLINE idStr::idStr( const bool b )
 {
-	Init();
+	Construct();
 	EnsureAlloced( 2 );
 	data[ 0 ] = b ? '1' : '0';
 	data[ 1 ] = '\0';
@@ -459,7 +595,7 @@ ID_INLINE idStr::idStr( const bool b )
 
 ID_INLINE idStr::idStr( const char c )
 {
-	Init();
+	Construct();
 	EnsureAlloced( 2 );
 	data[ 0 ] = c;
 	data[ 1 ] = '\0';
@@ -468,10 +604,10 @@ ID_INLINE idStr::idStr( const char c )
 
 ID_INLINE idStr::idStr( const int i )
 {
+	Construct();
 	char text[ 64 ];
 	int l;
 	
-	Init();
 	l = sprintf( text, "%d", i );
 	EnsureAlloced( l + 1 );
 	strcpy( data, text );
@@ -480,10 +616,10 @@ ID_INLINE idStr::idStr( const int i )
 
 ID_INLINE idStr::idStr( const unsigned u )
 {
+	Construct();
 	char text[ 64 ];
 	int l;
 	
-	Init();
 	l = sprintf( text, "%u", u );
 	EnsureAlloced( l + 1 );
 	strcpy( data, text );
@@ -492,10 +628,10 @@ ID_INLINE idStr::idStr( const unsigned u )
 
 ID_INLINE idStr::idStr( const float f )
 {
+	Construct();
 	char text[ 64 ];
 	int l;
 	
-	Init();
 	l = idStr::snPrintf( text, sizeof( text ), "%f", f );
 	while( l > 0 && text[l - 1] == '0' ) text[--l] = '\0';
 	while( l > 0 && text[l - 1] == '.' ) text[--l] = '\0';
@@ -721,7 +857,9 @@ ID_INLINE int idStr::Cmpn( const char* text, int n ) const
 ID_INLINE int idStr::CmpPrefix( const char* text ) const
 {
 	assert( text );
-	return idStr::Cmpn( data, text, strlen( text ) );
+	// RB: 64 bit fixes,  conversion from 'size_t' to 'int', possible loss of data
+	return idStr::Cmpn( data, text, ( int )strlen( text ) );
+	// RB end
 }
 
 ID_INLINE int idStr::Icmp( const char* text ) const
@@ -739,7 +877,9 @@ ID_INLINE int idStr::Icmpn( const char* text, int n ) const
 ID_INLINE int idStr::IcmpPrefix( const char* text ) const
 {
 	assert( text );
-	return idStr::Icmpn( data, text, strlen( text ) );
+	// RB: 64 bit fixes,  conversion from 'size_t' to 'int', possible loss of data
+	return idStr::Icmpn( data, text, ( int )strlen( text ) );
+	// RB end
 }
 
 ID_INLINE int idStr::IcmpNoColor( const char* text ) const
@@ -763,7 +903,9 @@ ID_INLINE int idStr::IcmpnPath( const char* text, int n ) const
 ID_INLINE int idStr::IcmpPrefixPath( const char* text ) const
 {
 	assert( text );
-	return idStr::IcmpnPath( data, text, strlen( text ) );
+	// RB: 64 bit fixes,  conversion from 'size_t' to 'int', possible loss of data
+	return idStr::IcmpnPath( data, text, ( int )strlen( text ) );
+	// RB end
 }
 
 ID_INLINE int idStr::Length() const
@@ -775,7 +917,7 @@ ID_INLINE int idStr::Allocated() const
 {
 	if( data != baseBuffer )
 	{
-		return alloced;
+		return GetAlloced();
 	}
 	else
 	{
@@ -797,8 +939,14 @@ ID_INLINE bool idStr::IsEmpty() const
 
 ID_INLINE void idStr::Clear()
 {
+	if( IsStatic() )
+	{
+		len = 0;
+		data[ 0 ] = '\0';
+		return;
+	}
 	FreeData();
-	Init();
+	Construct();
 }
 
 ID_INLINE void idStr::Append( const char a )
@@ -831,7 +979,9 @@ ID_INLINE void idStr::Append( const char* text )
 	
 	if( text )
 	{
-		newLen = len + strlen( text );
+		// RB: 64 bit fixes,  conversion from 'size_t' to 'int', possible loss of data
+		newLen = len + ( int )strlen( text );
+		// RB end
 		EnsureAlloced( newLen + 1 );
 		for( i = 0; text[ i ]; i++ )
 		{
@@ -896,7 +1046,9 @@ ID_INLINE void idStr::Insert( const char* text, int index )
 		index = len;
 	}
 	
-	l = strlen( text );
+	// RB: 64 bit fixes,  conversion from 'size_t' to 'int', possible loss of data
+	l = ( int )strlen( text );
+	// RB end
 	EnsureAlloced( len + l + 1 );
 	for( i = len; i >= index; i-- )
 	{
@@ -979,6 +1131,62 @@ ID_INLINE void idStr::Fill( const char ch, int newlen )
 	len = newlen;
 	memset( data, ch, len );
 	data[ len ] = 0;
+}
+
+/*
+========================
+idStr::UTF8Length
+========================
+*/
+ID_INLINE int idStr::UTF8Length()
+{
+	return UTF8Length( ( byte* )data );
+}
+
+/*
+========================
+idStr::UTF8Char
+========================
+*/
+ID_INLINE uint32 idStr::UTF8Char( int& idx )
+{
+	return UTF8Char( ( byte* )data, idx );
+}
+
+/*
+========================
+idStr::ConvertToUTF8
+========================
+*/
+ID_INLINE void idStr::ConvertToUTF8()
+{
+	idStr temp( *this );
+	Clear();
+	for( int index = 0; index < temp.Length(); ++index )
+	{
+		AppendUTF8Char( temp[index] );
+	}
+}
+
+/*
+========================
+idStr::UTF8Char
+========================
+*/
+ID_INLINE uint32 idStr::UTF8Char( const char* s, int& idx )
+{
+	return UTF8Char( ( byte* )s, idx );
+}
+
+/*
+========================
+idStr::IsValidUTF8
+========================
+*/
+ID_INLINE bool idStr::IsValidUTF8( const uint8* s, const int maxLen )
+{
+	utf8Encoding_t encoding;
+	return IsValidUTF8( s, maxLen, encoding );
 }
 
 ID_INLINE int idStr::Find( const char c, int start, int end ) const
@@ -1191,7 +1399,31 @@ ID_INLINE int idStr::ColorIndex( int c )
 
 ID_INLINE int idStr::DynamicMemoryUsed() const
 {
-	return ( data == baseBuffer ) ? 0 : alloced;
+	return ( data == baseBuffer ) ? 0 : GetAlloced();
+}
+
+/*
+========================
+idStr::CopyRange
+========================
+*/
+ID_INLINE void idStr::CopyRange( const char* text, int start, int end )
+{
+	int l = end - start;
+	if( l < 0 )
+	{
+		l = 0;
+	}
+	
+	EnsureAlloced( l + 1 );
+	
+	for( int i = 0; i < l; i++ )
+	{
+		data[ i ] = text[ start + i ];
+	}
+	
+	data[ l ] = '\0';
+	len = l;
 }
 
 #endif /* !__STR_H__ */

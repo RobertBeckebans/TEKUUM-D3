@@ -14573,7 +14573,7 @@ idSIMD_SSE::DeriveUnsmoothedTangents
 */
 #define DERIVE_UNSMOOTHED_BITANGENT
 
-void VPCALL idSIMD_SSE::DeriveUnsmoothedTangents( idDrawVert *verts, const dominantTri_s *dominantTris, const int numVerts ) {
+void VPCALL idSIMD_SSE::DeriveUnsmoothedTangents( idDrawVert *verts, const dominantTri_t *dominantTris, const int numVerts ) {
 	int i, j;
 
 	for ( i = 0; i <= numVerts - 4; i += 4 ) {
@@ -14603,7 +14603,7 @@ void VPCALL idSIMD_SSE::DeriveUnsmoothedTangents( idDrawVert *verts, const domin
 		for ( j = 0; j < 4; j++ ) {
 			const idDrawVert *a, *b, *c;
 
-			const dominantTri_s &dt = dominantTris[i+j];
+			const dominantTri_t &dt = dominantTris[i+j];
 
 			s0[j] = dt.normalizationScale[0];
 			s1[j] = dt.normalizationScale[1];
@@ -14926,7 +14926,7 @@ void VPCALL idSIMD_SSE::DeriveUnsmoothedTangents( idDrawVert *verts, const domin
 		float t0, t1, t2;
 		float t3, t4, t5;
 
-		const dominantTri_s &dt = dominantTris[i];
+		const dominantTri_t &dt = dominantTris[i];
 
 		s0 = dt.normalizationScale[0];
 		s1 = dt.normalizationScale[1];

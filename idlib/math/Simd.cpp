@@ -3340,7 +3340,7 @@ void TestDeriveUnsmoothedTangents()
 	TIME_TYPE start, end, bestClocksGeneric, bestClocksSIMD;
 	ALIGN16( idDrawVert drawVerts1[COUNT] );
 	ALIGN16( idDrawVert drawVerts2[COUNT] );
-	ALIGN16( dominantTri_s dominantTris[COUNT] );
+	ALIGN16( dominantTri_t dominantTris[COUNT] );
 	const char* result;
 	
 	idRandom srnd( RANDOM_SEED );

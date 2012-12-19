@@ -270,9 +270,9 @@ public:
 	
 	virtual bool			Initialize( ) = 0;
 	
-	virtual bool			Lock( void** pDSLockedBuffer, ulong* dwDSLockedBufferSize ) = 0;
+	virtual bool			Lock( void** pDSLockedBuffer, uint32* dwDSLockedBufferSize ) = 0;
 	virtual bool			Unlock( void* pDSLockedBuffer, dword dwDSLockedBufferSize ) = 0;
-	virtual bool			GetCurrentPosition( ulong* pdwCurrentWriteCursor ) = 0;
+	virtual bool			GetCurrentPosition( uint32* pdwCurrentWriteCursor ) = 0;
 	
 	// try to write as many sound samples to the device as possible without blocking and prepare for a possible new mixing call
 	// returns wether there is *some* space for writing available

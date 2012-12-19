@@ -60,9 +60,9 @@ public:
 	
 	int FillBufferWithSound( LPDIRECTSOUNDBUFFER pDSB, bool bRepeatWavIfBufferLarger );
 	
-	bool Lock( void** pDSLockedBuffer, ulong* dwDSLockedBufferSize );
+	bool Lock( void** pDSLockedBuffer, uint32* dwDSLockedBufferSize );
 	bool Unlock( void* pDSLockedBuffer, dword dwDSLockedBufferSize );
-	bool GetCurrentPosition( ulong* pdwCurrentWriteCursor );
+	bool GetCurrentPosition( uint32* pdwCurrentWriteCursor );
 	
 	int Play( dword dwPriority = 0, dword dwFlags = 0 );
 	int Stop();
@@ -92,11 +92,11 @@ public:
 	
 	int Create( idWaveFile* pWaveFile, idAudioBuffer** ppiab );
 	int Create( idAudioBuffer** ppSound, const char* strWaveFileName, dword dwCreationFlags = 0 );
-	int CreateFromMemory( idAudioBufferWIN32** ppSound, byte* pbData, ulong ulDataSize, waveformatextensible_t* pwfx, dword dwCreationFlags = 0 );
+	int CreateFromMemory( idAudioBufferWIN32** ppSound, byte* pbData, uint32 ulDataSize, waveformatextensible_t* pwfx, dword dwCreationFlags = 0 );
 	
-	bool Lock( void** pDSLockedBuffer, ulong* dwDSLockedBufferSize );
+	bool Lock( void** pDSLockedBuffer, uint32* dwDSLockedBufferSize );
 	bool Unlock( void* pDSLockedBuffer, dword dwDSLockedBufferSize );
-	bool GetCurrentPosition( ulong* pdwCurrentWriteCursor );
+	bool GetCurrentPosition( uint32* pdwCurrentWriteCursor );
 	
 	int				GetNumberOfSpeakers()
 	{
@@ -261,8 +261,8 @@ void idAudioHardwareWIN32::SetPrimaryBufferFormat( dword dwPrimaryFreq, dword dw
 		return;
 	}
 	
-	ulong cfgSpeakers;
-	m_pDS->GetSpeakerConfig( &cfgSpeakers );
+	uint32 cfgSpeakers;
+	m_pDS->GetSpeakerConfig( (LPDWORD) &cfgSpeakers );
 	
 	DSCAPS dscaps;
 	dscaps.dwSize = sizeof( DSCAPS );
@@ -476,7 +476,7 @@ LFail:
 //-----------------------------------------------------------------------------
 int idAudioHardwareWIN32::CreateFromMemory( idAudioBufferWIN32** ppSound,
 		byte* pbData,
-		ulong  ulDataSize,
+		uint32  ulDataSize,
 		waveformatextensible_t* pwfx,
 		dword dwCreationFlags )
 {
@@ -523,7 +523,7 @@ int idAudioHardwareWIN32::CreateFromMemory( idAudioBufferWIN32** ppSound,
 idAudioHardwareWIN32::Lock
 ===============
 */
-bool idAudioHardwareWIN32::Lock( void** pDSLockedBuffer, ulong* dwDSLockedBufferSize )
+bool idAudioHardwareWIN32::Lock( void** pDSLockedBuffer, uint32* dwDSLockedBufferSize )
 {
 	if( speakers )
 	{
@@ -551,7 +551,7 @@ bool idAudioHardwareWIN32::Unlock( void* pDSLockedBuffer, dword dwDSLockedBuffer
 idAudioHardwareWIN32::GetCurrentPosition
 ===============
 */
-bool idAudioHardwareWIN32::GetCurrentPosition( ulong* pdwCurrentWriteCursor )
+bool idAudioHardwareWIN32::GetCurrentPosition( uint32* pdwCurrentWriteCursor )
 {
 	if( speakers )
 	{
@@ -653,7 +653,7 @@ int idAudioBufferWIN32::FillBufferWithSound( LPDIRECTSOUNDBUFFER pDSB, bool bRep
 {
 	int hr;
 	void*   pDSLockedBuffer      = NULL; // Pointer to locked buffer memory
-	ulong   dwDSLockedBufferSize = 0;    // Size of the locked DirectSound buffer
+	uint32   dwDSLockedBufferSize = 0;    // Size of the locked DirectSound buffer
 	int		dwWavDataRead        = 0;    // Amount of data read from the wav file
 	
 	if( pDSB == NULL )
@@ -674,7 +674,7 @@ int idAudioBufferWIN32::FillBufferWithSound( LPDIRECTSOUNDBUFFER pDSB, bool bRep
 	}
 	
 	// Lock the buffer down
-	if( FAILED( hr = pDSB->Lock( 0, m_dwDSBufferSize, &pDSLockedBuffer, &dwDSLockedBufferSize, NULL, NULL, 0L ) ) )
+	if( FAILED( hr = pDSB->Lock( 0, m_dwDSBufferSize, (LPVOID*) &pDSLockedBuffer, (LPDWORD) &dwDSLockedBufferSize, NULL, NULL, 0L ) ) )
 	{
 		DXTRACE_ERR( TEXT( "Lock" ), hr );
 		return -1;
@@ -752,8 +752,8 @@ int idAudioBufferWIN32::RestoreBuffer( LPDIRECTSOUNDBUFFER pDSB, bool* pbWasRest
 		*pbWasRestored = false;
 	}
 	
-	ulong dwStatus;
-	if( FAILED( hr = pDSB->GetStatus( &dwStatus ) ) )
+	uint32 dwStatus;
+	if( FAILED( hr = pDSB->GetStatus( (LPDWORD) &dwStatus ) ) )
 	{
 		return DXTRACE_ERR( TEXT( "GetStatus" ), hr );
 	}
@@ -878,8 +878,8 @@ bool idAudioBufferWIN32::IsSoundPlaying( )
 	
 	if( m_apDSBuffer )
 	{
-		ulong dwStatus = 0;
-		m_apDSBuffer->GetStatus( &dwStatus );
+		uint32 dwStatus = 0;
+		m_apDSBuffer->GetStatus( (LPDWORD) &dwStatus );
 		if( dwStatus & DSBSTATUS_PLAYING )
 		{
 			return true;
@@ -893,7 +893,7 @@ bool idAudioBufferWIN32::IsSoundPlaying( )
 idAudioBufferWIN32::Lock
 ===============
 */
-bool idAudioBufferWIN32::Lock( void** pDSLockedBuffer, ulong* dwDSLockedBufferSize )
+bool idAudioBufferWIN32::Lock( void** pDSLockedBuffer, uint32* dwDSLockedBufferSize )
 {
 	int hr;
 	// Restore the buffer if it was lost
@@ -904,7 +904,7 @@ bool idAudioBufferWIN32::Lock( void** pDSLockedBuffer, ulong* dwDSLockedBufferSi
 	}
 	
 	// Lock the DirectSound buffer
-	if( FAILED( hr = m_apDSBuffer->Lock( 0, m_dwDSBufferSize, pDSLockedBuffer, dwDSLockedBufferSize, NULL, NULL, 0 ) ) )
+	if( FAILED( hr = m_apDSBuffer->Lock( 0, m_dwDSBufferSize, pDSLockedBuffer, (LPDWORD) dwDSLockedBufferSize, NULL, NULL, 0 ) ) )
 	{
 		return false;
 	}
@@ -928,7 +928,7 @@ bool idAudioBufferWIN32::Unlock( void* pDSLockedBuffer, dword dwDSLockedBufferSi
 idAudioBufferWIN32::GetCurrentPosition
 ===============
 */
-bool idAudioBufferWIN32::GetCurrentPosition( ulong* pdwCurrentWriteCursor )
+bool idAudioBufferWIN32::GetCurrentPosition( uint32* pdwCurrentWriteCursor )
 {
 	int hr;
 	
@@ -940,7 +940,7 @@ bool idAudioBufferWIN32::GetCurrentPosition( ulong* pdwCurrentWriteCursor )
 		return false;
 	}
 	
-	if( FAILED( hr = m_apDSBuffer->GetCurrentPosition( NULL, pdwCurrentWriteCursor ) ) )
+	if( FAILED( hr = m_apDSBuffer->GetCurrentPosition( NULL, (LPDWORD) pdwCurrentWriteCursor ) ) )
 	{
 		return false;
 	}

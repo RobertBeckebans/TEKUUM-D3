@@ -671,7 +671,7 @@ void idSoundSystemLocal::ClearBuffer()
 	}
 	
 	short* fBlock;
-	ulong fBlockLen;
+	uint32 fBlockLen;
 	
 	if( !snd_audio_hw->Lock( ( void** )&fBlock, &fBlockLen ) )
 	{
@@ -728,7 +728,7 @@ int idSoundSystemLocal::AsyncUpdate( int inTime )
 		return 0;
 	}
 	
-	ulong dwCurrentWritePos;
+	uint32 dwCurrentWritePos;
 	dword dwCurrentBlock;
 	
 	// If not using openal, get actual playback position from sound hardware
@@ -766,7 +766,7 @@ int idSoundSystemLocal::AsyncUpdate( int inTime )
 	
 	// lock the buffer so we can actually write to it
 	short* fBlock = NULL;
-	ulong fBlockLen = 0;
+	uint32 fBlockLen = 0;
 	
 	// RB begin
 #if defined(USE_OPENAL)
