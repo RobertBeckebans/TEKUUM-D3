@@ -26,7 +26,7 @@ If you have questions concerning this license or the applicable additional terms
 ===========================================================================
 */
 
-#include "../../idlib/precompiled.h"
+#include "precompiled.h"
 #pragma hdrstop
 
 #include "GEApp.h"
@@ -339,7 +339,7 @@ bool rvGEWorkspace::LoadFile( const char* filename, idStr* error )
 		result = false;
 		if( error )
 		{
-			*error = e.error;
+			*error = e.GetError();
 		}
 		return false;
 	}

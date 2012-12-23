@@ -26,7 +26,7 @@ If you have questions concerning this license or the applicable additional terms
 ===========================================================================
 */
 
-#include "../../idlib/precompiled.h"
+#include "precompiled.h"
 #pragma hdrstop
 
 #include "qe3.h"
@@ -198,7 +198,7 @@ void RadiantRun()
 	}
 	catch( idException& ex )
 	{
-		::MessageBox( NULL, ex.error, "Exception error", MB_OK );
+		::MessageBox( NULL, ex.GetError(), "Exception error", MB_OK );
 		RadiantShutdown();
 	}
 }

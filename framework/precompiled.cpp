@@ -25,29 +25,4 @@ If you have questions concerning this license or the applicable additional terms
 
 ===========================================================================
 */
-
 #include "precompiled.h"
-#pragma hdrstop
-
-#include "DeviceContext.h"
-#include "Window.h"
-#include "UserInterfaceLocal.h"
-#include "GameWindow.h"
-
-/*
-================
-idGameWindowProxy::idGameWindowProxy
-================
-*/
-idGameWindowProxy::idGameWindowProxy( idDeviceContext* d, idUserInterfaceLocal* g ) : idWindow( d, g ) { }
-
-/*
-================
-idGameWindowProxy::Draw
-================
-*/
-void idGameWindowProxy::Draw( int time, float x, float y )
-{
-	common->Printf( "TODO: idGameWindowProxy::Draw\n" );
-}
-
