@@ -1,25 +1,25 @@
 /*
 ===========================================================================
 
-Doom 3 GPL Source Code
-Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Doom 3 BFG Edition GPL Source Code
+Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
 
-This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
+This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
-Doom 3 Source Code is free software: you can redistribute it and/or modify
+Doom 3 BFG Edition Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Doom 3 Source Code is distributed in the hope that it will be useful,
+Doom 3 BFG Edition Source Code is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Doom 3 Source Code.  If not, see <http://www.gnu.org/licenses/>.
+along with Doom 3 BFG Edition Source Code.  If not, see <http://www.gnu.org/licenses/>.
 
-In addition, the Doom 3 Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 Source Code.  If not, please request a copy in writing from id Software at the address below.
+In addition, the Doom 3 BFG Edition Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 BFG Edition Source Code.  If not, please request a copy in writing from id Software at the address below.
 
 If you have questions concerning this license or the applicable additional terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 
@@ -44,7 +44,19 @@ If you have questions concerning this license or the applicable additional terms
 #define MD5_CAMERA_EXT			"md5camera"
 #define MD5_VERSION				10
 
+// using shorts for triangle indexes can save a significant amount of traffic, but
+// to support the large models that renderBump loads, they need to be 32 bits
+#if defined(USE_GLES1)
 
+#define GL_INDEX_TYPE		GL_UNSIGNED_SHORT
+typedef short glIndex_t;
+
+#else
+
+#define GL_INDEX_TYPE		GL_UNSIGNED_INT
+typedef int glIndex_t;
+
+#endif
 
 
 typedef struct
@@ -61,7 +73,7 @@ struct dominantTri_t
 	float						normalizationScale[3];
 };
 
-typedef struct lightingCache_s
+struct lightingCache_t
 {
 	idVec3						localLightVector;		// this is the statically computed vector to the light
 	// in texture space for cards without vertex programs
@@ -71,17 +83,20 @@ typedef struct lightingCache_s
 	idVec4						lightProjection;		// light projection texgen
 #endif
 	
-} lightingCache_t;
+};
 
-typedef struct shadowCache_s
+struct shadowCache_t
 {
 	idVec4						xyz;					// we use homogenous coordinate tricks
-} shadowCache_t;
+};
 
 const int SHADOW_CAP_INFINITE	= 64;
 
+class idRenderModelStatic;
+struct viewDef_t;
+
 // our only drawing geometry type
-typedef struct srfTriangles_s
+struct srfTriangles_t
 {
 	idBounds					bounds;					// for culling
 	
@@ -126,38 +141,43 @@ typedef struct srfTriangles_s
 	shadowCache_t* 				shadowVertexes;			// these will be copied to shadowCache when it is going to be drawn.
 	// these are NULL when vertex programs are available
 	
-	struct srfTriangles_s* 		ambientSurface;			// for light interactions, point back at the original surface that generated
+	srfTriangles_t* 			ambientSurface;			// for light interactions, point back at the original surface that generated
 	// the interaction, which we will get the ambientCache from
 	
-	struct srfTriangles_s* 		nextDeferredFree;		// chain of tris to free next frame
+	srfTriangles_t* 			nextDeferredFree;		// chain of tris to free next frame
+	
+	// for deferred normal / tangent transformations by joints
+	// the jointsInverted list / buffer object on md5WithJoints may be
+	// shared by multiple srfTriangles_t
+	idRenderModelStatic* 		staticModelWithJoints;
 	
 	// data in vertex object space, not directly readable by the CPU
 	struct vertCache_s* 		indexCache;				// int
 	struct vertCache_s* 		ambientCache;			// idDrawVert
 	struct vertCache_s* 		lightingCache;			// lightingCache_t
 	struct vertCache_s* 		shadowCache;			// shadowCache_t
-} srfTriangles_t;
+};
 
 typedef idList<srfTriangles_t*> idTriList;
 
-typedef struct modelSurface_s
+struct modelSurface_t
 {
 	int							id;
 	const idMaterial* 			shader;
 	srfTriangles_t* 			geometry;
-} modelSurface_t;
+};
 
-typedef enum
+enum dynamicModel_t
 {
 	DM_STATIC,		// never creates a dynamic model
 	DM_CACHED,		// once created, stays constant until the entity is updated (animating characters)
 	DM_CONTINUOUS	// must be recreated for every single view (time dependent things like particles)
-} dynamicModel_t;
+};
 
-typedef enum
+enum jointHandle_t
 {
 	INVALID_JOINT				= -1
-} jointHandle_t;
+};
 
 class idMD5Joint
 {
@@ -181,6 +201,11 @@ public:
 	
 	// Loads static models only, dynamic models must be loaded by the modelManager
 	virtual void				InitFromFile( const char* fileName ) = 0;
+	
+	// Supports reading/writing binary file formats
+	virtual bool				LoadBinaryModel( idFile* file, const ID_TIME_T sourceTimeStamp ) = 0;
+	virtual void				WriteBinaryModel( idFile* file, ID_TIME_T* _timeStamp = NULL ) const = 0;
+	virtual bool				SupportsBinaryModel() = 0;
 	
 	// renderBump uses this to load the very high poly count models, skipping the
 	// shadow and tangent generation, along with some surface cleanup to make it load faster
@@ -240,7 +265,7 @@ public:
 	virtual int					Memory() const = 0;
 	
 	// for reloadModels
-	virtual ID_TIME_T				Timestamp() const = 0;
+	virtual ID_TIME_T			Timestamp() const = 0;
 	
 	// returns the number of surfaces
 	virtual int					NumSurfaces() const = 0;
@@ -293,7 +318,7 @@ public:
 	// The renderer will delete the returned dynamic model the next view
 	// This isn't const, because it may need to reload a purged model if it
 	// wasn't precached correctly.
-	virtual idRenderModel* 		InstantiateDynamicModel( const struct renderEntity_s* ent, const struct viewDef_s* view, idRenderModel* cachedModel ) = 0;
+	virtual idRenderModel* 		InstantiateDynamicModel( const struct renderEntity_s* ent, const viewDef_t* view, idRenderModel* cachedModel ) = 0;
 	
 	// Returns the number of joints or 0 if the model is not an MD5
 	virtual int					NumJoints() const = 0;
@@ -316,6 +341,26 @@ public:
 	// Writing to and reading from a demo file.
 	virtual void				ReadFromDemoFile( class idDemoFile* f ) = 0;
 	virtual void				WriteToDemoFile( class idDemoFile* f ) = 0;
+	
+	// if false, the model doesn't need to be linked into the world, because it
+	// can't contribute visually -- triggers, etc
+	virtual bool				ModelHasDrawingSurfaces() const
+	{
+		return true;
+	};
+	
+	// if false, the model doesn't generate interactions with lights
+	virtual bool				ModelHasInteractingSurfaces() const
+	{
+		return true;
+	};
+	
+	// if false, the model doesn't need to be added to the view unless it is
+	// directly visible, because it can't cast shadows into the view
+	virtual bool				ModelHasShadowCastingSurfaces() const
+	{
+		return true;
+	};
 };
 
 #endif /* !__MODEL_H__ */

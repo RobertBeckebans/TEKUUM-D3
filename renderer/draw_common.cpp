@@ -1261,7 +1261,7 @@ void RB_SetProgramEnvironmentSpace()
 		return;
 	}
 	
-	const struct viewEntity_s* space = backEnd.currentSpace;
+	const struct viewEntity_t* space = backEnd.currentSpace;
 	float	parm[4];
 	
 	// set eye position in local space

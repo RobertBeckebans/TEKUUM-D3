@@ -66,7 +66,7 @@ bool idRenderModelSprite::IsLoaded() const
 idRenderModelSprite::InstantiateDynamicModel
 ===============
 */
-idRenderModel* 	idRenderModelSprite::InstantiateDynamicModel( const struct renderEntity_s* renderEntity, const struct viewDef_s* viewDef, idRenderModel* cachedModel )
+idRenderModel* 	idRenderModelSprite::InstantiateDynamicModel( const struct renderEntity_s* renderEntity, const viewDef_t* viewDef, idRenderModel* cachedModel )
 {
 	idRenderModelStatic* staticModel;
 	srfTriangles_t* tri;

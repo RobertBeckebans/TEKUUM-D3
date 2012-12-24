@@ -522,7 +522,7 @@ idRenderModelDecal* idRenderModelDecal::RemoveFadedDecals( idRenderModelDecal* d
 idRenderModelDecal::AddDecalDrawSurf
 =====================
 */
-void idRenderModelDecal::AddDecalDrawSurf( viewEntity_t* space )
+void idRenderModelDecal::AddDecalDrawSurf( const struct viewEntity_t* space )
 {
 	int i, j, maxTime;
 	float f;

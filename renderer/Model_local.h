@@ -1,25 +1,26 @@
 /*
 ===========================================================================
 
-Doom 3 GPL Source Code
-Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Doom 3 BFG Edition GPL Source Code
+Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2012 Robert Beckebans
 
-This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
+This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
-Doom 3 Source Code is free software: you can redistribute it and/or modify
+Doom 3 BFG Edition Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Doom 3 Source Code is distributed in the hope that it will be useful,
+Doom 3 BFG Edition Source Code is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Doom 3 Source Code.  If not, see <http://www.gnu.org/licenses/>.
+along with Doom 3 BFG Edition Source Code.  If not, see <http://www.gnu.org/licenses/>.
 
-In addition, the Doom 3 Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 Source Code.  If not, please request a copy in writing from id Software at the address below.
+In addition, the Doom 3 BFG Edition Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 BFG Edition Source Code.  If not, please request a copy in writing from id Software at the address below.
 
 If you have questions concerning this license or the applicable additional terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 
@@ -37,6 +38,8 @@ If you have questions concerning this license or the applicable additional terms
 ===============================================================================
 */
 
+class idJointMat;
+struct deformInfo_t;
 class ColladaParser;
 
 class idRenderModelStatic : public idRenderModel
@@ -49,6 +52,13 @@ public:
 	virtual						~idRenderModelStatic();
 	
 	virtual void				InitFromFile( const char* fileName );
+	virtual bool				LoadBinaryModel( idFile* file, const ID_TIME_T sourceTimeStamp );
+	virtual void				WriteBinaryModel( idFile* file, ID_TIME_T* _timeStamp = NULL ) const;
+	virtual bool				SupportsBinaryModel()
+	{
+		return true;
+	}
+	
 	virtual void				PartialInitFromFile( const char* fileName );
 	virtual void				PurgeModel();
 	virtual void				Reset() {};
@@ -76,7 +86,7 @@ public:
 	virtual dynamicModel_t		IsDynamicModel() const;
 	virtual bool				IsDefaultModel() const;
 	virtual bool				IsReloadable() const;
-	virtual idRenderModel* 		InstantiateDynamicModel( const struct renderEntity_s* ent, const struct viewDef_s* view, idRenderModel* cachedModel );
+	virtual idRenderModel* 		InstantiateDynamicModel( const struct renderEntity_s* ent, const viewDef_t* view, idRenderModel* cachedModel );
 	virtual int					NumJoints() const;
 	virtual const idMD5Joint* 	GetJoints() const;
 	virtual jointHandle_t		GetJointHandle( const char* name ) const;
@@ -88,11 +98,23 @@ public:
 	virtual void				WriteToDemoFile( class idDemoFile* f );
 	virtual float				DepthHack() const;
 	
+	virtual bool				ModelHasDrawingSurfaces() const
+	{
+		return hasDrawingSurfaces;
+	};
+	virtual bool				ModelHasInteractingSurfaces() const
+	{
+		return hasInteractingSurfaces;
+	};
+	virtual bool				ModelHasShadowCastingSurfaces() const
+	{
+		return hasShadowCastingSurfaces;
+	};
+	
 	void						MakeDefaultModel();
 	
 	bool						LoadASE( const char* fileName );
 	bool						LoadLWO( const char* fileName );
-	bool						LoadFLT( const char* fileName );
 	bool						LoadMA( const char* filename );
 // RB: added COLLADA support
 	bool						LoadDAE( const char* fileName );
@@ -107,12 +129,20 @@ public:
 	
 	bool						DeleteSurfaceWithId( int id );
 	void						DeleteSurfacesWithNegativeId();
-	bool						FindSurfaceWithId( int id, int& surfaceNum );
+	bool						FindSurfaceWithId( int id, int& surfaceNum ) const;
 	
 public:
 	idList<modelSurface_t>		surfaces;
 	idBounds					bounds;
 	int							overlaysAdded;
+	
+	
+#if 0
+	// when an md5 is instantiated, the inverted joints array is stored to allow GPU skinning
+	int							numInvertedJoints;
+	idJointMat* 				jointsInverted;
+	vertCacheHandle_t			jointsInvertedBuffer;
+#endif
 	
 protected:
 	int							lastModifiedFrame;
@@ -126,6 +156,9 @@ protected:
 	bool						fastLoad;				// don't generate tangents and shadow data
 	bool						reloadable;				// if not, reloadModels won't check timestamp
 	bool						levelLoadReferenced;	// for determining if it needs to be freed
+	bool						hasDrawingSurfaces;
+	bool						hasInteractingSurfaces;
+	bool						hasShadowCastingSurfaces;
 	ID_TIME_T					timeStamp;
 	
 	static idCVar				r_mergeModelSurfaces;	// combine model surfaces with the same material
@@ -153,6 +186,20 @@ public:
 	void						ParseMesh( idLexer& parser, int numJoints, const idJointMat* joints );
 	void						UpdateSurface( const struct renderEntity_s* ent, const idJointMat* joints, modelSurface_t* surf );
 	idBounds					CalcBounds( const idJointMat* joints );
+	
+	/*
+	int							NumVerts() const
+	{
+		return numVerts;
+	}
+	int							NumTris() const
+	{
+		return numTris;
+	}
+	*/
+	void						UpdateSurface( const struct renderEntity_s* ent, const idJointMat* joints,
+			const idJointMat* entJointsInverted, modelSurface_t* surf );
+	void						CalculateBounds( const idJointMat* entJoints, idBounds& bounds ) const;
 	int							NearestJoint( int a, int b, int c ) const;
 	int							NumVerts() const;
 	int							NumTris() const;
@@ -164,8 +211,12 @@ private:
 	idVec4* 					scaledWeights;		// joint weights
 	int* 						weightIndex;		// pairs of: joint offset + bool true if next weight is for next vertex
 	const idMaterial* 			shader;				// material applied to mesh
+	int							numVerts;			// number of vertices
 	int							numTris;			// number of triangles
-	struct deformInfo_s* 		deformInfo;			// used to create srfTriangles_t from base frames and new vertexes
+	byte* 						meshJoints;			// the joints used by this mesh
+	int							numMeshJoints;		// number of mesh joints
+	float						maxJointVertDist;	// maximum distance a vertex is separated from a joint
+	deformInfo_t* 				deformInfo;			// used to create srfTriangles_t from base frames and new vertexes
 	int							surfaceNum;			// number of the static surface created for this mesh
 	
 	void						TransformVerts( idDrawVert* verts, const idJointMat* joints );
@@ -176,6 +227,21 @@ class idRenderModelMD5 : public idRenderModelStatic
 {
 public:
 	virtual void				InitFromFile( const char* fileName );
+	
+#if 0
+	virtual bool				LoadBinaryModel( idFile* file, const ID_TIME_T sourceTimeStamp );
+	virtual void				WriteBinaryModel( idFile* file, ID_TIME_T* _timeStamp = NULL ) const;
+	virtual bool				SupportsBinaryModel()
+	{
+		return true;
+	}
+#else
+	virtual bool				SupportsBinaryModel()
+	{
+		return false;
+	}
+#endif
+	
 	virtual dynamicModel_t		IsDynamicModel() const;
 	virtual idBounds			Bounds( const struct renderEntity_s* ent ) const;
 	virtual void				Print() const;
@@ -184,7 +250,7 @@ public:
 	virtual void				PurgeModel();
 	virtual void				LoadModel();
 	virtual int					Memory() const;
-	virtual idRenderModel* 		InstantiateDynamicModel( const struct renderEntity_s* ent, const struct viewDef_s* view, idRenderModel* cachedModel );
+	virtual idRenderModel* 		InstantiateDynamicModel( const struct renderEntity_s* ent, const viewDef_t* view, idRenderModel* cachedModel );
 	virtual int					NumJoints() const;
 	virtual const idMD5Joint* 	GetJoints() const;
 	virtual jointHandle_t		GetJointHandle( const char* name ) const;
@@ -195,11 +261,13 @@ public:
 private:
 	idList<idMD5Joint>			joints;
 	idList<idJointQuat>			defaultPose;
+	idList<idJointMat>			invertedDefaultPose;
 	idList<idMD5Mesh>			meshes;
 	
 	void						CalculateBounds( const idJointMat* joints );
 	void						GetFrameBounds( const renderEntity_t* ent, idBounds& bounds ) const;
-	void						DrawJoints( const renderEntity_t* ent, const struct viewDef_s* view ) const;
+	
+	void						DrawJoints( const renderEntity_t* ent, const viewDef_t* view ) const;
 	void						ParseJoint( idLexer& parser, idMD5Joint* joint, idJointQuat* defaultPose );
 };
 
@@ -218,8 +286,12 @@ class idRenderModelMD3 : public idRenderModelStatic
 {
 public:
 	virtual void				InitFromFile( const char* fileName );
+	virtual bool				SupportsBinaryModel()
+	{
+		return false;
+	}
 	virtual dynamicModel_t		IsDynamicModel() const;
-	virtual idRenderModel* 		InstantiateDynamicModel( const struct renderEntity_s* ent, const struct viewDef_s* view, idRenderModel* cachedModel );
+	virtual idRenderModel* 		InstantiateDynamicModel( const struct renderEntity_s* ent, const viewDef_t* view, idRenderModel* cachedModel );
 	virtual idBounds			Bounds( const struct renderEntity_s* ent ) const;
 	
 private:
@@ -245,8 +317,12 @@ public:
 	idRenderModelLiquid();
 	
 	virtual void				InitFromFile( const char* fileName );
+	virtual bool				SupportsBinaryModel()
+	{
+		return false;
+	}
 	virtual dynamicModel_t		IsDynamicModel() const;
-	virtual idRenderModel* 		InstantiateDynamicModel( const struct renderEntity_s* ent, const struct viewDef_s* view, idRenderModel* cachedModel );
+	virtual idRenderModel* 		InstantiateDynamicModel( const struct renderEntity_s* ent, const viewDef_t* view, idRenderModel* cachedModel );
 	virtual idBounds			Bounds( const struct renderEntity_s* ent ) const;
 	
 	virtual void				Reset();
@@ -269,7 +345,7 @@ private:
 	idRandom					random;
 	
 	const idMaterial* 			shader;
-	struct deformInfo_s*			deformInfo;		// used to create srfTriangles_t from base frames
+	deformInfo_t* 				deformInfo;		// used to create srfTriangles_t from base frames
 	// and new vertexes
 	
 	float						density;
@@ -301,12 +377,31 @@ public:
 	idRenderModelPrt();
 	
 	virtual void				InitFromFile( const char* fileName );
+	virtual bool				SupportsBinaryModel()
+	{
+		return false;
+	}
 	virtual void				TouchData();
 	virtual dynamicModel_t		IsDynamicModel() const;
-	virtual idRenderModel* 		InstantiateDynamicModel( const struct renderEntity_s* ent, const struct viewDef_s* view, idRenderModel* cachedModel );
+	virtual idRenderModel* 		InstantiateDynamicModel( const struct renderEntity_s* ent, const viewDef_t* view, idRenderModel* cachedModel );
 	virtual idBounds			Bounds( const struct renderEntity_s* ent ) const;
 	virtual float				DepthHack() const;
 	virtual int					Memory() const;
+	
+	// with the addModels2 arrangement we could have light accepting and
+	// shadowing dynamic models, but the original game never did
+	virtual bool				ModelHasDrawingSurfaces() const
+	{
+		return true;
+	};
+	virtual bool				ModelHasInteractingSurfaces() const
+	{
+		return false;
+	};
+	virtual bool				ModelHasShadowCastingSurfaces() const
+	{
+		return false;
+	};
 	
 private:
 	const idDeclParticle* 		particleSystem;
@@ -324,9 +419,28 @@ class idRenderModelBeam : public idRenderModelStatic
 {
 public:
 	virtual dynamicModel_t		IsDynamicModel() const;
+	virtual bool				SupportsBinaryModel()
+	{
+		return false;
+	}
 	virtual bool				IsLoaded() const;
-	virtual idRenderModel* 		InstantiateDynamicModel( const struct renderEntity_s* ent, const struct viewDef_s* view, idRenderModel* cachedModel );
+	virtual idRenderModel* 		InstantiateDynamicModel( const struct renderEntity_s* ent, const viewDef_t* view, idRenderModel* cachedModel );
 	virtual idBounds			Bounds( const struct renderEntity_s* ent ) const;
+	
+	// with the addModels2 arrangement we could have light accepting and
+	// shadowing dynamic models, but the original game never did
+	virtual bool				ModelHasDrawingSurfaces() const
+	{
+		return true;
+	};
+	virtual bool				ModelHasInteractingSurfaces() const
+	{
+		return false;
+	};
+	virtual bool				ModelHasShadowCastingSurfaces() const
+	{
+		return false;
+	};
 };
 
 /*
@@ -357,9 +471,28 @@ public:
 	idRenderModelTrail();
 	
 	virtual dynamicModel_t		IsDynamicModel() const;
+	virtual bool				SupportsBinaryModel()
+	{
+		return false;
+	}
 	virtual bool				IsLoaded() const;
-	virtual idRenderModel* 		InstantiateDynamicModel( const struct renderEntity_s* ent, const struct viewDef_s* view, idRenderModel* cachedModel );
+	virtual idRenderModel* 		InstantiateDynamicModel( const struct renderEntity_s* ent, const viewDef_t* view, idRenderModel* cachedModel );
 	virtual idBounds			Bounds( const struct renderEntity_s* ent ) const;
+	
+	// with the addModels2 arrangement we could have light accepting and
+	// shadowing dynamic models, but the original game never did
+	virtual bool				ModelHasDrawingSurfaces() const
+	{
+		return true;
+	};
+	virtual bool				ModelHasInteractingSurfaces() const
+	{
+		return false;
+	};
+	virtual bool				ModelHasShadowCastingSurfaces() const
+	{
+		return false;
+	};
 	
 	int							NewTrail( idVec3 pt, int duration );
 	void						UpdateTrail( int index, idVec3 pt );
@@ -378,9 +511,28 @@ class idRenderModelLightning : public idRenderModelStatic
 {
 public:
 	virtual dynamicModel_t		IsDynamicModel() const;
+	virtual bool				SupportsBinaryModel()
+	{
+		return false;
+	}
 	virtual bool				IsLoaded() const;
-	virtual idRenderModel* 		InstantiateDynamicModel( const struct renderEntity_s* ent, const struct viewDef_s* view, idRenderModel* cachedModel );
+	virtual idRenderModel* 		InstantiateDynamicModel( const struct renderEntity_s* ent, const viewDef_t* view, idRenderModel* cachedModel );
 	virtual idBounds			Bounds( const struct renderEntity_s* ent ) const;
+	
+	// with the addModels2 arrangement we could have light accepting and
+	// shadowing dynamic models, but the original game never did
+	virtual bool				ModelHasDrawingSurfaces() const
+	{
+		return true;
+	};
+	virtual bool				ModelHasInteractingSurfaces() const
+	{
+		return false;
+	};
+	virtual bool				ModelHasShadowCastingSurfaces() const
+	{
+		return false;
+	};
 };
 
 /*
@@ -393,10 +545,29 @@ public:
 class idRenderModelSprite : public idRenderModelStatic
 {
 public:
-	virtual	dynamicModel_t	IsDynamicModel() const;
-	virtual	bool			IsLoaded() const;
-	virtual	idRenderModel* 	InstantiateDynamicModel( const struct renderEntity_s* ent, const struct viewDef_s* view, idRenderModel* cachedModel );
-	virtual	idBounds		Bounds( const struct renderEntity_s* ent ) const;
+	virtual	dynamicModel_t		IsDynamicModel() const;
+	virtual bool				SupportsBinaryModel()
+	{
+		return false;
+	}
+	virtual	bool				IsLoaded() const;
+	virtual	idRenderModel* 		InstantiateDynamicModel( const struct renderEntity_s* ent, const viewDef_t* view, idRenderModel* cachedModel );
+	virtual	idBounds			Bounds( const struct renderEntity_s* ent ) const;
+	
+	// with the addModels2 arrangement we could have light accepting and
+	// shadowing dynamic models, but the original game never did
+	virtual bool				ModelHasDrawingSurfaces() const
+	{
+		return true;
+	};
+	virtual bool				ModelHasInteractingSurfaces() const
+	{
+		return false;
+	};
+	virtual bool				ModelHasShadowCastingSurfaces() const
+	{
+		return false;
+	};
 };
 
 #endif /* !__MODEL_LOCAL_H__ */

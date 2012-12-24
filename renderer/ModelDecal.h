@@ -84,7 +84,7 @@ public:
 	
 	// Updates the vertex colors, removing any faded indexes,
 	// then copy the verts to temporary vertex cache and adds a drawSurf.
-	void						AddDecalDrawSurf( struct viewEntity_s* space );
+	void						AddDecalDrawSurf( const struct viewEntity_t* space );
 	
 	// Returns the next decal in the chain.
 	idRenderModelDecal* 		Next() const

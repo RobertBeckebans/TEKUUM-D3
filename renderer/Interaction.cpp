@@ -1360,7 +1360,7 @@ void idInteraction::AddActiveInteraction()
 					// there are surfaces with NOSELFSHADOW
 					if( sint->shader->Coverage() == MC_TRANSLUCENT )
 					{
-						R_LinkLightSurf( &vLight->translucentInteractions, lightTris,
+						R_LinkLightSurf( ( const drawSurf_t** ) &vLight->translucentInteractions, lightTris,
 										 vEntity, lightDef, shader, lightScissor, false );
 					}
 					else if( !lightDef->parms.noShadows && sint->shader->TestMaterialFlag( MF_NOSELFSHADOW ) )
@@ -1369,7 +1369,7 @@ void idInteraction::AddActiveInteraction()
 						// TODO support post process blend and fog lights
 						if( ( tr.backEndRenderer != BE_EXP ) || !r_useDeferredShading.GetBool() || lightDef->lightShader->IsBlendLight() || lightDef->lightShader->IsFogLight() )
 						{
-							R_LinkLightSurf( &vLight->localInteractions, lightTris,
+							R_LinkLightSurf( ( const drawSurf_t** ) &vLight->localInteractions, lightTris,
 											 vEntity, lightDef, shader, lightScissor, false );
 						}
 						// RB end
@@ -1380,7 +1380,7 @@ void idInteraction::AddActiveInteraction()
 						// TODO support post process blend and fog lights
 						if( ( tr.backEndRenderer != BE_EXP ) || !r_useDeferredShading.GetBool() || lightDef->lightShader->IsBlendLight() || lightDef->lightShader->IsFogLight() )
 						{
-							R_LinkLightSurf( &vLight->globalInteractions, lightTris,
+							R_LinkLightSurf( ( const drawSurf_t** ) &vLight->globalInteractions, lightTris,
 											 vEntity, lightDef, shader, lightScissor, false );
 						}
 						// RB end
@@ -1468,12 +1468,12 @@ void idInteraction::AddActiveInteraction()
 			
 			if( sint->shader->TestMaterialFlag( MF_NOSELFSHADOW ) )
 			{
-				R_LinkLightSurf( &vLight->localShadows,
+				R_LinkLightSurf( ( const drawSurf_t** ) &vLight->localShadows,
 								 shadowTris, vEntity, lightDef, NULL, shadowScissor, inside );
 			}
 			else
 			{
-				R_LinkLightSurf( &vLight->globalShadows,
+				R_LinkLightSurf( ( const drawSurf_t** ) &vLight->globalShadows,
 								 shadowTris, vEntity, lightDef, NULL, shadowScissor, inside );
 			}
 		}

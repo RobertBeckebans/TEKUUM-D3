@@ -127,6 +127,9 @@ SURFACES
 #include "ModelOverlay.h"
 #include "Interaction.h"
 
+class idRenderWorldLocal;
+struct viewEntity_t;
+struct viewLight_t;
 
 // drawSurf_t structures command the back end to render surfaces
 // a given srfTriangles_t may be used with multiple viewEntity_t,
@@ -138,22 +141,22 @@ SURFACES
 // drawSurf_t are always allocated and freed every frame, they are never cached
 static const int	DSF_VIEW_INSIDE_SHADOW	= 1;
 
-typedef struct drawSurf_s
+struct drawSurf_t
 {
 	const srfTriangles_t*	geo;
-	const struct viewEntity_s* space;
+	const viewEntity_t*		space;
 	const idMaterial*		material;	// may be NULL for shadow volumes
 	float					sort;		// material->sort, modified by gui / entity sort offsets
-	const float*				shaderRegisters;	// evaluated and adjusted for referenceShaders
-	const struct drawSurf_s*	nextOnLight;	// viewLight chains
+	const float*			shaderRegisters;	// evaluated and adjusted for referenceShaders
+	drawSurf_t*				nextOnLight;	// viewLight chains
 	idScreenRect			scissorRect;	// for scissor clipping, local inside renderView viewport
 	int						dsFlags;			// DSF_VIEW_INSIDE_SHADOW, etc
 	struct vertCache_s*		dynamicTexCoords;	// float * in vertex cache memory
 	// specular directions for non vertex program cards, skybox texcoords, etc
-} drawSurf_t;
+};
 
 
-typedef struct
+struct shadowFrustum_t
 {
 	int		numPlanes;		// this is always 6 for now
 	idPlane	planes[6];
@@ -166,19 +169,19 @@ typedef struct
 	// a projected light with a single frustum needs to make sil planes
 	// from triangles that clip against side planes, but a point light
 	// that has adjacent frustums doesn't need to
-} shadowFrustum_t;
+};
 
 
 // areas have references to hold all the lights and entities in them
-typedef struct areaReference_s
+struct areaReference_t
 {
-	struct areaReference_s* areaNext;				// chain in the area
-	struct areaReference_s* areaPrev;
-	struct areaReference_s* ownerNext;				// chain on either the entityDef or lightDef
+	areaReference_t* 		areaNext;				// chain in the area
+	areaReference_t* 		areaPrev;
+	areaReference_t* 		ownerNext;				// chain on either the entityDef or lightDef
 	idRenderEntityLocal* 	entity;					// only one of entity / light will be non-NULL
 	idRenderLightLocal* 	light;					// only one of entity / light will be non-NULL
 	struct portalArea_s*		area;					// so owners can find all the areas they are in
-} areaReference_t;
+};
 
 
 // idRenderLight should become the new public interface replacing the qhandle_t to light defs in the idRenderWorld interface
@@ -264,7 +267,7 @@ public:
 	shadowFrustum_t			shadowFrustums[6];
 	
 	int						viewCount;				// if == tr.viewCount, the light is on the viewDef->viewLights list
-	struct viewLight_s* 	viewLight;
+	viewLight_t* 			viewLight;
 	
 	areaReference_t* 		references;				// each area the light is present in will have a lightRef
 	idInteraction* 			firstInteraction;		// doubly linked list
@@ -312,7 +315,7 @@ public:
 	// in a given view, even if it turns out to not be visible
 	int						viewCount;				// if tr.viewCount == viewCount, viewEntity is valid,
 	// but the entity may still be off screen
-	struct viewEntity_s* 	viewEntity;				// in frame temporary memory
+	viewEntity_t* 			viewEntity;				// in frame temporary memory
 	
 	int						visibleCount;
 	// if tr.viewCount == visibleCount, at least one ambient
@@ -336,9 +339,9 @@ public:
 // which the front end may be modifying simultaniously if running in SMP mode.
 // a viewLight may exist even without any surfaces, and may be relevent for fogging,
 // but should never exist if its volume does not intersect the view frustum
-typedef struct viewLight_s
+struct viewLight_t
 {
-	struct viewLight_s* 	next;
+	viewLight_t* 			next;
 	
 	// back end should NOT reference the lightDef, because it can change when running SMP
 	idRenderLightLocal* 	lightDef;
@@ -373,26 +376,25 @@ typedef struct viewLight_s
 	int						shadowLOD;					// shadowmap resolution index
 // RB end
 
-	const struct drawSurf_s*	globalShadows;				// shadow everything
-	const struct drawSurf_s*	localInteractions;			// don't get local shadows
-	const struct drawSurf_s*	localShadows;				// don't shadow local Surfaces
-	const struct drawSurf_s*	globalInteractions;		// get shadows from everything
-	const struct drawSurf_s*	translucentInteractions;	// get shadows from everything
-} viewLight_t;
-
+	drawSurf_t*				globalShadows;				// shadow everything
+	drawSurf_t*				localInteractions;			// don't get local shadows
+	drawSurf_t*				localShadows;				// don't shadow local Surfaces
+	drawSurf_t*				globalInteractions;			// get shadows from everything
+	drawSurf_t*				translucentInteractions;	// get shadows from everything
+};
 
 // a viewEntity is created whenever a idRenderEntityLocal is considered for inclusion
 // in the current view, but it may still turn out to be culled.
 // viewEntity are allocated on the frame temporary stack memory
 // a viewEntity contains everything that the back end needs out of a idRenderEntityLocal,
-// which the front end may be modifying simultaniously if running in SMP mode.
+// which the front end may be modifying simultaneously if running in SMP mode.
 // A single entityDef can generate multiple viewEntity_t in a single frame, as when seen in a mirror
-typedef struct viewEntity_s
+struct viewEntity_t
 {
-	struct viewEntity_s*	next;
+	viewEntity_t* 			next;
 	
 	// back end should NOT reference the entityDef, because it can change when running SMP
-	idRenderEntityLocal*	entityDef;
+	idRenderEntityLocal*		entityDef;
 	
 	// for scissor clipping, local inside renderView viewport
 	// scissorRect.Empty() is true if the viewEntity_t was never actually
@@ -409,13 +411,13 @@ typedef struct viewEntity_s
 // RB begin
 	matrix_t			unflippedViewMatrix;	// local coords to eye coords in Doom coordinate system
 // RB end
-} viewEntity_t;
+};
 
 
 const int	MAX_CLIP_PLANES	= 1;				// we may expand this to six for some subview issues
 
 // viewDefs are allocated on the frame temporary stack memory
-typedef struct viewDef_s
+struct viewDef_t
 {
 	// specified in the call to DrawScene()
 	renderView_t		renderView;
@@ -457,8 +459,8 @@ typedef struct viewDef_s
 	// these are real physical pixel values, possibly scaled and offset from the
 	// renderView x/y/width/height
 	
-	struct viewDef_s* 	superView;				// never go into an infinite subview loop
-	struct drawSurf_s* 	subviewSurface;
+	viewDef_t* 			superView;				// never go into an infinite subview loop
+	const drawSurf_t* 	subviewSurface;
 	
 	// drawSurfs are the visible surfaces of the viewEntities, sorted
 	// by the material sort parameter
@@ -466,8 +468,8 @@ typedef struct viewDef_s
 	int					numDrawSurfs;			// it is allocated in frame temporary memory
 	int					maxDrawSurfs;			// may be resized
 	
-	struct viewLight_s*	viewLights;			// chain of all viewLights effecting view
-	struct viewEntity_s*	viewEntitys;			// chain of all viewEntities effecting view, including off screen ones casting shadows
+	viewLight_t*			viewLights;			// chain of all viewLights effecting view
+	viewEntity_t* 		viewEntitys;			// chain of all viewEntities effecting view, including off screen ones casting shadows
 	// we use viewEntities as a check to see if a given view consists solely
 	// of 2D rendering, which we can optimize in certain ways.  A 2D view will
 	// not have any viewEntities
@@ -477,17 +479,16 @@ typedef struct viewDef_s
 	
 	int					areaNum;				// -1 = not in a valid area
 	
-	bool* 				connectedAreas;
 	// An array in frame temporary memory that lists if an area can be reached without
 	// crossing a closed door.  This is used to avoid drawing interactions
 	// when the light is behind a closed door.
-	
-} viewDef_t;
+	bool* 				connectedAreas;
+};
 
 
 // complex light / surface interactions are broken up into multiple passes of a
 // simple interaction shader
-typedef struct
+struct drawInteraction_t
 {
 	const drawSurf_t* 	surf;
 	
@@ -515,12 +516,12 @@ typedef struct
 	idVec4				bumpMatrix[2];
 	idVec4				diffuseMatrix[2];
 	idVec4				specularMatrix[2];
-} drawInteraction_t;
+};
 
 // RB begin
 // RB: this struct helps to render bump,diffuse,specular combinations required for deferred shading
 // and all kind of precomputed light techniques like lightmaps
-typedef struct
+struct drawInteractionMaterialOnly_t
 {
 	const drawSurf_t* 	surf;
 	
@@ -540,7 +541,7 @@ typedef struct
 	idVec4				bumpMatrix[2];
 	idVec4				diffuseMatrix[2];
 	idVec4				specularMatrix[2];
-} drawInteractionMaterialOnly_t;
+};
 // RB end
 
 /*
@@ -553,7 +554,7 @@ TR_CMDS
 =============================================================
 */
 
-typedef enum
+enum renderCommand_t
 {
 	RC_NOP,
 	RC_DRAW_VIEW,
@@ -561,33 +562,37 @@ typedef enum
 	RC_COPY_RENDER,
 	RC_SWAP_BUFFERS		// can't just assume swap at end of list because
 	// of forced list submission before syncs
-} renderCommand_t;
+};
 
-typedef struct
+struct emptyCommand_t
 {
-	renderCommand_t		commandId, *next;
-} emptyCommand_t;
+	renderCommand_t		commandId;
+	renderCommand_t* 	next;
+};
 
-typedef struct
+struct setBufferCommand_t
 {
-	renderCommand_t		commandId, *next;
+	renderCommand_t		commandId;
+	renderCommand_t* 	next;
 	GLenum	buffer;
 	int		frameCount;
-} setBufferCommand_t;
+};
 
-typedef struct
+struct drawSurfsCommand_t
 {
-	renderCommand_t		commandId, *next;
-	viewDef_t*	viewDef;
-} drawSurfsCommand_t;
+	renderCommand_t		commandId;
+	renderCommand_t*	next;
+	viewDef_t*			viewDef;
+};
 
-typedef struct
+struct copyRenderCommand_t
 {
-	renderCommand_t		commandId, *next;
+	renderCommand_t		commandId;
+	renderCommand_t*	next;
 	int		x, y, imageWidth, imageHeight;
 	idImage*	image;
 	int		cubeFace;					// when copying to a cubeMap
-} copyRenderCommand_t;
+};
 
 
 //=======================================================================
@@ -659,7 +664,7 @@ const idMaterial* R_RemapShaderBySkin( const idMaterial* shader, const idDeclSki
 /*
 ** performanceCounters_t
 */
-typedef struct
+struct performanceCounters_t
 {
 	int		c_sphere_cull_in, c_sphere_cull_clip, c_sphere_cull_out;
 	int		c_box_cull_in, c_box_cull_out;
@@ -668,7 +673,8 @@ typedef struct
 	int		c_createShadowVolumes;
 	int		c_generateMd5;
 	int		c_entityDefCallbacks;
-	int		c_alloc, c_free;	// counts for R_StaticAllc/R_StaticFree
+	int		c_alloc;			// counts for R_StaticAllc/R_StaticFree
+	int		c_free;
 	int		c_visibleViewEntities;
 	int		c_shadowViewEntities;
 	int		c_viewLights;
@@ -677,47 +683,50 @@ typedef struct
 	int		c_deformedVerts;	// idMD5Mesh::GenerateSurface
 	int		c_deformedIndexes;	// idMD5Mesh::GenerateSurface
 	int		c_tangentIndexes;	// R_DeriveTangents()
-	int		c_entityUpdates, c_lightUpdates, c_entityReferences, c_lightReferences;
+	int		c_entityUpdates;
+	int		c_lightUpdates;
+	int		c_entityReferences;
+	int		c_lightReferences;
 	int		c_guiSurfs;
 	int		frontEndMsec;		// sum of time in all RE_RenderScene's in a frame
-} performanceCounters_t;
+};
 
 
-typedef struct
+struct tmu_t
 {
 	int		current2DMap;
 	int		current3DMap;
 	int		currentCubeMap;
 	int		texEnv;
 	textureType_t	textureType;
-} tmu_t;
+};
 
 const int MAX_MULTITEXTURE_UNITS = 16;
 const int MAX_GLSTACK = 5;
-typedef struct
+
+struct glstate_t
 {
-	tmu_t		tmu[MAX_MULTITEXTURE_UNITS];
-	int			currenttmu;
+	tmu_t				tmu[MAX_MULTITEXTURE_UNITS];
+	int					currenttmu;
 	
-	int			faceCulling;
-	int			glStateBits;
-	bool		forceGlState;		// the next GL_State will ignore glStateBits and set everything
+	int					faceCulling;
+	int					glStateBits;
+	bool				forceGlState;		// the next GL_State will ignore glStateBits and set everything
 	
-	int			matrixMode;
-	int			stackIndex;
-	matrix_t	modelViewMatrix[MAX_GLSTACK];
-	matrix_t	projectionMatrix[MAX_GLSTACK];
-	matrix_t	modelViewProjectionMatrix[MAX_GLSTACK];
-	matrix_t	textureMatrix[MAX_MULTITEXTURE_UNITS];
+	int					matrixMode;
+	int					stackIndex;
+	matrix_t			modelViewMatrix[MAX_GLSTACK];
+	matrix_t			projectionMatrix[MAX_GLSTACK];
+	matrix_t			modelViewProjectionMatrix[MAX_GLSTACK];
+	matrix_t			textureMatrix[MAX_MULTITEXTURE_UNITS];
 	
 	struct shaderProgram_s*   currentProgram;
 #if !defined(USE_GLES1)
-	Framebuffer* framebuffer;
+	Framebuffer*		framebuffer;
 #endif
-} glstate_t;
+};
 
-
-typedef struct
+struct backEndCounters_t
 {
 	int		c_surfaces;
 	int		c_shaders;
@@ -740,11 +749,11 @@ typedef struct
 	
 	float	maxLightValue;	// for light scale
 	int		msec;			// total msec for backend run
-} backEndCounters_t;
+};
 
 // all state modified by the back end is separated
 // from the front end state
-typedef struct
+struct backEndState_t
 {
 	int					frameCount;		// used to track all images used in a frame
 	const viewDef_t*		viewDef;
@@ -781,13 +790,13 @@ typedef struct
 	glstate_t			glState;
 	
 	int					c_copyFrameBuffer;
-} backEndState_t;
+};
 
 
 const int MAX_GUI_SURFACES	= 1024;		// default size of the drawSurfs list for guis, will
 // be automatically expanded as needed
 
-typedef enum
+enum backEndName_t
 {
 	BE_ARB,
 	BE_NV10,
@@ -797,7 +806,7 @@ typedef enum
 	BE_GLSL,
 	BE_EXP,
 	BE_BAD
-} backEndName_t;
+};
 
 typedef struct
 {
@@ -1323,7 +1332,7 @@ float R_ProjectRadius( float r, const idVec3& location );
 /*
 ============================================================
 
-LIGHT
+RENDERWORLD_DEFS
 
 ============================================================
 */
@@ -1981,12 +1990,12 @@ void CleanupOptimizedShadowTris( srfTriangles_t* tri );
 /*
 ============================================================
 
-TRISURF
+TR_TRISURF
 
 ============================================================
 */
 
-#define USE_TRI_DATA_ALLOCATOR
+//#define USE_TRI_DATA_ALLOCATOR
 
 void				R_InitTriSurfData();
 void				R_ShutdownTriSurfData();
@@ -1997,6 +2006,13 @@ srfTriangles_t* 	R_AllocStaticTriSurf();
 srfTriangles_t* 	R_CopyStaticTriSurf( const srfTriangles_t* tri );
 void				R_AllocStaticTriSurfVerts( srfTriangles_t* tri, int numVerts );
 void				R_AllocStaticTriSurfIndexes( srfTriangles_t* tri, int numIndexes );
+// RB begin
+void				R_AllocStaticTriSurfSilIndexes( srfTriangles_t* tri, int numIndexes );
+void				R_AllocStaticTriSurfMirroredVerts( srfTriangles_t* tri, int numVerts );
+void				R_AllocStaticTriSurfDupVerts( srfTriangles_t* tri, int numVerts );
+void				R_AllocStaticTriSurfSilEdges( srfTriangles_t* tri, int numSilEdges );
+void				R_AllocStaticTriSurfDominantTris( srfTriangles_t* tri, int numTris );
+// RB end
 void				R_AllocStaticTriSurfShadowVerts( srfTriangles_t* tri, int numVerts );
 void				R_AllocStaticTriSurfPlanes( srfTriangles_t* tri, int numIndexes );
 void				R_ResizeStaticTriSurfVerts( srfTriangles_t* tri, int numVerts );
@@ -2033,31 +2049,31 @@ void				R_DeriveTangents( srfTriangles_t* tri, bool allocFacePlanes = true );
 
 // deformable meshes precalculate as much as possible from a base frame, then generate
 // complete srfTriangles_t from just a new set of vertexes
-typedef struct deformInfo_s
+struct deformInfo_t
 {
-	int				numSourceVerts;
+	int					numSourceVerts;
 	
 	// numOutputVerts may be smaller if the input had duplicated or degenerate triangles
 	// it will often be larger if the input had mirrored texture seams that needed
 	// to be busted for proper tangent spaces
-	int				numOutputVerts;
+	int					numOutputVerts;
 	
-	int				numMirroredVerts;
-	int* 			mirroredVerts;
+	int					numIndexes;
+	glIndex_t* 			indexes;
 	
-	int				numIndexes;
-	glIndex_t* 		indexes;
+	glIndex_t* 			silIndexes;
 	
-	glIndex_t* 		silIndexes;
+	int					numMirroredVerts;
+	int* 				mirroredVerts;
 	
-	int				numDupVerts;
-	int* 			dupVerts;
+	int					numDupVerts;
+	int* 				dupVerts;
 	
-	int				numSilEdges;
-	silEdge_t* 		silEdges;
+	int					numSilEdges;
+	silEdge_t* 			silEdges;
 	
-	dominantTri_t* 	dominantTris;
-} deformInfo_t;
+	dominantTri_t* 		dominantTris;
+};
 
 
 deformInfo_t* 		R_BuildDeformInfo( int numVerts, const idDrawVert* verts, int numIndexes, const int* indexes, bool useUnsmoothedTangents );
@@ -2099,7 +2115,7 @@ void R_StaticFree( void* data );
 /*
 =============================================================
 
-RENDERER DEBUG TOOLS
+TR_BACKEND_RENDERTOOLS
 
 =============================================================
 */
@@ -2179,14 +2195,14 @@ TR_TRACE
 =============================================================
 */
 
-typedef struct
+struct localTrace_t
 {
 	float		fraction;
 	// only valid if fraction < 1.0
 	idVec3		point;
 	idVec3		normal;
 	int			indexes[3];
-} localTrace_t;
+};
 
 localTrace_t R_LocalTrace( const idVec3& start, const idVec3& end, const float radius, const srfTriangles_t* tri );
 void RB_ShowTrace( drawSurf_t** drawSurfs, int numDrawSurfs );

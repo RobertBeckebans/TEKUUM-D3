@@ -887,7 +887,7 @@ void R_LinkLightSurf( const drawSurf_t** link, const srfTriangles_t* tri, const 
 	}
 	
 	// actually link it in
-	drawSurf->nextOnLight = *link;
+	drawSurf->nextOnLight = ( drawSurf_t* ) *link;
 	*link = drawSurf;
 }
 
@@ -1290,7 +1290,7 @@ void R_AddLightSurfaces()
 				vertexCache.Touch( tri->indexCache );
 			}
 			
-			R_LinkLightSurf( &vLight->globalShadows, tri, NULL, light, NULL, vLight->scissorRect, true /* FIXME? */ );
+			R_LinkLightSurf( ( const drawSurf_t** ) &vLight->globalShadows, tri, NULL, light, NULL, vLight->scissorRect, true /* FIXME? */ );
 		}
 	}
 }
