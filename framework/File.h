@@ -113,6 +113,7 @@ public:
 	virtual int				WriteVec6( const idVec6& vec );
 	virtual int				WriteMat3( const idMat3& mat );
 	
+#if 1
 	template<class type> ID_INLINE size_t ReadBig( type& c )
 	{
 		size_t r = Read( &c, sizeof( c ) );
@@ -143,6 +144,7 @@ public:
 		}
 		return r;
 	}
+#endif
 };
 
 /*
@@ -340,6 +342,34 @@ private:
 	int						zipFilePos;		// zip file info position in pak
 	int						fileSize;		// size of the file
 	void* 					z;				// unzip info
+};
+
+
+class idFileLocal
+{
+public:
+	// Constructor that accepts and stores the file pointer.
+	idFileLocal( idFile* _file )	: file( _file )
+	{
+	}
+	
+	// Destructor that will destroy (close) the file when this wrapper class goes out of scope.
+	~idFileLocal();
+	
+	// Cast to a file pointer.
+	operator idFile* () const
+	{
+		return file;
+	}
+	
+	// Member access operator for treating the wrapper as if it were the file, itself.
+	idFile* operator -> () const
+	{
+		return file;
+	}
+	
+protected:
+	idFile* file;	// The managed file pointer.
 };
 
 #endif /* !__FILE_H__ */

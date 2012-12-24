@@ -241,5 +241,10 @@ const int MAX_EXPRESSION_REGISTERS = 4096;
 #endif /* !_D3SDK */
 
 //-----------------------------------------------------
+/*
+#undef min
+#undef max
+#include <algorithm>	// for min / max / swap
+*/
 
 #endif /* !__PRECOMPILED_H__ */

@@ -257,7 +257,10 @@ public:
 #include "math/Random.h"
 #include "math/Complex.h"
 #include "math/Vector.h"
+#include "math/VecX.h"
+//#include "math/VectorI.h"
 #include "math/Matrix.h"
+#include "math/MatX.h"
 #include "math/Angles.h"
 #include "math/Quat.h"
 #include "math/Rotation.h"
@@ -297,6 +300,7 @@ public:
 #include "CmdArgs.h"
 
 // containers
+#include "containers/Array.h"
 #include "containers/BTree.h"
 #include "containers/BinSearch.h"
 #include "containers/HashIndex.h"
@@ -322,6 +326,6 @@ public:
 #include "BitMsg.h"
 #include "MapFile.h"
 #include "Timer.h"
-//#include "Swap.h"
+#include "Swap.h"
 
 #endif	/* !__LIB_H__ */

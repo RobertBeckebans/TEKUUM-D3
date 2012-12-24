@@ -450,26 +450,3 @@ const char* idVec6::ToString( int precision ) const
 {
 	return idStr::FloatArrayToString( ToFloatPtr(), GetDimension(), precision );
 }
-
-
-//===============================================================
-//
-//	idVecX
-//
-//===============================================================
-
-float	idVecX::temp[VECX_MAX_TEMP + 4];
-// RB: 64 bit fix, changed int to intptr_t
-float* 	idVecX::tempPtr = ( float* )( ( ( intptr_t ) idVecX::temp + 15 ) & ~15 );
-// RB end
-int		idVecX::tempIndex = 0;
-
-/*
-=============
-idVecX::ToString
-=============
-*/
-const char* idVecX::ToString( int precision ) const
-{
-	return idStr::FloatArrayToString( ToFloatPtr(), GetDimension(), precision );
-}

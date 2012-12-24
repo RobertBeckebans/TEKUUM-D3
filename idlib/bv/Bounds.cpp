@@ -1,35 +1,37 @@
 /*
 ===========================================================================
 
-Doom 3 GPL Source Code
-Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Doom 3 BFG Edition GPL Source Code
+Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
 
-This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
+This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
-Doom 3 Source Code is free software: you can redistribute it and/or modify
+Doom 3 BFG Edition Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Doom 3 Source Code is distributed in the hope that it will be useful,
+Doom 3 BFG Edition Source Code is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Doom 3 Source Code.  If not, see <http://www.gnu.org/licenses/>.
+along with Doom 3 BFG Edition Source Code.  If not, see <http://www.gnu.org/licenses/>.
 
-In addition, the Doom 3 Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 Source Code.  If not, please request a copy in writing from id Software at the address below.
+In addition, the Doom 3 BFG Edition Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 BFG Edition Source Code.  If not, please request a copy in writing from id Software at the address below.
 
 If you have questions concerning this license or the applicable additional terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 
 ===========================================================================
 */
 
-#include "precompiled.h"
 #pragma hdrstop
+#include "precompiled.h"
 
 idBounds bounds_zero( vec3_zero, vec3_zero );
+idBounds bounds_zeroOneCube( idVec3( 0.0f, 0.0f, 0.0f ), idVec3( 1.0f, 1.0f, 1.0f ) );
+idBounds bounds_unitCube( idVec3( -1.0f, -1.0f, -1.0f ), idVec3( 1.0f, 1.0f, 1.0f ) );
 
 /*
 ============
@@ -150,44 +152,43 @@ idBounds::LineIntersection
 */
 bool idBounds::LineIntersection( const idVec3& start, const idVec3& end ) const
 {
-	float ld[3];
-	idVec3 center = ( b[0] + b[1] ) * 0.5f;
-	idVec3 extents = b[1] - center;
-	idVec3 lineDir = 0.5f * ( end - start );
-	idVec3 lineCenter = start + lineDir;
-	idVec3 dir = lineCenter - center;
+	const idVec3 center = ( b[0] + b[1] ) * 0.5f;
+	const idVec3 extents = b[1] - center;
+	const idVec3 lineDir = 0.5f * ( end - start );
+	const idVec3 lineCenter = start + lineDir;
+	const idVec3 dir = lineCenter - center;
 	
-	ld[0] = idMath::Fabs( lineDir[0] );
-	if( idMath::Fabs( dir[0] ) > extents[0] + ld[0] )
+	const float ld0 = idMath::Fabs( lineDir[0] );
+	if( idMath::Fabs( dir[0] ) > extents[0] + ld0 )
 	{
 		return false;
 	}
 	
-	ld[1] = idMath::Fabs( lineDir[1] );
-	if( idMath::Fabs( dir[1] ) > extents[1] + ld[1] )
+	const float ld1 = idMath::Fabs( lineDir[1] );
+	if( idMath::Fabs( dir[1] ) > extents[1] + ld1 )
 	{
 		return false;
 	}
 	
-	ld[2] = idMath::Fabs( lineDir[2] );
-	if( idMath::Fabs( dir[2] ) > extents[2] + ld[2] )
+	const float ld2 = idMath::Fabs( lineDir[2] );
+	if( idMath::Fabs( dir[2] ) > extents[2] + ld2 )
 	{
 		return false;
 	}
 	
-	idVec3 cross = lineDir.Cross( dir );
+	const idVec3 cross = lineDir.Cross( dir );
 	
-	if( idMath::Fabs( cross[0] ) > extents[1] * ld[2] + extents[2] * ld[1] )
+	if( idMath::Fabs( cross[0] ) > extents[1] * ld2 + extents[2] * ld1 )
 	{
 		return false;
 	}
 	
-	if( idMath::Fabs( cross[1] ) > extents[0] * ld[2] + extents[2] * ld[0] )
+	if( idMath::Fabs( cross[1] ) > extents[0] * ld2 + extents[2] * ld0 )
 	{
 		return false;
 	}
 	
-	if( idMath::Fabs( cross[2] ) > extents[0] * ld[1] + extents[1] * ld[0] )
+	if( idMath::Fabs( cross[2] ) > extents[0] * ld1 + extents[1] * ld0 )
 	{
 		return false;
 	}
