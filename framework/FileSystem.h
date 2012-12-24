@@ -288,6 +288,11 @@ public:
 	
 	// Opens a file for reading.
 	virtual idFile* 		OpenFileRead( const char* relativePath, bool allowCopyFiles = true, const char* gamedir = NULL ) = 0;
+
+	// RB: from BFG code
+	// Opens a file for reading, reads the file completely in memory and returns an idFile_Memory obj.
+	virtual idFile* 		OpenFileReadMemory( const char* relativePath, bool allowCopyFiles = true, const char* gamedir = NULL ) = 0;
+	// RB end
 	
 	// Opens a file for writing, will create any needed subdirectories.
 	virtual idFile* 		OpenFileWrite( const char* relativePath, const char* basePath = "fs_savepath" ) = 0;

@@ -333,6 +333,9 @@ typedef struct searchpath_s
 #define FSFLAG_PURE_NOREF		( 1 << 2 )
 #define FSFLAG_BINARY_ONLY		( 1 << 3 )
 #define FSFLAG_SEARCH_ADDONS	( 1 << 4 )
+// RB begin
+#define FSFLAG_RETURN_FILE_MEM	( 1 << 5 )
+// RB end
 
 // 3 search path (fs_savepath fs_basepath fs_cdpath)
 // + .jpg and .tga
@@ -392,6 +395,9 @@ public:
 	virtual void			RemoveFile( const char* relativePath );
 	virtual idFile* 		OpenFileReadFlags( const char* relativePath, int searchFlags, pack_t** foundInPak = NULL, bool allowCopyFiles = true, const char* gamedir = NULL );
 	virtual idFile* 		OpenFileRead( const char* relativePath, bool allowCopyFiles = true, const char* gamedir = NULL );
+	// RB begin
+	virtual idFile*			OpenFileReadMemory( const char* relativePath, bool allowCopyFiles, const char* gamedir );
+	// RB end
 	virtual idFile* 		OpenFileWrite( const char* relativePath, const char* basePath = "fs_savepath" );
 	virtual idFile* 		OpenFileAppend( const char* relativePath, bool sync = false, const char* basePath = "fs_basepath" );
 	virtual idFile* 		OpenFileByMode( const char* relativePath, fsMode_t mode );
@@ -3802,6 +3808,16 @@ idFile* idFileSystemLocal::OpenFileReadFlags( const char* relativePath, int sear
 						break;
 				}
 			}
+
+			if( searchFlags & FSFLAG_RETURN_FILE_MEM )
+			{
+				idFile_Memory* memFile = new idFile_Memory( file->name );
+				memFile->SetLength( file->fileSize );
+				file->Read( ( void* )memFile->GetDataPtr(), file->fileSize );
+				delete file;
+				memFile->TakeDataOwnership();
+				return memFile;
+			}
 			
 			return file;
 		}
@@ -3876,6 +3892,17 @@ idFile* idFileSystemLocal::OpenFileReadFlags( const char* relativePath, int sear
 					{
 						common->Printf( "idFileSystem::OpenFileRead: %s (found in '%s')\n", relativePath, pak->pakFilename.c_str() );
 					}
+
+					if( searchFlags & FSFLAG_RETURN_FILE_MEM )
+					{
+						idFile_Memory* memFile = new idFile_Memory( file->name );
+						memFile->SetLength( file->fileSize );
+						file->Read( ( void* )memFile->GetDataPtr(), file->fileSize );
+						delete file;
+						memFile->TakeDataOwnership();
+						return memFile;
+					}
+
 					return file;
 				}
 			}
@@ -3898,11 +3925,23 @@ idFile* idFileSystemLocal::OpenFileReadFlags( const char* relativePath, int sear
 					{
 						*foundInPak = pak;
 					}
+					
 					// we don't toggle pure on paks found in addons - they can't be used without a reloadEngine anyway
 					if( fs_debug.GetInteger( ) )
 					{
 						common->Printf( "idFileSystem::OpenFileRead: %s (found in addon pk4 '%s')\n", relativePath, search->pack->pakFilename.c_str() );
 					}
+					
+					if( searchFlags & FSFLAG_RETURN_FILE_MEM )
+					{
+						idFile_Memory* memFile = new idFile_Memory( file->name );
+						memFile->SetLength( file->fileSize );
+						file->Read( ( void* )memFile->GetDataPtr(), file->fileSize );
+						delete file;
+						memFile->TakeDataOwnership();
+						return memFile;
+					}
+
 					return file;
 				}
 			}
@@ -3934,6 +3973,18 @@ idFile* idFileSystemLocal::OpenFileRead( const char* relativePath, bool allowCop
 	return f;
 // RB end
 }
+
+/*
+===========
+idFileSystemLocal::OpenFileReadMemory
+===========
+*/
+// RB begin
+idFile* idFileSystemLocal::OpenFileReadMemory( const char* relativePath, bool allowCopyFiles, const char* gamedir )
+{
+	return OpenFileReadFlags( relativePath, FSFLAG_SEARCH_DIRS | FSFLAG_SEARCH_PAKS | FSFLAG_RETURN_FILE_MEM, NULL, allowCopyFiles, gamedir );
+}
+// RB end
 
 /*
 ===========
