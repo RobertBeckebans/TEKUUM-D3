@@ -42,7 +42,7 @@ idCVar idRenderModelStatic::r_slopVertex( "r_slopVertex", "0.01", CVAR_RENDERER,
 idCVar idRenderModelStatic::r_slopTexCoord( "r_slopTexCoord", "0.001", CVAR_RENDERER, "merge texture coordinates this far apart" );
 idCVar idRenderModelStatic::r_slopNormal( "r_slopNormal", "0.02", CVAR_RENDERER, "merge normals that dot less than this" );
 
-static const byte BRM_VERSION = 108;
+static const byte BRM_VERSION = 109;
 static const unsigned int BRM_MAGIC = ( 'B' << 24 ) | ( 'R' << 16 ) | ( 'M' << 8 ) | BRM_VERSION;
 
 /*
@@ -57,7 +57,6 @@ idRenderModelStatic::idRenderModelStatic()
 	lastModifiedFrame = 0;
 	lastArchivedFrame = 0;
 	overlaysAdded = 0;
-	shadowHull = NULL;
 	isStaticWorldModel = false;
 	defaulted = false;
 	purged = false;
@@ -136,11 +135,6 @@ int idRenderModelStatic::Memory() const
 	totalBytes += sizeof( *this );
 	totalBytes += name.DynamicMemoryUsed();
 	totalBytes += surfaces.MemoryUsed();
-	
-	if( shadowHull )
-	{
-		totalBytes += R_TriSurfMemory( shadowHull );
-	}
 	
 	for( int j = 0; j < NumSurfaces(); j++ )
 	{
@@ -429,6 +423,11 @@ bool idRenderModelStatic::LoadBinaryModel( idFile* file, const ID_TIME_T sourceT
 			file->ReadBig( ambientViewCount );
 			file->ReadBig( tri.generateNormals );
 			file->ReadBig( tri.tangentsCalculated );
+			
+			// RB FIXME
+			file->ReadBig( tri.facePlanesCalculated );
+			tri.facePlanesCalculated = false;
+			
 			file->ReadBig( tri.perfectHull );
 			file->ReadBig( tri.deformedSurface );
 			//file->ReadBig( tri.referencedIndexes );
@@ -617,6 +616,7 @@ void idRenderModelStatic::WriteBinaryModel( idFile* file, ID_TIME_T* _timeStamp 
 			file->WriteBig( ambientViewCount );
 			file->WriteBig( tri.generateNormals );
 			file->WriteBig( tri.tangentsCalculated );
+			file->WriteBig( tri.facePlanesCalculated );
 			file->WriteBig( tri.perfectHull );
 			//file->WriteBig( tri.referencedIndexes );
 			file->WriteBig( tri.deformedSurface );
@@ -875,16 +875,6 @@ void idRenderModelStatic::FreeSurfaceTriangles( srfTriangles_t* tris ) const
 
 /*
 ================
-idRenderModelStatic::ShadowHull
-================
-*/
-srfTriangles_t* idRenderModelStatic::ShadowHull() const
-{
-	return shadowHull;
-}
-
-/*
-================
 idRenderModelStatic::IsStaticWorldModel
 ================
 */
@@ -1051,6 +1041,7 @@ void idRenderModelStatic::FinishSurfaces()
 	
 	// make sure we don't have a huge bounds even if we don't finish everything
 	bounds.Zero();
+	
 	
 	if( surfaces.Num() == 0 )
 	{

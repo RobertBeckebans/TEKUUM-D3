@@ -285,12 +285,6 @@ public:
 	// Frees surfaces triangles.
 	virtual void				FreeSurfaceTriangles( srfTriangles_t* tris ) const = 0;
 	
-	// created at load time by stitching together all surfaces and sharing
-	// the maximum number of edges.  This may be incorrect if a skin file
-	// remaps surfaces between shadow casting and non-shadow casting, or
-	// if some surfaces are noSelfShadow and others aren't
-	virtual srfTriangles_t*		ShadowHull() const = 0;
-	
 	// models of the form "_area*" may have a prelight shadow model associated with it
 	virtual bool				IsStaticWorldModel() const = 0;
 	

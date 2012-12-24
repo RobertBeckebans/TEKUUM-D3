@@ -659,7 +659,7 @@ R_AllocStaticTriSurfDupVerts
 void R_AllocStaticTriSurfDupVerts( srfTriangles_t* tri, int numVerts )
 {
 	assert( tri->dupVerts == NULL );
-	tri->dupVerts = triDupVertAllocator.Alloc( numVerts );
+	tri->dupVerts = triDupVertAllocator.Alloc( numVerts * 2 );
 }
 
 /*
@@ -721,7 +721,12 @@ void R_ResizeStaticTriSurfVerts( srfTriangles_t* tri, int numVerts )
 #ifdef USE_TRI_DATA_ALLOCATOR
 	tri->verts = triVertexAllocator.Resize( tri->verts, numVerts );
 #else
-	assert( false );
+	//assert( false );
+	idDrawVert* oldVerts = tri->verts;
+	//R_AllocStaticTriSurfVerts( tri, totalVerts );
+	tri->verts = triVertexAllocator.Alloc( numVerts );
+	memcpy( tri->verts, oldVerts, tri->numVerts * sizeof( tri->verts[0] ) );
+	triVertexAllocator.Free( oldVerts );
 #endif
 }
 
@@ -1515,10 +1520,9 @@ static void	R_DuplicateMirroredVertexes( srfTriangles_t* tri )
 #ifdef USE_TRI_DATA_ALLOCATOR
 	tri->verts = triVertexAllocator.Resize( tri->verts, totalVerts );
 #else
-	idDrawVert* oldVerts = tri->verts;
-	R_AllocStaticTriSurfVerts( tri, totalVerts );
-	memcpy( tri->verts, oldVerts, tri->numVerts * sizeof( tri->verts[0] ) );
-	triVertexAllocator.Free( oldVerts );
+	// RB begin
+	R_ResizeStaticTriSurfVerts( tri, totalVerts );
+	// RB end
 #endif
 	
 	// create the duplicates

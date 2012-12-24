@@ -1995,7 +1995,7 @@ TR_TRISURF
 ============================================================
 */
 
-//#define USE_TRI_DATA_ALLOCATOR
+#define USE_TRI_DATA_ALLOCATOR
 
 void				R_InitTriSurfData();
 void				R_ShutdownTriSurfData();

@@ -81,7 +81,6 @@ public:
 	virtual const modelSurface_t* Surface( int surfaceNum ) const;
 	virtual srfTriangles_t* 	AllocSurfaceTriangles( int numVerts, int numIndexes ) const;
 	virtual void				FreeSurfaceTriangles( srfTriangles_t* tris ) const;
-	virtual srfTriangles_t* 	ShadowHull() const;
 	virtual bool				IsStaticWorldModel() const;
 	virtual dynamicModel_t		IsDynamicModel() const;
 	virtual bool				IsDefaultModel() const;
@@ -149,7 +148,6 @@ protected:
 	int							lastArchivedFrame;
 	
 	idStr						name;
-	srfTriangles_t* 			shadowHull;
 	bool						isStaticWorldModel;
 	bool						defaulted;
 	bool						purged;					// eventually we will have dynamic reloading

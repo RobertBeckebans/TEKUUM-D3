@@ -304,8 +304,8 @@ idRenderModel* idRenderModelManagerLocal::GetModel( const char* _modelName, bool
 				if( model->SupportsBinaryModel() && r_binaryLoadRenderModels.GetBool() )
 				{
 					// RB: FIXME OpenFileReadMemory
-					//idFileLocal file( fileSystem->OpenFileReadMemory( generatedFileName ) );
-					idFileLocal file( fileSystem->OpenFileRead( generatedFileName ) );
+					idFileLocal file( fileSystem->OpenFileReadMemory( generatedFileName ) );
+					//idFileLocal file( fileSystem->OpenFileRead( generatedFileName ) );
 					model->PurgeModel();
 					if( !model->LoadBinaryModel( file, 0 ) )
 					{
@@ -371,8 +371,8 @@ idRenderModel* idRenderModelManagerLocal::GetModel( const char* _modelName, bool
 		fileSystem->ReadFile( canonical, NULL, &sourceTimeStamp );
 		
 		// RB: FIXME OpenFileReadMemory
-		//idFileLocal file( fileSystem->OpenFileReadMemory( generatedFileName ) );
-		idFileLocal file( fileSystem->OpenFileRead( generatedFileName ) );
+		idFileLocal file( fileSystem->OpenFileReadMemory( generatedFileName ) );
+		//idFileLocal file( fileSystem->OpenFileRead( generatedFileName ) );
 		
 		if( !model->SupportsBinaryModel() || !r_binaryLoadRenderModels.GetBool() )
 		{

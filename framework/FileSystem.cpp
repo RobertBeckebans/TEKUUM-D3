@@ -3808,7 +3808,7 @@ idFile* idFileSystemLocal::OpenFileReadFlags( const char* relativePath, int sear
 						break;
 				}
 			}
-
+			
 			if( searchFlags & FSFLAG_RETURN_FILE_MEM )
 			{
 				idFile_Memory* memFile = new idFile_Memory( file->name );
@@ -3892,7 +3892,7 @@ idFile* idFileSystemLocal::OpenFileReadFlags( const char* relativePath, int sear
 					{
 						common->Printf( "idFileSystem::OpenFileRead: %s (found in '%s')\n", relativePath, pak->pakFilename.c_str() );
 					}
-
+					
 					if( searchFlags & FSFLAG_RETURN_FILE_MEM )
 					{
 						idFile_Memory* memFile = new idFile_Memory( file->name );
@@ -3902,7 +3902,7 @@ idFile* idFileSystemLocal::OpenFileReadFlags( const char* relativePath, int sear
 						memFile->TakeDataOwnership();
 						return memFile;
 					}
-
+					
 					return file;
 				}
 			}
@@ -3941,7 +3941,7 @@ idFile* idFileSystemLocal::OpenFileReadFlags( const char* relativePath, int sear
 						memFile->TakeDataOwnership();
 						return memFile;
 					}
-
+					
 					return file;
 				}
 			}
