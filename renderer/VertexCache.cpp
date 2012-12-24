@@ -70,7 +70,7 @@ void idVertexCache::ActuallyFree( vertCache_t* block )
 	}
 	
 	// temp blocks are in a shared space that won't be freed
-	if( block->tag != TAG_TEMP )
+	if( block->tag != VTAG_TEMP )
 	{
 		staticAllocTotal -= block->size;
 		staticCountTotal--;
@@ -89,7 +89,7 @@ void idVertexCache::ActuallyFree( vertCache_t* block )
 			block->virtMem = NULL;
 		}
 	}
-	block->tag = TAG_FREE;		// mark as free
+	block->tag = VTAG_FREE;		// mark as free
 	
 	// unlink stick it back on the free list
 	block->next->prev = block->prev;
@@ -122,7 +122,7 @@ The ARB_vertex_buffer_object will be bound
 */
 void* idVertexCache::Position( vertCache_t* buffer )
 {
-	if( !buffer || buffer->tag == TAG_FREE )
+	if( !buffer || buffer->tag == VTAG_FREE )
 	{
 		common->FatalError( "idVertexCache::Position: bad vertCache_t" );
 	}
@@ -132,7 +132,7 @@ void* idVertexCache::Position( vertCache_t* buffer )
 	{
 		if( r_showVertexCache.GetInteger() == 2 )
 		{
-			if( buffer->tag == TAG_TEMP )
+			if( buffer->tag == VTAG_TEMP )
 			{
 				common->Printf( "GL_ARRAY_BUFFER_ARB = %i + %i (%i bytes)\n", buffer->vbo, buffer->offset, buffer->size );
 			}
@@ -209,7 +209,7 @@ void idVertexCache::Init()
 		allocatingTempBuffer = true;	// force the alloc to use GL_STREAM_DRAW_ARB
 		Alloc( junk, frameBytes, &tempBuffers[i] );
 		allocatingTempBuffer = false;
-		tempBuffers[i]->tag = TAG_FIXED;
+		tempBuffers[i]->tag = VTAG_FIXED;
 		// unlink these from the static list, so they won't ever get purged
 		tempBuffers[i]->next->prev = tempBuffers[i]->prev;
 		tempBuffers[i]->prev->next = tempBuffers[i]->next;
@@ -307,7 +307,7 @@ void idVertexCache::Alloc( void* data, int size, vertCache_t** buffer, bool inde
 	
 	block->size = size;
 	block->offset = 0;
-	block->tag = TAG_USED;
+	block->tag = VTAG_USED;
 	
 	// save data for debugging
 	staticAllocThisFrame += block->size;
@@ -378,11 +378,11 @@ void idVertexCache::Touch( vertCache_t* block )
 		common->Error( "idVertexCache Touch: NULL pointer" );
 	}
 	
-	if( block->tag == TAG_FREE )
+	if( block->tag == VTAG_FREE )
 	{
 		common->FatalError( "idVertexCache Touch: freed pointer" );
 	}
-	if( block->tag == TAG_TEMP )
+	if( block->tag == VTAG_TEMP )
 	{
 		common->FatalError( "idVertexCache Touch: temporary pointer" );
 	}
@@ -411,11 +411,11 @@ void idVertexCache::Free( vertCache_t* block )
 		return;
 	}
 	
-	if( block->tag == TAG_FREE )
+	if( block->tag == VTAG_FREE )
 	{
 		common->FatalError( "idVertexCache Free: freed pointer" );
 	}
-	if( block->tag == TAG_TEMP )
+	if( block->tag == VTAG_TEMP )
 	{
 		common->FatalError( "idVertexCache Free: temporary pointer" );
 	}
@@ -487,7 +487,7 @@ vertCache_t*	idVertexCache::AllocFrameTemp( void* data, int size )
 	block->prev->next = block;
 	
 	block->size = size;
-	block->tag = TAG_TEMP;
+	block->tag = VTAG_TEMP;
 	block->indexBuffer = false;
 	block->offset = dynamicAllocThisFrame;
 	dynamicAllocThisFrame += block->size;

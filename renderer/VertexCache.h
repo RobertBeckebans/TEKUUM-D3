@@ -32,10 +32,10 @@ const int NUM_VERTEX_FRAMES = 2;
 
 typedef enum
 {
-	TAG_FREE,
-	TAG_USED,
-	TAG_FIXED,		// for the temp buffers
-	TAG_TEMP		// in frame temp area, not static area
+	VTAG_FREE,
+	VTAG_USED,
+	VTAG_FIXED,		// for the temp buffers
+	VTAG_TEMP		// in frame temp area, not static area
 } vertBlockTag_t;
 
 typedef struct vertCache_s
