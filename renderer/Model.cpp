@@ -653,8 +653,8 @@ void idRenderModelStatic::WriteBinaryModel( idFile* file, ID_TIME_T* _timeStamp 
 			
 			if( tri.shadowVertexes != NULL )
 			{
-				file->WriteBig( tri.numVerts * 2 );
-				for( int j = 0; j < tri.numVerts * 2; j++ )
+				file->WriteBig( tri.numVerts );
+				for( int j = 0; j < tri.numVerts; j++ )
 				{
 					file->WriteVec4( tri.shadowVertexes[ j ].xyz );
 				}
