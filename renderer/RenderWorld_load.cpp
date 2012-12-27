@@ -1,33 +1,33 @@
 /*
 ===========================================================================
 
-Doom 3 GPL Source Code
-Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Doom 3 BFG Edition GPL Source Code
+Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
 
-This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
+This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
-Doom 3 Source Code is free software: you can redistribute it and/or modify
+Doom 3 BFG Edition Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Doom 3 Source Code is distributed in the hope that it will be useful,
+Doom 3 BFG Edition Source Code is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Doom 3 Source Code.  If not, see <http://www.gnu.org/licenses/>.
+along with Doom 3 BFG Edition Source Code.  If not, see <http://www.gnu.org/licenses/>.
 
-In addition, the Doom 3 Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 Source Code.  If not, please request a copy in writing from id Software at the address below.
+In addition, the Doom 3 BFG Edition Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 BFG Edition Source Code.  If not, please request a copy in writing from id Software at the address below.
 
 If you have questions concerning this license or the applicable additional terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 
 ===========================================================================
 */
 
-#include "precompiled.h"
 #pragma hdrstop
+#include "precompiled.h"
 
 #include "tr_local.h"
 
@@ -39,19 +39,17 @@ idRenderWorldLocal::FreeWorld
 */
 void idRenderWorldLocal::FreeWorld()
 {
-	int i;
-	
 	// this will free all the lightDefs and entityDefs
 	FreeDefs();
 	
 	// free all the portals and check light/model references
-	for( i = 0 ; i < numPortalAreas ; i++ )
+	for( int i = 0; i < numPortalAreas; i++ )
 	{
 		portalArea_t*	area;
 		portal_t*		portal, *nextPortal;
 		
 		area = &portalAreas[i];
-		for( portal = area->portals ; portal ; portal = nextPortal )
+		for( portal = area->portals; portal; portal = nextPortal )
 		{
 			nextPortal = portal->next;
 			delete portal->w;
@@ -92,7 +90,7 @@ void idRenderWorldLocal::FreeWorld()
 	}
 	
 	// free all the inline idRenderModels
-	for( i = 0 ; i < localModels.Num() ; i++ )
+	for( int i = 0; i < localModels.Num(); i++ )
 	{
 		renderModelManager->RemoveModel( localModels[i] );
 		delete localModels[i];
@@ -113,9 +111,7 @@ idRenderWorldLocal::TouchWorldModels
 */
 void idRenderWorldLocal::TouchWorldModels()
 {
-	int i;
-	
-	for( i = 0 ; i < localModels.Num() ; i++ )
+	for( int i = 0; i < localModels.Num(); i++ )
 	{
 		renderModelManager->CheckModel( localModels[i]->Name() );
 	}
@@ -123,24 +119,47 @@ void idRenderWorldLocal::TouchWorldModels()
 
 /*
 ================
+idRenderWorldLocal::ReadBinaryShadowModel
+================
+*/
+idRenderModel* idRenderWorldLocal::ReadBinaryModel( idFile* fileIn )
+{
+	idStrStatic< MAX_OSPATH > name;
+	fileIn->ReadString( name );
+	idRenderModel* model = renderModelManager->AllocModel();
+	model->InitEmpty( name );
+	if( model->LoadBinaryModel( fileIn, mapTimeStamp ) )
+	{
+		return model;
+	}
+	return NULL;
+}
+
+extern idCVar r_binaryLoadRenderModels;
+
+/*
+================
 idRenderWorldLocal::ParseModel
 ================
 */
-idRenderModel* idRenderWorldLocal::ParseModel( idLexer* src )
+idRenderModel* idRenderWorldLocal::ParseModel( idLexer* src, const char* mapName, ID_TIME_T mapTimeStamp, idFile* fileOut )
 {
-	idRenderModel*	model;
-	idToken			token;
-	int				i, j;
-	srfTriangles_t*	tri;
-	modelSurface_t	surf;
+	idToken token;
 	
 	src->ExpectTokenString( "{" );
 	
 	// parse the name
 	src->ExpectAnyToken( &token );
 	
-	model = renderModelManager->AllocModel();
+	idRenderModel* model = renderModelManager->AllocModel();
 	model->InitEmpty( token );
+	
+	if( fileOut != NULL )
+	{
+		// write out the type so the binary reader knows what to instantiate
+		fileOut->WriteString( "shadowmodel" );
+		fileOut->WriteString( token );
+	}
 	
 	int numSurfaces = src->ParseInt();
 	if( numSurfaces < 0 )
@@ -148,24 +167,25 @@ idRenderModel* idRenderWorldLocal::ParseModel( idLexer* src )
 		src->Error( "R_ParseModel: bad numSurfaces" );
 	}
 	
-	for( i = 0 ; i < numSurfaces ; i++ )
+	for( int i = 0; i < numSurfaces; i++ )
 	{
 		src->ExpectTokenString( "{" );
 		
 		src->ExpectAnyToken( &token );
 		
+		modelSurface_t surf;
 		surf.shader = declManager->FindMaterial( token );
 		
 		( ( idMaterial* )surf.shader )->AddReference();
 		
-		tri = R_AllocStaticTriSurf();
+		srfTriangles_t* tri = R_AllocStaticTriSurf();
 		surf.geometry = tri;
 		
 		tri->numVerts = src->ParseInt();
 		tri->numIndexes = src->ParseInt();
 		
 		R_AllocStaticTriSurfVerts( tri, tri->numVerts );
-		for( j = 0 ; j < tri->numVerts ; j++ )
+		for( int j = 0 ; j < tri->numVerts ; j++ )
 		{
 			float	vec[8];
 			
@@ -182,7 +202,7 @@ idRenderModel* idRenderWorldLocal::ParseModel( idLexer* src )
 		}
 		
 		R_AllocStaticTriSurfIndexes( tri, tri->numIndexes );
-		for( j = 0 ; j < tri->numIndexes ; j++ )
+		for( int j = 0; j < tri->numIndexes; j++ )
 		{
 			tri->indexes[j] = src->ParseInt();
 		}
@@ -196,34 +216,56 @@ idRenderModel* idRenderWorldLocal::ParseModel( idLexer* src )
 	
 	model->FinishSurfaces();
 	
+	if( fileOut != NULL && model->SupportsBinaryModel() && r_binaryLoadRenderModels.GetBool() )
+	{
+		model->WriteBinaryModel( fileOut, &mapTimeStamp );
+	}
+	
 	return model;
 }
 
 /*
 ================
+idRenderWorldLocal::ReadBinaryShadowModel
+================
+*/
+idRenderModel* idRenderWorldLocal::ReadBinaryShadowModel( idFile* fileIn )
+{
+	idStrStatic< MAX_OSPATH > name;
+	fileIn->ReadString( name );
+	idRenderModel* model = renderModelManager->AllocModel();
+	model->InitEmpty( name );
+	if( model->LoadBinaryModel( fileIn, mapTimeStamp ) )
+	{
+		return model;
+	}
+	return NULL;
+}
+/*
+================
 idRenderWorldLocal::ParseShadowModel
 ================
 */
-idRenderModel* idRenderWorldLocal::ParseShadowModel( idLexer* src )
+idRenderModel* idRenderWorldLocal::ParseShadowModel( idLexer* src, idFile* fileOut )
 {
-	idRenderModel*	model;
-	idToken			token;
-	int				j;
-	srfTriangles_t*	tri;
-	modelSurface_t	surf;
+	idToken token;
 	
 	src->ExpectTokenString( "{" );
 	
 	// parse the name
 	src->ExpectAnyToken( &token );
 	
-	model = renderModelManager->AllocModel();
+	idRenderModel* model = renderModelManager->AllocModel();
 	model->InitEmpty( token );
 	
-	surf.shader = tr.defaultMaterial;
+	if( fileOut != NULL )
+	{
+		// write out the type so the binary reader knows what to instantiate
+		fileOut->WriteString( "shadowmodel" );
+		fileOut->WriteString( token );
+	}
 	
-	tri = R_AllocStaticTriSurf();
-	surf.geometry = tri;
+	srfTriangles_t* tri = R_AllocStaticTriSurf();
 	
 	tri->numVerts = src->ParseInt();
 	tri->numShadowIndexesNoCaps = src->ParseInt();
@@ -231,9 +273,11 @@ idRenderModel* idRenderWorldLocal::ParseShadowModel( idLexer* src )
 	tri->numIndexes = src->ParseInt();
 	tri->shadowCapPlaneBits = src->ParseInt();
 	
+	assert( ( tri->numVerts & 1 ) == 0 );
+	
 	R_AllocStaticTriSurfShadowVerts( tri, tri->numVerts );
 	tri->bounds.Clear();
-	for( j = 0 ; j < tri->numVerts ; j++ )
+	for( int j = 0; j < tri->numVerts; j++ )
 	{
 		float	vec[8];
 		
@@ -247,19 +291,28 @@ idRenderModel* idRenderWorldLocal::ParseShadowModel( idLexer* src )
 	}
 	
 	R_AllocStaticTriSurfIndexes( tri, tri->numIndexes );
-	for( j = 0 ; j < tri->numIndexes ; j++ )
+	for( int j = 0; j < tri->numIndexes; j++ )
 	{
 		tri->indexes[j] = src->ParseInt();
 	}
 	
 	// add the completed surface to the model
+	modelSurface_t surf;
+	surf.id = 0;
+	surf.shader = tr.defaultMaterial;
+	surf.geometry = tri;
+	
 	model->AddSurface( surf );
 	
 	src->ExpectTokenString( "}" );
 	
-	// we do NOT do a model->FinishSurfaceces, because we don't need sil edges, planes, tangents, etc.
-//	model->FinishSurfaces();
-
+	// NOTE: we do NOT do a model->FinishSurfaceces, because we don't need sil edges, planes, tangents, etc.
+	
+	if( fileOut != NULL && model->SupportsBinaryModel() && r_binaryLoadRenderModels.GetBool() )
+	{
+		model->WriteBinaryModel( fileOut, &mapTimeStamp );
+	}
+	
 	return model;
 }
 
@@ -290,10 +343,8 @@ void idRenderWorldLocal::SetupAreaRefs()
 idRenderWorldLocal::ParseInterAreaPortals
 ================
 */
-void idRenderWorldLocal::ParseInterAreaPortals( idLexer* src )
+void idRenderWorldLocal::ParseInterAreaPortals( idLexer* src, idFile* fileOut )
 {
-	int i, j;
-	
 	src->ExpectTokenString( "{" );
 	
 	numPortalAreas = src->ParseInt();
@@ -302,6 +353,14 @@ void idRenderWorldLocal::ParseInterAreaPortals( idLexer* src )
 		src->Error( "R_ParseInterAreaPortals: bad numPortalAreas" );
 		return;
 	}
+	
+	if( fileOut != NULL )
+	{
+		// write out the type so the binary reader knows what to instantiate
+		fileOut->WriteString( "interAreaPortals" );
+	}
+	
+	
 	portalAreas = ( portalArea_t* )R_ClearedStaticAlloc( numPortalAreas * sizeof( portalAreas[0] ) );
 	areaScreenRect = ( idScreenRect* ) R_ClearedStaticAlloc( numPortalAreas * sizeof( idScreenRect ) );
 	
@@ -315,10 +374,16 @@ void idRenderWorldLocal::ParseInterAreaPortals( idLexer* src )
 		return;
 	}
 	
+	if( fileOut != NULL )
+	{
+		fileOut->WriteBig( numPortalAreas );
+		fileOut->WriteBig( numInterAreaPortals );
+	}
+	
 	doublePortals = ( doublePortal_t* )R_ClearedStaticAlloc( numInterAreaPortals *
 					sizeof( doublePortals [0] ) );
 					
-	for( i = 0 ; i < numInterAreaPortals ; i++ )
+	for( int i = 0; i < numInterAreaPortals; i++ )
 	{
 		int		numPoints, a1, a2;
 		idWinding*	w;
@@ -328,11 +393,25 @@ void idRenderWorldLocal::ParseInterAreaPortals( idLexer* src )
 		a1 = src->ParseInt();
 		a2 = src->ParseInt();
 		
+		if( fileOut != NULL )
+		{
+			fileOut->WriteBig( numPoints );
+			fileOut->WriteBig( a1 );
+			fileOut->WriteBig( a2 );
+		}
+		
 		w = new idWinding( numPoints );
 		w->SetNumPoints( numPoints );
-		for( j = 0 ; j < numPoints ; j++ )
+		for( int j = 0; j < numPoints; j++ )
 		{
 			src->Parse1DMatrix( 3, ( *w )[j].ToFloatPtr() );
+			
+			if( fileOut != NULL )
+			{
+				fileOut->WriteBig( ( *w )[j].x );
+				fileOut->WriteBig( ( *w )[j].y );
+				fileOut->WriteBig( ( *w )[j].z );
+			}
 			// no texture coordinates
 			( *w )[j][3] = 0;
 			( *w )[j][4] = 0;
@@ -368,13 +447,78 @@ void idRenderWorldLocal::ParseInterAreaPortals( idLexer* src )
 
 /*
 ================
+idRenderWorldLocal::ParseInterAreaPortals
+================
+*/
+void idRenderWorldLocal::ReadBinaryAreaPortals( idFile* file )
+{
+
+	file->ReadBig( numPortalAreas );
+	file->ReadBig( numInterAreaPortals );
+	
+	portalAreas = ( portalArea_t* )R_ClearedStaticAlloc( numPortalAreas * sizeof( portalAreas[0] ) );
+	areaScreenRect = ( idScreenRect* ) R_ClearedStaticAlloc( numPortalAreas * sizeof( idScreenRect ) );
+	
+	// set the doubly linked lists
+	SetupAreaRefs();
+	
+	doublePortals = ( doublePortal_t* )R_ClearedStaticAlloc( numInterAreaPortals * sizeof( doublePortals [0] ) );
+	
+	for( int i = 0; i < numInterAreaPortals; i++ )
+	{
+		int		numPoints, a1, a2;
+		idWinding*	w;
+		portal_t*	p;
+		
+		file->ReadBig( numPoints );
+		file->ReadBig( a1 );
+		file->ReadBig( a2 );
+		w = new idWinding( numPoints );
+		w->SetNumPoints( numPoints );
+		for( int j = 0; j < numPoints; j++ )
+		{
+			file->ReadBig( ( *w )[ j ][ 0 ] );
+			file->ReadBig( ( *w )[ j ][ 1 ] );
+			file->ReadBig( ( *w )[ j ][ 2 ] );
+			// no texture coordinates
+			( *w )[ j ][ 3 ] = 0;
+			( *w )[ j ][ 4 ] = 0;
+		}
+		
+		// add the portal to a1
+		p = ( portal_t* )R_ClearedStaticAlloc( sizeof( *p ) );
+		p->intoArea = a2;
+		p->doublePortal = &doublePortals[i];
+		p->w = w;
+		p->w->GetPlane( p->plane );
+		
+		p->next = portalAreas[a1].portals;
+		portalAreas[a1].portals = p;
+		
+		doublePortals[i].portals[0] = p;
+		
+		// reverse it for a2
+		p = ( portal_t* )R_ClearedStaticAlloc( sizeof( *p ) );
+		p->intoArea = a1;
+		p->doublePortal = &doublePortals[i];
+		p->w = w->Reverse();
+		p->w->GetPlane( p->plane );
+		
+		p->next = portalAreas[a2].portals;
+		portalAreas[a2].portals = p;
+		
+		doublePortals[i].portals[1] = p;
+	}
+}
+
+
+/*
+================
 idRenderWorldLocal::ParseNodes
 ================
 */
-void idRenderWorldLocal::ParseNodes( idLexer* src )
+void idRenderWorldLocal::ParseNodes( idLexer* src, idFile* fileOut )
 {
-	int			i;
-	
 	src->ExpectTokenString( "{" );
 	
 	numAreaNodes = src->ParseInt();
@@ -384,18 +528,62 @@ void idRenderWorldLocal::ParseNodes( idLexer* src )
 	}
 	areaNodes = ( areaNode_t* )R_ClearedStaticAlloc( numAreaNodes * sizeof( areaNodes[0] ) );
 	
-	for( i = 0 ; i < numAreaNodes ; i++ )
+	if( fileOut != NULL )
+	{
+		// write out the type so the binary reader knows what to instantiate
+		fileOut->WriteString( "nodes" );
+	}
+	
+	if( fileOut != NULL )
+	{
+		fileOut->WriteBig( numAreaNodes );
+	}
+	
+	for( int i = 0; i < numAreaNodes; i++ )
 	{
 		areaNode_t*	node;
 		
 		node = &areaNodes[i];
 		
 		src->Parse1DMatrix( 4, node->plane.ToFloatPtr() );
+		
 		node->children[0] = src->ParseInt();
 		node->children[1] = src->ParseInt();
+		
+		if( fileOut != NULL )
+		{
+			fileOut->WriteBig( node->plane[ 0 ] );
+			fileOut->WriteBig( node->plane[ 1 ] );
+			fileOut->WriteBig( node->plane[ 2 ] );
+			fileOut->WriteBig( node->plane[ 3 ] );
+			fileOut->WriteBig( node->children[ 0 ] );
+			fileOut->WriteBig( node->children[ 1 ] );
+		}
+		
 	}
 	
 	src->ExpectTokenString( "}" );
+}
+
+/*
+================
+idRenderWorldLocal::ReadBinaryNodes
+================
+*/
+void idRenderWorldLocal::ReadBinaryNodes( idFile* file )
+{
+	file->ReadBig( numAreaNodes );
+	areaNodes = ( areaNode_t* )R_ClearedStaticAlloc( numAreaNodes * sizeof( areaNodes[0] ) );
+	for( int i = 0; i < numAreaNodes; i++ )
+	{
+		areaNode_t* node = &areaNodes[ i ];
+		file->ReadBig( node->plane[ 0 ] );
+		file->ReadBig( node->plane[ 1 ] );
+		file->ReadBig( node->plane[ 2 ] );
+		file->ReadBig( node->plane[ 3 ] );
+		file->ReadBig( node->children[ 0 ] );
+		file->ReadBig( node->children[ 1 ] );
+	}
 }
 
 /*
@@ -407,7 +595,7 @@ int idRenderWorldLocal::CommonChildrenArea_r( areaNode_t* node )
 {
 	int	nums[2];
 	
-	for( int i = 0 ; i < 2 ; i++ )
+	for( int i = 0; i < 2; i++ )
 	{
 		if( node->children[i] <= 0 )
 		{
@@ -477,8 +665,6 @@ dump all the interactions
 */
 void idRenderWorldLocal::FreeDefs()
 {
-	int		i;
-	
 	generateAllInteractionsCalled = false;
 	
 	if( interactionTable )
@@ -488,12 +674,10 @@ void idRenderWorldLocal::FreeDefs()
 	}
 	
 	// free all lightDefs
-	for( i = 0 ; i < lightDefs.Num() ; i++ )
+	for( int i = 0; i < lightDefs.Num(); i++ )
 	{
-		idRenderLightLocal*	light;
-		
-		light = lightDefs[i];
-		if( light && light->world == this )
+		idRenderLightLocal* light = lightDefs[i];
+		if( light != NULL && light->world == this )
 		{
 			FreeLightDef( i );
 			lightDefs[i] = NULL;
@@ -501,12 +685,10 @@ void idRenderWorldLocal::FreeDefs()
 	}
 	
 	// free all entityDefs
-	for( i = 0 ; i < entityDefs.Num() ; i++ )
+	for( int i = 0; i < entityDefs.Num(); i++ )
 	{
-		idRenderEntityLocal*	mod;
-		
-		mod = entityDefs[i];
-		if( mod && mod->world == this )
+		idRenderEntityLocal*	 mod = entityDefs[i];
+		if( mod != NULL && mod->world == this )
 		{
 			FreeEntityDef( i );
 			entityDefs[i] = NULL;
@@ -526,7 +708,6 @@ bool idRenderWorldLocal::InitFromMap( const char* name )
 {
 	idLexer* 		src;
 	idToken			token;
-	idStr			filename;
 	idRenderModel* 	lastModel;
 	
 	// if this is an empty world, initialize manually
@@ -538,15 +719,18 @@ bool idRenderWorldLocal::InitFromMap( const char* name )
 		return true;
 	}
 	
-	
 	// load it
-	filename = name;
+	idStrStatic< MAX_OSPATH > filename = name;
 	filename.SetFileExtension( PROC_FILE_EXT );
+	
+	// check for generated file
+	idStrStatic< MAX_OSPATH > generatedFileName = filename;
+	generatedFileName.Insert( "generated/", 0 );
+	generatedFileName.SetFileExtension( "bproc" );
 	
 	// if we are reloading the same map, check the timestamp
 	// and try to skip all the work
-	ID_TIME_T currentTimeStamp;
-	fileSystem->ReadFile( filename, NULL, &currentTimeStamp );
+	ID_TIME_T currentTimeStamp = fileSystem->GetTimestamp( filename );
 	
 	if( name == mapName )
 	{
@@ -564,79 +748,182 @@ bool idRenderWorldLocal::InitFromMap( const char* name )
 	
 	FreeWorld();
 	
-	src = new idLexer( filename, LEXFL_NOSTRINGCONCAT | LEXFL_NODOLLARPRECOMPILE );
-	if( !src->IsLoaded() )
+	// see if we have a generated version of this
+	static const byte BPROC_VERSION = 1;
+	static const unsigned int BPROC_MAGIC = ( 'P' << 24 ) | ( 'R' << 16 ) | ( 'O' << 8 ) | BPROC_VERSION;
+	bool loaded = false;
+	idFileLocal file( fileSystem->OpenFileReadMemory( generatedFileName ) );
+	if( file != NULL )
 	{
-		common->Printf( "idRenderWorldLocal::InitFromMap: %s not found\n", filename.c_str() );
-		ClearWorld();
-		return false;
+		int numEntries = 0;
+		int magic = 0;
+		file->ReadBig( magic );
+		if( magic == BPROC_MAGIC )
+		{
+			file->ReadBig( numEntries );
+			file->ReadString( mapName );
+			file->ReadBig( mapTimeStamp );
+			
+			// if we are writing a demo, archive the load command
+			if( session->writeDemo )
+			{
+				WriteLoadMap();
+			}
+			
+			loaded = true;
+			for( int i = 0; i < numEntries; i++ )
+			{
+				idStrStatic< MAX_OSPATH > type;
+				file->ReadString( type );
+				type.ToLower();
+				if( type == "model" )
+				{
+					idRenderModel* lastModel = ReadBinaryModel( file );
+					if( lastModel == NULL )
+					{
+						loaded = false;
+						break;
+					}
+					renderModelManager->AddModel( lastModel );
+					localModels.Append( lastModel );
+				}
+				else if( type == "shadowmodel" )
+				{
+					idRenderModel* lastModel = ReadBinaryModel( file );
+					if( lastModel == NULL )
+					{
+						loaded = false;
+						break;
+					}
+					renderModelManager->AddModel( lastModel );
+					localModels.Append( lastModel );
+				}
+				else if( type == "interareaportals" )
+				{
+					ReadBinaryAreaPortals( file );
+				}
+				else if( type == "nodes" )
+				{
+					ReadBinaryNodes( file );
+				}
+				else
+				{
+					idLib::Error( "Binary proc file failed, unexpected type %s\n", type.c_str() );
+				}
+			}
+		}
 	}
 	
-	
-	mapName = name;
-	mapTimeStamp = currentTimeStamp;
-	
-	// if we are writing a demo, archive the load command
-	if( session->writeDemo )
+	if( !loaded )
 	{
-		WriteLoadMap();
-	}
 	
-	if( !src->ReadToken( &token ) || token.Icmp( PROC_FILE_ID ) )
-	{
-		common->Printf( "idRenderWorldLocal::InitFromMap: bad id '%s' instead of '%s'\n", token.c_str(), PROC_FILE_ID );
+		src = new idLexer( filename, LEXFL_NOSTRINGCONCAT | LEXFL_NODOLLARPRECOMPILE );
+		if( !src->IsLoaded() )
+		{
+			common->Printf( "idRenderWorldLocal::InitFromMap: %s not found\n", filename.c_str() );
+			ClearWorld();
+			return false;
+		}
+		
+		
+		mapName = name;
+		mapTimeStamp = currentTimeStamp;
+		
+		// if we are writing a demo, archive the load command
+		if( session->writeDemo )
+		{
+			WriteLoadMap();
+		}
+		
+		if( !src->ReadToken( &token ) || token.Icmp( PROC_FILE_ID ) )
+		{
+			common->Printf( "idRenderWorldLocal::InitFromMap: bad id '%s' instead of '%s'\n", token.c_str(), PROC_FILE_ID );
+			delete src;
+			return false;
+		}
+		
+		int numEntries = 0;
+		idFileLocal outputFile( fileSystem->OpenFileWrite( generatedFileName, "fs_basepath" ) );
+		if( outputFile != NULL )
+		{
+			int magic = BPROC_MAGIC;
+			outputFile->WriteBig( magic );
+			outputFile->WriteBig( numEntries );
+			outputFile->WriteString( mapName );
+			outputFile->WriteBig( mapTimeStamp );
+		}
+		
+		// parse the file
+		while( 1 )
+		{
+			if( !src->ReadToken( &token ) )
+			{
+				break;
+			}
+			
+			session->PacifierUpdate();
+			
+			if( token == "model" )
+			{
+				lastModel = ParseModel( src, name, currentTimeStamp, outputFile );
+				
+				// add it to the model manager list
+				renderModelManager->AddModel( lastModel );
+				
+				// save it in the list to free when clearing this map
+				localModels.Append( lastModel );
+				
+				numEntries++;
+				
+				continue;
+			}
+			
+			if( token == "shadowModel" )
+			{
+				lastModel = ParseShadowModel( src, outputFile );
+				
+				// add it to the model manager list
+				renderModelManager->AddModel( lastModel );
+				
+				// save it in the list to free when clearing this map
+				localModels.Append( lastModel );
+				
+				numEntries++;
+				continue;
+			}
+			
+			if( token == "interAreaPortals" )
+			{
+				ParseInterAreaPortals( src, outputFile );
+				
+				numEntries++;
+				continue;
+			}
+			
+			if( token == "nodes" )
+			{
+				ParseNodes( src, outputFile );
+				
+				numEntries++;
+				continue;
+			}
+			
+			src->Error( "idRenderWorldLocal::InitFromMap: bad token \"%s\"", token.c_str() );
+		}
+		
 		delete src;
-		return false;
+		
+		if( outputFile != NULL )
+		{
+			outputFile->Seek( 0, FS_SEEK_SET );
+			int magic = BPROC_MAGIC;
+			outputFile->WriteBig( magic );
+			outputFile->WriteBig( numEntries );
+		}
+		
 	}
 	
-	// parse the file
-	while( 1 )
-	{
-		if( !src->ReadToken( &token ) )
-		{
-			break;
-		}
-		
-		if( token == "model" )
-		{
-			lastModel = ParseModel( src );
-			
-			// add it to the model manager list
-			renderModelManager->AddModel( lastModel );
-			
-			// save it in the list to free when clearing this map
-			localModels.Append( lastModel );
-			continue;
-		}
-		
-		if( token == "shadowModel" )
-		{
-			lastModel = ParseShadowModel( src );
-			
-			// add it to the model manager list
-			renderModelManager->AddModel( lastModel );
-			
-			// save it in the list to free when clearing this map
-			localModels.Append( lastModel );
-			continue;
-		}
-		
-		if( token == "interAreaPortals" )
-		{
-			ParseInterAreaPortals( src );
-			continue;
-		}
-		
-		if( token == "nodes" )
-		{
-			ParseNodes( src );
-			continue;
-		}
-		
-		src->Error( "idRenderWorldLocal::InitFromMap: bad token \"%s\"", token.c_str() );
-	}
 	
-	delete src;
 	
 	// if it was a trivial map without any areas, create a single area
 	if( !numPortalAreas )
@@ -661,18 +948,16 @@ idRenderWorldLocal::ClearPortalStates
 */
 void idRenderWorldLocal::ClearPortalStates()
 {
-	int		i, j;
-	
 	// all portals start off open
-	for( i = 0 ; i < numInterAreaPortals ; i++ )
+	for( int i = 0; i < numInterAreaPortals; i++ )
 	{
 		doublePortals[i].blockingBits = PS_BLOCK_NONE;
 	}
 	
 	// flood fill all area connections
-	for( i = 0 ; i < numPortalAreas ; i++ )
+	for( int i = 0; i < numPortalAreas; i++ )
 	{
-		for( j = 0 ; j < NUM_PORTAL_ATTRIBUTES ; j++ )
+		for( int j = 0; j < NUM_PORTAL_ATTRIBUTES; j++ )
 		{
 			connectedAreaNum++;
 			FloodConnectedAreas( &portalAreas[i], j );
@@ -687,20 +972,18 @@ idRenderWorldLocal::AddWorldModelEntities
 */
 void idRenderWorldLocal::AddWorldModelEntities()
 {
-	int		i;
-	
 	// add the world model for each portal area
 	// we can't just call AddEntityDef, because that would place the references
 	// based on the bounding box, rather than explicitly into the correct area
-	for( i = 0 ; i < numPortalAreas ; i++ )
+	for( int i = 0; i < numPortalAreas; i++ )
 	{
-		idRenderEntityLocal*	def;
-		int			index;
+		session->PacifierUpdate();
 		
-		def = new idRenderEntityLocal;
+		
+		idRenderEntityLocal* def = new idRenderEntityLocal;
 		
 		// try and reuse a free spot
-		index = entityDefs.FindNull();
+		int index = entityDefs.FindNull();
 		if( index == -1 )
 		{
 			index = entityDefs.Append( def );
@@ -757,11 +1040,9 @@ CheckAreaForPortalSky
 */
 bool idRenderWorldLocal::CheckAreaForPortalSky( int areaNum )
 {
-	areaReference_t*	ref;
-	
 	assert( areaNum >= 0 && areaNum < numPortalAreas );
 	
-	for( ref = portalAreas[areaNum].entityRefs.areaNext; ref->entity; ref = ref->areaNext )
+	for( areaReference_t* ref = portalAreas[areaNum].entityRefs.areaNext; ref->entity; ref = ref->areaNext )
 	{
 		assert( ref->area == &portalAreas[areaNum] );
 		

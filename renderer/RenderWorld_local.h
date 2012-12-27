@@ -140,7 +140,7 @@ public:
 	//-----------------------
 	
 	idStr					mapName;				// ie: maps/tim_dm2.proc, written to demoFile
-	ID_TIME_T					mapTimeStamp;			// for fast reloads of the same level
+	ID_TIME_T				mapTimeStamp;			// for fast reloads of the same level
 	
 	areaNode_t* 			areaNodes;
 	int						numAreaNodes;
@@ -178,11 +178,11 @@ public:
 	//-----------------------
 	// RenderWorld_load.cpp
 	
-	idRenderModel* 			ParseModel( idLexer* src );
-	idRenderModel* 			ParseShadowModel( idLexer* src );
+	idRenderModel* 			ParseModel( idLexer* src, const char* mapName, ID_TIME_T mapTimeStamp, idFile* fileOut );
+	idRenderModel* 			ParseShadowModel( idLexer* src, idFile* fileOut );
 	void					SetupAreaRefs();
-	void					ParseInterAreaPortals( idLexer* src );
-	void					ParseNodes( idLexer* src );
+	void					ParseInterAreaPortals( idLexer* src, idFile* fileOut );
+	void					ParseNodes( idLexer* src, idFile* fileOut );
 	int						CommonChildrenArea_r( areaNode_t* node );
 	void					FreeWorld();
 	void					ClearWorld();
@@ -191,6 +191,12 @@ public:
 	void					AddWorldModelEntities();
 	void					ClearPortalStates();
 	virtual	bool			InitFromMap( const char* mapName );
+	// RB begin
+	void					ReadBinaryAreaPortals( idFile* file );
+	void					ReadBinaryNodes( idFile* file );
+	idRenderModel* 			ReadBinaryModel( idFile* file );
+	idRenderModel* 			ReadBinaryShadowModel( idFile* file );
+	// RB end
 	
 	//--------------------------
 	// RenderWorld_portals.cpp
