@@ -360,6 +360,19 @@ public:
 	
 	// ignore case and seperator char distinctions
 	virtual bool			FilenameCompare( const char* s1, const char* s2 ) const = 0;
+	
+	// RB: from BFG
+	ID_TIME_T				GetTimestamp( const char* relativePath )
+	{
+		ID_TIME_T timestamp = FILE_NOT_FOUND_TIMESTAMP;
+		if( relativePath == NULL || relativePath[ 0 ] == '\0' )
+		{
+			return timestamp;
+		}
+		ReadFile( relativePath, NULL, &timestamp );
+		return timestamp;
+	}
+	// RB end
 };
 
 extern idFileSystem* 		fileSystem;

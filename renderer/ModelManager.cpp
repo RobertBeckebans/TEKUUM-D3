@@ -303,9 +303,13 @@ idRenderModel* idRenderModelManagerLocal::GetModel( const char* _modelName, bool
 				generatedFileName.SetFileExtension( va( "b%s", extension.c_str() ) );
 				if( model->SupportsBinaryModel() && r_binaryLoadRenderModels.GetBool() )
 				{
-					// RB: FIXME OpenFileReadMemory
+					// RB: don't waste memory on low memory systems
+#if defined(__ANDROID__)
+					idFileLocal file( fileSystem->OpenFileRead( generatedFileName ) )
+#else
 					idFileLocal file( fileSystem->OpenFileReadMemory( generatedFileName ) );
-					//idFileLocal file( fileSystem->OpenFileRead( generatedFileName ) );
+#endif
+					// RB end
 					model->PurgeModel();
 					if( !model->LoadBinaryModel( file, 0 ) )
 					{
@@ -370,10 +374,13 @@ idRenderModel* idRenderModelManagerLocal::GetModel( const char* _modelName, bool
 		ID_TIME_T sourceTimeStamp;// = fileSystem->GetTimestamp( canonical );
 		fileSystem->ReadFile( canonical, NULL, &sourceTimeStamp );
 		
-		// RB: FIXME OpenFileReadMemory
+		// RB: don't waste memory on low memory systems
+#if defined(__ANDROID__)
+		idFileLocal file( fileSystem->OpenFileRead( generatedFileName ) );
+#else
 		idFileLocal file( fileSystem->OpenFileReadMemory( generatedFileName ) );
-		//idFileLocal file( fileSystem->OpenFileRead( generatedFileName ) );
-		
+#endif
+		// RB end
 		if( !model->SupportsBinaryModel() || !r_binaryLoadRenderModels.GetBool() )
 		{
 			model->InitFromFile( canonical );

@@ -1,25 +1,25 @@
 /*
 ===========================================================================
 
-Doom 3 GPL Source Code
-Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Doom 3 BFG Edition GPL Source Code
+Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
 
-This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
+This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
-Doom 3 Source Code is free software: you can redistribute it and/or modify
+Doom 3 BFG Edition Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Doom 3 Source Code is distributed in the hope that it will be useful,
+Doom 3 BFG Edition Source Code is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Doom 3 Source Code.  If not, see <http://www.gnu.org/licenses/>.
+along with Doom 3 BFG Edition Source Code.  If not, see <http://www.gnu.org/licenses/>.
 
-In addition, the Doom 3 Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 Source Code.  If not, please request a copy in writing from id Software at the address below.
+In addition, the Doom 3 BFG Edition Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 BFG Edition Source Code.  If not, please request a copy in writing from id Software at the address below.
 
 If you have questions concerning this license or the applicable additional terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 
@@ -83,8 +83,10 @@ typedef struct cm_vertex_s
 {
 	idVec3					p;					// vertex point
 	int						checkcount;			// for multi-check avoidance
-	unsigned long			side;				// each bit tells at which side this vertex passes one of the trace model edges
-	unsigned long			sideSet;			// each bit tells if sidedness for the trace model edge has been calculated yet
+	// DG: use int instead of long for 64bit compatibility
+	unsigned int			side;				// each bit tells at which side this vertex passes one of the trace model edges
+	unsigned int			sideSet;			// each bit tells if sidedness for the trace model edge has been calculated yet
+	// DG end
 } cm_vertex_t;
 
 typedef struct cm_edge_s
@@ -92,8 +94,10 @@ typedef struct cm_edge_s
 	int						checkcount;			// for multi-check avoidance
 	unsigned short			internal;			// a trace model can never collide with internal edges
 	unsigned short			numUsers;			// number of polygons using this edge
-	unsigned long			side;				// each bit tells at which side of this edge one of the trace model vertices passes
-	unsigned long			sideSet;			// each bit tells if sidedness for the trace model vertex has been calculated yet
+	// DG: use int instead of long for 64bit compatibility
+	unsigned int			side;				// each bit tells at which side of this edge one of the trace model vertices passes
+	unsigned int			sideSet;			// each bit tells if sidedness for the trace model vertex has been calculated yet
+	// DG end
 	int						vertexNum[2];		// start and end point of edge
 	idVec3					normal;				// edge normal
 } cm_edge_t;
@@ -135,6 +139,14 @@ typedef struct cm_brushBlock_s
 
 typedef struct cm_brush_s
 {
+	cm_brush_s()
+	{
+		checkcount = 0;
+		contents = 0;
+		material = NULL;
+		primitiveNum = 0;
+		numPlanes = 0;
+	}
 	int						checkcount;			// for multi-check avoidance
 	idBounds				bounds;				// brush bounds
 	int						contents;			// contents of brush
@@ -489,6 +501,10 @@ private:			// CollisionMap_load.cpp
 	cmHandle_t		FindModel( const char* name );
 	cm_model_t* 	CollisionModelForMapEntity( const idMapEntity* mapEnt );	// brush/patch model from .map
 	cm_model_t* 	LoadRenderModel( const char* fileName );					// ASE/LWO models
+	cm_model_t* 	LoadBinaryModel( const char* fileName, ID_TIME_T sourceTimeStamp );
+	cm_model_t* 	LoadBinaryModelFromFile( idFile* fileIn, ID_TIME_T sourceTimeStamp );
+	void			WriteBinaryModel( cm_model_t* model, const char* fileName, ID_TIME_T sourceTimeStamp );
+	void			WriteBinaryModelToFile( cm_model_t* model, idFile* fileOut, ID_TIME_T sourceTimeStamp );
 	bool			TrmFromModel_r( idTraceModel& trm, cm_node_t* node );
 	bool			TrmFromModel( const cm_model_t* model, idTraceModel& trm );
 	
@@ -507,7 +523,7 @@ private:			// CollisionMap_files.cpp
 	void			ParseEdges( idLexer* src, cm_model_t* model );
 	void			ParsePolygons( idLexer* src, cm_model_t* model );
 	void			ParseBrushes( idLexer* src, cm_model_t* model );
-	bool			ParseCollisionModel( idLexer* src );
+	cm_model_t* 	ParseCollisionModel( idLexer* src );
 	bool			LoadCollisionModelFile( const char* name, unsigned int mapFileCRC );
 	
 private:			// CollisionMap_debug

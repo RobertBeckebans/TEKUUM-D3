@@ -1,25 +1,25 @@
 /*
 ===========================================================================
 
-Doom 3 GPL Source Code
-Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Doom 3 BFG Edition GPL Source Code
+Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
 
-This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
+This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
-Doom 3 Source Code is free software: you can redistribute it and/or modify
+Doom 3 BFG Edition Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Doom 3 Source Code is distributed in the hope that it will be useful,
+Doom 3 BFG Edition Source Code is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Doom 3 Source Code.  If not, see <http://www.gnu.org/licenses/>.
+along with Doom 3 BFG Edition Source Code.  If not, see <http://www.gnu.org/licenses/>.
 
-In addition, the Doom 3 Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 Source Code.  If not, please request a copy in writing from id Software at the address below.
+In addition, the Doom 3 BFG Edition Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 BFG Edition Source Code.  If not, please request a copy in writing from id Software at the address below.
 
 If you have questions concerning this license or the applicable additional terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 
@@ -50,6 +50,7 @@ If you have questions concerning this license or the applicable additional terms
 
 #include "CollisionModel_local.h"
 
+#define CMODEL_BINARYFILE_EXT	"bcmodel"
 
 idCollisionModelManagerLocal	collisionModelManagerLocal;
 idCollisionModelManager* 		collisionModelManager = &collisionModelManagerLocal;
@@ -679,7 +680,7 @@ cm_polygonRef_t* idCollisionModelManagerLocal::AllocPolygonReference( cm_model_t
 	
 	if( !model->polygonRefBlocks || !model->polygonRefBlocks->nextRef )
 	{
-		prefBlock = ( cm_polygonRefBlock_t* ) Mem_Alloc( sizeof( cm_polygonRefBlock_t ) + blockSize * sizeof( cm_polygonRef_t ) );
+		prefBlock = ( cm_polygonRefBlock_t* ) Mem_ClearedAlloc( sizeof( cm_polygonRefBlock_t ) + blockSize * sizeof( cm_polygonRef_t ) );
 		prefBlock->nextRef = ( cm_polygonRef_t* )( ( ( byte* ) prefBlock ) + sizeof( cm_polygonRefBlock_t ) );
 		prefBlock->next = model->polygonRefBlocks;
 		model->polygonRefBlocks = prefBlock;
@@ -711,7 +712,7 @@ cm_brushRef_t* idCollisionModelManagerLocal::AllocBrushReference( cm_model_t* mo
 	
 	if( !model->brushRefBlocks || !model->brushRefBlocks->nextRef )
 	{
-		brefBlock = ( cm_brushRefBlock_t* ) Mem_Alloc( sizeof( cm_brushRefBlock_t ) + blockSize * sizeof( cm_brushRef_t ) );
+		brefBlock = ( cm_brushRefBlock_t* ) Mem_ClearedAlloc( sizeof( cm_brushRefBlock_t ) + blockSize * sizeof( cm_brushRef_t ) );
 		brefBlock->nextRef = ( cm_brushRef_t* )( ( ( byte* ) brefBlock ) + sizeof( cm_brushRefBlock_t ) );
 		brefBlock->next = model->brushRefBlocks;
 		model->brushRefBlocks = brefBlock;
@@ -751,7 +752,7 @@ cm_polygon_t* idCollisionModelManagerLocal::AllocPolygon( cm_model_t* model, int
 	}
 	else
 	{
-		poly = ( cm_polygon_t* ) Mem_Alloc( size );
+		poly = ( cm_polygon_t* ) Mem_ClearedAlloc( size );
 	}
 	return poly;
 }
@@ -777,7 +778,7 @@ cm_brush_t* idCollisionModelManagerLocal::AllocBrush( cm_model_t* model, int num
 	}
 	else
 	{
-		brush = ( cm_brush_t* ) Mem_Alloc( size );
+		brush = ( cm_brush_t* ) Mem_ClearedAlloc( size );
 	}
 	return brush;
 }
@@ -867,6 +868,7 @@ void idCollisionModelManagerLocal::SetupTrmModelStructure()
 	trmBrushes[0]->b->bounds.Clear();
 	trmBrushes[0]->b->checkcount = 0;
 	trmBrushes[0]->b->contents = -1;		// all contents
+	trmBrushes[ 0 ]->b->material = trmMaterial;
 	trmBrushes[0]->b->numPlanes = 0;
 }
 
@@ -956,6 +958,7 @@ cmHandle_t idCollisionModelManagerLocal::SetupTrmModel( const idTraceModel& trm,
 		trmBrushes[0]->b->bounds = trm.bounds;
 		// link brush at node
 		trmBrushes[0]->next = model->node->brushes;
+		trmBrushes[ 0 ]->b->material = material;
 		model->node->brushes = trmBrushes[0];
 	}
 	// model bounds
@@ -3356,18 +3359,20 @@ void idCollisionModelManagerLocal::OptimizeArrays( cm_model_t* model )
 	
 	// realloc vertices
 	oldVertices = model->vertices;
+	model->maxVertices = model->numVertices;
+	model->vertices = ( cm_vertex_t* ) Mem_ClearedAlloc( model->numVertices * sizeof( cm_vertex_t ) );
 	if( oldVertices )
 	{
-		model->vertices = ( cm_vertex_t* ) Mem_ClearedAlloc( model->numVertices * sizeof( cm_vertex_t ) );
 		memcpy( model->vertices, oldVertices, model->numVertices * sizeof( cm_vertex_t ) );
 		Mem_Free( oldVertices );
 	}
 	
 	// realloc edges
 	oldEdges = model->edges;
+	model->maxEdges = model->numEdges;
+	model->edges = ( cm_edge_t* ) Mem_ClearedAlloc( model->numEdges * sizeof( cm_edge_t ) );
 	if( oldEdges )
 	{
-		model->edges = ( cm_edge_t* ) Mem_ClearedAlloc( model->numEdges * sizeof( cm_edge_t ) );
 		memcpy( model->edges, oldEdges, model->numEdges * sizeof( cm_edge_t ) );
 		Mem_Free( oldEdges );
 	}
@@ -3409,6 +3414,448 @@ void idCollisionModelManagerLocal::FinishModel( cm_model_t* model )
 						model->numBrushRefs * sizeof( cm_brushRef_t );
 }
 
+static const byte BCM_VERSION = 100;
+static const unsigned int BCM_MAGIC = ( 'B' << 24 ) | ( 'C' << 16 ) | ( 'M' << 16 ) | BCM_VERSION;
+
+/*
+================
+idCollisionModelManagerLocal::LoadBinaryModel
+================
+*/
+cm_model_t* idCollisionModelManagerLocal::LoadBinaryModelFromFile( idFile* file, ID_TIME_T sourceTimeStamp )
+{
+
+	unsigned int magic = 0;
+	file->ReadBig( magic );
+	if( magic != BCM_MAGIC )
+	{
+		return NULL;
+	}
+	ID_TIME_T storedTimeStamp = FILE_NOT_FOUND_TIMESTAMP;
+	file->ReadBig( storedTimeStamp );
+	if( /*!fileSystem->InProductionMode() &&*/ storedTimeStamp != sourceTimeStamp )
+	{
+		return NULL;
+	}
+	cm_model_t* model = AllocModel();
+	file->ReadString( model->name );
+	file->ReadBig( model->bounds );
+	file->ReadBig( model->contents );
+	file->ReadBig( model->isConvex );
+	file->ReadBig( model->numVertices );
+	file->ReadBig( model->numEdges );
+	// RB begin
+	//file->ReadBig( model->numPolygons );
+	//file->ReadBig( model->numBrushes );
+	// RB end
+	file->ReadBig( model->numNodes );
+	file->ReadBig( model->numBrushRefs );
+	file->ReadBig( model->numPolygonRefs );
+	file->ReadBig( model->numInternalEdges );
+	file->ReadBig( model->numSharpEdges );
+	file->ReadBig( model->numRemovedPolys );
+	file->ReadBig( model->numMergedPolys );
+	
+	model->maxVertices = model->numVertices;
+	model->vertices = ( cm_vertex_t* ) Mem_ClearedAlloc( model->maxVertices * sizeof( cm_vertex_t ) );
+	for( int i = 0; i < model->numVertices; i++ )
+	{
+		file->ReadBig( model->vertices[i].p );
+		file->ReadBig( model->vertices[i].checkcount );
+		file->ReadBig( model->vertices[i].side );
+		file->ReadBig( model->vertices[i].sideSet );
+	}
+	
+	model->maxEdges = model->numEdges;
+	model->edges = ( cm_edge_t* ) Mem_ClearedAlloc( model->maxEdges * sizeof( cm_edge_t ) );
+	for( int i = 0; i < model->numEdges; i++ )
+	{
+		file->ReadBig( model->edges[i].checkcount );
+		file->ReadBig( model->edges[i].internal );
+		file->ReadBig( model->edges[i].numUsers );
+		file->ReadBig( model->edges[i].side );
+		file->ReadBig( model->edges[i].sideSet );
+		file->ReadBig( model->edges[i].vertexNum[0] );
+		file->ReadBig( model->edges[i].vertexNum[1] );
+		file->ReadBig( model->edges[i].normal );
+	}
+	
+	file->ReadBig( model->polygonMemory );
+	model->polygonBlock = ( cm_polygonBlock_t* ) Mem_ClearedAlloc( sizeof( cm_polygonBlock_t ) + model->polygonMemory );
+	model->polygonBlock->bytesRemaining = model->polygonMemory;
+	model->polygonBlock->next = ( ( byte* ) model->polygonBlock ) + sizeof( cm_polygonBlock_t );
+	
+	file->ReadBig( model->brushMemory );
+	model->brushBlock = ( cm_brushBlock_t* ) Mem_ClearedAlloc( sizeof( cm_brushBlock_t ) + model->brushMemory );
+	model->brushBlock->bytesRemaining = model->brushMemory;
+	model->brushBlock->next = ( ( byte* ) model->brushBlock ) + sizeof( cm_brushBlock_t );
+	
+	int numMaterials = 0;
+	file->ReadBig( numMaterials );
+	
+	idList< const idMaterial* > materials;
+	materials.SetNum( numMaterials );
+	idStr materialName;
+	for( int i = 0; i < materials.Num(); i++ )
+	{
+		file->ReadString( materialName );
+		if( materialName.IsEmpty() )
+		{
+			materials[i] = NULL;
+		}
+		else
+		{
+			materials[i] = declManager->FindMaterial( materialName );
+		}
+	}
+	
+	
+#if 1
+	struct local
+	{
+		static cm_node_t* ReadNodeTree( idFile* file, cm_model_t* model, cm_node_t* parent )
+		{
+			cm_node_t* node;
+			
+			node = collisionModelManagerLocal.AllocNode( model, model->numNodes < NODE_BLOCK_SIZE_SMALL ? NODE_BLOCK_SIZE_SMALL : NODE_BLOCK_SIZE_LARGE );
+			node->brushes = NULL;
+			node->polygons = NULL;
+			node->parent = parent;
+			
+			file->ReadBig( node->planeType );
+			file->ReadBig( node->planeDist );
+			
+			if( node->planeType != -1 )
+			{
+				node->children[0] = ReadNodeTree( file, model, node );
+				node->children[1] = ReadNodeTree( file, model, node );
+			}
+			
+			return node;
+		}
+	};
+	
+	model->node = local::ReadNodeTree( file, model, model->node );
+#endif
+	
+	
+	idList< cm_polygon_t* > polys;
+	idList< cm_brush_t* > brushes;
+	
+	
+	// RB begin
+	file->ReadBig( model->numPolygons );
+	polys.SetNum( model->numPolygons );
+	// RB end
+	for( int i = 0; i < polys.Num(); i++ )
+	{
+		int materialIndex = 0;
+		file->ReadBig( materialIndex );
+		int numEdges = 0;
+		file->ReadBig( numEdges );
+		polys[i] = AllocPolygon( model, numEdges );
+		polys[i]->numEdges = numEdges;
+		polys[i]->material = materials[materialIndex];
+		file->ReadBig( polys[i]->bounds );
+		//file->ReadBig( polys[i]->checkcount );
+		polys[i]->checkcount = 0;
+		file->ReadBig( polys[i]->contents );
+		file->ReadBig( polys[i]->plane );
+		file->ReadBigArray( polys[i]->edges, polys[i]->numEdges );
+		
+		// filter polygon into tree
+		R_FilterPolygonIntoTree( model, model->node, NULL, polys[i] );
+	}
+	
+	// RB begin
+	file->ReadBig( model->numBrushes );
+	brushes.SetNum( model->numBrushes );
+	// RB end
+	for( int i = 0; i < brushes.Num(); i++ )
+	{
+		int materialIndex = 0;
+		file->ReadBig( materialIndex );
+		int numPlanes = 0;
+		file->ReadBig( numPlanes );
+		brushes[i] = AllocBrush( model, numPlanes );
+		brushes[i]->numPlanes = numPlanes;
+		brushes[i]->material = materials[materialIndex];
+		//file->ReadBig( brushes[i]->checkcount );
+		brushes[i]->checkcount = 0;
+		file->ReadBig( brushes[i]->bounds );
+		file->ReadBig( brushes[i]->contents );
+		file->ReadBig( brushes[i]->primitiveNum );
+		file->ReadBigArray( brushes[i]->planes, brushes[i]->numPlanes );
+		
+		// filter brush into tree
+		R_FilterBrushIntoTree( model, model->node, NULL, brushes[i] );
+	}
+	
+#if 0
+	struct local
+	{
+		static void ReadNodeTree( idFile* file, cm_model_t* model, cm_node_t* node, idList< cm_polygon_t* >& polys, idList< cm_brush_t* >& brushes )
+		{
+			file->ReadBig( node->planeType );
+			file->ReadBig( node->planeDist );
+			
+			int i = 0;
+			
+			while( file->ReadBig( i ) == sizeof( i ) && ( i >= 0 ) )
+			{
+				cm_polygonRef_t* pref = collisionModelManagerLocal.AllocPolygonReference( model, model->numPolygonRefs );
+				pref->p = polys[i];
+				pref->next = node->polygons;
+				node->polygons = pref;
+			}
+			
+			while( file->ReadBig( i ) == sizeof( i ) && ( i >= 0 ) )
+			{
+				cm_brushRef_t* bref = collisionModelManagerLocal.AllocBrushReference( model, model->numBrushRefs );
+				bref->b = brushes[i];
+				bref->next = node->brushes;
+				node->brushes = bref;
+			}
+			
+			if( node->planeType != -1 )
+			{
+				node->children[0] = collisionModelManagerLocal.AllocNode( model, model->numNodes );
+				node->children[1] = collisionModelManagerLocal.AllocNode( model, model->numNodes );
+				node->children[0]->parent = node;
+				node->children[1]->parent = node;
+				ReadNodeTree( file, model, node->children[0], polys, brushes );
+				ReadNodeTree( file, model, node->children[1], polys, brushes );
+			}
+		}
+	};
+	
+	model->node = AllocNode( model, model->numNodes + 1 );
+	local::ReadNodeTree( file, model, model->node, polys, brushes );
+#endif
+	
+	// We should have only allocated a single block, and used every entry in the block
+	// assert( model->nodeBlocks != NULL && model->nodeBlocks->next == NULL && model->nodeBlocks->nextNode == NULL );
+	
+	// RB: FIXME
+	assert( model->brushRefBlocks == NULL || ( model->brushRefBlocks->next == NULL && model->brushRefBlocks->nextRef == NULL ) );
+	assert( model->polygonRefBlocks == NULL || ( model->polygonRefBlocks->next == NULL && model->polygonRefBlocks->nextRef == NULL ) );
+	
+	// RB: FIXME
+#if !defined(__x86_64__) && !defined(_WIN64)
+	assert( model->polygonBlock->bytesRemaining == 0 );
+	assert( model->brushBlock->bytesRemaining == 0 );
+#endif
+	// RB end
+	
+	model->usedMemory = model->numVertices * sizeof( cm_vertex_t ) +
+						model->numEdges * sizeof( cm_edge_t ) +
+						model->polygonMemory +
+						model->brushMemory +
+						model->numNodes * sizeof( cm_node_t ) +
+						model->numPolygonRefs * sizeof( cm_polygonRef_t ) +
+						model->numBrushRefs * sizeof( cm_brushRef_t );
+	return model;
+}
+
+/*
+================
+idCollisionModelManagerLocal::LoadBinaryModel
+================
+*/
+cm_model_t* idCollisionModelManagerLocal::LoadBinaryModel( const char* fileName, ID_TIME_T sourceTimeStamp )
+{
+	// RB: don't waste memory on low memory systems
+#if defined(__ANDROID__)
+	idFileLocal file( fileSystem->OpenFileRead( fileName ) );
+#else
+	idFileLocal file( fileSystem->OpenFileReadMemory( fileName ) );
+#endif
+	// RB end
+	if( file == NULL )
+	{
+		return NULL;
+	}
+	return LoadBinaryModelFromFile( file, sourceTimeStamp );
+}
+
+/*
+================
+idCollisionModelManagerLocal::WriteBinaryModel
+================
+*/
+void idCollisionModelManagerLocal::WriteBinaryModelToFile( cm_model_t* model, idFile* file, ID_TIME_T sourceTimeStamp )
+{
+
+	file->WriteBig( BCM_MAGIC );
+	file->WriteBig( sourceTimeStamp );
+	file->WriteString( model->name );
+	file->WriteBig( model->bounds );
+	file->WriteBig( model->contents );
+	file->WriteBig( model->isConvex );
+	file->WriteBig( model->numVertices );
+	file->WriteBig( model->numEdges );
+	// RB
+	//file->WriteBig( model->numPolygons );
+	//file->WriteBig( model->numBrushes );
+	// RB end
+	file->WriteBig( model->numNodes );
+	file->WriteBig( model->numBrushRefs );
+	file->WriteBig( model->numPolygonRefs );
+	file->WriteBig( model->numInternalEdges );
+	file->WriteBig( model->numSharpEdges );
+	file->WriteBig( model->numRemovedPolys );
+	file->WriteBig( model->numMergedPolys );
+	
+	for( int i = 0; i < model->numVertices; i++ )
+	{
+		file->WriteBig( model->vertices[i].p );
+		file->WriteBig( model->vertices[i].checkcount );
+		file->WriteBig( model->vertices[i].side );
+		file->WriteBig( model->vertices[i].sideSet );
+	}
+	
+	for( int i = 0; i < model->numEdges; i++ )
+	{
+		file->WriteBig( model->edges[i].checkcount );
+		file->WriteBig( model->edges[i].internal );
+		file->WriteBig( model->edges[i].numUsers );
+		file->WriteBig( model->edges[i].side );
+		file->WriteBig( model->edges[i].sideSet );
+		file->WriteBig( model->edges[i].vertexNum[0] );
+		file->WriteBig( model->edges[i].vertexNum[1] );
+		file->WriteBig( model->edges[i].normal );
+	}
+	file->WriteBig( model->polygonMemory );
+	file->WriteBig( model->brushMemory );
+	
+	int numNodes = 0;
+	
+	struct local
+	{
+		static void BuildUniqueLists( cm_node_t* node, idList< cm_polygon_t* >& polys, idList< cm_brush_t* >& brushes )
+		{
+			for( cm_polygonRef_t* pr = node->polygons; pr != NULL; pr = pr->next )
+			{
+				polys.AddUnique( pr->p );
+			}
+			
+			for( cm_brushRef_t* br = node->brushes; br != NULL; br = br->next )
+			{
+				brushes.AddUnique( br->b );
+			}
+			
+			if( node->planeType != -1 )
+			{
+				BuildUniqueLists( node->children[0], polys, brushes );
+				BuildUniqueLists( node->children[1], polys, brushes );
+			}
+		}
+		
+		static void WriteNodeTree( idFile* file, cm_node_t* node, idList< cm_polygon_t* >& polys, idList< cm_brush_t* >& brushes )
+		{
+			//numNodes++;
+			
+			file->WriteBig( node->planeType );
+			file->WriteBig( node->planeDist );
+			
+#if 0
+			for( cm_polygonRef_t* pr = node->polygons; pr != NULL; pr = pr->next )
+			{
+				file->WriteBig( polys.FindIndex( pr->p ) );
+			}
+			
+			file->WriteBig( -2 );
+			for( cm_brushRef_t* br = node->brushes; br != NULL; br = br->next )
+			{
+				file->WriteBig( brushes.FindIndex( br->b ) );
+			}
+			
+			file->WriteBig( -2 );
+#endif
+			if( node->planeType != -1 )
+			{
+				WriteNodeTree( file, node->children[0], polys, brushes );
+				WriteNodeTree( file, node->children[1], polys, brushes );
+			}
+		}
+	};
+	idList< cm_polygon_t* > polys;
+	idList< cm_brush_t* > brushes;
+	local::BuildUniqueLists( model->node, polys, brushes );
+	
+	// RB: FIXME
+	assert( polys.Num() == model->numPolygons );
+	assert( brushes.Num() == model->numBrushes );
+	// RB end
+	
+	idList< const idMaterial* > materials;
+	for( int i = 0; i < polys.Num(); i++ )
+	{
+		materials.AddUnique( polys[i]->material );
+	}
+	for( int i = 0; i < brushes.Num(); i++ )
+	{
+		materials.AddUnique( brushes[i]->material );
+	}
+	
+	file->WriteBig( materials.Num() );
+	for( int i = 0; i < materials.Num(); i++ )
+	{
+		if( materials[i] == NULL )
+		{
+			file->WriteString( "" );
+		}
+		else
+		{
+			file->WriteString( materials[i]->GetName() );
+		}
+	}
+	
+	numNodes = 0;
+	//file->WriteBig( numNodes );
+	local::WriteNodeTree( file, model->node, polys, brushes );
+	
+	file->WriteBig( polys.Num() );
+	for( int i = 0; i < polys.Num(); i++ )
+	{
+		file->WriteBig( ( int )materials.FindIndex( polys[i]->material ) );
+		file->WriteBig( polys[i]->numEdges );
+		file->WriteBig( polys[i]->bounds );
+		//file->WriteBig( polys[i]->checkcount );
+		file->WriteBig( polys[i]->contents );
+		file->WriteBig( polys[i]->plane );
+		file->WriteBigArray( polys[i]->edges, polys[i]->numEdges );
+	}
+	
+	file->WriteBig( brushes.Num() );
+	for( int i = 0; i < brushes.Num(); i++ )
+	{
+		file->WriteBig( ( int )materials.FindIndex( brushes[i]->material ) );
+		file->WriteBig( brushes[i]->numPlanes );
+		//file->WriteBig( brushes[i]->checkcount );
+		file->WriteBig( brushes[i]->bounds );
+		file->WriteBig( brushes[i]->contents );
+		file->WriteBig( brushes[i]->primitiveNum );
+		file->WriteBigArray( brushes[i]->planes, brushes[i]->numPlanes );
+	}
+}
+
+/*
+================
+idCollisionModelManagerLocal::WriteBinaryModel
+================
+*/
+void idCollisionModelManagerLocal::WriteBinaryModel( cm_model_t* model, const char* fileName, ID_TIME_T sourceTimeStamp )
+{
+	idFileLocal file( fileSystem->OpenFileWrite( fileName, "fs_basepath" ) );
+	if( file == NULL )
+	{
+		common->Printf( "Failed to open %s\n", fileName );
+		return;
+	}
+	WriteBinaryModelToFile( model, file, sourceTimeStamp );
+}
+
 /*
 ================
 idCollisionModelManagerLocal::LoadRenderModel
@@ -3436,12 +3883,23 @@ cm_model_t* idCollisionModelManagerLocal::LoadRenderModel( const char* fileName 
 		return NULL;
 	}
 	
-	if( !renderModelManager->CheckModel( fileName ) )
+	renderModel = renderModelManager->CheckModel( fileName );
+	if( !renderModel )
 	{
 		return NULL;
 	}
 	
-	renderModel = renderModelManager->FindModel( fileName );
+	idStrStatic< MAX_OSPATH > generatedFileName = "generated/collision/";
+	generatedFileName.AppendPath( fileName );
+	generatedFileName.SetFileExtension( CMODEL_BINARYFILE_EXT );
+	
+	ID_TIME_T sourceTimeStamp = renderModel->Timestamp();
+	model = LoadBinaryModel( generatedFileName, sourceTimeStamp );
+	if( model != NULL )
+	{
+		return model;
+	}
+	idLib::Printf( "Writing %s\n", generatedFileName.c_str() );
 	
 	model = AllocModel();
 	model->name = fileName;
@@ -3531,7 +3989,7 @@ cm_model_t* idCollisionModelManagerLocal::LoadRenderModel( const char* fileName 
 	// shutdown the hash
 	ShutdownHash();
 	
-	common->Printf( "loaded collision model %s\n", model->name.c_str() );
+	WriteBinaryModel( model, generatedFileName, sourceTimeStamp );
 	
 	return model;
 }
@@ -3543,6 +4001,7 @@ idCollisionModelManagerLocal::CollisionModelForMapEntity
 */
 cm_model_t* idCollisionModelManagerLocal::CollisionModelForMapEntity( const idMapEntity* mapEnt )
 {
+
 	cm_model_t* model;
 	idBounds bounds;
 	const char* name;
@@ -3872,11 +4331,17 @@ void idCollisionModelManagerLocal::LoadMap( const idMapFile* mapFile )
 	// setup hash to speed up finding shared vertices and edges
 	SetupHash();
 	
+	session->PacifierUpdate();
+	
 	// setup trace model structure
 	SetupTrmModelStructure();
 	
+	session->PacifierUpdate();
+	
 	// build collision models
 	BuildModels( mapFile );
+	
+	session->PacifierUpdate();
 	
 	// save name and time stamp
 	mapName = mapFile->GetName();
@@ -4036,12 +4501,34 @@ cmHandle_t idCollisionModelManagerLocal::LoadModel( const char* modelName, const
 		return 0;
 	}
 	
+	idStrStatic< MAX_OSPATH > generatedFileName = "generated/collision/";
+	generatedFileName.AppendPath( modelName );
+	generatedFileName.SetFileExtension( CMODEL_BINARYFILE_EXT );
+	
+	ID_TIME_T sourceTimeStamp = fileSystem->GetTimestamp( modelName );
+	
+	models[ numModels ] = LoadBinaryModel( generatedFileName, sourceTimeStamp );
+	if( models[ numModels ] != NULL )
+	{
+		numModels++;
+		/*
+		if( cvarSystem->GetCVarBool( "fs_buildresources" ) )
+		{
+			// for resource gathering write this model to the preload file for this map
+			fileSystem->AddCollisionPreload( modelName );
+		}
+		*/
+		return ( numModels - 1 );
+	}
+	
 	// try to load a .cm file
 	if( LoadCollisionModelFile( modelName, 0 ) )
 	{
 		handle = FindModel( modelName );
-		if( handle >= 0 )
+		if( handle >= 0  && handle < numModels )
 		{
+			cm_model_t* cm = models[ handle ];
+			WriteBinaryModel( cm, generatedFileName, sourceTimeStamp );
 			return handle;
 		}
 		else
@@ -4057,8 +4544,8 @@ cmHandle_t idCollisionModelManagerLocal::LoadModel( const char* modelName, const
 	}
 	
 	// try to load a .ASE or .LWO model and convert it to a collision model
-	models[numModels] = LoadRenderModel( modelName );
-	if( models[numModels] != NULL )
+	models[ numModels ] = LoadRenderModel( modelName );
+	if( models[ numModels ] != NULL )
 	{
 		numModels++;
 		return ( numModels - 1 );

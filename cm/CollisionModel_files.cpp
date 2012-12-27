@@ -1,25 +1,25 @@
 /*
 ===========================================================================
 
-Doom 3 GPL Source Code
-Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Doom 3 BFG Edition GPL Source Code
+Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
 
-This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
+This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
-Doom 3 Source Code is free software: you can redistribute it and/or modify
+Doom 3 BFG Edition Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Doom 3 Source Code is distributed in the hope that it will be useful,
+Doom 3 BFG Edition Source Code is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Doom 3 Source Code.  If not, see <http://www.gnu.org/licenses/>.
+along with Doom 3 BFG Edition Source Code.  If not, see <http://www.gnu.org/licenses/>.
 
-In addition, the Doom 3 Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 Source Code.  If not, please request a copy in writing from id Software at the address below.
+In addition, the Doom 3 BFG Edition Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 BFG Edition Source Code.  If not, please request a copy in writing from id Software at the address below.
 
 If you have questions concerning this license or the applicable additional terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 
@@ -40,6 +40,7 @@ If you have questions concerning this license or the applicable additional terms
 #include "CollisionModel_local.h"
 
 #define CM_FILE_EXT			"cm"
+#define CM_BINARYFILE_EXT	"bcm"
 #define CM_FILEID			"CM"
 #define CM_FILEVERSION		"1.00"
 
@@ -260,10 +261,7 @@ void idCollisionModelManagerLocal::WriteCollisionModelsToFile( const char* filen
 	idFile* fp;
 	idStr name;
 	
-// RB: added generated/
-	name = "generated/";
-	name += filename;
-// RB end
+	name = filename;
 	name.SetFileExtension( CM_FILE_EXT );
 	
 	common->Printf( "writing %s\n", name.c_str() );
@@ -358,7 +356,7 @@ void idCollisionModelManagerLocal::ParseVertices( idLexer* src, cm_model_t* mode
 	src->ExpectTokenString( "{" );
 	model->numVertices = src->ParseInt();
 	model->maxVertices = model->numVertices;
-	model->vertices = ( cm_vertex_t* ) Mem_Alloc( model->maxVertices * sizeof( cm_vertex_t ) );
+	model->vertices = ( cm_vertex_t* ) Mem_ClearedAlloc( model->maxVertices * sizeof( cm_vertex_t ) );
 	for( i = 0; i < model->numVertices; i++ )
 	{
 		src->Parse1DMatrix( 3, model->vertices[i].p.ToFloatPtr() );
@@ -381,7 +379,7 @@ void idCollisionModelManagerLocal::ParseEdges( idLexer* src, cm_model_t* model )
 	src->ExpectTokenString( "{" );
 	model->numEdges = src->ParseInt();
 	model->maxEdges = model->numEdges;
-	model->edges = ( cm_edge_t* ) Mem_Alloc( model->maxEdges * sizeof( cm_edge_t ) );
+	model->edges = ( cm_edge_t* ) Mem_ClearedAlloc( model->maxEdges * sizeof( cm_edge_t ) );
 	for( i = 0; i < model->numEdges; i++ )
 	{
 		src->ExpectTokenString( "(" );
@@ -439,7 +437,7 @@ void idCollisionModelManagerLocal::ParsePolygons( idLexer* src, cm_model_t* mode
 	
 	if( src->CheckTokenType( TT_NUMBER, 0, &token ) )
 	{
-		model->polygonBlock = ( cm_polygonBlock_t* ) Mem_Alloc( sizeof( cm_polygonBlock_t ) + token.GetIntValue() );
+		model->polygonBlock = ( cm_polygonBlock_t* ) Mem_ClearedAlloc( sizeof( cm_polygonBlock_t ) + token.GetIntValue() );
 		model->polygonBlock->bytesRemaining = token.GetIntValue();
 		model->polygonBlock->next = ( ( byte* ) model->polygonBlock ) + sizeof( cm_polygonBlock_t );
 	}
@@ -486,7 +484,7 @@ void idCollisionModelManagerLocal::ParseBrushes( idLexer* src, cm_model_t* model
 	
 	if( src->CheckTokenType( TT_NUMBER, 0, &token ) )
 	{
-		model->brushBlock = ( cm_brushBlock_t* ) Mem_Alloc( sizeof( cm_brushBlock_t ) + token.GetIntValue() );
+		model->brushBlock = ( cm_brushBlock_t* ) Mem_ClearedAlloc( sizeof( cm_brushBlock_t ) + token.GetIntValue() );
 		model->brushBlock->bytesRemaining = token.GetIntValue();
 		model->brushBlock->next = ( ( byte* ) model->brushBlock ) + sizeof( cm_brushBlock_t );
 	}
@@ -519,6 +517,7 @@ void idCollisionModelManagerLocal::ParseBrushes( idLexer* src, cm_model_t* model
 		}
 		b->checkcount = 0;
 		b->primitiveNum = 0;
+		b->material = NULL;
 		// filter brush into tree
 		R_FilterBrushIntoTree( model, model->node, NULL, b );
 	}
@@ -529,15 +528,16 @@ void idCollisionModelManagerLocal::ParseBrushes( idLexer* src, cm_model_t* model
 idCollisionModelManagerLocal::ParseCollisionModel
 ================
 */
-bool idCollisionModelManagerLocal::ParseCollisionModel( idLexer* src )
+cm_model_t* idCollisionModelManagerLocal::ParseCollisionModel( idLexer* src )
 {
+
 	cm_model_t* model;
 	idToken token;
 	
 	if( numModels >= MAX_SUBMODELS )
 	{
 		common->Error( "LoadModel: no free slots" );
-		return false;
+		return NULL;
 	}
 	model = AllocModel();
 	models[numModels ] = model;
@@ -601,7 +601,7 @@ bool idCollisionModelManagerLocal::ParseCollisionModel( idLexer* src )
 						model->numPolygonRefs * sizeof( cm_polygonRef_t ) +
 						model->numBrushRefs * sizeof( cm_brushRef_t );
 						
-	return true;
+	return model;
 }
 
 /*
@@ -611,73 +611,139 @@ idCollisionModelManagerLocal::LoadCollisionModelFile
 */
 bool idCollisionModelManagerLocal::LoadCollisionModelFile( const char* name, unsigned int mapFileCRC )
 {
-	idStr fileName;
 	idToken token;
 	idLexer* src;
 	unsigned int crc;
 	
 	// load it
-	fileName = name;
-	fileName.SetFileExtension( CM_FILE_EXT );
-	src = new idLexer( fileName );
-	src->SetFlags( LEXFL_NOSTRINGCONCAT | LEXFL_NODOLLARPRECOMPILE );
-	if( !src->IsLoaded() )
-	{
-		delete src;
-		return false;
-	}
+	idStrStatic< MAX_OSPATH > fileName = name;
 	
-	if( !src->ExpectTokenString( CM_FILEID ) )
-	{
-		common->Warning( "%s is not an CM file.", fileName.c_str() );
-		delete src;
-		return false;
-	}
+	// check for generated file
+	idStrStatic< MAX_OSPATH > generatedFileName = "generated/collision/";
+	generatedFileName.AppendPath( fileName );
+	generatedFileName.SetFileExtension( CM_BINARYFILE_EXT );
 	
-	if( !src->ReadToken( &token ) || token != CM_FILEVERSION )
-	{
-		common->Warning( "%s has version %s instead of %s", fileName.c_str(), token.c_str(), CM_FILEVERSION );
-		delete src;
-		return false;
-	}
+	// if we are reloading the same map, check the timestamp
+	// and try to skip all the work
+	ID_TIME_T currentTimeStamp = fileSystem->GetTimestamp( fileName );
 	
-	if( !src->ExpectTokenType( TT_NUMBER, TT_INTEGER, &token ) )
-	{
-		common->Warning( "%s has no map file CRC", fileName.c_str() );
-		delete src;
-		return false;
-	}
+	// see if we have a generated version of this
+	bool loaded = false;
 	
-	crc = token.GetUnsignedLongValue();
-	if( mapFileCRC && crc != mapFileCRC )
+	// RB: don't waste memory on low memory systems
+#if defined(__ANDROID__)
+	idFileLocal file( fileSystem->OpenFileRead( generatedFileName ) );
+#else
+	idFileLocal file( fileSystem->OpenFileReadMemory( generatedFileName ) );
+#endif
+	// RB end
+	if( file != NULL )
 	{
-		common->Printf( "%s is out of date\n", fileName.c_str() );
-		delete src;
-		return false;
-	}
-	
-	// parse the file
-	while( 1 )
-	{
-		if( !src->ReadToken( &token ) )
+		int numEntries = 0;
+		file->ReadBig( numEntries );
+		file->ReadString( mapName );
+		file->ReadBig( crc );
+		idStrStatic< 32 > fileID;
+		idStrStatic< 32 > fileVersion;
+		file->ReadString( fileID );
+		file->ReadString( fileVersion );
+		if( fileID == CM_FILEID && fileVersion == CM_FILEVERSION && crc == mapFileCRC && numEntries > 0 )
 		{
-			break;
-		}
-		
-		if( token == "collisionModel" )
-		{
-			if( !ParseCollisionModel( src ) )
+			for( int i = 0; i < numEntries; i++ )
 			{
-				delete src;
-				return false;
+				cm_model_t* model = LoadBinaryModelFromFile( file, currentTimeStamp );
+				models[ numModels ] = model;
+				numModels++;
 			}
-			continue;
+			loaded = true;
 		}
-		
-		src->Error( "idCollisionModelManagerLocal::LoadCollisionModelFile: bad token \"%s\"", token.c_str() );
 	}
 	
-	delete src;
+	if( !loaded )
+	{
+	
+		fileName.SetFileExtension( CM_FILE_EXT );
+		src = new idLexer( fileName );
+		src->SetFlags( LEXFL_NOSTRINGCONCAT | LEXFL_NODOLLARPRECOMPILE );
+		if( !src->IsLoaded() )
+		{
+			delete src;
+			return false;
+		}
+		
+		int numEntries = 0;
+		idFileLocal outputFile( fileSystem->OpenFileWrite( generatedFileName, "fs_basepath" ) );
+		if( outputFile != NULL )
+		{
+			outputFile->WriteBig( numEntries );
+			outputFile->WriteString( mapName );
+			outputFile->WriteBig( mapFileCRC );
+			outputFile->WriteString( CM_FILEID );
+			outputFile->WriteString( CM_FILEVERSION );
+		}
+		
+		if( !src->ExpectTokenString( CM_FILEID ) )
+		{
+			common->Warning( "%s is not an CM file.", fileName.c_str() );
+			delete src;
+			return false;
+		}
+		
+		if( !src->ReadToken( &token ) || token != CM_FILEVERSION )
+		{
+			common->Warning( "%s has version %s instead of %s", fileName.c_str(), token.c_str(), CM_FILEVERSION );
+			delete src;
+			return false;
+		}
+		
+		if( !src->ExpectTokenType( TT_NUMBER, TT_INTEGER, &token ) )
+		{
+			common->Warning( "%s has no map file CRC", fileName.c_str() );
+			delete src;
+			return false;
+		}
+		
+		crc = token.GetUnsignedLongValue();
+		if( mapFileCRC && crc != mapFileCRC )
+		{
+			common->Printf( "%s is out of date\n", fileName.c_str() );
+			delete src;
+			return false;
+		}
+		
+		// parse the file
+		while( 1 )
+		{
+			if( !src->ReadToken( &token ) )
+			{
+				break;
+			}
+			
+			if( token == "collisionModel" )
+			{
+				cm_model_t* model = ParseCollisionModel( src );
+				if( model == NULL )
+				{
+					delete src;
+					return false;
+				}
+				if( outputFile != NULL )
+				{
+					WriteBinaryModelToFile( model, outputFile, currentTimeStamp );
+					numEntries++;
+				}
+				continue;
+			}
+			
+			src->Error( "idCollisionModelManagerLocal::LoadCollisionModelFile: bad token \"%s\"", token.c_str() );
+		}
+		delete src;
+		if( outputFile != NULL )
+		{
+			outputFile->Seek( 0, FS_SEEK_SET );
+			outputFile->WriteBig( numEntries );
+		}
+	}
 	
 	return true;
 }
