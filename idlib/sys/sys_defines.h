@@ -107,6 +107,60 @@ If you have questions concerning this license or the applicable additional terms
 #endif
 
 
+#elif defined(__ANDROID__)
+
+#if defined(__i386__)
+#define	CPUSTRING						"x86"
+#elif defined(__x86_64__)
+#define CPUSTRING						"x86_86"
+#elif defined(__ARMEL__)
+
+#if defined(__ARM_ARCH_7__) || defined(__ARM_ARCH_7A__)
+#define CPUSTRING						"armv7a"
+#elif defined(__MATH_NEON)
+#define CPUSTRING						"neon"
+#else//lif defined(__ARM_ARCH_5__)
+#define CPUSTRING						"armv5"
+#endif
+
+#endif
+
+#define	BUILD_STRING					"android-" CPUSTRING
+#define BUILD_OS_ID						2
+
+#define _alloca							alloca
+
+#define ALIGN16( x )					x __attribute__ ((aligned (16)))
+#define ALIGNTYPE16						__attribute__ ((aligned (16)))
+#define ALIGNTYPE128					__attribute__ ((aligned (128)))
+
+#define PACKED							__attribute__((packed))
+
+
+#define FORMAT_PRINTF( x )
+
+#define PATHSEPARATOR_STR				"/"
+#define PATHSEPARATOR_CHAR				'/'
+#define NEWLINE							"\n"
+
+#define ID_INLINE						inline
+
+// DG: this should at least work with GCC/MinGW, probably with clang as well..
+#define ID_FORCE_INLINE					inline // TODO: always_inline?
+// DG end
+
+#define ID_INLINE_EXTERN				extern inline
+
+// DG: GCC/MinGW, probably clang
+#define ID_FORCE_INLINE_EXTERN			extern inline // TODO: always_inline ?
+// DG end
+
+#define ID_STATIC_TEMPLATE
+
+#define ID_HDRSTOP
+#define CALLBACK
+#define __cdecl
+
 #elif defined(__linux__)
 
 #if defined(__i386__)
@@ -116,7 +170,7 @@ If you have questions concerning this license or the applicable additional terms
 #endif
 
 #define	BUILD_STRING					"linux-" CPUSTRING
-#define BUILD_OS_ID						2
+#define BUILD_OS_ID						1
 
 #define _alloca							alloca
 

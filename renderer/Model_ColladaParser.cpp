@@ -2963,7 +2963,11 @@ void ColladaParser::ReadScene()
 // Aborts the file reading with an exception
 void ColladaParser::ThrowException( const idStr& pError ) const
 {
+#if defined(USE_EXCEPTIONS)
 	throw idException( va( "Collada: %s - %s", mFileName.c_str(), pError.c_str() ) );
+#else
+	common->FatalError( "%s", va( "Collada: %s - %s", mFileName.c_str(), pError.c_str() ) );
+#endif
 }
 
 // ------------------------------------------------------------------------------------------------

@@ -3136,7 +3136,9 @@ bool idRenderModelStatic::LoadDAE( const char* fileName )
 {
 	bool loaded = false;
 	
+#if defined(USE_EXCEPTIONS)
 	try
+#endif
 	{
 		idTimer timer;
 		timer.Start();
@@ -3149,10 +3151,12 @@ bool idRenderModelStatic::LoadDAE( const char* fileName )
 		
 		common->Printf( "...loaded '%s' in %5.2f seconds\n", fileName, timer.Milliseconds() / 1000.0 );
 	}
+#if defined(USE_EXCEPTIONS)
 	catch( idException& e )
 	{
 		common->Warning( "%s", e.GetError() );
 	}
+#endif
 	
 	return loaded;
 }

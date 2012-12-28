@@ -123,7 +123,7 @@ public:
 	
 	
 	// Linux driver doesn't support memory map API
-	bool				Lock( void** pDSLockedBuffer, ulong* dwDSLockedBufferSize )
+	bool				Lock( void** pDSLockedBuffer, uint32* dwDSLockedBufferSize )
 	{
 		return false;
 	}
@@ -131,7 +131,7 @@ public:
 	{
 		return false;
 	}
-	bool				GetCurrentPosition( ulong* pdwCurrentWriteCursor )
+	bool				GetCurrentPosition( uint32* pdwCurrentWriteCursor )
 	{
 		return false;
 	}

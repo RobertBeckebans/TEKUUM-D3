@@ -305,7 +305,7 @@ idRenderModel* idRenderModelManagerLocal::GetModel( const char* _modelName, bool
 				{
 					// RB: don't waste memory on low memory systems
 #if defined(__ANDROID__)
-					idFileLocal file( fileSystem->OpenFileRead( generatedFileName ) )
+					idFileLocal file( fileSystem->OpenFileRead( generatedFileName ) );
 #else
 					idFileLocal file( fileSystem->OpenFileReadMemory( generatedFileName ) );
 #endif
