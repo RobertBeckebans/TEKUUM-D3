@@ -257,16 +257,15 @@ idCollisionModelManagerLocal::WriteCollisionModelsToFile
 */
 void idCollisionModelManagerLocal::WriteCollisionModelsToFile( const char* filename, int firstModel, int lastModel, unsigned int mapFileCRC )
 {
-	int i;
-	idFile* fp;
-	idStr name;
-	
-	name = filename;
+	// RB: added generated/collision
+	idStrStatic< MAX_OSPATH > name = "generated/";
+	name.AppendPath( filename );
+	// RB end
 	name.SetFileExtension( CM_FILE_EXT );
 	
 	common->Printf( "writing %s\n", name.c_str() );
-	// _D3XP was saving to fs_cdpath
-	fp = fileSystem->OpenFileWrite( name, "fs_devpath" );
+	
+	idFile* fp = fileSystem->OpenFileWrite( name, "fs_devpath" );
 	if( !fp )
 	{
 		common->Warning( "idCollisionModelManagerLocal::WriteCollisionModelsToFile: Error opening file %s\n", name.c_str() );
@@ -275,11 +274,12 @@ void idCollisionModelManagerLocal::WriteCollisionModelsToFile( const char* filen
 	
 	// write file id and version
 	fp->WriteFloatString( "%s \"%s\"\n\n", CM_FILEID, CM_FILEVERSION );
+	
 	// write the map file crc
 	fp->WriteFloatString( "%u\n\n", mapFileCRC );
 	
 	// write the collision models
-	for( i = firstModel; i < lastModel; i++ )
+	for( int i = firstModel; i < lastModel; i++ )
 	{
 		WriteCollisionModel( fp, models[ i ] );
 	}
@@ -618,6 +618,9 @@ bool idCollisionModelManagerLocal::LoadCollisionModelFile( const char* name, uns
 	// load it
 	idStrStatic< MAX_OSPATH > fileName = name;
 	
+	// RB: if called from dmap .cm might be missing
+	fileName.SetFileExtension( CM_FILE_EXT );
+	
 	// check for generated file
 	idStrStatic< MAX_OSPATH > generatedFileName = "generated/collision/";
 	generatedFileName.AppendPath( fileName );
@@ -649,13 +652,18 @@ bool idCollisionModelManagerLocal::LoadCollisionModelFile( const char* name, uns
 		file->ReadString( fileVersion );
 		if( fileID == CM_FILEID && fileVersion == CM_FILEVERSION && crc == mapFileCRC && numEntries > 0 )
 		{
+			loaded = true;
 			for( int i = 0; i < numEntries; i++ )
 			{
 				cm_model_t* model = LoadBinaryModelFromFile( file, currentTimeStamp );
+				if( model == NULL )
+				{
+					loaded = false;
+					break;
+				}
 				models[ numModels ] = model;
 				numModels++;
 			}
-			loaded = true;
 		}
 	}
 	
@@ -667,9 +675,24 @@ bool idCollisionModelManagerLocal::LoadCollisionModelFile( const char* name, uns
 		src->SetFlags( LEXFL_NOSTRINGCONCAT | LEXFL_NODOLLARPRECOMPILE );
 		if( !src->IsLoaded() )
 		{
-			delete src;
-			return false;
+			// RB: double check for new generated/collision/*.cm
+			idStrStatic< MAX_OSPATH > asciiGeneratedFileName = "generated/collision/";
+			asciiGeneratedFileName.AppendPath( fileName );
+			asciiGeneratedFileName.SetFileExtension( CM_FILE_EXT );
+			src = new idLexer( asciiGeneratedFileName );
+			src->SetFlags( LEXFL_NOSTRINGCONCAT | LEXFL_NODOLLARPRECOMPILE );
+			if( !src->IsLoaded() )
+			{
+				delete src;
+				return false;
+			}
+			
+			fileName = asciiGeneratedFileName;
+			// RB end
 		}
+		
+		// RB: update timestamp from .cm file
+		//currentTimeStamp = fileSystem->GetTimestamp( fileName );
 		
 		int numEntries = 0;
 		idFileLocal outputFile( fileSystem->OpenFileWrite( generatedFileName, "fs_basepath" ) );

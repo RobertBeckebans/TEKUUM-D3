@@ -3414,7 +3414,7 @@ void idCollisionModelManagerLocal::FinishModel( cm_model_t* model )
 						model->numBrushRefs * sizeof( cm_brushRef_t );
 }
 
-static const byte BCM_VERSION = 100;
+static const byte BCM_VERSION = 101;
 static const unsigned int BCM_MAGIC = ( 'B' << 24 ) | ( 'C' << 16 ) | ( 'M' << 16 ) | BCM_VERSION;
 
 /*
@@ -3461,7 +3461,7 @@ cm_model_t* idCollisionModelManagerLocal::LoadBinaryModelFromFile( idFile* file,
 	for( int i = 0; i < model->numVertices; i++ )
 	{
 		file->ReadBig( model->vertices[i].p );
-		file->ReadBig( model->vertices[i].checkcount );
+		//file->ReadBig( model->vertices[i].checkcount );
 		file->ReadBig( model->vertices[i].side );
 		file->ReadBig( model->vertices[i].sideSet );
 	}
@@ -3470,7 +3470,7 @@ cm_model_t* idCollisionModelManagerLocal::LoadBinaryModelFromFile( idFile* file,
 	model->edges = ( cm_edge_t* ) Mem_ClearedAlloc( model->maxEdges * sizeof( cm_edge_t ) );
 	for( int i = 0; i < model->numEdges; i++ )
 	{
-		file->ReadBig( model->edges[i].checkcount );
+		//file->ReadBig( model->edges[i].checkcount );
 		file->ReadBig( model->edges[i].internal );
 		file->ReadBig( model->edges[i].numUsers );
 		file->ReadBig( model->edges[i].side );
@@ -3510,7 +3510,7 @@ cm_model_t* idCollisionModelManagerLocal::LoadBinaryModelFromFile( idFile* file,
 	}
 	
 	
-#if 1
+#if 0
 	struct local
 	{
 		static cm_node_t* ReadNodeTree( idFile* file, cm_model_t* model, cm_node_t* parent )
@@ -3542,7 +3542,6 @@ cm_model_t* idCollisionModelManagerLocal::LoadBinaryModelFromFile( idFile* file,
 	idList< cm_polygon_t* > polys;
 	idList< cm_brush_t* > brushes;
 	
-	
 	// RB begin
 	file->ReadBig( model->numPolygons );
 	polys.SetNum( model->numPolygons );
@@ -3564,7 +3563,7 @@ cm_model_t* idCollisionModelManagerLocal::LoadBinaryModelFromFile( idFile* file,
 		file->ReadBigArray( polys[i]->edges, polys[i]->numEdges );
 		
 		// filter polygon into tree
-		R_FilterPolygonIntoTree( model, model->node, NULL, polys[i] );
+		//R_FilterPolygonIntoTree( model, model->node, NULL, polys[i] );
 	}
 	
 	// RB begin
@@ -3588,10 +3587,10 @@ cm_model_t* idCollisionModelManagerLocal::LoadBinaryModelFromFile( idFile* file,
 		file->ReadBigArray( brushes[i]->planes, brushes[i]->numPlanes );
 		
 		// filter brush into tree
-		R_FilterBrushIntoTree( model, model->node, NULL, brushes[i] );
+		//R_FilterBrushIntoTree( model, model->node, NULL, brushes[i] );
 	}
 	
-#if 0
+#if 1
 	struct local
 	{
 		static void ReadNodeTree( idFile* file, cm_model_t* model, cm_node_t* node, idList< cm_polygon_t* >& polys, idList< cm_brush_t* >& brushes )
@@ -3709,14 +3708,14 @@ void idCollisionModelManagerLocal::WriteBinaryModelToFile( cm_model_t* model, id
 	for( int i = 0; i < model->numVertices; i++ )
 	{
 		file->WriteBig( model->vertices[i].p );
-		file->WriteBig( model->vertices[i].checkcount );
+		//file->WriteBig( model->vertices[i].checkcount );
 		file->WriteBig( model->vertices[i].side );
 		file->WriteBig( model->vertices[i].sideSet );
 	}
 	
 	for( int i = 0; i < model->numEdges; i++ )
 	{
-		file->WriteBig( model->edges[i].checkcount );
+		//file->WriteBig( model->edges[i].checkcount );
 		file->WriteBig( model->edges[i].internal );
 		file->WriteBig( model->edges[i].numUsers );
 		file->WriteBig( model->edges[i].side );
@@ -3758,7 +3757,7 @@ void idCollisionModelManagerLocal::WriteBinaryModelToFile( cm_model_t* model, id
 			file->WriteBig( node->planeType );
 			file->WriteBig( node->planeDist );
 			
-#if 0
+#if 1
 			for( cm_polygonRef_t* pr = node->polygons; pr != NULL; pr = pr->next )
 			{
 				file->WriteBig( polys.FindIndex( pr->p ) );
@@ -3811,10 +3810,6 @@ void idCollisionModelManagerLocal::WriteBinaryModelToFile( cm_model_t* model, id
 		}
 	}
 	
-	numNodes = 0;
-	//file->WriteBig( numNodes );
-	local::WriteNodeTree( file, model->node, polys, brushes );
-	
 	file->WriteBig( polys.Num() );
 	for( int i = 0; i < polys.Num(); i++ )
 	{
@@ -3838,6 +3833,10 @@ void idCollisionModelManagerLocal::WriteBinaryModelToFile( cm_model_t* model, id
 		file->WriteBig( brushes[i]->primitiveNum );
 		file->WriteBigArray( brushes[i]->planes, brushes[i]->numPlanes );
 	}
+	
+	numNodes = 0;
+	//file->WriteBig( numNodes );
+	local::WriteNodeTree( file, model->node, polys, brushes );
 }
 
 /*
@@ -3853,6 +3852,9 @@ void idCollisionModelManagerLocal::WriteBinaryModel( cm_model_t* model, const ch
 		common->Printf( "Failed to open %s\n", fileName );
 		return;
 	}
+	
+	common->Printf( "writing %s\n", fileName );
+	
 	WriteBinaryModelToFile( model, file, sourceTimeStamp );
 }
 
@@ -3899,7 +3901,7 @@ cm_model_t* idCollisionModelManagerLocal::LoadRenderModel( const char* fileName 
 	{
 		return model;
 	}
-	idLib::Printf( "Writing %s\n", generatedFileName.c_str() );
+	//idLib::Printf( "Writing %s\n", generatedFileName.c_str() );
 	
 	model = AllocModel();
 	model->name = fileName;
@@ -4528,7 +4530,10 @@ cmHandle_t idCollisionModelManagerLocal::LoadModel( const char* modelName, const
 		if( handle >= 0  && handle < numModels )
 		{
 			cm_model_t* cm = models[ handle ];
-			WriteBinaryModel( cm, generatedFileName, sourceTimeStamp );
+			// RB: LoadCollisionModelFile already wrote a .bcm file if necessary
+			// don't write another .cmodel file
+			//WriteBinaryModel( cm, generatedFileName, sourceTimeStamp );
+			// RB end
 			return handle;
 		}
 		else
