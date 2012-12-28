@@ -19,6 +19,8 @@ project "idlib"
 		"hashing/*.cpp", "hashing/*.h",
 		
 		"math/*.cpp", "math/*.h",
+		
+		"sys/*.cpp", "sys/*.h",
 	}
 	excludes
 	{
@@ -27,6 +29,7 @@ project "idlib"
 	}
 	includedirs
 	{
+		"."
 		--"idlib",
 	}
 	defines
@@ -79,6 +82,8 @@ project "idlib"
 			"_USE_32BIT_TIME_T",
 			"_MBCS",
 		}
+		--pchheader "precompiled.h"
+		--pchsource "precompiled.cpp"
 		
 		
 	configuration { "linux" }

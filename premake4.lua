@@ -594,6 +594,7 @@ project "Techyon"
 	}
 	includedirs
 	{
+		"idlib",
 		"libs/zlib",
 		"libs/glew/include",
 		"libs/freetype/include",
