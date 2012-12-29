@@ -135,8 +135,6 @@ idRenderModel* idRenderWorldLocal::ReadBinaryModel( idFile* fileIn )
 	return NULL;
 }
 
-extern idCVar r_binaryLoadRenderModels;
-
 /*
 ================
 idRenderWorldLocal::ParseModel

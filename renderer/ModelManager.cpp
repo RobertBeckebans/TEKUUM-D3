@@ -32,8 +32,6 @@ If you have questions concerning this license or the applicable additional terms
 #include "Model_local.h"
 #include "tr_local.h"	// just for R_FreeWorldInteractions and R_CreateWorldInteractions
 
-idCVar r_binaryLoadRenderModels( "r_binaryLoadRenderModels", "1", 0, "enable binary load/write of render models" );
-//idCVar preload_MapModels( "preload_MapModels", "1", CVAR_SYSTEM | CVAR_BOOL, "preload models during begin or end levelload" );
 
 class idRenderModelManagerLocal : public idRenderModelManager
 {
@@ -392,7 +390,7 @@ idRenderModel* idRenderModelManagerLocal::GetModel( const char* _modelName, bool
 				model->InitFromFile( canonical );
 				
 				idFileLocal outputFile( fileSystem->OpenFileWrite( generatedFileName, "fs_basepath" ) );
-				idLib::Printf( "Writing %s\n", generatedFileName.c_str() );
+				idLib::Printf( "writing %s\n", generatedFileName.c_str() );
 				model->WriteBinaryModel( outputFile );
 			} /* else {
 				idLib::Printf( "loaded binary model %s from file %s\n", model->Name(), generatedFileName.c_str() );

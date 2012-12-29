@@ -1147,6 +1147,8 @@ extern idCVar r_deferredShadingGPUFrustumCulling;
 extern idCVar r_useFXAA;
 extern idCVar r_fxaaQualityPreset;
 
+extern idCVar r_binaryLoadRenderModels;
+
 // RB end
 
 /*

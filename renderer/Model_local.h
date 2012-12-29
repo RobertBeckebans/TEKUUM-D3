@@ -209,11 +209,13 @@ private:
 	idVec4* 					scaledWeights;		// joint weights
 	int* 						weightIndex;		// pairs of: joint offset + bool true if next weight is for next vertex
 	const idMaterial* 			shader;				// material applied to mesh
-	int							numVerts;			// number of vertices
 	int							numTris;			// number of triangles
+#if defined(USE_GPU_SKINNING)
+	int							numVerts;			// number of vertices
 	byte* 						meshJoints;			// the joints used by this mesh
 	int							numMeshJoints;		// number of mesh joints
 	float						maxJointVertDist;	// maximum distance a vertex is separated from a joint
+#endif
 	deformInfo_t* 				deformInfo;			// used to create srfTriangles_t from base frames and new vertexes
 	int							surfaceNum;			// number of the static surface created for this mesh
 	
@@ -226,7 +228,7 @@ class idRenderModelMD5 : public idRenderModelStatic
 public:
 	virtual void				InitFromFile( const char* fileName );
 	
-#if 0
+#if 1
 	virtual bool				LoadBinaryModel( idFile* file, const ID_TIME_T sourceTimeStamp );
 	virtual void				WriteBinaryModel( idFile* file, ID_TIME_T* _timeStamp = NULL ) const;
 	virtual bool				SupportsBinaryModel()
@@ -259,7 +261,9 @@ public:
 private:
 	idList<idMD5Joint>			joints;
 	idList<idJointQuat>			defaultPose;
+#if defined(USE_GPU_SKINNING)
 	idList<idJointMat>			invertedDefaultPose;
+#endif
 	idList<idMD5Mesh>			meshes;
 	
 	void						CalculateBounds( const idJointMat* joints );

@@ -1464,11 +1464,11 @@ sets mirroredVerts and mirroredVerts[]
 
 ===================
 */
-typedef struct
+struct tangentVert_t
 {
 	bool	polarityUsed[2];
-	int			negativeRemap;
-} tangentVert_t;
+	int		negativeRemap;
+};
 
 static void	R_DuplicateMirroredVertexes( srfTriangles_t* tri )
 {
@@ -1527,7 +1527,7 @@ static void	R_DuplicateMirroredVertexes( srfTriangles_t* tri )
 	
 	// create the duplicates
 	numMirror = 0;
-	for( i = 0 ; i < tri->numVerts ; i++ )
+	for( i = 0; i < tri->numVerts; i++ )
 	{
 		j = tverts[i].negativeRemap;
 		if( j )
@@ -1537,13 +1537,12 @@ static void	R_DuplicateMirroredVertexes( srfTriangles_t* tri )
 			numMirror++;
 		}
 	}
-	
 	tri->numVerts = totalVerts;
+	
 	// change the indexes
-	for( i = 0 ; i < tri->numIndexes ; i++ )
+	for( i = 0; i < tri->numIndexes; i++ )
 	{
-		if( tverts[tri->indexes[i]].negativeRemap &&
-				R_FaceNegativePolarity( tri, 3 * ( i / 3 ) ) )
+		if( tverts[tri->indexes[i]].negativeRemap && R_FaceNegativePolarity( tri, 3 * ( i / 3 ) ) )
 		{
 			tri->indexes[i] = tverts[tri->indexes[i]].negativeRemap;
 		}
@@ -2475,9 +2474,7 @@ deformInfo_t* R_BuildDeformInfo( int numVerts, const idDrawVert* verts, int numI
 	// they can deform to silhouettes
 	
 	R_DuplicateMirroredVertexes( &tri );		// split mirror points into multiple points
-	
 	R_CreateDupVerts( &tri );
-	
 	if( useUnsmoothedTangents )
 	{
 		R_BuildDominantTris( &tri );
