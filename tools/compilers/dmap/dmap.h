@@ -194,8 +194,12 @@ typedef struct tree_s
 typedef struct
 {
 	idRenderLightLocal	def;
-	char		name[MAX_QPATH];		// for naming the shadow volume surface and interactions
-	srfTriangles_t*	shadowTris;
+	char				name[MAX_QPATH];		// for naming the shadow volume surface and interactions
+	srfTriangles_t*		shadowTris;
+	
+	// RB: extra info for vertex lighting
+	int					photons;
+	// RB end
 } mapLight_t;
 
 #define	MAX_GROUP_LIGHTS	16
@@ -422,7 +426,7 @@ void	FixGlobalTjunctions( uEntity_t* e );
 
 //=============================================================================
 
-// optimize.cpp -- trianlge mesh reoptimization
+// optimize.cpp -- triangle mesh reoptimization
 
 // the shadow volume optimizer call internal optimizer routines, normal triangles
 // will just be done by OptimizeEntity()
@@ -506,3 +510,13 @@ srfTriangles_t* CreateLightShadow( optimizeGroup_t* shadowerGroups, const mapLig
 void		FreeBeamTree( struct beamTree_s* beamTree );
 
 void		CarveTriByBeamTree( const struct beamTree_s* beamTree, const mapTri_t* tri, mapTri_t** lit, mapTri_t** unLit );
+
+//=============================================================================
+
+// RB begin
+
+// light.cpp --	Q3A style vertex lighting and lightgrid calculation
+
+void		LightWorld();
+
+// RB end

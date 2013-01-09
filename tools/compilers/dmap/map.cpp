@@ -528,6 +528,10 @@ static void CreateMapLight( const idMapEntity* mapEnt )
 	light->lightShader = light->parms.shader;
 #endif
 	
+	// RB begin
+	light->photons = light->def.parms.lightRadius.Length();
+	// RB end
+	
 	dmapGlobals.mapLights.Append( light );
 	
 }

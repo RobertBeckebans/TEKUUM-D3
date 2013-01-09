@@ -395,6 +395,10 @@ void Dmap( const idCmdArgs& args )
 	
 	if( ProcessModels() )
 	{
+		// RB begin
+		//LightWorld();
+		// RB end
+		
 		WriteOutputFile();
 	}
 	else

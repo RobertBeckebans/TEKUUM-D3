@@ -737,6 +737,7 @@ void WriteOutputFile()
 		common->Error( "Error opening %s", qpath.c_str() );
 	}
 	
+	// RB: TODO add PROC_FILE_ID2
 	procFile->WriteFloatString( "%s\n\n", PROC_FILE_ID );
 	
 	// write the entity models and information, writing entities first
