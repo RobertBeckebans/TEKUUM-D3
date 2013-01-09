@@ -2043,10 +2043,11 @@ void idWindow::PostParse()
 idWindow::GetWinVarOffset
 ================
 */
-int idWindow::GetWinVarOffset( idWinVar* wv, drawWin_t* owner )
+intptr_t idWindow::GetWinVarOffset( idWinVar* wv, drawWin_t* owner )
 {
 	// RB: 64 bit fixes, changed oldschool offsets using ptrdiff_t
-	int ret = -1;
+	// DG: => also return intptr_t..
+	intptr_t ret = -1;
 	
 	if( wv == &rect )
 	{
@@ -2480,7 +2481,9 @@ bool idWindow::ParseRegEntry( const char* name, idParser* src )
 	work = name;
 	work.ToLower();
 	
-	idWinVar* var = GetWinVarByName( work, NULL );
+	// DG: second argument is a bool, so use false, not NULL
+	idWinVar* var = GetWinVarByName( work, false );
+	// DG end
 	if( var )
 	{
 		for( int i = 0; i < NumRegisterVars; i++ )
@@ -3313,9 +3316,10 @@ wexpOp_t* idWindow::ExpressionOp()
 idWindow::EmitOp
 ================
 */
-
-int idWindow::EmitOp( int a, int b, wexpOpType_t opType, wexpOp_t** opp )
+// DG: a, b and the return value are really pointers, so use intptr_t
+intptr_t idWindow::EmitOp( intptr_t a, intptr_t b, wexpOpType_t opType, wexpOp_t** opp )
 {
+	// DG end
 	wexpOp_t* op;
 	/*
 		// optimize away identity operations
@@ -3367,9 +3371,11 @@ int idWindow::EmitOp( int a, int b, wexpOpType_t opType, wexpOp_t** opp )
 idWindow::ParseEmitOp
 ================
 */
-int idWindow::ParseEmitOp( idParser* src, int a, wexpOpType_t opType, int priority, wexpOp_t** opp )
+// DG: a, b and the return value are really pointers, so use intptr_t
+intptr_t idWindow::ParseEmitOp( idParser* src, intptr_t a, wexpOpType_t opType, int priority, wexpOp_t** opp )
 {
-	int b = ParseExpressionPriority( src, priority );
+	intptr_t b = ParseExpressionPriority( src, priority );
+// DG end
 	return EmitOp( a, b, opType, opp );
 }
 
@@ -3381,8 +3387,10 @@ idWindow::ParseTerm
 Returns a register index
 =================
 */
-int idWindow::ParseTerm( idParser* src,	idWinVar* var, int component )
+// DG: component and the return value are really pointers, so use intptr_t
+intptr_t idWindow::ParseTerm( idParser* src,	idWinVar* var, intptr_t component )
 {
+	// DG end
 	idToken token;
 	// RB: 64 bit fixes, changed int to intptr_t
 	intptr_t		a, b;
@@ -3504,7 +3512,8 @@ Returns a register index
 =================
 */
 #define	TOP_PRIORITY 4
-int idWindow::ParseExpressionPriority( idParser* src, int priority, idWinVar* var, int component )
+// DG: a, component and the return value are really pointers, so use intptr_t
+intptr_t idWindow::ParseExpressionPriority( idParser* src, int priority, idWinVar* var, intptr_t component )
 {
 	idToken token;
 	int		a;
@@ -3578,7 +3587,8 @@ int idWindow::ParseExpressionPriority( idParser* src, int priority, idWinVar* va
 	if( priority == 4 && token == "?" )
 	{
 		wexpOp_t* oop = NULL;
-		int o = ParseEmitOp( src, a, WOP_TYPE_COND, priority, &oop );
+		intptr_t o = ParseEmitOp( src, a, WOP_TYPE_COND, priority, &oop );
+		// DG end
 		if( !src->ReadToken( &token ) )
 		{
 			return o;
@@ -3606,7 +3616,9 @@ idWindow::ParseExpression
 Returns a register index
 ================
 */
-int idWindow::ParseExpression( idParser* src, idWinVar* var, int component )
+// DG: component and the return value are really pointers, so use intptr_t
+intptr_t idWindow::ParseExpression( idParser* src, idWinVar* var, intptr_t component )
+// DG end
 {
 	return ParseExpressionPriority( src, TOP_PRIORITY, var );
 }
@@ -4493,11 +4505,10 @@ void idWindow::FixupTransitions()
 		drawWin_t* dw = gui->GetDesktop()->FindChildByName( ( ( idWinStr* )transitions[i].data )->c_str() );
 		delete transitions[i].data;
 		transitions[i].data = NULL;
-		
-		if( dw && ( dw->win || dw->simp ) )
+		if( dw != NULL && ( dw->win != NULL || dw->simp != NULL ) )
 		{
 			// RB: 64 bit fixes, changed oldschool offsets using ptrdiff_t
-			if( dw->win )
+			if( dw->win != NULL )
 			{
 				if( transitions[i].offset == ( ptrdiff_t )&rect - ( ptrdiff_t )this )
 				{
@@ -4741,11 +4752,11 @@ void idWindow::SetChildWinVarVal( const char* name, const char* var, const char*
 {
 	drawWin_t* dw = FindChildByName( name );
 	idWinVar* wv = NULL;
-	if( dw && dw->simp )
+	if( dw != NULL && dw->simp != NULL )
 	{
 		wv = dw->simp->GetWinVarByName( var );
 	}
-	else if( dw && dw->win )
+	else if( dw != NULL && dw->win != NULL )
 	{
 		wv = dw->win->GetWinVarByName( var );
 	}
