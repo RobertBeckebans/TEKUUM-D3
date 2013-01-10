@@ -143,7 +143,9 @@ const float	MAX_ENTITY_COORDINATE = 64000.0f;
 
 // using shorts for triangle indexes can save a significant amount of traffic, but
 // to support the large models that renderBump loads, they need to be 32 bits
-#if defined(USE_GLES1)
+
+// RB: changing this breaks generated rendermodels and we don't need the renderbump tool anymore
+#if 1 //defined(USE_GLES1)
 
 #define GL_INDEX_TYPE		GL_UNSIGNED_SHORT
 typedef short glIndex_t;
