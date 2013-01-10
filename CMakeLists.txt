@@ -17,6 +17,9 @@ option(MONOLITH
 		
 option(STANDALONE
 		"Skip Doom 3 base/ folder" OFF)
+		
+option(GLES1
+		"Only use OpenGL ES 1.0 functions" OFF)
 
 #if(USE_QT_TOOLS)
 #	set(USE_QT_WINDOWING TRUE)
@@ -197,6 +200,17 @@ set(RENDERER_SOURCES
 	renderer/tr_trisurf.cpp
 	renderer/tr_turboshadow.cpp)
 
+if(GLES1)
+	add_definitions(-DUSE_GLES1)
+	
+	list(REMOVE_ITEM RENDERER_INCLUDES renderer/GLShader.h)
+	list(REMOVE_ITEM RENDERER_INCLUDES renderer/GLShader_strings.h)
+	
+	list(REMOVE_ITEM RENDERER_SOURCES renderer/GLShader.cpp)
+	list(REMOVE_ITEM RENDERER_SOURCES renderer/Framebuffer.cpp)
+	list(REMOVE_ITEM RENDERER_SOURCES renderer/draw_glsl.cpp)
+	list(REMOVE_ITEM RENDERER_SOURCES renderer/draw_exp.cpp)
+endif()
 
 file(GLOB IRRXML_INCLUDES libs/irrxml/src/*.h)
 file(GLOB IRRXML_SOURCES libs/irrxml/src/*.cpp)
