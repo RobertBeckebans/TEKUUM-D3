@@ -556,7 +556,6 @@ static void RB_CreateDrawInteractions( const drawSurf_t* surf )
 /*
 ==================
 RB_RenderViewLight
-
 ==================
 */
 static void RB_RenderViewLight( viewLight_t* vLight )

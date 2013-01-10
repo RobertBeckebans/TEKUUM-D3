@@ -747,7 +747,7 @@ void idInteraction::MakeEmpty()
 idInteraction::HasShadows
 ===============
 */
-ID_INLINE bool idInteraction::HasShadows() const
+bool idInteraction::HasShadows() const
 {
 // RB begin
 	// RB: added check for r_shadows 0

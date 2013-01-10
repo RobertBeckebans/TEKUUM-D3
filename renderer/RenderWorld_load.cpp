@@ -140,7 +140,8 @@ idRenderModel* idRenderWorldLocal::ReadBinaryModel( idFile* fileIn )
 idRenderWorldLocal::ParseModel
 ================
 */
-idRenderModel* idRenderWorldLocal::ParseModel( idLexer* src, const char* mapName, ID_TIME_T mapTimeStamp, idFile* fileOut )
+// RB added procVersion
+idRenderModel* idRenderWorldLocal::ParseModel( idLexer* src, const char* mapName, ID_TIME_T mapTimeStamp, idFile* fileOut, int procVersion )
 {
 	idToken token;
 	
@@ -185,18 +186,43 @@ idRenderModel* idRenderWorldLocal::ParseModel( idLexer* src, const char* mapName
 		R_AllocStaticTriSurfVerts( tri, tri->numVerts );
 		for( int j = 0 ; j < tri->numVerts ; j++ )
 		{
-			float	vec[8];
-			
-			src->Parse1DMatrix( 8, vec );
-			
-			tri->verts[j].xyz[0] = vec[0];
-			tri->verts[j].xyz[1] = vec[1];
-			tri->verts[j].xyz[2] = vec[2];
-			tri->verts[j].st[0] = vec[3];
-			tri->verts[j].st[1] = vec[4];
-			tri->verts[j].normal[0] = vec[5];
-			tri->verts[j].normal[1] = vec[6];
-			tri->verts[j].normal[2] = vec[7];
+			// RB: changed for new .proc format
+			if( procVersion == PROC_EXT_VERSION )
+			{
+				float	vec[12];
+				
+				src->Parse1DMatrix( 12, vec );
+				
+				tri->verts[j].xyz[0] = vec[0];
+				tri->verts[j].xyz[1] = vec[1];
+				tri->verts[j].xyz[2] = vec[2];
+				tri->verts[j].st[0] = vec[3];
+				tri->verts[j].st[1] = vec[4];
+				tri->verts[j].normal[0] = vec[5];
+				tri->verts[j].normal[1] = vec[6];
+				tri->verts[j].normal[2] = vec[7];
+				
+				tri->verts[j].color[0] = ( byte )( vec[8] * 255.0f );
+				tri->verts[j].color[1] = ( byte )( vec[9] * 255.0f );
+				tri->verts[j].color[2] = ( byte )( vec[10] * 255.0f );
+				tri->verts[j].color[3] = ( byte )( vec[11] * 255.0f );
+			}
+			else
+			{
+				float	vec[8];
+				
+				src->Parse1DMatrix( 8, vec );
+				
+				tri->verts[j].xyz[0] = vec[0];
+				tri->verts[j].xyz[1] = vec[1];
+				tri->verts[j].xyz[2] = vec[2];
+				tri->verts[j].st[0] = vec[3];
+				tri->verts[j].st[1] = vec[4];
+				tri->verts[j].normal[0] = vec[5];
+				tri->verts[j].normal[1] = vec[6];
+				tri->verts[j].normal[2] = vec[7];
+			}
+			// RB end
 		}
 		
 		R_AllocStaticTriSurfIndexes( tri, tri->numIndexes );
@@ -747,7 +773,7 @@ bool idRenderWorldLocal::InitFromMap( const char* name )
 	FreeWorld();
 	
 	// see if we have a generated version of this
-	static const byte BPROC_VERSION = 1;
+	static const byte BPROC_VERSION = 2;
 	static const unsigned int BPROC_MAGIC = ( 'P' << 24 ) | ( 'R' << 16 ) | ( 'O' << 8 ) | BPROC_VERSION;
 	bool loaded = false;
 	idFileLocal file( fileSystem->OpenFileReadMemory( generatedFileName ) );
@@ -833,12 +859,23 @@ bool idRenderWorldLocal::InitFromMap( const char* name )
 			WriteLoadMap();
 		}
 		
-		if( !src->ReadToken( &token ) || token.Icmp( PROC_FILE_ID ) )
+		// RB: added PROC_FILE_ID2
+		if( !src->ReadToken( &token ) || ( token.Icmp( PROC_FILE_ID ) && token.Icmp( PROC_FILE_ID2 ) ) )
+			// RB end
 		{
 			common->Printf( "idRenderWorldLocal::InitFromMap: bad id '%s' instead of '%s'\n", token.c_str(), PROC_FILE_ID );
 			delete src;
 			return false;
 		}
+		
+		// RB begin
+		int procVersion = 3;
+		
+		if( !token.Icmp( PROC_FILE_ID2 ) )
+		{
+			procVersion = PROC_EXT_VERSION;
+		}
+		// RB end
 		
 		int numEntries = 0;
 		idFileLocal outputFile( fileSystem->OpenFileWrite( generatedFileName, "fs_basepath" ) );
@@ -863,7 +900,7 @@ bool idRenderWorldLocal::InitFromMap( const char* name )
 			
 			if( token == "model" )
 			{
-				lastModel = ParseModel( src, name, currentTimeStamp, outputFile );
+				lastModel = ParseModel( src, name, currentTimeStamp, outputFile, procVersion );
 				
 				// add it to the model manager list
 				renderModelManager->AddModel( lastModel );

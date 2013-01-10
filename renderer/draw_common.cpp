@@ -2504,7 +2504,6 @@ void RB_STD_LightScale()
 /*
 =============
 RB_STD_DrawView
-
 =============
 */
 void	RB_STD_DrawView()

@@ -303,7 +303,8 @@ static void WriteUTriangles( const srfTriangles_t* uTris )
 	col = 0;
 	for( i = 0 ; i < uTris->numVerts ; i++ )
 	{
-		float	vec[8];
+		// RB: extended to write drawVert colors
+		float	vec[12];
 		const idDrawVert* dv;
 		
 		dv = &uTris->verts[i];
@@ -311,12 +312,21 @@ static void WriteUTriangles( const srfTriangles_t* uTris )
 		vec[0] = dv->xyz[0];
 		vec[1] = dv->xyz[1];
 		vec[2] = dv->xyz[2];
+		
 		vec[3] = dv->st[0];
 		vec[4] = dv->st[1];
+		
 		vec[5] = dv->normal[0];
 		vec[6] = dv->normal[1];
 		vec[7] = dv->normal[2];
-		Write1DMatrix( procFile, 8, vec );
+		
+		vec[8] = dv->color[0] * ( 1.0f / 255.0f );
+		vec[9] = dv->color[1] * ( 1.0f / 255.0f );
+		vec[10] = dv->color[2] * ( 1.0f / 255.0f );
+		vec[11] = dv->color[3] * ( 1.0f / 255.0f );
+		
+		Write1DMatrix( procFile, 12, vec );
+		// RB end
 		
 		if( ++col == 3 )
 		{
@@ -725,10 +735,10 @@ void WriteOutputFile()
 	// write the file
 	common->Printf( "----- WriteOutputFile -----\n" );
 	
-// RB: added generated/
+	// RB: added generated/
 	sprintf( qpath, "generated/%s." PROC_FILE_EXT, dmapGlobals.mapFileBase );
-// RB end
-
+	// RB end
+	
 	common->Printf( "writing %s\n", qpath.c_str() );
 	// _D3XP used fs_cdpath
 	procFile = fileSystem->OpenFileWrite( qpath, "fs_devpath" );
@@ -737,8 +747,8 @@ void WriteOutputFile()
 		common->Error( "Error opening %s", qpath.c_str() );
 	}
 	
-	// RB: TODO add PROC_FILE_ID2
-	procFile->WriteFloatString( "%s\n\n", PROC_FILE_ID );
+	// RB: write new PROC_FILE_ID2 format
+	procFile->WriteFloatString( "%s\n\n", PROC_FILE_ID2 );
 	
 	// write the entity models and information, writing entities first
 	for( i = dmapGlobals.num_entities - 1 ; i >= 0 ; i-- )
