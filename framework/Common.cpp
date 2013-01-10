@@ -410,7 +410,7 @@ void idCommonLocal::VPrintf( const char* fmt, va_list args )
 	
 	// print to script debugger server
 	// RB begin
-#if defined(USE_MFC_TOOLS)
+#if 0 //defined(USE_MFC_TOOLS)
 	DebuggerServerPrint( msg );
 #endif
 	// RB end
@@ -1325,7 +1325,7 @@ static void Com_ScriptDebugger_f( const idCmdArgs& args )
 	if( !( com_editors & EDITOR_DEBUGGER ) )
 	{
 // RB begin
-#if defined(USE_MFC_TOOLS)
+#if 0 //defined(USE_MFC_TOOLS)
 		DebuggerClientLaunch();
 #else
 		common->Printf( "Script debugger is currently disabled\n" );
@@ -3621,7 +3621,7 @@ void idCommonLocal::InitGame()
 	
 	// startup the script debugger
 	// RB begin
-#if defined(USE_MFC_TOOLS)
+#if 0 //defined(USE_MFC_TOOLS)
 	DebuggerServerInit();
 #endif
 	// RB end
@@ -3679,7 +3679,7 @@ void idCommonLocal::ShutdownGame( bool reloading )
 	
 	// shutdown the script debugger
 	// RB begin
-#if defined(USE_MFC_TOOLS)
+#if 0 //defined(USE_MFC_TOOLS)
 	DebuggerServerShutdown();
 #endif
 	// RB end

@@ -1482,7 +1482,7 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 	// Launch the script debugger
 	if ( strstr( lpCmdLine, "+debugger" ) ) {
 		// RB begin
-#if defined(USE_MFC_TOOLS)
+#if 0 //defined(USE_MFC_TOOLS)
 		DebuggerClientInit( lpCmdLine );
 #endif
 		// RB end
