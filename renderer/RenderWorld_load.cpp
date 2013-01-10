@@ -747,14 +747,24 @@ bool idRenderWorldLocal::InitFromMap( const char* name )
 	idStrStatic< MAX_OSPATH > filename = name;
 	filename.SetFileExtension( PROC_FILE_EXT );
 	
-	// check for generated file
+	// check for generated ASCII file
+	idStrStatic< MAX_OSPATH > generatedASCIIFileName = filename;
+	generatedASCIIFileName.Insert( "generated/", 0 );
+	
+	// check for generated binary file
 	idStrStatic< MAX_OSPATH > generatedFileName = filename;
 	generatedFileName.Insert( "generated/", 0 );
 	generatedFileName.SetFileExtension( "bproc" );
 	
 	// if we are reloading the same map, check the timestamp
 	// and try to skip all the work
-	ID_TIME_T currentTimeStamp = fileSystem->GetTimestamp( filename );
+	
+	// RB: look for generated/maps/*.proc first
+	ID_TIME_T currentTimeStamp = fileSystem->GetTimestamp( generatedASCIIFileName );
+	if( currentTimeStamp != FILE_NOT_FOUND_TIMESTAMP )
+	{
+		filename = generatedASCIIFileName;
+	}
 	
 	if( name == mapName )
 	{
