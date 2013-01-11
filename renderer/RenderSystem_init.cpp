@@ -277,6 +277,8 @@ idCVar r_useFXAA( "r_useFXAA", "0", CVAR_RENDERER | CVAR_BOOL, "enable Fast Appr
 idCVar r_fxaaQualityPreset( "r_fxaaQualityPreset", "12", CVAR_RENDERER | CVAR_INTEGER, "default medium dither (10=fastest, 15=highest quality)",  10, 15, idCmdSystem::ArgCompletion_Integer<10, 15> );
 
 idCVar r_binaryLoadRenderModels( "r_binaryLoadRenderModels", "1", 0, "enable binary load/write of render models" );
+
+idCVar r_usePrecomputedLighting( "r_usePrecomputedLighting", "1", 0, "enable Q3A style precomputed lighting (vertex lighting/lightgrid)" );
 // RB end
 
 

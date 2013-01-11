@@ -246,13 +246,22 @@ srfTriangles_t*	ShareMapTriVerts( const mapTri_t* tris )
 					break;
 				}
 			}
+			
 			if( j == numVerts )
 			{
 				numVerts++;
+				
 				uTri->verts[j].xyz = dv->xyz;
 				uTri->verts[j].normal = dv->normal;
 				uTri->verts[j].st[0] = dv->st[0];
 				uTri->verts[j].st[1] = dv->st[1];
+				
+				// RB
+				uTri->verts[j].color[0] = dv->color[0];
+				uTri->verts[j].color[1] = dv->color[1];
+				uTri->verts[j].color[2] = dv->color[2];
+				uTri->verts[j].color[3] = dv->color[3];
+				// RB end
 			}
 			
 			uTri->indexes[numIndexes++] = j;

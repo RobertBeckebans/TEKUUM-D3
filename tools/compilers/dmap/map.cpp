@@ -478,10 +478,32 @@ static bool	ProcessMapEntity( idMapEntity* mapEnt )
 
 //===================================================================
 
+static float	CalcLightAxialSize( mapLight_t* light )
+{
+	float	max = 0;
+	
+	if( !light->def.parms.pointLight )
+	{
+		idVec3	dir = light->def.parms.target - light->def.parms.origin;
+		max = dir.Length();
+		return max;
+	}
+	
+	for( int i = 0 ; i < 3 ; i++ )
+	{
+		float	dist = fabs( light->def.parms.lightCenter[i] );
+		dist += light->def.parms.lightRadius[i];
+		if( dist > max )
+		{
+			max = dist;
+		}
+	}
+	return max;
+}
+
 /*
 ==============
 CreateMapLight
-
 ==============
 */
 static void CreateMapLight( const idMapEntity* mapEnt )
@@ -529,7 +551,7 @@ static void CreateMapLight( const idMapEntity* mapEnt )
 #endif
 	
 	// RB begin
-	light->photons = light->def.parms.lightRadius.Length();
+	light->photons = CalcLightAxialSize( light );
 	// RB end
 	
 	dmapGlobals.mapLights.Append( light );

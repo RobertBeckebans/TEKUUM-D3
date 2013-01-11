@@ -1149,6 +1149,8 @@ extern idCVar r_fxaaQualityPreset;
 
 extern idCVar r_binaryLoadRenderModels;
 
+extern idCVar r_usePrecomputedLighting;
+
 // RB end
 
 /*

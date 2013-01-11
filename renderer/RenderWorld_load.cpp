@@ -765,6 +765,11 @@ bool idRenderWorldLocal::InitFromMap( const char* name )
 	{
 		filename = generatedASCIIFileName;
 	}
+	else
+	{
+		// try maps/*.proc without the generated/
+		currentTimeStamp = fileSystem->GetTimestamp( generatedFileName );
+	}
 	
 	if( name == mapName )
 	{
@@ -782,10 +787,12 @@ bool idRenderWorldLocal::InitFromMap( const char* name )
 	
 	FreeWorld();
 	
+	
 	// see if we have a generated version of this
 	static const byte BPROC_VERSION = 2;
 	static const unsigned int BPROC_MAGIC = ( 'P' << 24 ) | ( 'R' << 16 ) | ( 'O' << 8 ) | BPROC_VERSION;
 	bool loaded = false;
+#if 0
 	idFileLocal file( fileSystem->OpenFileReadMemory( generatedFileName ) );
 	if( file != NULL )
 	{
@@ -847,6 +854,7 @@ bool idRenderWorldLocal::InitFromMap( const char* name )
 			}
 		}
 	}
+#endif
 	
 	if( !loaded )
 	{

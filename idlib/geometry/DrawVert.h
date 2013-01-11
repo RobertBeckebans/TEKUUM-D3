@@ -45,11 +45,15 @@ public:
 	idVec3			normal;
 	idVec3			tangents[2];
 	
+#if 1
+	byte			color[4];
+#else
 	union
 	{
 		byte			color[4];
 		byte			lightColor[4];
 	};
+#endif
 	
 #if defined(USE_LIGHTMAPS)
 	idVec2			lm;

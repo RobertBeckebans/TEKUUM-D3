@@ -505,6 +505,11 @@ void RB_T_FillDepthBuffer( const drawSurf_t* surf )
 	glVertexPointer( 3, GL_FLOAT, sizeof( idDrawVert ), ac->xyz.ToFloatPtr() );
 	glTexCoordPointer( 2, GL_FLOAT, sizeof( idDrawVert ), reinterpret_cast<void*>( &ac->st ) );
 	
+	if( r_usePrecomputedLighting.GetBool() && tr.backEndRenderer == BE_ARB )
+	{
+		glColorPointer( 4, GL_UNSIGNED_BYTE, sizeof( idDrawVert ), ( void* ) &ac->color );
+	}
+	
 	bool drawSolid = false;
 	
 	if( shader->Coverage() == MC_OPAQUE )
@@ -559,14 +564,22 @@ void RB_T_FillDepthBuffer( const drawSurf_t* surf )
 			{
 				continue;
 			}
-			glColor4f( color[0], color[1], color[2], color[3] );
 			
 #if !defined(USE_GLES2)
 			glAlphaFunc( GL_GREATER, regs[ pStage->alphaTestRegister ] );
 #endif
 			
-			// bind the texture
-			pStage->texture.image->Bind();
+			if( r_usePrecomputedLighting.GetBool() && tr.backEndRenderer == BE_ARB )
+			{
+				globalImages->whiteImage->Bind();
+			}
+			else
+			{
+				glColor4f( color[0], color[1], color[2], color[3] );
+				
+				// bind the texture
+				pStage->texture.image->Bind();
+			}
 			
 			// set texture matrix and texGens
 			RB_PrepareStageTexturing( pStage, surf, ac );
@@ -598,7 +611,10 @@ void RB_T_FillDepthBuffer( const drawSurf_t* surf )
 	// draw the entire surface solid
 	if( drawSolid )
 	{
-		glColor4f( color[0], color[1], color[2], color[3] );
+		if( !( r_usePrecomputedLighting.GetBool() && tr.backEndRenderer == BE_ARB ) )
+		{
+			glColor4f( color[0], color[1], color[2], color[3] );
+		}
 		globalImages->whiteImage->Bind();
 		
 		// draw it
@@ -796,7 +812,7 @@ void RB_T_FillDepthBufferWithNormals( const drawSurf_t* surf )
 	
 	if( !tri->ambientCache )
 	{
-		common->Printf( "RB_T_FillDepthBuffer: !tri->ambientCache\n" );
+		common->Printf( "RB_T_FillDepthBufferWithNormals: !tri->ambientCache\n" );
 		return;
 	}
 	
@@ -1100,6 +1116,11 @@ void RB_STD_FillDepthBuffer( drawSurf_t** drawSurfs, int numDrawSurfs )
 #endif
 	{
 		glEnableClientState( GL_TEXTURE_COORD_ARRAY );
+		
+		if( r_usePrecomputedLighting.GetBool() && tr.backEndRenderer == BE_ARB )
+		{
+			glEnableClientState( GL_COLOR_ARRAY );
+		}
 	}
 	
 	// decal surfaces may enable polygon offset
@@ -1150,6 +1171,11 @@ void RB_STD_FillDepthBuffer( drawSurf_t** drawSurfs, int numDrawSurfs )
 		glDisable( GL_TEXTURE_GEN_S );
 #endif
 		GL_SelectTexture( 0 );
+	}
+	
+	if( r_usePrecomputedLighting.GetBool() && tr.backEndRenderer == BE_ARB )
+	{
+		glDisableClientState( GL_COLOR_ARRAY );
 	}
 	
 	GL_CheckErrors();
