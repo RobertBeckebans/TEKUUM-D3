@@ -373,7 +373,7 @@ static void VertexLightingSurfaces( int entityNum, int areaNum )
 	traceWork_t tw;
 	
 	uArea_t* area = &dmapGlobals.uEntities[entityNum].areas[areaNum];
-	idMapEntity* entity = dmapGlobals.uEntities[entityNum].mapEntity;
+	//idMapEntity* entity = dmapGlobals.uEntities[entityNum].mapEntity;
 	
 	for( optimizeGroup_t* group = area->groups ; group ; group = group->nextGroup )
 	{
@@ -408,28 +408,396 @@ static void LightEntity( int entityNum )
 	}
 }
 
+
+//=============================================================================
+
 /*
 =============
-LightWorld
+PointInSolid
 =============
 */
-void LightWorld()
+static bool PointInSolid( const idVec3& start )
 {
-	//float           f;
+	node_t* node = NodeForPoint( NULL, start );
 	
-	// determine the number of grid points
-	//SetupGrid();
+	return ( node == NULL );
+}
+
+//=============================================================================
+
+/*
+========================
+LightContributionToPoint
+========================
+*/
+bool LightContributionToPoint( const mapLight_t* light, const idVec3& origin, idVec3& color, traceWork_t* tw )
+{
+	trace_t         trace;
+	float           add;
 	
-	// find the optional world ambient
-	//GetVectorForKey(&entities[0], "_color", ambientColor);
-	//f = FloatForKey(&entities[0], "ambient");
-	//VectorScale(ambientColor, f, ambientColor);
+	add = 0;
 	
-	// create lights out of patches and lights
-	//Sys_FPrintf(SYS_VRB, "--- CreateLights ---\n");
-	//CreateEntityLights();
-	//Sys_FPrintf(SYS_VRB, "%i point lights\n", numPointLights);
-	//Sys_FPrintf(SYS_VRB, "%i area lights\n", numAreaLights);
+	color.Zero();
+	
+	// testing exact PTPFF
+	/*
+	if(exactPointToPolygon && light->type == emit_area)
+	{
+		float           factor;
+		float           d;
+		vec3_t          normal;
+	
+		// see if the point is behind the light
+		d = DotProduct(origin, light->normal) - light->dist;
+		if(!light->twosided)
+		{
+			if(d < 1)
+			{
+				return qfalse;	// point is behind light
+			}
+		}
+	
+		// test occlusion
+		// clip the line, tracing from the surface towards the light
+		TraceLine(origin, light->origin, &trace, qfalse, tw);
+		if(trace.passSolid)
+		{
+			return qfalse;
+		}
+	
+		// calculate the contribution
+		VectorSubtract(light->origin, origin, normal);
+		if(VectorNormalize(normal) == 0)
+		{
+			return qfalse;
+		}
+		factor = PointToPolygonFormFactor(origin, normal, light->w);
+		if(factor <= 0)
+		{
+			if(light->twosided)
+			{
+				factor = -factor;
+			}
+			else
+			{
+				return qfalse;
+			}
+		}
+		VectorScale(light->emitColor, factor, color);
+		return qtrue;
+	}
+	*/
+	
+	// calculate the amount of light at this sample
+	//if(light->def.parms.pointLight)//|| light->def.parms.)
+	{
+		idVec3 dir = light->def.globalLightOrigin - origin;
+		float dist = dir.Normalize();
+		
+		// clamp the distance to prevent super hot spots
+		if( dist < 16 )
+		{
+			dist = 16;
+		}
+		
+		const float pointScale = 7500.0f;
+		
+#if 0
+		if( light->linearLight )
+		{
+			add = light->photons * linearScale - dist;
+			if( add < 0 )
+			{
+				add = 0;
+			}
+		}
+		else
+#endif
+		{
+			add = ( light->photons * pointScale ) / ( dist * dist );
+		}
+	}
+	//else
+	//{
+	//	return false;
+	//}
+	
+	if( add <= 1.0 )
+	{
+		return false;
+	}
+	
+#if 0
+	// clip the line, tracing from the surface towards the light
+	TraceLine( origin, light->def.globalLightOrigin, &trace, false, tw );
+	
+	// other light rays must not hit anything
+	if( trace.passSolid )
+	{
+		return false;
+	}
+#endif
+	
+	// add the result
+	color[0] = add * light->def.parms.shaderParms[ SHADERPARM_RED ];
+	color[1] = add * light->def.parms.shaderParms[ SHADERPARM_GREEN ];
+	color[2] = add * light->def.parms.shaderParms[ SHADERPARM_BLUE ];
+	
+	return true;
+}
+
+struct contribution_t
+{
+	idVec3          dir;
+	idVec3          color;
+};
+
+/*
+=============
+TraceGrid
+
+Grid samples are foe quickly determining the lighting
+of dynamically placed entities in the world
+=============
+*/
+#define	MAX_CONTRIBUTIONS	1024
+void TraceGrid( int num )
+{
+#if 0
+	int             x, y, z;
+	idVec3          origin;
+	mapLight_t*     light;
+	idVec3          color;
+	int             mod;
+	idVec3          directedColor;
+	idVec3          summedDir;
+	contribution_t  contributions[MAX_CONTRIBUTIONS];
+	int             numCon;
+	int             i;
+	traceWork_t     tw;
+	float           addSize;
+	lightGridPoint_t* gridPoint;
+	
+	gridPoint = &dmapGlobals.lightGridPoints[ num ];
+	
+	mod = num;
+	z = mod / ( dmapGlobals.lightGridBounds[0] * dmapGlobals.lightGridBounds[1] );
+	mod -= z * ( dmapGlobals.lightGridBounds[0] * dmapGlobals.lightGridBounds[1] );
+	
+	y = mod / dmapGlobals.lightGridBounds[0];
+	mod -= y * dmapGlobals.lightGridBounds[0];
+	
+	x = mod;
+	
+	origin[0] = dmapGlobals.lightGridMins[0] + x * dmapGlobals.lightGridSize[0];
+	origin[1] = dmapGlobals.lightGridMins[1] + y * dmapGlobals.lightGridSize[1];
+	origin[2] = dmapGlobals.lightGridMins[2] + z * dmapGlobals.lightGridSize[2];
+	
+	if( PointInSolid( origin ) )
+	{
+		idVec3          baseOrigin;
+		int             step;
+		
+		VectorCopy( origin, baseOrigin );
+		
+		// try to nudge the origin around to find a valid point
+		for( step = 9; step <= 18; step += 9 )
+		{
+			for( i = 0; i < 8; i++ )
+			{
+				VectorCopy( baseOrigin, origin );
+				if( i & 1 )
+				{
+					origin[0] += step;
+				}
+				else
+				{
+					origin[0] -= step;
+				}
+				if( i & 2 )
+				{
+					origin[1] += step;
+				}
+				else
+				{
+					origin[1] -= step;
+				}
+				if( i & 4 )
+				{
+					origin[2] += step;
+				}
+				else
+				{
+					origin[2] -= step;
+				}
+				
+				if( !PointInSolid( origin ) )
+				{
+					break;
+				}
+			}
+			
+			if( i != 8 )
+			{
+				break;
+			}
+		}
+		
+		if( step > 18 )
+		{
+			// can't find a valid point at all
+			for( i = 0; i < 8; i++ )
+			{
+				gridPoint->ambient.Zero();
+				gridPoint->directed.Zero();
+				gridPoint->dir.Zero();
+			}
+			return;
+		}
+	}
+	
+	summedDir.Zero();
+	
+	// trace to all the lights
+	
+	// find the major light direction, and divide the
+	// total light between that along the direction and
+	// the remaining in the ambient
+	numCon = 0;
+	for( i = 0 ; i < dmapGlobals.mapLights.Num() ; i++ )
+	{
+		light = dmapGlobals.mapLights[i];
+		
+		idVec3          add;
+		idVec3          dir;
+		float           addSize;
+		
+		if( !LightContributionToPoint( light, origin, add, &tw ) )
+		{
+			continue;
+		}
+		
+		dir = light->def.globalLightOrigin - origin;
+		dir.Normalize();
+		
+		VectorCopy( add, contributions[numCon].color );
+		VectorCopy( dir, contributions[numCon].dir );
+		numCon++;
+		
+		addSize = add.Length();
+		VectorMA( summedDir, addSize, dir, summedDir );
+		
+		if( numCon == MAX_CONTRIBUTIONS - 1 )
+		{
+			break;
+		}
+	}
+	
+#if 0
+	// trace directly to the sun
+	SunToPoint( origin, &tw, color );
+	addSize = VectorLength( color );
+	if( addSize > 0 )
+	{
+		VectorCopy( color, contributions[numCon].color );
+		VectorCopy( sunDirection, contributions[numCon].dir );
+		VectorMA( summedDir, addSize, sunDirection, summedDir );
+		numCon++;
+	}
+#endif
+	
+	// now that we have identified the primary light direction,
+	// go back and seperate all the light into directed and ambient
+	summedDir.Normalize();
+	
+	// RB: FIXME add ambientColor
+	//VectorCopy(ambientColor, color);
+	color.Zero();
+	
+	directedColor.Zero();
+	
+	for( i = 0; i < numCon; i++ )
+	{
+		float           d;
+		
+		d = DotProduct( contributions[i].dir, summedDir );
+		if( d < 0 )
+		{
+			d = 0;
+		}
+		
+		VectorMA( directedColor, d, contributions[i].color, directedColor );
+		
+		// the ambient light will be at 1/4 the value of directed light
+		d = 0.25 * ( 1.0 - d );
+		VectorMA( color, d, contributions[i].color, color );
+	}
+	
+	// now do some fudging to keep the ambient from being too low
+	VectorMA( color, 0.25, directedColor, color );
+	
+	// save the resulting value out
+	ColorToBytes( color, gridPoint->ambient );
+	ColorToBytes( directedColor, gridPoint->directed );
+	
+	summedDir.Normalize();
+	NormalToLatLong( summedDir, gridData + num * 8 + 6 );
+#endif
+}
+
+static void CalculateLightGridBounds( idBounds& bounds )
+{
+	uEntity_t* e = &dmapGlobals.uEntities[0];
+	
+	bounds.Clear();
+	for( int i = 0; i < e->numAreas; i++ )
+	{
+		uArea_t* area = &dmapGlobals.uEntities[0].areas[i];
+		
+		for( optimizeGroup_t* group = area->groups ; group ; group = group->nextGroup )
+		{
+#if 1
+			bounds.AddBounds( group->bounds );
+#else
+			for( mapTri_t* tri = group->triList ; tri ; tri = tri->next )
+			{
+				bounds.AddPoint( tri->v[0].xyz );
+				bounds.AddPoint( tri->v[1].xyz );
+				bounds.AddPoint( tri->v[2].xyz );
+			}
+#endif
+		}
+	}
+}
+
+static void SetupLightGrid()
+{
+	idLib::Printf( "----- SetupLightGrid -----\n" );
+	
+	idBounds bounds;
+	CalculateLightGridBounds( bounds );
+	
+	idVec3 maxs;
+	for( int i = 0; i < 3; i++ )
+	{
+		dmapGlobals.lightGridMins[i] = dmapGlobals.lightGridSize[i] * ceil( bounds[0][i] / dmapGlobals.lightGridSize[i] );
+		maxs[i] = dmapGlobals.lightGridSize[i] * floor( bounds[1][i] / dmapGlobals.lightGridSize[i] );
+		dmapGlobals.lightGridBounds[i] = ( maxs[i] - dmapGlobals.lightGridMins[i] ) / dmapGlobals.lightGridSize[i] + 1;
+	}
+	
+	idLib::Printf( "grid size (%i %i %i)\n", ( int )dmapGlobals.lightGridSize[0], ( int )dmapGlobals.lightGridSize[1], dmapGlobals.lightGridSize[2] );
+	idLib::Printf( "grid bounds (%i %i %i)\n", ( int )dmapGlobals.lightGridBounds[0], ( int )dmapGlobals.lightGridBounds[1], ( int )dmapGlobals.lightGridBounds[2] );
+	
+	int numGridPoints = dmapGlobals.lightGridBounds[0] * dmapGlobals.lightGridBounds[1] * dmapGlobals.lightGridBounds[2];
+	idLib::Printf( "%i x %i x %i = %i grid points \n", dmapGlobals.lightGridBounds[0], dmapGlobals.lightGridBounds[1], dmapGlobals.lightGridBounds[2], numGridPoints );
+	
+	dmapGlobals.lightGridPoints.SetNum( numGridPoints );
+	
+	idLib::Printf( "%9u x %u B = lightGridSize = (%.2fMB)\n", numGridPoints, sizeof( lightGridPoint_t ), ( float )( dmapGlobals.lightGridPoints.MemoryUsed() ) / ( 1024.0f * 1024.0f ) );
+	
+	//if(numGridPoints * 8 >= MAX_MAP_LIGHTGRID)
+	//	Error("MAX_MAP_LIGHTGRID");
+	//Sys_FPrintf(SYS_VRB, "%5i gridPoints\n", numGridPoints);
 	
 	//if(!nogridlighting)
 	//{
@@ -437,16 +805,18 @@ void LightWorld()
 	//	RunThreadsOnIndividual(numGridPoints, qtrue, TraceGrid);
 	//	Sys_FPrintf(SYS_VRB, "%i x %i x %i = %i grid\n", gridBounds[0], gridBounds[1], gridBounds[2], numGridPoints);
 	//}
-	
-	//Sys_FPrintf(SYS_VRB, "--- TraceLtm ---\n");
-	//RunThreadsOnIndividual(numDrawSurfaces, qtrue, TraceLtm);
-	//Sys_FPrintf(SYS_VRB, "%5i visible samples\n", c_visible);
-	//Sys_FPrintf(SYS_VRB, "%5i occluded samples\n", c_occluded);
-	
-	// write the entity models and information, writing entities first
-	
+}
+
+/*
+=============
+LightWorld
+=============
+*/
+void LightWorld()
+{
 	common->Printf( "----- LightWorld -----\n" );
 	
+	common->Printf( "----- VertexLighting -----\n" );
 	for( int i = dmapGlobals.num_entities - 1 ; i >= 0 ; i-- )
 	{
 		uEntity_t* entity = &dmapGlobals.uEntities[i];
@@ -458,4 +828,6 @@ void LightWorld()
 		
 		LightEntity( i );
 	}
+	
+	SetupLightGrid();
 }

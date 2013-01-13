@@ -185,6 +185,10 @@ void ResetDmapGlobals()
 	dmapGlobals.uEntities = NULL;
 	dmapGlobals.entityNum = 0;
 	dmapGlobals.mapLights.Clear();
+	// RB begin
+	dmapGlobals.lightGridSize.Set( 64, 64, 128 );
+	dmapGlobals.lightGridPoints.Clear();
+	// RB end
 	dmapGlobals.verbose = false;
 	dmapGlobals.glview = false;
 	dmapGlobals.noOptimize = false;

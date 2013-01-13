@@ -202,6 +202,15 @@ typedef struct
 	// RB end
 } mapLight_t;
 
+// RB begin
+struct lightGridPoint_t
+{
+	idVec3          ambient;
+	idVec3          directed;
+	idVec3          dir;
+};
+// RB end
+
 #define	MAX_GROUP_LIGHTS	16
 
 typedef struct optimizeGroup_s
@@ -266,6 +275,13 @@ typedef struct
 	int			entityNum;
 	
 	idList<mapLight_t*>	mapLights;
+	
+	// RB begin
+	idVec3		lightGridMins;
+	idVec3		lightGridSize;
+	int			lightGridBounds[3];
+	idList<lightGridPoint_t> lightGridPoints;
+	// RB end
 	
 	bool	verbose;
 	
@@ -401,6 +417,8 @@ void FreeTreePortals_r( node_t* node );
 bspface_t*	MakeStructuralBspFaceList( primitive_t* list );
 bspface_t*	MakeVisibleBspFaceList( primitive_t* list );
 tree_t*		FaceBSP( bspface_t* list );
+
+node_t*		NodeForPoint( node_t* node, const idVec3& origin );
 
 //=============================================================================
 
