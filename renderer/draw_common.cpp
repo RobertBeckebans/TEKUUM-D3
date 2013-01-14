@@ -1788,8 +1788,6 @@ static void RB_T_Shadow( const drawSurf_t* surf )
 #if !defined(USE_GLES1)
 		switch( tr.backEndRenderer )
 		{
-			case BE_NV20:
-			case BE_R200:
 			case BE_ARB2:
 				glProgramEnvParameter4fvARB( GL_VERTEX_PROGRAM_ARB, PP_LIGHT_ORIGIN, localLight.ToFloatPtr() );
 				break;
@@ -2586,15 +2584,6 @@ void	RB_STD_DrawView()
 			{
 				RB_EXP_ResolveLightFromLightBuffer( drawSurfs, numDrawSurfs );
 			}
-			break;
-		case BE_NV20:
-			RB_NV20_DrawInteractions();
-			break;
-		case BE_NV10:
-			RB_NV10_DrawInteractions();
-			break;
-		case BE_R200:
-			RB_R200_DrawInteractions();
 			break;
 #endif
 	}

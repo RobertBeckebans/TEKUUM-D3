@@ -47,8 +47,17 @@ idScreenRect::Clear
 */
 void idScreenRect::Clear()
 {
-	x1 = y1 = 32000;
-	x2 = y2 = -32000;
+	// RB: fix invalid scissor values
+	//x1 = y1 = 32000;
+	//x2 = y2 = -32000;
+
+	x1 = glConfig.vidWidth;
+	y1 = glConfig.vidHeight;
+
+	y1 = 0;
+	y2 = 0;
+	// RB end
+
 	zmin = 0.0f;
 	zmax = 1.0f;
 }

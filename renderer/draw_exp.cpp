@@ -217,13 +217,13 @@ static void R_CreateHDRRenderImage( idImage* image )
 #if 1
 	if( r_useHighDynamicRange.GetBool() )
 	{
-		image->GenerateImage( NULL, width, height, TF_LINEAR, false, TR_CLAMP_TO_BORDER, TD_FBO_RGBA16F );
+		image->GenerateImage( NULL, width, height, TF_LINEAR, false, TR_CLAMP, TD_FBO_RGBA16F );
 	}
 	else
 #endif
 	{
 		byte* data = ( byte* )Mem_Alloc( width * height * 4 );
-		image->GenerateImage( data, width, height, TF_LINEAR, false, TR_CLAMP_TO_BORDER, TD_HIGH_QUALITY );
+		image->GenerateImage( data, width, height, TF_LINEAR, false, TR_CLAMP, TD_HIGH_QUALITY );
 		Mem_Free( data );
 	}
 }
@@ -246,13 +246,13 @@ static void R_CreateDownScaleImage_Quarter( idImage* image )
 #if 1
 	if( r_useHighDynamicRange.GetBool() )
 	{
-		image->GenerateImage( NULL, width, height, TF_LINEAR, false, TR_CLAMP_TO_BORDER, TD_FBO_RGBA16F );
+		image->GenerateImage( NULL, width, height, TF_LINEAR, false, TR_CLAMP, TD_FBO_RGBA16F );
 	}
 	else
 #endif
 	{
 		byte* data = ( byte* )Mem_Alloc( width * height * 4 );
-		image->GenerateImage( data, width, height, TF_LINEAR, false, TR_CLAMP_TO_BORDER, TD_HIGH_QUALITY );
+		image->GenerateImage( data, width, height, TF_LINEAR, false, TR_CLAMP, TD_HIGH_QUALITY );
 		Mem_Free( data );
 	}
 }
@@ -266,13 +266,13 @@ static void R_CreateDownScaleImage_64x64( idImage* image )
 #if 1
 	if( r_useHighDynamicRange.GetBool() )
 	{
-		image->GenerateImage( NULL, width, height, TF_LINEAR, false, TR_CLAMP_TO_BORDER, TD_FBO_RGBA16F );
+		image->GenerateImage( NULL, width, height, TF_LINEAR, false, TR_CLAMP, TD_FBO_RGBA16F );
 	}
 	else
 #endif
 	{
 		byte* data = ( byte* )Mem_Alloc( width * height * 4 );
-		image->GenerateImage( data, width, height, TF_LINEAR, false, TR_CLAMP_TO_BORDER, TD_HIGH_QUALITY );
+		image->GenerateImage( data, width, height, TF_LINEAR, false, TR_CLAMP, TD_HIGH_QUALITY );
 		Mem_Free( data );
 	}
 }
@@ -286,27 +286,27 @@ static void R_CreateShadowBufferImage( idImage* image, int lightBufferSize )
 {
 	if( r_sb_mode.GetInteger() == SHADOWING_ESM16 )
 	{
-		image->GenerateImage( NULL, lightBufferSize, lightBufferSize, TF_LINEAR, false, TR_CLAMP_TO_BORDER, TD_FBO_R16F );
+		image->GenerateImage( NULL, lightBufferSize, lightBufferSize, TF_LINEAR, false, TR_CLAMP, TD_FBO_R16F );
 	}
 	else if( r_sb_mode.GetInteger() == SHADOWING_ESM32 )
 	{
-		image->GenerateImage( NULL, lightBufferSize, lightBufferSize, TF_LINEAR, false, TR_CLAMP_TO_BORDER, TD_FBO_R32F );
+		image->GenerateImage( NULL, lightBufferSize, lightBufferSize, TF_LINEAR, false, TR_CLAMP, TD_FBO_R32F );
 	}
 	else if( r_sb_mode.GetInteger() == SHADOWING_VSM16 )
 	{
-		image->GenerateImage( NULL, lightBufferSize, lightBufferSize, TF_LINEAR, false, TR_CLAMP_TO_BORDER, TD_FBO_RG16F );
+		image->GenerateImage( NULL, lightBufferSize, lightBufferSize, TF_LINEAR, false, TR_CLAMP, TD_FBO_RG16F );
 	}
 	else if( r_sb_mode.GetInteger() == SHADOWING_VSM32 )
 	{
-		image->GenerateImage( NULL, lightBufferSize, lightBufferSize, TF_LINEAR, false, TR_CLAMP_TO_BORDER, TD_FBO_RG32F );
+		image->GenerateImage( NULL, lightBufferSize, lightBufferSize, TF_LINEAR, false, TR_CLAMP, TD_FBO_RG32F );
 	}
 	else if( r_sb_mode.GetInteger() == SHADOWING_EVSM32 )
 	{
-		image->GenerateImage( NULL, lightBufferSize, lightBufferSize, TF_LINEAR, false, TR_CLAMP_TO_BORDER, TD_FBO_RGBA32F );
+		image->GenerateImage( NULL, lightBufferSize, lightBufferSize, TF_LINEAR, false, TR_CLAMP, TD_FBO_RGBA32F );
 	}
 	else
 	{
-		image->GenerateImage( NULL, lightBufferSize, lightBufferSize, TF_LINEAR, false, TR_CLAMP_TO_BORDER, TD_FBO_RGBA16F );
+		image->GenerateImage( NULL, lightBufferSize, lightBufferSize, TF_LINEAR, false, TR_CLAMP, TD_FBO_RGBA16F );
 	}
 	
 	GL_CheckErrors();

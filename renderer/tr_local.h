@@ -799,9 +799,6 @@ const int MAX_GUI_SURFACES	= 1024;		// default size of the drawSurfs list for gu
 enum backEndName_t
 {
 	BE_ARB,
-	BE_NV10,
-	BE_NV20,
-	BE_R200,
 	BE_ARB2,
 	BE_GLSL,
 	BE_EXP,

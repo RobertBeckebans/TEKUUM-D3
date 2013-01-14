@@ -55,7 +55,9 @@ typedef enum
 {
 	TR_REPEAT,
 	TR_CLAMP,
-	TR_CLAMP_TO_BORDER,		// this should replace TR_CLAMP_TO_ZERO and TR_CLAMP_TO_ZERO_ALPHA,
+	// RB: deprecated with OpenGL 3.0
+	//TR_CLAMP_TO_BORDER,		// this should replace TR_CLAMP_TO_ZERO and TR_CLAMP_TO_ZERO_ALPHA,
+	// RB end
 	// but I don't want to risk changing it right now
 	TR_CLAMP_TO_ZERO,		// guarantee 0,0,0,255 edge for projected textures,
 	// set AFTER image format selection

@@ -241,7 +241,6 @@ BindForViewOrigin
 */
 void idMegaTexture::BindForViewOrigin( const idVec3 viewOrigin )
 {
-
 	SetViewOrigin( viewOrigin );
 	
 	// borderClamp image goes in texture 0

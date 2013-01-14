@@ -521,18 +521,6 @@ static void R_CheckPortableExtensions()
 	}
 #endif
 	
-	// GL_ATI_fragment_shader
-#if defined(USE_GLES1)
-	glConfig.atiFragmentShaderAvailable = false;
-#else
-	glConfig.atiFragmentShaderAvailable = GLEW_ATI_fragment_shader != 0;
-	if( ! glConfig.atiFragmentShaderAvailable )
-	{
-		// only on OSX: ATI_fragment_shader is faked through ATI_text_fragment_shader (macosx_glimp.cpp)
-		glConfig.atiFragmentShaderAvailable = GLEW_ATI_text_fragment_shader != 0;
-	}
-#endif
-	
 	// ARB_vertex_buffer_object
 #if defined(USE_GLES1)
 	glConfig.ARBVertexBufferObjectAvailable = true;
@@ -856,9 +844,6 @@ void R_InitOpenGL()
 	// parse our vertex and fragment programs, possibly disably support for
 	// one of the paths if there was an error
 #if !defined(USE_GLES1)
-	R_NV10_Init();
-	R_NV20_Init();
-	R_R200_Init();
 	R_ARB2_Init();
 	R_GLSL_Init();
 	R_Exp_Init();
@@ -2241,33 +2226,6 @@ static void GfxInfo_f( const idCmdArgs& args )
 	const char* active[2] = { "", " (ACTIVE)" };
 	common->Printf( "ARB path ENABLED%s\n", active[tr.backEndRenderer == BE_ARB] );
 	
-	if( glConfig.allowNV10Path )
-	{
-		common->Printf( "NV10 path ENABLED%s\n", active[tr.backEndRenderer == BE_NV10] );
-	}
-	else
-	{
-		common->Printf( "NV10 path disabled\n" );
-	}
-	
-	if( glConfig.allowNV20Path )
-	{
-		common->Printf( "NV20 path ENABLED%s\n", active[tr.backEndRenderer == BE_NV20] );
-	}
-	else
-	{
-		common->Printf( "NV20 path disabled\n" );
-	}
-	
-	if( glConfig.allowR200Path )
-	{
-		common->Printf( "R200 path ENABLED%s\n", active[tr.backEndRenderer == BE_R200] );
-	}
-	else
-	{
-		common->Printf( "R200 path disabled\n" );
-	}
-	
 	if( glConfig.allowARB2Path )
 	{
 		common->Printf( "ARB2 path ENABLED%s\n", active[tr.backEndRenderer == BE_ARB2] );
@@ -2850,7 +2808,7 @@ idRenderSystemLocal::GetCardCaps
 */
 void idRenderSystemLocal::GetCardCaps( bool& oldCard, bool& nv10or20 )
 {
-	nv10or20 = ( tr.backEndRenderer == BE_NV10 || tr.backEndRenderer == BE_NV20 );
-	oldCard = ( tr.backEndRenderer == BE_ARB || tr.backEndRenderer == BE_R200 || tr.backEndRenderer == BE_NV10 || tr.backEndRenderer == BE_NV20 );
+	nv10or20 = false;
+	oldCard = ( tr.backEndRenderer == BE_ARB );
 }
 

@@ -389,7 +389,7 @@ static void R_BorderClampImage( idImage* image )
 	}
 	
 	image->GenerateImage( ( byte* )data, BORDER_CLAMP_SIZE, BORDER_CLAMP_SIZE,
-						  TF_LINEAR /* TF_NEAREST */, false, TR_CLAMP_TO_BORDER, TD_DEFAULT );
+						  TF_LINEAR /* TF_NEAREST */, false, TR_CLAMP_TO_ZERO, TD_DEFAULT );
 						  
 	if( !glConfig.isInitialized )
 	{

@@ -179,9 +179,6 @@ set(RENDERER_SOURCES
 	renderer/draw_glsl.cpp
 	renderer/draw_common.cpp
 	renderer/draw_exp.cpp
-	renderer/draw_nv10.cpp
-	renderer/draw_nv20.cpp
-	renderer/draw_r200.cpp
 	renderer/tr_backend.cpp
 	renderer/tr_backend_draw.cpp
 	renderer/tr_backend_rendertools.cpp
@@ -190,6 +187,7 @@ set(RENDERER_SOURCES
 	renderer/tr_frontend_guisurf.cpp
 	renderer/tr_frontend_main.cpp
 	renderer/tr_frontend_subview.cpp
+	renderer/tr_legacy.cpp
 	renderer/tr_light.cpp
 	renderer/tr_math.cpp
 	renderer/tr_orderIndexes.cpp
