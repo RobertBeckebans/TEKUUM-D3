@@ -431,8 +431,6 @@ void idCommonLocal::VPrintf( const char* fmt, va_list args )
 		
 		if( !logFile && !recursing )
 		{
-			struct tm* newtime;
-			ID_TIME_T aclock;
 			const char* fileName = com_logFileName.GetString()[0] ? com_logFileName.GetString() : "qconsole.log";
 			
 			// fileSystem->OpenFileWrite can cause recursive prints into here
@@ -454,8 +452,9 @@ void idCommonLocal::VPrintf( const char* fmt, va_list args )
 				logFile->ForceFlush();
 			}
 			
+			time_t aclock;
 			time( &aclock );
-			newtime = localtime( &aclock );
+			struct tm* newtime = localtime( &aclock );
 			Printf( "log file '%s' opened on %s\n", fileName, asctime( newtime ) );
 		}
 		if( logFile )

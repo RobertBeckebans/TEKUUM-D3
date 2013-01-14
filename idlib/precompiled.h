@@ -44,9 +44,10 @@ If you have questions concerning this license or the applicable additional terms
 
 //-----------------------------------------------------
 
-//#define ID_TIME_T int64 // Signed because -1 means "File not found" and we don't want that to compare > than any other time
-#define ID_TIME_T time_t
-
+// Signed because -1 means "File not found" and we don't want that to compare > than any other time
+// RB: don't use time_t because it can cause trouble with different implementations on 32 and 64 bit
+#define ID_TIME_T int64
+// RB end
 
 
 // non-portable system services

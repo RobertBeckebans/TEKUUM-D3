@@ -3,6 +3,7 @@
 
 Doom 3 GPL Source Code
 Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2013 Robert Beckebans
 
 This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
 
@@ -78,6 +79,14 @@ typedef struct
 	// this is the area number, else CHILDREN_HAVE_MULTIPLE_AREAS
 } areaNode_t;
 
+// RB begin
+struct lightGridPoint_t
+{
+	idVec3          ambient;
+	idVec3          directed;
+	idVec3          dir;
+};
+// RB end
 
 class idRenderWorldLocal : public idRenderWorld
 {
@@ -154,6 +163,14 @@ public:
 	doublePortal_t* 		doublePortals;
 	int						numInterAreaPortals;
 	
+	// RB: added Q3A style light grid
+	idVec3					lightGridOrigin;
+	idVec3					lightGridSize;
+	idVec3					lightGridInverseSize;
+	int						lightGridBounds[3];
+	idList<lightGridPoint_t> lightGridPoints;
+	// RB end
+	
 	idList<idRenderModel*>	localModels;
 	
 	idList<idRenderEntityLocal*>	entityDefs;
@@ -184,6 +201,9 @@ public:
 	idRenderModel* 			ParseShadowModel( idLexer* src, idFile* fileOut );
 	void					SetupAreaRefs();
 	void					ParseInterAreaPortals( idLexer* src, idFile* fileOut );
+	// RB begin
+	void					ParseLightGridPoints( idLexer* src, idFile* fileOut );
+	// RB end
 	void					ParseNodes( idLexer* src, idFile* fileOut );
 	int						CommonChildrenArea_r( areaNode_t* node );
 	void					FreeWorld();
@@ -198,6 +218,7 @@ public:
 	void					ReadBinaryNodes( idFile* file );
 	idRenderModel* 			ReadBinaryModel( idFile* file );
 	idRenderModel* 			ReadBinaryShadowModel( idFile* file );
+	void					ReadBinaryLightGridPoints( idFile* file );
 	// RB end
 	
 	//--------------------------

@@ -759,7 +759,7 @@ idParser::ExpandBuiltinDefine
 int idParser::ExpandBuiltinDefine( idToken* deftoken, define_t* define, idToken** firsttoken, idToken** lasttoken )
 {
 	idToken* token;
-	ID_TIME_T t;
+	time_t t;
 	char* curtime;
 	char buf[MAX_STRING_CHARS];
 	

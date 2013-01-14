@@ -165,6 +165,14 @@ void idCollisionModelManagerLocal::LoadProcBSP( const char* name )
 			continue;
 		}
 		
+		// RB begin
+		if( token == "lightGridPoints" )
+		{
+			src->SkipBracedSection();
+			continue;
+		}
+		// RB end
+		
 		if( token == "nodes" )
 		{
 			ParseProcNodes( src );

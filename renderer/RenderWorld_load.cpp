@@ -3,6 +3,7 @@
 
 Doom 3 BFG Edition GPL Source Code
 Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2013 Robert Beckebans
 
 This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
@@ -82,6 +83,10 @@ void idRenderWorldLocal::FreeWorld()
 		doublePortals = NULL;
 		numInterAreaPortals = 0;
 	}
+	
+	// RB begin
+	lightGridPoints.Clear();
+	// RB end
 	
 	if( areaNodes )
 	{
@@ -471,7 +476,7 @@ void idRenderWorldLocal::ParseInterAreaPortals( idLexer* src, idFile* fileOut )
 
 /*
 ================
-idRenderWorldLocal::ParseInterAreaPortals
+idRenderWorldLocal::ReadBinaryAreaPortals
 ================
 */
 void idRenderWorldLocal::ReadBinaryAreaPortals( idFile* file )
@@ -534,6 +539,107 @@ void idRenderWorldLocal::ReadBinaryAreaPortals( idFile* file )
 		doublePortals[i].portals[1] = p;
 	}
 }
+
+/*
+================
+idRenderWorldLocal::ParseLightGridPoints
+================
+*/
+// RB begin
+void idRenderWorldLocal::ParseLightGridPoints( idLexer* src, idFile* fileOut )
+{
+	src->ExpectTokenString( "{" );
+	
+	int numLightGridPoints = src->ParseInt();
+	if( numLightGridPoints < 0 )
+	{
+		src->Error( "ParseLightGridPoints: bad numLightGridPoints" );
+		return;
+	}
+	
+	if( fileOut != NULL )
+	{
+		// write out the type so the binary reader knows what to instantiate
+		fileOut->WriteString( "lightGridPoints" );
+	}
+	
+	// gridMins
+	src->Parse1DMatrix( 3, lightGridOrigin.ToFloatPtr() );
+	src->Parse1DMatrix( 3, lightGridSize.ToFloatPtr() );
+	for( int i = 0; i < 3; i++ )
+	{
+		lightGridBounds[i] = src->ParseInt();
+	}
+	
+	lightGridPoints.SetNum( numLightGridPoints );
+	
+	idLib::Printf( "light grid size (%i %i %i)\n", ( int )lightGridSize[0], ( int )lightGridSize[1], ( int )lightGridSize[2] );
+	idLib::Printf( "light grid bounds (%i %i %i)\n", ( int )lightGridBounds[0], ( int )lightGridBounds[1], ( int )lightGridBounds[2] );
+	
+	if( fileOut != NULL )
+	{
+		fileOut->WriteBig( numLightGridPoints );
+		fileOut->WriteBig( lightGridOrigin );
+		fileOut->WriteBig( lightGridSize );
+		fileOut->WriteBigArray( lightGridBounds, 3 );
+	}
+	
+	for( int i = 0; i < numLightGridPoints; i++ )
+	{
+		lightGridPoint_t* gridPoint = &lightGridPoints[i];
+		
+		src->Parse1DMatrix( 3, gridPoint->ambient.ToFloatPtr() );
+		src->Parse1DMatrix( 3, gridPoint->directed.ToFloatPtr() );
+		src->Parse1DMatrix( 3, gridPoint->dir.ToFloatPtr() );
+		
+		if( fileOut != NULL )
+		{
+			fileOut->WriteBig( gridPoint->ambient );
+			fileOut->WriteBig( gridPoint->directed );
+			fileOut->WriteBig( gridPoint->dir );
+		}
+	}
+	
+	src->ExpectTokenString( "}" );
+}
+// RB end
+
+/*
+================
+idRenderWorldLocal::ReadBinaryLightGridPoints
+================
+*/
+// RB begin
+void idRenderWorldLocal::ReadBinaryLightGridPoints( idFile* file )
+{
+	int numLightGridPoints = 0;
+	file->ReadBig( numLightGridPoints );
+	if( numLightGridPoints < 0 )
+	{
+		idLib::Error( "ReadBinaryLightGridPoints: bad numLightGridPoints" );
+		return;
+	}
+	
+	// gridMins
+	file->ReadBig( lightGridOrigin );
+	file->ReadBig( lightGridSize );
+	file->ReadBigArray( lightGridBounds, 3 );
+	
+	lightGridPoints.SetNum( numLightGridPoints );
+	
+	idLib::Printf( "light grid size (%i %i %i)\n", ( int )lightGridSize[0], ( int )lightGridSize[1], ( int )lightGridSize[2] );
+	idLib::Printf( "light grid bounds (%i %i %i)\n", ( int )lightGridBounds[0], ( int )lightGridBounds[1], ( int )lightGridBounds[2] );
+	
+	for( int i = 0; i < numLightGridPoints; i++ )
+	{
+		lightGridPoint_t* gridPoint = &lightGridPoints[i];
+		
+		file->ReadBig( gridPoint->ambient );
+		file->ReadBig( gridPoint->directed );
+		file->ReadBig( gridPoint->dir );
+	}
+}
+// RB end
 
 
 /*
@@ -760,20 +866,20 @@ bool idRenderWorldLocal::InitFromMap( const char* name )
 	// and try to skip all the work
 	
 	// RB: look for generated/maps/*.proc first
-	ID_TIME_T currentTimeStamp = fileSystem->GetTimestamp( generatedASCIIFileName );
-	if( currentTimeStamp != FILE_NOT_FOUND_TIMESTAMP )
+	ID_TIME_T sourceTimeStamp = fileSystem->GetTimestamp( generatedASCIIFileName );
+	if( sourceTimeStamp != FILE_NOT_FOUND_TIMESTAMP )
 	{
 		filename = generatedASCIIFileName;
 	}
 	else
 	{
 		// try maps/*.proc without the generated/
-		currentTimeStamp = fileSystem->GetTimestamp( generatedFileName );
+		sourceTimeStamp = fileSystem->GetTimestamp( filename );
 	}
 	
 	if( name == mapName )
 	{
-		if( currentTimeStamp != FILE_NOT_FOUND_TIMESTAMP && currentTimeStamp == mapTimeStamp )
+		if( sourceTimeStamp != FILE_NOT_FOUND_TIMESTAMP && sourceTimeStamp == mapTimeStamp )
 		{
 			common->Printf( "idRenderWorldLocal::InitFromMap: retaining existing map\n" );
 			FreeDefs();
@@ -789,21 +895,32 @@ bool idRenderWorldLocal::InitFromMap( const char* name )
 	
 	
 	// see if we have a generated version of this
-	static const byte BPROC_VERSION = 2;
+	static const byte BPROC_VERSION = 4;
 	static const unsigned int BPROC_MAGIC = ( 'P' << 24 ) | ( 'R' << 16 ) | ( 'O' << 8 ) | BPROC_VERSION;
 	bool loaded = false;
-#if 0
+	
+#if 1
+	
+	// RB: don't waste memory on low memory systems
+#if defined(__ANDROID__)
+	idFileLocal file( fileSystem->OpenFileRead( generatedFileName ) );
+#else
 	idFileLocal file( fileSystem->OpenFileReadMemory( generatedFileName ) );
+#endif
+	
 	if( file != NULL )
 	{
 		int numEntries = 0;
 		int magic = 0;
+		
 		file->ReadBig( magic );
-		if( magic == BPROC_MAGIC )
+		file->ReadBig( mapTimeStamp );
+		
+		// RB: added extra time stamp check
+		if( magic == BPROC_MAGIC && sourceTimeStamp == mapTimeStamp )
 		{
 			file->ReadBig( numEntries );
 			file->ReadString( mapName );
-			file->ReadBig( mapTimeStamp );
 			
 			// if we are writing a demo, archive the load command
 			if( session->writeDemo )
@@ -847,6 +964,12 @@ bool idRenderWorldLocal::InitFromMap( const char* name )
 				{
 					ReadBinaryNodes( file );
 				}
+				// RB begin
+				else if( type == "lightgridpoints" )
+				{
+					ReadBinaryLightGridPoints( file );
+				}
+				// RB end
 				else
 				{
 					idLib::Error( "Binary proc file failed, unexpected type %s\n", type.c_str() );
@@ -858,7 +981,6 @@ bool idRenderWorldLocal::InitFromMap( const char* name )
 	
 	if( !loaded )
 	{
-	
 		src = new idLexer( filename, LEXFL_NOSTRINGCONCAT | LEXFL_NODOLLARPRECOMPILE );
 		if( !src->IsLoaded() )
 		{
@@ -867,9 +989,8 @@ bool idRenderWorldLocal::InitFromMap( const char* name )
 			return false;
 		}
 		
-		
 		mapName = name;
-		mapTimeStamp = currentTimeStamp;
+		mapTimeStamp = sourceTimeStamp;
 		
 		// if we are writing a demo, archive the load command
 		if( session->writeDemo )
@@ -901,9 +1022,9 @@ bool idRenderWorldLocal::InitFromMap( const char* name )
 		{
 			int magic = BPROC_MAGIC;
 			outputFile->WriteBig( magic );
+			outputFile->WriteBig( mapTimeStamp );
 			outputFile->WriteBig( numEntries );
 			outputFile->WriteString( mapName );
-			outputFile->WriteBig( mapTimeStamp );
 		}
 		
 		// parse the file
@@ -918,7 +1039,7 @@ bool idRenderWorldLocal::InitFromMap( const char* name )
 			
 			if( token == "model" )
 			{
-				lastModel = ParseModel( src, name, currentTimeStamp, outputFile, procVersion );
+				lastModel = ParseModel( src, name, sourceTimeStamp, outputFile, procVersion );
 				
 				// add it to the model manager list
 				renderModelManager->AddModel( lastModel );
@@ -953,6 +1074,16 @@ bool idRenderWorldLocal::InitFromMap( const char* name )
 				continue;
 			}
 			
+			// RB begin
+			if( token == "lightGridPoints" )
+			{
+				ParseLightGridPoints( src, outputFile );
+				
+				numEntries++;
+				continue;
+			}
+			// RB end
+			
 			if( token == "nodes" )
 			{
 				ParseNodes( src, outputFile );
@@ -971,12 +1102,10 @@ bool idRenderWorldLocal::InitFromMap( const char* name )
 			outputFile->Seek( 0, FS_SEEK_SET );
 			int magic = BPROC_MAGIC;
 			outputFile->WriteBig( magic );
+			outputFile->WriteBig( mapTimeStamp );
 			outputFile->WriteBig( numEntries );
 		}
-		
 	}
-	
-	
 	
 	// if it was a trivial map without any areas, create a single area
 	if( !numPortalAreas )

@@ -729,6 +729,35 @@ static void WriteOutputEntity( int entityNum )
 	}
 }
 
+static void WriteLightGrid()
+{
+	procFile->WriteFloatString( "lightGridPoints { /* numLightGridPoints = */ %i ", dmapGlobals.lightGridPoints.Num() );
+	
+	procFile->WriteFloatString( "/* gridMins */ " );
+	Write1DMatrix( procFile, 3, dmapGlobals.lightGridMins.ToFloatPtr() );
+	
+	procFile->WriteFloatString( "/* gridSize */ " );
+	Write1DMatrix( procFile, 3, dmapGlobals.lightGridSize.ToFloatPtr() );
+	
+	procFile->WriteFloatString( "/* gridBounds */ " );
+	procFile->WriteFloatString( "%i %i %i\n\n", dmapGlobals.lightGridBounds[0], dmapGlobals.lightGridBounds[1], dmapGlobals.lightGridBounds[2] );
+	
+	for( int i = 0 ; i < dmapGlobals.lightGridPoints.Num() ; i++ )
+	{
+		lightGridPoint_t* gridPoint = &dmapGlobals.lightGridPoints[i];
+		
+		procFile->WriteFloatString( "/* lgp %i */ ", i );
+		
+		Write1DMatrix( procFile, 3, gridPoint->ambient.ToFloatPtr() );
+		Write1DMatrix( procFile, 3, gridPoint->directed.ToFloatPtr() );
+		Write1DMatrix( procFile, 3, gridPoint->dir.ToFloatPtr() );
+		
+		procFile->WriteFloatString( "\n" );
+	}
+	
+	procFile->WriteFloatString( "}\n\n" );
+}
+
 
 /*
 ====================
@@ -788,6 +817,10 @@ void WriteOutputFile()
 		R_FreeStaticTriSurf( light->shadowTris );
 		light->shadowTris = NULL;
 	}
+	
+	// RB begin
+	WriteLightGrid();
+	// RB end
 	
 	fileSystem->CloseFile( procFile );
 }

@@ -515,6 +515,11 @@ void idSoundSample::Load()
 		return;
 	}
 	
+#if 0
+	MakeDefault();
+	return;
+#endif
+	
 	// load it
 	idWaveFile	fh;
 	waveformatex_t info;

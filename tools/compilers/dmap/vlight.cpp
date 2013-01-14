@@ -53,6 +53,38 @@ struct lightTrace_t
 	bool	        passSolid;
 };
 
+
+static void ColorToBytes( const float* color, byte* colorBytes )
+{
+	float           max;
+	idVec3          sample;
+	
+	VectorCopy( color, sample );
+	
+	// clamp with color normalization
+	max = sample[0];
+	
+	if( sample[1] > max )
+	{
+		max = sample[1];
+	}
+	
+	if( sample[2] > max )
+	{
+		max = sample[2];
+	}
+	
+	if( max > 255 )
+	{
+		VectorScale( sample, 255 / max, sample );
+	}
+	
+	colorBytes[0] = sample[0];
+	colorBytes[1] = sample[1];
+	colorBytes[2] = sample[2];
+}
+
+
 /*
 ================
 LightingAtSample
@@ -418,7 +450,9 @@ PointInSolid
 */
 static bool PointInSolid( const idVec3& start )
 {
-	node_t* node = NodeForPoint( NULL, start );
+	uEntity_t* e = &dmapGlobals.uEntities[0];
+	
+	node_t* node = NodeForPoint( e->tree->headnode, start );
 	
 	return ( node == NULL );
 }
@@ -563,7 +597,7 @@ of dynamically placed entities in the world
 #define	MAX_CONTRIBUTIONS	1024
 void TraceGrid( int num )
 {
-#if 0
+#if 1
 	int             x, y, z;
 	idVec3          origin;
 	mapLight_t*     light;
@@ -646,7 +680,7 @@ void TraceGrid( int num )
 		if( step > 18 )
 		{
 			// can't find a valid point at all
-			for( i = 0; i < 8; i++ )
+			//for( i = 0; i < 8; i++ )
 			{
 				gridPoint->ambient.Zero();
 				gridPoint->directed.Zero();
@@ -737,11 +771,16 @@ void TraceGrid( int num )
 	VectorMA( color, 0.25, directedColor, color );
 	
 	// save the resulting value out
-	ColorToBytes( color, gridPoint->ambient );
-	ColorToBytes( directedColor, gridPoint->directed );
+	//ColorToBytes( color, gridPoint->ambient );
+	//ColorToBytes( directedColor, gridPoint->directed );
+	
+	gridPoint->ambient = color;
+	gridPoint->directed = directedColor;
 	
 	summedDir.Normalize();
-	NormalToLatLong( summedDir, gridData + num * 8 + 6 );
+	gridPoint->dir = summedDir;
+	
+	//NormalToLatLong( summedDir, gridData + num * 8 + 6 );
 #endif
 }
 
@@ -794,17 +833,6 @@ static void SetupLightGrid()
 	dmapGlobals.lightGridPoints.SetNum( numGridPoints );
 	
 	idLib::Printf( "%9u x %u B = lightGridSize = (%.2fMB)\n", numGridPoints, sizeof( lightGridPoint_t ), ( float )( dmapGlobals.lightGridPoints.MemoryUsed() ) / ( 1024.0f * 1024.0f ) );
-	
-	//if(numGridPoints * 8 >= MAX_MAP_LIGHTGRID)
-	//	Error("MAX_MAP_LIGHTGRID");
-	//Sys_FPrintf(SYS_VRB, "%5i gridPoints\n", numGridPoints);
-	
-	//if(!nogridlighting)
-	//{
-	//	Sys_FPrintf(SYS_VRB, "--- TraceGrid ---\n");
-	//	RunThreadsOnIndividual(numGridPoints, qtrue, TraceGrid);
-	//	Sys_FPrintf(SYS_VRB, "%i x %i x %i = %i grid\n", gridBounds[0], gridBounds[1], gridBounds[2], numGridPoints);
-	//}
 }
 
 /*
@@ -830,4 +858,10 @@ void LightWorld()
 	}
 	
 	SetupLightGrid();
+	
+	// TODO parallel jobs
+	for( int i = 0; i < dmapGlobals.lightGridPoints.Num(); i++ )
+	{
+		TraceGrid( i );
+	}
 }

@@ -203,12 +203,14 @@ typedef struct
 } mapLight_t;
 
 // RB begin
+/*
 struct lightGridPoint_t
 {
 	idVec3          ambient;
 	idVec3          directed;
 	idVec3          dir;
 };
+*/
 // RB end
 
 #define	MAX_GROUP_LIGHTS	16

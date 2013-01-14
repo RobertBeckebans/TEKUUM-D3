@@ -192,7 +192,8 @@ const char* Sys_TimeStampToStr( ID_TIME_T timeStamp )
 	static char timeString[MAX_STRING_CHARS];
 	timeString[0] = '\0';
 	
-	tm*	time = localtime( &timeStamp );
+	time_t ts = ( time_t )timeStamp;
+	tm*	time = localtime( &ts );
 	idStr out;
 	
 	idStr lang = cvarSystem->GetCVarString( "sys_lang" );

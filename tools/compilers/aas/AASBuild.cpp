@@ -186,6 +186,14 @@ bool idAASBuild::LoadProcBSP( const char* name, ID_TIME_T minFileTime )
 			continue;
 		}
 		
+		// RB begin
+		if( token == "lightGridPoints" )
+		{
+			src->SkipBracedSection();
+			continue;
+		}
+		// RB end
+		
 		if( token == "nodes" )
 		{
 			idAASBuild::ParseProcNodes( src );
