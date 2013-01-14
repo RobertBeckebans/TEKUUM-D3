@@ -1,25 +1,26 @@
 /*
 ===========================================================================
 
-Doom 3 GPL Source Code
-Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Doom 3 BFG Edition GPL Source Code
+Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2013 Robert Beckebans
 
-This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
+This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
-Doom 3 Source Code is free software: you can redistribute it and/or modify
+Doom 3 BFG Edition Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Doom 3 Source Code is distributed in the hope that it will be useful,
+Doom 3 BFG Edition Source Code is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Doom 3 Source Code.  If not, see <http://www.gnu.org/licenses/>.
+along with Doom 3 BFG Edition Source Code.  If not, see <http://www.gnu.org/licenses/>.
 
-In addition, the Doom 3 Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 Source Code.  If not, please request a copy in writing from id Software at the address below.
+In addition, the Doom 3 BFG Edition Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 BFG Edition Source Code.  If not, please request a copy in writing from id Software at the address below.
 
 If you have questions concerning this license or the applicable additional terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 
@@ -53,6 +54,8 @@ If you have questions concerning this license or the applicable additional terms
 // RB end
 
 static void		GLW_InitExtensions();
+
+
 
 
 /*
@@ -205,7 +208,6 @@ GLW_GetWGLExtensionsWithFakeWindow
 */
 void GLW_CheckWGLExtensions( HDC hDC )
 {
-
 	GLenum glewResult = glewInit();
 	if( GLEW_OK != glewResult )
 	{
@@ -299,6 +301,96 @@ void GLW_WM_CREATE( HWND hWnd )
 {
 }
 
+/*
+========================
+CreateOpenGLContextOnDC
+========================
+*/
+static HGLRC CreateOpenGLContextOnDC( const HDC hdc, const bool debugContext )
+{
+	int useOpenGL32 = r_useOpenGL32.GetInteger();
+	HGLRC m_hrc = NULL;
+	
+	for( int i = 0; i < 2; i++ )
+	{
+		const int glMajorVersion = ( useOpenGL32 != 0 ) ? 3 : 2;
+		const int glMinorVersion = ( useOpenGL32 != 0 ) ? 2 : 0;
+		const int glDebugFlag = debugContext ? WGL_CONTEXT_DEBUG_BIT_ARB : 0;
+		const int glProfileMask = ( useOpenGL32 != 0 ) ? WGL_CONTEXT_PROFILE_MASK_ARB : 0;
+		const int glProfile = ( useOpenGL32 == 1 ) ? WGL_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB : ( ( useOpenGL32 == 2 ) ? WGL_CONTEXT_CORE_PROFILE_BIT_ARB : 0 );
+		const int attribs[] =
+		{
+			WGL_CONTEXT_MAJOR_VERSION_ARB,	glMajorVersion,
+			WGL_CONTEXT_MINOR_VERSION_ARB,	glMinorVersion,
+			WGL_CONTEXT_FLAGS_ARB,			glDebugFlag,
+			glProfileMask,					glProfile,
+			0
+		};
+		
+		m_hrc = wglCreateContextAttribsARB( hdc, 0, attribs );
+		if( m_hrc != NULL )
+		{
+			idLib::Printf( "created OpenGL %d.%d context\n", glMajorVersion, glMinorVersion );
+			break;
+		}
+		
+		idLib::Printf( "failed to create OpenGL %d.%d context\n", glMajorVersion, glMinorVersion );
+		useOpenGL32 = 0;	// fall back to OpenGL 2.0
+	}
+	
+	if( m_hrc == NULL )
+	{
+		int	err = GetLastError();
+		switch( err )
+		{
+			case ERROR_INVALID_VERSION_ARB:
+				idLib::Printf( "ERROR_INVALID_VERSION_ARB\n" );
+				break;
+			case ERROR_INVALID_PROFILE_ARB:
+				idLib::Printf( "ERROR_INVALID_PROFILE_ARB\n" );
+				break;
+			default:
+				idLib::Printf( "unknown error: 0x%x\n", err );
+				break;
+		}
+	}
+	
+	return m_hrc;
+}
+
+/*
+====================
+GLW_ChoosePixelFormat
+
+Returns -1 on failure, or a pixel format
+====================
+*/
+static int GLW_ChoosePixelFormat( const HDC hdc, const int multisamples, const bool stereo3D )
+{
+	FLOAT	fAttributes[] = { 0, 0 };
+	int		iAttributes[] =
+	{
+		WGL_SAMPLE_BUFFERS_ARB, ( ( multisamples > 1 ) ? 1 : 0 ),
+		WGL_SAMPLES_ARB, multisamples,
+		WGL_DOUBLE_BUFFER_ARB, TRUE,
+		WGL_STENCIL_BITS_ARB, 8,
+		WGL_DEPTH_BITS_ARB, 24,
+		WGL_RED_BITS_ARB, 8,
+		WGL_BLUE_BITS_ARB, 8,
+		WGL_GREEN_BITS_ARB, 8,
+		WGL_ALPHA_BITS_ARB, 8,
+		WGL_STEREO_ARB, ( stereo3D ? TRUE : FALSE ),
+		0, 0
+	};
+	
+	int	pixelFormat;
+	UINT numFormats;
+	if( !wglChoosePixelFormatARB( hdc, iAttributes, fAttributes, 1, &pixelFormat, &numFormats ) )
+	{
+		return -1;
+	}
+	return pixelFormat;
+}
 
 
 /*
@@ -351,39 +443,14 @@ static bool GLW_InitDriver( glimpParms_t parms )
 	}
 	
 	// the multisample path uses the wgl
-	if( WGLEW_ARB_pixel_format && parms.multiSamples > 1 )
+	if( WGLEW_ARB_pixel_format )// && parms.multiSamples > 1 )
 	{
-		int		iAttributes[20];
-		FLOAT	fAttributes[] = {0, 0};
-		UINT	numFormats;
-		
-		// FIXME: specify all the other stuff
-		iAttributes[0] = WGL_SAMPLE_BUFFERS_ARB;
-		iAttributes[1] = 1;
-		iAttributes[2] = WGL_SAMPLES_ARB;
-		iAttributes[3] = parms.multiSamples;
-		iAttributes[4] = WGL_DOUBLE_BUFFER_ARB;
-		iAttributes[5] = TRUE;
-		iAttributes[6] = WGL_STENCIL_BITS_ARB;
-		iAttributes[7] = 8;
-		iAttributes[8] = WGL_DEPTH_BITS_ARB;
-		iAttributes[9] = 24;
-		iAttributes[10] = WGL_RED_BITS_ARB;
-		iAttributes[11] = 8;
-		iAttributes[12] = WGL_BLUE_BITS_ARB;
-		iAttributes[13] = 8;
-		iAttributes[14] = WGL_GREEN_BITS_ARB;
-		iAttributes[15] = 8;
-		iAttributes[16] = WGL_ALPHA_BITS_ARB;
-		iAttributes[17] = 8;
-		iAttributes[18] = 0;
-		iAttributes[19] = 0;
-		
-		wglChoosePixelFormatARB( win32.hDC, iAttributes, fAttributes, 1, &win32.pixelformat, &numFormats );
+		win32.pixelformat = GLW_ChoosePixelFormat( win32.hDC, parms.multiSamples, parms.stereo );
 	}
 	else
 	{
 		// this is the "classic" choose pixel format path
+		common->Printf( "Using classic ChoosePixelFormat\n" );
 		
 		// eventually we may need to have more fallbacks, but for
 		// now, ask for everything
@@ -429,7 +496,8 @@ static bool GLW_InitDriver( glimpParms_t parms )
 	// startup the OpenGL subsystem by creating a context and making it current
 	//
 	common->Printf( "...creating GL context: " );
-	if( ( win32.hGLRC = wglCreateContext( win32.hDC ) ) == 0 )
+	win32.hGLRC = CreateOpenGLContextOnDC( win32.hDC, r_debugContext.GetBool() );
+	if( win32.hGLRC == 0 )
 	{
 		common->Printf( "^3failed^0\n" );
 		return false;
@@ -841,6 +909,11 @@ bool GLimp_Init( glimpParms_t parms )
 		return false;
 	}
 	
+	// RB: use glewExperimental to avoid issues with OpenGL 3.x core profiles
+	if( r_useOpenGL32.GetInteger() > 1 )
+	{
+		glewExperimental = GL_TRUE;
+	}
 	GLenum glewResult = glewInit();
 	if( GLEW_OK != glewResult )
 	{

@@ -40,11 +40,15 @@ If you have questions concerning this license or the applicable additional terms
 
 glconfig_t	glConfig;
 
+static idStr gl_extensionsString;
+
 //static void GfxInfo_f();
 
 const char* r_rendererArgs[] = { "best", "arb", "arb2", "Cg", "exp", "nv10", "nv20", "r200", NULL };
 
 idCVar r_inhibitFragmentProgram( "r_inhibitFragmentProgram", "0", CVAR_RENDERER | CVAR_BOOL, "ignore the fragment program extension" );
+idCVar r_useOpenGL32( "r_useOpenGL32", "1", CVAR_INTEGER, "0 = OpenGL 2.0, 1 = OpenGL 3.2 compatibility profile, 2 = OpenGL 3.2 core profile", 0, 2 );
+idCVar r_debugContext( "r_debugContext", "0", CVAR_RENDERER, "Enable various levels of context debug." );
 idCVar r_glDriver( "r_glDriver", "", CVAR_RENDERER, "\"opengl32\", etc." );
 idCVar r_useLightPortalFlow( "r_useLightPortalFlow", "1", CVAR_RENDERER | CVAR_BOOL, "use a more precise area reference determination" );
 idCVar r_multiSamples( "r_multiSamples", "0", CVAR_RENDERER | CVAR_ARCHIVE | CVAR_INTEGER, "number of antialiasing samples" );
@@ -239,9 +243,6 @@ idCVar r_showSkel( "r_showSkel", "0", CVAR_RENDERER | CVAR_INTEGER, "draw the sk
 idCVar r_jointNameScale( "r_jointNameScale", "0.02", CVAR_RENDERER | CVAR_FLOAT, "size of joint names when r_showskel is set to 1" );
 idCVar r_jointNameOffset( "r_jointNameOffset", "0.5", CVAR_RENDERER | CVAR_FLOAT, "offset of joint names when r_showskel is set to 1" );
 
-idCVar r_cgVertexProfile( "r_cgVertexProfile", "best", CVAR_RENDERER | CVAR_ARCHIVE, "arbvp1, vp20, vp30" );
-idCVar r_cgFragmentProfile( "r_cgFragmentProfile", "best", CVAR_RENDERER | CVAR_ARCHIVE, "arbfp1, fp30" );
-
 idCVar r_debugLineDepthTest( "r_debugLineDepthTest", "0", CVAR_RENDERER | CVAR_ARCHIVE | CVAR_BOOL, "perform depth test on debug lines" );
 idCVar r_debugLineWidth( "r_debugLineWidth", "1", CVAR_RENDERER | CVAR_ARCHIVE | CVAR_BOOL, "width of debug lines" );
 idCVar r_debugArrowStep( "r_debugArrowStep", "120", CVAR_RENDERER | CVAR_ARCHIVE | CVAR_INTEGER, "step size of arrow cone line rotation in degrees", 0, 120 );
@@ -302,6 +303,28 @@ bool R_CheckExtension( char* name )
 #endif
 
 /*
+========================
+DebugCallback
+
+For ARB_debug_output
+========================
+*/
+static void CALLBACK DebugCallback( unsigned int source, unsigned int type,
+									unsigned int id, unsigned int severity, int length, const char* message, void* userParam )
+{
+	// it probably isn't safe to do an idLib::Printf at this point
+	
+	// RB begin
+#if defined(_WIN32)
+	OutputDebugString( message );
+	OutputDebugString( "\n" );
+#else
+	printf( "%s\n", message );
+#endif
+	// RB end
+}
+
+/*
 ==================
 R_CheckPortableExtensions
 ==================
@@ -343,11 +366,10 @@ static void R_CheckPortableExtensions()
 	//glGetIntegerv( GL_MAX_TEXTURE_IMAGE_UNITS, (GLint *)&glConfig.maxTextureImageUnits );
 	
 #else
-	glConfig.multitextureAvailable = GLEW_ARB_multitexture;
+	glConfig.multitextureAvailable = GLEW_ARB_multitexture != 0;
 	
 	if( glConfig.multitextureAvailable )
 	{
-	
 		glGetIntegerv( GL_MAX_TEXTURE_UNITS_ARB, ( GLint* )&glConfig.maxTextureUnits );
 	
 		if( glConfig.maxTextureUnits > MAX_MULTITEXTURE_UNITS )
@@ -367,35 +389,35 @@ static void R_CheckPortableExtensions()
 #if defined(USE_GLES1)
 	glConfig.textureEnvCombineAvailable = true;
 #else
-	glConfig.textureEnvCombineAvailable = GLEW_ARB_texture_env_combine;
+	glConfig.textureEnvCombineAvailable = GLEW_ARB_texture_env_combine != 0;
 #endif
 	
 	// GL_ARB_texture_cube_map
 #if defined(USE_GLES1) && defined(__ANDROID__)
 	glConfig.cubeMapAvailable = R_CheckExtension( "GL_OES_texture_cube_map" );
 #else
-	glConfig.cubeMapAvailable = GLEW_ARB_texture_cube_map;
+	glConfig.cubeMapAvailable = GLEW_ARB_texture_cube_map != 0;
 #endif
 	
 	// GL_ARB_texture_env_dot3
 #if defined(USE_GLES1)
 	glConfig.envDot3Available = true;
 #else
-	glConfig.envDot3Available = GLEW_ARB_texture_env_dot3;
+	glConfig.envDot3Available = GLEW_ARB_texture_env_dot3 != 0;
 #endif
 	
 	// GL_ARB_texture_env_add
 #if defined(USE_GLES1)
 	glConfig.textureEnvAddAvailable = true;
 #else
-	glConfig.textureEnvAddAvailable = GLEW_ARB_texture_env_add;
+	glConfig.textureEnvAddAvailable = GLEW_ARB_texture_env_add != 0;
 #endif
 	
 	// GL_ARB_texture_non_power_of_two
 #if defined(USE_GLES1)
 	glConfig.textureNonPowerOfTwoAvailable = false;
 #else
-	glConfig.textureNonPowerOfTwoAvailable = GLEW_ARB_texture_non_power_of_two;
+	glConfig.textureNonPowerOfTwoAvailable = GLEW_ARB_texture_non_power_of_two != 0;
 #endif
 	
 	// GL_ARB_texture_compression + GL_S3_s3tc
@@ -403,7 +425,7 @@ static void R_CheckPortableExtensions()
 #if defined(USE_GLES1)
 	glConfig.s3tcTextureCompressionAvailable = R_CheckExtension( "GL_EXT_texture_compression_s3tc" );
 #else
-	if( GLEW_ARB_texture_compression && GLEW_EXT_texture_compression_s3tc )
+	if( GLEW_ARB_texture_compression != 0 && GLEW_EXT_texture_compression_s3tc != 0 )
 	{
 		glConfig.s3tcTextureCompressionAvailable = true;
 	}
@@ -417,7 +439,7 @@ static void R_CheckPortableExtensions()
 #if defined(USE_GLES1)
 	glConfig.anisotropicAvailable = false;
 #else
-	glConfig.anisotropicAvailable = GLEW_EXT_texture_filter_anisotropic;
+	glConfig.anisotropicAvailable = GLEW_EXT_texture_filter_anisotropic != 0;
 	if( glConfig.anisotropicAvailable )
 	{
 		glGetFloatv( GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &glConfig.maxTextureAnisotropy );
@@ -435,7 +457,7 @@ static void R_CheckPortableExtensions()
 #if defined(USE_GLES1)
 	glConfig.textureLODBiasAvailable = false;
 #else
-	if( glConfig.glVersion >= 1.4 || GLEW_EXT_texture_lod_bias )
+	if( glConfig.glVersion >= 1.4 || GLEW_EXT_texture_lod_bias != 0 )
 	{
 		common->Printf( "...using %s\n", "GL_1.4_texture_lod_bias" );
 		glConfig.textureLODBiasAvailable = true;
@@ -451,14 +473,14 @@ static void R_CheckPortableExtensions()
 #if defined(USE_GLES1)
 	glConfig.sharedTexturePaletteAvailable = false;
 #else
-	glConfig.sharedTexturePaletteAvailable = GLEW_EXT_shared_texture_palette;
+	glConfig.sharedTexturePaletteAvailable = GLEW_EXT_shared_texture_palette != 0;
 #endif
 	
 	// GL_EXT_texture3D (not currently used for anything)
 #if defined(USE_GLES1)
 	glConfig.texture3DAvailable = false;
 #else
-	glConfig.texture3DAvailable = GLEW_EXT_texture3D;
+	glConfig.texture3DAvailable = GLEW_EXT_texture3D != 0;
 #endif
 	
 	// EXT_stencil_wrap
@@ -485,17 +507,17 @@ static void R_CheckPortableExtensions()
 #if defined(USE_GLES1)
 	glConfig.registerCombinersAvailable = false;
 #else
-	glConfig.registerCombinersAvailable = GLEW_NV_register_combiners;
+	glConfig.registerCombinersAvailable = GLEW_NV_register_combiners != 0;
 #endif
 	
 	// GL_EXT_stencil_two_side
 #if defined(USE_GLES1)
 	glConfig.twoSidedStencilAvailable = false;
 #else
-	glConfig.twoSidedStencilAvailable = GLEW_EXT_stencil_two_side;
+	glConfig.twoSidedStencilAvailable = GLEW_EXT_stencil_two_side != 0;
 	if( !glConfig.twoSidedStencilAvailable )
 	{
-		glConfig.atiTwoSidedStencilAvailable = GLEW_ATI_separate_stencil;
+		glConfig.atiTwoSidedStencilAvailable = GLEW_ATI_separate_stencil != 0;
 	}
 #endif
 	
@@ -503,11 +525,11 @@ static void R_CheckPortableExtensions()
 #if defined(USE_GLES1)
 	glConfig.atiFragmentShaderAvailable = false;
 #else
-	glConfig.atiFragmentShaderAvailable = GLEW_ATI_fragment_shader;
+	glConfig.atiFragmentShaderAvailable = GLEW_ATI_fragment_shader != 0;
 	if( ! glConfig.atiFragmentShaderAvailable )
 	{
 		// only on OSX: ATI_fragment_shader is faked through ATI_text_fragment_shader (macosx_glimp.cpp)
-		glConfig.atiFragmentShaderAvailable = GLEW_ATI_text_fragment_shader;
+		glConfig.atiFragmentShaderAvailable = GLEW_ATI_text_fragment_shader != 0;
 	}
 #endif
 	
@@ -515,14 +537,14 @@ static void R_CheckPortableExtensions()
 #if defined(USE_GLES1)
 	glConfig.ARBVertexBufferObjectAvailable = true;
 #else
-	glConfig.ARBVertexBufferObjectAvailable = GLEW_ARB_vertex_buffer_object;
+	glConfig.ARBVertexBufferObjectAvailable = GLEW_ARB_vertex_buffer_object != 0;
 #endif
 	
 	// ARB_vertex_program
 #if defined(USE_GLES1)
 	glConfig.ARBVertexProgramAvailable = false;
 #else
-	glConfig.ARBVertexProgramAvailable = GLEW_ARB_vertex_program;
+	glConfig.ARBVertexProgramAvailable = GLEW_ARB_vertex_program != 0;
 #endif
 	
 	// ARB_fragment_program
@@ -535,13 +557,12 @@ static void R_CheckPortableExtensions()
 	}
 	else
 	{
-		glConfig.ARBFragmentProgramAvailable = GLEW_ARB_fragment_program;
+		glConfig.ARBFragmentProgramAvailable = GLEW_ARB_fragment_program != 0;
 	}
 #endif
 	
 	// check for minimum set
-	if( !glConfig.multitextureAvailable || !glConfig.textureEnvCombineAvailable || !glConfig.cubeMapAvailable
-			|| !glConfig.envDot3Available )
+	if( r_useOpenGL32.GetInteger() < 1 && ( !glConfig.multitextureAvailable || !glConfig.textureEnvCombineAvailable || !glConfig.cubeMapAvailable || !glConfig.envDot3Available ) )
 	{
 #if defined(STANDALONE)
 		common->Error( common->GetLanguageDict()->GetString( "#str_R_CheckPortableExtensions_BadVideoCardDriver" ) );
@@ -550,11 +571,38 @@ static void R_CheckPortableExtensions()
 #endif
 	}
 	
+	// GL_ARB_debug_output
+#if defined(USE_GLES1)
+	glConfig.debugOutputAvailable = false;
+#else
+	glConfig.debugOutputAvailable = GLEW_ARB_debug_output != 0;
+	if( glConfig.debugOutputAvailable )
+	{
+		if( r_debugContext.GetInteger() >= 1 )
+		{
+			glDebugMessageCallbackARB( DebugCallback, NULL );
+		}
+		if( r_debugContext.GetInteger() >= 2 )
+		{
+			// force everything to happen in the main thread instead of in a separate driver thread
+			glEnable( GL_DEBUG_OUTPUT_SYNCHRONOUS_ARB );
+		}
+		if( r_debugContext.GetInteger() >= 3 )
+		{
+			// enable all the low priority messages
+			glDebugMessageControlARB( GL_DONT_CARE,
+									  GL_DONT_CARE,
+									  GL_DEBUG_SEVERITY_LOW_ARB,
+									  0, NULL, true );
+		}
+	}
+#endif
+	
 	// GL_EXT_depth_bounds_test
 #if defined(USE_GLES1)
 	glConfig.depthBoundsTestAvailable = false;
 #else
-	glConfig.depthBoundsTestAvailable = GLEW_EXT_depth_bounds_test;
+	glConfig.depthBoundsTestAvailable = GLEW_EXT_depth_bounds_test != 0;
 #endif
 	
 	// GL_EXT_framebuffer_object
@@ -763,6 +811,27 @@ void R_InitOpenGL()
 	glConfig.renderer_string = ( const char* )glGetString( GL_RENDERER );
 	glConfig.version_string = ( const char* )glGetString( GL_VERSION );
 	glConfig.extensions_string = ( const char* )glGetString( GL_EXTENSIONS );
+	
+	if( glConfig.extensions_string == NULL )
+	{
+		// As of OpenGL 3.2, glGetStringi is required to obtain the available extensions
+		//glGetStringi = ( PFNGLGETSTRINGIPROC )GLimp_ExtensionPointer( "glGetStringi" );
+		
+		// Build the extensions string
+		GLint numExtensions;
+		glGetIntegerv( GL_NUM_EXTENSIONS, &numExtensions );
+		gl_extensionsString.Clear();
+		for( int i = 0; i < numExtensions; i++ )
+		{
+			gl_extensionsString.Append( ( const char* )glGetStringi( GL_EXTENSIONS, i ) );
+			// the now deprecated glGetString method usaed to create a single string with each extension separated by a space
+			if( i < numExtensions - 1 )
+			{
+				gl_extensionsString.Append( ' ' );
+			}
+		}
+		glConfig.extensions_string = gl_extensionsString.c_str();
+	}
 	
 	common->Printf( "\nGL_VENDOR: %s\n", glConfig.vendor_string );
 	common->Printf( "GL_RENDERER: %s\n", glConfig.renderer_string );
@@ -2125,6 +2194,35 @@ static void GfxInfo_f( const idCmdArgs& args )
 	{
 		common->Printf( "GL_MAX_RENDERBUFFER_SIZE: %d\n", glConfig.maxRenderbufferSize );
 		common->Printf( "GL_MAX_COLOR_ATTACHMENTS: %d\n", glConfig.maxColorAttachments );
+	}
+	
+	if( r_useOpenGL32.GetInteger() > 0 )
+	{
+		int				contextFlags, profile;
+		
+		common->Printf( S_COLOR_GREEN "Using OpenGL 3.x context\n" );
+		
+		// check if we have a core-profile
+		glGetIntegerv( GL_CONTEXT_PROFILE_MASK, &profile );
+		if( profile == GL_CONTEXT_CORE_PROFILE_BIT )
+		{
+			common->Printf( S_COLOR_GREEN "Having a core profile\n" );
+		}
+		else
+		{
+			common->Printf( S_COLOR_RED "Having a compatibility profile\n" );
+		}
+		
+		// check if context is forward compatible
+		glGetIntegerv( GL_CONTEXT_FLAGS, &contextFlags );
+		if( contextFlags & GL_CONTEXT_FLAG_FORWARD_COMPATIBLE_BIT )
+		{
+			common->Printf( S_COLOR_GREEN "Context is forward compatible\n" );
+		}
+		else
+		{
+			common->Printf( S_COLOR_RED "Context is NOT forward compatible\n" );
+		}
 	}
 	
 	common->Printf( "\nPIXELFORMAT: color(%d-bits) Z(%d-bit) stencil(%d-bits)\n", glConfig.colorBits, glConfig.depthBits, glConfig.stencilBits );

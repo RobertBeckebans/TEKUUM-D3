@@ -948,8 +948,8 @@ extern glconfig_t			glConfig;		// outside of TR since it shouldn't be cleared du
 //
 // cvars
 //
-extern idCVar r_ext_vertex_array_range;
-
+extern idCVar r_useOpenGL32;			// require clean OpenGL 3.2 API
+extern idCVar r_debugContext;			// enable various levels of context debug
 extern idCVar r_glDriver;				// "opengl32", etc
 extern idCVar r_mode;					// video mode number
 extern idCVar r_displayRefresh;			// optional display refresh rate option for vid mode
@@ -978,9 +978,6 @@ extern idCVar r_gamma;					// changes gamma tables
 extern idCVar r_brightness;				// changes gamma tables
 
 extern idCVar r_renderer;				// arb, nv10, nv20, r200, gl2, etc
-
-extern idCVar r_cgVertexProfile;		// arbvp1, vp20, vp30
-extern idCVar r_cgFragmentProfile;		// arbfp1, fp30
 
 extern idCVar r_checkBounds;			// compare all surface bounds with precalculated ones
 
