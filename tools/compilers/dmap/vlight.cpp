@@ -54,7 +54,7 @@ struct lightTrace_t
 };
 
 
-static void ColorToBytes( const float* color, byte* colorBytes )
+static void ColorToBytes( const idVec3& color, idVec3& colorBytes )
 {
 	float           max;
 	idVec3          sample;
@@ -698,7 +698,7 @@ void TraceGrid( int num )
 	// total light between that along the direction and
 	// the remaining in the ambient
 	numCon = 0;
-	for( i = 0 ; i < dmapGlobals.mapLights.Num() ; i++ )
+	for( i = 0; i < dmapGlobals.mapLights.Num() && i < MAX_CONTRIBUTIONS; i++ )
 	{
 		light = dmapGlobals.mapLights[i];
 		
@@ -771,11 +771,11 @@ void TraceGrid( int num )
 	VectorMA( color, 0.25, directedColor, color );
 	
 	// save the resulting value out
-	//ColorToBytes( color, gridPoint->ambient );
-	//ColorToBytes( directedColor, gridPoint->directed );
+	ColorToBytes( color, gridPoint->ambient );
+	ColorToBytes( directedColor, gridPoint->directed );
 	
-	gridPoint->ambient = color;
-	gridPoint->directed = directedColor;
+	//gridPoint->ambient = color;
+	//gridPoint->directed = directedColor;
 	
 	summedDir.Normalize();
 	gridPoint->dir = summedDir;

@@ -749,10 +749,9 @@ idInteraction::HasShadows
 */
 bool idInteraction::HasShadows() const
 {
-// RB begin
-	// RB: added check for r_shadows 0
-	return ( r_shadows.GetBool() && !lightDef->parms.noShadows && !entityDef->parms.noShadow && lightDef->lightShader->LightCastsShadows() );
-// RB end
+	// RB: added check for r_shadows 0 and precomputed lighting
+	return ( r_shadows.GetBool() && !( r_usePrecomputedLighting.GetBool() && tr.backEndRenderer == BE_ARB ) && !lightDef->parms.noShadows && !entityDef->parms.noShadow && lightDef->lightShader->LightCastsShadows() );
+	// RB end
 }
 
 /*
@@ -1034,7 +1033,7 @@ void idInteraction::CreateInteraction( const idRenderModel* model )
 			if( tri->ambientViewCount == tr.viewCount )
 			{
 				// RB begin
-				if( r_useDeferredShading.GetBool() )
+				if( ( r_useDeferredShading.GetBool() && tr.backEndRenderer == BE_EXP ) || ( r_usePrecomputedLighting.GetBool() && tr.backEndRenderer == BE_ARB ) )
 				{
 					sint->lightTris = LIGHT_TRIS_DEFERRED;
 				}
@@ -1286,7 +1285,7 @@ void idInteraction::AddActiveInteraction()
 			if( sint->lightTris == LIGHT_TRIS_DEFERRED )
 			{
 				// RB begin
-				if( r_useDeferredShading.GetBool() )
+				if( ( r_useDeferredShading.GetBool() && tr.backEndRenderer == BE_EXP ) || ( r_usePrecomputedLighting.GetBool() && tr.backEndRenderer == BE_ARB ) )
 				{
 					sint->lightTris = NULL;
 				}
@@ -1367,7 +1366,7 @@ void idInteraction::AddActiveInteraction()
 					{
 						// RB begin
 						// TODO support post process blend and fog lights
-						if( ( tr.backEndRenderer != BE_EXP ) || !r_useDeferredShading.GetBool() || lightDef->lightShader->IsBlendLight() || lightDef->lightShader->IsFogLight() )
+						if( ( tr.backEndRenderer != BE_EXP && !( r_usePrecomputedLighting.GetBool() && tr.backEndRenderer == BE_ARB ) ) || !r_useDeferredShading.GetBool() || lightDef->lightShader->IsBlendLight() || lightDef->lightShader->IsFogLight() )
 						{
 							R_LinkLightSurf( ( const drawSurf_t** ) &vLight->localInteractions, lightTris,
 											 vEntity, lightDef, shader, lightScissor, false );
@@ -1378,7 +1377,7 @@ void idInteraction::AddActiveInteraction()
 					{
 						// RB begin
 						// TODO support post process blend and fog lights
-						if( ( tr.backEndRenderer != BE_EXP ) || !r_useDeferredShading.GetBool() || lightDef->lightShader->IsBlendLight() || lightDef->lightShader->IsFogLight() )
+						if( ( tr.backEndRenderer != BE_EXP && !( r_usePrecomputedLighting.GetBool() && tr.backEndRenderer == BE_ARB ) ) || !r_useDeferredShading.GetBool() || lightDef->lightShader->IsBlendLight() || lightDef->lightShader->IsFogLight() )
 						{
 							R_LinkLightSurf( ( const drawSurf_t** ) &vLight->globalInteractions, lightTris,
 											 vEntity, lightDef, shader, lightScissor, false );

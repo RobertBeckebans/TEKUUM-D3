@@ -53,6 +53,9 @@ idRenderEntityLocal::idRenderEntityLocal()
 	firstInteraction		= NULL;
 	lastInteraction			= NULL;
 	needsPortalSky			= false;
+	// RB begin
+	lightgridCalculated		= false;
+	// RB end
 }
 
 void idRenderEntityLocal::FreeRenderEntity()

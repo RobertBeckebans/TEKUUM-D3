@@ -600,8 +600,44 @@ void idRenderWorldLocal::ParseLightGridPoints( idLexer* src, idFile* fileOut )
 		}
 	}
 	
+	CalculateLightGridPointPositions();
+	
 	src->ExpectTokenString( "}" );
 }
+
+void idRenderWorldLocal::CalculateLightGridPointPositions()
+{
+	int             gridStep[3];
+	int             pos[3];
+	idVec3          posFloat;
+	
+	// calculate grid point positions
+	gridStep[0] = 1;
+	gridStep[1] = lightGridBounds[0];
+	gridStep[2] = lightGridBounds[0] * lightGridBounds[1];
+	
+	for( int i = 0; i < lightGridBounds[0]; i += 1 )
+	{
+		for( int j = 0; j < lightGridBounds[1]; j += 1 )
+		{
+			for( int k = 0; k < lightGridBounds[2]; k += 1 )
+			{
+				pos[0] = i;
+				pos[1] = j;
+				pos[2] = k;
+				
+				posFloat[0] = i * lightGridSize[0];
+				posFloat[1] = j * lightGridSize[1];
+				posFloat[2] = k * lightGridSize[2];
+				
+				lightGridPoint_t* gridPoint = &lightGridPoints[ pos[0] * gridStep[0] + pos[1] * gridStep[1] + pos[2] * gridStep[2] ];
+				
+				gridPoint->origin = lightGridOrigin + posFloat;
+			}
+		}
+	}
+}
+
 // RB end
 
 /*
@@ -638,6 +674,8 @@ void idRenderWorldLocal::ReadBinaryLightGridPoints( idFile* file )
 		file->ReadBig( gridPoint->directed );
 		file->ReadBig( gridPoint->dir );
 	}
+	
+	CalculateLightGridPointPositions();
 }
 // RB end
 

@@ -321,6 +321,13 @@ void idRenderWorldLocal::UpdateEntityDef( qhandle_t entityHandle, const renderEn
 	// based on the model bounds, add references in each area
 	// that may contain the updated surface
 	R_CreateEntityRefs( def );
+	
+	// RB begin
+	if( r_usePrecomputedLighting.GetBool() && tr.backEndRenderer == BE_ARB )
+	{
+		SetupEntityLightingGrid( def );
+	}
+	// RB end
 }
 
 /*

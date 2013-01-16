@@ -88,12 +88,12 @@ void esDisableClientState( GLenum array )
 
 void esVertexPointer( GLint size, GLenum type, GLsizei stride, const GLvoid* pointer )
 {
-	// TODO
+	glVertexAttribPointer( VA_INDEX_POSITION, size, type, false, stride, pointer );
 }
 
 void esNormalPointer( GLenum type, GLsizei stride, const GLvoid* pointer )
 {
-	// TODO
+	glVertexAttribPointer( VA_INDEX_NORMAL, size, type, false, stride, pointer );
 }
 
 void esTexCoordPointer( GLint size, GLenum type, GLsizei stride, const GLvoid* pointer )
@@ -108,7 +108,7 @@ void esColorPointer( GLint size, GLenum type, GLsizei stride, const GLvoid* poin
 
 void esColor4f( GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha )
 {
-	// TODO
+	glVertexAttrib4f( VA_INDEX_COLOR, red, green, blue, alpha );
 }
 
 #endif

@@ -331,6 +331,13 @@ public:
 	idInteraction* 			lastInteraction;
 	
 	bool					needsPortalSky;
+	
+	// RB begin
+	bool					lightgridCalculated;
+	idVec3					lightDir;	// normalized direction towards light
+	idVec3					ambientLight;	// color normalized to 0-1
+	idVec3					directedLight;
+	// RB end
 };
 
 
@@ -1091,6 +1098,9 @@ extern idCVar r_showPortals;			// draw portal outlines in color based on passed 
 extern idCVar r_showAlloc;				// report alloc/free counts
 extern idCVar r_showSkel;				// draw the skeleton when model animates
 extern idCVar r_showOverDraw;			// show overdraw
+// RB begin
+extern idCVar r_showLightGrid;			// show Q3A style light grid
+// RB end
 extern idCVar r_jointNameScale;			// size of joint names when r_showskel is set to 1
 extern idCVar r_jointNameOffset;		// offset of joint names when r_showskel is set to 1
 

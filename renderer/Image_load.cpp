@@ -574,7 +574,7 @@ void idImage::SetImageFilterAndRepeat() const
 			glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT );
 			glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );
 			break;
-
+			
 		case TR_CLAMP_TO_ZERO:
 		case TR_CLAMP_TO_ZERO_ALPHA:
 		case TR_CLAMP:
@@ -1115,7 +1115,7 @@ void idImage::Generate3DImage( const byte* pic, int width, int height, int picDe
 			glTexParameterf( GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_REPEAT );
 			glTexParameterf( GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_REPEAT );
 			break;
-
+			
 		case TR_CLAMP_TO_ZERO:
 		case TR_CLAMP_TO_ZERO_ALPHA:
 		case TR_CLAMP:
@@ -2237,7 +2237,7 @@ void idImage::Bind()
 				glEnable( GL_TEXTURE_2D );
 			}
 		}
-
+		
 		tmu->textureType = type;
 	}
 	

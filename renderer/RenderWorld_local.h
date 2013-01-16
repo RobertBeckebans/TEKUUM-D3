@@ -82,6 +82,7 @@ typedef struct
 // RB begin
 struct lightGridPoint_t
 {
+	idVec3			origin;				// not saved to .proc
 	idVec3          ambient;
 	idVec3          directed;
 	idVec3          dir;
@@ -166,7 +167,6 @@ public:
 	// RB: added Q3A style light grid
 	idVec3					lightGridOrigin;
 	idVec3					lightGridSize;
-	idVec3					lightGridInverseSize;
 	int						lightGridBounds[3];
 	idList<lightGridPoint_t> lightGridPoints;
 	// RB end
@@ -203,6 +203,7 @@ public:
 	void					ParseInterAreaPortals( idLexer* src, idFile* fileOut );
 	// RB begin
 	void					ParseLightGridPoints( idLexer* src, idFile* fileOut );
+	void					CalculateLightGridPointPositions();
 	// RB end
 	void					ParseNodes( idLexer* src, idFile* fileOut );
 	int						CommonChildrenArea_r( areaNode_t* node );
@@ -213,6 +214,8 @@ public:
 	void					AddWorldModelEntities();
 	void					ClearPortalStates();
 	virtual	bool			InitFromMap( const char* mapName );
+	
+private:
 	// RB begin
 	void					ReadBinaryAreaPortals( idFile* file );
 	void					ReadBinaryNodes( idFile* file );
@@ -221,6 +224,7 @@ public:
 	void					ReadBinaryLightGridPoints( idFile* file );
 	// RB end
 	
+public:
 	//--------------------------
 	// RenderWorld_portals.cpp
 	
@@ -294,6 +298,13 @@ public:
 	//-------------------------------
 	// tr_light.c
 	void					CreateLightDefInteractions( idRenderLightLocal* ldef );
+	
+	
+	//--------------------------
+	// RenderWorld_lightgrid.cpp
+	
+private:
+	void					SetupEntityLightingGrid( idRenderEntityLocal* def );
 };
 
 #endif /* !__RENDERWORLDLOCAL_H__ */

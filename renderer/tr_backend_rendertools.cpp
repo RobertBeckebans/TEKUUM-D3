@@ -1856,6 +1856,7 @@ void RB_ShowLights()
 	common->Printf( " = %i total\n", count );
 }
 
+// RB begin
 void RB_ShowLightShadowLODs()
 {
 	const idRenderLightLocal*	light;
@@ -1945,6 +1946,68 @@ void RB_ShowLightShadowLODs()
 	GL_State( GLS_DEFAULT );
 	GL_Cull( CT_FRONT_SIDED );
 }
+
+void RB_ShowLightGrid()
+{
+#if !defined(USE_GLES1)
+
+	if( r_showLightGrid.GetFloat() == 0.0f && tr.backEndRenderer == BE_ARB )
+	{
+		return;
+	}
+	
+	// all volumes are expressed in world coordinates
+	RB_SimpleWorldSetup();
+	
+	glDisableClientState( GL_TEXTURE_COORD_ARRAY );
+	globalImages->BindNull();
+	glDisable( GL_STENCIL_TEST );
+	
+	GL_Cull( CT_TWO_SIDED );
+	glDisable( GL_DEPTH_TEST );
+	
+	GL_State( GLS_POLYMODE_LINE | GLS_DEPTHMASK );
+	
+	for( int i = 0; i < tr.primaryWorld->lightGridPoints.Num(); i++ )
+	{
+		lightGridPoint_t* gridPoint = &tr.primaryWorld->lightGridPoints[i];
+		
+		idVec3 distanceToCam = gridPoint->origin - backEnd.viewDef->renderView.vieworg;
+		if( distanceToCam.LengthSqr() > ( 1024 * 1024 ) )
+			continue;
+			
+		idVec4 c;
+		c[0] = idMath::ClampFloat( 0, 1, gridPoint->directed[0] * ( 1.0f / 255.0f ) );
+		c[1] = idMath::ClampFloat( 0, 1, gridPoint->directed[1] * ( 1.0f / 255.0f ) );
+		c[2] = idMath::ClampFloat( 0, 1, gridPoint->directed[2] * ( 1.0f / 255.0f ) );
+		
+		glColor4f( c[0], c[1], c[2], 1 );
+		
+		idVec3 pos2 = gridPoint->origin - gridPoint->dir * r_showLightGrid.GetFloat();
+		
+		glBegin( GL_LINES );
+		
+		glColor4f( c[0], c[1], c[2], 1 );
+		//glColor4f( 1, 1, 1, 1 );
+		glVertex3fv( gridPoint->origin.ToFloatPtr() );
+		
+		glColor4f( 0, 0, 0, 1 );
+		glVertex3fv( pos2.ToFloatPtr() );
+		glEnd();
+	}
+	
+	glEnable( GL_DEPTH_TEST );
+#if !defined(USE_GLES1)
+	glDisable( GL_POLYGON_OFFSET_LINE );
+#endif
+	
+	glDepthRange( 0, 1 );
+	GL_State( GLS_DEFAULT );
+	GL_Cull( CT_FRONT_SIDED );
+	
+#endif
+}
+// RB end
 
 /*
 =====================
@@ -2819,6 +2882,7 @@ void RB_RenderDebugTools( drawSurf_t** drawSurfs, int numDrawSurfs )
 	RB_ShowLights();
 // RB begin
 	RB_ShowLightShadowLODs();
+	RB_ShowLightGrid();
 // RB end
 
 	RB_ShowTextureVectors( drawSurfs, numDrawSurfs );

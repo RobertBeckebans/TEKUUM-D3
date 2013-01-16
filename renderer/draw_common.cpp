@@ -505,9 +505,52 @@ void RB_T_FillDepthBuffer( const drawSurf_t* surf )
 	glVertexPointer( 3, GL_FLOAT, sizeof( idDrawVert ), ac->xyz.ToFloatPtr() );
 	glTexCoordPointer( 2, GL_FLOAT, sizeof( idDrawVert ), reinterpret_cast<void*>( &ac->st ) );
 	
+	
+	idVec4 lightDiffuse;
+	lightDiffuse.x = surf->space->entityDef->directedLight.x;
+	lightDiffuse.y = surf->space->entityDef->directedLight.y;
+	lightDiffuse.z = surf->space->entityDef->directedLight.z;
+	lightDiffuse.w = 1;
+	
+	bool isWorldModel = ( surf->space->entityDef->parms.origin == vec3_origin );
 	if( r_usePrecomputedLighting.GetBool() && tr.backEndRenderer == BE_ARB )
 	{
-		glColorPointer( 4, GL_UNSIGNED_BYTE, sizeof( idDrawVert ), ( void* ) &ac->color );
+		if( isWorldModel )
+		{
+			glEnableClientState( GL_COLOR_ARRAY );
+			glColorPointer( 4, GL_UNSIGNED_BYTE, sizeof( idDrawVert ), ( void* ) &ac->color );
+		}
+		else
+		{
+			glEnableClientState( GL_NORMAL_ARRAY );
+			glNormalPointer( GL_FLOAT, sizeof( idDrawVert ), ac->normal.ToFloatPtr() );
+			
+#if 0
+			glEnable( GL_LIGHTING );
+			
+			idVec4 lightPos;
+#if 0
+			lightPos.x = surf->space->entityDef->lightDir.x;
+			lightPos.y = surf->space->entityDef->lightDir.y;
+			lightPos.z = surf->space->entityDef->lightDir.z;
+			lightPos.w = 0;
+#elif 0
+			lightPos.x = surf->space->entityDef->parms.origin.x;
+			lightPos.y = surf->space->entityDef->parms.origin.y;
+			lightPos.z = surf->space->entityDef->parms.origin.z;
+			lightPos.w = 1;
+#else
+			lightPos.Zero();
+#endif
+			
+			
+			
+			glLightfv( GL_LIGHT0, GL_POSITION, lightPos.ToFloatPtr() );
+			glLightfv( GL_LIGHT0, GL_DIFFUSE, lightDiffuse.ToFloatPtr() );
+			
+			glEnable( GL_LIGHT0 );
+#endif
+		}
 	}
 	
 	bool drawSolid = false;
@@ -572,6 +615,11 @@ void RB_T_FillDepthBuffer( const drawSurf_t* surf )
 			if( r_usePrecomputedLighting.GetBool() && tr.backEndRenderer == BE_ARB )
 			{
 				globalImages->whiteImage->Bind();
+				
+				if( !isWorldModel )
+				{
+					glColor4f( lightDiffuse[0], lightDiffuse[1], lightDiffuse[2], lightDiffuse[3] );
+				}
 			}
 			else
 			{
@@ -611,7 +659,14 @@ void RB_T_FillDepthBuffer( const drawSurf_t* surf )
 	// draw the entire surface solid
 	if( drawSolid )
 	{
-		if( !( r_usePrecomputedLighting.GetBool() && tr.backEndRenderer == BE_ARB ) )
+		if( r_usePrecomputedLighting.GetBool() && tr.backEndRenderer == BE_ARB )
+		{
+			if( !isWorldModel )
+			{
+				glColor4f( lightDiffuse[0], lightDiffuse[1], lightDiffuse[2], lightDiffuse[3] );
+			}
+		}
+		else
 		{
 			glColor4f( color[0], color[1], color[2], color[3] );
 		}
@@ -619,6 +674,21 @@ void RB_T_FillDepthBuffer( const drawSurf_t* surf )
 		
 		// draw it
 		RB_DrawElementsWithCounters( tri );
+	}
+	
+	if( r_usePrecomputedLighting.GetBool() && tr.backEndRenderer == BE_ARB )
+	{
+		if( isWorldModel )
+		{
+			glDisableClientState( GL_COLOR_ARRAY );
+		}
+		else
+		{
+			glDisableClientState( GL_NORMAL_ARRAY );
+			
+			glDisable( GL_LIGHTING );
+			glDisable( GL_LIGHT0 );
+		}
 	}
 	
 	GL_CheckErrors();
@@ -1105,7 +1175,7 @@ void RB_STD_FillDepthBuffer( drawSurf_t** drawSurfs, int numDrawSurfs )
 	GL_CheckErrors();
 	
 #if !defined(USE_GLES1)
-	if( r_useDeferredShading.GetBool() )
+	if( r_useDeferredShading.GetBool() && tr.backEndRenderer == BE_EXP )
 	{
 		glEnableVertexAttribArrayARB( VA_INDEX_TEXCOORD0 );
 		glEnableVertexAttribArrayARB( VA_INDEX_TANGENT );
@@ -1119,7 +1189,7 @@ void RB_STD_FillDepthBuffer( drawSurf_t** drawSurfs, int numDrawSurfs )
 		
 		if( r_usePrecomputedLighting.GetBool() && tr.backEndRenderer == BE_ARB )
 		{
-			glEnableClientState( GL_COLOR_ARRAY );
+			//glEnableClientState( GL_COLOR_ARRAY );
 		}
 	}
 	
@@ -1143,7 +1213,7 @@ void RB_STD_FillDepthBuffer( drawSurf_t** drawSurfs, int numDrawSurfs )
 	glStencilFunc( GL_ALWAYS, 1, 255 );
 	
 #if !defined(USE_GLES1)
-	if( /*tr.backEndRenderer == BE_EXP &&*/ r_useDeferredShading.GetBool() )
+	if( r_useDeferredShading.GetBool() && tr.backEndRenderer == BE_EXP )
 	{
 		RB_RenderDrawSurfListWithFunction( drawSurfs, numDrawSurfs, RB_T_FillDepthBufferWithNormals );
 		
@@ -1175,7 +1245,7 @@ void RB_STD_FillDepthBuffer( drawSurf_t** drawSurfs, int numDrawSurfs )
 	
 	if( r_usePrecomputedLighting.GetBool() && tr.backEndRenderer == BE_ARB )
 	{
-		glDisableClientState( GL_COLOR_ARRAY );
+		//glDisableClientState( GL_COLOR_ARRAY );
 	}
 	
 	GL_CheckErrors();
