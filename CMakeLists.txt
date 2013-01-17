@@ -170,6 +170,7 @@ set(RENDERER_SOURCES
 	renderer/RenderSystem_init.cpp
 	renderer/RenderWorld.cpp
 	renderer/RenderWorld_demo.cpp
+	renderer/RenderWorld_lightgrid.cpp
 	renderer/RenderWorld_load.cpp
 	renderer/RenderWorld_portals.cpp
 	renderer/RenderWorld_defs.cpp
