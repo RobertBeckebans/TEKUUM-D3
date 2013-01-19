@@ -3,6 +3,8 @@
 
 Doom 3 GPL Source Code
 Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2012 MH
+Copyright (C) 2013 Robert Beckebans
 
 This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
 
@@ -31,14 +33,23 @@ If you have questions concerning this license or the applicable additional terms
 
 #include "tr_local.h"
 
+static const int FRAME_MEMORY_BYTES = 0x200000;
 
-static const int	FRAME_MEMORY_BYTES = 0x200000;
-static const int	EXPAND_HEADERS = 1024;
+#if 0
+static const int EXPAND_HEADERS = 1024;
+#else
+static const int EXPAND_HEADERS = 32;
+#endif
 
 idCVar idVertexCache::r_showVertexCache( "r_showVertexCache", "0", CVAR_INTEGER | CVAR_RENDERER, "" );
 idCVar idVertexCache::r_vertexBufferMegs( "r_vertexBufferMegs", "32", CVAR_INTEGER | CVAR_RENDERER, "" );
+idCVar idVertexCache::r_useMapBufferRange( "r_useMapBufferRange", "0", CVAR_BOOL | CVAR_RENDERER, "use ARB_map_buffer_range for better VBO streaming" );
+idCVar idVertexCache::r_reuseVertexCacheSooner( "r_reuseVertexCacheSooner", "1", CVAR_BOOL | CVAR_RENDERER, "reuse vertex buffers as soon as possible after freeing" );
 
 idVertexCache		vertexCache;
+
+static GLuint gl_currentArrayBuffer = 0;
+static GLuint gl_currentIndexBuffer = 0;
 
 /*
 ==============
@@ -48,6 +59,46 @@ R_ListVertexCache_f
 static void R_ListVertexCache_f( const idCmdArgs& args )
 {
 	vertexCache.List();
+}
+
+/*
+==============
+GL_BindBuffer
+==============
+*/
+static void GL_BindBuffer( GLenum target, GLuint buffer )
+{
+#if 1
+	if( target == GL_ARRAY_BUFFER )
+	{
+		if( gl_currentArrayBuffer != buffer )
+		{
+			gl_currentArrayBuffer = buffer;
+		}
+		else
+		{
+			return;
+		}
+	}
+	else if( target == GL_ELEMENT_ARRAY_BUFFER )
+	{
+		if( gl_currentIndexBuffer != buffer )
+		{
+			gl_currentIndexBuffer = buffer;
+		}
+		else
+		{
+			return;
+		}
+	}
+	else
+	{
+		common->Error( "GL_BindBuffer : invalid buffer target : %i\n", ( int ) target );
+		return;
+	}
+#endif
+	
+	glBindBuffer( target, buffer );
 }
 
 /*
@@ -77,10 +128,12 @@ void idVertexCache::ActuallyFree( vertCache_t* block )
 		
 		if( block->vbo )
 		{
-#if 0		// this isn't really necessary, it will be reused soon enough
+#if 0
+			// this isn't really necessary, it will be reused soon enough
 			// filling with zero length data is the equivalent of freeing
-			glBindBufferARB( GL_ARRAY_BUFFER_ARB, block->vbo );
-			glBufferDataARB( GL_ARRAY_BUFFER_ARB, 0, 0, GL_DYNAMIC_DRAW_ARB );
+			GL_BindBuffer( GL_ARRAY_BUFFER, block->vbo );
+			
+			glBufferDataARB( GL_ARRAY_BUFFER, block->size, NULL, GL_DYNAMIC_DRAW );
 #endif
 		}
 		else if( block->virtMem )
@@ -95,15 +148,18 @@ void idVertexCache::ActuallyFree( vertCache_t* block )
 	block->next->prev = block->prev;
 	block->prev->next = block->next;
 	
-#if 1
-	// stick it on the front of the free list so it will be reused immediately
-	block->next = freeStaticHeaders.next;
-	block->prev = &freeStaticHeaders;
-#else
-	// stick it on the back of the free list so it won't be reused soon (just for debugging)
-	block->next = &freeStaticHeaders;
-	block->prev = freeStaticHeaders.prev;
-#endif
+	if( r_reuseVertexCacheSooner.GetBool() )
+	{
+		// stick it on the front of the free list so it will be reused immediately
+		block->next = freeStaticHeaders.next;
+		block->prev = &freeStaticHeaders;
+	}
+	else
+	{
+		// stick it on the back of the free list so it won't be reused soon (just for debugging)
+		block->next = &freeStaticHeaders;
+		block->prev = freeStaticHeaders.prev;
+	}
 	
 	block->next->prev = block;
 	block->prev->next = block;
@@ -141,14 +197,9 @@ void* idVertexCache::Position( vertCache_t* buffer )
 				common->Printf( "GL_ARRAY_BUFFER_ARB = %i (%i bytes)\n", buffer->vbo, buffer->size );
 			}
 		}
-		if( buffer->indexBuffer )
-		{
-			glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, buffer->vbo );
-		}
-		else
-		{
-			glBindBuffer( GL_ARRAY_BUFFER, buffer->vbo );
-		}
+		
+		GL_BindBuffer( ( buffer->indexBuffer ? GL_ELEMENT_ARRAY_BUFFER : GL_ARRAY_BUFFER ), buffer->vbo );
+		
 		return ( void* )buffer->offset;
 	}
 	
@@ -158,7 +209,7 @@ void* idVertexCache::Position( vertCache_t* buffer )
 
 void idVertexCache::UnbindIndex()
 {
-	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, 0 );
+	GL_BindBuffer( GL_ELEMENT_ARRAY_BUFFER, 0 );
 }
 
 
@@ -203,13 +254,14 @@ void idVertexCache::Init()
 	frameBytes = FRAME_MEMORY_BYTES;
 	staticAllocTotal = 0;
 	
-	byte*	junk = ( byte* )Mem_Alloc( frameBytes );
+	byte* junk = ( byte* )Mem_Alloc( frameBytes );
 	for( int i = 0 ; i < NUM_VERTEX_FRAMES ; i++ )
 	{
 		allocatingTempBuffer = true;	// force the alloc to use GL_STREAM_DRAW_ARB
 		Alloc( junk, frameBytes, &tempBuffers[i] );
 		allocatingTempBuffer = false;
 		tempBuffers[i]->tag = VTAG_FIXED;
+		
 		// unlink these from the static list, so they won't ever get purged
 		tempBuffers[i]->next->prev = tempBuffers[i]->prev;
 		tempBuffers[i]->prev->next = tempBuffers[i]->next;
@@ -261,7 +313,7 @@ idVertexCache::Alloc
 */
 void idVertexCache::Alloc( void* data, int size, vertCache_t** buffer, bool indexBuffer )
 {
-	vertCache_t*	block;
+	vertCache_t*   block = NULL;
 	
 	if( size <= 0 )
 	{
@@ -274,7 +326,6 @@ void idVertexCache::Alloc( void* data, int size, vertCache_t** buffer, bool inde
 	// if we don't have any remaining unused headers, allocate some more
 	if( freeStaticHeaders.next == &freeStaticHeaders )
 	{
-	
 		for( int i = 0; i < EXPAND_HEADERS; i++ )
 		{
 			block = headerAllocator.Alloc();
@@ -283,21 +334,77 @@ void idVertexCache::Alloc( void* data, int size, vertCache_t** buffer, bool inde
 			block->next->prev = block;
 			block->prev->next = block;
 			
-			if( !virtualMemory )
-			{
-				glGenBuffers( 1, & block->vbo );
-			}
-			// RB: block->vbo != 0 is possible with bad drivers which don't support GL_ARB_vertex_buffer_object
-			else
-			{
-				block->vbo = 0;
-			}
+			// RB begin
+			block->target = 0;
+			block->usage = 0;
 			// RB end
+			
+			glGenBuffers( 1, &block->vbo );
 		}
 	}
 	
+	// MH begin
+	GLenum target = ( indexBuffer ? GL_ELEMENT_ARRAY_BUFFER : GL_ARRAY_BUFFER );
+	
+	GLenum usage;
+#if defined(USE_GLES1)
+	usage = ( allocatingTempBuffer ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW );
+#else
+	usage = ( allocatingTempBuffer ? GL_STREAM_DRAW : GL_STATIC_DRAW );
+#endif
+	
+#if 1
+	// try to find a matching block to replace so that we're not continually respecifying vbo data each frame
+	for( vertCache_t* findblock = freeStaticHeaders.next; ; findblock = findblock->next )
+	{
+		if( findblock == &freeStaticHeaders )
+		{
+			block = freeStaticHeaders.next;
+			break;
+		}
+		
+		if( findblock->target != target )
+		{
+			continue;
+		}
+		
+		if( findblock->usage != usage )
+		{
+			continue;
+		}
+		
+		if( findblock->size != size )
+		{
+			continue;
+		}
+		
+		block = findblock;
+		break;
+	}
+#else
 	// move it from the freeStaticHeaders list to the staticHeaders list
 	block = freeStaticHeaders.next;
+#endif
+	
+	block->target = target;
+	block->usage = usage;
+	
+	if( block->vbo )
+	{
+		// orphan the buffer in case it needs respecifying (it usually will)
+		GL_BindBuffer( target, block->vbo );
+		
+		// RB: this additional glBufferData costs up to 20% performance
+		//glBufferData( target, ( GLsizeiptr ) size, NULL, usage );
+		glBufferData( target, ( GLsizeiptr ) size, data, usage );
+	}
+	else
+	{
+		block->virtMem = Mem_Alloc( size );
+		SIMDProcessor->Memcpy( block->virtMem, data, size );
+	}
+	// MH end
+	
 	block->next->prev = block->prev;
 	block->prev->next = block->next;
 	block->next = staticHeaders.next;
@@ -325,45 +432,6 @@ void idVertexCache::Alloc( void* data, int size, vertCache_t** buffer, bool inde
 	block->frameUsed = currentFrame - NUM_VERTEX_FRAMES;
 	
 	block->indexBuffer = indexBuffer;
-	
-	// copy the data
-	if( block->vbo )
-	{
-		if( indexBuffer )
-		{
-			glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, block->vbo );
-#if defined(USE_GLES1)
-			glBufferData( GL_ELEMENT_ARRAY_BUFFER, ( GLsizeiptr )size, data, GL_STATIC_DRAW );
-#else
-			glBufferData( GL_ELEMENT_ARRAY_BUFFER, ( GLsizeiptrARB )size, data, GL_STATIC_DRAW );
-#endif
-		}
-		else
-		{
-			glBindBuffer( GL_ARRAY_BUFFER, block->vbo );
-			if( allocatingTempBuffer )
-			{
-#if defined(USE_GLES1)
-				glBufferData( GL_ARRAY_BUFFER, ( GLsizeiptr )size, data, GL_DYNAMIC_DRAW );
-#else
-				glBufferData( GL_ARRAY_BUFFER, ( GLsizeiptrARB )size, data, GL_STREAM_DRAW );
-#endif
-			}
-			else
-			{
-#if defined(USE_GLES1)
-				glBufferData( GL_ARRAY_BUFFER, ( GLsizeiptr )size, data, GL_STATIC_DRAW );
-#else
-				glBufferData( GL_ARRAY_BUFFER, ( GLsizeiptrARB )size, data, GL_STATIC_DRAW );
-#endif
-			}
-		}
-	}
-	else
-	{
-		block->virtMem = Mem_Alloc( size );
-		SIMDProcessor->Memcpy( block->virtMem, data, size );
-	}
 }
 
 /*
@@ -499,19 +567,52 @@ vertCache_t*	idVertexCache::AllocFrameTemp( void* data, int size )
 	block->virtMem = tempBuffers[listNum]->virtMem;
 	block->vbo = tempBuffers[listNum]->vbo;
 	
-	if( block->vbo )
+	// MH begin
+	if( block->vbo != 0 )
 	{
-		glBindBuffer( GL_ARRAY_BUFFER, block->vbo );
-#if defined(USE_GLES1)
-		glBufferSubData( GL_ARRAY_BUFFER, block->offset, ( GLsizeiptr )size, data );
-#else
-		glBufferSubData( GL_ARRAY_BUFFER, block->offset, ( GLsizeiptrARB )size, data );
+		GL_BindBuffer( GL_ARRAY_BUFFER, block->vbo );
+		
+		// try to get an unsynchronized map if at all possible
+#if !defined(USE_GLES1)
+		if( glConfig.mapBufferRangeAvailable && r_useMapBufferRange.GetBool() )
+		{
+			void* dst = NULL;
+			GLbitfield access = GL_MAP_WRITE_BIT | GL_MAP_UNSYNCHRONIZED_BIT | GL_MAP_INVALIDATE_RANGE_BIT;
+			
+			// if the buffer has wrapped then we orphan it
+			if( block->offset == 0 )
+			{
+				access = GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT;
+			}
+			else
+			{
+				access = GL_MAP_WRITE_BIT | GL_MAP_UNSYNCHRONIZED_BIT | GL_MAP_INVALIDATE_RANGE_BIT;
+			}
+			
+			if( ( dst = glMapBufferRange( GL_ARRAY_BUFFER, block->offset, ( GLsizeiptr ) size, access ) ) != NULL )
+			{
+				SIMDProcessor->Memcpy( ( byte* ) dst, data, size );
+				
+				glUnmapBuffer( GL_ARRAY_BUFFER );
+				
+				return block;
+			}
+			else
+			{
+				glBufferSubData( GL_ARRAY_BUFFER, block->offset, ( GLsizeiptr ) size, data );
+			}
+		}
+		else
 #endif
+		{
+			glBufferSubData( GL_ARRAY_BUFFER, block->offset, ( GLsizeiptr ) size, data );
+		}
 	}
 	else
 	{
-		SIMDProcessor->Memcpy( ( byte* )block->virtMem + block->offset, data, size );
+		SIMDProcessor->Memcpy( ( byte* ) block->virtMem + block->offset, data, size );
 	}
+	// MH end
 	
 	return block;
 }
@@ -560,10 +661,9 @@ void idVertexCache::EndFrame()
 	{
 		// unbind vertex buffers so normal virtual memory will be used in case
 		// r_useVertexBuffers / r_useIndexBuffers
-		glBindBuffer( GL_ARRAY_BUFFER, 0 );
-		glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, 0 );
+		GL_BindBuffer( GL_ARRAY_BUFFER, 0 );
+		GL_BindBuffer( GL_ELEMENT_ARRAY_BUFFER, 0 );
 	}
-	
 	
 	currentFrame = tr.frameCount;
 	listNum = currentFrame % NUM_VERTEX_FRAMES;
@@ -611,6 +711,7 @@ void idVertexCache::List()
 		numActive++;
 		
 		totalStatic += block->size;
+		
 		if( block->frameUsed == currentFrame )
 		{
 			frameStatic += block->size;
@@ -618,12 +719,14 @@ void idVertexCache::List()
 	}
 	
 	int	numFreeStaticHeaders = 0;
+	
 	for( block = freeStaticHeaders.next ; block != &freeStaticHeaders ; block = block->next )
 	{
 		numFreeStaticHeaders++;
 	}
 	
 	int	numFreeDynamicHeaders = 0;
+	
 	for( block = freeDynamicHeaders.next ; block != &freeDynamicHeaders ; block = block->next )
 	{
 		numFreeDynamicHeaders++;
@@ -651,6 +754,15 @@ void idVertexCache::List()
 	else
 	{
 		common->Printf( "Index buffers are not used.\n" );
+	}
+	
+	if( glConfig.mapBufferRangeAvailable && r_useMapBufferRange.GetBool() )
+	{
+		common->Printf( "Vertex cache uses glMapBufferRange.\n" );
+	}
+	else
+	{
+		common->Printf( "Vertex cache does not use glMapBufferRange\n" );
 	}
 }
 

@@ -102,6 +102,7 @@ typedef struct glconfig_s
 	int					maxColorAttachments;
 	bool				framebufferPackedDepthStencilAvailable;
 	bool				framebufferBlitAvailable;
+	bool				mapBufferRangeAvailable;
 // RB end
 
 } glconfig_t;

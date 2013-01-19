@@ -1951,7 +1951,7 @@ void RB_ShowLightGrid()
 {
 #if !defined(USE_GLES1)
 
-	if( r_showLightGrid.GetFloat() == 0.0f && tr.backEndRenderer == BE_ARB )
+	if( r_showLightGrid.GetFloat() == 0.0f || tr.backEndRenderer != BE_ARB )
 	{
 		return;
 	}

@@ -32,16 +32,23 @@ const int NUM_VERTEX_FRAMES = 2;
 
 typedef enum
 {
+	// RB: renamed TAG_* to VTAG_* so it does not conflict with the BFG memory tag code
 	VTAG_FREE,
 	VTAG_USED,
 	VTAG_FIXED,		// for the temp buffers
 	VTAG_TEMP		// in frame temp area, not static area
+	// RB end
 } vertBlockTag_t;
 
 typedef struct vertCache_s
 {
 	GLuint			vbo;
 	void*			virtMem;			// only one of vbo / virtMem will be set
+	// MH begin
+	GLenum			target;
+	GLenum			usage;
+	// MH end
+	
 	bool			indexBuffer;		// holds indexes instead of vertexes
 	
 	int				offset;
@@ -87,7 +94,7 @@ public:
 	// will change every frame.
 	// will return NULL if the vertex cache is completely full
 	// As with Position(), this may not actually be a pointer you can access.
-	vertCache_t*		AllocFrameTemp( void* data, int bytes );
+	vertCache_t*	AllocFrameTemp( void* data, int bytes );
 	
 	// notes that a buffer is used this frame, so it can't be purged
 	// out from under the GPU
@@ -112,6 +119,10 @@ private:
 	
 	static idCVar	r_showVertexCache;
 	static idCVar	r_vertexBufferMegs;
+	// MH begin
+	static idCVar	r_useMapBufferRange;
+	static idCVar	r_reuseVertexCacheSooner;
+	// MH end
 	
 	int				staticCountTotal;
 	int				staticAllocTotal;		// for end of frame purging
@@ -128,7 +139,7 @@ private:
 	
 	bool			allocatingTempBuffer;	// force GL_STREAM_DRAW_ARB
 	
-	vertCache_t*		tempBuffers[NUM_VERTEX_FRAMES];		// allocated at startup
+	vertCache_t*	tempBuffers[NUM_VERTEX_FRAMES];		// allocated at startup
 	bool			tempOverflow;			// had to alloc a temp in static memory
 	
 	idBlockAlloc<vertCache_t, 1024>	headerAllocator;

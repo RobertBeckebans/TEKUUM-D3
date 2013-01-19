@@ -75,7 +75,9 @@ idCVar r_useDeferredTangents( "r_useDeferredTangents", "1", CVAR_RENDERER | CVAR
 idCVar r_useCachedDynamicModels( "r_useCachedDynamicModels", "1", CVAR_RENDERER | CVAR_BOOL, "cache snapshots of dynamic models" );
 
 idCVar r_useVertexBuffers( "r_useVertexBuffers", "1", CVAR_RENDERER | CVAR_INTEGER, "use ARB_vertex_buffer_object for vertexes", 0, 1, idCmdSystem::ArgCompletion_Integer<0, 1> );
-idCVar r_useIndexBuffers( "r_useIndexBuffers", "0", CVAR_RENDERER | CVAR_ARCHIVE | CVAR_INTEGER, "use ARB_vertex_buffer_object for indexes", 0, 1, idCmdSystem::ArgCompletion_Integer<0, 1> );
+// RB: defaulted to 1
+idCVar r_useIndexBuffers( "r_useIndexBuffers", "1", CVAR_RENDERER | CVAR_ARCHIVE | CVAR_INTEGER, "use ARB_vertex_buffer_object for indexes", 0, 1, idCmdSystem::ArgCompletion_Integer<0, 1> );
+// RB end
 
 idCVar r_useStateCaching( "r_useStateCaching", "1", CVAR_RENDERER | CVAR_BOOL, "avoid redundant state changes in GL_*() calls" );
 idCVar r_useInfiniteFarZ( "r_useInfiniteFarZ", "1", CVAR_RENDERER | CVAR_BOOL, "use the no-far-clip-plane trick" );
@@ -549,6 +551,27 @@ static void R_CheckPortableExtensions()
 	else
 	{
 		glConfig.ARBFragmentProgramAvailable = GLEW_ARB_fragment_program != 0;
+	}
+#endif
+	
+	// ARB_map_buffer_range
+	glConfig.mapBufferRangeAvailable = false;
+#if !defined(USE_GLES1)
+	if( GLEW_ARB_map_buffer_range != 0 )
+	{
+		//if( idVertexCache::r_useMapBufferRange.GetBool() )
+		{
+			glConfig.mapBufferRangeAvailable = true;
+			common->Printf( "...using ARB_map_buffer_range\n" );
+		}
+		//else
+		//{
+		//	common->Printf("...ignoring ARB_map_buffer_range\n");
+		//}
+	}
+	else
+	{
+		common->Printf( "...ARB_map_buffer_range not found\n" );
 	}
 #endif
 	
@@ -2305,6 +2328,12 @@ static void GfxInfo_f( const idCmdArgs& args )
 	{
 		common->Printf( "S3TC texture compression available\n" );
 	}
+	
+	if( glConfig.mapBufferRangeAvailable )
+	{
+		common->Printf( "glMapBufferRange available\n" );
+	}
+	
 }
 
 /*
