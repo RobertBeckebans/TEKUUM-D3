@@ -69,7 +69,7 @@ If you have questions concerning this license or the applicable additional terms
 #endif
 
 // RB begin
-#if !defined(__ANDROID__)
+#if 0 //!defined(__ANDROID__)
 #ifndef ID_ENABLE_CURL
 #define ID_ENABLE_CURL 1
 #endif

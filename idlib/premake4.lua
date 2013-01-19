@@ -62,12 +62,6 @@ project "idlib"
 	configuration { "mfc-tools", "vs*" }
 		flags       { "MFC" }
 	
-	configuration "lightmaps"
-		defines
-		{
-			"USE_LIGHTMAPS",
-		}
-	
 	-- 
 	-- Project Configurations
 	-- 

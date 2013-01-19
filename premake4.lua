@@ -121,14 +121,7 @@ newoption
 
 newoption
 {
-	trigger = "lightmaps",
-	description = "Enable support for lightmaps",
-	--value = "1"
-}
-
-newoption
-{
-	trigger = "force-gles1",
+	trigger = "gles1",
 	description = "Only use OpenGL ES 1.0 functions",
 }
 
@@ -238,6 +231,8 @@ solution "Techyon"
 		
 			-- turn off Basic Runtime Checks
 			--"/RTC1-",
+			
+			--"/MTd",
 		}
 	
 	configuration { "vs*", "Release" }
@@ -254,6 +249,8 @@ solution "Techyon"
 			
 			-- Omit Frame Pointers
 			"/Oy",
+			
+			--"/MT",
 		}
 			
 	configuration { "vs*", "Profile" }
@@ -274,6 +271,8 @@ solution "Techyon"
 			
 			-- Omit Frame Pointers
 			"/Oy",
+			
+			--"/MTd",
 		}
 		linkoptions
 		{
@@ -362,87 +361,6 @@ function FindDirectXSDK()
 	return false
 end
 
-function FindPlatformSDK()
-	
-	configuration {}
-	local platformsdkdir = os.getenv("PLATFORMSDK_DIR")
-	if (platformsdkdir) then
-		includedirs {
-			"$(PLATFORMSDK_DIR)/include/mfc",
-			"$(PLATFORMSDK_DIR)/include/atl"			
-		}
-		configuration "x32"
-			libdirs {"$(PLATFORMSDK_DIR)/lib"}
-		configuration "x64"
-			libdirs {"$(PLATFORMSDK_DIR)/lib/amd64"}
-		configuration {}
-		print("Found Platform SDK at '" .. platformsdkdir .. "'")
-		return true
-	end
-	
-	return false
-end
-
-function FindWinDDK()
-	
-	configuration {}
-	local platformsdkdir = os.getenv("WINDDK_DIR")
-	if (platformsdkdir) then
-		includedirs 
-		{
-			"$(WINDDK_DIR)/inc/mfc42",
-			"$(WINDDK_DIR)/inc/atl71"			
-		}
-		defines
-		{
-			"USE_MFC6_WITH_ATL7",
-		}
-		configuration "x32"
-			libdirs 
-			{
-			"$(WINDDK_DIR)/lib/mfc/i386",
-			"$(WINDDK_DIR)/lib/atl/i386"
-			}
-		configuration "x64"
-			libdirs 
-			{
-			"$(WINDDK_DIR)/lib/mfc/amd64",
-			"$(WINDDK_DIR)/lib/atl/amd64"
-			}
-		configuration {}
-		print("Found Windows Driver Development Kit at '" .. platformsdkdir .. "'")
-		return true
-	end
-	
-	return false
-end
-
--- function FindQtSDK()
-	
-	-- configuration {}
-	-- local qtsdkdir = os.getenv("QTDIR")
-	-- if (qtsdkdir) then
-		-- -- includedirs {
-			-- -- "$(QTDIR)/include",
-			-- -- "$(QTDIR)/include/qtmain",
-			-- -- "$(QTDIR)/include/QtCore",
-			-- -- "$(QTDIR)/include/QtGui",
-			-- -- "$(QTDIR)/include/QtOpenGL",
-		-- -- }
-		-- -- configuration "x32"
-			-- -- libdirs {"$(QTDIR)/lib"}
-		
-		-- -- FIXME 64 bit support
-		-- --configuration "x64"
-		-- --	libdirs {"$(QTDIR)/lib/amd64"}
-		-- configuration {}
-		-- print("Found Qt SDK at '" .. qtsdkdir .. "'")
-		-- return true
-	-- end
-	
-	-- return false
--- end
-
 function FindGtkmmSDK()
 	
 	configuration {}
@@ -460,9 +378,6 @@ if _ACTION == "vs2010" then
 	if _OPTIONS["xinput"] then
 		foundDirectSDK = FindDirectXSDK()
 	end
-	--foundPlatformSDK = FindPlatformSDK()
-	--foundWinDDK = FindWinDDK()
-	--foundQtSDK = FindQtSDK()
 	
 	if _OPTIONS["gtk-tools"] then
 		foundGtkMMSDK = FindGtkmmSDK()
@@ -652,14 +567,8 @@ end
 			"ID_DEBUG_MEMORY",
 			"ID_REDIRECT_NEWDELETE",
 		}
-	
-	configuration "lightmaps"
-		defines
-		{
-			"USE_LIGHTMAPS",
-		}
 		
-	configuration "force-gles1"
+	configuration "gles1"
 		defines
 		{
 			"USE_GLES1",
@@ -715,7 +624,7 @@ end
 		defines
 		{
 			"USE_MFC_TOOLS",
-			"_AFXDLL"
+			--"_AFXDLL"
 		}
 		files
 		{
@@ -928,7 +837,7 @@ end
 		}
 		includedirs
 		{
-			"libs/curl/include",
+			--"libs/curl/include",
 			"libs/openal/include",
 			--"libs/sdl/include",
 		}
@@ -945,7 +854,7 @@ end
 		{
 			--"/MT",
 			-- multi processor support
-			"/MP4",
+			"/MP",
 		}
 		linkoptions
 		{
@@ -969,13 +878,6 @@ end
 			"USE_EXCEPTIONS",
 			--"USE_GLES1",
 		}
-		
-		
-	-- configuration { "vs*", "Debug" }
-		-- links
-		-- { 
-			-- "libcmtd",
-		-- }
 	
 	configuration { "vs2010", "xinput" }
 		defines
@@ -995,11 +897,11 @@ end
 			--"../libs/openal/libs/win32",
 			"libs/openal/lib",
 			--"../libs/curl-7.12.2/lib"
-			"libs/curl/lib"
+			--"libs/curl/lib"
 		}
 		links
 		{ 
-			"libcurl",
+			--"libcurl",
 			"openal32",
 			"opengl32",
 			"glu32",
@@ -1013,11 +915,11 @@ end
 			"winmm",
 			"ws2_32",
 		}
-		prebuildcommands
-		{
-		   "cd libs/curl/lib",
-		   "nmake /f Makefile.vc6 CFG=release",
-		}
+		--prebuildcommands
+		--{
+		--   "cd libs/curl/lib",
+		--   "nmake /f Makefile.vc6 CFG=release",
+		--}
 		
 	configuration { "vs*", "x64" }
 		targetdir 	"../bin/win64"
@@ -1059,7 +961,7 @@ if not _OPTIONS["android"] then
 		}
 		links
 		{ 
-			"curl",
+			--"curl",
 			--"openal",
 		}
 	

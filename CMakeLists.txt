@@ -46,15 +46,15 @@ elseif(MSVC)
 	# Omit Frame Pointers
 	# "/Oy",
 	
-	set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} /D _DEBUG /MP")
-	set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} /MP /Oi /Oy")
-	set(CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELWITHDEBINFO} /MP /Oi")
-	set(CMAKE_C_FLAGS_MINSIZEREL "${CMAKE_C_FLAGS_MINSIZEREL} /MP /Oi /Oy")
+	set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} /D _DEBUG /MP /MTd")
+	set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} /MP /Oi /Oy /MT")
+	set(CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELWITHDEBINFO} /MP /Oi /MTd")
+	set(CMAKE_C_FLAGS_MINSIZEREL "${CMAKE_C_FLAGS_MINSIZEREL} /MP /Oi /Oy /MT")
 	
-	set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MP")
-	set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MP /Oi /Oy")
-	set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} /MP")
-	set(CMAKE_CXX_FLAGS_MINSIZEREL "${CMAKE_CXX_FLAGS_MINSIZEREL} /MP /Oi /Oy")
+	set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MP /MTd")
+	set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MP /Oi /Oy /MT")
+	set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} /MP /MTd")
+	set(CMAKE_CXX_FLAGS_MINSIZEREL "${CMAKE_CXX_FLAGS_MINSIZEREL} /MP /Oi /Oy /MT")
 
 	add_definitions(-DWIN32 
 					-D_WINDOWS
@@ -70,12 +70,12 @@ elseif(MSVC)
 	endif()
 					
 	if(USE_MFC_TOOLS)
-		add_definitions(-D_AFXDLL)
+		# add_definitions(-D_AFXDLL)
 		
 		# 0: Use Standard Windows Libraries
 		# 1: Use MFC in a Static Library
 		# 2: Use MFC in a Shared DLL 
-		set(CMAKE_MFC_FLAG 2)
+		set(CMAKE_MFC_FLAG 1)
 	endif()
 endif()
 
@@ -1128,18 +1128,18 @@ if(MSVC)
 		add_executable(Techyon WIN32 ${TECHYON_INCLUDES} ${TECHYON_SOURCES} ${TECHYON_RESOURCES})
 	endif()
 		
-	add_custom_command(TARGET Techyon
-                   PRE_BUILD
-				   COMMAND nmake ARGS /f Makefile.vc6 CFG=release
-				   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/libs/curl/lib
-                   COMMENT "Compiling libcURL")
+	# add_custom_command(TARGET Techyon
+                   # PRE_BUILD
+				   # COMMAND nmake ARGS /f Makefile.vc6 CFG=release
+				   # WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/libs/curl/lib
+                   # COMMENT "Compiling libcURL")
 		
 	add_dependencies(Techyon idlib)
 	target_link_libraries(Techyon
 		idlib
 		${DirectX_LIBRARIES}
 		${QT_LIBRARIES}
-		libcurl 
+		#libcurl 
 		#openal32 
 		opengl32
 		glu32
