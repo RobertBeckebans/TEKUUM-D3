@@ -195,8 +195,7 @@ public:
 		return numTris;
 	}
 	*/
-	void						UpdateSurface( const struct renderEntity_s* ent, const idJointMat* joints,
-			const idJointMat* entJointsInverted, modelSurface_t* surf );
+	void						UpdateSurface( const struct renderEntity_s* ent, const idJointMat* joints, const idJointMat* entJointsInverted, modelSurface_t* surf );
 	void						CalculateBounds( const idJointMat* entJoints, idBounds& bounds ) const;
 	int							NearestJoint( int a, int b, int c ) const;
 	int							NumVerts() const;

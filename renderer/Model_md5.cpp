@@ -34,7 +34,7 @@ If you have questions concerning this license or the applicable additional terms
 
 static const char* MD5_SnapshotName = "_MD5_Snapshot_";
 
-static const byte MD5B_VERSION = 107;
+static const byte MD5B_VERSION = 108;
 static const unsigned int MD5B_MAGIC = ( '5' << 24 ) | ( 'D' << 16 ) | ( 'M' << 8 ) | MD5B_VERSION;
 
 
@@ -540,7 +540,6 @@ idRenderModelMD5::LoadBinaryModel
 */
 bool idRenderModelMD5::LoadBinaryModel( idFile* file, const ID_TIME_T sourceTimeStamp )
 {
-
 	if( !idRenderModelStatic::LoadBinaryModel( file, sourceTimeStamp ) )
 	{
 		return false;
@@ -596,7 +595,6 @@ bool idRenderModelMD5::LoadBinaryModel( idFile* file, const ID_TIME_T sourceTime
 	meshes.SetNum( tempNum );
 	for( int i = 0; i < meshes.Num(); i++ )
 	{
-	
 		idStr materialName;
 		file->ReadString( materialName );
 		if( materialName.IsEmpty() )
@@ -656,7 +654,8 @@ bool idRenderModelMD5::LoadBinaryModel( idFile* file, const ID_TIME_T sourceTime
 		
 		if( deform.numOutputVerts > 0 )
 		{
-			R_AllocStaticTriSurfVerts( &tri, deform.numOutputVerts );
+			// RB: no deform.verts in old Doom 3 renderer
+			//R_AllocStaticTriSurfVerts( &tri, deform.numOutputVerts );
 			//deform.verts = tri.verts;
 			//file->ReadBigArray( deform.verts, deform.numOutputVerts );
 		}
@@ -701,12 +700,14 @@ bool idRenderModelMD5::LoadBinaryModel( idFile* file, const ID_TIME_T sourceTime
 		
 		bool temp;
 		file->ReadBig( temp );
-		tri.dominantTris = NULL;
 		if( temp )
 		{
-			R_AllocStaticTriSurfDominantTris( &tri, deform.numSourceVerts );
+			R_AllocStaticTriSurfDominantTris( &tri, deform.numOutputVerts );
+			deform.dominantTris = tri.dominantTris;
+			
 			assert( tri.dominantTris != NULL );
-			for( int j = 0; j < deform.numSourceVerts; j++ )
+			
+			for( int j = 0; j < deform.numOutputVerts; j++ )
 			{
 				file->ReadBig( tri.dominantTris[j].v2 );
 				file->ReadBig( tri.dominantTris[j].v3 );
@@ -740,7 +741,6 @@ idRenderModelMD5::WriteBinaryModel
 */
 void idRenderModelMD5::WriteBinaryModel( idFile* file, ID_TIME_T* _timeStamp ) const
 {
-
 	idRenderModelStatic::WriteBinaryModel( file );
 	
 	if( file == NULL )
@@ -864,7 +864,7 @@ void idRenderModelMD5::WriteBinaryModel( idFile* file, ID_TIME_T* _timeStamp ) c
 		file->WriteBig( deform.dominantTris != NULL );
 		if( deform.dominantTris != NULL )
 		{
-			for( int j = 0; j < deform.numSourceVerts; j++ )
+			for( int j = 0; j < deform.numOutputVerts; j++ )
 			{
 				file->WriteBig( deform.dominantTris[j].v2 );
 				file->WriteBig( deform.dominantTris[j].v3 );
