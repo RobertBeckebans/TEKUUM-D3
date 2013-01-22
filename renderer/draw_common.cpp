@@ -512,6 +512,12 @@ void RB_T_FillDepthBuffer( const drawSurf_t* surf )
 	lightDiffuse.z = surf->space->entityDef->directedLight.z;
 	lightDiffuse.w = 1;
 	
+	idVec4 lightAmbient;
+	lightAmbient.x = surf->space->entityDef->ambientLight.x;
+	lightAmbient.y = surf->space->entityDef->ambientLight.y;
+	lightAmbient.z = surf->space->entityDef->ambientLight.z;
+	lightAmbient.w = 1;
+	
 	bool isWorldModel = ( surf->space->entityDef->parms.origin == vec3_origin );
 	if( r_usePrecomputedLighting.GetBool() && tr.backEndRenderer == BE_ARB )
 	{
@@ -526,27 +532,32 @@ void RB_T_FillDepthBuffer( const drawSurf_t* surf )
 			glNormalPointer( GL_FLOAT, sizeof( idDrawVert ), ac->normal.ToFloatPtr() );
 			
 #if 0
-			glEnable( GL_LIGHTING );
+			glMaterialfv( GL_FRONT_AND_BACK, GL_AMBIENT, colorBlack.ToFloatPtr() );
+			glMaterialfv( GL_FRONT_AND_BACK, GL_DIFFUSE, colorWhite.ToFloatPtr() );
+			glMaterialfv( GL_FRONT_AND_BACK, GL_SPECULAR, colorBlack.ToFloatPtr() );
 			
-			idVec4 lightPos;
-#if 0
-			lightPos.x = surf->space->entityDef->lightDir.x;
-			lightPos.y = surf->space->entityDef->lightDir.y;
-			lightPos.z = surf->space->entityDef->lightDir.z;
-			lightPos.w = 0;
-#elif 0
-			lightPos.x = surf->space->entityDef->parms.origin.x;
-			lightPos.y = surf->space->entityDef->parms.origin.y;
-			lightPos.z = surf->space->entityDef->parms.origin.z;
-			lightPos.w = 1;
-#else
-			lightPos.Zero();
+			glEnable( GL_COLOR_MATERIAL );
 #endif
 			
+#if 1
+			glEnable( GL_LIGHTING );
 			
+			idVec3 tmp;
+			idVec4 lightPos;
+			
+			// directional light
+			lightPos.w = 0;
+			
+			R_GlobalVectorToLocal( surf->space->modelMatrix, surf->space->entityDef->lightDir, tmp );
+			lightPos.x = tmp.x;
+			lightPos.y = tmp.y;
+			lightPos.z = tmp.z;
 			
 			glLightfv( GL_LIGHT0, GL_POSITION, lightPos.ToFloatPtr() );
+			
+			glLightfv( GL_LIGHT0, GL_AMBIENT, lightAmbient.ToFloatPtr() );
 			glLightfv( GL_LIGHT0, GL_DIFFUSE, lightDiffuse.ToFloatPtr() );
+			glLightfv( GL_LIGHT0, GL_SPECULAR, colorBlack.ToFloatPtr() );
 			
 			glEnable( GL_LIGHT0 );
 #endif
@@ -618,7 +629,12 @@ void RB_T_FillDepthBuffer( const drawSurf_t* surf )
 				
 				if( !isWorldModel )
 				{
+					// TODO material color
+#if 0
+					glMaterialfv( GL_FRONT_AND_BACK, GL_DIFFUSE, color.ToFloatPtr() );
+#else
 					glColor4f( lightDiffuse[0], lightDiffuse[1], lightDiffuse[2], lightDiffuse[3] );
+#endif
 				}
 			}
 			else
@@ -663,7 +679,12 @@ void RB_T_FillDepthBuffer( const drawSurf_t* surf )
 		{
 			if( !isWorldModel )
 			{
+				// TODO material color
+#if 0
+				glMaterialfv( GL_FRONT_AND_BACK, GL_DIFFUSE, color.ToFloatPtr() );
+#else
 				glColor4f( lightDiffuse[0], lightDiffuse[1], lightDiffuse[2], lightDiffuse[3] );
+#endif
 			}
 		}
 		else
@@ -688,6 +709,8 @@ void RB_T_FillDepthBuffer( const drawSurf_t* surf )
 			
 			glDisable( GL_LIGHTING );
 			glDisable( GL_LIGHT0 );
+			
+			glDisable( GL_COLOR_MATERIAL );
 		}
 	}
 	

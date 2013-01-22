@@ -795,7 +795,7 @@ static void CalculateLightGridBounds( idBounds& bounds )
 		
 		for( optimizeGroup_t* group = area->groups ; group ; group = group->nextGroup )
 		{
-#if 1
+#if 0
 			bounds.AddBounds( group->bounds );
 #else
 			for( mapTri_t* tri = group->triList ; tri ; tri = tri->next )

@@ -320,11 +320,19 @@ static void CALLBACK DebugCallback( unsigned int source, unsigned int type,
 	// it probably isn't safe to do an idLib::Printf at this point
 	
 	// RB begin
+#if 1
+	// RB: only not thread-safe in the BFG edition
+	idLib::Printf( "OpenGL debug callback: %s\n" );
+#else
+	
 #if defined(_WIN32)
+	OutputDebugString( "OpenGL debug callback: " );
 	OutputDebugString( message );
 	OutputDebugString( "\n" );
 #else
-	printf( "%s\n", message );
+	printf( "OpenGL debug callback %s\n", message );
+#endif
+	
 #endif
 	// RB end
 }
