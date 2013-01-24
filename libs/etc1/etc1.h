@@ -1,4 +1,5 @@
 // Copyright 2009 Google Inc.
+// Copyright 2013 Robert Beckebans ( id Tech 4 integration )
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -41,8 +42,8 @@ extern "C" {
 //
 // pOut is an ETC1 compressed version of the data.
 
-void etc1_encode_block(const etc1_byte* pIn, etc1_uint32 validPixelMask, etc1_byte* pOut);
-
+	void etc1_encode_block( const etc1_byte* pIn, etc1_uint32 validPixelMask, etc1_byte* pOut );
+	
 // Decode a block of pixels.
 //
 // pIn is an ETC1 compressed version of the data.
@@ -51,54 +52,54 @@ void etc1_encode_block(const etc1_byte* pIn, etc1_uint32 validPixelMask, etc1_by
 // 4 x 4 square of 3-byte pixels in form R, G, B. Byte (3 * (x + 4 * y) is the R
 // value of pixel (x, y).
 
-void etc1_decode_block(const etc1_byte* pIn, etc1_byte* pOut);
-
+	void etc1_decode_block( const etc1_byte* pIn, etc1_byte* pOut );
+	
 // Return the size of the encoded image data (does not include size of PKM header).
 
-etc1_uint32 etc1_get_encoded_data_size(etc1_uint32 width, etc1_uint32 height);
-
+	etc1_uint32 etc1_get_encoded_data_size( etc1_uint32 width, etc1_uint32 height );
+	
 // Encode an entire image.
 // pIn - pointer to the image data. Formatted such that
 //       pixel (x,y) is at pIn + pixelSize * x + stride * y;
 // pOut - pointer to encoded data. Must be large enough to store entire encoded image.
-// pixelSize can be 2 or 3. 2 is an GL_UNSIGNED_SHORT_5_6_5 image, 3 is a GL_BYTE RGB image.
+// pixelSize can be 2, 3 or 4. 2 is an GL_UNSIGNED_SHORT_5_6_5 image, 3 is a GL_BYTE RGB image, 4 is a GL_BYTE RGBA image.
 // returns non-zero if there is an error.
 
-int etc1_encode_image(const etc1_byte* pIn, etc1_uint32 width, etc1_uint32 height,
-        etc1_uint32 pixelSize, etc1_uint32 stride, etc1_byte* pOut);
-
+	int etc1_encode_image( const etc1_byte* pIn, etc1_uint32 width, etc1_uint32 height,
+						   etc1_uint32 pixelSize, etc1_uint32 stride, etc1_byte* pOut );
+						   
 // Decode an entire image.
 // pIn - pointer to encoded data.
 // pOut - pointer to the image data. Will be written such that
 //        pixel (x,y) is at pIn + pixelSize * x + stride * y. Must be
 //        large enough to store entire image.
-// pixelSize can be 2 or 3. 2 is an GL_UNSIGNED_SHORT_5_6_5 image, 3 is a GL_BYTE RGB image.
+// pixelSize can be 2, or 3. 2 is an GL_UNSIGNED_SHORT_5_6_5 image, 3 is a GL_BYTE RGB image.
 // returns non-zero if there is an error.
 
-int etc1_decode_image(const etc1_byte* pIn, etc1_byte* pOut,
-        etc1_uint32 width, etc1_uint32 height,
-        etc1_uint32 pixelSize, etc1_uint32 stride);
-
+	int etc1_decode_image( const etc1_byte* pIn, etc1_byte* pOut,
+						   etc1_uint32 width, etc1_uint32 height,
+						   etc1_uint32 pixelSize, etc1_uint32 stride );
+						   
 // Size of a PKM header, in bytes.
 
 #define ETC_PKM_HEADER_SIZE 16
 
 // Format a PKM header
 
-void etc1_pkm_format_header(etc1_byte* pHeader, etc1_uint32 width, etc1_uint32 height);
-
+	void etc1_pkm_format_header( etc1_byte* pHeader, etc1_uint32 width, etc1_uint32 height );
+	
 // Check if a PKM header is correctly formatted.
 
-etc1_bool etc1_pkm_is_valid(const etc1_byte* pHeader);
-
+	etc1_bool etc1_pkm_is_valid( const etc1_byte* pHeader );
+	
 // Read the image width from a PKM header
 
-etc1_uint32 etc1_pkm_get_width(const etc1_byte* pHeader);
-
+	etc1_uint32 etc1_pkm_get_width( const etc1_byte* pHeader );
+	
 // Read the image height from a PKM header
 
-etc1_uint32 etc1_pkm_get_height(const etc1_byte* pHeader);
-
+	etc1_uint32 etc1_pkm_get_height( const etc1_byte* pHeader );
+	
 #ifdef __cplusplus
 }
 #endif
