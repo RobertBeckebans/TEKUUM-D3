@@ -231,16 +231,25 @@ public:
 	void		MakeDefault();	// fill with a grid pattern
 	void		SetImageFilterAndRepeat() const;
 	bool		ShouldImageBePartialCached();
-	void		WritePrecompressedImage();
-	bool		CheckPrecompressedImage( bool fullLoad );
-	void		UploadPrecompressedImage( byte* data, int len );
+	// RB begin
+	bool		CheckPrecompressedDDSImage( bool fullLoad );
+	void		UploadPrecompressedDDSImage( byte* data, int len );
+	void		WritePrecompressedDDSImage();
+	
+	bool		CheckPrecompressedPKMImage( bool fullLoad );
+	void		WritePrecompressedPKMImage( const byte* data, int width, int height ) const;
+	void		UploadPrecompressedPKMImage( byte* data, int len );
+	// RB end
 	void		ActuallyLoadImage( bool checkForPrecompressed, bool fromBackEnd );
 	void		StartBackgroundImageLoad();
 	int			BitsForInternalFormat( int internalFormat ) const;
 	void		UploadCompressedNormalMap( int width, int height, const byte* rgba, int mipLevel );
 	GLenum		SelectInternalFormat( const byte** dataPtrs, int numDataPtrs, int width, int height,
 									  textureDepth_t minimumDepth ) const;
-	void		ImageProgramStringToCompressedFileName( const char* imageProg, char* fileName ) const;
+	// RB begin
+	void		ImageProgramStringToCompressedFileName( const char* imageProg, idStrStatic<MAX_IMAGE_NAME>& fileName, const char* prefix, const char* suffix ) const;
+	// RB end
+	
 	int			NumLevelsForImageSize( int width, int height ) const;
 	
 	// data commonly accessed is grouped here

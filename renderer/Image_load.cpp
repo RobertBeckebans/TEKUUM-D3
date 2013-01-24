@@ -3,6 +3,7 @@
 
 Doom 3 GPL Source Code
 Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2013 Robert Beckebans
 
 This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
 
@@ -30,6 +31,8 @@ If you have questions concerning this license or the applicable additional terms
 #pragma hdrstop
 
 #include "tr_local.h"
+
+#include "../libs/etc1/etc1.h"
 
 /*
 PROBLEM: compressed textures may break the zero clamp rule!
@@ -76,6 +79,8 @@ int idImage::BitsForInternalFormat( int internalFormat ) const
 			return 8;
 		case GL_COMPRESSED_RGBA_S3TC_DXT5_EXT:
 			return 8;
+		case GL_ETC1_RGB8_OES:
+			return 4;
 #else
 		case GL_INTENSITY8:
 		case 1:
@@ -134,6 +139,8 @@ int idImage::BitsForInternalFormat( int internalFormat ) const
 			return 32;
 		case GL_RG32F:
 			return 64;
+		case GL_ETC1_RGB8_OES:
+			return 4;
 // RB end
 			
 #endif // #if !defined(USE_GLES1)
@@ -198,14 +205,15 @@ void idImage::UploadCompressedNormalMap( int width, int height, const byte* rgba
 		}
 	}
 	
+#if 0
 	if( mipLevel == 0 )
 	{
 		// Optionally write out the paletized normal map to a .tga
 		if( globalImages->image_writeNormalTGAPalletized.GetBool() )
 		{
-			char filename[MAX_IMAGE_NAME];
+			idStrStatic<MAX_IMAGE_NAME> filename;
 			ImageProgramStringToCompressedFileName( imgName, filename );
-			char* ext = strrchr( filename, '.' );
+			char* ext = strrchr( filename.c_str(), '.' );
 			if( ext )
 			{
 				strcpy( ext, "_pal.tga" );
@@ -213,6 +221,7 @@ void idImage::UploadCompressedNormalMap( int width, int height, const byte* rgba
 			}
 		}
 	}
+#endif
 	
 #if !defined(USE_GLES1)
 	if( glConfig.sharedTexturePaletteAvailable )
@@ -854,6 +863,7 @@ void idImage::GenerateImage( const byte* pic, int width, int height,
 		R_SetBorderTexels( ( byte* )scaledBuffer, width, height, rgba );
 	}
 	
+#if 0
 	if( generatorFunction == NULL && ( depth == TD_BUMP && globalImages->image_writeNormalTGA.GetBool() || depth != TD_BUMP && globalImages->image_writeTGA.GetBool() ) )
 	{
 		// Optionally write out the texture to a .tga
@@ -885,6 +895,7 @@ void idImage::GenerateImage( const byte* pic, int width, int height,
 			*/
 		}
 	}
+#endif
 	
 	GL_CheckErrors();
 	
@@ -1288,8 +1299,24 @@ void idImage::GenerateCubeImage( const byte* pic[6], int size,
 ImageProgramStringToFileCompressedFileName
 ================
 */
-void idImage::ImageProgramStringToCompressedFileName( const char* imageProg, char* fileName ) const
+void idImage::ImageProgramStringToCompressedFileName( const char* imageProg, idStrStatic<MAX_IMAGE_NAME>& generatedFileName, const char* prefix, const char* suffix ) const
 {
+#if 1
+	generatedFileName = "generated/images/";
+	generatedFileName.AppendPath( prefix );
+	generatedFileName.AppendPath( "/" );
+	
+	generatedFileName.AppendPath( imageProg );
+	
+	generatedFileName.BackSlashesToSlashes();
+	generatedFileName.Replace( "(", "/" );
+	generatedFileName.Replace( ",", "/" );
+	generatedFileName.Replace( ")", "" );
+	generatedFileName.Replace( " ", "" );
+	
+	generatedFileName.DefaultFileExtension( suffix );
+	
+#else
 	const char*	s;
 	char*	f;
 	
@@ -1338,6 +1365,7 @@ void idImage::ImageProgramStringToCompressedFileName( const char* imageProg, cha
 	}
 	*f++ = 0;
 	strcat( fileName, ".dds" );
+#endif
 }
 
 /*
@@ -1367,9 +1395,10 @@ When we are happy with our source data, we can write out precompressed
 versions of everything to speed future load times.
 ================
 */
-void idImage::WritePrecompressedImage()
+void idImage::WritePrecompressedDDSImage()
 {
 #if !defined(USE_GLES1)
+
 	// Always write the precompressed image if we're making a build
 	if( !com_makingBuild.GetBool() )
 	{
@@ -1384,15 +1413,13 @@ void idImage::WritePrecompressedImage()
 		return;
 	}
 	
-	char filename[MAX_IMAGE_NAME];
-	ImageProgramStringToCompressedFileName( imgName, filename );
-	
-	
+	idStrStatic<MAX_IMAGE_NAME> filename;
+	ImageProgramStringToCompressedFileName( imgName, filename, "dxt", "dds" );
 	
 	int numLevels = NumLevelsForImageSize( uploadWidth, uploadHeight );
 	if( numLevels > MAX_TEXTURE_LEVELS )
 	{
-		common->Warning( "R_WritePrecompressedImage: level > MAX_TEXTURE_LEVELS for image %s", filename );
+		common->Warning( "idImage::WritePrecompressedDDSImage: level > MAX_TEXTURE_LEVELS for image %s", filename.c_str() );
 		return;
 	}
 	
@@ -1434,7 +1461,7 @@ void idImage::WritePrecompressedImage()
 			}
 			else
 			{
-				common->Warning( "Unknown or unsupported format for %s", filename );
+				common->Warning( "Unknown or unsupported format for %s", filename.c_str() );
 				return;
 			}
 	}
@@ -1442,7 +1469,7 @@ void idImage::WritePrecompressedImage()
 	if( globalImages->image_useOffLineCompression.GetBool() && FormatIsDXT( altInternalFormat ) )
 	{
 		// RB: use generated/ folder
-		idStr outFile = fileSystem->RelativePathToOSPath( filename, "fs_devpath" );
+		idStr outFile = fileSystem->RelativePathToOSPath( filename.c_str(), "fs_devpath" );
 		// RB end
 		idStr inFile = outFile;
 		inFile.StripFileExtension();
@@ -1549,7 +1576,7 @@ void idImage::WritePrecompressedImage()
 				header.ddspf.dwABitMask = 0xFF000000;
 				break;
 			default:
-				common->Warning( "Unknown or unsupported format for %s", filename );
+				common->Warning( "Unknown or unsupported format for %s", filename.c_str() );
 				return;
 		}
 	}
@@ -1557,10 +1584,10 @@ void idImage::WritePrecompressedImage()
 	idFile* f = fileSystem->OpenFileWrite( filename );
 	if( f == NULL )
 	{
-		common->Warning( "Could not open %s trying to write precompressed image", filename );
+		common->Warning( "Could not open %s trying to write precompressed image", filename.c_str() );
 		return;
 	}
-	common->Printf( "Writing precompressed image: %s\n", filename );
+	common->Printf( "Writing precompressed image: %s\n", filename.c_str() );
 	
 	f->Write( "DDS ", 4 );
 	f->Write( &header, sizeof( header ) );
@@ -1627,6 +1654,119 @@ void idImage::WritePrecompressedImage()
 #endif // #if !defined(USE_GLES1)
 }
 
+// RB begin
+void idImage::WritePrecompressedPKMImage( const byte* pic, int width, int height ) const
+{
+	// Always write the precompressed image if we're making a build
+	if( !com_makingBuild.GetBool() )
+	{
+		if( !globalImages->image_writePrecompressedTextures.GetBool() || !globalImages->image_usePrecompressedTextures.GetBool() )
+		{
+			return;
+		}
+	}
+	
+	if( !glConfig.isInitialized )
+	{
+		return;
+	}
+	
+	idStrStatic<MAX_IMAGE_NAME> filename;
+	ImageProgramStringToCompressedFileName( imgName, filename, "etc1", "pkm" );
+	
+	int numLevels = NumLevelsForImageSize( uploadWidth, uploadHeight );
+	if( numLevels > MAX_TEXTURE_LEVELS )
+	{
+		common->Warning( "idImage::WritePrecompressedPKMImage: level > MAX_TEXTURE_LEVELS for image %s", filename.c_str() );
+		return;
+	}
+	
+	idFile* f = fileSystem->OpenFileWrite( filename );
+	if( f == NULL )
+	{
+		common->Warning( "Could not open %s trying to write precompressed image", filename.c_str() );
+		return;
+	}
+	common->Printf( "Writing precompressed image: %s\n", filename.c_str() );
+	
+	//f->Write( "DDS ", 4 );
+	//f->Write( &header, sizeof( header ) );
+	
+	// bind to the image so we can read back the contents
+	//Bind();
+	
+	//glPixelStorei( GL_PACK_ALIGNMENT, 1 );	// otherwise small rows get padded to 32 bits
+	
+	width = uploadWidth;
+	height = uploadHeight;
+	
+	// Will be allocated first time through the loop
+	byte* encodedData = NULL;
+	
+	etc1_byte header[ETC_PKM_HEADER_SIZE];
+	etc1_pkm_format_header( header, width, height );
+	
+	f->Write( header, sizeof( header ) );
+	
+	etc1_uint32 encodedSize = etc1_get_encoded_data_size( width, height );
+	encodedData = ( byte* ) R_StaticAlloc( encodedSize );
+	
+	etc1_encode_image( pic, width, height, 4, width * 4, encodedData );
+	
+	f->Write( encodedData, encodedSize );
+	
+	/*
+	for( int level = 0 ; level < numLevels ; level++ )
+	{
+		int size = 0;
+		if( FormatIsDXT( altInternalFormat ) )
+		{
+			size = ( ( uw + 3 ) / 4 ) * ( ( uh + 3 ) / 4 ) *
+				   ( altInternalFormat <= GL_COMPRESSED_RGBA_S3TC_DXT1_EXT ? 8 : 16 );
+		}
+		else
+		{
+			size = uw * uh * ( bitSize / 8 );
+		}
+	
+		if( data == NULL )
+		{
+			data = ( byte* )R_StaticAlloc( size );
+		}
+	
+		if( FormatIsDXT( altInternalFormat ) )
+		{
+			glGetCompressedTexImageARB( GL_TEXTURE_2D, level, data );
+		}
+		else
+		{
+			glGetTexImage( GL_TEXTURE_2D, level, altInternalFormat, GL_UNSIGNED_BYTE, data );
+		}
+	
+		f->Write( data, size );
+	
+		uw /= 2;
+		uh /= 2;
+		if( uw < 1 )
+		{
+			uw = 1;
+		}
+		if( uh < 1 )
+		{
+			uh = 1;
+		}
+	}
+	*/
+	
+	if( encodedData != NULL )
+	{
+		R_StaticFree( encodedData );
+	}
+	
+	fileSystem->CloseFile( f );
+}
+// RB end
+
 /*
 ================
 ShouldImageBePartialCached
@@ -1664,8 +1804,8 @@ bool idImage::ShouldImageBePartialCached()
 		return false;
 	}
 	
-	char	filename[MAX_IMAGE_NAME];
-	ImageProgramStringToCompressedFileName( imgName, filename );
+	idStrStatic<MAX_IMAGE_NAME>	filename;
+	ImageProgramStringToCompressedFileName( imgName, filename, "dxt", "dds" );
 	
 	// get the file timestamp
 	fileSystem->ReadFile( filename, NULL, &timestamp );
@@ -1703,7 +1843,7 @@ CheckPrecompressedImage
 If fullLoad is false, only the small mip levels of the image will be loaded
 ================
 */
-bool idImage::CheckPrecompressedImage( bool fullLoad )
+bool idImage::CheckPrecompressedDDSImage( bool fullLoad )
 {
 	if( !glConfig.isInitialized || !glConfig.s3tcTextureCompressionAvailable )
 	{
@@ -1729,13 +1869,12 @@ bool idImage::CheckPrecompressedImage( bool fullLoad )
 		return false;
 	}
 	
-	char filename[MAX_IMAGE_NAME];
-	ImageProgramStringToCompressedFileName( imgName, filename );
+	idStrStatic<MAX_IMAGE_NAME> filename;
+	ImageProgramStringToCompressedFileName( imgName, filename, "dxt", "dds" );
 	
 	// get the file timestamp
 	ID_TIME_T precompTimestamp;
 	fileSystem->ReadFile( filename, NULL, &precompTimestamp );
-	
 	
 	if( precompTimestamp == FILE_NOT_FOUND_TIMESTAMP )
 	{
@@ -1809,7 +1948,121 @@ bool idImage::CheckPrecompressedImage( bool fullLoad )
 #endif
 	
 	// upload all the levels
-	UploadPrecompressedImage( data, len );
+	UploadPrecompressedDDSImage( data, len );
+	
+	R_StaticFree( data );
+	
+	return true;
+}
+
+/*
+================
+CheckPrecompressedImage
+
+If fullLoad is false, only the small mip levels of the image will be loaded
+================
+*/
+bool idImage::CheckPrecompressedPKMImage( bool fullLoad )
+{
+	if( !glConfig.isInitialized || !glConfig.etc1TextureCompressionAvailable )
+	{
+		return false;
+	}
+	
+#if 1 // ( _D3XP had disabled ) - Allow grabbing of DDS's from original Doom pak files
+	// if we are doing a copyFiles, make sure the original images are referenced
+	if( fileSystem->PerformingCopyFiles() )
+	{
+		return false;
+	}
+#endif
+	
+	if( depth == TD_BUMP && globalImages->image_useNormalCompression.GetInteger() != 2 )
+	{
+		return false;
+	}
+	
+	// god i love last minute hacks :-)
+	if( com_machineSpec.GetInteger() >= 1 && com_videoRam.GetInteger() >= 128 && imgName.Icmpn( "lights/", 7 ) == 0 )
+	{
+		return false;
+	}
+	
+	idStrStatic<MAX_IMAGE_NAME> filename;
+	ImageProgramStringToCompressedFileName( imgName, filename, "etc1", "pkm" );
+	
+	// get the file timestamp
+	ID_TIME_T precompTimestamp;
+	fileSystem->ReadFile( filename, NULL, &precompTimestamp );
+	
+	if( precompTimestamp == FILE_NOT_FOUND_TIMESTAMP )
+	{
+		return false;
+	}
+	
+	if( !generatorFunction && timestamp != FILE_NOT_FOUND_TIMESTAMP )
+	{
+		if( precompTimestamp < timestamp )
+		{
+			// The image has changed after being precompressed
+			return false;
+		}
+	}
+	
+	timestamp = precompTimestamp;
+	
+	// open it and just read the header
+	idFile* f;
+	
+	f = fileSystem->OpenFileRead( filename );
+	if( !f )
+	{
+		return false;
+	}
+	
+	int	len = f->Length();
+	if( len < ETC_PKM_HEADER_SIZE )
+	{
+		fileSystem->CloseFile( f );
+		return false;
+	}
+	
+	//if( !fullLoad && len > globalImages->image_cacheMinK.GetInteger() * 1024 )
+	//{
+	//	len = globalImages->image_cacheMinK.GetInteger() * 1024;
+	//}
+	
+	byte* data = ( byte* )R_StaticAlloc( len );
+	byte* header = data;
+	byte* encodedData = data + ETC_PKM_HEADER_SIZE;
+	
+	f->Read( header, len );
+	
+	fileSystem->CloseFile( f );
+	
+	if( !etc1_pkm_is_valid( header ) )
+	{
+		common->Printf( "CheckPrecompressedPKMImage( %s ): PKM is invalid\n", imgName.c_str() );
+		R_StaticFree( header );
+		return false;
+	}
+	
+	int width = etc1_pkm_get_width( header );
+	int height = etc1_pkm_get_width( header );
+	int encodedDataSize = etc1_get_encoded_data_size( width, height );
+	
+	// upload all the levels
+	//UploadPrecompressedPKMImage( data, len );
+	
+	precompressedFile = true;
+	
+	uploadWidth = width;
+	uploadHeight = height;
+	
+	internalFormat = GL_ETC1_RGB8_OES;
+	glCompressedTexImage2D( GL_TEXTURE_2D, 0, internalFormat, width, height, 0, encodedDataSize, encodedData );
+	
+	SetImageFilterAndRepeat();
 	
 	R_StaticFree( data );
 	
@@ -1825,7 +2078,7 @@ or by the backend after a background read of the file
 has completed
 ===================
 */
-void idImage::UploadPrecompressedImage( byte* data, int len )
+void idImage::UploadPrecompressedDDSImage( byte* data, int len )
 {
 #if 1 //!defined(USE_GLES1)
 	ddsFileHeader_t*	header = ( ddsFileHeader_t* )( data + 4 );
@@ -2024,7 +2277,7 @@ void	idImage::ActuallyLoadImage( bool checkForPrecompressed, bool fromBackEnd )
 	if( isPartialImage )
 	{
 #if 1 //!defined(USE_GLES1)
-		if( CheckPrecompressedImage( false ) )
+		if( glConfig.s3tcTextureCompressionAvailable && CheckPrecompressedDDSImage( false ) )
 		{
 			return;
 		}
@@ -2034,9 +2287,7 @@ void	idImage::ActuallyLoadImage( bool checkForPrecompressed, bool fromBackEnd )
 		return;
 	}
 	
-	//
 	// load the image from disk
-	//
 	if( cubeFiles != CF_2D )
 	{
 		byte*	pics[6];
@@ -2069,7 +2320,12 @@ void	idImage::ActuallyLoadImage( bool checkForPrecompressed, bool fromBackEnd )
 #if 1 //!defined(USE_GLES1)
 		if( checkForPrecompressed && globalImages->image_usePrecompressedTextures.GetBool() )
 		{
-			if( CheckPrecompressedImage( true ) )
+			if( glConfig.s3tcTextureCompressionAvailable && CheckPrecompressedDDSImage( true ) )
+			{
+				// we got the precompressed image
+				return;
+			}
+			else if( glConfig.etc1TextureCompressionAvailable && CheckPrecompressedPKMImage( true ) )
 			{
 				// we got the precompressed image
 				return;
@@ -2108,10 +2364,14 @@ void	idImage::ActuallyLoadImage( bool checkForPrecompressed, bool fromBackEnd )
 		timestamp = timestamp;
 		precompressedFile = false;
 		
-		R_StaticFree( pic );
-		
 		// write out the precompressed version of this file if needed
-		WritePrecompressedImage();
+		if( checkForPrecompressed && globalImages->image_usePrecompressedTextures.GetBool() )
+		{
+			WritePrecompressedDDSImage();
+			WritePrecompressedPKMImage( pic, width, height );
+		}
+		
+		R_StaticFree( pic );
 	}
 }
 

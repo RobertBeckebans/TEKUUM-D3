@@ -54,7 +54,7 @@ idCVar idImageManager::image_useCompression( "image_useCompression", "1", CVAR_R
 idCVar idImageManager::image_useAllFormats( "image_useAllFormats", "1", CVAR_RENDERER | CVAR_ARCHIVE | CVAR_BOOL, "allow alpha/intensity/luminance/luminance+alpha" );
 idCVar idImageManager::image_useNormalCompression( "image_useNormalCompression", "2", CVAR_RENDERER | CVAR_ARCHIVE | CVAR_INTEGER, "2 = use rxgb compression for normal maps, 1 = use 256 color compression for normal maps if available" );
 idCVar idImageManager::image_usePrecompressedTextures( "image_usePrecompressedTextures", "1", CVAR_RENDERER | CVAR_ARCHIVE | CVAR_BOOL, "use .dds files if present" );
-idCVar idImageManager::image_writePrecompressedTextures( "image_writePrecompressedTextures", "0", CVAR_RENDERER | CVAR_BOOL, "write .dds files if necessary" );
+idCVar idImageManager::image_writePrecompressedTextures( "image_writePrecompressedTextures", "1", CVAR_RENDERER | CVAR_BOOL, "write .dds files if necessary" );
 idCVar idImageManager::image_writeNormalTGA( "image_writeNormalTGA", "0", CVAR_RENDERER | CVAR_BOOL, "write .tgas of the final normal maps for debugging" );
 idCVar idImageManager::image_writeNormalTGAPalletized( "image_writeNormalTGAPalletized", "0", CVAR_RENDERER | CVAR_BOOL, "write .tgas of the final palletized normal maps for debugging" );
 idCVar idImageManager::image_writeTGA( "image_writeTGA", "0", CVAR_RENDERER | CVAR_BOOL, "write .tgas of the non normal maps for debugging" );
@@ -2098,8 +2098,8 @@ void idImage::StartBackgroundImageLoad()
 	bglNext = globalImages->backgroundImageLoads;
 	globalImages->backgroundImageLoads = this;
 	
-	char	filename[MAX_IMAGE_NAME];
-	ImageProgramStringToCompressedFileName( imgName, filename );
+	idStrStatic<MAX_IMAGE_NAME> filename;
+	ImageProgramStringToCompressedFileName( imgName, filename, "dxt", "dds" );
 	
 	bgl.completed = false;
 	bgl.f = fileSystem->OpenFileRead( filename );
@@ -2170,9 +2170,11 @@ void idImageManager::CompleteBackgroundImageLoads()
 		{
 			numActiveBackgroundImageLoads--;
 			fileSystem->CloseFile( image->bgl.f );
+			
 			// upload the image
-			image->UploadPrecompressedImage( ( byte* )image->bgl.file.buffer, image->bgl.file.length );
+			image->UploadPrecompressedDDSImage( ( byte* )image->bgl.file.buffer, image->bgl.file.length );
 			R_StaticFree( image->bgl.file.buffer );
+			
 			if( image_showBackgroundLoads.GetBool() )
 			{
 				common->Printf( "R_CompleteBackgroundImageLoad: %s\n", image->imgName.c_str() );

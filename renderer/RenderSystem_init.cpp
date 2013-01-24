@@ -448,6 +448,13 @@ static void R_CheckPortableExtensions()
 	}
 #endif
 	
+	
+#if defined(USE_GLES1)
+	glConfig.etc1TextureCompressionAvailable = false; //R_CheckExtension( "GL_OES_compressed_ETC1_RGB8_texture" );
+#else
+	glConfig.etc1TextureCompressionAvailable = false;
+#endif
+	
 	// GL_EXT_texture_filter_anisotropic
 #if defined(USE_GLES1)
 	glConfig.anisotropicAvailable = false;
@@ -834,6 +841,7 @@ void R_InitOpenGL()
 	glConfig.version_string = ( const char* )glGetString( GL_VERSION );
 	glConfig.extensions_string = ( const char* )glGetString( GL_EXTENSIONS );
 	
+#if !defined(USE_GLES1)
 	if( glConfig.extensions_string == NULL )
 	{
 		// As of OpenGL 3.2, glGetStringi is required to obtain the available extensions
@@ -854,6 +862,7 @@ void R_InitOpenGL()
 		}
 		glConfig.extensions_string = gl_extensionsString.c_str();
 	}
+#endif
 	
 	common->Printf( "\nGL_VENDOR: %s\n", glConfig.vendor_string );
 	common->Printf( "GL_RENDERER: %s\n", glConfig.renderer_string );
@@ -2215,6 +2224,7 @@ static void GfxInfo_f( const idCmdArgs& args )
 		common->Printf( "GL_MAX_COLOR_ATTACHMENTS: %d\n", glConfig.maxColorAttachments );
 	}
 	
+#if !defined(USE_GLES1)
 	if( r_useOpenGL32.GetInteger() > 0 )
 	{
 		int				contextFlags, profile;
@@ -2243,6 +2253,7 @@ static void GfxInfo_f( const idCmdArgs& args )
 			common->Printf( S_COLOR_RED "Context is NOT forward compatible\n" );
 		}
 	}
+#endif
 	
 	common->Printf( "\nPIXELFORMAT: color(%d-bits) Z(%d-bit) stencil(%d-bits)\n", glConfig.colorBits, glConfig.depthBits, glConfig.stencilBits );
 	common->Printf( "MODE: %d, %d x %d %s hz:", r_mode.GetInteger(), glConfig.vidWidth, glConfig.vidHeight, fsstrings[r_fullscreen.GetBool()] );
