@@ -424,6 +424,7 @@ project "Techyon"
 		"libs/glew/include/GL/glew.h",
 		"libs/png/*.c", "libs/png/*.h",
 		"libs/zlib/*.c", "libs/zlib/*.h",
+		"libs/etc1/etc1.cpp", "libs/etc1/etc1.h",
 		
 		"libs/irrxml/src/*.cpp", "libs/irrxml/src/*.h",
 		
