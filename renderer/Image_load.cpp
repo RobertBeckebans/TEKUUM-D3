@@ -69,6 +69,8 @@ int idImage::BitsForInternalFormat( int internalFormat ) const
 	switch( internalFormat )
 	{
 #if defined(USE_GLES1)
+		case GL_RGB:
+			return 24;
 		case GL_RGBA:
 			return 32;
 		case GL_COMPRESSED_RGB_S3TC_DXT1_EXT:
@@ -1314,7 +1316,7 @@ void idImage::ImageProgramStringToCompressedFileName( const char* imageProg, idS
 	generatedFileName.Replace( ")", "" );
 	generatedFileName.Replace( " ", "" );
 	
-	generatedFileName.DefaultFileExtension( suffix );
+	generatedFileName.SetFileExtension( suffix );
 	
 #else
 	const char*	s;
@@ -1680,6 +1682,50 @@ void idImage::WritePrecompressedPKMImage( const byte* pic, int width, int height
 		common->Warning( "idImage::WritePrecompressedPKMImage: level > MAX_TEXTURE_LEVELS for image %s", filename.c_str() );
 		return;
 	}
+
+	switch( internalFormat )
+	{
+		//case GL_COLOR_INDEX8_EXT:
+		//case GL_COLOR_INDEX:
+			// this will not work with dds viewers but we need it in this format to save disk
+			// load speed ( i.e. size )
+			//altInternalFormat = GL_COLOR_INDEX;
+			//bitSize = 24;
+			//break;
+		
+		case 1:
+		case 3:
+		case GL_RGB:
+		case GL_COMPRESSED_RGB_S3TC_DXT1_EXT:
+#if !defined(USE_GLES1)
+		case GL_INTENSITY8:
+		case GL_LUMINANCE8:
+		case GL_RGB8:
+#endif
+			//altInternalFormat = GL_BGR_EXT;
+			//bitSize = 24;
+			break;
+		
+		case 4:
+		case GL_RGBA:
+#if !defined(USE_GLES1)
+		case GL_LUMINANCE8_ALPHA8:
+		case GL_RGBA8:
+#endif
+			//altInternalFormat = GL_BGRA_EXT;
+			//bitSize = 32;
+			break;
+		
+		//case GL_ALPHA8:
+			//altInternalFormat = GL_ALPHA;
+			//bitSize = 8;
+			//break;
+		default:
+			{
+				//common->Warning( "Unknown or unsupported format for %s", filename.c_str() );
+				return;
+			}
+	}
 	
 	idFile* f = fileSystem->OpenFileWrite( filename );
 	if( f == NULL )
@@ -1714,6 +1760,23 @@ void idImage::WritePrecompressedPKMImage( const byte* pic, int width, int height
 	etc1_encode_image( pic, width, height, 4, width * 4, encodedData );
 	
 	f->Write( encodedData, encodedSize );
+
+#if 0
+	//if( image_writeETC1
+	{
+		idStrStatic<MAX_IMAGE_NAME> pngName = filename;
+		pngName.SetFileExtension( "png" );
+
+		int decodedSize = width * height * 3;
+		byte* decodedData = ( byte* ) R_StaticAlloc( decodedSize );
+
+		etc1_decode_image( encodedData, decodedData, width, height, 3, width * 3 );
+
+		R_WritePNG( pngName, decodedData, 3, width, height, true );
+
+		R_StaticFree( decodedData );
+	}
+#endif
 	
 	/*
 	for( int level = 0 ; level < numLevels ; level++ )
@@ -2050,7 +2113,8 @@ bool idImage::CheckPrecompressedPKMImage( bool fullLoad )
 	int width = etc1_pkm_get_width( header );
 	int height = etc1_pkm_get_width( header );
 	int encodedDataSize = etc1_get_encoded_data_size( width, height );
-	
+
+
 	// upload all the levels
 	//UploadPrecompressedPKMImage( data, len );
 	
@@ -2059,9 +2123,16 @@ bool idImage::CheckPrecompressedPKMImage( bool fullLoad )
 	uploadWidth = width;
 	uploadHeight = height;
 	
+	//int decodedSize = width * height * 3;
+	//byte* decodedData = ( byte* ) R_StaticAlloc( decodedSize );
+
+	//etc1_decode_image( encodedData, decodedData, width, height, 3, width * 3 );
+
 	internalFormat = GL_ETC1_RGB8_OES;
 	glCompressedTexImage2D( GL_TEXTURE_2D, 0, internalFormat, width, height, 0, encodedDataSize, encodedData );
 	
+	//R_StaticFree( decodedData );
+
 	SetImageFilterAndRepeat();
 	
 	R_StaticFree( data );
@@ -2996,10 +3067,16 @@ void idImage::Print() const
 		case GL_RGB:
 			common->Printf( "RGB     " );
 			break;
+
 		case GL_RGBA:
 		case 4:
 			common->Printf( "RGBA    " );
 			break;
+
+		case GL_ETC1_RGB8_OES:
+			common->Printf( "RGB8_OES" );
+			break;
+
 		case GL_COMPRESSED_RGB_S3TC_DXT1_EXT:
 			common->Printf( "DXT1    " );
 			break;
