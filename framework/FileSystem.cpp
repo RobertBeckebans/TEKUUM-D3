@@ -3307,11 +3307,13 @@ void idFileSystemLocal::Init()
 	{
 		fs_basepath.SetString( Sys_DefaultBasePath() );
 	}
+	
 	if( fs_savepath.GetString()[0] == '\0' )
 	{
 		fs_savepath.SetString( Sys_DefaultSavePath() );
 		common->Printf( "User savepath: '%s'\n", fs_savepath.GetString() );
 	}
+	
 	if( fs_cdpath.GetString()[0] == '\0' )
 	{
 		fs_cdpath.SetString( Sys_DefaultCDPath() );
@@ -3322,7 +3324,8 @@ void idFileSystemLocal::Init()
 #ifdef WIN32
 		fs_devpath.SetString( fs_cdpath.GetString()[0] ? fs_cdpath.GetString() : fs_basepath.GetString() );
 #else
-		fs_devpath.SetString( fs_savepath.GetString() );
+		// RB: don't write to home folder on Linux
+		fs_devpath.SetString( fs_basepath.GetString() );
 #endif
 	}
 	

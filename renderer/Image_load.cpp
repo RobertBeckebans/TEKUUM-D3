@@ -1471,7 +1471,7 @@ void idImage::WritePrecompressedDDSImage()
 	if( globalImages->image_useOffLineCompression.GetBool() && FormatIsDXT( altInternalFormat ) )
 	{
 		// RB: use generated/ folder
-		idStr outFile = fileSystem->RelativePathToOSPath( filename.c_str(), "fs_devpath" );
+		idStr outFile = fileSystem->RelativePathToOSPath( filename.c_str(), "fs_basepath" );
 		// RB end
 		idStr inFile = outFile;
 		inFile.StripFileExtension();
@@ -1727,7 +1727,7 @@ void idImage::WritePrecompressedPKMImage( const byte* pic, int width, int height
 		}
 	}
 	
-	idFile* f = fileSystem->OpenFileWrite( filename );
+	idFile* f = fileSystem->OpenFileWrite( filename, "fs_basepath" );
 	if( f == NULL )
 	{
 		common->Warning( "Could not open %s trying to write precompressed image", filename.c_str() );

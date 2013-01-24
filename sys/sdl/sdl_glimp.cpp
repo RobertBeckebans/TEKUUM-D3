@@ -76,7 +76,7 @@ bool GLimp_Init( glimpParms_t parms )
 			return false;
 		}
 	}
-
+	
 	//assert( SDL_WasInit( SDL_INIT_VIDEO ) );
 	
 	Uint32 flags = SDL_WINDOW_OPENGL;
@@ -189,6 +189,9 @@ bool GLimp_Init( glimpParms_t parms )
 		
 		glConfig.isFullscreen = ( SDL_GetWindowFlags( window ) & SDL_WINDOW_FULLSCREEN ) == SDL_WINDOW_FULLSCREEN;
 #else
+		// no SDL 2 -> no OpenGL 3 context
+		r_useOpenGL32.SetInteger( 0 );
+		
 		SDL_WM_SetCaption( GAME_NAME, GAME_NAME );
 		
 		if( SDL_GL_SetAttribute( SDL_GL_SWAP_CONTROL, r_swapInterval.GetInteger() ) < 0 )
@@ -237,7 +240,7 @@ bool GLimp_Init( glimpParms_t parms )
 	{
 		common->Printf( "Using GLEW %s\n", glewGetString( GLEW_VERSION ) );
 	}
-
+	
 	return true;
 }
 
@@ -385,21 +388,21 @@ int Sys_GetVideoRam()
 {
 	static int run_once = 0;
 	int major, minor, value;
-
+	
 	if( run_once )
 	{
 		return run_once;
 	}
-
+	
 	if( sys_videoRam.GetInteger() )
 	{
 		run_once = sys_videoRam.GetInteger();
 		return sys_videoRam.GetInteger();
 	}
-
+	
 	// try a few strategies to guess the amount of video ram
 	common->Printf( "guessing video ram ( use +set sys_videoRam to force ) ..\n" );
-
+	
 	/*
 	if( !GLimp_OpenDisplay( ) )
 	{
@@ -409,7 +412,7 @@ int Sys_GetVideoRam()
 	l_dpy = dpy;
 	l_scrnum = scrnum;
 	*/
-
+	
 	// try ATI /proc read ( for the lack of a better option )
 	int fd;
 	if( ( fd = open( "/proc/dri/0/umm", O_RDONLY ) ) != -1 )
@@ -450,10 +453,10 @@ int Sys_GetVideoRam()
 			common->Printf( "read /proc/dri/0/umm failed: %s\n", strerror( errno ) );
 		}
 	}
-
+	
 	common->Printf( "guess failed, return default mid-range VRAM setting ( 256MB VRAM )\n" );
 	run_once = 256;
-
+	
 	return run_once;
 }
 
