@@ -262,7 +262,7 @@ void idAudioHardwareWIN32::SetPrimaryBufferFormat( dword dwPrimaryFreq, dword dw
 	}
 	
 	uint32 cfgSpeakers;
-	m_pDS->GetSpeakerConfig( (LPDWORD) &cfgSpeakers );
+	m_pDS->GetSpeakerConfig( ( LPDWORD ) &cfgSpeakers );
 	
 	DSCAPS dscaps;
 	dscaps.dwSize = sizeof( DSCAPS );
@@ -674,7 +674,7 @@ int idAudioBufferWIN32::FillBufferWithSound( LPDIRECTSOUNDBUFFER pDSB, bool bRep
 	}
 	
 	// Lock the buffer down
-	if( FAILED( hr = pDSB->Lock( 0, m_dwDSBufferSize, (LPVOID*) &pDSLockedBuffer, (LPDWORD) &dwDSLockedBufferSize, NULL, NULL, 0L ) ) )
+	if( FAILED( hr = pDSB->Lock( 0, m_dwDSBufferSize, ( LPVOID* ) &pDSLockedBuffer, ( LPDWORD ) &dwDSLockedBufferSize, NULL, NULL, 0L ) ) )
 	{
 		DXTRACE_ERR( TEXT( "Lock" ), hr );
 		return -1;
@@ -753,7 +753,7 @@ int idAudioBufferWIN32::RestoreBuffer( LPDIRECTSOUNDBUFFER pDSB, bool* pbWasRest
 	}
 	
 	uint32 dwStatus;
-	if( FAILED( hr = pDSB->GetStatus( (LPDWORD) &dwStatus ) ) )
+	if( FAILED( hr = pDSB->GetStatus( ( LPDWORD ) &dwStatus ) ) )
 	{
 		return DXTRACE_ERR( TEXT( "GetStatus" ), hr );
 	}
@@ -879,7 +879,7 @@ bool idAudioBufferWIN32::IsSoundPlaying( )
 	if( m_apDSBuffer )
 	{
 		uint32 dwStatus = 0;
-		m_apDSBuffer->GetStatus( (LPDWORD) &dwStatus );
+		m_apDSBuffer->GetStatus( ( LPDWORD ) &dwStatus );
 		if( dwStatus & DSBSTATUS_PLAYING )
 		{
 			return true;
@@ -904,7 +904,7 @@ bool idAudioBufferWIN32::Lock( void** pDSLockedBuffer, uint32* dwDSLockedBufferS
 	}
 	
 	// Lock the DirectSound buffer
-	if( FAILED( hr = m_apDSBuffer->Lock( 0, m_dwDSBufferSize, pDSLockedBuffer, (LPDWORD) dwDSLockedBufferSize, NULL, NULL, 0 ) ) )
+	if( FAILED( hr = m_apDSBuffer->Lock( 0, m_dwDSBufferSize, pDSLockedBuffer, ( LPDWORD ) dwDSLockedBufferSize, NULL, NULL, 0 ) ) )
 	{
 		return false;
 	}
@@ -940,7 +940,7 @@ bool idAudioBufferWIN32::GetCurrentPosition( uint32* pdwCurrentWriteCursor )
 		return false;
 	}
 	
-	if( FAILED( hr = m_apDSBuffer->GetCurrentPosition( NULL, (LPDWORD) pdwCurrentWriteCursor ) ) )
+	if( FAILED( hr = m_apDSBuffer->GetCurrentPosition( NULL, ( LPDWORD ) pdwCurrentWriteCursor ) ) )
 	{
 		return false;
 	}

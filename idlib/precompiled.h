@@ -36,7 +36,7 @@ If you have questions concerning this license or the applicable additional terms
 #include "sys/sys_types.h"
 
 // RB begin
-#if !defined(__ANDROID__)
+#if 0 //!defined(__ANDROID__)
 #include "sys/sys_intrinsics.h"
 #endif
 // RB end

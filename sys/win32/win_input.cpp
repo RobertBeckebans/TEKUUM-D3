@@ -1191,25 +1191,25 @@ static bool IN_AddGamepadPollEvent( int action, int value, int value2 )
 {
 	if( s_pollGamepadEventsCount >= MAX_POLL_EVENTS + POLL_EVENTS_HEADROOM )
 		common->FatalError( "pollGamepadEventsCount exceeded MAX_POLL_EVENT + POLL_EVENTS_HEADROOM\n" );
-		
+
 	s_pollGamepadEvents[s_pollGamepadEventsCount].action = action;
 	s_pollGamepadEvents[s_pollGamepadEventsCount].value = value;
 	s_pollGamepadEvents[s_pollGamepadEventsCount].value2 = value2;
 	s_pollGamepadEventsCount++;
-	
+
 	if( s_pollGamepadEventsCount >= MAX_POLL_EVENTS )
 	{
 		common->DPrintf( "WARNING: reached MAX_POLL_EVENT pollGamepadEventsCount\n" );
 		return false;
 	}
-	
+
 	return true;
 }
 
 static void IN_XBox360Axis( int action, short thumbAxis, float scale )
 {
 	float           f = ( ( float )thumbAxis ) / 32767.0f;
-	
+
 	float threshold = win32.in_xbox360ControllerThreshold.GetFloat();
 	if( f > -threshold && f < threshold )
 	{
@@ -1221,7 +1221,7 @@ static void IN_XBox360Axis( int action, short thumbAxis, float scale )
 		{
 			common->Printf( "xbox axis %i = %f\n", action, f );
 		}
-		
+
 		IN_AddGamepadPollEvent( action, f * scale, 0 );
 	}
 }
@@ -1230,12 +1230,12 @@ static void IN_XBox360TriggerToButton( byte triggerAxis, byte oldTriggerAxis, in
 {
 	float           f = ( ( float )triggerAxis ) / 255.0f;
 	float           fOld = ( ( float )triggerAxis ) / 255.0f;
-	
+
 	if( f > ( expectedStartValue + threshold + win32.in_xbox360ControllerThreshold.GetFloat() ) )
 	{
 		IN_AddGamepadPollEvent( GP_BUTTON, key, 1 );
 		Sys_QueEvent( GetTickCount(), SE_KEY, key, 1, 0, NULL );
-		
+
 		if( win32.in_xbox360ControllerDebug.GetBool() )
 		{
 			common->Printf( "xbox trigger to key press = Q:0x%02x(%s), value = %f\n", key, idKeyInput::KeyNumToString( key, false ), f );
@@ -1245,7 +1245,7 @@ static void IN_XBox360TriggerToButton( byte triggerAxis, byte oldTriggerAxis, in
 	{
 		IN_AddGamepadPollEvent( GP_BUTTON, key, 0 );
 		Sys_QueEvent( GetTickCount(), SE_KEY, key, 0, 0, NULL );
-		
+
 		if( win32.in_xbox360ControllerDebug.GetBool() )
 		{
 			common->Printf( "xbox trigger to key release = Q:0x%02x(%s), value = %f\n", key, idKeyInput::KeyNumToString( key, false ), f );
@@ -1257,42 +1257,42 @@ int Sys_PollXbox360ControllerInputEvents()
 {
 	if( !win32.in_xbox360Controller.GetBool() )
 		return 0;
-		
+
 	s_pollGamepadEventsCount = 0;
-	
+
 	XINPUT_STATE state;
 	DWORD dwResult = XInputGetState( 0, &state );
-	
+
 	if( dwResult == ERROR_SUCCESS )
 	{
 		win32.g_ControllerAvailable = true;
-		
+
 		// always send the axis
-		
+
 		// use left analog stick for strafing
 		IN_XBox360Axis( GP_AXIS_SIDE, state.Gamepad.sThumbLX, 127 );
 		IN_XBox360Axis( GP_AXIS_FORWARD, state.Gamepad.sThumbLY, 127 );
-		
+
 		// use right analog stick for viewing
 		IN_XBox360Axis( GP_AXIS_YAW, state.Gamepad.sThumbRX, -127 );
 		IN_XBox360Axis( GP_AXIS_PITCH, state.Gamepad.sThumbRY, -127 );
-		
+
 		if( state.dwPacketNumber == win32.g_Controller.dwPacketNumber )
 		{
 			// no changes since last frame so skip the buttons
 			return s_pollGamepadEventsCount;
 		}
-		
+
 		if( state.Gamepad.bLeftTrigger != win32.g_Controller.Gamepad.bLeftTrigger )
 		{
 			IN_XBox360TriggerToButton( state.Gamepad.bLeftTrigger, win32.g_Controller.Gamepad.bLeftTrigger, K_XINPUT_GAMEPAD_LT, 0, 0 );
 		}
-		
+
 		if( state.Gamepad.bRightTrigger != win32.g_Controller.Gamepad.bRightTrigger )
 		{
 			IN_XBox360TriggerToButton( state.Gamepad.bRightTrigger, win32.g_Controller.Gamepad.bRightTrigger, K_XINPUT_GAMEPAD_RT, 0, 0 );
 		}
-		
+
 		WORD diff = state.Gamepad.wButtons ^ win32.g_Controller.Gamepad.wButtons;
 		if( diff )
 		{
@@ -1309,7 +1309,7 @@ int Sys_PollXbox360ControllerInputEvents()
 					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_DPAD_UP, 0, 0, NULL );
 				}
 			}
-			
+
 			if( diff & XINPUT_GAMEPAD_DPAD_DOWN )
 			{
 				if( state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_DOWN )
@@ -1323,7 +1323,7 @@ int Sys_PollXbox360ControllerInputEvents()
 					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_DPAD_DOWN, 0, 0, NULL );
 				}
 			}
-			
+
 			if( diff & XINPUT_GAMEPAD_DPAD_LEFT )
 			{
 				if( state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_LEFT )
@@ -1337,7 +1337,7 @@ int Sys_PollXbox360ControllerInputEvents()
 					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_DPAD_LEFT, 0, 0, NULL );
 				}
 			}
-			
+
 			if( diff & XINPUT_GAMEPAD_DPAD_RIGHT )
 			{
 				if( state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_RIGHT )
@@ -1351,7 +1351,7 @@ int Sys_PollXbox360ControllerInputEvents()
 					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_DPAD_RIGHT, 0, 0, NULL );
 				}
 			}
-			
+
 			if( diff & XINPUT_GAMEPAD_START )
 			{
 				if( state.Gamepad.wButtons & XINPUT_GAMEPAD_START )
@@ -1365,7 +1365,7 @@ int Sys_PollXbox360ControllerInputEvents()
 					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_START, 0, 0, NULL );
 				}
 			}
-			
+
 			if( diff & XINPUT_GAMEPAD_BACK )
 			{
 				if( state.Gamepad.wButtons & XINPUT_GAMEPAD_BACK )
@@ -1379,7 +1379,7 @@ int Sys_PollXbox360ControllerInputEvents()
 					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_BACK, 0, 0, NULL );
 				}
 			}
-			
+
 			if( diff & XINPUT_GAMEPAD_LEFT_THUMB )
 			{
 				if( state.Gamepad.wButtons & XINPUT_GAMEPAD_LEFT_THUMB )
@@ -1393,7 +1393,7 @@ int Sys_PollXbox360ControllerInputEvents()
 					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_LS, 0, 0, NULL );
 				}
 			}
-			
+
 			if( diff & XINPUT_GAMEPAD_RIGHT_THUMB )
 			{
 				if( state.Gamepad.wButtons & XINPUT_GAMEPAD_RIGHT_THUMB )
@@ -1407,7 +1407,7 @@ int Sys_PollXbox360ControllerInputEvents()
 					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_RS, 0, 0, NULL );
 				}
 			}
-			
+
 			if( diff & XINPUT_GAMEPAD_LEFT_SHOULDER )
 			{
 				if( state.Gamepad.wButtons & XINPUT_GAMEPAD_LEFT_SHOULDER )
@@ -1421,7 +1421,7 @@ int Sys_PollXbox360ControllerInputEvents()
 					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_LB, 0, 0, NULL );
 				}
 			}
-			
+
 			if( diff & XINPUT_GAMEPAD_RIGHT_SHOULDER )
 			{
 				if( state.Gamepad.wButtons & XINPUT_GAMEPAD_RIGHT_SHOULDER )
@@ -1435,7 +1435,7 @@ int Sys_PollXbox360ControllerInputEvents()
 					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_RB, 0, 0, NULL );
 				}
 			}
-			
+
 			if( diff & XINPUT_GAMEPAD_A )
 			{
 				if( state.Gamepad.wButtons & XINPUT_GAMEPAD_A )
@@ -1449,7 +1449,7 @@ int Sys_PollXbox360ControllerInputEvents()
 					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_A, 0, 0, NULL );
 				}
 			}
-			
+
 			if( diff & XINPUT_GAMEPAD_B )
 			{
 				if( state.Gamepad.wButtons & XINPUT_GAMEPAD_B )
@@ -1463,7 +1463,7 @@ int Sys_PollXbox360ControllerInputEvents()
 					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_B, 0, 0, NULL );
 				}
 			}
-			
+
 			if( diff & XINPUT_GAMEPAD_X )
 			{
 				if( state.Gamepad.wButtons & XINPUT_GAMEPAD_X )
@@ -1477,7 +1477,7 @@ int Sys_PollXbox360ControllerInputEvents()
 					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_X, 0, 0, NULL );
 				}
 			}
-			
+
 			if( diff & XINPUT_GAMEPAD_Y )
 			{
 				if( state.Gamepad.wButtons & XINPUT_GAMEPAD_Y )
@@ -1492,11 +1492,11 @@ int Sys_PollXbox360ControllerInputEvents()
 				}
 			}
 		}
-		
+
 		win32.g_Controller = state;
 		return s_pollGamepadEventsCount;
 	}
-	
+
 	return 0;
 }
 
@@ -1506,11 +1506,11 @@ int	Sys_ReturnXbox360ControllerInputEvent( const int n, int& action, int& value,
 	{
 		return 0;
 	}
-	
+
 	action = s_pollGamepadEvents[ n ].action;
 	value = s_pollGamepadEvents[ n ].value;
 	value2 = s_pollGamepadEvents[ n ].value2;
-	
+
 	return 1;
 }
 
