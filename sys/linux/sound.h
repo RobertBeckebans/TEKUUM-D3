@@ -230,7 +230,7 @@ private:
 // libpulse-dev
 #include <pulse/simple.h>
 
-class tyAudioHardwarePulseAudio : public idAudioHardware
+class rbAudioHardwarePulseAudio : public idAudioHardware
 {
 private:
 	// if you can't write MIXBUFFER_SAMPLES all at once to the audio device, split in MIXBUFFER_CHUNKS
@@ -245,7 +245,7 @@ private:
 	int					remainingFrames;
 	
 public:
-	tyAudioHardwarePulseAudio()
+	rbAudioHardwarePulseAudio()
 	{
 		paPlayback		= NULL;
 		numChannels		= 0;
@@ -253,13 +253,13 @@ public:
 		mixBufferSize	= 0;
 		remainingFrames	= 0;
 	}
-	virtual				~tyAudioHardwarePulseAudio();
+	virtual				~rbAudioHardwarePulseAudio();
 	
 	bool				Initialize();
 	
 	
 	// Linux driver doesn't support memory map API
-	bool				Lock( void** pDSLockedBuffer, ulong* dwDSLockedBufferSize )
+	bool				Lock( void** pDSLockedBuffer, uint32* dwDSLockedBufferSize )
 	{
 		return false;
 	}
@@ -267,7 +267,7 @@ public:
 	{
 		return false;
 	}
-	bool				GetCurrentPosition( ulong* pdwCurrentWriteCursor )
+	bool				GetCurrentPosition( uint32* pdwCurrentWriteCursor )
 	{
 		return false;
 	}

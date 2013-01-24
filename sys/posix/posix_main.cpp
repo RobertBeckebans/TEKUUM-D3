@@ -3,6 +3,7 @@
 
 Doom 3 GPL Source Code
 Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2013 Robert Beckebans
 
 This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
 
@@ -370,6 +371,7 @@ void Posix_QueEvent( sysEventType_t type, int value, int value2,
 Sys_GetEvent
 ================
 */
+#if !defined(USE_SDL)
 sysEvent_t Sys_GetEvent()
 {
 	static sysEvent_t ev;
@@ -385,16 +387,19 @@ sysEvent_t Sys_GetEvent()
 	
 	return ev;
 }
+#endif
 
 /*
 ================
 Sys_ClearEvents
 ================
 */
+#if !defined(USE_SDL)
 void Sys_ClearEvents()
 {
 	eventHead = eventTail = 0;
 }
+#endif
 
 /*
 ================
@@ -1164,6 +1169,7 @@ called during frame loops, pacifier updates etc.
 this is only for console input polling and misc mouse grab tasks
 the actual mouse and keyboard input is in the Sys_Poll logic
 */
+#if !defined(USE_SDL)
 void Sys_GenerateEvents()
 {
 	char* s;
@@ -1178,6 +1184,7 @@ void Sys_GenerateEvents()
 		Posix_QueEvent( SE_CONSOLE, 0, 0, len, b );
 	}
 }
+#endif
 
 /*
 ===============

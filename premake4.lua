@@ -942,22 +942,22 @@ if not _OPTIONS["android"] then
 	configuration { "linux", "gmake" }
 		buildoptions
 		{
-			"`pkg-config --cflags x11`",
-			"`pkg-config --cflags xext`",
-			"`pkg-config --cflags xf86dgaproto`",
-			"`pkg-config --cflags xxf86vm`",
+			--"`pkg-config --cflags x11`",
+			--"`pkg-config --cflags xext`",
+			--"`pkg-config --cflags xf86dgaproto`",
+			--"`pkg-config --cflags xxf86vm`",
 			"`pkg-config --cflags libpulse-simple`",
-			--"`pkg-config --cflags sdl`",
+			"`pkg-config --cflags sdl`",
 			--"`pkg-config --cflags libcurl`",
 		}
 		linkoptions
 		{
-			"`pkg-config --libs x11`",
-			"`pkg-config --libs xext`",
-			"`pkg-config --libs xf86dgaproto`",
-			"`pkg-config --libs xxf86vm`",
+			--"`pkg-config --libs x11`",
+			--"`pkg-config --libs xext`",
+			--"`pkg-config --libs xf86dgaproto`",
+			--"`pkg-config --libs xxf86vm`",
 			"`pkg-config --libs libpulse-simple`",
-			--"`pkg-config --libs sdl`",
+			"`pkg-config --libs sdl`",
 			--"`pkg-config --libs libcurl`",
 		}
 		links
@@ -975,11 +975,13 @@ if not _OPTIONS["android"] then
 			"sys/posix/posix_main.cpp",
 			"sys/posix/posix_signal.cpp",
 			"sys/posix/posix_threads.cpp",
-			"sys/posix/posix_input.cpp",
+			--"sys/posix/posix_input.cpp",
 			"sys/linux/stack.cpp",
 			"sys/linux/main.cpp",
-			"sys/linux/glimp.cpp",
-			"sys/linux/input.cpp",
+			--"sys/linux/glimp.cpp",
+			--"sys/linux/input.cpp",
+			"sys/sdl/sdl_glimp.cpp",
+			"sys/sdl/sdl_input.cpp",
 			"sys/linux/sound.cpp",
 			--"sys/linux/sound_alsa.cpp",
 			"sys/linux/sound_pulse.cpp",
@@ -1012,7 +1014,8 @@ if not _OPTIONS["android"] then
 			--"USE_OPENAL",
 			"USE_SOUND_PULSE",
 			--"USE_SOUND_SDL",
-            "PNG_NO_ASSEMBLER_CODE",
+			"PNG_NO_ASSEMBLER_CODE",
+			"USE_SDL",
 		}
 			
 	configuration { "linux", "x32" }

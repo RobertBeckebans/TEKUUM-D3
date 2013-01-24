@@ -3,6 +3,7 @@
 
 Doom 3 GPL Source Code
 Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2013 Robert Beckebans
 
 This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
 
@@ -96,7 +97,7 @@ idAudioHardware* idAudioHardware::Alloc()
 #elif defined(USE_SOUND_OSS)
 	return new idAudioHardwareOSS;
 #elif defined(USE_SOUND_PULSE)
-	return new tyAudioHardwarePulseAudio;
+	return new rbAudioHardwarePulseAudio;
 #else
 	return NULL;
 #endif

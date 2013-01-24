@@ -244,15 +244,7 @@ const char* Sys_DefaultBasePath()
 	return LINUX_DEFAULT_PATH;
 }
 
-/*
-===============
-Sys_GetConsoleKey
-===============
-*/
-unsigned char Sys_GetConsoleKey( bool shifted )
-{
-	return shifted ? '~' : '`';
-}
+
 
 /*
 ===============

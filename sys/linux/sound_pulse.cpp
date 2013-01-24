@@ -35,10 +35,10 @@ If you have questions concerning this license or the applicable additional terms
 
 /*
 ===============
-tyAudioHardwarePulseAudio::Release
+rbAudioHardwarePulseAudio::Release
 ===============
 */
-void tyAudioHardwarePulseAudio::Release()
+void rbAudioHardwarePulseAudio::Release()
 {
 
 	if( paPlayback )
@@ -55,10 +55,10 @@ void tyAudioHardwarePulseAudio::Release()
 
 /*
 =================
-tyAudioHardwarePulseAudio::InitFailed
+rbAudioHardwarePulseAudio::InitFailed
 =================
 */
-void tyAudioHardwarePulseAudio::InitFailed()
+void rbAudioHardwarePulseAudio::InitFailed()
 {
 	Release();
 	cvarSystem->SetCVarBool( "s_noSound", true );
@@ -68,10 +68,10 @@ void tyAudioHardwarePulseAudio::InitFailed()
 
 /*
 =====================
-tyAudioHardwarePulseAudio::Initialize
+rbAudioHardwarePulseAudio::Initialize
 =====================
 */
-bool tyAudioHardwarePulseAudio::Initialize()
+bool rbAudioHardwarePulseAudio::Initialize()
 {
 	int err;
 	char driverName[128];
@@ -151,10 +151,10 @@ bool tyAudioHardwarePulseAudio::Initialize()
 
 /*
 ===============
-tyAudioHardwarePulseAudio::~tyAudioHardwarePulseAudio
+rbAudioHardwarePulseAudio::~rbAudioHardwarePulseAudio
 ===============
 */
-tyAudioHardwarePulseAudio::~tyAudioHardwarePulseAudio()
+rbAudioHardwarePulseAudio::~rbAudioHardwarePulseAudio()
 {
 	common->Printf( "----------- SDL Sound Shutdown ------------\n" );
 	Release();
@@ -163,30 +163,30 @@ tyAudioHardwarePulseAudio::~tyAudioHardwarePulseAudio()
 
 /*
 =================
-tyAudioHardwarePulseAudio::GetMixBufferSize
+rbAudioHardwarePulseAudio::GetMixBufferSize
 =================
 */
-int tyAudioHardwarePulseAudio::GetMixBufferSize()
+int rbAudioHardwarePulseAudio::GetMixBufferSize()
 {
 	return mixBufferSize;
 }
 
 /*
 =================
-tyAudioHardwarePulseAudio::GetMixBuffer
+rbAudioHardwarePulseAudio::GetMixBuffer
 =================
 */
-short* tyAudioHardwarePulseAudio::GetMixBuffer()
+short* rbAudioHardwarePulseAudio::GetMixBuffer()
 {
 	return ( short* )mixBuffer;
 }
 
 /*
 ===============
-tyAudioHardwarePulseAudio::Flush
+rbAudioHardwarePulseAudio::Flush
 ===============
 */
-bool tyAudioHardwarePulseAudio::Flush()
+bool rbAudioHardwarePulseAudio::Flush()
 {
 	int error;
 	
@@ -206,11 +206,11 @@ bool tyAudioHardwarePulseAudio::Flush()
 
 /*
 ===============
-tyAudioHardwarePulseAudio::Write
+rbAudioHardwarePulseAudio::Write
 rely on m_freeWriteChunks which has been set in Flush() before engine did the mixing for this MIXBUFFER_SAMPLE
 ===============
 */
-void tyAudioHardwarePulseAudio::Write( bool flushing )
+void rbAudioHardwarePulseAudio::Write( bool flushing )
 {
 	int error;
 	
@@ -218,7 +218,7 @@ void tyAudioHardwarePulseAudio::Write( bool flushing )
 	{
 		// if we write after a new mixing loop, we should have m_writeChunk == 0
 		// otherwise that last remaining chunk that was never flushed out to the audio device has just been overwritten
-		Sys_Printf( "tyAudioHardwarePulseAudio::Write: %d frames overflowed and dropped\n", remainingFrames );
+		Sys_Printf( "rbAudioHardwarePulseAudio::Write: %d frames overflowed and dropped\n", remainingFrames );
 	}
 	
 	if( !flushing )
