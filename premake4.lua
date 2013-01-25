@@ -143,6 +143,12 @@ newoption
 	description = "Support the Xbox 360 controller"
 }
 
+newoption
+{
+	trigger = "sdl2",
+	description = "Use SDL 2.0 instead of SDL 1.2"
+}
+
 --newoption
 --{
 --	trigger = "lua",
@@ -947,7 +953,6 @@ if not _OPTIONS["android"] then
 			--"`pkg-config --cflags xf86dgaproto`",
 			--"`pkg-config --cflags xxf86vm`",
 			"`pkg-config --cflags libpulse-simple`",
-			"`pkg-config --cflags sdl`",
 			--"`pkg-config --cflags libcurl`",
 		}
 		linkoptions
@@ -957,7 +962,6 @@ if not _OPTIONS["android"] then
 			--"`pkg-config --libs xf86dgaproto`",
 			--"`pkg-config --libs xxf86vm`",
 			"`pkg-config --libs libpulse-simple`",
-			"`pkg-config --libs sdl`",
 			--"`pkg-config --libs libcurl`",
 		}
 		links
@@ -965,6 +969,28 @@ if not _OPTIONS["android"] then
 			--"curl",
 			--"openal",
 		}
+		
+if _OPTIONS["sdl2"] then
+	configuration { "linux", "gmake" }
+	  buildoptions
+		{
+			"`pkg-config --cflags sdl2`",
+		}
+		linkoptions
+		{
+			"`pkg-config --libs sdl2`",
+		}
+else
+	configuration { "linux", "gmake" }
+		buildoptions
+		{
+			"`pkg-config --cflags sdl`",
+		}
+		linkoptions
+		{
+			"`pkg-config --libs sdl`",
+		}
+end
 	
 	configuration "linux"
 		targetname  "techyon"

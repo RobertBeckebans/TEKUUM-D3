@@ -451,6 +451,7 @@ sysEvent_t Sys_GetEvent()
 				switch( ev.window.event )
 				{
 					case SDL_WINDOWEVENT_FOCUS_GAINED:
+					{
 						// unset modifier, in case alt-tab was used to leave window and ALT is still set
 						// as that can cause fullscreen-toggling when pressing enter...
 						SDL_Keymod currentmod = SDL_GetModState();
@@ -462,9 +463,13 @@ sysEvent_t Sys_GetEvent()
 						
 						GLimp_GrabInput( GRAB_ENABLE | GRAB_REENABLE | GRAB_HIDECURSOR );
 						break;
+					}
+					
 					case SDL_WINDOWEVENT_FOCUS_LOST:
+					{
 						GLimp_GrabInput( 0 );
 						break;
+					}
 				}
 				
 				return res_none;
