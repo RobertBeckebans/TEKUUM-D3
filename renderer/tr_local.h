@@ -333,6 +333,7 @@ public:
 	bool					needsPortalSky;
 	
 	// RB begin
+	idVec3					volumeMidPoint;
 	bool					lightgridCalculated;
 	idVec3					lightDir;	// normalized direction towards light
 	idVec3					ambientLight;	// color normalized to 0-1

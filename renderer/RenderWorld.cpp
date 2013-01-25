@@ -1964,6 +1964,13 @@ void idRenderWorldLocal::PushVolumeIntoTree( idRenderEntityLocal* def, idRenderL
 		}
 	}
 	
+	// RB: save for further lightgrid calculations
+	if( def != NULL )
+	{
+		def->volumeMidPoint = mid;
+	}
+	// RB end
+	
 	idSphere sphere( mid, sqrt( radSquared ) );
 	
 	PushVolumeIntoTree_r( def, light, &sphere, numPoints, points, 0 );

@@ -77,7 +77,15 @@ void idRenderWorldLocal::SetupEntityLightingGrid( idRenderEntityLocal* def )
 			}
 		}
 #else
-		lightOrigin = def->parms.origin;
+		// some models, like empty particles have no volume
+		if( def->referenceBounds.IsCleared() )
+		{
+			lightOrigin = def->parms.origin;
+		}
+		else
+		{
+			lightOrigin = def->volumeMidPoint;
+		}
 #endif
 		
 		lightOrigin -= lightGridOrigin;
