@@ -27,22 +27,6 @@ If you have questions concerning this license or the applicable additional terms
 
 ===========================================================================
 */
-/*
- * Copyright (C) 2010 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- */
 #include <stdio.h>
 #include <unistd.h>
 #include <fcntl.h>
@@ -84,11 +68,11 @@ static SLVolumeItf bqPlayerVolume;
 
 
 
-class tyAudioHardwareSLES : public idAudioHardware
+class rbAudioHardwareSLES : public idAudioHardware
 {
 private:
 	// if you can't write MIXBUFFER_SAMPLES all at once to the audio device, split in MIXBUFFER_CHUNKS
-	static const int			MIXBUFFER_CHUNKS = 8;
+	static const int			MIXBUFFER_CHUNKS = 4;
 	
 	unsigned int				numChannels;
 	void*						mixBuffer;
@@ -103,11 +87,11 @@ private:
 	// how many chunks we can write to the audio device without blocking
 	//int						freeWriteChunks;
 	
-	static tyAudioHardwareSLES* instance;
+	static rbAudioHardwareSLES* instance;
 	
 	
 public:
-	tyAudioHardwareSLES()
+	rbAudioHardwareSLES()
 	{
 		instance = this;
 		
@@ -117,7 +101,7 @@ public:
 		//remainingFrames	= 0;
 		writeChunks = 0;
 	}
-	virtual				~tyAudioHardwareSLES();
+	virtual				~rbAudioHardwareSLES();
 	
 	bool				Initialize();
 	
@@ -156,7 +140,7 @@ private:
 	static void			bqPlayerCallback( SLAndroidSimpleBufferQueueItf bq, void* context );
 };
 
-tyAudioHardwareSLES* tyAudioHardwareSLES::instance = NULL;
+rbAudioHardwareSLES* rbAudioHardwareSLES::instance = NULL;
 
 
 #if 0
@@ -164,7 +148,7 @@ static idCVar s_driver( "s_driver", "audiotarget", CVAR_SYSTEM | CVAR_ARCHIVE | 
 
 idAudioHardware* idAudioHardware::Alloc()
 {
-	g_audioHardwareAudioTarget = new tyAudioHardwareAudioTarget;
+	g_audioHardwareAudioTarget = new rbAudioHardwareAudioTarget;
 	return g_audioHardwareAudioTarget;
 }
 
@@ -173,7 +157,7 @@ static idCVar s_driver( "s_driver", "opensles", CVAR_SYSTEM | CVAR_ARCHIVE | CVA
 
 idAudioHardware* idAudioHardware::Alloc()
 {
-	return new tyAudioHardwareSLES;
+	return new rbAudioHardwareSLES;
 }
 #endif
 
@@ -189,10 +173,10 @@ idAudioHardware::~idAudioHardware() { }
 
 /*
 ===============
-tyAudioHardwareSLES::Release
+rbAudioHardwareSLES::Release
 ===============
 */
-void tyAudioHardwareSLES::Release()
+void rbAudioHardwareSLES::Release()
 {
 	// destroy buffer queue audio player object, and invalidate all associated interfaces
 	if( bqPlayerObject != NULL )
@@ -231,10 +215,10 @@ void tyAudioHardwareSLES::Release()
 
 /*
 =================
-tyAudioHardwareSLES::InitFailed
+rbAudioHardwareSLES::InitFailed
 =================
 */
-void tyAudioHardwareSLES::InitFailed()
+void rbAudioHardwareSLES::InitFailed()
 {
 	Release();
 	cvarSystem->SetCVarBool( "s_noSound", true );
@@ -244,10 +228,10 @@ void tyAudioHardwareSLES::InitFailed()
 
 /*
 =====================
-tyAudioHardwareSLES::Initialize
+rbAudioHardwareSLES::Initialize
 =====================
 */
-bool tyAudioHardwareSLES::Initialize()
+bool rbAudioHardwareSLES::Initialize()
 {
 	common->Printf( "------ OpenSL Sound Initialization -----\n" );
 	
@@ -271,10 +255,10 @@ bool tyAudioHardwareSLES::Initialize()
 
 /*
 ===============
-tyAudioHardwareSLES::~tyAudioHardwareSLES
+rbAudioHardwareSLES::~rbAudioHardwareSLES
 ===============
 */
-tyAudioHardwareSLES::~tyAudioHardwareSLES()
+rbAudioHardwareSLES::~rbAudioHardwareSLES()
 {
 	common->Printf( "----------- OpenSL Sound Shutdown ------------\n" );
 	Release();
@@ -283,52 +267,58 @@ tyAudioHardwareSLES::~tyAudioHardwareSLES()
 
 /*
 =================
-tyAudioHardwareSLES::GetMixBufferSize
+rbAudioHardwareSLES::GetMixBufferSize
 =================
 */
-int tyAudioHardwareSLES::GetMixBufferSize()
+int rbAudioHardwareSLES::GetMixBufferSize()
 {
 	return mixBufferSize;
 }
 
 /*
 =================
-tyAudioHardwareSLES::GetMixBuffer
+rbAudioHardwareSLES::GetMixBuffer
 =================
 */
-short* tyAudioHardwareSLES::GetMixBuffer()
+short* rbAudioHardwareSLES::GetMixBuffer()
 {
 	return ( short* )mixBuffer;
 }
 
 /*
 ===============
-tyAudioHardwareSLES::Flush
+rbAudioHardwareSLES::Flush
 ===============
 */
-bool tyAudioHardwareSLES::Flush()
+bool rbAudioHardwareSLES::Flush()
 {
 	int error;
 	
 	if( writeChunks > 0 )
 	{
-		Write( true );
+		//Write( true );
 	}
 	
 	return true;
 }
 
 // this callback handler is called every time a buffer finishes playing
-void tyAudioHardwareSLES::bqPlayerCallback( SLAndroidSimpleBufferQueueItf bq, void* context )
+void rbAudioHardwareSLES::bqPlayerCallback( SLAndroidSimpleBufferQueueItf bq, void* context )
 {
 	assert( bq == bqPlayerBufferQueue );
 	assert( instance == context );
 	
-#if 1
-	int len = ( MIXBUFFER_SAMPLES * instance->numChannels * 2 ) / MIXBUFFER_CHUNKS;
+	// OpenSL thread can be different from sound engine thread
+	Sys_EnterCriticalSection( CRITICAL_SECTION_ONE );
 	
+	// finished a chunk
+	instance->writeChunks -= 1;
+	
+#if 0
 	if( instance->writeChunks > 0 )
 	{
+		int len = ( MIXBUFFER_SAMPLES * instance->numChannels * 2 ) / MIXBUFFER_CHUNKS;
+		
 		int offset = ( MIXBUFFER_CHUNKS - instance->writeChunks ) * len;
 		int pos = ( intptr_t )instance->mixBuffer + offset;
 		
@@ -336,32 +326,41 @@ void tyAudioHardwareSLES::bqPlayerCallback( SLAndroidSimpleBufferQueueItf bq, vo
 		result = ( *bqPlayerBufferQueue )->Enqueue( bqPlayerBufferQueue, ( byte* )pos, len );
 		if( SL_RESULT_SUCCESS != result )
 		{
-			common->Printf( "tyAudioHardwareSLES::bqPlayerCallback: bqPlayerBufferQueue->Enqueue( data = %p, offset = %i, len = %i ) failed\n", ( byte* )pos, offset, len );
-			return;
+			common->Printf( "rbAudioHardwareSLES::bqPlayerCallback: bqPlayerBufferQueue->Enqueue( data = %p, offset = %i, len = %i ) failed\n", ( byte* )pos, offset, len );
+			//return;
 		}
 		
-		instance->writeChunks -= 1;
+		//common->Printf( "rbAudioHardwareSLES::bqPlayerCallback: bqPlayerBufferQueue->Enqueue( data = %p, offset = %i, len = %i ) succeeded\n", ( byte* )pos, offset, len );
 	}
 #endif
+	
+	Sys_LeaveCriticalSection( CRITICAL_SECTION_ONE );
 }
 
 /*
 ===============
-tyAudioHardwareSLES::Write
+rbAudioHardwareSLES::Write
 rely on m_freeWriteChunks which has been set in Flush() before engine did the mixing for this MIXBUFFER_SAMPLE
 ===============
 */
-void tyAudioHardwareSLES::Write( bool flushing )
+void rbAudioHardwareSLES::Write( bool flushing )
 {
 	int error;
+	SLresult result;
 	
-	if( !flushing && writeChunks )
+	if( !flushing && writeChunks > 0 )
 	{
-		// if we write after a new mixing loop, we should have m_writeChunk == 0
+		// if we write after a new mixing loop, we should have writeChunks == 0
 		// otherwise that last remaining chunk that was never flushed out to the audio device has just been overwritten
-		//Sys_Printf( "tyAudioHardwareSLES::Write: %d samples overflowed and dropped\n", remainingFrames );
 		
-		Sys_Printf( "tyAudioHardwareSLES::Write: %d samples were overflowed and dropped\n", writeChunks * MIXBUFFER_SAMPLES / MIXBUFFER_CHUNKS );
+		Sys_Printf( "rbAudioHardwareSLES::Write: %d samples were overflowed and dropped\n", writeChunks * MIXBUFFER_SAMPLES / MIXBUFFER_CHUNKS );
+		
+		result = ( *bqPlayerBufferQueue )->Clear( bqPlayerBufferQueue );
+		if( SL_RESULT_SUCCESS != result )
+		{
+			common->Printf( "rbAudioHardwareSLES::Write: bqPlayerBufferQueue->Clear() failed\n" );
+			return;
+		}
 	}
 	
 	if( !flushing )
@@ -377,16 +376,18 @@ void tyAudioHardwareSLES::Write( bool flushing )
 		return;
 	}
 	
+	if( flushing && writeChunks > 0 )
+	{
+		return;
+	}
+	
 	// write the max frames you can in one shot - we need to write it all out in Flush() calls before the next Write() happens
 	
-#if 1
-	// here we only enqueue one buffer because it is a long clip,
-	// but for streaming playback we would typically enqueue at least 2 buffers to start
-	SLresult result;
+#if 0
 	result = ( *bqPlayerBufferQueue )->Enqueue( bqPlayerBufferQueue, mixBuffer, mixBufferSize );
 	if( SL_RESULT_SUCCESS != result )
 	{
-		common->Printf( "bqPlayerBufferQueue->Enqueue( mixBuffer = %p, mixBufferSize = %i ) failed\n", mixBuffer, mixBufferSize );
+		common->Printf( "rbAudioHardwareSLES::Write: bqPlayerBufferQueue->Enqueue( mixBuffer = %p, mixBufferSize = %i ) failed\n", mixBuffer, mixBufferSize );
 		return;
 	}
 	else
@@ -394,49 +395,33 @@ void tyAudioHardwareSLES::Write( bool flushing )
 		writeChunks = 0;
 	}
 	
-#elif 0
+#else
 	
-	int len = ( MIXBUFFER_SAMPLES * numChannels * 2 ) / MIXBUFFER_CHUNKS;
+	int len = mixBufferSize / MIXBUFFER_CHUNKS;
+	
+#if 1
 	for( int i = 0; i < MIXBUFFER_CHUNKS; i++ )
+#else
+	int i = 0;
+#endif
 	{
 		int offset = i * len;
 		int pos = ( intptr_t )mixBuffer + offset;
 	
-		SLresult result;
 		result = ( *bqPlayerBufferQueue )->Enqueue( bqPlayerBufferQueue, ( byte* )pos, len );
 		if( SL_RESULT_SUCCESS != result )
 		{
-			common->Printf( "bqPlayerBufferQueue->Enqueue( data = %p, offset = %i, len = %i ) failed\n", ( byte* )pos, offset, len );
+			common->Printf( "rbAudioHardwareSLES::Write: bqPlayerBufferQueue->Enqueue( data = %p, offset = %i, len = %i ) failed\n", ( byte* )pos, offset, len );
 			return;
 		}
 	
-		remainingFrames -= len;
-	}
-	
-#else
-	
-	int len = ( MIXBUFFER_SAMPLES * numChannels * 2 ) / MIXBUFFER_CHUNKS;
-	//for( int i = 0; i < MIXBUFFER_CHUNKS; i++)
-	{
-		//int offset = i * len;
-		int offset = 0;
-		int pos = ( intptr_t )mixBuffer;// + offset;
-	
-		SLresult result;
-		result = ( *bqPlayerBufferQueue )->Enqueue( bqPlayerBufferQueue, ( byte* )pos, len );
-		if( SL_RESULT_SUCCESS != result )
-		{
-			//common->Printf( "tyAudioHardwareSLES::Write: bqPlayerBufferQueue->Enqueue( data = %p, offset = %i, len = %i ) failed\n", ( byte* )pos, offset, len );
-			return;
-		}
-	
-		writeChunks -= 1;
+		//writeChunks -= 1;
 	}
 #endif
 }
 
 // create the engine and output mix objects
-void tyAudioHardwareSLES::CreateEngine()
+void rbAudioHardwareSLES::CreateEngine()
 {
 	SLresult result;
 	
@@ -465,7 +450,7 @@ void tyAudioHardwareSLES::CreateEngine()
 
 
 // create buffer queue audio player
-void tyAudioHardwareSLES::CreateBufferQueueAudioPlayer()
+void rbAudioHardwareSLES::CreateBufferQueueAudioPlayer()
 {
 	SLresult result;
 	
