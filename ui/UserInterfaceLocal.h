@@ -94,7 +94,7 @@ public:
 	{
 		return source;
 	}
-	ID_TIME_T						GetTimeStamp() const
+	ID_TIME_T					GetTimeStamp() const
 	{
 		return timeStamp;
 	}
@@ -157,7 +157,7 @@ private:
 	idStr						activateStr;
 	idStr						pendingCmd;
 	idStr						returnCmd;
-	ID_TIME_T						timeStamp;
+	ID_TIME_T					timeStamp;
 	
 	float						cursorX;
 	float						cursorY;

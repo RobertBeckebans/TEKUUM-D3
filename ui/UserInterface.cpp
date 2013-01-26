@@ -397,7 +397,6 @@ bool idUserInterfaceLocal::InitFromFile( const char* qpath, bool rebuild, bool c
 
 const char* idUserInterfaceLocal::HandleEvent( const sysEvent_t* event, int _time, bool* updateVisuals )
 {
-
 	time = _time;
 	
 	if( bindHandler && event->evType == SE_KEY && event->evValue2 == 1 )
@@ -421,6 +420,16 @@ const char* idUserInterfaceLocal::HandleEvent( const sysEvent_t* event, int _tim
 			cursorY = 0;
 		}
 	}
+	
+	// RB begin
+	if( event->evType == SE_TOUCH_MOTION_DOWN || event->evType == SE_TOUCH_MOTION_UP || event->evType == SE_TOUCH_MOTION_MOVE )
+	{
+		//common->Printf( "idUserInterfaceLocal::HandleEvent( motionEvent = %i, x = %i, y = %i )\n", event->evType, event->evValue, event->evValue2 );
+		
+		cursorX = idMath::ClampFloat( 0, SCREEN_WIDTH - 1, event->evValue * 0.01f * SCREEN_WIDTH );
+		cursorY = idMath::ClampFloat( 0, SCREEN_HEIGHT - 1, event->evValue2 * 0.01f * SCREEN_HEIGHT );
+	}
+	// RB end
 	
 	if( desktop )
 	{

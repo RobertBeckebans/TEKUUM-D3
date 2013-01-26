@@ -90,6 +90,42 @@ static int mouse_accel_numerator;
 static int mouse_accel_denominator;
 static int mouse_threshold;
 
+typedef struct poll_mouse_event_s
+{
+	int action;
+	int value;
+} poll_mouse_event_t;
+
+#define MAX_POLL_EVENTS 50
+#define POLL_EVENTS_HEADROOM 2 // some situations require to add several events
+
+static poll_mouse_event_t poll_events_mouse[MAX_POLL_EVENTS + POLL_EVENTS_HEADROOM];
+static int poll_mouse_event_count = 0;
+
+/*
+==========
+Android_AddMousePollEvent
+==========
+*/
+static bool Android_AddMousePollEvent( int action, int value )
+{
+	//common->Printf( "Android_AddMousePollEvent( action = %i, value = %i )\n", action, value );
+	
+	if( poll_mouse_event_count >= MAX_POLL_EVENTS + POLL_EVENTS_HEADROOM )
+	{
+		common->FatalError( "poll_mouse_event_count exceeded MAX_POLL_EVENT + POLL_EVENTS_HEADROOM\n" );
+	}
+	
+	poll_events_mouse[poll_mouse_event_count].action = action;
+	poll_events_mouse[poll_mouse_event_count++].value = value;
+	if( poll_mouse_event_count >= MAX_POLL_EVENTS )
+	{
+		common->DPrintf( "WARNING: reached MAX_POLL_EVENT poll_mouse_event_count\n" );
+		return false;
+	}
+	
+	return true;
+}
 
 
 void JE_QueueKeyEvent( int key, int state )
@@ -119,10 +155,42 @@ enum MotionEventAction
 
 void JE_QueueMotionEvent( int action, float x, float y, float pressure )
 {
+#if 1
 	if( !common || !common->IsInitialized() )
 		return;
 		
-	common->Printf( "JE_QueueKeyEvent( action = %i, x = %f, y = %f, pressure = %f )\n", action, x, y, pressure );
+	//common->Printf( "JE_QueueMotionEvent( action = %i, x = %f, y = %f, pressure = %f )\n", action, x, y, pressure );
+#endif
+	
+#if 1
+	int rx = idMath::ClampInt( 0, 99, idMath::Ftoi( ( x / ( float )glConfig.vidWidth ) * 100 ) );
+	int ry = idMath::ClampInt( 0, 99, idMath::Ftoi( ( y / ( float )glConfig.vidHeight ) * 100 ) );
+	
+	switch( action )
+	{
+		case MOTION_EVENT_ACTION_DOWN:
+			Posix_QueEvent( SE_TOUCH_MOTION_DOWN, rx, ry, 0, NULL );
+			Posix_QueEvent( SE_KEY, K_MOUSE1, true, 0, NULL );
+			
+			Android_AddMousePollEvent( M_ACTION1, true );
+			break;
+			
+		case MOTION_EVENT_ACTION_UP:
+			Posix_QueEvent( SE_TOUCH_MOTION_UP, rx, ry, 0, NULL );
+			
+			//if( ( idMath::Fabs( mdx - x ) < 3 ) && ( idMath::Fabs( mdy - y ) < 3 ) )
+			{
+				Posix_QueEvent( SE_KEY, K_MOUSE1, false, 0, NULL );
+			}
+			
+			Android_AddMousePollEvent( M_ACTION1, false );
+			break;
+			
+		case MOTION_EVENT_ACTION_MOVE:
+			Posix_QueEvent( SE_TOUCH_MOTION_MOVE, rx, ry, 0, NULL );
+			break;
+	}
+#else
 	
 	int b, dx, dy;
 	
@@ -131,36 +199,36 @@ void JE_QueueMotionEvent( int action, float x, float y, float pressure )
 		case MOTION_EVENT_ACTION_DOWN:
 			mdx = x;
 			mdy = y;
-			
+	
 			dx = ( ( int ) x - mwx );
 			dy = ( ( int ) y - mwy );
-			
+	
 			Posix_QueEvent( SE_MOUSE, dx, dy, 0, NULL );
-			
+	
 			mx += dx;
 			my += dy;
 			break;
-			
+	
 		case MOTION_EVENT_ACTION_UP:
-			if( ( idMath::Fabs( mdx - x ) < 3 ) && ( idMath::Fabs( mdy - y ) < 3 ) )
-			{
-				Posix_QueEvent( SE_KEY, K_MOUSE1, true, 0, NULL );
-				Posix_QueEvent( SE_KEY, K_MOUSE1, false, 0, NULL );
-			}
-			
-			mx = x;
-			my = y;
-			break;
-			
+			//if( ( idMath::Fabs( mdx - x ) < 3 ) && ( idMath::Fabs( mdy - y ) < 3 ) )
+		{
+			Posix_QueEvent( SE_KEY, K_MOUSE1, true, 0, NULL );
+			Posix_QueEvent( SE_KEY, K_MOUSE1, false, 0, NULL );
+		}
+
+		mx = x;
+		my = y;
+		break;
+
 		case MOTION_EVENT_ACTION_MOVE:
 			// FIXME: we generate mouse delta on wrap return, but that lags us quite a bit from the initial event..
 			/*
 			if (x == glConfig.vidWidth / 2 && y == glConfig.vidHeight / 2) {
 				mwx = glConfig.vidWidth / 2;
 				mwy = glConfig.vidHeight / 2;
-			
+	
 				Posix_QueEvent( SE_MOUSE, mx, my, 0, NULL);
-			
+	
 				//Posix_AddMousePollEvent( M_DELTAX, mx );
 				//if (!Posix_AddMousePollEvent( M_DELTAY, my ))
 				//	return;
@@ -168,17 +236,18 @@ void JE_QueueMotionEvent( int action, float x, float y, float pressure )
 				break;
 			}
 			*/
-			
-			
+	
+	
 			dx = ( ( int ) x - mwx );
 			dy = ( ( int ) y - mwy );
-			
+	
 			Posix_QueEvent( SE_MOUSE, dx, dy, 0, NULL );
-			
+	
 			mx += dx;
 			my += dy;
 			break;
 	}
+#endif
 	
 	mwx = x;
 	mwy = y;
@@ -211,9 +280,15 @@ int JE_IsConsoleActive()
 	return 0;
 }
 
-void Sys_InitInput() {}
+void Sys_InitInput()
+{
+	poll_mouse_event_count = 0;
+}
 
-void Sys_ShutdownInput() {}
+void Sys_ShutdownInput()
+{
+	poll_mouse_event_count = 0;
+}
 
 unsigned char Sys_MapCharForKey( int key )
 {
@@ -235,13 +310,33 @@ void			Sys_EndKeyboardInputEvents() {}
 // mouse input polling
 int				Sys_PollMouseInputEvents()
 {
-	return 0;
+#if 0
+	if( poll_mouse_event_count > 0 )
+	{
+		common->Printf( "Sys_PollMouseInputEvents() = %i )\n", poll_mouse_event_count );
+	}
+#endif
+	
+	return poll_mouse_event_count;
 }
+
 int				Sys_ReturnMouseInputEvent( const int n, int& action, int& value )
 {
-	return 0;
+	if( n >= poll_mouse_event_count )
+	{
+		return 0;
+	}
+	
+	action = poll_events_mouse[ n ].action;
+	value = poll_events_mouse[ n ].value;
+	
+	return 1;
 }
-void			Sys_EndMouseInputEvents() {}
+
+void			Sys_EndMouseInputEvents()
+{
+	poll_mouse_event_count = 0;
+}
 
 //=====================================================================================
 
@@ -249,11 +344,11 @@ static float		s_joystickAxis[MAX_JOYSTICK_AXIS];	// set by joystick events
 
 void JE_QueueJoystickEvent( int axis, float value )
 {
-#if 0
+#if 1
 	if( !common || !common->IsInitialized() )
 		return;
 		
-	common->Printf( "JE_QueueJoystickEvent( axis = %i, value = %f )\n", axis, value );
+	//common->Printf( "JE_QueueJoystickEvent( axis = %i, value = %f )\n", axis, value );
 #endif
 	
 	if( axis < 0 || axis >= MAX_JOYSTICK_AXIS )

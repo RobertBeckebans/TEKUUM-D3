@@ -1387,6 +1387,10 @@ void idSessionLocal::MoveToNewMap( const char* mapName )
 {
 	mapSpawnData.serverInfo.Set( "si_map", mapName );
 	
+#if defined(__ANDROID__)
+	//ji.ShowProgressDialog( mapName );
+#endif
+	
 	ExecuteMapChange();
 	
 	if( !mapSpawnData.serverInfo.GetBool( "devmap" ) )

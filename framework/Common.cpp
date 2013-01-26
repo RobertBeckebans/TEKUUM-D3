@@ -68,7 +68,7 @@ idCVar com_asyncInput( "com_asyncInput", "0", CVAR_BOOL | CVAR_SYSTEM, "sample i
 #if defined( MACOS_X )
 idCVar com_asyncSound( "com_asyncSound", "2", CVAR_INTEGER | CVAR_SYSTEM | CVAR_ROM, ASYNCSOUND_INFO );
 #elif defined(__ANDROID__)
-idCVar com_asyncSound( "com_asyncSound", "0", CVAR_INTEGER | CVAR_SYSTEM | CVAR_ROM, ASYNCSOUND_INFO );
+idCVar com_asyncSound( "com_asyncSound", "3", CVAR_INTEGER | CVAR_SYSTEM | CVAR_ROM, ASYNCSOUND_INFO );
 #elif defined( __linux__ )
 idCVar com_asyncSound( "com_asyncSound", "3", CVAR_INTEGER | CVAR_SYSTEM | CVAR_ROM, ASYNCSOUND_INFO );
 #else
@@ -82,7 +82,7 @@ idCVar com_allowConsole( "com_allowConsole", "1", CVAR_BOOL | CVAR_SYSTEM | CVAR
 idCVar com_speeds( "com_speeds", "0", CVAR_BOOL | CVAR_SYSTEM | CVAR_NOCHEAT, "show engine timings" );
 #if defined(__ANDROID__)
 idCVar com_showFPS( "com_showFPS", "1", CVAR_BOOL | CVAR_SYSTEM | CVAR_NOCHEAT, "show frames rendered per second" );
-idCVar com_showMemoryUsage( "com_showMemoryUsage", "0", CVAR_BOOL | CVAR_SYSTEM | CVAR_NOCHEAT, "show total and per frame memory usage" );
+idCVar com_showMemoryUsage( "com_showMemoryUsage", "1", CVAR_BOOL | CVAR_SYSTEM | CVAR_NOCHEAT, "show total and per frame memory usage" );
 idCVar com_logFile( "logFile", "1", CVAR_SYSTEM | CVAR_NOCHEAT, "1 = buffer log, 2 = flush after each print", 0, 2, idCmdSystem::ArgCompletion_Integer<0, 2> );
 #else
 idCVar com_showFPS( "com_showFPS", "0", CVAR_BOOL | CVAR_SYSTEM | CVAR_ARCHIVE | CVAR_NOCHEAT, "show frames rendered per second" );

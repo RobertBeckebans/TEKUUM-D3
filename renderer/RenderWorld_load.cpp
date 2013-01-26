@@ -957,6 +957,8 @@ bool idRenderWorldLocal::InitFromMap( const char* name )
 		// RB: added extra time stamp check
 		if( magic == BPROC_MAGIC && sourceTimeStamp == mapTimeStamp )
 		{
+			common->Printf( "idRenderWorldLocal::InitFromMap: loading binary file '%s'\n", generatedFileName.c_str() );
+			
 			file->ReadBig( numEntries );
 			file->ReadString( mapName );
 			

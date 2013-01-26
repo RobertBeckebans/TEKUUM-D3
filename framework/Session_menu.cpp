@@ -109,8 +109,12 @@ void idSessionLocal::SetGUI( idUserInterface* gui, HandleGuiCommand_t handle )
 		common->DPrintf( "idSessionLocal::SetGUI: cleared an active message box\n" );
 		guiMsgRestore = NULL;
 	}
+	
 	if( !guiActive )
 	{
+#if defined(__ANDROID__)
+		//ji.HideProgressDialog();
+#endif
 		return;
 	}
 	
