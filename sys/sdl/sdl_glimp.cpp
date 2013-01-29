@@ -625,15 +625,31 @@ int Sys_GetVideoRam()
 	// try a few strategies to guess the amount of video ram
 	common->Printf( "guessing video ram ( use +set sys_videoRam to force ) ..\n" );
 	
-	/*
-	if( !GLimp_OpenDisplay( ) )
+	if( GLEW_NVX_gpu_memory_info != 0 )
 	{
-		run_once = 64;
+		GLint total;
+		
+		glGetIntegerv( GL_GPU_MEMORY_INFO_CURRENT_AVAILABLE_VIDMEM_NVX , ( GLint* )&total );
+		
+		run_once = total / 1024;
+		
+		// round to the lower 16Mb
+		run_once &= ~15;
 		return run_once;
 	}
-	l_dpy = dpy;
-	l_scrnum = scrnum;
-	*/
+	
+	if( GLEW_ATI_meminfo != 0 )
+	{
+		GLint total;
+		
+		glGetIntegerv( GL_TEXTURE_FREE_MEMORY_ATI , ( GLint* )&total );
+		
+		run_once = total / 1024;
+		
+		// round to the lower 16Mb
+		run_once &= ~15;
+		return run_once;
+	}
 	
 	// try ATI /proc read ( for the lack of a better option )
 	int fd;
