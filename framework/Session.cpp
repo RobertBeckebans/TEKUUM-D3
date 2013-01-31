@@ -2824,7 +2824,7 @@ void idSessionLocal::Draw()
 idSessionLocal::UpdateScreen
 ===============
 */
-void idSessionLocal::UpdateScreen( bool outOfSequence )
+void idSessionLocal::UpdateScreen( bool outOfSequence, bool swapBuffers )
 {
 
 #if defined(USE_MFC_TOOLS)
@@ -2857,14 +2857,16 @@ void idSessionLocal::UpdateScreen( bool outOfSequence )
 	// draw everything
 	Draw();
 	
+	// RB begin
 	if( com_speeds.GetBool() )
 	{
-		renderSystem->EndFrame( &time_frontend, &time_backend );
+		renderSystem->EndFrame( &time_frontend, &time_backend, swapBuffers );
 	}
 	else
 	{
-		renderSystem->EndFrame( NULL, NULL );
+		renderSystem->EndFrame( NULL, NULL, swapBuffers );
 	}
+	// RB end
 	
 	insideUpdateScreen = false;
 }

@@ -860,7 +860,7 @@ public:
 	virtual void			WriteDemoPics();
 	virtual void			DrawDemoPics();
 	virtual void			BeginFrame( int windowWidth, int windowHeight );
-	virtual void			EndFrame( int* frontEndMsec, int* backEndMsec );
+	virtual void			EndFrame( int* frontEndMsec, int* backEndMsec, bool swapBuffers = true );
 	virtual void			TakeScreenshot( int width, int height, const char* fileName, int downSample, renderView_t* ref );
 	virtual void			CropRenderSize( int width, int height, bool makePowerOfTwo = false, bool forceDimensions = false );
 	virtual void			CaptureRenderToImage( const char* imageName );
@@ -1017,7 +1017,6 @@ extern idCVar r_useInfiniteFarZ;		// 1 = use the no-far-clip-plane trick
 extern idCVar r_useScissor;				// 1 = scissor clip as portals and lights are processed
 extern idCVar r_usePortals;				// 1 = use portals to perform area culling, otherwise draw everything
 extern idCVar r_useStateCaching;		// avoid redundant state changes in GL_*() calls
-extern idCVar r_useCombinerDisplayLists;// if 1, put all nvidia register combiner programming in display lists
 extern idCVar r_useVertexBuffers;		// if 0, don't use ARB_vertex_buffer_object for vertexes
 extern idCVar r_useIndexBuffers;		// if 0, don't use ARB_vertex_buffer_object for indexes
 extern idCVar r_useEntityCallbacks;		// if 0, issue the callback immediately at update time, rather than defering

@@ -533,6 +533,103 @@ GLenum idImage::SelectInternalFormat( const byte** dataPtrs, int numDataPtrs, in
 }
 
 /*
+===============
+HasAlphaChannel
+
+This may need to scan six cube map images
+===============
+*/
+bool idImage::HasAlphaChannel( const byte** dataPtrs, int numDataPtrs, int width, int height, textureDepth_t minimumDepth ) const
+{
+	int		i, c;
+	const byte*	scan;
+	int		rgbOr, rgbAnd, aOr, aAnd;
+	int		rgbDiffer, rgbaDiffer;
+	
+	// determine if the rgb channels are all the same
+	// and if either all rgb or all alpha are 255
+	c = width * height;
+	rgbDiffer = 0;
+	rgbaDiffer = 0;
+	rgbOr = 0;
+	rgbAnd = -1;
+	aOr = 0;
+	aAnd = -1;
+	
+	for( int side = 0 ; side < numDataPtrs ; side++ )
+	{
+		scan = dataPtrs[side];
+		for( i = 0; i < c; i++, scan += 4 )
+		{
+			int		cor, cand;
+			
+			aOr |= scan[3];
+			aAnd &= scan[3];
+			
+			cor = scan[0] | scan[1] | scan[2];
+			cand = scan[0] & scan[1] & scan[2];
+			
+			// if rgb are all the same, the or and and will match
+			rgbDiffer |= ( cor ^ cand );
+			
+			rgbOr |= cor;
+			rgbAnd &= cand;
+			
+			cor |= scan[3];
+			cand &= scan[3];
+			
+			rgbaDiffer |= ( cor ^ cand );
+		}
+	}
+	
+	// we assume that all 0 implies that the alpha channel isn't needed,
+	// because some tools will spit out 32 bit images with a 0 alpha instead
+	// of 255 alpha, but if the alpha actually is referenced, there will be
+	// different behavior in the compressed vs uncompressed states.
+	bool needAlpha;
+	if( aAnd == 255 || aOr == 0 )
+	{
+		needAlpha = false;
+	}
+	else
+	{
+		needAlpha = true;
+	}
+	
+	// catch normal maps first
+	if( minimumDepth == TD_BUMP )
+	{
+		return true;
+	}
+	
+	// allow a complete override of image compression with a cvar
+	if( !globalImages->image_useCompression.GetBool() && minimumDepth < TD_HIGH_QUALITY )
+	{
+		minimumDepth = TD_HIGH_QUALITY;
+	}
+	
+	if( minimumDepth == TD_SPECULAR )
+	{
+		// we are assuming that any alpha channel is unintentional
+		return false;
+	}
+	
+	if( minimumDepth == TD_DIFFUSE )
+	{
+		if( ( aAnd == 255 || aOr == 0 ) )
+		{
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+	
+	return needAlpha;
+}
+
+/*
 ==================
 SetImageFilterAndRepeat
 ==================
@@ -1673,58 +1770,40 @@ void idImage::WritePrecompressedPKMImage( const byte* pic, int width, int height
 		return;
 	}
 	
+	if( width <= 32 || height <= 32 )
+	{
+		return;
+	}
+	
+	if( type != TT_2D )
+	{
+		return;
+	}
+	
 	idStrStatic<MAX_IMAGE_NAME> filename;
 	ImageProgramStringToCompressedFileName( imgName, filename, "etc1", "pkm" );
+	
+	ID_TIME_T generatedTimestamp = fileSystem->GetTimestamp( filename );
+	
+	if( generatedTimestamp != FILE_NOT_FOUND_TIMESTAMP )
+	{
+		if( sourceTimestamp <= generatedTimestamp )
+		{
+			return;
+		}
+	}
+	
+	bool needsAlpha = HasAlphaChannel( &pic, 1, width, height, depth );
+	if( needsAlpha )
+	{
+		return;
+	}
 	
 	int numLevels = NumLevelsForImageSize( uploadWidth, uploadHeight );
 	if( numLevels > MAX_TEXTURE_LEVELS )
 	{
 		common->Warning( "idImage::WritePrecompressedPKMImage: level > MAX_TEXTURE_LEVELS for image %s", filename.c_str() );
 		return;
-	}
-	
-	switch( internalFormat )
-	{
-			//case GL_COLOR_INDEX8_EXT:
-			//case GL_COLOR_INDEX:
-			// this will not work with dds viewers but we need it in this format to save disk
-			// load speed ( i.e. size )
-			//altInternalFormat = GL_COLOR_INDEX;
-			//bitSize = 24;
-			//break;
-			
-		case 1:
-		case 3:
-		case GL_RGB:
-		case GL_COMPRESSED_RGB_S3TC_DXT1_EXT:
-#if !defined(USE_GLES1)
-		case GL_INTENSITY8:
-		case GL_LUMINANCE8:
-		case GL_RGB8:
-#endif
-			//altInternalFormat = GL_BGR_EXT;
-			//bitSize = 24;
-			break;
-			
-		case 4:
-		case GL_RGBA:
-#if !defined(USE_GLES1)
-		case GL_LUMINANCE8_ALPHA8:
-		case GL_RGBA8:
-#endif
-			//altInternalFormat = GL_BGRA_EXT;
-			//bitSize = 32;
-			break;
-			
-			//case GL_ALPHA8:
-			//altInternalFormat = GL_ALPHA;
-			//bitSize = 8;
-			//break;
-		default:
-		{
-			//common->Warning( "Unknown or unsupported format for %s", filename.c_str() );
-			return;
-		}
 	}
 	
 	idFile* f = fileSystem->OpenFileWrite( filename, "fs_basepath" );
@@ -1743,8 +1822,8 @@ void idImage::WritePrecompressedPKMImage( const byte* pic, int width, int height
 	
 	//glPixelStorei( GL_PACK_ALIGNMENT, 1 );	// otherwise small rows get padded to 32 bits
 	
-	width = uploadWidth;
-	height = uploadHeight;
+	//width = uploadWidth;
+	//height = uploadHeight;
 	
 	// Will be allocated first time through the loop
 	byte* encodedData = NULL;
@@ -1761,7 +1840,7 @@ void idImage::WritePrecompressedPKMImage( const byte* pic, int width, int height
 	
 	f->Write( encodedData, encodedSize );
 	
-#if 0
+#if 1
 	//if( image_writeETC1
 	{
 		idStrStatic<MAX_IMAGE_NAME> pngName = filename;
@@ -1871,9 +1950,9 @@ bool idImage::ShouldImageBePartialCached()
 	ImageProgramStringToCompressedFileName( imgName, filename, "dxt", "dds" );
 	
 	// get the file timestamp
-	fileSystem->ReadFile( filename, NULL, &timestamp );
+	fileSystem->ReadFile( filename, NULL, &generatedTimestamp );
 	
-	if( timestamp == FILE_NOT_FOUND_TIMESTAMP )
+	if( generatedTimestamp == FILE_NOT_FOUND_TIMESTAMP )
 	{
 		return false;
 	}
@@ -1936,24 +2015,23 @@ bool idImage::CheckPrecompressedDDSImage( bool fullLoad )
 	ImageProgramStringToCompressedFileName( imgName, filename, "dxt", "dds" );
 	
 	// get the file timestamp
-	ID_TIME_T precompTimestamp;
-	fileSystem->ReadFile( filename, NULL, &precompTimestamp );
+	fileSystem->ReadFile( filename, NULL, &generatedTimestamp );
 	
-	if( precompTimestamp == FILE_NOT_FOUND_TIMESTAMP )
+	if( generatedTimestamp == FILE_NOT_FOUND_TIMESTAMP )
 	{
 		return false;
 	}
 	
-	if( !generatorFunction && timestamp != FILE_NOT_FOUND_TIMESTAMP )
+	if( !generatorFunction && sourceTimestamp != FILE_NOT_FOUND_TIMESTAMP )
 	{
-		if( precompTimestamp < timestamp )
+		if( generatedTimestamp < sourceTimestamp )
 		{
 			// The image has changed after being precompressed
 			return false;
 		}
 	}
 	
-	timestamp = precompTimestamp;
+	//timestamp = precompTimestamp;
 	
 	// open it and just read the header
 	idFile* f;
@@ -2055,24 +2133,23 @@ bool idImage::CheckPrecompressedPKMImage( bool fullLoad )
 	ImageProgramStringToCompressedFileName( imgName, filename, "etc1", "pkm" );
 	
 	// get the file timestamp
-	ID_TIME_T precompTimestamp;
-	fileSystem->ReadFile( filename, NULL, &precompTimestamp );
+	fileSystem->ReadFile( filename, NULL, &generatedTimestamp );
 	
-	if( precompTimestamp == FILE_NOT_FOUND_TIMESTAMP )
+	if( generatedTimestamp == FILE_NOT_FOUND_TIMESTAMP )
 	{
 		return false;
 	}
 	
-	if( !generatorFunction && timestamp != FILE_NOT_FOUND_TIMESTAMP )
+	if( !generatorFunction && generatedTimestamp != FILE_NOT_FOUND_TIMESTAMP )
 	{
-		if( precompTimestamp < timestamp )
+		if( generatedTimestamp < sourceTimestamp )
 		{
 			// The image has changed after being precompressed
 			return false;
 		}
 	}
 	
-	timestamp = precompTimestamp;
+	//timestamp = precompTimestamp;
 	
 	// open it and just read the header
 	idFile* f;
@@ -2111,12 +2188,19 @@ bool idImage::CheckPrecompressedPKMImage( bool fullLoad )
 	}
 	
 	int width = etc1_pkm_get_width( header );
-	int height = etc1_pkm_get_width( header );
+	int height = etc1_pkm_get_height( header );
 	int encodedDataSize = etc1_get_encoded_data_size( width, height );
 	
 	
 	// upload all the levels
 	//UploadPrecompressedPKMImage( data, len );
+	
+	// generate the texture number
+	glGenTextures( 1, &texnum );
+	
+	type = TT_2D;			// FIXME: we may want to support pre-compressed cube maps in the future
+	
+	Bind();
 	
 	precompressedFile = true;
 	
@@ -2128,12 +2212,26 @@ bool idImage::CheckPrecompressedPKMImage( bool fullLoad )
 	
 	//etc1_decode_image( encodedData, decodedData, width, height, 3, width * 3 );
 	
+	GL_CheckErrors();
+	
+	common->Printf( "CheckPrecompressedPKMImage( %s, width = %i, height = %i ): uploading PKM ...\n", imgName.c_str(), width, height );
+	
 	internalFormat = GL_ETC1_RGB8_OES;
 	glCompressedTexImage2D( GL_TEXTURE_2D, 0, internalFormat, width, height, 0, encodedDataSize, encodedData );
+	
+	//common->Printf( "done\n" );
+	
+	if( GL_CheckErrors() )
+	{
+		common->Printf( "CheckPrecompressedPKMImage: OpenGL Error: image = '%s', internalFormat = %i, width = %i, height = %i, size = %i, data = %p",
+						imgName.c_str(), internalFormat, width, height, encodedDataSize, encodedData );
+	}
 	
 	//R_StaticFree( decodedData );
 	
 	SetImageFilterAndRepeat();
+	
+	GL_CheckErrors();
 	
 	R_StaticFree( data );
 	
@@ -2364,7 +2462,7 @@ void	idImage::ActuallyLoadImage( bool checkForPrecompressed, bool fromBackEnd )
 		byte*	pics[6];
 		
 		// we don't check for pre-compressed cube images currently
-		R_LoadCubeImages( imgName, cubeFiles, pics, &width, &timestamp );
+		R_LoadCubeImages( imgName, cubeFiles, pics, &width, &sourceTimestamp );
 		
 		if( pics[0] == NULL )
 		{
@@ -2405,7 +2503,7 @@ void	idImage::ActuallyLoadImage( bool checkForPrecompressed, bool fromBackEnd )
 		}
 #endif
 		
-		R_LoadImageProgram( imgName, &pic, &width, &height, &timestamp, &depth );
+		R_LoadImageProgram( imgName, &pic, &width, &height, &sourceTimestamp, &depth );
 		
 		if( pic == NULL )
 		{
@@ -2432,7 +2530,7 @@ void	idImage::ActuallyLoadImage( bool checkForPrecompressed, bool fromBackEnd )
 		imageHash = MD4_BlockChecksum( pic, width * height * 4 );
 		
 		GenerateImage( pic, width, height, filter, allowDownSize, repeat, depth );
-		timestamp = timestamp;
+		//sourceTimestamp = timestamp;
 		precompressedFile = false;
 		
 		// write out the precompressed version of this file if needed
@@ -3065,115 +3163,115 @@ void idImage::Print() const
 #if defined(USE_GLES1)
 		case 3:
 		case GL_RGB:
-			common->Printf( "RGB     " );
+			common->Printf( "RGB      " );
 			break;
 			
 		case GL_RGBA:
 		case 4:
-			common->Printf( "RGBA    " );
+			common->Printf( "RGBA     " );
 			break;
 			
 		case GL_ETC1_RGB8_OES:
-			common->Printf( "RGB8_OES" );
+			common->Printf( "RGB8_OES " );
 			break;
 			
 		case GL_COMPRESSED_RGB_S3TC_DXT1_EXT:
-			common->Printf( "DXT1    " );
+			common->Printf( "DXT1     " );
 			break;
 		case GL_COMPRESSED_RGBA_S3TC_DXT1_EXT:
-			common->Printf( "DXT1A   " );
+			common->Printf( "DXT1A    " );
 			break;
 		case GL_COMPRESSED_RGBA_S3TC_DXT3_EXT:
-			common->Printf( "DXT3    " );
+			common->Printf( "DXT3     " );
 			break;
 		case GL_COMPRESSED_RGBA_S3TC_DXT5_EXT:
-			common->Printf( "DXT5    " );
+			common->Printf( "DXT5     " );
 			break;
 #else
 		case GL_INTENSITY8:
 		case 1:
-			common->Printf( "I       " );
+			common->Printf( "I        " );
 			break;
 		case 2:
 		case GL_LUMINANCE8_ALPHA8:
-			common->Printf( "LA      " );
+			common->Printf( "LA       " );
 			break;
 		case 3:
-			common->Printf( "RGB     " );
+			common->Printf( "RGB      " );
 			break;
 		case 4:
-			common->Printf( "RGBA    " );
+			common->Printf( "RGBA     " );
 			break;
 		case GL_LUMINANCE8:
-			common->Printf( "L       " );
+			common->Printf( "L        " );
 			break;
 		case GL_ALPHA8:
-			common->Printf( "A       " );
+			common->Printf( "A        " );
 			break;
 		case GL_RGBA8:
-			common->Printf( "RGBA8   " );
+			common->Printf( "RGBA8    " );
 			break;
 		case GL_RGB8:
-			common->Printf( "RGB8    " );
+			common->Printf( "RGB8     " );
 			break;
 		case GL_COMPRESSED_RGB_S3TC_DXT1_EXT:
-			common->Printf( "DXT1    " );
+			common->Printf( "DXT1     " );
 			break;
 		case GL_COMPRESSED_RGBA_S3TC_DXT1_EXT:
-			common->Printf( "DXT1A   " );
+			common->Printf( "DXT1A    " );
 			break;
 		case GL_COMPRESSED_RGBA_S3TC_DXT3_EXT:
-			common->Printf( "DXT3    " );
+			common->Printf( "DXT3     " );
 			break;
 		case GL_COMPRESSED_RGBA_S3TC_DXT5_EXT:
-			common->Printf( "DXT5    " );
+			common->Printf( "DXT5     " );
 			break;
 		case GL_RGBA4:
-			common->Printf( "RGBA4   " );
+			common->Printf( "RGBA4    " );
 			break;
 		case GL_RGB5:
-			common->Printf( "RGB5    " );
+			common->Printf( "RGB5     " );
 			break;
 		case GL_COLOR_INDEX8_EXT:
-			common->Printf( "CI8     " );
+			common->Printf( "CI8      " );
 			break;
 		case GL_COLOR_INDEX:
-			common->Printf( "CI      " );
+			common->Printf( "CI       " );
 			break;
 		case GL_COMPRESSED_RGB_ARB:
-			common->Printf( "RGBC    " );
+			common->Printf( "RGBC     " );
 			break;
 		case GL_COMPRESSED_RGBA_ARB:
-			common->Printf( "RGBAC   " );
+			common->Printf( "RGBAC    " );
 			break;
 			
 // RB begin
 		case GL_DEPTH_COMPONENT16:
-			common->Printf( "DEPTH16 " );
+			common->Printf( "DEPTH16  " );
 			break;
 		case GL_DEPTH_COMPONENT24:
-			common->Printf( "DEPTH24 " );
+			common->Printf( "DEPTH24  " );
 			break;
 		case GL_DEPTH_COMPONENT32:
-			common->Printf( "DEPTH32 " );
+			common->Printf( "DEPTH32  " );
 			break;
 		case GL_RGBA16F:
-			common->Printf( "RGBA16F " );
+			common->Printf( "RGBA16F  " );
 			break;
 		case GL_R16F:
-			common->Printf( "R16F    " );
+			common->Printf( "R16F     " );
 			break;
 		case GL_RG16F:
-			common->Printf( "RG16F   " );
+			common->Printf( "RG16F    " );
 			break;
 		case GL_RGBA32F:
-			common->Printf( "RGBA32F " );
+			common->Printf( "RGBA32F  " );
 			break;
 		case GL_R32F:
-			common->Printf( "R32F    " );
+			common->Printf( "R32F     " );
 			break;
 		case GL_RG32F:
-			common->Printf( "RG32F   " );
+			common->Printf( "RG32F    " );
 			break;
 // RB end
 			

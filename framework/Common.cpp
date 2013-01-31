@@ -2966,7 +2966,12 @@ void idCommonLocal::Frame()
 			if( idAsyncNetwork::serverDedicated.GetInteger() != 1 )
 			{
 				session->GuiFrameEvents();
+				
+				// RB begin
+#if defined(__ANDROID__)
 				session->UpdateScreen( false );
+#endif
+				// RB end
 			}
 		}
 		else
@@ -2974,7 +2979,12 @@ void idCommonLocal::Frame()
 			session->Frame();
 			
 			// normal, in-sequence screen update
-			session->UpdateScreen( false );
+			
+			// RB begin
+#if defined(__ANDROID__)
+			session->UpdateScreen( false, false );
+#endif
+			// RB end
 		}
 		
 		// report timing information

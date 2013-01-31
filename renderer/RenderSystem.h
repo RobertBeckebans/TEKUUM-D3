@@ -239,7 +239,9 @@ public:
 	virtual void			BeginFrame( int windowWidth, int windowHeight ) = 0;
 	
 	// if the pointers are not NULL, timing info will be returned
-	virtual void			EndFrame( int* frontEndMsec, int* backEndMsec ) = 0;
+	// RB: added swapBuffers parameter
+	virtual void			EndFrame( int* frontEndMsec, int* backEndMsec, bool swapBuffers = true ) = 0;
+	// RB end
 	
 	// aviDemo uses this.
 	// Will automatically tile render large screen shots if necessary

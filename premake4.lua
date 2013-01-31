@@ -1117,6 +1117,7 @@ end -- if not _OPTIONS["android"]
 		}
 		links
 		{
+			"EGL",
 			"GLESv1_CM",
 			"OpenSLES",
 			"m",

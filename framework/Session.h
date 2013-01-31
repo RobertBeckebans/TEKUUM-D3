@@ -81,7 +81,9 @@ public:
 	// during normal once-a-frame updates, outOfSequence will be false,
 	// but when the screen is updated in a modal manner, as with utility
 	// output, the mouse cursor will be released if running windowed.
-	virtual void	UpdateScreen( bool outOfSequence = true ) = 0;
+	// RB: added swapBuffers parameter
+	virtual void	UpdateScreen( bool outOfSequence = true, bool swapBuffers = true ) = 0;
+	// RB end
 	
 	// Called when console prints happen, allowing the loading screen
 	// to redraw if enough time has passed.

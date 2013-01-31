@@ -26,12 +26,17 @@ If you have questions concerning this license or the applicable additional terms
 ===========================================================================
 */
 
+#include <EGL/egl.h>
+
 #include "../../idlib/precompiled.h"
 #include "../../renderer/tr_local.h"
 #include "../../sound/snd_local.h"
 #include "android_local.h"
 
 idCVar sys_videoRam( "sys_videoRam", "0", CVAR_SYSTEM | CVAR_ARCHIVE | CVAR_INTEGER, "Texture memory on the video card (in megabytes) - 0: autodetect", 0, 512 );
+
+static EGLDisplay s_eglDisplay = EGL_NO_DISPLAY;
+static EGLSurface s_eglSurface = EGL_NO_SURFACE;
 
 // JNI
 
@@ -50,6 +55,9 @@ bool GLimp_Init( glimpParms_t parms )
 	//const char *glstring;
 	
 	glConfig.isFullscreen = true;
+	
+	//s_eglDisplay = eglGetCurrentDisplay();
+	//s_eglSurface = eglGetCurrentSurface( EGL_DRAW );
 	
 	// FIXME check these with egl functions
 	glConfig.colorBits = 16;
@@ -83,7 +91,7 @@ void GLimp_Shutdown()
 
 void GLimp_SwapBuffers()
 {
-	//s_requestRender();
+	eglSwapBuffers( eglGetCurrentDisplay(), eglGetCurrentSurface( EGL_DRAW ) );
 }
 
 void GLimp_SetGamma( unsigned short red[256], unsigned short green[256], unsigned short blue[256] )

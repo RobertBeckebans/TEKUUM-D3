@@ -246,6 +246,8 @@ public:
 	void		UploadCompressedNormalMap( int width, int height, const byte* rgba, int mipLevel );
 	GLenum		SelectInternalFormat( const byte** dataPtrs, int numDataPtrs, int width, int height,
 									  textureDepth_t minimumDepth ) const;
+									  
+	bool		HasAlphaChannel( const byte** dataPtrs, int numDataPtrs, int width, int height, textureDepth_t minimumDepth ) const;
 	// RB begin
 	void		ImageProgramStringToCompressedFileName( const char* imageProg, idStrStatic<MAX_IMAGE_NAME>& fileName, const char* prefix, const char* suffix ) const;
 	// RB end
@@ -284,7 +286,8 @@ public:
 	bool				levelLoadReferenced;	// for determining if it needs to be purged
 	bool				precompressedFile;		// true when it was loaded from a .d3t file
 	bool				defaulted;				// true if the default image was generated because a file couldn't be loaded
-	ID_TIME_T			timestamp;				// the most recent of all images used in creation, for reloadImages command
+	ID_TIME_T			sourceTimestamp;		// the most recent of all images used in creation, for reloadImages command
+	ID_TIME_T			generatedTimestamp;
 	
 	int					imageHash;				// for identical-image checking
 	
@@ -324,7 +327,8 @@ ID_INLINE idImage::idImage()
 	levelLoadReferenced = false;
 	precompressedFile = false;
 	defaulted = false;
-	timestamp = 0;
+	sourceTimestamp = 0;
+	generatedTimestamp = 0;
 	bindCount = 0;
 	uploadWidth = uploadHeight = uploadDepth = 0;
 	internalFormat = 0;

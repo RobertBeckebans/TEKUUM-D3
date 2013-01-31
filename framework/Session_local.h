@@ -100,7 +100,9 @@ public:
 	
 	virtual void		Stop();
 	
-	virtual void		UpdateScreen( bool outOfSequence = true );
+	// RB: added swapBuffers parameter
+	virtual void		UpdateScreen( bool outOfSequence = true, bool swapBuffers = true );
+	// RB end
 	
 	virtual void		PacifierUpdate();
 	

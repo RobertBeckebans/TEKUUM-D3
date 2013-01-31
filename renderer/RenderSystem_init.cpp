@@ -184,7 +184,6 @@ idCVar r_flareSize( "r_flareSize", "1", CVAR_RENDERER | CVAR_FLOAT, "scale the f
 idCVar r_useExternalShadows( "r_useExternalShadows", "1", CVAR_RENDERER | CVAR_INTEGER, "1 = skip drawing caps when outside the light volume, 2 = force to no caps for testing", 0, 2, idCmdSystem::ArgCompletion_Integer<0, 2> );
 idCVar r_useOptimizedShadows( "r_useOptimizedShadows", "1", CVAR_RENDERER | CVAR_BOOL, "use the dmap generated static shadow volumes" );
 idCVar r_useScissor( "r_useScissor", "1", CVAR_RENDERER | CVAR_BOOL, "scissor clip as portals and lights are processed" );
-idCVar r_useCombinerDisplayLists( "r_useCombinerDisplayLists", "1", CVAR_RENDERER | CVAR_BOOL | CVAR_NOCHEAT, "put all nvidia register combiner programming in display lists" );
 idCVar r_useDepthBoundsTest( "r_useDepthBoundsTest", "1", CVAR_RENDERER | CVAR_BOOL, "use depth bounds test to reduce shadow fill" );
 
 idCVar r_screenFraction( "r_screenFraction", "100", CVAR_RENDERER | CVAR_INTEGER, "for testing fill rate, the resolution of the entire screen can be changed" );
@@ -294,7 +293,7 @@ R_CheckExtension
 =================
 */
 #if defined(USE_GLES1)
-bool R_CheckExtension( char* name )
+bool R_CheckExtension( const char* name )
 {
 	if( !strstr( glConfig.extensions_string, name ) )
 	{
@@ -436,7 +435,7 @@ static void R_CheckPortableExtensions()
 	// GL_ARB_texture_compression + GL_S3_s3tc
 	// DRI drivers may have GL_ARB_texture_compression but no GL_EXT_texture_compression_s3tc
 #if defined(USE_GLES1)
-	glConfig.s3tcTextureCompressionAvailable = R_CheckExtension( "GL_EXT_texture_compression_s3tc" );
+	glConfig.s3tcTextureCompressionAvailable = false; //R_CheckExtension( "GL_EXT_texture_compression_s3tc" );
 #else
 	if( GLEW_ARB_texture_compression != 0 && GLEW_EXT_texture_compression_s3tc != 0 )
 	{

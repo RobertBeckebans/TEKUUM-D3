@@ -54,7 +54,7 @@ idCVar idImageManager::image_useCompression( "image_useCompression", "1", CVAR_R
 idCVar idImageManager::image_useAllFormats( "image_useAllFormats", "1", CVAR_RENDERER | CVAR_ARCHIVE | CVAR_BOOL, "allow alpha/intensity/luminance/luminance+alpha" );
 idCVar idImageManager::image_useNormalCompression( "image_useNormalCompression", "2", CVAR_RENDERER | CVAR_ARCHIVE | CVAR_INTEGER, "2 = use rxgb compression for normal maps, 1 = use 256 color compression for normal maps if available" );
 idCVar idImageManager::image_usePrecompressedTextures( "image_usePrecompressedTextures", "1", CVAR_RENDERER | CVAR_ARCHIVE | CVAR_BOOL, "use .dds files if present" );
-idCVar idImageManager::image_writePrecompressedTextures( "image_writePrecompressedTextures", "0", CVAR_RENDERER | CVAR_BOOL, "write .dds files if necessary" );
+idCVar idImageManager::image_writePrecompressedTextures( "image_writePrecompressedTextures", "1", CVAR_RENDERER | CVAR_BOOL, "write .dds files if necessary" );
 idCVar idImageManager::image_writeNormalTGA( "image_writeNormalTGA", "0", CVAR_RENDERER | CVAR_BOOL, "write .tgas of the final normal maps for debugging" );
 idCVar idImageManager::image_writeNormalTGAPalletized( "image_writeNormalTGAPalletized", "0", CVAR_RENDERER | CVAR_BOOL, "write .tgas of the final palletized normal maps for debugging" );
 idCVar idImageManager::image_writeTGA( "image_writeTGA", "0", CVAR_RENDERER | CVAR_BOOL, "write .tgas of the non normal maps for debugging" );
@@ -1190,7 +1190,9 @@ void idImage::Reload( bool checkPrecompressed, bool force )
 			// get the current values
 			R_LoadImageProgram( imgName, NULL, NULL, NULL, &current );
 		}
-		if( current <= timestamp )
+		
+		// RB: FIXME
+		if( current <= sourceTimestamp )
 		{
 			return;
 		}
@@ -2426,8 +2428,32 @@ void idImageManager::EndLevelLoad()
 	}
 	
 	// load the ones we do need, if we are preloading
+	common->Printf( "...loading images\n" );
+	common->Printf( "0%%  10   20   30   40   50   60   70   80   90   100%%\n" );
+	common->Printf( "|----|----|----|----|----|----|----|----|----|----|\n" );
+	size_t tics = 0;
+	size_t nextTicCount = 0;
 	for( int i = 0 ; i < images.Num() ; i++ )
 	{
+		if( ( i + 1 ) >= nextTicCount )
+		{
+			size_t ticsNeeded = ( size_t )( ( ( double )( i + 1 ) / images.Num() ) * 50.0 );
+			
+			do
+			{
+				common->Printf( "*" );
+			}
+			while( ++tics < ticsNeeded );
+			
+			nextTicCount = ( size_t )( ( tics / 50.0 ) * images.Num() );
+			if( i == ( images.Num() - 1 ) )
+			{
+				if( tics < 51 )
+					common->Printf( "*" );
+				common->Printf( "\n" );
+			}
+		}
+		
 		idImage*	image = images[ i ];
 		if( image->generatorFunction )
 		{

@@ -787,7 +787,7 @@ EndFrame
 Returns the number of msec spent in the back end
 =============
 */
-void idRenderSystemLocal::EndFrame( int* frontEndMsec, int* backEndMsec )
+void idRenderSystemLocal::EndFrame( int* frontEndMsec, int* backEndMsec, bool swapBuffers )
 {
 	emptyCommand_t* cmd;
 	
@@ -820,8 +820,11 @@ void idRenderSystemLocal::EndFrame( int* frontEndMsec, int* backEndMsec )
 	GL_CheckErrors();
 	
 	// add the swapbuffers command
-	cmd = ( emptyCommand_t* )R_GetCommandBuffer( sizeof( *cmd ) );
-	cmd->commandId = RC_SWAP_BUFFERS;
+	if( swapBuffers )
+	{
+		cmd = ( emptyCommand_t* )R_GetCommandBuffer( sizeof( *cmd ) );
+		cmd->commandId = RC_SWAP_BUFFERS;
+	}
 	
 	// start the back end up again with the new command list
 	R_IssueRenderCommands();
