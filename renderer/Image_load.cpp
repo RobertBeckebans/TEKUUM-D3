@@ -618,11 +618,11 @@ bool idImage::HasAlphaChannel( const byte** dataPtrs, int numDataPtrs, int width
 	{
 		if( ( aAnd == 255 || aOr == 0 ) )
 		{
-			return true;
+			return false;
 		}
 		else
 		{
-			return false;
+			return true;
 		}
 	}
 	
@@ -640,8 +640,16 @@ void idImage::SetImageFilterAndRepeat() const
 	switch( filter )
 	{
 		case TF_DEFAULT:
-			glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, globalImages->textureMinFilter );
-			glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, globalImages->textureMaxFilter );
+			if( internalFormat == GL_ETC1_RGB8_OES )// || internalFormat == GL_RGB )
+			{
+				glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+				glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+			}
+			else
+			{
+				glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, globalImages->textureMinFilter );
+				glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, globalImages->textureMaxFilter );
+			}
 			break;
 		case TF_LINEAR:
 			glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
@@ -1515,6 +1523,16 @@ void idImage::WritePrecompressedDDSImage()
 	idStrStatic<MAX_IMAGE_NAME> filename;
 	ImageProgramStringToCompressedFileName( imgName, filename, "dxt", "dds" );
 	
+	ID_TIME_T generatedTimestamp = fileSystem->GetTimestamp( filename );
+	
+	if( generatedTimestamp != FILE_NOT_FOUND_TIMESTAMP )
+	{
+		if( sourceTimestamp <= generatedTimestamp )
+		{
+			return;
+		}
+	}
+	
 	int numLevels = NumLevelsForImageSize( uploadWidth, uploadHeight );
 	if( numLevels > MAX_TEXTURE_LEVELS )
 	{
@@ -1840,7 +1858,7 @@ void idImage::WritePrecompressedPKMImage( const byte* pic, int width, int height
 	
 	f->Write( encodedData, encodedSize );
 	
-#if 1
+#if 0
 	//if( image_writeETC1
 	{
 		idStrStatic<MAX_IMAGE_NAME> pngName = filename;
@@ -2176,7 +2194,7 @@ bool idImage::CheckPrecompressedPKMImage( bool fullLoad )
 	byte* header = data;
 	byte* encodedData = data + ETC_PKM_HEADER_SIZE;
 	
-	f->Read( header, len );
+	f->Read( data, len );
 	
 	fileSystem->CloseFile( f );
 	
@@ -2190,6 +2208,23 @@ bool idImage::CheckPrecompressedPKMImage( bool fullLoad )
 	int width = etc1_pkm_get_width( header );
 	int height = etc1_pkm_get_height( header );
 	int encodedDataSize = etc1_get_encoded_data_size( width, height );
+	
+#if 0
+	//if( image_writeETC1
+	{
+		idStrStatic<MAX_IMAGE_NAME> pngName = filename;
+		pngName.SetFileExtension( "png" );
+		
+		int decodedSize = width * height * 3;
+		byte* decodedData = ( byte* ) R_StaticAlloc( decodedSize );
+		
+		etc1_decode_image( encodedData, decodedData, width, height, 3, width * 3 );
+		
+		R_WritePNG( pngName, decodedData, 3, width, height, true );
+		
+		R_StaticFree( decodedData );
+	}
+#endif
 	
 	
 	// upload all the levels
@@ -2207,27 +2242,34 @@ bool idImage::CheckPrecompressedPKMImage( bool fullLoad )
 	uploadWidth = width;
 	uploadHeight = height;
 	
-	//int decodedSize = width * height * 3;
-	//byte* decodedData = ( byte* ) R_StaticAlloc( decodedSize );
-	
-	//etc1_decode_image( encodedData, decodedData, width, height, 3, width * 3 );
-	
 	GL_CheckErrors();
 	
-	common->Printf( "CheckPrecompressedPKMImage( %s, width = %i, height = %i ): uploading PKM ...\n", imgName.c_str(), width, height );
+#if 0
+	int decodedDataSize = width * height * 3;
+	byte* decodedData = ( byte* ) R_StaticAlloc( decodedDataSize );
+	etc1_decode_image( encodedData, decodedData, width, height, 3, width * 3 );
+	
+	internalFormat = GL_RGB;
+	glTexImage2D( GL_TEXTURE_2D, 0, internalFormat, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, decodedData );
+	
+	R_StaticFree( decodedData );
+	
+#else
+	
+	//common->Printf( "CheckPrecompressedPKMImage( %s, width = %i, height = %i ): uploading PKM ...\n", imgName.c_str(), width, height );
 	
 	internalFormat = GL_ETC1_RGB8_OES;
 	glCompressedTexImage2D( GL_TEXTURE_2D, 0, internalFormat, width, height, 0, encodedDataSize, encodedData );
 	
 	//common->Printf( "done\n" );
 	
+#endif
+	
 	if( GL_CheckErrors() )
 	{
 		common->Printf( "CheckPrecompressedPKMImage: OpenGL Error: image = '%s', internalFormat = %i, width = %i, height = %i, size = %i, data = %p",
 						imgName.c_str(), internalFormat, width, height, encodedDataSize, encodedData );
 	}
-	
-	//R_StaticFree( decodedData );
 	
 	SetImageFilterAndRepeat();
 	

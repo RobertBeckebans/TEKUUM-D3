@@ -281,9 +281,9 @@ idCVar r_deferredShadingGPUFrustumCulling( "r_deferredShadingGPUFrustumCulling",
 idCVar r_useFXAA( "r_useFXAA", "0", CVAR_RENDERER | CVAR_BOOL, "enable Fast Approximate Anti-Aliasing" );
 idCVar r_fxaaQualityPreset( "r_fxaaQualityPreset", "12", CVAR_RENDERER | CVAR_INTEGER, "default medium dither (10=fastest, 15=highest quality)",  10, 15, idCmdSystem::ArgCompletion_Integer<10, 15> );
 
-idCVar r_binaryLoadRenderModels( "r_binaryLoadRenderModels", "1", 0, "enable binary load/write of render models" );
+idCVar r_binaryLoadRenderModels( "r_binaryLoadRenderModels", "1", CVAR_RENDERER | CVAR_BOOL, "enable binary load/write of render models" );
 
-idCVar r_usePrecomputedLighting( "r_usePrecomputedLighting", "1", 0, "enable Q3A style precomputed lighting (vertex lighting/lightgrid)" );
+idCVar r_usePrecomputedLighting( "r_usePrecomputedLighting", "1", CVAR_RENDERER | CVAR_BOOL, "enable Q3A style precomputed lighting (vertex lighting/lightgrid)" );
 // RB end
 
 
@@ -435,7 +435,7 @@ static void R_CheckPortableExtensions()
 	// GL_ARB_texture_compression + GL_S3_s3tc
 	// DRI drivers may have GL_ARB_texture_compression but no GL_EXT_texture_compression_s3tc
 #if defined(USE_GLES1)
-	glConfig.s3tcTextureCompressionAvailable = false; //R_CheckExtension( "GL_EXT_texture_compression_s3tc" );
+	glConfig.s3tcTextureCompressionAvailable = R_CheckExtension( "GL_EXT_texture_compression_s3tc" );
 #else
 	if( GLEW_ARB_texture_compression != 0 && GLEW_EXT_texture_compression_s3tc != 0 )
 	{
@@ -449,7 +449,7 @@ static void R_CheckPortableExtensions()
 	
 	
 #if defined(USE_GLES1)
-	glConfig.etc1TextureCompressionAvailable = false; //R_CheckExtension( "GL_OES_compressed_ETC1_RGB8_texture" );
+	glConfig.etc1TextureCompressionAvailable = R_CheckExtension( "GL_OES_compressed_ETC1_RGB8_texture" );
 #else
 	glConfig.etc1TextureCompressionAvailable = false;
 #endif
