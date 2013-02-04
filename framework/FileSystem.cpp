@@ -905,7 +905,9 @@ const char* idFileSystemLocal::BuildOSPath( const char* base, const char* game, 
 				fileName.StripPath();
 				sprintf( newPath, "%s/%s/%s", base, testPath.c_str(), fileName.c_str() );
 				ReplaceSeparators( newPath );
-				common->DPrintf( "Fixed up to %s\n", newPath.c_str() );
+				
+				//common->DPrintf( "Fixed up to %s\n", newPath.c_str() );
+				
 				idStr::Copynz( OSPath, newPath, sizeof( OSPath ) );
 				return OSPath;
 			}

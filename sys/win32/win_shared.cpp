@@ -118,13 +118,40 @@ returns in megabytes
 int Sys_GetVideoRam() {
 #if defined(ID_DEDICATED)
 	return 0;
-// RB begin
+	// RB begin
 #elif defined(USE_QT_WINDOWING)
 	// FIXME
 	return 512;
-// RB end
 #else
-	unsigned int retSize = 64;
+	int retSize = 64;
+
+	// RB: added check with OpenGL extensions for GFX cards with more than 2 GB ram
+	if( GLEW_NVX_gpu_memory_info != 0 )
+	{
+		GLint total;
+		
+		glGetIntegerv( GL_GPU_MEMORY_INFO_CURRENT_AVAILABLE_VIDMEM_NVX , ( GLint* )&total );
+		
+		retSize = total / 1024;
+		
+		// round to the lower 16Mb
+		retSize &= ~15;
+		return retSize;
+	}
+	
+	if( GLEW_ATI_meminfo != 0 )
+	{
+		GLint total;
+		
+		glGetIntegerv( GL_TEXTURE_FREE_MEMORY_ATI , ( GLint* )&total );
+		
+		retSize = total / 1024;
+		
+		// round to the lower 16Mb
+		retSize &= ~15;
+		return retSize;
+	}
+	// RB end
 
 	CComPtr<IWbemLocator> spLoc = NULL;
 	HRESULT hr = CoCreateInstance( CLSID_WbemLocator, 0, CLSCTX_SERVER, IID_IWbemLocator, ( LPVOID * ) &spLoc );
@@ -162,9 +189,16 @@ int Sys_GetVideoRam() {
 		// Get properties from the object
 		CComVariant varSize;
 		hr = spInstance->Get( CComBSTR( _T( "AdapterRAM" ) ), 0, &varSize, 0, 0 );
-		if ( hr == S_OK ) {
-			retSize = varSize.intVal / ( 1024 * 1024 );
-			if ( retSize == 0 ) {
+		if ( hr == S_OK )
+		{
+			// HACK HACK RB: if the size is negative then we got more than 2 GB VRAM
+			retSize = ( varSize.intVal / ( 1024 * 1024 ) );
+			if( retSize < 0 )
+			{
+				retSize = 2048;
+			}
+			else if( retSize == 0 )
+			{
 				retSize = 64;
 			}
 		}

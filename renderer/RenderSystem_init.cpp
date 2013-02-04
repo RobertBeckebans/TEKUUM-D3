@@ -134,7 +134,7 @@ idCVar r_skipBump( "r_skipBump", "0", CVAR_RENDERER | CVAR_BOOL | CVAR_ARCHIVE, 
 #endif
 idCVar r_skipDiffuse( "r_skipDiffuse", "0", CVAR_RENDERER | CVAR_BOOL, "use black for diffuse" );
 #if defined(__ANDROID__)
-idCVar r_skipROQ( "r_skipROQ", "0", CVAR_RENDERER | CVAR_BOOL, "skip ROQ decoding" );
+idCVar r_skipROQ( "r_skipROQ", "1", CVAR_RENDERER | CVAR_BOOL, "skip ROQ decoding" );
 #else
 idCVar r_skipROQ( "r_skipROQ", "0", CVAR_RENDERER | CVAR_BOOL, "skip ROQ decoding" );
 #endif
