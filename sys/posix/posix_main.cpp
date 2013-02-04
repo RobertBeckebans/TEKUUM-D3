@@ -831,7 +831,7 @@ void tty_Show()
 			
 			// RB begin
 #if defined(__ANDROID__)
-			//__android_log_print(ANDROID_LOG_DEBUG, "Techyon_DEBUG", "%s", buf);
+			//__android_log_print(ANDROID_LOG_DEBUG, "Tekuum_DEBUG", "%s", buf);
 #endif
 			// RB end
 			
@@ -1203,7 +1203,7 @@ void Sys_DebugPrintf( const char* fmt, ... )
 	va_end( argptr );
 	msg[sizeof( msg ) - 1] = '\0';
 	
-	__android_log_print( ANDROID_LOG_DEBUG, "Techyon_Debug", msg );
+	__android_log_print( ANDROID_LOG_DEBUG, "Tekuum_Debug", msg );
 #else
 	va_list argptr;
 	
@@ -1218,7 +1218,7 @@ void Sys_DebugPrintf( const char* fmt, ... )
 void Sys_DebugVPrintf( const char* fmt, va_list arg )
 {
 #if defined(__ANDROID__)
-	__android_log_vprint( ANDROID_LOG_DEBUG, "Techyon_Debug", fmt, arg );
+	__android_log_vprint( ANDROID_LOG_DEBUG, "Tekuum_Debug", fmt, arg );
 #else
 	tty_Hide();
 	vprintf( fmt, arg );
@@ -1237,7 +1237,7 @@ void Sys_Printf( const char* fmt, ... )
 	va_end( argptr );
 	msg[sizeof( msg ) - 1] = '\0';
 	
-	__android_log_print( ANDROID_LOG_DEBUG, "Techyon", msg );
+	__android_log_print( ANDROID_LOG_DEBUG, "Tekuum", msg );
 #else
 	va_list argptr;
 	
@@ -1252,7 +1252,7 @@ void Sys_Printf( const char* fmt, ... )
 void Sys_VPrintf( const char* fmt, va_list arg )
 {
 #if defined(__ANDROID__)
-	__android_log_vprint( ANDROID_LOG_DEBUG, "Techyon", fmt, arg );
+	__android_log_vprint( ANDROID_LOG_DEBUG, "Tekuum", fmt, arg );
 #else
 	tty_Hide();
 	vprintf( fmt, arg );

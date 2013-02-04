@@ -19,7 +19,7 @@
 #include "lauxlib.h"
 #include "lualib.h"
 
-// Techyon BEGIN
+// Tekuum BEGIN
 #if defined(LUA_LIB)
 static int luaB_print( lua_State* L )
 {
@@ -45,7 +45,7 @@ static int luaB_print( lua_State* L )
 	return 0;
 }
 #endif
-// Techyon END
+// Tekuum END
 
 
 #define SPACECHARS	" \f\n\r\t\v"

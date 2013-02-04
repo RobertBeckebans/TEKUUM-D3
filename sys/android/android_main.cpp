@@ -273,7 +273,7 @@ const char* Sys_DefaultBasePath()
 	common->Printf( "WARNING: using hardcoded default base path\n" );
 	//return LINUX_DEFAULT_PATH;
 	
-	return "/sdcard/techyon";
+	return "/sdcard/tekuum";
 }
 
 /*
@@ -690,11 +690,11 @@ main
 int JE_Main( int argc, char** argv )
 {
 
-	__android_log_print( ANDROID_LOG_DEBUG, "Techyon", "Inside Techyon source!" );
+	__android_log_print( ANDROID_LOG_DEBUG, "Tekuum", "Inside Tekuum source!" );
 	
 	for( int i = 0; i < argc; i++ )
 	{
-		__android_log_print( ANDROID_LOG_DEBUG, "Techyon", "main(argc=%d, %s)", i, argv[i] );
+		__android_log_print( ANDROID_LOG_DEBUG, "Tekuum", "main(argc=%d, %s)", i, argv[i] );
 	}
 	
 #ifdef ID_MCHECK
@@ -725,7 +725,7 @@ int JE_Main( int argc, char** argv )
 
 void JE_DrawFrame()
 {
-	//__android_log_print(ANDROID_LOG_DEBUG, "Techyon", "JNI_NextFrame()");
+	//__android_log_print(ANDROID_LOG_DEBUG, "Tekuum", "JNI_NextFrame()");
 	
 	common->Frame();
 }
@@ -739,13 +739,13 @@ extern "C"
 		
 		ji = *jimp;
 		
-		__android_log_print( ANDROID_LOG_DEBUG, "Techyon", "GetEngineJavaAPI()" );
+		__android_log_print( ANDROID_LOG_DEBUG, "Tekuum", "GetEngineJavaAPI()" );
 		
 		memset( &je, 0, sizeof( je ) );
 		
 		if( apiVersion != ENGINE_JNI_API_VERSION )
 		{
-			__android_log_print( ANDROID_LOG_ERROR, "Techyon", "GetEngineJavaAPI: Mismatched ENGINE_JNI_API_VERSION: expected %i, got %i\n", ENGINE_JNI_API_VERSION, apiVersion );
+			__android_log_print( ANDROID_LOG_ERROR, "Tekuum", "GetEngineJavaAPI: Mismatched ENGINE_JNI_API_VERSION: expected %i, got %i\n", ENGINE_JNI_API_VERSION, apiVersion );
 			return NULL;
 		}
 		
@@ -758,7 +758,6 @@ extern "C"
 		je.QueueJoystickEvent = JE_QueueJoystickEvent;
 		je.QueueConsoleEvent = JE_QueueConsoleEvent;
 		
-		je.RequestAudioData = JE_RequestAudioData;
 		je.SetResolution = JE_SetResolution;
 		
 		je.IsConsoleActive = JE_IsConsoleActive;

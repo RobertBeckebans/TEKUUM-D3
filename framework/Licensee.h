@@ -34,12 +34,12 @@ If you have questions concerning this license or the applicable additional terms
 ===============================================================================
 */
 
-#define GAME_NAME						"Techyon"		// appears on window titles and errors
+#define GAME_NAME						"Tekuum"		// appears on window titles and errors
 
-#define ENGINE_VERSION					"Techyon 0.3.0"	// printed in console
+#define ENGINE_VERSION					"Tekuum 0.3.0"	// printed in console
 
 // paths
-#define	CD_BASEDIR						"Techyon"
+#define	CD_BASEDIR						"Tekuum"
 
 #if defined(STANDALONE)
 #if !defined(BASE_GAMEDIR)
@@ -54,8 +54,8 @@ If you have questions concerning this license or the applicable additional terms
 #endif
 
 // filenames
-#define	CD_EXE							"techyon.exe"
-#define CONFIG_FILE						"TechyonConfig.cfg"
+#define	CD_EXE							"tekuum.exe"
+#define CONFIG_FILE						"TekuumConfig.cfg"
 
 // base folder where the source code lives
 #define SOURCE_CODE_BASE_FOLDER			"src"
@@ -92,13 +92,13 @@ If you have questions concerning this license or the applicable additional terms
 
 // <= Doom v1.1: 1. no DS_VERSION token ( default )
 // Doom v1.2: 2
-// RB: Techyon uses a different renderdemo version because of some 64 bit fixes
+// RB: Tekuum uses a different renderdemo version because of some 64 bit fixes
 #define RENDERDEMO_VERSION				3
 
 // editor info
 #define EDITOR_DEFAULT_PROJECT			"doom.qe4"
-#define EDITOR_REGISTRY_KEY				"TechyonRadiant"
-#define EDITOR_WINDOWTEXT				"TechyonEdit"
+#define EDITOR_REGISTRY_KEY				"TekuumRadiant"
+#define EDITOR_WINDOWTEXT				"TekuumEdit"
 
 // win32 info
 #define WIN32_CONSOLE_CLASS				"TECHYON WinConsole"
@@ -107,15 +107,15 @@ If you have questions concerning this license or the applicable additional terms
 
 // Linux info
 #ifdef ID_DEMO_BUILD
-#define LINUX_DEFAULT_PATH				"/usr/local/games/techyon-demo"
+#define LINUX_DEFAULT_PATH				"/usr/local/games/tekuum-demo"
 #else
-#define LINUX_DEFAULT_PATH				"/usr/local/games/techyon"
+#define LINUX_DEFAULT_PATH				"/usr/local/games/tekuum"
 #endif
 
 // CD Key file info
 // goes into BASE_GAMEDIR whatever the fs_game is set to
 // two distinct files for easier win32 installer job
-#define CDKEY_FILE						"techyonkey"
+#define CDKEY_FILE						"tekuumkey"
 #define XPKEY_FILE						"xpkey"
 #define CDKEY_TEXT						"\n// Do not give this file to ANYONE.\n" \
 										"// id Software or Zenimax will NEVER ask you to send this file to them.\n"

@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8)
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 
-project(Techyon)
+project(Tekuum)
 
 option(USE_MFC_TOOLS
 		"Compile the built-in MFC based tools" OFF)
@@ -747,7 +747,7 @@ if(USE_QT_TOOLS)
 		file(GLOB QTTECHYON_INCLUDES sys/qt/*.h)
 		file(GLOB QTTECHYON_SOURCES sys/qt/*.cpp)
 		
-		set(QTTECHYON_RESOURCES sys/qt/Techyon.qrc)
+		set(QTTECHYON_RESOURCES sys/qt/Tekuum.qrc)
 		file(GLOB QTTECHYON_FORMS sys/qt/*.ui)
 			
 		QT4_WRAP_CPP(QTTECHYON_INCLUDES_MOC ${QTTECHYON_INCLUDES})
@@ -1131,19 +1131,19 @@ if(MSVC)
         )
 	
 	if(USE_QT_WINDOWING)
-		add_executable(Techyon ${TECHYON_INCLUDES} ${TECHYON_SOURCES} ${TECHYON_RESOURCES})
+		add_executable(Tekuum ${TECHYON_INCLUDES} ${TECHYON_SOURCES} ${TECHYON_RESOURCES})
 	else()
-		add_executable(Techyon WIN32 ${TECHYON_INCLUDES} ${TECHYON_SOURCES} ${TECHYON_RESOURCES})
+		add_executable(Tekuum WIN32 ${TECHYON_INCLUDES} ${TECHYON_SOURCES} ${TECHYON_RESOURCES})
 	endif()
 		
-	# add_custom_command(TARGET Techyon
+	# add_custom_command(TARGET Tekuum
                    # PRE_BUILD
 				   # COMMAND nmake ARGS /f Makefile.vc6 CFG=release
 				   # WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/libs/curl/lib
                    # COMMENT "Compiling libcURL")
 		
-	add_dependencies(Techyon idlib)
-	target_link_libraries(Techyon
+	add_dependencies(Tekuum idlib)
+	target_link_libraries(Tekuum
 		idlib
 		${DirectX_LIBRARIES}
 		${QT_LIBRARIES}

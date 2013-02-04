@@ -195,9 +195,9 @@ void Sys_AsyncThread()
 const char* Sys_DefaultSavePath()
 {
 #if defined( ID_DEMO_BUILD )
-	sprintf( savepath, "%s/.techyon-demo", getenv( "HOME" ) );
+	sprintf( savepath, "%s/.tekuum-demo", getenv( "HOME" ) );
 #else
-	sprintf( savepath, "%s/.techyon", getenv( "HOME" ) );
+	sprintf( savepath, "%s/.tekuum", getenv( "HOME" ) );
 #endif
 	return savepath.c_str();
 }

@@ -692,7 +692,7 @@ void Sys_FreeOpenAL();
 
 
 #if defined(__ANDROID__)
-#include "../../android/jni/techyonjni_public.h"
+#include "../../android/jni/tekuumjni_public.h"
 
 extern jniImport_t			ji;
 #endif

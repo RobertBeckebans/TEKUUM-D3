@@ -59,7 +59,7 @@ extern idRenderWorld* 				gameRenderWorld;
 extern idSoundWorld* 				gameSoundWorld;
 
 // the "gameversion" client command will print this plus compile date
-#define	GAME_VERSION		"baseTechyon-1"
+#define	GAME_VERSION		"baseTekuum-1"
 
 // classes used by idGameLocal
 class idEntity;

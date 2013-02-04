@@ -1,5 +1,5 @@
 --
--- Techyon build configuration script
+-- Tekuum build configuration script
 -- 
 
 function FindAndroidNDK()
@@ -169,7 +169,7 @@ newaction {
 }
 
 
-solution "Techyon"
+solution "Tekuum"
 	configurations { "Debug", "Release", "Profile" }
 	
 	if _OPTIONS["android"] then
@@ -410,8 +410,8 @@ end
 
 
 
-project "Techyon"
-	targetname  "Techyon"
+project "Tekuum"
+	targetname  "Tekuum"
 	language    "C++"
 	if _OPTIONS["android"] then
 		kind        "SharedLib"
@@ -993,7 +993,7 @@ else
 end
 	
 	configuration "linux"
-		targetname  "techyon"
+		targetname  "tekuum"
 		files
 		{
 			"sys/sys_local.cpp",
@@ -1053,7 +1053,7 @@ end
 end -- if not _OPTIONS["android"]
 
 	configuration "android"
-		targetname  "techyon"
+		targetname  "tekuum"
 		buildoptions
 		{
 			-- shut up about: the mangling of 'va_list' has changed in GCC 4.4
@@ -1166,7 +1166,7 @@ end -- if not _OPTIONS["android"]
 		}
 		
 	configuration "armeabi-v7a"
-		targetname  "techyon-v7a"
+		targetname  "tekuum-v7a"
 		targetdir 	"../android/libs/armeabi"
 		buildoptions
 		{
@@ -1186,7 +1186,7 @@ end -- if not _OPTIONS["android"]
 		}
 	
 	configuration "neon"
-		targetname  "techyon-neon"
+		targetname  "tekuum-neon"
 		targetdir 	"../android/libs/armeabi"
 		buildoptions
 		{

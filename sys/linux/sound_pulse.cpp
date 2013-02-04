@@ -86,7 +86,7 @@ bool rbAudioHardwarePulseAudio::Initialize()
 	sampleSpec.rate = 44100;
 	
 	int error;
-	paPlayback = pa_simple_new( NULL, "Techyon", PA_STREAM_PLAYBACK, NULL, "playback", &sampleSpec, NULL, NULL, &error );
+	paPlayback = pa_simple_new( NULL, "Tekuum", PA_STREAM_PLAYBACK, NULL, "playback", &sampleSpec, NULL, NULL, &error );
 	if( paPlayback == NULL )
 	{
 		common->Printf( "pa_simple_new() failed: %s\n", pa_strerror( error ) );
