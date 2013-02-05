@@ -977,7 +977,11 @@ void idGameLocal::LoadMap( const char* mapName, int randseed )
 	}
 	
 	// RB: changed g_gravity to 3d vector
+#if defined(STANDALONE)
 	gravity.Set( g_gravityX.GetFloat(), g_gravityY.GetFloat(), g_gravityZ.GetFloat() );
+#else
+	gravity.Set( 0, 0, -g_gravity.GetFloat() );
+#endif
 	// RB end
 	
 	spawnArgs.Clear();
@@ -2294,7 +2298,11 @@ void idGameLocal::UpdateGravity()
 	idEntity* ent;
 	
 	// RB: changed gravity to 3 vectors
+#if defined(STANDALONE)
 	if( g_gravityX.IsModified() || g_gravityY.IsModified() || g_gravityZ.IsModified() )
+#else
+	if( g_gravity.IsModified() )
+#endif
 	{
 	
 		/*
@@ -2305,17 +2313,23 @@ void idGameLocal::UpdateGravity()
 		if ( g_gravityY.GetFloat() == 0.0f ) {
 			g_gravityY.SetFloat( 1.0f );
 		}
-		
-		if ( g_gravityZ.GetFloat() == 0.0f ) {
-			g_gravityZ.SetFloat( -1.0f );
-		}
 		*/
 		
+#if defined(STANDALONE)
 		gravity.Set( g_gravityX.GetFloat(), g_gravityY.GetFloat(), g_gravityZ.GetFloat() );
+#else
+		if( g_gravity.GetFloat() == 0.0f )
+		{
+			g_gravity.SetFloat( 1.0f );
+		}
+		
+		gravity.Set( 0, 0, -g_gravity.GetFloat() );
+#endif
 		
 		// update all physics objects
 		for( ent = spawnedEntities.Next(); ent != NULL; ent = ent->spawnNode.Next() )
 		{
+#if defined(STANDALONE)
 			//if ( ent->IsType( idAFEntity_Generic::Type ) ) {
 			idPhysics* phys = ent->GetPhysics();
 			if( phys )
@@ -2323,11 +2337,25 @@ void idGameLocal::UpdateGravity()
 				phys->SetGravity( gravity );
 			}
 			//}
+#else
+			if( ent->IsType( idAFEntity_Generic::Type ) )
+			{
+				idPhysics* phys = ent->GetPhysics();
+				if( phys )
+				{
+					phys->SetGravity( gravity );
+				}
+			}
+#endif
 		}
 		
+#if defined(STANDALONE)
 		g_gravityX.ClearModified();
 		g_gravityY.ClearModified();
 		g_gravityZ.ClearModified();
+#else
+		g_gravity.ClearModified();
+#endif
 	}
 	// RB end
 }

@@ -41,9 +41,13 @@ extern idCVar	g_decals;
 extern idCVar	g_knockback;
 extern idCVar	g_skill;
 // RB begin
+#if defined(STANDALONE)
 extern idCVar	g_gravityX;
 extern idCVar	g_gravityY;
 extern idCVar	g_gravityZ;
+#else
+extern idCVar	g_gravity;
+#endif
 // RB end
 extern idCVar	g_skipFX;
 extern idCVar	g_skipParticles;

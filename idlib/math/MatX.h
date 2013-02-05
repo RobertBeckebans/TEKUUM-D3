@@ -973,8 +973,8 @@ ID_INLINE idMatX idMatX::Inverse() const
 	
 	invMat.SetTempSize( numRows, numColumns );
 	memcpy( invMat.mat, mat, numRows * numColumns * sizeof( float ) );
-	int r = invMat.InverseSelf();
-	assert( r );
+	verify( invMat.InverseSelf() );
+	
 	return invMat;
 }
 
@@ -1013,8 +1013,8 @@ ID_INLINE idMatX idMatX::InverseFast() const
 	
 	invMat.SetTempSize( numRows, numColumns );
 	memcpy( invMat.mat, mat, numRows * numColumns * sizeof( float ) );
-	int r = invMat.InverseFastSelf();
-	assert( r );
+	verify( invMat.InverseFastSelf() );
+	
 	return invMat;
 }
 

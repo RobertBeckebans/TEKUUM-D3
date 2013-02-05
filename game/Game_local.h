@@ -730,7 +730,13 @@ typedef enum
 #define	MASK_SHOT_BOUNDINGBOX		(CONTENTS_SOLID|CONTENTS_BODY)
 
 const float DEFAULT_GRAVITY			= 1066.0f;
+
+#if defined(STANDALONE)
 #define DEFAULT_GRAVITY_STRING		"-1066"	// RB: added - sign because of 3 directions gravity
+#else
+#define DEFAULT_GRAVITY_STRING		"1066"
+#endif
+
 const idVec3 DEFAULT_GRAVITY_VEC3( 0, 0, -DEFAULT_GRAVITY );
 
 const int	CINEMATIC_SKIP_DELAY	= SEC2MS( 2.0f );

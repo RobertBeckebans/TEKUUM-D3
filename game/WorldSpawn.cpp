@@ -65,7 +65,11 @@ void idWorldspawn::Spawn()
 	gameLocal.world = this;
 	
 	// RB: changed gravity sign
+#if defined(STANDALONE)
 	g_gravityZ.SetFloat( -spawnArgs.GetFloat( "gravity", va( "-%f", DEFAULT_GRAVITY ) ) );
+#else
+	g_gravity.SetFloat( spawnArgs.GetFloat( "gravity", va( "%f", DEFAULT_GRAVITY ) ) );
+#endif
 	// RB end
 	
 	// disable stamina on hell levels
@@ -125,9 +129,13 @@ void idWorldspawn::Restore( idRestoreGame* savefile )
 	assert( gameLocal.world == this );
 	
 	// RB: changed g_gravity to 3d vector
+#if defined(STANDALONE)
 	g_gravityY.SetFloat( 0.0f );
 	g_gravityY.SetFloat( 0.0f );
 	g_gravityZ.SetFloat( -spawnArgs.GetFloat( "gravity", va( "%f", DEFAULT_GRAVITY ) ) );
+#else
+	g_gravity.SetFloat( spawnArgs.GetFloat( "gravity", va( "%f", DEFAULT_GRAVITY ) ) );
+#endif
 	// RB end
 	
 	// disable stamina on hell levels

@@ -711,7 +711,11 @@ void idAI::Restore( idRestoreGame* savefile )
 	idVec3 gravity = spawnArgs.GetVector( "gravityDir", "0 0 -1" );
 	
 	// RB: changed g_gravity to 3d vector, FIXME double check this
+#if defined(STANDALONE)
 	gravity *= -g_gravityZ.GetFloat();
+#else
+	gravity *= g_gravity.GetFloat();
+#endif
 	// RB end
 	
 	if( gravity == gameLocal.GetGravity() )
@@ -939,7 +943,11 @@ void idAI::Spawn()
 		idVec3 gravity = spawnArgs.GetVector( "gravityDir", "0 0 -1" );
 		
 		// RB: changed g_gravity to 3d vector, FIXME double check this
+#if defined(STANDALONE)
 		gravity *= -g_gravityZ.GetFloat();
+#else
+		gravity *= g_gravity.GetFloat();
+#endif
 		// RB end
 		
 		physicsObj.SetGravity( gravity );

@@ -86,7 +86,7 @@ void idMD5Anim::Free()
 	frameRate	= 24;
 	animLength	= 0;
 	numAnimatedComponents = 0;
-	//name		= "";
+	name		= "";
 	
 	totaldelta.Zero();
 	

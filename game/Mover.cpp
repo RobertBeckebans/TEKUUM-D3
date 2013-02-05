@@ -5187,7 +5187,11 @@ void idPendulum::Spawn()
 		}
 		
 		// RB: changed g_gravity to 3d vector, FIXME find down direction
+#if defined(STANDALONE)
 		freq = 1 / ( idMath::TWO_PI ) * idMath::Sqrt( idMath::Fabs( g_gravityZ.GetFloat() ) / ( 3 * length ) );
+#else
+		freq = 1 / ( idMath::TWO_PI ) * idMath::Sqrt( idMath::Fabs( g_gravity.GetFloat() ) / ( 3 * length ) );
+#endif
 		// RB end
 	}
 	
