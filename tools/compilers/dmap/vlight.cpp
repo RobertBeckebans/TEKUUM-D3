@@ -33,6 +33,8 @@ If you have questions concerning this license or the applicable additional terms
 #include "dmap.h"
 
 
+#define	MAX_MAP_LIGHTGRID_POINTS		0x100000
+
 struct traceWork_t
 {
 	idVec3          start, end;
@@ -54,7 +56,7 @@ struct lightTrace_t
 };
 
 
-static void ColorToBytes( const idVec3& color, idVec3& colorBytes )
+static void ColorToBytes( const idVec3& color, byte colorBytes[3] )
 {
 	float           max;
 	idVec3          sample;
@@ -84,6 +86,44 @@ static void ColorToBytes( const idVec3& color, idVec3& colorBytes )
 	colorBytes[2] = sample[2];
 }
 
+static /*
+** NormalToLatLong
+**
+** We use two byte encoded normals in some space critical applications.
+** Lat = 0 at (1,0,0) to 360 (-1,0,0), encoded in 8-bit sine table format
+** Lng = 0 at (0,0,1) to 180 (0,0,-1), encoded in 8-bit sine table format
+**
+*/
+void NormalToLatLong( const idVec3& normal, byte bytes[2] )
+{
+	// check for singularities
+	if( normal[0] == 0 && normal[1] == 0 )
+	{
+		if( normal[2] > 0 )
+		{
+			bytes[0] = 0;
+			bytes[1] = 0;		// lat = 0, long = 0
+		}
+		else
+		{
+			bytes[0] = 128;
+			bytes[1] = 0;		// lat = 0, long = 128
+		}
+	}
+	else
+	{
+		int             a, b;
+		
+		a = RAD2DEG( atan2( normal[1], normal[0] ) ) * ( 255.0f / 360.0f );
+		a &= 0xff;
+		
+		b = RAD2DEG( acos( normal[2] ) ) * ( 255.0f / 360.0f );
+		b &= 0xff;
+		
+		bytes[0] = b;			// longitude
+		bytes[1] = a;			// lattitude
+	}
+}
 
 /*
 ================
@@ -454,7 +494,8 @@ static bool PointInSolid( const idVec3& start )
 	
 	node_t* node = NodeForPoint( e->tree->headnode, start );
 	
-	return ( node == NULL );
+	// RB: area -1 is the void
+	return ( node->area == -1 );
 }
 
 //=============================================================================
@@ -680,12 +721,13 @@ void TraceGrid( int num )
 		if( step > 18 )
 		{
 			// can't find a valid point at all
-			//for( i = 0; i < 8; i++ )
+			for( i = 0; i < 3; i++ )
 			{
-				gridPoint->ambient.Zero();
-				gridPoint->directed.Zero();
-				gridPoint->dir.Zero();
+				gridPoint->ambient[i] = 0;
+				gridPoint->directed[i] = 0;
 			}
+			gridPoint->latLong[0] = 0;
+			gridPoint->latLong[1] = 0;
 			return;
 		}
 	}
@@ -778,9 +820,9 @@ void TraceGrid( int num )
 	//gridPoint->directed = directedColor;
 	
 	summedDir.Normalize();
-	gridPoint->dir = summedDir;
 	
-	//NormalToLatLong( summedDir, gridData + num * 8 + 6 );
+	//gridPoint->dir = summedDir;
+	NormalToLatLong( summedDir, gridPoint->latLong );
 #endif
 }
 
@@ -817,17 +859,29 @@ static void SetupLightGrid()
 	CalculateLightGridBounds( bounds );
 	
 	idVec3 maxs;
-	for( int i = 0; i < 3; i++ )
+	int j = 0;
+	int numGridPoints = MAX_MAP_LIGHTGRID_POINTS + 1;
+	while( numGridPoints > MAX_MAP_LIGHTGRID_POINTS )
 	{
-		dmapGlobals.lightGridMins[i] = dmapGlobals.lightGridSize[i] * ceil( bounds[0][i] / dmapGlobals.lightGridSize[i] );
-		maxs[i] = dmapGlobals.lightGridSize[i] * floor( bounds[1][i] / dmapGlobals.lightGridSize[i] );
-		dmapGlobals.lightGridBounds[i] = ( maxs[i] - dmapGlobals.lightGridMins[i] ) / dmapGlobals.lightGridSize[i] + 1;
+		for( int i = 0; i < 3; i++ )
+		{
+			dmapGlobals.lightGridMins[i] = dmapGlobals.lightGridSize[i] * ceil( bounds[0][i] / dmapGlobals.lightGridSize[i] );
+			maxs[i] = dmapGlobals.lightGridSize[i] * floor( bounds[1][i] / dmapGlobals.lightGridSize[i] );
+			dmapGlobals.lightGridBounds[i] = ( maxs[i] - dmapGlobals.lightGridMins[i] ) / dmapGlobals.lightGridSize[i] + 1;
+		}
+		
+		numGridPoints = dmapGlobals.lightGridBounds[0] * dmapGlobals.lightGridBounds[1] * dmapGlobals.lightGridBounds[2];
+		
+		if( numGridPoints > MAX_MAP_LIGHTGRID_POINTS )
+		{
+			dmapGlobals.lightGridSize[ j++ % 3 ] += 16.0f;
+		}
 	}
 	
 	idLib::Printf( "grid size (%i %i %i)\n", ( int )dmapGlobals.lightGridSize[0], ( int )dmapGlobals.lightGridSize[1], dmapGlobals.lightGridSize[2] );
 	idLib::Printf( "grid bounds (%i %i %i)\n", ( int )dmapGlobals.lightGridBounds[0], ( int )dmapGlobals.lightGridBounds[1], ( int )dmapGlobals.lightGridBounds[2] );
 	
-	int numGridPoints = dmapGlobals.lightGridBounds[0] * dmapGlobals.lightGridBounds[1] * dmapGlobals.lightGridBounds[2];
+	
 	idLib::Printf( "%i x %i x %i = %i grid points \n", dmapGlobals.lightGridBounds[0], dmapGlobals.lightGridBounds[1], dmapGlobals.lightGridBounds[2], numGridPoints );
 	
 	dmapGlobals.lightGridPoints.SetNum( numGridPoints );

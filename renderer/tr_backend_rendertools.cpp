@@ -1983,7 +1983,15 @@ void RB_ShowLightGrid()
 		
 		glColor4f( c[0], c[1], c[2], 1 );
 		
-		idVec3 pos2 = gridPoint->origin - gridPoint->dir * r_showLightGrid.GetFloat();
+		float lattitude = DEG2RAD( gridPoint->latLong[1] * ( 360.0f / 255.0f ) );
+		float longitude = DEG2RAD( gridPoint->latLong[0] * ( 360.0f / 255.0f ) );
+		
+		idVec3 dir;
+		dir[0] = idMath::Cos( lattitude ) * idMath::Sin( longitude );
+		dir[1] = idMath::Sin( lattitude ) * idMath::Sin( longitude );
+		dir[2] = idMath::Cos( longitude );
+		
+		idVec3 pos2 = gridPoint->origin - dir * r_showLightGrid.GetFloat();
 		
 		glBegin( GL_LINES );
 		

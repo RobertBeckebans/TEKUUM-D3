@@ -746,13 +746,27 @@ static void WriteLightGrid()
 	{
 		lightGridPoint_t* gridPoint = &dmapGlobals.lightGridPoints[i];
 		
+#if 1
+		procFile->WriteFloatString( "/* lgp %i */ %i %i %i %i %i %i %i %i\n",
+									i,
+									gridPoint->ambient[0],
+									gridPoint->ambient[1],
+									gridPoint->ambient[2],
+									gridPoint->directed[0],
+									gridPoint->directed[1],
+									gridPoint->directed[2],
+									gridPoint->latLong[0],
+									gridPoint->latLong[1]
+								  );
+#else
 		procFile->WriteFloatString( "/* lgp %i */ ", i );
-		
+								  
 		Write1DMatrix( procFile, 3, gridPoint->ambient.ToFloatPtr() );
 		Write1DMatrix( procFile, 3, gridPoint->directed.ToFloatPtr() );
 		Write1DMatrix( procFile, 3, gridPoint->dir.ToFloatPtr() );
-		
+								  
 		procFile->WriteFloatString( "\n" );
+#endif
 	}
 	
 	procFile->WriteFloatString( "}\n\n" );

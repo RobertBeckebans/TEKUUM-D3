@@ -55,6 +55,9 @@ void idRenderWorldLocal::SetupEntityLightingGrid( idRenderEntityLocal* def )
 		float           frac[3];
 		int             gridStep[3];
 		idVec3          direction;
+		idVec3			direction2;
+		float			lattitude;
+		float			longitude;
 		float           totalFactor;
 		
 #if 0
@@ -156,15 +159,24 @@ void idRenderWorldLocal::SetupEntityLightingGrid( idRenderEntityLocal* def )
 			
 			totalFactor += factor;
 			
-			def->ambientLight[0] += factor * gridPoint2->ambient[0];
-			def->ambientLight[1] += factor * gridPoint2->ambient[1];
-			def->ambientLight[2] += factor * gridPoint2->ambient[2];
+			def->ambientLight[0] += factor * gridPoint2->ambient[0] * ( 1.0f / 255.0f );
+			def->ambientLight[1] += factor * gridPoint2->ambient[1] * ( 1.0f / 255.0f );
+			def->ambientLight[2] += factor * gridPoint2->ambient[2] * ( 1.0f / 255.0f );
 			
-			def->directedLight[0] += factor * gridPoint2->directed[0];
-			def->directedLight[1] += factor * gridPoint2->directed[1];
-			def->directedLight[2] += factor * gridPoint2->directed[2];
+			def->directedLight[0] += factor * gridPoint2->directed[0] * ( 1.0f / 255.0f );
+			def->directedLight[1] += factor * gridPoint2->directed[1] * ( 1.0f / 255.0f );
+			def->directedLight[2] += factor * gridPoint2->directed[2] * ( 1.0f / 255.0f );
 			
-			direction += ( gridPoint2->dir * factor );
+			lattitude = DEG2RAD( gridPoint2->latLong[1] * ( 360.0f / 255.0f ) );
+			longitude = DEG2RAD( gridPoint2->latLong[0] * ( 360.0f / 255.0f ) );
+			
+			direction2[0] = idMath::Cos( lattitude ) * idMath::Sin( longitude );
+			direction2[1] = idMath::Sin( lattitude ) * idMath::Sin( longitude );
+			direction2[2] = idMath::Cos( longitude );
+			
+			direction += ( direction2 * factor );
+			
+			//direction += ( gridPoint2->dir * factor );
 		}
 		
 #if 1
@@ -176,13 +188,13 @@ void idRenderWorldLocal::SetupEntityLightingGrid( idRenderEntityLocal* def )
 		}
 #endif
 		
-		def->ambientLight[0] = idMath::ClampFloat( 0, 1, def->ambientLight[0] * ( 1.0f / 255.0f ) );
-		def->ambientLight[1] = idMath::ClampFloat( 0, 1, def->ambientLight[1] * ( 1.0f / 255.0f ) );
-		def->ambientLight[2] = idMath::ClampFloat( 0, 1, def->ambientLight[2] * ( 1.0f / 255.0f ) );
+		def->ambientLight[0] = idMath::ClampFloat( 0, 1, def->ambientLight[0] );
+		def->ambientLight[1] = idMath::ClampFloat( 0, 1, def->ambientLight[1] );
+		def->ambientLight[2] = idMath::ClampFloat( 0, 1, def->ambientLight[2] );
 		
-		def->directedLight[0] = idMath::ClampFloat( 0, 1, def->directedLight[0] * ( 1.0f / 255.0f ) );
-		def->directedLight[1] = idMath::ClampFloat( 0, 1, def->directedLight[1] * ( 1.0f / 255.0f ) );
-		def->directedLight[2] = idMath::ClampFloat( 0, 1, def->directedLight[2] * ( 1.0f / 255.0f ) );
+		def->directedLight[0] = idMath::ClampFloat( 0, 1, def->directedLight[0] );
+		def->directedLight[1] = idMath::ClampFloat( 0, 1, def->directedLight[1] );
+		def->directedLight[2] = idMath::ClampFloat( 0, 1, def->directedLight[2] );
 		
 		def->lightDir = direction;
 		def->lightDir.Normalize();

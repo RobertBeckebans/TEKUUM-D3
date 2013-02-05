@@ -575,6 +575,7 @@ void idRenderWorldLocal::ParseLightGridPoints( idLexer* src, idFile* fileOut )
 	
 	idLib::Printf( "light grid size (%i %i %i)\n", ( int )lightGridSize[0], ( int )lightGridSize[1], ( int )lightGridSize[2] );
 	idLib::Printf( "light grid bounds (%i %i %i)\n", ( int )lightGridBounds[0], ( int )lightGridBounds[1], ( int )lightGridBounds[2] );
+	idLib::Printf( "%9u x %u B = lightGridSize = (%.2fMB)\n", numLightGridPoints, sizeof( lightGridPoint_t ), ( float )( lightGridPoints.MemoryUsed() ) / ( 1024.0f * 1024.0f ) );
 	
 	if( fileOut != NULL )
 	{
@@ -588,15 +589,38 @@ void idRenderWorldLocal::ParseLightGridPoints( idLexer* src, idFile* fileOut )
 	{
 		lightGridPoint_t* gridPoint = &lightGridPoints[i];
 		
+		byte values[8];
+		
+#if 1
+		for( int j = 0; j < 8; j++ )
+		{
+			int intVal = src->ParseInt();
+			intVal = idMath::ClampInt( 0, 255, intVal );
+			
+			values[j] = ( byte ) intVal;
+		}
+		
+		gridPoint->ambient[0] = values[0];
+		gridPoint->ambient[1] = values[1];
+		gridPoint->ambient[2] = values[2];
+		
+		gridPoint->directed[0] = values[3];
+		gridPoint->directed[1] = values[4];
+		gridPoint->directed[2] = values[5];
+		
+		gridPoint->latLong[0] = values[6];
+		gridPoint->latLong[1] = values[7];
+#else
 		src->Parse1DMatrix( 3, gridPoint->ambient.ToFloatPtr() );
 		src->Parse1DMatrix( 3, gridPoint->directed.ToFloatPtr() );
 		src->Parse1DMatrix( 3, gridPoint->dir.ToFloatPtr() );
+#endif
 		
 		if( fileOut != NULL )
 		{
-			fileOut->WriteBig( gridPoint->ambient );
-			fileOut->WriteBig( gridPoint->directed );
-			fileOut->WriteBig( gridPoint->dir );
+			fileOut->WriteBigArray( gridPoint->ambient, 3 );
+			fileOut->WriteBigArray( gridPoint->directed, 3 );
+			fileOut->WriteBigArray( gridPoint->latLong, 2 );
 		}
 	}
 	
@@ -607,6 +631,7 @@ void idRenderWorldLocal::ParseLightGridPoints( idLexer* src, idFile* fileOut )
 
 void idRenderWorldLocal::CalculateLightGridPointPositions()
 {
+#if !defined(USE_GLES1)
 	int             gridStep[3];
 	int             pos[3];
 	idVec3          posFloat;
@@ -636,6 +661,7 @@ void idRenderWorldLocal::CalculateLightGridPointPositions()
 			}
 		}
 	}
+#endif
 }
 
 // RB end
@@ -665,14 +691,15 @@ void idRenderWorldLocal::ReadBinaryLightGridPoints( idFile* file )
 	
 	idLib::Printf( "light grid size (%i %i %i)\n", ( int )lightGridSize[0], ( int )lightGridSize[1], ( int )lightGridSize[2] );
 	idLib::Printf( "light grid bounds (%i %i %i)\n", ( int )lightGridBounds[0], ( int )lightGridBounds[1], ( int )lightGridBounds[2] );
+	idLib::Printf( "%9u x %u B = lightGridSize = (%.2fMB)\n", numLightGridPoints, sizeof( lightGridPoint_t ), ( float )( lightGridPoints.MemoryUsed() ) / ( 1024.0f * 1024.0f ) );
 	
 	for( int i = 0; i < numLightGridPoints; i++ )
 	{
 		lightGridPoint_t* gridPoint = &lightGridPoints[i];
 		
-		file->ReadBig( gridPoint->ambient );
-		file->ReadBig( gridPoint->directed );
-		file->ReadBig( gridPoint->dir );
+		file->ReadBigArray( gridPoint->ambient, 3 );
+		file->ReadBigArray( gridPoint->directed, 3 );
+		file->ReadBigArray( gridPoint->latLong, 2 );
 	}
 	
 	CalculateLightGridPointPositions();
@@ -933,7 +960,7 @@ bool idRenderWorldLocal::InitFromMap( const char* name )
 	
 	
 	// see if we have a generated version of this
-	static const byte BPROC_VERSION = 4;
+	static const byte BPROC_VERSION = 5;
 	static const unsigned int BPROC_MAGIC = ( 'P' << 24 ) | ( 'R' << 16 ) | ( 'O' << 8 ) | BPROC_VERSION;
 	bool loaded = false;
 	
