@@ -321,7 +321,7 @@ static void CALLBACK DebugCallback( unsigned int source, unsigned int type,
 	// RB begin
 #if 1
 	// RB: only not thread-safe in the BFG edition
-	idLib::Printf( "OpenGL debug callback: %s\n" );
+	idLib::Printf( "OpenGL debug callback: %s\n", message );
 #else
 	
 #if defined(_WIN32)
