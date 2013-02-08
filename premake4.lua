@@ -1060,10 +1060,11 @@ end -- if not _OPTIONS["android"]
 			"-Wno-psabi",
 			
 			-- Android NDK does not support exceptions ...
-			"-fno-exceptions",
+			--"-fno-exceptions",
 		}
 		files
 		{
+			"../android/jni/tekuumjni.c",
 			"idlib/**.cpp", "idlib/**.h",
 			"game/**.cpp", "game/**.h",
 			"sys/android/**.cpp", "android/**.h",
@@ -1164,10 +1165,16 @@ end -- if not _OPTIONS["android"]
 		{
 			"-fuse-ld=gold",
 		}
+		prebuildcommands
+		{
+			"cp $(NDK)/prebuilt/android-arm/gdbserver/gdbserver ../android/libs/armeabi/gdbserver",
+			"echo 'set solib-search-path ./obj/local/armeabi' > ../android/libs/armeabi/gdb.setup",
+			"echo 'directory $(NDK)/platforms/android-9/arch-arm/usr/include $(NDK)/sources/cxx-stl/stlport jni/../../src/idlib jni/../../src/libs/zlib jni/../../src/libs/freetype/include jni/../../src/libs/oggvorbis/ogg jni/../../src/libs/oggvorbis/vorbis $(NDK)/sources/cxx-stl/stlport/stlport $(NDK)/sources/cxx-stl//gabi++/include' >> ../android/libs/armeabi/gdb.setup",
+		}
 		
 	configuration "armeabi-v7a"
-		targetname  "tekuum-v7a"
-		targetdir 	"../android/libs/armeabi"
+		targetname  "tekuum"
+		targetdir 	"../android/libs/armeabi-v7a"
 		buildoptions
 		{
 			"-march=armv7-a -mfloat-abi=softfp -mfpu=vfp -fpic -mthumb -ffunction-sections -funwind-tables -fstack-protector -fno-short-enums"
@@ -1183,6 +1190,12 @@ end -- if not _OPTIONS["android"]
 		{
 			"$(NDK)/sources/cxx-stl/gnu-libstdc++/4.6/libs/armeabi-v7a",
 			"$(NDK)/sources/cxx-stl/stlport/libs/armeabi-v7a",
+		}
+		prebuildcommands
+		{
+			"cp $(NDK)/prebuilt/android-arm/gdbserver/gdbserver ../android/libs/armeabi-v7a/gdbserver",
+			"echo 'set solib-search-path ./obj/local/armeabi-v7a' > ../android/libs/armeabi-v7a/gdb.setup",
+			"echo 'directory $(NDK)/platforms/android-9/arch-arm/usr/include $(NDK)/sources/cxx-stl/stlport jni/../../src/idlib jni/../../src/libs/zlib jni/../../src/libs/freetype/include jni/../../src/libs/oggvorbis/ogg jni/../../src/libs/oggvorbis/vorbis $(NDK)/sources/cxx-stl/stlport/stlport $(NDK)/sources/cxx-stl//gabi++/include' >> ../android/libs/armeabi-v7a/gdb.setup",
 		}
 	
 	configuration "neon"
