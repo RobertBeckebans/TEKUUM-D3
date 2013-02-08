@@ -171,7 +171,9 @@ If you have questions concerning this license or the applicable additional terms
 #include <errno.h>
 #include <math.h>
 #include <limits.h>
+#if !defined(__ANDROID__)
 #include <memory>
+#endif
 // RB: added <stdint.h> for missing uintptr_t with MinGW
 #include <stdint.h>
 // RB end
