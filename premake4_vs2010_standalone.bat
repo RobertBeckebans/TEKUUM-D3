@@ -1,3 +1,3 @@
 premake4 clean
-premake4 --monolith --xinput --standalone vs2010
+premake4 --cmdline-tools --monolith --xinput --standalone vs2010
 pause

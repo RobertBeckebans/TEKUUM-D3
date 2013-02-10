@@ -97,6 +97,12 @@ newoption
 
 newoption
 {
+	trigger = "cmdline-tools",
+	description = "Enable command line tools like dmap"
+}
+
+newoption
+{
 	trigger = "mfc-tools",
 	description = "Enable original Doom 3 tools"
 }
@@ -422,6 +428,7 @@ project "Tekuum"
 	--debugargs	{ "+set com_allowConsole 1 +set fs_game basety" }
 	files
 	{
+		"aas/*.cpp", "aas/*.h",
 		"cm/*.cpp", "cm/*.h",
 		"framework/**.cpp", "framework/**.h",
 		"renderer/**.c", "renderer/**.cpp", "renderer/**.h",
@@ -499,8 +506,6 @@ project "Tekuum"
 		
 		"sys/sys_*.cpp", "sys/sys_*.h",
 		
-		"tools/compilers/**.cpp", "tools/compilers/**.h",
-		"tools/*.h",
 		"ui/*.cpp", "ui/*.h",
 	}
 	excludes
@@ -626,6 +631,16 @@ end
 			"libs/lua/src",
 		}
 	
+	configuration { "cmdline-tools", "vs*" }
+		defines
+		{
+			"USE_CMDLINE_TOOLS",
+		}
+		files
+		{
+			"tools/compilers/**.cpp", "tools/compilers/**.h",
+		}
+	
 	configuration { "mfc-tools", "vs*" }
 		flags       { "MFC" }
 		defines
@@ -635,6 +650,7 @@ end
 		}
 		files
 		{
+			"tools/*.h",
 			"tools/af/*.cpp", "tools/af/*.h",
 			"tools/comafx/*.cpp", "tools/comafx/*.h",
 			"tools/common/**.cpp", "tools/common/**.h",
@@ -744,6 +760,7 @@ end
 		}
 		files
 		{
+			"tools/*.h",
 			"tools/gtktest/*.cpp", "tools/gtktest/*.h",
 		}
 		
@@ -1013,7 +1030,6 @@ end
 			"sys/linux/sound_pulse.cpp",
 			"sys/linux/libXNVCtrl/NVCtrl.c",
 			--"sys/sdl/sdl_sound.cpp", "sys/sdl/sdl_sound.h",
-			"tools/compilers/dmap/optimize_gcc.cpp",
 		}
 		excludes
 		{
@@ -1042,6 +1058,16 @@ end
 			--"USE_SOUND_SDL",
 			"PNG_NO_ASSEMBLER_CODE",
 			"USE_SDL",
+		}
+		
+	configuration { "cmdline-tools", "linux" }
+		defines
+		{
+			"USE_CMDLINE_TOOLS",
+		}
+		files
+		{
+			"tools/compilers/dmap/optimize_gcc.cpp",
 		}
 			
 	configuration { "linux", "x32" }
@@ -1074,7 +1100,6 @@ end -- if not _OPTIONS["android"]
 			"sys/posix/posix_threads.cpp",
 			"sys/linux/stack.cpp",
 			--"sys/linux/main.cpp",
-			"tools/compilers/dmap/optimize_gcc.cpp",
 		}
 		excludes
 		{

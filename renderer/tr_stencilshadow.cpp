@@ -1021,6 +1021,7 @@ static void R_CreateShadowVolumeInFrustum( const idRenderEntityLocal* ent,
 	
 	//--------------- off-line processing ------------------
 	
+#if defined(USE_CMDLINE_TOOLS)
 	// if we are running from dmap, perform the (very) expensive shadow optimizations
 	// to remove internal sil edges and optimize the caps
 	if( callOptimizer )
@@ -1079,6 +1080,7 @@ static void R_CreateShadowVolumeInFrustum( const idRenderEntityLocal* ent,
 		Mem_Free( opt.indexes );
 		return;
 	}
+#endif // #if defined(USE_CMDLINE_TOOLS)
 	
 	//--------------- real-time processing ------------------
 	
@@ -1540,10 +1542,12 @@ srfTriangles_t* R_CreateShadowVolume( const idRenderEntityLocal* ent,
 		SIMDProcessor->Memcpy( newTri->indexes, shadowIndexes, newTri->numIndexes * sizeof( newTri->indexes[0] ) );
 	}
 	
+#if defined(USE_CMDLINE_TOOLS)
 	if( optimize == SG_OFFLINE )
 	{
 		CleanupOptimizedShadowTris( newTri );
 	}
+#endif
 	
 	return newTri;
 }

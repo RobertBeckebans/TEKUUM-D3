@@ -197,8 +197,8 @@ const int MAX_EXPRESSION_REGISTERS = 4096;
 #include "../cm/CollisionModel.h"
 
 // AAS files and manager
-#include "../tools/compilers/aas/AASFile.h"
-#include "../tools/compilers/aas/AASFileManager.h"
+#include "../aas/AASFile.h"
+#include "../aas/AASFileManager.h"
 
 // game
 #if defined(_D3XP)
@@ -237,10 +237,14 @@ const int MAX_EXPRESSION_REGISTERS = 4096;
 
 // The editor entry points are always declared, but may just be
 // stubbed out on non-windows platforms.
+#if defined(USE_MFC_TOOLS) || defined(USE_QT_TOOLS) || defined(USE_GTK_TOOLS)
 #include "../tools/edit_public.h"
+#endif
 
 // Compilers for map, model, video etc. processing.
+#if defined(USE_CMDLINE_TOOLS)
 #include "../tools/compilers/compiler_public.h"
+#endif
 
 #endif /* !GAME_DLL */
 

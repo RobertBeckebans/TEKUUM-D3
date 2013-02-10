@@ -3,6 +3,9 @@ set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 
 project(Tekuum)
 
+option(USE_CMDLINE_TOOLS
+		"Compile the built-in command line based tools" ON)
+
 option(USE_MFC_TOOLS
 		"Compile the built-in MFC based tools" OFF)
 		
@@ -85,6 +88,8 @@ endif()
 
 add_subdirectory(idlib)
 
+file(GLOB AAS_INCLUDES aas/*.h)
+file(GLOB AAS_SOURCES aas/*.cpp)
 
 #file(GLOB_RECURSE CM_INCLUDES cm/*.h)
 #file(GLOB_RECURSE CM_SOURCES cm/*.cpp)
@@ -766,6 +771,8 @@ if(USE_QT_TOOLS)
 	
 endif(USE_QT_TOOLS)
 
+source_group("aas" FILES ${AAS_INCLUDES})
+source_group("aas" FILES ${AAS_SOURCES})
 
 source_group("cm" FILES ${CM_INCLUDES})
 source_group("cm" FILES ${CM_SOURCES})
@@ -901,6 +908,7 @@ source_group("tools\\sound" FILES ${EDITOR_SOUND_SOURCES})
 
 
 set(TECHYON_INCLUDES
+			${AAS_INCLUDES}
 			${CM_INCLUDES}
 			${FRAMEWORK_INCLUDES}
 			${FRAMEWORK_ASYNC_INCLUDES}
@@ -915,13 +923,10 @@ set(TECHYON_INCLUDES
 			${OGGVORBIS_INCLUDES}
 			${UI_INCLUDES}
 			
-			${COMPILER_INCLUDES}
-			${COMPILER_AAS_INCLUDES}
-			${COMPILER_DMAP_INCLUDES}
-			${COMPILER_RENDERBUMP_INCLUDES}
-			${COMPILER_ROQVQ_INCLUDES})
+			)
 			
 set(TECHYON_SOURCES
+			${AAS_SOURCES}
 			${CM_SOURCES}
 			${FRAMEWORK_SOURCES}
 			${FRAMEWORK_ASYNC_SOURCES} 
@@ -937,10 +942,7 @@ set(TECHYON_SOURCES
 			${OGGVORBIS_SOURCES}
 			${UI_SOURCES}
 			
-			${COMPILER_AAS_SOURCES}
-			${COMPILER_DMAP_SOURCES}
-			${COMPILER_RENDERBUMP_SOURCES}
-			${COMPILER_ROQVQ_SOURCES})
+			)
 
 add_definitions(-D__DOOM__
 				-DGLEW_STATIC
@@ -965,6 +967,23 @@ if(MONOLITH)
 		${GAME_SCRIPT_SOURCES})
 else()
 	add_definitions(-D__DOOM_DLL__)
+endif()
+
+if(USE_CMDLINE_TOOLS)
+	add_definitions(-DUSE_CMDLINE_TOOLS)
+
+	list(APPEND TECHYON_INCLUDES
+		${COMPILER_INCLUDES}
+		${COMPILER_AAS_INCLUDES}
+		${COMPILER_DMAP_INCLUDES}
+		${COMPILER_RENDERBUMP_INCLUDES}
+		${COMPILER_ROQVQ_INCLUDES})
+		
+	list(APPEND TECHYON_SOURCES
+		${COMPILER_AAS_SOURCES}
+		${COMPILER_DMAP_SOURCES}
+		${COMPILER_RENDERBUMP_SOURCES}
+		${COMPILER_ROQVQ_SOURCES})
 endif()
 
 include_directories(
