@@ -818,9 +818,9 @@ void Sys_PumpEvents() {
 		}
 
 // RB begin
-#if defined(USE_MFC_TOOLS)
+#if 0 //defined(USE_MFC_TOOLS)
 // RB end
-		if ( GUIEditorHandleMessage ( &msg ) ) {	
+		if ( GUIEditorHandleMessage ( &msg ) ) {
 			continue;
 		}
 #endif
@@ -1510,8 +1510,9 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 			if ( com_editors & EDITOR_GUI )
 			{
 				// GUI editor
-				GUIEditorRun();
-			} else if ( com_editors & EDITOR_RADIANT )
+				//GUIEditorRun();
+			}
+			else if ( com_editors & EDITOR_RADIANT )
 			{
 				// Level Editor
 				RadiantRun();
@@ -1519,7 +1520,7 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 			else if (com_editors & EDITOR_MATERIAL )
 			{
 				//BSM Nerve: Add support for the material editor
-				MaterialEditorRun();
+				//MaterialEditorRun();
 			}
 			else
 			{

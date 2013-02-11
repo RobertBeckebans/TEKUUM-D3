@@ -43,9 +43,9 @@ typedef enum
 } errorParm_t;
 
 #if defined( _DEBUG )
-#define BUILD_DEBUG "-debug"
+#define BUILD_DEBUG "-debug private alpha"
 #else
-#define BUILD_DEBUG ""
+#define BUILD_DEBUG " private alpha"
 #endif
 
 struct version_s
@@ -1345,7 +1345,7 @@ Com_EditGUIs_f
 */
 static void Com_EditGUIs_f( const idCmdArgs& args )
 {
-	GUIEditorInit();
+	//GUIEditorInit();
 }
 
 /*
@@ -2827,12 +2827,12 @@ void idCommonLocal::InitCommands()
 	cmdSystem->AddCommand( "editAFs", Com_EditAFs_f, CMD_FL_TOOL, "launches the in-game Articulated Figure Editor" );
 	cmdSystem->AddCommand( "editParticles", Com_EditParticles_f, CMD_FL_TOOL, "launches the in-game Particle Editor" );
 	cmdSystem->AddCommand( "editScripts", Com_EditScripts_f, CMD_FL_TOOL, "launches the in-game Script Editor" );
-	cmdSystem->AddCommand( "editGUIs", Com_EditGUIs_f, CMD_FL_TOOL, "launches the GUI Editor" );
+	//cmdSystem->AddCommand( "editGUIs", Com_EditGUIs_f, CMD_FL_TOOL, "launches the GUI Editor" );
 	cmdSystem->AddCommand( "editPDAs", Com_EditPDAs_f, CMD_FL_TOOL, "launches the in-game PDA Editor" );
 	cmdSystem->AddCommand( "debugger", Com_ScriptDebugger_f, CMD_FL_TOOL, "launches the Script Debugger" );
 	
 	//BSM Nerve: Add support for the material editor
-	cmdSystem->AddCommand( "materialEditor", Com_MaterialEditor_f, CMD_FL_TOOL, "launches the Material Editor" );
+	//cmdSystem->AddCommand( "materialEditor", Com_MaterialEditor_f, CMD_FL_TOOL, "launches the Material Editor" );
 #endif
 	
 	// RB begin

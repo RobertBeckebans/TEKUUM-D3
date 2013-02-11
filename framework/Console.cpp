@@ -963,10 +963,10 @@ void idConsoleLocal::Print( const char* txt )
 #if defined(USE_MFC_TOOLS)
 	RadiantPrint( txt );
 	
-	if( com_editors & EDITOR_MATERIAL )
-	{
-		MaterialEditorPrintConsole( txt );
-	}
+	//if( com_editors & EDITOR_MATERIAL )
+	//{
+	//	MaterialEditorPrintConsole( txt );
+	//}
 	
 #elif defined(USE_QT_TOOLS)
 	if( com_editors & EDITOR_QTRADIANT )
@@ -1216,9 +1216,9 @@ void idConsoleLocal::DrawSolidConsole( float frac )
 	
 	// RB begin
 #if defined( _DEBUG )
-	idStr version = va( "%s.%i-debug %s", ENGINE_VERSION, BUILD_NUMBER, BUILD_STRING );
+	idStr version = va( "%s.%i-debug private alpha %s", ENGINE_VERSION, BUILD_NUMBER, BUILD_STRING );
 #else
-	idStr version = va( "%s.%i %s", ENGINE_VERSION, BUILD_NUMBER, BUILD_STRING );
+	idStr version = va( "%s.%i %s private alpha", ENGINE_VERSION, BUILD_NUMBER, BUILD_STRING );
 #endif
 	// RB end
 	

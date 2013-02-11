@@ -195,7 +195,7 @@ int Sys_GetVideoRam() {
 			retSize = ( varSize.intVal / ( 1024 * 1024 ) );
 			if( retSize < 0 )
 			{
-				retSize = 2048;
+				retSize = 2048 - retSize;
 			}
 			else if( retSize == 0 )
 			{

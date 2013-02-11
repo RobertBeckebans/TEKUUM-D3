@@ -2596,7 +2596,7 @@ bool idWindow::Parse( idParser* src, bool rebuild )
 	
 	// attach a window wrapper to the window if the gui editor is running
 // RB begin
-#if defined(USE_MFC_TOOLS)
+#if 0 //defined(USE_MFC_TOOLS)
 // RB end
 	if( com_editors & EDITOR_GUI )
 	{
@@ -2807,7 +2807,7 @@ bool idWindow::Parse( idParser* src, bool rebuild )
 			// If we are in the gui editor then add the internal var to the
 			// the wrapper
 // RB begin
-#if defined(USE_MFC_TOOLS)
+#if 0 //defined(USE_MFC_TOOLS)
 // RB end
 			if( com_editors & EDITOR_GUI )
 			{
@@ -2851,7 +2851,7 @@ bool idWindow::Parse( idParser* src, bool rebuild )
 			// If we are in the gui editor then add the internal var to the
 			// the wrapper
 // RB begin
-#if defined(USE_MFC_TOOLS)
+#if 0 //defined(USE_MFC_TOOLS)
 // RB end
 			if( com_editors & EDITOR_GUI )
 			{
@@ -2891,7 +2891,7 @@ bool idWindow::Parse( idParser* src, bool rebuild )
 			
 			// If we are in the gui editor then add the float to the defines
 // RB begin
-#if defined(USE_MFC_TOOLS)
+#if 0 //defined(USE_MFC_TOOLS)
 // RB end
 			if( com_editors & EDITOR_GUI )
 			{
@@ -2933,7 +2933,7 @@ bool idWindow::Parse( idParser* src, bool rebuild )
 			// store the original vec4 for the editor
 			// If we are in the gui editor then add the float to the defines
 // RB begin
-#if defined(USE_MFC_TOOLS)
+#if 0 //defined(USE_MFC_TOOLS)
 // RB end
 			if( com_editors & EDITOR_GUI )
 			{
@@ -2963,7 +2963,7 @@ bool idWindow::Parse( idParser* src, bool rebuild )
 			
 			// If we are in the gui editor then add the float to the defines
 // RB begin
-#if defined(USE_MFC_TOOLS)
+#if 0 //defined(USE_MFC_TOOLS)
 // RB end
 			if( com_editors & EDITOR_GUI )
 			{
@@ -2981,7 +2981,7 @@ bool idWindow::Parse( idParser* src, bool rebuild )
 			// If we are in the gui editor then add the internal var to the
 			// the wrapper
 // RB begin
-#if defined(USE_MFC_TOOLS)
+#if 0 //defined(USE_MFC_TOOLS)
 // RB end
 			if( com_editors & EDITOR_GUI )
 			{
@@ -3006,7 +3006,7 @@ bool idWindow::Parse( idParser* src, bool rebuild )
 			// If we are in the gui editor then add the internal var to the
 			// the wrapper
 // RB begin
-#if defined(USE_MFC_TOOLS)
+#if 0 //defined(USE_MFC_TOOLS)
 // RB end
 			if( com_editors & EDITOR_GUI )
 			{
@@ -3023,7 +3023,7 @@ bool idWindow::Parse( idParser* src, bool rebuild )
 			// If we are in the gui editor then add the internal var to the
 			// the wrapper
 // RB begin
-#if defined(USE_MFC_TOOLS)
+#if 0 //defined(USE_MFC_TOOLS)
 // RB end
 			if( com_editors & EDITOR_GUI )
 			{
@@ -3053,7 +3053,7 @@ bool idWindow::Parse( idParser* src, bool rebuild )
 	// If we are in the gui editor then add the internal var to the
 	// the wrapper
 // RB begin
-#if defined(USE_MFC_TOOLS)
+#if 0 //defined(USE_MFC_TOOLS)
 // RB end
 	if( com_editors & EDITOR_GUI )
 	{

@@ -36,14 +36,14 @@ If you have questions concerning this license or the applicable additional terms
 
 #define GAME_NAME						"Tekuum"		// appears on window titles and errors
 
-#define ENGINE_VERSION					"Tekuum 0.3.0"	// printed in console
+#define ENGINE_VERSION					"Tekuum 0.4.0"	// printed in console
 
 // paths
 #define	CD_BASEDIR						"Tekuum"
 
 #if defined(STANDALONE)
 #if !defined(BASE_GAMEDIR)
-#define	BASE_GAMEDIR					"basety"
+#define	BASE_GAMEDIR					"assets"
 #endif
 #else
 #ifdef ID_DEMO_BUILD
