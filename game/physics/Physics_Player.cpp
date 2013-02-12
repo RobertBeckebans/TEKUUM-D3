@@ -2306,7 +2306,8 @@ END_CLASS
 
 tyPhysics_Player::tyPhysics_Player()
 {
-	SetGravity( gravityVector );
+	// HACK use different value than gameLocal.gravity so wen can set the wish gravity
+	SetGravity( vec3_origin );
 }
 
 void tyPhysics_Player::Save( idSaveGame* savefile ) const
@@ -2404,7 +2405,9 @@ void tyPhysics_Player::SetGravity( const idVec3& newGravity )
 		wishGravityNormal = newGravity;
 		wishGravityNormal.Normalize();
 		
-		wishGravityTime = gameLocal.time;
+		{
+			wishGravityTime = gameLocal.time;
+		}
 	}
 #else
 	idPhysics_Actor::SetGravity( newGravity );
