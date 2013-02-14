@@ -146,6 +146,11 @@ SCommandInfo	g_Commands[] =
 	{ "FileSaveCopy",            'C', RAD_CONTROL | RAD_ALT | RAD_SHIFT, D3XP_ID_FILE_SAVE_COPY },
 	{ "ShowHideModels",          'M', RAD_CONTROL, D3XP_ID_SHOW_MODELS },
 	{ "NextView",                VK_HOME, 0, ID_VIEW_NEXTVIEW },
+// RB begin
+	{ "TopView",                 VK_NUMPAD7, 0, ID_VIEW_TOPVIEW },
+	{ "FrontView",               VK_NUMPAD1, 0, ID_VIEW_FRONTVIEW },
+	{ "SideView",                VK_NUMPAD3, 0, ID_VIEW_SIDEVIEW },
+// RB end
 	{ "Grid_ZoomIn",             VK_DELETE, 0, ID_VIEW_ZOOMIN },
 	
 	{ "Grid_SetPoint5",          '4', RAD_SHIFT, ID_GRID_POINT5 },
@@ -477,6 +482,11 @@ BEGIN_MESSAGE_MAP( CMainFrame, CFrameWnd )
 	ON_COMMAND( ID_EDIT_MAPINFO, OnEditMapinfo )
 	ON_COMMAND( ID_EDIT_ENTITYINFO, OnEditEntityinfo )
 	ON_COMMAND( ID_VIEW_NEXTVIEW, OnViewNextview )
+	// RB begin
+	ON_COMMAND( ID_VIEW_TOPVIEW, OnViewTopview )
+	ON_COMMAND( ID_VIEW_FRONTVIEW, OnViewFrontview )
+	ON_COMMAND( ID_VIEW_SIDEVIEW, OnViewSideview )
+	// RB end
 	ON_COMMAND( ID_HELP_COMMANDLIST, OnHelpCommandlist )
 	ON_COMMAND( ID_FILE_NEWPROJECT, OnFileNewproject )
 	ON_COMMAND( ID_FLIP_CLIP, OnFlipClip )
@@ -4291,6 +4301,47 @@ void CMainFrame::OnViewNextview()
 	}
 	Sys_UpdateWindows( W_XY | W_CAMERA );
 }
+
+// RB begin
+void CMainFrame::OnViewTopview()
+{
+	m_pXYWnd->SetViewType( XY );
+	m_pXYWnd->PositionView();
+	
+	if( g_qeglobals.flatRotation )
+	{
+		g_qeglobals.rotateAxis = 2;
+	}
+	
+	Sys_UpdateWindows( W_XY | W_CAMERA );
+}
+
+void CMainFrame::OnViewFrontview()
+{
+	m_pXYWnd->SetViewType( XZ );
+	m_pXYWnd->PositionView();
+	
+	if( g_qeglobals.flatRotation )
+	{
+		g_qeglobals.rotateAxis = 1;
+	}
+	
+	Sys_UpdateWindows( W_XY | W_CAMERA );
+}
+
+void CMainFrame::OnViewSideview()
+{
+	m_pXYWnd->SetViewType( YZ );
+	m_pXYWnd->PositionView();
+	
+	if( g_qeglobals.flatRotation )
+	{
+		g_qeglobals.rotateAxis = 0;
+	}
+	
+	Sys_UpdateWindows( W_XY | W_CAMERA );
+}
+// RB end
 
 /*
  =======================================================================================================================

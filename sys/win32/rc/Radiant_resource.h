@@ -872,6 +872,13 @@ If you have questions concerning this license or the applicable additional terms
 #define ID_SELECTION_VIEW_WIREFRAMEOFF           30403
 #define ID_SELECTION_VIEW_VISIBLEON              30404
 #define ID_SELECTION_VIEW_VISIBLEOFF             30405
+
+// RB begin
+#define ID_VIEW_TOPVIEW                          30407
+#define ID_VIEW_FRONTVIEW                        30408
+#define ID_VIEW_SIDEVIEW                         30409
+// RB end
+
 #define ID_ENTITY_START                          40000
 #define ID_ENTITY_END                            45000
 

@@ -335,6 +335,11 @@ public:
 	afx_msg void OnEditMapinfo();
 	afx_msg void OnEditEntityinfo();
 	afx_msg void OnViewNextview();
+// RB begin
+	afx_msg void OnViewTopview();
+	afx_msg void OnViewFrontview();
+	afx_msg void OnViewSideview();
+// RB end
 	afx_msg void OnHelpCommandlist();
 	afx_msg void OnFileNewproject();
 	afx_msg void OnFlipClip();
