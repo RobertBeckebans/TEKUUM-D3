@@ -1000,20 +1000,20 @@ link_directories(
 
 if(MSVC)
 
-	if(MSVC_VERSION EQUAL 1700)
-		set(DirectX_LIBRARIES
-			dinput8
-			dsound
-			dxguid
-			#dxerr
-			Xinput
-			)
-		add_definitions(-DUSE_XINPUT)
-	else()
+	# if(MSVC_VERSION EQUAL 1700)
+		# set(DirectX_LIBRARIES
+			# dinput8
+			# dsound
+			# dxguid
+			# #dxerr
+			# Xinput
+			# )
+		# add_definitions(-DUSE_XINPUT)
+	# else()
 		find_package(DirectX REQUIRED)
 		include_directories(${DirectX_INCLUDE_DIR})
 		add_definitions(-DUSE_XINPUT)
-	endif()
+	# endif()
 	
 	if(USE_MFC_TOOLS)
 		# find_package(MFC REQUIRED)
