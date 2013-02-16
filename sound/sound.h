@@ -3,6 +3,7 @@
 
 Doom 3 GPL Source Code
 Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2013 Robert Beckebans
 
 This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
 
@@ -39,7 +40,15 @@ If you have questions concerning this license or the applicable additional terms
 
 // unfortunately, our minDistance / maxDistance is specified in meters, and
 // we have far too many of them to change at this time.
+
+// RB: changed inches to centimeter
+#if defined(STANDALONE)
+const float DOOM_TO_METERS = 0.01f;						// doom to meters
+#else
 const float DOOM_TO_METERS = 0.0254f;					// doom to meters
+#endif
+// RB end
+
 const float METERS_TO_DOOM = ( 1.0f / DOOM_TO_METERS );	// meters to doom
 
 class idSoundSample;
