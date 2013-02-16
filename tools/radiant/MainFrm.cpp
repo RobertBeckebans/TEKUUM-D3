@@ -145,11 +145,11 @@ SCommandInfo	g_Commands[] =
 	{ "Grid_ZoomOut",            VK_INSERT, 0, ID_VIEW_ZOOMOUT },
 	{ "FileSaveCopy",            'C', RAD_CONTROL | RAD_ALT | RAD_SHIFT, D3XP_ID_FILE_SAVE_COPY },
 	{ "ShowHideModels",          'M', RAD_CONTROL, D3XP_ID_SHOW_MODELS },
-	{ "NextView",                VK_HOME, 0, ID_VIEW_NEXTVIEW },
 // RB begin
-	{ "TopView",                 VK_NUMPAD7, 0, ID_VIEW_TOPVIEW },
-	{ "FrontView",               VK_NUMPAD1, 0, ID_VIEW_FRONTVIEW },
-	{ "SideView",                VK_NUMPAD3, 0, ID_VIEW_SIDEVIEW },
+	{ "View_Next",               VK_HOME, 0, ID_VIEW_NEXTVIEW },
+	{ "View_Top",                VK_NUMPAD7, 0, ID_VIEW_TOPVIEW },
+	{ "View_Front",              VK_NUMPAD1, 0, ID_VIEW_FRONTVIEW },
+	{ "View_Side",               VK_NUMPAD3, 0, ID_VIEW_SIDEVIEW },
 // RB end
 	{ "Grid_ZoomIn",             VK_DELETE, 0, ID_VIEW_ZOOMIN },
 	
