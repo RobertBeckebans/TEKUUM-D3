@@ -28,7 +28,7 @@ public:
 	{
 		// open file
 		_file = idLib::fileSystem->OpenFileRead( filename );
-		if( _file )
+		if( _file != NULL )
 		{
 			getFileSize();
 		}
@@ -38,8 +38,10 @@ public:
 	CFileReadCallBack(idFile* file)
 		: _file(file), _size(0), _close(false)
 	{
-		if( _file )
+		if( _file != NULL )
+		{
 			getFileSize();
+		}
 	}
 
 	//! destructor
@@ -54,8 +56,10 @@ public:
 	//! Reads an amount of bytes from the file.
 	virtual int read(void* buffer, int sizeToRead)
 	{
-		if( !_file )
+		if( _file == NULL )
+		{
 			return 0;
+		}
 
 		return _file->Read( buffer, sizeToRead );
 	}
@@ -68,6 +72,11 @@ public:
 
 	virtual ID_TIME_T getTimestamp() const
 	{
+		if( _file == NULL )
+		{
+			return FILE_NOT_FOUND_TIMESTAMP;
+		}
+
 		return _file->Timestamp();
 	}
 
