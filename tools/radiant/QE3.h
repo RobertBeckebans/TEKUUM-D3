@@ -120,12 +120,25 @@ bool	Sys_Waiting();
 void    Sys_EndWait();
 void    Sys_Status( const char* psz, int part = -1 );
 
+
+// RB begin
+#if defined(STANDALONE)
+#define MAX_GRID	1000.0f
+#define MIN_GRID	0.1f
+#else
+#define MAX_GRID	64.0f
+#define MIN_GRID	0.125f
+#endif
+// RB end
+
 /*
 ** most of the QE globals are stored in this structure
 */
 typedef struct
 {
 	bool d_showgrid;
+	
+	int   d_gridId;
 	float d_gridsize;
 	
 	int	rotateAxis;			// 0, 1 or 2

@@ -251,7 +251,13 @@ void Z_DrawGrid()
 		zb = region_mins[2];
 	}
 	
-	zb = 64 * floor( zb / 64 );
+#if defined(STANDALONE)
+	int stepSize = 100;
+#else
+	int stepSize = 64;
+#endif
+	
+	zb = stepSize * floor( zb / stepSize );
 	
 	ze = z.origin[2] + h;
 	if( ze > region_maxs[2] )
@@ -259,7 +265,7 @@ void Z_DrawGrid()
 		ze = region_maxs[2];
 	}
 	
-	ze = 64 * ceil( ze / 64 );
+	ze = stepSize * ceil( ze / stepSize );
 	
 	// draw major blocks
 	glColor3fv( g_qeglobals.d_savedinfo.colors[COLOR_GRIDMAJOR].ToFloatPtr() );
@@ -269,7 +275,7 @@ void Z_DrawGrid()
 	glVertex2f( 0, zb );
 	glVertex2f( 0, ze );
 	
-	for( zz = zb; zz < ze; zz += 64 )
+	for( zz = zb; zz < ze; zz += stepSize )
 	{
 		glVertex2f( -w, zz );
 		glVertex2f( w, zz );
@@ -288,10 +294,12 @@ void Z_DrawGrid()
 		glBegin( GL_LINES );
 		for( zz = zb; zz < ze; zz += g_qeglobals.d_gridsize )
 		{
-			if( !( ( int )zz & 63 ) )
+			/*
+			if( !( ( int )zz & ( stepSize - 1 ) ) )
 			{
 				continue;
 			}
+			*/
 			
 			glVertex2f( -w, zz );
 			glVertex2f( w, zz );
@@ -303,7 +311,7 @@ void Z_DrawGrid()
 	// draw coordinate text if needed
 	glColor3fv( g_qeglobals.d_savedinfo.colors[COLOR_GRIDTEXT].ToFloatPtr() );
 	
-	for( zz = zb; zz < ze; zz += 64 )
+	for( zz = zb; zz < ze; zz += stepSize )
 	{
 		glRasterPos2f( -w + 1, zz );
 		sprintf( text, "%i", ( int )zz );

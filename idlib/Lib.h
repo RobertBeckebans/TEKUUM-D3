@@ -3,6 +3,7 @@
 
 Doom 3 BFG Edition GPL Source Code
 Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2013 Robert Beckebans
 
 This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
@@ -104,8 +105,16 @@ class idVec4;
 #define MAX_PRINT_MSG			16384		// buffer size for our various printf routines
 
 // maximum world size
+
+// RB begin
+#if defined(STANDALONE)
+#define MAX_WORLD_COORD			( 100 * 1000 * 2 )
+#define MIN_WORLD_COORD			( -100 * 1000 * 2 )
+#else
 #define MAX_WORLD_COORD			( 128 * 1024 )
 #define MIN_WORLD_COORD			( -128 * 1024 )
+#endif
+// RB end
 #define MAX_WORLD_SIZE			( MAX_WORLD_COORD - MIN_WORLD_COORD )
 
 #define SIZE_KB( x )						( ( (x) + 1023 ) / 1024 )

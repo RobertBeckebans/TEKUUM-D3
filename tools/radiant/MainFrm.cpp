@@ -96,8 +96,7 @@ CString			g_strProject;						// holds the active project filename
 #define SPEED_MOVE	32.0f
 #define SPEED_TURN	22.5f
 
-#define MAX_GRID	64.0f
-#define MIN_GRID	0.125f
+
 
 SCommandInfo	g_Commands[] =
 {
@@ -153,6 +152,21 @@ SCommandInfo	g_Commands[] =
 // RB end
 	{ "Grid_ZoomIn",             VK_DELETE, 0, ID_VIEW_ZOOMIN },
 	
+// RB Begin
+#if defined(STANDALONE)
+	{ "Grid_SetPoint5",          '2', RAD_SHIFT, ID_GRID_POINT5 },
+	{ "Grid_SetPoint1",			 '1', RAD_SHIFT, ID_GRID_POINT1 },
+	//{ "Grid_SetPoint25",       '3', RAD_SHIFT, ID_GRID_POINT25 },
+	//{ "Grid_SetPoint125",      '2', RAD_SHIFT, ID_GRID_POINT125 },
+	//{ "Grid_SetPoint0625",     '1', RAD_SHIFT, ID_GRID_POINT0625 },
+	{ "Grid_Set1",               '1', 0, ID_GRID_1 },
+	{ "Grid_Set5",               '2', 0, ID_GRID_5 },
+	{ "Grid_Set10",              '3', 0, ID_GRID_10 },
+	{ "Grid_Set25",              '4', 0, ID_GRID_25 },
+	{ "Grid_Set50",              '5', 0, ID_GRID_50 },
+	{ "Grid_Set100",             '6', 0, ID_GRID_100 },
+	{ "Grid_Set1000",            '7', 0, ID_GRID_1000 },
+#else
 	{ "Grid_SetPoint5",          '4', RAD_SHIFT, ID_GRID_POINT5 },
 	{ "Grid_SetPoint25",         '3', RAD_SHIFT, ID_GRID_POINT25 },
 	{ "Grid_SetPoint125",        '2', RAD_SHIFT, ID_GRID_POINT125 },
@@ -164,6 +178,9 @@ SCommandInfo	g_Commands[] =
 	{ "Grid_Set16",              '5', 0, ID_GRID_16 },
 	{ "Grid_Set32",              '6', 0, ID_GRID_32 },
 	{ "Grid_Set64",              '7', 0, ID_GRID_64 },
+#endif
+// RB end
+
 	{ "Grid_Down",               219, 0, ID_GRID_PREV },
 	{ "Grid_Up",                 221, 0, ID_GRID_NEXT },
 	
@@ -703,7 +720,15 @@ BEGIN_MESSAGE_MAP( CMainFrame, CFrameWnd )
 	ON_COMMAND_RANGE( CMD_BSPCOMMAND, CMD_BSPCOMMAND_END, OnBspCommand )
 	ON_COMMAND_RANGE( IDMRU, IDMRU_END, OnMru )
 	ON_COMMAND_RANGE( ID_VIEW_NEAREST, ID_TEXTURES_FLATSHADE, OnViewNearest )
+	
+// RB begin
+#if defined(STANDALONE)
+	ON_COMMAND_RANGE( ID_GRID_POINT1, ID_GRID_1000, OnGrid1 )
+#else
 	ON_COMMAND_RANGE( ID_GRID_POINT0625, ID_GRID_64, OnGrid1 )
+#endif
+// RB end
+	
 #if _MSC_VER < 1300
 	ON_REGISTERED_MESSAGE( g_msgBSPDone, OnBSPDone )
 	ON_REGISTERED_MESSAGE( g_msgBSPStatus, OnBSPStatus )
@@ -2781,6 +2806,41 @@ static void UpdateGrid()
  */
 void CMainFrame::OnGrid1( unsigned int nID )
 {
+// RB begin
+	g_qeglobals.d_gridId = nID;
+	
+#if defined(STANDALONE)
+	switch( nID )
+	{
+		case ID_GRID_1:
+			g_qeglobals.d_gridsize = 1;
+			break;
+		case ID_GRID_5:
+			g_qeglobals.d_gridsize = 5;
+			break;
+		case ID_GRID_10:
+			g_qeglobals.d_gridsize = 10;
+			break;
+		case ID_GRID_25:
+			g_qeglobals.d_gridsize = 25;
+			break;
+		case ID_GRID_50:
+			g_qeglobals.d_gridsize = 50;
+			break;
+		case ID_GRID_100:
+			g_qeglobals.d_gridsize = 100;
+			break;
+		case ID_GRID_1000:
+			g_qeglobals.d_gridsize = 1000;
+			break;
+		case ID_GRID_POINT1:
+			g_qeglobals.d_gridsize = 0.1f;
+			break;
+		case ID_GRID_POINT5:
+			g_qeglobals.d_gridsize = 0.5f;
+			break;
+	}
+#else
 	switch( nID )
 	{
 		case ID_GRID_1:
@@ -2817,7 +2877,9 @@ void CMainFrame::OnGrid1( unsigned int nID )
 			//	g_qeglobals.d_gridsize = 0.0625f;
 			//	break;
 	}
-	
+#endif
+// RB end
+
 	UpdateGrid();
 	
 	SetGridStatus();
@@ -5161,6 +5223,19 @@ void CMainFrame::OnSelectionTextureShiftup()
 void CMainFrame::SetGridChecks( int id )
 {
 	HMENU	hMenu = ::GetMenu( GetSafeHwnd() );
+	
+// RB begin
+#if defined(STANDALONE)
+	CheckMenuItem( hMenu, ID_GRID_1, MF_BYCOMMAND | MF_UNCHECKED );
+	CheckMenuItem( hMenu, ID_GRID_5, MF_BYCOMMAND | MF_UNCHECKED );
+	CheckMenuItem( hMenu, ID_GRID_10, MF_BYCOMMAND | MF_UNCHECKED );
+	CheckMenuItem( hMenu, ID_GRID_25, MF_BYCOMMAND | MF_UNCHECKED );
+	CheckMenuItem( hMenu, ID_GRID_50, MF_BYCOMMAND | MF_UNCHECKED );
+	CheckMenuItem( hMenu, ID_GRID_100, MF_BYCOMMAND | MF_UNCHECKED );
+	CheckMenuItem( hMenu, ID_GRID_1000, MF_BYCOMMAND | MF_UNCHECKED );
+	CheckMenuItem( hMenu, ID_GRID_POINT1, MF_BYCOMMAND | MF_UNCHECKED );
+	CheckMenuItem( hMenu, ID_GRID_POINT5, MF_BYCOMMAND | MF_UNCHECKED );
+#else
 	CheckMenuItem( hMenu, ID_GRID_1, MF_BYCOMMAND | MF_UNCHECKED );
 	CheckMenuItem( hMenu, ID_GRID_2, MF_BYCOMMAND | MF_UNCHECKED );
 	CheckMenuItem( hMenu, ID_GRID_4, MF_BYCOMMAND | MF_UNCHECKED );
@@ -5172,6 +5247,8 @@ void CMainFrame::SetGridChecks( int id )
 	CheckMenuItem( hMenu, ID_GRID_POINT25, MF_BYCOMMAND | MF_UNCHECKED );
 	CheckMenuItem( hMenu, ID_GRID_POINT125, MF_BYCOMMAND | MF_UNCHECKED );
 	CheckMenuItem( hMenu, ID_GRID_POINT0625, MF_BYCOMMAND | MF_UNCHECKED );
+#endif
+// RB end
 	CheckMenuItem( hMenu, id, MF_BYCOMMAND | MF_CHECKED );
 }
 
@@ -5185,6 +5262,51 @@ void CMainFrame::OnGridNext()
 	{
 		return;
 	}
+	
+// RB begin
+	if( g_qeglobals.d_gridId >= ID_GRID_END )
+	{
+		return;
+	}
+	
+	g_qeglobals.d_gridId++;
+	
+#if defined(STANDALONE)
+	switch( g_qeglobals.d_gridId )
+	{
+		case ID_GRID_1:
+			g_qeglobals.d_gridsize = 1;
+			break;
+		case ID_GRID_5:
+			g_qeglobals.d_gridsize = 5;
+			break;
+		case ID_GRID_10:
+			g_qeglobals.d_gridsize = 10;
+			break;
+		case ID_GRID_25:
+			g_qeglobals.d_gridsize = 25;
+			break;
+		case ID_GRID_50:
+			g_qeglobals.d_gridsize = 50;
+			break;
+		case ID_GRID_100:
+			g_qeglobals.d_gridsize = 100;
+			break;
+		case ID_GRID_1000:
+			g_qeglobals.d_gridsize = 1000;
+			break;
+		case ID_GRID_POINT1:
+			g_qeglobals.d_gridsize = 0.1f;
+			break;
+		case ID_GRID_POINT5:
+			g_qeglobals.d_gridsize = 0.5f;
+			break;
+	}
+	
+	UpdateGrid();
+	
+	SetGridChecks( g_qeglobals.d_gridId );
+#else
 	
 	g_qeglobals.d_gridsize *= 2.0f;
 	
@@ -5200,6 +5322,9 @@ void CMainFrame::OnGridNext()
 	UpdateGrid();
 	
 	SetGridChecks( id );
+#endif
+// RB end
+
 	SetGridStatus();
 	Sys_UpdateWindows( W_XY | W_Z );
 }
@@ -5215,6 +5340,50 @@ void CMainFrame::OnGridPrev()
 		return;
 	}
 	
+// RB begin
+	if( g_qeglobals.d_gridId <= ID_GRID_START )
+	{
+		return;
+	}
+	
+	g_qeglobals.d_gridId--;
+	
+#if defined(STANDALONE)
+	switch( g_qeglobals.d_gridId )
+	{
+		case ID_GRID_1:
+			g_qeglobals.d_gridsize = 1;
+			break;
+		case ID_GRID_5:
+			g_qeglobals.d_gridsize = 5;
+			break;
+		case ID_GRID_10:
+			g_qeglobals.d_gridsize = 10;
+			break;
+		case ID_GRID_25:
+			g_qeglobals.d_gridsize = 25;
+			break;
+		case ID_GRID_50:
+			g_qeglobals.d_gridsize = 50;
+			break;
+		case ID_GRID_100:
+			g_qeglobals.d_gridsize = 100;
+			break;
+		case ID_GRID_1000:
+			g_qeglobals.d_gridsize = 1000;
+			break;
+		case ID_GRID_POINT1:
+			g_qeglobals.d_gridsize = 0.1f;
+			break;
+		case ID_GRID_POINT5:
+			g_qeglobals.d_gridsize = 0.5f;
+			break;
+	}
+	
+	UpdateGrid();
+	
+	SetGridChecks( g_qeglobals.d_gridId );
+#else
 	g_qeglobals.d_gridsize /= 2;
 	
 	float	maxGrid = MAX_GRID;
@@ -5229,6 +5398,9 @@ void CMainFrame::OnGridPrev()
 	UpdateGrid();
 	
 	SetGridChecks( id );
+#endif
+// RB end
+
 	SetGridStatus();
 	Sys_UpdateWindows( W_XY | W_Z );
 }

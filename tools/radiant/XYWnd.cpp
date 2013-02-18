@@ -3095,7 +3095,7 @@ void CXYWnd::XY_DrawGrid()
 	int		w, h;
 	char	text[32];
 	
-	int startPos = max( 64 , g_qeglobals.d_gridsize );
+	int startPos = max( MAX_GRID , g_qeglobals.d_gridsize );
 	
 	w = m_nWidth / 2 / m_fScale;
 	h = m_nHeight / 2 / m_fScale;
@@ -3110,6 +3110,9 @@ void CXYWnd::XY_DrawGrid()
 		xb = region_mins[nDim1];
 	}
 	
+#if defined(STANDALONE)
+	xb = MIN_WORLD_COORD;
+#endif
 	xb = startPos * floor( xb / startPos );
 	
 	xe = m_vOrigin[nDim1] + w;
@@ -3118,6 +3121,9 @@ void CXYWnd::XY_DrawGrid()
 		xe = region_maxs[nDim1];
 	}
 	
+#if defined(STANDALONE)
+	xe = MAX_WORLD_COORD;
+#endif
 	xe = startPos * ceil( xe / startPos );
 	
 	yb = m_vOrigin[nDim2] - h;
@@ -3126,6 +3132,9 @@ void CXYWnd::XY_DrawGrid()
 		yb = region_mins[nDim2];
 	}
 	
+#if defined(STANDALONE)
+	yb = MIN_WORLD_COORD;
+#endif
 	yb = startPos * floor( yb / startPos );
 	
 	ye = m_vOrigin[nDim2] + h;
@@ -3134,20 +3143,71 @@ void CXYWnd::XY_DrawGrid()
 		ye = region_maxs[nDim2];
 	}
 	
+#if defined(STANDALONE)
+	ye = MAX_WORLD_COORD;
+#endif
 	ye = startPos * ceil( ye / startPos );
 	
+	
+	
+#if 1
+	// draw minor blocks
+	if( m_fScale > .1 &&
+			g_qeglobals.d_showgrid &&
+			g_qeglobals.d_gridsize * m_fScale >= 4 &&
+			!g_qeglobals.d_savedinfo.colors[COLOR_GRIDMINOR].Compare( g_qeglobals.d_savedinfo.colors[COLOR_GRIDBACK] ) )
+	{
+	
+		glColor3fv( g_qeglobals.d_savedinfo.colors[COLOR_GRIDMINOR].ToFloatPtr() );
+		
+		glBegin( GL_LINES );
+		for( x = xb; x < xe; x += g_qeglobals.d_gridsize )
+		{
+			/*
+			if( !( ( int )x & ( startPos - 1 ) ) )
+			{
+				continue;
+			}
+			*/
+			
+			glVertex2f( x, yb );
+			glVertex2f( x, ye );
+		}
+		
+		for( y = yb; y < ye; y += g_qeglobals.d_gridsize )
+		{
+			/*
+			if( !( ( int )y & ( startPos - 1 ) ) )
+			{
+				continue;
+			}
+			*/
+			
+			glVertex2f( xb, y );
+			glVertex2f( xe, y );
+		}
+		
+		glEnd();
+	}
+#endif
+	
+#if 1
 	// draw major blocks
 	glColor3fv( g_qeglobals.d_savedinfo.colors[COLOR_GRIDMAJOR].ToFloatPtr() );
 	
-	int stepSize = 64 * 0.1 / m_fScale;
-	if( stepSize < 64 )
+	int stepSize = MAX_GRID * 0.1 / m_fScale;
+	if( stepSize < MAX_GRID )
 	{
-		stepSize = max( 64 , g_qeglobals.d_gridsize );
+		stepSize = max( MAX_GRID , g_qeglobals.d_gridsize );
 	}
 	else
 	{
 		int i;
+#if defined(STANDALONE)
+		for( i = MAX_GRID; i < stepSize /*&& i < 100000*/; i *= 10 )
+#else
 		for( i = 1; i < stepSize; i <<= 1 )
+#endif
 		{
 		}
 		
@@ -3172,45 +3232,9 @@ void CXYWnd::XY_DrawGrid()
 		
 		glEnd();
 	}
-	
-	// draw minor blocks
-	if( m_fScale > .1 &&
-			g_qeglobals.d_showgrid &&
-			g_qeglobals.d_gridsize * m_fScale >= 4 &&
-			!g_qeglobals.d_savedinfo.colors[COLOR_GRIDMINOR].Compare( g_qeglobals.d_savedinfo.colors[COLOR_GRIDBACK] ) )
-	{
-	
-		glColor3fv( g_qeglobals.d_savedinfo.colors[COLOR_GRIDMINOR].ToFloatPtr() );
-		
-		glBegin( GL_LINES );
-		for( x = xb; x < xe; x += g_qeglobals.d_gridsize )
-		{
-			if( !( ( int )x & ( startPos - 1 ) ) )
-			{
-				continue;
-			}
-			
-			glVertex2f( x, yb );
-			glVertex2f( x, ye );
-		}
-		
-		for( y = yb; y < ye; y += g_qeglobals.d_gridsize )
-		{
-			if( !( ( int )y & ( startPos - 1 ) ) )
-			{
-				continue;
-			}
-			
-			glVertex2f( xb, y );
-			glVertex2f( xe, y );
-		}
-		
-		glEnd();
-	}
-	
+#endif
 	
 	// draw ZClip boundaries (if applicable)...
-	//
 	if( m_nViewType == XZ || m_nViewType == YZ )
 	{
 		if( g_pParentWnd->GetZWnd()->m_pZClip )	// should always be the case at this point I think, but this is safer

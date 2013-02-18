@@ -442,10 +442,19 @@ bool QE_SingleBrush( bool bQuiet, bool entityOK )
  */
 void QE_Init()
 {
-	/* initialize variables */
+
+// RB begin
+#if defined(STANDALONE)
+	g_qeglobals.d_gridId = ID_GRID_10;
+	g_qeglobals.d_gridsize = 10;
+	g_qeglobals.d_showgrid = true;
+#else
+	g_qeglobals.d_gridId = ID_GRID_8;
 	g_qeglobals.d_gridsize = 8;
 	g_qeglobals.d_showgrid = true;
-	
+#endif
+// RB end
+
 	/*
 	 * other stuff £
 	 * FIXME: idMaterial Texture_Init (true); Cam_Init (); XY_Init ();

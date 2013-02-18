@@ -540,7 +540,19 @@ BEGIN
     END
     POPUP "&Grid"
     BEGIN
-        MENUITEM "Grid 0.125 \t&Shift + 1",     ID_GRID_POINT125
+// RB begin
+#if defined(STANDALONE)
+        MENUITEM "Grid 0.1 \t&Shift + 1",       ID_GRID_POINT1
+        MENUITEM "Grid 0.5 \t&Shift + 2",       ID_GRID_POINT5
+        MENUITEM "Grid1\t&1",                   ID_GRID_1
+        MENUITEM "Grid5\t&2",                   ID_GRID_5
+        MENUITEM "Grid10\t&3",                  ID_GRID_10
+        MENUITEM "Grid25\t&4",                  ID_GRID_25, CHECKED
+        MENUITEM "Grid50\t&5",                  ID_GRID_50
+        MENUITEM "Grid100\t&6",                 ID_GRID_100
+        MENUITEM "Grid1000\t&7",                ID_GRID_1000
+#else
+		MENUITEM "Grid 0.125 \t&Shift + 1",     ID_GRID_POINT125
         MENUITEM "Grid 0.25 \t&Shift + 2",      ID_GRID_POINT25
         MENUITEM "Grid 0.5 \t&Shift + 3",       ID_GRID_POINT5
         MENUITEM "Grid1\t&1",                   ID_GRID_1
@@ -550,6 +562,8 @@ BEGIN
         MENUITEM "Grid16\t&5",                  ID_GRID_16
         MENUITEM "Grid32\t&6",                  ID_GRID_32
         MENUITEM "Grid64\t&7",                  ID_GRID_64
+#endif
+// RB end
         MENUITEM SEPARATOR
         MENUITEM "Snap to grid",                ID_VIEW_SHOWTRIGGERS
         , CHECKED
