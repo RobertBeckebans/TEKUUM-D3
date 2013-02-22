@@ -74,6 +74,11 @@ idMoveable::idMoveable()
 	unbindOnDeath		= false;
 	allowStep			= false;
 	canDamage			= false;
+// RB begin
+#if defined(STANDALONE)
+	attacker			= NULL;
+#endif
+// RB end
 }
 
 /*
@@ -134,6 +139,13 @@ void idMoveable::Spawn()
 	
 	fl.takedamage = true;
 	damage = spawnArgs.GetString( "def_damage", "" );
+// RB begin
+#if defined(STANDALONE)
+	monsterDamage = spawnArgs.GetString( "monster_damage", "" );
+	fl.networkSync = true;
+	attacker = NULL;
+#endif
+// RB end
 	canDamage = spawnArgs.GetBool( "damageWhenActive" ) ? false : true;
 	minDamageVelocity = spawnArgs.GetFloat( "minDamageVelocity", "100" );
 	maxDamageVelocity = spawnArgs.GetFloat( "maxDamageVelocity", "200" );
@@ -203,6 +215,12 @@ void idMoveable::Save( idSaveGame* savefile ) const
 
 	savefile->WriteString( brokenModel );
 	savefile->WriteString( damage );
+// RB begin
+#if defined(STANDALONE)
+	savefile->WriteString( monsterDamage );
+	savefile->WriteObject( attacker );
+#endif
+// RB end
 	savefile->WriteString( fxCollide );
 	savefile->WriteInt( nextCollideFxTime );
 	savefile->WriteFloat( minDamageVelocity );
@@ -230,6 +248,12 @@ void idMoveable::Restore( idRestoreGame* savefile )
 	
 	savefile->ReadString( brokenModel );
 	savefile->ReadString( damage );
+// RB begin
+#if defined(STANDALONE)
+	savefile->ReadString( monsterDamage );
+	savefile->ReadObject( reinterpret_cast<idClass*&>( attacker ) );
+#endif
+// RB end
 	savefile->ReadString( fxCollide );
 	savefile->ReadInt( nextCollideFxTime );
 	savefile->ReadFloat( minDamageVelocity );
@@ -522,6 +546,20 @@ void idMoveable::Event_BecomeNonSolid()
 	BecomeNonSolid();
 }
 
+// RB begin
+#if defined(STANDALONE)
+/*
+================
+idMoveable::SetAttacker
+================
+*/
+void idMoveable::SetAttacker( idEntity* ent )
+{
+	attacker = ent;
+}
+#endif
+// RB end
+
 /*
 ================
 idMoveable::Event_Activate
@@ -599,6 +637,13 @@ idMoveable::Event_EnableDamage
 */
 void idMoveable::Event_EnableDamage( float enable )
 {
+// RB begin
+#if defined(STANDALONE)
+	// clear out attacker
+	attacker = NULL;
+#endif
+// RB end
+
 	canDamage = ( enable != 0.0f );
 }
 
@@ -790,6 +835,12 @@ void idBarrel::Spawn()
 	
 	additionalRotation = 0.0f;
 	additionalAxis.Identity();
+	
+// RB begin
+#if defined(STANDALONE)
+	fl.networkSync = true;
+#endif
+// RB end
 }
 
 /*
@@ -830,6 +881,11 @@ idExplodingBarrel::idExplodingBarrel()
 	spawnOrigin.Zero();
 	spawnAxis.Zero();
 	state = NORMAL;
+// RB begin
+#if defined(STANDALONE)
+	isStable = true;
+#endif
+// RB end
 	particleModelDefHandle = -1;
 	lightDefHandle = -1;
 	memset( &particleRenderEntity, 0, sizeof( particleRenderEntity ) );
@@ -876,6 +932,12 @@ void idExplodingBarrel::Save( idSaveGame* savefile ) const
 	savefile->WriteInt( particleTime );
 	savefile->WriteInt( lightTime );
 	savefile->WriteFloat( time );
+	
+// RB begin
+#if defined(STANDALONE)
+	savefile->WriteBool( isStable );
+#endif
+// RB end
 }
 
 /*
@@ -898,6 +960,21 @@ void idExplodingBarrel::Restore( idRestoreGame* savefile )
 	savefile->ReadInt( particleTime );
 	savefile->ReadInt( lightTime );
 	savefile->ReadFloat( time );
+	
+// RB begin
+#if defined(STANDALONE)
+	savefile->ReadBool( isStable );
+	
+	if( lightDefHandle != -1 )
+	{
+		lightDefHandle = gameRenderWorld->AddLightDef( &light );
+	}
+	if( particleModelDefHandle != -1 )
+	{
+		particleModelDefHandle = gameRenderWorld->AddEntityDef( &particleRenderEntity );
+	}
+#endif
+// RB end
 }
 
 /*
@@ -909,6 +986,12 @@ void idExplodingBarrel::Spawn()
 {
 	health = spawnArgs.GetInt( "health", "5" );
 	fl.takedamage = true;
+// RB begin
+#if defined(STANDALONE)
+	isStable = true;
+	fl.networkSync = true;
+#endif
+// RB end
 	spawnOrigin = GetPhysics()->GetOrigin();
 	spawnAxis = GetPhysics()->GetAxis();
 	state = NORMAL;
@@ -973,6 +1056,60 @@ void idExplodingBarrel::Think()
 	}
 }
 
+// RB begin
+#if defined(STANDALONE)
+/*
+================
+idExplodingBarrel::SetStability
+================
+*/
+void idExplodingBarrel::SetStability( bool stability )
+{
+	isStable = stability;
+}
+
+/*
+================
+idExplodingBarrel::IsStable
+================
+*/
+bool idExplodingBarrel::IsStable()
+{
+	return isStable;
+}
+
+/*
+================
+idExplodingBarrel::StartBurning
+================
+*/
+void idExplodingBarrel::StartBurning()
+{
+	state = BURNING;
+	AddParticles( "barrelfire.prt", true );
+}
+
+/*
+================
+idExplodingBarrel::StartBurning
+================
+*/
+void idExplodingBarrel::StopBurning()
+{
+	state = NORMAL;
+	
+	if( particleModelDefHandle >= 0 )
+	{
+		gameRenderWorld->FreeEntityDef( particleModelDefHandle );
+		particleModelDefHandle = -1;
+		
+		particleTime = 0;
+		memset( &particleRenderEntity, 0, sizeof( particleRenderEntity ) );
+	}
+}
+#endif
+// RB end
+
 /*
 ================
 idExplodingBarrel::AddParticles
@@ -982,6 +1119,12 @@ void idExplodingBarrel::AddParticles( const char* name, bool burn )
 {
 	if( name && *name )
 	{
+// RB begin
+#if defined(STANDALONE)
+		int explicitTimeGroup = timeGroup;
+		SetTimeState explicitTS( explicitTimeGroup );
+#endif
+// RB end
 		if( particleModelDefHandle >= 0 )
 		{
 			gameRenderWorld->FreeEntityDef( particleModelDefHandle );
@@ -1000,6 +1143,11 @@ void idExplodingBarrel::AddParticles( const char* name, bool burn )
 			particleRenderEntity.shaderParms[ SHADERPARM_ALPHA ] = rgb;
 			particleRenderEntity.shaderParms[ SHADERPARM_TIMEOFFSET ] = -MS2SEC( gameLocal.realClientTime );
 			particleRenderEntity.shaderParms[ SHADERPARM_DIVERSITY ] = ( burn ) ? 1.0f : gameLocal.random.RandomInt( 90 );
+// RB begin
+#if defined(STANDALONE)
+			particleRenderEntity.timeGroup = explicitTimeGroup;
+#endif
+// RB end
 			if( !particleRenderEntity.hModel )
 			{
 				particleRenderEntity.hModel = renderModelManager->FindModel( name );

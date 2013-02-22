@@ -187,8 +187,7 @@ version number has changed.
 */
 bool idModelExport::ConvertMayaToMD5()
 {
-	ID_TIME_T
-	sourceTime;
+	ID_TIME_T		sourceTime;
 	ID_TIME_T		destTime;
 	int			version;
 	idToken		cmdLine;

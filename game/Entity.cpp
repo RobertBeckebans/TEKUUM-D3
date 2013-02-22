@@ -105,6 +105,17 @@ const idEventDef EV_StartFx( "startFx", "s" );
 const idEventDef EV_HasFunction( "hasFunction", "s", 'd' );
 const idEventDef EV_CallFunction( "callFunction", "s" );
 const idEventDef EV_SetNeverDormant( "setNeverDormant", "d" );
+// RB begin
+#if defined(STANDALONE)
+const idEventDef EV_SetGui( "setGui", "ds" );
+const idEventDef EV_PrecacheGui( "precacheGui", "s" );
+const idEventDef EV_GetGuiParm( "getGuiParm", "ds", 's' );
+const idEventDef EV_GetGuiParmFloat( "getGuiParmFloat", "ds", 'f' );
+const idEventDef EV_MotionBlurOn( "motionBlurOn" );
+const idEventDef EV_MotionBlurOff( "motionBlurOff" );
+const idEventDef EV_GuiNamedEvent( "guiNamedEvent", "ds" );
+#endif
+// RB end
 
 ABSTRACT_DECLARATION( idClass, idEntity )
 EVENT( EV_GetName,				idEntity::Event_GetName )
@@ -170,6 +181,15 @@ EVENT( EV_Thread_Wait,			idEntity::Event_Wait )
 EVENT( EV_HasFunction,			idEntity::Event_HasFunction )
 EVENT( EV_CallFunction,			idEntity::Event_CallFunction )
 EVENT( EV_SetNeverDormant,		idEntity::Event_SetNeverDormant )
+// RB begin
+#if defined(STANDALONE)
+EVENT( EV_SetGui,				idEntity::Event_SetGui )
+EVENT( EV_PrecacheGui,			idEntity::Event_PrecacheGui )
+EVENT( EV_GetGuiParm,			idEntity::Event_GetGuiParm )
+EVENT( EV_GetGuiParmFloat,		idEntity::Event_GetGuiParmFloat )
+EVENT( EV_GuiNamedEvent,		idEntity::Event_GuiNamedEvent )
+#endif
+// RB end
 END_CLASS
 
 /*
@@ -453,6 +473,13 @@ idEntity::idEntity()
 	memset( &refSound, 0, sizeof( refSound ) );
 	
 	mpGUIState = -1;
+	
+// RB begin
+#if defined(STANDALONE)
+	timeGroup = TIME_GROUP1;
+	noGrab = false;
+#endif
+// RB end
 }
 
 /*
@@ -503,6 +530,12 @@ void idEntity::Spawn()
 	
 	renderEntity.entityNum = entityNumber;
 	
+// RB begin
+#if defined(STANDALONE)
+	noGrab = spawnArgs.GetBool( "noGrab", "0" );
+#endif
+// RB end
+
 	// go dormant within 5 frames so that when the map starts most monsters are dormant
 	dormantStart = gameLocal.time - DELAY_DORMANT_TIME + gameLocal.msec * 5;
 	
@@ -608,6 +641,13 @@ void idEntity::Spawn()
 		
 		ConstructScriptObject();
 	}
+	
+// RB begin
+#if defined(STANDALONE)
+	// determine time group
+	DetermineTimeGroup( spawnArgs.GetBool( "slowmo", "1" ) );
+#endif
+// RB end
 }
 
 /*
@@ -704,6 +744,13 @@ void idEntity::Save( idSaveGame* savefile ) const
 	LittleBitField( &flags, sizeof( flags ) );
 	savefile->Write( &flags, sizeof( flags ) );
 	
+// RB begin
+#if defined(STANDALONE)
+	savefile->WriteInt( timeGroup );
+	savefile->WriteBool( noGrab );
+#endif
+// RB end
+
 	savefile->WriteRenderEntity( renderEntity );
 	savefile->WriteInt( modelDefHandle );
 	savefile->WriteRefSound( refSound );
@@ -787,6 +834,13 @@ void idEntity::Restore( idRestoreGame* savefile )
 	savefile->Read( &fl, sizeof( fl ) );
 	LittleBitField( &fl, sizeof( fl ) );
 	
+// RB begin
+#if defined(STANDALONE)
+	savefile->ReadInt( timeGroup );
+	savefile->ReadBool( noGrab );
+#endif
+// RB end
+
 	savefile->ReadRenderEntity( renderEntity );
 	savefile->ReadInt( modelDefHandle );
 	savefile->ReadRefSound( refSound );
@@ -1342,6 +1396,12 @@ idEntity::UpdateModel
 */
 void idEntity::UpdateModel()
 {
+// RB begin
+#if defined(STANDALONE)
+	renderEntity.timeGroup = timeGroup;
+#endif
+// RB end
+
 	UpdateModelTransform();
 	
 	// check if the entity has an MD5 model
@@ -1619,6 +1679,12 @@ bool idEntity::UpdateRenderEntity( renderEntity_s* renderEntity, const renderVie
 	idAnimator* animator = GetAnimator();
 	if( animator )
 	{
+// RB begin
+#if defined(STANDALONE)
+		SetTimeState ts( timeGroup );
+#endif
+// RB end
+
 		return animator->CreateFrame( gameLocal.time, false );
 	}
 	
@@ -1802,7 +1868,13 @@ bool idEntity::StartSoundShader( const idSoundShader* shader, const s_channelTyp
 	
 	UpdateSound();
 	
+// RB begin
+#if defined(STANDALONE)
+	len = refSound.referenceSound->StartSound( shader, channel, diversity, soundShaderFlags, !timeGroup /*_D3XP*/ );
+#else
 	len = refSound.referenceSound->StartSound( shader, channel, diversity, soundShaderFlags );
+#endif
+// RB end
 	if( length )
 	{
 		*length = len;
@@ -3380,6 +3452,12 @@ void idEntity::Damage( idEntity* inflictor, idEntity* attacker, const idVec3& di
 		return;
 	}
 	
+// RB begin
+#if defined(STANDALONE)
+	SetTimeState ts( timeGroup );
+#endif
+// RB end
+
 	if( !inflictor )
 	{
 		inflictor = gameLocal.world;
@@ -4138,6 +4216,12 @@ bool idEntity::TouchTriggers() const
 			continue;
 		}
 		
+// RB begin
+#if defined(STANDALONE)
+		SetTimeState ts( ent->timeGroup );
+#endif
+// RB end
+
 		numEntities++;
 		
 		trace.c.contents = cm->GetContents();
@@ -4915,6 +4999,12 @@ idEntity::Event_SetKey
 void idEntity::Event_SetKey( const char* key, const char* value )
 {
 	spawnArgs.Set( key, value );
+	
+// RB begin
+#if defined(STANDALONE)
+	UpdateChangeableSpawnArgs( NULL );
+#endif
+// RB end
 }
 
 /*
@@ -5217,6 +5307,82 @@ void idEntity::Event_SetNeverDormant( int enable )
 	fl.neverDormant	= ( enable != 0 );
 	dormantStart = 0;
 }
+
+// RB begin
+#if defined(STANDALONE)
+/*
+================
+idEntity::Event_SetGui
+================
+* BSM Nerve: Allows guis to be changed at runtime. Guis that are
+* loaded after the level loads should be precahced using PrecacheGui.
+*/
+void idEntity::Event_SetGui( int guiNum, const char* guiName )
+{
+	idUserInterface** gui = NULL;
+	
+	if( guiNum >= 1 && guiNum <= MAX_RENDERENTITY_GUI )
+	{
+		gui = &renderEntity.gui[ guiNum - 1 ];
+	}
+	
+	if( gui )
+	{
+		*gui = uiManager->FindGui( guiName, true, false );
+		UpdateGuiParms( *gui, &spawnArgs );
+		UpdateChangeableSpawnArgs( NULL );
+		gameRenderWorld->UpdateEntityDef( modelDefHandle, &renderEntity );
+		
+	}
+	else
+	{
+		gameLocal.Error( "Entity '%s' doesn't have a GUI %d", name.c_str(), guiNum );
+	}
+	
+}
+
+/*
+================
+idEntity::Event_PrecacheGui
+================
+* BSM Nerve: Forces the engine to initialize a gui even if it is not specified as used in a level.
+* This is useful for preventing load hitches when switching guis during the game using "setGui"
+*/
+void idEntity::Event_PrecacheGui( const char* guiName )
+{
+	uiManager->FindGui( guiName, true, true );
+}
+
+void idEntity::Event_GetGuiParm( int guiNum, const char* key )
+{
+	if( renderEntity.gui[guiNum - 1] )
+	{
+		idThread::ReturnString( renderEntity.gui[guiNum - 1]->GetStateString( key ) );
+		return;
+	}
+	idThread::ReturnString( "" );
+}
+
+void idEntity::Event_GetGuiParmFloat( int guiNum, const char* key )
+{
+	if( renderEntity.gui[guiNum - 1] )
+	{
+		idThread::ReturnFloat( renderEntity.gui[guiNum - 1]->GetStateFloat( key ) );
+		return;
+	}
+	idThread::ReturnFloat( 0.0f );
+}
+
+void idEntity::Event_GuiNamedEvent( int guiNum, const char* event )
+{
+	if( renderEntity.gui[guiNum - 1] )
+	{
+		renderEntity.gui[guiNum - 1]->HandleNamedEvent( event );
+	}
+}
+
+#endif
+// RB end
 
 /***********************************************************************
 
@@ -5560,6 +5726,47 @@ bool idEntity::ClientReceiveEvent( int event, int time, const idBitMsg& msg )
 	return false;
 }
 
+// RB begin
+#if defined(STANDALONE)
+/*
+================
+idEntity::DetermineTimeGroup
+================
+*/
+void idEntity::DetermineTimeGroup( bool slowmo )
+{
+	if( slowmo || gameLocal.isMultiplayer )
+	{
+		timeGroup = TIME_GROUP1;
+	}
+	else
+	{
+		timeGroup = TIME_GROUP2;
+	}
+}
+
+/*
+================
+idEntity::SetGrabbedState
+================
+*/
+void idEntity::SetGrabbedState( bool grabbed )
+{
+	fl.grabbed = grabbed;
+}
+
+/*
+================
+idEntity::IsGrabbed
+================
+*/
+bool idEntity::IsGrabbed()
+{
+	return fl.grabbed;
+}
+#endif
+// RB end
+
 /*
 ===============================================================================
 
@@ -5897,6 +6104,12 @@ void idAnimatedEntity::AddLocalDamageEffect( jointHandle_t jointNum, const idVec
 	idVec3 origin, dir;
 	idMat3 axis;
 	
+// RB begin
+#if defined(STANDALONE)
+	SetTimeState ts( timeGroup );
+#endif
+// RB end
+
 	axis = renderEntity.joints[jointNum].ToMat3() * renderEntity.axis;
 	origin = renderEntity.origin + renderEntity.joints[jointNum].ToVec3() * renderEntity.axis;
 	
@@ -6012,7 +6225,13 @@ void idAnimatedEntity::UpdateDamageEffects()
 		axis *= renderEntity.axis;
 		origin = renderEntity.origin + origin * renderEntity.axis;
 		start = origin + de->localOrigin * axis;
+// RB begin
+#if defined(STANDALONE)
+		if( !gameLocal.smokeParticles->EmitSmoke( de->type, de->time, gameLocal.random.CRandomFloat(), start, axis, timeGroup /*_D3XP*/ ) )
+#else
 		if( !gameLocal.smokeParticles->EmitSmoke( de->type, de->time, gameLocal.random.CRandomFloat(), start, axis ) )
+#endif
+// RB end
 		{
 			de->time = 0;
 		}

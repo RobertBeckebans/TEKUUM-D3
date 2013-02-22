@@ -53,6 +53,12 @@ extern const idEventDef AI_AnimDone;
 extern const idEventDef AI_SetBlendFrames;
 extern const idEventDef AI_GetBlendFrames;
 
+// RB begin
+#if defined(STANDALONE)
+extern const idEventDef AI_SetState;
+#endif
+// RB end
+
 class idDeclParticle;
 
 class idAnimState
@@ -209,6 +215,15 @@ public:
 	bool					AnimDone( int channel, int blendFrames ) const;
 	virtual void			SpawnGibs( const idVec3& dir, const char* damageDefName );
 	
+// RB begin
+#if defined(STANDALONE)
+	idEntity*				GetHeadEntity()
+	{
+		return head.GetEntity();
+	};
+#endif
+// RB end
+
 protected:
 	friend class			idAnimState;
 	

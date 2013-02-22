@@ -134,8 +134,15 @@ struct idNullPtr
 #define MAX_PRINT_MSG			16384		// buffer size for our various printf routines
 
 // maximum world size
+// RB begin
+#if defined(STANDALONE)
+#define MAX_WORLD_COORD			( 100 * 1000 * 2 )
+#define MIN_WORLD_COORD			( -100 * 1000 * 2 )
+#else
 #define MAX_WORLD_COORD			( 128 * 1024 )
 #define MIN_WORLD_COORD			( -128 * 1024 )
+#endif
+// RB end
 #define MAX_WORLD_SIZE			( MAX_WORLD_COORD - MIN_WORLD_COORD )
 
 const float	MAX_ENTITY_COORDINATE = 64000.0f;

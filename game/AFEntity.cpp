@@ -1082,6 +1082,11 @@ idAFEntity_Gibbable::idAFEntity_Gibbable()
 	skeletonModel = NULL;
 	skeletonModelDefHandle = -1;
 	gibbed = false;
+// RB begin
+#if defined(STANDALONE)
+	wasThrown = false;
+#endif
+// RB end
 }
 
 /*
@@ -1107,6 +1112,11 @@ void idAFEntity_Gibbable::Save( idSaveGame* savefile ) const
 {
 	savefile->WriteBool( gibbed );
 	savefile->WriteBool( combatModel != NULL );
+// RB begin
+#if defined(STANDALONE)
+	savefile->WriteBool( wasThrown );
+#endif
+// RB end
 }
 
 /*
@@ -1120,7 +1130,12 @@ void idAFEntity_Gibbable::Restore( idRestoreGame* savefile )
 	
 	savefile->ReadBool( gibbed );
 	savefile->ReadBool( hasCombatModel );
-	
+// RB begin
+#if defined(STANDALONE)
+	savefile->ReadBool( wasThrown );
+#endif
+// RB end
+
 	InitSkeletonModel();
 	
 	if( hasCombatModel )
@@ -1140,6 +1155,12 @@ void idAFEntity_Gibbable::Spawn()
 	InitSkeletonModel();
 	
 	gibbed = false;
+	
+// RB begin
+#if defined(STANDALONE)
+	wasThrown = false;
+#endif
+// RB end
 }
 
 /*
@@ -1237,6 +1258,65 @@ void idAFEntity_Gibbable::Damage( idEntity* inflictor, idEntity* attacker, const
 	}
 }
 
+// RB begin
+#if defined(STANDALONE)
+/*
+=====================
+idAFEntity_Gibbable::SetThrown
+=====================
+*/
+void idAFEntity_Gibbable::SetThrown( bool isThrown )
+{
+
+	if( isThrown )
+	{
+		int i, num = af.GetPhysics()->GetNumBodies();
+		
+		for( i = 0; i < num; i++ )
+		{
+			idAFBody* body;
+			
+			body = af.GetPhysics()->GetBody( i );
+			body->SetClipMask( MASK_MONSTERSOLID );
+		}
+	}
+	
+	wasThrown = isThrown;
+}
+
+/*
+=====================
+idAFEntity_Gibbable::Collide
+=====================
+*/
+bool idAFEntity_Gibbable::Collide( const trace_t& collision, const idVec3& velocity )
+{
+
+	if( !gibbed && wasThrown )
+	{
+	
+		// Everything gibs (if possible)
+		if( spawnArgs.GetBool( "gib" ) )
+		{
+			idEntity*	ent;
+			
+			ent = gameLocal.entities[ collision.c.entityNum ];
+			if( ent->fl.takedamage )
+			{
+				ent->Damage( this, gameLocal.GetLocalPlayer(), collision.c.normal, "damage_thrown_ragdoll", 1.f, CLIPMODEL_ID_TO_JOINT_HANDLE( collision.c.id ) );
+			}
+			
+			idVec3 vel = velocity;
+			vel.NormalizeFast();
+			Gib( vel, "damage_gib" );
+		}
+	}
+	
+	return idAFEntity_Base::Collide( collision, velocity );
+}
+#endif
+// RB end
+
 /*
 =====================
 idAFEntity_Gibbable::SpawnGibs
@@ -1277,13 +1357,26 @@ void idAFEntity_Gibbable::SpawnGibs( const idVec3& dir, const char* damageDefNam
 		}
 		else
 		{
+// RB begin
+#if defined(STANDALONE)
+			list[i]->GetPhysics()->SetContents( 0 );
+#else
 			list[i]->GetPhysics()->SetContents( CONTENTS_CORPSE );
+#endif
+// RB end
 			list[i]->GetPhysics()->SetClipMask( CONTENTS_SOLID );
 			velocity = list[i]->GetPhysics()->GetAbsBounds().GetCenter() - entityCenter;
 			velocity.NormalizeFast();
 			velocity += ( i & 1 ) ? dir : -dir;
 			list[i]->GetPhysics()->SetLinearVelocity( velocity * 75.0f );
 		}
+		
+// RB begin
+#if defined(STANDALONE)
+		// Don't allow grabber to pick up temporary gibs
+		list[i]->noGrab = true;
+#endif
+// RB end
 		list[i]->GetRenderEntity()->noShadow = true;
 		list[i]->GetRenderEntity()->shaderParms[ SHADERPARM_TIME_OF_DEATH ] = gameLocal.time * 0.001f;
 		list[i]->PostEventSec( &EV_Remove, 4.0f );
@@ -1303,6 +1396,13 @@ void idAFEntity_Gibbable::Gib( const idVec3& dir, const char* damageDefName )
 		return;
 	}
 	
+// RB begin
+#if defined(STANDALONE)
+	// Don't grab this ent after it's been gibbed (and now invisible!)
+	noGrab = true;
+#endif
+// RB end
+
 	const idDict* damageDef = gameLocal.FindEntityDefDict( damageDefName );
 	if( !damageDef )
 	{
@@ -2324,7 +2424,13 @@ void idAFEntity_VehicleFourWheels::Think()
 				numContacts = af.GetPhysics()->GetBodyContactConstraints( wheels[i]->GetClipModel()->GetId(), contacts, 2 );
 				for( int j = 0; j < numContacts; j++ )
 				{
+// RB begin
+#if defined(STANDALONE)
+					gameLocal.smokeParticles->EmitSmoke( dustSmoke, gameLocal.time, gameLocal.random.RandomFloat(), contacts[j]->GetContact().point, contacts[j]->GetContact().normal.ToMat3(), timeGroup /* D3XP */ );
+#else
 					gameLocal.smokeParticles->EmitSmoke( dustSmoke, gameLocal.time, gameLocal.random.RandomFloat(), contacts[j]->GetContact().point, contacts[j]->GetContact().normal.ToMat3() );
+#endif
+// RB end
 				}
 			}
 		}
@@ -2544,7 +2650,13 @@ void idAFEntity_VehicleSixWheels::Think()
 				numContacts = af.GetPhysics()->GetBodyContactConstraints( wheels[i]->GetClipModel()->GetId(), contacts, 2 );
 				for( int j = 0; j < numContacts; j++ )
 				{
+// RB begin
+#if defined(STANDALONE)
+					gameLocal.smokeParticles->EmitSmoke( dustSmoke, gameLocal.time, gameLocal.random.RandomFloat(), contacts[j]->GetContact().point, contacts[j]->GetContact().normal.ToMat3(), timeGroup /* D3XP */ );
+#else
 					gameLocal.smokeParticles->EmitSmoke( dustSmoke, gameLocal.time, gameLocal.random.RandomFloat(), contacts[j]->GetContact().point, contacts[j]->GetContact().normal.ToMat3() );
+#endif
+// RB end
 				}
 			}
 		}
@@ -2558,6 +2670,228 @@ void idAFEntity_VehicleSixWheels::Think()
 	}
 }
 
+// RB begin
+#if defined(STANDALONE)
+/*
+===============================================================================
+
+idAFEntity_VehicleAutomated
+
+===============================================================================
+*/
+const idEventDef EV_Vehicle_setVelocity( "setVelocity", "f" );
+const idEventDef EV_Vehicle_setTorque( "setTorque", "f" );
+const idEventDef EV_Vehicle_setSteeringSpeed( "setSteeringSpeed", "f" );
+const idEventDef EV_Vehicle_setWaypoint( "setWaypoint", "e" );
+
+CLASS_DECLARATION( idAFEntity_VehicleSixWheels, idAFEntity_VehicleAutomated )
+EVENT( EV_PostSpawn,				idAFEntity_VehicleAutomated::PostSpawn )
+EVENT( EV_Vehicle_setVelocity,		idAFEntity_VehicleAutomated::Event_SetVelocity )
+EVENT( EV_Vehicle_setTorque,		idAFEntity_VehicleAutomated::Event_SetTorque )
+EVENT( EV_Vehicle_setSteeringSpeed,	idAFEntity_VehicleAutomated::Event_SetSteeringSpeed )
+EVENT( EV_Vehicle_setWaypoint,		idAFEntity_VehicleAutomated::Event_SetWayPoint )
+END_CLASS
+
+/*
+================
+idAFEntity_VehicleAutomated::Spawn
+================
+*/
+void idAFEntity_VehicleAutomated::Spawn()
+{
+
+	velocity = force = steerAngle = 0.f;
+	currentSteering = steeringSpeed = 0.f;
+	originHeight = 0.f;
+	waypoint = NULL;
+	
+	spawnArgs.GetFloat( "velocity", "150", velocity );
+	spawnArgs.GetFloat( "torque", "200000", force );
+	spawnArgs.GetFloat( "steeringSpeed", "1", steeringSpeed );
+	spawnArgs.GetFloat( "originHeight", "0", originHeight );
+	
+	PostEventMS( &EV_PostSpawn, 0 );
+}
+
+/*
+================
+idAFEntity_VehicleAutomated::PostSpawn
+================
+*/
+void idAFEntity_VehicleAutomated::PostSpawn()
+{
+
+	if( targets.Num() )
+	{
+		waypoint = targets[0].GetEntity();
+	}
+}
+
+/*
+================
+idAFEntity_VehicleAutomated::Event_SetVelocity
+================
+*/
+void idAFEntity_VehicleAutomated::Event_SetVelocity( float _velocity )
+{
+	velocity = _velocity;
+}
+
+/*
+================
+idAFEntity_VehicleAutomated::Event_SetTorque
+================
+*/
+void idAFEntity_VehicleAutomated::Event_SetTorque( float _torque )
+{
+	force = _torque;
+}
+
+/*
+================
+idAFEntity_VehicleAutomated::Event_SetSteeringSpeed
+================
+*/
+void idAFEntity_VehicleAutomated::Event_SetSteeringSpeed( float _steeringSpeed )
+{
+	steeringSpeed = _steeringSpeed;
+}
+
+/*
+================
+idAFEntity_VehicleAutomated::Event_SetWayPoint
+================
+*/
+void idAFEntity_VehicleAutomated::Event_SetWayPoint( idEntity* _waypoint )
+{
+	waypoint = _waypoint;
+}
+
+/*
+================
+idAFEntity_VehicleAutomated::Think
+================
+*/
+#define	HIT_WAYPOINT_THRESHOLD	80.f
+
+void idAFEntity_VehicleAutomated::Think()
+{
+
+	// If we don't have a waypoint, coast to a stop
+	if( !waypoint )
+	{
+		velocity = force = steerAngle = 0.f;
+		idAFEntity_VehicleSixWheels::Think();
+		return;
+	}
+	
+	idVec3 waypoint_origin, vehicle_origin;
+	idVec3 travel_vector;
+	float distance_from_waypoint;
+	
+	// Set up the vector from the vehicle origin, to the waypoint
+	vehicle_origin = GetPhysics()->GetOrigin();
+	vehicle_origin.z -= originHeight;
+	
+	waypoint_origin = waypoint->GetPhysics()->GetOrigin();
+	
+	travel_vector = waypoint_origin - vehicle_origin;
+	distance_from_waypoint = travel_vector.Length();
+	
+	// Check if we've hit the waypoint (within a certain threshold)
+	if( distance_from_waypoint < HIT_WAYPOINT_THRESHOLD )
+	{
+		idStr				callfunc;
+		const function_t*	func;
+		idThread*			thread;
+		
+		// Waypoints can call script functions
+		waypoint->spawnArgs.GetString( "call", "", callfunc );
+		if( callfunc.Length() )
+		{
+			func = gameLocal.program.FindFunction( callfunc );
+			if( func != NULL )
+			{
+				thread = new idThread( func );
+				thread->DelayedStart( 0 );
+			}
+		}
+		
+		// Get next waypoint
+		if( waypoint->targets.Num() )
+		{
+			waypoint = waypoint->targets[0].GetEntity();
+		}
+		else
+		{
+			waypoint = NULL;
+		}
+		
+		// We are switching waypoints, adjust steering next frame
+		idAFEntity_VehicleSixWheels::Think();
+		return;
+	}
+	
+	idAngles vehicle_angles, travel_angles;
+	
+	// Get the angles we need to steer towards
+	travel_angles = travel_vector.ToAngles().Normalize360();
+	vehicle_angles = this->GetPhysics()->GetAxis().ToAngles().Normalize360();
+	
+	float	delta_yaw;
+	
+	// Get the shortest steering angle towards the travel angles
+	delta_yaw = vehicle_angles.yaw - travel_angles.yaw;
+	if( idMath::Fabs( delta_yaw ) > 180.f )
+	{
+		if( delta_yaw > 0 )
+		{
+			delta_yaw = delta_yaw - 360;
+		}
+		else
+		{
+			delta_yaw = delta_yaw + 360;
+		}
+	}
+	
+	// Maximum steering angle is 35 degrees
+	delta_yaw = idMath::ClampFloat( -35.f, 35.f, delta_yaw );
+	
+	idealSteering = delta_yaw;
+	
+	// Adjust steering incrementally so it doesn't snap to the ideal angle
+	if( idMath::Fabs( ( idealSteering - currentSteering ) ) > steeringSpeed )
+	{
+		if( idealSteering > currentSteering )
+		{
+			currentSteering += steeringSpeed;
+		}
+		else
+		{
+			currentSteering -= steeringSpeed;
+		}
+	}
+	else
+	{
+		currentSteering = idealSteering;
+	}
+	
+	// DEBUG
+	if( g_vehicleDebug.GetBool() )
+	{
+		gameRenderWorld->DebugBounds( colorRed, idBounds( idVec3( -4, -4, -4 ), idVec3( 4, 4, 4 ) ), vehicle_origin );
+		gameRenderWorld->DebugBounds( colorRed, idBounds( idVec3( -4, -4, -4 ), idVec3( 4, 4, 4 ) ), waypoint_origin );
+		gameRenderWorld->DrawText( waypoint->name.c_str(), waypoint_origin + idVec3( 0, 0, 16 ), 0.25f, colorYellow, gameLocal.GetLocalPlayer()->viewAxis );
+		gameRenderWorld->DebugArrow( colorWhite, vehicle_origin, waypoint_origin, 12.f );
+	}
+	
+	// Set the final steerAngle for the vehicle
+	steerAngle = currentSteering;
+	
+	idAFEntity_VehicleSixWheels::Think();
+}
+#endif
+// RB end
 
 /*
 ===============================================================================
@@ -3273,3 +3607,5 @@ idRenderModel* idGameEdit::AF_CreateMesh( const idDict& args, idVec3& meshOrigin
 	// instantiate a mesh using the joint information from the render entity
 	return md5->InstantiateDynamicModel( &ent, NULL, NULL );
 }
+
+

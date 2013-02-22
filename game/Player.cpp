@@ -1099,6 +1099,12 @@ idPlayer::idPlayer()
 	objectiveSystem			= NULL;
 	objectiveSystemOpen		= false;
 	
+// RB begin
+#if defined(STANDALONE)
+	mountedObject			= NULL;
+#endif
+// RB end
+
 	heartRate				= BASE_HEARTRATE;
 	heartInfo.Init( 0, 0, 0, 0 );
 	lastHeartAdjust			= 0;
@@ -1368,6 +1374,12 @@ void idPlayer::Init()
 	influenceMaterial		= NULL;
 	influenceSkin			= NULL;
 	
+// RB begin
+#if defined(STANDALONE)
+	mountedObject			= NULL;
+#endif
+// RB end
+
 	currentLoggedAccel		= 0;
 	
 	focusTime				= 0;
@@ -1458,6 +1470,11 @@ void idPlayer::Init()
 		cursor->SetStateString( "combatcursor", "1" );
 		cursor->SetStateString( "itemcursor", "0" );
 		cursor->SetStateString( "guicursor", "0" );
+// RB begin
+#if defined(STANDALONE)
+		cursor->SetStateString( "grabbercursor", "0" );
+#endif
+// RB end
 	}
 	
 	if( ( gameLocal.isMultiplayer || g_testDeath.GetBool() ) && skin )
@@ -2000,6 +2017,12 @@ void idPlayer::Save( idSaveGame* savefile ) const
 		hud->SetStateString( "message", common->GetLanguageDict()->GetString( "#str_02916" ) );
 		hud->HandleNamedEvent( "Message" );
 	}
+	
+// RB begin
+#if defined(STANDALONE)
+	savefile->WriteObject( mountedObject );
+#endif
+// RB end
 }
 
 /*
@@ -2254,6 +2277,12 @@ void idPlayer::Restore( idRestoreGame* savefile )
 	
 	// create combat collision hull for exact collision detection
 	SetCombatModel();
+	
+// RB begin
+#if defined(STANDALONE)
+	savefile->ReadObject( reinterpret_cast<idClass*&>( mountedObject ) );
+#endif
+// RB end
 }
 
 /*
@@ -5673,6 +5702,33 @@ void idPlayer::UpdateViewAngles()
 			viewAngles.pitch = -89.0f;
 		}
 	}
+// RB begin
+#if defined(STANDALONE)
+	else if( mountedObject )
+	{
+		int yaw_min, yaw_max, varc;
+		
+		mountedObject->GetAngleRestrictions( yaw_min, yaw_max, varc );
+		
+		if( yaw_min < yaw_max )
+		{
+			viewAngles.yaw = idMath::ClampFloat( yaw_min, yaw_max, viewAngles.yaw );
+		}
+		else
+		{
+			if( viewAngles.yaw < 0 )
+			{
+				viewAngles.yaw = idMath::ClampFloat( -180.f, yaw_max, viewAngles.yaw );
+			}
+			else
+			{
+				viewAngles.yaw = idMath::ClampFloat( yaw_min, 180.f, viewAngles.yaw );
+			}
+		}
+		viewAngles.pitch = idMath::ClampFloat( -varc, varc, viewAngles.pitch );
+	}
+#endif
+// RB end
 	else
 	{
 		if( viewAngles.pitch > pm_maxviewpitch.GetFloat() )
@@ -6945,6 +7001,15 @@ void idPlayer::Move()
 		physicsObj.SetContents( CONTENTS_BODY );
 		physicsObj.SetMovementType( PM_FREEZE );
 	}
+// RB begin
+#if defined(STANDALONE)
+	else if( mountedObject )
+	{
+		physicsObj.SetContents( 0 );
+		physicsObj.SetMovementType( PM_FREEZE );
+	}
+#endif
+// RB end
 	else
 	{
 		physicsObj.SetContents( CONTENTS_BODY );
@@ -7280,6 +7345,17 @@ void idPlayer::Think()
 		oldFlags = usercmd.flags;
 	}
 	
+// RB begin
+#if defined(STANDALONE)
+	if( mountedObject )
+	{
+		usercmd.forwardmove = 0;
+		usercmd.rightmove = 0;
+		usercmd.upmove = 0;
+	}
+#endif
+// RB end
+
 	if( objectiveSystemOpen || gameLocal.inCinematic || influenceActive )
 	{
 		if( objectiveSystemOpen && AI_PAIN )
@@ -7870,6 +7946,12 @@ void idPlayer::Damage( idEntity* inflictor, idEntity* attacker, const idVec3& di
 	idVec3		localDamageVector;
 	float		attackerPushScale;
 	
+// RB begin
+#if defined(STANDALONE)
+	SetTimeState ts( timeGroup );
+#endif
+// RB end
+
 	// damage is only processed on server
 	if( gameLocal.isClient )
 	{
@@ -8587,8 +8669,15 @@ void idPlayer::CalculateRenderView()
 		renderView->shaderParms[ i ] = gameLocal.globalShaderParms[ i ];
 	}
 	renderView->globalMaterial = gameLocal.GetGlobalMaterial();
-	renderView->time = gameLocal.time;
 	
+// RB begin
+#if defined(STANDALONE)
+	renderView->time = gameLocal.slow.time;
+#else
+	renderView->time = gameLocal.time;
+#endif
+// RB end
+
 	// calculate size of 3D view
 	renderView->x = 0;
 	renderView->y = 0;
@@ -9164,6 +9253,17 @@ void idPlayer::ClientPredictionThink()
 	buttonMask &= usercmd.buttons;
 	usercmd.buttons &= ~buttonMask;
 	
+// RB begin
+#if defined(STANDALONE)
+	if( mountedObject )
+	{
+		usercmd.forwardmove = 0;
+		usercmd.rightmove = 0;
+		usercmd.upmove = 0;
+	}
+#endif
+// RB end
+
 	if( objectiveSystemOpen )
 	{
 		usercmd.forwardmove = 0;
@@ -9313,6 +9413,15 @@ void idPlayer::ClientPredictionThink()
 	{
 		playerView.CalculateShake();
 	}
+	
+// RB begin
+#if defined(STANDALONE)
+	// determine if portal sky is in pvs
+	pvsHandle_t	clientPVS = gameLocal.pvs.SetupCurrentPVS( GetPVSAreas(), GetNumPVSAreas() );
+	gameLocal.portalSkyActive = gameLocal.pvs.CheckAreasForPortalSky( clientPVS, GetPhysics()->GetOrigin() );
+	gameLocal.pvs.FreeCurrentPVS( clientPVS );
+#endif
+// RB end
 }
 
 /*

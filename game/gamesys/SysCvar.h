@@ -100,6 +100,11 @@ extern idCVar	ai_showCombatNodes;
 extern idCVar	ai_showPaths;
 extern idCVar	ai_showObstacleAvoidance;
 extern idCVar	ai_blockedFailSafe;
+// RB begin
+#if defined(STANDALONE)
+extern idCVar	ai_showHealth;
+#endif
+// RB end
 
 extern idCVar	g_dvTime;
 extern idCVar	g_dvAmplitude;
@@ -124,6 +129,13 @@ extern idCVar	g_vehicleSuspensionDown;
 extern idCVar	g_vehicleSuspensionKCompress;
 extern idCVar	g_vehicleSuspensionDamping;
 extern idCVar	g_vehicleTireFriction;
+// RB begin
+#if defined(STANDALONE)
+extern idCVar	g_vehicleDebug;
+extern idCVar	g_debugShockwave;
+extern idCVar	g_enablePortalSky;
+#endif
+// RB end
 
 extern idCVar	ik_enable;
 extern idCVar	ik_debug;
@@ -232,6 +244,21 @@ extern idCVar	g_testModelAnimate;
 extern idCVar	g_testModelBlend;
 extern idCVar	g_exportMask;
 extern idCVar	g_flushSave;
+
+// RB begin
+#if defined(STANDALONE)
+extern idCVar	g_enableSlowmo;
+extern idCVar	g_slowmoStepRate;
+
+extern idCVar	g_moveableDamageScale;
+
+extern idCVar	g_grabberHoldSeconds;
+extern idCVar	g_grabberEnableShake;
+extern idCVar	g_grabberRandomMotion;
+extern idCVar	g_grabberHardStop;
+extern idCVar	g_grabberDamping;
+#endif
+// RB end
 
 extern idCVar	aas_test;
 extern idCVar	aas_showAreas;

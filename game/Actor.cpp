@@ -2444,11 +2444,17 @@ void idActor::Damage( idEntity* inflictor, idEntity* attacker, const idVec3& dir
 		attacker = gameLocal.world;
 	}
 	
+// RB begin
+#if defined(STANDALONE)
+	SetTimeState ts( timeGroup );
+#else
 	if( finalBoss && !inflictor->IsType( idSoulCubeMissile::Type ) )
 	{
 		return;
 	}
-	
+#endif
+// RB end
+
 	const idDict* damageDef = gameLocal.FindEntityDefDict( damageDefName );
 	if( !damageDef )
 	{
@@ -3502,7 +3508,7 @@ idActor::Event_HasAnim
 */
 void idActor::Event_HasAnim( int channel, const char* animname )
 {
-	// RB: fixed converting to non-pointer type ‘int’ from NULL
+	// RB: fixed converting to non-pointer type int from NULL
 	if( GetAnim( channel, animname ) != 0 )
 	{
 		// RB end

@@ -634,6 +634,12 @@ void idCameraAnim::GetViewParms( renderView_t* view )
 		return;
 	}
 	
+// RB begin
+#if defined(STANDALONE)
+	SetTimeState ts( timeGroup );
+#endif
+// RB end
+
 	if( frameRate == USERCMD_HZ )
 	{
 		frameTime	= gameLocal.time - starttime;

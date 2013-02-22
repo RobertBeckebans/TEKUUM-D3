@@ -122,6 +122,10 @@ public:
 	static void					CancelEvents( const idClass* obj, const idEventDef* evdef = NULL );
 	static void					ClearEventList();
 	static void					ServiceEvents();
+// RB begin
+#if defined(STANDALONE)
+	static void					ServiceFastEvents();
+#endif
 	static void					Init();
 	static void					Shutdown();
 	

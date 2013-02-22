@@ -662,6 +662,23 @@ void idGameLocal::ServerWriteSnapshot( int clientNum, int sequence, idBitMsg& ms
 	numSourceAreas = gameRenderWorld->BoundsInAreas( spectated->GetPlayerPhysics()->GetAbsBounds(), sourceAreas, idEntity::MAX_PVS_AREAS );
 	pvsHandle = gameLocal.pvs.SetupCurrentPVS( sourceAreas, numSourceAreas, PVS_NORMAL );
 	
+// RB begin
+#if defined(STANDALONE)
+	// Add portalSky areas to PVS
+	if( portalSkyEnt.GetEntity() )
+	{
+		pvsHandle_t	otherPVS, newPVS;
+		idEntity* skyEnt = portalSkyEnt.GetEntity();
+		
+		otherPVS = gameLocal.pvs.SetupCurrentPVS( skyEnt->GetPVSAreas(), skyEnt->GetNumPVSAreas() );
+		newPVS = gameLocal.pvs.MergeCurrentPVS( pvsHandle, otherPVS );
+		pvs.FreeCurrentPVS( pvsHandle );
+		pvs.FreeCurrentPVS( otherPVS );
+		pvsHandle = newPVS;
+	}
+#endif
+// RB end
+
 #if ASYNC_WRITE_TAGS
 	idRandom tagRandom;
 	tagRandom.SetSeed( random.RandomInt() );
@@ -1276,6 +1293,23 @@ void idGameLocal::ClientReadSnapshot( int clientNum, int sequence, const int gam
 	numSourceAreas = gameRenderWorld->BoundsInAreas( spectated->GetPlayerPhysics()->GetAbsBounds(), sourceAreas, idEntity::MAX_PVS_AREAS );
 	pvsHandle = gameLocal.pvs.SetupCurrentPVS( sourceAreas, numSourceAreas, PVS_NORMAL );
 	
+// RB begin
+#if defined(STANDALONE)
+	// Add portalSky areas to PVS
+	if( portalSkyEnt.GetEntity() )
+	{
+		pvsHandle_t	otherPVS, newPVS;
+		idEntity* skyEnt = portalSkyEnt.GetEntity();
+		
+		otherPVS = gameLocal.pvs.SetupCurrentPVS( skyEnt->GetPVSAreas(), skyEnt->GetNumPVSAreas() );
+		newPVS = gameLocal.pvs.MergeCurrentPVS( pvsHandle, otherPVS );
+		pvs.FreeCurrentPVS( pvsHandle );
+		pvs.FreeCurrentPVS( otherPVS );
+		pvsHandle = newPVS;
+	}
+#endif
+// RB end
+
 	// read the PVS from the snapshot
 #if ASYNC_WRITE_PVS
 	int serverPVS[idEntity::MAX_PVS_AREAS];
@@ -1725,6 +1759,13 @@ gameReturn_t idGameLocal::ClientPrediction( int clientNum, const usercmd_t* clie
 		isNewFrame = false;
 	}
 	
+// RB begin
+#if defined(STANDALONE)
+	slow.Set( time, previousTime, msec, framenum, realClientTime );
+	fast.Set( time, previousTime, msec, framenum, realClientTime );
+#endif
+// RB end
+
 	// set the user commands for this frame
 	memcpy( usercmds, clientCmds, numClients * sizeof( usercmds[ 0 ] ) );
 	

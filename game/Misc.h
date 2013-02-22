@@ -167,6 +167,13 @@ public:
 	void				Spawn();
 	void				Killed( idEntity* inflictor, idEntity* attacker, int damage, const idVec3& dir, int location );
 	
+// RB begin
+#if defined(STANDALONE)
+	virtual void		Hide();
+	virtual void		Show();
+#endif
+// RB end
+
 private:
 	int					count;
 	int					nextTriggerTime;
@@ -300,6 +307,13 @@ private:
 	void					Event_Footstep();
 	void					Event_LaunchMissiles( const char* projectilename, const char* sound, const char* launchjoint, const char* targetjoint, int numshots, int framedelay );
 	void					Event_LaunchMissilesUpdate( int launchjoint, int targetjoint, int numshots, int framedelay );
+	
+// RB begin
+#if defined(STANDALONE)
+	void					Event_SetAnimation( const char* animName );
+	void					Event_GetAnimationLength();
+#endif
+// RB end
 };
 
 
@@ -789,5 +803,134 @@ private:
 	idList<int>			targetTime;
 	idList<idVec3>		lastTargetPos;
 };
+
+// RB begin
+#if defined(STANDALONE)
+/*
+===============================================================================
+
+idShockwave
+
+===============================================================================
+*/
+class idShockwave : public idEntity
+{
+public:
+	CLASS_PROTOTYPE( idShockwave );
+	
+	idShockwave();
+	~idShockwave();
+	
+	void				Spawn();
+	void				Think();
+	
+	void				Save( idSaveGame* savefile ) const;
+	void				Restore( idRestoreGame* savefile );
+	
+private:
+	void				Event_Activate( idEntity* activator );
+	
+	bool				isActive;
+	int					startTime;
+	int					duration;
+	
+	float				startSize;
+	float				endSize;
+	float				currentSize;
+	
+	float				magnitude;
+	
+	float				height;
+	bool				playerDamaged;
+	float				playerDamageSize;
+	
+};
+
+/*
+===============================================================================
+
+idFuncMountedObject
+
+===============================================================================
+*/
+class idFuncMountedObject : public idEntity
+{
+public:
+	CLASS_PROTOTYPE( idFuncMountedObject );
+	
+	idFuncMountedObject();
+	~idFuncMountedObject();
+	
+	void				Spawn();
+	void				Think();
+	
+	void				GetAngleRestrictions( int& yaw_min, int& yaw_max, int& pitch );
+	
+private:
+	int					harc;
+	int					varc;
+	
+	void				Event_Touch( idEntity* other, trace_t* trace );
+	void				Event_Activate( idEntity* activator );
+	
+public:
+	bool				isMounted;
+	function_t*			scriptFunction;
+	idPlayer* 			mountedPlayer;
+};
+
+
+class idFuncMountedWeapon : public idFuncMountedObject
+{
+public:
+	CLASS_PROTOTYPE( idFuncMountedWeapon );
+	
+	idFuncMountedWeapon();
+	~idFuncMountedWeapon();
+	
+	void				Spawn();
+	void				Think();
+	
+private:
+
+	// The actual turret that moves with the player's view
+	idEntity*			turret;
+	
+	// the muzzle bone's position, used for launching projectiles and trailing smoke
+	idVec3				muzzleOrigin;
+	idMat3				muzzleAxis;
+	
+	float				weaponLastFireTime;
+	float				weaponFireDelay;
+	
+	const idDict* 		projectile;
+	
+	const idSoundShader*	soundFireWeapon;
+	
+	void				Event_PostSpawn();
+};
+
+/*
+===============================================================================
+
+idPortalSky
+
+===============================================================================
+*/
+class idPortalSky : public idEntity
+{
+public:
+	CLASS_PROTOTYPE( idPortalSky );
+	
+	idPortalSky();
+	~idPortalSky();
+	
+	void				Spawn();
+	void				Event_PostSpawn();
+	void				Event_Activate( idEntity* activator );
+};
+
+#endif /* _D3XP */
+// RB end
 
 #endif /* !__GAME_MISC_H__ */

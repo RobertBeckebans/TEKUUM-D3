@@ -809,6 +809,50 @@ void idObjective::Event_CamShot( )
 			renderView_t fullView = *view;
 			fullView.width = SCREEN_WIDTH;
 			fullView.height = SCREEN_HEIGHT;
+			
+// RB begin
+#if defined(STANDALONE)
+			// HACK : always draw sky-portal view if there is one in the map, this isn't real-time
+			if( gameLocal.portalSkyEnt.GetEntity() && g_enablePortalSky.GetBool() )
+			{
+				renderView_t	portalView = fullView;
+				portalView.vieworg = gameLocal.portalSkyEnt.GetEntity()->GetPhysics()->GetOrigin();
+				
+				// setup global fixup projection vars
+				if( 1 )
+				{
+					int vidWidth, vidHeight;
+					idVec2 shiftScale;
+					
+					renderSystem->GetGLSettings( vidWidth, vidHeight );
+					
+					float pot;
+					int temp;
+					
+					int	 w = vidWidth;
+					for( temp = 1 ; temp < w ; temp <<= 1 )
+					{
+					}
+					pot = ( float )temp;
+					shiftScale.x = ( float )w / pot;
+					
+					int	 h = vidHeight;
+					for( temp = 1 ; temp < h ; temp <<= 1 )
+					{
+					}
+					pot = ( float )temp;
+					shiftScale.y = ( float )h / pot;
+					
+					fullView.shaderParms[4] = shiftScale.x;
+					fullView.shaderParms[5] = shiftScale.y;
+				}
+				
+				gameRenderWorld->RenderScene( &portalView );
+				renderSystem->CaptureRenderToImage( "_currentRender" );
+			}
+#endif
+// RB end
+
 			// draw a view to a texture
 			renderSystem->CropRenderSize( 256, 256, true );
 			gameRenderWorld->RenderScene( &fullView );
@@ -1045,6 +1089,12 @@ void idMoveableItem::Spawn()
 	idStr clipModelName;
 	idBounds bounds;
 	
+// RB begin
+#if defined(STANDALONE)
+	SetTimeState ts( timeGroup );
+#endif
+// RB end
+
 	// create a trigger for item pickup
 	spawnArgs.GetFloat( "triggersize", "16.0", tsize );
 	trigger = new idClipModel( idTraceModel( idBounds( vec3_origin ).Expand( tsize ) ) );
@@ -1120,7 +1170,13 @@ void idMoveableItem::Think()
 	
 	if( thinkFlags & TH_UPDATEPARTICLES )
 	{
+// RB begin
+#if defined(STANDALONE)
+		if( !gameLocal.smokeParticles->EmitSmoke( smoke, smokeTime, gameLocal.random.CRandomFloat(), GetPhysics()->GetOrigin(), GetPhysics()->GetAxis(), timeGroup /*_D3XP*/ ) )
+#else
 		if( !gameLocal.smokeParticles->EmitSmoke( smoke, smokeTime, gameLocal.random.CRandomFloat(), GetPhysics()->GetOrigin(), GetPhysics()->GetAxis() ) )
+#endif
+// RB end
 		{
 			smokeTime = 0;
 			BecomeInactive( TH_UPDATEPARTICLES );
@@ -1309,7 +1365,14 @@ void idMoveableItem::Gib( const idVec3& dir, const char* damageDefName )
 	if( *smokeName != '\0' )
 	{
 		const idDeclParticle* smoke = static_cast<const idDeclParticle*>( declManager->FindType( DECL_PARTICLE, smokeName ) );
+		
+// RB begin
+#if defined(STANDALONE)
+		gameLocal.smokeParticles->EmitSmoke( smoke, gameLocal.time, gameLocal.random.CRandomFloat(), renderEntity.origin, renderEntity.axis, timeGroup /*_D3XP*/ );
+#else
 		gameLocal.smokeParticles->EmitSmoke( smoke, gameLocal.time, gameLocal.random.CRandomFloat(), renderEntity.origin, renderEntity.axis );
+#endif
+// RB end
 	}
 	// remove the entity
 	PostEventMS( &EV_Remove, 0 );

@@ -667,6 +667,11 @@ assumes: color.w is 0 or 1
 */
 void idPlayerView::Fade( idVec4 color, int time )
 {
+// RB begin
+#if defined(STANDALONE)
+	SetTimeState ts( player->timeGroup );
+#endif
+// RB end
 
 	if( !fadeTime )
 	{
@@ -714,6 +719,12 @@ void idPlayerView::ScreenFade()
 		return;
 	}
 	
+// RB begin
+#if defined(STANDALONE)
+	SetTimeState ts( player->timeGroup );
+#endif
+// RB end
+
 	msec = fadeTime - gameLocal.realClientTime;
 	
 	if( msec <= 0 )

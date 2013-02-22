@@ -618,6 +618,13 @@ void idSaveGame::WriteRenderEntity( const renderEntity_t& renderEntity )
 	WriteBool( renderEntity.weaponDepthHack );
 	
 	WriteInt( renderEntity.forceUpdate );
+	
+// RB begin
+#if defined(STANDALONE)
+	WriteInt( renderEntity.timeGroup );
+	WriteInt( renderEntity.xrayIndex );
+#endif
+// RB end
 }
 
 /*
@@ -1495,6 +1502,13 @@ void idRestoreGame::ReadRenderEntity( renderEntity_t& renderEntity )
 	ReadBool( renderEntity.weaponDepthHack );
 	
 	ReadInt( renderEntity.forceUpdate );
+	
+// RB begin
+#if defined(STANDALONE)
+	ReadInt( renderEntity.timeGroup );
+	ReadInt( renderEntity.xrayIndex );
+#endif
+// RB end
 }
 
 /*

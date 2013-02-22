@@ -402,6 +402,7 @@ set(GAME_INCLUDES
 	game/Game.h
 	game/GameEdit.h
 	game/Game_local.h
+	game/Grabber.h
 	game/IK.h
 	game/Item.h
 	game/Light.h
@@ -435,6 +436,7 @@ set(GAME_SOURCES
 	game/GameEdit.cpp
 	game/Game_local.cpp
 	game/Game_network.cpp
+	game/Grabber.cpp
 	game/IK.cpp
 	game/Item.cpp
 	game/Light.cpp

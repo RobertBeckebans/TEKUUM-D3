@@ -95,6 +95,11 @@ enum
 	INVISIBILITY,
 	MEGAHEALTH,
 	ADRENALINE,
+// RB begin
+#if defined(STANDALONE)
+	HELLTIME,
+#endif
+// RB end
 	MAX_POWERUPS
 };
 
@@ -332,6 +337,12 @@ public:
 	
 	idDragEntity			dragEntity;
 	
+// RB begin
+#if defined(STANDALONE)
+	idFuncMountedObject*	mountedObject;
+#endif
+// RB end
+
 public:
 	CLASS_PROTOTYPE( idPlayer );
 	

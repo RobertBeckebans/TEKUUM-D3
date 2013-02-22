@@ -160,6 +160,14 @@ typedef enum
 	FC_DISABLE_LEG_IK,
 	FC_RECORDDEMO,
 	FC_AVIGAME
+// RB begin
+#if defined(STANDALONE)
+	, FC_LAUNCH_PROJECTILE,
+	FC_TRIGGER_FX,
+	FC_START_EMITTER,
+	FC_STOP_EMITTER,
+#endif
+// RB end
 } frameCommandType_t;
 
 typedef struct

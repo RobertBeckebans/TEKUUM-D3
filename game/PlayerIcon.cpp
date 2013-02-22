@@ -97,7 +97,7 @@ void idPlayerIcon::Draw( idPlayer* player, const idVec3& origin )
 	
 	idMat3 axis = localPlayer->GetRenderView()->viewaxis;
 	
-	if( player->isLagged )
+	if( player->isLagged && !player->spectating )
 	{
 		// create the icon if necessary, or update if already created
 		if( !CreateIcon( player, ICON_LAG, origin, axis ) )
@@ -105,7 +105,7 @@ void idPlayerIcon::Draw( idPlayer* player, const idVec3& origin )
 			UpdateIcon( player, origin, axis );
 		}
 	}
-	else if( player->isChatting )
+	else if( player->isChatting && !player->spectating )
 	{
 		if( !CreateIcon( player, ICON_CHAT, origin, axis ) )
 		{

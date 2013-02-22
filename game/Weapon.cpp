@@ -67,6 +67,21 @@ const idEventDef EV_Weapon_AutoReload( "autoReload", NULL, 'f' );
 const idEventDef EV_Weapon_NetReload( "netReload" );
 const idEventDef EV_Weapon_IsInvisible( "isInvisible", NULL, 'f' );
 const idEventDef EV_Weapon_NetEndReload( "netEndReload" );
+// RB: adopted D3XP feature
+#if defined(STANDALONE)
+const idEventDef EV_Weapon_GrabberHasTarget( "grabberHasTarget", NULL, 'd' );
+const idEventDef EV_Weapon_Grabber( "grabber", "d" );
+const idEventDef EV_Weapon_Grabber_SetGrabDistance( "grabberGrabDistance", "f" );
+const idEventDef EV_Weapon_LaunchProjectilesEllipse( "launchProjectilesEllipse", "dffff" );
+const idEventDef EV_Weapon_LaunchPowerup( "launchPowerup", "sfd" );
+const idEventDef EV_Weapon_StartWeaponSmoke( "startWeaponSmoke" );
+const idEventDef EV_Weapon_StopWeaponSmoke( "stopWeaponSmoke" );
+const idEventDef EV_Weapon_StartWeaponParticle( "startWeaponParticle", "s" );
+const idEventDef EV_Weapon_StopWeaponParticle( "stopWeaponParticle", "s" );
+const idEventDef EV_Weapon_StartWeaponLight( "startWeaponLight", "s" );
+const idEventDef EV_Weapon_StopWeaponLight( "stopWeaponLight", "s" );
+#endif
+// RB end
 
 //
 // class def
@@ -108,6 +123,21 @@ EVENT( EV_Weapon_AutoReload,				idWeapon::Event_AutoReload )
 EVENT( EV_Weapon_NetReload,					idWeapon::Event_NetReload )
 EVENT( EV_Weapon_IsInvisible,				idWeapon::Event_IsInvisible )
 EVENT( EV_Weapon_NetEndReload,				idWeapon::Event_NetEndReload )
+// RB: adopted D3XP feature
+#if defined(STANDALONE)
+EVENT( EV_Weapon_Grabber,					idWeapon::Event_Grabber )
+EVENT( EV_Weapon_GrabberHasTarget,			idWeapon::Event_GrabberHasTarget )
+EVENT( EV_Weapon_Grabber_SetGrabDistance,	idWeapon::Event_GrabberSetGrabDistance )
+EVENT( EV_Weapon_LaunchProjectilesEllipse,	idWeapon::Event_LaunchProjectilesEllipse )
+EVENT( EV_Weapon_LaunchPowerup,				idWeapon::Event_LaunchPowerup )
+EVENT( EV_Weapon_StartWeaponSmoke,			idWeapon::Event_StartWeaponSmoke )
+EVENT( EV_Weapon_StopWeaponSmoke,			idWeapon::Event_StopWeaponSmoke )
+EVENT( EV_Weapon_StartWeaponParticle,		idWeapon::Event_StartWeaponParticle )
+EVENT( EV_Weapon_StopWeaponParticle,		idWeapon::Event_StopWeaponParticle )
+EVENT( EV_Weapon_StartWeaponLight,			idWeapon::Event_StartWeaponLight )
+EVENT( EV_Weapon_StopWeaponLight,			idWeapon::Event_StopWeaponLight )
+#endif
+// RB end
 END_CLASS
 
 /***********************************************************************
@@ -140,7 +170,12 @@ idWeapon::idWeapon()
 	guiLightHandle			= -1;
 	nozzleGlowHandle		= -1;
 	modelDefHandle			= -1;
-	
+// RB: adopted D3XP feature
+#if defined(STANDALONE)
+	grabberState			= -1;
+#endif
+// RB end
+
 	berserk					= 2;
 	brassDelay				= 0;
 	
@@ -177,6 +212,15 @@ void idWeapon::Spawn()
 		worldModel.GetEntity()->fl.networkSync = true;
 	}
 	
+// RB: adopted D3XP feature
+#if defined(STANDALONE)
+	if( 1 /*!gameLocal.isMultiplayer*/ )
+	{
+		grabber.Initialize();
+	}
+#endif
+// RB end
+
 	thread = new idThread();
 	thread->ManualDelete();
 	thread->ManualControl();
@@ -382,6 +426,41 @@ void idWeapon::Save( idSaveGame* savefile ) const
 	savefile->WriteBool( allowDrop );
 	savefile->WriteObject( projectileEnt );
 	
+// RB: adopted D3XP feature
+#if defined(STANDALONE)
+	savefile->WriteStaticObject( grabber );
+	savefile->WriteInt( grabberState );
+	
+	savefile->WriteJoint( smokeJointView );
+	
+	savefile->WriteInt( weaponParticles.Num() );
+	for( int i = 0; i < weaponParticles.Num(); i++ )
+	{
+		WeaponParticle_t* part = weaponParticles.GetIndex( i );
+		savefile->WriteString( part->name );
+		savefile->WriteString( part->particlename );
+		savefile->WriteBool( part->active );
+		savefile->WriteInt( part->startTime );
+		savefile->WriteJoint( part->joint );
+		savefile->WriteBool( part->smoke );
+		if( !part->smoke )
+		{
+			savefile->WriteObject( part->emitter );
+		}
+	}
+	savefile->WriteInt( weaponLights.Num() );
+	for( int i = 0; i < weaponLights.Num(); i++ )
+	{
+		WeaponLight_t* light = weaponLights.GetIndex( i );
+		savefile->WriteString( light->name );
+		savefile->WriteBool( light->active );
+		savefile->WriteInt( light->startTime );
+		savefile->WriteJoint( light->joint );
+		savefile->WriteInt( light->lightHandle );
+		savefile->WriteRenderLight( light->light );
+	}
+#endif
+// RB end
 }
 
 /*
@@ -466,13 +545,38 @@ void idWeapon::Restore( idRestoreGame* savefile )
 	
 	savefile->ReadInt( guiLightHandle );
 	savefile->ReadRenderLight( guiLight );
-	
+// RB begin
+#if defined(STANDALONE)
+	if( guiLightHandle >= 0 )
+	{
+		guiLightHandle = gameRenderWorld->AddLightDef( &guiLight );
+	}
+#endif
+// RB end
+
 	savefile->ReadInt( muzzleFlashHandle );
 	savefile->ReadRenderLight( muzzleFlash );
-	
+// RB begin
+#if defined(STANDALONE)
+	if( muzzleFlashHandle >= 0 )
+	{
+		muzzleFlashHandle = gameRenderWorld->AddLightDef( &muzzleFlash );
+	}
+#endif
+// RB end
+
 	savefile->ReadInt( worldMuzzleFlashHandle );
 	savefile->ReadRenderLight( worldMuzzleFlash );
 	
+// RB begin
+#if defined(STANDALONE)
+	if( worldMuzzleFlashHandle >= 0 )
+	{
+		worldMuzzleFlashHandle = gameRenderWorld->AddLightDef( &worldMuzzleFlash );
+	}
+#endif
+// RB end
+
 	savefile->ReadVec3( flashColor );
 	savefile->ReadInt( muzzleFlashEnd );
 	savefile->ReadInt( flashTime );
@@ -530,6 +634,15 @@ void idWeapon::Restore( idRestoreGame* savefile )
 	savefile->ReadInt( nozzleGlowHandle );
 	savefile->ReadRenderLight( nozzleGlow );
 	
+// RB begin
+#if defined(STANDALONE)
+	if( nozzleGlowHandle >= 0 )
+	{
+		nozzleGlowHandle = gameRenderWorld->AddLightDef( &nozzleGlow );
+	}
+#endif
+// RB end
+
 	savefile->ReadVec3( nozzleGlowColor );
 	savefile->ReadMaterial( nozzleGlowShader );
 	savefile->ReadFloat( nozzleGlowRadius );
@@ -542,6 +655,68 @@ void idWeapon::Restore( idRestoreGame* savefile )
 	
 	savefile->ReadBool( allowDrop );
 	savefile->ReadObject( reinterpret_cast<idClass*&>( projectileEnt ) );
+	
+// RB begin
+#if defined(STANDALONE)
+	savefile->ReadStaticObject( grabber );
+	savefile->ReadInt( grabberState );
+	
+	savefile->ReadJoint( smokeJointView );
+	
+	int particleCount;
+	savefile->ReadInt( particleCount );
+	for( int i = 0; i < particleCount; i++ )
+	{
+		WeaponParticle_t newParticle;
+		memset( &newParticle, 0, sizeof( newParticle ) );
+		
+		idStr name, particlename;
+		savefile->ReadString( name );
+		savefile->ReadString( particlename );
+		
+		strcpy( newParticle.name, name.c_str() );
+		strcpy( newParticle.particlename, particlename.c_str() );
+		
+		savefile->ReadBool( newParticle.active );
+		savefile->ReadInt( newParticle.startTime );
+		savefile->ReadJoint( newParticle.joint );
+		savefile->ReadBool( newParticle.smoke );
+		if( newParticle.smoke )
+		{
+			newParticle.particle = static_cast<const idDeclParticle*>( declManager->FindType( DECL_PARTICLE, particlename, false ) );
+		}
+		else
+		{
+			savefile->ReadObject( reinterpret_cast<idClass*&>( newParticle.emitter ) );
+		}
+		
+		weaponParticles.Set( newParticle.name, newParticle );
+	}
+	
+	int lightCount;
+	savefile->ReadInt( lightCount );
+	for( int i = 0; i < lightCount; i++ )
+	{
+		WeaponLight_t newLight;
+		memset( &newLight, 0, sizeof( newLight ) );
+		
+		idStr name;
+		savefile->ReadString( name );
+		strcpy( newLight.name, name.c_str() );
+		
+		savefile->ReadBool( newLight.active );
+		savefile->ReadInt( newLight.startTime );
+		savefile->ReadJoint( newLight.joint );
+		savefile->ReadInt( newLight.lightHandle );
+		savefile->ReadRenderLight( newLight.light );
+		if( newLight.lightHandle >= 0 )
+		{
+			newLight.lightHandle = gameRenderWorld->AddLightDef( &newLight.light );
+		}
+		weaponLights.Set( newLight.name, newLight );
+	}
+#endif
+// RB end
 }
 
 /***********************************************************************
@@ -680,6 +855,13 @@ void idWeapon::Clear()
 	lightOn			= false;
 	silent_fire		= false;
 	
+// RB begin
+#if defined(STANDALONE)
+	grabberState	= -1;
+	grabber.Update( owner, true );
+#endif
+// RB end
+
 	ammoType		= 0;
 	ammoRequired	= 0;
 	ammoClip		= 0;
@@ -705,6 +887,35 @@ void idWeapon::Clear()
 	flashJointWorld		= INVALID_JOINT;
 	ejectJointWorld		= INVALID_JOINT;
 	
+// RB begin
+#if defined(STANDALONE)
+	smokeJointView		= INVALID_JOINT;
+	
+	//Clean up the weapon particles
+	for( int i = 0; i < weaponParticles.Num(); i++ )
+	{
+		WeaponParticle_t* part = weaponParticles.GetIndex( i );
+		if( !part->smoke )
+		{
+			//Destroy the emitters
+			part->emitter->PostEventMS( &EV_Remove, 0 );
+		}
+	}
+	weaponParticles.Clear();
+	
+	//Clean up the weapon lights
+	for( int i = 0; i < weaponLights.Num(); i++ )
+	{
+		WeaponLight_t* light = weaponLights.GetIndex( i );
+		if( light->lightHandle != -1 )
+		{
+			gameRenderWorld->FreeLightDef( light->lightHandle );
+		}
+	}
+	weaponLights.Clear();
+#endif
+// RB end
+
 	hasBloodSplat		= false;
 	nozzleFx			= false;
 	nozzleFxFade		= 1500;
@@ -888,6 +1099,20 @@ void idWeapon::GetWeaponDef( const char* objectname, int ammoinclip )
 	guiLightJointView = animator.GetJointHandle( "guiLight" );
 	ventLightJointView = animator.GetJointHandle( "ventLight" );
 	
+// RB begin
+#if defined(STANDALONE)
+	idStr smokeJoint = weaponDef->dict.GetString( "smoke_joint" );
+	if( smokeJoint.Length() > 0 )
+	{
+		smokeJointView = animator.GetJointHandle( smokeJoint );
+	}
+	else
+	{
+		smokeJointView = INVALID_JOINT;
+	}
+#endif
+// RB end
+
 	// get the projectile
 	projectileDict.Clear();
 	
@@ -1019,6 +1244,13 @@ void idWeapon::GetWeaponDef( const char* objectname, int ammoinclip )
 		{
 			ammoClip = ammoAvail;
 		}
+		
+// RB begin
+#if defined(STANDALONE)
+		//In D3XP we use ammo as soon as it is moved into the clip. This allows for weapons that share ammo
+		owner->inventory.UseAmmo( ammoType, ammoClip );
+#endif
+// RB end
 	}
 	
 	renderEntity.gui[ 0 ] = NULL;
@@ -1073,6 +1305,97 @@ void idWeapon::GetWeaponDef( const char* objectname, int ammoinclip )
 	
 	// make sure we have the correct skin
 	UpdateSkin();
+	
+// RB begin
+#if defined(STANDALONE)
+	idEntity* ent = worldModel.GetEntity();
+	DetermineTimeGroup( weaponDef->dict.GetBool( "slowmo", "0" ) );
+	if( ent )
+	{
+		ent->DetermineTimeGroup( weaponDef->dict.GetBool( "slowmo", "0" ) );
+	}
+	
+	//Initialize the particles
+	if( !gameLocal.isMultiplayer )
+	{
+	
+		const idKeyValue* pkv = weaponDef->dict.MatchPrefix( "weapon_particle", NULL );
+		while( pkv )
+		{
+			WeaponParticle_t newParticle;
+			memset( &newParticle, 0, sizeof( newParticle ) );
+			
+			idStr name = pkv->GetValue();
+			
+			strcpy( newParticle.name, name.c_str() );
+			
+			idStr jointName = weaponDef->dict.GetString( va( "%s_joint", name.c_str() ) );
+			newParticle.joint = animator.GetJointHandle( jointName.c_str() );
+			newParticle.smoke = weaponDef->dict.GetBool( va( "%s_smoke", name.c_str() ) );
+			newParticle.active = false;
+			newParticle.startTime = 0;
+			
+			idStr particle = weaponDef->dict.GetString( va( "%s_particle", name.c_str() ) );
+			strcpy( newParticle.particlename, particle.c_str() );
+			
+			if( newParticle.smoke )
+			{
+				newParticle.particle = static_cast<const idDeclParticle*>( declManager->FindType( DECL_PARTICLE, particle, false ) );
+			}
+			else
+			{
+				idDict args;
+				
+				const idDeclEntityDef* emitterDef = gameLocal.FindEntityDef( "func_emitter", false );
+				args = emitterDef->dict;
+				args.Set( "model", particle.c_str() );
+				args.SetBool( "start_off", true );
+				
+				idEntity* ent;
+				gameLocal.SpawnEntityDef( args, &ent, false );
+				newParticle.emitter = ( idFuncEmitter* )ent;
+				
+				newParticle.emitter->BecomeActive( TH_THINK );
+			}
+			
+			weaponParticles.Set( name.c_str(), newParticle );
+			
+			pkv = weaponDef->dict.MatchPrefix( "weapon_particle", pkv );
+		}
+		
+		const idKeyValue* lkv = weaponDef->dict.MatchPrefix( "weapon_light", NULL );
+		while( lkv )
+		{
+			WeaponLight_t newLight;
+			memset( &newLight, 0, sizeof( newLight ) );
+			
+			newLight.lightHandle = -1;
+			newLight.active = false;
+			newLight.startTime = 0;
+			
+			idStr name = lkv->GetValue();
+			strcpy( newLight.name, name.c_str() );
+			
+			idStr jointName = weaponDef->dict.GetString( va( "%s_joint", name.c_str() ) );
+			newLight.joint = animator.GetJointHandle( jointName.c_str() );
+			
+			idStr shader = weaponDef->dict.GetString( va( "%s_shader", name.c_str() ) );
+			newLight.light.shader = declManager->FindMaterial( shader, false );
+			
+			float radius = weaponDef->dict.GetFloat( va( "%s_radius", name.c_str() ) );
+			newLight.light.lightRadius[0] = newLight.light.lightRadius[1] = newLight.light.lightRadius[2] = radius;
+			newLight.light.pointLight = true;
+			newLight.light.noShadows = true;
+			
+			newLight.light.allowLightInViewID = owner->entityNumber + 1;
+			
+			weaponLights.Set( name.c_str(), newLight );
+			
+			lkv = weaponDef->dict.MatchPrefix( "weapon_light", lkv );
+		}
+	}
+#endif
+// RB end
 }
 
 /***********************************************************************
@@ -1142,14 +1465,33 @@ void idWeapon::UpdateGUI()
 	else
 	{
 		// show remaining ammo
+// RB begin
+#if defined(STANDALONE)
+		renderEntity.gui[ 0 ]->SetStateString( "player_totalammo", va( "%i", ammoamount ) );
+#else
 		renderEntity.gui[ 0 ]->SetStateString( "player_totalammo", va( "%i", ammoamount - inclip ) );
+#endif
 		renderEntity.gui[ 0 ]->SetStateString( "player_ammo", ClipSize() ? va( "%i", inclip ) : "--" );
 		renderEntity.gui[ 0 ]->SetStateString( "player_clips", ClipSize() ? va( "%i", ammoamount / ClipSize() ) : "--" );
+		
+#if defined(STANDALONE)
+		renderEntity.gui[ 0 ]->SetStateString( "player_allammo", va( "%i/%i", inclip, ammoamount ) );
+#else
 		renderEntity.gui[ 0 ]->SetStateString( "player_allammo", va( "%i/%i", inclip, ammoamount - inclip ) );
+#endif
 	}
 	renderEntity.gui[ 0 ]->SetStateBool( "player_ammo_empty", ( ammoamount == 0 ) );
 	renderEntity.gui[ 0 ]->SetStateBool( "player_clip_empty", ( inclip == 0 ) );
 	renderEntity.gui[ 0 ]->SetStateBool( "player_clip_low", ( inclip <= lowAmmo ) );
+	
+#if defined(STANDALONE)
+	//Let the HUD know the total amount of ammo regardless of the ammo required value
+	renderEntity.gui[ 0 ]->SetStateString( "player_ammo_count", va( "%i", AmmoCount() ) );
+	
+	//Grabber Gui Info
+	renderEntity.gui[ 0 ]->SetStateString( "grabber_state", va( "%i", grabberState ) );
+#endif
+// RB end
 }
 
 /***********************************************************************
@@ -1502,6 +1844,16 @@ void idWeapon::OwnerDied()
 	{
 		SetState( "OwnerDied", 0 );
 		thread->Execute();
+		
+// RB begin
+#if defined(STANDALONE)
+		// Update the grabber effects
+		if( /*!gameLocal.isMultiplayer &&*/ grabberState != -1 )
+		{
+			grabber.Update( owner, hide );
+		}
+#endif
+// RB end
 	}
 	
 	Hide();
@@ -1534,7 +1886,13 @@ void idWeapon::BeginAttack()
 	
 	if( !WEAPON_ATTACK )
 	{
+// RB begin
+#if defined(STANDALONE)
+		if( sndHum && grabberState == -1 )  	// _D3XP :: don't stop grabber hum
+#else
 		if( sndHum )
+#endif
+// RB end
 		{
 			StopSound( SND_CHANNEL_BODY, false );
 		}
@@ -2145,9 +2503,21 @@ void idWeapon::PresentWeapon( bool showViewModel )
 	if( showViewModel && !disabled && weaponSmoke && ( weaponSmokeStartTime != 0 ) )
 	{
 		// use the barrel joint if available
+		
+// RB begin
+#if defined(STANDALONE)
+		if( smokeJointView != INVALID_JOINT )
+		{
+			GetGlobalJointTransform( true, smokeJointView, muzzleOrigin, muzzleAxis );
+		}
+		else if( barrelJointView != INVALID_JOINT )
+		{
+			GetGlobalJointTransform( true, barrelJointView, muzzleOrigin, muzzleAxis );
+#else
 		if( barrelJointView )
 		{
 			GetGlobalJointTransform( true, barrelJointView, muzzleOrigin, muzzleAxis );
+#endif
 		}
 		else
 		{
@@ -2155,8 +2525,15 @@ void idWeapon::PresentWeapon( bool showViewModel )
 			muzzleOrigin = playerViewOrigin;
 			muzzleAxis = playerViewAxis;
 		}
+		
 		// spit out a particle
+// RB begin
+#if defined(STANDALONE)
+		if( !gameLocal.smokeParticles->EmitSmoke( weaponSmoke, weaponSmokeStartTime, gameLocal.random.RandomFloat(), muzzleOrigin, muzzleAxis, timeGroup /*_D3XP*/ ) )
+#else
 		if( !gameLocal.smokeParticles->EmitSmoke( weaponSmoke, weaponSmokeStartTime, gameLocal.random.RandomFloat(), muzzleOrigin, muzzleAxis ) )
+#endif
+// RB end
 		{
 			weaponSmokeStartTime = ( continuousSmoke ) ? gameLocal.time : 0;
 		}
@@ -2165,12 +2542,89 @@ void idWeapon::PresentWeapon( bool showViewModel )
 	if( showViewModel && strikeSmoke && strikeSmokeStartTime != 0 )
 	{
 		// spit out a particle
+// RB begin
+#if defined(STANDALONE)
+		if( !gameLocal.smokeParticles->EmitSmoke( strikeSmoke, strikeSmokeStartTime, gameLocal.random.RandomFloat(), strikePos, strikeAxis, timeGroup /*_D3XP*/ ) )
+#else
 		if( !gameLocal.smokeParticles->EmitSmoke( strikeSmoke, strikeSmokeStartTime, gameLocal.random.RandomFloat(), strikePos, strikeAxis ) )
+#endif
+// RB end
 		{
 			strikeSmokeStartTime = 0;
 		}
 	}
 	
+// RB begin
+#if defined(STANDALONE)
+	if( showViewModel && !hide )
+	{
+	
+		for( int i = 0; i < weaponParticles.Num(); i++ )
+		{
+			WeaponParticle_t* part = weaponParticles.GetIndex( i );
+			
+			if( part->active )
+			{
+				if( part->smoke )
+				{
+					if( part->joint != INVALID_JOINT )
+					{
+						GetGlobalJointTransform( true, part->joint, muzzleOrigin, muzzleAxis );
+					}
+					else
+					{
+						// default to going straight out the view
+						muzzleOrigin = playerViewOrigin;
+						muzzleAxis = playerViewAxis;
+					}
+					if( !gameLocal.smokeParticles->EmitSmoke( part->particle, part->startTime, gameLocal.random.RandomFloat(), muzzleOrigin, muzzleAxis, timeGroup /*_D3XP*/ ) )
+					{
+						part->active = false;	// all done
+						part->startTime = 0;
+					}
+				}
+				else
+				{
+					//Manually update the position of the emitter so it follows the weapon
+					renderEntity_t* rendEnt = part->emitter->GetRenderEntity();
+					GetGlobalJointTransform( true, part->joint, rendEnt->origin, rendEnt->axis );
+					
+					if( part->emitter->GetModelDefHandle() != -1 )
+					{
+						gameRenderWorld->UpdateEntityDef( part->emitter->GetModelDefHandle(), rendEnt );
+					}
+				}
+			}
+		}
+		
+		for( int i = 0; i < weaponLights.Num(); i++ )
+		{
+			WeaponLight_t* light = weaponLights.GetIndex( i );
+			
+			if( light->active )
+			{
+			
+				GetGlobalJointTransform( true, light->joint, light->light.origin, light->light.axis );
+				if( ( light->lightHandle != -1 ) )
+				{
+					gameRenderWorld->UpdateLightDef( light->lightHandle, &light->light );
+				}
+				else
+				{
+					light->lightHandle = gameRenderWorld->AddLightDef( &light->light );
+				}
+			}
+		}
+	}
+	
+	// Update the grabber effects
+	if( grabberState != -1 )
+	{
+		grabberState = grabber.Update( owner, hide );
+	}
+#endif
+// RB end
+
 	// remove the muzzle flash light when it's done
 	if( ( !lightOn && ( gameLocal.time >= muzzleFlashEnd ) ) || IsHidden() )
 	{
@@ -2244,6 +2698,12 @@ void idWeapon::EnterCinematic()
 		WEAPON_NETFIRING	= false;
 		WEAPON_RAISEWEAPON	= false;
 		WEAPON_LOWERWEAPON	= false;
+		
+// RB begin
+#if defined(STANDALONE)
+		grabber.Update( this->GetOwner(), true );
+#endif
+// RB end
 	}
 	
 	disabled = true;
@@ -2505,6 +2965,43 @@ int	idWeapon::AmmoRequired() const
 {
 	return ammoRequired;
 }
+
+// RB begin
+#if defined(STANDALONE)
+/*
+================
+idWeapon::GetGrabberState
+
+Returns the current grabberState
+================
+*/
+int idWeapon::GetGrabberState() const
+{
+
+	return grabberState;
+}
+
+/*
+================
+idWeapon::AmmoCount
+
+Returns the total number of rounds regardless of the required ammo
+================
+*/
+int idWeapon::AmmoCount() const
+{
+
+	if( owner )
+	{
+		return owner->inventory.HasAmmo( ammoType, 1 );
+	}
+	else
+	{
+		return 0;
+	}
+}
+#endif
+// RB end
 
 /*
 ================
@@ -2786,17 +3283,33 @@ void idWeapon::Event_AddToClip( int amount )
 		return;
 	}
 	
+// RB begin
+#if defined(STANDALONE)
+	int oldAmmo = ammoClip;
+	ammoAvail = owner->inventory.HasAmmo( ammoType, ammoRequired ) + AmmoInClip();
+#endif
+	
 	ammoClip += amount;
 	if( ammoClip > clipSize )
 	{
 		ammoClip = clipSize;
 	}
 	
+#if !defined(STANDALONE)
 	ammoAvail = owner->inventory.HasAmmo( ammoType, ammoRequired );
+#endif
+	
 	if( ammoClip > ammoAvail )
 	{
 		ammoClip = ammoAvail;
 	}
+	
+#if defined(STANDALONE)
+	// for shared ammo we need to use the ammo when it is moved into the clip
+	int usedAmmo = ammoClip - oldAmmo;
+	owner->inventory.UseAmmo( ammoType, usedAmmo );
+#endif
+// RB end
 }
 
 /*
@@ -2817,7 +3330,15 @@ idWeapon::Event_AmmoAvailable
 */
 void idWeapon::Event_AmmoAvailable()
 {
+// RB begin
+#if defined(STANDALONE)
 	int ammoAvail = owner->inventory.HasAmmo( ammoType, ammoRequired );
+	ammoAvail += AmmoInClip();
+#else
+	int ammoAvail = owner->inventory.HasAmmo( ammoType, ammoRequired );
+#endif
+// RB end
+
 	idThread::ReturnFloat( ammoAvail );
 }
 
@@ -3113,6 +3634,48 @@ void idWeapon::Event_SetLightParms( float parm0, float parm1, float parm2, float
 	UpdateVisuals();
 }
 
+// RB begin
+#if defined(STANDALONE)
+/*
+================
+idWeapon::Event_Grabber
+================
+*/
+void idWeapon::Event_Grabber( int enable )
+{
+	if( enable )
+	{
+		grabberState = 0;
+	}
+	else
+	{
+		grabberState = -1;
+	}
+}
+
+/*
+================
+idWeapon::Event_GrabberHasTarget
+================
+*/
+void idWeapon::Event_GrabberHasTarget()
+{
+	idThread::ReturnInt( grabberState );
+}
+
+/*
+================
+idWeapon::Event_GrabberSetGrabDistance
+================
+*/
+void idWeapon::Event_GrabberSetGrabDistance( float dist )
+{
+
+	grabber.SetDragDistance( dist );
+}
+#endif
+// RB end
+
 /*
 ================
 idWeapon::Event_CreateProjectile
@@ -3173,13 +3736,24 @@ void idWeapon::Event_LaunchProjectiles( int num_projectiles, float spread, float
 	if( !gameLocal.isClient )
 	{
 	
+// RB begin
+#if defined(STANDALONE)
+
+		int ammoAvail = owner->inventory.HasAmmo( ammoType, ammoRequired );
+		if( ( clipSize != 0 ) && ( ammoClip <= 0 ) )
+		{
+			return;
+		}
+		
+#else
 		// check if we're out of ammo or the clip is empty
 		int ammoAvail = owner->inventory.HasAmmo( ammoType, ammoRequired );
 		if( !ammoAvail || ( ( clipSize != 0 ) && ( ammoClip <= 0 ) ) )
 		{
 			return;
 		}
-		
+#endif
+// RB end
 		// if this is a power ammo weapon ( currently only the bfg ) then make sure
 		// we only fire as much power as available in each clip
 		if( powerAmmo )
@@ -3195,10 +3769,28 @@ void idWeapon::Event_LaunchProjectiles( int num_projectiles, float spread, float
 			}
 		}
 		
-		owner->inventory.UseAmmo( ammoType, ( powerAmmo ) ? dmgPower : ammoRequired );
+// RB begin
+#if defined(STANDALONE)
+		if( clipSize == 0 )
+		{
+			//Weapons with a clip size of 0 launch strait from inventory without moving to a clip
+#endif
+			//In D3XP we used the ammo when the ammo was moved into the clip so we don't want to
+			//use it now.
+			owner->inventory.UseAmmo( ammoType, ( powerAmmo ) ? dmgPower : ammoRequired );
+			
+#if defined(STANDALONE)
+		}
+#endif
+		
 		if( clipSize && ammoRequired )
 		{
+#if defined(STANDALONE)
+			ammoClip -= powerAmmo ? dmgPower : ammoRequired;
+#else
 			ammoClip -= powerAmmo ? dmgPower : 1;
+#endif
+// RB end
 		}
 		
 	}
@@ -3331,7 +3923,10 @@ void idWeapon::Event_LaunchProjectiles( int num_projectiles, float spread, float
 		}
 		
 		// toss the brass
-		PostEventMS( &EV_Weapon_EjectBrass, brassDelay );
+#if defined(STANDALONE)
+		if( brassDelay >= 0 )
+#endif
+			PostEventMS( &EV_Weapon_EjectBrass, brassDelay );
 	}
 	
 	// add the light for the muzzleflash
@@ -3345,6 +3940,296 @@ void idWeapon::Event_LaunchProjectiles( int num_projectiles, float spread, float
 	// reset muzzle smoke
 	weaponSmokeStartTime = gameLocal.realClientTime;
 }
+
+// RB begin
+#if defined(STANDALONE)
+/*
+================
+idWeapon::Event_LaunchProjectilesEllipse
+================
+*/
+void idWeapon::Event_LaunchProjectilesEllipse( int num_projectiles, float spreada, float spreadb, float fuseOffset, float power )
+{
+	idProjectile*	proj;
+	idEntity*		ent;
+	int				i;
+	idVec3			dir;
+	float			anga, angb;
+	float			spin;
+	float			distance;
+	trace_t			tr;
+	idVec3			start;
+	idVec3			muzzle_pos;
+	idBounds		ownerBounds, projBounds;
+	
+	if( IsHidden() )
+	{
+		return;
+	}
+	
+	if( !projectileDict.GetNumKeyVals() )
+	{
+		const char* classname = weaponDef->dict.GetString( "classname" );
+		gameLocal.Warning( "No projectile defined on '%s'", classname );
+		return;
+	}
+	
+	// avoid all ammo considerations on a client
+	if( !gameLocal.isClient )
+	{
+	
+		int ammoAvail = owner->inventory.HasAmmo( ammoType, ammoRequired );
+		if( ( clipSize != 0 ) && ( ammoClip <= 0 ) )
+		{
+			return;
+		}
+		
+		if( clipSize == 0 )
+		{
+			//Weapons with a clip size of 0 launch strait from inventory without moving to a clip
+			owner->inventory.UseAmmo( ammoType, ammoRequired );
+		}
+		
+		if( clipSize && ammoRequired )
+		{
+			ammoClip -= ammoRequired;
+		}
+		
+		if( !silent_fire )
+		{
+			// wake up nearby monsters
+			gameLocal.AlertAI( owner );
+		}
+		
+	}
+	
+	// set the shader parm to the time of last projectile firing,
+	// which the gun material shaders can reference for single shot barrel glows, etc
+	renderEntity.shaderParms[ SHADERPARM_DIVERSITY ]	= gameLocal.random.CRandomFloat();
+	renderEntity.shaderParms[ SHADERPARM_TIMEOFFSET ]	= -MS2SEC( gameLocal.time );
+	
+	if( worldModel.GetEntity() )
+	{
+		worldModel.GetEntity()->SetShaderParm( SHADERPARM_DIVERSITY, renderEntity.shaderParms[ SHADERPARM_DIVERSITY ] );
+		worldModel.GetEntity()->SetShaderParm( SHADERPARM_TIMEOFFSET, renderEntity.shaderParms[ SHADERPARM_TIMEOFFSET ] );
+	}
+	
+	// calculate the muzzle position
+	if( barrelJointView != INVALID_JOINT && projectileDict.GetBool( "launchFromBarrel" ) )
+	{
+		// there is an explicit joint for the muzzle
+		GetGlobalJointTransform( true, barrelJointView, muzzleOrigin, muzzleAxis );
+	}
+	else
+	{
+		// go straight out of the view
+		muzzleOrigin = playerViewOrigin;
+		muzzleAxis = playerViewAxis;
+	}
+	
+	// add some to the kick time, incrementally moving repeat firing weapons back
+	if( kick_endtime < gameLocal.time )
+	{
+		kick_endtime = gameLocal.time;
+	}
+	kick_endtime += muzzle_kick_time;
+	if( kick_endtime > gameLocal.time + muzzle_kick_maxtime )
+	{
+		kick_endtime = gameLocal.time + muzzle_kick_maxtime;
+	}
+	
+	if( !gameLocal.isClient )
+	{
+		ownerBounds = owner->GetPhysics()->GetAbsBounds();
+		
+		owner->AddProjectilesFired( num_projectiles );
+		
+		float spreadRadA = DEG2RAD( spreada );
+		float spreadRadB = DEG2RAD( spreadb );
+		
+		for( i = 0; i < num_projectiles; i++ )
+		{
+			//Ellipse Form
+			spin = ( float )DEG2RAD( 360.0f ) * gameLocal.random.RandomFloat();
+			anga = idMath::Sin( spreadRadA * gameLocal.random.RandomFloat() );
+			angb = idMath::Sin( spreadRadB * gameLocal.random.RandomFloat() );
+			dir = playerViewAxis[ 0 ] + playerViewAxis[ 2 ] * ( angb * idMath::Sin( spin ) ) - playerViewAxis[ 1 ] * ( anga * idMath::Cos( spin ) );
+			dir.Normalize();
+			
+			gameLocal.SpawnEntityDef( projectileDict, &ent );
+			if( !ent || !ent->IsType( idProjectile::Type ) )
+			{
+				const char* projectileName = weaponDef->dict.GetString( "def_projectile" );
+				gameLocal.Error( "'%s' is not an idProjectile", projectileName );
+			}
+			
+			proj = static_cast<idProjectile*>( ent );
+			proj->Create( owner, muzzleOrigin, dir );
+			
+			projBounds = proj->GetPhysics()->GetBounds().Rotate( proj->GetPhysics()->GetAxis() );
+			
+			// make sure the projectile starts inside the bounding box of the owner
+			if( i == 0 )
+			{
+				muzzle_pos = muzzleOrigin + playerViewAxis[ 0 ] * 2.0f;
+				if( ( ownerBounds - projBounds ).RayIntersection( muzzle_pos, playerViewAxis[0], distance ) )
+				{
+					start = muzzle_pos + distance * playerViewAxis[0];
+				}
+				else
+				{
+					start = ownerBounds.GetCenter();
+				}
+				gameLocal.clip.Translation( tr, start, muzzle_pos, proj->GetPhysics()->GetClipModel(), proj->GetPhysics()->GetClipModel()->GetAxis(), MASK_SHOT_RENDERMODEL, owner );
+				muzzle_pos = tr.endpos;
+			}
+			
+			proj->Launch( muzzle_pos, dir, pushVelocity, fuseOffset, power );
+		}
+		
+		// toss the brass
+		if( brassDelay >= 0 )
+		{
+			PostEventMS( &EV_Weapon_EjectBrass, brassDelay );
+		}
+	}
+	
+	// add the light for the muzzleflash
+	if( !lightOn )
+	{
+		MuzzleFlashLight();
+	}
+	
+	owner->WeaponFireFeedback( &weaponDef->dict );
+	
+	// reset muzzle smoke
+	weaponSmokeStartTime = gameLocal.time;
+	
+}
+
+/**
+* Gives the player a powerup as if it were a weapon shot. It will use the ammo amount specified
+* as ammoRequired.
+*/
+void idWeapon::Event_LaunchPowerup( const char* powerup, float duration, int useAmmo )
+{
+
+	if( IsHidden() )
+	{
+		return;
+	}
+	
+	// check if we're out of ammo
+	if( useAmmo )
+	{
+		int ammoAvail = owner->inventory.HasAmmo( ammoType, ammoRequired );
+		if( !ammoAvail )
+		{
+			return;
+		}
+		owner->inventory.UseAmmo( ammoType, ammoRequired );
+	}
+	
+	// set the shader parm to the time of last projectile firing,
+	// which the gun material shaders can reference for single shot barrel glows, etc
+	renderEntity.shaderParms[ SHADERPARM_DIVERSITY ]	= gameLocal.random.CRandomFloat();
+	renderEntity.shaderParms[ SHADERPARM_TIMEOFFSET ]	= -MS2SEC( gameLocal.time );
+	
+	if( worldModel.GetEntity() )
+	{
+		worldModel.GetEntity()->SetShaderParm( SHADERPARM_DIVERSITY, renderEntity.shaderParms[ SHADERPARM_DIVERSITY ] );
+		worldModel.GetEntity()->SetShaderParm( SHADERPARM_TIMEOFFSET, renderEntity.shaderParms[ SHADERPARM_TIMEOFFSET ] );
+	}
+	
+	// add the light for the muzzleflash
+	if( !lightOn )
+	{
+		MuzzleFlashLight();
+	}
+	
+	owner->Give( powerup, va( "%f", duration ) );
+	
+	
+}
+
+void idWeapon::Event_StartWeaponSmoke()
+{
+
+	// reset muzzle smoke
+	weaponSmokeStartTime = gameLocal.time;
+}
+
+void idWeapon::Event_StopWeaponSmoke()
+{
+
+	// reset muzzle smoke
+	weaponSmokeStartTime = 0;
+}
+
+void idWeapon::Event_StartWeaponParticle( const char* name )
+{
+	WeaponParticle_t* part;
+	weaponParticles.Get( name, &part );
+	if( part )
+	{
+		part->active = true;
+		part->startTime = gameLocal.time;
+		
+		//Toggle the emitter
+		if( !part->smoke )
+		{
+			part->emitter->Show();
+			part->emitter->PostEventMS( &EV_Activate, 0, this );
+		}
+	}
+}
+
+void idWeapon::Event_StopWeaponParticle( const char* name )
+{
+	WeaponParticle_t* part;
+	weaponParticles.Get( name, &part );
+	if( part )
+	{
+		part->active = false;
+		part->startTime = 0;
+		
+		//Toggle the emitter
+		if( !part->smoke )
+		{
+			part->emitter->Hide();
+			part->emitter->PostEventMS( &EV_Activate, 0, this );
+		}
+	}
+}
+
+void idWeapon::Event_StartWeaponLight( const char* name )
+{
+	WeaponLight_t* light;
+	weaponLights.Get( name, &light );
+	if( light )
+	{
+		light->active = true;
+		light->startTime = gameLocal.time;
+	}
+}
+
+void idWeapon::Event_StopWeaponLight( const char* name )
+{
+	WeaponLight_t* light;
+	weaponLights.Get( name, &light );
+	if( light )
+	{
+		light->active = false;
+		light->startTime = 0;
+		if( light->lightHandle != -1 )
+		{
+			gameRenderWorld->FreeLightDef( light->lightHandle );
+			light->lightHandle = -1;
+		}
+	}
+}
+#endif
+// RB end
 
 /*
 =====================
@@ -3406,7 +4291,7 @@ void idWeapon::Event_Melee()
 					&& weaponDef && weaponDef->dict.GetBool( "stealing" )
 					&& ent->IsType( idPlayer::Type )
 					&& !owner->PowerUpActive( BERSERK )
-					&& ( gameLocal.gameType != GAME_TDM || gameLocal.serverInfo.GetBool( "si_teamDamage" ) || ( owner->team != static_cast< idPlayer* >( ent )->team ) )
+					&& ( ( gameLocal.gameType != GAME_TDM ) || gameLocal.serverInfo.GetBool( "si_teamDamage" ) || ( owner->team != static_cast< idPlayer* >( ent )->team ) )
 			  )
 			{
 				owner->StealWeapon( static_cast< idPlayer* >( ent ) );

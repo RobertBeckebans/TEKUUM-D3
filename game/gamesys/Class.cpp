@@ -1202,6 +1202,18 @@ bool idClass::ProcessEventArgPtr( const idEventDef* ev, intptr_t* data )
 	assert( ev );
 	assert( idEvent::initialized );
 	
+// RB begin
+#if defined(STANDALONE)
+	SetTimeState ts;
+	
+	if( IsType( idEntity::Type ) )
+	{
+		idEntity* ent = ( idEntity* )this;
+		ts.PushState( ent->timeGroup );
+	}
+#endif
+// RB end
+
 	if( g_debugTriggers.GetBool() && ( ev == &EV_Activate ) && IsType( idEntity::Type ) )
 	{
 		const idEntity* ent = *reinterpret_cast<idEntity**>( data );

@@ -72,6 +72,46 @@ const char* idGameLocal::sufaceTypeNames[ MAX_SURFACE_TYPES ] =
 };
 // RB end
 
+// RB begin
+#if defined(STANDALONE)
+// List of all defs used by the player that will stay on the fast timeline
+static char* fastEntityList[] =
+{
+	"player_doommarine",
+	"weapon_chainsaw",
+	"weapon_fists",
+	"weapon_flashlight",
+	"weapon_rocketlauncher",
+	"projectile_rocket",
+	"weapon_machinegun",
+	"projectile_bullet_machinegun",
+	"weapon_pistol",
+	"projectile_bullet_pistol",
+	"weapon_handgrenade",
+	"projectile_grenade",
+	"weapon_bfg",
+	"projectile_bfg",
+	"weapon_chaingun",
+	"projectile_chaingunbullet",
+	"weapon_pda",
+	"weapon_plasmagun",
+	"projectile_plasmablast",
+	"weapon_shotgun",
+	"projectile_bullet_shotgun",
+	"weapon_soulcube",
+	"projectile_soulblast",
+	"weapon_shotgun_double",
+	"projectile_shotgunbullet_double",
+	"weapon_grabber",
+	"weapon_bloodstone_active1",
+	"weapon_bloodstone_active2",
+	"weapon_bloodstone_active3",
+	"weapon_bloodstone_passive",
+	NULL
+};
+#endif
+// RB end
+
 /*
 ===========
 GetGameAPI
@@ -541,6 +581,12 @@ void idGameLocal::SaveGame( idFile* f )
 	savegame.WriteInt( previousTime );
 	savegame.WriteInt( time );
 	
+// RB begin
+#if defined(STANDALONE)
+	savegame.WriteInt( msec );
+#endif
+// RB end
+
 	savegame.WriteInt( vacuumAreaNum );
 	
 	savegame.WriteInt( entityDefBits );
@@ -555,6 +601,20 @@ void idGameLocal::SaveGame( idFile* f )
 	savegame.WriteBool( isNewFrame );
 	savegame.WriteFloat( clientSmoothing );
 	
+// RB begin
+#if defined(STANDALONE)
+	portalSkyEnt.Save( &savegame );
+	savegame.WriteBool( portalSkyActive );
+	
+	fast.Save( &savegame );
+	slow.Save( &savegame );
+	
+	savegame.WriteInt( slowmoState );
+	savegame.WriteFloat( slowmoMsec );
+	savegame.WriteBool( quickSlowmoReset );
+#endif
+// RB end
+
 	savegame.WriteBool( mapCycleLoaded );
 	savegame.WriteInt( spawnCount );
 	
@@ -904,6 +964,14 @@ void idGameLocal::LoadMap( const char* mapName, int randseed )
 	// clear the sound system
 	gameSoundWorld->ClearAllSoundEmitters();
 	
+// RB begin
+#if defined(STANDALONE)
+	// clear envirosuit sound fx
+	gameSoundWorld->SetEnviroSuit( false );
+	gameSoundWorld->SetSlowmo( false );
+#endif
+// RB end
+
 	InitAsyncNetwork();
 	
 	if( !sameMap || ( mapFile && mapFile->NeedsReload() ) )
@@ -969,6 +1037,15 @@ void idGameLocal::LoadMap( const char* mapName, int randseed )
 	sessionCommand = "";
 	nextGibTime		= 0;
 	
+// RB begin
+#if defined(STANDALONE)
+	portalSkyEnt			= NULL;
+	portalSkyActive			= false;
+	
+	ResetSlowTimeVars();
+#endif
+// RB end
+
 	vacuumAreaNum = -1;		// if an info_vacuum is spawned, it will set this
 	
 	if( !editEntities )
@@ -1041,6 +1118,8 @@ void idGameLocal::LocalMapRestart( )
 	
 	MapClear( false );
 	
+	
+	
 	// clear the smoke particle free list
 	smokeParticles->Init();
 	
@@ -1048,6 +1127,14 @@ void idGameLocal::LocalMapRestart( )
 	if( gameSoundWorld )
 	{
 		gameSoundWorld->ClearAllSoundEmitters();
+		
+// RB begin
+#if defined(STANDALONE)
+		// clear envirosuit sound fx
+		gameSoundWorld->SetEnviroSuit( false );
+		gameSoundWorld->SetSlowmo( false );
+#endif
+// RB end
 	}
 	
 	// the spawnCount is reset to zero temporarily to spawn the map entities with the same spawnId
@@ -1463,6 +1550,12 @@ bool idGameLocal::InitFromSaveGame( const char* mapName, idRenderWorld* renderWo
 	savegame.ReadInt( previousTime );
 	savegame.ReadInt( time );
 	
+// RB begin
+#if defined(STANDALONE)
+	savegame.ReadInt( msec );
+#endif
+// RB end
+
 	savegame.ReadInt( vacuumAreaNum );
 	
 	savegame.ReadInt( entityDefBits );
@@ -1477,6 +1570,42 @@ bool idGameLocal::InitFromSaveGame( const char* mapName, idRenderWorld* renderWo
 	savegame.ReadBool( isNewFrame );
 	savegame.ReadFloat( clientSmoothing );
 	
+// RB begin
+#if defined(STANDALONE)
+	portalSkyEnt.Restore( &savegame );
+	savegame.ReadBool( portalSkyActive );
+	
+	fast.Restore( &savegame );
+	slow.Restore( &savegame );
+	
+	int blah;
+	savegame.ReadInt( blah );
+	slowmoState = ( slowmoState_t )blah;
+	
+	savegame.ReadFloat( slowmoMsec );
+	savegame.ReadBool( quickSlowmoReset );
+	
+	if( slowmoState == SLOWMO_STATE_OFF )
+	{
+		if( gameSoundWorld )
+		{
+			gameSoundWorld->SetSlowmo( false );
+		}
+	}
+	else
+	{
+		if( gameSoundWorld )
+		{
+			gameSoundWorld->SetSlowmo( true );
+		}
+	}
+	if( gameSoundWorld )
+	{
+		gameSoundWorld->SetSlowmoSpeed( slowmoMsec / ( float )USERCMD_MSEC );
+	}
+#endif
+// RB end
+
 	savegame.ReadBool( mapCycleLoaded );
 	savegame.ReadInt( spawnCount );
 	
@@ -2234,6 +2363,28 @@ void idGameLocal::SetupPlayerPVS()
 			pvs.FreeCurrentPVS( otherPVS );
 			playerConnectedAreas = newPVS;
 		}
+		
+// RB begin
+#if defined(STANDALONE)
+		// if portalSky is preset, then merge into pvs so we get rotating brushes, etc
+		if( portalSkyEnt.GetEntity() )
+		{
+			idEntity* skyEnt = portalSkyEnt.GetEntity();
+			
+			otherPVS = pvs.SetupCurrentPVS( skyEnt->GetPVSAreas(), skyEnt->GetNumPVSAreas() );
+			newPVS = pvs.MergeCurrentPVS( playerPVS, otherPVS );
+			pvs.FreeCurrentPVS( playerPVS );
+			pvs.FreeCurrentPVS( otherPVS );
+			playerPVS = newPVS;
+			
+			otherPVS = pvs.SetupCurrentPVS( skyEnt->GetPVSAreas(), skyEnt->GetNumPVSAreas() );
+			newPVS = pvs.MergeCurrentPVS( playerConnectedAreas, otherPVS );
+			pvs.FreeCurrentPVS( playerConnectedAreas );
+			pvs.FreeCurrentPVS( otherPVS );
+			playerConnectedAreas = newPVS;
+		}
+#endif
+// RB end
 	}
 }
 
@@ -2452,6 +2603,37 @@ void idGameLocal::SortActiveEntityList()
 	sortPushers = false;
 }
 
+// RB begin
+#if defined(STANDALONE)
+/*
+================
+idGameLocal::RunTimeGroup2
+================
+*/
+void idGameLocal::RunTimeGroup2()
+{
+	idEntity* ent;
+	int num = 0;
+	
+	fast.Increment();
+	fast.Get( time, previousTime, msec, framenum, realClientTime );
+	
+	for( ent = activeEntities.Next(); ent != NULL; ent = ent->activeNode.Next() )
+	{
+		if( ent->timeGroup != TIME_GROUP2 )
+		{
+			continue;
+		}
+		
+		ent->Think();
+		num++;
+	}
+	
+	slow.Get( time, previousTime, msec, framenum, realClientTime );
+}
+#endif
+// RB end
+
 /*
 ================
 idGameLocal::RunFrame
@@ -2476,6 +2658,15 @@ gameReturn_t idGameLocal::RunFrame( const usercmd_t* clientCmds )
 	
 	player = GetLocalPlayer();
 	
+// RB begin
+#if defined(STANDALONE)
+	ComputeSlowMsec();
+	
+	slow.Get( time, previousTime, msec, framenum, realClientTime );
+	msec = slowmoMsec;
+#endif
+// RB end
+
 	if( !isMultiplayer && g_stopTime.GetBool() )
 	{
 		// clear any debug lines from a previous frame
@@ -2497,6 +2688,12 @@ gameReturn_t idGameLocal::RunFrame( const usercmd_t* clientCmds )
 			time += msec;
 			realClientTime = time;
 			
+// RB begin
+#if defined(STANDALONE)
+			slow.Set( time, previousTime, msec, framenum, realClientTime );
+#endif
+// RB end
+
 #ifdef GAME_DLL
 			// allow changing SIMD usage on the fly
 			if( com_forceGenericSIMD.IsModified() )
@@ -2590,12 +2787,26 @@ gameReturn_t idGameLocal::RunFrame( const usercmd_t* clientCmds )
 					num = 0;
 					for( ent = activeEntities.Next(); ent != NULL; ent = ent->activeNode.Next() )
 					{
+// RB begin
+#if defined(STANDALONE)
+						if( ent->timeGroup != TIME_GROUP1 )
+						{
+							continue;
+						}
+#endif
+// RB end
 						ent->Think();
 						num++;
 					}
 				}
 			}
 			
+// RB begin
+#if defined(STANDALONE)
+			RunTimeGroup2();
+#endif
+// RB end
+
 			// remove any entities that have stopped thinking
 			if( numEntitiesToDeactivate )
 			{
@@ -2621,6 +2832,15 @@ gameReturn_t idGameLocal::RunFrame( const usercmd_t* clientCmds )
 			// service any pending events
 			idEvent::ServiceEvents();
 			
+// RB begin
+#if defined(STANDALONE)
+			// service pending fast events
+			fast.Get( time, previousTime, msec, framenum, realClientTime );
+			idEvent::ServiceFastEvents();
+			slow.Get( time, previousTime, msec, framenum, realClientTime );
+#endif
+// RB end
+
 			timer_events.Stop();
 			
 			// free the player pvs
@@ -3498,6 +3718,29 @@ bool idGameLocal::SpawnEntityDef( const idDict& args, idEntity** ent, bool setDe
 	
 	spawnArgs.SetDefaults( &def->dict );
 	
+// RB begin
+#if defined(STANDALONE)
+	if( !spawnArgs.FindKey( "slowmo" ) )
+	{
+		bool slowmo = true;
+		
+		for( int i = 0; fastEntityList[i]; i++ )
+		{
+			if( !idStr::Cmp( classname, fastEntityList[i] ) )
+			{
+				slowmo = false;
+				break;
+			}
+		}
+		
+		if( !slowmo )
+		{
+			spawnArgs.SetBool( "slowmo", slowmo );
+		}
+	}
+#endif
+// RB end
+
 	// check if we should spawn a class object
 	spawnArgs.GetString( "spawnclass", NULL, &spawn );
 	if( spawn )
@@ -4078,6 +4321,17 @@ idGameLocal::GetAlertEntity
 */
 idActor* idGameLocal::GetAlertEntity()
 {
+// RB begin
+#if defined(STANDALONE)
+	int timeGroup = 0;
+	if( lastAIAlertTime && lastAIAlertEntity.GetEntity() )
+	{
+		timeGroup = lastAIAlertEntity.GetEntity()->timeGroup;
+	}
+	SetTimeState ts( timeGroup );
+#endif
+// RB end
+
 	if( lastAIAlertTime >= time )
 	{
 		return lastAIAlertEntity.GetEntity();
@@ -4416,7 +4670,13 @@ void idGameLocal::ProjectDecal( const idVec3& origin, const idVec3& dir, float d
 	winding += idVec5( windingOrigin + ( axis * decalWinding[1] ) * size, idVec2( 0, 1 ) );
 	winding += idVec5( windingOrigin + ( axis * decalWinding[2] ) * size, idVec2( 0, 0 ) );
 	winding += idVec5( windingOrigin + ( axis * decalWinding[3] ) * size, idVec2( 1, 0 ) );
+	
+// RB begin
+#if defined(STANDALONE)
+	gameRenderWorld->ProjectDecalOntoWorld( winding, projectionOrigin, parallel, depth * 0.5f, declManager->FindMaterial( material ), gameLocal.slow.time /* _D3XP */ );
+#else
 	gameRenderWorld->ProjectDecalOntoWorld( winding, projectionOrigin, parallel, depth * 0.5f, declManager->FindMaterial( material ), time );
+#endif
 }
 
 /*
@@ -4960,12 +5220,52 @@ void idGameLocal::ThrottleUserInfo()
 	mpGame.ThrottleUserInfo();
 }
 
+// RB begin
+#if defined(STANDALONE)
+/*
+=================
+idPlayer::SetPortalSkyEnt
+=================
+*/
+void idGameLocal::SetPortalSkyEnt( idEntity* ent )
+{
+	portalSkyEnt = ent;
+}
+
+/*
+=================
+idPlayer::IsPortalSkyAcive
+=================
+*/
+bool idGameLocal::IsPortalSkyAcive()
+{
+	return portalSkyActive;
+}
+#endif
+// RB end
+
 /*
 ===========
 idGameLocal::SelectTimeGroup
 ============
 */
-void idGameLocal::SelectTimeGroup( int timeGroup ) { }
+void idGameLocal::SelectTimeGroup( int timeGroup )
+{
+// RB begin
+#if defined(STANDALONE)
+	int i = 0;
+	
+	if( timeGroup )
+	{
+		fast.Get( time, previousTime, msec, framenum, realClientTime );
+	}
+	else
+	{
+		slow.Get( time, previousTime, msec, framenum, realClientTime );
+	}
+#endif
+// RB end
+}
 
 /*
 ===========
@@ -4974,7 +5274,20 @@ idGameLocal::GetTimeGroupTime
 */
 int idGameLocal::GetTimeGroupTime( int timeGroup )
 {
+// RB begin
+#if defined(STANDALONE)
+	if( timeGroup )
+	{
+		return fast.time;
+	}
+	else
+	{
+		return slow.time;
+	}
+#else
 	return gameLocal.time;
+#endif
+// RB end
 }
 
 /*
@@ -4988,10 +5301,155 @@ void idGameLocal::GetBestGameType( const char* map, const char* gametype, char b
 	buf[ MAX_STRING_CHARS - 1 ] = '\0';
 }
 
+// RB begin
+#if defined(STANDALONE)
 /*
 ===========
-idGameLocal::NeedRestart
+idGameLocal::ComputeSlowMsec
 ============
+*/
+void idGameLocal::ComputeSlowMsec()
+{
+	idPlayer* player;
+	bool powerupOn;
+	float delta;
+	
+	// check if we need to do a quick reset
+	if( quickSlowmoReset )
+	{
+		quickSlowmoReset = false;
+		
+		// stop the sounds
+		if( gameSoundWorld )
+		{
+			gameSoundWorld->SetSlowmo( false );
+			gameSoundWorld->SetSlowmoSpeed( 1 );
+		}
+		
+		// stop the state
+		slowmoState = SLOWMO_STATE_OFF;
+		slowmoMsec = USERCMD_MSEC;
+	}
+	
+	// check the player state
+	player = GetLocalPlayer();
+	powerupOn = false;
+	
+	if( player && player->PowerUpActive( HELLTIME ) )
+	{
+		powerupOn = true;
+	}
+	else if( g_enableSlowmo.GetBool() )
+	{
+		powerupOn = true;
+	}
+	
+	// determine proper slowmo state
+	if( powerupOn && slowmoState == SLOWMO_STATE_OFF )
+	{
+		slowmoState = SLOWMO_STATE_RAMPUP;
+		
+		slowmoMsec = msec;
+		if( gameSoundWorld )
+		{
+			gameSoundWorld->SetSlowmo( true );
+			gameSoundWorld->SetSlowmoSpeed( slowmoMsec / ( float )USERCMD_MSEC );
+		}
+	}
+	else if( !powerupOn && slowmoState == SLOWMO_STATE_ON )
+	{
+		slowmoState = SLOWMO_STATE_RAMPDOWN;
+		
+		// play the stop sound
+		if( player )
+		{
+			//player->PlayHelltimeStopSound();
+		}
+	}
+	
+	// do any necessary ramping
+	if( slowmoState == SLOWMO_STATE_RAMPUP )
+	{
+		delta = 4 - slowmoMsec;
+		
+		if( fabs( delta ) < g_slowmoStepRate.GetFloat() )
+		{
+			slowmoMsec = 4;
+			slowmoState = SLOWMO_STATE_ON;
+		}
+		else
+		{
+			slowmoMsec += delta * g_slowmoStepRate.GetFloat();
+		}
+		
+		if( gameSoundWorld )
+		{
+			gameSoundWorld->SetSlowmoSpeed( slowmoMsec / ( float )USERCMD_MSEC );
+		}
+	}
+	else if( slowmoState == SLOWMO_STATE_RAMPDOWN )
+	{
+		delta = 16 - slowmoMsec;
+		
+		if( fabs( delta ) < g_slowmoStepRate.GetFloat() )
+		{
+			slowmoMsec = 16;
+			slowmoState = SLOWMO_STATE_OFF;
+			if( gameSoundWorld )
+			{
+				gameSoundWorld->SetSlowmo( false );
+			}
+		}
+		else
+		{
+			slowmoMsec += delta * g_slowmoStepRate.GetFloat();
+		}
+		
+		if( gameSoundWorld )
+		{
+			gameSoundWorld->SetSlowmoSpeed( slowmoMsec / ( float )USERCMD_MSEC );
+		}
+	}
+}
+
+/*
+===========
+idGameLocal::ResetSlowTimeVars
+============
+*/
+void idGameLocal::ResetSlowTimeVars()
+{
+	msec				= USERCMD_MSEC;
+	slowmoMsec			= USERCMD_MSEC;
+	slowmoState			= SLOWMO_STATE_OFF;
+	
+	fast.framenum		= 0;
+	fast.previousTime	= 0;
+	fast.time			= 0;
+	fast.msec			= USERCMD_MSEC;
+	
+	slow.framenum		= 0;
+	slow.previousTime	= 0;
+	slow.time			= 0;
+	slow.msec			= USERCMD_MSEC;
+}
+
+/*
+===========
+idGameLocal::QuickSlowmoReset
+============
+*/
+void idGameLocal::QuickSlowmoReset()
+{
+	quickSlowmoReset = true;
+}
+#endif
+// RB end
+
+/*
+===============
+idGameLocal::NeedRestart
+===============
 */
 bool idGameLocal::NeedRestart()
 {

@@ -58,6 +58,16 @@ public :
 	
 	idEntity* 				GetOwner() const;
 	
+// RB begin
+#if defined(STANDALONE)
+	void					CatchProjectile( idEntity* o, const char* reflectName );
+	int						GetProjectileState();
+	void					Event_CreateProjectile( idEntity* owner, const idVec3& start, const idVec3& dir );
+	void					Event_LaunchProjectile( const idVec3& start, const idVec3& dir, const idVec3& pushVelocity );
+	void					Event_SetGravity( float gravity );
+#endif
+// RB end
+
 	virtual void			Think();
 	virtual void			Killed( idEntity* inflictor, idEntity* attacker, int damage, const idVec3& dir, int location );
 	virtual bool			Collide( const trace_t& collision, const idVec3& velocity );
@@ -109,6 +119,12 @@ protected:
 	const idDeclParticle* 	smokeFly;
 	int						smokeFlyTime;
 	
+// RB begin
+#if defined(STANDALONE)
+	int						originalTimeGroup;
+#endif
+// RB end
+
 	typedef enum
 	{
 		// must update these in script/doom_defs.script if changed
@@ -148,6 +164,13 @@ public :
 	virtual void			Think();
 	virtual void			Launch( const idVec3& start, const idVec3& dir, const idVec3& pushVelocity, const float timeSinceFire = 0.0f, const float launchPower = 1.0f, const float dmgPower = 1.0f );
 	
+// RB begin
+#if defined(STANDALONE)
+	void					SetEnemy( idEntity* ent );
+	void					Event_SetEnemy( idEntity* ent );
+#endif
+// RB end
+
 protected:
 	float					speed;
 	idEntityPtr<idEntity>	enemy;
