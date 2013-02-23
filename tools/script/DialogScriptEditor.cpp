@@ -148,7 +148,13 @@ void DialogScriptEditor::InitScriptEvents()
 	idStr whiteSpace;
 	scriptEventInfo_t info;
 	
+	// RB begin
+#if defined(STANDALONE)
+	if( !src.LoadFile( "script/tekuum_events.script" ) )
+#else
 	if( !src.LoadFile( "script/doom_events.script" ) )
+#endif
+		// RB end
 	{
 		return;
 	}

@@ -4899,7 +4899,7 @@ idProjectile* idAI::LaunchProjectile( const char* jointname, idEntity* target, b
 // RB begin
 #if defined(STANDALONE)
 	proj_axis = axis;
-
+	
 	if( !forceMuzzle )  	// _D3XP
 #endif
 	{

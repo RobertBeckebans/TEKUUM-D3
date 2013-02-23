@@ -38,9 +38,17 @@ If you have questions concerning this license or the applicable additional terms
 */
 
 // default scripts
+// RB begin
+#if defined(STANDALONE)
+#define SCRIPT_DEFAULTDEFS			"script/tekuum_defs.script"
+#define SCRIPT_DEFAULT				"script/tekuum_main.script"
+#define SCRIPT_DEFAULTFUNC			"main"
+#else
 #define SCRIPT_DEFAULTDEFS			"script/doom_defs.script"
 #define SCRIPT_DEFAULT				"script/doom_main.script"
 #define SCRIPT_DEFAULTFUNC			"doom_main"
+#endif
+// RB end
 
 typedef struct
 {

@@ -368,7 +368,7 @@ public:
 	int						framenum;
 	int						previousTime;			// time in msec of last frame
 	int						time;					// in msec
-
+	
 // RB begin
 #if defined(STANDALONE)
 	int						msec;					// time since last update in milliseconds
@@ -376,7 +376,7 @@ public:
 	static const int		msec = USERCMD_MSEC;	// time since last update in milliseconds
 #endif
 // RB end
-	
+
 	int						vacuumAreaNum;			// -1 if level doesn't have any outside areas
 	
 	gameType_t				gameType;
