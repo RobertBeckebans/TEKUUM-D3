@@ -19,7 +19,7 @@ option(MONOLITH
 		"Embed game logic into main executable" ON)
 		
 option(STANDALONE
-		"Skip Doom 3 base/ folder" OFF)
+		"Skip Doom 3 base/ folder" ON)
 		
 option(GLES1
 		"Only use OpenGL ES 1.0 functions" OFF)
@@ -389,6 +389,68 @@ file(GLOB SYS_SOURCES sys/*.cpp)
 file(GLOB UI_INCLUDES ui/*.h)
 file(GLOB UI_SOURCES ui/*.cpp)
 
+set(LUA_INCLUDES
+	libs/lua/src/lapi.h
+	libs/lua/src/lauxlib.h
+	libs/lua/src/lcode.h
+	libs/lua/src/lctype.h
+	libs/lua/src/ldebug.h
+	libs/lua/src/ldo.h
+	libs/lua/src/lfunc.h
+	libs/lua/src/lgc.h
+	libs/lua/src/llex.h
+	libs/lua/src/llimits.h
+	libs/lua/src/lmem.h
+	libs/lua/src/lobject.h
+	libs/lua/src/lopcodes.h
+	libs/lua/src/lparser.h
+	libs/lua/src/lstate.h
+	libs/lua/src/lstring.h
+	libs/lua/src/ltable.h
+	libs/lua/src/ltm.h
+	libs/lua/src/lua.h
+	libs/lua/src/luaconf.h
+	libs/lua/src/lualib.h
+	libs/lua/src/lundump.h
+	libs/lua/src/lvm.h
+	libs/lua/src/lzio.h
+	)
+	
+set(LUA_SOURCES
+	libs/lua/src/lapi.c
+	libs/lua/src/lauxlib.c
+	libs/lua/src/lbaselib.c
+	libs/lua/src/lbitlib.c
+	libs/lua/src/lcode.c
+	libs/lua/src/lcorolib.c
+	libs/lua/src/lctype.c
+	libs/lua/src/ldblib.c
+	libs/lua/src/ldebug.c
+	libs/lua/src/ldo.c
+	libs/lua/src/ldump.c
+	libs/lua/src/lfunc.c
+	libs/lua/src/lgc.c
+	#linit.c
+	libs/lua/src/liolib.c
+	libs/lua/src/llex.c
+	libs/lua/src/lmathlib.c
+	libs/lua/src/lmem.c
+	libs/lua/src/loadlib.c
+	libs/lua/src/lobject.c
+	libs/lua/src/lopcodes.c
+	libs/lua/src/loslib.c
+	libs/lua/src/lparser.c
+	libs/lua/src/lstate.c
+	libs/lua/src/lstring.c
+	libs/lua/src/lstrlib.c
+	libs/lua/src/ltable.c
+	libs/lua/src/ltablib.c
+	libs/lua/src/ltm.c
+	#libs/lua/src/lua.c
+	libs/lua/src/lundump.c
+	libs/lua/src/lvm.c
+	libs/lua/src/lzio.c
+	)
 
 set(GAME_INCLUDES
 	game/AF.h
@@ -818,6 +880,9 @@ source_group("libs\\oggvorbis" FILES ${OGGVORBIS_SOURCES})
 source_group("ui" FILES ${UI_INCLUDES})
 source_group("ui" FILES ${UI_SOURCES})
 
+source_group("libs\\lua" FILES ${LUA_INCLUDES})
+source_group("libs\\lua" FILES ${LUA_SOURCES})
+
 source_group("sys" FILES ${SYS_INCLUDES})
 source_group("sys" FILES ${SYS_SOURCES})
 
@@ -924,7 +989,7 @@ set(TEKUUM_INCLUDES
 			${SOUND_INCLUDES}
 			${OGGVORBIS_INCLUDES}
 			${UI_INCLUDES}
-			
+			${LUA_INCLUDES}
 			)
 			
 set(TEKUUM_SOURCES
@@ -943,13 +1008,14 @@ set(TEKUUM_SOURCES
 			${SOUND_SOURCES}
 			${OGGVORBIS_SOURCES}
 			${UI_SOURCES}
-			
+			${LUA_SOURCES}
 			)
 
 add_definitions(-D__DOOM__
 				-DGLEW_STATIC
 				-DBUILD_FREETYPE
-				-DFT2_BUILD_LIBRARY)
+				-DFT2_BUILD_LIBRARY
+				-DUSE_LUA)
 				
 if(MONOLITH)
 	list(APPEND TEKUUM_INCLUDES
@@ -994,6 +1060,7 @@ include_directories(
 			#libs/openal/include
 			libs/glew/include
 			libs/freetype/include
+			libs/lua/src
 			libs/zlib)
 			
 link_directories(
@@ -1134,7 +1201,7 @@ if(MSVC)
 	list(REMOVE_DUPLICATES TEKUUM_SOURCES)
 	
 	set(TEKUUM_PRECOMPILED_SOURCES ${TEKUUM_SOURCES})
-	list(REMOVE_ITEM TEKUUM_PRECOMPILED_SOURCES ${JPEG_SOURCES} ${PNG_SOURCES} ${ETC1_SOURCES} ${ZLIB_SOURCES} ${GLEW_SOURCES} ${FREETYPE_SOURCES} ${OGGVORBIS_SOURCES})		
+	list(REMOVE_ITEM TEKUUM_PRECOMPILED_SOURCES ${JPEG_SOURCES} ${PNG_SOURCES} ${ETC1_SOURCES} ${ZLIB_SOURCES} ${GLEW_SOURCES} ${FREETYPE_SOURCES} ${OGGVORBIS_SOURCES} ${LUA_SOURCES})
 	list(REMOVE_ITEM TEKUUM_PRECOMPILED_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/game/gamesys/TypeInfo.cpp)
 	
 	foreach( src_file ${TEKUUM_PRECOMPILED_SOURCES} )

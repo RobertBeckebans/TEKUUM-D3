@@ -26,6 +26,10 @@ If you have questions concerning this license or the applicable additional terms
 ===========================================================================
 */
 
+// RB begin
+#include <lua.hpp>
+// RB end
+
 class idWindow;
 
 class idUserInterfaceLocal : public idUserInterface
@@ -144,6 +148,14 @@ public:
 	};
 	
 private:
+
+	// RB begin
+	static void*				LuaAlloc( void* ud, void* ptr, size_t osize, size_t nsize );
+	static int					LuaPanic( lua_State* L );
+	
+	lua_State*					luaState;
+	// RB end
+	
 	bool						active;
 	bool						loading;
 	bool						interactive;

@@ -41,13 +41,7 @@ If you have questions concerning this license or the applicable additional terms
 #include "MarkerWindow.h"
 #include "FieldWindow.h"
 
-#include "GameSSDWindow.h"
-#include "GameBearShootWindow.h"
-#include "GameBustOutWindow.h"
 
-//
-//  gui editor is more integrated into the window now
-#include "../tools/guied/GEWindowWrapper.h"
 
 bool idWindow::registerIsTemporary[MAX_EXPRESSION_REGISTERS];		// statics to assist during parsing
 //float idWindow::shaderRegisters[MAX_EXPRESSION_REGISTERS];
@@ -2738,42 +2732,6 @@ bool idWindow::Parse( idParser* src, bool rebuild )
 		else if( token == "renderDef" )
 		{
 			idRenderWindow* win = new idRenderWindow( dc, gui );
-			SaveExpressionParseState();
-			win->Parse( src, rebuild );
-			RestoreExpressionParseState();
-			AddChild( win );
-			win->SetParent( this );
-			dwt.simp = NULL;
-			dwt.win = win;
-			drawWindows.Append( dwt );
-		}
-		else if( token == "gameSSDDef" )
-		{
-			idGameSSDWindow* win = new idGameSSDWindow( dc, gui );
-			SaveExpressionParseState();
-			win->Parse( src, rebuild );
-			RestoreExpressionParseState();
-			AddChild( win );
-			win->SetParent( this );
-			dwt.simp = NULL;
-			dwt.win = win;
-			drawWindows.Append( dwt );
-		}
-		else if( token == "gameBearShootDef" )
-		{
-			idGameBearShootWindow* win = new idGameBearShootWindow( dc, gui );
-			SaveExpressionParseState();
-			win->Parse( src, rebuild );
-			RestoreExpressionParseState();
-			AddChild( win );
-			win->SetParent( this );
-			dwt.simp = NULL;
-			dwt.win = win;
-			drawWindows.Append( dwt );
-		}
-		else if( token == "gameBustOutDef" )
-		{
-			idGameBustOutWindow* win = new idGameBustOutWindow( dc, gui );
 			SaveExpressionParseState();
 			win->Parse( src, rebuild );
 			RestoreExpressionParseState();

@@ -33,6 +33,7 @@ If you have questions concerning this license or the applicable additional terms
 #include "DeviceContext.h"
 #include "Window.h"
 #include "UserInterfaceLocal.h"
+#include "Lua_local.h"
 
 extern idCVar r_skipGuiShaders;		// 1 = don't render any gui elements on surfaces
 
@@ -340,16 +341,49 @@ bool idUserInterfaceLocal::InitFromFile( const char* qpath, bool rebuild, bool c
 		desktop = new idWindow( this );
 	}
 	
-	source = qpath;
+	idStrStatic< MAX_OSPATH > filename = qpath;
+	filename.SetFileExtension( "lua" );
+	
+	source = filename;
 	state.Set( "text", "Test Text!" );
 	
-	idParser src( LEXFL_NOFATALERRORS | LEXFL_NOSTRINGCONCAT | LEXFL_ALLOWMULTICHARLITERALS | LEXFL_ALLOWBACKSLASHSTRINGCONCAT );
+	//luaState = luaL_newstate();
+	luaState = lua_newstate( LuaAlloc, NULL );
+	if( luaState )
+	{
+		lua_atpanic( luaState, &LuaPanic );
+	}
+	
+	luaL_openlibs( luaState );
+	
+	//idParser src( LEXFL_NOFATALERRORS | LEXFL_NOSTRINGCONCAT | LEXFL_ALLOWMULTICHARLITERALS | LEXFL_ALLOWBACKSLASHSTRINGCONCAT );
+	//src.LoadFile( qpath );
+	
+	char* src;
 	
 	//Load the timestamp so reload guis will work correctly
-	fileSystem->ReadFile( qpath, NULL, &timeStamp );
+	fileSystem->ReadFile( filename, ( void** ) &src, &timeStamp );
 	
-	src.LoadFile( qpath );
+	if( src != NULL )
+	{
+		int result = luaL_loadbuffer( luaState, src, strlen( src ), filename );
+		if( result == LUA_ERRSYNTAX )
+		{
+			lua_pop( luaState, 1 );
+			idLib::Error( "Compile of file %s failed: %s ", filename, lua_tostring( luaState, -1 ) );
+		}
+		
+		fileSystem->FreeFile( src );
+		
+		if( lua_pcall( luaState, 0, 0, 0 ) )
+		{
+			idLib::Error( "Cannot pcall: %s", lua_tostring( luaState, -1 ) );
+		}
+	}
 	
+	
+	
+	/*
 	if( src.IsLoaded() )
 	{
 		idToken token;
@@ -366,21 +400,22 @@ bool idUserInterfaceLocal::InitFromFile( const char* qpath, bool rebuild, bool c
 				continue;
 			}
 		}
-		
+	
 		state.Set( "name", qpath );
 	}
 	else
+	*/
 	{
 		desktop->SetDC( &uiManagerLocal.dc );
 		desktop->SetFlag( WIN_DESKTOP );
 		desktop->name = "Desktop";
-		desktop->text = va( "Invalid GUI: %s", qpath );
+		desktop->text = va( "Invalid GUI: %s", filename.c_str() );
 		desktop->rect = idRectangle( 0.0f, 0.0f, 640.0f, 480.0f );
 		desktop->drawRect = desktop->rect;
 		desktop->foreColor = idVec4( 1.0f, 1.0f, 1.0f, 1.0f );
 		desktop->backColor = idVec4( 0.0f, 0.0f, 0.0f, 1.0f );
 		desktop->SetupFromState();
-		common->Warning( "Couldn't load gui: '%s'", qpath );
+		common->Warning( "Couldn't load gui: '%s'", filename.c_str() );
 	}
 	
 	interactive = desktop->Interactive();
@@ -767,3 +802,29 @@ void idUserInterfaceLocal::SetCursor( float x, float y )
 	cursorY = y;
 }
 
+
+// RB begin
+void* idUserInterfaceLocal::LuaAlloc( void* ud, void* ptr, size_t osize, size_t nsize )
+{
+	( void )ud;
+	( void )osize; /* not used */
+	
+	if( nsize == 0 )
+	{
+		free( ptr );
+		return NULL;
+	}
+	else
+	{
+		return realloc( ptr, nsize );
+	}
+}
+
+int idUserInterfaceLocal::LuaPanic( lua_State* L )
+{
+	//luai_writestringerror( "PANIC: unprotected error in call to Lua API (%s)\n", lua_tostring( L, -1 ) );
+	idLib::Error( "PANIC: unprotected error in call to Lua API (%s)\n", lua_tostring( L, -1 ) );
+	
+	return 0;  /* return to Lua to abort */
+}
+// RB end
