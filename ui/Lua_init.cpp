@@ -48,7 +48,7 @@ extern "C"
 //	{LUA_BITLIBNAME, luaopen_bit32},
 //	{LUA_MATHLIBNAME, luaopen_math},
 		{LUA_DBLIBNAME, luaopen_debug},
-		{"sys", luaopen_sys},
+//		{"sys", luaopen_sys},
 		{NULL, NULL}
 	};
 	

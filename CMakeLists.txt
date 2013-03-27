@@ -419,7 +419,7 @@ set(LUA_INCLUDES
 set(LUA_SOURCES
 	libs/lua/src/lapi.c
 	libs/lua/src/lauxlib.c
-	libs/lua/src/lbaselib.c
+	libs/lua/src/lbaselib.cpp
 	libs/lua/src/lbitlib.c
 	libs/lua/src/lcode.c
 	libs/lua/src/lcorolib.c

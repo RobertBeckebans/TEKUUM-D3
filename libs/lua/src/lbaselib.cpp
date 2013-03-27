@@ -11,6 +11,11 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "precompiled.h"
+
+extern "C"
+{
+
 #define lbaselib_c
 //#define LUA_LIB
 
@@ -19,8 +24,8 @@
 #include "lauxlib.h"
 #include "lualib.h"
 
-// Tekuum BEGIN
-#if defined(LUA_LIB)
+// RB: replaced luaB_print with idlib version
+#if 0
 static int luaB_print( lua_State* L )
 {
 	int n = lua_gettop( L ); /* number of arguments */
@@ -44,8 +49,46 @@ static int luaB_print( lua_State* L )
 	luai_writeline();
 	return 0;
 }
+#else
+static int luaB_print( lua_State* L )
+{
+	idStr	text;
+	
+	// number of arguments
+	int n = lua_gettop( L );
+	int i;
+	lua_getglobal( L, "tostring" );
+	for( i = 1; i <= n; i++ )
+	{
+		const char* s;
+		size_t l;
+		lua_pushvalue( L, -1 ); // function to be called
+		lua_pushvalue( L, i ); // value to print
+		lua_call( L, 1, 1 );
+		
+		// get result
+		s = lua_tolstring( L, -1, &l );
+		if( s == NULL )
+			return luaL_error( L, LUA_QL( "tostring" ) " must return a string to " LUA_QL( "print" ) );
+			
+		if( i > 1 )
+		{
+			//luai_writestring( "\t", 1 );
+			text += "\t";
+		}
+		//luai_writestring( s, l );
+		text += s;
+		
+		// pop result
+		lua_pop( L, 1 );
+	}
+	
+	//luai_writeline();
+	idLib::Printf( "%s", text.c_str() );
+	return 0;
+}
 #endif
-// Tekuum END
+// RB end
 
 
 #define SPACECHARS	" \f\n\r\t\v"
@@ -496,9 +539,9 @@ static const luaL_Reg base_funcs[] =
 	{"next", luaB_next},
 	{"pairs", luaB_pairs},
 	{"pcall", luaB_pcall},
-#if defined(LUA_LIB)
+//#if defined(LUA_LIB)
 	{"print", luaB_print},
-#endif
+//#endif
 	{"rawequal", luaB_rawequal},
 	{"rawlen", luaB_rawlen},
 	{"rawget", luaB_rawget},
@@ -526,3 +569,4 @@ LUAMOD_API int luaopen_base( lua_State* L )
 	return 1;
 }
 
+} // extern "C"

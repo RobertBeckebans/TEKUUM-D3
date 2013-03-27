@@ -153,6 +153,8 @@ private:
 	static void*				LuaAlloc( void* ud, void* ptr, size_t osize, size_t nsize );
 	static int					LuaPanic( lua_State* L );
 	
+	bool						RunLuaFunction( const char* func, const char* fmt, ... );
+	
 	lua_State*					luaState;
 	// RB end
 	

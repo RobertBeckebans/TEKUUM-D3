@@ -297,6 +297,10 @@ idUserInterfaceLocal::~idUserInterfaceLocal()
 {
 	delete desktop;
 	desktop = NULL;
+	
+	// RB begin
+	lua_close( luaState );
+	// RB end
 }
 
 const char* idUserInterfaceLocal::Name() const
@@ -405,6 +409,19 @@ bool idUserInterfaceLocal::InitFromFile( const char* qpath, bool rebuild, bool c
 	}
 	else
 	*/
+	if( RunLuaFunction( "main", "w", desktop ) )
+	{
+		desktop->SetDC( &uiManagerLocal.dc );
+		desktop->SetFlag( WIN_DESKTOP );
+		desktop->name = "Desktop";
+		desktop->text = va( "Lua GUI: %s", filename.c_str() );
+		desktop->rect = idRectangle( 0.0f, 0.0f, 640.0f, 480.0f );
+		desktop->drawRect = desktop->rect;
+		desktop->foreColor = idVec4( 1.0f, 1.0f, 1.0f, 1.0f );
+		desktop->backColor = idVec4( 0.0f, 0.0f, 0.5f, 1.0f );
+		desktop->SetupFromState();
+	}
+	else
 	{
 		desktop->SetDC( &uiManagerLocal.dc );
 		desktop->SetFlag( WIN_DESKTOP );
@@ -827,4 +844,116 @@ int idUserInterfaceLocal::LuaPanic( lua_State* L )
 	
 	return 0;  /* return to Lua to abort */
 }
+
+bool idUserInterfaceLocal::RunLuaFunction( const char* func, const char* fmt, ... )
+{
+	va_list         argptr;
+	int             numArgs, numResults;
+	lua_State*      L = luaState;
+	
+	if( !func || !func[0] )
+		return false;
+		
+	va_start( argptr, fmt );
+	lua_getglobal( L, func );
+	
+	// push arguments
+	numArgs = 0;
+	while( *fmt )
+	{
+		switch( *fmt++ )
+		{
+			case 'f':
+				// float argument
+				lua_pushnumber( L, va_arg( argptr, double ) );
+				
+				break;
+				
+			case 'i':
+				// int argument
+				lua_pushnumber( L, va_arg( argptr, int ) );
+				break;
+				
+			case 's':
+				// string argument
+				lua_pushstring( L, va_arg( argptr, char* ) );
+				break;
+				
+			case 'w':
+				// window argument
+				luapush_Window( L, va_arg( argptr, idWindow* ) );
+				break;
+				
+			case '>':
+				goto endwhile;
+				
+			default:
+				idLib::Warning( "idUserInterfaceLocal::RunLuaFunction: invalid option (%c)\n", *( fmt - 1 ) );
+		}
+		numArgs++;
+		luaL_checkstack( L, 1, "too many arguments" );
+	}
+endwhile:
+
+	// do the call
+	numResults = strlen( fmt );
+	if( lua_pcall( L, numArgs, numResults, 0 ) != 0 )
+	{
+		idLib::Warning( "idUserInterfaceLocal::RunLuaFunction: error running function `%s': %s\n", func, lua_tostring( L, -1 ) );
+	}
+	
+	bool result = true;
+	
+	// retrieve results
+	numResults = -numResults;				// stack index of first result
+	while( *fmt )
+	{
+		// get results
+		switch( *fmt++ )
+		{
+		
+			case 'f':
+				// float result
+				if( !lua_isnumber( L, numResults ) )
+				{
+					idLib::Warning( "idUserInterfaceLocal::RunLuaFunction: wrong result type\n" );
+					result = false;
+				}
+				*va_arg( argptr, float* ) = lua_tonumber( L, numResults );
+				
+				break;
+				
+			case 'i':
+				// int result
+				if( !lua_isnumber( L, numResults ) )
+				{
+					idLib::Warning( "idUserInterfaceLocal::RunLuaFunction: wrong result type\n" );
+					result = false;
+				}
+				*va_arg( argptr, int* ) = ( int )lua_tonumber( L, numResults );
+				break;
+				
+			case 's':
+				// string result
+				if( !lua_isstring( L, numResults ) )
+				{
+					idLib::Warning( "idUserInterfaceLocal::RunLuaFunction: wrong result type\n" );
+					result = false;
+				}
+				*va_arg( argptr, const char** ) = lua_tostring( L, numResults );
+				break;
+				
+			default:
+				idLib::Warning( "idUserInterfaceLocal::RunLuaFunction: invalid option (%c)\n", *( fmt - 1 ) );
+				result = false;
+				break;
+		}
+		numResults++;
+	}
+	
+	va_end( argptr );
+	
+	return result;
+}
+
 // RB end
