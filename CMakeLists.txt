@@ -19,7 +19,7 @@ option(MONOLITH
 		"Embed game logic into main executable" ON)
 		
 option(STANDALONE
-		"Skip Doom 3 base/ folder" OFF)
+		"Skip Doom 3 base/ folder" ON)
 		
 option(GLES1
 		"Only use OpenGL ES 1.0 functions" OFF)
