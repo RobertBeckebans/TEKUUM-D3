@@ -479,7 +479,7 @@ idMaterial::GetExpressionTemporary
 */
 int idMaterial::GetExpressionTemporary()
 {
-	if( numRegisters == MAX_EXPRESSION_REGISTERS )
+	if( numRegisters >= MAX_EXPRESSION_REGISTERS )
 	{
 		common->Warning( "GetExpressionTemporary: material '%s' hit MAX_EXPRESSION_REGISTERS", GetName() );
 		SetMaterialFlag( MF_DEFAULTED );
