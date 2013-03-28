@@ -96,7 +96,8 @@ void Sys_AsyncThread()
 		elapsed = Sys_Milliseconds() - start;
 		if( elapsed < 0x10 )
 		{
-			usleep( 0x10 - elapsed );
+			// usleep wants microseconds
+			usleep( ( 0x10 - elapsed ) * 1000 );
 		}
 	}
 #elif 1
