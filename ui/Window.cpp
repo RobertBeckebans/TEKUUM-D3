@@ -41,9 +41,6 @@ If you have questions concerning this license or the applicable additional terms
 #include "MarkerWindow.h"
 #include "FieldWindow.h"
 
-#include "GameSSDWindow.h"
-#include "GameBearShootWindow.h"
-#include "GameBustOutWindow.h"
 
 //
 //  gui editor is more integrated into the window now
@@ -3480,7 +3477,7 @@ Returns a register index
 intptr_t idWindow::ParseExpressionPriority( idParser* src, int priority, idWinVar* var, intptr_t component )
 {
 	idToken token;
-	int		a;
+	intptr_t a;
 	
 	if( priority == 0 )
 	{
