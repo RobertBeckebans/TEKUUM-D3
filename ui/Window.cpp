@@ -2747,42 +2747,6 @@ bool idWindow::Parse( idParser* src, bool rebuild )
 			dwt.win = win;
 			drawWindows.Append( dwt );
 		}
-		else if( token == "gameSSDDef" )
-		{
-			idGameSSDWindow* win = new idGameSSDWindow( dc, gui );
-			SaveExpressionParseState();
-			win->Parse( src, rebuild );
-			RestoreExpressionParseState();
-			AddChild( win );
-			win->SetParent( this );
-			dwt.simp = NULL;
-			dwt.win = win;
-			drawWindows.Append( dwt );
-		}
-		else if( token == "gameBearShootDef" )
-		{
-			idGameBearShootWindow* win = new idGameBearShootWindow( dc, gui );
-			SaveExpressionParseState();
-			win->Parse( src, rebuild );
-			RestoreExpressionParseState();
-			AddChild( win );
-			win->SetParent( this );
-			dwt.simp = NULL;
-			dwt.win = win;
-			drawWindows.Append( dwt );
-		}
-		else if( token == "gameBustOutDef" )
-		{
-			idGameBustOutWindow* win = new idGameBustOutWindow( dc, gui );
-			SaveExpressionParseState();
-			win->Parse( src, rebuild );
-			RestoreExpressionParseState();
-			AddChild( win );
-			win->SetParent( this );
-			dwt.simp = NULL;
-			dwt.win = win;
-			drawWindows.Append( dwt );
-		}
 //
 //  added new onEvent
 		else if( token == "onNamedEvent" )
@@ -2919,7 +2883,7 @@ bool idWindow::Parse( idParser* src, bool rebuild )
 			//        when this window is destoyed which even happens during parsing with simple windows ?
 			
 			// RB: changed behavior to put the var into the vars list of this window
-#if 0
+#if defined(STANDALONE)
 			definedVars.Append( var );
 			
 			// Read in the vec4
