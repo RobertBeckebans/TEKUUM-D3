@@ -176,12 +176,17 @@ void Script_ResetTime( idWindow* window, idList<idGSWinVar>* src )
 {
 	idWinStr* parm = dynamic_cast<idWinStr*>( ( *src )[0].var );
 	drawWin_t* win = NULL;
-	if( parm && src->Num() > 1 )
+	if( parm != NULL && src->Num() > 1 )
 	{
 		win = window->GetGui()->GetDesktop()->FindChildByName( *parm );
 		parm = dynamic_cast<idWinStr*>( ( *src )[1].var );
 	}
-	if( win && win->win )
+	if( parm == NULL )
+	{
+		return;
+	}
+	
+	if( win != NULL && win->win != NULL )
 	{
 		win->win->ResetTime( atoi( *parm ) );
 		win->win->EvalRegs( -1, true );
@@ -670,7 +675,7 @@ void idGuiScript::FixupParms( idWindow* win )
 			parms[c].var = v4;
 			parms[c].own = true;
 			
-			drawWin_t* owner;
+			drawWin_t* owner = NULL;
 			
 			if( ( *str[0] ) == '$' )
 			{
@@ -685,7 +690,7 @@ void idGuiScript::FixupParms( idWindow* win )
 			{
 				idWindow* ownerparent;
 				idWindow* destparent;
-				if( owner )
+				if( owner != NULL )
 				{
 					ownerparent = owner->simp ? owner->simp->GetParent() : owner->win->GetParent();
 					destparent  = destowner->simp ? destowner->simp->GetParent() : destowner->win->GetParent();
@@ -718,7 +723,14 @@ void idGuiScript::FixupParms( idWindow* win )
 			delete str;
 		}
 		//
-		
+	}
+	else if( handler == &Script_LocalSound )
+	{
+		idWinStr* str = dynamic_cast<idWinStr*>( parms[0].var );
+		if( str )
+		{
+			declManager->FindSound( str->c_str() );
+		}
 	}
 	else
 	{

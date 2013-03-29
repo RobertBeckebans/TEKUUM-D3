@@ -2877,7 +2877,7 @@ bool idWindow::Parse( idParser* src, bool rebuild )
 			//        when this window is destoyed which even happens during parsing with simple windows ?
 			
 			// RB: changed behavior to put the var into the vars list of this window
-#if 0
+#if defined(STANDALONE)
 			definedVars.Append( var );
 			
 			// Read in the vec4
@@ -3474,7 +3474,7 @@ Returns a register index
 intptr_t idWindow::ParseExpressionPriority( idParser* src, int priority, idWinVar* var, intptr_t component )
 {
 	idToken token;
-	int		a;
+	intptr_t a;
 	
 	if( priority == 0 )
 	{
