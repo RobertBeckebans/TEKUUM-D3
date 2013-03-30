@@ -359,6 +359,7 @@ bool idUserInterfaceLocal::InitFromFile( const char* qpath, bool rebuild, bool c
 	}
 	
 	luaL_openlibs( luaState );
+	luaopen_Window( luaState );
 	
 	//idParser src( LEXFL_NOFATALERRORS | LEXFL_NOSTRINGCONCAT | LEXFL_ALLOWMULTICHARLITERALS | LEXFL_ALLOWBACKSLASHSTRINGCONCAT );
 	//src.LoadFile( qpath );
@@ -373,8 +374,8 @@ bool idUserInterfaceLocal::InitFromFile( const char* qpath, bool rebuild, bool c
 		int result = luaL_loadbuffer( luaState, src, strlen( src ), filename );
 		if( result == LUA_ERRSYNTAX )
 		{
+			idLib::Error( "Compile of file %s failed: %s ", filename.c_str(), lua_tostring( luaState, -1 ) );
 			lua_pop( luaState, 1 );
-			idLib::Error( "Compile of file %s failed: %s ", filename, lua_tostring( luaState, -1 ) );
 		}
 		
 		fileSystem->FreeFile( src );
@@ -382,6 +383,7 @@ bool idUserInterfaceLocal::InitFromFile( const char* qpath, bool rebuild, bool c
 		if( lua_pcall( luaState, 0, 0, 0 ) )
 		{
 			idLib::Error( "Cannot pcall: %s", lua_tostring( luaState, -1 ) );
+			lua_pop( luaState, 1 );
 		}
 	}
 	
@@ -413,8 +415,10 @@ bool idUserInterfaceLocal::InitFromFile( const char* qpath, bool rebuild, bool c
 	{
 		desktop->SetDC( &uiManagerLocal.dc );
 		desktop->SetFlag( WIN_DESKTOP );
+		desktop->FixupParms();
+		
 		desktop->name = "Desktop";
-		desktop->text = va( "Lua GUI: %s", filename.c_str() );
+		//desktop->text = va( "Lua GUI: %s", filename.c_str() );
 		desktop->rect = idRectangle( 0.0f, 0.0f, 640.0f, 480.0f );
 		desktop->drawRect = desktop->rect;
 		desktop->foreColor = idVec4( 1.0f, 1.0f, 1.0f, 1.0f );
@@ -881,14 +885,14 @@ bool idUserInterfaceLocal::RunLuaFunction( const char* func, const char* fmt, ..
 				
 			case 'w':
 				// window argument
-				luapush_Window( L, va_arg( argptr, idWindow* ) );
+				luaW_push<idWindow>( L, va_arg( argptr, idWindow* ) );
 				break;
 				
 			case '>':
 				goto endwhile;
 				
 			default:
-				idLib::Warning( "idUserInterfaceLocal::RunLuaFunction: invalid option (%c)\n", *( fmt - 1 ) );
+				idLib::Warning( "idUserInterfaceLocal::RunLuaFunction( %s ): invalid option (%c)\n", source.c_str(), *( fmt - 1 ) );
 		}
 		numArgs++;
 		luaL_checkstack( L, 1, "too many arguments" );
@@ -899,7 +903,7 @@ endwhile:
 	numResults = strlen( fmt );
 	if( lua_pcall( L, numArgs, numResults, 0 ) != 0 )
 	{
-		idLib::Warning( "idUserInterfaceLocal::RunLuaFunction: error running function `%s': %s\n", func, lua_tostring( L, -1 ) );
+		idLib::Warning( "idUserInterfaceLocal::RunLuaFunction( %s ): error running function `%s': %s\n", source.c_str(), func, lua_tostring( L, -1 ) );
 	}
 	
 	bool result = true;

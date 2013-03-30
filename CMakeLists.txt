@@ -451,6 +451,11 @@ set(LUA_SOURCES
 	libs/lua/src/lvm.c
 	libs/lua/src/lzio.c
 	)
+	
+set(LUAWRAPPER_INCLUDES
+	libs/luawrapper/luawrapper.hpp
+	libs/luawrapper/luawrapperutil.hpp
+	)
 
 set(GAME_INCLUDES
 	game/AF.h
@@ -883,6 +888,8 @@ source_group("ui" FILES ${UI_SOURCES})
 source_group("libs\\lua" FILES ${LUA_INCLUDES})
 source_group("libs\\lua" FILES ${LUA_SOURCES})
 
+source_group("libs\\luawrapper" FILES ${LUAWRAPPER_INCLUDES})
+
 source_group("sys" FILES ${SYS_INCLUDES})
 source_group("sys" FILES ${SYS_SOURCES})
 
@@ -990,6 +997,7 @@ set(TEKUUM_INCLUDES
 			${OGGVORBIS_INCLUDES}
 			${UI_INCLUDES}
 			${LUA_INCLUDES}
+			${LUAWRAPPER_INCLUDES}
 			)
 			
 set(TEKUUM_SOURCES
@@ -1061,6 +1069,7 @@ include_directories(
 			libs/glew/include
 			libs/freetype/include
 			libs/lua/src
+			libs/luawrapper
 			libs/zlib)
 			
 link_directories(

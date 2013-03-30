@@ -29,6 +29,8 @@ If you have questions concerning this license or the applicable additional terms
 #ifndef __WINDOW_H__
 #define __WINDOW_H__
 
+#include <lua.hpp>
+
 #include "Rectangle.h"
 #include "DeviceContext.h"
 #include "RegExp.h"
@@ -177,6 +179,9 @@ class idUserInterfaceLocal;
 class idWindow
 {
 public:
+	// RB: default ctor for Lua
+	idWindow();
+	// RB end
 	idWindow( idUserInterfaceLocal* gui );
 	idWindow( idDeviceContext* d, idUserInterfaceLocal* gui );
 	virtual ~idWindow();
@@ -387,6 +392,16 @@ public:
 	void				ClientToScreen( idRectangle* rect );
 	
 	bool				UpdateFromDictionary( idDict& dict );
+	
+	// RB begin
+	static int			Lua_gc( lua_State* L );
+	static int			Lua_index( lua_State* L );
+	static int			Lua_newindex( lua_State* L );
+	static int			Lua_tostring( lua_State* L );
+	static int			Lua_GetText( lua_State* L );
+	static int			Lua_SetText( lua_State* L );
+	static int			Lua_text( lua_State* L );
+	// RB end
 	
 protected:
 
