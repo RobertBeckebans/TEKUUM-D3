@@ -189,8 +189,8 @@ LUALIB_API int luaL_argerror( lua_State* L, int narg, const char* extramsg )
 					   narg, ar.name, extramsg );
 }
 
-
-static int typeerror( lua_State* L, int narg, const char* tname )
+// RB: changed typeerror to 5.1 style luaL_typerror
+LUALIB_API int luaL_typerror( lua_State* L, int narg, const char* tname )
 {
 	const char* msg = lua_pushfstring( L, "%s expected, got %s",
 									   tname, luaL_typename( L, narg ) );
@@ -200,7 +200,7 @@ static int typeerror( lua_State* L, int narg, const char* tname )
 
 static void tag_error( lua_State* L, int narg, int tag )
 {
-	typeerror( L, narg, lua_typename( L, tag ) );
+	luaL_typerror( L, narg, lua_typename( L, tag ) );
 }
 
 
@@ -343,7 +343,7 @@ LUALIB_API void* luaL_testudata( lua_State* L, int ud, const char* tname )
 LUALIB_API void* luaL_checkudata( lua_State* L, int ud, const char* tname )
 {
 	void* p = luaL_testudata( L, ud, tname );
-	if( p == NULL ) typeerror( L, ud, tname );
+	if( p == NULL ) luaL_typerror( L, ud, tname );
 	return p;
 }
 

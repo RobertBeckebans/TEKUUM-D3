@@ -302,13 +302,15 @@ void luai_writestringerror( const char* fmt, ... );
 #define lua_equal(L,idx1,idx2)		lua_compare(L,(idx1),(idx2),LUA_OPEQ)
 #define lua_lessthan(L,idx1,idx2)	lua_compare(L,(idx1),(idx2),LUA_OPLT)
 
+
+
+#endif				/* } */
+
 /*
 @@ LUA_COMPAT_MODULE controls compatibility with previous
 ** module functions 'module' (Lua) and 'luaL_register' (C).
 */
 #define LUA_COMPAT_MODULE
-
-#endif				/* } */
 
 /* }================================================================== */
 

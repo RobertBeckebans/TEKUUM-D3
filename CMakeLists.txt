@@ -456,6 +456,39 @@ set(LUAWRAPPER_INCLUDES
 	libs/luawrapper/luawrapper.hpp
 	libs/luawrapper/luawrapperutil.hpp
 	)
+	
+file(GLOB LUASOCKET_INCLUDES libs/luasocket/src/*.h)
+
+set(LUASOCKET_SOURCES
+	libs/luasocket/src/luasocket.c
+	libs/luasocket/src/timeout.c
+	libs/luasocket/src/buffer.c
+	libs/luasocket/src/io.c
+	libs/luasocket/src/auxiliar.c
+	libs/luasocket/src/options.c
+	libs/luasocket/src/inet.c
+	libs/luasocket/src/tcp.c
+	libs/luasocket/src/udp.c
+	libs/luasocket/src/except.c
+	libs/luasocket/src/select.c
+	# Modules belonging mime-core
+	#$(COMPAT)/compat-5.1.o \
+	libs/luasocket/src/mime.c
+
+	libs/luasocket/src/buffer.c
+	libs/luasocket/src/auxiliar.c
+	libs/luasocket/src/options.c
+	libs/luasocket/src/timeout.c
+	libs/luasocket/src/io.c
+	)
+	
+if(WIN32)
+	list(APPEND LUASOCKET_SOURCES libs/luasocket/src/wsocket.c)
+else()
+	list(APPEND LUASOCKET_SOURCES libs/luasocket/src/unix.c)
+	list(APPEND LUASOCKET_SOURCES libs/luasocket/src/usocket.c)
+endif()
+
 
 set(GAME_INCLUDES
 	game/AF.h
@@ -890,6 +923,9 @@ source_group("libs\\lua" FILES ${LUA_SOURCES})
 
 source_group("libs\\luawrapper" FILES ${LUAWRAPPER_INCLUDES})
 
+source_group("libs\\luasocket" FILES ${LUASOCKET_INCLUDES})
+source_group("libs\\luasocket" FILES ${LUASOCKET_SOURCES})
+
 source_group("sys" FILES ${SYS_INCLUDES})
 source_group("sys" FILES ${SYS_SOURCES})
 
@@ -998,6 +1034,7 @@ set(TEKUUM_INCLUDES
 			${UI_INCLUDES}
 			${LUA_INCLUDES}
 			${LUAWRAPPER_INCLUDES}
+			${LUASOCKET_INCLUDES}
 			)
 			
 set(TEKUUM_SOURCES
@@ -1017,6 +1054,7 @@ set(TEKUUM_SOURCES
 			${OGGVORBIS_SOURCES}
 			${UI_SOURCES}
 			${LUA_SOURCES}
+			${LUASOCKET_SOURCES}
 			)
 
 add_definitions(-D__DOOM__
@@ -1210,7 +1248,7 @@ if(MSVC)
 	list(REMOVE_DUPLICATES TEKUUM_SOURCES)
 	
 	set(TEKUUM_PRECOMPILED_SOURCES ${TEKUUM_SOURCES})
-	list(REMOVE_ITEM TEKUUM_PRECOMPILED_SOURCES ${JPEG_SOURCES} ${PNG_SOURCES} ${ETC1_SOURCES} ${ZLIB_SOURCES} ${GLEW_SOURCES} ${FREETYPE_SOURCES} ${OGGVORBIS_SOURCES} ${LUA_SOURCES})
+	list(REMOVE_ITEM TEKUUM_PRECOMPILED_SOURCES ${JPEG_SOURCES} ${PNG_SOURCES} ${ETC1_SOURCES} ${ZLIB_SOURCES} ${GLEW_SOURCES} ${FREETYPE_SOURCES} ${OGGVORBIS_SOURCES} ${LUA_SOURCES} ${LUASOCKET_SOURCES})
 	list(REMOVE_ITEM TEKUUM_PRECOMPILED_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/game/gamesys/TypeInfo.cpp)
 	list(REMOVE_ITEM TEKUUM_PRECOMPILED_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/ui/Lua_init.cpp)
 	

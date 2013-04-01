@@ -116,7 +116,7 @@ typedef LUAI_UACNUMBER l_uacNumber;
 ** in a program. (Value must fit in an unsigned short int.)
 */
 #if !defined(LUAI_MAXCCALLS)
-#define LUAI_MAXCCALLS		200
+#define LUAI_MAXCCALLS		200*4
 #endif
 
 /*

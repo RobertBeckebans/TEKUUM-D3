@@ -359,6 +359,8 @@ bool idUserInterfaceLocal::InitFromFile( const char* qpath, bool rebuild, bool c
 	}
 	
 	luaL_openlibs( luaState );
+	luaopen_socket_core( luaState );
+	
 	luaopen_Window( luaState );
 	
 	//idParser src( LEXFL_NOFATALERRORS | LEXFL_NOSTRINGCONCAT | LEXFL_ALLOWMULTICHARLITERALS | LEXFL_ALLOWBACKSLASHSTRINGCONCAT );

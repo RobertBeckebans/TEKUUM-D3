@@ -31,6 +31,10 @@ If you have questions concerning this license or the applicable additional terms
 
 #include <lua.hpp>
 #include <luawrapper.hpp>
+extern "C"
+{
+#include "../libs/luasocket/src/luasocket.h"
+}
 
 class idWindow;
 
