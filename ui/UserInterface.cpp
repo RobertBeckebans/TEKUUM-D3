@@ -830,8 +830,9 @@ void idUserInterfaceLocal::SetCursor( float x, float y )
 void* idUserInterfaceLocal::LuaAlloc( void* ud, void* ptr, size_t osize, size_t nsize )
 {
 	( void )ud;
-	( void )osize; /* not used */
+	//( void )osize; /* not used */
 	
+#if 0
 	if( nsize == 0 )
 	{
 		free( ptr );
@@ -841,6 +842,26 @@ void* idUserInterfaceLocal::LuaAlloc( void* ud, void* ptr, size_t osize, size_t 
 	{
 		return realloc( ptr, nsize );
 	}
+#else
+	if( nsize == 0 )
+	{
+		Mem_Free( ptr );
+		return NULL;
+	}
+	else
+	{
+		void* mem = Mem_Alloc( nsize );
+	
+		if( ptr != NULL )
+		{
+			SIMDProcessor->Memcpy( mem, ptr, ( osize < nsize ) ? osize : nsize );
+			Mem_Free( ptr );
+		}
+	
+		return mem;
+	}
+	
+#endif
 }
 
 int idUserInterfaceLocal::LuaPanic( lua_State* L )
