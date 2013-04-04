@@ -16,6 +16,11 @@ endif()
 if(STANDALONE)
 	add_definitions(-DSTANDALONE)
 endif()
+
+if(DEBUG_MEMORY)
+	add_definitions(-DID_DEBUG_MEMORY)
+	add_definitions(-DID_REDIRECT_NEWDELETE)
+endif()
 	
 if(MSVC)
 	

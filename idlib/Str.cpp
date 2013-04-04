@@ -102,7 +102,7 @@ void idStr::ReAllocate( int amount, bool keepold )
 #ifdef USE_STRING_DATA_ALLOCATOR
 	newbuffer = stringDataAllocator.Alloc( GetAlloced() );
 #else
-	newbuffer = new( TAG_STRING ) char[ GetAlloced() ];
+	newbuffer = new char[ GetAlloced() ];
 #endif
 	if( keepold && data )
 	{
