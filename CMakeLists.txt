@@ -23,6 +23,9 @@ option(STANDALONE
 		
 option(GLES1
 		"Only use OpenGL ES 1.0 functions" OFF)
+		
+option(DEBUG_MEMORY
+		"Enables memory logging to file" OFF)
 
 #if(USE_QT_TOOLS)
 #	set(USE_QT_WINDOWING TRUE)
@@ -84,6 +87,11 @@ endif()
 
 if(STANDALONE)
 	add_definitions(-DSTANDALONE)
+endif()
+
+if(DEBUG_MEMORY)
+	add_definitions(-DID_DEBUG_MEMORY)
+	add_definitions(-DID_REDIRECT_NEWDELETE)
 endif()
 
 add_subdirectory(idlib)
