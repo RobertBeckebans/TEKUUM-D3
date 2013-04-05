@@ -80,21 +80,58 @@ char* 		Mem_CopyString( const char* in );
 void* 		Mem_Alloc16( const int size, const memTag_t tag = TAG_CRAP );
 void		Mem_Free16( void* ptr, const memTag_t tag = TAG_CRAP );
 
-#ifdef ID_REDIRECT_NEWDELETE
+#if 1 //def ID_REDIRECT_NEWDELETE
 
-__inline void* operator new( size_t s )
+ID_INLINE void* operator new( size_t s )
+#if !defined(_MSC_VER)
+throw( std::bad_alloc ) // DG: standard signature seems to include throw(..)
+#endif
 {
-	return Mem_Alloc( s );
+	return Mem_Alloc( s, TAG_NEW );
 }
-__inline void operator delete( void* p )
+
+ID_INLINE void operator delete( void* p )
+#if !defined(_MSC_VER)
+throw() // DG: delete musn't throw
+#endif
 {
 	Mem_Free( p );
 }
-__inline void* operator new[]( size_t s )
+ID_INLINE void* operator new[]( size_t s )
+#if !defined(_MSC_VER)
+throw( std::bad_alloc ) // DG: standard signature seems to include throw(..)
+#endif
 {
-	return Mem_Alloc( s );
+	return Mem_Alloc( s, TAG_NEW );
 }
-__inline void operator delete[]( void* p )
+
+ID_INLINE void operator delete[]( void* p )
+#if !defined(_MSC_VER)
+throw() // DG: delete musn't throw
+#endif
+{
+	Mem_Free( p );
+}
+
+ID_INLINE void* operator new( size_t s, memTag_t tag )
+{
+	return Mem_Alloc( s, tag );
+}
+
+ID_INLINE void operator delete( void* p, memTag_t tag )
+#if !defined(_MSC_VER)
+throw() // DG: delete musn't throw
+#endif
+{
+	Mem_Free( p );
+}
+
+ID_INLINE void* operator new[]( size_t s, memTag_t tag )
+{
+	return Mem_Alloc( s, tag );
+}
+
+ID_INLINE void operator delete[]( void* p, memTag_t tag ) throw() // DG: delete musn't throw
 {
 	Mem_Free( p );
 }

@@ -467,6 +467,11 @@ void idImageManager::CreateIntrinsicImages()
 	noFalloffImage = ImageFromFunction( "_noFalloff", R_CreateNoFalloffImage );
 	ImageFromFunction( "_quadratic", R_QuadraticImage );
 	
+	// RB begin
+	// cinematicImage is used for cinematic drawing
+	cinematicImage = ImageFromFunction( "_cinematic", R_RGBA8Image );
+	// RB end
+	
 	// scratchImage is used for screen wipes/doublevision etc..
 	scratchImage = ImageFromFunction( "_scratch", R_RGBA8Image );
 	scratchImage2 = ImageFromFunction( "_scratch2", R_RGBA8Image );

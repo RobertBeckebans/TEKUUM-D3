@@ -303,7 +303,7 @@ public:
 	void				EndLevelLoad();
 	
 //	void				Preload( const idPreloadManifest& manifest, const bool& mapPreload );
-	
+
 	// Loads unloaded level images
 	int					LoadLevelImages( bool pacifier );
 	
@@ -323,6 +323,9 @@ public:
 	idImage* 			noFalloffImage;				// all 255, but zero clamped
 	idImage* 			fogImage;					// increasing alpha is denser fog
 	idImage* 			fogEnterImage;				// adjust fogImage alpha based on terminator plane
+	// RB begin
+	idImage* 			cinematicImage;
+	// RB end
 	idImage* 			scratchImage;
 	idImage* 			scratchImage2;
 	idImage* 			accumImage;

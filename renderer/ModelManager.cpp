@@ -56,7 +56,7 @@ public:
 	virtual void			BeginLevelLoad();
 	virtual void			EndLevelLoad();
 //	virtual void			Preload( const idPreloadManifest& manifest );
-	
+
 	virtual	void			PrintMemInfo( MemInfo_t* mi );
 	
 private:
@@ -186,7 +186,7 @@ void idRenderModelManagerLocal::TouchModel_f( const idCmdArgs& args )
 	
 	common->Printf( "touchModel %s\n", model );
 	const bool captureToImage = false;
-	common->UpdateScreen( captureToImage );
+	session->UpdateScreen( captureToImage );
 	idRenderModel* m = renderModelManager->CheckModel( model );
 	if( !m )
 	{
@@ -672,9 +672,9 @@ void idRenderModelManagerLocal::Preload( const idPreloadManifest& manifest )
 				}
 			}
 		}
-		
+
 		preloadSort.SortWithTemplate( idSort_Preload() );
-		
+
 		for( int i = 0; i < preloadSort.Num(); i++ )
 		{
 			const preloadSort_t& ps = preloadSort[ i ];
@@ -693,7 +693,7 @@ void idRenderModelManagerLocal::Preload( const idPreloadManifest& manifest )
 			}
 			numLoaded++;
 		}
-		
+
 		int	end = Sys_Milliseconds();
 		common->Printf( "%05d models preloaded ( or were already loaded ) in %5.1f seconds\n", numLoaded, ( end - start ) * 0.001 );
 		common->Printf( "----------------------------------------\n" );
@@ -743,13 +743,13 @@ void idRenderModelManagerLocal::EndLevelLoad()
 			keepCount++;
 		}
 		
-		common->UpdateLevelLoadPacifier();
+		session->PacifierUpdate();
 	}
 	
 	// load any new ones
 	for( int i = 0; i < models.Num(); i++ )
 	{
-		common->UpdateLevelLoadPacifier();
+		session->PacifierUpdate();
 		
 		
 		idRenderModel* model = models[i];
@@ -764,7 +764,7 @@ void idRenderModelManagerLocal::EndLevelLoad()
 	// create static vertex/index buffers for all models
 	for( int i = 0; i < models.Num(); i++ )
 	{
-		common->UpdateLevelLoadPacifier();
+		session->PacifierUpdate();
 		
 		
 		idRenderModel* model = models[i];

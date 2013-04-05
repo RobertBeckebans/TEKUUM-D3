@@ -58,13 +58,13 @@ idFont* idFont::RemapFont( const char* baseName )
 		return NULL;
 	}
 	
-	const char* remapped = idLocalization::FindString( "#font_" + cleanName );
+	const char* remapped = common->GetLanguageDict()->GetString( "#font_" + cleanName );
 	if( remapped != NULL )
 	{
 		return renderSystem->RegisterFont( remapped );
 	}
 	
-	const char* wildcard = idLocalization::FindString( "#font_*" );
+	const char* wildcard = common->GetLanguageDict()->GetString( "#font_*" );
 	if( wildcard != NULL && cleanName.Icmp( wildcard ) != 0 )
 	{
 		return renderSystem->RegisterFont( wildcard );

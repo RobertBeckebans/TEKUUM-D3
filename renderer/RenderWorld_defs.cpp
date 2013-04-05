@@ -69,7 +69,7 @@ void R_FreeEntityDefDerivedData( idRenderEntityLocal* def, bool keepDecals, bool
 {
 	// demo playback needs to free the joints, while normal play
 	// leaves them in the control of the game
-	if( common->ReadDemo() )
+	if( session->ReadDemo() )
 	{
 		if( def->parms.joints )
 		{

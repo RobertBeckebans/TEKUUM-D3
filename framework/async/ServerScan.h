@@ -3,6 +3,7 @@
 
 Doom 3 GPL Source Code
 Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2013 Robert Beckebans
 
 This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
 
@@ -126,6 +127,9 @@ public:
 	
 	// there is an internal toggle, call twice with same sort to switch
 	void				SetSorting( serverSort_t sort );
+	// RB begin
+	serverSort_t		GetSorting() const;
+	// RB end
 	
 	int					GetChallenge( );
 	
@@ -171,8 +175,6 @@ private:
 	void				EmitGetInfo( netadr_t& serv );
 	void				GUIAdd( int id, const networkServer_t server );
 	bool				IsFiltered( const networkServer_t server );
-	
-	static int			Cmp( const int* a, const int* b );
 };
 
 #endif /* !__SERVERSCAN_H__ */

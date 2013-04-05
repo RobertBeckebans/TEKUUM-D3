@@ -935,7 +935,7 @@ void R_TestVideo_f( const idCmdArgs& args )
 	idStr	wavString = args.Argv( ( args.Argc() == 2 ) ? 1 : 2 );
 	wavString.StripFileExtension();
 	wavString = wavString + ".wav";
-	common->SW()->PlayShaderDirectly( wavString.c_str() );
+	session->SW()->PlayShaderDirectly( wavString.c_str() );
 }
 
 static int R_QsortSurfaceAreas( const void* a, const void* b )
@@ -2220,7 +2220,7 @@ void idRenderSystemLocal::Init()
 	
 	R_InitCommands();
 	
-	guiModel = new( TAG_RENDER ) idGuiModel;
+	guiModel = new idGuiModel;
 	guiModel->Clear();
 	tr_guiModel = guiModel;	// for DeviceContext fast path
 	
@@ -2314,7 +2314,7 @@ idRenderSystemLocal::ResetGuiModels
 void idRenderSystemLocal::ResetGuiModels()
 {
 	delete guiModel;
-	guiModel = new( TAG_RENDER ) idGuiModel;
+	guiModel = new idGuiModel;
 	guiModel->Clear();
 	guiModel->BeginFrame();
 	tr_guiModel = guiModel;	// for DeviceContext fast path
@@ -2415,7 +2415,7 @@ idFont* idRenderSystemLocal::RegisterFont( const char* fontName )
 			return fonts[i];
 		}
 	}
-	idFont* newFont = new( TAG_FONT ) idFont( baseFontName );
+	idFont* newFont = new idFont( baseFontName );
 	fonts.Append( newFont );
 	return newFont;
 }

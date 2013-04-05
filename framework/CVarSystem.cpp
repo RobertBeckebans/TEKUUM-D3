@@ -1218,10 +1218,13 @@ idCVarSystemLocal::ListByFlags
 //	return idStr::Icmp( ( *a )->GetName(), ( *b )->GetName() );
 //}
 
-class idSort_InternalCVar : public idSort_Quick< const idInternalCVar *, idSort_InternalCVar >
+class idSort_InternalCVar : public idSort_Quick< const idInternalCVar*, idSort_InternalCVar >
 {
 public:
-	int Compare( const idInternalCVar * & a, const idInternalCVar * & b ) const { return idStr::Icmp( a->GetName(), b->GetName() ); }
+	int Compare( const idInternalCVar*& a, const idInternalCVar*& b ) const
+	{
+		return idStr::Icmp( a->GetName(), b->GetName() );
+	}
 };
 
 void idCVarSystemLocal::ListByFlags( const idCmdArgs& args, cvarFlags_t flags )

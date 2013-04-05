@@ -160,14 +160,14 @@ idRenderWorldLocal::idRenderWorldLocal()
 	{
 		decals[i].entityHandle = -1;
 		decals[i].lastStartTime = 0;
-		decals[i].decals = new( TAG_MODEL ) idRenderModelDecal();
+		decals[i].decals = new idRenderModelDecal();
 	}
 	
 	for( int i = 0; i < overlays.Num(); i++ )
 	{
 		overlays[i].entityHandle = -1;
 		overlays[i].lastStartTime = 0;
-		overlays[i].overlays = new( TAG_MODEL ) idRenderModelOverlay();
+		overlays[i].overlays = new idRenderModelOverlay();
 	}
 }
 
@@ -346,7 +346,7 @@ void idRenderWorldLocal::UpdateEntityDef( qhandle_t entityHandle, const renderEn
 	def->parms = *re;
 	
 	def->lastModifiedFrameNum = tr.frameCount;
-	if( common->WriteDemo() && def->archived )
+	if( session->WriteDemo() && def->archived )
 	{
 		WriteFreeEntity( entityHandle );
 		def->archived = false;
@@ -397,7 +397,7 @@ void idRenderWorldLocal::FreeEntityDef( qhandle_t entityHandle )
 	
 	R_FreeEntityDefDerivedData( def, false, false );
 	
-	if( common->WriteDemo() && def->archived )
+	if( session->WriteDemo() && def->archived )
 	{
 		WriteFreeEntity( entityHandle );
 	}
@@ -526,7 +526,7 @@ void idRenderWorldLocal::UpdateLightDef( qhandle_t lightHandle, const renderLigh
 	
 	light->parms = *rlight;
 	light->lastModifiedFrameNum = tr.frameCount;
-	if( common->WriteDemo() && light->archived )
+	if( session->WriteDemo() && light->archived )
 	{
 		WriteFreeLight( lightHandle );
 		light->archived = false;
@@ -577,7 +577,7 @@ void idRenderWorldLocal::FreeLightDef( qhandle_t lightHandle )
 	
 	R_FreeLightDefDerivedData( light );
 	
-	if( common->WriteDemo() && light->archived )
+	if( session->WriteDemo() && light->archived )
 	{
 		WriteFreeLight( lightHandle );
 	}
@@ -979,7 +979,7 @@ void idRenderWorldLocal::RenderScene( const renderView_t* renderView )
 	
 	// now write delete commands for any modified-but-not-visible entities, and
 	// add the renderView command to the demo
-	if( common->WriteDemo() )
+	if( session->WriteDemo() )
 	{
 		WriteRenderView( renderView );
 	}

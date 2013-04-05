@@ -111,8 +111,10 @@ idCVar com_product_lang_ext( "com_product_lang_ext", "1", CVAR_INTEGER | CVAR_SY
 // com_speeds times
 int				time_gameFrame;
 int				time_gameDraw;
-int				time_frontend;			// renderSystem frontend time
-int				time_backend;			// renderSystem backend time
+uint64			time_frontend;			// renderSystem frontend time
+uint64			time_backend;			// renderSystem backend time
+uint64			time_shadows;			// renderer backend waiting for shadow volumes to be created
+uint64			time_gpu;				// total gpu time, at least for PC
 
 int				com_frameTime;			// time for the current frame in milliseconds
 int				com_frameNumber;		// variable frame number
@@ -139,7 +141,7 @@ class idCommonLocal : public idCommon
 public:
 	idCommonLocal();
 	
-	virtual void				Init( int argc, const char** argv, const char* cmdline );
+	virtual void				Init( int argc, const char* const* argv, const char* cmdline );
 	virtual void				Shutdown();
 	virtual void				Quit();
 	virtual bool				IsInitialized() const;
@@ -187,7 +189,7 @@ private:
 	void						InitRenderSystem();
 	void						InitSIMD();
 	bool						AddStartupCommands();
-	void						ParseCommandLine( int argc, const char** argv );
+	void						ParseCommandLine( int argc, const char* const* argv );
 	void						ClearCommandLine();
 	bool						SafeMode();
 	void						CheckToolMode();
@@ -692,7 +694,7 @@ void idCommonLocal::DumpWarnings()
 		}
 		
 		warningFile->Printf( "\n\n-------------- Errors ---------------\n\n" );
-		errorList.Sort();
+		//errorList.Sort();
 		for( i = 0; i < errorList.Num(); i++ )
 		{
 			errorList[i].RemoveColors();
@@ -933,7 +935,7 @@ idCmdArgs	com_consoleLines[MAX_CONSOLE_LINES];
 idCommonLocal::ParseCommandLine
 ==================
 */
-void idCommonLocal::ParseCommandLine( int argc, const char** argv )
+void idCommonLocal::ParseCommandLine( int argc, const char* const* argv )
 {
 	int i, current_count;
 	
@@ -2913,15 +2915,44 @@ void idCommonLocal::PrintLoadingMessage( const char* msg )
 		return;
 	}
 	
+	// RB begin
 #if defined(__ANDROID__)
 	ji.ShowProgressDialog( msg );
 #else
-	renderSystem->BeginFrame( renderSystem->GetWidth(), renderSystem->GetHeight() );
-	renderSystem->DrawStretchPic( 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0, 1, 1, declManager->FindMaterial( "splashScreen" ) );
+	//renderSystem->BeginFrame( renderSystem->GetWidth(), renderSystem->GetHeight() );
+	
+	const idMaterial* whiteMaterial = declManager->FindMaterial( "_white" );
+	const idMaterial* splashScreen = declManager->FindMaterial( "splashScreen" );
+	
+	const float sysWidth = renderSystem->GetWidth() * renderSystem->GetPixelAspect();
+	const float sysHeight = renderSystem->GetHeight();
+	const float sysAspect = sysWidth / sysHeight;
+	const float splashAspect = 16.0f / 9.0f;
+	const float adjustment = sysAspect / splashAspect;
+	const float barHeight = ( adjustment >= 1.0f ) ? 0.0f : ( 1.0f - adjustment ) * ( float )SCREEN_HEIGHT * 0.25f;
+	const float barWidth = ( adjustment <= 1.0f ) ? 0.0f : ( adjustment - 1.0f ) * ( float )SCREEN_WIDTH * 0.25f;
+	if( barHeight > 0.0f )
+	{
+		renderSystem->SetColor( colorBlack );
+		renderSystem->DrawStretchPic( 0, 0, SCREEN_WIDTH, barHeight, 0, 0, 1, 1, whiteMaterial );
+		renderSystem->DrawStretchPic( 0, SCREEN_HEIGHT - barHeight, SCREEN_WIDTH, barHeight, 0, 0, 1, 1, whiteMaterial );
+	}
+	if( barWidth > 0.0f )
+	{
+		renderSystem->SetColor( colorBlack );
+		renderSystem->DrawStretchPic( 0, 0, barWidth, SCREEN_HEIGHT, 0, 0, 1, 1, whiteMaterial );
+		renderSystem->DrawStretchPic( SCREEN_WIDTH - barWidth, 0, barWidth, SCREEN_HEIGHT, 0, 0, 1, 1, whiteMaterial );
+	}
+	
+	renderSystem->DrawStretchPic( 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0, 1, 1, splashScreen );
 	int len = strlen( msg );
 	renderSystem->DrawSmallStringExt( ( 640 - len * SMALLCHAR_WIDTH ) / 2, 410, msg, idVec4( 0.0f, 0.81f, 0.94f, 1.0f ), true );
-	renderSystem->EndFrame( NULL, NULL );
+	
+	//renderSystem->EndFrame( NULL, NULL );
+	const emptyCommand_t* cmd = renderSystem->SwapCommandBuffers( NULL, NULL, NULL, NULL );
+	renderSystem->RenderCommandBuffers( cmd );
 #endif
+	// RB end
 }
 
 /*
@@ -3331,7 +3362,7 @@ void idCommonLocal::SetMachineSpec()
 idCommonLocal::Init
 =================
 */
-void idCommonLocal::Init( int argc, const char** argv, const char* cmdline )
+void idCommonLocal::Init( int argc, const char* const* argv, const char* cmdline )
 {
 
 // RB begin

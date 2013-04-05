@@ -49,13 +49,6 @@ void idMarkerWindow::CommonInit()
 	markerStop = NULL;
 }
 
-idMarkerWindow::idMarkerWindow( idDeviceContext* d, idUserInterfaceLocal* g ) : idWindow( d, g )
-{
-	dc = d;
-	gui = g;
-	CommonInit();
-}
-
 idMarkerWindow::idMarkerWindow( idUserInterfaceLocal* g ) : idWindow( g )
 {
 	gui = g;

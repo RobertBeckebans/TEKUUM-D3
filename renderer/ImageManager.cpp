@@ -875,7 +875,7 @@ void idImageManager::Preload( const idPreloadManifest& manifest, const bool& map
 		preloadingMapImages = mapPreload;
 		int	start = Sys_Milliseconds();
 		int numLoaded = 0;
-		
+
 		//fileSystem->StartPreload( preloadImageFiles );
 		for( int i = 0; i < manifest.NumResources(); i++ )
 		{

@@ -430,7 +430,7 @@ static void RB_ShowIntensity()
 		return;
 	}
 	
-	colorReadback = ( byte* )R_StaticAlloc( renderSystem->GetWidth() * renderSystem->GetHeight() * 4, TAG_RENDER_TOOLS );
+	colorReadback = ( byte* )R_StaticAlloc( renderSystem->GetWidth() * renderSystem->GetHeight() * 4 );
 	glReadPixels( 0, 0, renderSystem->GetWidth(), renderSystem->GetHeight(), GL_RGBA, GL_UNSIGNED_BYTE, colorReadback );
 	
 	c = renderSystem->GetWidth() * renderSystem->GetHeight() * 4;
@@ -509,7 +509,7 @@ static void RB_ShowDepthBuffer()
 	GL_Color( 1, 1, 1 );
 	globalImages->BindNull();
 	
-	depthReadback = R_StaticAlloc( renderSystem->GetWidth() * renderSystem->GetHeight() * 4, TAG_RENDER_TOOLS );
+	depthReadback = R_StaticAlloc( renderSystem->GetWidth() * renderSystem->GetHeight() * 4 );
 	memset( depthReadback, 0, renderSystem->GetWidth() * renderSystem->GetHeight() * 4 );
 	
 	glReadPixels( 0, 0, renderSystem->GetWidth(), renderSystem->GetHeight(), GL_DEPTH_COMPONENT , GL_FLOAT, depthReadback );
@@ -2685,8 +2685,6 @@ Display a single image over most of the screen
 void RB_TestImage()
 {
 	idImage*	image = NULL;
-	idImage* imageCr = NULL;
-	idImage* imageCb = NULL;
 	int		max;
 	float	w, h;
 	
@@ -2701,11 +2699,9 @@ void RB_TestImage()
 		cinData_t	cin;
 		
 		cin = tr.testVideo->ImageForTime( backEnd.viewDef->renderView.time[1] - tr.testVideoStartTime );
-		if( cin.imageY != NULL )
+		if( cin.image != NULL )
 		{
-			image = cin.imageY;
-			imageCr = cin.imageCr;
-			imageCb = cin.imageCb;
+			image->UploadScratch( cin.image, cin.imageWidth, cin.imageHeight );
 		}
 		else
 		{
@@ -2775,6 +2771,7 @@ void RB_TestImage()
 	GL_Color( 1, 1, 1, 1 );
 	
 	// Bind the Texture
+	/*
 	if( ( imageCr != NULL ) && ( imageCb != NULL ) )
 	{
 		GL_SelectTexture( 0 );
@@ -2786,6 +2783,7 @@ void RB_TestImage()
 		renderProgManager.BindShader_Bink();
 	}
 	else
+	*/
 	{
 		GL_SelectTexture( 0 );
 		image->Bind();

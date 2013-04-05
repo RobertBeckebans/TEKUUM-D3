@@ -390,7 +390,7 @@ void idImage::ActuallyLoadImage( bool fromBackEnd )
 		}
 	}
 #endif
-
+	
 	const bimageFile_t& header = im.GetFileHeader();
 	
 #if 0

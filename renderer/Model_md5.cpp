@@ -1077,7 +1077,7 @@ void idRenderModelMD5::LoadModel()
 	// set the timestamp for reloadmodels
 	fileSystem->ReadFile( name, NULL, &timeStamp );
 	
-	common->UpdateLevelLoadPacifier();
+	session->PacifierUpdate();
 }
 
 /*
@@ -1175,18 +1175,18 @@ void idRenderModelMD5::DrawJoints( const renderEntity_t* ent, const viewDef_t* v
 		if( md5Joint->parent )
 		{
 			parentNum = md5Joint->parent - joints.Ptr();
-			common->RW()->DebugLine( colorWhite, ent->origin + ent->joints[ parentNum ].ToVec3() * ent->axis, pos );
+			session->RW()->DebugLine( colorWhite, ent->origin + ent->joints[ parentNum ].ToVec3() * ent->axis, pos );
 		}
 		
-		common->RW()->DebugLine( colorRed,	pos, pos + joint->ToMat3()[ 0 ] * 2.0f * ent->axis );
-		common->RW()->DebugLine( colorGreen, pos, pos + joint->ToMat3()[ 1 ] * 2.0f * ent->axis );
-		common->RW()->DebugLine( colorBlue,	pos, pos + joint->ToMat3()[ 2 ] * 2.0f * ent->axis );
+		session->RW()->DebugLine( colorRed,	pos, pos + joint->ToMat3()[ 0 ] * 2.0f * ent->axis );
+		session->RW()->DebugLine( colorGreen, pos, pos + joint->ToMat3()[ 1 ] * 2.0f * ent->axis );
+		session->RW()->DebugLine( colorBlue,	pos, pos + joint->ToMat3()[ 2 ] * 2.0f * ent->axis );
 	}
 	
 	idBounds bounds;
 	
 	bounds.FromTransformedBounds( ent->bounds, vec3_zero, ent->axis );
-	common->RW()->DebugBounds( colorMagenta, bounds, ent->origin );
+	session->RW()->DebugBounds( colorMagenta, bounds, ent->origin );
 	
 	if( ( r_jointNameScale.GetFloat() != 0.0f ) && ( bounds.Expand( 128.0f ).ContainsPoint( view->renderView.vieworg - ent->origin ) ) )
 	{
@@ -1199,7 +1199,7 @@ void idRenderModelMD5::DrawJoints( const renderEntity_t* ent, const viewDef_t* v
 		for( i = 0; i < num; i++, joint++ )
 		{
 			pos = ent->origin + joint->ToVec3() * ent->axis;
-			common->RW()->DrawText( joints[ i ].name, pos + offset, scale, colorWhite, view->renderView.viewaxis, 1 );
+			session->RW()->DrawText( joints[ i ].name, pos + offset, scale, colorWhite, view->renderView.viewaxis, 1 );
 		}
 	}
 }

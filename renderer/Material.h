@@ -302,7 +302,7 @@ typedef enum
 	CONTENTS_AAS_SOLID			= BIT( 13 ),	// solid for AAS
 	CONTENTS_AAS_OBSTACLE		= BIT( 14 ),	// used to compile an obstacle into AAS that can be enabled/disabled
 	CONTENTS_FLASHLIGHT_TRIGGER	= BIT( 15 ),	// used for triggers that are activated by the flashlight
-
+	
 	// RB begin
 	CONTENTS_DYNAMICPORTAL		= BIT( 16 ),	// used for dynamic portals
 	// RB end
@@ -743,7 +743,7 @@ public:
 	void				ResetCinematicTime( int time ) const;
 	
 //	int					GetCinematicStartTime() const;
-	
+
 	void				UpdateCinematic( int time ) const;
 	
 	//------------------------------------------------------------------

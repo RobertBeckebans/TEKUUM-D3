@@ -1127,12 +1127,12 @@ void idRenderWorldLocal::SetPortalState( qhandle_t portal, int blockTypes )
 		}
 	}
 	
-	if( common->WriteDemo() )
+	if( session->WriteDemo() )
 	{
-		common->WriteDemo()->WriteInt( DS_RENDER );
-		common->WriteDemo()->WriteInt( DC_SET_PORTAL_STATE );
-		common->WriteDemo()->WriteInt( portal );
-		common->WriteDemo()->WriteInt( blockTypes );
+		session->WriteDemo()->WriteInt( DS_RENDER );
+		session->WriteDemo()->WriteInt( DC_SET_PORTAL_STATE );
+		session->WriteDemo()->WriteInt( portal );
+		session->WriteDemo()->WriteInt( blockTypes );
 	}
 }
 

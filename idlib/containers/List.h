@@ -626,7 +626,7 @@ ID_INLINE idList<_type_>& idList<_type_>::operator=( const idList<_type_>& other
 	size		= other.size;
 	granularity	= other.granularity;
 //	memTag		= other.memTag;
-	
+
 	if( size )
 	{
 		list = ( _type_* )idListArrayNew< _type_>( size, false );

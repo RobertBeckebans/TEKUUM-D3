@@ -866,8 +866,8 @@ idRenderSystemLocal::WriteDemoPics
 */
 void idRenderSystemLocal::WriteDemoPics()
 {
-	common->WriteDemo()->WriteInt( DS_RENDER );
-	common->WriteDemo()->WriteInt( DC_GUI_MODEL );
+	session->WriteDemo()->WriteInt( DS_RENDER );
+	session->WriteDemo()->WriteInt( DC_GUI_MODEL );
 }
 
 /*
@@ -935,10 +935,10 @@ void idRenderSystemLocal::CropRenderSize( int width, int height )
 	
 	if( session->WriteDemo() )
 	{
-		common->WriteDemo()->WriteInt( DS_RENDER );
-		common->WriteDemo()->WriteInt( DC_CROP_RENDER );
-		common->WriteDemo()->WriteInt( width );
-		common->WriteDemo()->WriteInt( height );
+		session->WriteDemo()->WriteInt( DS_RENDER );
+		session->WriteDemo()->WriteInt( DC_CROP_RENDER );
+		session->WriteDemo()->WriteInt( width );
+		session->WriteDemo()->WriteInt( height );
 		
 		if( r_showDemo.GetBool() )
 		{
@@ -981,10 +981,10 @@ void idRenderSystemLocal::UnCrop()
 	
 	currentRenderCrop--;
 	
-	if( common->WriteDemo() )
+	if( session->WriteDemo() )
 	{
-		common->WriteDemo()->WriteInt( DS_RENDER );
-		common->WriteDemo()->WriteInt( DC_UNCROP_RENDER );
+		session->WriteDemo()->WriteInt( DS_RENDER );
+		session->WriteDemo()->WriteInt( DC_UNCROP_RENDER );
 		
 		if( r_showDemo.GetBool() )
 		{
@@ -1007,11 +1007,11 @@ void idRenderSystemLocal::CaptureRenderToImage( const char* imageName, bool clea
 	guiModel->EmitFullScreen();
 	guiModel->Clear();
 	
-	if( common->WriteDemo() )
+	if( session->WriteDemo() )
 	{
-		common->WriteDemo()->WriteInt( DS_RENDER );
-		common->WriteDemo()->WriteInt( DC_CAPTURE_RENDER );
-		common->WriteDemo()->WriteHashString( imageName );
+		session->WriteDemo()->WriteInt( DS_RENDER );
+		session->WriteDemo()->WriteInt( DC_CAPTURE_RENDER );
+		session->WriteDemo()->WriteHashString( imageName );
 		
 		if( r_showDemo.GetBool() )
 		{

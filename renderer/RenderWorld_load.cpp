@@ -921,7 +921,7 @@ bool idRenderWorldLocal::InitFromMap( const char* name )
 		mapTimeStamp = currentTimeStamp;
 		
 		// if we are writing a demo, archive the load command
-		if( common->WriteDemo() )
+		if( session->WriteDemo() )
 		{
 			WriteLoadMap();
 		}
@@ -952,7 +952,7 @@ bool idRenderWorldLocal::InitFromMap( const char* name )
 				break;
 			}
 			
-			common->UpdateLevelLoadPacifier();
+			session->PacifierUpdate();
 			
 			
 			if( token == "model" )
@@ -1069,7 +1069,7 @@ void idRenderWorldLocal::AddWorldModelEntities()
 	// based on the bounding box, rather than explicitly into the correct area
 	for( int i = 0; i < numPortalAreas; i++ )
 	{
-		common->UpdateLevelLoadPacifier();
+		session->PacifierUpdate();
 		
 		
 		idRenderEntityLocal*	 def = new( TAG_RENDER_ENTITY ) idRenderEntityLocal;

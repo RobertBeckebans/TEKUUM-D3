@@ -1883,7 +1883,10 @@ void idSessionLocal::ExecuteMapChange( bool noFadeWipe )
 		declManager->EndLevelLoad();
 		SetBytesNeededForMapLoad( mapString.c_str(), fileSystem->GetReadCount() );
 	}
-	uiManager->EndLevelLoad();
+	
+	// RB begin
+	uiManager->EndLevelLoad( mapString.c_str() );
+	// RB end
 	
 	if( !idAsyncNetwork::IsActive() && !loadingSaveGame )
 	{
@@ -2852,19 +2855,29 @@ void idSessionLocal::UpdateScreen( bool outOfSequence, bool swapBuffers )
 		Sys_GrabMouseCursor( false );
 	}
 	
-	renderSystem->BeginFrame( renderSystem->GetScreenWidth(), renderSystem->GetScreenHeight() );
+	//renderSystem->BeginFrame( renderSystem->GetScreenWidth(), renderSystem->GetScreenHeight() );
 	
 	// draw everything
 	Draw();
 	
 	// RB begin
-	if( com_speeds.GetBool() )
+	if( swapBuffers )
 	{
-		renderSystem->EndFrame( &time_frontend, &time_backend, swapBuffers );
-	}
-	else
-	{
-		renderSystem->EndFrame( NULL, NULL, swapBuffers );
+		// this should exit right after vsync, with the GPU idle and ready to draw
+		const emptyCommand_t* cmd;
+		
+		if( com_speeds.GetBool() )
+		{
+			cmd = renderSystem->SwapCommandBuffers( &time_frontend, &time_backend, &time_shadows, &time_gpu );
+		}
+		else
+		{
+			cmd = renderSystem->SwapCommandBuffers( NULL, NULL, NULL, NULL );
+		}
+		
+		// get the GPU busy with new commands
+		renderSystem->RenderCommandBuffers( cmd );
+		
 	}
 	// RB end
 	

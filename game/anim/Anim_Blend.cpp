@@ -4971,7 +4971,7 @@ void idAnimator::FinishAFPose( int animNum, const idBounds& bounds, const int ti
 	}
 	
 	// lock all parents of modified joints
-	AFPoseJoints.SetNum( 0, false );
+	AFPoseJoints.SetNum( 0 );
 	for( i = 0; i < numJoints; i++ )
 	{
 		if( blendJoints[i] )
@@ -5026,7 +5026,7 @@ void idAnimator::ClearAFPose()
 		ForceUpdate();
 	}
 	AFPoseBlendWeight = 1.0f;
-	AFPoseJoints.SetNum( 0, false );
+	AFPoseJoints.SetNum( 0 );
 	AFPoseBounds.Clear();
 	AFPoseTime = 0;
 }

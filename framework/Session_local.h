@@ -138,7 +138,7 @@ public:
 	virtual bool		WaitingForGameAuth();
 	
 	virtual int			GetSaveGameVersion();
-
+	
 	// RB begin
 	virtual idDemoFile* 		ReadDemo()
 	{
@@ -151,11 +151,11 @@ public:
 	
 	virtual idRenderWorld* 		RW()
 	{
-		return renderWorld;
+		return rw;
 	}
 	virtual idSoundWorld* 		SW()
 	{
-		return soundWorld;
+		return sw;
 	}
 	// RB end
 	
@@ -220,7 +220,7 @@ public:
 	idDemoFile* 		writeDemo;
 	int					renderdemoVersion;
 	// RB end
-
+	
 	int					timeHitch;
 	
 	bool				menuActive;

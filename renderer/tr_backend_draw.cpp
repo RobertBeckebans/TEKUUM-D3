@@ -396,14 +396,18 @@ static void RB_BindVariableStageImage( const textureStage_t* texture, const floa
 		// We make no attempt to optimize for multiple identical cinematics being in view, or
 		// for cinematics going at a lower framerate than the renderer.
 		cin = texture->cinematic->ImageForTime( backEnd.viewDef->renderView.time[0] + idMath::Ftoi( 1000.0f * backEnd.viewDef->renderView.shaderParms[11] ) );
-		if( cin.imageY != NULL )
+		if( cin.image != NULL )
 		{
 			GL_SelectTexture( 0 );
-			cin.imageY->Bind();
+			//cin.image->Bind();
+			globalImages->cinematicImage->UploadScratch( cin.image, cin.imageWidth, cin.imageHeight );
+			
+			/*
 			GL_SelectTexture( 1 );
 			cin.imageCr->Bind();
 			GL_SelectTexture( 2 );
 			cin.imageCb->Bind();
+			*/
 		}
 		else
 		{

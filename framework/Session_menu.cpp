@@ -3,6 +3,7 @@
 
 Doom 3 GPL Source Code
 Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2013 Robert Beckebans
 
 This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
 
@@ -155,15 +156,16 @@ void idSessionLocal::ExitMenu()
 	}
 }
 
-/*
-===============
-idListSaveGameCompare
-===============
-*/
-ID_INLINE int idListSaveGameCompare( const fileTIME_T* a, const fileTIME_T* b )
+// RB begin
+class rbSort_fileTIME_T : public idSort_Quick< fileTIME_T, rbSort_fileTIME_T >
 {
-	return b->timeStamp - a->timeStamp;
-}
+public:
+	int Compare( const fileTIME_T& a, const fileTIME_T& b ) const
+	{
+		return b.timeStamp - a.timeStamp;
+	}
+};
+// RB end
 
 /*
 ===============
@@ -203,7 +205,7 @@ void idSessionLocal::GetSaveGameList( idStrList& fileList, idList<fileTIME_T>& f
 		fileTimes.Append( ft );
 	}
 	
-	fileTimes.Sort( idListSaveGameCompare );
+	fileTimes.SortWithTemplate( rbSort_fileTIME_T() );
 }
 
 /*

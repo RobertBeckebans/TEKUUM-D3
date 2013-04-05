@@ -39,6 +39,9 @@ If you have questions concerning this license or the applicable additional terms
 
 class idJointMat;
 struct deformInfo_t;
+// RB begin
+class ColladaParser;
+// RB end
 
 class idRenderModelStatic : public idRenderModel
 {
@@ -117,6 +120,9 @@ public:
 	bool						LoadLWO( const char* fileName );
 	bool						LoadMA( const char* filename );
 	
+	// RB begin
+	bool						ConvertDAEToModelSurfaces( const ColladaParser* dae );
+	// RB end
 	bool						ConvertASEToModelSurfaces( const struct aseModel_s* ase );
 	bool						ConvertLWOToModelSurfaces( const struct st_lwObject* lwo );
 	bool						ConvertMAToModelSurfaces( const struct maModel_s* ma );
