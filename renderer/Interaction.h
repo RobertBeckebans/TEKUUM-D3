@@ -1,25 +1,25 @@
 /*
 ===========================================================================
 
-Doom 3 GPL Source Code
-Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Doom 3 BFG Edition GPL Source Code
+Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
 
-This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
+This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
-Doom 3 Source Code is free software: you can redistribute it and/or modify
+Doom 3 BFG Edition Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Doom 3 Source Code is distributed in the hope that it will be useful,
+Doom 3 BFG Edition Source Code is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Doom 3 Source Code.  If not, see <http://www.gnu.org/licenses/>.
+along with Doom 3 BFG Edition Source Code.  If not, see <http://www.gnu.org/licenses/>.
 
-In addition, the Doom 3 Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 Source Code.  If not, please request a copy in writing from id Software at the address below.
+In addition, the Doom 3 BFG Edition Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 BFG Edition Source Code.  If not, please request a copy in writing from id Software at the address below.
 
 If you have questions concerning this license or the applicable additional terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 
@@ -32,7 +32,7 @@ If you have questions concerning this license or the applicable additional terms
 /*
 ===============================================================================
 
-	Interaction between entityDef surfaces and a lightDef.
+	Interaction between static entityDef surfaces and a static lightDef.
 
 	Interactions with no lightTris and no shadowTris are still
 	valid, because they show that a given entityDef / lightDef
@@ -41,12 +41,14 @@ If you have questions concerning this license or the applicable additional terms
 ===============================================================================
 */
 
-#define LIGHT_TRIS_DEFERRED			((srfTriangles_t *)-1)
 #define LIGHT_CULL_ALL_FRONT		((byte *)-1)
 #define	LIGHT_CLIP_EPSILON			0.1f
 
+// enabling this define allows the precise inside shadow volume test
+// to be performed on interaction (static) shadow volumes
+#define KEEP_INTERACTION_CPU_DATA
 
-typedef struct
+struct srfCullInfo_t
 {
 	// For each triangle a byte set to 1 if facing the light origin.
 	byte* 					facing;
@@ -59,35 +61,25 @@ typedef struct
 	
 	// Clip planes in surface space used to calculate the cull bits.
 	idPlane					localClipPlanes[6];
-} srfCullInfo_t;
+};
 
 
-typedef struct
+// Pre-generated shadow volumes from dmap are not present in surfaceInteraction_t,
+// they are added separately.
+struct surfaceInteraction_t
 {
-	// if lightTris == LIGHT_TRIS_DEFERRED, then the calculation of the
-	// lightTris has been deferred, and must be done if ambientTris is visible
-	srfTriangles_t* 		lightTris;
+	// The vertexes for light tris will always come from ambient triangles.
+	// For interactions created at load time, the indexes will be uniquely
+	// generated in static vertex memory.
+	int						numLightTrisIndexes;
+	vertCacheHandle_t		lightTrisIndexCache;
 	
 	// shadow volume triangle surface
-	srfTriangles_t* 		shadowTris;
-	
-	// so we can check ambientViewCount before adding lightTris, and get
-	// at the shared vertex and possibly shadowVertex caches
-	srfTriangles_t* 		ambientTris;
-	
-	const idMaterial* 		shader;
-	
-	int						expCulled;			// only for the experimental shadow buffer renderer
-	
-	srfCullInfo_t			cullInfo;
-} surfaceInteraction_t;
-
-
-typedef struct areaNumRef_s
-{
-	struct areaNumRef_s* 	next;
-	int						areaNum;
-} areaNumRef_t;
+	int						numShadowIndexes;
+	int						numShadowIndexesNoCaps;	// if the view is outside the shadow, this can be used
+	triIndex_t* 			shadowIndexes;			// only != NULL if KEEP_INTERACTION_CPU_DATA is defined
+	vertCacheHandle_t		shadowIndexCache;
+};
 
 
 class idRenderEntityLocal;
@@ -103,6 +95,7 @@ public:
 	// if there is a whole-entity optimized shadow hull, it will
 	// be present as a surfaceInteraction_t with a NULL ambientTris, but
 	// possibly having a shader to specify the shadow sorting order
+	// (FIXME: actually try making shadow hulls?  we never did.)
 	surfaceInteraction_t* 	surfaces;
 	
 	// get space from here, if NULL, it is a pre-generated shadow volume from dmap
@@ -113,6 +106,8 @@ public:
 	idInteraction* 			lightPrev;
 	idInteraction* 			entityNext;				// for entityDef chains
 	idInteraction* 			entityPrev;
+	
+	bool					staticInteraction;		// true if the interaction was created at map load time in static buffer space
 	
 public:
 	idInteraction();
@@ -148,47 +143,13 @@ public:
 	// returns true if the interaction has shadows
 	bool					HasShadows() const;
 	
-	// counts up the memory used by all the surfaceInteractions, which
-	// will be used to determine when we need to start purging old interactions
-	int						MemoryUsed();
-	
-	// makes sure all necessary light surfaces and shadow surfaces are created, and
-	// calls R_LinkLightSurf() for each one
-	void					AddActiveInteraction();
+	// called by GenerateAllInteractions
+	void					CreateStaticInteraction();
 	
 private:
-	enum
-	{
-		FRUSTUM_UNINITIALIZED,
-		FRUSTUM_INVALID,
-		FRUSTUM_VALID,
-		FRUSTUM_VALIDAREAS,
-	}						frustumState;
-	idFrustum				frustum;				// frustum which contains the interaction
-	areaNumRef_t* 			frustumAreas;			// numbers of the areas the frustum touches
-	
-	int						dynamicModelFrameCount;	// so we can tell if a callback model animated
-	
-private:
-	// actually create the interaction
-	void					CreateInteraction( const idRenderModel* model );
-	
 	// unlink from entity and light lists
 	void					Unlink();
-	
-	// try to determine if the entire interaction, including shadows, is guaranteed
-	// to be outside the view frustum
-	bool					CullInteractionByViewFrustum( const idFrustum& viewFrustum );
-	
-	// determine the minimum scissor rect that will include the interaction shadows
-	// projected to the bounds of the light
-	idScreenRect			CalcInteractionScissorRectangle( const idFrustum& viewFrustum );
 };
-
-
-void R_CalcInteractionFacing( const idRenderEntityLocal* ent, const srfTriangles_t* tri, const idRenderLightLocal* light, srfCullInfo_t& cullInfo );
-void R_CalcInteractionCullBits( const idRenderEntityLocal* ent, const srfTriangles_t* tri, const idRenderLightLocal* light, srfCullInfo_t& cullInfo );
-void R_FreeInteractionCullInfo( srfCullInfo_t& cullInfo );
 
 void R_ShowInteractionMemory_f( const idCmdArgs& args );
 

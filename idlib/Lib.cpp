@@ -48,6 +48,9 @@ idCommon* 		idLib::common		= NULL;
 idCVarSystem* 	idLib::cvarSystem	= NULL;
 idFileSystem* 	idLib::fileSystem	= NULL;
 int				idLib::frameNumber	= 0;
+bool			idLib::mainThreadInitialized = 0;
+ID_TLS			idLib::isMainThread = 0;
+
 char idException::error[2048];
 
 /*
@@ -59,6 +62,9 @@ void idLib::Init()
 {
 
 	assert( sizeof( bool ) == 1 );
+	
+	isMainThread = 1;
+	mainThreadInitialized = 1;	// note that the thread-local isMainThread is now valid
 	
 	// initialize little/big endian conversion
 	Swap_Init();
@@ -79,7 +85,9 @@ void idLib::Init()
 	//idMatX::Test();
 	
 	// test idPolynomial
+#ifdef _DEBUG
 	idPolynomial::Test();
+#endif
 	
 	// initialize the dictionary string pools
 	idDict::Init();
@@ -131,18 +139,6 @@ idVec4	colorLtGrey	= idVec4( 0.75f, 0.75f, 0.75f, 1.00f );
 idVec4	colorMdGrey	= idVec4( 0.50f, 0.50f, 0.50f, 1.00f );
 idVec4	colorDkGrey	= idVec4( 0.25f, 0.25f, 0.25f, 1.00f );
 
-static dword colorMask[2] = { 255, 0 };
-
-/*
-================
-ColorFloatToByte
-================
-*/
-ID_INLINE static byte ColorFloatToByte( float c )
-{
-	return ( byte )( ( ( dword )( c * 255.0f ) ) & colorMask[FLOATSIGNBITSET( c )] );
-}
-
 /*
 ================
 PackColor
@@ -150,12 +146,10 @@ PackColor
 */
 dword PackColor( const idVec4& color )
 {
-	dword dw, dx, dy, dz;
-	
-	dx = ColorFloatToByte( color.x );
-	dy = ColorFloatToByte( color.y );
-	dz = ColorFloatToByte( color.z );
-	dw = ColorFloatToByte( color.w );
+	byte dx = idMath::Ftob( color.x * 255.0f );
+	byte dy = idMath::Ftob( color.y * 255.0f );
+	byte dz = idMath::Ftob( color.z * 255.0f );
+	byte dw = idMath::Ftob( color.w * 255.0f );
 	
 #if defined(_WIN32) || defined(__linux__) || (defined(MACOS_X) && defined(__i386__))
 	return ( dx << 0 ) | ( dy << 8 ) | ( dz << 16 ) | ( dw << 24 );
@@ -195,11 +189,9 @@ PackColor
 */
 dword PackColor( const idVec3& color )
 {
-	dword dx, dy, dz;
-	
-	dx = ColorFloatToByte( color.x );
-	dy = ColorFloatToByte( color.y );
-	dz = ColorFloatToByte( color.z );
+	byte dx = idMath::Ftob( color.x * 255.0f );
+	byte dy = idMath::Ftob( color.y * 255.0f );
+	byte dz = idMath::Ftob( color.z * 255.0f );
 	
 #if defined(_WIN32) || defined(__linux__) || (defined(MACOS_X) && defined(__i386__))
 	return ( dx << 0 ) | ( dy << 8 ) | ( dz << 16 );

@@ -1573,15 +1573,15 @@ cm_polygon_t* idCollisionModelManagerLocal::TryMergePolygons( cm_model_t* model,
 	// check if the new polygon would still be convex
 	edgeNum = p1->edges[p1BeforeShare];
 	edge = model->edges + abs( edgeNum );
-	delta = model->vertices[edge->vertexNum[INTSIGNBITNOTSET( edgeNum )]].p -
-			model->vertices[edge->vertexNum[INTSIGNBITSET( edgeNum )]].p;
+	delta = model->vertices[edge->vertexNum[INT32_SIGNBITNOTSET( edgeNum )]].p -
+			model->vertices[edge->vertexNum[INT32_SIGNBITSET( edgeNum )]].p;
 	normal = p1->plane.Normal().Cross( delta );
 	normal.Normalize();
 	
 	edgeNum = p2->edges[p2AfterShare];
 	edge = model->edges + abs( edgeNum );
-	delta = model->vertices[edge->vertexNum[INTSIGNBITNOTSET( edgeNum )]].p -
-			model->vertices[edge->vertexNum[INTSIGNBITSET( edgeNum )]].p;
+	delta = model->vertices[edge->vertexNum[INT32_SIGNBITNOTSET( edgeNum )]].p -
+			model->vertices[edge->vertexNum[INT32_SIGNBITSET( edgeNum )]].p;
 			
 	dot = delta * normal;
 	if( dot < -CONTINUOUS_EPSILON )
@@ -1590,15 +1590,15 @@ cm_polygon_t* idCollisionModelManagerLocal::TryMergePolygons( cm_model_t* model,
 	
 	edgeNum = p2->edges[p2BeforeShare];
 	edge = model->edges + abs( edgeNum );
-	delta = model->vertices[edge->vertexNum[INTSIGNBITNOTSET( edgeNum )]].p -
-			model->vertices[edge->vertexNum[INTSIGNBITSET( edgeNum )]].p;
+	delta = model->vertices[edge->vertexNum[INT32_SIGNBITNOTSET( edgeNum )]].p -
+			model->vertices[edge->vertexNum[INT32_SIGNBITSET( edgeNum )]].p;
 	normal = p1->plane.Normal().Cross( delta );
 	normal.Normalize();
 	
 	edgeNum = p1->edges[p1AfterShare];
 	edge = model->edges + abs( edgeNum );
-	delta = model->vertices[edge->vertexNum[INTSIGNBITNOTSET( edgeNum )]].p -
-			model->vertices[edge->vertexNum[INTSIGNBITSET( edgeNum )]].p;
+	delta = model->vertices[edge->vertexNum[INT32_SIGNBITNOTSET( edgeNum )]].p -
+			model->vertices[edge->vertexNum[INT32_SIGNBITSET( edgeNum )]].p;
 			
 	dot = delta * normal;
 	if( dot < -CONTINUOUS_EPSILON )
@@ -1611,8 +1611,8 @@ cm_polygon_t* idCollisionModelManagerLocal::TryMergePolygons( cm_model_t* model,
 	{
 		edgeNum1 = p1->edges[p1BeforeShare];
 		edgeNum2 = p2->edges[p2AfterShare];
-		GetEdge( model, model->vertices[model->edges[abs( edgeNum1 )].vertexNum[INTSIGNBITSET( edgeNum1 )]].p,
-				 model->vertices[model->edges[abs( edgeNum2 )].vertexNum[INTSIGNBITNOTSET( edgeNum2 )]].p,
+		GetEdge( model, model->vertices[model->edges[abs( edgeNum1 )].vertexNum[INT32_SIGNBITSET( edgeNum1 )]].p,
+				 model->vertices[model->edges[abs( edgeNum2 )].vertexNum[INT32_SIGNBITNOTSET( edgeNum2 )]].p,
 				 &newEdgeNum1, -1 );
 		if( newEdgeNum1 == 0 )
 		{
@@ -1623,8 +1623,8 @@ cm_polygon_t* idCollisionModelManagerLocal::TryMergePolygons( cm_model_t* model,
 	{
 		edgeNum1 = p2->edges[p2BeforeShare];
 		edgeNum2 = p1->edges[p1AfterShare];
-		GetEdge( model, model->vertices[model->edges[abs( edgeNum1 )].vertexNum[INTSIGNBITSET( edgeNum1 )]].p,
-				 model->vertices[model->edges[abs( edgeNum2 )].vertexNum[INTSIGNBITNOTSET( edgeNum2 )]].p,
+		GetEdge( model, model->vertices[model->edges[abs( edgeNum1 )].vertexNum[INT32_SIGNBITSET( edgeNum1 )]].p,
+				 model->vertices[model->edges[abs( edgeNum2 )].vertexNum[INT32_SIGNBITNOTSET( edgeNum2 )]].p,
 				 &newEdgeNum2, -1 );
 		if( newEdgeNum2 == 0 )
 		{
@@ -1856,8 +1856,8 @@ bool idCollisionModelManagerLocal::PointInsidePolygon( cm_model_t* model, cm_pol
 		edgeNum = p->edges[i];
 		edge = model->edges + abs( edgeNum );
 		//
-		v1 = &model->vertices[edge->vertexNum[INTSIGNBITSET( edgeNum )]].p;
-		v2 = &model->vertices[edge->vertexNum[INTSIGNBITNOTSET( edgeNum )]].p;
+		v1 = &model->vertices[edge->vertexNum[INT32_SIGNBITSET( edgeNum )]].p;
+		v2 = &model->vertices[edge->vertexNum[INT32_SIGNBITNOTSET( edgeNum )]].p;
 		dir1 = ( *v2 ) - ( *v1 );
 		vec = v - ( *v1 );
 		dir2 = dir1.Cross( p->plane.Normal() );
@@ -1906,8 +1906,8 @@ void idCollisionModelManagerLocal::FindInternalEdgesOnPolygon( cm_model_t* model
 			continue;
 		}
 		//
-		v1 = &model->vertices[edge->vertexNum[INTSIGNBITSET( edgeNum )]].p;
-		v2 = &model->vertices[edge->vertexNum[INTSIGNBITNOTSET( edgeNum )]].p;
+		v1 = &model->vertices[edge->vertexNum[INT32_SIGNBITSET( edgeNum )]].p;
+		v2 = &model->vertices[edge->vertexNum[INT32_SIGNBITNOTSET( edgeNum )]].p;
 		// if either of the two vertices is outside the bounds of the other polygon
 		for( k = 0; k < 3; k++ )
 		{
@@ -2069,8 +2069,8 @@ void idCollisionModelManagerLocal::FindContainedEdges( cm_model_t* model, cm_pol
 			continue;
 		}
 		w.Clear();
-		w += model->vertices[edge->vertexNum[INTSIGNBITSET( edgeNum )]].p;
-		w += model->vertices[edge->vertexNum[INTSIGNBITNOTSET( edgeNum )]].p;
+		w += model->vertices[edge->vertexNum[INT32_SIGNBITSET( edgeNum )]].p;
+		w += model->vertices[edge->vertexNum[INT32_SIGNBITNOTSET( edgeNum )]].p;
 		if( ChoppedAwayByProcBSP( w, p->plane, p->contents ) )
 		{
 			edge->internal = true;
@@ -2817,7 +2817,7 @@ void idCollisionModelManagerLocal::CreatePolygon( cm_model_t* model, idFixedWind
 		if( polyEdges[numPolyEdges] )
 		{
 			// last vertex of this edge is the first vertex of the next edge
-			v1num = model->edges[ abs( polyEdges[numPolyEdges] ) ].vertexNum[ INTSIGNBITNOTSET( polyEdges[numPolyEdges] ) ];
+			v1num = model->edges[ abs( polyEdges[numPolyEdges] ) ].vertexNum[ INT32_SIGNBITNOTSET( polyEdges[numPolyEdges] ) ];
 			// this edge is valid so keep it
 			numPolyEdges++;
 		}
@@ -4486,7 +4486,7 @@ bool idCollisionModelManagerLocal::GetModelPolygon( cmHandle_t model, int polygo
 	for( i = 0; i < poly->numEdges; i++ )
 	{
 		edgeNum = poly->edges[i];
-		winding += models[model]->vertices[ models[model]->edges[abs( edgeNum )].vertexNum[INTSIGNBITSET( edgeNum )] ].p;
+		winding += models[model]->vertices[ models[model]->edges[abs( edgeNum )].vertexNum[INT32_SIGNBITSET( edgeNum )] ].p;
 	}
 	
 	return true;

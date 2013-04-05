@@ -817,12 +817,12 @@ void idBrittleFracture::ProjectDecal( const idVec3& point, const idVec3& dir, co
 			st[j].x = d0 = textureAxis[0].Distance( p );
 			st[j].y = d1 = textureAxis[1].Distance( p );
 			
-			bits = FLOATSIGNBITSET( d0 );
+			bits = IEEE_FLT_SIGNBITSET( d0 );
 			d0 = 1.0f - d0;
-			bits |= FLOATSIGNBITSET( d1 ) << 2;
+			bits |= IEEE_FLT_SIGNBITSET( d1 ) << 2;
 			d1 = 1.0f - d1;
-			bits |= FLOATSIGNBITSET( d0 ) << 1;
-			bits |= FLOATSIGNBITSET( d1 ) << 3;
+			bits |= IEEE_FLT_SIGNBITSET( d0 ) << 1;
+			bits |= IEEE_FLT_SIGNBITSET( d1 ) << 3;
 			
 			clipBits &= bits;
 		}

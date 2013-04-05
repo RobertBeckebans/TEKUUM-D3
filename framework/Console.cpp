@@ -152,7 +152,7 @@ void SCR_DrawTextLeftAlign( float& y, const char* text, ... )
 	va_start( argptr, text );
 	idStr::vsnPrintf( string, sizeof( string ), text, argptr );
 	va_end( argptr );
-	renderSystem->DrawSmallStringExt( 0, y + 2, string, colorWhite, true, localConsole.charSetShader );
+	renderSystem->DrawSmallStringExt( 0, y + 2, string, colorWhite, true );
 	y += SMALLCHAR_HEIGHT + 4;
 }
 
@@ -168,7 +168,7 @@ void SCR_DrawTextRightAlign( float& y, const char* text, ... )
 	va_start( argptr, text );
 	int i = idStr::vsnPrintf( string, sizeof( string ), text, argptr );
 	va_end( argptr );
-	renderSystem->DrawSmallStringExt( 635 - i * SMALLCHAR_WIDTH, y + 2, string, colorWhite, true, localConsole.charSetShader );
+	renderSystem->DrawSmallStringExt( 635 - i * SMALLCHAR_WIDTH, y + 2, string, colorWhite, true );
 	y += SMALLCHAR_HEIGHT + 4;
 }
 
@@ -218,7 +218,7 @@ float SCR_DrawFPS( float y )
 		s = va( "%ifps", fps );
 		w = strlen( s ) * BIGCHAR_WIDTH;
 		
-		renderSystem->DrawBigStringExt( 635 - w, idMath::FtoiFast( y ) + 2, s, colorWhite, true, localConsole.charSetShader );
+		renderSystem->DrawBigStringExt( 635 - w, idMath::Ftoi( y ) + 2, s, colorWhite, true );
 	}
 	
 	return y + BIGCHAR_HEIGHT + 4;
@@ -1099,9 +1099,9 @@ void idConsoleLocal::DrawInput()
 	
 	renderSystem->SetColor( idStr::ColorForIndex( C_COLOR_CYAN ) );
 	
-	renderSystem->DrawSmallChar( 1 * SMALLCHAR_WIDTH, y, ']', localConsole.charSetShader );
+	renderSystem->DrawSmallChar( 1 * SMALLCHAR_WIDTH, y, ']' );
 	
-	consoleField.Draw( 2 * SMALLCHAR_WIDTH, y, SCREEN_WIDTH - 3 * SMALLCHAR_WIDTH, true, charSetShader );
+	consoleField.Draw( 2 * SMALLCHAR_WIDTH, y, SCREEN_WIDTH - 3 * SMALLCHAR_WIDTH, true );
 }
 
 
@@ -1158,7 +1158,7 @@ void idConsoleLocal::DrawNotify()
 				currentColor = idStr::ColorIndex( text_p[x] >> 8 );
 				renderSystem->SetColor( idStr::ColorForIndex( currentColor ) );
 			}
-			renderSystem->DrawSmallChar( ( x + 1 )*SMALLCHAR_WIDTH, v, text_p[x] & 0xff, localConsole.charSetShader );
+			renderSystem->DrawSmallChar( ( x + 1 )*SMALLCHAR_WIDTH, v, text_p[x] & 0xff );
 		}
 		
 		v += SMALLCHAR_HEIGHT;
@@ -1184,7 +1184,7 @@ void idConsoleLocal::DrawSolidConsole( float frac )
 	int				lines;
 	int				currentColor;
 	
-	lines = idMath::FtoiFast( SCREEN_HEIGHT * frac );
+	lines = idMath::Ftoi( SCREEN_HEIGHT * frac );
 	if( lines <= 0 )
 	{
 		return;
@@ -1227,7 +1227,7 @@ void idConsoleLocal::DrawSolidConsole( float frac )
 	for( x = 0; x < i; x++ )
 	{
 		renderSystem->DrawSmallChar( SCREEN_WIDTH - ( i - x ) * SMALLCHAR_WIDTH,
-									 ( lines - ( SMALLCHAR_HEIGHT + SMALLCHAR_HEIGHT / 2 ) ), version[x], localConsole.charSetShader );
+									 ( lines - ( SMALLCHAR_HEIGHT + SMALLCHAR_HEIGHT / 2 ) ), version[x] );
 									 
 	}
 	
@@ -1245,7 +1245,7 @@ void idConsoleLocal::DrawSolidConsole( float frac )
 		renderSystem->SetColor( idStr::ColorForIndex( C_COLOR_CYAN ) );
 		for( x = 0; x < LINE_WIDTH; x += 4 )
 		{
-			renderSystem->DrawSmallChar( ( x + 1 )*SMALLCHAR_WIDTH, idMath::FtoiFast( y ), '^', localConsole.charSetShader );
+			renderSystem->DrawSmallChar( ( x + 1 )*SMALLCHAR_WIDTH, idMath::Ftoi( y ), '^' );
 		}
 		y -= SMALLCHAR_HEIGHT;
 		rows--;
@@ -1287,7 +1287,7 @@ void idConsoleLocal::DrawSolidConsole( float frac )
 				currentColor = idStr::ColorIndex( text_p[x] >> 8 );
 				renderSystem->SetColor( idStr::ColorForIndex( currentColor ) );
 			}
-			renderSystem->DrawSmallChar( ( x + 1 )*SMALLCHAR_WIDTH, idMath::FtoiFast( y ), text_p[x] & 0xff, localConsole.charSetShader );
+			renderSystem->DrawSmallChar( ( x + 1 )*SMALLCHAR_WIDTH, idMath::Ftoi( y ), text_p[x] & 0xff );
 		}
 	}
 	

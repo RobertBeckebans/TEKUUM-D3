@@ -87,7 +87,7 @@ idJointQuat idJointMat::ToJointQuat() const
 	jq.t[0] = mat[0 * 4 + 3];
 	jq.t[1] = mat[1 * 4 + 3];
 	jq.t[2] = mat[2 * 4 + 3];
-	//jq.w = 0.0f;
+	jq.w = 0.0f;
 	
 	return jq;
 }

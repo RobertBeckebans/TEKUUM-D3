@@ -70,7 +70,7 @@ float idDeclTable::TableLookup( float index ) const
 			index += domain * idMath::Ceil( -index / domain );
 		}
 		
-		iIndex = idMath::FtoiFast( idMath::Floor( index ) );
+		iIndex = idMath::Ftoi( idMath::Floor( index ) );
 		iFrac = index - iIndex;
 		iIndex = iIndex % domain;
 	}

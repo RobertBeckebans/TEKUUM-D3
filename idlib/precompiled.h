@@ -36,11 +36,11 @@ If you have questions concerning this license or the applicable additional terms
 #include "sys/sys_types.h"
 
 // RB begin
-#if 0 //!defined(__ANDROID__)
+#if 1 //!defined(__ANDROID__)
 #include "sys/sys_intrinsics.h"
 #endif
 // RB end
-//#include "sys/sys_threading.h"
+#include "sys/sys_threading.h"
 
 //-----------------------------------------------------
 
@@ -178,6 +178,8 @@ const int MAX_EXPRESSION_REGISTERS = 4096;
 // RB end
 #include "../renderer/Cinematic.h"
 #include "../renderer/Material.h"
+#include "../renderer/BufferObject.h"
+#include "../renderer/VertexCache.h"
 #include "../renderer/Model.h"
 #include "../renderer/ModelManager.h"
 #include "../renderer/RenderSystem.h"

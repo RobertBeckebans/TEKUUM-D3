@@ -1,25 +1,25 @@
 /*
 ===========================================================================
 
-Doom 3 GPL Source Code
-Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Doom 3 BFG Edition GPL Source Code
+Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
 
-This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
+This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
-Doom 3 Source Code is free software: you can redistribute it and/or modify
+Doom 3 BFG Edition Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Doom 3 Source Code is distributed in the hope that it will be useful,
+Doom 3 BFG Edition Source Code is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Doom 3 Source Code.  If not, see <http://www.gnu.org/licenses/>.
+along with Doom 3 BFG Edition Source Code.  If not, see <http://www.gnu.org/licenses/>.
 
-In addition, the Doom 3 Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 Source Code.  If not, please request a copy in writing from id Software at the address below.
+In addition, the Doom 3 BFG Edition Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 BFG Edition Source Code.  If not, please request a copy in writing from id Software at the address below.
 
 If you have questions concerning this license or the applicable additional terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 
@@ -183,6 +183,8 @@ idMapPatch* idMapPatch::Parse( idLexer& src, const idVec3& origin, bool patchDef
 		delete patch;
 		return NULL;
 	}
+	
+	
 	for( j = 0; j < patch->GetWidth(); j++ )
 	{
 		if( !src.ExpectTokenString( "(" ) )
@@ -206,8 +208,7 @@ idMapPatch* idMapPatch::Parse( idLexer& src, const idVec3& origin, bool patchDef
 			vert->xyz[0] = v[0] - origin[0];
 			vert->xyz[1] = v[1] - origin[1];
 			vert->xyz[2] = v[2] - origin[2];
-			vert->st[0] = v[3];
-			vert->st[1] = v[4];
+			vert->SetTexCoord( v[3], v[4] );
 		}
 		if( !src.ExpectTokenString( ")" ) )
 		{
@@ -216,6 +217,7 @@ idMapPatch* idMapPatch::Parse( idLexer& src, const idVec3& origin, bool patchDef
 			return NULL;
 		}
 	}
+	
 	if( !src.ExpectTokenString( ")" ) )
 	{
 		src.Error( "idMapPatch::Parse: unable to parse patch control points, no closure" );
@@ -264,14 +266,16 @@ bool idMapPatch::Write( idFile* fp, int primitiveNum, const idVec3& origin ) con
 	}
 	
 	fp->WriteFloatString( "  (\n" );
+	idVec2 st;
 	for( i = 0; i < GetWidth(); i++ )
 	{
 		fp->WriteFloatString( "   ( " );
 		for( j = 0; j < GetHeight(); j++ )
 		{
 			v = &verts[ j * GetWidth() + i ];
+			st = v->GetTexCoord();
 			fp->WriteFloatString( " ( %f %f %f %f %f )", v->xyz[0] + origin[0],
-								  v->xyz[1] + origin[1], v->xyz[2] + origin[2], v->st[0], v->st[1] );
+								  v->xyz[1] + origin[1], v->xyz[2] + origin[2], st[0], st[1] );
 		}
 		fp->WriteFloatString( " )\n" );
 	}
@@ -975,7 +979,7 @@ bool idMapFile::Write( const char* fileName, const char* ext, bool fromBasePath 
 	
 	if( fromBasePath )
 	{
-		fp = idLib::fileSystem->OpenFileWrite( qpath, "fs_devpath" );
+		fp = idLib::fileSystem->OpenFileWrite( qpath, "fs_basepath" );
 	}
 	else
 	{
@@ -1110,7 +1114,7 @@ bool idMapFile::NeedsReload()
 {
 	if( name.Length() )
 	{
-		ID_TIME_T time = ( ID_TIME_T ) - 1;
+		ID_TIME_T time = FILE_NOT_FOUND_TIMESTAMP;
 		if( idLib::fileSystem->ReadFile( name, NULL, &time ) > 0 )
 		{
 			return ( time > fileTime );

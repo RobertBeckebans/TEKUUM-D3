@@ -39,158 +39,7 @@ If you have questions concerning this license or the applicable additional terms
 ===============================================================================
 */
 
-/*
-// Win32
-#if defined(WIN32) || defined(_WIN32)
-
-#define	BUILD_STRING					"win-x86"
-#define BUILD_OS_ID						0
-#define	CPUSTRING						"x86"
-#define CPU_EASYARGS					1
-
-#define ALIGN16( x )					__declspec(align(16)) x
-#define PACKED
-
-#define _alloca16( x )					((void *)((((int)_alloca( (x)+15 )) + 15) & ~15))
-
-#define PATHSEPERATOR_STR				"\\"
-#define PATHSEPERATOR_CHAR				'\\'
-
-#define ID_INLINE						__forceinline
-#define ID_STATIC_TEMPLATE				static
-
-#define assertmem( x, y )				assert( _CrtIsValidPointer( x, y, true ) )
-
-#endif
-
-// Mac OSX
-#if defined(MACOS_X) || defined(__APPLE__)
-
-#define BUILD_STRING				"MacOSX-universal"
-#define BUILD_OS_ID					1
-#ifdef __ppc__
-#define	CPUSTRING					"ppc"
-#define CPU_EASYARGS				0
-#elif defined(__i386__)
-#define	CPUSTRING					"x86"
-#define CPU_EASYARGS				1
-#endif
-
-#define ALIGN16( x )					x __attribute__ ((aligned (16)))
-
-#ifdef __MWERKS__
-#define PACKED
-#include <alloca.h>
-#else
-#define PACKED							__attribute__((packed))
-#endif
-
-#define _alloca							alloca
-#define _alloca16( x )					((void *)((((int)alloca( (x)+15 )) + 15) & ~15))
-
-#define PATHSEPERATOR_STR				"/"
-#define PATHSEPERATOR_CHAR				'/'
-
-#define __cdecl
-#define ASSERT							assert
-
-#define ID_INLINE						inline
-#define ID_STATIC_TEMPLATE
-
-#define assertmem( x, y )
-
-#endif
-
-
-// RB begin
-
-// Android
-#if defined(__ANDROID__)
-
-#define BUILD_OS_ID						3
-
-#if defined(__i386__)
-#define BUILD_STRING				"android-x86"
-#define CPUSTRING					"x86"
-#define CPU_EASYARGS				1
-#elif defined(__ARMEL__)
-
-#if defined(__ARM_ARCH_7__) || defined(__ARM_ARCH_7A__)
-#define BUILD_STRING				"android-armv7a"
-#elif defined(__MATH_NEON)
-#define BUILD_STRING				"android-neon"
-#else//lif defined(__ARM_ARCH_5__)
-#define BUILD_STRING				"android-armv5"
-#endif
-
-
-#define CPUSTRING					"arm"
-#define CPU_EASYARGS				0
-#endif
-
-#define _alloca							alloca
-#define _alloca16( x )					((void *)((((uintptr_t)alloca( (x)+15 )) + 15) & ~15))
-
-#define ALIGN16( x )					x
-#define PACKED							__attribute__((packed))
-
-#define PATHSEPERATOR_STR				"/"
-#define PATHSEPERATOR_CHAR				'/'
-
-#define __cdecl
-#define ASSERT							assert
-
-#define ID_INLINE						inline
-#define ID_STATIC_TEMPLATE
-
-#define assertmem( x, y )
-
-//#endif
-
-// Linux
-#elif defined(__linux__)
-// RB end
-
-#define BUILD_OS_ID					2
-
-#if defined(__i386__)
-#define	BUILD_STRING				"linux-x86"
-#define CPUSTRING					"x86"
-#define CPU_EASYARGS				1
-// RB begin
-#elif defined(__x86_64__)
-#define	BUILD_STRING				"linux-x86_64"
-#define CPUSTRING					"x86_64"
-// RB: no easyargs because of sizeof( int ) != sizeof( intptr_t )
-#define CPU_EASYARGS				0
-// RB end
-#elif defined(__ppc__)
-#define	BUILD_STRING				"linux-ppc"
-#define CPUSTRING					"ppc"
-#define CPU_EASYARGS				0
-#endif
-
-#define _alloca							alloca
-#define _alloca16( x )					((void *)((((uintptr_t)alloca( (x)+15 )) + 15) & ~15))
-
-#define ALIGN16( x )					x
-#define PACKED							__attribute__((packed))
-
-#define PATHSEPERATOR_STR				"/"
-#define PATHSEPERATOR_CHAR				'/'
-
-#define __cdecl
-#define ASSERT							assert
-
-#define ID_INLINE						inline
-#define ID_STATIC_TEMPLATE
-
-#define assertmem( x, y )
-
-#endif
-*/
-
-typedef enum
+enum cpuid_t
 {
 	CPUID_NONE							= 0x00000,
 	CPUID_UNSUPPORTED					= 0x00001,	// unsupported (386/486)
@@ -206,10 +55,12 @@ typedef enum
 	CPUID_HTT							= 0x01000,	// Hyper-Threading Technology
 	CPUID_CMOV							= 0x02000,	// Conditional Move (CMOV) and fast floating point comparison (FCOMI) instructions
 	CPUID_FTZ							= 0x04000,	// Flush-To-Zero mode (denormal results are flushed to zero)
-	CPUID_DAZ							= 0x08000	// Denormals-Are-Zero mode (denormal source operands are set to zero)
-} cpuid_t;
+	CPUID_DAZ							= 0x08000,	// Denormals-Are-Zero mode (denormal source operands are set to zero)
+	CPUID_XENON							= 0x10000,	// Xbox 360
+	CPUID_CELL							= 0x20000	// PS3
+};
 
-typedef enum
+enum fpuExceptions_t
 {
 	FPU_EXCEPTION_INVALID_OPERATION		= 1,
 	FPU_EXCEPTION_DENORMALIZED_OPERAND	= 2,
@@ -217,24 +68,24 @@ typedef enum
 	FPU_EXCEPTION_NUMERIC_OVERFLOW		= 8,
 	FPU_EXCEPTION_NUMERIC_UNDERFLOW		= 16,
 	FPU_EXCEPTION_INEXACT_RESULT		= 32
-} fpuExceptions_t;
+};
 
-typedef enum
+enum fpuPrecision_t
 {
 	FPU_PRECISION_SINGLE				= 0,
 	FPU_PRECISION_DOUBLE				= 1,
 	FPU_PRECISION_DOUBLE_EXTENDED		= 2
-} fpuPrecision_t;
+};
 
-typedef enum
+enum fpuRounding_t
 {
 	FPU_ROUNDING_TO_NEAREST				= 0,
 	FPU_ROUNDING_DOWN					= 1,
 	FPU_ROUNDING_UP						= 2,
 	FPU_ROUNDING_TO_ZERO				= 3
-} fpuRounding_t;
+};
 
-typedef enum
+enum joystickAxis_t
 {
 	AXIS_SIDE,
 	AXIS_FORWARD,
@@ -243,9 +94,9 @@ typedef enum
 	AXIS_YAW,
 	AXIS_PITCH,
 	MAX_JOYSTICK_AXIS
-} joystickAxis_t;
+};
 
-typedef enum
+enum sysEventType_t
 {
 	SE_NONE,				// evTime is still valid
 	SE_KEY,					// evValue is a key code, evValue2 is the down flag
@@ -258,9 +109,9 @@ typedef enum
 	// RB end
 	SE_JOYSTICK_AXIS,		// evValue is an axis number and evValue2 is the current state (-127 to 127)
 	SE_CONSOLE				// evPtr is a char*, from typing something at a non-game console
-} sysEventType_t;
+};
 
-typedef enum
+enum sys_mEvents
 {
 	M_ACTION1,
 	M_ACTION2,
@@ -273,7 +124,7 @@ typedef enum
 	M_DELTAX,
 	M_DELTAY,
 	M_DELTAZ
-} sys_mEvents;
+};
 
 // RB begin
 typedef enum
@@ -343,6 +194,7 @@ void			Sys_Sleep( int msec );
 // Sys_Milliseconds should only be used for profiling purposes,
 // any game related timing information should come from event timestamps
 int				Sys_Milliseconds();
+uint64			Sys_Microseconds();
 
 // for accurate performance testing
 double			Sys_GetClockTicks();
@@ -404,6 +256,7 @@ const char* 	Sys_GetCallStackCurAddressStr( int depth );
 void			Sys_ShutdownSymbols();
 
 // DLL loading, the path should be a fully qualified OS path to the DLL file to be loaded
+
 // RB: 64 bit fixes, changed int to intptr_t
 intptr_t		Sys_DLL_Load( const char* dllName );
 void* 			Sys_DLL_GetProcAddress( intptr_t dllHandle, const char* procName );
@@ -576,12 +429,14 @@ void			Sys_ShutdownNetworking();
 
 typedef unsigned int ( *xthread_t )( void* );
 
+/*
 typedef enum
 {
 	THREAD_NORMAL,
 	THREAD_ABOVE_NORMAL,
 	THREAD_HIGHEST
 } xthreadPriority;
+*/
 
 typedef struct
 {
@@ -598,7 +453,7 @@ typedef struct
 	// RB end
 } xthreadInfo;
 
-const int MAX_THREADS				= 10;
+const int MAX_THREADS				= 32;
 extern xthreadInfo* g_threads[MAX_THREADS];
 extern int			g_thread_count;
 
@@ -609,6 +464,7 @@ void				Sys_DestroyThread( xthreadInfo& info ); // sets threadHandle back to 0
 // if index != NULL, set the index in g_threads array (use -1 for "main" thread)
 const char* 		Sys_GetThreadName( int* index = 0 );
 
+/*
 const int MAX_CRITICAL_SECTIONS		= 4;
 
 enum
@@ -618,6 +474,7 @@ enum
 	CRITICAL_SECTION_TWO,
 	CRITICAL_SECTION_THREE
 };
+*/
 
 // RB begin
 void				Sys_InitCriticalSections();

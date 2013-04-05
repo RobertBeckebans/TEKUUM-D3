@@ -27,9 +27,8 @@ If you have questions concerning this license or the applicable additional terms
 ===========================================================================
 */
 
-#include "precompiled.h"
 #pragma hdrstop
-
+#include "precompiled.h"
 
 //===============================================================
 //
@@ -1545,8 +1544,8 @@ bool idMatX::LU_UpdateDecrement( const idVecX& v, const idVecX& w, const idVecX&
 		
 		if( p != r )
 		{
-			idSwap( v1[index[r]], v1[index[p]] );
-			idSwap( index[r], index[p] );
+			SwapValues( v1[index[r]], v1[index[p]] );
+			SwapValues( index[r], index[p] );
 		}
 		
 		v1[r] += 1.0f;

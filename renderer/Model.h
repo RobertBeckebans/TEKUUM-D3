@@ -44,36 +44,16 @@ If you have questions concerning this license or the applicable additional terms
 #define MD5_CAMERA_EXT			"md5camera"
 #define MD5_VERSION				10
 
-
-typedef struct
-{
-	// NOTE: making this a glIndex is dubious, as there can be 2x the faces as verts
-	glIndex_t					p1, p2;					// planes defining the edge
-	glIndex_t					v1, v2;					// verts defining the edge
-} silEdge_t;
+#include "jobs/ShadowShared.h"
+#include "jobs/prelightshadowvolume/PreLightShadowVolume.h"
+#include "jobs/staticshadowvolume/StaticShadowVolume.h"
+#include "jobs/dynamicshadowvolume/DynamicShadowVolume.h"
 
 // this is used for calculating unsmoothed normals and tangents for deformed models
 struct dominantTri_t
 {
-	glIndex_t					v2, v3;
+	triIndex_t					v2, v3;
 	float						normalizationScale[3];
-};
-
-struct lightingCache_t
-{
-	idVec3						localLightVector;		// this is the statically computed vector to the light
-	// in texture space for cards without vertex programs
-	
-#if defined(USE_GLES1)
-	idVec4						lightFalloff;			// light falloff texgen
-	idVec4						lightProjection;		// light projection texgen
-#endif
-	
-};
-
-struct shadowCache_t
-{
-	idVec4						xyz;					// we use homogenous coordinate tricks
 };
 
 const int SHADOW_CAP_INFINITE	= 64;
@@ -84,24 +64,24 @@ struct viewDef_t;
 // our only drawing geometry type
 struct srfTriangles_t
 {
-	idBounds					bounds;					// for culling
+	srfTriangles_t() {}
 	
-	int							ambientViewCount;		// if == tr.viewCount, it is visible this view
+	idBounds					bounds;					// for culling
 	
 	bool						generateNormals;		// create normals from geometry, instead of using explicit ones
 	bool						tangentsCalculated;		// set when the vertex tangents have been calculated
-	bool						facePlanesCalculated;	// set when the face planes have been calculated
 	bool						perfectHull;			// true if there aren't any dangling edges
-	bool						deformedSurface;		// if true, indexes, silIndexes, mirrorVerts, and silEdges are
+	bool						referencedVerts;		// if true the 'verts' are referenced and should not be freed
+	bool						referencedIndexes;		// if true, indexes, silIndexes, mirrorVerts, and silEdges are
 	// pointers into the original surface, and should not be freed
 	
 	int							numVerts;				// number of vertices
 	idDrawVert* 				verts;					// vertices, allocated with special allocator
 	
 	int							numIndexes;				// for shadows, this has both front and rear end caps and silhouette planes
-	glIndex_t* 					indexes;				// indexes, allocated with special allocator
+	triIndex_t* 				indexes;				// indexes, allocated with special allocator
 	
-	glIndex_t* 					silIndexes;				// indexes changed to be the first vertex with same XYZ, ignoring normal and texcoords
+	triIndex_t* 				silIndexes;				// indexes changed to be the first vertex with same XYZ, ignoring normal and texcoords
 	
 	int							numMirroredVerts;		// this many verts at the end of the vert list are tangent mirrors
 	int* 						mirroredVerts;			// tri->mirroredVerts[0] is the mirror of tri->numVerts - tri->numMirroredVerts + 0
@@ -112,8 +92,6 @@ struct srfTriangles_t
 	int							numSilEdges;			// number of silhouette edges
 	silEdge_t* 					silEdges;				// silhouette edges
 	
-	idPlane* 					facePlanes;				// [numIndexes/3] plane equations
-	
 	dominantTri_t* 				dominantTris;			// [numVerts] for deformed surface fast tangent calculation
 	
 	int							numShadowIndexesNoFrontCaps;	// shadow volumes with front caps omitted
@@ -122,10 +100,10 @@ struct srfTriangles_t
 	int							shadowCapPlaneBits;		// bits 0-5 are set when that plane of the interacting light has triangles
 	// projected on it, which means that if the view is on the outside of that
 	// plane, we need to draw the rear caps of the shadow volume
-	// turboShadows will have SHADOW_CAP_INFINITE
+	// dynamic shadows will have SHADOW_CAP_INFINITE
 	
-	shadowCache_t* 				shadowVertexes;			// these will be copied to shadowCache when it is going to be drawn.
-	// these are NULL when vertex programs are available
+	idShadowVert* 				preLightShadowVertexes;	// shadow vertices in CPU memory for pre-light shadow volumes
+	idShadowVert* 				staticShadowVertexes;	// shadow vertices in CPU memory for static shadow volumes
 	
 	srfTriangles_t* 			ambientSurface;			// for light interactions, point back at the original surface that generated
 	// the interaction, which we will get the ambientCache from
@@ -138,10 +116,11 @@ struct srfTriangles_t
 	idRenderModelStatic* 		staticModelWithJoints;
 	
 	// data in vertex object space, not directly readable by the CPU
-	struct vertCache_s* 		indexCache;				// int
-	struct vertCache_s* 		ambientCache;			// idDrawVert
-	struct vertCache_s* 		lightingCache;			// lightingCache_t
-	struct vertCache_s* 		shadowCache;			// shadowCache_t
+	vertCacheHandle_t			indexCache;				// GL_INDEX_TYPE
+	vertCacheHandle_t			ambientCache;			// idDrawVert
+	vertCacheHandle_t			shadowCache;			// idVec4
+	
+	DISALLOW_COPY_AND_ASSIGN( srfTriangles_t );
 };
 
 typedef idList<srfTriangles_t*> idTriList;

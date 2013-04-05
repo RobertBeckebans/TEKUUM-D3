@@ -2484,13 +2484,13 @@ void idProgram::Restart()
 	{
 		delete types[ i ];
 	}
-	types.SetNum( top_types, false );
+	types.SetNum( top_types );
 	
 	for( i = top_defs; i < varDefs.Num(); i++ )
 	{
 		delete varDefs[ i ];
 	}
-	varDefs.SetNum( top_defs, false );
+	varDefs.SetNum( top_defs );
 	
 	for( i = top_functions; i < functions.Num(); i++ )
 	{
@@ -2499,7 +2499,7 @@ void idProgram::Restart()
 	functions.SetNum( top_functions	);
 	
 	statements.SetNum( top_statements );
-	fileList.SetNum( top_files, false );
+	fileList.SetNum( top_files );
 	filename.Clear();
 	
 	// reset the variables to their default values

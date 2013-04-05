@@ -3,7 +3,6 @@
 
 Doom 3 BFG Edition GPL Source Code
 Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
-Copyright (C) 2012 Robert Beckebans
 
 This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
@@ -40,7 +39,6 @@ If you have questions concerning this license or the applicable additional terms
 
 class idJointMat;
 struct deformInfo_t;
-class ColladaParser;
 
 class idRenderModelStatic : public idRenderModel
 {
@@ -113,13 +111,12 @@ public:
 	void						MakeDefaultModel();
 	
 	bool						LoadASE( const char* fileName );
+	// RB begin
+	bool						LoadDAE( const char* fileName );
+	// RB end
 	bool						LoadLWO( const char* fileName );
 	bool						LoadMA( const char* filename );
-// RB: added COLLADA support
-	bool						LoadDAE( const char* fileName );
 	
-	bool						ConvertDAEToModelSurfaces( const ColladaParser* dae );
-// RB end
 	bool						ConvertASEToModelSurfaces( const struct aseModel_s* ase );
 	bool						ConvertLWOToModelSurfaces( const struct st_lwObject* lwo );
 	bool						ConvertMAToModelSurfaces( const struct maModel_s* ma );
@@ -135,13 +132,10 @@ public:
 	idBounds					bounds;
 	int							overlaysAdded;
 	
-	
-#if 0
 	// when an md5 is instantiated, the inverted joints array is stored to allow GPU skinning
 	int							numInvertedJoints;
 	idJointMat* 				jointsInverted;
 	vertCacheHandle_t			jointsInvertedBuffer;
-#endif
 	
 protected:
 	int							lastModifiedFrame;
@@ -182,10 +176,7 @@ public:
 	~idMD5Mesh();
 	
 	void						ParseMesh( idLexer& parser, int numJoints, const idJointMat* joints );
-	void						UpdateSurface( const struct renderEntity_s* ent, const idJointMat* joints, modelSurface_t* surf );
-	idBounds					CalcBounds( const idJointMat* joints );
 	
-	/*
 	int							NumVerts() const
 	{
 		return numVerts;
@@ -194,53 +185,29 @@ public:
 	{
 		return numTris;
 	}
-	*/
-	void						UpdateSurface( const struct renderEntity_s* ent, const idJointMat* joints, const idJointMat* entJointsInverted, modelSurface_t* surf );
+	
+	void						UpdateSurface( const struct renderEntity_s* ent, const idJointMat* joints,
+			const idJointMat* entJointsInverted, modelSurface_t* surf );
 	void						CalculateBounds( const idJointMat* entJoints, idBounds& bounds ) const;
 	int							NearestJoint( int a, int b, int c ) const;
-	int							NumVerts() const;
-	int							NumTris() const;
-	int							NumWeights() const;
 	
 private:
-	idList<idVec2>				texCoords;			// texture coordinates
-	int							numWeights;			// number of weights
-	idVec4* 					scaledWeights;		// joint weights
-	int* 						weightIndex;		// pairs of: joint offset + bool true if next weight is for next vertex
 	const idMaterial* 			shader;				// material applied to mesh
-	int							numTris;			// number of triangles
-#if defined(USE_GPU_SKINNING)
 	int							numVerts;			// number of vertices
+	int							numTris;			// number of triangles
 	byte* 						meshJoints;			// the joints used by this mesh
 	int							numMeshJoints;		// number of mesh joints
 	float						maxJointVertDist;	// maximum distance a vertex is separated from a joint
-#endif
 	deformInfo_t* 				deformInfo;			// used to create srfTriangles_t from base frames and new vertexes
 	int							surfaceNum;			// number of the static surface created for this mesh
-	
-	void						TransformVerts( idDrawVert* verts, const idJointMat* joints );
-	void						TransformScaledVerts( idDrawVert* verts, const idJointMat* joints, float scale );
 };
 
 class idRenderModelMD5 : public idRenderModelStatic
 {
 public:
 	virtual void				InitFromFile( const char* fileName );
-	
-#if 1
 	virtual bool				LoadBinaryModel( idFile* file, const ID_TIME_T sourceTimeStamp );
 	virtual void				WriteBinaryModel( idFile* file, ID_TIME_T* _timeStamp = NULL ) const;
-	virtual bool				SupportsBinaryModel()
-	{
-		return true;
-	}
-#else
-	virtual bool				SupportsBinaryModel()
-	{
-		return false;
-	}
-#endif
-	
 	virtual dynamicModel_t		IsDynamicModel() const;
 	virtual idBounds			Bounds( const struct renderEntity_s* ent ) const;
 	virtual void				Print() const;
@@ -257,16 +224,16 @@ public:
 	virtual const idJointQuat* 	GetDefaultPose() const;
 	virtual int					NearestJoint( int surfaceNum, int a, int b, int c ) const;
 	
+	virtual bool				SupportsBinaryModel()
+	{
+		return true;
+	}
+	
 private:
 	idList<idMD5Joint>			joints;
 	idList<idJointQuat>			defaultPose;
-#if defined(USE_GPU_SKINNING)
 	idList<idJointMat>			invertedDefaultPose;
-#endif
 	idList<idMD5Mesh>			meshes;
-	
-	void						CalculateBounds( const idJointMat* joints );
-	void						GetFrameBounds( const renderEntity_t* ent, idBounds& bounds ) const;
 	
 	void						DrawJoints( const renderEntity_t* ent, const viewDef_t* view ) const;
 	void						ParseJoint( idLexer& parser, idMD5Joint* joint, idJointQuat* defaultPose );

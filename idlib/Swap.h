@@ -169,34 +169,17 @@ public:		// specializations
 	static void Little( idDrawVert& v )
 	{
 		Little( v.xyz );
-// RB begin
-#if 1
-		Little( v.st );
-		Little( v.normal );
-		Little( v.tangents[0] );
-		Little( v.tangents[1] );
-#else
-		LittleArray( v.st );
+		LittleArray( v.st, 2 );
 		LittleArray( v.normal, 4 );
 		LittleArray( v.tangent, 4 );
-#endif
-// RB end
 		LittleArray( v.color, 4 );
 	}
 	static void Big( idDrawVert& v )
 	{
 		Big( v.xyz );
-// RB begin
-#if 1
-		Big( v.st );
-		Big( v.normal );
-		Big( v.tangents[0] );
-		Big( v.tangents[1] );
-#else
 		BigArray( v.st, 2 );
 		BigArray( v.normal, 4 );
 		BigArray( v.tangent, 4 );
-#endif
 		BigArray( v.color, 4 );
 	}
 #endif

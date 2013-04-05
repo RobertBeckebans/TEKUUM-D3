@@ -1212,11 +1212,17 @@ idCVarSystemLocal::ListByFlags
 ============
 */
 // NOTE: the const wonkyness is required to make msvc happy
-template<>
-ID_INLINE int idListSortCompare( const idInternalCVar* const* a, const idInternalCVar* const* b )
+//template<>
+//ID_INLINE int idListSortCompare( const idInternalCVar* const* a, const idInternalCVar* const* b )
+//{
+//	return idStr::Icmp( ( *a )->GetName(), ( *b )->GetName() );
+//}
+
+class idSort_InternalCVar : public idSort_Quick< const idInternalCVar *, idSort_InternalCVar >
 {
-	return idStr::Icmp( ( *a )->GetName(), ( *b )->GetName() );
-}
+public:
+	int Compare( const idInternalCVar * & a, const idInternalCVar * & b ) const { return idStr::Icmp( a->GetName(), b->GetName() ); }
+};
 
 void idCVarSystemLocal::ListByFlags( const idCmdArgs& args, cvarFlags_t flags )
 {
@@ -1282,7 +1288,7 @@ void idCVarSystemLocal::ListByFlags( const idCmdArgs& args, cvarFlags_t flags )
 		cvarList.Append( cvar );
 	}
 	
-	cvarList.Sort();
+	cvarList.SortWithTemplate( idSort_InternalCVar() );
 	
 	switch( show )
 	{

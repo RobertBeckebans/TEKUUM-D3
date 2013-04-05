@@ -2868,7 +2868,7 @@ gameReturn_t idGameLocal::RunFrame( const usercmd_t* clientCmds )
 			{
 				ret.health = player->health;
 				ret.heartRate = player->heartRate;
-				ret.stamina = idMath::FtoiFast( player->stamina );
+				ret.stamina = idMath::Ftoi( player->stamina );
 				// combat is a 0-100 value based on lastHitTime and lastDmgTime
 				// each make up 50% of the time spread over 10 seconds
 				ret.combat = 0;
@@ -4588,7 +4588,7 @@ void idGameLocal::RadiusPushClipModel( const idVec3& origin, const float push, c
 		center.Zero();
 		for( j = 0; j < poly->numEdges; j++ )
 		{
-			v = trm->verts[ trm->edges[ abs( poly->edges[j] ) ].v[ INTSIGNBITSET( poly->edges[j] ) ] ];
+			v = trm->verts[ trm->edges[ abs( poly->edges[j] ) ].v[ INT32_SIGNBITSET( poly->edges[j] ) ] ];
 			center += v;
 			v -= localOrigin;
 			v.NormalizeFast();	// project point on a unit sphere

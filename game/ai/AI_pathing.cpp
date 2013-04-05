@@ -108,12 +108,12 @@ bool LineIntersectsPath( const idVec2& start, const idVec2& end, const pathNode_
 	while( node->parent )
 	{
 		d1 = plane1.x * node->parent->pos.x + plane1.y * node->parent->pos.y + plane1.z;
-		if( FLOATSIGNBITSET( d0 ) ^ FLOATSIGNBITSET( d1 ) )
+		if( IEEE_FLT_SIGNBITSET( d0 ) ^ IEEE_FLT_SIGNBITSET( d1 ) )
 		{
 			plane2 = idWinding2D::Plane2DFromPoints( node->pos, node->parent->pos );
 			d2 = plane2.x * start.x + plane2.y * start.y + plane2.z;
 			d3 = plane2.x * end.x + plane2.y * end.y + plane2.z;
-			if( FLOATSIGNBITSET( d2 ) ^ FLOATSIGNBITSET( d3 ) )
+			if( IEEE_FLT_SIGNBITSET( d2 ) ^ IEEE_FLT_SIGNBITSET( d3 ) )
 			{
 				return true;
 			}
@@ -310,8 +310,8 @@ bool GetFirstBlockingObstacle( const obstacle_t* obstacles, int numObstacles, in
 	// get bounds for the current movement delta
 	bounds[0] = startPos - idVec2( CM_BOX_EPSILON, CM_BOX_EPSILON );
 	bounds[1] = startPos + idVec2( CM_BOX_EPSILON, CM_BOX_EPSILON );
-	bounds[FLOATSIGNBITNOTSET( delta.x )].x += delta.x;
-	bounds[FLOATSIGNBITNOTSET( delta.y )].y += delta.y;
+	bounds[IEEE_FLT_SIGNBITNOTSET( delta.x )].x += delta.x;
+	bounds[IEEE_FLT_SIGNBITNOTSET( delta.y )].y += delta.y;
 	
 	// test for obstacles blocking the path
 	blockingScale = idMath::INFINITY;
@@ -895,8 +895,8 @@ int OptimizePath( const pathNode_t* root, const pathNode_t* leafNode, const obst
 			// get bounds for the current movement delta
 			bounds[0] = curPos - idVec2( CM_BOX_EPSILON, CM_BOX_EPSILON );
 			bounds[1] = curPos + idVec2( CM_BOX_EPSILON, CM_BOX_EPSILON );
-			bounds[FLOATSIGNBITNOTSET( curDelta.x )].x += curDelta.x;
-			bounds[FLOATSIGNBITNOTSET( curDelta.y )].y += curDelta.y;
+			bounds[IEEE_FLT_SIGNBITNOTSET( curDelta.x )].x += curDelta.x;
+			bounds[IEEE_FLT_SIGNBITNOTSET( curDelta.y )].y += curDelta.y;
 			
 			// test if the shortcut intersects with any obstacles
 			for( i = 0; i < numObstacles; i++ )

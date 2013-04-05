@@ -156,15 +156,13 @@ public:
 	
 	virtual int		GetSaveGameVersion() = 0;
 	
-	// The render world and sound world used for this session.
-	idRenderWorld* 	rw;
-	idSoundWorld* 	sw;
+	// RB begin
+	virtual idDemoFile* 		ReadDemo() = 0;
+	virtual idDemoFile* 		WriteDemo() = 0;
 	
-	// The renderer and sound system will write changes to writeDemo.
-	// Demos can be recorded and played at the same time when splicing.
-	idDemoFile* 	readDemo;
-	idDemoFile* 	writeDemo;
-	int				renderdemoVersion;
+	virtual idRenderWorld* 		RW() = 0;
+	virtual idSoundWorld* 		SW() = 0;
+	// RB end
 };
 
 extern	idSession* 	session;

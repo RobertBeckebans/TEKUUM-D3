@@ -26,12 +26,14 @@ If you have questions concerning this license or the applicable additional terms
 ===========================================================================
 */
 
-#include "precompiled.h"
 #pragma hdrstop
+#include "precompiled.h"
 
 #include "Model_local.h"
 #include "tr_local.h"	// just for R_FreeWorldInteractions and R_CreateWorldInteractions
 
+idCVar r_binaryLoadRenderModels( "r_binaryLoadRenderModels", "1", 0, "enable binary load/write of render models" );
+idCVar preload_MapModels( "preload_MapModels", "1", CVAR_SYSTEM | CVAR_BOOL, "preload models during begin or end levelload" );
 
 class idRenderModelManagerLocal : public idRenderModelManager
 {
@@ -53,6 +55,7 @@ public:
 	virtual void			WritePrecacheCommands( idFile* file );
 	virtual void			BeginLevelLoad();
 	virtual void			EndLevelLoad();
+//	virtual void			Preload( const idPreloadManifest& manifest );
 	
 	virtual	void			PrintMemInfo( MemInfo_t* mi );
 	
@@ -62,7 +65,6 @@ private:
 	idRenderModel* 			defaultModel;
 	idRenderModel* 			beamModel;
 	idRenderModel* 			spriteModel;
-	idRenderModel* 			trailModel;
 	bool					insideLevelLoad;		// don't actually load now
 	
 	idRenderModel* 			GetModel( const char* modelName, bool createIfNotFound );
@@ -88,7 +90,6 @@ idRenderModelManagerLocal::idRenderModelManagerLocal()
 	beamModel = NULL;
 	spriteModel = NULL;
 	insideLevelLoad = false;
-	trailModel = NULL;
 }
 
 /*
@@ -184,7 +185,8 @@ void idRenderModelManagerLocal::TouchModel_f( const idCmdArgs& args )
 	}
 	
 	common->Printf( "touchModel %s\n", model );
-	session->UpdateScreen();
+	const bool captureToImage = false;
+	common->UpdateScreen( captureToImage );
 	idRenderModel* m = renderModelManager->CheckModel( model );
 	if( !m )
 	{
@@ -301,13 +303,7 @@ idRenderModel* idRenderModelManagerLocal::GetModel( const char* _modelName, bool
 				generatedFileName.SetFileExtension( va( "b%s", extension.c_str() ) );
 				if( model->SupportsBinaryModel() && r_binaryLoadRenderModels.GetBool() )
 				{
-					// RB: don't waste memory on low memory systems
-#if defined(__ANDROID__)
-					idFileLocal file( fileSystem->OpenFileRead( generatedFileName ) );
-#else
 					idFileLocal file( fileSystem->OpenFileReadMemory( generatedFileName ) );
-#endif
-					// RB end
 					model->PurgeModel();
 					if( !model->LoadBinaryModel( file, 0 ) )
 					{
@@ -337,9 +333,7 @@ idRenderModel* idRenderModelManagerLocal::GetModel( const char* _modelName, bool
 	
 	idRenderModel* model = NULL;
 	
-	// RB: added dae
-	if( ( extension.Icmp( "ase" ) == 0 ) || ( extension.Icmp( "lwo" ) == 0 ) || ( extension.Icmp( "ma" ) == 0 ) || ( extension.Icmp( "dae" ) == 0 ) )
-		// RB end
+	if( ( extension.Icmp( "ase" ) == 0 ) || ( extension.Icmp( "lwo" ) == 0 ) || ( extension.Icmp( "flt" ) == 0 ) || ( extension.Icmp( "ma" ) == 0 ) )
 	{
 		model = new idRenderModelStatic;
 	}
@@ -364,21 +358,16 @@ idRenderModel* idRenderModelManagerLocal::GetModel( const char* _modelName, bool
 	
 	if( model != NULL )
 	{
+	
 		generatedFileName = "generated/rendermodels/";
 		generatedFileName.AppendPath( canonical );
 		generatedFileName.SetFileExtension( va( "b%s", extension.c_str() ) );
 		
 		// Get the timestamp on the original file, if it's newer than what is stored in binary model, regenerate it
-		ID_TIME_T sourceTimeStamp;// = fileSystem->GetTimestamp( canonical );
-		fileSystem->ReadFile( canonical, NULL, &sourceTimeStamp );
+		ID_TIME_T sourceTimeStamp = fileSystem->GetTimestamp( canonical );
 		
-		// RB: don't waste memory on low memory systems
-#if defined(__ANDROID__)
-		idFileLocal file( fileSystem->OpenFileRead( generatedFileName ) );
-#else
 		idFileLocal file( fileSystem->OpenFileReadMemory( generatedFileName ) );
-#endif
-		// RB end
+		
 		if( !model->SupportsBinaryModel() || !r_binaryLoadRenderModels.GetBool() )
 		{
 			model->InitFromFile( canonical );
@@ -390,7 +379,7 @@ idRenderModel* idRenderModelManagerLocal::GetModel( const char* _modelName, bool
 				model->InitFromFile( canonical );
 				
 				idFileLocal outputFile( fileSystem->OpenFileWrite( generatedFileName, "fs_basepath" ) );
-				idLib::Printf( "writing %s\n", generatedFileName.c_str() );
+				idLib::Printf( "Writing %s\n", generatedFileName.c_str() );
 				model->WriteBinaryModel( outputFile );
 			} /* else {
 				idLib::Printf( "loaded binary model %s from file %s\n", model->Name(), generatedFileName.c_str() );
@@ -419,6 +408,12 @@ idRenderModel* idRenderModelManagerLocal::GetModel( const char* _modelName, bool
 		model = smodel;
 	}
 	
+	/*
+	if( cvarSystem->GetCVarBool( "fs_buildresources" ) )
+	{
+		fileSystem->AddModelPreload( canonical );
+	}
+	*/
 	model->SetLevelLoadReferenced( true );
 	
 	if( !createIfNotFound && model->IsDefaultModel() )
@@ -427,6 +422,11 @@ idRenderModel* idRenderModelManagerLocal::GetModel( const char* _modelName, bool
 		model = NULL;
 		
 		return NULL;
+	}
+	
+	if( cvarSystem->GetCVarBool( "fs_buildgame" ) )
+	{
+		fileSystem->AddModelPreload( model->Name() );
 	}
 	
 	AddModel( model );
@@ -614,7 +614,8 @@ void idRenderModelManagerLocal::BeginLevelLoad()
 	{
 		idRenderModel* model = models[i];
 		
-		if( com_purgeAll.GetBool() && model->IsReloadable() )
+		// always reload all models
+		if( model->IsReloadable() )
 		{
 			R_CheckForEntityDefsUsingModel( model );
 			model->PurgeModel();
@@ -623,10 +624,82 @@ void idRenderModelManagerLocal::BeginLevelLoad()
 		model->SetLevelLoadReferenced( false );
 	}
 	
-	// purge unused triangle surface memory
-	R_PurgeTriSurfData( frameData );
+	vertexCache.FreeStaticData();
 }
 
+/*
+=================
+idRenderModelManagerLocal::Preload
+=================
+*/
+/*
+void idRenderModelManagerLocal::Preload( const idPreloadManifest& manifest )
+{
+	if( preload_MapModels.GetBool() )
+	{
+		// preload this levels images
+		int	start = Sys_Milliseconds();
+		int numLoaded = 0;
+		idList< preloadSort_t > preloadSort;
+		preloadSort.Resize( manifest.NumResources() );
+		for( int i = 0; i < manifest.NumResources(); i++ )
+		{
+			const preloadEntry_s& p = manifest.GetPreloadByIndex( i );
+			idResourceCacheEntry rc;
+			idStrStatic< MAX_OSPATH > filename;
+			if( p.resType == PRELOAD_MODEL )
+			{
+				filename = "generated/rendermodels/";
+				filename += p.resourceName;
+				idStrStatic< 16 > ext;
+				filename.ExtractFileExtension( ext );
+				filename.SetFileExtension( va( "b%s", ext.c_str() ) );
+			}
+			if( p.resType == PRELOAD_PARTICLE )
+			{
+				filename = "generated/particles/";
+				filename += p.resourceName;
+				filename += ".bprt";
+			}
+			if( !filename.IsEmpty() )
+			{
+				if( fileSystem->GetResourceCacheEntry( filename, rc ) )
+				{
+					preloadSort_t ps = {};
+					ps.idx = i;
+					ps.ofs = rc.offset;
+					preloadSort.Append( ps );
+				}
+			}
+		}
+		
+		preloadSort.SortWithTemplate( idSort_Preload() );
+		
+		for( int i = 0; i < preloadSort.Num(); i++ )
+		{
+			const preloadSort_t& ps = preloadSort[ i ];
+			const preloadEntry_s& p = manifest.GetPreloadByIndex( ps.idx );
+			if( p.resType == PRELOAD_MODEL )
+			{
+				idRenderModel* model = FindModel( p.resourceName );
+				if( model != NULL )
+				{
+					model->SetLevelLoadReferenced( true );
+				}
+			}
+			else if( p.resType == PRELOAD_PARTICLE )
+			{
+				declManager->FindType( DECL_PARTICLE, p.resourceName );
+			}
+			numLoaded++;
+		}
+		
+		int	end = Sys_Milliseconds();
+		common->Printf( "%05d models preloaded ( or were already loaded ) in %5.1f seconds\n", numLoaded, ( end - start ) * 0.001 );
+		common->Printf( "----------------------------------------\n" );
+	}
+}
+*/
 
 
 /*
@@ -669,24 +742,37 @@ void idRenderModelManagerLocal::EndLevelLoad()
 
 			keepCount++;
 		}
+		
+		common->UpdateLevelLoadPacifier();
 	}
-	
-	// purge unused triangle surface memory
-	R_PurgeTriSurfData( frameData );
 	
 	// load any new ones
 	for( int i = 0; i < models.Num(); i++ )
 	{
+		common->UpdateLevelLoadPacifier();
+		
+		
 		idRenderModel* model = models[i];
 		
 		if( model->IsLevelLoadReferenced() && !model->IsLoaded() && model->IsReloadable() )
 		{
 			loadCount++;
 			model->LoadModel();
-			
-			if( ( loadCount & 15 ) == 0 )
+		}
+	}
+	
+	// create static vertex/index buffers for all models
+	for( int i = 0; i < models.Num(); i++ )
+	{
+		common->UpdateLevelLoadPacifier();
+		
+		
+		idRenderModel* model = models[i];
+		if( model->IsLoaded() )
+		{
+			for( int j = 0; j < model->NumSurfaces(); j++ )
 			{
-				session->PacifierUpdate();
+				R_CreateStaticBuffersForTri( *( model->Surface( j )->geometry ) );
 			}
 		}
 	}

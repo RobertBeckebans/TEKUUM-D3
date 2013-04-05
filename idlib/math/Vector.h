@@ -1,25 +1,25 @@
 /*
 ===========================================================================
 
-Doom 3 GPL Source Code
-Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Doom 3 BFG Edition GPL Source Code
+Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
 
-This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
+This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
-Doom 3 Source Code is free software: you can redistribute it and/or modify
+Doom 3 BFG Edition Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Doom 3 Source Code is distributed in the hope that it will be useful,
+Doom 3 BFG Edition Source Code is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Doom 3 Source Code.  If not, see <http://www.gnu.org/licenses/>.
+along with Doom 3 BFG Edition Source Code.  If not, see <http://www.gnu.org/licenses/>.
 
-In addition, the Doom 3 Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 Source Code.  If not, please request a copy in writing from id Software at the address below.
+In addition, the Doom 3 BFG Edition Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 BFG Edition Source Code.  If not, please request a copy in writing from id Software at the address below.
 
 If you have questions concerning this license or the applicable additional terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 
@@ -79,6 +79,8 @@ public:
 	
 	friend idVec2	operator*( const float a, const idVec2 b );
 	
+	idVec2			Scale( const idVec2& a ) const;
+	
 	bool			Compare( const idVec2& a ) const;							// exact compare, no epsilon
 	bool			Compare( const idVec2& a, const float epsilon ) const;		// compare with epsilon
 	bool			operator==(	const idVec2& a ) const;						// exact compare, no epsilon
@@ -89,7 +91,7 @@ public:
 	float			LengthSqr() const;
 	float			Normalize();			// returns length
 	float			NormalizeFast();		// returns length
-	idVec2& 		Truncate( float length );	// cap length
+	idVec2			Truncate( float length ) const;	// cap length
 	void			Clamp( const idVec2& min, const idVec2& max );
 	void			Snap();				// snap to closest integer value
 	void			SnapInt();			// snap towards integer (floor)
@@ -177,7 +179,7 @@ ID_INLINE float idVec2::LengthFast() const
 	float sqrLength;
 	
 	sqrLength = x * x + y * y;
-	return sqrLength * idMath::RSqrt( sqrLength );
+	return sqrLength * idMath::InvSqrt( sqrLength );
 }
 
 ID_INLINE float idVec2::LengthSqr() const
@@ -201,32 +203,27 @@ ID_INLINE float idVec2::NormalizeFast()
 	float lengthSqr, invLength;
 	
 	lengthSqr = x * x + y * y;
-	invLength = idMath::RSqrt( lengthSqr );
+	invLength = idMath::InvSqrt( lengthSqr );
 	x *= invLength;
 	y *= invLength;
 	return invLength * lengthSqr;
 }
 
-ID_INLINE idVec2& idVec2::Truncate( float length )
+ID_INLINE idVec2 idVec2::Truncate( float length ) const
 {
-	float length2;
-	float ilength;
-	
-	if( !length )
+	if( length < idMath::FLT_SMALLEST_NON_DENORMAL )
 	{
-		Zero();
+		return vec2_zero;
 	}
 	else
 	{
-		length2 = LengthSqr();
+		float length2 = LengthSqr();
 		if( length2 > length * length )
 		{
-			ilength = length * idMath::InvSqrt( length2 );
-			x *= ilength;
-			y *= ilength;
+			float ilength = length * idMath::InvSqrt( length2 );
+			return *this * ilength;
 		}
 	}
-	
 	return *this;
 }
 
@@ -339,6 +336,11 @@ ID_INLINE idVec2& idVec2::operator*=( const float a )
 	return *this;
 }
 
+ID_INLINE idVec2 idVec2::Scale( const idVec2& a ) const
+{
+	return idVec2( x * a.x, y * a.y );
+}
+
 ID_INLINE int idVec2::GetDimension() const
 {
 	return 2;
@@ -369,6 +371,10 @@ public:
 	float			z;
 	
 	idVec3();
+	explicit idVec3( const float xyz )
+	{
+		Set( xyz, xyz, xyz );
+	}
 	explicit idVec3( const float x, const float y, const float z );
 	
 	void 			Set( const float x, const float y, const float z );
@@ -406,7 +412,7 @@ public:
 	float			LengthFast() const;
 	float			Normalize();				// returns length
 	float			NormalizeFast();			// returns length
-	idVec3& 		Truncate( float length );		// cap length
+	idVec3			Truncate( float length ) const;		// cap length
 	void			Clamp( const idVec3& min, const idVec3& max );
 	void			Snap();					// snap to closest integer value
 	void			SnapInt();				// snap towards integer (floor)
@@ -605,7 +611,7 @@ ID_INLINE float idVec3::NormalizeFast()
 	float sqrLength, invLength;
 	
 	sqrLength = x * x + y * y + z * z;
-	invLength = idMath::RSqrt( sqrLength );
+	invLength = idMath::InvSqrt( sqrLength );
 	x *= invLength;
 	y *= invLength;
 	z *= invLength;
@@ -760,7 +766,7 @@ ID_INLINE float idVec3::LengthFast() const
 	float sqrLength;
 	
 	sqrLength = x * x + y * y + z * z;
-	return sqrLength * idMath::RSqrt( sqrLength );
+	return sqrLength * idMath::InvSqrt( sqrLength );
 }
 
 ID_INLINE float idVec3::Normalize()
@@ -775,27 +781,21 @@ ID_INLINE float idVec3::Normalize()
 	return invLength * sqrLength;
 }
 
-ID_INLINE idVec3& idVec3::Truncate( float length )
+ID_INLINE idVec3 idVec3::Truncate( float length ) const
 {
-	float length2;
-	float ilength;
-	
-	if( !length )
+	if( length < idMath::FLT_SMALLEST_NON_DENORMAL )
 	{
-		Zero();
+		return vec3_zero;
 	}
 	else
 	{
-		length2 = LengthSqr();
+		float length2 = LengthSqr();
 		if( length2 > length * length )
 		{
-			ilength = length * idMath::InvSqrt( length2 );
-			x *= ilength;
-			y *= ilength;
-			z *= ilength;
+			float ilength = length * idMath::InvSqrt( length2 );
+			return *this * ilength;
 		}
 	}
-	
 	return *this;
 }
 
@@ -1003,8 +1003,15 @@ public:
 	float			z;
 	float			w;
 	
-	idVec4();
-	explicit idVec4( const float x, const float y, const float z, const float w );
+	idVec4() { }
+	explicit idVec4( const float x )
+	{
+		Set( x, x, x, x );
+	}
+	explicit idVec4( const float x, const float y, const float z, const float w )
+	{
+		Set( x, y, z, w );
+	}
 	
 	void 			Set( const float x, const float y, const float z, const float w );
 	void			Zero();
@@ -1024,6 +1031,8 @@ public:
 	idVec4& 		operator*=( const float a );
 	
 	friend idVec4	operator*( const float a, const idVec4 b );
+	
+	idVec4			Multiply( const idVec4& a ) const;
 	
 	bool			Compare( const idVec4& a ) const;							// exact compare, no epsilon
 	bool			Compare( const idVec4& a, const float epsilon ) const;		// compare with epsilon
@@ -1050,18 +1059,6 @@ public:
 
 extern idVec4 vec4_origin;
 #define vec4_zero vec4_origin
-
-ID_INLINE idVec4::idVec4()
-{
-}
-
-ID_INLINE idVec4::idVec4( const float x, const float y, const float z, const float w )
-{
-	this->x = x;
-	this->y = y;
-	this->z = z;
-	this->w = w;
-}
 
 ID_INLINE void idVec4::Set( const float x, const float y, const float z, const float w )
 {
@@ -1173,6 +1170,11 @@ ID_INLINE idVec4& idVec4::operator*=( const float a )
 	return *this;
 }
 
+ID_INLINE idVec4 idVec4::Multiply( const idVec4& a ) const
+{
+	return idVec4( x * a.x, y * a.y, z * a.z, w * a.w );
+}
+
 ID_INLINE bool idVec4::Compare( const idVec4& a ) const
 {
 	return ( ( x == a.x ) && ( y == a.y ) && ( z == a.z ) && w == a.w );
@@ -1241,7 +1243,7 @@ ID_INLINE float idVec4::NormalizeFast()
 	float sqrLength, invLength;
 	
 	sqrLength = x * x + y * y + z * z + w * w;
-	invLength = idMath::RSqrt( sqrLength );
+	invLength = idMath::InvSqrt( sqrLength );
 	x *= invLength;
 	y *= invLength;
 	z *= invLength;
@@ -1658,7 +1660,7 @@ ID_INLINE float idVec6::NormalizeFast()
 	float sqrLength, invLength;
 	
 	sqrLength = p[0] * p[0] + p[1] * p[1] + p[2] * p[2] + p[3] * p[3] + p[4] * p[4] + p[5] * p[5];
-	invLength = idMath::RSqrt( sqrLength );
+	invLength = idMath::InvSqrt( sqrLength );
 	p[0] *= invLength;
 	p[1] *= invLength;
 	p[2] *= invLength;

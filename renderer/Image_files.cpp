@@ -1,33 +1,34 @@
 /*
 ===========================================================================
 
-Doom 3 GPL Source Code
-Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Doom 3 BFG Edition GPL Source Code
+Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
 
-This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
+This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
-Doom 3 Source Code is free software: you can redistribute it and/or modify
+Doom 3 BFG Edition Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Doom 3 Source Code is distributed in the hope that it will be useful,
+Doom 3 BFG Edition Source Code is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Doom 3 Source Code.  If not, see <http://www.gnu.org/licenses/>.
+along with Doom 3 BFG Edition Source Code.  If not, see <http://www.gnu.org/licenses/>.
 
-In addition, the Doom 3 Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 Source Code.  If not, please request a copy in writing from id Software at the address below.
+In addition, the Doom 3 BFG Edition Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 BFG Edition Source Code.  If not, please request a copy in writing from id Software at the address below.
 
 If you have questions concerning this license or the applicable additional terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 
 ===========================================================================
 */
 
-#include "precompiled.h"
 #pragma hdrstop
+#include "precompiled.h"
+
 
 #include "tr_local.h"
 
@@ -47,36 +48,34 @@ void R_LoadImage( const char *name, byte **pic, int *width, int *height, bool ma
  * You may also wish to include "jerror.h".
  */
 
-extern "C" {
 #include "../libs/jpeg-6/jpeglib.h"
 
-	// hooks from jpeg lib to our system
+// hooks from jpeg lib to our system
+
+void jpg_Error( const char* fmt, ... )
+{
+	va_list		argptr;
+	char		msg[2048];
 	
-	void jpg_Error( const char* fmt, ... )
-	{
-		va_list		argptr;
-		char		msg[2048];
-		
-		va_start( argptr, fmt );
-		vsprintf( msg, fmt, argptr );
-		va_end( argptr );
-		
-		common->FatalError( "%s", msg );
-	}
+	va_start( argptr, fmt );
+	vsprintf( msg, fmt, argptr );
+	va_end( argptr );
 	
-	void jpg_Printf( const char* fmt, ... )
-	{
-		va_list		argptr;
-		char		msg[2048];
-		
-		va_start( argptr, fmt );
-		vsprintf( msg, fmt, argptr );
-		va_end( argptr );
-		
-		common->Printf( "%s", msg );
-	}
-	
+	common->FatalError( "%s", msg );
 }
+
+void jpg_Printf( const char* fmt, ... )
+{
+	va_list		argptr;
+	char		msg[2048];
+	
+	va_start( argptr, fmt );
+	vsprintf( msg, fmt, argptr );
+	va_end( argptr );
+	
+	common->Printf( "%s", msg );
+}
+
 
 
 /*
@@ -84,14 +83,15 @@ extern "C" {
 R_WriteTGA
 ================
 */
-void R_WriteTGA( const char* filename, const byte* data, int width, int height, bool flipVertical )
+void R_WriteTGA( const char* filename, const byte* data, int width, int height, bool flipVertical, const char* basePath )
 {
 	byte*	buffer;
 	int		i;
 	int		bufferSize = width * height * 4 + 18;
 	int     imgStart = 18;
 	
-	buffer = ( byte* )Mem_Alloc( bufferSize );
+	idTempArray<byte> buf( bufferSize );
+	buffer = ( byte* )buf.Ptr();
 	memset( buffer, 0, 18 );
 	buffer[2] = 2;		// uncompressed type
 	buffer[12] = width & 255;
@@ -113,95 +113,11 @@ void R_WriteTGA( const char* filename, const byte* data, int width, int height, 
 		buffer[i + 3] = data[i - imgStart + 3];		// alpha
 	}
 	
-	fileSystem->WriteFile( filename, buffer, bufferSize );
-	
-	Mem_Free( buffer );
+	fileSystem->WriteFile( filename, buffer, bufferSize, basePath );
 }
 
-
-/*
-================
-R_WritePalTGA
-================
-*/
-void R_WritePalTGA( const char* filename, const byte* data, const byte* palette, int width, int height, bool flipVertical )
-{
-	byte*	buffer;
-	int		i;
-	int		bufferSize = ( width * height ) + ( 256 * 3 ) + 18;
-	int     palStart = 18;
-	int     imgStart = 18 + ( 256 * 3 );
-	
-	buffer = ( byte* )Mem_Alloc( bufferSize );
-	memset( buffer, 0, 18 );
-	buffer[1] = 1;		// color map type
-	buffer[2] = 1;		// uncompressed color mapped image
-	buffer[5] = 0;		// number of palette entries (lo)
-	buffer[6] = 1;		// number of palette entries (hi)
-	buffer[7] = 24;		// color map bpp
-	buffer[12] = width & 255;
-	buffer[13] = width >> 8;
-	buffer[14] = height & 255;
-	buffer[15] = height >> 8;
-	buffer[16] = 8;	// pixel size
-	if( !flipVertical )
-	{
-		buffer[17] = ( 1 << 5 );	// flip bit, for normal top to bottom raster order
-	}
-	
-	// store palette, swapping rgb to bgr
-	for( i = palStart ; i < imgStart ; i += 3 )
-	{
-		buffer[i] = palette[i - palStart + 2];		// blue
-		buffer[i + 1] = palette[i - palStart + 1];		// green
-		buffer[i + 2] = palette[i - palStart + 0];		// red
-	}
-	
-	// store the image data
-	for( i = imgStart ; i < bufferSize ; i++ )
-	{
-		buffer[i] = data[i - imgStart];
-	}
-	
-	fileSystem->WriteFile( filename, buffer, bufferSize );
-	
-	Mem_Free( buffer );
-}
-
-
-static void LoadBMP( const char* name, byte** pic, int* width, int* height, ID_TIME_T* timestamp );
 static void LoadTGA( const char* name, byte** pic, int* width, int* height, ID_TIME_T* timestamp );
 static void LoadJPG( const char* name, byte** pic, int* width, int* height, ID_TIME_T* timestamp );
-// RB begin
-static void LoadPNG( const char* name, byte** pic, int* width, int* height, ID_TIME_T* timestamp );
-// RB end
-
-
-/*
-========================================================================
-
-PCX files are used for 8 bit images
-
-========================================================================
-*/
-
-typedef struct
-{
-	char	manufacturer;
-	char	version;
-	char	encoding;
-	char	bits_per_pixel;
-	unsigned short	xmin, ymin, xmax, ymax;
-	unsigned short	hres, vres;
-	unsigned char	palette[48];
-	char	reserved;
-	char	color_planes;
-	unsigned short	bytes_per_line;
-	unsigned short	palette_type;
-	char	filler[58];
-	unsigned char	data;			// unbounded
-} pcx_t;
-
 
 /*
 ========================================================================
@@ -220,348 +136,6 @@ typedef struct _TargaHeader
 	unsigned char	pixel_size, attributes;
 } TargaHeader;
 
-
-
-/*
-=========================================================
-
-BMP LOADING
-
-=========================================================
-*/
-typedef struct
-{
-	char id[2];
-	unsigned long fileSize;
-	unsigned long reserved0;
-	unsigned long bitmapDataOffset;
-	unsigned long bitmapHeaderSize;
-	unsigned long width;
-	unsigned long height;
-	unsigned short planes;
-	unsigned short bitsPerPixel;
-	unsigned long compression;
-	unsigned long bitmapDataSize;
-	unsigned long hRes;
-	unsigned long vRes;
-	unsigned long colors;
-	unsigned long importantColors;
-	unsigned char palette[256][4];
-} BMPHeader_t;
-
-/*
-==============
-LoadBMP
-==============
-*/
-static void LoadBMP( const char* name, byte** pic, int* width, int* height, ID_TIME_T* timestamp )
-{
-	int		columns, rows, numPixels;
-	byte*	pixbuf;
-	int		row, column;
-	byte*	buf_p;
-	byte*	buffer;
-	int		length;
-	BMPHeader_t bmpHeader;
-	byte*		bmpRGBA;
-	
-	if( !pic )
-	{
-		fileSystem->ReadFile( name, NULL, timestamp );
-		return;	// just getting timestamp
-	}
-	
-	*pic = NULL;
-	
-	//
-	// load the file
-	//
-	length = fileSystem->ReadFile( name, ( void** )&buffer, timestamp );
-	if( !buffer )
-	{
-		return;
-	}
-	
-	buf_p = buffer;
-	
-	bmpHeader.id[0] = *buf_p++;
-	bmpHeader.id[1] = *buf_p++;
-	bmpHeader.fileSize = LittleLong( * ( long* ) buf_p );
-	buf_p += 4;
-	bmpHeader.reserved0 = LittleLong( * ( long* ) buf_p );
-	buf_p += 4;
-	bmpHeader.bitmapDataOffset = LittleLong( * ( long* ) buf_p );
-	buf_p += 4;
-	bmpHeader.bitmapHeaderSize = LittleLong( * ( long* ) buf_p );
-	buf_p += 4;
-	bmpHeader.width = LittleLong( * ( long* ) buf_p );
-	buf_p += 4;
-	bmpHeader.height = LittleLong( * ( long* ) buf_p );
-	buf_p += 4;
-	bmpHeader.planes = LittleShort( * ( short* ) buf_p );
-	buf_p += 2;
-	bmpHeader.bitsPerPixel = LittleShort( * ( short* ) buf_p );
-	buf_p += 2;
-	bmpHeader.compression = LittleLong( * ( long* ) buf_p );
-	buf_p += 4;
-	bmpHeader.bitmapDataSize = LittleLong( * ( long* ) buf_p );
-	buf_p += 4;
-	bmpHeader.hRes = LittleLong( * ( long* ) buf_p );
-	buf_p += 4;
-	bmpHeader.vRes = LittleLong( * ( long* ) buf_p );
-	buf_p += 4;
-	bmpHeader.colors = LittleLong( * ( long* ) buf_p );
-	buf_p += 4;
-	bmpHeader.importantColors = LittleLong( * ( long* ) buf_p );
-	buf_p += 4;
-	
-	memcpy( bmpHeader.palette, buf_p, sizeof( bmpHeader.palette ) );
-	
-	if( bmpHeader.bitsPerPixel == 8 )
-		buf_p += 1024;
-		
-	if( bmpHeader.id[0] != 'B' && bmpHeader.id[1] != 'M' )
-	{
-		common->Error( "LoadBMP: only Windows-style BMP files supported (%s)\n", name );
-	}
-	if( bmpHeader.fileSize != length )
-	{
-		common->Error( "LoadBMP: header size does not match file size (%lu vs. %d) (%s)\n", bmpHeader.fileSize, length, name );
-	}
-	if( bmpHeader.compression != 0 )
-	{
-		common->Error( "LoadBMP: only uncompressed BMP files supported (%s)\n", name );
-	}
-	if( bmpHeader.bitsPerPixel < 8 )
-	{
-		common->Error( "LoadBMP: monochrome and 4-bit BMP files not supported (%s)\n", name );
-	}
-	
-	columns = bmpHeader.width;
-	rows = bmpHeader.height;
-	if( rows < 0 )
-		rows = -rows;
-	numPixels = columns * rows;
-	
-	if( width )
-		*width = columns;
-	if( height )
-		*height = rows;
-		
-	bmpRGBA = ( byte* )R_StaticAlloc( numPixels * 4 );
-	*pic = bmpRGBA;
-	
-	
-	for( row = rows - 1; row >= 0; row-- )
-	{
-		pixbuf = bmpRGBA + row * columns * 4;
-		
-		for( column = 0; column < columns; column++ )
-		{
-			unsigned char red, green, blue, alpha;
-			int palIndex;
-			unsigned short shortPixel;
-			
-			switch( bmpHeader.bitsPerPixel )
-			{
-				case 8:
-					palIndex = *buf_p++;
-					*pixbuf++ = bmpHeader.palette[palIndex][2];
-					*pixbuf++ = bmpHeader.palette[palIndex][1];
-					*pixbuf++ = bmpHeader.palette[palIndex][0];
-					*pixbuf++ = 0xff;
-					break;
-				case 16:
-					shortPixel = * ( unsigned short* ) pixbuf;
-					pixbuf += 2;
-					*pixbuf++ = ( shortPixel & ( 31 << 10 ) ) >> 7;
-					*pixbuf++ = ( shortPixel & ( 31 << 5 ) ) >> 2;
-					*pixbuf++ = ( shortPixel & ( 31 ) ) << 3;
-					*pixbuf++ = 0xff;
-					break;
-					
-				case 24:
-					blue = *buf_p++;
-					green = *buf_p++;
-					red = *buf_p++;
-					*pixbuf++ = red;
-					*pixbuf++ = green;
-					*pixbuf++ = blue;
-					*pixbuf++ = 255;
-					break;
-				case 32:
-					blue = *buf_p++;
-					green = *buf_p++;
-					red = *buf_p++;
-					alpha = *buf_p++;
-					*pixbuf++ = red;
-					*pixbuf++ = green;
-					*pixbuf++ = blue;
-					*pixbuf++ = alpha;
-					break;
-				default:
-					common->Error( "LoadBMP: illegal pixel_size '%d' in file '%s'\n", bmpHeader.bitsPerPixel, name );
-					break;
-			}
-		}
-	}
-	
-	fileSystem->FreeFile( buffer );
-	
-}
-
-
-/*
-=================================================================
-
-PCX LOADING
-
-=================================================================
-*/
-
-
-/*
-==============
-LoadPCX
-==============
-*/
-static void LoadPCX( const char* filename, byte** pic, byte** palette, int* width, int* height,
-					 ID_TIME_T* timestamp )
-{
-	byte*	raw;
-	pcx_t*	pcx;
-	int		x, y;
-	int		len;
-	int		dataByte, runLength;
-	byte*	out, *pix;
-	int		xmax, ymax;
-	
-	if( !pic )
-	{
-		fileSystem->ReadFile( filename, NULL, timestamp );
-		return;	// just getting timestamp
-	}
-	
-	*pic = NULL;
-	*palette = NULL;
-	
-	//
-	// load the file
-	//
-	len = fileSystem->ReadFile( filename, ( void** )&raw, timestamp );
-	if( !raw )
-	{
-		return;
-	}
-	
-	//
-	// parse the PCX file
-	//
-	pcx = ( pcx_t* )raw;
-	raw = &pcx->data;
-	
-	xmax = LittleShort( pcx->xmax );
-	ymax = LittleShort( pcx->ymax );
-	
-	if( pcx->manufacturer != 0x0a
-			|| pcx->version != 5
-			|| pcx->encoding != 1
-			|| pcx->bits_per_pixel != 8
-			|| xmax >= 1024
-			|| ymax >= 1024 )
-	{
-		common->Printf( "Bad pcx file %s (%i x %i) (%i x %i)\n", filename, xmax + 1, ymax + 1, pcx->xmax, pcx->ymax );
-		return;
-	}
-	
-	out = ( byte* )R_StaticAlloc( ( ymax + 1 ) * ( xmax + 1 ) );
-	
-	*pic = out;
-	
-	pix = out;
-	
-	if( palette )
-	{
-		*palette = ( byte* )R_StaticAlloc( 768 );
-		memcpy( *palette, ( byte* )pcx + len - 768, 768 );
-	}
-	
-	if( width )
-		*width = xmax + 1;
-	if( height )
-		*height = ymax + 1;
-// FIXME: use bytes_per_line here?
-
-	for( y = 0 ; y <= ymax ; y++, pix += xmax + 1 )
-	{
-		for( x = 0 ; x <= xmax ; )
-		{
-			dataByte = *raw++;
-			
-			if( ( dataByte & 0xC0 ) == 0xC0 )
-			{
-				runLength = dataByte & 0x3F;
-				dataByte = *raw++;
-			}
-			else
-				runLength = 1;
-				
-			while( runLength-- > 0 )
-				pix[x++] = dataByte;
-		}
-		
-	}
-	
-	if( raw - ( byte* )pcx > len )
-	{
-		common->Printf( "PCX file %s was malformed", filename );
-		R_StaticFree( *pic );
-		*pic = NULL;
-	}
-	
-	fileSystem->FreeFile( pcx );
-}
-
-
-/*
-==============
-LoadPCX32
-==============
-*/
-static void LoadPCX32( const char* filename, byte** pic, int* width, int* height, ID_TIME_T* timestamp )
-{
-	byte*	palette;
-	byte*	pic8;
-	int		i, c, p;
-	byte*	pic32;
-	
-	if( !pic )
-	{
-		fileSystem->ReadFile( filename, NULL, timestamp );
-		return;	// just getting timestamp
-	}
-	LoadPCX( filename, &pic8, &palette, width, height, timestamp );
-	if( !pic8 )
-	{
-		*pic = NULL;
-		return;
-	}
-	
-	c = ( *width ) * ( *height );
-	pic32 = *pic = ( byte* )R_StaticAlloc( 4 * c );
-	for( i = 0 ; i < c ; i++ )
-	{
-		p = pic8[i];
-		pic32[0] = palette[p * 3];
-		pic32[1] = palette[p * 3 + 1];
-		pic32[2] = palette[p * 3 + 2];
-		pic32[3] = 255;
-		pic32 += 4;
-	}
-	
-	R_StaticFree( pic8 );
-	R_StaticFree( palette );
-}
 
 /*
 =========================================================
@@ -830,7 +404,10 @@ breakOut:
 	
 	if( ( targa_header.attributes & ( 1 << 5 ) ) )  			// image flp bit
 	{
-		R_VerticalFlip( *pic, *width, *height );
+		if( width != NULL && height != NULL )
+		{
+			R_VerticalFlip( *pic, *width, *height );
+		}
 	}
 	
 	fileSystem->FreeFile( buffer );
@@ -931,7 +508,7 @@ static void LoadJPG( const char* filename, unsigned char** pic, int* width, int*
 	
 	/* Step 3: read file parameters with jpeg_read_header() */
 	
-	jpeg_read_header( &cinfo, true );
+	( void ) jpeg_read_header( &cinfo, true );
 	/* We can ignore the return value from jpeg_read_header since
 	 *   (a) suspension is not possible with the stdio data source, and
 	 *   (b) we passed TRUE to reject a tables-only JPEG file as an error.
@@ -946,7 +523,7 @@ static void LoadJPG( const char* filename, unsigned char** pic, int* width, int*
 	
 	/* Step 5: Start decompressor */
 	
-	jpeg_start_decompress( &cinfo );
+	( void ) jpeg_start_decompress( &cinfo );
 	/* We can ignore the return value since suspension is not possible
 	 * with the stdio data source.
 	 */
@@ -985,7 +562,7 @@ static void LoadJPG( const char* filename, unsigned char** pic, int* width, int*
 		 */
 		bbuf = ( ( out + ( row_stride * cinfo.output_scanline ) ) );
 		buffer = &bbuf;
-		jpeg_read_scanlines( &cinfo, buffer, 1 );
+		( void ) jpeg_read_scanlines( &cinfo, buffer, 1 );
 	}
 	
 	// clear all the alphas to 255
@@ -1004,7 +581,7 @@ static void LoadJPG( const char* filename, unsigned char** pic, int* width, int*
 	
 	/* Step 7: Finish decompression */
 	
-	jpeg_finish_decompress( &cinfo );
+	( void ) jpeg_finish_decompress( &cinfo );
 	/* We can ignore the return value since suspension is not possible
 	 * with the stdio data source.
 	 */
@@ -1028,265 +605,7 @@ static void LoadJPG( const char* filename, unsigned char** pic, int* width, int*
 	/* And we're done! */
 }
 
-
-/*
-=========================================================
-
-PNG LOADING
-
-=========================================================
-*/
-
-extern "C"
-{
-#include "../libs/png/png.h"
-
-
-	static void png_Error( png_structp pngPtr, png_const_charp msg )
-	{
-		common->FatalError( "%s", msg );
-	}
-	
-	static void png_Warning( png_structp pngPtr, png_const_charp msg )
-	{
-		common->Warning( "%s", msg );
-	}
-	
-	static void	png_ReadData( png_structp pngPtr, png_bytep data, png_size_t length )
-	{
-		memcpy( data, ( byte* )pngPtr->io_ptr, length );
-		
-		pngPtr->io_ptr = ( ( byte* ) pngPtr->io_ptr ) + length;
-	}
-	
-}
-
-/*
-=============
-LoadPNG
-=============
-*/
-static void LoadPNG( const char* filename, unsigned char** pic, int* width, int* height, ID_TIME_T* timestamp )
-{
-	byte*	fbuffer;
-	
-	if( !pic )
-	{
-		fileSystem->ReadFile( filename, NULL, timestamp );
-		return;	// just getting timestamp
-	}
-	
-	*pic = NULL;
-	
-	//
-	// load the file
-	//
-	int fileSize = fileSystem->ReadFile( filename, ( void** )&fbuffer, timestamp );
-	if( !fbuffer )
-	{
-		return;
-	}
-	
-	// create png_struct with the custom error handlers
-	png_structp pngPtr = png_create_read_struct( PNG_LIBPNG_VER_STRING, ( png_voidp ) NULL, png_Error, png_Warning );
-	if( !pngPtr )
-	{
-		common->Error( "LoadPNG( %s ): png_create_read_struct failed", filename );
-	}
-	
-	// allocate the memory for image information
-	png_infop infoPtr = png_create_info_struct( pngPtr );
-	if( !infoPtr )
-	{
-		common->Error( "LoadPNG( %s ): png_create_info_struct failed", filename );
-	}
-	
-	png_set_read_fn( pngPtr, fbuffer, png_ReadData );
-	
-	png_set_sig_bytes( pngPtr, 0 );
-	
-	png_read_info( pngPtr, infoPtr );
-	
-	png_uint_32 pngWidth, pngHeight;
-	int bitDepth, colorType, interlaceType;
-	png_get_IHDR( pngPtr, infoPtr, &pngWidth, &pngHeight, &bitDepth, &colorType, &interlaceType, NULL, NULL );
-	
-	// 16 bit -> 8 bit
-	png_set_strip_16( pngPtr );
-	
-	// 1, 2, 4 bit -> 8 bit
-	if( bitDepth < 8 )
-	{
-		png_set_packing( pngPtr );
-	}
-	
-#if 1
-	if( colorType & PNG_COLOR_MASK_PALETTE )
-	{
-		png_set_expand( pngPtr );
-	}
-	
-	if( !( colorType & PNG_COLOR_MASK_COLOR ) )
-	{
-		png_set_gray_to_rgb( pngPtr );
-	}
-	
-#else
-	if( colorType == PNG_COLOR_TYPE_PALETTE )
-	{
-		png_set_palette_to_rgb( pngPtr );
-	}
-	
-	if( colorType == PNG_COLOR_TYPE_GRAY && bitDepth < 8 )
-	{
-		png_set_expand_gray_1_2_4_to_8( pngPtr );
-	}
-#endif
-	
-	// set paletted or RGB images with transparency to full alpha so we get RGBA
-	if( png_get_valid( pngPtr, infoPtr, PNG_INFO_tRNS ) )
-	{
-		png_set_tRNS_to_alpha( pngPtr );
-	}
-	
-	// make sure every pixel has an alpha value
-	if( !( colorType & PNG_COLOR_MASK_ALPHA ) )
-	{
-		png_set_filler( pngPtr, 255, PNG_FILLER_AFTER );
-	}
-	
-	png_read_update_info( pngPtr, infoPtr );
-	
-	byte* out = ( byte* )R_StaticAlloc( pngWidth * pngHeight * 4 );
-	
-	*pic = out;
-	*width = pngWidth;
-	*height = pngHeight;
-	
-	png_uint_32 rowBytes = png_get_rowbytes( pngPtr, infoPtr );
-	
-	png_bytep* rowPointers = ( png_bytep* ) R_StaticAlloc( sizeof( png_bytep ) * pngHeight );
-	for( int row = 0; row < pngHeight; row++ )
-	{
-		rowPointers[row] = ( png_bytep )( out + ( row * pngWidth * 4 ) );
-	}
-	
-	png_read_image( pngPtr, rowPointers );
-	
-	png_read_end( pngPtr, infoPtr );
-	
-	png_destroy_read_struct( &pngPtr, &infoPtr, NULL );
-	
-	R_StaticFree( rowPointers );
-	Mem_Free( fbuffer );
-}
-
-
-extern "C"
-{
-
-	static int png_compressedSize = 0;
-	static void	png_WriteData( png_structp pngPtr, png_bytep data, png_size_t length )
-	{
-		memcpy( ( byte* )pngPtr->io_ptr, data, length );
-		
-		pngPtr->io_ptr = ( ( byte* ) pngPtr->io_ptr ) + length;
-		
-		png_compressedSize += length;
-	}
-	
-	static void	png_FlushData( png_structp pngPtr ) { }
-	
-}
-
-/*
-================
-R_WritePNG
-================
-*/
-void R_WritePNG( const char* filename, const byte* data, int bytesPerPixel, int width, int height, bool flipVertical, const char* basePath )
-{
-	png_structp pngPtr = png_create_write_struct( PNG_LIBPNG_VER_STRING, NULL, png_Error, png_Warning );
-	if( !pngPtr )
-	{
-		common->Error( "R_WritePNG( %s ): png_create_write_struct failed", filename );
-	}
-	
-	png_infop infoPtr = png_create_info_struct( pngPtr );
-	if( !infoPtr )
-	{
-		common->Error( "R_WritePNG( %s ): png_create_info_struct failed", filename );
-	}
-	
-	png_compressedSize = 0;
-	byte* buffer = ( byte* ) Mem_Alloc( width * height * bytesPerPixel );
-	png_set_write_fn( pngPtr, buffer, png_WriteData, png_FlushData );
-	
-	if( bytesPerPixel == 4 )
-	{
-		png_set_IHDR( pngPtr, infoPtr, width, height, 8, PNG_COLOR_TYPE_RGBA, PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT );
-	}
-	else if( bytesPerPixel == 3 )
-	{
-		png_set_IHDR( pngPtr, infoPtr, width, height, 8, PNG_COLOR_TYPE_RGB, PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT );
-	}
-	else
-	{
-		common->Error( "R_WritePNG( %s ): bytesPerPixel = %i not supported", filename, bytesPerPixel );
-	}
-	
-	// write header
-	png_write_info( pngPtr, infoPtr );
-	
-	png_bytep* rowPointers = ( png_bytep* ) Mem_Alloc( sizeof( png_bytep ) * height );
-	
-	if( !flipVertical )
-	{
-		for( int row = 0, flippedRow = height - 1; row < height; row++, flippedRow-- )
-		{
-			rowPointers[flippedRow] = ( png_bytep )( data + ( row * width * bytesPerPixel ) );
-		}
-	}
-	else
-	{
-		for( int row = 0; row < height; row++ )
-		{
-			rowPointers[row] = ( png_bytep )( data + ( row * width * bytesPerPixel ) );
-		}
-	}
-	
-	png_write_image( pngPtr, rowPointers );
-	png_write_end( pngPtr, infoPtr );
-	
-	png_destroy_write_struct( &pngPtr, &infoPtr );
-	
-	Mem_Free( rowPointers );
-	
-	fileSystem->WriteFile( filename, buffer, png_compressedSize, basePath );
-	
-	Mem_Free( buffer );
-}
-
-
 //===================================================================
-
-
-typedef struct
-{
-	const char*	ext;
-	void	( *ImageLoader )( const char* filename, unsigned char** pic, int* width, int* height, ID_TIME_T* timestamp );
-} imageExtToLoader_t;
-
-static imageExtToLoader_t imageLoaders[] =
-{
-	{"png", LoadPNG},
-	{"tga", LoadTGA},
-	{"jpg", LoadJPG},
-	{"pcx", LoadPCX32},
-	{"bmp", LoadBMP},
-};
-
-static const int numImageLoaders = sizeof( imageLoaders ) / sizeof( imageLoaders[0] );
 
 /*
 =================
@@ -1343,67 +662,22 @@ void R_LoadImage( const char* cname, byte** pic, int* width, int* height, ID_TIM
 	name.ToLower();
 	idStr ext;
 	name.ExtractFileExtension( ext );
-	idStr origName = name;
 	
-// RB begin
-#if 0
 	if( ext == "tga" )
 	{
 		LoadTGA( name.c_str(), pic, width, height, timestamp );            // try tga first
-		if( ( pic && *pic == 0 ) || ( timestamp && *timestamp == -1 ) )
+		if( ( pic && *pic == 0 ) || ( timestamp && *timestamp == -1 ) )    //-V595
 		{
 			name.StripFileExtension();
 			name.DefaultFileExtension( ".jpg" );
 			LoadJPG( name.c_str(), pic, width, height, timestamp );
 		}
 	}
-	else if( ext == "pcx" )
-	{
-		LoadPCX32( name.c_str(), pic, width, height, timestamp );
-	}
-	else if( ext == "bmp" )
-	{
-		LoadBMP( name.c_str(), pic, width, height, timestamp );
-	}
 	else if( ext == "jpg" )
 	{
 		LoadJPG( name.c_str(), pic, width, height, timestamp );
 	}
-#else
-	if( !ext.IsEmpty() )
-	{
-		int i;
-		for( i = 0; i < numImageLoaders; i++ )
-		{
-			if( !ext.Icmp( imageLoaders[i].ext ) )
-			{
-				imageLoaders[i].ImageLoader( name.c_str(), pic, width, height, timestamp );
-				break;
-			}
-		}
 	
-		if( i < numImageLoaders )
-		{
-			if( pic && *pic == NULL )
-			{
-				// image with the specified extension was not found so try all formats
-				for( i = 0; i < numImageLoaders; i++ )
-				{
-					name.SetFileExtension( imageLoaders[i].ext );
-					imageLoaders[i].ImageLoader( name.c_str(), pic, width, height, timestamp );
-	
-					if( pic && *pic != NULL )
-					{
-						//common->Warning("image %s failed to load, using %s instead", origName.c_str(), name.c_str());
-						break;
-					}
-				}
-			}
-		}
-	}
-#endif
-// RB end
-
 	if( ( width && *width < 1 ) || ( height && *height < 1 ) )
 	{
 		if( pic && *pic )
@@ -1416,31 +690,21 @@ void R_LoadImage( const char* cname, byte** pic, int* width, int* height, ID_TIM
 	//
 	// convert to exact power of 2 sizes
 	//
-	if( pic && *pic && makePowerOf2 )
-	{
+	/*
+	if ( pic && *pic && makePowerOf2 ) {
 		int		w, h;
 		int		scaled_width, scaled_height;
-		byte*	resampledBuffer;
-		
+		byte	*resampledBuffer;
+	
 		w = *width;
 		h = *height;
-		
-		for( scaled_width = 1 ; scaled_width < w ; scaled_width <<= 1 )
+	
+		for (scaled_width = 1 ; scaled_width < w ; scaled_width<<=1)
 			;
-		for( scaled_height = 1 ; scaled_height < h ; scaled_height <<= 1 )
+		for (scaled_height = 1 ; scaled_height < h ; scaled_height<<=1)
 			;
-			
-		if( scaled_width != w || scaled_height != h )
-		{
-			if( globalImages->image_roundDown.GetBool() && scaled_width > w )
-			{
-				scaled_width >>= 1;
-			}
-			if( globalImages->image_roundDown.GetBool() && scaled_height > h )
-			{
-				scaled_height >>= 1;
-			}
-			
+	
+		if ( scaled_width != w || scaled_height != h ) {
 			resampledBuffer = R_ResampleTexture( *pic, w, h, scaled_width, scaled_height );
 			R_StaticFree( *pic );
 			*pic = resampledBuffer;
@@ -1448,6 +712,7 @@ void R_LoadImage( const char* cname, byte** pic, int* width, int* height, ID_TIM
 			*height = scaled_height;
 		}
 	}
+	*/
 }
 
 
@@ -1461,13 +726,13 @@ Loads six files with proper extensions
 bool R_LoadCubeImages( const char* imgName, cubeFiles_t extensions, byte* pics[6], int* outSize, ID_TIME_T* timestamp )
 {
 	int		i, j;
-	char*	cameraSides[6] =  { "_forward.tga", "_back.tga", "_left.tga", "_right.tga",
-								"_up.tga", "_down.tga"
-							};
-	char*	axisSides[6] =  { "_px.tga", "_nx.tga", "_py.tga", "_ny.tga",
-							  "_pz.tga", "_nz.tga"
-						  };
-	char**	sides;
+	const char*	cameraSides[6] =  { "_forward.tga", "_back.tga", "_left.tga", "_right.tga",
+									"_up.tga", "_down.tga"
+								  };
+	const char*	axisSides[6] =  { "_px.tga", "_nx.tga", "_py.tga", "_ny.tga",
+								  "_pz.tga", "_nz.tga"
+								};
+	const char**	sides;
 	char	fullName[MAX_IMAGE_NAME];
 	int		width, height, size = 0;
 	

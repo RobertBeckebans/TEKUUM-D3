@@ -1,39 +1,43 @@
 /*
 ===========================================================================
 
-Doom 3 GPL Source Code
-Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Doom 3 BFG Edition GPL Source Code
+Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
 
-This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
+This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
-Doom 3 Source Code is free software: you can redistribute it and/or modify
+Doom 3 BFG Edition Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Doom 3 Source Code is distributed in the hope that it will be useful,
+Doom 3 BFG Edition Source Code is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Doom 3 Source Code.  If not, see <http://www.gnu.org/licenses/>.
+along with Doom 3 BFG Edition Source Code.  If not, see <http://www.gnu.org/licenses/>.
 
-In addition, the Doom 3 Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 Source Code.  If not, please request a copy in writing from id Software at the address below.
+In addition, the Doom 3 BFG Edition Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 BFG Edition Source Code.  If not, please request a copy in writing from id Software at the address below.
 
 If you have questions concerning this license or the applicable additional terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 
 ===========================================================================
 */
 
-#include "precompiled.h"
 #pragma hdrstop
+#include "precompiled.h"
 
+const int SMALLEST_NON_DENORMAL					= 1 << IEEE_FLT_MANTISSA_BITS;
+const int NAN_VALUE								= 0x7f800000;
 
 const float	idMath::PI				= 3.14159265358979323846f;
 const float	idMath::TWO_PI			= 2.0f * PI;
 const float	idMath::HALF_PI			= 0.5f * PI;
 const float	idMath::ONEFOURTH_PI	= 0.25f * PI;
+const float idMath::ONEOVER_PI		= 1.0f / idMath::PI;
+const float idMath::ONEOVER_TWOPI	= 1.0f / idMath::TWO_PI;
 const float idMath::E				= 2.71828182845904523536f;
 const float idMath::SQRT_TWO		= 1.41421356237309504880f;
 const float idMath::SQRT_THREE		= 1.73205080756887729352f;
@@ -45,6 +49,18 @@ const float	idMath::M_SEC2MS		= 1000.0f;
 const float	idMath::M_MS2SEC		= 0.001f;
 const float	idMath::INFINITY		= 1e30f;
 const float idMath::FLT_EPSILON		= 1.192092896e-07f;
+const float idMath::FLT_SMALLEST_NON_DENORMAL	= * reinterpret_cast< const float* >( & SMALLEST_NON_DENORMAL );	// 1.1754944e-038f
+
+const __m128 idMath::SIMD_SP_zero				= { 0.0f, 0.0f, 0.0f, 0.0f };
+const __m128 idMath::SIMD_SP_255				= { 255.0f, 255.0f, 255.0f, 255.0f };
+const __m128 idMath::SIMD_SP_min_char			= { -128.0f, -128.0f, -128.0f, -128.0f };
+const __m128 idMath::SIMD_SP_max_char			= { 127.0f, 127.0f, 127.0f, 127.0f };
+const __m128 idMath::SIMD_SP_min_short			= { -32768.0f, -32768.0f, -32768.0f, -32768.0f };
+const __m128 idMath::SIMD_SP_max_short			= { 32767.0f, 32767.0f, 32767.0f, 32767.0f };
+const __m128 idMath::SIMD_SP_smallestNonDenorm	= { FLT_SMALLEST_NON_DENORMAL, FLT_SMALLEST_NON_DENORMAL, FLT_SMALLEST_NON_DENORMAL, FLT_SMALLEST_NON_DENORMAL };
+const __m128 idMath::SIMD_SP_tiny				= { 1e-4f, 1e-4f, 1e-4f, 1e-4f };
+const __m128 idMath::SIMD_SP_rsqrt_c0			= { 3.0f, 3.0f, 3.0f, 3.0f };
+const __m128 idMath::SIMD_SP_rsqrt_c1			= { -0.5f, -0.5f, -0.5f, -0.5f };
 
 bool		idMath::initialized		= false;
 dword		idMath::iSqrt[SQRT_TABLE_SIZE];		// inverse square root lookup table
@@ -117,7 +133,7 @@ int idMath::FloatToBits( float f, int exponentBits, int mantissaBits )
 	exponent = ( ( i >> IEEE_FLT_MANTISSA_BITS ) & ( ( 1 << IEEE_FLT_EXPONENT_BITS ) - 1 ) ) - IEEE_FLT_EXPONENT_BIAS;
 	mantissa = i & ( ( 1 << IEEE_FLT_MANTISSA_BITS ) - 1 );
 	value = sign << ( 1 + exponentBits + mantissaBits );
-	value |= ( ( INTSIGNBITSET( exponent ) << exponentBits ) | ( abs( exponent ) & ( ( 1 << exponentBits ) - 1 ) ) ) << mantissaBits;
+	value |= ( ( INT32_SIGNBITSET( exponent ) << exponentBits ) | ( abs( exponent ) & ( ( 1 << exponentBits ) - 1 ) ) ) << mantissaBits;
 	value |= mantissa >> ( IEEE_FLT_MANTISSA_BITS - mantissaBits );
 	return value;
 }

@@ -138,6 +138,26 @@ public:
 	virtual bool		WaitingForGameAuth();
 	
 	virtual int			GetSaveGameVersion();
+
+	// RB begin
+	virtual idDemoFile* 		ReadDemo()
+	{
+		return readDemo;
+	}
+	virtual idDemoFile* 		WriteDemo()
+	{
+		return writeDemo;
+	}
+	
+	virtual idRenderWorld* 		RW()
+	{
+		return renderWorld;
+	}
+	virtual idSoundWorld* 		SW()
+	{
+		return soundWorld;
+	}
+	// RB end
 	
 	virtual const char* GetCurrentMapName();
 	
@@ -189,6 +209,18 @@ public:
 	
 	static idCVar		gui_configServerRate;
 	
+	// RB begin
+	// The render world and sound world used for this session.
+	idRenderWorld* 		rw;
+	idSoundWorld* 		sw;
+	
+	// The renderer	and sound system will write changes to writeDemo.
+	// Demos can be	recorded and played at the same time when splicing.
+	idDemoFile* 		readDemo;
+	idDemoFile* 		writeDemo;
+	int					renderdemoVersion;
+	// RB end
+
 	int					timeHitch;
 	
 	bool				menuActive;

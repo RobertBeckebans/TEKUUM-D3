@@ -1949,7 +1949,7 @@ void idSessionLocal::HandleNoteCommands( const char* menuCommand )
 			cmdSystem->ExecuteCommandBuffer();
 			
 			UpdateScreen();
-			renderSystem->TakeScreenshot( renderSystem->GetScreenWidth(), renderSystem->GetScreenHeight(), shotName, 1, NULL );
+			renderSystem->TakeScreenshot( renderSystem->GetWidth(), renderSystem->GetHeight(), shotName, 1, NULL );
 		}
 		noteNumber++;
 		

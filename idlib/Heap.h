@@ -41,6 +41,15 @@ If you have questions concerning this license or the applicable additional terms
 ===============================================================================
 */
 
+// memory tag names are used to sort allocations for sys_dumpMemory and other reporting functions
+enum memTag_t
+{
+#define MEM_TAG( x )	TAG_##x,
+#include "sys/sys_alloc_tags.h"
+	TAG_NUM_TAGS,
+};
+
+static const int MAX_TAGS = 256;
 
 typedef struct
 {
@@ -64,12 +73,12 @@ void		Mem_AllocDefragBlock();
 
 #ifndef ID_DEBUG_MEMORY
 
-void* 		Mem_Alloc( const int size );
-void* 		Mem_ClearedAlloc( const int size );
+void* 		Mem_Alloc( const int size, const memTag_t tag = TAG_CRAP );
+void* 		Mem_ClearedAlloc( const int size, const memTag_t tag = TAG_CRAP );
 void		Mem_Free( void* ptr );
 char* 		Mem_CopyString( const char* in );
-void* 		Mem_Alloc16( const int size );
-void		Mem_Free16( void* ptr );
+void* 		Mem_Alloc16( const int size, const memTag_t tag = TAG_CRAP );
+void		Mem_Free16( void* ptr, const memTag_t tag = TAG_CRAP );
 
 #ifdef ID_REDIRECT_NEWDELETE
 
@@ -150,6 +159,107 @@ __inline void operator delete[]( void* p )
 #define		Mem_Free16( ptr )				Mem_Free16( ptr, __FILE__, __LINE__ )
 
 #endif /* ID_DEBUG_MEMORY */
+
+
+
+/*
+================================================
+idTempArray is an array that is automatically free'd when it goes out of scope.
+There is no "cast" operator because these are very unsafe.
+
+The template parameter MUST BE POD!
+
+Compile time asserting POD-ness of the template parameter is complicated due
+to our vector classes that need a default constructor but are otherwise
+considered POD.
+================================================
+*/
+template < class T >
+class idTempArray
+{
+public:
+	idTempArray( idTempArray<T>& other );
+	idTempArray( unsigned int num );
+	
+	~idTempArray();
+	
+	T& operator []( unsigned int i )
+	{
+		assert( i < num );
+		return buffer[i];
+	}
+	const T& operator []( unsigned int i ) const
+	{
+		assert( i < num );
+		return buffer[i];
+	}
+	
+	T* Ptr()
+	{
+		return buffer;
+	}
+	const T* Ptr() const
+	{
+		return buffer;
+	}
+	
+	size_t Size( ) const
+	{
+		return num * sizeof( T );
+	}
+	unsigned int Num( ) const
+	{
+		return num;
+	}
+	
+	void Zero()
+	{
+		memset( Ptr(), 0, Size() );
+	}
+	
+private:
+	T* 				buffer;		// Ensure this buffer comes first, so this == &this->buffer
+	unsigned int	num;
+};
+
+/*
+========================
+idTempArray::idTempArray
+========================
+*/
+template < class T >
+ID_INLINE idTempArray<T>::idTempArray( idTempArray<T>& other )
+{
+	this->num = other.num;
+	this->buffer = other.buffer;
+	other.num = 0;
+	other.buffer = NULL;
+}
+
+/*
+========================
+idTempArray::idTempArray
+========================
+*/
+template < class T >
+ID_INLINE idTempArray<T>::idTempArray( unsigned int num )
+{
+	this->num = num;
+	buffer = ( T* )Mem_Alloc( num * sizeof( T ) );
+}
+
+/*
+========================
+idTempArray::~idTempArray
+========================
+*/
+template < class T >
+ID_INLINE idTempArray<T>::~idTempArray()
+{
+	Mem_Free( buffer );
+}
+
+
 
 
 /*

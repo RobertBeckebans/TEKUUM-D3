@@ -1,33 +1,34 @@
 /*
 ===========================================================================
 
-Doom 3 GPL Source Code
-Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Doom 3 BFG Edition GPL Source Code
+Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
 
-This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
+This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
-Doom 3 Source Code is free software: you can redistribute it and/or modify
+Doom 3 BFG Edition Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Doom 3 Source Code is distributed in the hope that it will be useful,
+Doom 3 BFG Edition Source Code is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Doom 3 Source Code.  If not, see <http://www.gnu.org/licenses/>.
+along with Doom 3 BFG Edition Source Code.  If not, see <http://www.gnu.org/licenses/>.
 
-In addition, the Doom 3 Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 Source Code.  If not, please request a copy in writing from id Software at the address below.
+In addition, the Doom 3 BFG Edition Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 BFG Edition Source Code.  If not, please request a copy in writing from id Software at the address below.
 
 If you have questions concerning this license or the applicable additional terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 
 ===========================================================================
 */
 
-#include "precompiled.h"
 #pragma hdrstop
+#include "precompiled.h"
+
 
 #include "tr_local.h"
 #include "Model_local.h"
@@ -86,7 +87,7 @@ modelSurface_t idRenderModelLiquid::GenerateSurface( float lerp )
 	tri = R_AllocStaticTriSurf();
 	
 	// note that some of the data is references, and should not be freed
-	tri->deformedSurface = true;
+	tri->referencedIndexes = true;
 	
 	tri->numIndexes = deformInfo->numIndexes;
 	tri->indexes = deformInfo->indexes;
@@ -97,7 +98,6 @@ modelSurface_t idRenderModelLiquid::GenerateSurface( float lerp )
 	tri->dupVerts = deformInfo->dupVerts;
 	tri->numSilEdges = deformInfo->numSilEdges;
 	tri->silEdges = deformInfo->silEdges;
-	tri->dominantTris = deformInfo->dominantTris;
 	
 	tri->numVerts = deformInfo->numOutputVerts;
 	R_AllocStaticTriSurfVerts( tri, tri->numVerts );
@@ -111,16 +111,6 @@ modelSurface_t idRenderModelLiquid::GenerateSurface( float lerp )
 	}
 	
 	R_BoundTriSurf( tri );
-	
-	// If a surface is going to be have a lighting interaction generated, it will also have to call
-	// R_DeriveTangents() to get normals, tangents, and face planes.  If it only
-	// needs shadows generated, it will only have to generate face planes.  If it only
-	// has ambient drawing, or is culled, no additional work will be necessary
-	if( !r_useDeferredTangents.GetBool() )
-	{
-		// set face planes, vertex normals, tangents
-		R_DeriveTangents( tri );
-	}
 	
 	surf.geometry	= tri;
 	surf.shader		= shader;
@@ -257,7 +247,7 @@ void idRenderModelLiquid::Update()
 	
 	time += update_tics;
 	
-	idSwap( page1, page2 );
+	SwapValues( page1, page2 );
 	
 	if( time > nextDropTime )
 	{
@@ -468,10 +458,6 @@ void idRenderModelLiquid::InitFromFile( const char* fileName )
 			parser.ReadToken( &token );
 			shader = declManager->FindMaterial( token );
 		}
-		else if( !token.Icmp( "seed" ) )
-		{
-			seed = parser.ParseInt();
-		}
 		else if( !token.Icmp( "update_rate" ) )
 		{
 			rate = parser.ParseFloat();
@@ -507,7 +493,7 @@ void idRenderModelLiquid::InitFromFile( const char* fileName )
 			page2[ i ] = 0.0f;
 			verts[ i ].Clear();
 			verts[ i ].xyz.Set( x * scale_x, y * scale_y, 0.0f );
-			verts[ i ].st.Set( ( float ) x / ( float )( verts_x - 1 ), ( float ) - y / ( float )( verts_y - 1 ) );
+			verts[ i ].SetTexCoord( ( float ) x / ( float )( verts_x - 1 ), ( float ) - y / ( float )( verts_y - 1 ) );
 		}
 	}
 	
@@ -569,7 +555,7 @@ idRenderModel* idRenderModelLiquid::InstantiateDynamicModel( const struct render
 	}
 	else
 	{
-		t = view->renderView.time;
+		t = view->renderView.time[0];
 	}
 	
 	// update the liquid model
@@ -592,7 +578,7 @@ idRenderModel* idRenderModelLiquid::InstantiateDynamicModel( const struct render
 	lerp = ( float )( t - time ) / ( float )update_tics;
 	modelSurface_t surf = GenerateSurface( lerp );
 	
-	staticModel = new idRenderModelStatic;
+	staticModel = new( TAG_MODEL ) idRenderModelStatic;
 	staticModel->AddSurface( surf );
 	staticModel->bounds = surf.geometry->bounds;
 	

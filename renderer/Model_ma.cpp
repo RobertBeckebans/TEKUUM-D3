@@ -1,33 +1,33 @@
 /*
 ===========================================================================
 
-Doom 3 GPL Source Code
-Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Doom 3 BFG Edition GPL Source Code
+Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
 
-This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
+This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
-Doom 3 Source Code is free software: you can redistribute it and/or modify
+Doom 3 BFG Edition Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Doom 3 Source Code is distributed in the hope that it will be useful,
+Doom 3 BFG Edition Source Code is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Doom 3 Source Code.  If not, see <http://www.gnu.org/licenses/>.
+along with Doom 3 BFG Edition Source Code.  If not, see <http://www.gnu.org/licenses/>.
 
-In addition, the Doom 3 Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 Source Code.  If not, please request a copy in writing from id Software at the address below.
+In addition, the Doom 3 BFG Edition Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 BFG Edition Source Code.  If not, please request a copy in writing from id Software at the address below.
 
 If you have questions concerning this license or the applicable additional terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 
 ===========================================================================
 */
 
-#include "precompiled.h"
 #pragma hdrstop
+#include "precompiled.h"
 
 #include "Model_ma.h"
 
@@ -138,10 +138,7 @@ bool MA_ReadVec3( idParser& parser, idVec3& vec )
 	idToken token;
 	if( !parser.SkipUntilString( "double3" ) )
 	{
-#if defined(USE_EXCEPTIONS)
 		throw idException( va( "Maya Loader '%s': Invalid Vec3", parser.GetFileName() ) );
-#endif
-		return false;
 	}
 	
 	
@@ -170,7 +167,7 @@ bool MA_ParseTransform( idParser& parser )
 	memset( &header, 0, sizeof( header ) );
 	
 	//Allocate room for the transform
-	transform = ( maTransform_t* )Mem_Alloc( sizeof( maTransform_t ) );
+	transform = ( maTransform_t* )Mem_Alloc( sizeof( maTransform_t ), TAG_MODEL );
 	memset( transform, 0, sizeof( maTransform_t ) );
 	transform->scale.x = transform->scale.y = transform->scale.z = 1;
 	
@@ -244,7 +241,7 @@ bool MA_ParseVertex( idParser& parser, maAttribHeader_t* header )
 	if( !pMesh->vertexes )
 	{
 		pMesh->numVertexes = header->size;
-		pMesh->vertexes = ( idVec3* )Mem_Alloc( sizeof( idVec3 ) * pMesh->numVertexes );
+		pMesh->vertexes = ( idVec3* )Mem_Alloc( sizeof( idVec3 ) * pMesh->numVertexes, TAG_MODEL );
 	}
 	
 	//Get the start and end index for this attribute
@@ -281,7 +278,7 @@ bool MA_ParseVertexTransforms( idParser& parser, maAttribHeader_t* header )
 		}
 		
 		pMesh->numVertTransforms = header->size;
-		pMesh->vertTransforms = ( idVec4* )Mem_Alloc( sizeof( idVec4 ) * pMesh->numVertTransforms );
+		pMesh->vertTransforms = ( idVec4* )Mem_Alloc( sizeof( idVec4 ) * pMesh->numVertTransforms, TAG_MODEL );
 		pMesh->nextVertTransformIndex = 0;
 	}
 	
@@ -339,7 +336,7 @@ bool MA_ParseEdge( idParser& parser, maAttribHeader_t* header )
 	if( !pMesh->edges )
 	{
 		pMesh->numEdges = header->size;
-		pMesh->edges = ( idVec3* )Mem_Alloc( sizeof( idVec3 ) * pMesh->numEdges );
+		pMesh->edges = ( idVec3* )Mem_Alloc( sizeof( idVec3 ) * pMesh->numEdges, TAG_MODEL );
 	}
 	
 	//Get the start and end index for this attribute
@@ -371,7 +368,7 @@ bool MA_ParseNormal( idParser& parser, maAttribHeader_t* header )
 	if( !pMesh->normals )
 	{
 		pMesh->numNormals = header->size;
-		pMesh->normals = ( idVec3* )Mem_Alloc( sizeof( idVec3 ) * pMesh->numNormals );
+		pMesh->normals = ( idVec3* )Mem_Alloc( sizeof( idVec3 ) * pMesh->numNormals, TAG_MODEL );
 	}
 	
 	//Get the start and end index for this attribute
@@ -435,7 +432,7 @@ bool MA_ParseFace( idParser& parser, maAttribHeader_t* header )
 	if( !pMesh->faces )
 	{
 		pMesh->numFaces = header->size;
-		pMesh->faces = ( maFace_t* )Mem_Alloc( sizeof( maFace_t ) * pMesh->numFaces );
+		pMesh->faces = ( maFace_t* )Mem_Alloc( sizeof( maFace_t ) * pMesh->numFaces, TAG_MODEL );
 	}
 	
 	//Get the start and end index for this attribute
@@ -461,10 +458,7 @@ bool MA_ParseFace( idParser& parser, maAttribHeader_t* header )
 			int count = parser.ParseInt();
 			if( count != 3 )
 			{
-#if defined(USE_EXCEPTIONS)
 				throw idException( va( "Maya Loader '%s': Face is not a triangle.", parser.GetFileName() ) );
-#endif
-				return false;
 			}
 			//Increment the face number because a new face always starts with an "f" token
 			currentFace++;
@@ -482,13 +476,11 @@ bool MA_ParseFace( idParser& parser, maAttribHeader_t* header )
 		else if( !token.Icmp( "mu" ) )
 		{
 			int uvstIndex = parser.ParseInt();
+			uvstIndex;
 			int count = parser.ParseInt();
 			if( count != 3 )
 			{
-#if defined(USE_EXCEPTIONS)
 				throw idException( va( "Maya Loader '%s': Invalid texture coordinates.", parser.GetFileName() ) );
-#endif
-				return false;
 			}
 			pMesh->faces[currentFace].tVertexNum[0] = parser.ParseInt();
 			pMesh->faces[currentFace].tVertexNum[1] = parser.ParseInt();
@@ -500,10 +492,7 @@ bool MA_ParseFace( idParser& parser, maAttribHeader_t* header )
 			int count = parser.ParseInt();
 			if( count != 3 )
 			{
-#if defined(USE_EXCEPTIONS)
 				throw idException( va( "Maya Loader '%s': Invalid texture coordinates.", parser.GetFileName() ) );
-#endif
-				return false;
 			}
 			pMesh->faces[currentFace].tVertexNum[0] = parser.ParseInt();
 			pMesh->faces[currentFace].tVertexNum[1] = parser.ParseInt();
@@ -516,10 +505,7 @@ bool MA_ParseFace( idParser& parser, maAttribHeader_t* header )
 			int count = parser.ParseInt();
 			if( count != 3 )
 			{
-#if defined(USE_EXCEPTIONS)
 				throw idException( va( "Maya Loader '%s': Invalid vertex color.", parser.GetFileName() ) );
-#endif
-				return false;
 			}
 			pMesh->faces[currentFace].vertexColors[0] = parser.ParseInt();
 			pMesh->faces[currentFace].vertexColors[1] = parser.ParseInt();
@@ -541,7 +527,7 @@ bool MA_ParseColor( idParser& parser, maAttribHeader_t* header )
 	if( !pMesh->colors )
 	{
 		pMesh->numColors = header->size;
-		pMesh->colors = ( byte* )Mem_Alloc( sizeof( byte ) * pMesh->numColors * 4 );
+		pMesh->colors = ( byte* )Mem_Alloc( sizeof( byte ) * pMesh->numColors * 4, TAG_MODEL );
 	}
 	
 	//Get the start and end index for this attribute
@@ -580,7 +566,7 @@ bool MA_ParseTVert( idParser& parser, maAttribHeader_t* header )
 	if( !pMesh->tvertexes )
 	{
 		pMesh->numTVertexes = header->size;
-		pMesh->tvertexes = ( idVec2* )Mem_Alloc( sizeof( idVec2 ) * pMesh->numTVertexes );
+		pMesh->tvertexes = ( idVec2* )Mem_Alloc( sizeof( idVec2 ) * pMesh->numTVertexes, TAG_MODEL );
 	}
 	
 	//Get the start and end index for this attribute
@@ -693,7 +679,7 @@ void MA_ParseMesh( idParser& parser )
 {
 
 	maObject_t*	object;
-	object = ( maObject_t* )Mem_Alloc( sizeof( maObject_t ) );
+	object = ( maObject_t* )Mem_Alloc( sizeof( maObject_t ), TAG_MODEL );
 	memset( object, 0, sizeof( maObject_t ) );
 	maGlobal.model->objects.Append( object );
 	maGlobal.currentObject = object;
@@ -817,9 +803,7 @@ void MA_ParseMesh( idParser& parser )
 					if( pMesh->nextNormal >= pMesh->numNormals )
 					{
 						//We are using more normals than exist
-#if defined(USE_EXCEPTIONS)
 						throw idException( va( "Maya Loader '%s': Invalid Normals Index.", parser.GetFileName() ) );
-#endif
 					}
 					pMesh->faces[i].vertexNormals[j] = pMesh->normals[pMesh->nextNormal];
 					pMesh->nextNormal++;
@@ -890,7 +874,7 @@ void MA_ParseFileNode( idParser& parser )
 				}
 				
 				maFileNode_t* fileNode;
-				fileNode = ( maFileNode_t* )Mem_Alloc( sizeof( maFileNode_t ) );
+				fileNode = ( maFileNode_t* )Mem_Alloc( sizeof( maFileNode_t ), TAG_MODEL );
 				strcpy( fileNode->name, header.name );
 				strcpy( fileNode->path, token.c_str() );
 				
@@ -912,7 +896,7 @@ void MA_ParseMaterialNode( idParser& parser )
 	MA_ParseNodeHeader( parser, &header );
 	
 	maMaterialNode_t* matNode;
-	matNode = ( maMaterialNode_t* )Mem_Alloc( sizeof( maMaterialNode_t ) );
+	matNode = ( maMaterialNode_t* )Mem_Alloc( sizeof( maMaterialNode_t ), TAG_MODEL );
 	memset( matNode, 0, sizeof( maMaterialNode_t ) );
 	
 	strcpy( matNode->name, header.name );
@@ -965,7 +949,7 @@ int MA_AddMaterial( const char* materialName )
 		
 			//Got the file
 			maMaterial_t*	material;
-			material = ( maMaterial_t* )Mem_Alloc( sizeof( maMaterial_t ) );
+			material = ( maMaterial_t* )Mem_Alloc( sizeof( maMaterial_t ), TAG_MODEL );
 			memset( material, 0, sizeof( maMaterial_t ) );
 			
 			//Remove the OS stuff
@@ -996,10 +980,7 @@ bool MA_ParseConnectAttr( idParser& parser )
 	int dot = temp.Find( "." );
 	if( dot == -1 )
 	{
-#if defined(USE_EXCEPTIONS)
 		throw idException( va( "Maya Loader '%s': Invalid Connect Attribute.", parser.GetFileName() ) );
-#endif
-		return false;
 	}
 	srcName = temp.Left( dot );
 	srcType = temp.Right( temp.Length() - dot - 1 );
@@ -1009,10 +990,7 @@ bool MA_ParseConnectAttr( idParser& parser )
 	dot = temp.Find( "." );
 	if( dot == -1 )
 	{
-#if defined(USE_EXCEPTIONS)
 		throw idException( va( "Maya Loader '%s': Invalid Connect Attribute.", parser.GetFileName() ) );
-#endif
-		return false;
 	}
 	destName = temp.Left( dot );
 	destType = temp.Right( temp.Length() - dot - 1 );
@@ -1172,7 +1150,7 @@ maModel_t* MA_Parse( const char* buffer, const char* filename, bool verbose )
 	maGlobal.currentObject = NULL;
 	
 	// NOTE: using new operator because aseModel_t contains idList class objects
-	maGlobal.model = new maModel_t;
+	maGlobal.model = new( TAG_MODEL ) maModel_t;
 	maGlobal.model->objects.Resize( 32, 32 );
 	maGlobal.model->materials.Resize( 32, 32 );
 	
@@ -1226,16 +1204,11 @@ maModel_t* MA_Load( const char* fileName )
 		return NULL;
 	}
 	
-// RB begin
-#if defined(USE_EXCEPTIONS)
 	try
-#endif
 	{
 		ma = MA_Parse( buf, fileName, false );
 		ma->timeStamp = timeStamp;
 	}
-	
-#if defined(USE_EXCEPTIONS)
 	catch( idException& e )
 	{
 		common->Warning( "%s", e.GetError() );
@@ -1245,7 +1218,6 @@ maModel_t* MA_Load( const char* fileName )
 		}
 		ma = NULL;
 	}
-#endif
 	
 	fileSystem->FreeFile( buf );
 	

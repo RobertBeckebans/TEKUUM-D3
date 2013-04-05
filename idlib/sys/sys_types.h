@@ -155,19 +155,19 @@ const float	MAX_ENTITY_COORDINATE = 64000.0f;
 #if 1 //defined(USE_GLES1)
 
 #define GL_INDEX_TYPE		GL_UNSIGNED_SHORT
-typedef short glIndex_t;
+typedef short triIndex_t;
 //typedef unsigned short triIndex_t;
 
 #else
 
 #define GL_INDEX_TYPE		GL_UNSIGNED_INT
-typedef int glIndex_t;
+typedef int triIndex_t;
 //typedef unsigned int triIndex_t;
 
 #endif
 
 // if writing to write-combined memroy, always write indexes as pairs for 32 bit writes
-ID_INLINE void WriteIndexPair( glIndex_t* dest, const glIndex_t a, const glIndex_t b )
+ID_INLINE void WriteIndexPair( triIndex_t* dest, const triIndex_t a, const triIndex_t b )
 {
 	*( unsigned* )dest = ( unsigned )a | ( ( unsigned )b << 16 );
 }

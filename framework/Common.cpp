@@ -104,6 +104,8 @@ idCVar com_makingBuild( "com_makingBuild", "0", CVAR_BOOL | CVAR_SYSTEM, "1 when
 idCVar com_updateLoadSize( "com_updateLoadSize", "0", CVAR_BOOL | CVAR_SYSTEM | CVAR_NOCHEAT, "update the load size after loading a map" );
 idCVar com_videoRam( "com_videoRam", "64", CVAR_INTEGER | CVAR_SYSTEM | CVAR_NOCHEAT | CVAR_ARCHIVE, "holds the last amount of detected video ram" );
 
+idCVar com_productionMode( "com_productionMode", "0", CVAR_SYSTEM | CVAR_BOOL, "0 - no special behavior, 1 - building a production build, 2 - running a production build" );
+
 idCVar com_product_lang_ext( "com_product_lang_ext", "1", CVAR_INTEGER | CVAR_SYSTEM | CVAR_ARCHIVE, "Extension to use when creating language files." );
 
 // com_speeds times
@@ -620,7 +622,7 @@ void idCommonLocal::PrintWarnings()
 		return;
 	}
 	
-	warningList.Sort();
+	//warningList.Sort();
 	
 	Printf( "------------- Warnings ---------------\n" );
 	Printf( "during %s...\n", warningCaption.c_str() );
@@ -674,7 +676,7 @@ void idCommonLocal::DumpWarnings()
 	
 		warningFile->Printf( "------------- Warnings ---------------\n\n" );
 		warningFile->Printf( "during %s...\n", warningCaption.c_str() );
-		warningList.Sort();
+		//warningList.Sort();
 		for( i = 0; i < warningList.Num(); i++ )
 		{
 			warningList[i].RemoveColors();
@@ -1792,7 +1794,7 @@ void Com_ExecMachineSpec_f( const idCmdArgs& args )
 	
 	bool oldCard = false;
 	bool nv10or20 = false;
-	renderSystem->GetCardCaps( oldCard, nv10or20 );
+	//renderSystem->GetCardCaps( oldCard, nv10or20 );
 	if( oldCard )
 	{
 		cvarSystem->SetCVarBool( "g_decals", false, CVAR_ARCHIVE );
@@ -2914,10 +2916,10 @@ void idCommonLocal::PrintLoadingMessage( const char* msg )
 #if defined(__ANDROID__)
 	ji.ShowProgressDialog( msg );
 #else
-	renderSystem->BeginFrame( renderSystem->GetScreenWidth(), renderSystem->GetScreenHeight() );
+	renderSystem->BeginFrame( renderSystem->GetWidth(), renderSystem->GetHeight() );
 	renderSystem->DrawStretchPic( 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0, 1, 1, declManager->FindMaterial( "splashScreen" ) );
 	int len = strlen( msg );
-	renderSystem->DrawSmallStringExt( ( 640 - len * SMALLCHAR_WIDTH ) / 2, 410, msg, idVec4( 0.0f, 0.81f, 0.94f, 1.0f ), true, declManager->FindMaterial( "textures/bigchars" ) );
+	renderSystem->DrawSmallStringExt( ( 640 - len * SMALLCHAR_WIDTH ) / 2, 410, msg, idVec4( 0.0f, 0.81f, 0.94f, 1.0f ), true );
 	renderSystem->EndFrame( NULL, NULL );
 #endif
 }
@@ -3297,7 +3299,7 @@ void idCommonLocal::SetMachineSpec()
 	bool oldCard = false;
 	bool nv10or20 = false;
 	
-	renderSystem->GetCardCaps( oldCard, nv10or20 );
+	//renderSystem->GetCardCaps( oldCard, nv10or20 );
 	
 	Printf( "Detected\n \t%.2f GHz CPU\n\t%i MB of System memory\n\t%i MB of Video memory on %s\n\n", ghz, sysRam, vidRam, ( oldCard ) ? "a less than optimal video architecture" : "an optimal video architecture" );
 	

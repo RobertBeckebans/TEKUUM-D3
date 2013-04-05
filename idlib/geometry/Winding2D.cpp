@@ -1,36 +1,34 @@
 /*
 ===========================================================================
 
-Doom 3 GPL Source Code
-Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Doom 3 BFG Edition GPL Source Code
+Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
 
-This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
+This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
-Doom 3 Source Code is free software: you can redistribute it and/or modify
+Doom 3 BFG Edition Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Doom 3 Source Code is distributed in the hope that it will be useful,
+Doom 3 BFG Edition Source Code is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Doom 3 Source Code.  If not, see <http://www.gnu.org/licenses/>.
+along with Doom 3 BFG Edition Source Code.  If not, see <http://www.gnu.org/licenses/>.
 
-In addition, the Doom 3 Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 Source Code.  If not, please request a copy in writing from id Software at the address below.
+In addition, the Doom 3 BFG Edition Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 BFG Edition Source Code.  If not, please request a copy in writing from id Software at the address below.
 
 If you have questions concerning this license or the applicable additional terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 
 ===========================================================================
 */
 
-#include "precompiled.h"
 #pragma hdrstop
-
+#include "precompiled.h"
 #include "Winding2D.h"
-
 
 /*
 ============
@@ -39,12 +37,12 @@ GetAxialBevel
 */
 bool GetAxialBevel( const idVec3& plane1, const idVec3& plane2, const idVec2& point, idVec3& bevel )
 {
-	if( FLOATSIGNBITSET( plane1.x ) ^ FLOATSIGNBITSET( plane2.x ) )
+	if( IEEE_FLT_SIGNBITSET( plane1.x ) ^ IEEE_FLT_SIGNBITSET( plane2.x ) )
 	{
 		if( idMath::Fabs( plane1.x ) > 0.1f && idMath::Fabs( plane2.x ) > 0.1f )
 		{
 			bevel.x = 0.0f;
-			if( FLOATSIGNBITSET( plane1.y ) )
+			if( IEEE_FLT_SIGNBITSET( plane1.y ) )
 			{
 				bevel.y = -1.0f;
 			}
@@ -56,12 +54,12 @@ bool GetAxialBevel( const idVec3& plane1, const idVec3& plane2, const idVec2& po
 			return true;
 		}
 	}
-	if( FLOATSIGNBITSET( plane1.y ) ^ FLOATSIGNBITSET( plane2.y ) )
+	if( IEEE_FLT_SIGNBITSET( plane1.y ) ^ IEEE_FLT_SIGNBITSET( plane2.y ) )
 	{
 		if( idMath::Fabs( plane1.y ) > 0.1f && idMath::Fabs( plane2.y ) > 0.1f )
 		{
 			bevel.y = 0.0f;
-			if( FLOATSIGNBITSET( plane1.x ) )
+			if( IEEE_FLT_SIGNBITSET( plane1.x ) )
 			{
 				bevel.x = -1.0f;
 			}
@@ -106,6 +104,7 @@ void idWinding2D::ExpandForAxialBox( const idVec2 bounds[2] )
 		assert( numPlanes < MAX_POINTS_ON_WINDING_2D );
 		planes[numPlanes++] = plane;
 	}
+	assert( numPlanes < MAX_POINTS_ON_WINDING_2D && numPlanes > 0 );
 	if( GetAxialBevel( planes[numPlanes - 1], planes[0], p[0], bevel ) )
 	{
 		planes[numPlanes++] = bevel;
@@ -114,8 +113,8 @@ void idWinding2D::ExpandForAxialBox( const idVec2 bounds[2] )
 	// expand the planes
 	for( i = 0; i < numPlanes; i++ )
 	{
-		v.x = bounds[ FLOATSIGNBITSET( planes[i].x ) ].x;
-		v.y = bounds[ FLOATSIGNBITSET( planes[i].y ) ].y;
+		v.x = bounds[ IEEE_FLT_SIGNBITSET( planes[i].x ) ].x;
+		v.y = bounds[ IEEE_FLT_SIGNBITSET( planes[i].y ) ].y;
 		planes[i].z += v.x * planes[i].x + v.y * planes[i].y;
 	}
 	
@@ -641,7 +640,7 @@ float idWinding2D::PlaneDistance( const idVec3& plane ) const
 		if( d < min )
 		{
 			min = d;
-			if( FLOATSIGNBITSET( min ) & FLOATSIGNBITNOTSET( max ) )
+			if( IEEE_FLT_SIGNBITSET( min ) & IEEE_FLT_SIGNBITNOTSET( max ) )
 			{
 				return 0.0f;
 			}
@@ -649,17 +648,17 @@ float idWinding2D::PlaneDistance( const idVec3& plane ) const
 		if( d > max )
 		{
 			max = d;
-			if( FLOATSIGNBITSET( min ) & FLOATSIGNBITNOTSET( max ) )
+			if( IEEE_FLT_SIGNBITSET( min ) & IEEE_FLT_SIGNBITNOTSET( max ) )
 			{
 				return 0.0f;
 			}
 		}
 	}
-	if( FLOATSIGNBITNOTSET( min ) )
+	if( IEEE_FLT_SIGNBITNOTSET( min ) )
 	{
 		return min;
 	}
-	if( FLOATSIGNBITSET( max ) )
+	if( IEEE_FLT_SIGNBITSET( max ) )
 	{
 		return max;
 	}
@@ -798,13 +797,13 @@ bool idWinding2D::LineIntersection( const idVec2& start, const idVec2& end ) con
 	
 	d1 = edges[0].x * start.x + edges[0].y * start.y + edges[0].z;
 	d2 = edges[0].x * end.x + edges[0].y * end.y + edges[0].z;
-	if( FLOATSIGNBITNOTSET( d1 ) & FLOATSIGNBITNOTSET( d2 ) )
+	if( IEEE_FLT_SIGNBITNOTSET( d1 ) & IEEE_FLT_SIGNBITNOTSET( d2 ) )
 	{
 		return false;
 	}
 	d1 = edges[1].x * start.x + edges[1].y * start.y + edges[1].z;
 	d2 = edges[1].x * end.x + edges[1].y * end.y + edges[1].z;
-	if( FLOATSIGNBITNOTSET( d1 ) & FLOATSIGNBITNOTSET( d2 ) )
+	if( IEEE_FLT_SIGNBITNOTSET( d1 ) & IEEE_FLT_SIGNBITNOTSET( d2 ) )
 	{
 		return false;
 	}
@@ -890,8 +889,8 @@ bool idWinding2D::RayIntersection( const idVec2& start, const idVec2& dir, float
 	
 	if( idMath::Fabs( scale1 ) > idMath::Fabs( scale2 ) )
 	{
-		idSwap( scale1, scale2 );
-		idSwap( localEdgeNums[0], localEdgeNums[1] );
+		SwapValues( scale1, scale2 );
+		SwapValues( localEdgeNums[0], localEdgeNums[1] );
 	}
 	
 	if( edgeNums )

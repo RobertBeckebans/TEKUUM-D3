@@ -708,7 +708,7 @@ void idEditWindow::EnsureCursorVisible()
 					break;
 				}
 			}
-			int topLine = idMath::FtoiFast( scroller->GetValue() );
+			int topLine = idMath::Ftoi( scroller->GetValue() );
 			if( cursorLine < topLine )
 			{
 				scroller->SetValue( cursorLine );

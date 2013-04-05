@@ -123,19 +123,25 @@ private:
 idCmdSystemLocal			cmdSystemLocal;
 idCmdSystem* 				cmdSystem = &cmdSystemLocal;
 
+/*
+================================================
+idSort_CommandDef
+================================================
+*/
+class idSort_CommandDef : public idSort_Quick< commandDef_t, idSort_CommandDef >
+{
+public:
+	int Compare( const commandDef_t& a, const commandDef_t& b ) const
+	{
+		return idStr::Icmp( a.name, b.name );
+	}
+};
 
 /*
 ============
 idCmdSystemLocal::ListByFlags
 ============
 */
-// NOTE: the const wonkyness is required to make msvc happy
-template<>
-ID_INLINE int idListSortCompare( const commandDef_t* const* a, const commandDef_t* const* b )
-{
-	return idStr::Icmp( ( *a )->name, ( *b )->name );
-}
-
 void idCmdSystemLocal::ListByFlags( const idCmdArgs& args, cmdFlags_t flags )
 {
 	int i;
@@ -167,7 +173,7 @@ void idCmdSystemLocal::ListByFlags( const idCmdArgs& args, cmdFlags_t flags )
 		cmdList.Append( cmd );
 	}
 	
-	cmdList.Sort();
+	//cmdList.SortWithTemplate( idSort_CommandDef() );
 	
 	for( i = 0; i < cmdList.Num(); i++ )
 	{

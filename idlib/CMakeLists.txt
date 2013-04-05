@@ -5,12 +5,9 @@ file(GLOB_RECURSE ID_INCLUDES *.h)
 file(GLOB_RECURSE ID_SOURCES *.cpp)
 
 if(MSVC)
-	list(REMOVE_ITEM ID_INCLUDES ${CMAKE_CURRENT_SOURCE_DIR}/math/Simd_AltiVec.h)
-	list(REMOVE_ITEM ID_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/math/Simd_AltiVec.cpp)
-	list(REMOVE_ITEM ID_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/bv/Frustum_gcc.cpp)
-elseif(NOT APPLE)
-	list(REMOVE_ITEM ID_INCLUDES ${CMAKE_CURRENT_SOURCE_DIR}/math/Simd_AltiVec.h)
-	list(REMOVE_ITEM ID_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/math/Simd_AltiVec.cpp)
+	list(REMOVE_ITEM ID_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/sys/posix/posix_thread.cpp)	
+else()
+	list(REMOVE_ITEM ID_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/sys/win32/win_thread.cpp)
 endif()
 
 if(STANDALONE)
@@ -21,14 +18,14 @@ if(DEBUG_MEMORY)
 	add_definitions(-DID_DEBUG_MEMORY)
 	add_definitions(-DID_REDIRECT_NEWDELETE)
 endif()
-	
+
 if(MSVC)
 	
 	#set_target_properties(idlib PROPERTIES COMPILE_FLAGS "/Yuprecompiled.h")
 	
 	set(ID_PRECOMPILED_SOURCES ${ID_SOURCES})
-	#list(REMOVE_ITEM ID_PRECOMPILED_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/geometry/RenderMatrix.cpp)
-	#list(REMOVE_ITEM ID_PRECOMPILED_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/SoftwareCache.cpp)
+	list(REMOVE_ITEM ID_PRECOMPILED_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/geometry/RenderMatrix.cpp)
+	list(REMOVE_ITEM ID_PRECOMPILED_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/SoftwareCache.cpp)
 	
 	foreach( src_file ${ID_PRECOMPILED_SOURCES} )
 		#message(STATUS "/Yuprecompiled.h for ${src_file}")

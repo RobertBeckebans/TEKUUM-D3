@@ -282,7 +282,7 @@ void idCollisionModelManagerLocal::DrawPolygon( cm_model_t* model, cm_polygon_t*
 		{
 			edgeNum = p->edges[i];
 			edge = model->edges + abs( edgeNum );
-			winding += origin + model->vertices[edge->vertexNum[INTSIGNBITSET( edgeNum )]].p * axis;
+			winding += origin + model->vertices[edge->vertexNum[INT32_SIGNBITSET( edgeNum )]].p * axis;
 		}
 		session->rw->DebugPolygon( cm_color, winding );
 	}

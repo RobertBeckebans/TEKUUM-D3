@@ -565,8 +565,8 @@ void idCollisionModelManagerLocal::RotateTrmEdgeThroughPolygon( cm_traceWork_t* 
 			continue;
 		}
 		
-		v1 = tw->model->vertices + edge->vertexNum[INTSIGNBITSET( edgeNum )];
-		v2 = tw->model->vertices + edge->vertexNum[INTSIGNBITNOTSET( edgeNum )];
+		v1 = tw->model->vertices + edge->vertexNum[INT32_SIGNBITSET( edgeNum )];
+		v2 = tw->model->vertices + edge->vertexNum[INT32_SIGNBITNOTSET( edgeNum )];
 		
 		// edge bounds
 		for( j = 0; j < 3; j++ )
@@ -1259,14 +1259,14 @@ bool idCollisionModelManagerLocal::RotateTrmThroughPolygon( cm_traceWork_t* tw, 
 		bv = tw->vertices + i;
 		// calculate polygon side this vertex is on
 		d = p->plane.Distance( bv->p );
-		bv->polygonSide = FLOATSIGNBITSET( d );
+		bv->polygonSide = IEEE_FLT_SIGNBITSET( d );
 	}
 	
 	for( i = 0; i < p->numEdges; i++ )
 	{
 		edgeNum = p->edges[i];
 		e = tw->model->edges + abs( edgeNum );
-		v = tw->model->vertices + e->vertexNum[INTSIGNBITSET( edgeNum )];
+		v = tw->model->vertices + e->vertexNum[INT32_SIGNBITSET( edgeNum )];
 		
 		// pluecker coordinate for edge
 		tw->polygonEdgePlueckerCache[i].FromLine( tw->model->vertices[e->vertexNum[0]].p,
@@ -1326,7 +1326,7 @@ bool idCollisionModelManagerLocal::RotateTrmThroughPolygon( cm_traceWork_t* tw, 
 			for( k = 0; k < 2; k++ )
 			{
 			
-				v = tw->model->vertices + e->vertexNum[k ^ INTSIGNBITSET( edgeNum )];
+				v = tw->model->vertices + e->vertexNum[k ^ INT32_SIGNBITSET( edgeNum )];
 				
 				// if this vertex is already checked
 				if( v->checkcount == idCollisionModelManagerLocal::checkCount )
@@ -1768,9 +1768,9 @@ void idCollisionModelManagerLocal::Rotation180( trace_t* results, const idVec3& 
 					if( !( edge->bitNum & 2 ) )
 					{
 						d = plaxis.PermutedInnerProduct( edge->pl );
-						edge->bitNum = FLOATSIGNBITSET( d ) | 2;
+						edge->bitNum = IEEE_FLT_SIGNBITSET( d ) | 2;
 					}
-					if( ( edge->bitNum ^ INTSIGNBITSET( edgeNum ) ) & 1 )
+					if( ( edge->bitNum ^ INT32_SIGNBITSET( edgeNum ) ) & 1 )
 					{
 						break;
 					}

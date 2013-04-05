@@ -316,7 +316,7 @@ void idDeviceContext::AdjustCoords( float* x, float* y, float* w, float* h )
 void idDeviceContext::DrawStretchPic( float x, float y, float w, float h, float s1, float t1, float s2, float t2, const idMaterial* shader )
 {
 	idDrawVert verts[4];
-	glIndex_t indexes[6];
+	triIndex_t indexes[6];
 	indexes[0] = 3;
 	indexes[1] = 0;
 	indexes[2] = 2;
@@ -512,7 +512,7 @@ void idDeviceContext::DrawStretchPicRotated( float x, float y, float w, float h,
 {
 
 	idDrawVert verts[4];
-	glIndex_t indexes[6];
+	triIndex_t indexes[6];
 	indexes[0] = 3;
 	indexes[1] = 0;
 	indexes[2] = 2;
@@ -863,7 +863,7 @@ int idDeviceContext::CharWidth( const char c, float scale )
 	fontInfo_t*	font = useFont;
 	useScale = scale * font->glyphScale;
 	glyph = &font->glyphs[( const unsigned char )c];
-	return idMath::FtoiFast( glyph->xSkip * useScale );
+	return idMath::Ftoi( glyph->xSkip * useScale );
 }
 
 int idDeviceContext::TextWidth( const char* text, float scale, int limit )
@@ -907,7 +907,7 @@ int idDeviceContext::TextWidth( const char* text, float scale, int limit )
 			}
 		}
 	}
-	return idMath::FtoiFast( scale * useFont->glyphScale * width );
+	return idMath::Ftoi( scale * useFont->glyphScale * width );
 }
 
 int idDeviceContext::TextHeight( const char* text, float scale, int limit )
@@ -952,21 +952,21 @@ int idDeviceContext::TextHeight( const char* text, float scale, int limit )
 		}
 	}
 	
-	return idMath::FtoiFast( max * useScale );
+	return idMath::Ftoi( max * useScale );
 }
 
 int idDeviceContext::MaxCharWidth( float scale )
 {
 	SetFontByScale( scale );
 	float useScale = scale * useFont->glyphScale;
-	return idMath::FtoiFast( activeFont->maxWidth * useScale );
+	return idMath::Ftoi( activeFont->maxWidth * useScale );
 }
 
 int idDeviceContext::MaxCharHeight( float scale )
 {
 	SetFontByScale( scale );
 	float useScale = scale * useFont->glyphScale;
-	return idMath::FtoiFast( activeFont->maxHeight * useScale );
+	return idMath::Ftoi( activeFont->maxHeight * useScale );
 }
 
 const idMaterial* idDeviceContext::GetScrollBarImage( int index )
@@ -1090,7 +1090,7 @@ int idDeviceContext::DrawText( const char* text, float textScale, int textAlign,
 			renderSystem->SetColor( color );
 			DrawEditCursor( rectDraw.x, lineSkip + rectDraw.y, textScale );
 		}
-		return idMath::FtoiFast( rectDraw.w / charSkip );
+		return idMath::Ftoi( rectDraw.w / charSkip );
 	}
 	
 	textPtr = text;
@@ -1230,7 +1230,7 @@ int idDeviceContext::DrawText( const char* text, float textScale, int textAlign,
 		}
 	}
 	
-	return idMath::FtoiFast( rectDraw.w / charSkip );
+	return idMath::Ftoi( rectDraw.w / charSkip );
 }
 
 /*

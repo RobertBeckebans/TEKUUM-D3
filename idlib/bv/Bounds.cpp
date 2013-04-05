@@ -30,8 +30,8 @@ If you have questions concerning this license or the applicable additional terms
 #include "precompiled.h"
 
 idBounds bounds_zero( vec3_zero, vec3_zero );
-idBounds bounds_zeroOneCube( idVec3( 0.0f, 0.0f, 0.0f ), idVec3( 1.0f, 1.0f, 1.0f ) );
-idBounds bounds_unitCube( idVec3( -1.0f, -1.0f, -1.0f ), idVec3( 1.0f, 1.0f, 1.0f ) );
+idBounds bounds_zeroOneCube( idVec3( 0.0f ), idVec3( 1.0f ) );
+idBounds bounds_unitCube( idVec3( -1.0f ), idVec3( 1.0f ) );
 
 /*
 ============

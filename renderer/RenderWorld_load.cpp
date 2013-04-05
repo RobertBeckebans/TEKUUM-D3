@@ -3,7 +3,6 @@
 
 Doom 3 BFG Edition GPL Source Code
 Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
-Copyright (C) 2013 Robert Beckebans
 
 This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
@@ -84,10 +83,6 @@ void idRenderWorldLocal::FreeWorld()
 		numInterAreaPortals = 0;
 	}
 	
-	// RB begin
-	lightGridPoints.Clear();
-	// RB end
-	
 	if( areaNodes )
 	{
 		R_StaticFree( areaNodes );
@@ -104,7 +99,6 @@ void idRenderWorldLocal::FreeWorld()
 	
 	areaReferenceAllocator.Shutdown();
 	interactionAllocator.Shutdown();
-	areaNumRefAllocator.Shutdown();
 	
 	mapName = "<FREED>";
 }
@@ -140,13 +134,14 @@ idRenderModel* idRenderWorldLocal::ReadBinaryModel( idFile* fileIn )
 	return NULL;
 }
 
+extern idCVar r_binaryLoadRenderModels;
+
 /*
 ================
 idRenderWorldLocal::ParseModel
 ================
 */
-// RB added procVersion
-idRenderModel* idRenderWorldLocal::ParseModel( idLexer* src, const char* mapName, ID_TIME_T mapTimeStamp, idFile* fileOut, int procVersion )
+idRenderModel* idRenderWorldLocal::ParseModel( idLexer* src, const char* mapName, ID_TIME_T mapTimeStamp, idFile* fileOut )
 {
 	idToken token;
 	
@@ -188,52 +183,110 @@ idRenderModel* idRenderWorldLocal::ParseModel( idLexer* src, const char* mapName
 		tri->numVerts = src->ParseInt();
 		tri->numIndexes = src->ParseInt();
 		
-		R_AllocStaticTriSurfVerts( tri, tri->numVerts );
-		for( int j = 0 ; j < tri->numVerts ; j++ )
+		// parse the vertices
+		idTempArray<float> verts( tri->numVerts * 8 );
+		for( int j = 0; j < tri->numVerts; j++ )
 		{
-			// RB: changed for new .proc format
-			if( procVersion == PROC_EXT_VERSION )
+			src->Parse1DMatrix( 8, &verts[j * 8] );
+		}
+		
+		// parse the indices
+		idTempArray<triIndex_t> indexes( tri->numIndexes );
+		for( int j = 0; j < tri->numIndexes; j++ )
+		{
+			indexes[j] = src->ParseInt();
+		}
+		
+#if 1
+		// find the island that each vertex belongs to
+		idTempArray<int> vertIslands( tri->numVerts );
+		idTempArray<bool> trisVisited( tri->numIndexes );
+		vertIslands.Zero();
+		trisVisited.Zero();
+		int numIslands = 0;
+		for( int j = 0; j < tri->numIndexes; j += 3 )
+		{
+			if( trisVisited[j] )
 			{
-				float	vec[12];
-				
-				src->Parse1DMatrix( 12, vec );
-				
-				tri->verts[j].xyz[0] = vec[0];
-				tri->verts[j].xyz[1] = vec[1];
-				tri->verts[j].xyz[2] = vec[2];
-				tri->verts[j].st[0] = vec[3];
-				tri->verts[j].st[1] = vec[4];
-				tri->verts[j].normal[0] = vec[5];
-				tri->verts[j].normal[1] = vec[6];
-				tri->verts[j].normal[2] = vec[7];
-				
-				tri->verts[j].color[0] = ( byte )( vec[8] * 255.0f );
-				tri->verts[j].color[1] = ( byte )( vec[9] * 255.0f );
-				tri->verts[j].color[2] = ( byte )( vec[10] * 255.0f );
-				tri->verts[j].color[3] = ( byte )( vec[11] * 255.0f );
+				continue;
 			}
-			else
+			
+			int islandNum = ++numIslands;
+			vertIslands[indexes[j + 0]] = islandNum;
+			vertIslands[indexes[j + 1]] = islandNum;
+			vertIslands[indexes[j + 2]] = islandNum;
+			trisVisited[j] = true;
+			
+			idList<int> queue;
+			queue.Append( j );
+			for( int n = 0; n < queue.Num(); n++ )
 			{
-				float	vec[8];
-				
-				src->Parse1DMatrix( 8, vec );
-				
-				tri->verts[j].xyz[0] = vec[0];
-				tri->verts[j].xyz[1] = vec[1];
-				tri->verts[j].xyz[2] = vec[2];
-				tri->verts[j].st[0] = vec[3];
-				tri->verts[j].st[1] = vec[4];
-				tri->verts[j].normal[0] = vec[5];
-				tri->verts[j].normal[1] = vec[6];
-				tri->verts[j].normal[2] = vec[7];
+				int t = queue[n];
+				for( int k = 0; k < tri->numIndexes; k += 3 )
+				{
+					if( trisVisited[k] )
+					{
+						continue;
+					}
+					bool connected =	indexes[t + 0] == indexes[k + 0] || indexes[t + 0] == indexes[k + 1] || indexes[t + 0] == indexes[k + 2] ||
+										indexes[t + 1] == indexes[k + 0] || indexes[t + 1] == indexes[k + 1] || indexes[t + 1] == indexes[k + 2] ||
+										indexes[t + 2] == indexes[k + 0] || indexes[t + 2] == indexes[k + 1] || indexes[t + 2] == indexes[k + 2];
+					if( connected )
+					{
+						vertIslands[indexes[k + 0]] = islandNum;
+						vertIslands[indexes[k + 1]] = islandNum;
+						vertIslands[indexes[k + 2]] = islandNum;
+						trisVisited[k] = true;
+						queue.Append( k );
+					}
+				}
 			}
-			// RB end
+		}
+		
+		// center the texture coordinates for each island for maximum 16-bit precision
+		for( int j = 1; j <= numIslands; j++ )
+		{
+			float minS = idMath::INFINITY;
+			float minT = idMath::INFINITY;
+			float maxS = -idMath::INFINITY;
+			float maxT = -idMath::INFINITY;
+			for( int k = 0; k < tri->numVerts; k++ )
+			{
+				if( vertIslands[k] == j )
+				{
+					minS = Min( minS, verts[k * 8 + 3] );
+					maxS = Max( maxS, verts[k * 8 + 3] );
+					minT = Min( minT, verts[k * 8 + 4] );
+					maxT = Max( maxT, verts[k * 8 + 4] );
+				}
+			}
+			const float averageS = idMath::Ftoi( ( minS + maxS ) * 0.5f );
+			const float averageT = idMath::Ftoi( ( minT + maxT ) * 0.5f );
+			for( int k = 0; k < tri->numVerts; k++ )
+			{
+				if( vertIslands[k] == j )
+				{
+					verts[k * 8 + 3] -= averageS;
+					verts[k * 8 + 4] -= averageT;
+				}
+			}
+		}
+#endif
+		
+		R_AllocStaticTriSurfVerts( tri, tri->numVerts );
+		for( int j = 0; j < tri->numVerts; j++ )
+		{
+			tri->verts[j].xyz[0] = verts[j * 8 + 0];
+			tri->verts[j].xyz[1] = verts[j * 8 + 1];
+			tri->verts[j].xyz[2] = verts[j * 8 + 2];
+			tri->verts[j].SetTexCoord( verts[j * 8 + 3], verts[j * 8 + 4] );
+			tri->verts[j].SetNormal( verts[j * 8 + 5], verts[j * 8 + 6], verts[j * 8 + 7] );
 		}
 		
 		R_AllocStaticTriSurfIndexes( tri, tri->numIndexes );
 		for( int j = 0; j < tri->numIndexes; j++ )
 		{
-			tri->indexes[j] = src->ParseInt();
+			tri->indexes[j] = indexes[j];
 		}
 		src->ExpectTokenString( "}" );
 		
@@ -304,20 +357,28 @@ idRenderModel* idRenderWorldLocal::ParseShadowModel( idLexer* src, idFile* fileO
 	
 	assert( ( tri->numVerts & 1 ) == 0 );
 	
-	R_AllocStaticTriSurfShadowVerts( tri, tri->numVerts );
+	R_AllocStaticTriSurfPreLightShadowVerts( tri, ALIGN( tri->numVerts, 2 ) );
 	tri->bounds.Clear();
 	for( int j = 0; j < tri->numVerts; j++ )
 	{
-		float	vec[8];
+		float vec[8];
 		
 		src->Parse1DMatrix( 3, vec );
-		tri->shadowVertexes[j].xyz[0] = vec[0];
-		tri->shadowVertexes[j].xyz[1] = vec[1];
-		tri->shadowVertexes[j].xyz[2] = vec[2];
-		tri->shadowVertexes[j].xyz[3] = 1;		// no homogenous value
+		tri->preLightShadowVertexes[j].xyzw[0] = vec[0];
+		tri->preLightShadowVertexes[j].xyzw[1] = vec[1];
+		tri->preLightShadowVertexes[j].xyzw[2] = vec[2];
+		tri->preLightShadowVertexes[j].xyzw[3] = 1.0f;		// no homogenous value
 		
-		tri->bounds.AddPoint( tri->shadowVertexes[j].xyz.ToVec3() );
+		tri->bounds.AddPoint( tri->preLightShadowVertexes[j].xyzw.ToVec3() );
 	}
+	// clear the last vertex if it wasn't stored
+	if( ( tri->numVerts & 1 ) != 0 )
+	{
+		tri->preLightShadowVertexes[ALIGN( tri->numVerts, 2 ) - 1].xyzw.Zero();
+	}
+	
+	// to be consistent set the number of vertices to half the number of shadow vertices
+	tri->numVerts = ALIGN( tri->numVerts, 2 ) / 2;
 	
 	R_AllocStaticTriSurfIndexes( tri, tri->numIndexes );
 	for( int j = 0; j < tri->numIndexes; j++ )
@@ -352,18 +413,14 @@ idRenderWorldLocal::SetupAreaRefs
 */
 void idRenderWorldLocal::SetupAreaRefs()
 {
-	int		i;
-	
 	connectedAreaNum = 0;
-	for( i = 0 ; i < numPortalAreas ; i++ )
+	for( int i = 0; i < numPortalAreas; i++ )
 	{
 		portalAreas[i].areaNum = i;
 		portalAreas[i].lightRefs.areaNext =
-			portalAreas[i].lightRefs.areaPrev =
-				&portalAreas[i].lightRefs;
+			portalAreas[i].lightRefs.areaPrev = &portalAreas[i].lightRefs;
 		portalAreas[i].entityRefs.areaNext =
-			portalAreas[i].entityRefs.areaPrev =
-				&portalAreas[i].entityRefs;
+			portalAreas[i].entityRefs.areaPrev = &portalAreas[i].entityRefs;
 	}
 }
 
@@ -429,7 +486,7 @@ void idRenderWorldLocal::ParseInterAreaPortals( idLexer* src, idFile* fileOut )
 			fileOut->WriteBig( a2 );
 		}
 		
-		w = new idWinding( numPoints );
+		w = new( TAG_RENDER_WINDING ) idWinding( numPoints );
 		w->SetNumPoints( numPoints );
 		for( int j = 0; j < numPoints; j++ )
 		{
@@ -476,7 +533,7 @@ void idRenderWorldLocal::ParseInterAreaPortals( idLexer* src, idFile* fileOut )
 
 /*
 ================
-idRenderWorldLocal::ReadBinaryAreaPortals
+idRenderWorldLocal::ParseInterAreaPortals
 ================
 */
 void idRenderWorldLocal::ReadBinaryAreaPortals( idFile* file )
@@ -502,7 +559,7 @@ void idRenderWorldLocal::ReadBinaryAreaPortals( idFile* file )
 		file->ReadBig( numPoints );
 		file->ReadBig( a1 );
 		file->ReadBig( a2 );
-		w = new idWinding( numPoints );
+		w = new( TAG_RENDER_WINDING ) idWinding( numPoints );
 		w->SetNumPoints( numPoints );
 		for( int j = 0; j < numPoints; j++ )
 		{
@@ -539,172 +596,6 @@ void idRenderWorldLocal::ReadBinaryAreaPortals( idFile* file )
 		doublePortals[i].portals[1] = p;
 	}
 }
-
-/*
-================
-idRenderWorldLocal::ParseLightGridPoints
-================
-*/
-// RB begin
-void idRenderWorldLocal::ParseLightGridPoints( idLexer* src, idFile* fileOut )
-{
-	src->ExpectTokenString( "{" );
-	
-	int numLightGridPoints = src->ParseInt();
-	if( numLightGridPoints < 0 )
-	{
-		src->Error( "ParseLightGridPoints: bad numLightGridPoints" );
-		return;
-	}
-	
-	if( fileOut != NULL )
-	{
-		// write out the type so the binary reader knows what to instantiate
-		fileOut->WriteString( "lightGridPoints" );
-	}
-	
-	// gridMins
-	src->Parse1DMatrix( 3, lightGridOrigin.ToFloatPtr() );
-	src->Parse1DMatrix( 3, lightGridSize.ToFloatPtr() );
-	for( int i = 0; i < 3; i++ )
-	{
-		lightGridBounds[i] = src->ParseInt();
-	}
-	
-	lightGridPoints.SetNum( numLightGridPoints );
-	
-	idLib::Printf( "light grid size (%i %i %i)\n", ( int )lightGridSize[0], ( int )lightGridSize[1], ( int )lightGridSize[2] );
-	idLib::Printf( "light grid bounds (%i %i %i)\n", ( int )lightGridBounds[0], ( int )lightGridBounds[1], ( int )lightGridBounds[2] );
-	idLib::Printf( "%9u x %u B = lightGridSize = (%.2fMB)\n", numLightGridPoints, sizeof( lightGridPoint_t ), ( float )( lightGridPoints.MemoryUsed() ) / ( 1024.0f * 1024.0f ) );
-	
-	if( fileOut != NULL )
-	{
-		fileOut->WriteBig( numLightGridPoints );
-		fileOut->WriteBig( lightGridOrigin );
-		fileOut->WriteBig( lightGridSize );
-		fileOut->WriteBigArray( lightGridBounds, 3 );
-	}
-	
-	for( int i = 0; i < numLightGridPoints; i++ )
-	{
-		lightGridPoint_t* gridPoint = &lightGridPoints[i];
-		
-		byte values[8];
-		
-#if 1
-		for( int j = 0; j < 8; j++ )
-		{
-			int intVal = src->ParseInt();
-			intVal = idMath::ClampInt( 0, 255, intVal );
-			
-			values[j] = ( byte ) intVal;
-		}
-		
-		gridPoint->ambient[0] = values[0];
-		gridPoint->ambient[1] = values[1];
-		gridPoint->ambient[2] = values[2];
-		
-		gridPoint->directed[0] = values[3];
-		gridPoint->directed[1] = values[4];
-		gridPoint->directed[2] = values[5];
-		
-		gridPoint->latLong[0] = values[6];
-		gridPoint->latLong[1] = values[7];
-#else
-		src->Parse1DMatrix( 3, gridPoint->ambient.ToFloatPtr() );
-		src->Parse1DMatrix( 3, gridPoint->directed.ToFloatPtr() );
-		src->Parse1DMatrix( 3, gridPoint->dir.ToFloatPtr() );
-#endif
-		
-		if( fileOut != NULL )
-		{
-			fileOut->WriteBigArray( gridPoint->ambient, 3 );
-			fileOut->WriteBigArray( gridPoint->directed, 3 );
-			fileOut->WriteBigArray( gridPoint->latLong, 2 );
-		}
-	}
-	
-	CalculateLightGridPointPositions();
-	
-	src->ExpectTokenString( "}" );
-}
-
-void idRenderWorldLocal::CalculateLightGridPointPositions()
-{
-#if !defined(USE_GLES1)
-	int             gridStep[3];
-	int             pos[3];
-	idVec3          posFloat;
-	
-	// calculate grid point positions
-	gridStep[0] = 1;
-	gridStep[1] = lightGridBounds[0];
-	gridStep[2] = lightGridBounds[0] * lightGridBounds[1];
-	
-	for( int i = 0; i < lightGridBounds[0]; i += 1 )
-	{
-		for( int j = 0; j < lightGridBounds[1]; j += 1 )
-		{
-			for( int k = 0; k < lightGridBounds[2]; k += 1 )
-			{
-				pos[0] = i;
-				pos[1] = j;
-				pos[2] = k;
-				
-				posFloat[0] = i * lightGridSize[0];
-				posFloat[1] = j * lightGridSize[1];
-				posFloat[2] = k * lightGridSize[2];
-				
-				lightGridPoint_t* gridPoint = &lightGridPoints[ pos[0] * gridStep[0] + pos[1] * gridStep[1] + pos[2] * gridStep[2] ];
-				
-				gridPoint->origin = lightGridOrigin + posFloat;
-			}
-		}
-	}
-#endif
-}
-
-// RB end
-
-/*
-================
-idRenderWorldLocal::ReadBinaryLightGridPoints
-================
-*/
-// RB begin
-void idRenderWorldLocal::ReadBinaryLightGridPoints( idFile* file )
-{
-	int numLightGridPoints = 0;
-	file->ReadBig( numLightGridPoints );
-	if( numLightGridPoints < 0 )
-	{
-		idLib::Error( "ReadBinaryLightGridPoints: bad numLightGridPoints" );
-		return;
-	}
-	
-	// gridMins
-	file->ReadBig( lightGridOrigin );
-	file->ReadBig( lightGridSize );
-	file->ReadBigArray( lightGridBounds, 3 );
-	
-	lightGridPoints.SetNum( numLightGridPoints );
-	
-	idLib::Printf( "light grid size (%i %i %i)\n", ( int )lightGridSize[0], ( int )lightGridSize[1], ( int )lightGridSize[2] );
-	idLib::Printf( "light grid bounds (%i %i %i)\n", ( int )lightGridBounds[0], ( int )lightGridBounds[1], ( int )lightGridBounds[2] );
-	idLib::Printf( "%9u x %u B = lightGridSize = (%.2fMB)\n", numLightGridPoints, sizeof( lightGridPoint_t ), ( float )( lightGridPoints.MemoryUsed() ) / ( 1024.0f * 1024.0f ) );
-	
-	for( int i = 0; i < numLightGridPoints; i++ )
-	{
-		lightGridPoint_t* gridPoint = &lightGridPoints[i];
-		
-		file->ReadBigArray( gridPoint->ambient, 3 );
-		file->ReadBigArray( gridPoint->directed, 3 );
-		file->ReadBigArray( gridPoint->latLong, 2 );
-	}
-	
-	CalculateLightGridPointPositions();
-}
-// RB end
 
 
 /*
@@ -889,6 +780,18 @@ void idRenderWorldLocal::FreeDefs()
 			entityDefs[i] = NULL;
 		}
 	}
+	
+	// Reset decals and overlays
+	for( int i = 0; i < decals.Num(); i++ )
+	{
+		decals[i].entityHandle = -1;
+		decals[i].lastStartTime = 0;
+	}
+	for( int i = 0; i < overlays.Num(); i++ )
+	{
+		overlays[i].entityHandle = -1;
+		overlays[i].lastStartTime = 0;
+	}
 }
 
 /*
@@ -918,33 +821,18 @@ bool idRenderWorldLocal::InitFromMap( const char* name )
 	idStrStatic< MAX_OSPATH > filename = name;
 	filename.SetFileExtension( PROC_FILE_EXT );
 	
-	// check for generated ASCII file
-	idStrStatic< MAX_OSPATH > generatedASCIIFileName = filename;
-	generatedASCIIFileName.Insert( "generated/", 0 );
-	
-	// check for generated binary file
+	// check for generated file
 	idStrStatic< MAX_OSPATH > generatedFileName = filename;
 	generatedFileName.Insert( "generated/", 0 );
 	generatedFileName.SetFileExtension( "bproc" );
 	
 	// if we are reloading the same map, check the timestamp
 	// and try to skip all the work
-	
-	// RB: look for generated/maps/*.proc first
-	ID_TIME_T sourceTimeStamp = fileSystem->GetTimestamp( generatedASCIIFileName );
-	if( sourceTimeStamp != FILE_NOT_FOUND_TIMESTAMP )
-	{
-		filename = generatedASCIIFileName;
-	}
-	else
-	{
-		// try maps/*.proc without the generated/
-		sourceTimeStamp = fileSystem->GetTimestamp( filename );
-	}
+	ID_TIME_T currentTimeStamp = fileSystem->GetTimestamp( filename );
 	
 	if( name == mapName )
 	{
-		if( sourceTimeStamp != FILE_NOT_FOUND_TIMESTAMP && sourceTimeStamp == mapTimeStamp )
+		if( fileSystem->InProductionMode() || ( currentTimeStamp != FILE_NOT_FOUND_TIMESTAMP && currentTimeStamp == mapTimeStamp ) )
 		{
 			common->Printf( "idRenderWorldLocal::InitFromMap: retaining existing map\n" );
 			FreeDefs();
@@ -958,43 +846,21 @@ bool idRenderWorldLocal::InitFromMap( const char* name )
 	
 	FreeWorld();
 	
-	
 	// see if we have a generated version of this
-	static const byte BPROC_VERSION = 5;
+	static const byte BPROC_VERSION = 1;
 	static const unsigned int BPROC_MAGIC = ( 'P' << 24 ) | ( 'R' << 16 ) | ( 'O' << 8 ) | BPROC_VERSION;
 	bool loaded = false;
-	
-#if 1
-	
-	// RB: don't waste memory on low memory systems
-#if defined(__ANDROID__)
-	idFileLocal file( fileSystem->OpenFileRead( generatedFileName ) );
-#else
 	idFileLocal file( fileSystem->OpenFileReadMemory( generatedFileName ) );
-#endif
-	
 	if( file != NULL )
 	{
 		int numEntries = 0;
 		int magic = 0;
-		
 		file->ReadBig( magic );
-		file->ReadBig( mapTimeStamp );
-		
-		// RB: added extra time stamp check
-		if( magic == BPROC_MAGIC && sourceTimeStamp == mapTimeStamp )
+		if( magic == BPROC_MAGIC )
 		{
-			common->Printf( "idRenderWorldLocal::InitFromMap: loading binary file '%s'\n", generatedFileName.c_str() );
-			
 			file->ReadBig( numEntries );
 			file->ReadString( mapName );
-			
-			// if we are writing a demo, archive the load command
-			if( session->writeDemo )
-			{
-				WriteLoadMap();
-			}
-			
+			file->ReadBig( mapTimeStamp );
 			loaded = true;
 			for( int i = 0; i < numEntries; i++ )
 			{
@@ -1031,12 +897,6 @@ bool idRenderWorldLocal::InitFromMap( const char* name )
 				{
 					ReadBinaryNodes( file );
 				}
-				// RB begin
-				else if( type == "lightgridpoints" )
-				{
-					ReadBinaryLightGridPoints( file );
-				}
-				// RB end
 				else
 				{
 					idLib::Error( "Binary proc file failed, unexpected type %s\n", type.c_str() );
@@ -1044,11 +904,11 @@ bool idRenderWorldLocal::InitFromMap( const char* name )
 			}
 		}
 	}
-#endif
 	
 	if( !loaded )
 	{
-		src = new idLexer( filename, LEXFL_NOSTRINGCONCAT | LEXFL_NODOLLARPRECOMPILE );
+	
+		src = new( TAG_RENDER ) idLexer( filename, LEXFL_NOSTRINGCONCAT | LEXFL_NODOLLARPRECOMPILE );
 		if( !src->IsLoaded() )
 		{
 			common->Printf( "idRenderWorldLocal::InitFromMap: %s not found\n", filename.c_str() );
@@ -1056,32 +916,22 @@ bool idRenderWorldLocal::InitFromMap( const char* name )
 			return false;
 		}
 		
+		
 		mapName = name;
-		mapTimeStamp = sourceTimeStamp;
+		mapTimeStamp = currentTimeStamp;
 		
 		// if we are writing a demo, archive the load command
-		if( session->writeDemo )
+		if( common->WriteDemo() )
 		{
 			WriteLoadMap();
 		}
 		
-		// RB: added PROC_FILE_ID2
-		if( !src->ReadToken( &token ) || ( token.Icmp( PROC_FILE_ID ) && token.Icmp( PROC_FILE_ID2 ) ) )
-			// RB end
+		if( !src->ReadToken( &token ) || token.Icmp( PROC_FILE_ID ) )
 		{
 			common->Printf( "idRenderWorldLocal::InitFromMap: bad id '%s' instead of '%s'\n", token.c_str(), PROC_FILE_ID );
 			delete src;
 			return false;
 		}
-		
-		// RB begin
-		int procVersion = 3;
-		
-		if( !token.Icmp( PROC_FILE_ID2 ) )
-		{
-			procVersion = PROC_EXT_VERSION;
-		}
-		// RB end
 		
 		int numEntries = 0;
 		idFileLocal outputFile( fileSystem->OpenFileWrite( generatedFileName, "fs_basepath" ) );
@@ -1089,9 +939,9 @@ bool idRenderWorldLocal::InitFromMap( const char* name )
 		{
 			int magic = BPROC_MAGIC;
 			outputFile->WriteBig( magic );
-			outputFile->WriteBig( mapTimeStamp );
 			outputFile->WriteBig( numEntries );
 			outputFile->WriteString( mapName );
+			outputFile->WriteBig( mapTimeStamp );
 		}
 		
 		// parse the file
@@ -1102,11 +952,12 @@ bool idRenderWorldLocal::InitFromMap( const char* name )
 				break;
 			}
 			
-			session->PacifierUpdate();
+			common->UpdateLevelLoadPacifier();
+			
 			
 			if( token == "model" )
 			{
-				lastModel = ParseModel( src, name, sourceTimeStamp, outputFile, procVersion );
+				lastModel = ParseModel( src, name, currentTimeStamp, outputFile );
 				
 				// add it to the model manager list
 				renderModelManager->AddModel( lastModel );
@@ -1141,16 +992,6 @@ bool idRenderWorldLocal::InitFromMap( const char* name )
 				continue;
 			}
 			
-			// RB begin
-			if( token == "lightGridPoints" )
-			{
-				ParseLightGridPoints( src, outputFile );
-				
-				numEntries++;
-				continue;
-			}
-			// RB end
-			
 			if( token == "nodes" )
 			{
 				ParseNodes( src, outputFile );
@@ -1169,10 +1010,12 @@ bool idRenderWorldLocal::InitFromMap( const char* name )
 			outputFile->Seek( 0, FS_SEEK_SET );
 			int magic = BPROC_MAGIC;
 			outputFile->WriteBig( magic );
-			outputFile->WriteBig( mapTimeStamp );
 			outputFile->WriteBig( numEntries );
 		}
+		
 	}
+	
+	
 	
 	// if it was a trivial map without any areas, create a single area
 	if( !numPortalAreas )
@@ -1226,10 +1069,10 @@ void idRenderWorldLocal::AddWorldModelEntities()
 	// based on the bounding box, rather than explicitly into the correct area
 	for( int i = 0; i < numPortalAreas; i++ )
 	{
-		session->PacifierUpdate();
+		common->UpdateLevelLoadPacifier();
 		
 		
-		idRenderEntityLocal* def = new idRenderEntityLocal;
+		idRenderEntityLocal*	 def = new( TAG_RENDER_ENTITY ) idRenderEntityLocal;
 		
 		// try and reuse a free spot
 		int index = entityDefs.FindNull();
@@ -1263,21 +1106,23 @@ void idRenderWorldLocal::AddWorldModelEntities()
 			}
 		}
 		
-		def->referenceBounds = def->parms.hModel->Bounds();
+		// the local and global reference bounds are the same for area models
+		def->localReferenceBounds = def->parms.hModel->Bounds();
+		def->globalReferenceBounds = def->parms.hModel->Bounds();
 		
-		def->parms.axis[0][0] = 1;
-		def->parms.axis[1][1] = 1;
-		def->parms.axis[2][2] = 1;
-		
-		R_AxisToModelMatrix( def->parms.axis, def->parms.origin, def->modelMatrix );
+		def->parms.axis[0][0] = 1.0f;
+		def->parms.axis[1][1] = 1.0f;
+		def->parms.axis[2][2] = 1.0f;
 		
 		// in case an explicit shader is used on the world, we don't
 		// want it to have a 0 alpha or color
-		def->parms.shaderParms[0] =
-			def->parms.shaderParms[1] =
-				def->parms.shaderParms[2] =
-					def->parms.shaderParms[3] = 1;
-					
+		def->parms.shaderParms[0] = 1.0f;
+		def->parms.shaderParms[1] = 1.0f;
+		def->parms.shaderParms[2] = 1.0f;
+		def->parms.shaderParms[3] = 1.0f;
+		
+		R_DeriveEntityData( def );
+		
 		AddEntityRefToArea( def, &portalAreas[i] );
 	}
 }
@@ -1302,4 +1147,14 @@ bool idRenderWorldLocal::CheckAreaForPortalSky( int areaNum )
 	}
 	
 	return false;
+}
+
+/*
+=====================
+ResetLocalRenderModels
+=====================
+*/
+void idRenderWorldLocal::ResetLocalRenderModels()
+{
+	localModels.Clear();	// Clear out the list when switching between expansion packs, so InitFromMap doesn't try to delete the list whose content has already been deleted by the model manager being re-started
 }

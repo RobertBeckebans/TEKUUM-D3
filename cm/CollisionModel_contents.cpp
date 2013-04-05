@@ -132,7 +132,7 @@ CM_SetTrmEdgeSidedness
 	if ( !(edge->sideSet & (1<<bitNum)) ) {											\
 		float fl;																	\
 		fl = (bpl).PermutedInnerProduct( epl );										\
-		edge->side = (edge->side & ~(1<<bitNum)) | (FLOATSIGNBITSET(fl) << bitNum);	\
+		edge->side = (edge->side & ~(1<<bitNum)) | (IEEE_FLT_SIGNBITSET(fl) << bitNum);	\
 		edge->sideSet |= (1 << bitNum);												\
 	}																				\
 }
@@ -274,7 +274,7 @@ bool idCollisionModelManagerLocal::TestTrmInPolygon( cm_traceWork_t* tw, cm_poly
 		// pluecker coordinate for edge
 		tw->polygonEdgePlueckerCache[i].FromLine( tw->model->vertices[edge->vertexNum[0]].p,
 				tw->model->vertices[edge->vertexNum[1]].p );
-		v = &tw->model->vertices[edge->vertexNum[INTSIGNBITSET( edgeNum )]];
+		v = &tw->model->vertices[edge->vertexNum[INT32_SIGNBITSET( edgeNum )]];
 		// reset sidedness cache if this is the first time we encounter this vertex
 		if( v->checkcount != idCollisionModelManagerLocal::checkCount )
 		{
@@ -299,7 +299,7 @@ bool idCollisionModelManagerLocal::TestTrmInPolygon( cm_traceWork_t* tw, cm_poly
 			continue;
 		}
 		// check from which side to which side the trm edge goes
-		flip = INTSIGNBITSET( sides[tw->edges[i].vertexNum[0]] );
+		flip = INT32_SIGNBITSET( sides[tw->edges[i].vertexNum[0]] );
 		// test if trm edge goes through the polygon between the polygon edges
 		for( j = 0; j < p->numEdges; j++ )
 		{
@@ -307,7 +307,7 @@ bool idCollisionModelManagerLocal::TestTrmInPolygon( cm_traceWork_t* tw, cm_poly
 			edge = tw->model->edges + abs( edgeNum );
 #if 1
 			CM_SetTrmEdgeSidedness( edge, tw->edges[i].pl, tw->polygonEdgePlueckerCache[j], i );
-			if( INTSIGNBITSET( edgeNum ) ^ ( ( edge->side >> i ) & 1 ) ^ flip )
+			if( INT32_SIGNBITSET( edgeNum ) ^ ( ( edge->side >> i ) & 1 ) ^ flip )
 			{
 				break;
 			}
@@ -398,7 +398,7 @@ bool idCollisionModelManagerLocal::TestTrmInPolygon( cm_traceWork_t* tw, cm_poly
 #if 1
 				bitNum = abs( trmEdgeNum );
 				CM_SetTrmEdgeSidedness( edge, trmEdge->pl, tw->polygonEdgePlueckerCache[i], bitNum );
-				if( INTSIGNBITSET( trmEdgeNum ) ^ ( ( edge->side >> bitNum ) & 1 ) ^ flip )
+				if( INT32_SIGNBITSET( trmEdgeNum ) ^ ( ( edge->side >> bitNum ) & 1 ) ^ flip )
 				{
 					break;
 				}

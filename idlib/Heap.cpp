@@ -1216,8 +1216,11 @@ void Mem_UpdateFreeStats( int size )
 Mem_Alloc
 ==================
 */
-void* Mem_Alloc( const int size )
+void* Mem_Alloc( const int size, const memTag_t tag )
 {
+#if 1
+	return Mem_Alloc16( size, tag );
+#else
 	if( !size )
 	{
 		return NULL;
@@ -1232,6 +1235,7 @@ void* Mem_Alloc( const int size )
 	void* mem = mem_heap->Allocate( size );
 	Mem_UpdateAllocStats( mem_heap->Msize( mem ) );
 	return mem;
+#endif
 }
 
 /*
@@ -1241,6 +1245,9 @@ Mem_Free
 */
 void Mem_Free( void* ptr )
 {
+#if 1
+	return Mem_Free16( ptr );
+#else
 	if( !ptr )
 	{
 		return;
@@ -1255,6 +1262,7 @@ void Mem_Free( void* ptr )
 	}
 	Mem_UpdateFreeStats( mem_heap->Msize( ptr ) );
 	mem_heap->Free( ptr );
+#endif
 }
 
 /*
@@ -1262,7 +1270,7 @@ void Mem_Free( void* ptr )
 Mem_Alloc16
 ==================
 */
-void* Mem_Alloc16( const int size )
+void* Mem_Alloc16( const int size, const memTag_t tag )
 {
 	if( !size )
 	{
@@ -1318,9 +1326,9 @@ void Mem_Free16( void* ptr )
 Mem_ClearedAlloc
 ==================
 */
-void* Mem_ClearedAlloc( const int size )
+void* Mem_ClearedAlloc( const int size, const memTag_t tag )
 {
-	void* mem = Mem_Alloc( size );
+	void* mem = Mem_Alloc( size, tag );
 	SIMDProcessor->Memset( mem, 0, size );
 	return mem;
 }

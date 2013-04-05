@@ -1,25 +1,25 @@
 /*
 ===========================================================================
 
-Doom 3 GPL Source Code
-Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Doom 3 BFG Edition GPL Source Code
+Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
 
-This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
+This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
-Doom 3 Source Code is free software: you can redistribute it and/or modify
+Doom 3 BFG Edition Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Doom 3 Source Code is distributed in the hope that it will be useful,
+Doom 3 BFG Edition Source Code is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Doom 3 Source Code.  If not, see <http://www.gnu.org/licenses/>.
+along with Doom 3 BFG Edition Source Code.  If not, see <http://www.gnu.org/licenses/>.
 
-In addition, the Doom 3 Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 Source Code.  If not, please request a copy in writing from id Software at the address below.
+In addition, the Doom 3 BFG Edition Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 BFG Edition Source Code.  If not, please request a copy in writing from id Software at the address below.
 
 If you have questions concerning this license or the applicable additional terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 
@@ -40,8 +40,6 @@ If you have questions concerning this license or the applicable additional terms
 class idImage;
 class idCinematic;
 class idUserInterface;
-class idMegaTexture;
-struct viewDef_t;
 
 // moved from image.h for default parm
 typedef enum
@@ -55,14 +53,8 @@ typedef enum
 {
 	TR_REPEAT,
 	TR_CLAMP,
-	// RB: deprecated with OpenGL 3.0
-	//TR_CLAMP_TO_BORDER,		// this should replace TR_CLAMP_TO_ZERO and TR_CLAMP_TO_ZERO_ALPHA,
-	// RB end
-	// but I don't want to risk changing it right now
-	TR_CLAMP_TO_ZERO,		// guarantee 0,0,0,255 edge for projected textures,
-	// set AFTER image format selection
-	TR_CLAMP_TO_ZERO_ALPHA	// guarantee 0 alpha edge for projected textures,
-	// set AFTER image format selection
+	TR_CLAMP_TO_ZERO,		// guarantee 0,0,0,255 edge for projected textures
+	TR_CLAMP_TO_ZERO_ALPHA	// guarantee 0 alpha edge for projected textures
 } textureRepeat_t;
 
 typedef struct
@@ -189,7 +181,8 @@ typedef enum
 	SL_AMBIENT,						// execute after lighting
 	SL_BUMP,
 	SL_DIFFUSE,
-	SL_SPECULAR
+	SL_SPECULAR,
+	SL_COVERAGE,
 } stageLighting_t;
 
 // cross-blended terrain textures need to modulate the color by
@@ -211,17 +204,16 @@ typedef struct
 	int					vertexParms[MAX_VERTEX_PARMS][4];	// evaluated register indexes
 	
 	int					fragmentProgram;
+	int					glslProgram;
 	int					numFragmentProgramImages;
 	idImage* 			fragmentProgramImages[MAX_FRAGMENT_IMAGES];
-	
-	idMegaTexture*		megaTexture;		// handles all the binding and parameter setting
 } newShaderStage_t;
 
 typedef struct
 {
 	int					conditionRegister;	// if registers[conditionRegister] == 0, skip stage
 	stageLighting_t		lighting;			// determines which passes interact with lights
-	int					drawStateBits;
+	uint64				drawStateBits;
 	colorStage_t		color;
 	bool				hasAlphaTest;
 	int					alphaTestRegister;
@@ -277,6 +269,7 @@ const int MAX_SHADER_STAGES			= 256;
 const int MAX_TEXGEN_REGISTERS		= 4;
 
 const int MAX_ENTITY_SHADER_PARMS	= 12;
+const int MAX_GLOBAL_SHADER_PARMS	= 12;	// ? this looks like it should only be 8
 
 // material flags
 typedef enum
@@ -309,7 +302,7 @@ typedef enum
 	CONTENTS_AAS_SOLID			= BIT( 13 ),	// solid for AAS
 	CONTENTS_AAS_OBSTACLE		= BIT( 14 ),	// used to compile an obstacle into AAS that can be enabled/disabled
 	CONTENTS_FLASHLIGHT_TRIGGER	= BIT( 15 ),	// used for triggers that are activated by the flashlight
-	
+
 	// RB begin
 	CONTENTS_DYNAMICPORTAL		= BIT( 16 ),	// used for dynamic portals
 	// RB end
@@ -337,9 +330,10 @@ typedef enum
 	SURFTYPE_GLASS,
 	SURFTYPE_PLASTIC,
 	SURFTYPE_RICOCHET,
-// RB begin
+	// RB begin
 	SURFTYPE_WALLWALK,
-// RB end
+	// RB end
+	SURFTYPE_10,
 	SURFTYPE_11,
 	SURFTYPE_12,
 	SURFTYPE_13,
@@ -379,7 +373,7 @@ public:
 	virtual size_t		Size() const;
 	virtual bool		SetDefaultText();
 	virtual const char* DefaultDefinition() const;
-	virtual bool		Parse( const char* text, const int textLength );
+	virtual bool		Parse( const char* text, const int textLength, bool allowBinaryVersion );
 	virtual void		FreeData();
 	virtual void		Print() const;
 	
@@ -398,6 +392,22 @@ public:
 	{
 		return numStages;
 	}
+	
+	// if the material is simple, all that needs to be known are
+	// the images for drawing.
+	// These will either all return valid images, or all return NULL
+	idImage* 			GetFastPathBumpImage() const
+	{
+		return fastPathBumpImage;
+	};
+	idImage* 			GetFastPathDiffuseImage() const
+	{
+		return fastPathDiffuseImage;
+	};
+	idImage* 			GetFastPathSpecularImage() const
+	{
+		return fastPathSpecularImage;
+	};
 	
 	// get a specific stage
 	const shaderStage_t* GetStage( const int index ) const
@@ -639,6 +649,12 @@ public:
 	{
 		return sort;
 	}
+	
+	const int			GetStereoEye() const
+	{
+		return stereoEye;
+	}
+	
 	// this is only used by the gui system to force sorting order
 	// on images referenced from tga's instead of materials.
 	// this is done this way as there are 2000 tgas the guis use
@@ -726,6 +742,8 @@ public:
 	
 	void				ResetCinematicTime( int time ) const;
 	
+//	int					GetCinematicStartTime() const;
+	
 	void				UpdateCinematic( int time ) const;
 	
 	//------------------------------------------------------------------
@@ -737,9 +755,6 @@ public:
 	
 	void				SetGui( const char* _gui ) const;
 	
-	// just for resource tracking
-	void				SetImageClassifications( int tag ) const;
-	
 	//------------------------------------------------------------------
 	
 	// returns number of registers this material contains
@@ -748,14 +763,23 @@ public:
 		return numRegisters;
 	}
 	
-	// regs should point to a float array large enough to hold GetNumRegisters() floats
-	void				EvaluateRegisters( float* regs, const float entityParms[MAX_ENTITY_SHADER_PARMS],
-										   const viewDef_t* view, idSoundEmitter* soundEmitter = NULL ) const;
-										   
+	// Regs should point to a float array large enough to hold GetNumRegisters() floats.
+	// FloatTime is passed in because different entities, which may be running in parallel,
+	// can be in different time groups.
+	void				EvaluateRegisters(
+		float* 			registers,
+		const float		localShaderParms[MAX_ENTITY_SHADER_PARMS],
+		const float		globalShaderParms[MAX_GLOBAL_SHADER_PARMS],
+		const float		floatTime,
+		idSoundEmitter* soundEmitter ) const;
+		
 	// if a material only uses constants (no entityParm or globalparm references), this
 	// will return a pointer to an internal table, and EvaluateRegisters will not need
 	// to be called.  If NULL is returned, EvaluateRegisters must be used.
-	const float* 		ConstantRegisters() const;
+	const float* 		ConstantRegisters() const
+	{
+		return constantRegisters;
+	};
 	
 	bool				SuppressInSubview() const
 	{
@@ -773,8 +797,10 @@ private:
 	void				ParseMaterial( idLexer& src );
 	bool				MatchToken( idLexer& src, const char* match );
 	void				ParseSort( idLexer& src );
+	void				ParseStereoEye( idLexer& src );
 	void				ParseBlend( idLexer& src, shaderStage_t* stage );
 	void				ParseVertexParm( idLexer& src, newShaderStage_t* newStage );
+	void				ParseVertexParm2( idLexer& src, newShaderStage_t* newStage );
 	void				ParseFragmentMap( idLexer& src, newShaderStage_t* newStage );
 	void				ParseStage( idLexer& src, const textureRepeat_t trpDefault = TR_REPEAT );
 	void				ParseDeform( idLexer& src );
@@ -795,12 +821,17 @@ private:
 	void				SortInteractionStages();
 	void				AddImplicitStages( const textureRepeat_t trpDefault = TR_REPEAT );
 	void				CheckForConstantRegisters();
+	void				SetFastPathImages();
 	
 private:
 	idStr				desc;				// description
 	idStr				renderBump;			// renderbump command options, without the "renderbump" at the start
 	
-	idImage*				lightFalloffImage;
+	idImage*				lightFalloffImage;	// only for light shaders
+	
+	idImage* 			fastPathBumpImage;	// if any of these are set, they all will be
+	idImage* 			fastPathDiffuseImage;
+	idImage* 			fastPathSpecularImage;
 	
 	int					entityGui;			// draw a gui with the idUserInterface from the renderEntity_t
 	// non zero will draw gui, gui2, or gui3 from renderEnitty_t
@@ -820,6 +851,7 @@ private:
 	
 	
 	mutable	float		sort;				// lower numbered shaders draw before higher numbered
+	int					stereoEye;
 	deform_t			deform;
 	int					deformRegisters[4];		// numeric parameter for deforms
 	const idDecl*		deformDecl;			// for surface emitted particle deforms and tables

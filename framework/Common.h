@@ -37,6 +37,33 @@ If you have questions concerning this license or the applicable additional terms
 ==============================================================
 */
 
+ID_INLINE void BeginProfileNamedEventColor( uint32 color, VERIFY_FORMAT_STRING const char* szName )
+{
+}
+ID_INLINE void EndProfileNamedEvent()
+{
+}
+
+ID_INLINE void BeginProfileNamedEvent( VERIFY_FORMAT_STRING const char* szName )
+{
+	BeginProfileNamedEventColor( ( uint32 ) 0xFF00FF00, szName );
+}
+
+class idScopedProfileEvent
+{
+public:
+	idScopedProfileEvent( const char* name )
+	{
+		BeginProfileNamedEvent( name );
+	}
+	~idScopedProfileEvent()
+	{
+		EndProfileNamedEvent();
+	}
+};
+
+#define SCOPED_PROFILE_EVENT( x ) idScopedProfileEvent scopedProfileEvent_##__LINE__( x )
+
 typedef enum
 {
 	EDITOR_NONE					= 0,
@@ -89,6 +116,7 @@ extern idCVar		com_showSoundDecoders;
 extern idCVar		com_makingBuild;
 extern idCVar		com_updateLoadSize;
 extern idCVar		com_videoRam;
+extern idCVar		com_productionMode;
 
 extern int			time_gameFrame;			// game logic time
 extern int			time_gameDraw;			// game present time

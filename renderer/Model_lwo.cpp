@@ -1,33 +1,34 @@
 /*
 ===========================================================================
 
-Doom 3 GPL Source Code
-Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Doom 3 BFG Edition GPL Source Code
+Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
 
-This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
+This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
-Doom 3 Source Code is free software: you can redistribute it and/or modify
+Doom 3 BFG Edition Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Doom 3 Source Code is distributed in the hope that it will be useful,
+Doom 3 BFG Edition Source Code is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Doom 3 Source Code.  If not, see <http://www.gnu.org/licenses/>.
+along with Doom 3 BFG Edition Source Code.  If not, see <http://www.gnu.org/licenses/>.
 
-In addition, the Doom 3 Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 Source Code.  If not, please request a copy in writing from id Software at the address below.
+In addition, the Doom 3 BFG Edition Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 BFG Edition Source Code.  If not, please request a copy in writing from id Software at the address below.
 
 If you have questions concerning this license or the applicable additional terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 
 ===========================================================================
 */
 
-#include "precompiled.h"
 #pragma hdrstop
+#include "precompiled.h"
+
 
 #include "Model_lwo.h"
 
@@ -105,7 +106,7 @@ lwClip* lwGetClip( idFile* fp, int cksize )
 	
 	/* allocate the Clip structure */
 	
-	clip = ( lwClip* )Mem_ClearedAlloc( sizeof( lwClip ) );
+	clip = ( lwClip* )Mem_ClearedAlloc( sizeof( lwClip ), TAG_MODEL );
 	if( !clip ) goto Fail;
 	
 	clip->contrast.val = 1.0f;
@@ -236,7 +237,7 @@ lwClip* lwGetClip( idFile* fp, int cksize )
 				
 			case ID_IFLT:
 			case ID_PFLT:
-				filt = ( lwPlugin* )Mem_ClearedAlloc( sizeof( lwPlugin ) );
+				filt = ( lwPlugin* )Mem_ClearedAlloc( sizeof( lwPlugin ), TAG_MODEL );
 				if( !filt ) goto Fail;
 				
 				filt->name = getS0( fp );
@@ -352,9 +353,9 @@ Read an ENVL chunk from an LWO2 file.
 
 lwEnvelope* lwGetEnvelope( idFile* fp, int cksize )
 {
-	lwEnvelope* env;
-	lwKey* key;
-	lwPlugin* plug;
+	lwEnvelope* env = NULL;
+	lwKey* key = NULL;
+	lwPlugin* plug = NULL;
 	unsigned int id;
 	unsigned short sz;
 	float f[ 4 ];
@@ -363,7 +364,7 @@ lwEnvelope* lwGetEnvelope( idFile* fp, int cksize )
 	
 	/* allocate the Envelope structure */
 	
-	env = ( lwEnvelope* )Mem_ClearedAlloc( sizeof( lwEnvelope ) );
+	env = ( lwEnvelope* )Mem_ClearedAlloc( sizeof( lwEnvelope ), TAG_MODEL );
 	if( !env ) goto Fail;
 	
 	/* remember where we started */
@@ -407,7 +408,7 @@ lwEnvelope* lwGetEnvelope( idFile* fp, int cksize )
 				break;
 				
 			case ID_KEY:
-				key = ( lwKey* )Mem_ClearedAlloc( sizeof( lwKey ) );
+				key = ( lwKey* )Mem_ClearedAlloc( sizeof( lwKey ), TAG_MODEL );
 				if( !key ) goto Fail;
 				key->time = getF4( fp );
 				key->value = getF4( fp );
@@ -416,7 +417,7 @@ lwEnvelope* lwGetEnvelope( idFile* fp, int cksize )
 				break;
 				
 			case ID_SPAN:
-				if( !key ) goto Fail;
+				if( key == NULL ) goto Fail;
 				key->shape = getU4( fp );
 				
 				nparams = ( sz - 4 ) / 4;
@@ -442,7 +443,7 @@ lwEnvelope* lwGetEnvelope( idFile* fp, int cksize )
 				break;
 				
 			case ID_CHAN:
-				plug = ( lwPlugin* )Mem_ClearedAlloc( sizeof( lwPlugin ) );
+				plug = ( lwPlugin* )Mem_ClearedAlloc( sizeof( lwPlugin ), TAG_MODEL );
 				if( !plug ) goto Fail;
 				
 				plug->name = getS0( fp );
@@ -759,7 +760,6 @@ static float incoming( lwKey* key0, lwKey* key1 )
 			if( key1->next )
 				in *= ( key1->time - key0->time ) / ( key1->next->time - key0->time );
 			break;
-			return in;
 			
 		case ID_BEZ2:
 			in = key1->param[ 1 ] * ( key1->time - key0->time );
@@ -793,23 +793,28 @@ float evalEnvelope( lwEnvelope* env, float time )
 	float t, h1, h2, h3, h4, in, out, offset = 0.0f;
 	int noff;
 	
+	// Start key
+	skey = ekey = env->key;
 	
 	/* if there's no key, the value is 0 */
-	
-	if( env->nkeys == 0 ) return 0.0f;
+	if( env->nkeys == 0 || skey == NULL )
+	{
+		return 0.0f;
+	}
 	
 	/* if there's only one key, the value is constant */
-	
 	if( env->nkeys == 1 )
+	{
 		return env->key->value;
-		
-	/* find the first and last keys */
+	}
 	
-	skey = ekey = env->key;
-	while( ekey->next ) ekey = ekey->next;
+	/* find the last keys */
+	while( ekey->next != NULL )
+	{
+		ekey = ekey->next;
+	}
 	
 	/* use pre-behavior if time is before first key time */
-	
 	if( time < skey->time )
 	{
 		switch( env->behavior[ 0 ] )
@@ -836,9 +841,16 @@ float evalEnvelope( lwEnvelope* env, float time )
 				break;
 				
 			case BEH_LINEAR:
-				out = outgoing( skey, skey->next )
-					  / ( skey->next->time - skey->time );
-				return out * ( time - skey->time ) + skey->value;
+				if( skey->next != NULL )
+				{
+					out = outgoing( skey, skey->next )
+						  / ( skey->next->time - skey->time );
+					return out * ( time - skey->time ) + skey->value;
+				}
+				else
+				{
+					return 0.0f;
+				}
 		}
 	}
 	
@@ -879,9 +891,17 @@ float evalEnvelope( lwEnvelope* env, float time )
 	/* get the endpoints of the interval being evaluated */
 	
 	key0 = env->key;
+	if( key0 == NULL || key0->next == NULL )
+	{
+		return 0.0f;
+	}
 	while( time > key0->next->time )
 		key0 = key0->next;
 	key1 = key0->next;
+	if( key1 == NULL )
+	{
+		return 0.0f;
+	}
 	
 	/* check for singularities first */
 	
@@ -952,10 +972,10 @@ Append a node to a list.
 
 void lwListAdd( void** list, void* node )
 {
-	lwNode* head, *tail;
+	lwNode* head = NULL, *tail = NULL;
 	
 	head = *( ( lwNode** ) list );
-	if( !head )
+	if( head == NULL )
 	{
 		*list = node;
 		return;
@@ -1054,7 +1074,7 @@ void* getbytes( idFile* fp, int size )
 		flen = FLEN_ERROR;
 		return NULL;
 	}
-	data = Mem_ClearedAlloc( size );
+	data = Mem_ClearedAlloc( size, TAG_MODEL );
 	if( !data )
 	{
 		flen = FLEN_ERROR;
@@ -1245,7 +1265,7 @@ float getF4( idFile* fp )
 	BigRevBytes( &f, 4, 1 );
 	flen += 4;
 	
-	if( FLOAT_IS_DENORMAL( f ) )
+	if( IEEE_FLT_IS_DENORMAL( f ) )
 	{
 		f = 0.0f;
 	}
@@ -1282,7 +1302,7 @@ char* getS0( idFile* fp )
 	}
 	
 	len = i + ( i & 1 );
-	s = ( char* )Mem_ClearedAlloc( len );
+	s = ( char* )Mem_ClearedAlloc( len, TAG_MODEL );
 	if( !s )
 	{
 		flen = FLEN_ERROR;
@@ -1307,41 +1327,42 @@ char* getS0( idFile* fp )
 
 int sgetI1( unsigned char** bp )
 {
+	assert( bp != NULL && *bp != NULL ); // remove compiler warning
 	int i;
 	
 	if( flen == FLEN_ERROR ) return 0;
 	i = **bp;
 	if( i > 127 ) i -= 256;
 	flen += 1;
-	// RB: 64 bit fix, changed *bp++ to *bp += 1
-	*bp += 1;
-	// RB end
+	( *bp )++;
 	return i;
 }
 
 
 short sgetI2( unsigned char** bp )
 {
+	assert( bp != NULL && *bp != NULL ); // remove compiler warning
 	short i;
 	
 	if( flen == FLEN_ERROR ) return 0;
 	memcpy( &i, *bp, 2 );
 	BigRevBytes( &i, 2, 1 );
 	flen += 2;
-	*bp += 2;
+	( *bp ) += 2;
 	return i;
 }
 
 
 int sgetI4( unsigned char** bp )
 {
-	int i;
+	assert( bp != NULL && *bp != NULL ); // remove compiler warning
+	short i;
 	
 	if( flen == FLEN_ERROR ) return 0;
-	memcpy( &i, *bp, 4 );
+	memcpy( &i, *bp, sizeof( i ) );
 	BigRevBytes( &i, 4, 1 );
 	flen += 4;
-	*bp += 4;
+	( *bp ) += 4;
 	return i;
 }
 
@@ -1353,9 +1374,7 @@ unsigned char sgetU1( unsigned char** bp )
 	if( flen == FLEN_ERROR ) return 0;
 	c = **bp;
 	flen += 1;
-	// RB: 64 bit fix, changed *bp++ to *bp += 1
-	*bp += 1;
-	// RB end
+	( *bp )++;
 	return c;
 }
 
@@ -1368,7 +1387,7 @@ unsigned short sgetU2( unsigned char** bp )
 	if( flen == FLEN_ERROR ) return 0;
 	i = ( buf[ 0 ] << 8 ) | buf[ 1 ];
 	flen += 2;
-	*bp += 2;
+	( *bp ) += 2;
 	return i;
 }
 
@@ -1381,7 +1400,7 @@ unsigned int sgetU4( unsigned char** bp )
 	memcpy( &i, *bp, 4 );
 	BigRevBytes( &i, 4, 1 );
 	flen += 4;
-	*bp += 4;
+	( *bp ) += 4;
 	return i;
 }
 
@@ -1397,13 +1416,13 @@ int sgetVX( unsigned char** bp )
 	{
 		i = buf[ 0 ] << 8 | buf[ 1 ];
 		flen += 2;
-		*bp += 2;
+		( *bp ) += 2;
 	}
 	else
 	{
 		i = ( buf[ 1 ] << 16 ) | ( buf[ 2 ] << 8 ) | buf[ 3 ];
 		flen += 4;
-		*bp += 4;
+		( *bp ) += 4;
 	}
 	return i;
 }
@@ -1417,9 +1436,9 @@ float sgetF4( unsigned char** bp )
 	memcpy( &f, *bp, 4 );
 	BigRevBytes( &f, 4, 1 );
 	flen += 4;
-	*bp += 4;
+	( *bp ) += 4;
 	
-	if( FLOAT_IS_DENORMAL( f ) )
+	if( IEEE_FLT_IS_DENORMAL( f ) )
 	{
 		f = 0.0f;
 	}
@@ -1439,11 +1458,11 @@ char* sgetS0( unsigned char** bp )
 	if( len == 1 )
 	{
 		flen += 2;
-		*bp += 2;
+		( *bp ) += 2;
 		return NULL;
 	}
 	len += len & 1;
-	s = ( char* )Mem_ClearedAlloc( len );
+	s = ( char* )Mem_ClearedAlloc( len, TAG_MODEL );
 	if( !s )
 	{
 		flen = FLEN_ERROR;
@@ -1452,7 +1471,7 @@ char* sgetS0( unsigned char** bp )
 	
 	memcpy( s, buf, len );
 	flen += len;
-	*bp += len;
+	( *bp ) += len;
 	return s;
 }
 
@@ -1568,10 +1587,10 @@ lwObject* lwGetObject( const char* filename, unsigned int* failID, int* failpos 
 	
 	/* allocate an object and a default layer */
 	
-	object = ( lwObject* )Mem_ClearedAlloc( sizeof( lwObject ) );
+	object = ( lwObject* )Mem_ClearedAlloc( sizeof( lwObject ), TAG_MODEL );
 	if( !object ) goto Fail;
 	
-	layer = ( lwLayer* )Mem_ClearedAlloc( sizeof( lwLayer ) );
+	layer = ( lwLayer* )Mem_ClearedAlloc( sizeof( lwLayer ), TAG_MODEL );
 	if( !layer ) goto Fail;
 	object->layer = layer;
 	
@@ -1594,7 +1613,7 @@ lwObject* lwGetObject( const char* filename, unsigned int* failID, int* failpos 
 			case ID_LAYR:
 				if( object->nlayers > 0 )
 				{
-					layer = ( lwLayer* )Mem_ClearedAlloc( sizeof( lwLayer ) );
+					layer = ( lwLayer* )Mem_ClearedAlloc( sizeof( lwLayer ), TAG_MODEL );
 					if( !layer ) goto Fail;
 					lwListAdd( ( void** )&object->layer, layer );
 				}
@@ -1780,18 +1799,16 @@ static int add_clip( char* s, lwClip** clist, int* nclips )
 	lwClip* clip;
 	char* p;
 	
-	clip = ( lwClip* )Mem_ClearedAlloc( sizeof( lwClip ) );
-	if( !clip ) return 0;
+	clip = ( lwClip* )Mem_ClearedAlloc( sizeof( lwClip ), TAG_MODEL );
+	if( clip == NULL ) return 0;
 	
 	clip->contrast.val = 1.0f;
 	clip->brightness.val = 1.0f;
 	clip->saturation.val = 1.0f;
 	clip->gamma.val = 1.0f;
 	
-	// RB: fixed missing parenthesis
-	if( ( p = strstr( s, "(sequence)" ) ) )
+	if( ( p = strstr( s, "(sequence)" ) ) != NULL )
 	{
-		// RB end
 		p[ -1 ] = 0;
 		clip->type = ID_ISEQ;
 		clip->source.seq.prefix = s;
@@ -1803,9 +1820,7 @@ static int add_clip( char* s, lwClip** clist, int* nclips )
 		clip->source.still.name = s;
 	}
 	
-	// RB: fixed unused value
-	*nclips += 1;
-	// RB end
+	( *nclips )++;
 	clip->index = *nclips;
 	
 	lwListAdd( ( void** )clist, clip );
@@ -1824,15 +1839,15 @@ parameters.
 
 static int add_tvel( float pos[], float vel[], lwEnvelope** elist, int* nenvs )
 {
-	lwEnvelope* env;
-	lwKey* key0, *key1;
+	lwEnvelope* env = NULL;
+	lwKey* key0 = NULL, *key1 = NULL;
 	int i;
 	
 	for( i = 0; i < 3; i++ )
 	{
-		env = ( lwEnvelope* )Mem_ClearedAlloc( sizeof( lwEnvelope ) );
-		key0 = ( lwKey* )Mem_ClearedAlloc( sizeof( lwKey ) );
-		key1 = ( lwKey* )Mem_ClearedAlloc( sizeof( lwKey ) );
+		env = ( lwEnvelope* )Mem_ClearedAlloc( sizeof( lwEnvelope ), TAG_MODEL );
+		key0 = ( lwKey* )Mem_ClearedAlloc( sizeof( lwKey ), TAG_MODEL );
+		key1 = ( lwKey* )Mem_ClearedAlloc( sizeof( lwKey ), TAG_MODEL );
 		if( !env || !key0 || !key1 ) return 0;
 		
 		key0->next = key1;
@@ -1845,7 +1860,7 @@ static int add_tvel( float pos[], float vel[], lwEnvelope** elist, int* nenvs )
 		
 		env->index = *nenvs + i + 1;
 		env->type = 0x0301 + i;
-		env->name = ( char* )Mem_ClearedAlloc( 11 );
+		env->name = ( char* )Mem_ClearedAlloc( 11, TAG_MODEL );
 		if( env->name )
 		{
 			strcpy( env->name, "Position.X" );
@@ -1858,6 +1873,7 @@ static int add_tvel( float pos[], float vel[], lwEnvelope** elist, int* nenvs )
 		
 		lwListAdd( ( void** )elist, env );
 	}
+	assert( env != NULL );
 	
 	*nenvs += 3;
 	return env->index - 2;
@@ -1875,7 +1891,7 @@ static lwTexture* get_texture( char* s )
 {
 	lwTexture* tex;
 	
-	tex = ( lwTexture* )Mem_ClearedAlloc( sizeof( lwTexture ) );
+	tex = ( lwTexture* )Mem_ClearedAlloc( sizeof( lwTexture ), TAG_MODEL );
 	if( !tex ) return NULL;
 	
 	tex->tmap.size.val[ 0 ] =
@@ -1915,19 +1931,19 @@ Read an lwSurface from an LWOB file.
 
 lwSurface* lwGetSurface5( idFile* fp, int cksize, lwObject* obj )
 {
-	lwSurface* surf;
-	lwTexture* tex;
-	lwPlugin* shdr;
-	char* s;
+	lwSurface* surf = NULL;
+	lwTexture* tex = NULL;
+	lwPlugin* shdr = NULL;
+	char* s = NULL;
 	float v[ 3 ];
 	unsigned int id, flags;
 	unsigned short sz;
-	int pos, rlen, i;
+	int pos, rlen, i = 0;
 	
 	
 	/* allocate the Surface structure */
 	
-	surf = ( lwSurface* )Mem_ClearedAlloc( sizeof( lwSurface ) );
+	surf = ( lwSurface* )Mem_ClearedAlloc( sizeof( lwSurface ), TAG_MODEL );
 	if( !surf ) goto Fail;
 	
 	/* non-zero defaults */
@@ -2082,6 +2098,7 @@ lwSurface* lwGetSurface5( idFile* fp, int cksize, lwObject* obj )
 				break;
 				
 			case ID_TFLG:
+				assert( tex != NULL );
 				flags = getU2( fp );
 				
 				if( flags & 1 ) i = 0;
@@ -2104,21 +2121,25 @@ lwSurface* lwGetSurface5( idFile* fp, int cksize, lwObject* obj )
 				break;
 				
 			case ID_TSIZ:
+				assert( tex != NULL );
 				for( i = 0; i < 3; i++ )
 					tex->tmap.size.val[ i ] = getF4( fp );
 				break;
 				
 			case ID_TCTR:
+				assert( tex != NULL );
 				for( i = 0; i < 3; i++ )
 					tex->tmap.center.val[ i ] = getF4( fp );
 				break;
 				
 			case ID_TFAL:
+				assert( tex != NULL );
 				for( i = 0; i < 3; i++ )
 					tex->tmap.falloff.val[ i ] = getF4( fp );
 				break;
 				
 			case ID_TVEL:
+				assert( tex != NULL );
 				for( i = 0; i < 3; i++ )
 					v[ i ] = getF4( fp );
 				tex->tmap.center.eindex = add_tvel( tex->tmap.center.val, v,
@@ -2126,50 +2147,59 @@ lwSurface* lwGetSurface5( idFile* fp, int cksize, lwObject* obj )
 				break;
 				
 			case ID_TCLR:
+				assert( tex != NULL );
 				if( tex->type == ID_PROC )
 					for( i = 0; i < 3; i++ )
 						tex->param.proc.value[ i ] = getU1( fp ) / 255.0f;
 				break;
 				
 			case ID_TVAL:
+				assert( tex != NULL );
 				tex->param.proc.value[ 0 ] = getI2( fp ) / 256.0f;
 				break;
 				
 			case ID_TAMP:
+				assert( tex != NULL );
 				if( tex->type == ID_IMAP )
 					tex->param.imap.amplitude.val = getF4( fp );
 				break;
 				
 			case ID_TIMG:
+				assert( tex != NULL );
 				s = getS0( fp );
 				tex->param.imap.cindex = add_clip( s, &obj->clip, &obj->nclips );
 				break;
 				
 			case ID_TAAS:
+				assert( tex != NULL );
 				tex->param.imap.aa_strength = getF4( fp );
 				tex->param.imap.aas_flags = 1;
 				break;
 				
 			case ID_TREF:
+				assert( tex != NULL );
 				tex->tmap.ref_object = ( char* )getbytes( fp, sz );
 				break;
 				
 			case ID_TOPC:
+				assert( tex != NULL );
 				tex->opacity.val = getF4( fp );
 				break;
 				
 			case ID_TFP0:
+				assert( tex != NULL );
 				if( tex->type == ID_IMAP )
 					tex->param.imap.wrapw.val = getF4( fp );
 				break;
 				
 			case ID_TFP1:
+				assert( tex != NULL );
 				if( tex->type == ID_IMAP )
 					tex->param.imap.wraph.val = getF4( fp );
 				break;
 				
 			case ID_SHDR:
-				shdr = ( lwPlugin* )Mem_ClearedAlloc( sizeof( lwPlugin ) );
+				shdr = ( lwPlugin* )Mem_ClearedAlloc( sizeof( lwPlugin ), TAG_MODEL );
 				if( !shdr ) goto Fail;
 				shdr->name = ( char* )getbytes( fp, sz );
 				lwListAdd( ( void** )&surf->shader, shdr );
@@ -2177,6 +2207,7 @@ lwSurface* lwGetSurface5( idFile* fp, int cksize, lwObject* obj )
 				break;
 				
 			case ID_SDAT:
+				assert( shdr != NULL );
 				shdr->data = getbytes( fp, sz );
 				break;
 				
@@ -2228,10 +2259,7 @@ int lwGetPolygons5( idFile* fp, int cksize, lwPolygonList* plist, int ptoffset )
 	lwPolygon* pp;
 	lwPolVert* pv;
 	unsigned char* buf, *bp;
-	// RB: fixed int to pointer cast
-	int i, nv, nverts, npols;
-	ptrdiff_t j;
-	// RB end
+	int i, j, nv, nverts, npols;
 	
 	
 	if( cksize == 0 ) return 1;
@@ -2283,7 +2311,7 @@ int lwGetPolygons5( idFile* fp, int cksize, lwPolygonList* plist, int ptoffset )
 			bp += 2;
 		}
 		j -= 1;
-		pp->surf = ( lwSurface* ) j;
+		pp->surf = ( lwSurface* ) j; // DG: FIXME: cast int to pointer?!
 		
 		pp++;
 		pv += nv;
@@ -2362,10 +2390,10 @@ lwObject* lwGetObject5( const char* filename, unsigned int* failID, int* failpos
 	
 	/* allocate an object and a default layer */
 	
-	object = ( lwObject* )Mem_ClearedAlloc( sizeof( lwObject ) );
+	object = ( lwObject* )Mem_ClearedAlloc( sizeof( lwObject ), TAG_MODEL );
 	if( !object ) goto Fail2;
 	
-	layer = ( lwLayer* )Mem_ClearedAlloc( sizeof( lwLayer ) );
+	layer = ( lwLayer* )Mem_ClearedAlloc( sizeof( lwLayer ), TAG_MODEL );
 	if( !layer ) goto Fail2;
 	object->layer = layer;
 	object->nlayers = 1;
@@ -2528,7 +2556,7 @@ int lwGetPoints( idFile* fp, int cksize, lwPointList* point )
 	point->offset = point->count;
 	point->count += np;
 	lwPoint* oldpt = point->pt;
-	point->pt = ( lwPoint* )Mem_Alloc( point->count * sizeof( lwPoint ) );
+	point->pt = ( lwPoint* )Mem_Alloc( point->count * sizeof( lwPoint ), TAG_MODEL );
 	if( !point->pt ) return 0;
 	if( oldpt )
 	{
@@ -2603,7 +2631,7 @@ int lwAllocPolygons( lwPolygonList* plist, int npols, int nverts )
 	plist->offset = plist->count;
 	plist->count += npols;
 	lwPolygon* oldpol = plist->pol;
-	plist->pol = ( lwPolygon* )Mem_Alloc( plist->count * sizeof( lwPolygon ) );
+	plist->pol = ( lwPolygon* )Mem_Alloc( plist->count * sizeof( lwPolygon ), TAG_MODEL );
 	if( !plist->pol ) return 0;
 	if( oldpol )
 	{
@@ -2615,7 +2643,7 @@ int lwAllocPolygons( lwPolygonList* plist, int npols, int nverts )
 	plist->voffset = plist->vcount;
 	plist->vcount += nverts;
 	lwPolVert* oldpolv = plist->pol[0].v;
-	plist->pol[0].v = ( lwPolVert* )Mem_Alloc( plist->vcount * sizeof( lwPolVert ) );
+	plist->pol[0].v = ( lwPolVert* )Mem_Alloc( plist->vcount * sizeof( lwPolVert ), TAG_MODEL );
 	if( !plist->pol[ 0 ].v ) return 0;
 	if( oldpolv )
 	{
@@ -2773,7 +2801,7 @@ int lwGetPointPolygons( lwPointList* point, lwPolygonList* polygon )
 	for( i = 0; i < point->count; i++ )
 	{
 		if( point->pt[ i ].npols == 0 ) continue;
-		point->pt[ i ].pol = ( int* )Mem_ClearedAlloc( point->pt[ i ].npols * sizeof( int ) );
+		point->pt[ i ].pol = ( int* )Mem_ClearedAlloc( point->pt[ i ].npols * sizeof( int ), TAG_MODEL );
 		if( !point->pt[ i ].pol ) return 0;
 		point->pt[ i ].npols = 0;
 	}
@@ -2807,14 +2835,11 @@ int lwResolvePolySurfaces( lwPolygonList* polygon, lwTagList* tlist,
 						   lwSurface** surf, int* nsurfs )
 {
 	lwSurface** s, *st;
-	// RB: fixed int to pointer cast
 	int i;
-	ptrdiff_t index;
-	// RB end
 	
 	if( tlist->count == 0 ) return 1;
 	
-	s = ( lwSurface** )Mem_ClearedAlloc( tlist->count * sizeof( lwSurface* ) );
+	s = ( lwSurface** )Mem_ClearedAlloc( tlist->count * sizeof( lwSurface* ), TAG_MODEL );
 	if( !s ) return 0;
 	
 	for( i = 0; i < tlist->count; i++ )
@@ -2830,18 +2855,19 @@ int lwResolvePolySurfaces( lwPolygonList* polygon, lwTagList* tlist,
 			st = st->next;
 		}
 	}
-	
+	// RB: 64 bit fixes
+	uintptr_t index;
 	for( i = 0; i < polygon->count; i++ )
 	{
-		// RB: fixed int to pointer cast
-		index = ( ptrdiff_t ) polygon->pol[ i ].surf;
+		index = ( uintptr_t ) polygon->pol[ i ].surf;
 		// RB end
+		
 		if( index < 0 || index > tlist->count ) return 0;
 		if( !s[ index ] )
 		{
 			s[ index ] = lwDefaultSurface();
 			if( !s[ index ] ) return 0;
-			s[ index ]->name = ( char* )Mem_ClearedAlloc( strlen( tlist->tag[ index ] ) + 1 );
+			s[ index ]->name = ( char* )Mem_ClearedAlloc( strlen( tlist->tag[ index ] ) + 1, TAG_MODEL );
 			if( !s[ index ]->name ) return 0;
 			strcpy( s[ index ]->name, tlist->tag[ index ] );
 			lwListAdd( ( void** )surf, s[ index ] );
@@ -2971,7 +2997,7 @@ int lwGetTags( idFile* fp, int cksize, lwTagList* tlist )
 	tlist->offset = tlist->count;
 	tlist->count += ntags;
 	char** oldtag = tlist->tag;
-	tlist->tag = ( char** )Mem_Alloc( tlist->count * sizeof( char* ) );
+	tlist->tag = ( char** )Mem_Alloc( tlist->count * sizeof( char* ), TAG_MODEL );
 	if( !tlist->tag ) goto Fail;
 	if( oldtag )
 	{
@@ -3005,10 +3031,7 @@ Read polygon tags from a PTAG chunk in an LWO2 file.
 int lwGetPolygonTags( idFile* fp, int cksize, lwTagList* tlist, lwPolygonList* plist )
 {
 	unsigned int type;
-	// RB: fixed int to pointer cast
-	int rlen = 0, i;
-	ptrdiff_t j;
-	// RB end
+	int rlen = 0, i, j;
 	
 	set_flen( 0 );
 	type = getU4( fp );
@@ -3031,7 +3054,7 @@ int lwGetPolygonTags( idFile* fp, int cksize, lwTagList* tlist, lwPolygonList* p
 		switch( type )
 		{
 			case ID_SURF:
-				plist->pol[ i ].surf = ( lwSurface* ) j;
+				plist->pol[ i ].surf = ( lwSurface* ) j; // DG: FIXME: cast int to pointer?!
 				break;
 			case ID_PART:
 				plist->pol[ i ].part = j;
@@ -3553,7 +3576,7 @@ int lwGetGradient( idFile* fp, int rsz, lwTexture* tex )
 				
 			case ID_FKEY:
 				nkeys = sz / sizeof( lwGradKey );
-				tex->param.grad.key = ( lwGradKey* )Mem_ClearedAlloc( nkeys * sizeof( lwGradKey ) );
+				tex->param.grad.key = ( lwGradKey* )Mem_ClearedAlloc( nkeys * sizeof( lwGradKey ), TAG_MODEL );
 				if( !tex->param.grad.key ) return 0;
 				for( i = 0; i < nkeys; i++ )
 				{
@@ -3565,7 +3588,7 @@ int lwGetGradient( idFile* fp, int rsz, lwTexture* tex )
 				
 			case ID_IKEY:
 				nkeys = sz / 2;
-				tex->param.grad.ikey = ( short* )Mem_ClearedAlloc( nkeys * sizeof( short ) );
+				tex->param.grad.ikey = ( short* )Mem_ClearedAlloc( nkeys * sizeof( short ), TAG_MODEL );
 				if( !tex->param.grad.ikey ) return 0;
 				for( i = 0; i < nkeys; i++ )
 					tex->param.grad.ikey[ i ] = getU2( fp );
@@ -3616,7 +3639,7 @@ lwTexture* lwGetTexture( idFile* fp, int bloksz, unsigned int type )
 	unsigned short sz;
 	int ok;
 	
-	tex = ( lwTexture* )Mem_ClearedAlloc( sizeof( lwTexture ) );
+	tex = ( lwTexture* )Mem_ClearedAlloc( sizeof( lwTexture ), TAG_MODEL );
 	if( !tex ) return NULL;
 	
 	tex->type = type;
@@ -3674,7 +3697,7 @@ lwPlugin* lwGetShader( idFile* fp, int bloksz )
 	unsigned short sz;
 	int hsz, rlen, pos;
 	
-	shdr = ( lwPlugin* )Mem_ClearedAlloc( sizeof( lwPlugin ) );
+	shdr = ( lwPlugin* )Mem_ClearedAlloc( sizeof( lwPlugin ), TAG_MODEL );
 	if( !shdr ) return NULL;
 	
 	pos = fp->Tell();
@@ -3840,7 +3863,7 @@ lwSurface* lwDefaultSurface()
 {
 	lwSurface* surf;
 	
-	surf = ( lwSurface* )Mem_ClearedAlloc( sizeof( lwSurface ) );
+	surf = ( lwSurface* )Mem_ClearedAlloc( sizeof( lwSurface ), TAG_MODEL );
 	if( !surf ) return NULL;
 	
 	surf->color.rgb[ 0 ] = 0.78431f;
@@ -3875,7 +3898,7 @@ lwSurface* lwGetSurface( idFile* fp, int cksize )
 	
 	/* allocate the Surface structure */
 	
-	surf = ( lwSurface* )Mem_ClearedAlloc( sizeof( lwSurface ) );
+	surf = ( lwSurface* )Mem_ClearedAlloc( sizeof( lwSurface ), TAG_MODEL );
 	if( !surf ) goto Fail;
 	
 	/* non-zero defaults */
@@ -4167,7 +4190,7 @@ lwVMap* lwGetVMap( idFile* fp, int cksize, int ptoffset, int poloffset,
 	buf = ( unsigned char* )getbytes( fp, cksize );
 	if( !buf ) return NULL;
 	
-	vmap = ( lwVMap* )Mem_ClearedAlloc( sizeof( lwVMap ) );
+	vmap = ( lwVMap* )Mem_ClearedAlloc( sizeof( lwVMap ), TAG_MODEL );
 	if( !vmap )
 	{
 		Mem_Free( buf );
@@ -4200,19 +4223,19 @@ lwVMap* lwGetVMap( idFile* fp, int cksize, int ptoffset, int poloffset,
 	/* allocate the vmap */
 	
 	vmap->nverts = npts;
-	vmap->vindex = ( int* )Mem_ClearedAlloc( npts * sizeof( int ) );
+	vmap->vindex = ( int* )Mem_ClearedAlloc( npts * sizeof( int ), TAG_MODEL );
 	if( !vmap->vindex ) goto Fail;
 	if( perpoly )
 	{
-		vmap->pindex = ( int* )Mem_ClearedAlloc( npts * sizeof( int ) );
+		vmap->pindex = ( int* )Mem_ClearedAlloc( npts * sizeof( int ), TAG_MODEL );
 		if( !vmap->pindex ) goto Fail;
 	}
 	
 	if( vmap->dim > 0 )
 	{
-		vmap->val = ( float** )Mem_ClearedAlloc( npts * sizeof( float* ) );
+		vmap->val = ( float** )Mem_ClearedAlloc( npts * sizeof( float* ), TAG_MODEL );
 		if( !vmap->val ) goto Fail;
-		f = ( float* )Mem_ClearedAlloc( npts * vmap->dim * sizeof( float ) );
+		f = ( float* )Mem_ClearedAlloc( npts * vmap->dim * sizeof( float ), TAG_MODEL );
 		if( !f ) goto Fail;
 		for( i = 0; i < npts; i++ )
 			vmap->val[ i ] = f + i * vmap->dim;
@@ -4269,7 +4292,7 @@ int lwGetPointVMaps( lwPointList* point, lwVMap* vmap )
 	{
 		if( point->pt[ i ].nvmaps )
 		{
-			point->pt[ i ].vm = ( lwVMapPt* )Mem_ClearedAlloc( point->pt[ i ].nvmaps * sizeof( lwVMapPt ) );
+			point->pt[ i ].vm = ( lwVMapPt* )Mem_ClearedAlloc( point->pt[ i ].nvmaps * sizeof( lwVMapPt ), TAG_MODEL );
 			if( !point->pt[ i ].vm ) return 0;
 			point->pt[ i ].nvmaps = 0;
 		}
@@ -4343,7 +4366,7 @@ int lwGetPolyVMaps( lwPolygonList* polygon, lwVMap* vmap )
 			pv = &polygon->pol[ i ].v[ j ];
 			if( pv->nvmaps )
 			{
-				pv->vm = ( lwVMapPt* )Mem_ClearedAlloc( pv->nvmaps * sizeof( lwVMapPt ) );
+				pv->vm = ( lwVMapPt* )Mem_ClearedAlloc( pv->nvmaps * sizeof( lwVMapPt ), TAG_MODEL );
 				if( !pv->vm ) return 0;
 				pv->nvmaps = 0;
 			}

@@ -663,7 +663,7 @@ void idPhysics_RigidBody::SetClipModel( idClipModel* model, const float density,
 	clipModel->GetMassProperties( density, mass, centerOfMass, inertiaTensor );
 	
 	// check whether or not the clip model has valid mass properties
-	if( mass <= 0.0f || FLOAT_IS_NAN( mass ) )
+	if( mass <= 0.0f || IEEE_FLT_IS_NAN( mass ) )
 	{
 		gameLocal.Warning( "idPhysics_RigidBody::SetClipModel: invalid mass for entity '%s' type '%s'",
 						   self->name.c_str(), self->GetType()->classname );
@@ -1488,7 +1488,7 @@ bool idPhysics_RigidBody::EvaluateContacts()
 	
 	ClearContacts();
 	
-	contacts.SetNum( 10, false );
+	contacts.SetNum( 10 );
 	
 	dir.SubVec3( 0 ) = current.i.linearMomentum + current.lastTimeStep * gravityVector * mass;
 	dir.SubVec3( 1 ) = current.i.angularMomentum;
@@ -1496,7 +1496,7 @@ bool idPhysics_RigidBody::EvaluateContacts()
 	dir.SubVec3( 1 ).Normalize();
 	num = gameLocal.clip.Contacts( &contacts[0], 10, clipModel->GetOrigin(),
 								   dir, CONTACT_EPSILON, clipModel, clipModel->GetAxis(), clipMask, self );
-	contacts.SetNum( num, false );
+	contacts.SetNum( num );
 	
 	AddContactEntitiesForContacts();
 	

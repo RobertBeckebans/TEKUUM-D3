@@ -1265,17 +1265,10 @@ int	idParticleStage::ParticleVerts( particleGen_t* g, idVec3 origin, idDrawVert*
 			verts_p[3].xyz = oldOrigin + left;
 			
 			// modify texcoords
-			verts_p[0].st[0] = verts[0].st[0];
-			verts_p[0].st[1] = t;
-			
-			verts_p[1].st[0] = verts[1].st[0];
-			verts_p[1].st[1] = t;
-			
-			verts_p[2].st[0] = verts[2].st[0];
-			verts_p[2].st[1] = t + height;
-			
-			verts_p[3].st[0] = verts[3].st[0];
-			verts_p[3].st[1] = t + height;
+			verts_p[0].SetTexCoordT( t );
+			verts_p[1].SetTexCoordT( t );
+			verts_p[2].SetTexCoordT( t + height );
+			verts_p[3].SetTexCoordT( t + height );
 			
 			t += height;
 			
@@ -1404,17 +1397,10 @@ void idParticleStage::ParticleTexCoords( particleGen_t* g, idDrawVert* verts ) c
 	t = 0.0f;
 	height = 1.0f;
 	
-	verts[0].st[0] = s;
-	verts[0].st[1] = t;
-	
-	verts[1].st[0] = s + width;
-	verts[1].st[1] = t;
-	
-	verts[2].st[0] = s;
-	verts[2].st[1] = t + height;
-	
-	verts[3].st[0] = s + width;
-	verts[3].st[1] = t + height;
+	verts[0].SetTexCoord( s, t );
+	verts[1].SetTexCoord( s + width, t );
+	verts[2].SetTexCoord( s, t + height );
+	verts[3].SetTexCoord( s + width, t + height );
 }
 
 /*
@@ -1450,7 +1436,7 @@ void idParticleStage::ParticleColors( particleGen_t* g, idDrawVert* verts ) cons
 	for( int i = 0 ; i < 4 ; i++ )
 	{
 		float	fcolor = ( ( entityColor ) ? g->renderEnt->shaderParms[i] : color[i] ) * fadeFraction + fadeColor[i] * ( 1.0f - fadeFraction );
-		int		icolor = idMath::FtoiFast( fcolor * 255.0f );
+		int		icolor = idMath::Ftoi( fcolor * 255.0f );
 		if( icolor < 0 )
 		{
 			icolor = 0;
@@ -1512,11 +1498,14 @@ int idParticleStage::CreateParticle( particleGen_t* g, idDrawVert* verts ) const
 	float	width = 1.0f / animationFrames;
 	float	frac = g->animationFrameFrac;
 	float	iFrac = 1.0f - frac;
+	
+	idVec2 tempST;
 	for( int i = 0 ; i < numVerts ; i++ )
 	{
 		verts[numVerts + i] = verts[i];
 		
-		verts[numVerts + i].st[0] += width;
+		tempST = verts[numVerts + i].GetTexCoord();
+		verts[numVerts + i].SetTexCoord( tempST.x + width, tempST.y );
 		
 		verts[numVerts + i].color[0] *= frac;
 		verts[numVerts + i].color[1] *= frac;

@@ -1,33 +1,33 @@
 /*
 ===========================================================================
 
-Doom 3 GPL Source Code
-Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Doom 3 BFG Edition GPL Source Code
+Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
 
-This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
+This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
-Doom 3 Source Code is free software: you can redistribute it and/or modify
+Doom 3 BFG Edition Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Doom 3 Source Code is distributed in the hope that it will be useful,
+Doom 3 BFG Edition Source Code is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Doom 3 Source Code.  If not, see <http://www.gnu.org/licenses/>.
+along with Doom 3 BFG Edition Source Code.  If not, see <http://www.gnu.org/licenses/>.
 
-In addition, the Doom 3 Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 Source Code.  If not, please request a copy in writing from id Software at the address below.
+In addition, the Doom 3 BFG Edition Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 BFG Edition Source Code.  If not, please request a copy in writing from id Software at the address below.
 
 If you have questions concerning this license or the applicable additional terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 
 ===========================================================================
 */
 
-#include "precompiled.h"
 #pragma hdrstop
+#include "precompiled.h"
 
 #include "tr_local.h"
 #include "Model_local.h"
@@ -114,7 +114,7 @@ idRenderModel* idRenderModelPrt::InstantiateDynamicModel( const struct renderEnt
 	else
 	{
 	
-		staticModel = new idRenderModelStatic;
+		staticModel = new( TAG_MODEL ) idRenderModelStatic;
 		staticModel->InitEmpty( parametricParticle_SnapshotName );
 	}
 	
@@ -145,9 +145,8 @@ idRenderModel* idRenderModelPrt::InstantiateDynamicModel( const struct renderEnt
 		
 		idRandom steppingRandom, steppingRandom2;
 		
-		int stageAge = g.renderView->time + renderEntity->shaderParms[SHADERPARM_TIMEOFFSET] * 1000 - stage->timeOffset * 1000;
+		int stageAge = g.renderView->time[renderEntity->timeGroup] + renderEntity->shaderParms[SHADERPARM_TIMEOFFSET] * 1000 - stage->timeOffset * 1000;
 		int	stageCycle = stageAge / stage->cycleMsec;
-		int	inCycleTime = stageAge - stageCycle * stage->cycleMsec;
 		
 		// some particles will be in this cycle, some will be in the previous cycle
 		steppingRandom.SetSeed( ( ( stageCycle << 10 ) & idRandom::MAX_RAND ) ^ ( int )( renderEntity->shaderParms[SHADERPARM_DIVERSITY] * idRandom::MAX_RAND ) );
@@ -171,7 +170,6 @@ idRenderModel* idRenderModelPrt::InstantiateDynamicModel( const struct renderEnt
 			surf->geometry = R_AllocStaticTriSurf();
 			R_AllocStaticTriSurfVerts( surf->geometry, 4 * count );
 			R_AllocStaticTriSurfIndexes( surf->geometry, 6 * count );
-			R_AllocStaticTriSurfPlanes( surf->geometry, 6 * count );
 		}
 		
 		int numVerts = 0;
@@ -213,7 +211,7 @@ idRenderModel* idRenderModelPrt::InstantiateDynamicModel( const struct renderEnt
 			int	inCycleTime = particleAge - particleCycle * stage->cycleMsec;
 			
 			if( renderEntity->shaderParms[SHADERPARM_PARTICLE_STOPTIME] &&
-					g.renderView->time - inCycleTime >= renderEntity->shaderParms[SHADERPARM_PARTICLE_STOPTIME] * 1000 )
+					g.renderView->time[renderEntity->timeGroup] - inCycleTime >= renderEntity->shaderParms[SHADERPARM_PARTICLE_STOPTIME] * 1000 )
 			{
 				// don't fire any more particles
 				continue;
@@ -246,20 +244,19 @@ idRenderModel* idRenderModelPrt::InstantiateDynamicModel( const struct renderEnt
 		
 		// build the indexes
 		int	numIndexes = 0;
-		glIndex_t* indexes = surf->geometry->indexes;
+		triIndex_t* indexes = surf->geometry->indexes;
 		for( int i = 0; i < numVerts; i += 4 )
 		{
-			indexes[numIndexes + 0] = i;
+			indexes[numIndexes + 0] = i + 0;
 			indexes[numIndexes + 1] = i + 2;
 			indexes[numIndexes + 2] = i + 3;
-			indexes[numIndexes + 3] = i;
+			indexes[numIndexes + 3] = i + 0;
 			indexes[numIndexes + 4] = i + 3;
 			indexes[numIndexes + 5] = i + 1;
 			numIndexes += 6;
 		}
 		
 		surf->geometry->tangentsCalculated = false;
-		surf->geometry->facePlanesCalculated = false;
 		surf->geometry->numVerts = numVerts;
 		surf->geometry->numIndexes = numIndexes;
 		surf->geometry->bounds = stage->bounds;		// just always draw the particles
