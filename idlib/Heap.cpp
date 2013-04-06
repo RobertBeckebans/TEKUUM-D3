@@ -336,7 +336,7 @@ void idHeap::Free( void* p )
 		}
 		default:
 		{
-			idLib::common->FatalError( "idHeap::Free: invalid memory block (%s)", idLib::sys->GetCallStackCurStr( 4 ) );
+			idLib::common->FatalError( "idHeap::Free: invalid memory block (%p)", p );
 			break;
 		}
 	}
@@ -435,7 +435,7 @@ dword idHeap::Msize( void* p )
 		}
 		default:
 		{
-			idLib::common->FatalError( "idHeap::Msize: invalid memory block (%s)", idLib::sys->GetCallStackCurStr( 4 ) );
+			idLib::common->FatalError( "idHeap::Msize: invalid memory block (%p)", p );
 			return 0;
 		}
 	}

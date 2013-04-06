@@ -3596,6 +3596,11 @@ void idCommonLocal::InitGame()
 	// init journalling, etc
 	eventLoop->Init();
 	
+// RB begin
+	// init the parallel job manager
+	parallelJobManager->Init();
+// RB end
+
 #if defined(STANDALONE)
 	PrintLoadingMessage( common->GetLanguageDict()->GetString( "#str_idCommonLocal_InitGame_Executing_startup_commands" ) );
 #else
@@ -3765,6 +3770,10 @@ void idCommonLocal::ShutdownGame( bool reloading )
 	// shut down the event loop
 	eventLoop->Shutdown();
 	
+// RB begin
+	parallelJobManager->Shutdown();
+// RB end
+
 	// shut down the renderSystem
 	renderSystem->Shutdown();
 	

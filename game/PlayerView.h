@@ -75,7 +75,10 @@ public:
 	// this may involve rendering to a texture and displaying
 	// that with a warp model or in double vision mode
 	void				RenderPlayerView( idUserInterface* hud );
-	
+// RB begin
+	void				EmitStereoEyeView( const int eye, idUserInterface* hud );
+// RB end
+
 	void				Fade( idVec4 color, int time );
 	
 	void				Flash( idVec4 color, int time );

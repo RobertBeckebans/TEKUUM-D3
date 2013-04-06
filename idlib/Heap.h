@@ -78,7 +78,7 @@ void* 		Mem_ClearedAlloc( const int size, const memTag_t tag = TAG_CRAP );
 void		Mem_Free( void* ptr );
 char* 		Mem_CopyString( const char* in );
 void* 		Mem_Alloc16( const int size, const memTag_t tag = TAG_CRAP );
-void		Mem_Free16( void* ptr, const memTag_t tag = TAG_CRAP );
+void		Mem_Free16( void* ptr );
 
 #if 1 //def ID_REDIRECT_NEWDELETE
 

@@ -128,7 +128,10 @@ public:
 	// there is an internal toggle, call twice with same sort to switch
 	void				SetSorting( serverSort_t sort );
 	// RB begin
-	serverSort_t		GetSorting() const;
+	serverSort_t		GetSorting() const
+	{
+		return m_sort;
+	}
 	// RB end
 	
 	int					GetChallenge( );

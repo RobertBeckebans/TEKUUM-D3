@@ -48,34 +48,37 @@ void R_LoadImage( const char *name, byte **pic, int *width, int *height, bool ma
  * You may also wish to include "jerror.h".
  */
 
+extern "C"
+{
 #include "../libs/jpeg-6/jpeglib.h"
 
-// hooks from jpeg lib to our system
-
-void jpg_Error( const char* fmt, ... )
-{
-	va_list		argptr;
-	char		msg[2048];
+	// hooks from jpeg lib to our system
 	
-	va_start( argptr, fmt );
-	vsprintf( msg, fmt, argptr );
-	va_end( argptr );
+	void jpg_Error( const char* fmt, ... )
+	{
+		va_list		argptr;
+		char		msg[2048];
+		
+		va_start( argptr, fmt );
+		vsprintf( msg, fmt, argptr );
+		va_end( argptr );
+		
+		common->FatalError( "%s", msg );
+	}
 	
-	common->FatalError( "%s", msg );
+	void jpg_Printf( const char* fmt, ... )
+	{
+		va_list		argptr;
+		char		msg[2048];
+		
+		va_start( argptr, fmt );
+		vsprintf( msg, fmt, argptr );
+		va_end( argptr );
+		
+		common->Printf( "%s", msg );
+	}
+	
 }
-
-void jpg_Printf( const char* fmt, ... )
-{
-	va_list		argptr;
-	char		msg[2048];
-	
-	va_start( argptr, fmt );
-	vsprintf( msg, fmt, argptr );
-	va_end( argptr );
-	
-	common->Printf( "%s", msg );
-}
-
 
 
 /*
