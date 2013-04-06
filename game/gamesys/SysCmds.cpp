@@ -1536,68 +1536,6 @@ static void Cmd_CollisionModelInfo_f( const idCmdArgs& args )
 
 /*
 ==================
-Cmd_ExportModels_f
-==================
-*/
-static void Cmd_ExportModels_f( const idCmdArgs& args )
-{
-	idModelExport	exporter;
-	idStr			name;
-	
-	// don't allow exporting models when cheats are disabled,
-	// but if we're not in the game, it's ok
-	if( gameLocal.GetLocalPlayer() && !gameLocal.CheatsOk( false ) )
-	{
-		return;
-	}
-	
-	if( args.Argc() < 2 )
-	{
-		exporter.ExportModels( "def", ".def" );
-	}
-	else
-	{
-		name = args.Argv( 1 );
-		name = "def/" + name;
-		name.DefaultFileExtension( ".def" );
-		exporter.ExportDefFile( name );
-	}
-}
-
-/*
-==================
-Cmd_ReexportModels_f
-==================
-*/
-static void Cmd_ReexportModels_f( const idCmdArgs& args )
-{
-	idModelExport	exporter;
-	idStr			name;
-	
-	// don't allow exporting models when cheats are disabled,
-	// but if we're not in the game, it's ok
-	if( gameLocal.GetLocalPlayer() && !gameLocal.CheatsOk( false ) )
-	{
-		return;
-	}
-	
-	idAnimManager::forceExport = true;
-	if( args.Argc() < 2 )
-	{
-		exporter.ExportModels( "def", ".def" );
-	}
-	else
-	{
-		name = args.Argv( 1 );
-		name = "def/" + name;
-		name.DefaultFileExtension( ".def" );
-		exporter.ExportDefFile( name );
-	}
-	idAnimManager::forceExport = false;
-}
-
-/*
-==================
 Cmd_ReloadAnims_f
 ==================
 */
@@ -1824,13 +1762,13 @@ Cmd_SaveSelected_f
 static void Cmd_SaveSelected_f( const idCmdArgs& args )
 {
 	int i;
-	idPlayer* player;
-	idEntity* s;
+	idPlayer* player = NULL;
+	idEntity* s = NULL;
 	idMapEntity* mapEnt;
 	idMapFile* mapFile = gameLocal.GetLevelMap();
 	idDict dict;
 	idStr mapName;
-	const char* name;
+	const char* name = NULL;
 	
 	player = gameLocal.GetLocalPlayer();
 	if( !player || !gameLocal.CheatsOk() )
@@ -1922,11 +1860,11 @@ Cmd_SaveMoveables_f
 static void Cmd_SaveMoveables_f( const idCmdArgs& args )
 {
 	int e, i;
-	idMoveable* m;
-	idMapEntity* mapEnt;
+	idMoveable* m = NULL;
+	idMapEntity* mapEnt = NULL;
 	idMapFile* mapFile = gameLocal.GetLevelMap();
 	idStr mapName;
-	const char* name;
+	const char* name = NULL;
 	
 	if( !gameLocal.CheatsOk() )
 	{
@@ -2019,12 +1957,12 @@ Cmd_SaveRagdolls_f
 static void Cmd_SaveRagdolls_f( const idCmdArgs& args )
 {
 	int e, i;
-	idAFEntity_Base* af;
-	idMapEntity* mapEnt;
+	idAFEntity_Base* af = NULL;
+	idMapEntity* mapEnt = NULL;
 	idMapFile* mapFile = gameLocal.GetLevelMap();
 	idDict dict;
 	idStr mapName;
-	const char* name;
+	const char* name = NULL;
 	
 	if( !gameLocal.CheatsOk() )
 	{
@@ -2155,12 +2093,12 @@ Cmd_SaveLights_f
 static void Cmd_SaveLights_f( const idCmdArgs& args )
 {
 	int e, i;
-	idLight* light;
-	idMapEntity* mapEnt;
+	idLight* light = NULL;
+	idMapEntity* mapEnt = NULL;
 	idMapFile* mapFile = gameLocal.GetLevelMap();
 	idDict dict;
 	idStr mapName;
-	const char* name;
+	const char* name = NULL;
 	
 	if( !gameLocal.CheatsOk() )
 	{
@@ -2334,7 +2272,9 @@ static void Cmd_RecordViewNotes_f( const idCmdArgs& args )
 	
 	idStr str = args.Argv( 1 );
 	str.SetFileExtension( ".txt" );
+	
 	idFile* file = fileSystem->OpenFileAppend( str );
+	
 	if( file )
 	{
 		file->WriteFloatString( "\"view\"\t( %s )\t( %s )\r\n", origin.ToString(), axis.ToString() );
@@ -2493,7 +2433,6 @@ void Cmd_NextGUI_f( const idCmdArgs& args )
 	renderEntity_t*			renderEnt;
 	int						surfIndex;
 	srfTriangles_t*			geom;
-	idMat4					modelMatrix;
 	idVec3					normal;
 	idVec3					center;
 	const modelSurface_t*	surfaces[ MAX_RENDERENTITY_GUI ];
@@ -2598,11 +2537,14 @@ void Cmd_NextGUI_f( const idCmdArgs& args )
 		return;
 	}
 	
-	assert( geom->facePlanes != NULL );
+	const idVec3& v0 = geom->verts[geom->indexes[0]].xyz;
+	const idVec3& v1 = geom->verts[geom->indexes[1]].xyz;
+	const idVec3& v2 = geom->verts[geom->indexes[2]].xyz;
 	
-	modelMatrix = idMat4( renderEnt->axis, renderEnt->origin );
-	normal = geom->facePlanes[ 0 ].Normal() * renderEnt->axis;
-	center = geom->bounds.GetCenter() * modelMatrix;
+	const idPlane plane( v0, v1, v2 );
+	
+	normal = plane.Normal() * renderEnt->axis;
+	center = geom->bounds.GetCenter() * renderEnt->axis + renderEnt->origin;
 	
 	origin = center + ( normal * 32.0f );
 	origin.z -= player->EyeHeight();
@@ -2614,10 +2556,45 @@ void Cmd_NextGUI_f( const idCmdArgs& args )
 	player->Teleport( origin, angles, NULL );
 }
 
+// RB begin
+#if defined(STANDALONE)
+void Cmd_SetActorState_f( const idCmdArgs& args )
+{
+
+	if( args.Argc() != 3 )
+	{
+		common->Printf( "usage: setActorState <entity name> <state>\n" );
+		return;
+	}
+	
+	idEntity* ent;
+	ent = gameLocal.FindEntity( args.Argv( 1 ) );
+	if( !ent )
+	{
+		gameLocal.Printf( "entity not found\n" );
+		return;
+	}
+	
+	
+	if( !ent->IsType( idActor::Type ) )
+	{
+		gameLocal.Printf( "entity not an actor\n" );
+		return;
+	}
+	
+	idActor* actor = ( idActor* )ent;
+	actor->PostEventMS( &AI_SetState, 0, args.Argv( 2 ) );
+}
+#endif
+// RB end
+
+#if 0
+// not used
 static void ArgCompletion_DefFile( const idCmdArgs& args, void( *callback )( const char* s ) )
 {
 	cmdSystem->ArgCompletion_FolderExtension( args, callback, "def/", true, ".def", NULL );
 }
+#endif
 
 /*
 ===============
@@ -2719,7 +2696,6 @@ void idGameLocal::InitConsoleCommands()
 	cmdSystem->AddCommand( "script",				Cmd_Script_f,				CMD_FL_GAME | CMD_FL_CHEAT,	"executes a line of script" );
 	cmdSystem->AddCommand( "listCollisionModels",	Cmd_ListCollisionModels_f,	CMD_FL_GAME,				"lists collision models" );
 	cmdSystem->AddCommand( "collisionModelInfo",	Cmd_CollisionModelInfo_f,	CMD_FL_GAME,				"shows collision model info" );
-	cmdSystem->AddCommand( "reexportmodels",		Cmd_ReexportModels_f,		CMD_FL_GAME | CMD_FL_CHEAT,	"reexports models", ArgCompletion_DefFile );
 	cmdSystem->AddCommand( "reloadanims",			Cmd_ReloadAnims_f,			CMD_FL_GAME | CMD_FL_CHEAT,	"reloads animations" );
 	cmdSystem->AddCommand( "listAnims",				Cmd_ListAnims_f,			CMD_FL_GAME,				"lists all animations" );
 	cmdSystem->AddCommand( "aasStats",				Cmd_AASStats_f,				CMD_FL_GAME,				"shows AAS stats" );
@@ -2741,7 +2717,6 @@ void idGameLocal::InitConsoleCommands()
 	cmdSystem->AddCommand( "recordViewNotes",		Cmd_RecordViewNotes_f,		CMD_FL_GAME | CMD_FL_CHEAT,	"record the current view position with notes" );
 	cmdSystem->AddCommand( "showViewNotes",			Cmd_ShowViewNotes_f,		CMD_FL_GAME | CMD_FL_CHEAT,	"show any view notes for the current map, successive calls will cycle to the next note" );
 	cmdSystem->AddCommand( "closeViewNotes",		Cmd_CloseViewNotes_f,		CMD_FL_GAME | CMD_FL_CHEAT,	"close the view showing any notes for this map" );
-	cmdSystem->AddCommand( "exportmodels",			Cmd_ExportModels_f,			CMD_FL_GAME | CMD_FL_CHEAT,	"exports models", ArgCompletion_DefFile );
 	cmdSystem->AddCommand( "exportScriptEvents",	idClass::ExportScriptEvents_f,	CMD_FL_GAME | CMD_FL_CHEAT,	"export doom script events" );
 	
 	// multiplayer client commands ( replaces old impulses stuff )
@@ -2755,13 +2730,19 @@ void idGameLocal::InitConsoleCommands()
 	
 	// multiplayer server commands
 	cmdSystem->AddCommand( "serverMapRestart",		idGameLocal::MapRestart_f,	CMD_FL_GAME,				"restart the current game" );
-	cmdSystem->AddCommand( "serverForceReady",	idMultiplayerGame::ForceReady_f, CMD_FL_GAME,				"force all players ready" );
+	cmdSystem->AddCommand( "serverForceReady",		idMultiplayerGame::ForceReady_f, CMD_FL_GAME,				"force all players ready" );
 	cmdSystem->AddCommand( "serverNextMap",			idGameLocal::NextMap_f,		CMD_FL_GAME,				"change to the next map" );
 #endif
 	
 	// localization help commands
 	cmdSystem->AddCommand( "nextGUI",				Cmd_NextGUI_f,				CMD_FL_GAME | CMD_FL_CHEAT,	"teleport the player to the next func_static with a gui" );
 	cmdSystem->AddCommand( "testid",				Cmd_TestId_f,				CMD_FL_GAME | CMD_FL_CHEAT,	"output the string for the specified id." );
+	
+// RB begin
+#if defined(STANDALONE)
+	cmdSystem->AddCommand( "setActorState",			Cmd_SetActorState_f,		CMD_FL_GAME | CMD_FL_CHEAT,	"Manually sets an actors script state", idGameLocal::ArgCompletion_EntityName );
+#endif
+// RB end
 }
 
 /*

@@ -1,33 +1,34 @@
 /*
 ===========================================================================
 
-Doom 3 GPL Source Code
-Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Doom 3 BFG Edition GPL Source Code
+Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
 
-This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
+This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
-Doom 3 Source Code is free software: you can redistribute it and/or modify
+Doom 3 BFG Edition Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Doom 3 Source Code is distributed in the hope that it will be useful,
+Doom 3 BFG Edition Source Code is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Doom 3 Source Code.  If not, see <http://www.gnu.org/licenses/>.
+along with Doom 3 BFG Edition Source Code.  If not, see <http://www.gnu.org/licenses/>.
 
-In addition, the Doom 3 Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 Source Code.  If not, please request a copy in writing from id Software at the address below.
+In addition, the Doom 3 BFG Edition Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 BFG Edition Source Code.  If not, please request a copy in writing from id Software at the address below.
 
 If you have questions concerning this license or the applicable additional terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 
 ===========================================================================
 */
 
-#include "precompiled.h"
 #pragma hdrstop
+#include "precompiled.h"
+
 
 #include "../Game_local.h"
 
@@ -226,6 +227,7 @@ void GetPointOutsideObstacles( const obstacle_t* obstacles, const int numObstacl
 	queue[0] = bestObstacle;
 	
 	memset( obstacleVisited, 0, numObstacles * sizeof( obstacleVisited[0] ) );
+	assert( bestObstacle < numObstacles );
 	obstacleVisited[bestObstacle] = true;
 	
 	bestd = idMath::INFINITY;
@@ -248,6 +250,7 @@ void GetPointOutsideObstacles( const obstacle_t* obstacles, const int numObstacl
 				continue;
 			}
 			
+			assert( queueEnd < numObstacles );
 			queue[queueEnd++] = j;
 			obstacleVisited[j] = true;
 			
@@ -686,6 +689,7 @@ pathNode_t* BuildPathTree( const obstacle_t* obstacles, int numObstacles, const 
 	pathNode_t* root, *node, *child;
 	// gcc 4.0
 	idQueueTemplate<pathNode_t, offsetof( pathNode_t, next ) > pathNodeQueue, treeQueue;
+	
 	root = pathNodeAllocator.Alloc();
 	root->Init();
 	root->pos = startPos;
@@ -694,7 +698,7 @@ pathNode_t* BuildPathTree( const obstacle_t* obstacles, int numObstacles, const 
 	root->numNodes = 0;
 	pathNodeQueue.Add( root );
 	
-	for( node = pathNodeQueue.Get(); node && pathNodeAllocator.GetAllocCount() < MAX_PATH_NODES; node = pathNodeQueue.Get() )
+	for( node = pathNodeQueue.Get(); node != NULL && pathNodeAllocator.GetAllocCount() < MAX_PATH_NODES; node = pathNodeQueue.Get() )
 	{
 	
 		treeQueue.Add( node );
@@ -1042,26 +1046,36 @@ bool FindOptimalPath( const pathNode_t* root, const obstacle_t* obstacles, int n
 		}
 	}
 	
-	if( !pathToGoalExists )
+	if( root != NULL )
 	{
-		seekPos.ToVec2() = root->children[0]->pos;
-	}
-	else if( !optimizedPathCalculated )
-	{
-		OptimizePath( root, bestNode, obstacles, numObstacles, optimizedPath );
-		seekPos.ToVec2() = optimizedPath[1];
-	}
-	
-	if( ai_showObstacleAvoidance.GetBool() )
-	{
-		idVec3 start, end;
-		start.z = end.z = height + 4.0f;
-		numPathPoints = OptimizePath( root, bestNode, obstacles, numObstacles, optimizedPath );
-		for( i = 0; i < numPathPoints - 1; i++ )
+		if( !pathToGoalExists )
 		{
-			start.ToVec2() = optimizedPath[i];
-			end.ToVec2() = optimizedPath[i + 1];
-			gameRenderWorld->DebugArrow( colorCyan, start, end, 1 );
+			if( root->children[0] != NULL )
+			{
+				seekPos.ToVec2() = root->children[0]->pos;
+			}
+			else
+			{
+				seekPos.ToVec2() = root->pos;
+			}
+		}
+		else if( !optimizedPathCalculated )
+		{
+			OptimizePath( root, bestNode, obstacles, numObstacles, optimizedPath );
+			seekPos.ToVec2() = optimizedPath[1];
+		}
+		
+		if( ai_showObstacleAvoidance.GetBool() )
+		{
+			idVec3 start, end;
+			start.z = end.z = height + 4.0f;
+			numPathPoints = OptimizePath( root, bestNode, obstacles, numObstacles, optimizedPath );
+			for( i = 0; i < numPathPoints - 1; i++ )
+			{
+				start.ToVec2() = optimizedPath[i];
+				end.ToVec2() = optimizedPath[i + 1];
+				gameRenderWorld->DebugArrow( colorCyan, start, end, 1 );
+			}
 		}
 	}
 	
@@ -1331,7 +1345,16 @@ bool idAI::PredictPath( const idEntity* ent, const idAAS* aas, const idVec3& sta
 	curStart = start;
 	curVelocity = velocity;
 	
-	numFrames = ( totalTime + frameTime - 1 ) / frameTime;
+	// RB: fixed integer division by 0
+	if( frameTime != 0 )
+	{
+		numFrames = ( totalTime + frameTime - 1 ) / frameTime;
+	}
+	else
+	{
+		numFrames = ( totalTime + frameTime - 1 );
+	}
+	// RB end
 	curFrameTime = frameTime;
 	for( i = 0; i < numFrames; i++ )
 	{
@@ -1674,7 +1697,10 @@ bool idAI::PredictTrajectory( const idVec3& firePos, const idVec3& target, float
 	idVec3 velocity;
 	idVec3 lastPos, pos;
 	
-	assert( targetEntity );
+	if( targetEntity == NULL )
+	{
+		return false;
+	}
 	
 	// check if the projectile starts inside the target
 	if( targetEntity->GetPhysics()->GetAbsBounds().IntersectsBounds( clip->GetBounds().Translate( firePos ) ) )

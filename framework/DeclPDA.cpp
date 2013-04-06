@@ -29,7 +29,11 @@ If you have questions concerning this license or the applicable additional terms
 #include "precompiled.h"
 #pragma hdrstop
 
+#if defined(STANDALONE)
 idCVar g_useOldPDAStrings( "g_useOldPDAStrings", "0", CVAR_BOOL, "Read strings from the .pda files rather than from the .lang file" );
+#else
+idCVar g_useOldPDAStrings( "g_useOldPDAStrings", "1", CVAR_BOOL, "Read strings from the .pda files rather than from the .lang file" );
+#endif
 
 /*
 =================
@@ -187,21 +191,24 @@ bool idDeclPDA::Parse( const char* text, const int textLength, bool allowBinaryV
 		if( !token.Icmp( "pda_email" ) )
 		{
 			src.ReadToken( &token );
-			emails.Append( static_cast<const idDeclEmail*>( declManager->FindType( DECL_EMAIL, token ) ) );
+			emails.Append( token );
+			declManager->FindType( DECL_EMAIL, token );
 			continue;
 		}
 		
 		if( !token.Icmp( "pda_audio" ) )
 		{
 			src.ReadToken( &token );
-			audios.Append( static_cast<const idDeclAudio*>( declManager->FindType( DECL_AUDIO, token ) ) );
+			audios.Append( token );
+			declManager->FindType( DECL_AUDIO, token );
 			continue;
 		}
 		
 		if( !token.Icmp( "pda_video" ) )
 		{
 			src.ReadToken( &token );
-			videos.Append( static_cast<const idDeclVideo*>( declManager->FindType( DECL_VIDEO, token ) ) );
+			videos.Append( token );
+			declManager->FindType( DECL_VIDEO, token );
 			continue;
 		}
 		
@@ -247,6 +254,63 @@ void idDeclPDA::FreeData()
 
 /*
 =================
+idDeclPDA::AddVideo
+=================
+*/
+void idDeclPDA::AddVideo( const char* name, bool unique ) const
+{
+	if( unique && ( videos.Find( name ) != NULL ) )
+	{
+		return;
+	}
+	if( declManager->FindType( DECL_VIDEO, name, false ) == NULL )
+	{
+		common->Printf( "Video %s not found\n", name );
+		return;
+	}
+	videos.Append( name );
+}
+
+/*
+=================
+idDeclPDA::AddAudio
+=================
+*/
+void idDeclPDA::AddAudio( const char* name, bool unique ) const
+{
+	if( unique && ( audios.Find( name ) != NULL ) )
+	{
+		return;
+	}
+	if( declManager->FindType( DECL_AUDIO, name, false ) == NULL )
+	{
+		common->Printf( "Audio log %s not found\n", name );
+		return;
+	}
+	audios.Append( name );
+}
+
+/*
+=================
+idDeclPDA::AddEmail
+=================
+*/
+void idDeclPDA::AddEmail( const char* name, bool unique ) const
+{
+	if( unique && ( emails.Find( name ) != NULL ) )
+	{
+		return;
+	}
+	if( declManager->FindType( DECL_EMAIL, name, false ) == NULL )
+	{
+		common->Printf( "Email %s not found\n", name );
+		return;
+	}
+	emails.Append( name );
+}
+
+/*
+=================
 idDeclPDA::RemoveAddedEmailsAndVideos
 =================
 */
@@ -278,6 +342,78 @@ idDeclPDA::SetSecurity
 void idDeclPDA::SetSecurity( const char* sec ) const
 {
 	security = sec;
+}
+
+/*
+=================
+idDeclPDA::GetNumVideos
+=================
+*/
+const int idDeclPDA::GetNumVideos() const
+{
+	return videos.Num();
+}
+
+/*
+=================
+idDeclPDA::GetNumAudios
+=================
+*/
+const int idDeclPDA::GetNumAudios() const
+{
+	return audios.Num();
+}
+
+/*
+=================
+idDeclPDA::GetNumEmails
+=================
+*/
+const int idDeclPDA::GetNumEmails() const
+{
+	return emails.Num();
+}
+
+/*
+=================
+idDeclPDA::GetVideoByIndex
+=================
+*/
+const idDeclVideo* idDeclPDA::GetVideoByIndex( int index ) const
+{
+	if( index >= 0 && index < videos.Num() )
+	{
+		return static_cast< const idDeclVideo* >( declManager->FindType( DECL_VIDEO, videos[index], false ) );
+	}
+	return NULL;
+}
+
+/*
+=================
+idDeclPDA::GetAudioByIndex
+=================
+*/
+const idDeclAudio* idDeclPDA::GetAudioByIndex( int index ) const
+{
+	if( index >= 0 && index < audios.Num() )
+	{
+		return static_cast< const idDeclAudio* >( declManager->FindType( DECL_AUDIO, audios[index], false ) );
+	}
+	return NULL;
+}
+
+/*
+=================
+idDeclPDA::GetEmailByIndex
+=================
+*/
+const idDeclEmail* idDeclPDA::GetEmailByIndex( int index ) const
+{
+	if( index >= 0 && index < emails.Num() )
+	{
+		return static_cast< const idDeclEmail* >( declManager->FindType( DECL_EMAIL, emails[index], false ) );
+	}
+	return NULL;
 }
 
 /*
@@ -528,14 +664,15 @@ bool idDeclVideo::Parse( const char* text, const int textLength, bool allowBinar
 		if( !token.Icmp( "preview" ) )
 		{
 			src.ReadToken( &token );
-			preview = declManager->FindMaterial( token );
+			preview = token;
 			continue;
 		}
 		
 		if( !token.Icmp( "video" ) )
 		{
 			src.ReadToken( &token );
-			video = declManager->FindMaterial( token );
+			video = token;
+			declManager->FindMaterial( video );
 			continue;
 		}
 		
@@ -556,7 +693,8 @@ bool idDeclVideo::Parse( const char* text, const int textLength, bool allowBinar
 		if( !token.Icmp( "audio" ) )
 		{
 			src.ReadToken( &token );
-			audio = declManager->FindSound( token );
+			audio = token;
+			declManager->FindSound( audio );
 			continue;
 		}
 		
@@ -671,7 +809,8 @@ bool idDeclAudio::Parse( const char* text, const int textLength, bool allowBinar
 		if( !token.Icmp( "audio" ) )
 		{
 			src.ReadToken( &token );
-			audio = declManager->FindSound( token );
+			audio = token;
+			declManager->FindSound( audio );
 			continue;
 		}
 		
@@ -688,6 +827,21 @@ bool idDeclAudio::Parse( const char* text, const int textLength, bool allowBinar
 			}
 			continue;
 		}
+		
+		if( !token.Icmp( "preview" ) )
+		{
+			src.ReadToken( &token );
+			if( g_useOldPDAStrings.GetBool() )
+			{
+				preview = token;
+			}
+			else
+			{
+				preview = common->GetLanguageDict()->GetString( baseStrId + "info" );
+			}
+			continue;
+		}
+		
 	}
 	
 	if( src.HadError() )

@@ -8672,17 +8672,14 @@ void idPlayer::CalculateRenderView()
 	
 // RB begin
 #if defined(STANDALONE)
-	renderView->time = gameLocal.slow.time;
+	renderView->time[0] = gameLocal.slow.time;
+	renderView->time[1] = gameLocal.fast.time;
 #else
-	renderView->time = gameLocal.time;
+	renderView->time[0] = gameLocal.time;
+	renderView->time[1] = gameLocal.time;
 #endif
 // RB end
 
-	// calculate size of 3D view
-	renderView->x = 0;
-	renderView->y = 0;
-	renderView->width = SCREEN_WIDTH;
-	renderView->height = SCREEN_HEIGHT;
 	renderView->viewID = 0;
 	
 	// check if we should be drawing from a camera's POV

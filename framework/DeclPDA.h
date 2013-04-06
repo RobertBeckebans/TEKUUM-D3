@@ -70,6 +70,10 @@ public:
 	{
 		return to;
 	}
+	const char* 			GetImage() const
+	{
+		return image;
+	}
 	
 private:
 	idStr					text;
@@ -77,6 +81,7 @@ private:
 	idStr					date;
 	idStr					to;
 	idStr					from;
+	idStr					image;
 };
 
 
@@ -92,11 +97,11 @@ public:
 	virtual void			Print() const;
 	virtual void			List() const;
 	
-	const idMaterial* 		GetRoq() const
+	const char* 			GetRoq() const
 	{
 		return video;
 	}
-	const idSoundShader* 	GetWave() const
+	const char* 			GetWave() const
 	{
 		return audio;
 	}
@@ -108,24 +113,24 @@ public:
 	{
 		return info;
 	}
-	const idMaterial* 		GetPreview() const
+	const char* 			GetPreview() const
 	{
 		return preview;
 	}
 	
 private:
-	const idMaterial* 		preview;
-	const idMaterial* 		video;
+	idStr					preview;
+	idStr					video;
 	idStr					videoName;
 	idStr					info;
-	const idSoundShader* 	audio;
+	idStr					audio;
 };
 
 
 class idDeclAudio : public idDecl
 {
 public:
-	idDeclAudio() : audio( NULL ) {};
+	idDeclAudio() {};
 	
 	virtual size_t			Size() const;
 	virtual const char* 	DefaultDefinition() const;
@@ -138,7 +143,7 @@ public:
 	{
 		return audioName;
 	}
-	const idSoundShader* 	GetWave() const
+	const char* 			GetWave() const
 	{
 		return audio;
 	}
@@ -146,12 +151,18 @@ public:
 	{
 		return info;
 	}
+	const char* 			GetPreview() const
+	{
+		return preview;
+	}
 	
 private:
-	const idSoundShader* 	audio;
+	idStr					audio;
 	idStr					audioName;
 	idStr					info;
+	idStr					preview;
 };
+
 
 class idDeclPDA : public idDecl
 {
@@ -168,65 +179,17 @@ public:
 	virtual void			Print() const;
 	virtual void			List() const;
 	
-	virtual void			AddVideo( const idDeclVideo* video, bool unique = true ) const
-	{
-		if( unique )
-		{
-			videos.AddUnique( video );
-		}
-		else
-		{
-			videos.Append( video );
-		}
-	}
-	virtual void			AddAudio( const idDeclAudio* audio, bool unique = true ) const
-	{
-		if( unique )
-		{
-			audios.AddUnique( audio );
-		}
-		else
-		{
-			audios.Append( audio );
-		}
-	}
-	virtual void			AddEmail( const idDeclEmail* email, bool unique = true ) const
-	{
-		if( unique )
-		{
-			emails.AddUnique( email );
-		}
-		else
-		{
-			emails.Append( email );
-		}
-	}
+	virtual void			AddVideo( const char* name, bool unique = true ) const;
+	virtual void			AddAudio( const char* name, bool unique = true ) const;
+	virtual void			AddEmail( const char* name, bool unique = true ) const;
 	virtual void			RemoveAddedEmailsAndVideos() const;
 	
-	virtual const int		GetNumVideos() const
-	{
-		return videos.Num();
-	}
-	virtual const int		GetNumAudios() const
-	{
-		return audios.Num();
-	}
-	virtual const int		GetNumEmails() const
-	{
-		return emails.Num();
-	}
-	virtual const idDeclVideo* GetVideoByIndex( int index ) const
-	{
-		return ( index < 0 || index > videos.Num() ? NULL : videos[index] );
-	}
-	virtual const idDeclAudio* GetAudioByIndex( int index ) const
-	{
-		return ( index < 0 || index > audios.Num() ? NULL : audios[index] );
-	}
-	virtual const idDeclEmail* GetEmailByIndex( int index ) const
-	{
-		return ( index < 0 || index > emails.Num() ? NULL : emails[index] );
-	}
+	virtual const int		GetNumVideos() const;
+	virtual const int		GetNumAudios() const;
+	virtual const int		GetNumEmails() const;
+	virtual const idDeclVideo* GetVideoByIndex( int index ) const;
+	virtual const idDeclAudio* GetAudioByIndex( int index ) const;
+	virtual const idDeclEmail* GetEmailByIndex( int index ) const;
 	
 	virtual void			SetSecurity( const char* sec ) const;
 	
@@ -260,9 +223,9 @@ public:
 	}
 	
 private:
-	mutable idList<const idDeclVideo*>	videos;
-	mutable idList<const idDeclAudio*>	audios;
-	mutable idList<const idDeclEmail*>	emails;
+	mutable idStrList		videos;
+	mutable idStrList		audios;
+	mutable idStrList		emails;
 	idStr					pdaName;
 	idStr					fullName;
 	idStr					icon;
