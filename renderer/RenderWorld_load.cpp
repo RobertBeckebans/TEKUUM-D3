@@ -832,7 +832,7 @@ bool idRenderWorldLocal::InitFromMap( const char* name )
 	
 	if( name == mapName )
 	{
-		if( fileSystem->InProductionMode() || ( currentTimeStamp != FILE_NOT_FOUND_TIMESTAMP && currentTimeStamp == mapTimeStamp ) )
+		if( /*fileSystem->InProductionMode() ||*/ ( currentTimeStamp != FILE_NOT_FOUND_TIMESTAMP && currentTimeStamp == mapTimeStamp ) )
 		{
 			common->Printf( "idRenderWorldLocal::InitFromMap: retaining existing map\n" );
 			FreeDefs();

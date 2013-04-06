@@ -1,25 +1,25 @@
 /*
 ===========================================================================
 
-Doom 3 GPL Source Code
-Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Doom 3 BFG Edition GPL Source Code
+Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
 
-This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
+This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
-Doom 3 Source Code is free software: you can redistribute it and/or modify
+Doom 3 BFG Edition Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Doom 3 Source Code is distributed in the hope that it will be useful,
+Doom 3 BFG Edition Source Code is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Doom 3 Source Code.  If not, see <http://www.gnu.org/licenses/>.
+along with Doom 3 BFG Edition Source Code.  If not, see <http://www.gnu.org/licenses/>.
 
-In addition, the Doom 3 Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 Source Code.  If not, please request a copy in writing from id Software at the address below.
+In addition, the Doom 3 BFG Edition Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 BFG Edition Source Code.  If not, please request a copy in writing from id Software at the address below.
 
 If you have questions concerning this license or the applicable additional terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 
@@ -45,7 +45,7 @@ public:
 	
 	virtual size_t			Size() const;
 	virtual const char* 	DefaultDefinition() const;
-	virtual bool			Parse( const char* text, const int textLength );
+	virtual bool			Parse( const char* text, const int textLength, bool allowBinaryVersion );
 	virtual void			FreeData();
 	virtual void			Print() const;
 	virtual void			List() const;
@@ -70,10 +70,6 @@ public:
 	{
 		return to;
 	}
-	const char* 			GetImage() const
-	{
-		return image;
-	}
 	
 private:
 	idStr					text;
@@ -81,27 +77,26 @@ private:
 	idStr					date;
 	idStr					to;
 	idStr					from;
-	idStr					image;
 };
 
 
 class idDeclVideo : public idDecl
 {
 public:
-	idDeclVideo() {};
+	idDeclVideo() : preview( NULL ), video( NULL ), audio( NULL ) {};
 	
 	virtual size_t			Size() const;
 	virtual const char* 	DefaultDefinition() const;
-	virtual bool			Parse( const char* text, const int textLength );
+	virtual bool			Parse( const char* text, const int textLength, bool allowBinaryVersion );
 	virtual void			FreeData();
 	virtual void			Print() const;
 	virtual void			List() const;
 	
-	const char* 			GetRoq() const
+	const idMaterial* 		GetRoq() const
 	{
 		return video;
 	}
-	const char* 			GetWave() const
+	const idSoundShader* 	GetWave() const
 	{
 		return audio;
 	}
@@ -113,28 +108,28 @@ public:
 	{
 		return info;
 	}
-	const char* 			GetPreview() const
+	const idMaterial* 		GetPreview() const
 	{
 		return preview;
 	}
 	
 private:
-	idStr					preview;
-	idStr					video;
+	const idMaterial* 		preview;
+	const idMaterial* 		video;
 	idStr					videoName;
 	idStr					info;
-	idStr					audio;
+	const idSoundShader* 	audio;
 };
 
 
 class idDeclAudio : public idDecl
 {
 public:
-	idDeclAudio() {};
+	idDeclAudio() : audio( NULL ) {};
 	
 	virtual size_t			Size() const;
 	virtual const char* 	DefaultDefinition() const;
-	virtual bool			Parse( const char* text, const int textLength );
+	virtual bool			Parse( const char* text, const int textLength, bool allowBinaryVersion );
 	virtual void			FreeData();
 	virtual void			Print() const;
 	virtual void			List() const;
@@ -143,7 +138,7 @@ public:
 	{
 		return audioName;
 	}
-	const char* 			GetWave() const
+	const idSoundShader* 	GetWave() const
 	{
 		return audio;
 	}
@@ -151,18 +146,12 @@ public:
 	{
 		return info;
 	}
-	const char* 			GetPreview() const
-	{
-		return preview;
-	}
 	
 private:
-	idStr					audio;
+	const idSoundShader* 	audio;
 	idStr					audioName;
 	idStr					info;
-	idStr					preview;
 };
-
 
 class idDeclPDA : public idDecl
 {
@@ -174,22 +163,70 @@ public:
 	
 	virtual size_t			Size() const;
 	virtual const char* 	DefaultDefinition() const;
-	virtual bool			Parse( const char* text, const int textLength );
+	virtual bool			Parse( const char* text, const int textLength, bool allowBinaryVersion );
 	virtual void			FreeData();
 	virtual void			Print() const;
 	virtual void			List() const;
 	
-	virtual void			AddVideo( const char* name, bool unique = true ) const;
-	virtual void			AddAudio( const char* name, bool unique = true ) const;
-	virtual void			AddEmail( const char* name, bool unique = true ) const;
+	virtual void			AddVideo( const idDeclVideo* video, bool unique = true ) const
+	{
+		if( unique )
+		{
+			videos.AddUnique( video );
+		}
+		else
+		{
+			videos.Append( video );
+		}
+	}
+	virtual void			AddAudio( const idDeclAudio* audio, bool unique = true ) const
+	{
+		if( unique )
+		{
+			audios.AddUnique( audio );
+		}
+		else
+		{
+			audios.Append( audio );
+		}
+	}
+	virtual void			AddEmail( const idDeclEmail* email, bool unique = true ) const
+	{
+		if( unique )
+		{
+			emails.AddUnique( email );
+		}
+		else
+		{
+			emails.Append( email );
+		}
+	}
 	virtual void			RemoveAddedEmailsAndVideos() const;
 	
-	virtual const int		GetNumVideos() const;
-	virtual const int		GetNumAudios() const;
-	virtual const int		GetNumEmails() const;
-	virtual const idDeclVideo* GetVideoByIndex( int index ) const;
-	virtual const idDeclAudio* GetAudioByIndex( int index ) const;
-	virtual const idDeclEmail* GetEmailByIndex( int index ) const;
+	virtual const int		GetNumVideos() const
+	{
+		return videos.Num();
+	}
+	virtual const int		GetNumAudios() const
+	{
+		return audios.Num();
+	}
+	virtual const int		GetNumEmails() const
+	{
+		return emails.Num();
+	}
+	virtual const idDeclVideo* GetVideoByIndex( int index ) const
+	{
+		return ( index < 0 || index > videos.Num() ? NULL : videos[index] );
+	}
+	virtual const idDeclAudio* GetAudioByIndex( int index ) const
+	{
+		return ( index < 0 || index > audios.Num() ? NULL : audios[index] );
+	}
+	virtual const idDeclEmail* GetEmailByIndex( int index ) const
+	{
+		return ( index < 0 || index > emails.Num() ? NULL : emails[index] );
+	}
 	
 	virtual void			SetSecurity( const char* sec ) const;
 	
@@ -223,9 +260,9 @@ public:
 	}
 	
 private:
-	mutable idStrList		videos;
-	mutable idStrList		audios;
-	mutable idStrList		emails;
+	mutable idList<const idDeclVideo*>	videos;
+	mutable idList<const idDeclAudio*>	audios;
+	mutable idList<const idDeclEmail*>	emails;
 	idStr					pdaName;
 	idStr					fullName;
 	idStr					icon;

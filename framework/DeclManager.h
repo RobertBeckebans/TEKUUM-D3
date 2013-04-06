@@ -1,25 +1,25 @@
 /*
 ===========================================================================
 
-Doom 3 GPL Source Code
-Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Doom 3 BFG Edition GPL Source Code
+Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
 
-This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
+This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
-Doom 3 Source Code is free software: you can redistribute it and/or modify
+Doom 3 BFG Edition Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Doom 3 Source Code is distributed in the hope that it will be useful,
+Doom 3 BFG Edition Source Code is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Doom 3 Source Code.  If not, see <http://www.gnu.org/licenses/>.
+along with Doom 3 BFG Edition Source Code.  If not, see <http://www.gnu.org/licenses/>.
 
-In addition, the Doom 3 Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 Source Code.  If not, please request a copy in writing from id Software at the address below.
+In addition, the Doom 3 BFG Edition Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 BFG Edition Source Code.  If not, please request a copy in writing from id Software at the address below.
 
 If you have questions concerning this license or the applicable additional terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 
@@ -124,7 +124,7 @@ public:
 	virtual bool			EverReferenced() const = 0;
 	virtual bool			SetDefaultText() = 0;
 	virtual const char* 	DefaultDefinition() const = 0;
-	virtual bool			Parse( const char* text, const int textLength ) = 0;
+	virtual bool			Parse( const char* text, const int textLength, bool allowBinaryVersion ) = 0;
 	virtual void			FreeData() = 0;
 	virtual size_t			Size() const = 0;
 	virtual void			List() const = 0;
@@ -275,9 +275,9 @@ public:
 	// The manager will have called FreeData() before issuing a Parse().
 	// The subclass can call MakeDefault() internally at any point if
 	// there are parse errors.
-	virtual bool			Parse( const char* text, const int textLength )
+	virtual bool			Parse( const char* text, const int textLength, bool allowBinaryVersion = false )
 	{
-		return base->Parse( text, textLength );
+		return base->Parse( text, textLength, allowBinaryVersion );
 	}
 	
 	// Frees any pointers held by the subclass. This may be called before
@@ -333,6 +333,7 @@ public:
 	virtual					~idDeclManager() {}
 	
 	virtual void			Init() = 0;
+	virtual void			Init2() = 0;
 	virtual void			Shutdown() = 0;
 	virtual void			Reload( bool force ) = 0;
 	
@@ -387,7 +388,7 @@ public:
 	
 	// When media files are loaded, a reference line can be printed at a
 	// proper indentation if decl_show is set
-	virtual void			MediaPrint( const char* fmt, ... ) id_attribute( ( format( printf, 2, 3 ) ) ) = 0;
+	virtual void			MediaPrint( VERIFY_FORMAT_STRING const char* fmt, ... ) = 0;
 	
 	virtual void			WritePrecacheCommands( idFile* f ) = 0;
 	
@@ -399,6 +400,8 @@ public:
 	virtual const idMaterial* 		MaterialByIndex( int index, bool forceParse = true ) = 0;
 	virtual const idDeclSkin* 		SkinByIndex( int index, bool forceParse = true ) = 0;
 	virtual const idSoundShader* 	SoundByIndex( int index, bool forceParse = true ) = 0;
+	
+	virtual void					Touch( const idDecl* decl ) = 0;
 };
 
 extern idDeclManager* 		declManager;
