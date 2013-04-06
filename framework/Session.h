@@ -82,7 +82,7 @@ public:
 	// but when the screen is updated in a modal manner, as with utility
 	// output, the mouse cursor will be released if running windowed.
 	// RB: added swapBuffers parameter
-	virtual void	UpdateScreen( bool outOfSequence = true, bool swapBuffers = true ) = 0;
+	virtual void	UpdateScreen( bool captureToImage, bool outOfSequence = true, bool swapBuffers = true ) = 0;
 	// RB end
 	
 	// Called when console prints happen, allowing the loading screen

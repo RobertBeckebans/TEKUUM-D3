@@ -424,10 +424,12 @@ idRenderModel* idRenderModelManagerLocal::GetModel( const char* _modelName, bool
 		return NULL;
 	}
 	
+	/*
 	if( cvarSystem->GetCVarBool( "fs_buildgame" ) )
 	{
 		fileSystem->AddModelPreload( model->Name() );
 	}
+	*/
 	
 	AddModel( model );
 	

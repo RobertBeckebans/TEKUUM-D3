@@ -316,7 +316,7 @@ idStr StripDeadCode( const idStr& in, const char* name )
 	src.LoadMemory( in.c_str(), in.Length(), name );
 	src.AddDefine( "PC" );
 	
-	idList< idCGBlock, TAG_RENDERPROG > blocks;
+	idList< idCGBlock > blocks;
 	
 	blocks.SetNum( 100 );
 	
@@ -438,7 +438,7 @@ idStr StripDeadCode( const idStr& in, const char* name )
 		}
 	}
 	
-	idList<int, TAG_RENDERPROG> stack;
+	idList<int> stack;
 	for( int i = 0; i < blocks.Num(); i++ )
 	{
 		blocks[i].used = ( ( blocks[i].name == "main" )
@@ -710,8 +710,8 @@ idStr ConvertCG2GLSL( const idStr& in, const char* name, bool isVertexProgram, i
 	idStr program;
 	program.ReAllocate( in.Length() * 2, false );
 	
-	idList< inOutVariable_t, TAG_RENDERPROG > varsIn;
-	idList< inOutVariable_t, TAG_RENDERPROG > varsOut;
+	idList< inOutVariable_t > varsIn;
+	idList< inOutVariable_t > varsOut;
 	idList< idStr > uniformList;
 	
 	idLexer src( LEXFL_NOFATALERRORS );

@@ -30,7 +30,7 @@ If you have questions concerning this license or the applicable additional terms
 #include "precompiled.h"
 
 #include "../tr_local.h"
-#include "../../framework/Common_local.h"
+//#include "../../framework/Common_local.h"
 
 idCVar r_drawFlickerBox( "r_drawFlickerBox", "0", CVAR_RENDERER | CVAR_BOOL, "visual test for dropping frames" );
 idCVar stereoRender_warp( "stereoRender_warp", "0", CVAR_RENDERER | CVAR_ARCHIVE | CVAR_BOOL, "use the optical warping renderprog instead of stereoDeGhost" );
@@ -550,7 +550,8 @@ void RB_ExecuteBackEndCommands( const emptyCommand_t* cmds )
 	int c_setBuffers = 0;
 	int c_copyRenders = 0;
 	
-	resolutionScale.SetCurrentGPUFrameTime( commonLocal.GetRendererGPUMicroseconds() );
+	// RB FIXME
+	//resolutionScale.SetCurrentGPUFrameTime( commonLocal.GetRendererGPUMicroseconds() );
 	
 	renderLog.StartFrame();
 	

@@ -2141,7 +2141,7 @@ bool idRenderModelStatic::ConvertLWOToModelSurfaces( const struct st_lwObject* l
 		return false;
 	}
 	
-	vList = ( idVec3* )R_StaticAlloc( layer->point.count * sizeof( vList[0] ), TAG_MODEL );
+	vList = ( idVec3* )R_StaticAlloc( layer->point.count * sizeof( vList[0] ) );
 	for( j = 0; j < layer->point.count; j++ )
 	{
 		vList[j].x = layer->point.pt[j].pos[0];

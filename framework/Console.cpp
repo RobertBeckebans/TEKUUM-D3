@@ -648,8 +648,10 @@ void idConsoleLocal::KeyDownEvent( int key )
 		consoleField.Clear();
 		consoleField.SetWidthInChars( LINE_WIDTH );
 		
-		session->UpdateScreen();// force an update, because the command
-		// may take some time
+		// RB: added captureToImage
+		const bool captureToImage = true;
+		session->UpdateScreen( captureToImage );// force an update, because the command may take some time
+		// RB end
 		return;
 	}
 	

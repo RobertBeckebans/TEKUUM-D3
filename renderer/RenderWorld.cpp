@@ -1813,7 +1813,7 @@ void idRenderWorldLocal::GenerateAllInteractions()
 			}
 		}
 		
-		session->Pump();
+		//session->Pump();
 	}
 	
 	int end = Sys_Milliseconds();

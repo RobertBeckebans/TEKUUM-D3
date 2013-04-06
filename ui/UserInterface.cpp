@@ -433,7 +433,6 @@ bool idUserInterfaceLocal::InitFromFile( const char* qpath, bool rebuild, bool c
 		{
 			if( idStr::Icmp( token, "windowDef" ) == 0 )
 			{
-				desktop->SetDC( &uiManagerLocal.dc );
 				if( desktop->Parse( &src, rebuild ) )
 				{
 					desktop->SetFlag( WIN_DESKTOP );

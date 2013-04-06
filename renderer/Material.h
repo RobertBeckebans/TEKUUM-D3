@@ -742,8 +742,8 @@ public:
 	
 	void				ResetCinematicTime( int time ) const;
 	
-//	int					GetCinematicStartTime() const;
-
+	int					GetCinematicStartTime() const;
+	
 	void				UpdateCinematic( int time ) const;
 	
 	//------------------------------------------------------------------

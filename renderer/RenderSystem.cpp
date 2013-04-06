@@ -916,7 +916,7 @@ void idRenderSystemLocal::PerformResolutionScaling( int& newWidth, int& newHeigh
 idRenderSystemLocal::CropRenderSize
 ================
 */
-void idRenderSystemLocal::CropRenderSize( int width, int height )
+void idRenderSystemLocal::CropRenderSize( int width, int height, bool unused_makePowerOfTwo )
 {
 	if( !R_IsInitialized() )
 	{

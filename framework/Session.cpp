@@ -543,11 +543,14 @@ idSessionLocal::CompleteWipe
 */
 void idSessionLocal::CompleteWipe()
 {
+	// RB: added captureToImage
+	const bool captureToImage = true;
+	
 	if( com_ticNumber == 0 )
 	{
 		// if the async thread hasn't started, we would hang here
 		wipeStopTic = 0;
-		UpdateScreen( true );
+		UpdateScreen( captureToImage, true );
 		return;
 	}
 	while( com_ticNumber < wipeStopTic )
@@ -555,8 +558,9 @@ void idSessionLocal::CompleteWipe()
 #if ID_CONSOLE_LOCK
 		emptyDrawCount = 0;
 #endif
-		UpdateScreen( true );
+		UpdateScreen( captureToImage, true );
 	}
+	// RB end
 }
 
 /*
@@ -581,7 +585,11 @@ void idSessionLocal::ShowLoadingGui()
 	{
 		com_frameTime = com_ticNumber * USERCMD_MSEC;
 		session->Frame();
-		session->UpdateScreen( false );
+		
+		// RB: added captureToImage
+		const bool captureToImage = false;
+		session->UpdateScreen( captureToImage, false );
+		// RB end
 	}
 #else
 	int stop = com_ticNumber + 1000.0f / USERCMD_MSEC * 1.0f;
@@ -1016,7 +1024,10 @@ void idSessionLocal::DemoShot( const char* demoName )
 	StartRecordingRenderDemo( demoName );
 	
 	// force draw one frame
-	UpdateScreen();
+	// RB: added captureToImage
+	const bool captureToImage = false;
+	UpdateScreen( captureToImage );
+	// RB end
 	
 	StopRecordingRenderDemo();
 }
@@ -1068,7 +1079,12 @@ void idSessionLocal::StartPlayingRenderDemo( idStr demoName )
 	}
 	
 	insideExecuteMapChange = true;
-	UpdateScreen();
+	
+	// RB: added captureToImage
+	const bool captureToImage = true;
+	UpdateScreen( captureToImage );
+	// RB end
+	
 	insideExecuteMapChange = false;
 	guiLoading->SetStateString( "demo", "" );
 	
@@ -1107,7 +1123,12 @@ void idSessionLocal::TimeRenderDemo( const char* demoName, bool twice )
 		while( readDemo )
 		{
 			insideExecuteMapChange = true;
-			UpdateScreen();
+			
+			// RB: added captureToImage
+			const bool captureToImage = true;
+			UpdateScreen( captureToImage );
+			// RB end
+			
 			insideExecuteMapChange = false;
 			AdvanceRenderDemo( true );
 		}
@@ -1189,7 +1210,11 @@ void idSessionLocal::AVIRenderDemo( const char* _demoName )
 	
 	// I don't understand why I need to do this twice, something
 	// strange with the nvidia swapbuffers?
-	UpdateScreen();
+	
+	// RB: added captureToImage
+	const bool captureToImage = false;
+	UpdateScreen( captureToImage );
+	// RB end
 }
 
 /*
@@ -1556,7 +1581,10 @@ void idSessionLocal::TimeCmdDemo( const char* demoName )
 {
 	StartPlayingCmdDemo( demoName );
 	ClearWipe();
-	UpdateScreen();
+	
+	// RB: added captureToImage
+	const bool captureToImage = true;
+	UpdateScreen( captureToImage );
 	
 	int		startTime = Sys_Milliseconds();
 	int		count = 0;
@@ -1577,7 +1605,7 @@ void idSessionLocal::TimeCmdDemo( const char* demoName )
 			sec = ( minuteEnd - minuteStart ) / 1000.0;
 			minuteStart = minuteEnd;
 			common->Printf( "minute %i took %3.1f seconds\n", count / 3600, sec );
-			UpdateScreen();
+			UpdateScreen( captureToImage );
 		}
 	}
 	
@@ -1919,7 +1947,11 @@ void idSessionLocal::ExecuteMapChange( bool noFadeWipe )
 			guiLoading->SetStateFloat( "map_loading", pct );
 			guiLoading->StateChanged( com_frameTime );
 			Sys_GenerateEvents();
-			UpdateScreen();
+			
+			// RB: added captureToImage
+			const bool captureToImage = false;
+			UpdateScreen( captureToImage );
+			// RB end
 			pct += 0.05f;
 		}
 	}
@@ -2691,7 +2723,10 @@ void idSessionLocal::PacifierUpdate()
 	
 	Sys_GenerateEvents();
 	
-	UpdateScreen();
+	// RB: added captureToImage
+	const bool captureToImage = false;
+	UpdateScreen( captureToImage );
+	// RB end
 	
 	idAsyncNetwork::client.PacifierUpdate();
 	idAsyncNetwork::server.PacifierUpdate();
@@ -2827,7 +2862,7 @@ void idSessionLocal::Draw()
 idSessionLocal::UpdateScreen
 ===============
 */
-void idSessionLocal::UpdateScreen( bool outOfSequence, bool swapBuffers )
+void idSessionLocal::UpdateScreen( bool captureToImage, bool outOfSequence, bool swapBuffers )
 {
 
 #if defined(USE_MFC_TOOLS)
@@ -2859,6 +2894,11 @@ void idSessionLocal::UpdateScreen( bool outOfSequence, bool swapBuffers )
 	
 	// draw everything
 	Draw();
+	
+	if( captureToImage )
+	{
+		renderSystem->CaptureRenderToImage( "_currentRender", false );
+	}
 	
 	// RB begin
 	if( swapBuffers )

@@ -479,7 +479,10 @@ void idCommonLocal::VPrintf( const char* fmt, va_list args )
 		// update the console if we are in a long-running command, like dmap
 		if( com_refreshOnPrint )
 		{
-			session->UpdateScreen();
+			// RB: added captureToImage
+			const bool captureToImage = false;
+			session->UpdateScreen( captureToImage );
+			// RB end
 		}
 		
 		// let session redraw the animated loading screen if necessary
@@ -2103,7 +2106,10 @@ void idCommonLocal::LocalizeGui( const char* fileName, idLangDict& langDict )
 		{
 			idFile* outFile = fileSystem->OpenFileWrite( fileName );
 			common->Printf( "Processing %s\n", fileName );
-			session->UpdateScreen();
+			// RB: added captureToImage
+			const bool captureToImage = false;
+			session->UpdateScreen( captureToImage );
+			// RB end
 			idToken token;
 			while( src.ReadToken( &token ) )
 			{
@@ -3007,9 +3013,9 @@ void idCommonLocal::Frame()
 				
 				// RB begin
 #if defined(__ANDROID__)
-				session->UpdateScreen( false, false );
+				session->UpdateScreen( true, false, false );
 #else
-				session->UpdateScreen( false, true );
+				session->UpdateScreen( true, false, true );
 #endif
 				// RB end
 			}
@@ -3022,9 +3028,9 @@ void idCommonLocal::Frame()
 			
 			// RB begin
 #if defined(__ANDROID__)
-			session->UpdateScreen( false, false );
+			session->UpdateScreen( true, false, false );
 #else
-			session->UpdateScreen( false, true );
+			session->UpdateScreen( true, false, true );
 #endif
 			// RB end
 		}
@@ -3079,7 +3085,11 @@ void idCommonLocal::GUIFrame( bool execCmd, bool network )
 		idAsyncNetwork::RunFrame();
 	}
 	session->Frame();
-	session->UpdateScreen( false );
+	
+	// RB: added captureToImage
+	const bool captureToImage = false;
+	session->UpdateScreen( captureToImage, false );
+	// RB end
 }
 
 /*

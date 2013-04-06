@@ -47,6 +47,9 @@ idGuiModel* tr_guiModel;
 glconfig_t	glConfig;
 
 idCVar r_requestStereoPixelFormat( "r_requestStereoPixelFormat", "1", CVAR_RENDERER, "Ask for a stereo GL pixel format on startup" );
+// RB begin
+idCVar r_useOpenGL32( "r_useOpenGL32", "1", CVAR_INTEGER, "0 = OpenGL 2.0, 1 = OpenGL 3.2 compatibility profile, 2 = OpenGL 3.2 core profile", 0, 2 );
+// RB end
 idCVar r_debugContext( "r_debugContext", "0", CVAR_RENDERER, "Enable various levels of context debug." );
 idCVar r_glDriver( "r_glDriver", "", CVAR_RENDERER, "\"opengl32\", etc." );
 idCVar r_skipIntelWorkarounds( "r_skipIntelWorkarounds", "0", CVAR_RENDERER | CVAR_BOOL, "skip workarounds for Intel driver bugs" );
@@ -273,7 +276,7 @@ R_CheckPortableExtensions
 static void R_CheckPortableExtensions()
 {
 	glConfig.glVersion = atof( glConfig.version_string );
-	const char* badVideoCard = idLocalization::GetString( "#str_06780" );
+	const char* badVideoCard = common->GetLanguageDict()->GetString( "#str_06780" );
 	if( glConfig.glVersion < 2.0f )
 	{
 		idLib::FatalError( badVideoCard );
@@ -916,7 +919,7 @@ void R_TestVideo_f( const idCmdArgs& args )
 	
 	cinData_t	cin;
 	cin = tr.testVideo->ImageForTime( 0 );
-	if( cin.imageY == NULL )
+	if( cin.image == NULL )
 	{
 		delete tr.testVideo;
 		tr.testVideo = NULL;
@@ -1073,7 +1076,7 @@ void R_ReadTiledPixels( int width, int height, byte* buffer, renderView_t* ref =
 			else
 			{
 				const bool captureToImage = false;
-				common->UpdateScreen( captureToImage, false );
+				session->UpdateScreen( captureToImage, true );
 			}
 			
 			int w = sysWidth;
@@ -1492,7 +1495,7 @@ void R_MakeAmbientMap_f( const idCmdArgs& args )
 		sprintf( fullname, "env/%s%s", baseName, extensions[i] );
 		common->Printf( "loading %s\n", fullname.c_str() );
 		const bool captureToImage = false;
-		common->UpdateScreen( captureToImage );
+		session->UpdateScreen( captureToImage );
 		R_LoadImage( fullname, &buffers[i], &width, &height, NULL, true );
 		if( !buffers[i] )
 		{
@@ -1572,7 +1575,7 @@ void R_MakeAmbientMap_f( const idCmdArgs& args )
 			}
 			common->Printf( "writing %s\n", fullname.c_str() );
 			const bool captureToImage = false;
-			common->UpdateScreen( captureToImage );
+			session->UpdateScreen( captureToImage );
 			R_WriteTGA( fullname, outBuffer, outSize, outSize );
 		}
 	}
@@ -1904,7 +1907,7 @@ void R_TouchGui_f( const idCmdArgs& args )
 	
 	common->Printf( "touchGui %s\n", gui );
 	const bool captureToImage = false;
-	common->UpdateScreen( captureToImage );
+	session->UpdateScreen( captureToImage );
 	uiManager->Touch( gui );
 }
 

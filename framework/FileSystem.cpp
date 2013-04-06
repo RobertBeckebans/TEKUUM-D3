@@ -2390,7 +2390,12 @@ void idFileSystemLocal::TouchFileList_f( const idCmdArgs& args )
 			while( src.ReadToken( &token ) )
 			{
 				common->Printf( "%s\n", token.c_str() );
-				session->UpdateScreen();
+				
+				// RB: added captureToImage
+				const bool captureToImage = false;
+				session->UpdateScreen( captureToImage );
+				// RB end
+				
 				idFile* f = fileSystemLocal.OpenFileRead( token );
 				if( f )
 				{

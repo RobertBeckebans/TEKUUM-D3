@@ -527,10 +527,10 @@ void idDeviceContext::DrawMaterialRect( float x, float y, float w, float h, floa
 
 void idDeviceContext::SetCursor( int n )
 {
-
+#if 0
+	// TODO
 	if( n > CURSOR_ARROW && n < CURSOR_COUNT )
 	{
-	
 		keyBindings_t binds = idKeyInput::KeyBindingsFromBinding( "_use", true );
 		
 		keyNum_t keyNum = K_NONE;
@@ -567,6 +567,7 @@ void idDeviceContext::SetCursor( int n )
 		
 	}
 	else
+#endif
 	{
 		cursor = CURSOR_ARROW;
 	}

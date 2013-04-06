@@ -100,8 +100,8 @@ public:
 	
 	virtual void		Stop();
 	
-	// RB: added swapBuffers parameter
-	virtual void		UpdateScreen( bool outOfSequence = true, bool swapBuffers = true );
+	// RB: added captureImage, swapBuffers parameters
+	virtual void		UpdateScreen( bool captureImage, bool outOfSequence = true, bool swapBuffers = true );
 	// RB end
 	
 	virtual void		PacifierUpdate();

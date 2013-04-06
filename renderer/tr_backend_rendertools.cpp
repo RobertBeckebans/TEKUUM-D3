@@ -231,7 +231,7 @@ void RB_ScanStencilBuffer()
 	
 	memset( counts, 0, sizeof( counts ) );
 	
-	stencilReadback = ( byte* )R_StaticAlloc( renderSystem->GetWidth() * renderSystem->GetHeight(), TAG_RENDER_TOOLS );
+	stencilReadback = ( byte* )R_StaticAlloc( renderSystem->GetWidth() * renderSystem->GetHeight() );
 	glReadPixels( 0, 0, renderSystem->GetWidth(), renderSystem->GetHeight(), GL_STENCIL_INDEX, GL_UNSIGNED_BYTE, stencilReadback );
 	
 	for( i = 0; i < renderSystem->GetWidth() * renderSystem->GetHeight(); i++ )
@@ -267,7 +267,7 @@ static void RB_CountStencilBuffer()
 	byte*	stencilReadback;
 	
 	
-	stencilReadback = ( byte* )R_StaticAlloc( renderSystem->GetWidth() * renderSystem->GetHeight(), TAG_RENDER_TOOLS );
+	stencilReadback = ( byte* )R_StaticAlloc( renderSystem->GetWidth() * renderSystem->GetHeight() );
 	glReadPixels( 0, 0, renderSystem->GetWidth(), renderSystem->GetHeight(), GL_STENCIL_INDEX, GL_UNSIGNED_BYTE, stencilReadback );
 	
 	count = 0;

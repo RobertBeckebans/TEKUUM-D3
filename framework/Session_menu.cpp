@@ -1950,7 +1950,11 @@ void idSessionLocal::HandleNoteCommands( const char* menuCommand )
 			cmdSystem->BufferCommandText( CMD_EXEC_NOW, str );
 			cmdSystem->ExecuteCommandBuffer();
 			
-			UpdateScreen();
+			// RB: added captureToImage
+			const bool captureToImage = false;
+			UpdateScreen( captureToImage );
+			// RB end
+			
 			renderSystem->TakeScreenshot( renderSystem->GetWidth(), renderSystem->GetHeight(), shotName, 1, NULL );
 		}
 		noteNumber++;

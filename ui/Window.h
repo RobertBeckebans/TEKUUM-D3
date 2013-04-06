@@ -278,7 +278,7 @@ public:
 	virtual bool		Parse( idParser* src, bool rebuild = true );
 	virtual const char* HandleEvent( const sysEvent_t* event, bool* updateVisuals );
 	void				CalcRects( float x, float y );
-	virtual void		Redraw( float x, float y );
+	virtual void		Redraw( float x, float y, bool hud );
 	
 	virtual void		ArchiveToDictionary( idDict* dict, bool useNames = true );
 	virtual void		InitFromDictionary( idDict* dict, bool byName = true );
@@ -295,6 +295,7 @@ public:
 	virtual void		MouseExit();
 	virtual void		MouseEnter();
 	virtual void		DrawBackground( const idRectangle& drawRect );
+	virtual idWindow*	GetChildWithOnAction( float xd, float yd );
 	virtual const char* RouteMouseCoords( float xd, float yd );
 	virtual void		SetBuddy( idWindow* buddy ) {};
 	virtual void		HandleBuddyUpdate( idWindow* buddy ) {};

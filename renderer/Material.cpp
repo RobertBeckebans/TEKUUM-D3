@@ -3145,9 +3145,9 @@ void idMaterial::ResetCinematicTime( int time ) const
 idMaterial::GetCinematicStartTime
 =============
 */
-/*
 int idMaterial::GetCinematicStartTime() const
 {
+#if 0
 	for( int i = 0; i < numStages; i++ )
 	{
 		if( stages[i].texture.cinematic )
@@ -3156,8 +3156,10 @@ int idMaterial::GetCinematicStartTime() const
 		}
 	}
 	return -1;
+#else
+	return -1;
+#endif
 }
-*/
 
 /*
 ==================
