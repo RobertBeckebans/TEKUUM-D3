@@ -29,7 +29,7 @@ If you have questions concerning this license or the applicable additional terms
 #include "precompiled.h"
 #include "Font.h"
 
-const char* DEFAULT_FONT = "Arial_Narrow";
+const char* DEFAULT_FONT = "arial_narrow";
 
 static const float old_scale2 = 0.6f;
 static const float old_scale1 = 0.3f;
@@ -51,6 +51,7 @@ idFont::RemapFont
 */
 idFont* idFont::RemapFont( const char* baseName )
 {
+#if 0
 	idStr cleanName = baseName;
 	
 	if( cleanName == DEFAULT_FONT )
@@ -59,7 +60,7 @@ idFont* idFont::RemapFont( const char* baseName )
 	}
 	
 	const char* remapped = common->GetLanguageDict()->GetString( "#font_" + cleanName );
-	if( remapped != NULL )
+	if( remapped != NULL && remapped[0] != '\0' )
 	{
 		return renderSystem->RegisterFont( remapped );
 	}
@@ -75,6 +76,7 @@ idFont* idFont::RemapFont( const char* baseName )
 	{
 		return renderSystem->RegisterFont( cleanName );
 	}
+#endif
 	
 	return NULL;
 }

@@ -2902,6 +2902,9 @@ void idCommonLocal::InitRenderSystem()
 	
 	renderSystem->InitOpenGL();
 	
+	// initialize the renderSystem data structures
+	renderSystem->Init();
+	
 #if defined(STANDALONE)
 	PrintLoadingMessage( common->GetLanguageDict()->GetString( "#str_idCommonLocal_InitRenderSystem_Loading" ) );
 #else
@@ -3578,17 +3581,21 @@ void idCommonLocal::InitGame()
 		Com_ExecMachineSpec_f( args );
 	}
 	
-	// initialize the renderSystem data structures, but don't start OpenGL yet
-	renderSystem->Init();
-	
+// RB begin
+	// init the parallel job manager
+	parallelJobManager->Init();
+// RB end
+
 	// initialize string database right off so we can use it for loading messages
 	InitLanguageDict();
 	
-#if defined(STANDALONE)
+	/*
+	#if defined(STANDALONE)
 	PrintLoadingMessage( common->GetLanguageDict()->GetString( "#str_idCommonLocal_InitGame_Initialising_events" ) );
-#else
+	#else
 	PrintLoadingMessage( common->GetLanguageDict()->GetString( "#str_04344" ) );
-#endif
+	#endif
+	*/
 	
 	// load the font, etc
 	console->LoadGraphics();
@@ -3596,16 +3603,13 @@ void idCommonLocal::InitGame()
 	// init journalling, etc
 	eventLoop->Init();
 	
-// RB begin
-	// init the parallel job manager
-	parallelJobManager->Init();
-// RB end
-
-#if defined(STANDALONE)
+	/*
+	#if defined(STANDALONE)
 	PrintLoadingMessage( common->GetLanguageDict()->GetString( "#str_idCommonLocal_InitGame_Executing_startup_commands" ) );
-#else
+	#else
 	PrintLoadingMessage( common->GetLanguageDict()->GetString( "#str_04345" ) );
-#endif
+	#endif
+	*/
 	
 	// exec the startup scripts
 	cmdSystem->BufferCommandText( CMD_EXEC_APPEND, "exec editor.cfg\n" );
@@ -3636,20 +3640,24 @@ void idCommonLocal::InitGame()
 	// init the user command input code
 	usercmdGen->Init();
 	
-#if defined(STANDALONE)
+	/*
+	#if defined(STANDALONE)
 	PrintLoadingMessage( common->GetLanguageDict()->GetString( "#str_idCommonLocal_InitGame_Initialising_sound" ) );
-#else
+	#else
 	PrintLoadingMessage( common->GetLanguageDict()->GetString( "#str_04346" ) );
-#endif
+	#endif
+	*/
 	
 	// start the sound system, but don't do any hardware operations yet
 	soundSystem->Init();
 	
-#if defined(STANDALONE)
+	/*
+	#if defined(STANDALONE)
 	PrintLoadingMessage( common->GetLanguageDict()->GetString( "#str_idCommonLocal_InitGame_Initialising_network" ) );
-#else
+	#else
 	PrintLoadingMessage( common->GetLanguageDict()->GetString( "#str_04347" ) );
-#endif
+	#endif
+	*/
 	
 	// init async network
 	idAsyncNetwork::Init();
@@ -3665,12 +3673,14 @@ void idCommonLocal::InitGame()
 	}
 	else
 	{
+		/*
 		// init OpenGL, which will open a window and connect sound and input hardware
 #if defined(STANDALONE)
 		PrintLoadingMessage( common->GetLanguageDict()->GetString( "#str_idCommonLocal_InitGame_Initialising_render_system" ) );
 #else
 		PrintLoadingMessage( common->GetLanguageDict()->GetString( "#str_04348" ) );
 #endif
+		*/
 	
 		InitRenderSystem();
 	}
