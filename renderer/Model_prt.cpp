@@ -114,7 +114,7 @@ idRenderModel* idRenderModelPrt::InstantiateDynamicModel( const struct renderEnt
 	else
 	{
 	
-		staticModel = new( TAG_MODEL ) idRenderModelStatic;
+		staticModel = new idRenderModelStatic;
 		staticModel->InitEmpty( parametricParticle_SnapshotName );
 	}
 	

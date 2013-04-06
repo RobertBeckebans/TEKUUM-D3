@@ -665,7 +665,7 @@ ID_INLINE idHashTable<Type>::idHashTable( int newtablesize )
 	tablesize = newtablesize;
 	assert( tablesize > 0 );
 	
-	heads = new( TAG_IDLIB_HASH ) hashnode_s *[ tablesize ];
+	heads = new hashnode_s *[ tablesize ];
 	memset( heads, 0, sizeof( *heads ) * tablesize );
 	
 	numentries		= 0;
@@ -782,7 +782,7 @@ ID_INLINE void idHashTable<Type>::Set( const char* key, Type& value )
 	
 	numentries++;
 	
-	*nextPtr = new( TAG_IDLIB_HASH ) hashnode_s( key, value, heads[ hash ] );
+	*nextPtr = new hashnode_s( key, value, heads[ hash ] );
 	( *nextPtr )->next = node;
 }
 

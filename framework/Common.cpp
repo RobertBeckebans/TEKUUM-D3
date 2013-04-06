@@ -408,6 +408,18 @@ void idCommonLocal::VPrintf( const char* fmt, va_list args )
 		return;
 	}
 	
+	// RB: printf should be thread-safe on Linux
+	if( !idLib::IsMainThread() )
+	{
+#if defined(_WIN32)
+		OutputDebugString( msg );
+#else
+		printf( "%s", msg );
+#endif
+		return;
+	}
+	// RB end
+	
 	// echo to console buffer
 	console->Print( msg );
 	
@@ -2862,8 +2874,8 @@ void idCommonLocal::InitCommands()
 	cmdSystem->AddCommand( "printMemInfo", PrintMemInfo_f, CMD_FL_SYSTEM, "prints memory debugging data" );
 	
 	// idLib commands
-	cmdSystem->AddCommand( "memoryDump", Mem_Dump_f, CMD_FL_SYSTEM | CMD_FL_CHEAT, "creates a memory dump" );
-	cmdSystem->AddCommand( "memoryDumpCompressed", Mem_DumpCompressed_f, CMD_FL_SYSTEM | CMD_FL_CHEAT, "creates a compressed memory dump" );
+//	cmdSystem->AddCommand( "memoryDump", Mem_Dump_f, CMD_FL_SYSTEM | CMD_FL_CHEAT, "creates a memory dump" );
+//	cmdSystem->AddCommand( "memoryDumpCompressed", Mem_DumpCompressed_f, CMD_FL_SYSTEM | CMD_FL_CHEAT, "creates a compressed memory dump" );
 	cmdSystem->AddCommand( "showStringMemory", idStr::ShowMemoryUsage_f, CMD_FL_SYSTEM, "shows memory used by strings" );
 	cmdSystem->AddCommand( "showDictMemory", idDict::ShowMemoryUsage_f, CMD_FL_SYSTEM, "shows memory used by dictionaries" );
 	cmdSystem->AddCommand( "listDictKeys", idDict::ListKeys_f, CMD_FL_SYSTEM | CMD_FL_CHEAT, "lists all keys used by dictionaries" );
@@ -3540,8 +3552,8 @@ void idCommonLocal::Shutdown()
 	languageDict.Clear();
 	
 	// enable leak test
-	Mem_EnableLeakTest( "doom" );
-	
+//	Mem_EnableLeakTest( "doom" );
+
 	// shutdown idLib
 	idLib::ShutDown();
 }

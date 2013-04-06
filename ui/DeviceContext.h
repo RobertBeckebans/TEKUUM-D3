@@ -174,6 +174,7 @@ protected:
 	bool				initialized;
 };
 
+/*
 class idDeviceContextOptimized : public idDeviceContext
 {
 
@@ -181,13 +182,14 @@ class idDeviceContextOptimized : public idDeviceContext
 	virtual void		PushClipRect( idRectangle r );
 	virtual void		PopClipRect();
 	virtual void		EnableClipping( bool b );
-	
+
 	virtual int			DrawText( float x, float y, float scale, idVec4 color, const char* text, float adjust, int limit, int style, int cursor = -1 );
-	
+
 	float				clipX1;
 	float				clipX2;
 	float				clipY1;
 	float				clipY2;
 };
+*/
 
 #endif /* !__DEVICECONTEXT_H__ */

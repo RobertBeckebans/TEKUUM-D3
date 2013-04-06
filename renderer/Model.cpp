@@ -379,8 +379,8 @@ bool idRenderModelStatic::LoadBinaryModel( idFile* file, const ID_TIME_T sourceT
 		return false;
 	}
 	
-	session->PacifierUpdate();
-	
+//	session->PacifierUpdate();
+
 	int numSurfaces;
 	file->ReadBig( numSurfaces );
 	surfaces.SetNum( numSurfaces );
@@ -2165,7 +2165,7 @@ bool idRenderModelStatic::ConvertLWOToModelSurfaces( const struct st_lwObject* l
 	
 	if( numTVertexes )
 	{
-		tvList = ( idVec2* )Mem_Alloc( numTVertexes * sizeof( tvList[0] ), TAG_MODEL );
+		tvList = ( idVec2* )Mem_Alloc( numTVertexes * sizeof( tvList[0] ) );
 		int offset = 0;
 		for( lwVMap* vm = layer->vmap; vm; vm = vm->next )
 		{

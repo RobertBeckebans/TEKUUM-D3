@@ -393,13 +393,13 @@ void idImage::ActuallyLoadImage( bool fromBackEnd )
 	
 	const bimageFile_t& header = im.GetFileHeader();
 	
-#if 0
+	
 	// RB TODO
-	if( ( fileSystem->InProductionMode() && binaryFileTime != FILE_NOT_FOUND_TIMESTAMP ) || ( ( binaryFileTime != FILE_NOT_FOUND_TIMESTAMP )
+	if( /*( fileSystem->InProductionMode() && binaryFileTime != FILE_NOT_FOUND_TIMESTAMP ) ||*/ ( ( binaryFileTime != FILE_NOT_FOUND_TIMESTAMP )
 			&& ( header.colorFormat == opts.colorFormat )
 			&& ( header.format == opts.format )
 			&& ( header.textureType == opts.textureType )
-																							) )
+																								) )
 	{
 		opts.width = header.width;
 		opts.height = header.height;
@@ -407,14 +407,16 @@ void idImage::ActuallyLoadImage( bool fromBackEnd )
 		opts.colorFormat = ( textureColor_t )header.colorFormat;
 		opts.format = ( textureFormat_t )header.format;
 		opts.textureType = ( textureType_t )header.textureType;
+		
+		/*
 		if( cvarSystem->GetCVarBool( "fs_buildresources" ) )
 		{
 			// for resource gathering write this image to the preload file for this map
 			fileSystem->AddImagePreload( GetName(), filter, repeat, usage, cubeFiles );
 		}
+		*/
 	}
 	else
-#endif
 	{
 		if( cubeFiles != CF_2D )
 		{

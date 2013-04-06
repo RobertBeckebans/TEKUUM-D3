@@ -126,7 +126,7 @@ void R_InitFrameData()
 	
 	for( int i = 0; i < NUM_FRAME_DATA; i++ )
 	{
-		smpFrameData[i].frameMemory = ( byte* ) Mem_Alloc16( MAX_FRAME_MEMORY, TAG_RENDER );
+		smpFrameData[i].frameMemory = ( byte* ) Mem_Alloc16( MAX_FRAME_MEMORY );
 	}
 	
 	// must be set before calling R_ToggleSmpFrame()
@@ -202,11 +202,11 @@ FONT-END STATIC MEMORY ALLOCATION
 R_StaticAlloc
 =================
 */
-void* R_StaticAlloc( int bytes, const memTag_t tag )
+void* R_StaticAlloc( int bytes )
 {
 	tr.pc.c_alloc++;
 	
-	void* buf = Mem_Alloc( bytes, tag );
+	void* buf = Mem_Alloc( bytes );
 	
 	// don't exit on failure on zero length allocations since the old code didn't
 	if( buf == NULL && bytes != 0 )

@@ -336,7 +336,7 @@ void idRenderWorldLocal::UpdateEntityDef( qhandle_t entityHandle, const renderEn
 	else
 	{
 		// creating a new one
-		def = new( TAG_RENDER_ENTITY ) idRenderEntityLocal;
+		def = new idRenderEntityLocal;
 		entityDefs[entityHandle] = def;
 		
 		def->world = this;
@@ -517,7 +517,7 @@ void idRenderWorldLocal::UpdateLightDef( qhandle_t lightHandle, const renderLigh
 	else
 	{
 		// create a new one
-		light = new( TAG_RENDER_LIGHT ) idRenderLightLocal;
+		light = new idRenderLightLocal;
 		lightDefs[lightHandle] = light;
 		
 		light->world = this;

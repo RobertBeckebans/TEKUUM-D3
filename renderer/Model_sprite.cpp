@@ -98,7 +98,7 @@ idRenderModel* 	idRenderModelSprite::InstantiateDynamicModel( const struct rende
 	else
 	{
 	
-		staticModel = new( TAG_MODEL ) idRenderModelStatic;
+		staticModel = new idRenderModelStatic;
 		staticModel->InitEmpty( sprite_SnapshotName );
 		
 		tri = R_AllocStaticTriSurf();

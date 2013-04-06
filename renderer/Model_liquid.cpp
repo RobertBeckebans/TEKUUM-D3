@@ -578,7 +578,7 @@ idRenderModel* idRenderModelLiquid::InstantiateDynamicModel( const struct render
 	lerp = ( float )( t - time ) / ( float )update_tics;
 	modelSurface_t surf = GenerateSurface( lerp );
 	
-	staticModel = new( TAG_MODEL ) idRenderModelStatic;
+	staticModel = new idRenderModelStatic;
 	staticModel->AddSurface( surf );
 	staticModel->bounds = surf.geometry->bounds;
 	

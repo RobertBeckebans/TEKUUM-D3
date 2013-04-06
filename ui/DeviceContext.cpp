@@ -35,7 +35,7 @@ If you have questions concerning this license or the applicable additional terms
 extern idCVar in_useJoystick;
 
 // bypass rendersystem to directly work on guiModel
-extern idGuiModel* tr_guiModel;
+//extern idGuiModel* tr_guiModel;
 
 idVec4 idDeviceContext::colorPurple;
 idVec4 idDeviceContext::colorOrange;
@@ -1019,7 +1019,7 @@ OPTIMIZED VERSIONS
 
 ================================================================================================
 */
-
+#if 0
 // this is only called for the cursor and debug strings, and it should
 // scope properly with push/pop clipRect
 void idDeviceContextOptimized::EnableClipping( bool b )
@@ -1283,3 +1283,4 @@ int idDeviceContextOptimized::DrawText( float x, float y, float scale, idVec4 co
 	}
 	return drawText.Length();
 }
+#endif

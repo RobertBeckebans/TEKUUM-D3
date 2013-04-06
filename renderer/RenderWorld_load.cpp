@@ -486,7 +486,7 @@ void idRenderWorldLocal::ParseInterAreaPortals( idLexer* src, idFile* fileOut )
 			fileOut->WriteBig( a2 );
 		}
 		
-		w = new( TAG_RENDER_WINDING ) idWinding( numPoints );
+		w = new idWinding( numPoints );
 		w->SetNumPoints( numPoints );
 		for( int j = 0; j < numPoints; j++ )
 		{
@@ -559,7 +559,7 @@ void idRenderWorldLocal::ReadBinaryAreaPortals( idFile* file )
 		file->ReadBig( numPoints );
 		file->ReadBig( a1 );
 		file->ReadBig( a2 );
-		w = new( TAG_RENDER_WINDING ) idWinding( numPoints );
+		w = new idWinding( numPoints );
 		w->SetNumPoints( numPoints );
 		for( int j = 0; j < numPoints; j++ )
 		{
@@ -908,7 +908,7 @@ bool idRenderWorldLocal::InitFromMap( const char* name )
 	if( !loaded )
 	{
 	
-		src = new( TAG_RENDER ) idLexer( filename, LEXFL_NOSTRINGCONCAT | LEXFL_NODOLLARPRECOMPILE );
+		src = new idLexer( filename, LEXFL_NOSTRINGCONCAT | LEXFL_NODOLLARPRECOMPILE );
 		if( !src->IsLoaded() )
 		{
 			common->Printf( "idRenderWorldLocal::InitFromMap: %s not found\n", filename.c_str() );
@@ -952,8 +952,7 @@ bool idRenderWorldLocal::InitFromMap( const char* name )
 				break;
 			}
 			
-			session->PacifierUpdate();
-			
+			//session->PacifierUpdate();
 			
 			if( token == "model" )
 			{
@@ -1069,10 +1068,9 @@ void idRenderWorldLocal::AddWorldModelEntities()
 	// based on the bounding box, rather than explicitly into the correct area
 	for( int i = 0; i < numPortalAreas; i++ )
 	{
-		session->PacifierUpdate();
+		//session->PacifierUpdate();
 		
-		
-		idRenderEntityLocal*	 def = new( TAG_RENDER_ENTITY ) idRenderEntityLocal;
+		idRenderEntityLocal*	 def = new idRenderEntityLocal;
 		
 		// try and reuse a free spot
 		int index = entityDefs.FindNull();

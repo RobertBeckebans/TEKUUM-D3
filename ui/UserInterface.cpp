@@ -62,8 +62,8 @@ void idUserInterfaceManagerLocal::Init()
 {
 	screenRect = idRectangle( 0, 0, 640, 480 );
 	dcOld.Init();
-	dcOptimized.Init();
-	
+//	dcOptimized.Init();
+
 	SetDrawingDC();
 	
 }
@@ -73,7 +73,7 @@ void idUserInterfaceManagerLocal::Shutdown()
 	guis.DeleteContents( true );
 	demoGuis.DeleteContents( true );
 	dcOld.Shutdown();
-	dcOptimized.Shutdown();
+//	dcOptimized.Shutdown();
 //	mapParser.Clear();
 }
 
@@ -85,12 +85,13 @@ void idUserInterfaceManagerLocal::SetDrawingDC()
 	// new paths, toggle between them every frame if g_useNewGuiCode is set to 2
 	toggle++;
 	
-	if( g_useNewGuiCode.GetInteger() == 1 ||
-			( g_useNewGuiCode.GetInteger() == 2 && ( toggle & 1 ) ) )
+#if 0
+	if( g_useNewGuiCode.GetInteger() == 1 || ( g_useNewGuiCode.GetInteger() == 2 && ( toggle & 1 ) ) )
 	{
 		dc = &dcOptimized;
 	}
 	else
+#endif
 	{
 		dc = &dcOld;
 	}
@@ -133,9 +134,18 @@ void idUserInterfaceManagerLocal::Preload( const char* mapName )
 
 void idUserInterfaceManagerLocal::BeginLevelLoad()
 {
-	for( int i = 0; i < guis.Num(); i++ )
+	int c = guis.Num();
+	for( int i = 0; i < c; i++ )
 	{
-		guis[ i ]->ClearRefs();
+		if( ( guis[ i ]->GetDesktop()->GetFlags() & WIN_MENUGUI ) == 0 )
+		{
+			guis[ i ]->ClearRefs();
+			/*
+			delete guis[ i ];
+			guis.RemoveIndex( i );
+			i--; c--;
+			*/
+		}
 	}
 }
 
@@ -167,7 +177,7 @@ void idUserInterfaceManagerLocal::EndLevelLoad( const char* mapName )
 				c--;
 			}
 		}
-		session->PacifierUpdate();
+		//session->PacifierUpdate();
 	}
 	/*
 	if( cvarSystem->GetCVarBool( "fs_buildresources" ) && mapName != NULL && mapName[ 0 ] != '\0' )
@@ -178,7 +188,7 @@ void idUserInterfaceManagerLocal::EndLevelLoad( const char* mapName )
 	}
 	*/
 	dcOld.Init();
-	dcOptimized.Init();
+//	dcOptimized.Init();
 }
 
 void idUserInterfaceManagerLocal::Reload( bool all )

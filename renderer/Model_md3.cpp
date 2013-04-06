@@ -83,7 +83,7 @@ void idRenderModelMD3::InitFromFile( const char* fileName )
 	
 	size = LittleLong( pinmodel->ofsEnd );
 	dataSize += size;
-	md3 = ( md3Header_t* )Mem_Alloc( size, TAG_MODEL );
+	md3 = ( md3Header_t* )Mem_Alloc( size );
 	
 	memcpy( md3, buffer, LittleLong( pinmodel->ofsEnd ) );
 	
@@ -313,7 +313,7 @@ idRenderModel* idRenderModelMD3::InstantiateDynamicModel( const struct renderEnt
 		cachedModel = NULL;
 	}
 	
-	staticModel = new( TAG_MODEL ) idRenderModelStatic;
+	staticModel = new idRenderModelStatic;
 	staticModel->bounds.Clear();
 	
 	surface = ( md3Surface_t* )( ( byte* )md3 + md3->ofsSurfaces );

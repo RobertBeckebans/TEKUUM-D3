@@ -167,7 +167,7 @@ bool MA_ParseTransform( idParser& parser )
 	memset( &header, 0, sizeof( header ) );
 	
 	//Allocate room for the transform
-	transform = ( maTransform_t* )Mem_Alloc( sizeof( maTransform_t ), TAG_MODEL );
+	transform = ( maTransform_t* )Mem_Alloc( sizeof( maTransform_t ) );
 	memset( transform, 0, sizeof( maTransform_t ) );
 	transform->scale.x = transform->scale.y = transform->scale.z = 1;
 	
@@ -241,7 +241,7 @@ bool MA_ParseVertex( idParser& parser, maAttribHeader_t* header )
 	if( !pMesh->vertexes )
 	{
 		pMesh->numVertexes = header->size;
-		pMesh->vertexes = ( idVec3* )Mem_Alloc( sizeof( idVec3 ) * pMesh->numVertexes, TAG_MODEL );
+		pMesh->vertexes = ( idVec3* )Mem_Alloc( sizeof( idVec3 ) * pMesh->numVertexes );
 	}
 	
 	//Get the start and end index for this attribute
@@ -278,7 +278,7 @@ bool MA_ParseVertexTransforms( idParser& parser, maAttribHeader_t* header )
 		}
 		
 		pMesh->numVertTransforms = header->size;
-		pMesh->vertTransforms = ( idVec4* )Mem_Alloc( sizeof( idVec4 ) * pMesh->numVertTransforms, TAG_MODEL );
+		pMesh->vertTransforms = ( idVec4* )Mem_Alloc( sizeof( idVec4 ) * pMesh->numVertTransforms );
 		pMesh->nextVertTransformIndex = 0;
 	}
 	
@@ -336,7 +336,7 @@ bool MA_ParseEdge( idParser& parser, maAttribHeader_t* header )
 	if( !pMesh->edges )
 	{
 		pMesh->numEdges = header->size;
-		pMesh->edges = ( idVec3* )Mem_Alloc( sizeof( idVec3 ) * pMesh->numEdges, TAG_MODEL );
+		pMesh->edges = ( idVec3* )Mem_Alloc( sizeof( idVec3 ) * pMesh->numEdges );
 	}
 	
 	//Get the start and end index for this attribute
@@ -368,7 +368,7 @@ bool MA_ParseNormal( idParser& parser, maAttribHeader_t* header )
 	if( !pMesh->normals )
 	{
 		pMesh->numNormals = header->size;
-		pMesh->normals = ( idVec3* )Mem_Alloc( sizeof( idVec3 ) * pMesh->numNormals, TAG_MODEL );
+		pMesh->normals = ( idVec3* )Mem_Alloc( sizeof( idVec3 ) * pMesh->numNormals );
 	}
 	
 	//Get the start and end index for this attribute
@@ -432,7 +432,7 @@ bool MA_ParseFace( idParser& parser, maAttribHeader_t* header )
 	if( !pMesh->faces )
 	{
 		pMesh->numFaces = header->size;
-		pMesh->faces = ( maFace_t* )Mem_Alloc( sizeof( maFace_t ) * pMesh->numFaces, TAG_MODEL );
+		pMesh->faces = ( maFace_t* )Mem_Alloc( sizeof( maFace_t ) * pMesh->numFaces );
 	}
 	
 	//Get the start and end index for this attribute
@@ -527,7 +527,7 @@ bool MA_ParseColor( idParser& parser, maAttribHeader_t* header )
 	if( !pMesh->colors )
 	{
 		pMesh->numColors = header->size;
-		pMesh->colors = ( byte* )Mem_Alloc( sizeof( byte ) * pMesh->numColors * 4, TAG_MODEL );
+		pMesh->colors = ( byte* )Mem_Alloc( sizeof( byte ) * pMesh->numColors * 4 );
 	}
 	
 	//Get the start and end index for this attribute
@@ -566,7 +566,7 @@ bool MA_ParseTVert( idParser& parser, maAttribHeader_t* header )
 	if( !pMesh->tvertexes )
 	{
 		pMesh->numTVertexes = header->size;
-		pMesh->tvertexes = ( idVec2* )Mem_Alloc( sizeof( idVec2 ) * pMesh->numTVertexes, TAG_MODEL );
+		pMesh->tvertexes = ( idVec2* )Mem_Alloc( sizeof( idVec2 ) * pMesh->numTVertexes );
 	}
 	
 	//Get the start and end index for this attribute
@@ -679,7 +679,7 @@ void MA_ParseMesh( idParser& parser )
 {
 
 	maObject_t*	object;
-	object = ( maObject_t* )Mem_Alloc( sizeof( maObject_t ), TAG_MODEL );
+	object = ( maObject_t* )Mem_Alloc( sizeof( maObject_t ) );
 	memset( object, 0, sizeof( maObject_t ) );
 	maGlobal.model->objects.Append( object );
 	maGlobal.currentObject = object;
@@ -874,7 +874,7 @@ void MA_ParseFileNode( idParser& parser )
 				}
 				
 				maFileNode_t* fileNode;
-				fileNode = ( maFileNode_t* )Mem_Alloc( sizeof( maFileNode_t ), TAG_MODEL );
+				fileNode = ( maFileNode_t* )Mem_Alloc( sizeof( maFileNode_t ) );
 				strcpy( fileNode->name, header.name );
 				strcpy( fileNode->path, token.c_str() );
 				
@@ -896,7 +896,7 @@ void MA_ParseMaterialNode( idParser& parser )
 	MA_ParseNodeHeader( parser, &header );
 	
 	maMaterialNode_t* matNode;
-	matNode = ( maMaterialNode_t* )Mem_Alloc( sizeof( maMaterialNode_t ), TAG_MODEL );
+	matNode = ( maMaterialNode_t* )Mem_Alloc( sizeof( maMaterialNode_t ) );
 	memset( matNode, 0, sizeof( maMaterialNode_t ) );
 	
 	strcpy( matNode->name, header.name );
@@ -949,7 +949,7 @@ int MA_AddMaterial( const char* materialName )
 		
 			//Got the file
 			maMaterial_t*	material;
-			material = ( maMaterial_t* )Mem_Alloc( sizeof( maMaterial_t ), TAG_MODEL );
+			material = ( maMaterial_t* )Mem_Alloc( sizeof( maMaterial_t ) );
 			memset( material, 0, sizeof( maMaterial_t ) );
 			
 			//Remove the OS stuff
@@ -1150,7 +1150,7 @@ maModel_t* MA_Parse( const char* buffer, const char* filename, bool verbose )
 	maGlobal.currentObject = NULL;
 	
 	// NOTE: using new operator because aseModel_t contains idList class objects
-	maGlobal.model = new( TAG_MODEL ) maModel_t;
+	maGlobal.model = new maModel_t;
 	maGlobal.model->objects.Resize( 32, 32 );
 	maGlobal.model->materials.Resize( 32, 32 );
 	

@@ -70,8 +70,8 @@ void idLib::Init()
 	Swap_Init();
 	
 	// initialize memory manager
-	Mem_Init();
-	
+//	Mem_Init();
+
 	// init string memory allocator
 	idStr::InitMemory();
 	
@@ -111,7 +111,7 @@ void idLib::ShutDown()
 	idSIMD::Shutdown();
 	
 	// shut down the memory manager
-	Mem_Shutdown();
+//	Mem_Shutdown();
 }
 
 

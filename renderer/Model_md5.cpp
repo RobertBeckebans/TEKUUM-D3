@@ -231,8 +231,8 @@ void idMD5Mesh::ParseMesh( idLexer& parser, int numJoints, const idJointMat* joi
 	}
 	
 	// create pre-scaled weights and an index for the vertex/joint lookup
-	idVec4* scaledWeights = ( idVec4* ) Mem_Alloc16( numWeights * sizeof( scaledWeights[0] ), TAG_MD5_WEIGHT );
-	int* weightIndex = ( int* ) Mem_Alloc16( numWeights * 2 * sizeof( weightIndex[0] ), TAG_MD5_INDEX );
+	idVec4* scaledWeights = ( idVec4* ) Mem_Alloc16( numWeights * sizeof( scaledWeights[0] ) );
+	int* weightIndex = ( int* ) Mem_Alloc16( numWeights * 2 * sizeof( weightIndex[0] ) );
 	memset( weightIndex, 0, numWeights * 2 * sizeof( weightIndex[0] ) );
 	
 	count = 0;
@@ -262,7 +262,7 @@ void idMD5Mesh::ParseMesh( idLexer& parser, int numJoints, const idJointMat* joi
 	//
 	// build a base pose that can be used for skinning
 	//
-	idDrawVert* basePose = ( idDrawVert* )Mem_ClearedAlloc( texCoords.Num() * sizeof( *basePose ), TAG_MD5_BASE );
+	idDrawVert* basePose = ( idDrawVert* )Mem_ClearedAlloc( texCoords.Num() * sizeof( *basePose ) );
 	for( int j = 0, i = 0; i < texCoords.Num(); i++ )
 	{
 		idVec3 v = ( *( idJointMat* )( ( byte* )joints + weightIndex[j * 2 + 0] ) ) * scaledWeights[j];
@@ -413,7 +413,7 @@ void idMD5Mesh::ParseMesh( idLexer& parser, int numJoints, const idJointMat* joi
 		}
 	}
 	
-	meshJoints = ( byte* ) Mem_Alloc( numMeshJoints * sizeof( meshJoints[0] ), TAG_MODEL );
+	meshJoints = ( byte* ) Mem_Alloc( numMeshJoints * sizeof( meshJoints[0] ) );
 	numMeshJoints = 0;
 	for( int i = 0; i < numJoints; i++ )
 	{
@@ -773,7 +773,7 @@ bool idRenderModelMD5::LoadBinaryModel( idFile* file, const ID_TIME_T sourceTime
 		file->ReadBig( meshes[i].numTris );
 		
 		file->ReadBig( meshes[i].numMeshJoints );
-		meshes[i].meshJoints = ( byte* ) Mem_Alloc( meshes[i].numMeshJoints * sizeof( meshes[i].meshJoints[0] ), TAG_MODEL );
+		meshes[i].meshJoints = ( byte* ) Mem_Alloc( meshes[i].numMeshJoints * sizeof( meshes[i].meshJoints[0] ) );
 		file->ReadBigArray( meshes[i].meshJoints, meshes[i].numMeshJoints );
 		file->ReadBig( meshes[i].maxJointVertDist );
 		
@@ -835,7 +835,7 @@ bool idRenderModelMD5::LoadBinaryModel( idFile* file, const ID_TIME_T sourceTime
 			}
 		}
 		
-		idShadowVertSkinned* shadowVerts = ( idShadowVertSkinned* ) Mem_Alloc( ALIGN( deform.numOutputVerts * 2 * sizeof( idShadowVertSkinned ), 16 ), TAG_MODEL );
+		idShadowVertSkinned* shadowVerts = ( idShadowVertSkinned* ) Mem_Alloc( ALIGN( deform.numOutputVerts * 2 * sizeof( idShadowVertSkinned ), 16 ) );
 		idShadowVertSkinned::CreateShadowCache( shadowVerts, deform.verts, deform.numOutputVerts );
 		
 		deform.staticAmbientCache = vertexCache.AllocStaticVertex( deform.verts, ALIGN( deform.numOutputVerts * sizeof( idDrawVert ), VERTEX_CACHE_ALIGN ) );
@@ -1077,7 +1077,7 @@ void idRenderModelMD5::LoadModel()
 	// set the timestamp for reloadmodels
 	fileSystem->ReadFile( name, NULL, &timeStamp );
 	
-	session->PacifierUpdate();
+//	session->PacifierUpdate();
 }
 
 /*
@@ -1341,7 +1341,7 @@ idRenderModel* idRenderModelMD5::InstantiateDynamicModel( const struct renderEnt
 	}
 	else
 	{
-		staticModel = new( TAG_MODEL ) idRenderModelStatic;
+		staticModel = new idRenderModelStatic;
 		staticModel->InitEmpty( MD5_SnapshotName );
 	}
 	
@@ -1369,7 +1369,7 @@ idRenderModel* idRenderModelMD5::InstantiateDynamicModel( const struct renderEnt
 	{
 		staticModel->numInvertedJoints = numInvertedJoints;
 		const int alignment = glConfig.uniformBufferOffsetAlignment;
-		staticModel->jointsInverted = ( idJointMat* )Mem_ClearedAlloc( ALIGN( numInvertedJoints * sizeof( idJointMat ), alignment ), TAG_JOINTMAT );
+		staticModel->jointsInverted = ( idJointMat* )Mem_ClearedAlloc( ALIGN( numInvertedJoints * sizeof( idJointMat ), alignment ) );
 		staticModel->jointsInvertedBuffer = 0;
 	}
 	else

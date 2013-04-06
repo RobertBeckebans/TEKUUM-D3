@@ -755,7 +755,7 @@ void	idRenderWorldLocal::ReadRenderEntity()
 	}
 	if( ent.numJoints )
 	{
-		ent.joints = ( idJointMat* )Mem_Alloc16( SIMD_ROUND_JOINTS( ent.numJoints ) * sizeof( ent.joints[0] ), TAG_JOINTMAT );
+		ent.joints = ( idJointMat* )Mem_Alloc16( SIMD_ROUND_JOINTS( ent.numJoints ) * sizeof( ent.joints[0] ) );
 		for( int i = 0; i < ent.numJoints; i++ )
 		{
 			float* data = ent.joints[i].ToFloatPtr();

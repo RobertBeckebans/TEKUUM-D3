@@ -1089,7 +1089,7 @@ idRenderSystemLocal::AllocRenderWorld
 idRenderWorld* idRenderSystemLocal::AllocRenderWorld()
 {
 	idRenderWorldLocal* rw;
-	rw = new( TAG_RENDER ) idRenderWorldLocal;
+	rw = new idRenderWorldLocal;
 	worlds.Append( rw );
 	return rw;
 }

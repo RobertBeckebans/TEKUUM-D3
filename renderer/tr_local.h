@@ -1141,7 +1141,7 @@ void R_ToggleSmpFrame();
 void* R_FrameAlloc( int bytes, frameAllocType_t type = FRAME_ALLOC_UNKNOWN );
 void* R_ClearedFrameAlloc( int bytes, frameAllocType_t type = FRAME_ALLOC_UNKNOWN );
 
-void* R_StaticAlloc( int bytes, const memTag_t tag = TAG_RENDER_STATIC );		// just malloc with error checking
+void* R_StaticAlloc( int bytes );		// just malloc with error checking
 void* R_ClearedStaticAlloc( int bytes );	// with memset
 void R_StaticFree( void* data );
 
