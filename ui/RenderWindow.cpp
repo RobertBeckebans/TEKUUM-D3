@@ -123,7 +123,9 @@ void idRenderWindow::PreRender()
 			modelDef = world->AddEntityDef( &worldEntity );
 		}
 		
+		// RB: added to avoid crash in the renderer
 		world->GenerateAllInteractions();
+		// RB end
 		
 		needsRender = false;
 	}

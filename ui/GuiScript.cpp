@@ -722,7 +722,10 @@ void idGuiScript::FixupParms( idWindow* win )
 			delete str;
 		}
 		//
+		
 	}
+#if 0
+	// RB
 	else if( handler == &Script_LocalSound )
 	{
 		idWinStr* str = dynamic_cast<idWinStr*>( parms[0].var );
@@ -731,6 +734,7 @@ void idGuiScript::FixupParms( idWindow* win )
 			declManager->FindSound( str->c_str() );
 		}
 	}
+#endif
 	else
 	{
 		int c = parms.Num();

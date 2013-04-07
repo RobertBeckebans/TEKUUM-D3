@@ -3744,9 +3744,11 @@ void idCommonLocal::InitGame()
 		SetMachineSpec();
 		Com_ExecMachineSpec_f( args );
 		cvarSystem->SetCVarInteger( "s_numberOfSpeakers", 6 );
-		cmdSystem->BufferCommandText( CMD_EXEC_NOW, "s_restart\n" );
-		cmdSystem->ExecuteCommandBuffer();
 	}
+	
+	// RB: start sound hardware
+	cmdSystem->BufferCommandText( CMD_EXEC_NOW, "s_restart\n" );
+	cmdSystem->ExecuteCommandBuffer();
 }
 
 /*
