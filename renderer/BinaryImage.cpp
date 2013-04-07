@@ -466,7 +466,7 @@ bool idBinaryImage::LoadFromGeneratedFile( idFile* bFile, ID_TIME_T sourceFileTi
 	{
 		return false;
 	}
-	if( fileData.sourceFileTime != sourceFileTime /*&& !fileSystem->InProductionMode()*/ )
+	if( fileData.sourceFileTime != sourceFileTime && ( sourceFileTime != FILE_NOT_FOUND_TIMESTAMP ) /*&& !fileSystem->InProductionMode()*/ )
 	{
 		return false;
 	}

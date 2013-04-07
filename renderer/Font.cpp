@@ -51,7 +51,6 @@ idFont::RemapFont
 */
 idFont* idFont::RemapFont( const char* baseName )
 {
-#if 0
 	idStr cleanName = baseName;
 	
 	if( cleanName == DEFAULT_FONT )
@@ -59,24 +58,27 @@ idFont* idFont::RemapFont( const char* baseName )
 		return NULL;
 	}
 	
-	const char* remapped = common->GetLanguageDict()->GetString( "#font_" + cleanName );
-	if( remapped != NULL && remapped[0] != '\0' )
+	//: RB added suggestion to avoid infinite loop
+	idStr suggestion = "#font_" + cleanName;
+	const char* remapped = common->GetLanguageDict()->GetString( suggestion );
+	if( remapped != NULL && remapped[0] != '\0' && suggestion.Cmp( remapped ) != 0 )
 	{
 		return renderSystem->RegisterFont( remapped );
 	}
 	
+	suggestion = "#font_" + cleanName;
 	const char* wildcard = common->GetLanguageDict()->GetString( "#font_*" );
-	if( wildcard != NULL && cleanName.Icmp( wildcard ) != 0 )
+	if( wildcard != NULL && cleanName.Icmp( wildcard ) != 0 && suggestion.Cmp( remapped ) != 0 )
 	{
 		return renderSystem->RegisterFont( wildcard );
 	}
+	// RB end
 	
 	// Note single | so both sides are always executed
 	if( cleanName.ReplaceChar( ' ', '_' ) | cleanName.ReplaceChar( '-', '_' ) )
 	{
 		return renderSystem->RegisterFont( cleanName );
 	}
-#endif
 	
 	return NULL;
 }
