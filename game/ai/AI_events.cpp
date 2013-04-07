@@ -921,7 +921,7 @@ void idAI::Event_MeleeAttackToJoint( const char* jointname, const char* meleeDef
 	if( trace.fraction < 1.0f )
 	{
 		hitEnt = gameLocal.GetTraceEntity( trace );
-		if( hitEnt && hitEnt->IsType( idActor::Type ) )
+		if( hitEnt != NULL && hitEnt->IsType( idActor::Type ) )
 		{
 			DirectDamage( meleeDefName, hitEnt );
 			idThread::ReturnInt( true );
