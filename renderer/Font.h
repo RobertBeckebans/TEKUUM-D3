@@ -51,7 +51,7 @@ public:
 	}
 	
 	float GetLineHeight( float scale ) const;
-	float GetAscender( float scale ) const;
+//	float GetAscender( float scale ) const;
 	float GetMaxCharWidth( float scale ) const;
 	
 	float GetGlyphWidth( float scale, uint32 idx ) const;
@@ -64,6 +64,10 @@ private:
 	
 	bool LoadFont();
 	
+	bool LoadFromTrueTypeFont();
+	bool WriteFont();
+	
+public:
 	struct glyphInfo_t
 	{
 		byte	width;	// width of glyph in pixels
@@ -98,6 +102,7 @@ private:
 		const idMaterial* 	material;
 	};
 	
+private:
 	// base name of the font (minus "fonts/" and ".dat")
 	idStr			name;
 	
