@@ -196,8 +196,8 @@ public:
 private:
 	idRectangle					screenRect;
 	idDeviceContext				dcOld;
-//	idDeviceContextOptimized	dcOptimized;
-
+	idDeviceContextOptimized	dcOptimized;
+	
 	idList<idUserInterfaceLocal*> guis;
 	idList<idUserInterfaceLocal*> demoGuis;
 	

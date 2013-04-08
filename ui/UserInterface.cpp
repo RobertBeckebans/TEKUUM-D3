@@ -62,8 +62,8 @@ void idUserInterfaceManagerLocal::Init()
 {
 	screenRect = idRectangle( 0, 0, 640, 480 );
 	dcOld.Init();
-//	dcOptimized.Init();
-
+	dcOptimized.Init();
+	
 	SetDrawingDC();
 	
 }
@@ -73,8 +73,8 @@ void idUserInterfaceManagerLocal::Shutdown()
 	guis.DeleteContents( true );
 	demoGuis.DeleteContents( true );
 	dcOld.Shutdown();
-//	dcOptimized.Shutdown();
-//	mapParser.Clear();
+	dcOptimized.Shutdown();
+	//mapParser.Clear();
 }
 
 void idUserInterfaceManagerLocal::SetDrawingDC()
@@ -85,13 +85,12 @@ void idUserInterfaceManagerLocal::SetDrawingDC()
 	// new paths, toggle between them every frame if g_useNewGuiCode is set to 2
 	toggle++;
 	
-#if 0
-	if( g_useNewGuiCode.GetInteger() == 1 || ( g_useNewGuiCode.GetInteger() == 2 && ( toggle & 1 ) ) )
+	if( g_useNewGuiCode.GetInteger() == 1 ||
+			( g_useNewGuiCode.GetInteger() == 2 && ( toggle & 1 ) ) )
 	{
 		dc = &dcOptimized;
 	}
 	else
-#endif
 	{
 		dc = &dcOld;
 	}
@@ -188,7 +187,7 @@ void idUserInterfaceManagerLocal::EndLevelLoad( const char* mapName )
 	}
 	*/
 	dcOld.Init();
-//	dcOptimized.Init();
+	dcOptimized.Init();
 }
 
 void idUserInterfaceManagerLocal::Reload( bool all )

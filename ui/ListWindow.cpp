@@ -351,7 +351,7 @@ bool idListWindow::ParseInternalVar( const char* _name, idParser* src )
 		
 		ParseString( src, matName );
 		mat = declManager->FindMaterial( matName );
-		if( mat && !mat->TestMaterialFlag( MF_DEFAULTED ) )
+		if( mat != NULL && !mat->TestMaterialFlag( MF_DEFAULTED ) )
 		{
 			mat->SetSort( SS_GUI );
 		}

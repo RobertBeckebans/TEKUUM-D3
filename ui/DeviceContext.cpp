@@ -1019,7 +1019,7 @@ OPTIMIZED VERSIONS
 
 ================================================================================================
 */
-#if 0
+
 // this is only called for the cursor and debug strings, and it should
 // scope properly with push/pop clipRect
 void idDeviceContextOptimized::EnableClipping( bool b )
@@ -1246,7 +1246,7 @@ int idDeviceContextOptimized::DrawText( float x, float y, float scale, idVec4 co
 			float x2 = xOffset + ( drawX + w ) * xScale;
 			float y1 = yOffset + drawY * yScale;
 			float y2 = yOffset + ( drawY + h ) * yScale;
-			idDrawVert* verts = tr_guiModel->AllocTris( 4, quadPicIndexes, 6, glyphInfo.material, 0, STEREO_DEPTH_TYPE_NONE );
+			idDrawVert* verts = renderSystem->AllocTris( 4, quadPicIndexes, 6, glyphInfo.material, STEREO_DEPTH_TYPE_NONE );
 			if( verts != NULL )
 			{
 				verts[0].xyz[0] = x1;
@@ -1283,4 +1283,3 @@ int idDeviceContextOptimized::DrawText( float x, float y, float scale, idVec4 co
 	}
 	return drawText.Length();
 }
-#endif

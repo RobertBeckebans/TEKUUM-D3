@@ -265,8 +265,8 @@ void idRenderLog::StartFrame()
 	
 	char qpath[128];
 	sprintf( qpath, "renderlogPC_%04i.txt", r_logFile.GetInteger() );
-	idStr finalPath = fileSystem->RelativePathToOSPath( qpath );
-	sprintf( ospath, "%s", finalPath.c_str() );
+	//idStr finalPath = fileSystem->RelativePathToOSPath( qpath );
+	sprintf( ospath, "%s", qpath );
 	/*
 	for ( int i = 0; i < 9999 ; i++ ) {
 		char qpath[128];
