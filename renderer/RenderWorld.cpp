@@ -950,6 +950,12 @@ void idRenderWorldLocal::RenderScene( const renderView_t* renderView )
 	parms->initialViewAreaOrigin = renderView->vieworg;
 	parms->renderWorld = this;
 	
+#if 1
+	// use this time for any subsequent 2D rendering, so damage blobs/etc
+	// can use level time
+	tr.frameShaderTime = parms->renderView.time[0] * 0.001f;
+#endif
+	
 	// see if the view needs to reverse the culling sense in mirrors
 	// or environment cube sides
 	idVec3	cross;

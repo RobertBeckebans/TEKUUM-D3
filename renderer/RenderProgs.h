@@ -321,6 +321,13 @@ public:
 		BindShader_Builtin( BUILTIN_BINK_GUI );
 	}
 	
+	// RB begin
+	void	BindShader_RoQ()
+	{
+		BindShader_Builtin( BUILTIN_ROQ );
+	}
+	// RB end
+	
 	void	BindShader_MotionBlur()
 	{
 		BindShader_Builtin( BUILTIN_MOTION_BLUR );
@@ -398,6 +405,9 @@ protected:
 		BUILTIN_ZCULL_RECONSTRUCT,
 		BUILTIN_BINK,
 		BUILTIN_BINK_GUI,
+		// RB: RoQ videos
+		BUILTIN_ROQ,
+		// RB end
 		BUILTIN_STEREO_INTERLACE,
 		BUILTIN_MOTION_BLUR,
 		

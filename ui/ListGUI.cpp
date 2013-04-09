@@ -54,7 +54,7 @@ void idListGUILocal::StateChanged()
 		m_pGUI->SetStateString( va( "%s_item_%i", m_name.c_str(), i ), "" );
 	}
 	m_water = Num();
-	m_pGUI->StateChanged( com_frameTime );
+	m_pGUI->StateChanged( Sys_Milliseconds() );
 }
 
 /*

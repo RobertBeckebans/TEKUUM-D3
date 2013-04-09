@@ -137,10 +137,12 @@ idSimpleWindow::~idSimpleWindow()
 
 void idSimpleWindow::StateChanged( bool redraw )
 {
+#if 0
 	if( redraw && background && background->CinematicLength() )
 	{
 		background->UpdateCinematic( gui->GetTime() );
 	}
+#endif
 }
 
 void idSimpleWindow::SetupTransforms( float x, float y )

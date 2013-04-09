@@ -666,7 +666,7 @@ idWindow::RunTimeEvents
 bool idWindow::RunTimeEvents( int time )
 {
 
-	if( time - lastTimeRun < USERCMD_MSEC )
+	if( time == lastTimeRun )
 	{
 		//common->Printf("Skipping gui time events at %i\n", time);
 		return false;

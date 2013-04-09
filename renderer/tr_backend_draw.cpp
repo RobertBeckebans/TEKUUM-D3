@@ -392,10 +392,6 @@ static void RB_BindVariableStageImage( const textureStage_t* texture, const floa
 			return;
 		}
 		
-		// because the shaders may have already been set - we need to make sure we are not using a bink shader which would
-		// display incorrectly
-		renderProgManager.BindShader_TextureVertexColor();
-		
 		// offset time by shaderParm[7] (FIXME: make the time offset a parameter of the shader?)
 		// We make no attempt to optimize for multiple identical cinematics being in view, or
 		// for cinematics going at a lower framerate than the renderer.
@@ -417,6 +413,10 @@ static void RB_BindVariableStageImage( const textureStage_t* texture, const floa
 		else
 		{
 			globalImages->blackImage->Bind();
+			// because the shaders may have already been set - we need to make sure we are not using a bink shader which would
+			// display incorrectly.  We may want to get rid of RB_BindVariableStageImage and inline the code so that the
+			// SWF GUI case is handled better, too
+			renderProgManager.BindShader_TextureVertexColor();
 		}
 	}
 	else
@@ -2382,7 +2382,8 @@ static int RB_DrawShaderPasses( const drawSurf_t* const* const drawSurfs, const 
 					}
 					else
 					{
-						renderProgManager.BindShader_Bink();
+						//renderProgManager.BindShader_Bink();
+						renderProgManager.BindShader_RoQ();
 					}
 				}
 				else
@@ -2412,7 +2413,8 @@ static int RB_DrawShaderPasses( const drawSurf_t* const* const drawSurfs, const 
 			}
 			else if( pStage->texture.cinematic )
 			{
-				renderProgManager.BindShader_Bink();
+				//renderProgManager.BindShader_Bink();
+				renderProgManager.BindShader_RoQ();
 			}
 			else
 			{

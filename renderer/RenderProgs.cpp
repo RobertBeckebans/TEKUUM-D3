@@ -119,6 +119,9 @@ void idRenderProgManager::Init()
 		{ BUILTIN_ZCULL_RECONSTRUCT, "zcullReconstruct.vfp" },
 		{ BUILTIN_BINK, "bink.vfp" },
 		{ BUILTIN_BINK_GUI, "bink_gui.vfp" },
+		// RB begin
+		{ BUILTIN_ROQ, "roq.vfp" },
+		// RB end
 		{ BUILTIN_STEREO_INTERLACE, "stereoInterlace.vfp" },
 		{ BUILTIN_MOTION_BLUR, "motionBlur.vfp" },
 	};

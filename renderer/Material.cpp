@@ -3104,6 +3104,11 @@ idMaterial::UpdateCinematic
 */
 void idMaterial::UpdateCinematic( int time ) const
 {
+	if( !stages || !stages[0].texture.cinematic || !backEnd.viewDef )
+	{
+		return;
+	}
+	stages[0].texture.cinematic->ImageForTime( tr.primaryRenderView.time[0] );
 }
 
 /*

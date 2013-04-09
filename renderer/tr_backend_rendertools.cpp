@@ -2771,19 +2771,18 @@ void RB_TestImage()
 	GL_Color( 1, 1, 1, 1 );
 	
 	// Bind the Texture
-	/*
-	if( ( imageCr != NULL ) && ( imageCb != NULL ) )
+	//if( ( imageCr != NULL ) && ( imageCb != NULL ) )
+	if( tr.testVideo )
 	{
 		GL_SelectTexture( 0 );
 		image->Bind();
-		GL_SelectTexture( 1 );
+		/*GL_SelectTexture( 1 );
 		imageCr->Bind();
 		GL_SelectTexture( 2 );
-		imageCb->Bind();
-		renderProgManager.BindShader_Bink();
+		imageCb->Bind();*/
+		renderProgManager.BindShader_RoQ();
 	}
 	else
-	*/
 	{
 		GL_SelectTexture( 0 );
 		image->Bind();
