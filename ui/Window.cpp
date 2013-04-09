@@ -590,19 +590,20 @@ void idWindow::StateChanged( bool redraw )
 		}
 	}
 	
-	/*
+#if 0
 	if( redraw )
 	{
 		if( flags & WIN_DESKTOP )
 		{
-			Redraw( 0.0f, 0.0f );
+			// RB: FIXME hud parameter
+			Redraw( 0.0f, 0.0f, false );
 		}
 		if( background && background->CinematicLength() )
 		{
 			background->UpdateCinematic( gui->GetTime() );
 		}
 	}
-	*/
+#endif
 }
 
 /*
@@ -900,7 +901,7 @@ const char* idWindow::HandleEvent( const sysEvent_t* event, bool* updateVisuals 
 					actionDownRun = RunScript( ON_ACTION );
 					
 					// MF begin: keep mouse events more consistent
-					RouteMouseCoords( 0.0f, 0.0f );
+					//RouteMouseCoords( 0.0f, 0.0f );
 					// MF end
 					
 				}
@@ -909,7 +910,7 @@ const char* idWindow::HandleEvent( const sysEvent_t* event, bool* updateVisuals 
 					actionUpRun = RunScript( ON_ACTIONRELEASE );
 					
 					// MF begin: keep mouse events more consistent
-					RouteMouseCoords( 0.0f, 0.0f );
+					//RouteMouseCoords( 0.0f, 0.0f );
 					// MF end
 				}
 			}

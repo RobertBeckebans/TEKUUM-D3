@@ -26,10 +26,8 @@ If you have questions concerning this license or the applicable additional terms
 ===========================================================================
 */
 
-#include "precompiled.h"
 #pragma hdrstop
-
-#include "../framework/Session_local.h"
+#include "precompiled.h"
 
 #include "DeviceContext.h"
 #include "Window.h"
