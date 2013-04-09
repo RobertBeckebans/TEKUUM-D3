@@ -412,14 +412,16 @@ void Sys_Printf( const char *fmt, ... ) {
 	va_end(argptr);
 	msg[sizeof(msg)-1] = '\0';
 
-	if ( win32.win_outputDebugString.GetBool() ) {
+	// RB: added thread check
+	if ( win32.win_outputDebugString.GetBool() && idLib::IsMainThread() ) {
 		OutputDebugString( msg );
 	}
 #if !defined(USE_QT_WINDOWING)
-	if ( win32.win_outputEditString.GetBool() ) {
+	if ( win32.win_outputEditString.GetBool() && idLib::IsMainThread() ) {
 		Conbuf_AppendText( msg );
 	}
 #endif
+	// RB end
 }
 
 /*

@@ -612,6 +612,13 @@ void idCommonLocal::Warning( const char* fmt, ... )
 	va_list		argptr;
 	char		msg[MAX_PRINT_MSG_SIZE];
 	
+	// RB begin
+	if( !idLib::IsMainThread() )
+	{
+		return;	// not thread safe!
+	}
+	// RB end
+	
 	va_start( argptr, fmt );
 	idStr::vsnPrintf( msg, sizeof( msg ), fmt, argptr );
 	va_end( argptr );
