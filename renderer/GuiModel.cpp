@@ -303,6 +303,12 @@ void idGuiModel::EmitFullScreen()
 	viewDef->drawSurfs = ( drawSurf_t** )R_FrameAlloc( viewDef->maxDrawSurfs * sizeof( viewDef->drawSurfs[0] ), FRAME_ALLOC_DRAW_SURFACE_POINTER );
 	viewDef->numDrawSurfs = 0;
 	
+	// RB: give renderView the current time to calculate 2D shader effects
+	int shaderTime = tr.frameShaderTime * 1000; //Sys_Milliseconds();
+	viewDef->renderView.time[0] = shaderTime;
+	viewDef->renderView.time[1] = shaderTime;
+	// RB end
+	
 	viewDef_t* oldViewDef = tr.viewDef;
 	tr.viewDef = viewDef;
 	
