@@ -50,6 +50,14 @@ const int	DEFAULT_FLY_OFFSET			= 68;
 #define ATTACK_ON_ACTIVATE		2
 #define ATTACK_ON_SIGHT			4
 
+typedef struct ballistics_s
+{
+	float				angle;		// angle in degrees in the range [-180, 180]
+	float				time;		// time it takes before the projectile arrives
+} ballistics_t;
+
+extern int Ballistics( const idVec3& start, const idVec3& end, float speed, float gravity, ballistics_t bal[2] );
+
 // defined in script/ai_base.script.  please keep them up to date.
 typedef enum
 {

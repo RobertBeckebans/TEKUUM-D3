@@ -1510,13 +1510,8 @@ Ballistics
   also get the time it takes for the projectile to arrive at the target
 =====================
 */
-typedef struct ballistics_s
-{
-	float				angle;		// angle in degrees in the range [-180, 180]
-	float				time;		// time it takes before the projectile arrives
-} ballistics_t;
 
-static int Ballistics( const idVec3& start, const idVec3& end, float speed, float gravity, ballistics_t bal[2] )
+int Ballistics( const idVec3& start, const idVec3& end, float speed, float gravity, ballistics_t bal[2] )
 {
 	int n, i;
 	float x, y, a, b, c, d, sqrtd, inva, p[2];
@@ -1554,6 +1549,8 @@ static int Ballistics( const idVec3& start, const idVec3& end, float speed, floa
 	return n;
 }
 
+#if 0
+// not used
 /*
 =====================
 HeightForTrajectory
@@ -1561,8 +1558,6 @@ HeightForTrajectory
 Returns the maximum hieght of a given trajectory
 =====================
 */
-// RB: unused function
-#if 0
 static float HeightForTrajectory( const idVec3& start, float zVel, float gravity )
 {
 	float maxHeight, t;
@@ -1574,7 +1569,6 @@ static float HeightForTrajectory( const idVec3& start, float zVel, float gravity
 	return maxHeight;
 }
 #endif
-// RB end
 
 /*
 =====================
