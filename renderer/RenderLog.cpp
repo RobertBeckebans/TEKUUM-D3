@@ -234,8 +234,8 @@ idRenderLog::idRenderLog()
 	activeLevel = 0;
 	indentString[0] = '\0';
 	indentLevel = 0;
-	logFile = NULL;
-	
+//	logFile = NULL;
+
 	frameStartTime = 0;
 	closeBlockTime = 0;
 	logLevel = 0;
@@ -281,6 +281,7 @@ void idRenderLog::StartFrame()
 	
 	common->SetRefreshOnPrint( false );	// problems are caused if this print causes a refresh...
 	
+	/*
 	if( logFile != NULL )
 	{
 		fileSystem->CloseFile( logFile );
@@ -301,6 +302,7 @@ void idRenderLog::StartFrame()
 	const char* str = asctime( newtime );
 	logFile->Printf( "// %s", str );
 	logFile->Printf( "// %s\n\n", com_version.GetString() );
+	*/
 	
 	frameStartTime = Sys_Microseconds();
 	closeBlockTime = frameStartTime;
@@ -316,15 +318,16 @@ void idRenderLog::EndFrame()
 {
 	PC_EndFrame();
 	
-	if( logFile != NULL )
+	//if( logFile != NULL )
+	if( r_logFile.GetInteger() != 0 )
 	{
 		if( r_logFile.GetInteger() == 1 )
 		{
 			Close();
 		}
 		// log is open, so decrement r_logFile and stop if it is zero
-		r_logFile.SetInteger( r_logFile.GetInteger() - 1 );
-		idLib::Printf( "Frame logged.\n" );
+		//r_logFile.SetInteger( r_logFile.GetInteger() - 1 );
+		//idLib::Printf( "Frame logged.\n" );
 		return;
 	}
 }
@@ -336,12 +339,13 @@ idRenderLog::Close
 */
 void idRenderLog::Close()
 {
-	if( logFile != NULL )
+	//if( logFile != NULL )
+	if( r_logFile.GetInteger() != 0 )
 	{
 		CloseBlock();
-		idLib::Printf( "Closing logfile\n" );
-		fileSystem->CloseFile( logFile );
-		logFile = NULL;
+		//idLib::Printf( "Closing logfile\n" );
+		//fileSystem->CloseFile( logFile );
+		//logFile = NULL;
 		activeLevel = 0;
 	}
 }
@@ -374,7 +378,8 @@ void idRenderLog::OpenBlock( const char* label )
 	// Allow the PIX functionality even when logFile is not running.
 	PC_BeginNamedEvent( label );
 	
-	if( logFile != NULL )
+	//if( logFile != NULL )
+	if( r_logFile.GetInteger() != 0 )
 	{
 		LogOpenBlock( RENDER_LOG_INDENT_MAIN_BLOCK, label, NULL );
 	}
@@ -389,7 +394,8 @@ void idRenderLog::CloseBlock()
 {
 	PC_EndNamedEvent();
 	
-	if( logFile != NULL )
+	//if( logFile != NULL )
+	if( r_logFile.GetInteger() != 0 )
 	{
 		LogCloseBlock( RENDER_LOG_INDENT_MAIN_BLOCK );
 	}
@@ -407,16 +413,33 @@ void idRenderLog::Printf( const char* fmt, ... )
 		return;
 	}
 	
-	if( logFile == NULL )
+	//if( logFile == NULL )
+	if( r_logFile.GetInteger() == 0 || !glConfig.gremedyStringMarkerAvailable )
 	{
 		return;
 	}
 	
-	va_list marker;
-	logFile->Printf( "%s", indentString );
+	va_list		marker;
+	char		msg[4096];
+	
+	idStr		out = indentString;
+	
 	va_start( marker, fmt );
-	logFile->VPrintf( fmt, marker );
+	idStr::vsnPrintf( msg, sizeof( msg ), fmt, marker );
 	va_end( marker );
+	
+	msg[sizeof( msg ) - 1] = '\0';
+	
+	out.Append( msg );
+	
+	glStringMarkerGREMEDY( out.Length(), out.c_str() );
+	
+	//logFile->Printf( "%s", indentString );
+	//va_start( marker, fmt );
+	//logFile->VPrintf( fmt, marker );
+	//va_end( marker );
+	
+	
 //	logFile->Flush();		this makes it take waaaay too long
 }
 
@@ -430,15 +453,39 @@ void idRenderLog::LogOpenBlock( renderLogIndentLabel_t label, const char* fmt, v
 
 	uint64 now = Sys_Microseconds();
 	
-	if( logFile != NULL )
+	//if( logFile != NULL )
+	if( r_logFile.GetInteger() != 0 )
 	{
-		if( now - closeBlockTime >= 1000 )
+		//if( now - closeBlockTime >= 1000 )
+		//{
+		//logFile->Printf( "%s%1.1f msec gap from last closeblock\n", indentString, ( now - closeBlockTime ) * ( 1.0f / 1000.0f ) );
+		//}
+		
+		if( glConfig.gremedyStringMarkerAvailable )
 		{
-			logFile->Printf( "%s%1.1f msec gap from last closeblock\n", indentString, ( now - closeBlockTime ) * ( 1.0f / 1000.0f ) );
+			//Printf( fmt, args );
+			//Printf( " {\n" );
+			
+			//logFile->Printf( "%s", indentString );
+			//logFile->VPrintf( fmt, args );
+			//logFile->Printf( " {\n" );
+			
+			va_list		marker;
+			char		msg[4096];
+			
+			idStr		out = indentString;
+			
+			va_start( marker, fmt );
+			idStr::vsnPrintf( msg, sizeof( msg ), fmt, marker );
+			va_end( marker );
+			
+			msg[sizeof( msg ) - 1] = '\0';
+			
+			out.Append( msg );
+			out += " {";
+			
+			glStringMarkerGREMEDY( out.Length(), out.c_str() );
 		}
-		logFile->Printf( "%s", indentString );
-		logFile->VPrintf( fmt, args );
-		logFile->Printf( " {\n" );
 	}
 	
 	Indent( label );
@@ -466,9 +513,9 @@ void idRenderLog::LogCloseBlock( renderLogIndentLabel_t label )
 	
 	Outdent( label );
 	
-	if( logFile != NULL )
-	{
-	}
+	//if( logFile != NULL )
+	//{
+	//}
 }
 
 #else	// !STUB_RENDER_LOG

@@ -130,6 +130,10 @@ struct glconfig_t
 	bool				debugOutputAvailable;
 	bool				swapControlTearAvailable;
 	
+	// RB begin
+	bool				gremedyStringMarkerAvailable;
+	// RB end
+	
 	stereo3DMode_t		stereo3Dmode;
 	int					nativeScreenWidth; // this is the native screen width resolution of the renderer
 	int					nativeScreenHeight; // this is the native screen height resolution of the renderer

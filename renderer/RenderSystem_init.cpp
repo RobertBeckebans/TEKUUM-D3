@@ -391,6 +391,17 @@ static void R_CheckPortableExtensions()
 	// GL_ARB_timer_query
 	glConfig.timerQueryAvailable = GLEW_ARB_timer_query != 0 || GLEW_EXT_timer_query != 0;
 	
+	// GREMEDY_string_marker
+	glConfig.gremedyStringMarkerAvailable = GLEW_GREMEDY_string_marker != 0;
+	if( glConfig.textureLODBiasAvailable )
+	{
+		common->Printf( "...using %s\n", "GLEW_GREMEDY_string_marker" );
+	}
+	else
+	{
+		common->Printf( "X..%s not found\n", "GLEW_GREMEDY_string_marker" );
+	}
+	
 	// GL_ARB_debug_output
 	glConfig.debugOutputAvailable = GLEW_ARB_debug_output != 0;
 	if( glConfig.debugOutputAvailable )
