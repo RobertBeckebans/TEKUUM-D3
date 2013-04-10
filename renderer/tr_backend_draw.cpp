@@ -2521,6 +2521,17 @@ static void RB_T_BlendLight( const drawSurf_t* drawSurfs, const viewLight_t* vLi
 			backEnd.currentSpace = drawSurf->space;
 		}
 		
+		// RB begin
+		if( drawSurf->jointCache )
+		{
+			renderProgManager.BindShader_BlendLightSkinned();
+		}
+		else
+		{
+			renderProgManager.BindShader_BlendLight();
+		}
+		// RB end
+		
 		RB_DrawElementsWithCounters( drawSurf );
 	}
 }
@@ -2554,8 +2565,6 @@ static void RB_BlendLight( const drawSurf_t* drawSurfs, const drawSurf_t* drawSu
 	
 	// texture 0 will get the projected texture
 	GL_SelectTexture( 0 );
-	
-	renderProgManager.BindShader_BlendLight();
 	
 	for( int i = 0; i < lightShader->GetNumStages(); i++ )
 	{

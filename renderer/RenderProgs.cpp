@@ -108,7 +108,10 @@ void idRenderProgManager::Init()
 		{ BUILTIN_SHADOW_DEBUG, "shadowDebug.vfp" },
 		{ BUILTIN_SHADOW_DEBUG_SKINNED, "shadowDebug_skinned.vfp" },
 		
-		{ BUILTIN_BLENDLIGHT, "blendlight.vfp" },
+		// RB begin
+		{ BUILTIN_BLENDLIGHT, "blendLight.vfp" },
+		{ BUILTIN_BLENDLIGHT_SKINNED, "blendLight_skinned.vfp" },
+		// RB end
 		{ BUILTIN_FOG, "fog.vfp" },
 		{ BUILTIN_FOG_SKINNED, "fog_skinned.vfp" },
 		{ BUILTIN_SKYBOX, "skybox.vfp" },
@@ -158,6 +161,9 @@ void idRenderProgManager::Init()
 	vertexShaders[builtinShaders[BUILTIN_SHADOW_SKINNED]].usesJoints = true;
 	vertexShaders[builtinShaders[BUILTIN_SHADOW_DEBUG_SKINNED]].usesJoints = true;
 	vertexShaders[builtinShaders[BUILTIN_FOG_SKINNED]].usesJoints = true;
+	// RB begin
+	vertexShaders[builtinShaders[BUILTIN_BLENDLIGHT_SKINNED]].usesJoints = true;
+	// RB end
 	
 	cmdSystem->AddCommand( "reloadShaders", R_ReloadShaders, CMD_FL_RENDERER, "reloads shaders" );
 }

@@ -267,6 +267,13 @@ public:
 		BindShader_Builtin( BUILTIN_BLENDLIGHT );
 	}
 	
+	// RB begin
+	void	BindShader_BlendLightSkinned()
+	{
+		BindShader_Builtin( BUILTIN_BLENDLIGHT_SKINNED );
+	}
+	// RB end
+	
 	void	BindShader_Fog()
 	{
 		BindShader_Builtin( BUILTIN_FOG );
@@ -396,6 +403,9 @@ protected:
 		BUILTIN_SHADOW_DEBUG_SKINNED,
 		
 		BUILTIN_BLENDLIGHT,
+		// RB begin
+		BUILTIN_BLENDLIGHT_SKINNED,
+		// RB end
 		BUILTIN_FOG,
 		BUILTIN_FOG_SKINNED,
 		BUILTIN_SKYBOX,
