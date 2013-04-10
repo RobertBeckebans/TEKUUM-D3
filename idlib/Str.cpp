@@ -30,10 +30,6 @@ If you have questions concerning this license or the applicable additional terms
 #include "precompiled.h"
 #pragma hdrstop
 
-#if !defined( ID_REDIRECT_NEWDELETE ) && !defined( MACOS_X )
-#define USE_STRING_DATA_ALLOCATOR
-#endif
-
 #ifdef USE_STRING_DATA_ALLOCATOR
 static idDynamicBlockAlloc < char, 1 << 18, 128 >	stringDataAllocator;
 #endif
