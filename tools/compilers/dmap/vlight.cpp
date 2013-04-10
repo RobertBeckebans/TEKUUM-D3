@@ -397,7 +397,7 @@ void VertexLighting( mapTri_t* tri, bool testOcclusion, bool forceSunLight, floa
 	{
 		dv = &tri->v[i];
 		
-		LightingAtSample( dv->xyz, dv->normal, sample, testOcclusion, forceSunLight, tw );
+		LightingAtSample( dv->xyz, dv->GetNormal(), sample, testOcclusion, forceSunLight, tw );
 		
 		if( scale >= 0 )
 			VectorScale( sample, scale, sample );

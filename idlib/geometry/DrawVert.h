@@ -3,6 +3,7 @@
 
 Doom 3 BFG Edition GPL Source Code
 Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2013 Robert Beckebans
 
 This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
@@ -113,11 +114,20 @@ ID_INLINE halfFloat_t F32toF16( float a )
 
 class idDrawVert
 {
+	friend class idSwap;
+	friend class idShadowVertSkinned;
+	friend class idRenderModelStatic;
+	
+	friend void TransformVertsAndTangents( idDrawVert* targetVerts, const int numVerts, const idDrawVert* baseVerts, const idJointMat* joints );
+	
 public:
 	idVec3				xyz;			// 12 bytes
+private:
+	// RB: don't let the old tools code mess with these values
 	halfFloat_t			st[2];			// 4 bytes
 	byte				normal[4];		// 4 bytes
 	byte				tangent[4];		// 4 bytes -- [3] is texture polarity sign
+public:
 	byte				color[4];		// 4 bytes
 	byte				color2[4];		// 4 bytes -- weights for skinning
 	
@@ -187,9 +197,11 @@ public:
 #define DRAWVERT_COLOR_OFFSET		(6*4)
 #define DRAWVERT_COLOR2_OFFSET		(7*4)
 
+#if 0
 assert_offsetof( idDrawVert, xyz,		DRAWVERT_XYZ_OFFSET );
 assert_offsetof( idDrawVert, normal,	DRAWVERT_NORMAL_OFFSET );
 assert_offsetof( idDrawVert, tangent,	DRAWVERT_TANGENT_OFFSET );
+#endif
 
 /*
 ========================

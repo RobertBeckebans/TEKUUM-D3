@@ -1292,13 +1292,13 @@ void CleanupOptimizedShadowTris( srfTriangles_t* tri )
 	
 	for( i = 0 ; i < tri->numVerts ; i++ )
 	{
-		remap[i] = FindUniqueVert( tri->shadowVertexes[i].xyz.ToVec3() );
+		remap[i] = FindUniqueVert( tri->preLightShadowVertexes[i].xyzw.ToVec3() );
 	}
 	tri->numVerts = numUniqued;
 	for( i = 0 ; i < tri->numVerts ; i++ )
 	{
-		tri->shadowVertexes[i].xyz.ToVec3() = uniqued[i];
-		tri->shadowVertexes[i].xyz[3] = 1;
+		tri->preLightShadowVertexes[i].xyzw.ToVec3() = uniqued[i];
+		tri->preLightShadowVertexes[i].xyzw[3] = 1;
 	}
 	
 	for( i = 0 ; i < tri->numIndexes ; i++ )

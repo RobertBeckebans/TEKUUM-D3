@@ -4,7 +4,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 project(Tekuum)
 
 option(USE_CMDLINE_TOOLS
-		"Compile the built-in command line based tools" OFF)
+		"Compile the built-in command line based tools" ON)
 
 option(USE_MFC_TOOLS
 		"Compile the built-in MFC based tools" OFF)

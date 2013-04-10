@@ -1224,8 +1224,12 @@ void idBrittleFracture::CreateFractures( const idRenderModel* renderModel )
 			{
 				v = &surf->geometry->verts[ surf->geometry->indexes[ j + 2 - k ] ];
 				w.AddPoint( v->xyz );
-				w[k].s = v->st[0];
-				w[k].t = v->st[1];
+				
+				// RB begin
+				const idVec2 vST = v->GetTexCoord();
+				w[k].s = vST.x;
+				w[k].t = vST.y;
+				// RB end
 			}
 			Fracture_r( w );
 		}

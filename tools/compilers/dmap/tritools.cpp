@@ -308,17 +308,23 @@ void		TriVertsFromOriginal( mapTri_t* tri, const mapTri_t* original )
 		c = idWinding::TriangleArea( tri->v[i].xyz, original->v[0].xyz, original->v[1].xyz ) / denom;
 		
 		// regenerate the interpolated values
-		tri->v[i].st[0] = a * original->v[0].st[0]
-						  + b * original->v[1].st[0] + c * original->v[2].st[0];
-		tri->v[i].st[1] = a * original->v[0].st[1]
-						  + b * original->v[1].st[1] + c * original->v[2].st[1];
-						  
+		
+		// RB begin
+		const idVec2 aST = original->v[0].GetTexCoord();
+		const idVec2 bST = original->v[1].GetTexCoord();
+		const idVec2 cST = original->v[2].GetTexCoord();
+		
+		tri->v[i].SetTexCoord(	a * aST.x + b * bST.x + c * cST.x,
+								a * aST.y + b * bST.y + c * cST.y );
+								
+		idVec3 tempNormal;
 		for( j = 0 ; j < 3 ; j++ )
 		{
-			tri->v[i].normal[j] = a * original->v[0].normal[j]
-								  + b * original->v[1].normal[j] + c * original->v[2].normal[j];
+			tempNormal[j] = a * original->v[0].GetNormal()[j] + b * original->v[1].GetNormal()[j] + c * original->v[2].GetNormal()[j];
 		}
-		tri->v[i].normal.Normalize();
+		tempNormal.Normalize();
+		tri->v[i].SetNormal( tempNormal );
+		// RB end
 	}
 }
 

@@ -349,7 +349,7 @@ R_DeriveLightData
 Fills everything in based on light->parms
 =================
 */
-static void R_DeriveLightData( idRenderLightLocal* light )
+void R_DeriveLightData( idRenderLightLocal* light )
 {
 
 	// decide which light shader we are going to use

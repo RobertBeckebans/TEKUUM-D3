@@ -434,10 +434,17 @@ static	optVertex_t* EdgeIntersection( const optVertex_t* p1, const optVertex_t* 
 	memset( v, 0, sizeof( *v ) );
 	
 	v->xyz = p1->v.xyz * ( 1.0 - f ) + p2->v.xyz * f;
-	v->normal = p1->v.normal * ( 1.0 - f ) + p2->v.normal * f;
-	v->normal.Normalize();
-	v->st[0] = p1->v.st[0] * ( 1.0 - f ) + p2->v.st[0] * f;
-	v->st[1] = p1->v.st[1] * ( 1.0 - f ) + p2->v.st[1] * f;
+	// RB begin
+	idVec3 tempNormal = p1->v.GetNormal() * ( 1.0 - f ) + p2->v.GetNormal() * f;
+	tempNormal.Normalize();
+	v->SetNormal( tempNormal );
+	
+	const idVec2 aST = p1->v.GetTexCoord();
+	const idVec2 bST = p2->v.GetTexCoord();
+	
+	v->SetTexCoord( aST.x * ( 1.0 - f ) + bST.x * f,
+					aST.y * ( 1.0 - f ) + bST.y * f );
+	// RB end
 	
 	return FindOptVertex( v, opt );
 }

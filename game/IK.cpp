@@ -99,6 +99,7 @@ void idIK::Restore( idRestoreGame* savefile )
 		{
 			gameLocal.Warning( "idIK::Restore: IK for entity '%s' at (%s) has no model set.",
 							   self->name.c_str(), self->GetPhysics()->GetOrigin().ToString( 0 ) );
+			return;
 		}
 		modifiedAnim = animator->GetAnim( anim );
 		if( modifiedAnim == 0 )
@@ -608,7 +609,7 @@ idIK_Walk::Evaluate
 */
 void idIK_Walk::Evaluate()
 {
-	int i, newPivotFoot;
+	int i, newPivotFoot = -1;
 	float modelHeight, jointHeight, lowestHeight, floorHeights[MAX_LEGS];
 	float shift, smallestShift, newHeight, step, newPivotYaw, height, largestAnkleHeight;
 	idVec3 modelOrigin, normal, hipDir, kneeDir, start, end, jointOrigins[MAX_LEGS];

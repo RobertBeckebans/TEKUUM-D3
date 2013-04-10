@@ -1111,6 +1111,9 @@ void R_FreeEntityDefDecals( idRenderEntityLocal* def );
 void R_FreeEntityDefOverlay( idRenderEntityLocal* def );
 void R_FreeEntityDefFadedDecals( idRenderEntityLocal* def, int time );
 
+// RB: for dmap
+void R_DeriveLightData( idRenderLightLocal* light );
+// RB end
 void R_CreateLightRefs( idRenderLightLocal* light );
 void R_FreeLightDefDerivedData( idRenderLightLocal* light );
 

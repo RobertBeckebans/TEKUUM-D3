@@ -532,6 +532,10 @@ static void CreateMapLight( const idMapEntity* mapEnt )
 	
 	R_DeriveLightData( &light->def );
 	
+	// RB begin
+	idRenderMatrix::GetFrustumPlanes( light->frustumPlanes, light->def.baseLightProject, true, true );
+	// RB end
+	
 	// get the name for naming the shadow surfaces
 	const char*	name;
 	

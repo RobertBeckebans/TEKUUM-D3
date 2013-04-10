@@ -179,27 +179,28 @@ static bool MatchVert( const idDrawVert* a, const idDrawVert* b )
 	{
 		return false;
 	}
-	if( idMath::Fabs( a->st[0] - b->st[0] ) > ST_EPSILON )
+	if( idMath::Fabs( a->GetTexCoordNativeS() - b->GetTexCoordNativeS() ) > ST_EPSILON )
 	{
 		return false;
 	}
-	if( idMath::Fabs( a->st[1] - b->st[1] ) > ST_EPSILON )
+	if( idMath::Fabs( a->GetTexCoordNativeT() - b->GetTexCoordNativeT() ) > ST_EPSILON )
 	{
 		return false;
 	}
 	
+	// RB begin
 	// if the normal is 0 (smoothed normals), consider it a match
-	if( a->normal[0] == 0 && a->normal[1] == 0 && a->normal[2] == 0
-			&& b->normal[0] == 0 && b->normal[1] == 0 && b->normal[2] == 0 )
+	if( a->GetNormal().Length() == 0 && b->GetNormal().Length() == 0 )
 	{
 		return true;
 	}
 	
 	// otherwise do a dot-product cosine check
-	if( DotProduct( a->normal, b->normal ) < COSINE_EPSILON )
+	if( DotProduct( a->GetNormal(), b->GetNormal() ) < COSINE_EPSILON )
 	{
 		return false;
 	}
+	// RB end
 	
 	return true;
 }
@@ -251,12 +252,11 @@ srfTriangles_t*	ShareMapTriVerts( const mapTri_t* tris )
 			{
 				numVerts++;
 				
+				// RB begin
 				uTri->verts[j].xyz = dv->xyz;
-				uTri->verts[j].normal = dv->normal;
-				uTri->verts[j].st[0] = dv->st[0];
-				uTri->verts[j].st[1] = dv->st[1];
+				uTri->verts[j].SetNormal( dv->GetNormal() );
+				uTri->verts[j].SetTexCoord( dv->GetTexCoord() );
 				
-				// RB
 				uTri->verts[j].color[0] = dv->color[0];
 				uTri->verts[j].color[1] = dv->color[1];
 				uTri->verts[j].color[2] = dv->color[2];
@@ -322,12 +322,14 @@ static void WriteUTriangles( const srfTriangles_t* uTris )
 		vec[1] = dv->xyz[1];
 		vec[2] = dv->xyz[2];
 		
-		vec[3] = dv->st[0];
-		vec[4] = dv->st[1];
+		const idVec2 st = dv->GetTexCoord();
+		vec[3] = st.x;
+		vec[4] = st.y;
 		
-		vec[5] = dv->normal[0];
-		vec[6] = dv->normal[1];
-		vec[7] = dv->normal[2];
+		const idVec3 normal = dv->GetNormal();
+		vec[5] = normal[0];
+		vec[6] = normal[1];
+		vec[7] = normal[2];
 		
 		vec[8] = dv->color[0] * ( 1.0f / 255.0f );
 		vec[9] = dv->color[1] * ( 1.0f / 255.0f );
@@ -387,7 +389,7 @@ static void WriteShadowTriangles( const srfTriangles_t* tri )
 	col = 0;
 	for( i = 0 ; i < tri->numVerts ; i++ )
 	{
-		Write1DMatrix( procFile, 3, &tri->shadowVertexes[i].xyz[0] );
+		Write1DMatrix( procFile, 3, &tri->preLightShadowVertexes[i].xyzw[0] );
 		
 		if( ++col == 5 )
 		{

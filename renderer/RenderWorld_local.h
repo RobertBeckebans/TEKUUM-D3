@@ -3,6 +3,7 @@
 
 Doom 3 BFG Edition GPL Source Code
 Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2013 Robert Beckebans
 
 This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
@@ -79,6 +80,18 @@ typedef struct
 	int				commonChildrenArea;	// if all children are either solid or a single area,
 	// this is the area number, else CHILDREN_HAVE_MULTIPLE_AREAS
 } areaNode_t;
+
+// RB begin
+struct lightGridPoint_t
+{
+#if !defined(USE_GLES2)
+	idVec3			origin;				// not saved to .proc
+#endif
+	byte			ambient[3];
+	byte			directed[3];
+	byte			latLong[2];
+};
+// RB end
 
 struct reusableDecal_t
 {
@@ -173,6 +186,13 @@ public:
 	doublePortal_t* 		doublePortals;
 	int						numInterAreaPortals;
 	
+	// RB: added Q3A style light grid
+	idVec3					lightGridOrigin;
+	idVec3					lightGridSize;
+	int						lightGridBounds[3];
+	idList<lightGridPoint_t> lightGridPoints;
+	// RB end
+	
 	idList<idRenderModel* >	localModels;
 	
 	idList<idRenderEntityLocal* >		entityDefs;
@@ -203,10 +223,16 @@ public:
 	//-----------------------
 	// RenderWorld_load.cpp
 	
-	idRenderModel* 			ParseModel( idLexer* src, const char* mapName, ID_TIME_T mapTimeStamp, idFile* fileOut );
+	// RB: added procVersion
+	idRenderModel* 			ParseModel( idLexer* src, const char* mapName, ID_TIME_T mapTimeStamp, idFile* fileOut, int procVersion );
+	// RB end
 	idRenderModel* 			ParseShadowModel( idLexer* src, idFile* fileOut );
 	void					SetupAreaRefs();
 	void					ParseInterAreaPortals( idLexer* src, idFile* fileOut );
+	// RB begin
+	void					ParseLightGridPoints( idLexer* src, idFile* fileOut );
+	void					CalculateLightGridPointPositions();
+	// RB end
 	void					ParseNodes( idLexer* src, idFile* fileOut );
 	int						CommonChildrenArea_r( areaNode_t* node );
 	void					FreeWorld();
@@ -219,6 +245,9 @@ public:
 	void					ReadBinaryNodes( idFile* file );
 	idRenderModel* 			ReadBinaryModel( idFile* file );
 	idRenderModel* 			ReadBinaryShadowModel( idFile* file );
+	// RB begin
+	void					ReadBinaryLightGridPoints( idFile* file );
+	// RB end
 	
 	//--------------------------
 	// RenderWorld_portals.cpp
