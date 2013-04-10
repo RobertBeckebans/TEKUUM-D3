@@ -145,7 +145,13 @@ idRenderModel* idRenderModelPrt::InstantiateDynamicModel( const struct renderEnt
 		
 		idRandom steppingRandom, steppingRandom2;
 		
+// RB: timeGroup bugfix
+#if defined(STANDALONE)
 		int stageAge = g.renderView->time[renderEntity->timeGroup] + renderEntity->shaderParms[SHADERPARM_TIMEOFFSET] * 1000 - stage->timeOffset * 1000;
+#else
+		int stageAge = g.renderView->time[TIME_GROUP1] + renderEntity->shaderParms[SHADERPARM_TIMEOFFSET] * 1000 - stage->timeOffset * 1000;
+#endif
+// RB end
 		int	stageCycle = stageAge / stage->cycleMsec;
 		
 		// some particles will be in this cycle, some will be in the previous cycle
@@ -210,8 +216,13 @@ idRenderModel* idRenderModelPrt::InstantiateDynamicModel( const struct renderEnt
 			
 			int	inCycleTime = particleAge - particleCycle * stage->cycleMsec;
 			
-			if( renderEntity->shaderParms[SHADERPARM_PARTICLE_STOPTIME] &&
-					g.renderView->time[renderEntity->timeGroup] - inCycleTime >= renderEntity->shaderParms[SHADERPARM_PARTICLE_STOPTIME] * 1000 )
+// RB: timeGroup bugfix
+#if defined(STANDALONE)
+			if( renderEntity->shaderParms[SHADERPARM_PARTICLE_STOPTIME] && g.renderView->time[renderEntity->timeGroup] - inCycleTime >= renderEntity->shaderParms[SHADERPARM_PARTICLE_STOPTIME] * 1000 )
+#else
+			if( renderEntity->shaderParms[SHADERPARM_PARTICLE_STOPTIME] && g.renderView->time[TIME_GROUP1] - inCycleTime >= renderEntity->shaderParms[SHADERPARM_PARTICLE_STOPTIME] * 1000 )
+#endif
+// RB end
 			{
 				// don't fire any more particles
 				continue;

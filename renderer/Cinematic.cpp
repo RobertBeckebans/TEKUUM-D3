@@ -427,10 +427,10 @@ cinData_t idCinematicLocal::ImageForTime( int thisTime )
 	
 	memset( &cinData, 0, sizeof( cinData ) );
 	
-	//if( r_skipROQ.GetBool() )
-	//{
-	//	return cinData;
-	//}
+	if( r_skipROQ.GetBool() )
+	{
+		return cinData;
+	}
 	
 	if( status == FMV_EOF || status == FMV_IDLE )
 	{

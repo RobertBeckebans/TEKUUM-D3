@@ -937,6 +937,9 @@ extern idCVar r_skipDiffuse;				// use black for diffuse
 extern idCVar r_skipDecals;					// skip decal surfaces
 extern idCVar r_skipOverlays;				// skip overlay surfaces
 extern idCVar r_skipShadows;				// disable shadows
+// RB begin
+extern idCVar r_skipROQ;
+// RB end
 
 extern idCVar r_ignoreGLErrors;
 

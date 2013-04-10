@@ -953,7 +953,13 @@ static drawSurf_t* R_ParticleDeform( drawSurf_t* surf, bool useArea )
 			idRandom steppingRandom;
 			idRandom steppingRandom2;
 			
+// RB: timeGroup bugfix
+#if defined(STANDALONE)
 			int stageAge = g.renderView->time[renderEntity->timeGroup] + idMath::Ftoi( renderEntity->shaderParms[SHADERPARM_TIMEOFFSET] * 1000.0f - stage->timeOffset * 1000.0f );
+#else
+			int stageAge = g.renderView->time[TIME_GROUP1] + idMath::Ftoi( renderEntity->shaderParms[SHADERPARM_TIMEOFFSET] * 1000.0f - stage->timeOffset * 1000.0f );
+#endif
+// RB end
 			int stageCycle = stageAge / stage->cycleMsec;
 			
 			// some particles will be in this cycle, some will be in the previous cycle
@@ -986,8 +992,13 @@ static drawSurf_t* R_ParticleDeform( drawSurf_t* surf, bool useArea )
 				
 				int inCycleTime = particleAge - particleCycle * stage->cycleMsec;
 				
-				if( renderEntity->shaderParms[SHADERPARM_PARTICLE_STOPTIME] != 0.0f &&
-						g.renderView->time[renderEntity->timeGroup] - inCycleTime >= renderEntity->shaderParms[SHADERPARM_PARTICLE_STOPTIME] * 1000.0f )
+// RB: timeGroup bugfix
+#if defined(STANDALONE)
+				if( renderEntity->shaderParms[SHADERPARM_PARTICLE_STOPTIME] != 0.0f && g.renderView->time[renderEntity->timeGroup] - inCycleTime >= renderEntity->shaderParms[SHADERPARM_PARTICLE_STOPTIME] * 1000.0f )
+#else
+				if( renderEntity->shaderParms[SHADERPARM_PARTICLE_STOPTIME] != 0.0f && g.renderView->time[TIME_GROUP1] - inCycleTime >= renderEntity->shaderParms[SHADERPARM_PARTICLE_STOPTIME] * 1000.0f )
+#endif
+// RB end
 				{
 					// don't fire any more particles
 					continue;

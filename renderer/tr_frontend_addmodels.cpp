@@ -297,10 +297,19 @@ void R_SetupDrawSurfShader( drawSurf_t* drawSurf, const idMaterial* shader, cons
 		{
 			// evaluate the reference shader to find our shader parms
 			float refRegs[MAX_EXPRESSION_REGISTERS];
+			
+// RB: timeGroup bugfix
+#if defined(STANDALONE)
 			renderEntity->referenceShader->EvaluateRegisters( refRegs, renderEntity->shaderParms,
 					tr.viewDef->renderView.shaderParms,
 					tr.viewDef->renderView.time[renderEntity->timeGroup] * 0.001f, renderEntity->referenceSound );
-					
+#else
+			renderEntity->referenceShader->EvaluateRegisters( refRegs, renderEntity->shaderParms,
+					tr.viewDef->renderView.shaderParms,
+					tr.viewDef->renderView.time[TIME_GROUP1] * 0.001f, renderEntity->referenceSound );
+#endif
+// RB end
+
 			const shaderStage_t* pStage = renderEntity->referenceShader->GetStage( 0 );
 			
 			memcpy( generatedShaderParms, renderEntity->shaderParms, sizeof( generatedShaderParms ) );
@@ -316,8 +325,16 @@ void R_SetupDrawSurfShader( drawSurf_t* drawSurf, const idMaterial* shader, cons
 		drawSurf->shaderRegisters = regs;
 		
 		// process the shader expressions for conditionals / color / texcoords
+		
+// RB: timeGroup bugfix
+#if defined(STANDALONE)
 		shader->EvaluateRegisters( regs, shaderParms, tr.viewDef->renderView.shaderParms,
 								   tr.viewDef->renderView.time[renderEntity->timeGroup] * 0.001f, renderEntity->referenceSound );
+#else
+		shader->EvaluateRegisters( regs, shaderParms, tr.viewDef->renderView.shaderParms,
+								   tr.viewDef->renderView.time[TIME_GROUP1] * 0.001f, renderEntity->referenceSound );
+#endif
+// RB end
 	}
 }
 
