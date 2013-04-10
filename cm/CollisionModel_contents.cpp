@@ -129,13 +129,13 @@ bool idCollisionModelManagerLocal::TestTrmVertsInBrush( cm_traceWork_t* tw, cm_b
 CM_SetTrmEdgeSidedness
 ================
 */
-#define CM_SetTrmEdgeSidedness( edge, bpl, epl, bitNum ) {						\
-	const int mask = 1 << bitNum;												\
-	if ( ( edge->sideSet & mask ) == 0 ) {										\
-		const float fl = (bpl).PermutedInnerProduct( epl );						\
-		edge->side = ( edge->side & ~mask ) | ( ( fl < 0.0f ) ? mask : 0 );		\
-		edge->sideSet |= mask;													\
-	}																			\
+#define CM_SetTrmEdgeSidedness( edge, bpl, epl, bitNum ) {							\
+	if ( !(edge->sideSet & (1<<bitNum)) ) {											\
+		float fl;																	\
+		fl = (bpl).PermutedInnerProduct( epl );										\
+		edge->side = (edge->side & ~(1<<bitNum)) | (IEEE_FLT_SIGNBITSET(fl) << bitNum);	\
+		edge->sideSet |= (1 << bitNum);												\
+	}																				\
 }
 
 /*
@@ -143,13 +143,19 @@ CM_SetTrmEdgeSidedness
 CM_SetTrmPolygonSidedness
 ================
 */
-#define CM_SetTrmPolygonSidedness( v, plane, bitNum ) {						\
-	const int mask = 1 << bitNum;											\
-	if ( ( (v)->sideSet & mask ) == 0 ) {									\
-		const float fl = plane.Distance( (v)->p );							\
-		(v)->side = ( (v)->side & ~mask ) | ( ( fl < 0.0f ) ? mask : 0 );		\
-		(v)->sideSet |= mask;												\
-	}																		\
+#define CM_SetTrmPolygonSidedness( v, plane, bitNum ) {								\
+	if ( !((v)->sideSet & (1<<bitNum)) ) {											\
+		float fl;																	\
+		fl = plane.Distance( (v)->p );												\
+		/* cannot use float sign bit because it is undetermined when fl == 0.0f */	\
+		if ( fl < 0.0f ) {															\
+			(v)->side |= (1 << bitNum);												\
+		}																			\
+		else {																		\
+			(v)->side &= ~(1 << bitNum);											\
+		}																			\
+		(v)->sideSet |= (1 << bitNum);												\
+	}																				\
 }
 
 /*

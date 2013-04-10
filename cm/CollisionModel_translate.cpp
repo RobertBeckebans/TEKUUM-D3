@@ -208,12 +208,12 @@ CM_SetVertexSidedness
 */
 ID_INLINE void CM_SetVertexSidedness( cm_vertex_t* v, const idPluecker& vpl, const idPluecker& epl, const int bitNum )
 {
-	const int mask = 1 << bitNum;
-	if( ( v->sideSet & mask ) == 0 )
+	if( !( v->sideSet & ( 1 << bitNum ) ) )
 	{
-		const float fl = vpl.PermutedInnerProduct( epl );
-		v->side = ( v->side & ~mask ) | ( ( fl < 0.0f ) ? mask : 0 );
-		v->sideSet |= mask;
+		float fl;
+		fl = vpl.PermutedInnerProduct( epl );
+		v->side = ( v->side & ~( 1 << bitNum ) ) | ( IEEE_FLT_SIGNBITSET( fl ) << bitNum );
+		v->sideSet |= ( 1 << bitNum );
 	}
 }
 
@@ -226,12 +226,12 @@ CM_SetEdgeSidedness
 */
 ID_INLINE void CM_SetEdgeSidedness( cm_edge_t* edge, const idPluecker& vpl, const idPluecker& epl, const int bitNum )
 {
-	const int mask = 1 << bitNum;
-	if( ( edge->sideSet & mask ) == 0 )
+	if( !( edge->sideSet & ( 1 << bitNum ) ) )
 	{
-		const float fl = vpl.PermutedInnerProduct( epl );
-		edge->side = ( edge->side & ~mask ) | ( ( fl < 0.0f ) ? mask : 0 );
-		edge->sideSet |= mask;
+		float fl;
+		fl = vpl.PermutedInnerProduct( epl );
+		edge->side = ( edge->side & ~( 1 << bitNum ) ) | ( IEEE_FLT_SIGNBITSET( fl ) << bitNum );
+		edge->sideSet |= ( 1 << bitNum );
 	}
 }
 
@@ -374,7 +374,7 @@ float CM_TranslationPlaneFraction( const idPlane& plane, const idVec3& start, co
 		return 1.0f;
 	}
 	// leaves polygon
-	if( d1 - d2 < idMath::FLT_SMALLEST_NON_DENORMAL )
+	if( ( d1 - d2 )  < idMath::FLT_SMALLEST_NON_DENORMAL )
 	{
 		return 1.0f;
 	}
@@ -457,7 +457,7 @@ void idCollisionModelManagerLocal::TranslatePointThroughPolygon( cm_traceWork_t*
 				edge->checkcount = idCollisionModelManagerLocal::checkCount;
 				pl.FromLine( tw->model->vertices[edge->vertexNum[0]].p, tw->model->vertices[edge->vertexNum[1]].p );
 				fl = v->pl.PermutedInnerProduct( pl );
-				edge->side = ( fl < 0.0f );
+				edge->side = IEEE_FLT_SIGNBITSET( fl );
 			}
 			// if the point passes the edge at the wrong side
 			//if ( (edgeNum > 0) == edge->side ) {
