@@ -358,6 +358,9 @@ void idCollisionModelManagerLocal::TranslateTrmEdgeThroughPolygon( cm_traceWork_
 CM_TranslationPlaneFraction
 ================
 */
+
+#if 0
+
 float CM_TranslationPlaneFraction( const idPlane& plane, const idVec3& start, const idVec3& end )
 {
 	const float d2 = plane.Distance( end );
@@ -380,6 +383,40 @@ float CM_TranslationPlaneFraction( const idPlane& plane, const idVec3& start, co
 	}
 	return ( d1 - CM_CLIP_EPSILON ) / ( d1 - d2 );
 }
+
+#else
+
+float CM_TranslationPlaneFraction( idPlane& plane, idVec3& start, idVec3& end )
+{
+	float d1, d2, d2eps;
+
+	d2 = plane.Distance( end );
+	// if the end point is closer to the plane than an epsilon we still take it for a collision
+	// if ( d2 >= CM_CLIP_EPSILON ) {
+	d2eps = d2 - CM_CLIP_EPSILON;
+	if( IEEE_FLT_SIGNBITNOTSET( d2eps ) )
+	{
+		return 1.0f;
+	}
+	d1 = plane.Distance( start );
+
+	// if completely behind the polygon
+	if( IEEE_FLT_SIGNBITSET( d1 ) )
+	{
+		return 1.0f;
+	}
+	// if going towards the front of the plane and
+	// the start and end point are not at equal distance from the plane
+	// if ( d1 > d2 )
+	d2 = d1 - d2;
+	if( d2 <= 0.0f )
+	{
+		return 1.0f;
+	}
+	return ( d1 - CM_CLIP_EPSILON ) / d2;
+}
+
+#endif
 
 /*
 ================

@@ -85,6 +85,9 @@ elseif(MSVC)
 	endif()
 endif()
 
+# CMake only used for desktop builds
+add_definitions(-DID_PC)
+
 if(STANDALONE)
 	add_definitions(-DSTANDALONE)
 endif()

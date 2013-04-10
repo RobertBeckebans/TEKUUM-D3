@@ -1193,7 +1193,7 @@ static void RB_RenderInteractions( const drawSurf_t* surfList, const viewLight_t
 	// of benefit to trying to sort by materials.
 	//---------------------------------
 	static const int MAX_INTERACTIONS_PER_LIGHT = 1024;
-	static const int MAX_COMPLEX_INTERACTIONS_PER_LIGHT = 128;
+	static const int MAX_COMPLEX_INTERACTIONS_PER_LIGHT = 256;
 	idStaticList< const drawSurf_t*, MAX_INTERACTIONS_PER_LIGHT > allSurfaces;
 	idStaticList< const drawSurf_t*, MAX_COMPLEX_INTERACTIONS_PER_LIGHT > complexSurfaces;
 	for( const drawSurf_t* walk = surfList; walk != NULL; walk = walk->nextOnLight )

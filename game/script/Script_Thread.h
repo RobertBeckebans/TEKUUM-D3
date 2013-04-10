@@ -1,25 +1,25 @@
 /*
 ===========================================================================
 
-Doom 3 GPL Source Code
-Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Doom 3 BFG Edition GPL Source Code
+Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
 
-This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
+This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
-Doom 3 Source Code is free software: you can redistribute it and/or modify
+Doom 3 BFG Edition Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Doom 3 Source Code is distributed in the hope that it will be useful,
+Doom 3 BFG Edition Source Code is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Doom 3 Source Code.  If not, see <http://www.gnu.org/licenses/>.
+along with Doom 3 BFG Edition Source Code.  If not, see <http://www.gnu.org/licenses/>.
 
-In addition, the Doom 3 Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 Source Code.  If not, please request a copy in writing from id Software at the address below.
+In addition, the Doom 3 BFG Edition Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 BFG Edition Source Code.  If not, please request a copy in writing from id Software at the address below.
 
 If you have questions concerning this license or the applicable additional terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 
@@ -122,6 +122,7 @@ private:
 	void						Event_SetCvar( const char* name, const char* value ) const;
 	void						Event_GetCvar( const char* name ) const;
 	void						Event_Random( float range ) const;
+	void						Event_RandomInt( int range ) const;
 	void						Event_GetTime();
 	void						Event_KillThread( const char* name );
 	void						Event_GetEntity( const char* name );
@@ -141,12 +142,16 @@ private:
 	void						Event_AngToUp( idAngles& ang );
 	void						Event_GetSine( float angle );
 	void						Event_GetCosine( float angle );
+	void						Event_GetArcSine( float a );
+	void						Event_GetArcCosine( float a );
 	void						Event_GetSquareRoot( float theSquare );
 	void						Event_VecNormalize( idVec3& vec );
 	void						Event_VecLength( idVec3& vec );
 	void						Event_VecDotProduct( idVec3& vec1, idVec3& vec2 );
 	void						Event_VecCrossProduct( idVec3& vec1, idVec3& vec2 );
 	void						Event_VecToAngles( idVec3& vec );
+	void						Event_VecToOrthoBasisAngles( idVec3& vec );
+	void						Event_RotateVector( idVec3& vec, idVec3& ang );
 	void						Event_OnSignal( int signal, idEntity* ent, const char* func );
 	void						Event_ClearSignalThread( int signal, idEntity* ent );
 	void						Event_SetCamera( idEntity* ent );
@@ -271,8 +276,8 @@ public:
 	void						SetThreadName( const char* name );
 	const char*					GetThreadName();
 	
-	void						Error( const char* fmt, ... ) const id_attribute( ( format( printf, 2, 3 ) ) );
-	void						Warning( const char* fmt, ... ) const id_attribute( ( format( printf, 2, 3 ) ) );
+	void						Error( VERIFY_FORMAT_STRING const char* fmt, ... ) const;
+	void						Warning( VERIFY_FORMAT_STRING const char* fmt, ... ) const;
 	
 	static idThread*				CurrentThread();
 	static int					CurrentThreadNum();
