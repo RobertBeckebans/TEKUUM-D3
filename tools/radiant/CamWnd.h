@@ -129,6 +129,9 @@ public:
 		return soundMode;
 	}
 	
+	// RB begin
+	void ToggleContext( bool active );
+	// RB end
 	
 	bool UpdateRenderEntities();
 	void MarkWorldDirty();
@@ -182,7 +185,9 @@ protected:
 	idVec3 saveOrg;
 	idAngles saveAng;
 	bool saveValid;
-	
+	// RB begin
+	HGLRC hGLRC;
+	// RB end
 	// Generated message map functions
 protected:
 	void OriginalMouseDown( UINT nFlags, CPoint point );

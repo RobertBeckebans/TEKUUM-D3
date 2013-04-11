@@ -822,6 +822,10 @@ int CXYWnd::OnCreate( LPCREATESTRUCT lpCreateStruct )
 	
 	s_hdcXY = ::GetDC( GetSafeHwnd() );
 	QEW_SetupPixelFormat( s_hdcXY, false );
+	// RB begin
+	hGLRC = wglCreateContext( s_hdcXY );
+	wglShareLists( hGLRC, win32.hGLRC );
+	// RB end
 	
 	glPolygonStipple( ( unsigned char* )s_stipple );
 	glLineStipple( 3, 0xaaaa );
@@ -1672,7 +1676,10 @@ void CXYWnd::OnPaint()
 {
 	CPaintDC	dc( this );					// device context for painting
 	bool		bPaint = true;
-	if( !wglMakeCurrent( dc.m_hDC, win32.hGLRC ) )
+	
+	// RB begin
+	if( !wglMakeCurrent( dc.m_hDC, hGLRC ) )
+		// RB end
 	{
 		common->Printf( "ERROR: wglMakeCurrent failed.. Error:%i\n", glGetError() );
 		common->Printf( "Please restart Q3Radiant if the Map view is not working\n" );
@@ -1846,6 +1853,10 @@ void CXYWnd::OnPaint()
 		SwapBuffers( dc.m_hDC );
 		TRACE( "XY Paint\n" );
 	}
+	
+	// RB begin
+	wglMakeCurrent( NULL, NULL );
+	// RB end
 }
 
 /*

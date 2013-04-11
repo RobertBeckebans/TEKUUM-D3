@@ -89,6 +89,11 @@ int CZWnd::OnCreate( LPCREATESTRUCT lpCreateStruct )
 	m_dcZ = ::GetDC( GetSafeHwnd() );
 	QEW_SetupPixelFormat( m_dcZ, false );
 	
+	// RB begin
+	hGLRC = wglCreateContext( m_dcZ );
+	wglShareLists( hGLRC, win32.hGLRC );
+	// RB end
+	
 	m_pZClip = new CZClip();
 	
 	return 0;
@@ -142,7 +147,10 @@ void CZWnd::OnPaint()
 	CPaintDC dc( this ); // device context for painting
 	//if (!wglMakeCurrent(m_dcZ, m_hglrcZ))
 	//if (!qwglMakeCurrent(dc.m_hDC, m_hglrcZ))
-	if( !wglMakeCurrent( dc.m_hDC, win32.hGLRC ) )
+	
+	// RB begin
+	if( !wglMakeCurrent( dc.m_hDC, hGLRC ) )
+		// RB end
 	{
 		common->Printf( "ERROR: wglMakeCurrent failed..\n " );
 		common->Printf( "Please restart " EDITOR_WINDOWTEXT " if the Z view is not working\n" );
@@ -156,6 +164,10 @@ void CZWnd::OnPaint()
 		SwapBuffers( dc.m_hDC );
 		TRACE( "Z Paint\n" );
 	}
+	
+	// RB begin
+	wglMakeCurrent( NULL, NULL );
+	// RB end
 }
 
 void CZWnd::OnGetMinMaxInfo( MINMAXINFO FAR* lpMMI )

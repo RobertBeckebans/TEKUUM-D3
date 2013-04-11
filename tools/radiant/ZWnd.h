@@ -68,7 +68,9 @@ public:
 	// Generated message map functions
 protected:
 	HDC m_dcZ;
-	HGLRC m_hglrcZ;
+	// RB begin
+	HGLRC hGLRC;
+	// RB end
 	//{{AFX_MSG(CZWnd)
 	afx_msg int OnCreate( LPCREATESTRUCT lpCreateStruct );
 	afx_msg void OnDestroy();
