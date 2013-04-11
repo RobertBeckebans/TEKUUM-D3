@@ -1113,6 +1113,11 @@ void R_FreeEntityDefFadedDecals( idRenderEntityLocal* def, int time );
 
 // RB: for dmap
 void R_DeriveLightData( idRenderLightLocal* light );
+
+// Called by the editor and dmap to operate on light volumes
+void R_RenderLightFrustum( const renderLight_t& renderLight, idPlane lightFrustum[6] );
+
+srfTriangles_t* R_PolytopeSurface( int numPlanes, const idPlane* planes, idWinding** windings );
 // RB end
 void R_CreateLightRefs( idRenderLightLocal* light );
 void R_FreeLightDefDerivedData( idRenderLightLocal* light );

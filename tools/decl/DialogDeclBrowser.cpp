@@ -129,6 +129,17 @@ int idListDeclSortCompare( const type* a, const type* b )
 	return idStr::IcmpPath( ( *a )->GetName(), ( *b )->GetName() );
 }
 
+// RB begin
+class rbSort_Decl : public idSort_Quick< const idDecl*, rbSort_Decl >
+{
+public:
+	int Compare( const idDecl* a, const idDecl* b ) const
+	{
+		return idStr::IcmpPath( a->GetName(), b->GetName() );
+	}
+};
+// RB end
+
 void DialogDeclBrowser::AddDeclTypeToTree( declType_t type, const char* root, CPathTreeCtrl& tree )
 {
 	int i;
@@ -141,7 +152,10 @@ void DialogDeclBrowser::AddDeclTypeToTree( declType_t type, const char* root, CP
 	{
 		decls[i] = declManager->DeclByIndex( type, i, false );
 	}
-	decls.Sort( idListDeclSortCompare );
+	
+	// RB: BFG sort
+	decls.SortWithTemplate( rbSort_Decl() );
+	// RB end
 	
 	rootStr = root;
 	rootStr += "/";

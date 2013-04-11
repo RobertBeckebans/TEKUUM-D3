@@ -511,7 +511,7 @@ void R_AddLights()
 	{
 		for( viewLight_t* vLight = tr.viewDef->viewLights; vLight != NULL; vLight = vLight->next )
 		{
-			tr.frontEndJobList->AddJob( ( jobRun_t )R_AddSingleLight, vLight );
+			tr.frontEndJobList->AddParallelJob( ( jobRun_t )R_AddSingleLight, vLight );
 		}
 		tr.frontEndJobList->Submit();
 		tr.frontEndJobList->Wait();
@@ -568,7 +568,7 @@ void R_AddLights()
 		{
 			for( preLightShadowVolumeParms_t* shadowParms = vLight->preLightShadowVolumes; shadowParms != NULL; shadowParms = shadowParms->next )
 			{
-				tr.frontEndJobList->AddJob( ( jobRun_t )PreLightShadowVolumeJob, shadowParms );
+				tr.frontEndJobList->AddParallelJob( ( jobRun_t )PreLightShadowVolumeJob, shadowParms );
 			}
 			vLight->preLightShadowVolumes = NULL;
 		}

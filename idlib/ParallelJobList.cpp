@@ -852,23 +852,13 @@ idParallelJobList::~idParallelJobList()
 
 /*
 ========================
-idParallelJobList::AddJob
+idParallelJobList::AddParallelJob
 ========================
 */
-void idParallelJobList::AddJob( jobRun_t function, void* data )
+void idParallelJobList::AddParallelJob( jobRun_t function, void* data )
 {
 	assert( IsRegisteredJob( function ) );
 	jobListThreads->AddJob( function, data );
-}
-
-/*
-========================
-idParallelJobList::AddJobSPURS
-========================
-*/
-CellSpursJob128* idParallelJobList::AddJobSPURS()
-{
-	return NULL;
 }
 
 /*

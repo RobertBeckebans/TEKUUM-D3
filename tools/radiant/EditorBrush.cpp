@@ -75,10 +75,14 @@ void DrawRenderModel( idRenderModel* model, idVec3& origin, idMat3& axis, bool c
 			{
 				int		index = tri->indexes[j + k];
 				idVec3	v;
+				idVec2	st;
 				
+				// RB begin
 				v = tri->verts[index].xyz * axis + origin;
-				glTexCoord2f( tri->verts[index].st.x, tri->verts[index].st.y );
+				st = tri->verts[index].GetTexCoord();
+				glTexCoord2fv( st.ToFloatPtr() );
 				glVertex3fv( v.ToFloatPtr() );
+				// RB end
 			}
 		}
 		
@@ -410,8 +414,8 @@ void Face_MoveTexture( face_t* f, idVec3 delta )
 		f->texdef.shift[1] -= vShift[1] / f->texdef.scale[1];
 		
 		// clamp the shifts
-		Clamp( f->texdef.shift[0], f->d_texture->GetEditorImage()->uploadWidth );
-		Clamp( f->texdef.shift[1], f->d_texture->GetEditorImage()->uploadHeight );
+		Clamp( f->texdef.shift[0], f->d_texture->GetEditorImage()->GetUploadWidth() );
+		Clamp( f->texdef.shift[1], f->d_texture->GetEditorImage()->GetUploadHeight() );
 	}
 }
 
@@ -565,8 +569,8 @@ void Face_TextureVectors( face_t* f, float STfromXYZ[2][4] )
 	
 	for( j = 0; j < 4; j++ )
 	{
-		STfromXYZ[0][j] /= q->GetEditorImage()->uploadWidth;
-		STfromXYZ[1][j] /= q->GetEditorImage()->uploadHeight;
+		STfromXYZ[0][j] /= q->GetEditorImage()->GetUploadWidth();
+		STfromXYZ[1][j] /= q->GetEditorImage()->GetUploadHeight();
 	}
 }
 
@@ -3545,7 +3549,7 @@ void Brush_UpdateLightPoints( brush_t* b, const idVec3& offset )
 		const idMaterial*	q = Texture_LoadLight( str );
 		if( q )
 		{
-			b->lightTexture = q->GetEditorImage()->texnum;
+			//b->lightTexture = q->GetEditorImage()->GetTe;
 		}
 	}
 	
@@ -5945,19 +5949,19 @@ void Face_FitTexture( face_t* face, float nHeight, float nWidth )
 		 * { min_s = s; } if (i<2) { if (t < min_t) { min_t = t; } } else { if (t > max_t)
 		 * { max_t = t; } } } } rot_width = (max_s - min_s); rot_height = (max_t - min_t);
 		 * td->scale[0] =
-		 * -(rot_width/((float)(face->d_texture->GetEditorImage()->uploadWidth*nWidth)));
+		 * -(rot_width/((float)(face->d_texture->GetEditorImage()->GetUploadWidth()*nWidth)));
 		 * td->scale[1] =
-		 * -(rot_height/((float)(face->d_texture->GetEditorImage()->uploadHeight*nHeight)));
+		 * -(rot_height/((float)(face->d_texture->GetEditorImage()->GetUploadHeight()*nHeight)));
 		 * td->shift[0] = min_s/td->scale[0]; temp = (int)(td->shift[0] /
-		 * (face->d_texture->GetEditorImage()->uploadWidth*nWidth)); temp =
-		 * (temp+1)*face->d_texture->GetEditorImage()->uploadWidth*nWidth; td->shift[0] =
+		 * (face->d_texture->GetEditorImage()->GetUploadWidth()*nWidth)); temp =
+		 * (temp+1)*face->d_texture->GetEditorImage()->GetUploadWidth()*nWidth; td->shift[0] =
 		 * (int)(temp -
-		 * td->shift[0])%(face->d_texture->GetEditorImage()->uploadWidth*nWidth);
+		 * td->shift[0])%(face->d_texture->GetEditorImage()->GetUploadWidth()*nWidth);
 		 * td->shift[1] = min_t/td->scale[1]; temp = (int)(td->shift[1] /
-		 * (face->d_texture->GetEditorImage()->uploadHeight*nHeight)); temp =
-		 * (temp+1)*(face->d_texture->GetEditorImage()->uploadHeight*nHeight);
+		 * (face->d_texture->GetEditorImage()->GetUploadHeight()*nHeight)); temp =
+		 * (temp+1)*(face->d_texture->GetEditorImage()->GetUploadHeight()*nHeight);
 		 * td->shift[1] = (int)(temp -
-		 * td->shift[1])%(face->d_texture->GetEditorImage()->uploadHeight*nHeight);
+		 * td->shift[1])%(face->d_texture->GetEditorImage()->GetUploadHeight()*nHeight);
 		 */
 	}
 }

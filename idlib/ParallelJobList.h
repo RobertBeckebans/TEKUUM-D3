@@ -85,9 +85,9 @@ class idParallelJobList
 {
 	friend class idParallelJobManagerLocal;
 public:
-
-	void					AddJob( jobRun_t function, void* data );
-	CellSpursJob128* 		AddJobSPURS();
+	// RB: renamed to AddParallelJob to solve MFC conflicts
+	void					AddParallelJob( jobRun_t function, void* data );
+	// RB end
 	void					InsertSyncPoint( jobSyncType_t syncType );
 	
 	// Submit the jobs in this list.

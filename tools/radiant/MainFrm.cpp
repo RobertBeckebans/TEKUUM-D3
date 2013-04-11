@@ -7869,7 +7869,10 @@ void CMainFrame::OnGenerateMaterialsList()
 		}
 	}
 	
-	mtrList.Sort();
+	// RB: BFG sort
+	mtrList.SortWithTemplate( idSort_PathStr() );
+	// RB end
+	
 	for( int i = 0 ; i < mtrList.Num() ; i++ )
 	{
 		common->Printf( "%s\n" , mtrList[i].c_str() );

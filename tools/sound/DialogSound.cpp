@@ -525,7 +525,10 @@ void CDialogSound::AddSounds( bool rootItems )
 		const idSoundShader* poo = declManager->SoundByIndex( i, false );
 		list.AddUnique( poo->GetFileName() );
 	}
-	list.Sort();
+	
+	// RB: BFG sort
+	list.SortWithTemplate( idSort_PathStr() );
+	// RB end
 	
 	for( i = 0; i < list.Num(); i++ )
 	{
@@ -541,7 +544,11 @@ void CDialogSound::AddSounds( bool rootItems )
 				list2.Append( poo->GetName() );
 			}
 		}
-		list2.Sort();
+		
+		// RB: BFG sort
+		list2.SortWithTemplate( idSort_PathStr() );
+		// RB end
+		
 		for( j = 0; j < list2.Num(); j++ )
 		{
 			HTREEITEM child2 = treeSounds.InsertItem( list2[j], child );
@@ -595,7 +602,11 @@ void CDialogSound::AddInUseSounds()
 			}
 		}
 	}
-	list2.Sort();
+	
+	// RB: BFG sort
+	list2.SortWithTemplate( idSort_PathStr() );
+	// RB end
+	
 	count = list2.Num();
 	for( i = 0; i < count; i++ )
 	{

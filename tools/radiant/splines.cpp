@@ -128,7 +128,7 @@ void debugLine( idVec4& color, float x, float y, float z, float x2, float y2, fl
 {
 	idVec3 from( x, y, z );
 	idVec3 to( x2, y2, z2 );
-	session->rw->DebugLine( color, from, to );
+	session->RW()->DebugLine( color, from, to );
 }
 
 

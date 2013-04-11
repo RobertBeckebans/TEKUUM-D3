@@ -437,8 +437,8 @@ void idGLDrawableMaterial::draw( int x, int y, int w, int h )
 				return;
 			}
 			
-			int width = img->uploadWidth;
-			int height = img->uploadHeight;
+			int width = img->GetUploadWidth();
+			int height = img->GetUploadHeight();
 			
 			width *= scale;
 			height *= scale;
@@ -454,33 +454,34 @@ void idGLDrawableMaterial::draw( int x, int y, int w, int h )
 			tris->indexes[4] = 1;
 			tris->indexes[5] = 0;
 			
+			// RB begin
 			tris->verts[0].xyz.x = 64;
 			tris->verts[0].xyz.y = -xOffset + 0 - width / 2;
 			tris->verts[0].xyz.z = yOffset + 0 - height / 2;
-			tris->verts[0].st.x = 1;
-			tris->verts[0].st.y = 1;
+			tris->verts[0].SetTexCoord( 1, 1 );
 			
 			tris->verts[1].xyz.x = 64;
 			tris->verts[1].xyz.y = -xOffset + width / 2;
 			tris->verts[1].xyz.z = yOffset + height / 2;
-			tris->verts[1].st.x = 0;
-			tris->verts[1].st.y = 0;
+			tris->verts[1].SetTexCoord( 0, 0 );
 			
 			tris->verts[2].xyz.x = 64;
 			tris->verts[2].xyz.y = -xOffset + 0 - width / 2;
 			tris->verts[2].xyz.z = yOffset + height / 2;
-			tris->verts[2].st.x = 1;
-			tris->verts[2].st.y = 0;
+			tris->verts[2].SetTexCoord( 1, 0 );
 			
 			tris->verts[3].xyz.x = 64;
 			tris->verts[3].xyz.y = -xOffset + width / 2;
 			tris->verts[3].xyz.z = yOffset + 0 - height / 2;
-			tris->verts[3].st.x = 0;
-			tris->verts[3].st.y = 1;
+			tris->verts[3].SetTexCoord( 0, 1 );
 			
-			tris->verts[0].normal = tris->verts[1].xyz.Cross( tris->verts[3].xyz );
-			tris->verts[1].normal = tris->verts[2].normal = tris->verts[3].normal = tris->verts[0].normal;
+			idVec3 normal = tris->verts[1].xyz.Cross( tris->verts[3].xyz );
+			tris->verts[0].SetNormal( normal );
+			tris->verts[1].SetNormal( normal );
+			tris->verts[2].SetNormal( normal );
+			tris->verts[3].SetNormal( normal );
 			AddTris( tris, mat );
+			// RB end
 			
 			worldModel->FinishSurfaces();
 			
@@ -500,11 +501,18 @@ void idGLDrawableMaterial::draw( int x, int y, int w, int h )
 			modelDef = world->AddEntityDef( &worldEntity );
 			
 			worldDirty = false;
+			
+			// RB: avoid crash in R_AddSingleLight
+			world->GenerateAllInteractions();
+			// RB end
 		}
+		
+		// RB: BFG interface
 		
 		renderView_t	refdef;
 		// render it
-		renderSystem->BeginFrame( w, h );
+		//renderSystem->BeginFrame( w, h );
+		
 		memset( &refdef, 0, sizeof( refdef ) );
 		refdef.vieworg.Set( viewAngle, 0, 0 );
 		
@@ -514,19 +522,25 @@ void idGLDrawableMaterial::draw( int x, int y, int w, int h )
 		refdef.shaderParms[2] = 1;
 		refdef.shaderParms[3] = 1;
 		
-		refdef.width = SCREEN_WIDTH;
-		refdef.height = SCREEN_HEIGHT;
+		//refdef.width = SCREEN_WIDTH;
+		//refdef.height = SCREEN_HEIGHT;
 		refdef.fov_x = 90;
 		refdef.fov_y = 2 * atan( ( float )h / w ) * idMath::M_RAD2DEG;
 		
-		refdef.time = eventLoop->Milliseconds();
+		refdef.time[0] = eventLoop->Milliseconds();
 		
 		world->RenderScene( &refdef );
-		int frontEnd, backEnd;
-		renderSystem->EndFrame( &frontEnd, &backEnd );
+		
+		//int frontEnd, backEnd;
+		//renderSystem->EndFrame( &frontEnd, &backEnd );
+		
+		const emptyCommand_t* cmd = renderSystem->SwapCommandBuffers( NULL, NULL, NULL, NULL );
+		renderSystem->RenderCommandBuffers( cmd );
 		
 		glMatrixMode( GL_MODELVIEW );
 		glLoadIdentity();
+		
+		// RB end
 	}
 	
 }
@@ -559,7 +573,7 @@ void idGLDrawableMaterial::setMedia( const char* name )
 	if( material && img )
 	{
 	
-		float size = ( img->uploadWidth > img->uploadHeight ) ? img->uploadWidth : img->uploadHeight;
+		float size = ( img->GetUploadWidth() > img->GetUploadHeight() ) ? img->GetUploadWidth() : img->GetUploadHeight();
 		// use 128 as base scale of 1.0
 		scale = 128.0 / size;
 	}
@@ -771,12 +785,20 @@ void idGLDrawableModel::draw( int x, int y, int w, int h )
 		worldEntity.shaderParms[3] = 1;
 		modelDef = world->AddEntityDef( &worldEntity );
 		
+		// RB: avoid crash in R_AddSingleLight
+		world->GenerateAllInteractions();
+		// RB end
+		
 		worldDirty = false;
 	}
 	
+	// RB: BFG interface
+	
 	renderView_t	refdef;
+	
 	// render it
-	renderSystem->BeginFrame( w, h );
+	//renderSystem->BeginFrame( w, h );
+	
 	memset( &refdef, 0, sizeof( refdef ) );
 	refdef.vieworg.Set( zOffset, xOffset, -yOffset );
 	
@@ -786,19 +808,24 @@ void idGLDrawableModel::draw( int x, int y, int w, int h )
 	refdef.shaderParms[2] = 1;
 	refdef.shaderParms[3] = 1;
 	
-	refdef.width = SCREEN_WIDTH;
-	refdef.height = SCREEN_HEIGHT;
+	//refdef.width = SCREEN_WIDTH;
+	//refdef.height = SCREEN_HEIGHT;
 	refdef.fov_x = 90;
 	refdef.fov_y = 2 * atan( ( float )h / w ) * idMath::M_RAD2DEG;
 	
-	refdef.time = eventLoop->Milliseconds();
+	refdef.time[0] = eventLoop->Milliseconds();
 	
 	world->RenderScene( &refdef );
-	int frontEnd, backEnd;
-	renderSystem->EndFrame( &frontEnd, &backEnd );
+	//int frontEnd, backEnd;
+	//renderSystem->EndFrame( &frontEnd, &backEnd );
+	
+	const emptyCommand_t* cmd = renderSystem->SwapCommandBuffers( NULL, NULL, NULL, NULL );
+	renderSystem->RenderCommandBuffers( cmd );
 	
 	glMatrixMode( GL_MODELVIEW );
 	glLoadIdentity();
+	
+	// RB end
 }
 
 
@@ -959,11 +986,18 @@ void idGLDrawableConsole::draw( int x, int y, int w, int h )
 	glClearColor( 0.1f, 0.1f, 0.1f, 0.0f );
 	glScissor( 0, 0, w, h );
 	glClear( GL_COLOR_BUFFER_BIT );
-	renderSystem->BeginFrame( w, h );
+	
+	// RB: BFG interface
+	//renderSystem->BeginFrame( w, h );
 	
 	console->Draw( true );
 	
-	renderSystem->EndFrame( NULL, NULL );
+	//renderSystem->EndFrame( NULL, NULL );
+	const emptyCommand_t* cmd = renderSystem->SwapCommandBuffers( NULL, NULL, NULL, NULL );
+	renderSystem->RenderCommandBuffers( cmd );
+	
+	// RB end
+	
 	glPopAttrib();
 }
 
@@ -1067,6 +1101,9 @@ void idGLDrawableWorld::InitWorld()
 	if( world == NULL )
 	{
 		world = renderSystem->AllocRenderWorld();
+		// RB: avoid crash in R_AddSingleLight
+		//world->GenerateAllInteractions();
+		// RB end
 	}
 	if( worldModel == NULL )
 	{

@@ -115,6 +115,9 @@ void RadiantInit()
 	{
 		g_qeglobals.rw = renderSystem->AllocRenderWorld();
 		g_qeglobals.rw->InitFromMap( NULL );
+		// RB: avoid crash in R_AddSingleLight
+		g_qeglobals.rw->GenerateAllInteractions();
+		// RB end
 	}
 	if( g_qeglobals.sw == NULL )
 	{

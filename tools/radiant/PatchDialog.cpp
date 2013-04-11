@@ -270,8 +270,10 @@ void CPatchDialog::UpdateRowColInfo()
 			m_fX = m_Patch->ctrl( c, r ).xyz[0];
 			m_fY = m_Patch->ctrl( c, r ).xyz[1];
 			m_fZ = m_Patch->ctrl( c, r ).xyz[2];
-			m_fS = m_Patch->ctrl( c, r ).st[0];
-			m_fT = m_Patch->ctrl( c, r ).st[1];
+			// RB: BFG idDrawVert
+			m_fS = m_Patch->ctrl( c, r ).GetTexCoord().x;
+			m_fT = m_Patch->ctrl( c, r ).GetTexCoord().y;
+			// RB end
 		}
 	}
 	UpdateData( FALSE );
@@ -294,8 +296,9 @@ void CPatchDialog::OnApply()
 			m_Patch->ctrl( c, r ).xyz[0] = m_fX;
 			m_Patch->ctrl( c, r ).xyz[1] = m_fY;
 			m_Patch->ctrl( c, r ).xyz[2] = m_fZ;
-			m_Patch->ctrl( c, r ).st[0] = m_fS;
-			m_Patch->ctrl( c, r ).st[1] = m_fT;
+			// RB: BFG idDrawVert
+			m_Patch->ctrl( c, r ).SetTexCoord( m_fS, m_fT );
+			// RB end
 			Patch_MakeDirty( m_Patch );
 			Sys_UpdateWindows( W_ALL );
 		}

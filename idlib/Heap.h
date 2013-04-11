@@ -29,6 +29,8 @@ If you have questions concerning this license or the applicable additional terms
 #ifndef __HEAP_H__
 #define __HEAP_H__
 
+#undef new
+
 /*
 ===============================================================================
 
@@ -120,6 +122,28 @@ ID_INLINE void operator delete[]( void* p, memTag_t tag ) throw() // DG: delete 
 {
 	Mem_Free( p );
 }
+
+// RB: these are added to avoid problems with afxmem.cpp
+ID_INLINE void* operator new( size_t s, const char* file, int line )
+{
+	return Mem_Alloc( s );
+}
+
+ID_INLINE void* operator new[]( size_t s, const char* file, int line )
+{
+	return Mem_Alloc( s );
+}
+
+ID_INLINE void operator delete( void* p, const char* file, int line )
+{
+	Mem_Free( p );
+}
+
+ID_INLINE void operator delete[]( void* p, const char* file, int line )
+{
+	Mem_Free( p );
+}
+// RB end
 
 // Define replacements for the PS3 library's aligned new operator.
 // Without these, allocations of objects with 32 byte or greater alignment

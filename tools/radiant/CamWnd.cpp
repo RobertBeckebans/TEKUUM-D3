@@ -1561,14 +1561,19 @@ void Tris_ToOBJ( const char* outFile, idTriList* tris, idMatList* mats )
 			{
 				f->Printf( "v %f %f %f\n", tri->verts[j].xyz.x, tri->verts[j].xyz.z, -tri->verts[j].xyz.y );
 			}
+			
+			// RB begin
 			for( j = 0; j < tri->numVerts; j++ )
 			{
-				f->Printf( "vt %f %f\n", tri->verts[j].st.x, 1.0f - tri->verts[j].st.y );
+				idVec2 st = tri->verts[j].GetTexCoord();
+				f->Printf( "vt %f %f\n", st.x, 1.0f - st.y );
 			}
 			for( j = 0; j < tri->numVerts; j++ )
 			{
-				f->Printf( "vn %f %f %f\n", tri->verts[j].normal.x, tri->verts[j].normal.y, tri->verts[j].normal.z );
+				idVec3 normal = tri->verts[j].GetNormal();
+				f->Printf( "vn %f %f %f\n", normal.x, normal.y, normal.z );
 			}
+			// RB end
 			
 			if( stricmp( ( *mats )[i]->GetName(), lastMaterial ) )
 			{
@@ -1729,7 +1734,9 @@ int Brush_ToTris( brush_t* brush, idTriList* tris, idMatList* mats, bool models,
 			for( j = 0; j < pm->height; j++ )
 			{
 				( *cp )[j * cp->GetWidth() + i].xyz =  pm->ctrl( i, j ).xyz;
-				( *cp )[j * cp->GetWidth() + i].st = pm->ctrl( i, j ).st;
+				// RB: BFG idDrawVert
+				( *cp )[j * cp->GetWidth() + i].SetTexCoord( pm->ctrl( i, j ).GetTexCoord() );
+				// RB end
 			}
 		}
 		
@@ -1817,10 +1824,10 @@ int Brush_ToTris( brush_t* brush, idTriList* tris, idMatList* mats, bool models,
 				tri->verts[i].xyz -= brush->owner->origin;
 			}
 			
-			tri->verts[i].st[0] = ( *w )[i][3];
-			tri->verts[i].st[1] = ( *w )[i][4];
-			
-			tri->verts[i].normal = face->plane.Normal();
+			// RB: BFG idDrawVert
+			tri->verts[i].SetTexCoord( ( *w )[i][3], ( *w )[i][4] );
+			tri->verts[i].SetNormal( face->plane.Normal() );
+			// RB end
 		}
 		
 		tri->numIndexes = 0;
@@ -2353,8 +2360,10 @@ void CCamWnd::Cam_Render()
 		BuildRendererState();
 	}
 	
+	// RB: BFG interface
+	
 	// render it
-	renderSystem->BeginFrame( m_Camera.width, m_Camera.height );
+	//renderSystem->BeginFrame( m_Camera.width, m_Camera.height );
 	
 	memset( &refdef, 0, sizeof( refdef ) );
 	refdef.vieworg = m_Camera.origin;
@@ -2362,24 +2371,28 @@ void CCamWnd::Cam_Render()
 	// the editor uses opposite pitch convention
 	refdef.viewaxis = idAngles( -m_Camera.angles.pitch, m_Camera.angles.yaw, m_Camera.angles.roll ).ToMat3();
 	
-	refdef.width = SCREEN_WIDTH;
-	refdef.height = SCREEN_HEIGHT;
+	//refdef.width = SCREEN_WIDTH;
+	//refdef.height = SCREEN_HEIGHT;
 	refdef.fov_x = 90;
 	refdef.fov_y = 2 * atan( ( float )m_Camera.height / m_Camera.width ) * idMath::M_RAD2DEG;
 	
 	// only set in animation mode to give a consistent look
 	if( animationMode )
 	{
-		refdef.time = eventLoop->Milliseconds();
+		refdef.time[0] = eventLoop->Milliseconds();
 	}
 	
 	g_qeglobals.rw->RenderScene( &refdef );
 	
-	int	frontEnd, backEnd;
-	
-	renderSystem->EndFrame( &frontEnd, &backEnd );
+	//int	frontEnd, backEnd;
+	//renderSystem->EndFrame( &frontEnd, &backEnd );
 //common->Printf( "front:%i back:%i\n", frontEnd, backEnd );
 
+	const emptyCommand_t* cmd = renderSystem->SwapCommandBuffers( NULL, NULL, NULL, NULL );
+	renderSystem->RenderCommandBuffers( cmd );
+	
+	// RB end
+	
 	//glPopAttrib();
 	//DrawEntityData();
 	
