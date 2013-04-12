@@ -46,7 +46,10 @@ idCVar r_showSwapBuffers( "r_showSwapBuffers", "0", CVAR_BOOL, "Show timings fro
 idCVar r_syncEveryFrame( "r_syncEveryFrame", "1", CVAR_BOOL, "Don't let the GPU buffer execution past swapbuffers" );
 
 static int		swapIndex;		// 0 or 1 into renderSync
+
+#if !defined(USE_ANGLE)
 static GLsync	renderSync[2];
+#endif
 
 void GLimp_SwapBuffers();
 void RB_SetMVP( const idRenderMatrix& mvp );
@@ -154,6 +157,8 @@ const void GL_BlockingSwapBuffers()
 		common->Printf( "%i msec to swapBuffers\n", beforeFence - beforeSwap );
 	}
 	
+// RB begin
+#if !defined(USE_ANGLE)
 	if( glConfig.syncAvailable )
 	{
 		swapIndex ^= 1;
@@ -192,7 +197,9 @@ const void GL_BlockingSwapBuffers()
 			}
 		}
 	}
-	
+#endif
+// RB end
+
 	const int afterFence = Sys_Milliseconds();
 	if( r_showSwapBuffers.GetBool() && afterFence - beforeFence > 1 )
 	{
@@ -243,7 +250,10 @@ void RB_StereoRenderExecuteBackEndCommands( const emptyCommand_t* const allCmds 
 	// To allow stereo deghost processing, the views have to be copied to separate
 	// textures anyway, so there isn't any benefit to rendering to BACK_RIGHT for
 	// that eye.
+	
+#if !defined(USE_ANGLE)
 	glDrawBuffer( GL_BACK_LEFT );
+#endif
 	
 	// create the stereoRenderImage if we haven't already
 	static idImage* stereoRenderImages[2];
@@ -344,10 +354,12 @@ void RB_StereoRenderExecuteBackEndCommands( const emptyCommand_t* const allCmds 
 	// make sure we draw to both eyes.  This is likely to be sub-optimal
 	// performance on most cards and drivers, but it is better than getting
 	// a confusing, half-ghosted view.
+#if !defined(USE_ANGLE)
 	if( renderSystem->GetStereo3DMode() != STEREO3D_QUAD_BUFFER )
 	{
 		glDrawBuffer( GL_BACK );
 	}
+#endif
 	
 	GL_State( GLS_DEPTHFUNC_ALWAYS );
 	GL_Cull( CT_TWO_SIDED );
@@ -369,6 +381,7 @@ void RB_StereoRenderExecuteBackEndCommands( const emptyCommand_t* const allCmds 
 	
 	switch( renderSystem->GetStereo3DMode() )
 	{
+#if !defined(USE_ANGLE)
 		case STEREO3D_QUAD_BUFFER:
 			glDrawBuffer( GL_BACK_RIGHT );
 			GL_SelectTexture( 0 );
@@ -383,8 +396,9 @@ void RB_StereoRenderExecuteBackEndCommands( const emptyCommand_t* const allCmds 
 			GL_SelectTexture( 0 );
 			stereoRenderImages[0]->Bind();
 			RB_DrawElementsWithCounters( &backEnd.unitSquareSurface );
-			
 			break;
+#endif
+			
 		case STEREO3D_HDMI_720:
 			// HDMI 720P 3D
 			GL_SelectTexture( 0 );
@@ -575,7 +589,9 @@ void RB_ExecuteBackEndCommands( const emptyCommand_t* cmds )
 	// If we have a stereo pixel format, this will draw to both
 	// the back left and back right buffers, which will have a
 	// performance penalty.
+#if !defined(USE_ANGLE)
 	glDrawBuffer( GL_BACK );
+#endif
 	
 	for( ; cmds != NULL; cmds = ( const emptyCommand_t* )cmds->next )
 	{

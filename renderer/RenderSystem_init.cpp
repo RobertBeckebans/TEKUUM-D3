@@ -49,6 +49,7 @@ glconfig_t	glConfig;
 idCVar r_requestStereoPixelFormat( "r_requestStereoPixelFormat", "1", CVAR_RENDERER, "Ask for a stereo GL pixel format on startup" );
 // RB begin
 idCVar r_useOpenGL32( "r_useOpenGL32", "1", CVAR_INTEGER, "0 = OpenGL 2.0, 1 = OpenGL 3.2 compatibility profile, 2 = OpenGL 3.2 core profile", 0, 2 );
+idCVar r_useOpenGLES( "r_useOpenGLES", "0", CVAR_INTEGER, "0 = Desktop OpenGL, 1 = OpenGL ES 2.0, 2 = OpenGL ES 3.0", 0, 2 );
 // RB end
 idCVar r_debugContext( "r_debugContext", "0", CVAR_RENDERER, "Enable various levels of context debug." );
 idCVar r_glDriver( "r_glDriver", "", CVAR_RENDERER, "\"opengl32\", etc." );
@@ -271,6 +272,23 @@ static void CALLBACK DebugCallback( unsigned int source, unsigned int type,
 }
 
 /*
+=================
+R_CheckExtension
+=================
+*/
+bool R_CheckExtension( char* name )
+{
+	if( !strstr( glConfig.extensions_string, name ) )
+	{
+		common->Printf( "X..%s not found\n", name );
+		return false;
+	}
+	
+	common->Printf( "...using %s\n", name );
+	return true;
+}
+
+/*
 ==================
 R_CheckPortableExtensions
 ==================
@@ -299,18 +317,34 @@ static void R_CheckPortableExtensions()
 	}
 	
 	// GL_ARB_multitexture
+#if defined(USE_ANGLE)
+	glConfig.multitextureAvailable = true;
+#else
 	glConfig.multitextureAvailable = GLEW_ARB_multitexture != 0;
+#endif
 	
 	// GL_EXT_direct_state_access
+#if defined(USE_ANGLE)
+	glConfig.directStateAccess = 0;
+#else
 	glConfig.directStateAccess = GLEW_EXT_direct_state_access != 0;
+#endif
 	
 	
 	// GL_ARB_texture_compression + GL_S3_s3tc
 	// DRI drivers may have GL_ARB_texture_compression but no GL_EXT_texture_compression_s3tc
-	glConfig.textureCompressionAvailable = GLEW_ARB_texture_compression != 0 && GLEW_EXT_texture_compression_s3tc != 0;
+#if defined(USE_ANGLE)
+	glConfig.textureCompressionAvailable = R_CheckExtension( "GL_EXT_texture_compression_dxt1" );
+#else
+	glConfig.textureCompressionAvailable = GLEW_ARB_texture_compression != 0;// && GLEW_EXT_texture_compression_s3tc != 0;
+#endif
 	
 	// GL_EXT_texture_filter_anisotropic
+#if defined(USE_ANGLE)
+	glConfig.anisotropicFilterAvailable = R_CheckExtension( "GL_EXT_texture_filter_anisotropic" );
+#else
 	glConfig.anisotropicFilterAvailable = GLEW_EXT_texture_filter_anisotropic != 0;
+#endif
 	if( glConfig.anisotropicFilterAvailable )
 	{
 		glGetFloatv( GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &glConfig.maxTextureAnisotropy );
@@ -324,7 +358,11 @@ static void R_CheckPortableExtensions()
 	// GL_EXT_texture_lod_bias
 	// The actual extension is broken as specificed, storing the state in the texture unit instead
 	// of the texture object.  The behavior in GL 1.4 is the behavior we use.
+#if defined(USE_ANGLE)
+	glConfig.textureLODBiasAvailable = false;
+#else
 	glConfig.textureLODBiasAvailable = ( glConfig.glVersion >= 1.4 || GLEW_EXT_texture_lod_bias != 0 );
+#endif
 	if( glConfig.textureLODBiasAvailable )
 	{
 		common->Printf( "...using %s\n", "GL_EXT_texture_lod_bias" );
@@ -335,37 +373,75 @@ static void R_CheckPortableExtensions()
 	}
 	
 	// GL_ARB_seamless_cube_map
+#if defined(USE_ANGLE)
+	glConfig.seamlessCubeMapAvailable = false;
+#else
 	glConfig.seamlessCubeMapAvailable = GLEW_ARB_seamless_cube_map != 0;
+#endif
 	r_useSeamlessCubeMap.SetModified();		// the CheckCvars() next frame will enable / disable it
 	
 	// GL_ARB_framebuffer_sRGB
+#if defined(USE_ANGLE)
+	glConfig.sRGBFramebufferAvailable = false;
+#else
 	glConfig.sRGBFramebufferAvailable = GLEW_ARB_framebuffer_sRGB != 0;
+#endif
 	r_useSRGB.SetModified();		// the CheckCvars() next frame will enable / disable it
 	
 	// GL_ARB_vertex_buffer_object
+#if defined(USE_ANGLE)
+	glConfig.vertexBufferObjectAvailable = false;
+#else
 	glConfig.vertexBufferObjectAvailable = GLEW_ARB_vertex_buffer_object != 0;
+#endif
 	
 	// GL_ARB_map_buffer_range, map a section of a buffer object's data store
+#if defined(USE_ANGLE)
+	glConfig.mapBufferRangeAvailable = false;
+#else
 	glConfig.mapBufferRangeAvailable = GLEW_ARB_map_buffer_range != 0;
+#endif
 	
 	// GL_ARB_vertex_array_object
+#if defined(USE_ANGLE)
+	glConfig.vertexArrayObjectAvailable = false;
+#else
 	glConfig.vertexArrayObjectAvailable = GLEW_ARB_vertex_array_object != 0;
+#endif
 	
 	// GL_ARB_draw_elements_base_vertex
+#if defined(USE_ANGLE)
+	glConfig.drawElementsBaseVertexAvailable = false;
+#else
 	glConfig.drawElementsBaseVertexAvailable = GLEW_ARB_draw_elements_base_vertex != 0;
+#endif
 	
 	// GL_ARB_vertex_program / GL_ARB_fragment_program
-	glConfig.fragmentProgramAvailable = GLEW_ARB_fragment_program != 0;
-	if( glConfig.fragmentProgramAvailable )
+#if !defined(USE_ANGLE)
+	if( r_useOpenGL32.GetInteger() == 2 )
 	{
-		glGetIntegerv( GL_MAX_TEXTURE_COORDS_ARB, ( GLint* )&glConfig.maxTextureCoords );
-		glGetIntegerv( GL_MAX_TEXTURE_IMAGE_UNITS_ARB, ( GLint* )&glConfig.maxTextureImageUnits );
+		glConfig.fragmentProgramAvailable = true;
+		glGetIntegerv( GL_MAX_TEXTURE_COORDS, ( GLint* )&glConfig.maxTextureCoords );
+		glGetIntegerv( GL_MAX_TEXTURE_IMAGE_UNITS, ( GLint* )&glConfig.maxTextureImageUnits );
 	}
+	else
+	{
+		glConfig.fragmentProgramAvailable = GLEW_ARB_fragment_program != 0;
+		if( glConfig.fragmentProgramAvailable )
+		{
+			glGetIntegerv( GL_MAX_TEXTURE_COORDS_ARB, ( GLint* )&glConfig.maxTextureCoords );
+			glGetIntegerv( GL_MAX_TEXTURE_IMAGE_UNITS_ARB, ( GLint* )&glConfig.maxTextureImageUnits );
+		}
+	}
+#endif
 	
 	// GLSL, core in OpenGL > 2.0
 	glConfig.glslAvailable = ( glConfig.glVersion >= 2.0f );
 	
 	// GL_ARB_uniform_buffer_object
+#if defined(USE_ANGLE)
+	glConfig.uniformBufferAvailable = false;
+#else
 	glConfig.uniformBufferAvailable = GLEW_ARB_uniform_buffer_object != 0;
 	if( glConfig.uniformBufferAvailable )
 	{
@@ -375,28 +451,60 @@ static void R_CheckPortableExtensions()
 			glConfig.uniformBufferOffsetAlignment = 256;
 		}
 	}
+#endif
 	
 	// ATI_separate_stencil / OpenGL 2.0 separate stencil
+#if defined(USE_ANGLE)
+	glConfig.twoSidedStencilAvailable = false;
+#else
 	glConfig.twoSidedStencilAvailable = ( glConfig.glVersion >= 2.0f ) || GLEW_ATI_separate_stencil != 0;
+#endif
 	
 	// GL_EXT_depth_bounds_test
+#if defined(USE_ANGLE)
+	glConfig.depthBoundsTestAvailable = false;
+#else
 	glConfig.depthBoundsTestAvailable = GLEW_EXT_depth_bounds_test != 0;
+#endif
 	
 	// GL_ARB_sync
+#if defined(USE_ANGLE)
+	glConfig.syncAvailable = false;
+#else
 	glConfig.syncAvailable = GLEW_ARB_sync &&
 							 // as of 5/24/2012 (driver version 15.26.12.64.2761) sync objects
 							 // do not appear to work for the Intel HD 4000 graphics
 							 ( glConfig.vendor != VENDOR_INTEL || r_skipIntelWorkarounds.GetBool() );
-							 
+#endif
+	
 	// GL_ARB_occlusion_query
+#if defined(USE_ANGLE)
+	glConfig.occlusionQueryAvailable = false;
+#else
 	glConfig.occlusionQueryAvailable = GLEW_ARB_occlusion_query != 0;
+#endif
 	
 	// GL_ARB_timer_query
+#if defined(USE_ANGLE)
+	glConfig.timerQueryAvailable = false;
+#else
 	glConfig.timerQueryAvailable = GLEW_ARB_timer_query != 0 || GLEW_EXT_timer_query != 0;
+#endif
+
+	// GL_OES_vertex_half_float
+#if defined(USE_ANGLE)
+	glConfig.vertexHalfFloatAvailable = R_CheckExtension( "GL_OES_vertex_half_float" );
+#else
+	glConfig.vertexHalfFloatAvailable = true;
+#endif
 	
 	// GREMEDY_string_marker
+#if defined(USE_ANGLE)
+	glConfig.gremedyStringMarkerAvailable = false;
+#else
 	glConfig.gremedyStringMarkerAvailable = GLEW_GREMEDY_string_marker != 0;
-	if( glConfig.textureLODBiasAvailable )
+#endif
+	if( glConfig.gremedyStringMarkerAvailable )
 	{
 		common->Printf( "...using %s\n", "GLEW_GREMEDY_string_marker" );
 	}
@@ -406,6 +514,9 @@ static void R_CheckPortableExtensions()
 	}
 	
 	// GL_ARB_debug_output
+#if defined(USE_ANGLE)
+	glConfig.debugOutputAvailable = false;
+#else
 	glConfig.debugOutputAvailable = GLEW_ARB_debug_output != 0;
 	if( glConfig.debugOutputAvailable )
 	{
@@ -427,7 +538,9 @@ static void R_CheckPortableExtensions()
 									  0, NULL, true );
 		}
 	}
+#endif
 	
+#if !defined(USE_ANGLE)
 	// GL_ARB_multitexture
 	if( !glConfig.multitextureAvailable )
 	{
@@ -482,6 +595,7 @@ static void R_CheckPortableExtensions()
 	// generate one global Vertex Array Object (VAO)
 	glGenVertexArrays( 1, &glConfig.global_vao );
 	glBindVertexArray( glConfig.global_vao );
+#endif
 }
 // RB end
 
@@ -634,7 +748,9 @@ safeMode:
 	}
 }
 
+#if !defined(USE_ANGLE)
 idStr extensions_string;
+#endif
 
 /*
 ==================
@@ -679,6 +795,7 @@ void R_InitOpenGL()
 	glConfig.shading_language_string = ( const char* )glGetString( GL_SHADING_LANGUAGE_VERSION );
 	glConfig.extensions_string = ( const char* )glGetString( GL_EXTENSIONS );
 	
+#if !defined(USE_ANGLE)
 	if( glConfig.extensions_string == NULL )
 	{
 		// As of OpenGL 3.2, glGetStringi is required to obtain the available extensions
@@ -699,6 +816,7 @@ void R_InitOpenGL()
 		}
 		glConfig.extensions_string = extensions_string.c_str();
 	}
+#endif
 	
 	
 	float glVersion = atof( glConfig.version_string );
@@ -796,12 +914,14 @@ void GL_CheckErrors()
 			case GL_INVALID_OPERATION:
 				strcpy( s, "GL_INVALID_OPERATION" );
 				break;
+#if !defined(USE_ANGLE)
 			case GL_STACK_OVERFLOW:
 				strcpy( s, "GL_STACK_OVERFLOW" );
 				break;
 			case GL_STACK_UNDERFLOW:
 				strcpy( s, "GL_STACK_UNDERFLOW" );
 				break;
+#endif
 			case GL_OUT_OF_MEMORY:
 				strcpy( s, "GL_OUT_OF_MEMORY" );
 				break;
@@ -1652,6 +1772,50 @@ void GfxInfo_f( const idCmdArgs& args )
 	common->Printf( "GL_MAX_TEXTURE_SIZE: %d\n", glConfig.maxTextureSize );
 	common->Printf( "GL_MAX_TEXTURE_COORDS_ARB: %d\n", glConfig.maxTextureCoords );
 	common->Printf( "GL_MAX_TEXTURE_IMAGE_UNITS_ARB: %d\n", glConfig.maxTextureImageUnits );
+	
+	// RB begin
+#if !defined(USE_ANGLE) //!defined(USE_GLES1)
+	if( r_useOpenGL32.GetInteger() > 0 )
+	{
+		int				contextFlags, profile;
+		
+		common->Printf( S_COLOR_GREEN "Using OpenGL 3.x context\n" );
+		
+		// check if we have a core-profile
+		glGetIntegerv( GL_CONTEXT_PROFILE_MASK, &profile );
+		if( profile == GL_CONTEXT_CORE_PROFILE_BIT )
+		{
+			common->Printf( S_COLOR_GREEN "Having a core profile\n" );
+		}
+		else
+		{
+			common->Printf( S_COLOR_RED "Having a compatibility profile\n" );
+		}
+		
+		// check if context is forward compatible
+		glGetIntegerv( GL_CONTEXT_FLAGS, &contextFlags );
+		if( contextFlags & GL_CONTEXT_FLAG_FORWARD_COMPATIBLE_BIT )
+		{
+			common->Printf( S_COLOR_GREEN "Context is forward compatible\n" );
+		}
+		else
+		{
+			common->Printf( S_COLOR_RED "Context is NOT forward compatible\n" );
+		}
+		
+		// check if context is forward compatible
+		glGetIntegerv( GL_CONTEXT_FLAGS, &contextFlags );
+		if( contextFlags & WGL_CONTEXT_ES2_PROFILE_BIT_EXT )
+		{
+			common->Printf( S_COLOR_GREEN "Context OpenGL ES 2.0 compatible\n" );
+		}
+		else
+		{
+			common->Printf( S_COLOR_RED "Context is NOT OpenGL ES 2.0 compatible\n" );
+		}
+	}
+#endif
+	// RB end
 	
 	// print all the display adapters, monitors, and video modes
 	//void DumpAllDisplayDevices();

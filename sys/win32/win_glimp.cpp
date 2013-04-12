@@ -310,7 +310,12 @@ static HGLRC CreateOpenGLContextOnDC( const HDC hdc, const bool debugContext )
 		const int glMinorVersion = ( useOpenGL32 != 0 ) ? 2 : 0;
 		const int glDebugFlag = debugContext ? WGL_CONTEXT_DEBUG_BIT_ARB : 0;
 		const int glProfileMask = ( useOpenGL32 != 0 ) ? WGL_CONTEXT_PROFILE_MASK_ARB : 0;
-		const int glProfile = ( useOpenGL32 == 1 ) ? WGL_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB : ( ( useOpenGL32 == 2 ) ? WGL_CONTEXT_CORE_PROFILE_BIT_ARB : 0 );
+		int glProfile = ( useOpenGL32 == 1 ) ? WGL_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB : ( ( useOpenGL32 == 2 ) ? WGL_CONTEXT_CORE_PROFILE_BIT_ARB : 0 );
+		// RB: OpenGL ES support using Nvidia driver
+		if( WGLEW_EXT_create_context_es2_profile != 0 )
+		{
+			glProfile |= r_useOpenGLES.GetInteger() ? WGL_CONTEXT_ES2_PROFILE_BIT_EXT : 0;
+		}
 		const int attribs[] =
 		{
 			WGL_CONTEXT_MAJOR_VERSION_ARB,	glMajorVersion,
@@ -319,6 +324,7 @@ static HGLRC CreateOpenGLContextOnDC( const HDC hdc, const bool debugContext )
 			glProfileMask,					glProfile,
 			0
 		};
+		// RB end
 		
 		m_hrc = wglCreateContextAttribsARB( hdc, 0, attribs );
 		if( m_hrc != NULL )

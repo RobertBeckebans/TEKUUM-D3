@@ -86,8 +86,8 @@ void idImage::SubImageUpload( int mipLevel, int x, int y, int z, int width, int 
 	}
 	else if( opts.textureType == TT_CUBIC )
 	{
-		target = GL_TEXTURE_CUBE_MAP_EXT;
-		uploadTarget = GL_TEXTURE_CUBE_MAP_POSITIVE_X_EXT + z;
+		target = GL_TEXTURE_CUBE_MAP;
+		uploadTarget = GL_TEXTURE_CUBE_MAP_POSITIVE_X + z;
 	}
 	else
 	{
@@ -102,16 +102,18 @@ void idImage::SubImageUpload( int mipLevel, int x, int y, int z, int width, int 
 	{
 		glPixelStorei( GL_UNPACK_ROW_LENGTH, pixelPitch );
 	}
+
 	if( opts.format == FMT_RGB565 )
 	{
 		glPixelStorei( GL_UNPACK_SWAP_BYTES, GL_TRUE );
 	}
+
 #ifdef DEBUG
 	GL_CheckErrors();
 #endif
 	if( IsCompressed() )
 	{
-		glCompressedTexSubImage2DARB( uploadTarget, mipLevel, x, y, width, height, internalFormat, compressedSize, pic );
+		glCompressedTexSubImage2D( uploadTarget, mipLevel, x, y, width, height, internalFormat, compressedSize, pic );
 	}
 	else
 	{
@@ -134,10 +136,12 @@ void idImage::SubImageUpload( int mipLevel, int x, int y, int z, int width, int 
 #ifdef DEBUG
 	GL_CheckErrors();
 #endif
+	
 	if( opts.format == FMT_RGB565 )
 	{
 		glPixelStorei( GL_UNPACK_SWAP_BYTES, GL_FALSE );
 	}
+
 	if( pixelPitch != 0 )
 	{
 		glPixelStorei( GL_UNPACK_ROW_LENGTH, 0 );
@@ -168,12 +172,14 @@ void idImage::SetTexParameters()
 			target = GL_TEXTURE_2D;
 			break;
 		case TT_CUBIC:
-			target = GL_TEXTURE_CUBE_MAP_EXT;
+			target = GL_TEXTURE_CUBE_MAP;
 			break;
 		default:
 			idLib::FatalError( "%s: bad texture type %d", GetName(), opts.textureType );
 			return;
 	}
+	
+#if !defined(USE_ANGLE)
 	
 	// ALPHA, LUMINANCE, LUMINANCE_ALPHA, and INTENSITY have been removed
 	// in OpenGL 3.2. In order to mimic those modes, we use the swizzle operators
@@ -237,6 +243,8 @@ void idImage::SetTexParameters()
 	}
 #endif
 	
+#endif // #if !defined(USE_ANGLE)
+	
 	switch( filter )
 	{
 		case TF_DEFAULT:
@@ -283,11 +291,14 @@ void idImage::SetTexParameters()
 			glTexParameterf( target, GL_TEXTURE_MAX_ANISOTROPY_EXT, 1 );
 		}
 	}
+	
+#if !defined(USE_ANGLE)
 	if( glConfig.textureLODBiasAvailable && ( usage != TD_FONT ) )
 	{
 		// use a blurring LOD bias in combination with high anisotropy to fix our aliasing grate textures...
 		glTexParameterf( target, GL_TEXTURE_LOD_BIAS_EXT, r_lodBias.GetFloat() );
 	}
+#endif
 	
 	// set the wrap/clamp modes
 	switch( repeat )
@@ -296,6 +307,7 @@ void idImage::SetTexParameters()
 			glTexParameterf( target, GL_TEXTURE_WRAP_S, GL_REPEAT );
 			glTexParameterf( target, GL_TEXTURE_WRAP_T, GL_REPEAT );
 			break;
+#if !defined(USE_ANGLE)
 		case TR_CLAMP_TO_ZERO:
 		{
 			float color[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
@@ -312,6 +324,10 @@ void idImage::SetTexParameters()
 			glTexParameterf( target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER );
 		}
 		break;
+#else
+		case TR_CLAMP_TO_ZERO:
+		case TR_CLAMP_TO_ZERO_ALPHA:
+#endif
 		case TR_CLAMP:
 			glTexParameterf( target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
 			glTexParameterf( target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
@@ -339,7 +355,11 @@ void idImage::AllocImage()
 	switch( opts.format )
 	{
 		case FMT_RGBA8:
+#if defined(USE_ANGLE)
+			internalFormat = GL_RGBA;
+#else
 			internalFormat = GL_RGBA8;
+#endif
 			dataFormat = GL_RGBA;
 			dataType = GL_UNSIGNED_BYTE;
 			break;
@@ -449,8 +469,8 @@ void idImage::AllocImage()
 	}
 	else if( opts.textureType == TT_CUBIC )
 	{
-		target = GL_TEXTURE_CUBE_MAP_EXT;
-		uploadTarget = GL_TEXTURE_CUBE_MAP_POSITIVE_X_EXT;
+		target = GL_TEXTURE_CUBE_MAP;
+		uploadTarget = GL_TEXTURE_CUBE_MAP_POSITIVE_X;
 		numSides = 6;
 	}
 	else
@@ -492,7 +512,7 @@ void idImage::AllocImage()
 				// RB begin
 #if defined(_WIN32)
 				void* data = HeapAlloc( GetProcessHeap(), 0, compressedSize );
-				glCompressedTexImage2DARB( uploadTarget + side, level, internalFormat, w, h, 0, compressedSize, data );
+				glCompressedTexImage2D( uploadTarget + side, level, internalFormat, w, h, 0, compressedSize, data );
 				if( data != NULL )
 				{
 					HeapFree( GetProcessHeap(), 0, data );

@@ -527,13 +527,15 @@ void idImage::Bind()
 			tmu->current2DMap = texnum;
 			
 			// RB begin
+#if !defined(USE_ANGLE)
 			if( glConfig.directStateAccess )
 			{
-				glBindMultiTextureEXT( GL_TEXTURE0_ARB + texUnit, GL_TEXTURE_2D, texnum );
+				glBindMultiTextureEXT( GL_TEXTURE0 + texUnit, GL_TEXTURE_2D, texnum );
 			}
 			else
+#endif
 			{
-				glActiveTextureARB( GL_TEXTURE0_ARB + texUnit );
+				glActiveTexture( GL_TEXTURE0 + texUnit );
 				glBindTexture( GL_TEXTURE_2D, texnum );
 			}
 			// RB end
@@ -546,14 +548,16 @@ void idImage::Bind()
 			tmu->currentCubeMap = texnum;
 			
 			// RB begin
+#if !defined(USE_ANGLE)
 			if( glConfig.directStateAccess )
 			{
-				glBindMultiTextureEXT( GL_TEXTURE0_ARB + texUnit, GL_TEXTURE_CUBE_MAP_EXT, texnum );
+				glBindMultiTextureEXT( GL_TEXTURE0 + texUnit, GL_TEXTURE_CUBE_MAP, texnum );
 			}
 			else
+#endif
 			{
-				glActiveTextureARB( GL_TEXTURE0_ARB + texUnit );
-				glBindTexture( GL_TEXTURE_CUBE_MAP_EXT, texnum );
+				glActiveTexture( GL_TEXTURE0 + texUnit );
+				glBindTexture( GL_TEXTURE_CUBE_MAP, texnum );
 			}
 			// RB end
 		}
@@ -582,15 +586,20 @@ CopyFramebuffer
 */
 void idImage::CopyFramebuffer( int x, int y, int imageWidth, int imageHeight )
 {
-
-
-	glBindTexture( ( opts.textureType == TT_CUBIC ) ? GL_TEXTURE_CUBE_MAP_EXT : GL_TEXTURE_2D, texnum );
+	glBindTexture( ( opts.textureType == TT_CUBIC ) ? GL_TEXTURE_CUBE_MAP : GL_TEXTURE_2D, texnum );
 	
+#if !defined(USE_ANGLE)
 	glReadBuffer( GL_BACK );
+#endif
 	
 	opts.width = imageWidth;
 	opts.height = imageHeight;
+	
+#if defined(USE_ANGLE)
+	glCopyTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, x, y, imageWidth, imageHeight, 0 );
+#else
 	glCopyTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA8, x, y, imageWidth, imageHeight, 0 );
+#endif
 	
 	// these shouldn't be necessary if the image was initialized properly
 	glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
@@ -609,7 +618,7 @@ CopyDepthbuffer
 */
 void idImage::CopyDepthbuffer( int x, int y, int imageWidth, int imageHeight )
 {
-	glBindTexture( ( opts.textureType == TT_CUBIC ) ? GL_TEXTURE_CUBE_MAP_EXT : GL_TEXTURE_2D, texnum );
+	glBindTexture( ( opts.textureType == TT_CUBIC ) ? GL_TEXTURE_CUBE_MAP : GL_TEXTURE_2D, texnum );
 	
 	opts.width = imageWidth;
 	opts.height = imageHeight;
@@ -844,6 +853,6 @@ void idImage::SetSamplerState( textureFilter_t tf, textureRepeat_t tr )
 	}
 	filter = tf;
 	repeat = tr;
-	glBindTexture( ( opts.textureType == TT_CUBIC ) ? GL_TEXTURE_CUBE_MAP_EXT : GL_TEXTURE_2D, texnum );
+	glBindTexture( ( opts.textureType == TT_CUBIC ) ? GL_TEXTURE_CUBE_MAP : GL_TEXTURE_2D, texnum );
 	SetTexParameters();
 }

@@ -65,10 +65,12 @@ static void MapGeoBufferSet( geoBufferSet_t& gbs )
 	{
 		gbs.mappedIndexBase = ( byte* )gbs.indexBuffer.MapBuffer( BM_WRITE );
 	}
+#if !defined(USE_ANGLE)
 	if( gbs.mappedJointBase == NULL && gbs.jointBuffer.GetAllocedSize() != 0 )
 	{
 		gbs.mappedJointBase = ( byte* )gbs.jointBuffer.MapBuffer( BM_WRITE );
 	}
+#endif
 }
 
 /*
@@ -88,11 +90,13 @@ static void UnmapGeoBufferSet( geoBufferSet_t& gbs )
 		gbs.indexBuffer.UnmapBuffer();
 		gbs.mappedIndexBase = NULL;
 	}
+#if !defined(USE_ANGLE)
 	if( gbs.mappedJointBase != NULL )
 	{
 		gbs.jointBuffer.UnmapBuffer();
 		gbs.mappedJointBase = NULL;
 	}
+#endif
 }
 
 /*
@@ -104,10 +108,14 @@ static void AllocGeoBufferSet( geoBufferSet_t& gbs, const int vertexBytes, const
 {
 	gbs.vertexBuffer.AllocBufferObject( NULL, vertexBytes );
 	gbs.indexBuffer.AllocBufferObject( NULL, indexBytes );
+	
+#if !defined(USE_ANGLE)
 	if( jointBytes != 0 )
 	{
 		gbs.jointBuffer.AllocBufferObject( NULL, jointBytes / sizeof( idJointMat ) );
 	}
+#endif
+	
 	ClearGeoBufferSet( gbs );
 }
 
@@ -145,7 +153,10 @@ void idVertexCache::Shutdown()
 	{
 		frameData[i].vertexBuffer.FreeBufferObject();
 		frameData[i].indexBuffer.FreeBufferObject();
+		
+#if !defined(USE_ANGLE)
 		frameData[i].jointBuffer.FreeBufferObject();
+#endif
 	}
 }
 
@@ -214,6 +225,7 @@ vertCacheHandle_t idVertexCache::ActuallyAlloc( geoBufferSet_t& vcs, const void*
 			idLib::Error( "Out of vertex cache" );
 		}
 	}
+#if !defined(USE_ANGLE)
 	else if( type == CACHE_JOINT )
 	{
 		base = &vcs.mappedJointBase;
@@ -223,6 +235,7 @@ vertCacheHandle_t idVertexCache::ActuallyAlloc( geoBufferSet_t& vcs, const void*
 			idLib::Error( "Out of joint buffer cache" );
 		}
 	}
+#endif
 	else
 	{
 		assert( false );
@@ -302,6 +315,7 @@ bool idVertexCache::GetIndexBuffer( vertCacheHandle_t handle, idIndexBuffer* ib 
 idVertexCache::GetJointBuffer
 ==============
 */
+#if !defined(USE_ANGLE)
 bool idVertexCache::GetJointBuffer( vertCacheHandle_t handle, idJointBuffer* jb )
 {
 	const int isStatic = handle & VERTCACHE_STATIC;
@@ -321,6 +335,7 @@ bool idVertexCache::GetJointBuffer( vertCacheHandle_t handle, idJointBuffer* jb 
 	jb->Reference( frameData[drawListNum].jointBuffer, jointOffset, numJoints );
 	return true;
 }
+#endif
 
 /*
 ==============

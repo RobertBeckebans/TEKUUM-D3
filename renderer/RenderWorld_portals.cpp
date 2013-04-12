@@ -1165,6 +1165,7 @@ Debugging tool, won't work correctly with SMP or when mirrors are present
 */
 void idRenderWorldLocal::ShowPortals()
 {
+#if !defined(USE_ANGLE)
 	int			i, j;
 	portalArea_t*	area;
 	portal_t*	p;
@@ -1209,4 +1210,5 @@ void idRenderWorldLocal::ShowPortals()
 			glEnd();
 		}
 	}
+#endif
 }

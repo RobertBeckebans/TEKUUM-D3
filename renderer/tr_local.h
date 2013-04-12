@@ -863,6 +863,7 @@ extern glconfig_t			glConfig;		// outside of TR since it shouldn't be cleared du
 // cvars
 //
 extern idCVar r_useOpenGL32;
+extern idCVar r_useOpenGLES;
 extern idCVar r_debugContext;				// enable various levels of context debug
 extern idCVar r_glDriver;					// "opengl32", etc
 extern idCVar r_skipIntelWorkarounds;		// skip work arounds for Intel driver bugs

@@ -86,7 +86,16 @@ const int MAX_EXPRESSION_REGISTERS = 4096;
 
 // renderer
 // RB begin
-#if !defined(ID_TYPEINFO) && !defined(__ANDROID__)
+#if defined(USE_ANGLE)
+#include <GLES2/gl2.h>
+#include <GLES2/gl2ext.h>
+
+#define GL_CLAMP_TO_BORDER GL_CLAMP_TO_EDGE
+
+//#define glClearDepth glClearDepthf
+//#define glDepthRange glDepthRangef
+
+#elif !defined(ID_TYPEINFO) && !defined(__ANDROID__)
 #include "../libs/glew/include/GL/glew.h"
 //#include "../renderer/qgl.h"
 #endif

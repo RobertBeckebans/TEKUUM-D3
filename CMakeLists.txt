@@ -24,6 +24,9 @@ option(STANDALONE
 option(GLES1
 		"Only use OpenGL ES 1.0 functions" OFF)
 		
+option(ANGLE
+		"Only use OpenGL ES 2.0 functions through ANGLE" ON)
+		
 option(DEBUG_MEMORY
 		"Enables memory logging to file" OFF)
 
@@ -98,6 +101,7 @@ if(DEBUG_MEMORY)
 endif()
 
 add_subdirectory(idlib)
+add_subdirectory(libs)
 
 file(GLOB AAS_INCLUDES aas/*.h)
 file(GLOB AAS_SOURCES aas/*.cpp)
@@ -926,7 +930,7 @@ set(TEKUUM_INCLUDES
 			${PNG_INCLUDES}
 			${ETC1_INCLUDES}
 			${ZLIB_INCLUDES}
-			${GLEW_INCLUDES}
+			#${GLEW_INCLUDES}
 			${SOUND_INCLUDES}
 			${OGGVORBIS_INCLUDES}
 			${UI_INCLUDES}
@@ -944,7 +948,7 @@ set(TEKUUM_SOURCES
 			${PNG_SOURCES}
 			${ETC1_SOURCES}
 			${ZLIB_SOURCES}
-			${GLEW_SOURCES}
+			#${GLEW_SOURCES}
 			${FREETYPE_SOURCES}
 			${SOUND_SOURCES}
 			${OGGVORBIS_SOURCES}
@@ -956,6 +960,10 @@ add_definitions(-D__DOOM__
 				-DGLEW_STATIC
 				-DBUILD_FREETYPE
 				-DFT2_BUILD_LIBRARY)
+				
+if(ANGLE)
+	add_definitions(-DUSE_ANGLE)
+endif()
 				
 if(MONOLITH)
 	list(APPEND TEKUUM_INCLUDES
@@ -998,6 +1006,7 @@ include_directories(
 			#libs/openal/include
 			libs/glew/include
 			libs/freetype/include
+			libs/angle/include
 			libs/zlib)
 			
 link_directories(
@@ -1138,7 +1147,7 @@ if(MSVC)
 	list(REMOVE_DUPLICATES TEKUUM_SOURCES)
 	
 	set(TEKUUM_PRECOMPILED_SOURCES ${TEKUUM_SOURCES})
-	list(REMOVE_ITEM TEKUUM_PRECOMPILED_SOURCES ${JPEG_SOURCES} ${PNG_SOURCES} ${ETC1_SOURCES} ${ZLIB_SOURCES} ${GLEW_SOURCES} ${FREETYPE_SOURCES} ${OGGVORBIS_SOURCES})		
+	list(REMOVE_ITEM TEKUUM_PRECOMPILED_SOURCES ${JPEG_SOURCES} ${PNG_SOURCES} ${ETC1_SOURCES} ${ZLIB_SOURCES} ${FREETYPE_SOURCES} ${OGGVORBIS_SOURCES})		
 	list(REMOVE_ITEM TEKUUM_PRECOMPILED_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/game/gamesys/TypeInfo.cpp)
 	list(REMOVE_ITEM TEKUUM_PRECOMPILED_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/renderer/DXT/DXTDecoder.cpp)
 	list(REMOVE_ITEM TEKUUM_PRECOMPILED_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/renderer/DXT/DXTEncoder.cpp)
@@ -1193,11 +1202,13 @@ if(MSVC)
 	add_dependencies(Tekuum idlib)
 	target_link_libraries(Tekuum
 		idlib
+		libEGL
+		libGLESv2
 		${DirectX_LIBRARIES}
 		${QT_LIBRARIES}
 		#libcurl 
 		#openal32 
-		opengl32
+		#opengl32
 		glu32
 		dbghelp
 		eaxguid

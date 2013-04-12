@@ -149,6 +149,7 @@ GL_DepthBoundsTest
 */
 void GL_DepthBoundsTest( const float zmin, const float zmax )
 {
+#if !defined(USE_ANGLE)
 	if( !glConfig.depthBoundsTestAvailable || zmin > zmax )
 	{
 		return;
@@ -163,6 +164,7 @@ void GL_DepthBoundsTest( const float zmin, const float zmax )
 		glEnable( GL_DEPTH_BOUNDS_TEST_EXT );
 		glDepthBoundsEXT( zmin, zmax );
 	}
+#endif
 }
 
 /*
@@ -269,7 +271,11 @@ void GL_SetDefaultState()
 {
 	RENDERLOG_PRINTF( "--- GL_SetDefaultState ---\n" );
 	
+#if defined(USE_ANGLE)
+	glClearDepthf( 1.0f );
+#else
 	glClearDepth( 1.0f );
+#endif
 	
 	// make sure our GL state vector is set correctly
 	memset( &backEnd.glState, 0, sizeof( backEnd.glState ) );
@@ -286,8 +292,14 @@ void GL_SetDefaultState()
 	glDepthFunc( GL_LESS );
 	glDisable( GL_STENCIL_TEST );
 	glDisable( GL_POLYGON_OFFSET_FILL );
+	
+#if !defined(USE_ANGLE)
 	glDisable( GL_POLYGON_OFFSET_LINE );
+#endif
+	
+#if !defined(USE_ANGLE)
 	glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+#endif
 	
 	// These should never be changed
 	// DG: deprecated in opengl 3.2 and not needed because we don't do fixed function pipeline
@@ -296,8 +308,11 @@ void GL_SetDefaultState()
 	glEnable( GL_DEPTH_TEST );
 	glEnable( GL_BLEND );
 	glEnable( GL_SCISSOR_TEST );
+	
+#if !defined(USE_ANGLE)
 	glDrawBuffer( GL_BACK );
 	glReadBuffer( GL_BACK );
+#endif
 	
 	if( r_useScissor.GetBool() )
 	{
@@ -461,6 +476,7 @@ void GL_State( uint64 stateBits, bool forceGlState )
 	//
 	// fill/line mode
 	//
+#if !defined(USE_ANGLE)
 	if( diff & GLS_POLYMODE_LINE )
 	{
 		if( stateBits & GLS_POLYMODE_LINE )
@@ -472,6 +488,7 @@ void GL_State( uint64 stateBits, bool forceGlState )
 			glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
 		}
 	}
+#endif
 	
 	//
 	// polygon offset
@@ -482,12 +499,16 @@ void GL_State( uint64 stateBits, bool forceGlState )
 		{
 			glPolygonOffset( backEnd.glState.polyOfsScale, backEnd.glState.polyOfsBias );
 			glEnable( GL_POLYGON_OFFSET_FILL );
+#if !defined(USE_ANGLE)
 			glEnable( GL_POLYGON_OFFSET_LINE );
+#endif
 		}
 		else
 		{
 			glDisable( GL_POLYGON_OFFSET_FILL );
+#if !defined(USE_ANGLE)
 			glDisable( GL_POLYGON_OFFSET_LINE );
+#endif
 		}
 	}
 	

@@ -132,6 +132,7 @@ struct glconfig_t
 	
 	// RB begin
 	bool				gremedyStringMarkerAvailable;
+	bool				vertexHalfFloatAvailable;
 	// RB end
 	
 	stereo3DMode_t		stereo3Dmode;
