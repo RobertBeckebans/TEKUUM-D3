@@ -265,7 +265,7 @@ bool validReadFormatType(GLenum format, GLenum type)
 extern "C"
 {
 
-void __stdcall glActiveTexture(GLenum texture)
+void KHRONOS_APIENTRY glActiveTexture(GLenum texture)
 {
     EVENT("(GLenum texture = 0x%X)", texture);
 
@@ -289,7 +289,7 @@ void __stdcall glActiveTexture(GLenum texture)
     }
 }
 
-void __stdcall glAttachShader(GLuint program, GLuint shader)
+void KHRONOS_APIENTRY glAttachShader(GLuint program, GLuint shader)
 {
     EVENT("(GLuint program = %d, GLuint shader = %d)", program, shader);
 
@@ -338,7 +338,7 @@ void __stdcall glAttachShader(GLuint program, GLuint shader)
     }
 }
 
-void __stdcall glBeginQueryEXT(GLenum target, GLuint id)
+void KHRONOS_APIENTRY glBeginQueryEXT(GLenum target, GLuint id)
 {
     EVENT("(GLenum target = 0x%X, GLuint %d)", target, id);
 
@@ -371,7 +371,7 @@ void __stdcall glBeginQueryEXT(GLenum target, GLuint id)
     }
 }
 
-void __stdcall glBindAttribLocation(GLuint program, GLuint index, const GLchar* name)
+void KHRONOS_APIENTRY glBindAttribLocation(GLuint program, GLuint index, const GLchar* name)
 {
     EVENT("(GLuint program = %d, GLuint index = %d, const GLchar* name = 0x%0.8p)", program, index, name);
 
@@ -414,7 +414,7 @@ void __stdcall glBindAttribLocation(GLuint program, GLuint index, const GLchar* 
     }
 }
 
-void __stdcall glBindBuffer(GLenum target, GLuint buffer)
+void KHRONOS_APIENTRY glBindBuffer(GLenum target, GLuint buffer)
 {
     EVENT("(GLenum target = 0x%X, GLuint buffer = %d)", target, buffer);
 
@@ -443,7 +443,7 @@ void __stdcall glBindBuffer(GLenum target, GLuint buffer)
     }
 }
 
-void __stdcall glBindFramebuffer(GLenum target, GLuint framebuffer)
+void KHRONOS_APIENTRY glBindFramebuffer(GLenum target, GLuint framebuffer)
 {
     EVENT("(GLenum target = 0x%X, GLuint framebuffer = %d)", target, framebuffer);
 
@@ -475,7 +475,7 @@ void __stdcall glBindFramebuffer(GLenum target, GLuint framebuffer)
     }
 }
 
-void __stdcall glBindRenderbuffer(GLenum target, GLuint renderbuffer)
+void KHRONOS_APIENTRY glBindRenderbuffer(GLenum target, GLuint renderbuffer)
 {
     EVENT("(GLenum target = 0x%X, GLuint renderbuffer = %d)", target, renderbuffer);
 
@@ -499,7 +499,7 @@ void __stdcall glBindRenderbuffer(GLenum target, GLuint renderbuffer)
     }
 }
 
-void __stdcall glBindTexture(GLenum target, GLuint texture)
+void KHRONOS_APIENTRY glBindTexture(GLenum target, GLuint texture)
 {
     EVENT("(GLenum target = 0x%X, GLuint texture = %d)", target, texture);
 
@@ -535,7 +535,7 @@ void __stdcall glBindTexture(GLenum target, GLuint texture)
     }
 }
 
-void __stdcall glBlendColor(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha)
+void KHRONOS_APIENTRY glBlendColor(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha)
 {
     EVENT("(GLclampf red = %f, GLclampf green = %f, GLclampf blue = %f, GLclampf alpha = %f)",
           red, green, blue, alpha);
@@ -555,12 +555,12 @@ void __stdcall glBlendColor(GLclampf red, GLclampf green, GLclampf blue, GLclamp
     }
 }
 
-void __stdcall glBlendEquation(GLenum mode)
+void KHRONOS_APIENTRY glBlendEquation(GLenum mode)
 {
     glBlendEquationSeparate(mode, mode);
 }
 
-void __stdcall glBlendEquationSeparate(GLenum modeRGB, GLenum modeAlpha)
+void KHRONOS_APIENTRY glBlendEquationSeparate(GLenum modeRGB, GLenum modeAlpha)
 {
     EVENT("(GLenum modeRGB = 0x%X, GLenum modeAlpha = 0x%X)", modeRGB, modeAlpha);
 
@@ -599,12 +599,12 @@ void __stdcall glBlendEquationSeparate(GLenum modeRGB, GLenum modeAlpha)
     }
 }
 
-void __stdcall glBlendFunc(GLenum sfactor, GLenum dfactor)
+void KHRONOS_APIENTRY glBlendFunc(GLenum sfactor, GLenum dfactor)
 {
     glBlendFuncSeparate(sfactor, dfactor, sfactor, dfactor);
 }
 
-void __stdcall glBlendFuncSeparate(GLenum srcRGB, GLenum dstRGB, GLenum srcAlpha, GLenum dstAlpha)
+void KHRONOS_APIENTRY glBlendFuncSeparate(GLenum srcRGB, GLenum dstRGB, GLenum srcAlpha, GLenum dstAlpha)
 {
     EVENT("(GLenum srcRGB = 0x%X, GLenum dstRGB = 0x%X, GLenum srcAlpha = 0x%X, GLenum dstAlpha = 0x%X)",
           srcRGB, dstRGB, srcAlpha, dstAlpha);
@@ -722,7 +722,7 @@ void __stdcall glBlendFuncSeparate(GLenum srcRGB, GLenum dstRGB, GLenum srcAlpha
     }
 }
 
-void __stdcall glBufferData(GLenum target, GLsizeiptr size, const GLvoid* data, GLenum usage)
+void KHRONOS_APIENTRY glBufferData(GLenum target, GLsizeiptr size, const GLvoid* data, GLenum usage)
 {
     EVENT("(GLenum target = 0x%X, GLsizeiptr size = %d, const GLvoid* data = 0x%0.8p, GLenum usage = %d)",
           target, size, data, usage);
@@ -776,7 +776,7 @@ void __stdcall glBufferData(GLenum target, GLsizeiptr size, const GLvoid* data, 
     }
 }
 
-void __stdcall glBufferSubData(GLenum target, GLintptr offset, GLsizeiptr size, const GLvoid* data)
+void KHRONOS_APIENTRY glBufferSubData(GLenum target, GLintptr offset, GLsizeiptr size, const GLvoid* data)
 {
     EVENT("(GLenum target = 0x%X, GLintptr offset = %d, GLsizeiptr size = %d, const GLvoid* data = 0x%0.8p)",
           target, offset, size, data);
@@ -830,7 +830,7 @@ void __stdcall glBufferSubData(GLenum target, GLintptr offset, GLsizeiptr size, 
     }
 }
 
-GLenum __stdcall glCheckFramebufferStatus(GLenum target)
+GLenum KHRONOS_APIENTRY glCheckFramebufferStatus(GLenum target)
 {
     EVENT("(GLenum target = 0x%X)", target);
 
@@ -866,7 +866,7 @@ GLenum __stdcall glCheckFramebufferStatus(GLenum target)
     return 0;
 }
 
-void __stdcall glClear(GLbitfield mask)
+void KHRONOS_APIENTRY glClear(GLbitfield mask)
 {
     EVENT("(GLbitfield mask = %X)", mask);
 
@@ -885,7 +885,7 @@ void __stdcall glClear(GLbitfield mask)
     }
 }
 
-void __stdcall glClearColor(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha)
+void KHRONOS_APIENTRY glClearColor(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha)
 {
     EVENT("(GLclampf red = %f, GLclampf green = %f, GLclampf blue = %f, GLclampf alpha = %f)",
           red, green, blue, alpha);
@@ -905,7 +905,7 @@ void __stdcall glClearColor(GLclampf red, GLclampf green, GLclampf blue, GLclamp
     }
 }
 
-void __stdcall glClearDepthf(GLclampf depth)
+void KHRONOS_APIENTRY glClearDepthf(GLclampf depth)
 {
     EVENT("(GLclampf depth = %f)", depth);
 
@@ -924,7 +924,7 @@ void __stdcall glClearDepthf(GLclampf depth)
     }
 }
 
-void __stdcall glClearStencil(GLint s)
+void KHRONOS_APIENTRY glClearStencil(GLint s)
 {
     EVENT("(GLint s = %d)", s);
 
@@ -943,7 +943,7 @@ void __stdcall glClearStencil(GLint s)
     }
 }
 
-void __stdcall glColorMask(GLboolean red, GLboolean green, GLboolean blue, GLboolean alpha)
+void KHRONOS_APIENTRY glColorMask(GLboolean red, GLboolean green, GLboolean blue, GLboolean alpha)
 {
     EVENT("(GLboolean red = %d, GLboolean green = %d, GLboolean blue = %d, GLboolean alpha = %d)",
           red, green, blue, alpha);
@@ -963,7 +963,7 @@ void __stdcall glColorMask(GLboolean red, GLboolean green, GLboolean blue, GLboo
     }
 }
 
-void __stdcall glCompileShader(GLuint shader)
+void KHRONOS_APIENTRY glCompileShader(GLuint shader)
 {
     EVENT("(GLuint shader = %d)", shader);
 
@@ -996,7 +996,7 @@ void __stdcall glCompileShader(GLuint shader)
     }
 }
 
-void __stdcall glCompressedTexImage2D(GLenum target, GLint level, GLenum internalformat, GLsizei width, GLsizei height, 
+void KHRONOS_APIENTRY glCompressedTexImage2D(GLenum target, GLint level, GLenum internalformat, GLsizei width, GLsizei height, 
                                       GLint border, GLsizei imageSize, const GLvoid* data)
 {
     EVENT("(GLenum target = 0x%X, GLint level = %d, GLenum internalformat = 0x%X, GLsizei width = %d, " 
@@ -1145,7 +1145,7 @@ void __stdcall glCompressedTexImage2D(GLenum target, GLint level, GLenum interna
     }
 }
 
-void __stdcall glCompressedTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height,
+void KHRONOS_APIENTRY glCompressedTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height,
                                          GLenum format, GLsizei imageSize, const GLvoid* data)
 {
     EVENT("(GLenum target = 0x%X, GLint level = %d, GLint xoffset = %d, GLint yoffset = %d, "
@@ -1252,7 +1252,7 @@ void __stdcall glCompressedTexSubImage2D(GLenum target, GLint level, GLint xoffs
     }
 }
 
-void __stdcall glCopyTexImage2D(GLenum target, GLint level, GLenum internalformat, GLint x, GLint y, GLsizei width, GLsizei height, GLint border)
+void KHRONOS_APIENTRY glCopyTexImage2D(GLenum target, GLint level, GLenum internalformat, GLint x, GLint y, GLsizei width, GLsizei height, GLint border)
 {
     EVENT("(GLenum target = 0x%X, GLint level = %d, GLenum internalformat = 0x%X, "
           "GLint x = %d, GLint y = %d, GLsizei width = %d, GLsizei height = %d, GLint border = %d)",
@@ -1445,7 +1445,7 @@ void __stdcall glCopyTexImage2D(GLenum target, GLint level, GLenum internalforma
     }
 }
 
-void __stdcall glCopyTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint x, GLint y, GLsizei width, GLsizei height)
+void KHRONOS_APIENTRY glCopyTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint x, GLint y, GLsizei width, GLsizei height)
 {
     EVENT("(GLenum target = 0x%X, GLint level = %d, GLint xoffset = %d, GLint yoffset = %d, "
           "GLint x = %d, GLint y = %d, GLsizei width = %d, GLsizei height = %d)",
@@ -1577,7 +1577,7 @@ void __stdcall glCopyTexSubImage2D(GLenum target, GLint level, GLint xoffset, GL
     }
 }
 
-GLuint __stdcall glCreateProgram(void)
+GLuint KHRONOS_APIENTRY glCreateProgram(void)
 {
     EVENT("()");
 
@@ -1598,7 +1598,7 @@ GLuint __stdcall glCreateProgram(void)
     return 0;
 }
 
-GLuint __stdcall glCreateShader(GLenum type)
+GLuint KHRONOS_APIENTRY glCreateShader(GLenum type)
 {
     EVENT("(GLenum type = 0x%X)", type);
 
@@ -1626,7 +1626,7 @@ GLuint __stdcall glCreateShader(GLenum type)
     return 0;
 }
 
-void __stdcall glCullFace(GLenum mode)
+void KHRONOS_APIENTRY glCullFace(GLenum mode)
 {
     EVENT("(GLenum mode = 0x%X)", mode);
 
@@ -1656,7 +1656,7 @@ void __stdcall glCullFace(GLenum mode)
     }
 }
 
-void __stdcall glDeleteBuffers(GLsizei n, const GLuint* buffers)
+void KHRONOS_APIENTRY glDeleteBuffers(GLsizei n, const GLuint* buffers)
 {
     EVENT("(GLsizei n = %d, const GLuint* buffers = 0x%0.8p)", n, buffers);
 
@@ -1683,7 +1683,7 @@ void __stdcall glDeleteBuffers(GLsizei n, const GLuint* buffers)
     }
 }
 
-void __stdcall glDeleteFencesNV(GLsizei n, const GLuint* fences)
+void KHRONOS_APIENTRY glDeleteFencesNV(GLsizei n, const GLuint* fences)
 {
     EVENT("(GLsizei n = %d, const GLuint* fences = 0x%0.8p)", n, fences);
 
@@ -1710,7 +1710,7 @@ void __stdcall glDeleteFencesNV(GLsizei n, const GLuint* fences)
     }
 }
 
-void __stdcall glDeleteFramebuffers(GLsizei n, const GLuint* framebuffers)
+void KHRONOS_APIENTRY glDeleteFramebuffers(GLsizei n, const GLuint* framebuffers)
 {
     EVENT("(GLsizei n = %d, const GLuint* framebuffers = 0x%0.8p)", n, framebuffers);
 
@@ -1740,7 +1740,7 @@ void __stdcall glDeleteFramebuffers(GLsizei n, const GLuint* framebuffers)
     }
 }
 
-void __stdcall glDeleteProgram(GLuint program)
+void KHRONOS_APIENTRY glDeleteProgram(GLuint program)
 {
     EVENT("(GLuint program = %d)", program);
 
@@ -1776,7 +1776,7 @@ void __stdcall glDeleteProgram(GLuint program)
     }
 }
 
-void __stdcall glDeleteQueriesEXT(GLsizei n, const GLuint *ids)
+void KHRONOS_APIENTRY glDeleteQueriesEXT(GLsizei n, const GLuint *ids)
 {
     EVENT("(GLsizei n = %d, const GLuint *ids = 0x%0.8p)", n, ids);
 
@@ -1803,7 +1803,7 @@ void __stdcall glDeleteQueriesEXT(GLsizei n, const GLuint *ids)
     }
 }
 
-void __stdcall glDeleteRenderbuffers(GLsizei n, const GLuint* renderbuffers)
+void KHRONOS_APIENTRY glDeleteRenderbuffers(GLsizei n, const GLuint* renderbuffers)
 {
     EVENT("(GLsizei n = %d, const GLuint* renderbuffers = 0x%0.8p)", n, renderbuffers);
 
@@ -1830,7 +1830,7 @@ void __stdcall glDeleteRenderbuffers(GLsizei n, const GLuint* renderbuffers)
     }
 }
 
-void __stdcall glDeleteShader(GLuint shader)
+void KHRONOS_APIENTRY glDeleteShader(GLuint shader)
 {
     EVENT("(GLuint shader = %d)", shader);
 
@@ -1866,7 +1866,7 @@ void __stdcall glDeleteShader(GLuint shader)
     }
 }
 
-void __stdcall glDeleteTextures(GLsizei n, const GLuint* textures)
+void KHRONOS_APIENTRY glDeleteTextures(GLsizei n, const GLuint* textures)
 {
     EVENT("(GLsizei n = %d, const GLuint* textures = 0x%0.8p)", n, textures);
 
@@ -1896,7 +1896,7 @@ void __stdcall glDeleteTextures(GLsizei n, const GLuint* textures)
     }
 }
 
-void __stdcall glDepthFunc(GLenum func)
+void KHRONOS_APIENTRY glDepthFunc(GLenum func)
 {
     EVENT("(GLenum func = 0x%X)", func);
 
@@ -1930,7 +1930,7 @@ void __stdcall glDepthFunc(GLenum func)
     }
 }
 
-void __stdcall glDepthMask(GLboolean flag)
+void KHRONOS_APIENTRY glDepthMask(GLboolean flag)
 {
     EVENT("(GLboolean flag = %d)", flag);
 
@@ -1949,7 +1949,7 @@ void __stdcall glDepthMask(GLboolean flag)
     }
 }
 
-void __stdcall glDepthRangef(GLclampf zNear, GLclampf zFar)
+void KHRONOS_APIENTRY glDepthRangef(GLclampf zNear, GLclampf zFar)
 {
     EVENT("(GLclampf zNear = %f, GLclampf zFar = %f)", zNear, zFar);
 
@@ -1968,7 +1968,7 @@ void __stdcall glDepthRangef(GLclampf zNear, GLclampf zFar)
     }
 }
 
-void __stdcall glDetachShader(GLuint program, GLuint shader)
+void KHRONOS_APIENTRY glDetachShader(GLuint program, GLuint shader)
 {
     EVENT("(GLuint program = %d, GLuint shader = %d)", program, shader);
 
@@ -2021,7 +2021,7 @@ void __stdcall glDetachShader(GLuint program, GLuint shader)
     }
 }
 
-void __stdcall glDisable(GLenum cap)
+void KHRONOS_APIENTRY glDisable(GLenum cap)
 {
     EVENT("(GLenum cap = 0x%X)", cap);
 
@@ -2053,7 +2053,7 @@ void __stdcall glDisable(GLenum cap)
     }
 }
 
-void __stdcall glDisableVertexAttribArray(GLuint index)
+void KHRONOS_APIENTRY glDisableVertexAttribArray(GLuint index)
 {
     EVENT("(GLuint index = %d)", index);
 
@@ -2077,7 +2077,7 @@ void __stdcall glDisableVertexAttribArray(GLuint index)
     }
 }
 
-void __stdcall glDrawArrays(GLenum mode, GLint first, GLsizei count)
+void KHRONOS_APIENTRY glDrawArrays(GLenum mode, GLint first, GLsizei count)
 {
     EVENT("(GLenum mode = 0x%X, GLint first = %d, GLsizei count = %d)", mode, first, count);
 
@@ -2101,7 +2101,7 @@ void __stdcall glDrawArrays(GLenum mode, GLint first, GLsizei count)
     }
 }
 
-void __stdcall glDrawArraysInstancedANGLE(GLenum mode, GLint first, GLsizei count, GLsizei primcount)
+void KHRONOS_APIENTRY glDrawArraysInstancedANGLE(GLenum mode, GLint first, GLsizei count, GLsizei primcount)
 {
     EVENT("(GLenum mode = 0x%X, GLint first = %d, GLsizei count = %d, GLsizei primcount = %d)", mode, first, count, primcount);
 
@@ -2128,7 +2128,7 @@ void __stdcall glDrawArraysInstancedANGLE(GLenum mode, GLint first, GLsizei coun
     }
 }
 
-void __stdcall glDrawElements(GLenum mode, GLsizei count, GLenum type, const GLvoid* indices)
+void KHRONOS_APIENTRY glDrawElements(GLenum mode, GLsizei count, GLenum type, const GLvoid* indices)
 {
     EVENT("(GLenum mode = 0x%X, GLsizei count = %d, GLenum type = 0x%X, const GLvoid* indices = 0x%0.8p)",
           mode, count, type, indices);
@@ -2168,7 +2168,7 @@ void __stdcall glDrawElements(GLenum mode, GLsizei count, GLenum type, const GLv
     }
 }
 
-void __stdcall glDrawElementsInstancedANGLE(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices, GLsizei primcount)
+void KHRONOS_APIENTRY glDrawElementsInstancedANGLE(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices, GLsizei primcount)
 {
     EVENT("(GLenum mode = 0x%X, GLsizei count = %d, GLenum type = 0x%X, const GLvoid* indices = 0x%0.8p, GLsizei primcount = %d)",
           mode, count, type, indices, primcount);
@@ -2211,7 +2211,7 @@ void __stdcall glDrawElementsInstancedANGLE(GLenum mode, GLsizei count, GLenum t
     }
 }
 
-void __stdcall glEnable(GLenum cap)
+void KHRONOS_APIENTRY glEnable(GLenum cap)
 {
     EVENT("(GLenum cap = 0x%X)", cap);
 
@@ -2243,7 +2243,7 @@ void __stdcall glEnable(GLenum cap)
     }
 }
 
-void __stdcall glEnableVertexAttribArray(GLuint index)
+void KHRONOS_APIENTRY glEnableVertexAttribArray(GLuint index)
 {
     EVENT("(GLuint index = %d)", index);
 
@@ -2267,7 +2267,7 @@ void __stdcall glEnableVertexAttribArray(GLuint index)
     }
 }
 
-void __stdcall glEndQueryEXT(GLenum target)
+void KHRONOS_APIENTRY glEndQueryEXT(GLenum target)
 {
     EVENT("GLenum target = 0x%X)", target);
 
@@ -2295,7 +2295,7 @@ void __stdcall glEndQueryEXT(GLenum target)
     }
 }
 
-void __stdcall glFinishFenceNV(GLuint fence)
+void KHRONOS_APIENTRY glFinishFenceNV(GLuint fence)
 {
     EVENT("(GLuint fence = %d)", fence);
 
@@ -2321,7 +2321,7 @@ void __stdcall glFinishFenceNV(GLuint fence)
     }
 }
 
-void __stdcall glFinish(void)
+void KHRONOS_APIENTRY glFinish(void)
 {
     EVENT("()");
 
@@ -2340,7 +2340,7 @@ void __stdcall glFinish(void)
     }
 }
 
-void __stdcall glFlush(void)
+void KHRONOS_APIENTRY glFlush(void)
 {
     EVENT("()");
 
@@ -2359,7 +2359,7 @@ void __stdcall glFlush(void)
     }
 }
 
-void __stdcall glFramebufferRenderbuffer(GLenum target, GLenum attachment, GLenum renderbuffertarget, GLuint renderbuffer)
+void KHRONOS_APIENTRY glFramebufferRenderbuffer(GLenum target, GLenum attachment, GLenum renderbuffertarget, GLuint renderbuffer)
 {
     EVENT("(GLenum target = 0x%X, GLenum attachment = 0x%X, GLenum renderbuffertarget = 0x%X, "
           "GLuint renderbuffer = %d)", target, attachment, renderbuffertarget, renderbuffer);
@@ -2416,7 +2416,7 @@ void __stdcall glFramebufferRenderbuffer(GLenum target, GLenum attachment, GLenu
     }
 }
 
-void __stdcall glFramebufferTexture2D(GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level)
+void KHRONOS_APIENTRY glFramebufferTexture2D(GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level)
 {
     EVENT("(GLenum target = 0x%X, GLenum attachment = 0x%X, GLenum textarget = 0x%X, "
           "GLuint texture = %d, GLint level = %d)", target, attachment, textarget, texture, level);
@@ -2532,7 +2532,7 @@ void __stdcall glFramebufferTexture2D(GLenum target, GLenum attachment, GLenum t
     }
 }
 
-void __stdcall glFrontFace(GLenum mode)
+void KHRONOS_APIENTRY glFrontFace(GLenum mode)
 {
     EVENT("(GLenum mode = 0x%X)", mode);
 
@@ -2561,7 +2561,7 @@ void __stdcall glFrontFace(GLenum mode)
     }
 }
 
-void __stdcall glGenBuffers(GLsizei n, GLuint* buffers)
+void KHRONOS_APIENTRY glGenBuffers(GLsizei n, GLuint* buffers)
 {
     EVENT("(GLsizei n = %d, GLuint* buffers = 0x%0.8p)", n, buffers);
 
@@ -2588,7 +2588,7 @@ void __stdcall glGenBuffers(GLsizei n, GLuint* buffers)
     }
 }
 
-void __stdcall glGenerateMipmap(GLenum target)
+void KHRONOS_APIENTRY glGenerateMipmap(GLenum target)
 {
     EVENT("(GLenum target = 0x%X)", target);
 
@@ -2641,7 +2641,7 @@ void __stdcall glGenerateMipmap(GLenum target)
     }
 }
 
-void __stdcall glGenFencesNV(GLsizei n, GLuint* fences)
+void KHRONOS_APIENTRY glGenFencesNV(GLsizei n, GLuint* fences)
 {
     EVENT("(GLsizei n = %d, GLuint* fences = 0x%0.8p)", n, fences);
 
@@ -2668,7 +2668,7 @@ void __stdcall glGenFencesNV(GLsizei n, GLuint* fences)
     }
 }
 
-void __stdcall glGenFramebuffers(GLsizei n, GLuint* framebuffers)
+void KHRONOS_APIENTRY glGenFramebuffers(GLsizei n, GLuint* framebuffers)
 {
     EVENT("(GLsizei n = %d, GLuint* framebuffers = 0x%0.8p)", n, framebuffers);
 
@@ -2695,7 +2695,7 @@ void __stdcall glGenFramebuffers(GLsizei n, GLuint* framebuffers)
     }
 }
 
-void __stdcall glGenQueriesEXT(GLsizei n, GLuint* ids)
+void KHRONOS_APIENTRY glGenQueriesEXT(GLsizei n, GLuint* ids)
 {
     EVENT("(GLsizei n = %d, GLuint* ids = 0x%0.8p)", n, ids);
 
@@ -2722,7 +2722,7 @@ void __stdcall glGenQueriesEXT(GLsizei n, GLuint* ids)
     }
 }
 
-void __stdcall glGenRenderbuffers(GLsizei n, GLuint* renderbuffers)
+void KHRONOS_APIENTRY glGenRenderbuffers(GLsizei n, GLuint* renderbuffers)
 {
     EVENT("(GLsizei n = %d, GLuint* renderbuffers = 0x%0.8p)", n, renderbuffers);
 
@@ -2749,7 +2749,7 @@ void __stdcall glGenRenderbuffers(GLsizei n, GLuint* renderbuffers)
     }
 }
 
-void __stdcall glGenTextures(GLsizei n, GLuint* textures)
+void KHRONOS_APIENTRY glGenTextures(GLsizei n, GLuint* textures)
 {
     EVENT("(GLsizei n = %d, GLuint* textures =  0x%0.8p)", n, textures);
 
@@ -2776,7 +2776,7 @@ void __stdcall glGenTextures(GLsizei n, GLuint* textures)
     }
 }
 
-void __stdcall glGetActiveAttrib(GLuint program, GLuint index, GLsizei bufsize, GLsizei *length, GLint *size, GLenum *type, GLchar *name)
+void KHRONOS_APIENTRY glGetActiveAttrib(GLuint program, GLuint index, GLsizei bufsize, GLsizei *length, GLint *size, GLenum *type, GLchar *name)
 {
     EVENT("(GLuint program = %d, GLuint index = %d, GLsizei bufsize = %d, GLsizei *length = 0x%0.8p, "
           "GLint *size = 0x%0.8p, GLenum *type = %0.8p, GLchar *name = %0.8p)",
@@ -2821,7 +2821,7 @@ void __stdcall glGetActiveAttrib(GLuint program, GLuint index, GLsizei bufsize, 
     }
 }
 
-void __stdcall glGetActiveUniform(GLuint program, GLuint index, GLsizei bufsize, GLsizei* length, GLint* size, GLenum* type, GLchar* name)
+void KHRONOS_APIENTRY glGetActiveUniform(GLuint program, GLuint index, GLsizei bufsize, GLsizei* length, GLint* size, GLenum* type, GLchar* name)
 {
     EVENT("(GLuint program = %d, GLuint index = %d, GLsizei bufsize = %d, "
           "GLsizei* length = 0x%0.8p, GLint* size = 0x%0.8p, GLenum* type = 0x%0.8p, GLchar* name = 0x%0.8p)",
@@ -2866,7 +2866,7 @@ void __stdcall glGetActiveUniform(GLuint program, GLuint index, GLsizei bufsize,
     }
 }
 
-void __stdcall glGetAttachedShaders(GLuint program, GLsizei maxcount, GLsizei* count, GLuint* shaders)
+void KHRONOS_APIENTRY glGetAttachedShaders(GLuint program, GLsizei maxcount, GLsizei* count, GLuint* shaders)
 {
     EVENT("(GLuint program = %d, GLsizei maxcount = %d, GLsizei* count = 0x%0.8p, GLuint* shaders = 0x%0.8p)",
           program, maxcount, count, shaders);
@@ -2905,7 +2905,7 @@ void __stdcall glGetAttachedShaders(GLuint program, GLsizei maxcount, GLsizei* c
     }
 }
 
-int __stdcall glGetAttribLocation(GLuint program, const GLchar* name)
+int KHRONOS_APIENTRY glGetAttribLocation(GLuint program, const GLchar* name)
 {
     EVENT("(GLuint program = %d, const GLchar* name = %s)", program, name);
 
@@ -2947,7 +2947,7 @@ int __stdcall glGetAttribLocation(GLuint program, const GLchar* name)
     return -1;
 }
 
-void __stdcall glGetBooleanv(GLenum pname, GLboolean* params)
+void KHRONOS_APIENTRY glGetBooleanv(GLenum pname, GLboolean* params)
 {
     EVENT("(GLenum pname = 0x%X, GLboolean* params = 0x%0.8p)",  pname, params);
 
@@ -3010,7 +3010,7 @@ void __stdcall glGetBooleanv(GLenum pname, GLboolean* params)
     }
 }
 
-void __stdcall glGetBufferParameteriv(GLenum target, GLenum pname, GLint* params)
+void KHRONOS_APIENTRY glGetBufferParameteriv(GLenum target, GLenum pname, GLint* params)
 {
     EVENT("(GLenum target = 0x%X, GLenum pname = 0x%X, GLint* params = 0x%0.8p)", target, pname, params);
 
@@ -3057,7 +3057,7 @@ void __stdcall glGetBufferParameteriv(GLenum target, GLenum pname, GLint* params
     }
 }
 
-GLenum __stdcall glGetError(void)
+GLenum KHRONOS_APIENTRY glGetError(void)
 {
     EVENT("()");
 
@@ -3071,7 +3071,7 @@ GLenum __stdcall glGetError(void)
     return GL_NO_ERROR;
 }
 
-void __stdcall glGetFenceivNV(GLuint fence, GLenum pname, GLint *params)
+void KHRONOS_APIENTRY glGetFenceivNV(GLuint fence, GLenum pname, GLint *params)
 {
     EVENT("(GLuint fence = %d, GLenum pname = 0x%X, GLint *params = 0x%0.8p)", fence, pname, params);
 
@@ -3098,7 +3098,7 @@ void __stdcall glGetFenceivNV(GLuint fence, GLenum pname, GLint *params)
     }
 }
 
-void __stdcall glGetFloatv(GLenum pname, GLfloat* params)
+void KHRONOS_APIENTRY glGetFloatv(GLenum pname, GLfloat* params)
 {
     EVENT("(GLenum pname = 0x%X, GLfloat* params = 0x%0.8p)", pname, params);
 
@@ -3158,7 +3158,7 @@ void __stdcall glGetFloatv(GLenum pname, GLfloat* params)
     }
 }
 
-void __stdcall glGetFramebufferAttachmentParameteriv(GLenum target, GLenum attachment, GLenum pname, GLint* params)
+void KHRONOS_APIENTRY glGetFramebufferAttachmentParameteriv(GLenum target, GLenum attachment, GLenum pname, GLint* params)
 {
     EVENT("(GLenum target = 0x%X, GLenum attachment = 0x%X, GLenum pname = 0x%X, GLint* params = 0x%0.8p)",
           target, attachment, pname, params);
@@ -3281,7 +3281,7 @@ void __stdcall glGetFramebufferAttachmentParameteriv(GLenum target, GLenum attac
     }
 }
 
-GLenum __stdcall glGetGraphicsResetStatusEXT(void)
+GLenum KHRONOS_APIENTRY glGetGraphicsResetStatusEXT(void)
 {
     EVENT("()");
 
@@ -3302,7 +3302,7 @@ GLenum __stdcall glGetGraphicsResetStatusEXT(void)
     }
 }
 
-void __stdcall glGetIntegerv(GLenum pname, GLint* params)
+void KHRONOS_APIENTRY glGetIntegerv(GLenum pname, GLint* params)
 {
     EVENT("(GLenum pname = 0x%X, GLint* params = 0x%0.8p)", pname, params);
 
@@ -3367,7 +3367,7 @@ void __stdcall glGetIntegerv(GLenum pname, GLint* params)
     }
 }
 
-void __stdcall glGetProgramiv(GLuint program, GLenum pname, GLint* params)
+void KHRONOS_APIENTRY glGetProgramiv(GLuint program, GLenum pname, GLint* params)
 {
     EVENT("(GLuint program = %d, GLenum pname = %d, GLint* params = 0x%0.8p)", program, pname, params);
 
@@ -3427,7 +3427,7 @@ void __stdcall glGetProgramiv(GLuint program, GLenum pname, GLint* params)
     }
 }
 
-void __stdcall glGetProgramInfoLog(GLuint program, GLsizei bufsize, GLsizei* length, GLchar* infolog)
+void KHRONOS_APIENTRY glGetProgramInfoLog(GLuint program, GLsizei bufsize, GLsizei* length, GLchar* infolog)
 {
     EVENT("(GLuint program = %d, GLsizei bufsize = %d, GLsizei* length = 0x%0.8p, GLchar* infolog = 0x%0.8p)",
           program, bufsize, length, infolog);
@@ -3459,7 +3459,7 @@ void __stdcall glGetProgramInfoLog(GLuint program, GLsizei bufsize, GLsizei* len
     }
 }
 
-void __stdcall glGetQueryivEXT(GLenum target, GLenum pname, GLint *params)
+void KHRONOS_APIENTRY glGetQueryivEXT(GLenum target, GLenum pname, GLint *params)
 {
     EVENT("GLenum target = 0x%X, GLenum pname = 0x%X, GLint *params = 0x%0.8p)", target, pname, params);
 
@@ -3486,7 +3486,7 @@ void __stdcall glGetQueryivEXT(GLenum target, GLenum pname, GLint *params)
     }
 }
 
-void __stdcall glGetQueryObjectuivEXT(GLuint id, GLenum pname, GLuint *params)
+void KHRONOS_APIENTRY glGetQueryObjectuivEXT(GLuint id, GLenum pname, GLuint *params)
 {
     EVENT("(GLuint id = %d, GLenum pname = 0x%X, GLuint *params = 0x%0.8p)", id, pname, params);
 
@@ -3535,7 +3535,7 @@ void __stdcall glGetQueryObjectuivEXT(GLuint id, GLenum pname, GLuint *params)
     }
 }
 
-void __stdcall glGetRenderbufferParameteriv(GLenum target, GLenum pname, GLint* params)
+void KHRONOS_APIENTRY glGetRenderbufferParameteriv(GLenum target, GLenum pname, GLint* params)
 {
     EVENT("(GLenum target = 0x%X, GLenum pname = 0x%X, GLint* params = 0x%0.8p)", target, pname, params);
 
@@ -3589,7 +3589,7 @@ void __stdcall glGetRenderbufferParameteriv(GLenum target, GLenum pname, GLint* 
     }
 }
 
-void __stdcall glGetShaderiv(GLuint shader, GLenum pname, GLint* params)
+void KHRONOS_APIENTRY glGetShaderiv(GLuint shader, GLenum pname, GLint* params)
 {
     EVENT("(GLuint shader = %d, GLenum pname = %d, GLint* params = 0x%0.8p)", shader, pname, params);
 
@@ -3637,7 +3637,7 @@ void __stdcall glGetShaderiv(GLuint shader, GLenum pname, GLint* params)
     }
 }
 
-void __stdcall glGetShaderInfoLog(GLuint shader, GLsizei bufsize, GLsizei* length, GLchar* infolog)
+void KHRONOS_APIENTRY glGetShaderInfoLog(GLuint shader, GLsizei bufsize, GLsizei* length, GLchar* infolog)
 {
     EVENT("(GLuint shader = %d, GLsizei bufsize = %d, GLsizei* length = 0x%0.8p, GLchar* infolog = 0x%0.8p)",
           shader, bufsize, length, infolog);
@@ -3669,7 +3669,7 @@ void __stdcall glGetShaderInfoLog(GLuint shader, GLsizei bufsize, GLsizei* lengt
     }
 }
 
-void __stdcall glGetShaderPrecisionFormat(GLenum shadertype, GLenum precisiontype, GLint* range, GLint* precision)
+void KHRONOS_APIENTRY glGetShaderPrecisionFormat(GLenum shadertype, GLenum precisiontype, GLint* range, GLint* precision)
 {
     EVENT("(GLenum shadertype = 0x%X, GLenum precisiontype = 0x%X, GLint* range = 0x%0.8p, GLint* precision = 0x%0.8p)",
           shadertype, precisiontype, range, precision);
@@ -3714,7 +3714,7 @@ void __stdcall glGetShaderPrecisionFormat(GLenum shadertype, GLenum precisiontyp
     }
 }
 
-void __stdcall glGetShaderSource(GLuint shader, GLsizei bufsize, GLsizei* length, GLchar* source)
+void KHRONOS_APIENTRY glGetShaderSource(GLuint shader, GLsizei bufsize, GLsizei* length, GLchar* source)
 {
     EVENT("(GLuint shader = %d, GLsizei bufsize = %d, GLsizei* length = 0x%0.8p, GLchar* source = 0x%0.8p)",
           shader, bufsize, length, source);
@@ -3746,7 +3746,7 @@ void __stdcall glGetShaderSource(GLuint shader, GLsizei bufsize, GLsizei* length
     }
 }
 
-void __stdcall glGetTranslatedShaderSourceANGLE(GLuint shader, GLsizei bufsize, GLsizei* length, GLchar* source)
+void KHRONOS_APIENTRY glGetTranslatedShaderSourceANGLE(GLuint shader, GLsizei bufsize, GLsizei* length, GLchar* source)
 {
     EVENT("(GLuint shader = %d, GLsizei bufsize = %d, GLsizei* length = 0x%0.8p, GLchar* source = 0x%0.8p)",
           shader, bufsize, length, source);
@@ -3778,7 +3778,7 @@ void __stdcall glGetTranslatedShaderSourceANGLE(GLuint shader, GLsizei bufsize, 
     }
 }
 
-const GLubyte* __stdcall glGetString(GLenum name)
+const GLubyte* KHRONOS_APIENTRY glGetString(GLenum name)
 {
     EVENT("(GLenum name = 0x%X)", name);
 
@@ -3808,7 +3808,7 @@ const GLubyte* __stdcall glGetString(GLenum name)
     }
 }
 
-void __stdcall glGetTexParameterfv(GLenum target, GLenum pname, GLfloat* params)
+void KHRONOS_APIENTRY glGetTexParameterfv(GLenum target, GLenum pname, GLfloat* params)
 {
     EVENT("(GLenum target = 0x%X, GLenum pname = 0x%X, GLfloat* params = 0x%0.8p)", target, pname, params);
 
@@ -3870,7 +3870,7 @@ void __stdcall glGetTexParameterfv(GLenum target, GLenum pname, GLfloat* params)
     }
 }
 
-void __stdcall glGetTexParameteriv(GLenum target, GLenum pname, GLint* params)
+void KHRONOS_APIENTRY glGetTexParameteriv(GLenum target, GLenum pname, GLint* params)
 {
     EVENT("(GLenum target = 0x%X, GLenum pname = 0x%X, GLint* params = 0x%0.8p)", target, pname, params);
 
@@ -3932,7 +3932,7 @@ void __stdcall glGetTexParameteriv(GLenum target, GLenum pname, GLint* params)
     }
 }
 
-void __stdcall glGetnUniformfvEXT(GLuint program, GLint location, GLsizei bufSize, GLfloat* params)
+void KHRONOS_APIENTRY glGetnUniformfvEXT(GLuint program, GLint location, GLsizei bufSize, GLfloat* params)
 {
     EVENT("(GLuint program = %d, GLint location = %d, GLsizei bufSize = %d, GLfloat* params = 0x%0.8p)",
           program, location, bufSize, params);
@@ -3978,7 +3978,7 @@ void __stdcall glGetnUniformfvEXT(GLuint program, GLint location, GLsizei bufSiz
     }
 }
 
-void __stdcall glGetUniformfv(GLuint program, GLint location, GLfloat* params)
+void KHRONOS_APIENTRY glGetUniformfv(GLuint program, GLint location, GLfloat* params)
 {
     EVENT("(GLuint program = %d, GLint location = %d, GLfloat* params = 0x%0.8p)", program, location, params);
 
@@ -4018,7 +4018,7 @@ void __stdcall glGetUniformfv(GLuint program, GLint location, GLfloat* params)
     }
 }
 
-void __stdcall glGetnUniformivEXT(GLuint program, GLint location, GLsizei bufSize, GLint* params)
+void KHRONOS_APIENTRY glGetnUniformivEXT(GLuint program, GLint location, GLsizei bufSize, GLint* params)
 {
     EVENT("(GLuint program = %d, GLint location = %d, GLsizei bufSize = %d, GLint* params = 0x%0.8p)", 
           program, location, bufSize, params);
@@ -4064,7 +4064,7 @@ void __stdcall glGetnUniformivEXT(GLuint program, GLint location, GLsizei bufSiz
     }
 }
 
-void __stdcall glGetUniformiv(GLuint program, GLint location, GLint* params)
+void KHRONOS_APIENTRY glGetUniformiv(GLuint program, GLint location, GLint* params)
 {
     EVENT("(GLuint program = %d, GLint location = %d, GLint* params = 0x%0.8p)", program, location, params);
 
@@ -4104,7 +4104,7 @@ void __stdcall glGetUniformiv(GLuint program, GLint location, GLint* params)
     }
 }
 
-int __stdcall glGetUniformLocation(GLuint program, const GLchar* name)
+int KHRONOS_APIENTRY glGetUniformLocation(GLuint program, const GLchar* name)
 {
     EVENT("(GLuint program = %d, const GLchar* name = 0x%0.8p)", program, name);
 
@@ -4150,7 +4150,7 @@ int __stdcall glGetUniformLocation(GLuint program, const GLchar* name)
     return -1;
 }
 
-void __stdcall glGetVertexAttribfv(GLuint index, GLenum pname, GLfloat* params)
+void KHRONOS_APIENTRY glGetVertexAttribfv(GLuint index, GLenum pname, GLfloat* params)
 {
     EVENT("(GLuint index = %d, GLenum pname = 0x%X, GLfloat* params = 0x%0.8p)", index, pname, params);
 
@@ -4206,7 +4206,7 @@ void __stdcall glGetVertexAttribfv(GLuint index, GLenum pname, GLfloat* params)
     }
 }
 
-void __stdcall glGetVertexAttribiv(GLuint index, GLenum pname, GLint* params)
+void KHRONOS_APIENTRY glGetVertexAttribiv(GLuint index, GLenum pname, GLint* params)
 {
     EVENT("(GLuint index = %d, GLenum pname = 0x%X, GLint* params = 0x%0.8p)", index, pname, params);
 
@@ -4263,7 +4263,7 @@ void __stdcall glGetVertexAttribiv(GLuint index, GLenum pname, GLint* params)
     }
 }
 
-void __stdcall glGetVertexAttribPointerv(GLuint index, GLenum pname, GLvoid** pointer)
+void KHRONOS_APIENTRY glGetVertexAttribPointerv(GLuint index, GLenum pname, GLvoid** pointer)
 {
     EVENT("(GLuint index = %d, GLenum pname = 0x%X, GLvoid** pointer = 0x%0.8p)", index, pname, pointer);
 
@@ -4292,7 +4292,7 @@ void __stdcall glGetVertexAttribPointerv(GLuint index, GLenum pname, GLvoid** po
     }
 }
 
-void __stdcall glHint(GLenum target, GLenum mode)
+void KHRONOS_APIENTRY glHint(GLenum target, GLenum mode)
 {
     EVENT("(GLenum target = 0x%X, GLenum mode = 0x%X)", target, mode);
 
@@ -4327,7 +4327,7 @@ void __stdcall glHint(GLenum target, GLenum mode)
     }
 }
 
-GLboolean __stdcall glIsBuffer(GLuint buffer)
+GLboolean KHRONOS_APIENTRY glIsBuffer(GLuint buffer)
 {
     EVENT("(GLuint buffer = %d)", buffer);
 
@@ -4353,7 +4353,7 @@ GLboolean __stdcall glIsBuffer(GLuint buffer)
     return GL_FALSE;
 }
 
-GLboolean __stdcall glIsEnabled(GLenum cap)
+GLboolean KHRONOS_APIENTRY glIsEnabled(GLenum cap)
 {
     EVENT("(GLenum cap = 0x%X)", cap);
 
@@ -4387,7 +4387,7 @@ GLboolean __stdcall glIsEnabled(GLenum cap)
     return false;
 }
 
-GLboolean __stdcall glIsFenceNV(GLuint fence)
+GLboolean KHRONOS_APIENTRY glIsFenceNV(GLuint fence)
 {
     EVENT("(GLuint fence = %d)", fence);
 
@@ -4415,7 +4415,7 @@ GLboolean __stdcall glIsFenceNV(GLuint fence)
     return GL_FALSE;
 }
 
-GLboolean __stdcall glIsFramebuffer(GLuint framebuffer)
+GLboolean KHRONOS_APIENTRY glIsFramebuffer(GLuint framebuffer)
 {
     EVENT("(GLuint framebuffer = %d)", framebuffer);
 
@@ -4441,7 +4441,7 @@ GLboolean __stdcall glIsFramebuffer(GLuint framebuffer)
     return GL_FALSE;
 }
 
-GLboolean __stdcall glIsProgram(GLuint program)
+GLboolean KHRONOS_APIENTRY glIsProgram(GLuint program)
 {
     EVENT("(GLuint program = %d)", program);
 
@@ -4467,7 +4467,7 @@ GLboolean __stdcall glIsProgram(GLuint program)
     return GL_FALSE;
 }
 
-GLboolean __stdcall glIsQueryEXT(GLuint id)
+GLboolean KHRONOS_APIENTRY glIsQueryEXT(GLuint id)
 {
     EVENT("(GLuint id = %d)", id);
 
@@ -4498,7 +4498,7 @@ GLboolean __stdcall glIsQueryEXT(GLuint id)
     return GL_FALSE;
 }
 
-GLboolean __stdcall glIsRenderbuffer(GLuint renderbuffer)
+GLboolean KHRONOS_APIENTRY glIsRenderbuffer(GLuint renderbuffer)
 {
     EVENT("(GLuint renderbuffer = %d)", renderbuffer);
 
@@ -4524,7 +4524,7 @@ GLboolean __stdcall glIsRenderbuffer(GLuint renderbuffer)
     return GL_FALSE;
 }
 
-GLboolean __stdcall glIsShader(GLuint shader)
+GLboolean KHRONOS_APIENTRY glIsShader(GLuint shader)
 {
     EVENT("(GLuint shader = %d)", shader);
 
@@ -4550,7 +4550,7 @@ GLboolean __stdcall glIsShader(GLuint shader)
     return GL_FALSE;
 }
 
-GLboolean __stdcall glIsTexture(GLuint texture)
+GLboolean KHRONOS_APIENTRY glIsTexture(GLuint texture)
 {
     EVENT("(GLuint texture = %d)", texture);
 
@@ -4576,7 +4576,7 @@ GLboolean __stdcall glIsTexture(GLuint texture)
     return GL_FALSE;
 }
 
-void __stdcall glLineWidth(GLfloat width)
+void KHRONOS_APIENTRY glLineWidth(GLfloat width)
 {
     EVENT("(GLfloat width = %f)", width);
 
@@ -4600,7 +4600,7 @@ void __stdcall glLineWidth(GLfloat width)
     }
 }
 
-void __stdcall glLinkProgram(GLuint program)
+void KHRONOS_APIENTRY glLinkProgram(GLuint program)
 {
     EVENT("(GLuint program = %d)", program);
 
@@ -4633,7 +4633,7 @@ void __stdcall glLinkProgram(GLuint program)
     }
 }
 
-void __stdcall glPixelStorei(GLenum pname, GLint param)
+void KHRONOS_APIENTRY glPixelStorei(GLenum pname, GLint param)
 {
     EVENT("(GLenum pname = 0x%X, GLint param = %d)", pname, param);
 
@@ -4678,7 +4678,7 @@ void __stdcall glPixelStorei(GLenum pname, GLint param)
     }
 }
 
-void __stdcall glPolygonOffset(GLfloat factor, GLfloat units)
+void KHRONOS_APIENTRY glPolygonOffset(GLfloat factor, GLfloat units)
 {
     EVENT("(GLfloat factor = %f, GLfloat units = %f)", factor, units);
 
@@ -4697,7 +4697,7 @@ void __stdcall glPolygonOffset(GLfloat factor, GLfloat units)
     }
 }
 
-void __stdcall glReadnPixelsEXT(GLint x, GLint y, GLsizei width, GLsizei height,
+void KHRONOS_APIENTRY glReadnPixelsEXT(GLint x, GLint y, GLsizei width, GLsizei height,
                                 GLenum format, GLenum type, GLsizei bufSize,
                                 GLvoid *data)
 {
@@ -4738,7 +4738,7 @@ void __stdcall glReadnPixelsEXT(GLint x, GLint y, GLsizei width, GLsizei height,
     }
 }
 
-void __stdcall glReadPixels(GLint x, GLint y, GLsizei width, GLsizei height,
+void KHRONOS_APIENTRY glReadPixels(GLint x, GLint y, GLsizei width, GLsizei height,
                             GLenum format, GLenum type, GLvoid* pixels)
 {
     EVENT("(GLint x = %d, GLint y = %d, GLsizei width = %d, GLsizei height = %d, "
@@ -4778,7 +4778,7 @@ void __stdcall glReadPixels(GLint x, GLint y, GLsizei width, GLsizei height,
     }
 }
 
-void __stdcall glReleaseShaderCompiler(void)
+void KHRONOS_APIENTRY glReleaseShaderCompiler(void)
 {
     EVENT("()");
 
@@ -4792,7 +4792,7 @@ void __stdcall glReleaseShaderCompiler(void)
     }
 }
 
-void __stdcall glRenderbufferStorageMultisampleANGLE(GLenum target, GLsizei samples, GLenum internalformat, GLsizei width, GLsizei height)
+void KHRONOS_APIENTRY glRenderbufferStorageMultisampleANGLE(GLenum target, GLsizei samples, GLenum internalformat, GLsizei width, GLsizei height)
 {
     EVENT("(GLenum target = 0x%X, GLsizei samples = %d, GLenum internalformat = 0x%X, GLsizei width = %d, GLsizei height = %d)",
           target, samples, internalformat, width, height);
@@ -4863,12 +4863,12 @@ void __stdcall glRenderbufferStorageMultisampleANGLE(GLenum target, GLsizei samp
     }
 }
 
-void __stdcall glRenderbufferStorage(GLenum target, GLenum internalformat, GLsizei width, GLsizei height)
+void KHRONOS_APIENTRY glRenderbufferStorage(GLenum target, GLenum internalformat, GLsizei width, GLsizei height)
 {
     glRenderbufferStorageMultisampleANGLE(target, 0, internalformat, width, height);
 }
 
-void __stdcall glSampleCoverage(GLclampf value, GLboolean invert)
+void KHRONOS_APIENTRY glSampleCoverage(GLclampf value, GLboolean invert)
 {
     EVENT("(GLclampf value = %f, GLboolean invert = %d)", value, invert);
 
@@ -4887,7 +4887,7 @@ void __stdcall glSampleCoverage(GLclampf value, GLboolean invert)
     }
 }
 
-void __stdcall glSetFenceNV(GLuint fence, GLenum condition)
+void KHRONOS_APIENTRY glSetFenceNV(GLuint fence, GLenum condition)
 {
     EVENT("(GLuint fence = %d, GLenum condition = 0x%X)", fence, condition);
 
@@ -4918,7 +4918,7 @@ void __stdcall glSetFenceNV(GLuint fence, GLenum condition)
     }
 }
 
-void __stdcall glScissor(GLint x, GLint y, GLsizei width, GLsizei height)
+void KHRONOS_APIENTRY glScissor(GLint x, GLint y, GLsizei width, GLsizei height)
 {
     EVENT("(GLint x = %d, GLint y = %d, GLsizei width = %d, GLsizei height = %d)", x, y, width, height);
 
@@ -4942,7 +4942,7 @@ void __stdcall glScissor(GLint x, GLint y, GLsizei width, GLsizei height)
     }
 }
 
-void __stdcall glShaderBinary(GLsizei n, const GLuint* shaders, GLenum binaryformat, const GLvoid* binary, GLsizei length)
+void KHRONOS_APIENTRY glShaderBinary(GLsizei n, const GLuint* shaders, GLenum binaryformat, const GLvoid* binary, GLsizei length)
 {
     EVENT("(GLsizei n = %d, const GLuint* shaders = 0x%0.8p, GLenum binaryformat = 0x%X, "
           "const GLvoid* binary = 0x%0.8p, GLsizei length = %d)",
@@ -4959,7 +4959,7 @@ void __stdcall glShaderBinary(GLsizei n, const GLuint* shaders, GLenum binaryfor
     }
 }
 
-void __stdcall glShaderSource(GLuint shader, GLsizei count, const GLchar** string, const GLint* length)
+void KHRONOS_APIENTRY glShaderSource(GLuint shader, GLsizei count, const GLchar** string, const GLint* length)
 {
     EVENT("(GLuint shader = %d, GLsizei count = %d, const GLchar** string = 0x%0.8p, const GLint* length = 0x%0.8p)",
           shader, count, string, length);
@@ -4998,12 +4998,12 @@ void __stdcall glShaderSource(GLuint shader, GLsizei count, const GLchar** strin
     }
 }
 
-void __stdcall glStencilFunc(GLenum func, GLint ref, GLuint mask)
+void KHRONOS_APIENTRY glStencilFunc(GLenum func, GLint ref, GLuint mask)
 {
     glStencilFuncSeparate(GL_FRONT_AND_BACK, func, ref, mask);
 }
 
-void __stdcall glStencilFuncSeparate(GLenum face, GLenum func, GLint ref, GLuint mask)
+void KHRONOS_APIENTRY glStencilFuncSeparate(GLenum face, GLenum func, GLint ref, GLuint mask)
 {
     EVENT("(GLenum face = 0x%X, GLenum func = 0x%X, GLint ref = %d, GLuint mask = %d)", face, func, ref, mask);
 
@@ -5055,12 +5055,12 @@ void __stdcall glStencilFuncSeparate(GLenum face, GLenum func, GLint ref, GLuint
     }
 }
 
-void __stdcall glStencilMask(GLuint mask)
+void KHRONOS_APIENTRY glStencilMask(GLuint mask)
 {
     glStencilMaskSeparate(GL_FRONT_AND_BACK, mask);
 }
 
-void __stdcall glStencilMaskSeparate(GLenum face, GLuint mask)
+void KHRONOS_APIENTRY glStencilMaskSeparate(GLenum face, GLuint mask)
 {
     EVENT("(GLenum face = 0x%X, GLuint mask = %d)", face, mask);
 
@@ -5097,12 +5097,12 @@ void __stdcall glStencilMaskSeparate(GLenum face, GLuint mask)
     }
 }
 
-void __stdcall glStencilOp(GLenum fail, GLenum zfail, GLenum zpass)
+void KHRONOS_APIENTRY glStencilOp(GLenum fail, GLenum zfail, GLenum zpass)
 {
     glStencilOpSeparate(GL_FRONT_AND_BACK, fail, zfail, zpass);
 }
 
-void __stdcall glStencilOpSeparate(GLenum face, GLenum fail, GLenum zfail, GLenum zpass)
+void KHRONOS_APIENTRY glStencilOpSeparate(GLenum face, GLenum fail, GLenum zfail, GLenum zpass)
 {
     EVENT("(GLenum face = 0x%X, GLenum fail = 0x%X, GLenum zfail = 0x%X, GLenum zpas = 0x%Xs)",
           face, fail, zfail, zpass);
@@ -5185,7 +5185,7 @@ void __stdcall glStencilOpSeparate(GLenum face, GLenum fail, GLenum zfail, GLenu
     }
 }
 
-GLboolean __stdcall glTestFenceNV(GLuint fence)
+GLboolean KHRONOS_APIENTRY glTestFenceNV(GLuint fence)
 {
     EVENT("(GLuint fence = %d)", fence);
 
@@ -5213,7 +5213,7 @@ GLboolean __stdcall glTestFenceNV(GLuint fence)
     return GL_TRUE;
 }
 
-void __stdcall glTexImage2D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height,
+void KHRONOS_APIENTRY glTexImage2D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height,
                             GLint border, GLenum format, GLenum type, const GLvoid* pixels)
 {
     EVENT("(GLenum target = 0x%X, GLint level = %d, GLint internalformat = %d, GLsizei width = %d, GLsizei height = %d, "
@@ -5502,7 +5502,7 @@ void __stdcall glTexImage2D(GLenum target, GLint level, GLint internalformat, GL
     }
 }
 
-void __stdcall glTexParameterf(GLenum target, GLenum pname, GLfloat param)
+void KHRONOS_APIENTRY glTexParameterf(GLenum target, GLenum pname, GLfloat param)
 {
     EVENT("(GLenum target = 0x%X, GLenum pname = 0x%X, GLint param = %f)", target, pname, param);
 
@@ -5579,12 +5579,12 @@ void __stdcall glTexParameterf(GLenum target, GLenum pname, GLfloat param)
     }
 }
 
-void __stdcall glTexParameterfv(GLenum target, GLenum pname, const GLfloat* params)
+void KHRONOS_APIENTRY glTexParameterfv(GLenum target, GLenum pname, const GLfloat* params)
 {
     glTexParameterf(target, pname, (GLfloat)*params);
 }
 
-void __stdcall glTexParameteri(GLenum target, GLenum pname, GLint param)
+void KHRONOS_APIENTRY glTexParameteri(GLenum target, GLenum pname, GLint param)
 {
     EVENT("(GLenum target = 0x%X, GLenum pname = 0x%X, GLint param = %d)", target, pname, param);
 
@@ -5661,12 +5661,12 @@ void __stdcall glTexParameteri(GLenum target, GLenum pname, GLint param)
     }
 }
 
-void __stdcall glTexParameteriv(GLenum target, GLenum pname, const GLint* params)
+void KHRONOS_APIENTRY glTexParameteriv(GLenum target, GLenum pname, const GLint* params)
 {
     glTexParameteri(target, pname, *params);
 }
 
-void __stdcall glTexStorage2DEXT(GLenum target, GLsizei levels, GLenum internalformat, GLsizei width, GLsizei height)
+void KHRONOS_APIENTRY glTexStorage2DEXT(GLenum target, GLsizei levels, GLenum internalformat, GLsizei width, GLsizei height)
 {
     EVENT("(GLenum target = 0x%X, GLsizei levels = %d, GLenum internalformat = 0x%X, GLsizei width = %d, GLsizei height = %d)",
            target, levels, internalformat, width, height);
@@ -5836,7 +5836,7 @@ void __stdcall glTexStorage2DEXT(GLenum target, GLsizei levels, GLenum internalf
     }
 }
 
-void __stdcall glTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height,
+void KHRONOS_APIENTRY glTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height,
                                GLenum format, GLenum type, const GLvoid* pixels)
 {
     EVENT("(GLenum target = 0x%X, GLint level = %d, GLint xoffset = %d, GLint yoffset = %d, "
@@ -5936,12 +5936,12 @@ void __stdcall glTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint 
     }
 }
 
-void __stdcall glUniform1f(GLint location, GLfloat x)
+void KHRONOS_APIENTRY glUniform1f(GLint location, GLfloat x)
 {
     glUniform1fv(location, 1, &x);
 }
 
-void __stdcall glUniform1fv(GLint location, GLsizei count, const GLfloat* v)
+void KHRONOS_APIENTRY glUniform1fv(GLint location, GLsizei count, const GLfloat* v)
 {
     EVENT("(GLint location = %d, GLsizei count = %d, const GLfloat* v = 0x%0.8p)", location, count, v);
 
@@ -5979,12 +5979,12 @@ void __stdcall glUniform1fv(GLint location, GLsizei count, const GLfloat* v)
     }
 }
 
-void __stdcall glUniform1i(GLint location, GLint x)
+void KHRONOS_APIENTRY glUniform1i(GLint location, GLint x)
 {
     glUniform1iv(location, 1, &x);
 }
 
-void __stdcall glUniform1iv(GLint location, GLsizei count, const GLint* v)
+void KHRONOS_APIENTRY glUniform1iv(GLint location, GLsizei count, const GLint* v)
 {
     EVENT("(GLint location = %d, GLsizei count = %d, const GLint* v = 0x%0.8p)", location, count, v);
 
@@ -6022,14 +6022,14 @@ void __stdcall glUniform1iv(GLint location, GLsizei count, const GLint* v)
     }
 }
 
-void __stdcall glUniform2f(GLint location, GLfloat x, GLfloat y)
+void KHRONOS_APIENTRY glUniform2f(GLint location, GLfloat x, GLfloat y)
 {
     GLfloat xy[2] = {x, y};
 
     glUniform2fv(location, 1, (GLfloat*)&xy);
 }
 
-void __stdcall glUniform2fv(GLint location, GLsizei count, const GLfloat* v)
+void KHRONOS_APIENTRY glUniform2fv(GLint location, GLsizei count, const GLfloat* v)
 {
     EVENT("(GLint location = %d, GLsizei count = %d, const GLfloat* v = 0x%0.8p)", location, count, v);
 
@@ -6067,14 +6067,14 @@ void __stdcall glUniform2fv(GLint location, GLsizei count, const GLfloat* v)
     }
 }
 
-void __stdcall glUniform2i(GLint location, GLint x, GLint y)
+void KHRONOS_APIENTRY glUniform2i(GLint location, GLint x, GLint y)
 {
     GLint xy[4] = {x, y};
 
     glUniform2iv(location, 1, (GLint*)&xy);
 }
 
-void __stdcall glUniform2iv(GLint location, GLsizei count, const GLint* v)
+void KHRONOS_APIENTRY glUniform2iv(GLint location, GLsizei count, const GLint* v)
 {
     EVENT("(GLint location = %d, GLsizei count = %d, const GLint* v = 0x%0.8p)", location, count, v);
 
@@ -6112,14 +6112,14 @@ void __stdcall glUniform2iv(GLint location, GLsizei count, const GLint* v)
     }
 }
 
-void __stdcall glUniform3f(GLint location, GLfloat x, GLfloat y, GLfloat z)
+void KHRONOS_APIENTRY glUniform3f(GLint location, GLfloat x, GLfloat y, GLfloat z)
 {
     GLfloat xyz[3] = {x, y, z};
 
     glUniform3fv(location, 1, (GLfloat*)&xyz);
 }
 
-void __stdcall glUniform3fv(GLint location, GLsizei count, const GLfloat* v)
+void KHRONOS_APIENTRY glUniform3fv(GLint location, GLsizei count, const GLfloat* v)
 {
     EVENT("(GLint location = %d, GLsizei count = %d, const GLfloat* v = 0x%0.8p)", location, count, v);
 
@@ -6157,14 +6157,14 @@ void __stdcall glUniform3fv(GLint location, GLsizei count, const GLfloat* v)
     }
 }
 
-void __stdcall glUniform3i(GLint location, GLint x, GLint y, GLint z)
+void KHRONOS_APIENTRY glUniform3i(GLint location, GLint x, GLint y, GLint z)
 {
     GLint xyz[3] = {x, y, z};
 
     glUniform3iv(location, 1, (GLint*)&xyz);
 }
 
-void __stdcall glUniform3iv(GLint location, GLsizei count, const GLint* v)
+void KHRONOS_APIENTRY glUniform3iv(GLint location, GLsizei count, const GLint* v)
 {
     EVENT("(GLint location = %d, GLsizei count = %d, const GLint* v = 0x%0.8p)", location, count, v);
 
@@ -6202,14 +6202,14 @@ void __stdcall glUniform3iv(GLint location, GLsizei count, const GLint* v)
     }
 }
 
-void __stdcall glUniform4f(GLint location, GLfloat x, GLfloat y, GLfloat z, GLfloat w)
+void KHRONOS_APIENTRY glUniform4f(GLint location, GLfloat x, GLfloat y, GLfloat z, GLfloat w)
 {
     GLfloat xyzw[4] = {x, y, z, w};
 
     glUniform4fv(location, 1, (GLfloat*)&xyzw);
 }
 
-void __stdcall glUniform4fv(GLint location, GLsizei count, const GLfloat* v)
+void KHRONOS_APIENTRY glUniform4fv(GLint location, GLsizei count, const GLfloat* v)
 {
     EVENT("(GLint location = %d, GLsizei count = %d, const GLfloat* v = 0x%0.8p)", location, count, v);
 
@@ -6247,14 +6247,14 @@ void __stdcall glUniform4fv(GLint location, GLsizei count, const GLfloat* v)
     }
 }
 
-void __stdcall glUniform4i(GLint location, GLint x, GLint y, GLint z, GLint w)
+void KHRONOS_APIENTRY glUniform4i(GLint location, GLint x, GLint y, GLint z, GLint w)
 {
     GLint xyzw[4] = {x, y, z, w};
 
     glUniform4iv(location, 1, (GLint*)&xyzw);
 }
 
-void __stdcall glUniform4iv(GLint location, GLsizei count, const GLint* v)
+void KHRONOS_APIENTRY glUniform4iv(GLint location, GLsizei count, const GLint* v)
 {
     EVENT("(GLint location = %d, GLsizei count = %d, const GLint* v = 0x%0.8p)", location, count, v);
 
@@ -6292,7 +6292,7 @@ void __stdcall glUniform4iv(GLint location, GLsizei count, const GLint* v)
     }
 }
 
-void __stdcall glUniformMatrix2fv(GLint location, GLsizei count, GLboolean transpose, const GLfloat* value)
+void KHRONOS_APIENTRY glUniformMatrix2fv(GLint location, GLsizei count, GLboolean transpose, const GLfloat* value)
 {
     EVENT("(GLint location = %d, GLsizei count = %d, GLboolean transpose = %d, const GLfloat* value = 0x%0.8p)",
           location, count, transpose, value);
@@ -6331,7 +6331,7 @@ void __stdcall glUniformMatrix2fv(GLint location, GLsizei count, GLboolean trans
     }
 }
 
-void __stdcall glUniformMatrix3fv(GLint location, GLsizei count, GLboolean transpose, const GLfloat* value)
+void KHRONOS_APIENTRY glUniformMatrix3fv(GLint location, GLsizei count, GLboolean transpose, const GLfloat* value)
 {
     EVENT("(GLint location = %d, GLsizei count = %d, GLboolean transpose = %d, const GLfloat* value = 0x%0.8p)",
           location, count, transpose, value);
@@ -6370,7 +6370,7 @@ void __stdcall glUniformMatrix3fv(GLint location, GLsizei count, GLboolean trans
     }
 }
 
-void __stdcall glUniformMatrix4fv(GLint location, GLsizei count, GLboolean transpose, const GLfloat* value)
+void KHRONOS_APIENTRY glUniformMatrix4fv(GLint location, GLsizei count, GLboolean transpose, const GLfloat* value)
 {
     EVENT("(GLint location = %d, GLsizei count = %d, GLboolean transpose = %d, const GLfloat* value = 0x%0.8p)",
           location, count, transpose, value);
@@ -6409,7 +6409,7 @@ void __stdcall glUniformMatrix4fv(GLint location, GLsizei count, GLboolean trans
     }
 }
 
-void __stdcall glUseProgram(GLuint program)
+void KHRONOS_APIENTRY glUseProgram(GLuint program)
 {
     EVENT("(GLuint program = %d)", program);
 
@@ -6447,7 +6447,7 @@ void __stdcall glUseProgram(GLuint program)
     }
 }
 
-void __stdcall glValidateProgram(GLuint program)
+void KHRONOS_APIENTRY glValidateProgram(GLuint program)
 {
     EVENT("(GLuint program = %d)", program);
 
@@ -6480,7 +6480,7 @@ void __stdcall glValidateProgram(GLuint program)
     }
 }
 
-void __stdcall glVertexAttrib1f(GLuint index, GLfloat x)
+void KHRONOS_APIENTRY glVertexAttrib1f(GLuint index, GLfloat x)
 {
     EVENT("(GLuint index = %d, GLfloat x = %f)", index, x);
 
@@ -6505,7 +6505,7 @@ void __stdcall glVertexAttrib1f(GLuint index, GLfloat x)
     }
 }
 
-void __stdcall glVertexAttrib1fv(GLuint index, const GLfloat* values)
+void KHRONOS_APIENTRY glVertexAttrib1fv(GLuint index, const GLfloat* values)
 {
     EVENT("(GLuint index = %d, const GLfloat* values = 0x%0.8p)", index, values);
 
@@ -6530,7 +6530,7 @@ void __stdcall glVertexAttrib1fv(GLuint index, const GLfloat* values)
     }
 }
 
-void __stdcall glVertexAttrib2f(GLuint index, GLfloat x, GLfloat y)
+void KHRONOS_APIENTRY glVertexAttrib2f(GLuint index, GLfloat x, GLfloat y)
 {
     EVENT("(GLuint index = %d, GLfloat x = %f, GLfloat y = %f)", index, x, y);
 
@@ -6555,7 +6555,7 @@ void __stdcall glVertexAttrib2f(GLuint index, GLfloat x, GLfloat y)
     }
 }
 
-void __stdcall glVertexAttrib2fv(GLuint index, const GLfloat* values)
+void KHRONOS_APIENTRY glVertexAttrib2fv(GLuint index, const GLfloat* values)
 {
     EVENT("(GLuint index = %d, const GLfloat* values = 0x%0.8p)", index, values);
 
@@ -6580,7 +6580,7 @@ void __stdcall glVertexAttrib2fv(GLuint index, const GLfloat* values)
     }
 }
 
-void __stdcall glVertexAttrib3f(GLuint index, GLfloat x, GLfloat y, GLfloat z)
+void KHRONOS_APIENTRY glVertexAttrib3f(GLuint index, GLfloat x, GLfloat y, GLfloat z)
 {
     EVENT("(GLuint index = %d, GLfloat x = %f, GLfloat y = %f, GLfloat z = %f)", index, x, y, z);
 
@@ -6605,7 +6605,7 @@ void __stdcall glVertexAttrib3f(GLuint index, GLfloat x, GLfloat y, GLfloat z)
     }
 }
 
-void __stdcall glVertexAttrib3fv(GLuint index, const GLfloat* values)
+void KHRONOS_APIENTRY glVertexAttrib3fv(GLuint index, const GLfloat* values)
 {
     EVENT("(GLuint index = %d, const GLfloat* values = 0x%0.8p)", index, values);
 
@@ -6630,7 +6630,7 @@ void __stdcall glVertexAttrib3fv(GLuint index, const GLfloat* values)
     }
 }
 
-void __stdcall glVertexAttrib4f(GLuint index, GLfloat x, GLfloat y, GLfloat z, GLfloat w)
+void KHRONOS_APIENTRY glVertexAttrib4f(GLuint index, GLfloat x, GLfloat y, GLfloat z, GLfloat w)
 {
     EVENT("(GLuint index = %d, GLfloat x = %f, GLfloat y = %f, GLfloat z = %f, GLfloat w = %f)", index, x, y, z, w);
 
@@ -6655,7 +6655,7 @@ void __stdcall glVertexAttrib4f(GLuint index, GLfloat x, GLfloat y, GLfloat z, G
     }
 }
 
-void __stdcall glVertexAttrib4fv(GLuint index, const GLfloat* values)
+void KHRONOS_APIENTRY glVertexAttrib4fv(GLuint index, const GLfloat* values)
 {
     EVENT("(GLuint index = %d, const GLfloat* values = 0x%0.8p)", index, values);
 
@@ -6679,7 +6679,7 @@ void __stdcall glVertexAttrib4fv(GLuint index, const GLfloat* values)
     }
 }
 
-void __stdcall glVertexAttribDivisorANGLE(GLuint index, GLuint divisor)
+void KHRONOS_APIENTRY glVertexAttribDivisorANGLE(GLuint index, GLuint divisor)
 {
     EVENT("(GLuint index = %d, GLuint divisor = %d)", index, divisor);
 
@@ -6703,7 +6703,7 @@ void __stdcall glVertexAttribDivisorANGLE(GLuint index, GLuint divisor)
     }
 }
 
-void __stdcall glVertexAttribPointer(GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, const GLvoid* ptr)
+void KHRONOS_APIENTRY glVertexAttribPointer(GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, const GLvoid* ptr)
 {
     EVENT("(GLuint index = %d, GLint size = %d, GLenum type = 0x%X, "
           "GLboolean normalized = %d, GLsizei stride = %d, const GLvoid* ptr = 0x%0.8p)",
@@ -6752,7 +6752,7 @@ void __stdcall glVertexAttribPointer(GLuint index, GLint size, GLenum type, GLbo
     }
 }
 
-void __stdcall glViewport(GLint x, GLint y, GLsizei width, GLsizei height)
+void KHRONOS_APIENTRY glViewport(GLint x, GLint y, GLsizei width, GLsizei height)
 {
     EVENT("(GLint x = %d, GLint y = %d, GLsizei width = %d, GLsizei height = %d)", x, y, width, height);
 
@@ -6776,7 +6776,7 @@ void __stdcall glViewport(GLint x, GLint y, GLsizei width, GLsizei height)
     }
 }
 
-void __stdcall glBlitFramebufferANGLE(GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1, GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1,
+void KHRONOS_APIENTRY glBlitFramebufferANGLE(GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1, GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1,
                                       GLbitfield mask, GLenum filter)
 {
     EVENT("(GLint srcX0 = %d, GLint srcY0 = %d, GLint srcX1 = %d, GLint srcY1 = %d, "
@@ -6824,7 +6824,7 @@ void __stdcall glBlitFramebufferANGLE(GLint srcX0, GLint srcY0, GLint srcX1, GLi
     }
 }
 
-void __stdcall glTexImage3DOES(GLenum target, GLint level, GLenum internalformat, GLsizei width, GLsizei height, GLsizei depth,
+void KHRONOS_APIENTRY glTexImage3DOES(GLenum target, GLint level, GLenum internalformat, GLsizei width, GLsizei height, GLsizei depth,
                                GLint border, GLenum format, GLenum type, const GLvoid* pixels)
 {
     EVENT("(GLenum target = 0x%X, GLint level = %d, GLenum internalformat = 0x%X, "
@@ -6842,7 +6842,7 @@ void __stdcall glTexImage3DOES(GLenum target, GLint level, GLenum internalformat
     }
 }
 
-void __stdcall glGetProgramBinaryOES(GLuint program, GLsizei bufSize, GLsizei *length, 
+void KHRONOS_APIENTRY glGetProgramBinaryOES(GLuint program, GLsizei bufSize, GLsizei *length, 
                                      GLenum *binaryFormat, void *binary)
 {
     EVENT("(GLenum program = 0x%X, bufSize = %d, length = 0x%0.8p, binaryFormat = 0x%0.8p, binary = 0x%0.8p)",
@@ -6882,7 +6882,7 @@ void __stdcall glGetProgramBinaryOES(GLuint program, GLsizei bufSize, GLsizei *l
     }
 }
 
-void __stdcall glProgramBinaryOES(GLuint program, GLenum binaryFormat,
+void KHRONOS_APIENTRY glProgramBinaryOES(GLuint program, GLenum binaryFormat,
                                   const void *binary, GLint length)
 {
     EVENT("(GLenum program = 0x%X, binaryFormat = 0x%x, binary = 0x%0.8p, length = %d)",
@@ -6915,7 +6915,7 @@ void __stdcall glProgramBinaryOES(GLuint program, GLenum binaryFormat,
     }
 }
 
-__eglMustCastToProperFunctionPointerType __stdcall glGetProcAddress(const char *procname)
+__eglMustCastToProperFunctionPointerType KHRONOS_APIENTRY glGetProcAddress(const char *procname)
 {
     struct Extension
     {
@@ -6967,7 +6967,7 @@ __eglMustCastToProperFunctionPointerType __stdcall glGetProcAddress(const char *
 
 // Non-public functions used by EGL
 
-bool __stdcall glBindTexImage(egl::Surface *surface)
+bool KHRONOS_APIENTRY glBindTexImage(egl::Surface *surface)
 {
     EVENT("(egl::Surface* surface = 0x%0.8p)",
           surface);

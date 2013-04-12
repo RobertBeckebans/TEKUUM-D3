@@ -10,6 +10,7 @@
 
 #include "common/debug.h"
 
+#if !defined(ANGLE_STATIC)
 static DWORD currentTLS = TLS_OUT_OF_INDEXES;
 
 extern "C" BOOL WINAPI DllMain(HINSTANCE instance, DWORD reason, LPVOID reserved)
@@ -85,77 +86,123 @@ extern "C" BOOL WINAPI DllMain(HINSTANCE instance, DWORD reason, LPVOID reserved
 
     return TRUE;
 }
+#endif // #if !defined(ANGLE_STATIC)
 
 namespace egl
 {
+
+#if defined(ANGLE_STATIC)
+static Current current;
+#endif
+
 void setCurrentError(EGLint error)
 {
+#if defined(ANGLE_STATIC)
+	current.error = error;
+#else
     Current *current = (Current*)TlsGetValue(currentTLS);
 
     current->error = error;
+#endif
 }
 
 EGLint getCurrentError()
 {
+#if defined(ANGLE_STATIC)
+	return current.error;
+#else
     Current *current = (Current*)TlsGetValue(currentTLS);
 
     return current->error;
+#endif
 }
 
 void setCurrentAPI(EGLenum API)
 {
+#if defined(ANGLE_STATIC)
+	current.API = API;
+#else
     Current *current = (Current*)TlsGetValue(currentTLS);
 
     current->API = API;
+#endif
 }
 
 EGLenum getCurrentAPI()
 {
+#if defined(ANGLE_STATIC)
+	return current.API;
+#else
     Current *current = (Current*)TlsGetValue(currentTLS);
 
     return current->API;
+#endif
 }
 
 void setCurrentDisplay(EGLDisplay dpy)
 {
+#if defined(ANGLE_STATIC)
+	current.display = dpy;
+#else
     Current *current = (Current*)TlsGetValue(currentTLS);
 
     current->display = dpy;
+#endif
 }
 
 EGLDisplay getCurrentDisplay()
 {
+#if defined(ANGLE_STATIC)
+	return current.display;
+#else
     Current *current = (Current*)TlsGetValue(currentTLS);
 
     return current->display;
+#endif
 }
 
 void setCurrentDrawSurface(EGLSurface surface)
 {
+#if defined(ANGLE_STATIC)
+	current.drawSurface = surface;
+#else
     Current *current = (Current*)TlsGetValue(currentTLS);
 
     current->drawSurface = surface;
+#endif
 }
 
 EGLSurface getCurrentDrawSurface()
 {
+#if defined(ANGLE_STATIC)
+	return current.drawSurface;
+#else
     Current *current = (Current*)TlsGetValue(currentTLS);
 
     return current->drawSurface;
+#endif
 }
 
 void setCurrentReadSurface(EGLSurface surface)
 {
+#if defined(ANGLE_STATIC)
+	current.readSurface = surface;
+#else
     Current *current = (Current*)TlsGetValue(currentTLS);
 
     current->readSurface = surface;
+#endif
 }
 
 EGLSurface getCurrentReadSurface()
 {
+#if defined(ANGLE_STATIC)
+	return current.readSurface;
+#else
     Current *current = (Current*)TlsGetValue(currentTLS);
 
     return current->readSurface;
+#endif
 }
 }
 

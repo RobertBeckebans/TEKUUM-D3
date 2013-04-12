@@ -34,6 +34,10 @@ option(DEBUG_MEMORY
 #	set(USE_QT_WINDOWING TRUE)
 #endif()
 
+if(ANGLE)
+	set(USE_CMDLINE_TOOLS FALSE)
+endif()
+
 
 if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
 	add_definitions(-pipe)
@@ -632,6 +636,11 @@ if(USE_QT_WINDOWING)
 else()
 	file(GLOB_RECURSE WIN32_INCLUDES sys/win32/*.h)
 	file(GLOB_RECURSE WIN32_SOURCES sys/win32/*.cpp)
+	
+	if(ANGLE)
+		list(REMOVE_ITEM WIN32_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/sys/win32/win_glimp.cpp)
+		list(APPEND WIN32_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/sys/win32/win_egl.cpp)
+	endif()
 
 	set(WIN32_RESOURCES
 		sys/win32/rc/res/BEVEL.BMP
@@ -1199,11 +1208,14 @@ if(MSVC)
 				   # WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/libs/curl/lib
                    # COMMENT "Compiling libcURL")
 		
-	add_dependencies(Tekuum idlib)
+	if(ANGLE)
+		add_dependencies(Tekuum idlib libANGLE)
+	else()
+		add_dependencies(Tekuum idlib)
+	endif()
 	target_link_libraries(Tekuum
 		idlib
-		libEGL
-		libGLESv2
+		libANGLE
 		${DirectX_LIBRARIES}
 		${QT_LIBRARIES}
 		#libcurl 

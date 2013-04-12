@@ -17,6 +17,17 @@ namespace egl
 {
 struct Current
 {
+	// RB begin
+	Current()
+	{
+		error = EGL_SUCCESS;
+        API = EGL_OPENGL_ES_API;
+        display = EGL_NO_DISPLAY;
+        drawSurface = EGL_NO_SURFACE;
+        readSurface = EGL_NO_SURFACE;
+	}
+	// RB end
+
     EGLint error;
     EGLenum API;
     EGLDisplay display;

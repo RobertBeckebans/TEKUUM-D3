@@ -14,6 +14,7 @@
 
 #include "libGLESv2/Framebuffer.h"
 
+#if !defined(ANGLE_STATIC)
 static DWORD currentTLS = TLS_OUT_OF_INDEXES;
 
 extern "C" BOOL WINAPI DllMain(HINSTANCE instance, DWORD reason, LPVOID reserved)
@@ -71,15 +72,25 @@ extern "C" BOOL WINAPI DllMain(HINSTANCE instance, DWORD reason, LPVOID reserved
 
     return TRUE;
 }
+#endif // #if !defined(ANGLE_STATIC)
 
 namespace gl
 {
+#if defined(ANGLE_STATIC)
+static Current current;
+#endif
+
 void makeCurrent(Context *context, egl::Display *display, egl::Surface *surface)
 {
+#if defined(ANGLE_STATIC)
+	current.context = context;
+    current.display = display;
+#else
     Current *current = (Current*)TlsGetValue(currentTLS);
 
     current->context = context;
     current->display = display;
+#endif
 
     if (context && display && surface)
     {
@@ -89,9 +100,13 @@ void makeCurrent(Context *context, egl::Display *display, egl::Surface *surface)
 
 Context *getContext()
 {
-    Current *current = (Current*)TlsGetValue(currentTLS);
+#if defined(ANGLE_STATIC)
+	return current.context;    
+#else
+	Current *current = (Current*)TlsGetValue(currentTLS);
 
     return current->context;
+#endif
 }
 
 Context *getNonLostContext()
@@ -115,9 +130,13 @@ Context *getNonLostContext()
 
 egl::Display *getDisplay()
 {
+#if defined(ANGLE_STATIC)
+	return current.display;
+#else
     Current *current = (Current*)TlsGetValue(currentTLS);
 
     return current->display;
+#endif
 }
 
 IDirect3DDevice9 *getDevice()

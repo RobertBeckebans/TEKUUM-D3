@@ -298,10 +298,12 @@ static void R_CheckPortableExtensions()
 {
 	glConfig.glVersion = atof( glConfig.version_string );
 	const char* badVideoCard = common->GetLanguageDict()->GetString( "#str_06780" );
+#if !defined(USE_ANGLE)
 	if( glConfig.glVersion < 2.0f )
 	{
 		idLib::FatalError( badVideoCard );
 	}
+#endif
 	
 	if( idStr::Icmpn( glConfig.renderer_string, "ATI ", 4 ) == 0 || idStr::Icmpn( glConfig.renderer_string, "AMD ", 4 ) == 0 )
 	{
@@ -490,7 +492,7 @@ static void R_CheckPortableExtensions()
 #else
 	glConfig.timerQueryAvailable = GLEW_ARB_timer_query != 0 || GLEW_EXT_timer_query != 0;
 #endif
-
+	
 	// GL_OES_vertex_half_float
 #if defined(USE_ANGLE)
 	glConfig.vertexHalfFloatAvailable = R_CheckExtension( "GL_OES_vertex_half_float" );
@@ -819,11 +821,11 @@ void R_InitOpenGL()
 #endif
 	
 	
-	float glVersion = atof( glConfig.version_string );
-	float glslVersion = atof( glConfig.shading_language_string );
-	idLib::Printf( "OpenGL Version: %3.1f\n", glVersion );
+	//float glVersion = atof( glConfig.version_string );
+	//float glslVersion = atof( glConfig.shading_language_string );
+	idLib::Printf( "OpenGL Version: %s\n", glConfig.version_string );
 	idLib::Printf( "OpenGL Vendor : %s\n", glConfig.vendor_string );
-	idLib::Printf( "OpenGL GLSL   : %3.1f\n", glslVersion );
+	idLib::Printf( "OpenGL GLSL   : %s\n", glConfig.shading_language_string );
 	
 	// OpenGL driver constants
 	GLint temp;
@@ -1224,7 +1226,10 @@ void R_ReadTiledPixels( int width, int height, byte* buffer, renderView_t* ref =
 				h = height - yo;
 			}
 			
+#if !defined(USE_ANGLE)
 			glReadBuffer( GL_FRONT );
+#endif
+			
 			glReadPixels( 0, 0, w, h, GL_RGB, GL_UNSIGNED_BYTE, temp );
 			
 			int	row = ( w * 3 + 3 ) & ~3;		// OpenGL pads to dword boundaries
@@ -1835,7 +1840,7 @@ void GfxInfo_f( const idCmdArgs& args )
 	common->Printf( "-------\n" );
 	
 	// RB begin
-#if defined(_WIN32)
+#if defined(_WIN32) && !defined(USE_ANGLE)
 	// WGL_EXT_swap_interval
 	typedef BOOL ( WINAPI * PFNWGLSWAPINTERVALEXTPROC )( int interval );
 	extern	PFNWGLSWAPINTERVALEXTPROC wglSwapIntervalEXT;

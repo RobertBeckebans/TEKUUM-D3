@@ -22,6 +22,14 @@ namespace gl
 {
 struct Current
 {
+	// RB begin
+	Current()
+	{
+		context = NULL;
+		display = NULL;
+	}
+	// RB end
+
     Context *context;
     egl::Display *display;
 };

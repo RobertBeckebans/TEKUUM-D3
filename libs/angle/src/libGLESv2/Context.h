@@ -680,8 +680,8 @@ gl::Context *glCreateContext(const egl::Config *config, const gl::Context *share
 void glDestroyContext(gl::Context *context);
 void glMakeCurrent(gl::Context *context, egl::Display *display, egl::Surface *surface);
 gl::Context *glGetCurrentContext();
-__eglMustCastToProperFunctionPointerType __stdcall glGetProcAddress(const char *procname);
-bool __stdcall glBindTexImage(egl::Surface *surface);
+__eglMustCastToProperFunctionPointerType KHRONOS_APIENTRY glGetProcAddress(const char *procname);
+bool KHRONOS_APIENTRY glBindTexImage(egl::Surface *surface);
 }
 
 #endif   // INCLUDE_CONTEXT_H_

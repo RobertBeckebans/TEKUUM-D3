@@ -116,9 +116,16 @@ typedef struct
 	WNDPROC			wndproc;
 	
 	HDC				hDC;							// handle to device context
-	HGLRC			hGLRC;						// handle to GL rendering context
+	
+#if defined(USE_ANGLE)
+	EGLDisplay		eglDisplay;
+	EGLContext		eglContext;
+	EGLSurface		eglSurface;
+#else
+	HGLRC			hGLRC;							// handle to GL rendering context
 	PIXELFORMATDESCRIPTOR pfd;
 	int				pixelformat;
+#endif
 	
 	HINSTANCE		hinstOpenGL;	// HINSTANCE for the OpenGL library
 	

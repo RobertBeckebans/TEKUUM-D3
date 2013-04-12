@@ -102,12 +102,14 @@ void idImage::SubImageUpload( int mipLevel, int x, int y, int z, int width, int 
 	{
 		glPixelStorei( GL_UNPACK_ROW_LENGTH, pixelPitch );
 	}
-
+	
 	if( opts.format == FMT_RGB565 )
 	{
+#if !defined(USE_ANGLE)
 		glPixelStorei( GL_UNPACK_SWAP_BYTES, GL_TRUE );
+#endif
 	}
-
+	
 #ifdef DEBUG
 	GL_CheckErrors();
 #endif
@@ -139,9 +141,11 @@ void idImage::SubImageUpload( int mipLevel, int x, int y, int z, int width, int 
 	
 	if( opts.format == FMT_RGB565 )
 	{
+#if !defined(USE_ANGLE)
 		glPixelStorei( GL_UNPACK_SWAP_BYTES, GL_FALSE );
+#endif
 	}
-
+	
 	if( pixelPitch != 0 )
 	{
 		glPixelStorei( GL_UNPACK_ROW_LENGTH, 0 );
@@ -374,7 +378,10 @@ void idImage::AllocImage()
 			dataType = GL_UNSIGNED_SHORT_5_6_5;
 			break;
 		case FMT_ALPHA:
-#if defined( USE_CORE_PROFILE )
+#if defined( USE_ANGLE )
+			internalFormat = GL_ALPHA;
+			dataFormat = GL_ALPHA;
+#elif defined( USE_CORE_PROFILE )
 			internalFormat = GL_R8;
 			dataFormat = GL_RED;
 #else
@@ -384,7 +391,10 @@ void idImage::AllocImage()
 			dataType = GL_UNSIGNED_BYTE;
 			break;
 		case FMT_L8A8:
-#if defined( USE_CORE_PROFILE )
+#if defined( USE_ANGLE )
+			internalFormat = GL_LUMINANCE_ALPHA;
+			dataFormat = GL_LUMINANCE_ALPHA;
+#elif defined( USE_CORE_PROFILE )
 			internalFormat = GL_RG8;
 			dataFormat = GL_RG;
 #else
@@ -394,7 +404,10 @@ void idImage::AllocImage()
 			dataType = GL_UNSIGNED_BYTE;
 			break;
 		case FMT_LUM8:
-#if defined( USE_CORE_PROFILE )
+#if defined( USE_ANGLE )
+			internalFormat = GL_LUMINANCE;
+			dataFormat = GL_LUMINANCE;
+#elif defined( USE_CORE_PROFILE )
 			internalFormat = GL_R8;
 			dataFormat = GL_RED;
 #else
@@ -404,7 +417,10 @@ void idImage::AllocImage()
 			dataType = GL_UNSIGNED_BYTE;
 			break;
 		case FMT_INT8:
-#if defined( USE_CORE_PROFILE )
+#if defined( USE_ANGLE )
+			internalFormat = GL_LUMINANCE;
+			dataFormat = GL_LUMINANCE;
+#elif defined( USE_CORE_PROFILE )
 			internalFormat = GL_R8;
 			dataFormat = GL_RED;
 #else
@@ -418,16 +434,19 @@ void idImage::AllocImage()
 			dataFormat = GL_RGBA;
 			dataType = GL_UNSIGNED_BYTE;
 			break;
+#if !defined(USE_ANGLE)
 		case FMT_DXT5:
 			internalFormat = GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
 			dataFormat = GL_RGBA;
 			dataType = GL_UNSIGNED_BYTE;
 			break;
+#endif
 		case FMT_DEPTH:
 			internalFormat = GL_DEPTH_COMPONENT;
 			dataFormat = GL_DEPTH_COMPONENT;
 			dataType = GL_UNSIGNED_BYTE;
 			break;
+#if !defined(USE_ANGLE)
 		case FMT_X16:
 			internalFormat = GL_INTENSITY16;
 			dataFormat = GL_LUMINANCE;
@@ -438,6 +457,7 @@ void idImage::AllocImage()
 			dataFormat = GL_LUMINANCE_ALPHA;
 			dataType = GL_UNSIGNED_SHORT;
 			break;
+#endif
 		default:
 			idLib::Error( "Unhandled image format %d in %s\n", opts.format, GetName() );
 	}
@@ -539,7 +559,9 @@ void idImage::AllocImage()
 		}
 	}
 	
+#if !defined(USE_ANGLE)
 	glTexParameteri( target, GL_TEXTURE_MAX_LEVEL, opts.numLevels - 1 );
+#endif
 	
 	// see if we messed anything up
 	GL_CheckErrors();

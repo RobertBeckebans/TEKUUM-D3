@@ -408,6 +408,7 @@ idRenderLog::Printf
 */
 void idRenderLog::Printf( const char* fmt, ... )
 {
+#if !defined(USE_ANGLE)
 	if( activeLevel <= LOG_LEVEL_BLOCKS_ONLY )
 	{
 		return;
@@ -441,6 +442,7 @@ void idRenderLog::Printf( const char* fmt, ... )
 	
 	
 //	logFile->Flush();		this makes it take waaaay too long
+#endif
 }
 
 /*
@@ -461,6 +463,7 @@ void idRenderLog::LogOpenBlock( renderLogIndentLabel_t label, const char* fmt, v
 		//logFile->Printf( "%s%1.1f msec gap from last closeblock\n", indentString, ( now - closeBlockTime ) * ( 1.0f / 1000.0f ) );
 		//}
 		
+#if !defined(USE_ANGLE)
 		if( glConfig.gremedyStringMarkerAvailable )
 		{
 			//Printf( fmt, args );
@@ -486,6 +489,7 @@ void idRenderLog::LogOpenBlock( renderLogIndentLabel_t label, const char* fmt, v
 			
 			glStringMarkerGREMEDY( out.Length(), out.c_str() );
 		}
+#endif
 	}
 	
 	Indent( label );

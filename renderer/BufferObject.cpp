@@ -338,9 +338,12 @@ void* idVertexBuffer::MapBuffer( bufferMapType_t mapType ) const
 	// RB end
 	
 	glBindBuffer( GL_ARRAY_BUFFER, bufferObject );
+	
+#if !defined(USE_ANGLE)
+	
 	if( mapType == BM_READ )
 	{
-#if defined(USE_ANGLE)
+#if 0 //defined(USE_ANGLE)
 		buffer = glMapBufferOES( GL_ARRAY_BUFFER, GL_READ_ONLY );
 #else
 		buffer = glMapBufferRange( GL_ARRAY_BUFFER, 0, GetAllocedSize(), GL_MAP_READ_BIT | GL_MAP_INVALIDATE_RANGE_BIT | GL_MAP_UNSYNCHRONIZED_BIT );
@@ -352,7 +355,7 @@ void* idVertexBuffer::MapBuffer( bufferMapType_t mapType ) const
 	}
 	else if( mapType == BM_WRITE )
 	{
-#if defined(USE_ANGLE)
+#if 0 //defined(USE_ANGLE)
 		buffer = glMapBuffer( GL_ARRAY_BUFFER, GL_WRITE_ONLY );
 #else
 		buffer = glMapBufferRange( GL_ARRAY_BUFFER, 0, GetAllocedSize(), GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_RANGE_BIT | GL_MAP_UNSYNCHRONIZED_BIT );
@@ -374,6 +377,8 @@ void* idVertexBuffer::MapBuffer( bufferMapType_t mapType ) const
 	{
 		idLib::FatalError( "idVertexBuffer::MapBuffer: failed" );
 	}
+#endif
+	
 	return buffer;
 }
 
@@ -384,6 +389,7 @@ idVertexBuffer::UnmapBuffer
 */
 void idVertexBuffer::UnmapBuffer() const
 {
+#if !defined(USE_ANGLE)
 	assert( apiObject != NULL );
 	assert( IsMapped() );
 	
@@ -398,6 +404,7 @@ void idVertexBuffer::UnmapBuffer() const
 	}
 	
 	SetUnmapped();
+#endif
 }
 
 /*
@@ -631,10 +638,12 @@ void* idIndexBuffer::MapBuffer( bufferMapType_t mapType ) const
 	// RB end
 	
 	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, bufferObject );
+	
+#if !defined(USE_ANGLE)
 	if( mapType == BM_READ )
 	{
 		//buffer = glMapBufferARB( GL_ELEMENT_ARRAY_BUFFER_ARB, GL_READ_ONLY_ARB );
-		buffer = glMapBufferRange( GL_ELEMENT_ARRAY_BUFFER_ARB, 0, GetAllocedSize(), GL_MAP_READ_BIT | GL_MAP_INVALIDATE_RANGE_BIT | GL_MAP_UNSYNCHRONIZED_BIT );
+		buffer = glMapBufferRange( GL_ELEMENT_ARRAY_BUFFER, 0, GetAllocedSize(), GL_MAP_READ_BIT | GL_MAP_INVALIDATE_RANGE_BIT | GL_MAP_UNSYNCHRONIZED_BIT );
 		if( buffer != NULL )
 		{
 			buffer = ( byte* )buffer + GetOffset();
@@ -661,6 +670,8 @@ void* idIndexBuffer::MapBuffer( bufferMapType_t mapType ) const
 	{
 		idLib::FatalError( "idIndexBuffer::MapBuffer: failed" );
 	}
+#endif
+	
 	return buffer;
 }
 
@@ -671,6 +682,7 @@ idIndexBuffer::UnmapBuffer
 */
 void idIndexBuffer::UnmapBuffer() const
 {
+#if !defined(USE_ANGLE)
 	assert( apiObject != NULL );
 	assert( IsMapped() );
 	
@@ -685,6 +697,7 @@ void idIndexBuffer::UnmapBuffer() const
 	}
 	
 	SetUnmapped();
+#endif
 }
 
 /*
