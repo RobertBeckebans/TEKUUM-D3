@@ -92,41 +92,65 @@ void idRenderProgManager::Init()
 		{ BUILTIN_SIMPLESHADE, "simpleshade.vfp" },
 		{ BUILTIN_TEXTURED, "texture.vfp" },
 		{ BUILTIN_TEXTURE_VERTEXCOLOR, "texture_color.vfp" },
+#if !defined(USE_ANGLE)
 		{ BUILTIN_TEXTURE_VERTEXCOLOR_SKINNED, "texture_color_skinned.vfp" },
+#endif
 		{ BUILTIN_TEXTURE_TEXGEN_VERTEXCOLOR, "texture_color_texgen.vfp" },
 		{ BUILTIN_INTERACTION, "interaction.vfp" },
+#if !defined(USE_ANGLE)
 		{ BUILTIN_INTERACTION_SKINNED, "interaction_skinned.vfp" },
+#endif
 		{ BUILTIN_INTERACTION_AMBIENT, "interactionAmbient.vfp" },
+#if !defined(USE_ANGLE)
 		{ BUILTIN_INTERACTION_AMBIENT_SKINNED, "interactionAmbient_skinned.vfp" },
+#endif
 		{ BUILTIN_ENVIRONMENT, "environment.vfp" },
+#if !defined(USE_ANGLE)
 		{ BUILTIN_ENVIRONMENT_SKINNED, "environment_skinned.vfp" },
+#endif
 		{ BUILTIN_BUMPY_ENVIRONMENT, "bumpyEnvironment.vfp" },
+#if !defined(USE_ANGLE)
 		{ BUILTIN_BUMPY_ENVIRONMENT_SKINNED, "bumpyEnvironment_skinned.vfp" },
+#endif
 		
 		{ BUILTIN_DEPTH, "depth.vfp" },
+#if !defined(USE_ANGLE)
 		{ BUILTIN_DEPTH_SKINNED, "depth_skinned.vfp" },
+#endif
 		{ BUILTIN_SHADOW_DEBUG, "shadowDebug.vfp" },
+#if !defined(USE_ANGLE)
 		{ BUILTIN_SHADOW_DEBUG_SKINNED, "shadowDebug_skinned.vfp" },
+#endif
 		
 		// RB begin
 		{ BUILTIN_BLENDLIGHT, "blendLight.vfp" },
+#if !defined(USE_ANGLE)
 		{ BUILTIN_BLENDLIGHT_SKINNED, "blendLight_skinned.vfp" },
+#endif
 		// RB end
 		{ BUILTIN_FOG, "fog.vfp" },
+#if !defined(USE_ANGLE)
 		{ BUILTIN_FOG_SKINNED, "fog_skinned.vfp" },
+#endif
 		{ BUILTIN_SKYBOX, "skybox.vfp" },
 		{ BUILTIN_WOBBLESKY, "wobblesky.vfp" },
 		{ BUILTIN_POSTPROCESS, "postprocess.vfp" },
 		{ BUILTIN_STEREO_DEGHOST, "stereoDeGhost.vfp" },
 		{ BUILTIN_STEREO_WARP, "stereoWarp.vfp" },
-		{ BUILTIN_ZCULL_RECONSTRUCT, "zcullReconstruct.vfp" },
+//		{ BUILTIN_ZCULL_RECONSTRUCT, "zcullReconstruct.vfp" },
 		{ BUILTIN_BINK, "bink.vfp" },
 		{ BUILTIN_BINK_GUI, "bink_gui.vfp" },
 		// RB begin
 		{ BUILTIN_ROQ, "roq.vfp" },
 		// RB end
 		{ BUILTIN_STEREO_INTERLACE, "stereoInterlace.vfp" },
+#if defined(USE_ANGLE)
+		{ BUILTIN_SHADOW, "shadow.vfp" },
+#endif
+		
+#if !defined(USE_ANGLE)
 		{ BUILTIN_MOTION_BLUR, "motionBlur.vfp" },
+#endif
 	};
 	int numBuiltins = sizeof( builtins ) / sizeof( builtins[0] );
 	vertexShaders.SetNum( numBuiltins );
@@ -144,14 +168,17 @@ void idRenderProgManager::Init()
 	}
 	
 	// Special case handling for fastZ shaders
+#if !defined(USE_ANGLE)
 	builtinShaders[BUILTIN_SHADOW] = FindVertexShader( "shadow.vp" );
 	builtinShaders[BUILTIN_SHADOW_SKINNED] = FindVertexShader( "shadow_skinned.vp" );
 	
 	FindGLSLProgram( "shadow.vp", builtinShaders[BUILTIN_SHADOW], -1 );
 	FindGLSLProgram( "shadow_skinned.vp", builtinShaders[BUILTIN_SHADOW_SKINNED], -1 );
+#endif
 	
 	glslUniforms.SetNum( RENDERPARM_USER + MAX_GLSL_USER_PARMS, vec4_zero );
 	
+#if !defined(USE_ANGLE)
 	vertexShaders[builtinShaders[BUILTIN_TEXTURE_VERTEXCOLOR_SKINNED]].usesJoints = true;
 	vertexShaders[builtinShaders[BUILTIN_INTERACTION_SKINNED]].usesJoints = true;
 	vertexShaders[builtinShaders[BUILTIN_INTERACTION_AMBIENT_SKINNED]].usesJoints = true;
@@ -164,6 +191,7 @@ void idRenderProgManager::Init()
 	// RB begin
 	vertexShaders[builtinShaders[BUILTIN_BLENDLIGHT_SKINNED]].usesJoints = true;
 	// RB end
+#endif
 	
 	cmdSystem->AddCommand( "reloadShaders", R_ReloadShaders, CMD_FL_RENDERER, "reloads shaders" );
 }

@@ -177,10 +177,12 @@ public:
 		BindShader_Builtin( BUILTIN_TEXTURE_VERTEXCOLOR );
 	};
 	
+#if !defined(USE_ANGLE)
 	void	BindShader_TextureVertexColorSkinned()
 	{
 		BindShader_Builtin( BUILTIN_TEXTURE_VERTEXCOLOR_SKINNED );
 	};
+#endif
 	
 	void	BindShader_TextureTexGenVertexColor()
 	{
@@ -192,20 +194,24 @@ public:
 		BindShader_Builtin( BUILTIN_INTERACTION );
 	}
 	
+#if !defined(USE_ANGLE)
 	void	BindShader_InteractionSkinned()
 	{
 		BindShader_Builtin( BUILTIN_INTERACTION_SKINNED );
 	}
+#endif
 	
 	void	BindShader_InteractionAmbient()
 	{
 		BindShader_Builtin( BUILTIN_INTERACTION_AMBIENT );
 	}
 	
+#if !defined(USE_ANGLE)
 	void	BindShader_InteractionAmbientSkinned()
 	{
 		BindShader_Builtin( BUILTIN_INTERACTION_AMBIENT_SKINNED );
 	}
+#endif
 	
 	void	BindShader_SimpleShade()
 	{
@@ -217,50 +223,60 @@ public:
 		BindShader_Builtin( BUILTIN_ENVIRONMENT );
 	}
 	
+#if !defined(USE_ANGLE)
 	void	BindShader_EnvironmentSkinned()
 	{
 		BindShader_Builtin( BUILTIN_ENVIRONMENT_SKINNED );
 	}
+#endif
 	
 	void	BindShader_BumpyEnvironment()
 	{
 		BindShader_Builtin( BUILTIN_BUMPY_ENVIRONMENT );
 	}
 	
+#if !defined(USE_ANGLE)
 	void	BindShader_BumpyEnvironmentSkinned()
 	{
 		BindShader_Builtin( BUILTIN_BUMPY_ENVIRONMENT_SKINNED );
 	}
+#endif
 	
 	void	BindShader_Depth()
 	{
 		BindShader_Builtin( BUILTIN_DEPTH );
 	}
 	
+#if !defined(USE_ANGLE)
 	void	BindShader_DepthSkinned()
 	{
 		BindShader_Builtin( BUILTIN_DEPTH_SKINNED );
 	}
+#endif
 	
 	void	BindShader_Shadow()
 	{
 		BindShader( builtinShaders[BUILTIN_SHADOW], -1 );
 	}
 	
+#if !defined(USE_ANGLE)
 	void	BindShader_ShadowSkinned()
 	{
 		BindShader( builtinShaders[BUILTIN_SHADOW_SKINNED], -1 );
 	}
+#endif
 	
 	void	BindShader_ShadowDebug()
 	{
 		BindShader_Builtin( BUILTIN_SHADOW_DEBUG );
 	}
 	
+#if !defined(USE_ANGLE)
 	void	BindShader_ShadowDebugSkinned()
 	{
 		BindShader_Builtin( BUILTIN_SHADOW_DEBUG_SKINNED );
 	}
+#endif
 	
 	void	BindShader_BlendLight()
 	{
@@ -268,10 +284,12 @@ public:
 	}
 	
 	// RB begin
+#if !defined(USE_ANGLE)
 	void	BindShader_BlendLightSkinned()
 	{
 		BindShader_Builtin( BUILTIN_BLENDLIGHT_SKINNED );
 	}
+#endif
 	// RB end
 	
 	void	BindShader_Fog()
@@ -279,10 +297,12 @@ public:
 		BindShader_Builtin( BUILTIN_FOG );
 	}
 	
+#if !defined(USE_ANGLE)
 	void	BindShader_FogSkinned()
 	{
 		BindShader_Builtin( BUILTIN_FOG_SKINNED );
 	}
+#endif
 	
 	void	BindShader_SkyBox()
 	{
@@ -314,10 +334,12 @@ public:
 		BindShader_Builtin( BUILTIN_POSTPROCESS );
 	}
 	
+#if 0
 	void	BindShader_ZCullReconstruct()
 	{
 		BindShader_Builtin( BUILTIN_ZCULL_RECONSTRUCT );
 	}
+#endif
 	
 	void	BindShader_Bink()
 	{
@@ -336,10 +358,12 @@ public:
 	}
 	// RB end
 	
+#if !defined(USE_ANGLE)
 	void	BindShader_MotionBlur()
 	{
 		BindShader_Builtin( BUILTIN_MOTION_BLUR );
 	}
+#endif
 	
 	// the joints buffer should only be bound for vertex programs that use joints
 	bool	ShaderUsesJoints() const
@@ -384,43 +408,65 @@ protected:
 		BUILTIN_SIMPLESHADE,
 		BUILTIN_TEXTURED,
 		BUILTIN_TEXTURE_VERTEXCOLOR,
+#if !defined(USE_ANGLE)
 		BUILTIN_TEXTURE_VERTEXCOLOR_SKINNED,
+#endif
 		BUILTIN_TEXTURE_TEXGEN_VERTEXCOLOR,
 		BUILTIN_INTERACTION,
+#if !defined(USE_ANGLE)
 		BUILTIN_INTERACTION_SKINNED,
+#endif
 		BUILTIN_INTERACTION_AMBIENT,
+#if !defined(USE_ANGLE)
 		BUILTIN_INTERACTION_AMBIENT_SKINNED,
+#endif
 		BUILTIN_ENVIRONMENT,
+#if !defined(USE_ANGLE)
 		BUILTIN_ENVIRONMENT_SKINNED,
+#endif
 		BUILTIN_BUMPY_ENVIRONMENT,
+#if !defined(USE_ANGLE)
 		BUILTIN_BUMPY_ENVIRONMENT_SKINNED,
-		
+#endif
 		BUILTIN_DEPTH,
+#if !defined(USE_ANGLE)
 		BUILTIN_DEPTH_SKINNED,
+#endif
 		BUILTIN_SHADOW,
+#if !defined(USE_ANGLE)
 		BUILTIN_SHADOW_SKINNED,
+#endif
 		BUILTIN_SHADOW_DEBUG,
+#if !defined(USE_ANGLE)
 		BUILTIN_SHADOW_DEBUG_SKINNED,
+#endif
 		
 		BUILTIN_BLENDLIGHT,
 		// RB begin
+#if !defined(USE_ANGLE)
 		BUILTIN_BLENDLIGHT_SKINNED,
+#endif
 		// RB end
 		BUILTIN_FOG,
+#if !defined(USE_ANGLE)
 		BUILTIN_FOG_SKINNED,
+#endif
 		BUILTIN_SKYBOX,
 		BUILTIN_WOBBLESKY,
 		BUILTIN_POSTPROCESS,
 		BUILTIN_STEREO_DEGHOST,
 		BUILTIN_STEREO_WARP,
-		BUILTIN_ZCULL_RECONSTRUCT,
+		// RB: not used
+//		BUILTIN_ZCULL_RECONSTRUCT,
 		BUILTIN_BINK,
 		BUILTIN_BINK_GUI,
 		// RB: RoQ videos
 		BUILTIN_ROQ,
 		// RB end
 		BUILTIN_STEREO_INTERLACE,
+#if !defined(USE_ANGLE)
 		BUILTIN_MOTION_BLUR,
+#endif
 		
 		MAX_BUILTINS
 	};
