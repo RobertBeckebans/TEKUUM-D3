@@ -103,6 +103,9 @@ enum textureColor_t
 	CFM_DEFAULT,			// RGBA
 	CFM_NORMAL_DXT5,		// XY format and use the fast DXT5 compressor
 	CFM_YCOCG_DXT5,			// convert RGBA to CoCg_Y format
+	// RB begin
+	CFM_YCOCG_RGBA8,
+	// RB end
 	CFM_GREEN_ALPHA			// Copy the alpha channel to green
 };
 

@@ -249,7 +249,14 @@ vertCacheHandle_t idVertexCache::ActuallyAlloc( geoBufferSet_t& vcs, const void*
 	if( data != NULL )
 	{
 		MapGeoBufferSet( vcs );
-		CopyBuffer( *base + offset, ( const byte* )data, bytes );
+		if( *base != NULL )
+		{
+			CopyBuffer( *base + offset, ( const byte* )data, bytes );
+		}
+		else
+		{
+		
+		}
 	}
 	
 	vertCacheHandle_t handle =	( ( uint64 )( currentFrame & VERTCACHE_FRAME_MASK ) << VERTCACHE_FRAME_SHIFT ) |
@@ -259,6 +266,26 @@ vertCacheHandle_t idVertexCache::ActuallyAlloc( geoBufferSet_t& vcs, const void*
 	{
 		handle |= VERTCACHE_STATIC;
 	}
+	
+#if defined(USE_ANGLE)
+	if( type == CACHE_VERTEX )
+	{
+		idVertexBuffer vertexBuffer;
+		if( GetVertexBuffer( handle, &vertexBuffer ) )
+		{
+			vertexBuffer.AllocBufferObject( data, bytes );
+		}
+	}
+	else if( type == CACHE_INDEX )
+	{
+		idIndexBuffer indexBuffer;
+		if( GetIndexBuffer( handle, &indexBuffer ) )
+		{
+			indexBuffer.AllocBufferObject( data, bytes );
+		}
+	}
+#endif
+	
 	return handle;
 }
 

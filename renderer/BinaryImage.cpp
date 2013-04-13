@@ -59,7 +59,7 @@ void idBinaryImage::Load2DFromMemory( int width, int height, const byte* pic_con
 	byte* pic = ( byte* )Mem_Alloc( width * height * 4 );
 	memcpy( pic, pic_const, width * height * 4 );
 	
-	if( colorFormat == CFM_YCOCG_DXT5 )
+	if( colorFormat == CFM_YCOCG_DXT5 || colorFormat == CFM_YCOCG_RGBA8 )
 	{
 		// convert the image data to YCoCg and use the YCoCgDXT5 compressor
 		idColorSpace::ConvertRGBToCoCg_Y( pic, pic, width, height );

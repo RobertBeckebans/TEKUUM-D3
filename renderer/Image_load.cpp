@@ -94,10 +94,16 @@ ID_INLINE void idImage::DeriveOpts()
 				opts.format = FMT_DEPTH;
 				break;
 			case TD_DIFFUSE:
+#if defined( USE_ANGLE )
 				// TD_DIFFUSE gets only set to when its a diffuse texture for an interaction
+				//opts.gammaMips = true;
+				opts.format = FMT_RGBA8;
+				opts.colorFormat = CFM_YCOCG_RGBA8;
+#else
 				opts.gammaMips = true;
 				opts.format = FMT_DXT5;
 				opts.colorFormat = CFM_YCOCG_DXT5;
+#endif
 				break;
 			case TD_SPECULAR:
 				opts.gammaMips = true;
@@ -105,13 +111,24 @@ ID_INLINE void idImage::DeriveOpts()
 				opts.colorFormat = CFM_DEFAULT;
 				break;
 			case TD_DEFAULT:
+#if defined( USE_ANGLE )
+				opts.gammaMips = true;
+				opts.format = FMT_RGBA8;
+				opts.colorFormat = CFM_YCOCG_RGBA8;
+#else
 				opts.gammaMips = true;
 				opts.format = FMT_DXT5;
 				opts.colorFormat = CFM_DEFAULT;
+#endif
 				break;
 			case TD_BUMP:
+#if defined( USE_ANGLE )
+				opts.format = FMT_DXT1;
+				opts.colorFormat = CFM_DEFAULT;
+#else
 				opts.format = FMT_DXT5;
 				opts.colorFormat = CFM_NORMAL_DXT5;
+#endif
 				break;
 			case TD_FONT:
 				opts.format = FMT_DXT1;
