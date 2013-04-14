@@ -140,7 +140,7 @@ private:
 	void				PrintShaderSource( uint32_t object ) const;
 	void				PrintInfoLog( uint32_t object, bool developerOnly ) const;
 	
-	void				LinkProgram( uint32_t program ) const;
+	bool				LinkProgram( uint32_t program ) const;
 	void				BindAttribLocations( uint32_t program ) const;
 	
 protected:
@@ -1099,6 +1099,44 @@ public:
 };
 
 
+class u_ColorImage:
+	GLUniform
+{
+public:
+	u_ColorImage( GLShader* shader ):
+		GLUniform( shader )
+	{
+	}
+	
+	const char* GetName() const
+	{
+		return "u_ColorImage";
+	}
+	void				UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
+	{
+		shaderProgram->u_ColorImage = glGetUniformLocation( shaderProgram->program, GetName() );
+	}
+	
+	void SetUniform_ColorImage( int value )
+	{
+		shaderProgram_t* program = _shader->GetProgram();
+		
+#if defined(USE_UNIFORM_FIREWALL)
+		if( program->t_ColorImage == value )
+			return;
+			
+		program->t_ColorImage = value;
+#endif
+		
+#if defined(LOG_GLSL_UNIFORMS)
+		if( r_logFile.GetBool() )
+		{
+			RB_LogComment( "--- SetUniform_ColorImage( program = %s, value = %d ) ---\n", program->name.c_str(), value );
+		}
+#endif
+		glUniform1i( program->u_ColorImage, value );
+	}
+};
 
 class u_DiffuseImage:
 	GLUniform
@@ -1269,6 +1307,55 @@ public:
 };
 
 
+class u_ModelViewProjectionMatrix:
+	GLUniform
+{
+public:
+	u_ModelViewProjectionMatrix( GLShader* shader ):
+		GLUniform( shader )
+	{
+	}
+	
+	const char* GetName() const
+	{
+		return "u_ModelViewProjectionMatrix";
+	}
+	void				UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
+	{
+		shaderProgram->u_ModelViewProjectionMatrix = glGetUniformLocation( shaderProgram->program, GetName() );
+	}
+	
+	void SetUniform_ModelViewProjectionMatrix( const idMat4& m )
+	{
+		shaderProgram_t* program = _shader->GetProgram();
+		
+#if defined(USE_UNIFORM_FIREWALL)
+		if( program->t_ModelViewProjectionMatrix == m )
+			return;
+			
+		program->t_ModelViewProjectionMatrix = m;
+#endif
+		
+#if defined(LOG_GLSL_UNIFORMS)
+		if( r_logFile.GetBool() )
+		{
+			RB_LogComment( "--- SetUniform_ModelViewProjectionMatrix( program = %s, "
+						   "( %5.3f, %5.3f, %5.3f, %5.3f )\n"
+						   "( %5.3f, %5.3f, %5.3f, %5.3f )\n"
+						   "( %5.3f, %5.3f, %5.3f, %5.3f )\n"
+						   "( %5.3f, %5.3f, %5.3f, %5.3f ) ) ---\n",
+						   program->name.c_str(),
+						   m[0][0], m[0][1], m[0][2], m[0][3],
+						   m[1][0], m[1][1], m[1][2], m[1][3],
+						   m[2][0], m[2][1], m[2][2], m[2][3],
+						   m[3][0], m[3][1], m[3][2], m[3][3] );
+		}
+#endif
+		
+		glUniformMatrix4fv( program->u_ModelViewProjectionMatrix, 1, GL_TRUE, m.ToFloatPtr() );
+	}
+};
+
 class u_UnprojectMatrix:
 	GLUniform
 {
@@ -1368,7 +1455,6 @@ public:
 	}
 };
 
-
 class u_DiffuseMatrixS:
 	GLUniform
 {
@@ -1406,6 +1492,86 @@ public:
 #endif
 		
 		glUniform4f( program->u_DiffuseMatrixS, v[0], v[1], v[2], v[3] );
+	}
+};
+
+class u_ColorMatrixT:
+	GLUniform
+{
+public:
+	u_ColorMatrixT( GLShader* shader ):
+		GLUniform( shader )
+	{
+	}
+	
+	const char* GetName() const
+	{
+		return "u_ColorMatrixT";
+	}
+	void UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
+	{
+		shaderProgram->u_ColorMatrixT = glGetUniformLocation( shaderProgram->program, GetName() );
+	}
+	
+	void SetUniform_ColorMatrixT( const idVec4& v )
+	{
+		shaderProgram_t* program = _shader->GetProgram();
+		
+#if defined(USE_UNIFORM_FIREWALL)
+		if( program->t_ColorMatrixT == v )
+			return;
+			
+		program->t_ColorMatrixT = v;
+#endif
+		
+#if defined(LOG_GLSL_UNIFORMS)
+		if( r_logFile.GetBool() )
+		{
+			RB_LogComment( "--- SetUniform_ColorMatrixT( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name.c_str(), v[0], v[1], v[2], v[3] );
+		}
+#endif
+		
+		glUniform4f( program->u_ColorMatrixT, v[0], v[1], v[2], v[3] );
+	}
+};
+
+class u_ColorMatrixS:
+	GLUniform
+{
+public:
+	u_ColorMatrixS( GLShader* shader ):
+		GLUniform( shader )
+	{
+	}
+	
+	const char* GetName() const
+	{
+		return "u_ColorMatrixS";
+	}
+	void UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
+	{
+		shaderProgram->u_ColorMatrixS = glGetUniformLocation( shaderProgram->program, GetName() );
+	}
+	
+	void SetUniform_ColorMatrixS( const idVec4& v )
+	{
+		shaderProgram_t* program = _shader->GetProgram();
+		
+#if defined(USE_UNIFORM_FIREWALL)
+		if( program->t_ColorMatrixS == v )
+			return;
+			
+		program->t_ColorMatrixS = v;
+#endif
+		
+#if defined(LOG_GLSL_UNIFORMS)
+		if( r_logFile.GetBool() )
+		{
+			RB_LogComment( "--- SetUniform_ColorMatrixS( program = %s, vector = ( %5.3f, %5.3f, %5.3f, %5.3f  ) ) ---\n", program->name.c_str(), v[0], v[1], v[2], v[3] );
+		}
+#endif
+		
+		glUniform4f( program->u_ColorMatrixS, v[0], v[1], v[2], v[3] );
 	}
 };
 
@@ -2834,32 +3000,31 @@ public:
 };
 
 
-/*
 class GLShader_generic:
 public GLShader,
-public u_ColorMap,
-public u_ColorTextureMatrix,
-public u_ViewOrigin,
-public u_AlphaTest,
+public u_ColorImage,
+public u_ColorMatrixS,
+public u_ColorMatrixT,
+//public u_ViewOrigin,
+//public u_AlphaTest,
 public u_ModelMatrix,
 public u_ModelViewProjectionMatrix,
 public u_ColorModulate,
-public u_Color,
-public u_BoneMatrix,
-public u_VertexInterpolation,
-public u_PortalPlane,
-public GLDeformStage,
-public GLCompileMacro_USE_PORTAL_CLIPPING,
-public GLCompileMacro_USE_ALPHA_TESTING,
-public GLCompileMacro_USE_VERTEX_SKINNING,
-public GLCompileMacro_USE_VERTEX_ANIMATION,
-public GLCompileMacro_USE_DEFORM_VERTEXES,
-public GLCompileMacro_USE_TCGEN_ENVIRONMENT
+public u_Color
+//public u_BoneMatrix,
+//public u_VertexInterpolation,
+//public u_PortalPlane,
+//public GLDeformStage,
+//public GLCompileMacro_USE_PORTAL_CLIPPING,
+//public GLCompileMacro_USE_ALPHA_TESTING,
+//public GLCompileMacro_USE_VERTEX_SKINNING,
+//public GLCompileMacro_USE_VERTEX_ANIMATION,
+//public GLCompileMacro_USE_DEFORM_VERTEXES,
+//public GLCompileMacro_USE_TCGEN_ENVIRONMENT
 {
 public:
 	GLShader_generic();
 };
-*/
 
 class GLShader_geometricFill:
 	public GLShader,
@@ -2911,7 +3076,9 @@ class GLShader_deferredLighting:
 	public u_Viewport,
 	public GLCompileMacro_USE_NORMAL_MAPPING,
 //public GLCompileMacro_USE_PARALLAX_MAPPING,
+#if !defined(USE_GLES2)
 public GLCompileMacro_USE_SHADOWING,
+#endif
 public GLCompileMacro_USE_FRUSTUM_CLIPPING,
 //public GLCompileMacro_LIGHT_DIRECTIONAL,
 public GLCompileMacro_LIGHT_PROJ
@@ -2945,6 +3112,7 @@ class GLShader_forwardLighting:
 	public u_LightProjectT,
 	public u_LightProjectQ,
 	public u_LightFalloffS,
+	public u_ModelViewProjectionMatrix,
 	public u_ShadowMatrix,
 	public u_ShadowTexelSize,
 	public u_ShadowBlur,
@@ -2963,7 +3131,9 @@ class GLShader_forwardLighting:
 //public GLCompileMacro_USE_DEFORM_VERTEXES,
 public GLCompileMacro_USE_NORMAL_MAPPING,
 //public GLCompileMacro_USE_PARALLAX_MAPPING,
+#if !defined(USE_GLES2)
 public GLCompileMacro_USE_SHADOWING,
+#endif
 //public GLCompileMacro_LIGHT_DIRECTIONAL,
 public GLCompileMacro_LIGHT_PROJ
 {
@@ -3002,7 +3172,8 @@ private:
 
 class GLShader_shadowVolume:
 	public GLShader,
-	public u_LocalLightOrigin
+	public u_LocalLightOrigin,
+	public u_ModelViewProjectionMatrix
 //public GLCompileMacro_USE_VERTEX_SKINNING,
 //public GLCompileMacro_USE_VERTEX_ANIMATION,
 //public GLCompileMacro_USE_DEFORM_VERTEXES,
@@ -3042,6 +3213,7 @@ public:
 class GLShader_toneMapping:
 	public GLShader,
 	public u_CurrentRenderImage,
+	public u_ModelViewProjectionMatrix,
 	public u_HDRKey,
 	public u_HDRAverageLuminance,
 	public u_HDRMaxLuminance,
@@ -3052,7 +3224,7 @@ public:
 };
 
 
-//extern GLShader_generic* gl_genericShader;
+extern GLShader_generic* gl_genericShader;
 extern GLShader_geometricFill* gl_geometricFillShader;
 extern GLShader_deferredLighting* gl_deferredLightingShader;
 extern GLShader_forwardLighting* gl_forwardLightingShader;

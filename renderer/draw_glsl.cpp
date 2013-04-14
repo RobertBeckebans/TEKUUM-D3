@@ -99,7 +99,9 @@ static void	RB_GLSL_DrawInteraction( const drawInteraction_t* din )
 
 	// choose and bind the vertex program
 	// TODO gl_forwardLightingShader->SetAmbientLighting(backEnd.vLight->lightShader->IsAmbientLight());
+#if !defined(USE_GLES2)
 	gl_forwardLightingShader->SetShadowing( false );
+#endif
 	gl_forwardLightingShader->SetNormalMapping( !r_skipBump.GetBool() || backEnd.vLight->lightShader->IsAmbientLight() );
 	gl_forwardLightingShader->BindProgram();
 	
@@ -441,19 +443,30 @@ void R_ReloadShaders_f( const idCmdArgs& args )
 	if( GLEW_ARB_fragment_shader && GLEW_ARB_vertex_shader && GLEW_ARB_shader_objects && GLEW_ARB_shading_language_100 )
 #endif
 	{
+		if( gl_genericShader )
+		{
+			delete gl_genericShader;
+			gl_genericShader = NULL;
+		}
+		gl_genericShader = new GLShader_generic();
+
 		if( gl_geometricFillShader )
 		{
 			delete gl_geometricFillShader;
 			gl_geometricFillShader = NULL;
 		}
+#if !defined(USE_GLES2)
 		gl_geometricFillShader = new GLShader_geometricFill();
+#endif
 		
 		if( gl_deferredLightingShader )
 		{
 			delete gl_deferredLightingShader;
 			gl_deferredLightingShader = NULL;
 		}
+#if !defined(USE_GLES2)
 		gl_deferredLightingShader = new GLShader_deferredLighting();
+#endif
 		
 		if( gl_forwardLightingShader )
 		{
@@ -467,7 +480,9 @@ void R_ReloadShaders_f( const idCmdArgs& args )
 			delete gl_postLightingShader;
 			gl_postLightingShader = NULL;
 		}
+#if !defined(USE_GLES2)
 		gl_postLightingShader = new GLShader_postLighting();
+#endif
 		
 		if( gl_shadowVolumeShader )
 		{
@@ -481,7 +496,9 @@ void R_ReloadShaders_f( const idCmdArgs& args )
 			delete gl_shadowMapShader;
 			gl_shadowMapShader = NULL;
 		}
+#if !defined(USE_GLES2)
 		gl_shadowMapShader = new GLShader_shadowMap();
+#endif
 		
 #if 0
 		if( gl_FXAAShader )

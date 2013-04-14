@@ -1633,6 +1633,9 @@ typedef struct shaderProgram_s
 	int32_t         u_CurrentLightImage;
 	int32_t         t_CurrentLightImage;
 	
+	int32_t         u_ColorImage;
+	int32_t         t_ColorImage;
+
 	int32_t         u_DiffuseImage;
 	int32_t         t_DiffuseImage;
 	
@@ -1663,8 +1666,11 @@ typedef struct shaderProgram_s
 	int32_t         u_GrainImage;
 	int32_t         u_VignetteImage;
 	
-//	int32_t         u_ColorTextureMatrix;
-//	idMat4			t_ColorTextureMatrix;
+	int32_t         u_ColorMatrixS;
+	idVec4			t_ColorMatrixS;
+	
+	int32_t         u_ColorMatrixT;
+	idVec4			t_ColorMatrixT;
 
 	int32_t         u_DiffuseMatrixS;
 	idVec4			t_DiffuseMatrixS;
@@ -2255,8 +2261,8 @@ void			esOrthof( GLfloat left, GLfloat right, GLfloat bottom, GLfloat top, GLflo
 void			esPushMatrix();
 void			esPopMatrix();
 
-void			esEnableClientState( GLenum array );
-void			esDisableClientState( GLenum array );
+void			esEnableClientState( GLenum value );
+void			esDisableClientState( GLenum value );
 
 void			esVertexPointer( GLint size, GLenum type, GLsizei stride, const GLvoid* pointer );
 void			esNormalPointer( GLenum type, GLsizei stride, const GLvoid* pointer );

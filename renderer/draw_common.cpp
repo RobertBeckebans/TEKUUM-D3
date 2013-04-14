@@ -30,7 +30,9 @@ If you have questions concerning this license or the applicable additional terms
 
 #include "tr_local.h"
 
-#if !defined(USE_GLES1)
+#if defined(USE_GLES2)
+#include "GLShader.h"
+#elif !defined(USE_GLES1)
 #include "GLShader.h"
 #endif
 
@@ -695,6 +697,11 @@ void RB_T_FillDepthBuffer( const drawSurf_t* surf )
 			glColor4f( color[0], color[1], color[2], color[3] );
 		}
 		globalImages->whiteImage->Bind();
+
+#if defined(USE_GLES2)
+		//gl_genericShader->BindProgram();
+		//gl_genericShader->SetUniform_ModelViewProjectionMatrix( make_idMat4( backEnd.glState.modelViewProjectionMatrix[backEnd.glState.stackIndex]) );
+#endif
 		
 		// draw it
 		RB_DrawElementsWithCounters( tri );
@@ -1710,7 +1717,23 @@ void RB_STD_T_RenderShaderPasses( const drawSurf_t* surf )
 #endif
 		}
 		
-#if 0 //defined(USE_GLES2)
+		// bind the texture
+		RB_BindVariableStageImage( &pStage->texture, regs );
+		
+		// set the state
+		GL_State( pStage->drawStateBits );
+		
+		RB_PrepareStageTexturing( pStage, surf, ac );
+
+#if defined(USE_GLES2)
+		gl_genericShader->BindProgram();
+
+		gl_genericShader->SetUniform_ModelViewProjectionMatrix( make_idMat4( backEnd.glState.modelViewProjectionMatrix[backEnd.glState.stackIndex]) );
+
+		// TODO
+		gl_genericShader->SetUniform_ColorMatrixS( idVec4( 1, 0, 0, 0 ) );
+		gl_genericShader->SetUniform_ColorMatrixT( idVec4( 1, 0, 0, 0 ) );
+
 		// TODO
 		static const idVec4 zero( 0, 0, 0, 0 );
 		static const idVec4 one( 1, 1, 1, 1 );
@@ -1731,15 +1754,10 @@ void RB_STD_T_RenderShaderPasses( const drawSurf_t* surf )
 				gl_genericShader->SetUniform_Color( one );
 				break;
 		}
+
+		gl_genericShader->SetUniform_ColorImage( 0 );
+		GL_SelectTexture( 0 );
 #endif
-		
-		// bind the texture
-		RB_BindVariableStageImage( &pStage->texture, regs );
-		
-		// set the state
-		GL_State( pStage->drawStateBits );
-		
-		RB_PrepareStageTexturing( pStage, surf, ac );
 		
 		// draw it
 		RB_DrawElementsWithCounters( tri );
@@ -1758,6 +1776,10 @@ void RB_STD_T_RenderShaderPasses( const drawSurf_t* surf )
 			GL_TexEnv( GL_MODULATE );
 #endif
 		}
+
+#if defined(USE_GLES2)
+		GL_BindNullProgram();
+#endif
 	}
 	
 	// reset polygon offset
@@ -2666,7 +2688,11 @@ void	RB_STD_DrawView()
 	// main light renderer
 	switch( tr.backEndRenderer )
 	{
-#if !defined(USE_GLES2)
+#if defined(USE_GLES2)
+		case BE_GLSL:
+			RB_GLSL_DrawInteractions();
+			break;
+#else
 		case BE_ARB:
 			RB_ARB_DrawInteractions();
 			break;

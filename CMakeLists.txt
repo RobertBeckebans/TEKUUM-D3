@@ -24,8 +24,11 @@ option(STANDALONE
 option(GLES1
 		"Only use OpenGL ES 1.0 functions" OFF)
 		
+option(GLES2
+		"Only use OpenGL ES 2.0 functions" ON)
+		
 option(ANGLE
-		"Only use OpenGL ES 2.0 functions through ANGLE" ON)
+		"Only use OpenGL ES 2.0 functions through ANGLE" OFF)
 		
 option(DEBUG_MEMORY
 		"Enables memory logging to file" OFF)
@@ -34,7 +37,7 @@ option(DEBUG_MEMORY
 #	set(USE_QT_WINDOWING TRUE)
 #endif()
 
-if(ANGLE)
+if(ANGLE OR GLES2)
 	set(USE_CMDLINE_TOOLS FALSE)
 endif()
 
@@ -641,7 +644,8 @@ else()
 	
 	if(ANGLE)
 		list(REMOVE_ITEM WIN32_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/sys/win32/win_glimp.cpp)
-		list(APPEND WIN32_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/sys/win32/win_egl.cpp)
+	else()
+		list(REMOVE_ITEM WIN32_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/sys/win32/win_egl.cpp)
 	endif()
 
 	set(WIN32_RESOURCES
@@ -932,19 +936,21 @@ source_group("tools\\script" FILES ${EDITOR_SCRIPT_SOURCES})
 source_group("tools\\sound" FILES ${EDITOR_SOUND_INCLUDES})
 source_group("tools\\sound" FILES ${EDITOR_SOUND_SOURCES})
 
-if(ANGLE)
-	add_definitions(-DUSE_ANGLE)
+
+if(ANGLE OR GLES2)
+	if(ANGLE)
+		add_definitions(-DUSE_ANGLE)
+		include_directories(libs/angle/include)
+	endif()
+	
 	add_definitions(-DUSE_GLES1)
 	add_definitions(-DUSE_GLES2)
-	include_directories(libs/angle/include)
+	
 	list(REMOVE_ITEM RENDERER_SOURCES renderer/Framebuffer.cpp)
 	#list(REMOVE_ITEM RENDERER_SOURCES renderer/draw_glsl.cpp)
 	list(REMOVE_ITEM RENDERER_SOURCES renderer/draw_exp.cpp)
 	list(REMOVE_ITEM RENDERER_SOURCES renderer/draw_arb.cpp)
 	list(REMOVE_ITEM RENDERER_SOURCES renderer/draw_arb2.cpp)
-else()
-	list(APPEND TEKUUM_INCLUDES ${GLEW_INCLUDES})
-	list(APPEND TEKUUM_SOURCES ${GLEW_SOURCES})
 endif()
 
 set(TEKUUM_INCLUDES
@@ -961,7 +967,6 @@ set(TEKUUM_INCLUDES
 			${SOUND_INCLUDES}
 			${OGGVORBIS_INCLUDES}
 			${UI_INCLUDES}
-			
 			)
 			
 set(TEKUUM_SOURCES
@@ -979,8 +984,12 @@ set(TEKUUM_SOURCES
 			${SOUND_SOURCES}
 			${OGGVORBIS_SOURCES}
 			${UI_SOURCES}
-			
 			)
+			
+if(NOT ANGLE)
+	list(APPEND TEKUUM_INCLUDES ${GLEW_INCLUDES})
+	list(APPEND TEKUUM_SOURCES ${GLEW_SOURCES})
+endif()
 
 add_definitions(-D__DOOM__
 				-DGLEW_STATIC

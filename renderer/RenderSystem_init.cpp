@@ -887,7 +887,12 @@ void R_InitOpenGL()
 	
 	// parse our vertex and fragment programs, possibly disably support for
 	// one of the paths if there was an error
-#if !defined(USE_GLES1)
+#if defined(USE_GLES2)
+	R_GLSL_Init();
+
+	cmdSystem->AddCommand( "reloadShaders", R_ReloadShaders_f, CMD_FL_RENDERER, "reloads GLSL shaders" );
+	R_ReloadShaders_f( idCmdArgs() );
+#elif !defined(USE_GLES1)
 	R_ARB2_Init();
 	R_GLSL_Init();
 	R_Exp_Init();

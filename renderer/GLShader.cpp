@@ -1,6 +1,6 @@
 /*
 ===========================================================================
-Copyright (C) 2010-2012 Robert Beckebans
+Copyright (C) 2010-2013 Robert Beckebans
 
 This file is part of XreaL source code.
 
@@ -30,7 +30,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 // *INDENT-OFF*
 
 
-//GLShader_generic* gl_genericShader = NULL;
+GLShader_generic* gl_genericShader = NULL;
 GLShader_geometricFill* gl_geometricFillShader = NULL;
 GLShader_deferredLighting* gl_deferredLightingShader = NULL;
 GLShader_forwardLighting* gl_forwardLightingShader = NULL;
@@ -321,7 +321,7 @@ idStr	GLShader::BuildGPUShaderText(	const char* mainShaderName,
 	//       va("#ifndef r_NormalScale\n#define r_NormalScale %f\n#endif\n", r_normalScale->value));
 	*/
 	
-	shaderText += "#ifndef M_PI\n#define M_PI 3.14159265358979323846f\n#endif\n";
+	shaderText += "#ifndef M_PI\n#define M_PI 3.14159265358979323846\n#endif\n";
 	
 	float fbufWidthScale = 1.0f / ( float )glConfig.vidWidth;
 	float fbufHeightScale = 1.0f / ( float )glConfig.vidHeight;
@@ -721,11 +721,22 @@ void GLShader::CompileAndLinkGPUShaderProgram(	shaderProgram_t* program,
 	}
 	else
 	*/
+#if defined(USE_GLES2)
+	{
+		vertexHeader += "#version 100\n";
+		vertexHeader += "#define ES2\n";
+		vertexHeader += "precision mediump float;\n";
+		
+		fragmentHeader += "#version 100\n";
+		fragmentHeader += "#define ES2\n";
+		fragmentHeader += "precision mediump float;\n";
+	}
+#else
 	{
 		vertexHeader += "#version 120\n";
 		fragmentHeader += "#version 120\n";
 	}
-	
+#endif
 	// permutation macros
 	idStr macrosString;
 	
@@ -747,7 +758,22 @@ void GLShader::CompileAndLinkGPUShaderProgram(	shaderProgram_t* program,
 	CompileGPUShader( program->program, programName, fragmentShaderTextWithMacros, GL_FRAGMENT_SHADER );
 	
 	BindAttribLocations( program->program ); //, _vertexAttribsRequired | _vertexAttribsOptional);
-	LinkProgram( program->program );
+	if( !LinkProgram( program->program ) )
+	{
+		idStr macrosString;
+		if( compileMacros.Num() )
+		{
+			for( int i = 0; i < compileMacros.Num(); i++ )
+			{
+				const char* compileMacro = compileMacros[i].c_str();
+			
+				macrosString += va( "%s ", compileMacro );
+			}
+		}
+		common->Printf("Compile macros: '%s'\n", macrosString.c_str() );
+
+		common->Error( "Shaders failed to link!!!" );
+	}
 }
 
 void GLShader::CompileGPUShader( uint32_t program, const idStr& programName, const idStr& shaderText, GLenum shaderType ) const
@@ -807,18 +833,20 @@ void GLShader::PrintShaderSource( uint32_t object ) const
 	int             i;
 	
 	glGetShaderiv( object, GL_SHADER_SOURCE_LENGTH, &maxLength );
-	
-	msg = ( char* ) Mem_Alloc( maxLength );
-	
-	glGetShaderSource( object, maxLength, &maxLength, msg );
-	
-	for( i = 0; i < maxLength; i += 1024 )
+	if( maxLength > 1 )
 	{
-		idStr::snPrintf( msgPart, sizeof( msgPart ), msg + i );
-		common->Printf( "%s\n", msgPart );
-	}
+		msg = ( char* ) Mem_Alloc( maxLength );
 	
-	Mem_Free( msg );
+		glGetShaderSource( object, maxLength, &maxLength, msg );
+	
+		for( i = 0; i < maxLength; i += 1024 )
+		{
+			idStr::snPrintf( msgPart, sizeof( msgPart ), msg + i );
+			common->Printf( "%s\n", msgPart );
+		}
+	
+		Mem_Free( msg );
+	}
 }
 
 void GLShader::PrintInfoLog( uint32_t object, bool developerOnly ) const
@@ -829,34 +857,36 @@ void GLShader::PrintInfoLog( uint32_t object, bool developerOnly ) const
 	int             i;
 	
 	glGetShaderiv( object, GL_INFO_LOG_LENGTH, &maxLength );
-	
-	msg = ( char* ) Mem_Alloc( maxLength );
-	
-	glGetShaderInfoLog( object, maxLength, &maxLength, msg );
-	
-	if( developerOnly )
+	if( maxLength > 1 )
 	{
-		common->DPrintf( "compile log:\n" );
-	}
-	else
-	{
-		common->Printf( "compile log:\n" );
-	}
+		msg = ( char* ) Mem_Alloc( maxLength );
 	
-	for( i = 0; i < maxLength; i += 1024 )
-	{
-		idStr::snPrintf( msgPart, sizeof( msgPart ), msg + i );
-		
+		glGetShaderInfoLog( object, maxLength, &maxLength, msg );
+	
 		if( developerOnly )
-			common->DPrintf( "%s\n", msgPart );
+		{
+			common->DPrintf( "compile log:\n" );
+		}
 		else
-			common->Printf( "%s\n", msgPart );
-	}
+		{
+			common->Printf( "compile log:\n" );
+		}
 	
-	Mem_Free( msg );
+		for( i = 0; i < maxLength; i += 1024 )
+		{
+			idStr::snPrintf( msgPart, sizeof( msgPart ), msg + i );
+		
+			if( developerOnly )
+				common->DPrintf( "%s\n", msgPart );
+			else
+				common->Printf( "%s\n", msgPart );
+		}
+	
+		Mem_Free( msg );
+	}
 }
 
-void GLShader::LinkProgram( uint32_t program ) const
+bool GLShader::LinkProgram( uint32_t program ) const
 {
 	GLint           linked;
 	
@@ -866,8 +896,9 @@ void GLShader::LinkProgram( uint32_t program ) const
 	if( !linked )
 	{
 		PrintInfoLog( program, false );
-		common->Error( "Shaders failed to link!!!" );
 	}
+
+	return linked > 0;
 }
 
 void GLShader::ValidateProgram( uint32_t program ) const
@@ -1085,8 +1116,6 @@ void GLShader::CompilePermutations()
 		{
 			compileMacros.Append( constantCompileMacros );
 			
-			//common->DPrintf("Compile macros: '%s'\n", compileMacros.To);
-			
 			shaderProgram_t* shaderProgram = new shaderProgram_t();
 			_shaderPrograms.Append( shaderProgram );
 			
@@ -1119,7 +1148,21 @@ void GLShader::CompilePermutations()
 }
 
 
-
+GLShader_generic::GLShader_generic():
+	GLShader( "generic", VA_POSITION | VA_TEXCOORD | VA_NORMAL ),
+	u_ColorImage( this ),
+	u_ModelMatrix( this ),
+	u_ModelViewProjectionMatrix( this ),
+	u_ColorMatrixS( this ),
+	u_ColorMatrixT( this ),
+	u_Color( this ),
+	u_ColorModulate( this )
+	//u_GlobalViewOrigin( this ),
+	//GLCompileMacro_USE_TCGEN_ENVIRONMENT( this ),
+	//GLCompileMacro_USE_PARALLAX_MAPPING(this),
+{
+	CompilePermutations();
+}
 
 GLShader_geometricFill::GLShader_geometricFill():
 	GLShader( "geometricFill", VA_POSITION | VA_TEXCOORD | VA_NORMAL ),
@@ -1172,7 +1215,9 @@ GLShader_deferredLighting::GLShader_deferredLighting():
 	GLCompileMacro_USE_NORMAL_MAPPING( this ),
 	//GLCompileMacro_USE_PARALLAX_MAPPING(this),
 	GLCompileMacro_USE_FRUSTUM_CLIPPING( this ),
+#if !defined(USE_GLES2)
 	GLCompileMacro_USE_SHADOWING( this ),
+#endif
 	//GLCompileMacro_LIGHT_DIRECTIONAL(this),
 	GLCompileMacro_LIGHT_PROJ( this )
 {
@@ -1249,7 +1294,7 @@ GLShader_forwardLighting::GLShader_forwardLighting():
 	u_JitterTexScale( this ),
 	u_JitterTexOffset( this ),
 	//u_ModelMatrix(this),
-	//u_ModelViewProjectionMatrix(this),
+	u_ModelViewProjectionMatrix(this),
 	//u_BoneMatrix(this),
 	//u_VertexInterpolation(this),
 	//u_PortalPlane(this),
@@ -1262,7 +1307,9 @@ GLShader_forwardLighting::GLShader_forwardLighting():
 	//GLCompileMacro_USE_DEFORM_VERTEXES(this),
 	GLCompileMacro_USE_NORMAL_MAPPING( this ),
 	//GLCompileMacro_USE_PARALLAX_MAPPING(this),
+#if !defined(USE_GLES2)
 	GLCompileMacro_USE_SHADOWING( this ),
+#endif
 	//GLCompileMacro_LIGHT_DIRECTIONAL(this),
 	GLCompileMacro_LIGHT_PROJ( this )
 {
@@ -1351,7 +1398,8 @@ void GLShader_postLighting::SetShaderProgramUniforms( shaderProgram_t* shaderPro
 
 GLShader_shadowVolume::GLShader_shadowVolume():
 	GLShader( "shadowVolume", VA_POSITION ),
-	u_LocalLightOrigin( this )
+	u_LocalLightOrigin( this ),
+	u_ModelViewProjectionMatrix( this )
 	//GLCompileMacro_USE_VERTEX_SKINNING(this),
 	//GLCompileMacro_USE_VERTEX_ANIMATION(this),
 	//GLCompileMacro_USE_DEFORM_VERTEXES(this),
@@ -1389,6 +1437,7 @@ GLShader_FXAA::GLShader_FXAA():
 GLShader_toneMapping::GLShader_toneMapping():
 	GLShader( "toneMapping", VA_POSITION ),
 	u_CurrentRenderImage( this ),
+	u_ModelViewProjectionMatrix( this ),
 	u_HDRKey( this ),
 	u_HDRAverageLuminance( this ),
 	u_HDRMaxLuminance( this ),
