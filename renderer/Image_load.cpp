@@ -40,7 +40,11 @@ PROBLEM: compressed textures may break the zero clamp rule!
 
 static bool FormatIsDXT( int internalFormat )
 {
+#if defined(USE_GLES2)
+	if( internalFormat < GL_COMPRESSED_RGB_S3TC_DXT1_EXT )
+#else
 	if( internalFormat < GL_COMPRESSED_RGB_S3TC_DXT1_EXT || internalFormat > GL_COMPRESSED_RGBA_S3TC_DXT5_EXT )
+#endif
 	{
 		return false;
 	}
@@ -77,10 +81,10 @@ int idImage::BitsForInternalFormat( int internalFormat ) const
 			return 4;
 		case GL_COMPRESSED_RGBA_S3TC_DXT1_EXT:
 			return 4;
-		case GL_COMPRESSED_RGBA_S3TC_DXT3_EXT:
-			return 8;
-		case GL_COMPRESSED_RGBA_S3TC_DXT5_EXT:
-			return 8;
+			//case GL_COMPRESSED_RGBA_S3TC_DXT3_EXT:
+			//	return 8;
+			//case GL_COMPRESSED_RGBA_S3TC_DXT5_EXT:
+			//	return 8;
 		case GL_ETC1_RGB8_OES:
 			return 4;
 #else
@@ -1305,23 +1309,23 @@ void idImage::GenerateCubeImage( const byte* pic[6], int size,
 	Bind();
 	
 	// no other clamp mode makes sensee
-	glTexParameteri( GL_TEXTURE_CUBE_MAP_EXT, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
-	glTexParameteri( GL_TEXTURE_CUBE_MAP_EXT, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
+	glTexParameteri( GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
+	glTexParameteri( GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
 	
 	// set the minimize / maximize filtering
 	switch( filter )
 	{
 		case TF_DEFAULT:
-			glTexParameterf( GL_TEXTURE_CUBE_MAP_EXT, GL_TEXTURE_MIN_FILTER, globalImages->textureMinFilter );
-			glTexParameterf( GL_TEXTURE_CUBE_MAP_EXT, GL_TEXTURE_MAG_FILTER, globalImages->textureMaxFilter );
+			glTexParameterf( GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, globalImages->textureMinFilter );
+			glTexParameterf( GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, globalImages->textureMaxFilter );
 			break;
 		case TF_LINEAR:
-			glTexParameterf( GL_TEXTURE_CUBE_MAP_EXT, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
-			glTexParameterf( GL_TEXTURE_CUBE_MAP_EXT, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+			glTexParameterf( GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+			glTexParameterf( GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
 			break;
 		case TF_NEAREST:
-			glTexParameterf( GL_TEXTURE_CUBE_MAP_EXT, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
-			glTexParameterf( GL_TEXTURE_CUBE_MAP_EXT, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
+			glTexParameterf( GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
+			glTexParameterf( GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
 			break;
 		default:
 			common->FatalError( "R_CreateImage: bad texture filter" );
@@ -1335,7 +1339,7 @@ void idImage::GenerateCubeImage( const byte* pic[6], int size,
 	
 		for( i = 0 ; i < 6 ; i++ )
 		{
-			glTexImage2D( GL_TEXTURE_CUBE_MAP_POSITIVE_X_EXT + i, 0, internalFormat, scaled_width, scaled_height, 0,
+			glTexImage2D( GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, internalFormat, scaled_width, scaled_height, 0,
 						  GL_RGBA, GL_UNSIGNED_BYTE, NULL );
 		}
 		
@@ -1352,7 +1356,7 @@ void idImage::GenerateCubeImage( const byte* pic[6], int size,
 		// FIXME: support GL_COLOR_INDEX8_EXT?
 		for( i = 0 ; i < 6 ; i++ )
 		{
-			glTexImage2D( GL_TEXTURE_CUBE_MAP_POSITIVE_X_EXT + i, 0, internalFormat, scaled_width, scaled_height, 0,
+			glTexImage2D( GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, internalFormat, scaled_width, scaled_height, 0,
 						  GL_RGBA, GL_UNSIGNED_BYTE, pic[i] );
 		}
 	}
@@ -1374,7 +1378,7 @@ void idImage::GenerateCubeImage( const byte* pic[6], int size,
 		{
 			byte*	shrunken;
 			
-			glTexImage2D( GL_TEXTURE_CUBE_MAP_POSITIVE_X_EXT + i, miplevel, internalFormat,
+			glTexImage2D( GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, miplevel, internalFormat,
 						  scaled_width / 2, scaled_height / 2, 0,
 						  GL_RGBA, GL_UNSIGNED_BYTE, shrunk[i] );
 						  
@@ -2291,7 +2295,7 @@ has completed
 */
 void idImage::UploadPrecompressedDDSImage( byte* data, int len )
 {
-#if 1 //!defined(USE_GLES1)
+#if !defined(USE_GLES1)
 	ddsFileHeader_t*	header = ( ddsFileHeader_t* )( data + 4 );
 	
 	// ( not byte swapping dwReserved1 dwReserved2 )
@@ -2678,7 +2682,7 @@ void idImage::Bind()
 	{
 		if( tmu->textureType == TT_CUBIC )
 		{
-			glDisable( GL_TEXTURE_CUBE_MAP_EXT );
+			glDisable( GL_TEXTURE_CUBE_MAP );
 		}
 		else if( tmu->textureType == TT_3D )
 		{
@@ -2693,7 +2697,7 @@ void idImage::Bind()
 		
 		if( type == TT_CUBIC )
 		{
-			glEnable( GL_TEXTURE_CUBE_MAP_EXT );
+			glEnable( GL_TEXTURE_CUBE_MAP );
 		}
 		else if( type == TT_3D )
 		{
@@ -2726,7 +2730,7 @@ void idImage::Bind()
 		if( tmu->currentCubeMap != texnum )
 		{
 			tmu->currentCubeMap = texnum;
-			glBindTexture( GL_TEXTURE_CUBE_MAP_EXT, texnum );
+			glBindTexture( GL_TEXTURE_CUBE_MAP, texnum );
 		}
 	}
 	else if( type == TT_3D )
@@ -2819,7 +2823,7 @@ void idImage::BindFragment()
 	}
 	else if( type == TT_CUBIC )
 	{
-		glBindTexture( GL_TEXTURE_CUBE_MAP_EXT, texnum );
+		glBindTexture( GL_TEXTURE_CUBE_MAP, texnum );
 	}
 	else if( type == TT_3D )
 	{
@@ -3031,7 +3035,7 @@ void idImage::UploadScratch( const byte* data, int cols, int rows )
 			for( i = 0 ; i < 6 ; i++ )
 			{
 #if defined(USE_GLES1)
-				glTexImage2D( GL_TEXTURE_CUBE_MAP_POSITIVE_X_EXT + i, 0, GL_RGBA, cols, rows, 0,
+				glTexImage2D( GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGBA, cols, rows, 0,
 							  GL_RGBA, GL_UNSIGNED_BYTE, data + cols * rows * 4 * i );
 #else
 				glTexImage2D( GL_TEXTURE_CUBE_MAP_POSITIVE_X_EXT + i, 0, GL_RGB8, cols, rows, 0,
@@ -3045,15 +3049,15 @@ void idImage::UploadScratch( const byte* data, int cols, int rows )
 			// it and don't try and do a texture compression
 			for( i = 0 ; i < 6 ; i++ )
 			{
-				glTexSubImage2D( GL_TEXTURE_CUBE_MAP_POSITIVE_X_EXT + i, 0, 0, 0, cols, rows,
+				glTexSubImage2D( GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, 0, 0, cols, rows,
 								 GL_RGBA, GL_UNSIGNED_BYTE, data + cols * rows * 4 * i );
 			}
 		}
 		glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
 		glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
 		// no other clamp mode makes sense
-		glTexParameteri( GL_TEXTURE_CUBE_MAP_EXT, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
-		glTexParameteri( GL_TEXTURE_CUBE_MAP_EXT, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
+		glTexParameteri( GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
+		glTexParameteri( GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
 	}
 	else
 	{
@@ -3223,12 +3227,12 @@ void idImage::Print() const
 		case GL_COMPRESSED_RGBA_S3TC_DXT1_EXT:
 			common->Printf( "DXT1A    " );
 			break;
-		case GL_COMPRESSED_RGBA_S3TC_DXT3_EXT:
-			common->Printf( "DXT3     " );
-			break;
-		case GL_COMPRESSED_RGBA_S3TC_DXT5_EXT:
-			common->Printf( "DXT5     " );
-			break;
+			//case GL_COMPRESSED_RGBA_S3TC_DXT3_EXT:
+			//	common->Printf( "DXT3     " );
+			//	break;
+			//case GL_COMPRESSED_RGBA_S3TC_DXT5_EXT:
+			//	common->Printf( "DXT5     " );
+			//	break;
 #else
 		case GL_INTENSITY8:
 		case 1:

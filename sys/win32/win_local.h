@@ -35,8 +35,13 @@ If you have questions concerning this license or the applicable additional terms
 #include <windows.h>
 #include <XInput.h>
 // RB begin
+#if defined(USE_ANGLE)
+#include <EGL/egl.h>
+#include <EGL/eglext.h>
+#else
 #include "../../libs/glew/include/GL/wglew.h"
 //#include "../../renderer/wglext.h"		// windows OpenGL extensions
+#endif
 // RB end
 
 
@@ -111,9 +116,16 @@ typedef struct
 	WNDPROC			wndproc;
 	
 	HDC				hDC;							// handle to device context
-	HGLRC			hGLRC;						// handle to GL rendering context
+	
+#if defined(USE_ANGLE)
+	EGLDisplay		eglDisplay;
+	EGLContext		eglContext;
+	EGLSurface		eglSurface;
+#else
+	HGLRC			hGLRC;							// handle to GL rendering context
 	PIXELFORMATDESCRIPTOR pfd;
 	int				pixelformat;
+#endif
 	
 	HINSTANCE		hinstOpenGL;	// HINSTANCE for the OpenGL library
 	

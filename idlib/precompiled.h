@@ -86,7 +86,41 @@ const int MAX_EXPRESSION_REGISTERS = 4096;
 
 // renderer
 // RB begin
-#if !defined(ID_TYPEINFO) && !defined(__ANDROID__)
+#if defined(USE_ANGLE)
+#include <GLES2/gl2.h>
+#include <GLES2/gl2ext.h>
+
+#define GL_CLAMP_TO_BORDER GL_CLAMP_TO_EDGE
+
+#define glClearDepth glClearDepthf
+#define glDepthRange glDepthRangef
+
+#define glLoadIdentity esLoadIdentity
+#define glLoadMatrixf esLoadMatrixf
+#define glMatrixMode esMatrixMode
+#define glOrtho esOrthof
+#define glPushMatrix esPushMatrix
+#define glPopMatrix esPopMatrix
+
+#define glEnableClientState esEnableClientState
+#define glDisableClientState esDisableClientState
+
+#define glVertexPointer esVertexPointer
+#define glNormalPointer esNormalPointer
+#define glTexCoordPointer esTexCoordPointer
+#define glColorPointer esColorPointer
+
+#define glColor4f esColor4f
+
+#define GL_MODELVIEW 0x1700
+#define GL_PROJECTION 0x1701
+
+#define GL_VERTEX_ARRAY 0x8074
+#define GL_NORMAL_ARRAY 0x8075
+#define GL_COLOR_ARRAY 0x8076
+#define GL_TEXTURE_COORD_ARRAY 0x8078
+
+#elif !defined(ID_TYPEINFO) && !defined(__ANDROID__)
 #include "../libs/glew/include/GL/glew.h"
 //#include "../renderer/qgl.h"
 #endif

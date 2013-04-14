@@ -93,7 +93,7 @@ void esVertexPointer( GLint size, GLenum type, GLsizei stride, const GLvoid* poi
 
 void esNormalPointer( GLenum type, GLsizei stride, const GLvoid* pointer )
 {
-	glVertexAttribPointer( VA_INDEX_NORMAL, size, type, false, stride, pointer );
+	glVertexAttribPointer( VA_INDEX_NORMAL, 3, type, false, stride, pointer );
 }
 
 void esTexCoordPointer( GLint size, GLenum type, GLsizei stride, const GLvoid* pointer )

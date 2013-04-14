@@ -19,6 +19,9 @@ if(WIN32)
 	find_library(DirectX_DXGUID_LIBRARY NAMES dxguid HINTS $ENV{DXSDK_DIR} PATH_SUFFIXES ${DirectX_LIBPATH_SUFFIX})
 	find_library(DirectX_DXERR_LIBRARY NAMES dxerr HINTS $ENV{DXSDK_DIR} PATH_SUFFIXES ${DirectX_LIBPATH_SUFFIX})
 	find_library(DirectX_XINPUT_LIBRARY NAMES Xinput HINTS $ENV{DXSDK_DIR} PATH_SUFFIXES ${DirectX_LIBPATH_SUFFIX})
+	if(ANGLE)
+		find_library(DirectX_D3D9_LIBRARY NAMES d3d9 HINTS $ENV{DXSDK_DIR} PATH_SUFFIXES ${DirectX_LIBPATH_SUFFIX})
+	endif()
 	
 	set(DirectX_LIBRARIES
 		${DirectX_DINPUT8_LIBRARY}
@@ -26,6 +29,7 @@ if(WIN32)
 		${DirectX_DXGUID_LIBRARY}
 		${DirectX_DXERR_LIBRARY}
 		${DirectX_XINPUT_LIBRARY}
+		${DirectX_D3D9_LIBRARY}
 		)
 
 	# handle the QUIETLY and REQUIRED arguments and set DirectX_FOUND to TRUE if
@@ -39,6 +43,7 @@ if(WIN32)
 		DirectX_DXGUID_LIBRARY
 		DirectX_DXERR_LIBRARY
 		DirectX_XINPUT_LIBRARY
+		DirectX_D3D9_LIBRARY
 		)
 
 	mark_as_advanced(DirectX_LIBRARIES DirectX_INCLUDE_DIR)

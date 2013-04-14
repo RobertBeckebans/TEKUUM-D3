@@ -129,7 +129,7 @@ void RB_SetDefaultGLState()
 #endif
 		if( glConfig.cubeMapAvailable )
 		{
-			glDisable( GL_TEXTURE_CUBE_MAP_EXT );
+			glDisable( GL_TEXTURE_CUBE_MAP );
 		}
 	}
 	

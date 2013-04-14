@@ -1132,7 +1132,7 @@ void idImageManager::ChangeTextureFilter()
 				break;
 #endif
 			case TT_CUBIC:
-				texEnum = GL_TEXTURE_CUBE_MAP_EXT;
+				texEnum = GL_TEXTURE_CUBE_MAP;
 				break;
 		}
 		
@@ -2256,7 +2256,7 @@ void idImageManager::BindNull()
 	RB_LogComment( "BindNull()\n" );
 	if( tmu->textureType == TT_CUBIC )
 	{
-		glDisable( GL_TEXTURE_CUBE_MAP_EXT );
+		glDisable( GL_TEXTURE_CUBE_MAP );
 	}
 	else if( tmu->textureType == TT_3D )
 	{

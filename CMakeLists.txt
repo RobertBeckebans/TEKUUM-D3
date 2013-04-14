@@ -24,12 +24,19 @@ option(STANDALONE
 option(GLES1
 		"Only use OpenGL ES 1.0 functions" OFF)
 		
+option(ANGLE
+		"Only use OpenGL ES 2.0 functions through ANGLE" ON)
+		
 option(DEBUG_MEMORY
 		"Enables memory logging to file" OFF)
 
 #if(USE_QT_TOOLS)
 #	set(USE_QT_WINDOWING TRUE)
 #endif()
+
+if(ANGLE)
+	set(USE_CMDLINE_TOOLS FALSE)
+endif()
 
 
 if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
@@ -85,6 +92,9 @@ elseif(MSVC)
 	endif()
 endif()
 
+# CMake only used for desktop builds
+add_definitions(-DID_PC)
+
 if(STANDALONE)
 	add_definitions(-DSTANDALONE)
 endif()
@@ -95,6 +105,7 @@ if(DEBUG_MEMORY)
 endif()
 
 add_subdirectory(idlib)
+add_subdirectory(libs)
 
 file(GLOB AAS_INCLUDES aas/*.h)
 file(GLOB AAS_SOURCES aas/*.cpp)
@@ -627,6 +638,11 @@ if(USE_QT_WINDOWING)
 else()
 	file(GLOB_RECURSE WIN32_INCLUDES sys/win32/*.h)
 	file(GLOB_RECURSE WIN32_SOURCES sys/win32/*.cpp)
+	
+	if(ANGLE)
+		list(REMOVE_ITEM WIN32_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/sys/win32/win_glimp.cpp)
+		list(APPEND WIN32_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/sys/win32/win_egl.cpp)
+	endif()
 
 	set(WIN32_RESOURCES
 		sys/win32/rc/res/BEVEL.BMP
@@ -916,6 +932,20 @@ source_group("tools\\script" FILES ${EDITOR_SCRIPT_SOURCES})
 source_group("tools\\sound" FILES ${EDITOR_SOUND_INCLUDES})
 source_group("tools\\sound" FILES ${EDITOR_SOUND_SOURCES})
 
+if(ANGLE)
+	add_definitions(-DUSE_ANGLE)
+	add_definitions(-DUSE_GLES1)
+	add_definitions(-DUSE_GLES2)
+	include_directories(libs/angle/include)
+	list(REMOVE_ITEM RENDERER_SOURCES renderer/Framebuffer.cpp)
+	#list(REMOVE_ITEM RENDERER_SOURCES renderer/draw_glsl.cpp)
+	list(REMOVE_ITEM RENDERER_SOURCES renderer/draw_exp.cpp)
+	list(REMOVE_ITEM RENDERER_SOURCES renderer/draw_arb.cpp)
+	list(REMOVE_ITEM RENDERER_SOURCES renderer/draw_arb2.cpp)
+else()
+	list(APPEND TEKUUM_INCLUDES ${GLEW_INCLUDES})
+	list(APPEND TEKUUM_SOURCES ${GLEW_SOURCES})
+endif()
 
 set(TEKUUM_INCLUDES
 			${AAS_INCLUDES}
@@ -928,7 +958,6 @@ set(TEKUUM_INCLUDES
 			${PNG_INCLUDES}
 			${ETC1_INCLUDES}
 			${ZLIB_INCLUDES}
-			${GLEW_INCLUDES}
 			${SOUND_INCLUDES}
 			${OGGVORBIS_INCLUDES}
 			${UI_INCLUDES}
@@ -946,7 +975,6 @@ set(TEKUUM_SOURCES
 			${PNG_SOURCES}
 			${ETC1_SOURCES}
 			${ZLIB_SOURCES}
-			${GLEW_SOURCES}
 			${FREETYPE_SOURCES}
 			${SOUND_SOURCES}
 			${OGGVORBIS_SOURCES}
@@ -958,6 +986,8 @@ add_definitions(-D__DOOM__
 				-DGLEW_STATIC
 				-DBUILD_FREETYPE
 				-DFT2_BUILD_LIBRARY)
+				
+
 				
 if(MONOLITH)
 	list(APPEND TEKUUM_INCLUDES
@@ -1171,18 +1201,37 @@ if(MSVC)
 				   # WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/libs/curl/lib
                    # COMMENT "Compiling libcURL")
 		
-	add_dependencies(Tekuum idlib)
-	target_link_libraries(Tekuum
-		idlib
-		${DirectX_LIBRARIES}
-		${QT_LIBRARIES}
-		#libcurl 
-		#openal32 
-		opengl32
-		glu32
-		dbghelp
-		eaxguid
-		iphlpapi
-		winmm
-		ws2_32.lib)
+	if(ANGLE)
+		add_dependencies(Tekuum idlib libANGLE)
+		target_link_libraries(Tekuum
+			idlib
+			libANGLE
+			${DirectX_LIBRARIES}
+			${QT_LIBRARIES}
+			#libcurl 
+			#openal32 
+			#opengl32
+			glu32
+			dbghelp
+			eaxguid
+			iphlpapi
+			winmm
+			ws2_32.lib)
+	else()
+		add_dependencies(Tekuum idlib)
+			target_link_libraries(Tekuum
+			idlib
+	
+			${DirectX_LIBRARIES}
+			${QT_LIBRARIES}
+			#libcurl 
+			#openal32 
+			opengl32
+			glu32
+			dbghelp
+			eaxguid
+			iphlpapi
+			winmm
+			ws2_32.lib)
+	endif()
 endif()

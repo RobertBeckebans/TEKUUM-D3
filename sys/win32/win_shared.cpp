@@ -124,7 +124,8 @@ int Sys_GetVideoRam() {
 	return 512;
 #else
 	int retSize = 64;
-
+	
+#if !defined(USE_ANGLE)
 	// RB: added check with OpenGL extensions for GFX cards with more than 2 GB ram
 	if( GLEW_NVX_gpu_memory_info != 0 )
 	{
@@ -152,7 +153,8 @@ int Sys_GetVideoRam() {
 		return retSize;
 	}
 	// RB end
-
+#endif
+	
 	CComPtr<IWbemLocator> spLoc = NULL;
 	HRESULT hr = CoCreateInstance( CLSID_WbemLocator, 0, CLSCTX_SERVER, IID_IWbemLocator, ( LPVOID * ) &spLoc );
 	if ( hr != S_OK || spLoc == NULL ) {

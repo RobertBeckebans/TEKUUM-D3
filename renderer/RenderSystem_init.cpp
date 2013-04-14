@@ -158,7 +158,7 @@ idCVar r_useInteractionScissors( "r_useInteractionScissors", "2", CVAR_RENDERER 
 idCVar r_useShadowCulling( "r_useShadowCulling", "1", CVAR_RENDERER | CVAR_BOOL, "try to cull shadows from partially visible lights" );
 idCVar r_useFrustumFarDistance( "r_useFrustumFarDistance", "0", CVAR_RENDERER | CVAR_FLOAT, "if != 0 force the view frustum far distance to this distance" );
 idCVar r_logFile( "r_logFile", "0", CVAR_RENDERER | CVAR_INTEGER, "number of frames to emit GL logs" );
-idCVar r_clear( "r_clear", "2", CVAR_RENDERER, "force screen clear every frame, 1 = purple, 2 = black, 'r g b' = custom" );
+idCVar r_clear( "r_clear", "1", CVAR_RENDERER, "force screen clear every frame, 1 = purple, 2 = black, 'r g b' = custom" );
 idCVar r_offsetFactor( "r_offsetfactor", "0", CVAR_RENDERER | CVAR_FLOAT, "polygon offset parameter" );
 idCVar r_offsetUnits( "r_offsetunits", "-600", CVAR_RENDERER | CVAR_FLOAT, "polygon offset parameter" );
 idCVar r_shadowPolygonOffset( "r_shadowPolygonOffset", "-1", CVAR_RENDERER | CVAR_FLOAT, "bias value added to depth test for stencil shadow drawing" );
@@ -405,7 +405,9 @@ static void R_CheckPortableExtensions()
 #endif
 	
 	// GL_ARB_texture_cube_map
-#if defined(USE_GLES1) && defined(__ANDROID__)
+#if defined(USE_GLES2)
+	glConfig.cubeMapAvailable = true;
+#elif defined(USE_GLES1) && defined(__ANDROID__)
 	glConfig.cubeMapAvailable = R_CheckExtension( "GL_OES_texture_cube_map" );
 #else
 	glConfig.cubeMapAvailable = GLEW_ARB_texture_cube_map != 0;
@@ -2303,7 +2305,7 @@ static void GfxInfo_f( const idCmdArgs& args )
 		common->Printf( "glFinish not forced\n" );
 	}
 	
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(USE_ANGLE)
 // WGL_EXT_swap_interval
 	typedef BOOL ( WINAPI * PFNWGLSWAPINTERVALEXTPROC )( int interval );
 	extern	PFNWGLSWAPINTERVALEXTPROC wglSwapIntervalEXT;

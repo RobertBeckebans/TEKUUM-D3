@@ -519,6 +519,8 @@ void RB_T_FillDepthBuffer( const drawSurf_t* surf )
 	lightAmbient.w = 1;
 	
 	bool isWorldModel = ( surf->space->entityDef->parms.origin == vec3_origin );
+	
+#if !defined(USE_GLES2)
 	if( r_usePrecomputedLighting.GetBool() && tr.backEndRenderer == BE_ARB )
 	{
 		if( isWorldModel )
@@ -563,6 +565,7 @@ void RB_T_FillDepthBuffer( const drawSurf_t* surf )
 #endif
 		}
 	}
+#endif // #if !defined(USE_GLES2)
 	
 	bool drawSolid = false;
 	
@@ -697,6 +700,7 @@ void RB_T_FillDepthBuffer( const drawSurf_t* surf )
 		RB_DrawElementsWithCounters( tri );
 	}
 	
+#if !defined(USE_GLES2)
 	if( r_usePrecomputedLighting.GetBool() && tr.backEndRenderer == BE_ARB )
 	{
 		if( isWorldModel )
@@ -713,6 +717,7 @@ void RB_T_FillDepthBuffer( const drawSurf_t* surf )
 			glDisable( GL_COLOR_MATERIAL );
 		}
 	}
+#endif // #if !defined(USE_GLES2)
 	
 	GL_CheckErrors();
 	
@@ -2661,9 +2666,11 @@ void	RB_STD_DrawView()
 	// main light renderer
 	switch( tr.backEndRenderer )
 	{
+#if !defined(USE_GLES2)
 		case BE_ARB:
 			RB_ARB_DrawInteractions();
 			break;
+#endif
 #if !defined(USE_GLES1)
 		case BE_ARB2:
 			RB_ARB2_DrawInteractions();
