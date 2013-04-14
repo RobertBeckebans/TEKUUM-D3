@@ -95,14 +95,12 @@ idSaveGame::Close
 */
 void idSaveGame::Close()
 {
-	int i;
-	
 	WriteSoundCommands();
 	
 	// read trace models
 	idClipModel::SaveTraceModels( this );
 	
-	for( i = 1; i < objects.Num(); i++ )
+	for( int i = 1; i < objects.Num(); i++ )
 	{
 		CallSave_r( objects[ i ]->GetType(), objects[ i ] );
 	}
@@ -126,10 +124,8 @@ idSaveGame::WriteObjectList
 */
 void idSaveGame::WriteObjectList()
 {
-	int i;
-	
 	WriteInt( objects.Num() - 1 );
-	for( i = 1; i < objects.Num(); i++ )
+	for( int i = 1; i < objects.Num(); i++ )
 	{
 		WriteString( objects[ i ]->GetClassname() );
 	}

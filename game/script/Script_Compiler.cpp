@@ -1,33 +1,35 @@
 /*
 ===========================================================================
 
-Doom 3 GPL Source Code
-Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Doom 3 BFG Edition GPL Source Code
+Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2012 Robert Beckebans
 
-This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
+This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
-Doom 3 Source Code is free software: you can redistribute it and/or modify
+Doom 3 BFG Edition Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Doom 3 Source Code is distributed in the hope that it will be useful,
+Doom 3 BFG Edition Source Code is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Doom 3 Source Code.  If not, see <http://www.gnu.org/licenses/>.
+along with Doom 3 BFG Edition Source Code.  If not, see <http://www.gnu.org/licenses/>.
 
-In addition, the Doom 3 Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 Source Code.  If not, please request a copy in writing from id Software at the address below.
+In addition, the Doom 3 BFG Edition Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 BFG Edition Source Code.  If not, please request a copy in writing from id Software at the address below.
 
 If you have questions concerning this license or the applicable additional terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 
 ===========================================================================
 */
 
-#include "precompiled.h"
 #pragma hdrstop
+#include "precompiled.h"
+
 
 #include "../Game_local.h"
 
@@ -533,11 +535,11 @@ idVarDef* idCompiler::OptimizeOpcode( const opcode_t* op, idVarDef* var_a, idVar
 	eval_t		c;
 	idTypeDef*	type;
 	
-	if( var_a && var_a->initialized != idVarDef::initializedConstant )
+	if( var_a == NULL || var_a->initialized != idVarDef::initializedConstant )
 	{
 		return NULL;
 	}
-	if( var_b && var_b->initialized != idVarDef::initializedConstant )
+	if( var_b == NULL || var_b->initialized != idVarDef::initializedConstant )
 	{
 		return NULL;
 	}
@@ -1121,7 +1123,7 @@ idTypeDef* idCompiler::CheckType()
 	else
 	{
 		type = gameLocal.program.FindType( token.c_str() );
-		if( type && !type->Inherits( &type_object ) )
+		if( type != NULL && !type->Inherits( &type_object ) )
 		{
 			type = NULL;
 		}
@@ -1298,10 +1300,9 @@ idVarDef* idCompiler::EmitFunctionParms( int op, idVarDef* func, int startarg, i
 				break;
 				
 			default :
-				Error( "Invalid return type for function '%s'", func->Name() );
 				// shut up compiler
 				resultOp = OP_STORE_OBJ;
-				break;
+				Error( "Invalid return type for function '%s'", func->Name() );
 		}
 	}
 	
@@ -1447,11 +1448,12 @@ idVarDef* idCompiler::ParseSysObjectCall( idVarDef* funcDef )
 		Error( "'%s' is not a function", funcDef->Name() );
 	}
 	
-	if( !funcDef->value.functionPtr->eventdef )
+	if( funcDef->value.functionPtr->eventdef == NULL )
 	{
 		Error( "\"%s\" cannot be called with object notation", funcDef->Name() );
 	}
 	
+	assert( funcDef->value.functionPtr->eventdef != NULL ); // to remove stupid analyze warning
 	if( !idThread::Type.RespondsTo( *funcDef->value.functionPtr->eventdef ) )
 	{
 		Error( "\"%s\" is not callable as a 'sys' function", funcDef->Name() );
@@ -1607,7 +1609,7 @@ idVarDef* idCompiler::ParseValue()
 	
 	ParseName( name );
 	def = LookupDef( name, basetype );
-	if( !def )
+	if( def == NULL )
 	{
 		if( basetype )
 		{
@@ -1627,9 +1629,17 @@ idVarDef* idCompiler::ParseValue()
 			ParseName( name );
 			namespaceDef = def;
 			def = gameLocal.program.GetDef( NULL, name, namespaceDef );
-			if( !def )
+			if( def == NULL )
 			{
-				Error( "Unknown value \"%s::%s\"", namespaceDef->GlobalName(), name.c_str() );
+				if( namespaceDef != NULL )
+				{
+					Error( "Unknown value \"%s::%s\"", namespaceDef->GlobalName(), name.c_str() );
+				}
+				else
+				{
+					Error( "Unknown value \"%s\"", name.c_str() );
+				}
+				break;
 			}
 		}
 		//def = LookupDef( name, basetype );
@@ -1658,11 +1668,9 @@ idVarDef* idCompiler::GetTerm()
 				break;
 				
 			default :
-				Error( "type mismatch for ~" );
-				
 				// shut up compiler
 				op = OP_COMP_F;
-				break;
+				Error( "type mismatch for ~" );
 		}
 		
 		return EmitOpcode( op, e, 0 );
@@ -1694,22 +1702,18 @@ idVarDef* idCompiler::GetTerm()
 				break;
 				
 			case ev_function :
-				Error( "Invalid type for !" );
-				
 				// shut up compiler
 				op = OP_NOT_F;
+				Error( "Invalid type for !" );
 				break;
-				
 			case ev_object :
 				op = OP_NOT_ENT;
 				break;
 				
 			default :
-				Error( "type mismatch for !" );
-				
 				// shut up compiler
 				op = OP_NOT_F;
-				break;
+				Error( "type mismatch for !" );
 		}
 		
 		return EmitOpcode( op, e, 0 );
@@ -1744,11 +1748,9 @@ idVarDef* idCompiler::GetTerm()
 					op = OP_NEG_V;
 					break;
 				default :
-					Error( "type mismatch for -" );
-					
 					// shut up compiler
 					op = OP_NEG_F;
-					break;
+					Error( "type mismatch for -" );
 			}
 			return EmitOpcode( &opcodes[ op ], e, 0 );
 		}
@@ -2965,16 +2967,18 @@ void idCompiler::ParseEventDef( idTypeDef* returnType, const char* name )
 	idStr			parmName;
 	
 	ev = idEventDef::FindEvent( name );
-	if( !ev )
+	if( ev == NULL )
 	{
 		Error( "Unknown event '%s'", name );
+		return;
 	}
 	
 	// set the return type
 	expectedType = GetTypeForEventArg( ev->GetReturnType() );
-	if( !expectedType )
+	if( expectedType == NULL )
 	{
 		Error( "Invalid return type '%c' in definition of '%s' event.", ev->GetReturnType(), name );
+		return;
 	}
 	if( returnType != expectedType )
 	{
@@ -2990,9 +2994,10 @@ void idCompiler::ParseEventDef( idTypeDef* returnType, const char* name )
 	for( i = 0; i < num; i++ )
 	{
 		expectedType = GetTypeForEventArg( format[ i ] );
-		if( !expectedType || ( expectedType == &type_void ) )
+		if( expectedType == NULL || ( expectedType == &type_void ) )
 		{
 			Error( "Invalid parameter '%c' in definition of '%s' event.", format[ i ], name );
+			return;
 		}
 		
 		argType = ParseType();

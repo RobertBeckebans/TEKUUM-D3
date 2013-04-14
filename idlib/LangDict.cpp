@@ -109,7 +109,14 @@ bool idLangDict::Load( const char* fileName, bool clear /* _D3XP */ )
 			idLangKeyValue kv;
 			kv.key = tok;
 			kv.value = tok2;
-			assert( kv.key.Cmpn( STRTABLE_ID, STRTABLE_ID_LENGTH ) == 0 );
+			
+			// RB: development HACK until we replace the BFG fonts
+			if( kv.key.Cmpn( "#font_", 6 ) != 0 )
+			{
+				assert( kv.key.Cmpn( STRTABLE_ID, STRTABLE_ID_LENGTH ) == 0 );
+			}
+			// RB
+			
 			hash.Add( GetHashKey( kv.key ), args.Append( kv ) );
 		}
 	}
@@ -172,9 +179,13 @@ const char* idLangDict::GetString( const char* str ) const
 		return "";
 	}
 	
-	if( idStr::Cmpn( str, STRTABLE_ID, STRTABLE_ID_LENGTH ) != 0 )
+	// RB: development HACK until we replace the BFG fonts
+	if( idStr::Cmpn( str, "#font_", 6 ) != 0 )
 	{
-		return str;
+		if( idStr::Cmpn( str, STRTABLE_ID, STRTABLE_ID_LENGTH ) != 0 )
+		{
+			return str;
+		}
 	}
 	
 	int hashKey = GetHashKey( str );

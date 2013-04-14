@@ -1,33 +1,34 @@
 /*
 ===========================================================================
 
-Doom 3 GPL Source Code
-Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Doom 3 BFG Edition GPL Source Code
+Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
 
-This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
+This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
-Doom 3 Source Code is free software: you can redistribute it and/or modify
+Doom 3 BFG Edition Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Doom 3 Source Code is distributed in the hope that it will be useful,
+Doom 3 BFG Edition Source Code is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Doom 3 Source Code.  If not, see <http://www.gnu.org/licenses/>.
+along with Doom 3 BFG Edition Source Code.  If not, see <http://www.gnu.org/licenses/>.
 
-In addition, the Doom 3 Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 Source Code.  If not, please request a copy in writing from id Software at the address below.
+In addition, the Doom 3 BFG Edition Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 BFG Edition Source Code.  If not, please request a copy in writing from id Software at the address below.
 
 If you have questions concerning this license or the applicable additional terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 
 ===========================================================================
 */
 
-#include "precompiled.h"
 #pragma hdrstop
+#include "precompiled.h"
+
 
 #include "../Game_local.h"
 
@@ -179,7 +180,7 @@ index 0 will never be NULL.  Any anim >= NumAnims will return NULL.
 */
 const idMD5Anim* idAnim::MD5Anim( int num ) const
 {
-	if( anims == NULL || anims[0] == NULL )
+	if( anims[0] == NULL )
 	{
 		return NULL;
 	}
@@ -623,6 +624,10 @@ const char* idAnim::AddFrameCommand( const idDeclModelDef* modelDef, int framenu
 			return "Unexpected end of line";
 		}
 		fc.type = FC_TRIGGER_SMOKE_PARTICLE;
+		if( !declManager->FindType( DECL_PARTICLE, token.c_str() ) )
+		{
+			return va( "Particle '%s' not found", token.c_str() );
+		}
 		fc.string = new idStr( token );
 	}
 	else if( token == "melee" )
@@ -794,6 +799,10 @@ const char* idAnim::AddFrameCommand( const idDeclModelDef* modelDef, int framenu
 		if( !src.ReadTokenOnLine( &token ) )
 		{
 			return "Unexpected end of line";
+		}
+		if( !declManager->FindType( DECL_PARTICLE, token.c_str() ) )
+		{
+			return va( "Particle '%s' not found", token.c_str() );
 		}
 		str += token;
 		fc.type = FC_START_EMITTER;
@@ -2278,7 +2287,7 @@ bool idAnimBlend::BlendAnim( int currentTime, int channel, int numJoints, idJoin
 	float			mixWeight;
 	const idMD5Anim*	md5anim;
 	idJointQuat*		ptr;
-	frameBlend_t	frametime;
+	frameBlend_t	frametime = { 0 };
 	idJointQuat*		jointFrame;
 	idJointQuat*		mixFrame;
 	int				numAnims;
@@ -2864,7 +2873,7 @@ void idDeclModelDef::GetJointList( const char* jointnames, idList<jointHandle_t>
 	while( *pos )
 	{
 		// skip over whitespace
-		while( ( *pos != 0 ) && isspace( *pos ) )
+		while( ( *pos != 0 ) && isspace( ( unsigned char )*pos ) )
 		{
 			pos++;
 		}
@@ -2898,7 +2907,7 @@ void idDeclModelDef::GetJointList( const char* jointnames, idList<jointHandle_t>
 			getChildren = false;
 		}
 		
-		while( ( *pos != 0 ) && !isspace( *pos ) )
+		while( ( *pos != 0 ) && !isspace( ( unsigned char )*pos ) )
 		{
 			jointname += *pos;
 			pos++;
@@ -3758,6 +3767,7 @@ int idDeclModelDef::NumJointsOnChannel( int channel ) const
 	if( ( channel < 0 ) || ( channel >= ANIM_NumAnimChannels ) )
 	{
 		gameLocal.Error( "idDeclModelDef::NumJointsOnChannel : channel out of range" );
+		return 0;
 	}
 	return channelJoints[ channel ].Num();
 }
@@ -3772,6 +3782,7 @@ const int* idDeclModelDef::GetChannelJoints( int channel ) const
 	if( ( channel < 0 ) || ( channel >= ANIM_NumAnimChannels ) )
 	{
 		gameLocal.Error( "idDeclModelDef::GetChannelJoints : channel out of range" );
+		return NULL;
 	}
 	return channelJoints[ channel ].Ptr();
 }
@@ -4296,6 +4307,7 @@ idAnimBlend* idAnimator::CurrentAnim( int channelNum )
 	if( ( channelNum < 0 ) || ( channelNum >= ANIM_NumAnimChannels ) )
 	{
 		gameLocal.Error( "idAnimator::CurrentAnim : channel out of range" );
+		return NULL;
 	}
 	
 	return &channels[ channelNum ][ 0 ];
@@ -4314,6 +4326,7 @@ void idAnimator::Clear( int channelNum, int currentTime, int cleartime )
 	if( ( channelNum < 0 ) || ( channelNum >= ANIM_NumAnimChannels ) )
 	{
 		gameLocal.Error( "idAnimator::Clear : channel out of range" );
+		return;
 	}
 	
 	blend = channels[ channelNum ];
@@ -4409,6 +4422,7 @@ void idAnimator::SyncAnimChannels( int channelNum, int fromChannelNum, int curre
 	if( ( channelNum < 0 ) || ( channelNum >= ANIM_NumAnimChannels ) || ( fromChannelNum < 0 ) || ( fromChannelNum >= ANIM_NumAnimChannels ) )
 	{
 		gameLocal.Error( "idAnimator::SyncToChannel : channel out of range" );
+		return;
 	}
 	
 	idAnimBlend& fromBlend = channels[ fromChannelNum ][ 0 ];
@@ -5495,18 +5509,20 @@ bool idAnimator::GetJointLocalTransform( jointHandle_t jointHandle, int currentT
 	// FIXME: overkill
 	CreateFrame( currentTime, false );
 	
-	if( jointHandle > 0 )
-	{
-		idJointMat m = joints[ jointHandle ];
-		m /= joints[ modelJoints[ jointHandle ].parentNum ];
-		offset = m.ToVec3();
-		axis = m.ToMat3();
-	}
-	else
+	// RB: long neck GCC compiler bug workaround from dhewm3 ...
+	if( jointHandle == 0 )
 	{
 		offset = joints[ jointHandle ].ToVec3();
 		axis = joints[ jointHandle ].ToMat3();
+		
+		return true;
 	}
+	
+	idJointMat m = joints[ jointHandle ];
+	m /= joints[ modelJoints[ jointHandle ].parentNum ];
+	offset = m.ToVec3();
+	axis = m.ToMat3();
+	// RB end
 	
 	return true;
 }
@@ -5551,11 +5567,13 @@ int idAnimator::GetChannelForJoint( jointHandle_t joint ) const
 	if( !modelDef )
 	{
 		gameLocal.Error( "idAnimator::GetChannelForJoint: NULL model" );
+		return -1;
 	}
 	
 	if( ( joint < 0 ) || ( joint >= numJoints ) )
 	{
 		gameLocal.Error( "idAnimator::GetChannelForJoint: invalid joint num (%d)", joint );
+		return -1;
 	}
 	
 	return modelDef->GetJoint( joint )->channel;
@@ -5610,8 +5628,8 @@ idAnimator::GetJoints
 */
 void idAnimator::GetJoints( int* numJoints, idJointMat** jointsPtr )
 {
-	*numJoints	= this->numJoints;
-	*jointsPtr	= this->joints;
+	*numJoints = this->numJoints;
+	*jointsPtr = this->joints;
 }
 
 /*
@@ -5758,7 +5776,7 @@ const idDeclModelDef* ANIM_GetModelDefFromEntityDef( const idDict* args )
 	
 	idStr name = args->GetString( "model" );
 	modelDef = static_cast<const idDeclModelDef*>( declManager->FindType( DECL_MODELDEF, name, false ) );
-	if( modelDef && modelDef->ModelHandle() )
+	if( modelDef != NULL && modelDef->ModelHandle() )
 	{
 		return modelDef;
 	}
@@ -5780,17 +5798,17 @@ idRenderModel* idGameEdit::ANIM_GetModelFromEntityDef( const idDict* args )
 	
 	idStr name = args->GetString( "model" );
 	modelDef = static_cast<const idDeclModelDef*>( declManager->FindType( DECL_MODELDEF, name, false ) );
-	if( modelDef )
+	if( modelDef != NULL )
 	{
 		model = modelDef->ModelHandle();
 	}
 	
-	if( !model )
+	if( model == NULL )
 	{
 		model = renderModelManager->FindModel( name );
 	}
 	
-	if( model && model->IsDefaultModel() )
+	if( model != NULL && model->IsDefaultModel() )
 	{
 		return NULL;
 	}

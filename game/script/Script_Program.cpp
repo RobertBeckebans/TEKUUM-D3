@@ -1,33 +1,35 @@
 /*
 ===========================================================================
 
-Doom 3 GPL Source Code
-Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Doom 3 BFG Edition GPL Source Code
+Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2012 Robert Beckebans
 
-This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
+This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
-Doom 3 Source Code is free software: you can redistribute it and/or modify
+Doom 3 BFG Edition Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Doom 3 Source Code is distributed in the hope that it will be useful,
+Doom 3 BFG Edition Source Code is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Doom 3 Source Code.  If not, see <http://www.gnu.org/licenses/>.
+along with Doom 3 BFG Edition Source Code.  If not, see <http://www.gnu.org/licenses/>.
 
-In addition, the Doom 3 Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 Source Code.  If not, please request a copy in writing from id Software at the address below.
+In addition, the Doom 3 BFG Edition Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 BFG Edition Source Code.  If not, please request a copy in writing from id Software at the address below.
 
 If you have questions concerning this license or the applicable additional terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 
 ===========================================================================
 */
 
-#include "precompiled.h"
 #pragma hdrstop
+#include "precompiled.h"
+
 
 #include "../Game_local.h"
 
@@ -1260,15 +1262,14 @@ byte* idScriptObject::GetVariable( const char* name, etype_t etype ) const
 {
 	int				i;
 	int				pos;
-	const idTypeDef*	t;
+	const idTypeDef*	t = type;
 	const idTypeDef*	parm;
 	
-	if( type == &type_object )
+	if( t == &type_object || t == NULL )
 	{
 		return NULL;
 	}
 	
-	t = type;
 	do
 	{
 		if( t->SuperClass() != &type_object )
@@ -1302,7 +1303,7 @@ byte* idScriptObject::GetVariable( const char* name, etype_t etype ) const
 		}
 		t = t->SuperClass();
 	}
-	while( t && ( t != &type_object ) );
+	while( t != NULL && ( t != &type_object ) );
 	
 	return NULL;
 }
@@ -1320,11 +1321,8 @@ idProgram::AllocType
 */
 idTypeDef* idProgram::AllocType( idTypeDef& type )
 {
-	idTypeDef* newtype;
-	
-	newtype	= new idTypeDef( type );
-	types.Append( newtype );
-	
+	idTypeDef* newtype	= new idTypeDef( type );
+	typesHash.Add( idStr::Hash( type.Name() ), types.Append( newtype ) );
 	return newtype;
 }
 
@@ -1335,11 +1333,8 @@ idProgram::AllocType
 */
 idTypeDef* idProgram::AllocType( etype_t etype, idVarDef* edef, const char* ename, int esize, idTypeDef* aux )
 {
-	idTypeDef* newtype;
-	
-	newtype	= new idTypeDef( etype, edef, ename, esize, aux );
-	types.Append( newtype );
-	
+	idTypeDef* newtype	= new idTypeDef( etype, edef, ename, esize, aux );
+	typesHash.Add( idStr::Hash( ename ), types.Append( newtype ) );
 	return newtype;
 }
 
@@ -1353,10 +1348,8 @@ a new one and copies it out.
 */
 idTypeDef* idProgram::GetType( idTypeDef& type, bool allocate )
 {
-	int i;
-	
-	//FIXME: linear search == slow
-	for( i = types.Num() - 1; i >= 0; i-- )
+
+	for( int i = typesHash.First( idStr::Hash( type.Name() ) ); i != -1; i = typesHash.Next( i ) )
 	{
 		if( types[ i ]->MatchesType( type ) && !strcmp( types[ i ]->Name(), type.Name() ) )
 		{
@@ -1382,12 +1375,10 @@ Returns a preexisting complex type that matches the name, or returns NULL if not
 */
 idTypeDef* idProgram::FindType( const char* name )
 {
-	idTypeDef*	check;
-	int			i;
-	
-	for( i = types.Num() - 1; i >= 0; i-- )
+
+	for( int i = typesHash.First( idStr::Hash( name ) ); i != -1; i = typesHash.Next( i ) )
 	{
-		check = types[ i ];
+		idTypeDef* check = types[ i ];
 		if( !strcmp( check->Name(), name ) )
 		{
 			return check;
@@ -1893,7 +1884,7 @@ void idProgram::SetEntity( const char* name, idEntity* ent )
 	defName += name;
 	
 	def = GetDef( &type_entity, defName, &def_namespace );
-	if( def && ( def->initialized != idVarDef::stackVariable ) )
+	if( def != NULL && ( def->initialized != idVarDef::stackVariable ) )
 	{
 		// 0 is reserved for NULL entity
 		if( !ent )
@@ -2266,6 +2257,7 @@ void idProgram::FreeData()
 	
 	// free any special types we've created
 	types.DeleteContents( true );
+	typesHash.Free();
 	
 	filenum = 0;
 	
@@ -2484,13 +2476,19 @@ void idProgram::Restart()
 	{
 		delete types[ i ];
 	}
-	types.SetNum( top_types, false );
+	types.SetNum( top_types );
+	
+	typesHash.Free();
+	for( i = 0; i < types.Num(); i++ )
+	{
+		typesHash.Add( idStr::Hash( types[i]->Name() ), i );
+	}
 	
 	for( i = top_defs; i < varDefs.Num(); i++ )
 	{
 		delete varDefs[ i ];
 	}
-	varDefs.SetNum( top_defs, false );
+	varDefs.SetNum( top_defs );
 	
 	for( i = top_functions; i < functions.Num(); i++ )
 	{
@@ -2499,7 +2497,7 @@ void idProgram::Restart()
 	functions.SetNum( top_functions	);
 	
 	statements.SetNum( top_statements );
-	fileList.SetNum( top_files, false );
+	fileList.SetNum( top_files );
 	filename.Clear();
 	
 	// reset the variables to their default values
@@ -2547,6 +2545,9 @@ idProgram::idProgram
 */
 idProgram::idProgram()
 {
+	varDefs.SetGranularity( 256 );
+	varDefNames.SetGranularity( 256 );
+	
 	FreeData();
 }
 
