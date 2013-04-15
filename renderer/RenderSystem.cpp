@@ -612,6 +612,10 @@ void idRenderSystemLocal::SetBackEndRenderer()
 		}
 	}
 #endif
+	
+#if defined(USE_GLES2)
+	backEndRenderer = BE_GLSL;
+#else
 	if( idStr::Icmp( r_renderer.GetString(), "arb" ) == 0 )
 	{
 		backEndRenderer = BE_ARB;
@@ -623,6 +627,7 @@ void idRenderSystemLocal::SetBackEndRenderer()
 			backEndRenderer = BE_ARB2;
 		}
 	}
+#endif
 	
 	// fallback
 	if( backEndRenderer == BE_BAD )

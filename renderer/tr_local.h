@@ -732,6 +732,8 @@ struct glstate_t
 #if !defined(USE_GLES1)
 	Framebuffer*		framebuffer;
 #endif
+	
+	idVec4				color;
 };
 
 struct backEndCounters_t
@@ -1635,7 +1637,7 @@ typedef struct shaderProgram_s
 	
 	int32_t         u_ColorImage;
 	int32_t         t_ColorImage;
-
+	
 	int32_t         u_DiffuseImage;
 	int32_t         t_DiffuseImage;
 	
@@ -1666,12 +1668,15 @@ typedef struct shaderProgram_s
 	int32_t         u_GrainImage;
 	int32_t         u_VignetteImage;
 	
+	int32_t         u_ColorMatrix;
+	idMat4			t_ColorMatrix;
+	
 	int32_t         u_ColorMatrixS;
 	idVec4			t_ColorMatrixS;
 	
 	int32_t         u_ColorMatrixT;
 	idVec4			t_ColorMatrixT;
-
+	
 	int32_t         u_DiffuseMatrixS;
 	idVec4			t_DiffuseMatrixS;
 	
@@ -2211,6 +2216,7 @@ idScreenRect R_CalcIntersectionScissor( const idRenderLightLocal* lightDef,
 										const viewDef_t* viewDef );
 
 idMat4 make_idMat4( const float* m );
+idMat4 make_idMat4Transposed( const float* m );
 
 
 /*
@@ -2242,8 +2248,9 @@ void			MatrixMultiply2( matrix_t m, const matrix_t m2 );
 void			MatrixMultiplyTranslation( matrix_t m, float x, float y, float z );
 void			MatrixMultiplyScale( matrix_t m, float x, float y, float z );
 void            MatrixFromPlanes( matrix_t m, const idPlane frustum[6] );
-void			MatrixPerspectiveProjectionFovXYRH( matrix_t m, float fovX, float fovY, float near, float far );
-void			MatrixPerspectiveProjectionFovXYInfiniteRH( matrix_t m, float fovX, float fovY, float near );
+void			MatrixPerspectiveProjectionFovXYRH( matrix_t m, float fovX, float fovY, float zNear, float zFar );
+void			MatrixPerspectiveProjectionFovXYInfiniteRH( matrix_t m, float fovX, float fovY, float zNear );
+void			MatrixOrthogonalProjection( matrix_t m, float left, float right, float bottom, float top, float zNear, float zFar );
 
 
 /*

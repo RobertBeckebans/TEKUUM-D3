@@ -89,7 +89,7 @@ RB_DrawElementsWithCounters
 */
 void RB_DrawElementsWithCounters( const srfTriangles_t* tri )
 {
-#if defined(__ANDROID__)
+#if defined(__ANDROID__) || defined(USE_GLES2)
 	GL_CheckErrors();
 #endif
 	
@@ -123,7 +123,7 @@ void RB_DrawElementsWithCounters( const srfTriangles_t* tri )
 						( int* )vertexCache.Position( tri->indexCache ) );
 		backEnd.pc.c_vboIndexes += tri->numIndexes;
 		
-#if defined(__ANDROID__)
+#if defined(__ANDROID__) || defined(USE_GLES2)
 		GL_CheckErrors();
 #endif
 	}
@@ -144,7 +144,7 @@ void RB_DrawElementsWithCounters( const srfTriangles_t* tri )
 						GL_INDEX_TYPE,
 						tri->indexes );
 						
-#if defined(__ANDROID__)
+#if defined(__ANDROID__) || defined(USE_GLES2)
 		GL_CheckErrors();
 #endif
 	}

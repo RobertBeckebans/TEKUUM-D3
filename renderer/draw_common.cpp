@@ -628,6 +628,24 @@ void RB_T_FillDepthBuffer( const drawSurf_t* surf )
 			glAlphaFunc( GL_GREATER, regs[ pStage->alphaTestRegister ] );
 #endif
 			
+			if( r_logFile.GetBool() )
+			{
+				RB_LogComment( "RB_T_FillDepthBuffer( drawSolid = %i )\n", 0 );
+			}
+			
+#if defined(USE_GLES2)
+			gl_genericShader->BindProgram();
+			gl_genericShader->SetUniform_ColorImage( 0 );
+			gl_genericShader->SetUniform_ModelViewProjectionMatrix( make_idMat4Transposed( backEnd.glState.modelViewProjectionMatrix[backEnd.glState.stackIndex] ) );
+			
+			static const idVec4 zero( 0, 0, 0, 0 );
+			static const idVec4 one( 1, 1, 1, 1 );
+			static const idVec4 negOne( -1, -1, -1, -1 );
+			
+			gl_genericShader->SetUniform_ColorModulate( zero );
+			gl_genericShader->SetUniform_Color( backEnd.glState.color );
+#endif
+			
 			if( r_usePrecomputedLighting.GetBool() && tr.backEndRenderer == BE_ARB )
 			{
 				globalImages->whiteImage->Bind();
@@ -652,6 +670,11 @@ void RB_T_FillDepthBuffer( const drawSurf_t* surf )
 			
 			// set texture matrix and texGens
 			RB_PrepareStageTexturing( pStage, surf, ac );
+			
+#if defined(USE_GLES2)
+			// TODO texture matrix
+			//gl_genericShader->SetUniform_ModelViewProjectionMatrix( make_idMat4Transposed( backEnd.glState.modelViewProjectionMatrix[backEnd.glState.stackIndex]) );
+#endif
 			
 			// draw it
 			RB_DrawElementsWithCounters( tri );
@@ -680,6 +703,11 @@ void RB_T_FillDepthBuffer( const drawSurf_t* surf )
 	// draw the entire surface solid
 	if( drawSolid )
 	{
+		if( r_logFile.GetBool() )
+		{
+			RB_LogComment( "RB_T_FillDepthBuffer( drawSolid = %i )\n", ( int )drawSolid );
+		}
+		
 		if( r_usePrecomputedLighting.GetBool() && tr.backEndRenderer == BE_ARB )
 		{
 			if( !isWorldModel )
@@ -697,10 +725,18 @@ void RB_T_FillDepthBuffer( const drawSurf_t* surf )
 			glColor4f( color[0], color[1], color[2], color[3] );
 		}
 		globalImages->whiteImage->Bind();
-
+		
 #if defined(USE_GLES2)
-		//gl_genericShader->BindProgram();
-		//gl_genericShader->SetUniform_ModelViewProjectionMatrix( make_idMat4( backEnd.glState.modelViewProjectionMatrix[backEnd.glState.stackIndex]) );
+		gl_genericShader->BindProgram();
+		gl_genericShader->SetUniform_ColorImage( 0 );
+		gl_genericShader->SetUniform_ModelViewProjectionMatrix( make_idMat4Transposed( backEnd.glState.modelViewProjectionMatrix[backEnd.glState.stackIndex] ) );
+		
+		static const idVec4 zero( 0, 0, 0, 0 );
+		static const idVec4 one( 1, 1, 1, 1 );
+		static const idVec4 negOne( -1, -1, -1, -1 );
+		
+		gl_genericShader->SetUniform_ColorModulate( zero );
+		gl_genericShader->SetUniform_Color( backEnd.glState.color );
 #endif
 		
 		// draw it
@@ -763,7 +799,7 @@ static void	RB_T_DrawInteractionAsFillDepthBufferWithNormals( const drawInteract
 	gl_geometricFillShader->SetUniform_GlobalViewOrigin( backEnd.viewDef->renderView.vieworg );
 //	gl_geometricFillShader->SetUniform_AmbientColor(ambientColor);
 
-	gl_geometricFillShader->SetUniform_ModelMatrix( make_idMat4( din->surf->space->modelMatrix ) );
+	gl_geometricFillShader->SetUniform_ModelMatrix( make_idMat4Transposed( din->surf->space->modelMatrix ) );
 	
 	gl_geometricFillShader->SetUniform_NormalImage( 0 );
 	
@@ -1433,7 +1469,7 @@ void RB_STD_T_RenderShaderPasses( const drawSurf_t* surf )
 	const idMaterial*	shader;
 	const shaderStage_t* pStage;
 	const float*	regs;
-	float		color[4];
+	idVec4		color;
 	const srfTriangles_t*	tri;
 	
 	tri = surf->geo;
@@ -1717,6 +1753,14 @@ void RB_STD_T_RenderShaderPasses( const drawSurf_t* surf )
 #endif
 		}
 		
+		GL_CheckErrors();
+		
+#if defined(USE_GLES2)
+		gl_genericShader->BindProgram();
+		gl_genericShader->SetUniform_ColorImage( 0 );
+		GL_SelectTexture( 0 );
+#endif
+		
 		// bind the texture
 		RB_BindVariableStageImage( &pStage->texture, regs );
 		
@@ -1724,16 +1768,19 @@ void RB_STD_T_RenderShaderPasses( const drawSurf_t* surf )
 		GL_State( pStage->drawStateBits );
 		
 		RB_PrepareStageTexturing( pStage, surf, ac );
-
+		
+		GL_CheckErrors();
+		
 #if defined(USE_GLES2)
-		gl_genericShader->BindProgram();
-
-		gl_genericShader->SetUniform_ModelViewProjectionMatrix( make_idMat4( backEnd.glState.modelViewProjectionMatrix[backEnd.glState.stackIndex]) );
-
+		gl_genericShader->SetUniform_ModelViewProjectionMatrix( make_idMat4Transposed( backEnd.glState.modelViewProjectionMatrix[backEnd.glState.stackIndex] ) );
+		
 		// TODO
-		gl_genericShader->SetUniform_ColorMatrixS( idVec4( 1, 0, 0, 0 ) );
-		gl_genericShader->SetUniform_ColorMatrixT( idVec4( 1, 0, 0, 0 ) );
-
+		gl_genericShader->SetUniform_ColorMatrix( make_idMat4Transposed( backEnd.glState.textureMatrix[backEnd.glState.currenttmu] ) );
+		//gl_genericShader->SetUniform_ColorMatrixS( idVec4( 1, 0, 0, 0 ) );
+		//gl_genericShader->SetUniform_ColorMatrixT( idVec4( 0, 1, 0, 0 ) );
+		
+		GL_CheckErrors();
+		
 		// TODO
 		static const idVec4 zero( 0, 0, 0, 0 );
 		static const idVec4 one( 1, 1, 1, 1 );
@@ -1743,7 +1790,7 @@ void RB_STD_T_RenderShaderPasses( const drawSurf_t* surf )
 		{
 			case SVC_IGNORE:
 				gl_genericShader->SetUniform_ColorModulate( zero );
-				gl_genericShader->SetUniform_Color( one );
+				gl_genericShader->SetUniform_Color( color );
 				break;
 			case SVC_MODULATE:
 				gl_genericShader->SetUniform_ColorModulate( one );
@@ -1754,10 +1801,13 @@ void RB_STD_T_RenderShaderPasses( const drawSurf_t* surf )
 				gl_genericShader->SetUniform_Color( one );
 				break;
 		}
-
-		gl_genericShader->SetUniform_ColorImage( 0 );
-		GL_SelectTexture( 0 );
+		
+		
+		//GL_SelectTexture( 0 );
+		//RB_BindVariableStageImage( &pStage->texture, regs );
 #endif
+		
+		GL_CheckErrors();
 		
 		// draw it
 		RB_DrawElementsWithCounters( tri );
@@ -1776,9 +1826,9 @@ void RB_STD_T_RenderShaderPasses( const drawSurf_t* surf )
 			GL_TexEnv( GL_MODULATE );
 #endif
 		}
-
+		
 #if defined(USE_GLES2)
-		GL_BindNullProgram();
+		//GL_BindNullProgram();
 #endif
 	}
 	
@@ -2678,6 +2728,8 @@ void	RB_STD_DrawView()
 	
 	// decide how much overbrighting we are going to do
 	RB_DetermineLightScale();
+	
+	GL_CheckErrors();
 	
 	// fill the depth buffer and clear color buffer to black except on
 	// subviews

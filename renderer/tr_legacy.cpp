@@ -44,12 +44,12 @@ void esLoadMatrixf( const GLfloat* m )
 	{
 		MatrixCopy( m, backEnd.glState.textureMatrix[ backEnd.glState.currenttmu ] );
 	}
-
+	
 	if( backEnd.glState.matrixMode == GL_MODELVIEW || backEnd.glState.matrixMode == GL_PROJECTION )
 	{
 		myGlMultMatrix( backEnd.glState.modelViewMatrix[ backEnd.glState.stackIndex ],
-			backEnd.glState.projectionMatrix[ backEnd.glState.stackIndex ],
-			backEnd.glState.modelViewProjectionMatrix[ backEnd.glState.stackIndex ] );
+						backEnd.glState.projectionMatrix[ backEnd.glState.stackIndex ],
+						backEnd.glState.modelViewProjectionMatrix[ backEnd.glState.stackIndex ] );
 	}
 }
 
@@ -65,7 +65,12 @@ void esMatrixMode( GLenum mode )
 
 void esOrthof( GLfloat left, GLfloat right, GLfloat bottom, GLfloat top, GLfloat zNear, GLfloat zFar )
 {
-	// TODO
+	if( backEnd.glState.matrixMode == GL_PROJECTION )
+	{
+		float* m = backEnd.glState.projectionMatrix[ backEnd.glState.stackIndex ];
+		
+		MatrixOrthogonalProjection( m, left, right, bottom, top, zNear, zFar );
+	}
 }
 
 void esPushMatrix()
@@ -101,25 +106,25 @@ void esEnableClientState( GLenum value )
 		case GL_VERTEX_ARRAY:
 			glEnableVertexAttribArray( VA_INDEX_POSITION );
 			break;
-
+			
 		case GL_NORMAL_ARRAY:
 			glEnableVertexAttribArray( VA_INDEX_NORMAL );
 			break;
-
+			
 		case GL_COLOR_ARRAY:
 			glEnableVertexAttribArray( VA_INDEX_COLOR );
 			break;
-
+			
 		case GL_TEXTURE_COORD_ARRAY:
 			glEnableVertexAttribArray( VA_INDEX_TEXCOORD0 );
 			break;
-
+			
 		default:
 			assert( 0 );
 			common->Error( "esEnableClientState: bad value = %i", value );
 			break;
 	}
-
+	
 }
 
 void esDisableClientState( GLenum value )
@@ -129,19 +134,19 @@ void esDisableClientState( GLenum value )
 		case GL_VERTEX_ARRAY:
 			glDisableVertexAttribArray( VA_INDEX_POSITION );
 			break;
-
+			
 		case GL_NORMAL_ARRAY:
 			glDisableVertexAttribArray( VA_INDEX_NORMAL );
 			break;
-
+			
 		case GL_COLOR_ARRAY:
 			glDisableVertexAttribArray( VA_INDEX_COLOR );
 			break;
-
+			
 		case GL_TEXTURE_COORD_ARRAY:
 			glDisableVertexAttribArray( VA_INDEX_TEXCOORD0 );
 			break;
-
+			
 		default:
 			assert( 0 );
 			common->Error( "esEnableClientState: bad value = %i", value );
@@ -171,6 +176,11 @@ void esColorPointer( GLint size, GLenum type, GLsizei stride, const GLvoid* poin
 
 void esColor4f( GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha )
 {
+	backEnd.glState.color.x = red;
+	backEnd.glState.color.y = green;
+	backEnd.glState.color.z = blue;
+	backEnd.glState.color.w = alpha;
+	
 	glVertexAttrib4f( VA_INDEX_COLOR, red, green, blue, alpha );
 }
 

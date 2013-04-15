@@ -158,7 +158,11 @@ idCVar r_useInteractionScissors( "r_useInteractionScissors", "2", CVAR_RENDERER 
 idCVar r_useShadowCulling( "r_useShadowCulling", "1", CVAR_RENDERER | CVAR_BOOL, "try to cull shadows from partially visible lights" );
 idCVar r_useFrustumFarDistance( "r_useFrustumFarDistance", "0", CVAR_RENDERER | CVAR_FLOAT, "if != 0 force the view frustum far distance to this distance" );
 idCVar r_logFile( "r_logFile", "0", CVAR_RENDERER | CVAR_INTEGER, "number of frames to emit GL logs" );
+#if defined(USE_GLES2)
 idCVar r_clear( "r_clear", "1", CVAR_RENDERER, "force screen clear every frame, 1 = purple, 2 = black, 'r g b' = custom" );
+#else
+idCVar r_clear( "r_clear", "2", CVAR_RENDERER, "force screen clear every frame, 1 = purple, 2 = black, 'r g b' = custom" );
+#endif
 idCVar r_offsetFactor( "r_offsetfactor", "0", CVAR_RENDERER | CVAR_FLOAT, "polygon offset parameter" );
 idCVar r_offsetUnits( "r_offsetunits", "-600", CVAR_RENDERER | CVAR_FLOAT, "polygon offset parameter" );
 idCVar r_shadowPolygonOffset( "r_shadowPolygonOffset", "-1", CVAR_RENDERER | CVAR_FLOAT, "bias value added to depth test for stencil shadow drawing" );
@@ -437,7 +441,8 @@ static void R_CheckPortableExtensions()
 	// GL_ARB_texture_compression + GL_S3_s3tc
 	// DRI drivers may have GL_ARB_texture_compression but no GL_EXT_texture_compression_s3tc
 #if defined(USE_GLES1)
-	glConfig.s3tcTextureCompressionAvailable = R_CheckExtension( "GL_EXT_texture_compression_s3tc" );
+	// FIXME
+	glConfig.s3tcTextureCompressionAvailable = false; //R_CheckExtension( "GL_EXT_texture_compression_s3tc" );
 #else
 	if( GLEW_ARB_texture_compression != 0 && GLEW_EXT_texture_compression_s3tc != 0 )
 	{
@@ -889,7 +894,7 @@ void R_InitOpenGL()
 	// one of the paths if there was an error
 #if defined(USE_GLES2)
 	R_GLSL_Init();
-
+	
 	cmdSystem->AddCommand( "reloadShaders", R_ReloadShaders_f, CMD_FL_RENDERER, "reloads GLSL shaders" );
 	R_ReloadShaders_f( idCmdArgs() );
 #elif !defined(USE_GLES1)

@@ -501,6 +501,14 @@ idMat4 make_idMat4( const float* m )
 				   m[ 3], m[ 7], m[11], m[15] );
 }
 
+idMat4 make_idMat4Transposed( const float* m )
+{
+	return idMat4( m[ 0], m[ 1], m[ 2], m[ 3],
+				   m[ 4], m[ 5], m[ 6], m[ 7],
+				   m[ 8], m[ 9], m[10], m[11],
+				   m[12], m[13], m[14], m[15] );
+}
+
 idVec3 v4to3( const idVec4& v )
 {
 	return idVec3( v.x / v.w, v.y / v.w, v.z / v.w );

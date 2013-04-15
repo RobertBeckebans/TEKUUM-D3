@@ -96,7 +96,8 @@ RB_GLSL_DrawInteraction
 */
 static void	RB_GLSL_DrawInteraction( const drawInteraction_t* din )
 {
-
+	GL_CheckErrors();
+	
 	// choose and bind the vertex program
 	// TODO gl_forwardLightingShader->SetAmbientLighting(backEnd.vLight->lightShader->IsAmbientLight());
 #if !defined(USE_GLES2)
@@ -104,6 +105,8 @@ static void	RB_GLSL_DrawInteraction( const drawInteraction_t* din )
 #endif
 	gl_forwardLightingShader->SetNormalMapping( !r_skipBump.GetBool() || backEnd.vLight->lightShader->IsAmbientLight() );
 	gl_forwardLightingShader->BindProgram();
+	
+	gl_forwardLightingShader->SetUniform_ModelViewProjectionMatrix( make_idMat4Transposed( backEnd.glState.modelViewProjectionMatrix[backEnd.glState.stackIndex] ) );
 	
 	// load all the vertex program parameters
 	gl_forwardLightingShader->SetUniform_LocalViewOrigin( din->localViewOrigin.ToVec3() );
@@ -150,9 +153,13 @@ static void	RB_GLSL_DrawInteraction( const drawInteraction_t* din )
 	
 	// set the textures
 	
+	GL_CheckErrors();
+	
 	// texture 1 will be the per-surface bump map
 	GL_SelectTextureNoClient( 1 );
 	din->bumpImage->Bind();
+	
+	GL_CheckErrors();
 	
 	// texture 2 will be the light falloff texture
 	GL_SelectTextureNoClient( 2 );
@@ -169,6 +176,8 @@ static void	RB_GLSL_DrawInteraction( const drawInteraction_t* din )
 	// texture 5 is the per-surface specular map
 	GL_SelectTextureNoClient( 5 );
 	din->specularImage->Bind();
+	
+	GL_CheckErrors();
 	
 	// draw it
 	RB_DrawElementsWithCounters( din->surf->geo );
@@ -187,6 +196,8 @@ static void RB_GLSL_CreateDrawInteractions( const drawSurf_t* surf )
 		return;
 	}
 	
+	GL_CheckErrors();
+	
 	// perform setup here that will be constant for all interactions
 	GL_State( GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE | GLS_DEPTHMASK | backEnd.depthFunc );
 	
@@ -197,8 +208,13 @@ static void RB_GLSL_CreateDrawInteractions( const drawSurf_t* surf )
 	glEnableVertexAttribArray( VA_INDEX_NORMAL );
 	glEnableClientState( GL_COLOR_ARRAY );
 	
+	GL_CheckErrors();
+	
 	// texture 0 is the normalization cube map for the vector towards the light
 	GL_SelectTextureNoClient( 0 );
+	
+	GL_CheckErrors();
+	
 	if( backEnd.vLight->lightShader->IsAmbientLight() )
 	{
 		globalImages->ambientNormalMap->Bind();
@@ -207,6 +223,8 @@ static void RB_GLSL_CreateDrawInteractions( const drawSurf_t* surf )
 	{
 		globalImages->normalCubeMapImage->Bind();
 	}
+	
+	GL_CheckErrors();
 	
 	// texture 6 is the specular lookup table
 	/*
@@ -236,11 +254,15 @@ static void RB_GLSL_CreateDrawInteractions( const drawSurf_t* surf )
 		RB_CreateSingleDrawInteractions( surf, RB_GLSL_DrawInteraction );
 	}
 	
+	GL_CheckErrors();
+	
 	glDisableVertexAttribArray( VA_INDEX_TEXCOORD0 );
 	glDisableVertexAttribArray( VA_INDEX_TANGENT );
 	glDisableVertexAttribArray( VA_INDEX_BITANGENT );
 	glDisableVertexAttribArray( VA_INDEX_NORMAL );
 	glDisableClientState( GL_COLOR_ARRAY );
+	
+	GL_CheckErrors();
 	
 	// disable features
 	GL_SelectTextureNoClient( 6 );
@@ -261,7 +283,7 @@ static void RB_GLSL_CreateDrawInteractions( const drawSurf_t* surf )
 	GL_SelectTextureNoClient( 1 );
 	globalImages->BindNull();
 	
-	backEnd.glState.currenttmu = -1;
+	//backEnd.glState.currenttmu = -1;
 	GL_SelectTexture( 0 );
 	
 	GL_BindNullProgram();
@@ -280,6 +302,8 @@ void RB_GLSL_DrawInteractions()
 	
 	GL_SelectTexture( 0 );
 	glDisableClientState( GL_TEXTURE_COORD_ARRAY );
+	
+	GL_CheckErrors();
 	
 	//
 	// for each light, perform adding and shadowing
@@ -327,11 +351,18 @@ void RB_GLSL_DrawInteractions()
 			glStencilFunc( GL_ALWAYS, 128, 255 );
 		}
 		
+		GL_CheckErrors();
+		
 		if( r_useShadowVertexProgram.GetBool() )
 		{
 			gl_shadowVolumeShader->BindProgram();
 			
+			GL_CheckErrors();
+			
 			RB_StencilShadowPass( vLight->globalShadows );
+			
+			GL_CheckErrors();
+			
 			RB_GLSL_CreateDrawInteractions( vLight->localInteractions );
 			
 			gl_shadowVolumeShader->BindProgram();
@@ -449,7 +480,7 @@ void R_ReloadShaders_f( const idCmdArgs& args )
 			gl_genericShader = NULL;
 		}
 		gl_genericShader = new GLShader_generic();
-
+		
 		if( gl_geometricFillShader )
 		{
 			delete gl_geometricFillShader;

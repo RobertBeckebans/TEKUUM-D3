@@ -2254,9 +2254,15 @@ void idImageManager::BindNull()
 	tmu = &backEnd.glState.tmu[backEnd.glState.currenttmu];
 	
 	RB_LogComment( "BindNull()\n" );
+	
 	if( tmu->textureType == TT_CUBIC )
 	{
-		glDisable( GL_TEXTURE_CUBE_MAP );
+#if !defined(USE_GLES2)
+		if( r_useOpenGL32.GetInteger() <= 1 )
+		{
+			glDisable( GL_TEXTURE_CUBE_MAP );
+		}
+#endif
 	}
 	else if( tmu->textureType == TT_3D )
 	{
@@ -2266,7 +2272,12 @@ void idImageManager::BindNull()
 	}
 	else if( tmu->textureType == TT_2D )
 	{
-		glDisable( GL_TEXTURE_2D );
+#if !defined(USE_GLES2)
+		if( r_useOpenGL32.GetInteger() <= 1 )
+		{
+			glDisable( GL_TEXTURE_2D );
+		}
+#endif
 	}
 	tmu->textureType = TT_DISABLED;
 }

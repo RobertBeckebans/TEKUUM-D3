@@ -45,7 +45,7 @@ may touch, including the editor.
 */
 void RB_SetDefaultGLState()
 {
-	RB_LogComment( "--- R_SetDefaultGLState ---\n" );
+	RB_LogComment( "--- RB_SetDefaultGLState ---\n" );
 	
 	// make sure our GL state vector is set correctly
 	memset( &backEnd.glState, 0, sizeof( backEnd.glState ) );
@@ -60,7 +60,7 @@ void RB_SetDefaultGLState()
 		MatrixIdentity( backEnd.glState.modelViewProjectionMatrix[i] );
 	}
 	
-#if defined(__ANDROID__)
+#if defined(__ANDROID__) || defined(USE_GLES2)
 	GL_CheckErrors();
 #endif
 	
@@ -117,9 +117,12 @@ void RB_SetDefaultGLState()
 		
 #if !defined(USE_GLES2)
 		GL_TexEnv( GL_MODULATE );
-#endif
 		
-		glDisable( GL_TEXTURE_2D );
+		if( r_useOpenGL32.GetInteger <= 1 )
+		{
+			glDisable( GL_TEXTURE_2D );
+		}
+#endif
 		
 #if !defined(USE_GLES1)
 		if( glConfig.texture3DAvailable )
@@ -127,13 +130,19 @@ void RB_SetDefaultGLState()
 			glDisable( GL_TEXTURE_3D );
 		}
 #endif
+		
+#if !defined(USE_GLES2)
 		if( glConfig.cubeMapAvailable )
 		{
-			glDisable( GL_TEXTURE_CUBE_MAP );
+			if( r_useOpenGL32.GetInteger <= 1 )
+			{
+				glDisable( GL_TEXTURE_CUBE_MAP );
+			}
 		}
+#endif
 	}
 	
-#if defined(__ANDROID__)
+#if defined(__ANDROID__) || defined(USE_GLES2)
 	GL_CheckErrors();
 #endif
 }
@@ -189,13 +198,13 @@ void GL_SelectTexture( int unit )
 		return;
 	}
 	
-#if defined(__ANDROID__)
+#if defined(__ANDROID__) || defined(USE_GLES2)
 	GL_CheckErrors();
 #endif
 	
 	glActiveTexture( GL_TEXTURE0 + unit );
 	
-#if defined(__ANDROID__)
+#if defined(__ANDROID__) || defined(USE_GLES2)
 	GL_CheckErrors();
 #endif
 	
@@ -340,7 +349,7 @@ void GL_State( int stateBits )
 		}
 	}
 	
-#if defined(__ANDROID__)
+#if defined(__ANDROID__) || defined(USE_GLES2)
 	GL_CheckErrors();
 #endif
 	
@@ -442,7 +451,7 @@ void GL_State( int stateBits )
 		glBlendFunc( srcFactor, dstFactor );
 	}
 	
-#if defined(__ANDROID__)
+#if defined(__ANDROID__) || defined(USE_GLES2)
 	GL_CheckErrors();
 #endif
 	
@@ -461,7 +470,7 @@ void GL_State( int stateBits )
 		}
 	}
 	
-#if defined(__ANDROID__)
+#if defined(__ANDROID__) || defined(USE_GLES2)
 	GL_CheckErrors();
 #endif
 	
@@ -529,7 +538,7 @@ void GL_State( int stateBits )
 	}
 #endif
 	
-#if defined(__ANDROID__)
+#if defined(__ANDROID__) || defined(USE_GLES2)
 	GL_CheckErrors();
 #endif
 	
@@ -597,7 +606,7 @@ static void	RB_SetBuffer( const void* data )
 	
 	cmd = ( const setBufferCommand_t* )data;
 	
-#if defined(__ANDROID__)
+#if defined(__ANDROID__) || defined(USE_GLES2)
 	GL_CheckErrors();
 #endif
 	
@@ -711,7 +720,7 @@ RB_SwapBuffers
 */
 const void	RB_SwapBuffers( const void* data )
 {
-#if defined(__ANDROID__)
+#if defined(__ANDROID__) || defined(USE_GLES2)
 	GL_CheckErrors();
 #endif
 	
@@ -735,7 +744,7 @@ const void	RB_SwapBuffers( const void* data )
 		GLimp_SwapBuffers();
 	}
 	
-#if defined(__ANDROID__)
+#if defined(__ANDROID__) || defined(USE_GLES2)
 	GL_CheckErrors();
 #endif
 }
@@ -764,7 +773,7 @@ const void	RB_CopyRender( const void* data )
 	
 	if( cmd->image )
 	{
-#if !defined(__ANDROID__)
+#if !defined(__ANDROID__) || defined(USE_GLES2)
 		cmd->image->CopyFramebuffer( cmd->x, cmd->y, cmd->imageWidth, cmd->imageHeight, false );
 #endif
 	}

@@ -308,7 +308,11 @@ CreateOpenGLContextOnDC
 */
 static HGLRC CreateOpenGLContextOnDC( const HDC hdc, const bool debugContext )
 {
+#if defined(USE_GLES2)
+	int useOpenGL32 = 0;
+#else
 	int useOpenGL32 = r_useOpenGL32.GetInteger();
+#endif
 	HGLRC m_hrc = NULL;
 	
 	for( int i = 0; i < 2; i++ )
@@ -317,7 +321,12 @@ static HGLRC CreateOpenGLContextOnDC( const HDC hdc, const bool debugContext )
 		const int glMinorVersion = ( useOpenGL32 != 0 ) ? 2 : 0;
 		const int glDebugFlag = debugContext ? WGL_CONTEXT_DEBUG_BIT_ARB : 0;
 		const int glProfileMask = ( useOpenGL32 != 0 ) ? WGL_CONTEXT_PROFILE_MASK_ARB : 0;
-		const int glProfile = ( useOpenGL32 == 1 ) ? WGL_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB : ( ( useOpenGL32 == 2 ) ? WGL_CONTEXT_CORE_PROFILE_BIT_ARB : 0 );
+		int glProfile = ( useOpenGL32 == 1 ) ? WGL_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB : ( ( useOpenGL32 == 2 ) ? WGL_CONTEXT_CORE_PROFILE_BIT_ARB : 0 );
+		
+		if( WGLEW_EXT_create_context_es2_profile != 0 )
+		{
+			glProfile |= WGL_CONTEXT_ES2_PROFILE_BIT_EXT;
+		}
 		const int attribs[] =
 		{
 			WGL_CONTEXT_MAJOR_VERSION_ARB,	glMajorVersion,
@@ -910,6 +919,7 @@ bool GLimp_Init( glimpParms_t parms )
 	}
 	
 	// RB: use glewExperimental to avoid issues with OpenGL 3.x core profiles
+	/*
 	if( r_useOpenGL32.GetInteger() > 1 )
 	{
 		glewExperimental = GL_TRUE;
@@ -924,9 +934,10 @@ bool GLimp_Init( glimpParms_t parms )
 	{
 		common->Printf( "Using GLEW %s\n", glewGetString( GLEW_VERSION ) );
 	}
+	*/
 	
 	// wglSwapinterval, etc
-	GLW_CheckWGLExtensions( win32.hDC );
+	//GLW_CheckWGLExtensions( win32.hDC );
 	
 	return true;
 }

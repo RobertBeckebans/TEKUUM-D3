@@ -766,12 +766,12 @@ void GLShader::CompileAndLinkGPUShaderProgram(	shaderProgram_t* program,
 			for( int i = 0; i < compileMacros.Num(); i++ )
 			{
 				const char* compileMacro = compileMacros[i].c_str();
-			
+				
 				macrosString += va( "%s ", compileMacro );
 			}
 		}
-		common->Printf("Compile macros: '%s'\n", macrosString.c_str() );
-
+		common->Printf( "Compile macros: '%s'\n", macrosString.c_str() );
+		
 		common->Error( "Shaders failed to link!!!" );
 	}
 }
@@ -836,15 +836,15 @@ void GLShader::PrintShaderSource( uint32_t object ) const
 	if( maxLength > 1 )
 	{
 		msg = ( char* ) Mem_Alloc( maxLength );
-	
+		
 		glGetShaderSource( object, maxLength, &maxLength, msg );
-	
+		
 		for( i = 0; i < maxLength; i += 1024 )
 		{
 			idStr::snPrintf( msgPart, sizeof( msgPart ), msg + i );
 			common->Printf( "%s\n", msgPart );
 		}
-	
+		
 		Mem_Free( msg );
 	}
 }
@@ -860,9 +860,9 @@ void GLShader::PrintInfoLog( uint32_t object, bool developerOnly ) const
 	if( maxLength > 1 )
 	{
 		msg = ( char* ) Mem_Alloc( maxLength );
-	
+		
 		glGetShaderInfoLog( object, maxLength, &maxLength, msg );
-	
+		
 		if( developerOnly )
 		{
 			common->DPrintf( "compile log:\n" );
@@ -871,17 +871,17 @@ void GLShader::PrintInfoLog( uint32_t object, bool developerOnly ) const
 		{
 			common->Printf( "compile log:\n" );
 		}
-	
+		
 		for( i = 0; i < maxLength; i += 1024 )
 		{
 			idStr::snPrintf( msgPart, sizeof( msgPart ), msg + i );
-		
+			
 			if( developerOnly )
 				common->DPrintf( "%s\n", msgPart );
 			else
 				common->Printf( "%s\n", msgPart );
 		}
-	
+		
 		Mem_Free( msg );
 	}
 }
@@ -897,7 +897,7 @@ bool GLShader::LinkProgram( uint32_t program ) const
 	{
 		PrintInfoLog( program, false );
 	}
-
+	
 	return linked > 0;
 }
 
@@ -1149,12 +1149,11 @@ void GLShader::CompilePermutations()
 
 
 GLShader_generic::GLShader_generic():
-	GLShader( "generic", VA_POSITION | VA_TEXCOORD | VA_NORMAL ),
+	GLShader( "generic", VA_POSITION | VA_TEXCOORD/* | VA_NORMAL*/ ),
 	u_ColorImage( this ),
 	u_ModelMatrix( this ),
 	u_ModelViewProjectionMatrix( this ),
-	u_ColorMatrixS( this ),
-	u_ColorMatrixT( this ),
+	u_ColorMatrix( this ),
 	u_Color( this ),
 	u_ColorModulate( this )
 	//u_GlobalViewOrigin( this ),
@@ -1294,7 +1293,7 @@ GLShader_forwardLighting::GLShader_forwardLighting():
 	u_JitterTexScale( this ),
 	u_JitterTexOffset( this ),
 	//u_ModelMatrix(this),
-	u_ModelViewProjectionMatrix(this),
+	u_ModelViewProjectionMatrix( this ),
 	//u_BoneMatrix(this),
 	//u_VertexInterpolation(this),
 	//u_PortalPlane(this),

@@ -392,3 +392,27 @@ void MatrixPerspectiveProjectionFovXYInfiniteRH( matrix_t m, float fovX, float f
 	m[11] = -1;
 	m[15] = 0;
 }
+
+/*
+replacement for glOrtho
+see glspec30.pdf chapter 2.12 Coordinate Transformations
+*/
+void MatrixOrthogonalProjection( matrix_t m, float left, float right, float bottom, float top, float zNear, float zFar )
+{
+	m[0] = 2 / ( right - left );
+	m[4] = 0;
+	m[8] = 0;
+	m[12] = -( right + left ) / ( right - left );
+	m[1] = 0;
+	m[5] = 2 / ( top - bottom );
+	m[9] = 0;
+	m[13] = -( top + bottom ) / ( top - bottom );
+	m[2] = 0;
+	m[6] = 0;
+	m[10] = -2 / ( zFar - zNear );
+	m[14] = -( zFar + zNear ) / ( zFar - zNear );
+	m[3] = 0;
+	m[7] = 0;
+	m[11] = 0;
+	m[15] = 1;
+}
