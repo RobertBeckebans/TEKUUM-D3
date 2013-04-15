@@ -726,7 +726,7 @@ struct glstate_t
 	matrix_t			modelViewMatrix[MAX_GLSTACK];
 	matrix_t			projectionMatrix[MAX_GLSTACK];
 	matrix_t			modelViewProjectionMatrix[MAX_GLSTACK];
-	matrix_t			textureMatrix[MAX_MULTITEXTURE_UNITS];
+	matrix_t			textureMatrix[MAX_GLSTACK];	//MAX_MULTITEXTURE_UNITS;
 	
 	struct shaderProgram_s*   currentProgram;
 #if !defined(USE_GLES1)
@@ -1216,10 +1216,13 @@ const int GLS_DEPTHFUNC_ALWAYS					= 0x00010000;
 const int GLS_DEPTHFUNC_EQUAL					= 0x00020000;
 const int GLS_DEPTHFUNC_LESS					= 0x0;
 
+/*
+RB: was used in Q3A but not in Doom 3
 const int GLS_ATEST_EQ_255						= 0x10000000;
 const int GLS_ATEST_LT_128						= 0x20000000;
 const int GLS_ATEST_GE_128						= 0x40000000;
 const int GLS_ATEST_BITS						= 0x70000000;
+*/
 
 const int GLS_DEFAULT							= GLS_DEPTHFUNC_ALWAYS;
 
@@ -1695,9 +1698,9 @@ typedef struct shaderProgram_s
 	int32_t         u_SpecularMatrixT;
 	idVec4			t_SpecularMatrixT;
 	
-//	int32_t         u_AlphaTest;
-//	alphaTest_t		t_AlphaTest;
-
+	int32_t         u_AlphaTest;
+	float			t_AlphaTest;
+	
 	int32_t         u_LocalViewOrigin;
 	idVec3			t_LocalViewOrigin;
 	

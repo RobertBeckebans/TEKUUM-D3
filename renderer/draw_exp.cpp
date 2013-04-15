@@ -871,7 +871,7 @@ void RB_EXP_RenderOccluders( viewLight_t* vLight )
 		glMatrixMode( GL_MODELVIEW );
 #endif
 		
-		gl_shadowMapShader->SetUniform_ModelMatrix( make_idMat4( inter->entityDef->modelMatrix ) );
+		gl_shadowMapShader->SetUniform_ModelMatrix( make_idMat4Transposed( inter->entityDef->modelMatrix ) );
 		
 		// draw each surface
 		for( int i = 0 ; i < inter->numSurfaces ; i++ )
@@ -1326,7 +1326,7 @@ static void	RB_EXP_DrawInteraction( const drawInteraction_t* din )
 	gl_forwardLightingShader->BindProgram();
 	
 	// load all the vertex program parameters
-	gl_forwardLightingShader->SetUniform_ModelMatrix( make_idMat4( din->surf->space->modelMatrix ) );
+	gl_forwardLightingShader->SetUniform_ModelMatrix( make_idMat4Transposed( din->surf->space->modelMatrix ) );
 	
 	gl_forwardLightingShader->SetUniform_LocalViewOrigin( din->localViewOrigin.ToVec3() );
 	
@@ -1393,7 +1393,7 @@ static void	RB_EXP_DrawInteraction( const drawInteraction_t* din )
 		//glProgramEnvParameter4fvARB( GL_VERTEX_PROGRAM_ARB, 21, qRow );
 		
 		//idMat4 shadowMat(sRow, tRow, rRow, qRow);
-		idMat4 shadowMat = make_idMat4( matrix2 ); //.Transpose();
+		idMat4 shadowMat = make_idMat4Transposed( matrix2 ); //.Transpose();
 		
 		gl_forwardLightingShader->SetUniform_ShadowMatrix( shadowMat );
 	}
@@ -1678,7 +1678,7 @@ static void RB_EXP_DrawLightDeferred( viewLight_t* vLight )
 	gl_deferredLightingShader->BindProgram();
 	
 	// load all the vertex program parameters
-	gl_deferredLightingShader->SetUniform_UnprojectMatrix( make_idMat4( backEnd.viewDef->unprojectionMatrix ) );
+	gl_deferredLightingShader->SetUniform_UnprojectMatrix( make_idMat4Transposed( backEnd.viewDef->unprojectionMatrix ) );
 	
 	gl_deferredLightingShader->SetUniform_GlobalViewOrigin( backEnd.viewDef->renderView.vieworg );
 	gl_deferredLightingShader->SetUniform_GlobalLightOrigin( vLight->lightDef->globalLightOrigin );
@@ -1738,7 +1738,7 @@ static void RB_EXP_DrawLightDeferred( viewLight_t* vLight )
 		*/
 		
 		//idMat4 shadowMat(sRow, tRow, rRow, qRow);
-		idMat4 shadowMat = make_idMat4( matrix2 ); //.Transpose();
+		idMat4 shadowMat = make_idMat4Transposed( matrix2 ); //.Transpose();
 		
 		gl_deferredLightingShader->SetUniform_ShadowMatrix( shadowMat );
 	}
@@ -3360,7 +3360,7 @@ static void	RB_T_DrawInteractionWithLightbuffer( const drawInteractionMaterialOn
 			
 	gl_postLightingShader->SetUniform_Viewport( backEnd.viewDef->viewport );
 	
-	gl_postLightingShader->SetUniform_ModelMatrix( make_idMat4( din->surf->space->modelMatrix ) );
+	gl_postLightingShader->SetUniform_ModelMatrix( make_idMat4Transposed( din->surf->space->modelMatrix ) );
 	
 	gl_postLightingShader->SetUniform_BumpMatrixS( din->bumpMatrix[0] );
 	gl_postLightingShader->SetUniform_BumpMatrixT( din->bumpMatrix[1] );

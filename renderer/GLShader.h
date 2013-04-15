@@ -1884,6 +1884,11 @@ public:
 		shaderProgram->u_ColorModulate = glGetUniformLocation( shaderProgram->program, GetName() );
 	}
 	
+	void ResetUniform_ColorModulate()
+	{
+		SetUniform_ColorModulate( idVec4( 0, 0, 0, 0 ) );
+	}
+	
 	void SetUniform_ColorModulate( const idVec4& v )
 	{
 		shaderProgram_t* program = _shader->GetProgram();
@@ -2089,6 +2094,46 @@ public:
 	}
 };
 */
+class u_AlphaTest:
+	GLUniform
+{
+public:
+	u_AlphaTest( GLShader* shader ):
+		GLUniform( shader )
+	{
+	}
+	
+	const char* GetName() const
+	{
+		return "u_AlphaTest";
+	}
+	void				UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
+	{
+		shaderProgram->u_AlphaTest = glGetUniformLocation( shaderProgram->program, GetName() );
+	}
+	
+	void SetUniform_AlphaTest( float value )
+	{
+		shaderProgram_t* program = _shader->GetProgram();
+		
+#if defined(USE_UNIFORM_FIREWALL)
+		if( program->t_AlphaTest == value )
+			return;
+			
+		program->t_AlphaTest = value;
+#endif
+		
+#if defined(LOG_GLSL_UNIFORMS)
+		if( r_logFile.GetBool() )
+		{
+			RB_LogComment( "--- SetUniform_AlphaTest( program = %s, value = %f ) ---\n", program->name.c_str(), value );
+		}
+#endif
+		
+		glUniform1f( program->u_AlphaTest, value );
+	}
+};
+
 
 class u_LocalViewOrigin:
 	GLUniform
@@ -3054,17 +3099,17 @@ class GLShader_generic:
 	public u_ColorImage,
 	public u_ColorMatrix,
 //public u_ViewOrigin,
-//public u_AlphaTest,
+public u_AlphaTest,
 public u_ModelMatrix,
 public u_ModelViewProjectionMatrix,
 public u_ColorModulate,
-public u_Color
+public u_Color,
 //public u_BoneMatrix,
 //public u_VertexInterpolation,
 //public u_PortalPlane,
 //public GLDeformStage,
 //public GLCompileMacro_USE_PORTAL_CLIPPING,
-//public GLCompileMacro_USE_ALPHA_TESTING,
+public GLCompileMacro_USE_ALPHA_TESTING
 //public GLCompileMacro_USE_VERTEX_SKINNING,
 //public GLCompileMacro_USE_VERTEX_ANIMATION,
 //public GLCompileMacro_USE_DEFORM_VERTEXES,

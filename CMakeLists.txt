@@ -28,7 +28,7 @@ option(GLES2
 		"Only use OpenGL ES 2.0 functions" OFF)
 		
 option(ANGLE
-		"Only use OpenGL ES 2.0 functions through ANGLE" ON)
+		"Only use OpenGL ES 2.0 functions through ANGLE" OFF)
 		
 option(DEBUG_MEMORY
 		"Enables memory logging to file" OFF)

@@ -118,7 +118,7 @@ void RB_SetDefaultGLState()
 #if !defined(USE_GLES2)
 		GL_TexEnv( GL_MODULATE );
 		
-		if( r_useOpenGL32.GetInteger <= 1 )
+		if( r_useOpenGL32.GetInteger() <= 1 )
 		{
 			glDisable( GL_TEXTURE_2D );
 		}
@@ -134,7 +134,7 @@ void RB_SetDefaultGLState()
 #if !defined(USE_GLES2)
 		if( glConfig.cubeMapAvailable )
 		{
-			if( r_useOpenGL32.GetInteger <= 1 )
+			if( r_useOpenGL32.GetInteger() <= 1 )
 			{
 				glDisable( GL_TEXTURE_CUBE_MAP );
 			}
@@ -156,7 +156,7 @@ RB_LogComment
 void RB_LogComment( const char* fmt, ... )
 {
 // RB begin
-#if !defined(USE_GLES1)
+#if !defined(USE_ANGLE)
 	va_list		argptr;
 	char		msg[4096];
 	
@@ -511,7 +511,7 @@ void GL_State( int stateBits )
 	//
 	// alpha test
 	//
-#if !defined(USE_GLES2)
+#if 0 //!defined(USE_GLES2)
 	if( diff & GLS_ATEST_BITS )
 	{
 		switch( stateBits & GLS_ATEST_BITS )

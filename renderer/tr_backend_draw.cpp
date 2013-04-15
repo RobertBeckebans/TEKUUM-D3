@@ -111,7 +111,11 @@ void RB_DrawElementsWithCounters( const srfTriangles_t* tri )
 	
 	if( tri->indexCache && r_useIndexBuffers.GetBool() )
 	{
-	
+#if defined(USE_GLES2)
+		assert( backEnd.glState.currentProgram != NULL );
+#endif
+		
+		
 		if( backEnd.showTrisEnabled )
 		{
 			glColor4f( 0, 1, 0, 1 );

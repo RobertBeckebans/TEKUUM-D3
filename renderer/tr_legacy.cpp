@@ -1,7 +1,28 @@
 /*
 ===========================================================================
 
-Copyright (C) 2012 Robert Beckebans
+Doom 3 GPL Source Code
+Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2013 Robert Beckebans
+
+This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
+
+Doom 3 Source Code is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+Doom 3 Source Code is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with Doom 3 Source Code.  If not, see <http://www.gnu.org/licenses/>.
+
+In addition, the Doom 3 Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 Source Code.  If not, please request a copy in writing from id Software at the address below.
+
+If you have questions concerning this license or the applicable additional terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 
 ===========================================================================
 */
@@ -26,7 +47,8 @@ void esLoadIdentity()
 	}
 	else if( backEnd.glState.matrixMode == GL_TEXTURE )
 	{
-		MatrixIdentity( backEnd.glState.textureMatrix[ backEnd.glState.currenttmu ] );
+		//MatrixIdentity( backEnd.glState.textureMatrix[ backEnd.glState.currenttmu ] );
+		MatrixIdentity( backEnd.glState.textureMatrix[ backEnd.glState.stackIndex ] );
 	}
 }
 
@@ -42,7 +64,8 @@ void esLoadMatrixf( const GLfloat* m )
 	}
 	else if( backEnd.glState.matrixMode == GL_TEXTURE )
 	{
-		MatrixCopy( m, backEnd.glState.textureMatrix[ backEnd.glState.currenttmu ] );
+		//MatrixCopy( m, backEnd.glState.textureMatrix[ backEnd.glState.currenttmu ] );
+		MatrixCopy( m, backEnd.glState.textureMatrix[ backEnd.glState.stackIndex ] );
 	}
 	
 	if( backEnd.glState.matrixMode == GL_MODELVIEW || backEnd.glState.matrixMode == GL_PROJECTION )
@@ -166,12 +189,12 @@ void esNormalPointer( GLenum type, GLsizei stride, const GLvoid* pointer )
 
 void esTexCoordPointer( GLint size, GLenum type, GLsizei stride, const GLvoid* pointer )
 {
-	glVertexAttribPointer( VA_INDEX_TEXCOORD0, 2, type, false, stride, pointer );
+	glVertexAttribPointer( VA_INDEX_TEXCOORD0, size, type, false, stride, pointer );
 }
 
 void esColorPointer( GLint size, GLenum type, GLsizei stride, const GLvoid* pointer )
 {
-	glVertexAttribPointer( VA_INDEX_COLOR, 4, type, false, stride, pointer );
+	glVertexAttribPointer( VA_INDEX_COLOR, size, type, GL_TRUE, stride, pointer );
 }
 
 void esColor4f( GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha )
@@ -181,7 +204,7 @@ void esColor4f( GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha )
 	backEnd.glState.color.z = blue;
 	backEnd.glState.color.w = alpha;
 	
-	glVertexAttrib4f( VA_INDEX_COLOR, red, green, blue, alpha );
+	//glVertexAttrib4f( VA_INDEX_COLOR, red, green, blue, alpha );
 }
 
 #endif

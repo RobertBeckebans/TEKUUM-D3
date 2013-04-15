@@ -1151,12 +1151,14 @@ void GLShader::CompilePermutations()
 GLShader_generic::GLShader_generic():
 	GLShader( "generic", VA_POSITION | VA_TEXCOORD/* | VA_NORMAL*/ ),
 	u_ColorImage( this ),
+	u_AlphaTest( this ),
 	u_ModelMatrix( this ),
 	u_ModelViewProjectionMatrix( this ),
 	u_ColorMatrix( this ),
 	u_Color( this ),
-	u_ColorModulate( this )
+	u_ColorModulate( this ),
 	//u_GlobalViewOrigin( this ),
+	GLCompileMacro_USE_ALPHA_TESTING( this )
 	//GLCompileMacro_USE_TCGEN_ENVIRONMENT( this ),
 	//GLCompileMacro_USE_PARALLAX_MAPPING(this),
 {

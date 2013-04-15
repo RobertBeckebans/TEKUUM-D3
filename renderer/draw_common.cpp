@@ -634,7 +634,9 @@ void RB_T_FillDepthBuffer( const drawSurf_t* surf )
 			}
 			
 #if defined(USE_GLES2)
+			gl_genericShader->EnableAlphaTesting();
 			gl_genericShader->BindProgram();
+			
 			gl_genericShader->SetUniform_ColorImage( 0 );
 			gl_genericShader->SetUniform_ModelViewProjectionMatrix( make_idMat4Transposed( backEnd.glState.modelViewProjectionMatrix[backEnd.glState.stackIndex] ) );
 			
@@ -644,6 +646,8 @@ void RB_T_FillDepthBuffer( const drawSurf_t* surf )
 			
 			gl_genericShader->SetUniform_ColorModulate( zero );
 			gl_genericShader->SetUniform_Color( backEnd.glState.color );
+			
+			gl_genericShader->SetUniform_AlphaTest( regs[ pStage->alphaTestRegister ] );
 #endif
 			
 			if( r_usePrecomputedLighting.GetBool() && tr.backEndRenderer == BE_ARB )
@@ -672,8 +676,7 @@ void RB_T_FillDepthBuffer( const drawSurf_t* surf )
 			RB_PrepareStageTexturing( pStage, surf, ac );
 			
 #if defined(USE_GLES2)
-			// TODO texture matrix
-			//gl_genericShader->SetUniform_ModelViewProjectionMatrix( make_idMat4Transposed( backEnd.glState.modelViewProjectionMatrix[backEnd.glState.stackIndex]) );
+			gl_genericShader->SetUniform_ColorMatrix( make_idMat4Transposed( backEnd.glState.textureMatrix[backEnd.glState.currenttmu] ) );
 #endif
 			
 			// draw it
@@ -727,7 +730,9 @@ void RB_T_FillDepthBuffer( const drawSurf_t* surf )
 		globalImages->whiteImage->Bind();
 		
 #if defined(USE_GLES2)
+		gl_genericShader->DisableAlphaTesting();
 		gl_genericShader->BindProgram();
+		
 		gl_genericShader->SetUniform_ColorImage( 0 );
 		gl_genericShader->SetUniform_ModelViewProjectionMatrix( make_idMat4Transposed( backEnd.glState.modelViewProjectionMatrix[backEnd.glState.stackIndex] ) );
 		
@@ -1314,6 +1319,8 @@ void RB_STD_FillDepthBuffer( drawSurf_t** drawSurfs, int numDrawSurfs )
 		GL_SelectTexture( 0 );
 	}
 	
+	GL_BindNullProgram();
+	
 	if( r_usePrecomputedLighting.GetBool() && tr.backEndRenderer == BE_ARB )
 	{
 		//glDisableClientState( GL_COLOR_ARRAY );
@@ -1568,6 +1575,7 @@ void RB_STD_T_RenderShaderPasses( const drawSurf_t* surf )
 		newShaderStage_t* newStage = pStage->newStage;
 		if( newStage )
 		{
+#if !defined(USE_GLES2)
 			//--------------------------
 			//
 			// new style stages
@@ -1672,6 +1680,7 @@ void RB_STD_T_RenderShaderPasses( const drawSurf_t* surf )
 			glDisableVertexAttribArrayARB( 10 );
 #endif
 			glDisableClientState( GL_NORMAL_ARRAY );
+#endif // #if !defined(USE_GLES2)
 			continue;
 		}
 		
@@ -1732,7 +1741,7 @@ void RB_STD_T_RenderShaderPasses( const drawSurf_t* surf )
 				globalImages->whiteImage->Bind();
 				GL_TexEnv( GL_COMBINE );
 				
-				glTexEnvfv( GL_TEXTURE_ENV, GL_TEXTURE_ENV_COLOR, color );
+				glTexEnvfv( GL_TEXTURE_ENV, GL_TEXTURE_ENV_COLOR, color.ToFloatPtr() );
 				
 				glTexEnvi( GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_MODULATE );
 				glTexEnvi( GL_TEXTURE_ENV, GL_SRC0_RGB, GL_PREVIOUS );
@@ -1756,9 +1765,11 @@ void RB_STD_T_RenderShaderPasses( const drawSurf_t* surf )
 		GL_CheckErrors();
 		
 #if defined(USE_GLES2)
+		gl_genericShader->DisableAlphaTesting();
 		gl_genericShader->BindProgram();
+		
 		gl_genericShader->SetUniform_ColorImage( 0 );
-		GL_SelectTexture( 0 );
+		//GL_SelectTexture( 0 );
 #endif
 		
 		// bind the texture
@@ -1826,17 +1837,18 @@ void RB_STD_T_RenderShaderPasses( const drawSurf_t* surf )
 			GL_TexEnv( GL_MODULATE );
 #endif
 		}
-		
-#if defined(USE_GLES2)
-		//GL_BindNullProgram();
-#endif
 	}
+	
+#if defined(USE_GLES2)
+	//GL_BindNullProgram();
+#endif
 	
 	// reset polygon offset
 	if( shader->TestMaterialFlag( MF_POLYGONOFFSET ) )
 	{
 		glDisable( GL_POLYGON_OFFSET_FILL );
 	}
+	
 	if( surf->space->weaponDepthHack || surf->space->modelDepthHack != 0.0f )
 	{
 		RB_LeaveDepthHack();
@@ -1923,6 +1935,15 @@ int RB_STD_DrawShaderPasses( drawSurf_t** drawSurfs, int numDrawSurfs )
 	GL_Cull( CT_FRONT_SIDED );
 	glColor4f( 1, 1, 1, 1 );
 	
+#if defined(USE_GLES2)
+	gl_genericShader->DisableAlphaTesting();
+	gl_genericShader->BindProgram();
+	gl_genericShader->ResetUniform_ColorModulate();
+	gl_genericShader->SetUniform_Color( colorWhite );
+	
+	GL_BindNullProgram();
+#endif
+	
 	return i;
 }
 
@@ -1947,14 +1968,18 @@ static void RB_T_Shadow( const drawSurf_t* surf )
 {
 	const srfTriangles_t*	tri;
 	
+#if defined(USE_GLES2)
+	gl_shadowVolumeShader->SetUniform_ModelViewProjectionMatrix( make_idMat4Transposed( backEnd.glState.modelViewProjectionMatrix[backEnd.glState.stackIndex] ) );
+#endif
+	
 	// set the light position if we are using a vertex program to project the rear surfaces
-	if( tr.backEndRendererHasVertexPrograms && r_useShadowVertexProgram.GetBool()
-			&& surf->space != backEnd.currentSpace )
+	if( tr.backEndRendererHasVertexPrograms && r_useShadowVertexProgram.GetBool() && surf->space != backEnd.currentSpace )
 	{
 		idVec4 localLight;
 		
 		R_GlobalPointToLocal( surf->space->modelMatrix, backEnd.vLight->globalLightOrigin, localLight.ToVec3() );
 		localLight.w = 0.0f;
+		
 #if !defined(USE_GLES1)
 		switch( tr.backEndRenderer )
 		{
