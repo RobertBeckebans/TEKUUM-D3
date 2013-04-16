@@ -2806,7 +2806,7 @@ void	RB_STD_DrawView()
 	
 	GL_CheckErrors();
 	
-	// fob and blend lights
+	// fog and blend lights
 	RB_STD_FogAllLights();
 	
 	GL_CheckErrors();

@@ -100,13 +100,13 @@ static void	RB_GLSL_DrawInteraction( const drawInteraction_t* din )
 	
 	// choose and bind the vertex program
 	// TODO gl_forwardLightingShader->SetAmbientLighting(backEnd.vLight->lightShader->IsAmbientLight());
-#if !defined(USE_GLES2)
+#if defined(USE_GLES2)
+	gl_forwardLightingShader->SetUniform_ModelViewProjectionMatrix( make_idMat4Transposed( backEnd.glState.modelViewProjectionMatrix[backEnd.glState.stackIndex] ) );
+#else
 	gl_forwardLightingShader->SetShadowing( false );
 #endif
 	gl_forwardLightingShader->SetNormalMapping( !r_skipBump.GetBool() || backEnd.vLight->lightShader->IsAmbientLight() );
 	gl_forwardLightingShader->BindProgram();
-	
-	gl_forwardLightingShader->SetUniform_ModelViewProjectionMatrix( make_idMat4Transposed( backEnd.glState.modelViewProjectionMatrix[backEnd.glState.stackIndex] ) );
 	
 	// load all the vertex program parameters
 	gl_forwardLightingShader->SetUniform_LocalViewOrigin( din->localViewOrigin.ToVec3() );

@@ -380,12 +380,7 @@ GLenum idImage::SelectInternalFormat( const byte** dataPtrs, int numDataPtrs, in
 #if defined(USE_GLES1)
 		return GL_RGBA;
 #else
-		if( globalImages->image_useCompression.GetBool() && globalImages->image_useNormalCompression.GetInteger() == 1 && glConfig.sharedTexturePaletteAvailable )
-		{
-			// image_useNormalCompression should only be set to 1 on nv_10 and nv_20 paths
-			return GL_COLOR_INDEX8_EXT;
-		}
-		else if( globalImages->image_useCompression.GetBool() && globalImages->image_useNormalCompression.GetInteger() && glConfig.s3tcTextureCompressionAvailable )
+		if( globalImages->image_useCompression.GetBool() && globalImages->image_useNormalCompression.GetInteger() && glConfig.s3tcTextureCompressionAvailable )
 		{
 			// image_useNormalCompression == 2 uses rxgb format which produces really good quality for medium settings
 			return GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
@@ -601,10 +596,13 @@ bool idImage::HasAlphaChannel( const byte** dataPtrs, int numDataPtrs, int width
 	}
 	
 	// catch normal maps first
+#if 0
+	// RB: we don't use the RXGB normalmap compression anymore
 	if( minimumDepth == TD_BUMP )
 	{
 		return true;
 	}
+#endif
 	
 	// allow a complete override of image compression with a cvar
 	if( !globalImages->image_useCompression.GetBool() && minimumDepth < TD_HIGH_QUALITY )
@@ -1023,7 +1021,10 @@ void idImage::GenerateImage( const byte* pic, int width, int height,
 	// one fragment program
 	// if the image is precompressed ( either in palletized mode or true rxgb mode )
 	// then it is loaded above and the swap never happens here
-	if( depth == TD_BUMP && globalImages->image_useNormalCompression.GetInteger() != 1 )
+	
+#if 0
+	// RB: TODO use new DXTEncoder
+	if( depth == TD_BUMP && globalImages->image_useNormalCompression.GetInteger() != 0 )
 	{
 		for( int i = 0; i < scaled_width * scaled_height * 4; i += 4 )
 		{
@@ -1031,6 +1032,8 @@ void idImage::GenerateImage( const byte* pic, int width, int height,
 			scaledBuffer[ i ] = 0;
 		}
 	}
+#endif
+	
 	// upload the main image level
 	Bind();
 	
@@ -2040,10 +2043,13 @@ bool idImage::CheckPrecompressedDDSImage( bool fullLoad )
 	}
 #endif
 	
+#if 0
+	// RB: TODO use new DXTEncoder
 	if( depth == TD_BUMP && globalImages->image_useNormalCompression.GetInteger() != 2 )
 	{
 		return false;
 	}
+#endif
 	
 	// god i love last minute hacks :-)
 	if( com_machineSpec.GetInteger() >= 1 && com_videoRam.GetInteger() >= 128 && imgName.Icmpn( "lights/", 7 ) == 0 )
@@ -2157,11 +2163,6 @@ bool idImage::CheckPrecompressedPKMImage( bool fullLoad )
 		return false;
 	}
 #endif
-	
-	if( depth == TD_BUMP && globalImages->image_useNormalCompression.GetInteger() != 2 )
-	{
-		return false;
-	}
 	
 	// god i love last minute hacks :-)
 	if( com_machineSpec.GetInteger() >= 1 && com_videoRam.GetInteger() >= 128 && imgName.Icmpn( "lights/", 7 ) == 0 )

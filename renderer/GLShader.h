@@ -1306,6 +1306,103 @@ public:
 	}
 };
 
+class u_ViewMatrix:
+	GLUniform
+{
+public:
+	u_ViewMatrix( GLShader* shader ):
+		GLUniform( shader )
+	{
+	}
+	
+	const char* GetName() const
+	{
+		return "u_ViewMatrix";
+	}
+	void				UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
+	{
+		shaderProgram->u_ViewMatrix = glGetUniformLocation( shaderProgram->program, GetName() );
+	}
+	
+	void SetUniform_ViewMatrix( const idMat4& m )
+	{
+		shaderProgram_t* program = _shader->GetProgram();
+		
+#if defined(USE_UNIFORM_FIREWALL)
+		if( program->t_ViewMatrix == m )
+			return;
+			
+		program->t_ViewMatrix = m;
+#endif
+		
+#if defined(LOG_GLSL_UNIFORMS)
+		if( r_logFile.GetBool() )
+		{
+			RB_LogComment( "--- SetUniform_ViewMatrix( program = %s, "
+						   "( %5.3f, %5.3f, %5.3f, %5.3f )\n"
+						   "( %5.3f, %5.3f, %5.3f, %5.3f )\n"
+						   "( %5.3f, %5.3f, %5.3f, %5.3f )\n"
+						   "( %5.3f, %5.3f, %5.3f, %5.3f ) ) ---\n",
+						   program->name.c_str(),
+						   m[0][0], m[0][1], m[0][2], m[0][3],
+						   m[1][0], m[1][1], m[1][2], m[1][3],
+						   m[2][0], m[2][1], m[2][2], m[2][3],
+						   m[3][0], m[3][1], m[3][2], m[3][3] );
+		}
+#endif
+		
+		glUniformMatrix4fv( program->u_ViewMatrix, 1, GL_FALSE, m.ToFloatPtr() );
+	}
+};
+
+class u_ViewMatrixTranspose:
+	GLUniform
+{
+public:
+	u_ViewMatrixTranspose( GLShader* shader ):
+		GLUniform( shader )
+	{
+	}
+	
+	const char* GetName() const
+	{
+		return "u_ViewMatrixTranspose";
+	}
+	void				UpdateShaderProgramUniformLocation( shaderProgram_t* shaderProgram ) const
+	{
+		shaderProgram->u_ViewMatrixTranspose = glGetUniformLocation( shaderProgram->program, GetName() );
+	}
+	
+	void SetUniform_ViewMatrixTranspose( const idMat4& m )
+	{
+		shaderProgram_t* program = _shader->GetProgram();
+		
+#if defined(USE_UNIFORM_FIREWALL)
+		if( program->t_ViewMatrixTranspose == m )
+			return;
+			
+		program->t_ViewMatrixTranspose = m;
+#endif
+		
+#if defined(LOG_GLSL_UNIFORMS)
+		if( r_logFile.GetBool() )
+		{
+			RB_LogComment( "--- SetUniform_ViewMatrixTranspose( program = %s, "
+						   "( %5.3f, %5.3f, %5.3f, %5.3f )\n"
+						   "( %5.3f, %5.3f, %5.3f, %5.3f )\n"
+						   "( %5.3f, %5.3f, %5.3f, %5.3f )\n"
+						   "( %5.3f, %5.3f, %5.3f, %5.3f ) ) ---\n",
+						   program->name.c_str(),
+						   m[0][0], m[0][1], m[0][2], m[0][3],
+						   m[1][0], m[1][1], m[1][2], m[1][3],
+						   m[2][0], m[2][1], m[2][2], m[2][3],
+						   m[3][0], m[3][1], m[3][2], m[3][3] );
+		}
+#endif
+		
+		glUniformMatrix4fv( program->u_ViewMatrixTranspose, 1, GL_FALSE, m.ToFloatPtr() );
+	}
+};
 
 class u_ColorMatrix:
 	GLUniform

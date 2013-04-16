@@ -1171,7 +1171,11 @@ void	GL_SelectTexture( int unit );
 
 // RB begin
 bool	GL_CheckErrors_( const char* filename, int line );
+#if 1 // !defined(RETAIL)
 #define         GL_CheckErrors()	GL_CheckErrors_(__FILE__, __LINE__)
+#else
+#define         GL_CheckErrors()	false
+#endif
 // RB end
 
 void	GL_ClearStateDelta();
@@ -1848,6 +1852,9 @@ typedef struct shaderProgram_s
 	
 	int32_t         u_ViewMatrix;	// world -> camera
 	idMat4			t_ViewMatrix;
+	
+	int32_t         u_ViewMatrixTranspose;	// camera -> world
+	idMat4			t_ViewMatrixTranspose;
 	
 	int32_t         u_ModelViewMatrix;	// model -> camera
 	idMat4			t_ModelViewMatrix;

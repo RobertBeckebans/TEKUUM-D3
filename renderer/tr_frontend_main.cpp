@@ -1177,17 +1177,15 @@ static void R_SetupUnprojection()
 	float* unprojectMatrix = tr.viewDef->unprojectionMatrix;
 	
 #if 0
-	MatrixCopy( tr.viewDef->projectionMatrix, unprojectMatrix );
-	MatrixMultiply2( unprojectMatrix, s_flipMatrix );
-	MatrixMultiply2( unprojectMatrix, tr.viewDef->worldSpace.unflippedViewMatrix );
-	MatrixInverse( unprojectMatrix );
+	myGlMultMatrix( s_flipMatrix, tr.viewDef->projectionMatrix, unprojectMatrix );
+	MatrixFullInverse( unprojectMatrix, unprojectMatrix );
 #else
 	myGlMultMatrix( tr.viewDef->worldSpace.modelViewMatrix, tr.viewDef->projectionMatrix, unprojectMatrix );
 	MatrixFullInverse( unprojectMatrix, unprojectMatrix );
 #endif
 	
 	// FIXME move viewport offset into matrix for non-full window size viewports ?
-#if 1
+#if 0
 	
 #if 0
 	MatrixMultiplyTranslation( unprojectMatrix, -tr.viewDef->viewport.x1, -tr.viewDef->viewport.y1, -1.0 );

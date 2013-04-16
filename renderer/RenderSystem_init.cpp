@@ -287,7 +287,7 @@ idCVar r_fxaaQualityPreset( "r_fxaaQualityPreset", "12", CVAR_RENDERER | CVAR_IN
 
 idCVar r_binaryLoadRenderModels( "r_binaryLoadRenderModels", "1", CVAR_RENDERER | CVAR_BOOL, "enable binary load/write of render models" );
 
-idCVar r_usePrecomputedLighting( "r_usePrecomputedLighting", "1", CVAR_RENDERER | CVAR_BOOL, "enable Q3A style precomputed lighting (vertex lighting/lightgrid)" );
+idCVar r_usePrecomputedLighting( "r_usePrecomputedLighting", "0", CVAR_RENDERER | CVAR_BOOL, "enable Q3A style precomputed lighting (vertex lighting/lightgrid)" );
 // RB end
 
 
