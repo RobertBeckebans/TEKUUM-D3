@@ -3339,6 +3339,9 @@ void idImage::Print() const
 			break;
 			
 // RB begin
+		case GL_DEPTH_COMPONENT:
+			common->Printf( "DEPTH    " );
+			break;
 		case GL_DEPTH_COMPONENT16:
 			common->Printf( "DEPTH16  " );
 			break;

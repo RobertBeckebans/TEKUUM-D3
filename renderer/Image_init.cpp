@@ -1263,6 +1263,8 @@ void R_ReloadImages_f( const idCmdArgs& args )
 	all = false;
 	checkPrecompressed = false;		// if we are doing this as a vid_restart, look for precompressed like normal
 	
+	globalImages->ChangeTextureFilter();
+	
 	if( args.Argc() == 2 )
 	{
 		if( !idStr::Icmp( args.Argv( 1 ), "all" ) )
