@@ -3116,7 +3116,7 @@ void    RB_Exp_DrawInteractions()
 		
 		globalImages->currentNormalsImage->CopyFramebuffer( backEnd.viewDef->viewport.x1,
 				backEnd.viewDef->viewport.y1,  backEnd.viewDef->viewport.x2 -  backEnd.viewDef->viewport.x1 + 1,
-				backEnd.viewDef->viewport.y2 -  backEnd.viewDef->viewport.y1 + 1, !glConfig.textureNonPowerOfTwoAvailable, false );
+				backEnd.viewDef->viewport.y2 -  backEnd.viewDef->viewport.y1 + 1, !glConfig.textureNonPowerOfTwoAvailable, true );
 				
 		globalImages->currentDepthImage->CopyDepthbuffer( backEnd.viewDef->viewport.x1,
 				backEnd.viewDef->viewport.y1,  backEnd.viewDef->viewport.x2 -  backEnd.viewDef->viewport.x1 + 1,

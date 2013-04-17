@@ -429,7 +429,7 @@ static void R_RGBA8LinearImage( idImage* image )
 	data[0][0][3] = 96;
 	
 	image->GenerateImage( ( byte* )data, DEFAULT_SIZE, DEFAULT_SIZE,
-						  TF_NEAREST, false, TR_REPEAT, TD_HIGH_QUALITY );
+						  TF_LINEAR, false, TR_REPEAT, TD_HIGH_QUALITY );
 }
 
 static void R_RGB8Image( idImage* image )
@@ -447,6 +447,12 @@ static void R_RGB8Image( idImage* image )
 }
 
 #if !defined(USE_GLES1)
+static void R_DepthImage( idImage* image )
+{
+	image->GenerateImage( NULL, DEFAULT_SIZE, DEFAULT_SIZE,
+						  TF_NEAREST, false, TR_CLAMP, TD_FBO_DEPTH );
+}
+
 static void R_Depth16Image( idImage* image )
 {
 	image->GenerateImage( NULL, DEFAULT_SIZE, DEFAULT_SIZE,
@@ -1157,19 +1163,30 @@ void idImageManager::ChangeTextureFilter()
 		{
 			continue;
 		}
+		
 		glt->Bind();
+		
 		if( glt->filter == TF_DEFAULT )
 		{
 			glTexParameterf( texEnum, GL_TEXTURE_MIN_FILTER, globalImages->textureMinFilter );
 			glTexParameterf( texEnum, GL_TEXTURE_MAG_FILTER, globalImages->textureMaxFilter );
 		}
+		
 		if( glConfig.anisotropicAvailable )
 		{
-			glTexParameterf( texEnum, GL_TEXTURE_MAX_ANISOTROPY_EXT, globalImages->textureAnisotropy );
+			// only do aniso filtering on mip mapped images
+			if( glt->filter == TF_DEFAULT )
+			{
+				glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, globalImages->textureAnisotropy );
+			}
+			else
+			{
+				glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, 1 );
+			}
 		}
 		
 #if !defined(USE_GLES2)
-		if( glConfig.textureLODBiasAvailable )
+		if( glConfig.textureLODBiasAvailable )// && ( glt->depth < TD_HIGH_QUALITY ) )
 		{
 			glTexParameterf( texEnum, GL_TEXTURE_LOD_BIAS_EXT, globalImages->textureLODBias );
 		}
@@ -1243,9 +1260,6 @@ void R_ReloadImages_f( const idCmdArgs& args )
 	bool	all;
 	bool	checkPrecompressed;
 	
-	// this probably isn't necessary...
-	globalImages->ChangeTextureFilter();
-	
 	all = false;
 	checkPrecompressed = false;		// if we are doing this as a vid_restart, look for precompressed like normal
 	
@@ -1272,6 +1286,9 @@ void R_ReloadImages_f( const idCmdArgs& args )
 		image = globalImages->images[ i ];
 		image->Reload( checkPrecompressed, all );
 	}
+	
+	// this probably isn't necessary...
+	globalImages->ChangeTextureFilter();
 }
 
 typedef struct
@@ -2345,9 +2362,9 @@ void idImageManager::Init()
 	scratchImage2 = ImageFromFunction( "_scratch2", R_RGBA8Image );
 	accumImage = ImageFromFunction( "_accum", R_RGBA8Image );
 	scratchCubeMapImage = ImageFromFunction( "_scratchCubeMap", makeNormalizeVectorCubeMap );
-	currentRenderImage = ImageFromFunction( "_currentRender", R_RGBA8Image );
+	currentRenderImage = ImageFromFunction( "_currentRender", R_RGBA8LinearImage );
 #if !defined(USE_GLES1)
-	currentDepthImage = ImageFromFunction( "_currentDepth", R_Depth24Image );
+	currentDepthImage = ImageFromFunction( "_currentDepth", R_DepthImage );
 	currentNormalsImage = ImageFromFunction( "_currentNormals", R_RGBA8LinearImage );
 	currentLightImage = ImageFromFunction( "_currentLight", R_RGBA8LinearImage );
 #endif

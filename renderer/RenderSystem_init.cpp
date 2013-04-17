@@ -279,7 +279,7 @@ idCVar r_esmOverDarkeningFactor( "r_esmOverDarkeningFactor", "80", CVAR_RENDERER
 // EVSM specific
 idCVar r_evsm_postProcess( "r_evsm_postProcess", "0", CVAR_RENDERER | CVAR_BOOL, "don't use the expensive RGBA32F MRT" );
 
-idCVar r_useDeferredShading( "r_useDeferredShading", "0", CVAR_RENDERER | CVAR_BOOL, "enable light pre pass deferred shading" );
+idCVar r_useDeferredShading( "r_useDeferredShading", "1", CVAR_RENDERER | CVAR_BOOL, "enable light pre pass deferred shading" );
 idCVar r_deferredShadingGPUFrustumCulling( "r_deferredShadingGPUFrustumCulling", "0", CVAR_RENDERER | CVAR_BOOL, "WARNING EXPENSIVE: cull each pixel world position using the light frustum" );
 
 idCVar r_useFXAA( "r_useFXAA", "0", CVAR_RENDERER | CVAR_BOOL, "enable Fast Approximate Anti-Aliasing" );

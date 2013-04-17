@@ -132,6 +132,7 @@ int idImage::BitsForInternalFormat( int internalFormat ) const
 		case GL_DEPTH_COMPONENT24:
 			return 24;
 		case GL_DEPTH_COMPONENT32:
+		case GL_DEPTH_COMPONENT:
 			return 32;
 		case GL_RGBA16F:
 			return 64;
@@ -289,6 +290,9 @@ GLenum idImage::SelectInternalFormat( const byte** dataPtrs, int numDataPtrs, in
 	{
 		switch( minimumDepth )
 		{
+			case TD_FBO_DEPTH:
+				return GL_DEPTH_COMPONENT;
+				
 			case TD_FBO_DEPTH16:
 				return GL_DEPTH_COMPONENT16;
 				
@@ -642,6 +646,7 @@ void idImage::SetImageFilterAndRepeat() const
 	switch( filter )
 	{
 		case TF_DEFAULT:
+			// RB: FIXME
 			if( internalFormat == GL_ETC1_RGB8_OES )// || internalFormat == GL_RGB )
 			{
 				glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
@@ -679,7 +684,7 @@ void idImage::SetImageFilterAndRepeat() const
 	}
 	
 #if !defined(USE_GLES2)
-	if( glConfig.textureLODBiasAvailable )
+	if( glConfig.textureLODBiasAvailable )// && ( depth < TD_HIGH_QUALITY ) )
 	{
 		glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_LOD_BIAS_EXT, globalImages->textureLODBias );
 	}
@@ -882,8 +887,7 @@ void idImage::GenerateImage( const byte* pic, int width, int height,
 #if !defined(USE_GLES1)
 	if( depth > TD_HIGH_QUALITY )
 	{
-	
-		if( depth >= TD_FBO_DEPTH16 )
+		if( depth >= TD_FBO_DEPTH )
 		{
 			glTexImage2D( GL_TEXTURE_2D, 0, internalFormat, width, height, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, NULL );
 		}
@@ -2963,16 +2967,19 @@ void idImage::CopyFramebuffer( int x, int y, int imageWidth, int imageHeight, bo
 // RB begin
 	if( useNearestFilter )
 	{
+		filter = TF_NEAREST;
 		glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
 		glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
 	}
 	else
 	{
+		filter = TF_LINEAR;
 		glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
 		glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
 	}
 // RB end
 
+	repeat = TR_CLAMP;
 	glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
 	glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
 	
@@ -3030,9 +3037,13 @@ void idImage::CopyDepthbuffer( int x, int y, int imageWidth, int imageHeight )
 		glCopyTexSubImage2D( GL_TEXTURE_2D, 0, 0, 0, x, y, imageWidth, imageHeight );
 	}
 	
-//	glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
-//	glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
-
+#if 0
+	filter = TF_NEAREST;
+	glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
+	glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
+#endif
+	
+	repeat = TR_REPEAT;
 	glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
 	glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
 }

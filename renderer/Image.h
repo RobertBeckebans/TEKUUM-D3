@@ -139,6 +139,7 @@ typedef enum
 	TD_FBO_R32F,
 	TD_FBO_RG32F,
 	
+	TD_FBO_DEPTH,			// let the OpenGL driver decide
 	TD_FBO_DEPTH16,
 	TD_FBO_DEPTH24,
 	TD_FBO_DEPTH32,
