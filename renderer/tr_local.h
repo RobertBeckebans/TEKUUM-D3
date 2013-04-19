@@ -106,10 +106,19 @@ typedef enum
 
 typedef enum
 {
+#if 1
 	FRUSTUM_RIGHT,
 	FRUSTUM_TOP,
 	FRUSTUM_LEFT,
 	FRUSTUM_BOTTOM,
+#else
+	// like in XreaL and should work with MatrixFromPlanes()
+	FRUSTUM_LEFT,
+	FRUSTUM_RIGHT,
+	FRUSTUM_BOTTOM,
+	FRUSTUM_TOP,
+#endif
+	
 	FRUSTUM_NEAR,
 	FRUSTUM_FAR,
 } frustumPlane_t;
@@ -247,7 +256,8 @@ public:
 	
 	
 	// derived information
-	idPlane					lightProject[4];
+	
+	idPlane					lightProject[4];		// RB: in global space
 	
 	const idMaterial* 		lightShader;			// guaranteed to be valid, even if parms.shader isn't
 	idImage* 				falloffImage;
@@ -294,7 +304,7 @@ public:
 	
 	renderEntity_t			parms;
 	
-	float					modelMatrix[16];		// this is just a rearrangement of parms.axis and parms.origin
+	matrix_t				modelMatrix;			// this is just a rearrangement of parms.axis and parms.origin
 	
 	idRenderWorldLocal* 	world;
 	int						index;					// in world entityDefs

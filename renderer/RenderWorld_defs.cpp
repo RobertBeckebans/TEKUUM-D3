@@ -403,17 +403,24 @@ void R_SetLightFrustum( const idPlane lightProject[4], idPlane frustum[6], matri
 	int		i;
 	
 	// we want the planes of s=0, s=q, t=0, and t=q
-	frustum[0] = lightProject[0];
-	frustum[1] = lightProject[1];
-	frustum[2] = lightProject[2] - lightProject[0];
-	frustum[3] = lightProject[2] - lightProject[1];
+#if 1
+	frustum[FRUSTUM_RIGHT] = lightProject[0];
+	frustum[FRUSTUM_TOP] = lightProject[1];
+	frustum[FRUSTUM_LEFT] = lightProject[2] - lightProject[0];
+	frustum[FRUSTUM_BOTTOM] = lightProject[2] - lightProject[1];
+#else
+	frustum[FRUSTUM_LEFT] = lightProject[0];
+	frustum[FRUSTUM_BOTTOM] = lightProject[1];
+	frustum[FRUSTUM_RIGHT] = lightProject[2] - lightProject[0];
+	frustum[FRUSTUM_TOP] = lightProject[2] - lightProject[1];
+#endif
 	
 	// we want the planes of s=0 and s=1 for front and rear clipping planes
-	frustum[4] = lightProject[3];
+	frustum[FRUSTUM_NEAR] = lightProject[3];
 	
-	frustum[5] = lightProject[3];
-	frustum[5][3] -= 1.0f;
-	frustum[5] = -frustum[5];
+	frustum[FRUSTUM_FAR] = lightProject[3];
+	frustum[FRUSTUM_FAR][3] -= 1.0f;
+	frustum[FRUSTUM_FAR] = -frustum[FRUSTUM_FAR];
 	
 	MatrixFromPlanes( lightProjectionMatrix, frustum );
 	

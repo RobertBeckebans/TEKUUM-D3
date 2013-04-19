@@ -147,13 +147,13 @@ idCVar r_showHDR( "r_showHDR", "0", CVAR_RENDERER | CVAR_BOOL, "show HDR luminan
 
 
 // from world space to light origin, looking down the X axis
-static float	unflippedLightMatrix[16];
+static matrix_t	unflippedLightMatrix;
 
 // from world space to OpenGL view space, looking down the negative Z axis
-static float	lightMatrix[16];
+static matrix_t	lightMatrix;
 
 // from OpenGL view space to OpenGL NDC ( -1 : 1 in XYZ )
-static float	lightProjectionMatrix[16];
+static matrix_t	lightProjectionMatrix;
 
 
 /*
@@ -832,7 +832,6 @@ RB_EXP_RenderOccluders
 */
 void RB_EXP_RenderOccluders( viewLight_t* vLight )
 {
-
 	if( vLight->lightDef == NULL )
 	{
 		return;
@@ -852,23 +851,26 @@ void RB_EXP_RenderOccluders( viewLight_t* vLight )
 		
 		// no need to check for current on this, because each interaction is always
 		// a different space
-		matrix_t	modelViewMatrix;
-		myGlMultMatrix( inter->entityDef->modelMatrix, lightMatrix, modelViewMatrix );
-		glLoadMatrixf( modelViewMatrix );
+		matrix_t	modelToLightMatrix;
+		myGlMultMatrix( inter->entityDef->modelMatrix, lightMatrix, modelToLightMatrix );
+		glLoadMatrixf( modelToLightMatrix );
 		
 #if 0
-		idPlane lightProject[4];
-		for( int i = 0 ; i < 4 ; i++ )
+		if( !vLight->lightDef->parms.pointLight )
 		{
-			R_GlobalPlaneToLocal( inter->entityDef->modelMatrix, vLight->lightDef->lightProject[i], lightProject[i] );
+			idPlane lightProject[4];
+			for( int i = 0 ; i < 4 ; i++ )
+			{
+				R_GlobalPlaneToLocal( inter->entityDef->modelMatrix, vLight->lightDef->lightProject[i], lightProject[i] );
+			}
+			
+			idMat4 lProj( lightProject[0].ToVec4(), lightProject[1].ToVec4(), lightProject[3].ToVec4(), lightProject[2].ToVec4() );
+			lProj.TransposeSelf();
+			
+			glMatrixMode( GL_PROJECTION );
+			glLoadMatrixf( lProj.ToFloatPtr() );
+			glMatrixMode( GL_MODELVIEW );
 		}
-		
-		idMat4 lProj( lightProject[0].ToVec4(), lightProject[1].ToVec4(), lightProject[2].ToVec4(), lightProject[3].ToVec4() );
-		lProj.TransposeSelf();
-		
-		glMatrixMode( GL_PROJECTION );
-		glLoadMatrixf( lProj.ToFloatPtr() );
-		glMatrixMode( GL_MODELVIEW );
 #endif
 		
 		gl_shadowMapShader->SetUniform_ModelMatrix( make_idMat4Transposed( inter->entityDef->modelMatrix ) );
@@ -902,14 +904,17 @@ void RB_EXP_RenderOccluders( viewLight_t* vLight )
 			{
 				R_CreateAmbientCache( const_cast<srfTriangles_t*>( tri ), false );
 			}
+			
 			idDrawVert* ac = ( idDrawVert* )vertexCache.Position( tri->ambientCache );
 			glVertexPointer( 3, GL_FLOAT, sizeof( idDrawVert ), ac->xyz.ToFloatPtr() );
 			glVertexAttribPointerARB( VA_INDEX_TEXCOORD0, 2, GL_FLOAT, false, sizeof( idDrawVert ), ac->st.ToFloatPtr() );
 			//glTexCoordPointer( 2, GL_FLOAT, sizeof( idDrawVert ), ac->st.ToFloatPtr() );
+			
 			if( surfInt->shader )
 			{
 				surfInt->shader->GetEditorImage()->Bind();
 			}
+			
 			RB_DrawElementsWithCounters( tri );
 		}
 	}
@@ -918,10 +923,10 @@ void RB_EXP_RenderOccluders( viewLight_t* vLight )
 
 /*
 ==================
-RB_RenderShadowBuffer
+RB_EXP_RenderShadowBuffer
 ==================
 */
-void    RB_RenderShadowBuffer( viewLight_t*	vLight, int side )
+void    RB_EXP_RenderShadowBuffer( viewLight_t*	vLight, int side )
 {
 	float	xmin, xmax, ymin, ymax;
 	float	width, height;
@@ -931,14 +936,57 @@ void    RB_RenderShadowBuffer( viewLight_t*	vLight, int side )
 	
 	if( r_logFile.GetBool() )
 	{
-		RB_LogComment( "--- RB_RenderShadowBuffer( side = %i ) ---\n", side );
+		RB_LogComment( "--- RB_EXP_RenderShadowBuffer( side = %i ) ---\n", side );
 	}
 	
 	GL_CheckErrors();
 	
 	if( !vLight->lightDef->parms.pointLight )
 	{
+#if 0
+		idPlane lightProject[4];
+		for( int i = 0 ; i < 4 ; i++ )
+		{
+			R_GlobalPlaneToLocal( vLight->lightDef->modelMatrix, vLight->lightProject[i], lightProject[i] );
+		}
+		
+		// set the old style light projection where Z and W are flipped and
+		// for projected lights lightProject[3] is divided by ( zNear + zFar )
+		
+		// S or X
+		lightProjectionMatrix[ 0] = lightProject[0][0];
+		lightProjectionMatrix[ 1] = lightProject[0][1];
+		lightProjectionMatrix[ 2] = lightProject[0][2];
+		lightProjectionMatrix[ 3] = lightProject[0][3];
+		
+		// T or Y
+		lightProjectionMatrix[ 4] = lightProject[1][0];
+		lightProjectionMatrix[ 5] = lightProject[1][1];
+		lightProjectionMatrix[ 6] = lightProject[1][2];
+		lightProjectionMatrix[ 7] = lightProject[1][3];
+		
+		// R or Z
+		lightProjectionMatrix[ 8] = lightProject[3][0];
+		lightProjectionMatrix[ 9] = lightProject[3][1];
+		lightProjectionMatrix[10] = lightProject[3][2];
+		lightProjectionMatrix[11] = lightProject[3][3];
+		
+		// Q or W
+		lightProjectionMatrix[12] = lightProject[2][0];
+		lightProjectionMatrix[13] = lightProject[2][1];
+		lightProjectionMatrix[14] = lightProject[2][2];
+		lightProjectionMatrix[15] = lightProject[2][3];
+		
+#if 1
+		matrix_t tmp;
+		MatrixTranspose( lightProjectionMatrix, tmp );
+		MatrixCopy( tmp, lightProjectionMatrix );
+#endif
+		
+		// RB: FIXME mache vLight->lightProject zur lightProjectionMatrix
+#else
 		MatrixCopy( vLight->lightDef->projectionMatrix, lightProjectionMatrix );
+#endif
 	}
 	else
 	{
@@ -1039,7 +1087,7 @@ void    RB_RenderShadowBuffer( viewLight_t*	vLight, int side )
 		0, 0, 0, 1
 	};
 	
-	float	viewMatrix[16];
+	matrix_t	viewMatrix;
 	
 	idVec3	vec;
 	idVec3	origin = vLight->lightDef->globalLightOrigin;
@@ -1047,8 +1095,10 @@ void    RB_RenderShadowBuffer( viewLight_t*	vLight, int side )
 	if( side == -1 )
 	{
 #if 1
-		// MatrixIdentity(viewMatrix);
-		MatrixAffineInverse( vLight->lightDef->modelMatrix, viewMatrix );
+		// RB: worldToLight is already in the projection matrix
+		//MatrixIdentity( viewMatrix );
+		//MatrixAffineInverse( vLight->lightDef->modelMatrix, viewMatrix );
+		MatrixFullInverse( vLight->lightDef->modelMatrix, viewMatrix );
 #else
 		// projected light
 		vec = vLight->lightDef->parms.target;
@@ -1126,7 +1176,8 @@ void    RB_RenderShadowBuffer( viewLight_t*	vLight, int side )
 	else
 	{
 		// projected light
-		memcpy( lightMatrix, viewMatrix, sizeof( lightMatrix ) );
+		MatrixCopy( viewMatrix, lightMatrix );
+		//myGlMultMatrix( viewMatrix, s_flipMatrix, lightMatrix );
 	}
 	
 	
@@ -1360,40 +1411,34 @@ static void	RB_EXP_DrawInteraction( const drawInteraction_t* din )
 		gl_forwardLightingShader->SetUniform_ShadowBlur( r_sb_samples.GetInteger() );
 		
 		// calculate depth projection for shadow buffer
-		idVec4	sRow;
-		idVec4	tRow;
-		idVec4	rRow;
-		idVec4	qRow;
-		float	matrix[16];
-		float	matrix2[16];
-		myGlMultMatrix( din->surf->space->modelMatrix, lightMatrix, matrix );
-		myGlMultMatrix( matrix, lightProjectionMatrix, matrix2 );
-		//myGlMultMatrix( lightMatrix, lightProjectionMatrix, matrix2 );
+		matrix_t	modelToLightMatrix;
+		matrix_t	lightMVP;
 		
-		// the final values need to be in 0.0 : 1.0 range instead of -1 : 1
-		sRow[0] = 0.5 * lightBufferSizeFraction[0] * ( matrix2[0] + matrix2[3] );
-		sRow[1] = 0.5 * lightBufferSizeFraction[0] * ( matrix2[4] + matrix2[7] );
-		sRow[2] = 0.5 * lightBufferSizeFraction[0] * ( matrix2[8] + matrix2[11] );
-		sRow[3] = 0.5 * lightBufferSizeFraction[0] * ( matrix2[12] + matrix2[15] );
-		//glProgramEnvParameter4fvARB( GL_VERTEX_PROGRAM_ARB, 18, sRow );
-		tRow[0] = 0.5 * lightBufferSizeFraction[0] * ( matrix2[1] + matrix2[3] );
-		tRow[1] = 0.5 * lightBufferSizeFraction[0] * ( matrix2[5] + matrix2[7] );
-		tRow[2] = 0.5 * lightBufferSizeFraction[0] * ( matrix2[9] + matrix2[11] );
-		tRow[3] = 0.5 * lightBufferSizeFraction[0] * ( matrix2[13] + matrix2[15] );
-		//glProgramEnvParameter4fvARB( GL_VERTEX_PROGRAM_ARB, 19, tRow );
-		rRow[0] = 0.5 * ( matrix2[2] + matrix2[3] );
-		rRow[1] = 0.5 * ( matrix2[6] + matrix2[7] );
-		rRow[2] = 0.5 * ( matrix2[10] + matrix2[11] );
-		rRow[3] = 0.5 * ( matrix2[14] + matrix2[15] );
-		//glProgramEnvParameter4fvARB( GL_VERTEX_PROGRAM_ARB, 20, rRow );
-		qRow[0] = matrix2[3];
-		qRow[1] = matrix2[7];
-		qRow[2] = matrix2[11];
-		qRow[3] = matrix2[15];
-		//glProgramEnvParameter4fvARB( GL_VERTEX_PROGRAM_ARB, 21, qRow );
 		
-		//idMat4 shadowMat(sRow, tRow, rRow, qRow);
-		idMat4 shadowMat = make_idMat4Transposed( matrix2 ); //.Transpose();
+#if 0
+		if( !backEnd.vLight->lightDef->parms.pointLight )
+		{
+		
+			idPlane lightProject[4];
+			for( int i = 0 ; i < 4 ; i++ )
+			{
+				R_GlobalPlaneToLocal( din->surf->space->modelMatrix, backEnd.vLight->lightDef->lightProject[i], lightProject[i] );
+			}
+			
+			idMat4 lProj( lightProject[0].ToVec4(), lightProject[1].ToVec4(), lightProject[3].ToVec4(), lightProject[2].ToVec4() );
+			lProj.TransposeSelf();
+			
+			myGlMultMatrix( din->surf->space->modelMatrix, lightMatrix, modelToLightMatrix );
+			myGlMultMatrix( modelToLightMatrix, lProj.ToFloatPtr(), lightMVP );
+		}
+		else
+#endif
+		{
+			myGlMultMatrix( din->surf->space->modelMatrix, lightMatrix, modelToLightMatrix );
+			myGlMultMatrix( modelToLightMatrix, lightProjectionMatrix, lightMVP );
+		}
+		
+		idMat4 shadowMat = make_idMat4Transposed( lightMVP );
 		
 		gl_forwardLightingShader->SetUniform_ShadowMatrix( shadowMat );
 	}
@@ -1703,44 +1748,9 @@ static void RB_EXP_DrawLightDeferred( viewLight_t* vLight )
 		gl_deferredLightingShader->SetUniform_ShadowBlur( r_sb_samples.GetInteger() );
 		
 		// calculate depth projection for shadow buffer
-		idVec4	sRow;
-		idVec4	tRow;
-		idVec4	rRow;
-		idVec4	qRow;
-		float	matrix[16];
-		float	matrix2[16];
-		//myGlMultMatrix( din->surf->space->modelMatrix, lightMatrix, matrix );
-		//myGlMultMatrix( matrix, lightProjectionMatrix, matrix2 );
-		myGlMultMatrix( lightMatrix, lightProjectionMatrix, matrix2 );
 		
-		/*
-		// the final values need to be in 0.0 : 1.0 range instead of -1 : 1
-		sRow[0] = 0.5 * lightBufferSizeFraction[0] * ( matrix2[0] + matrix2[3] );
-		sRow[1] = 0.5 * lightBufferSizeFraction[0] * ( matrix2[4] + matrix2[7] );
-		sRow[2] = 0.5 * lightBufferSizeFraction[0] * ( matrix2[8] + matrix2[11] );
-		sRow[3] = 0.5 * lightBufferSizeFraction[0] * ( matrix2[12] + matrix2[15] );
-		//glProgramEnvParameter4fvARB( GL_VERTEX_PROGRAM_ARB, 18, sRow );
-		tRow[0] = 0.5 * lightBufferSizeFraction[0] * ( matrix2[1] + matrix2[3] );
-		tRow[1] = 0.5 * lightBufferSizeFraction[0] * ( matrix2[5] + matrix2[7] );
-		tRow[2] = 0.5 * lightBufferSizeFraction[0] * ( matrix2[9] + matrix2[11] );
-		tRow[3] = 0.5 * lightBufferSizeFraction[0] * ( matrix2[13] + matrix2[15] );
-		//glProgramEnvParameter4fvARB( GL_VERTEX_PROGRAM_ARB, 19, tRow );
-		rRow[0] = 0.5 * ( matrix2[2] + matrix2[3] );
-		rRow[1] = 0.5 * ( matrix2[6] + matrix2[7] );
-		rRow[2] = 0.5 * ( matrix2[10] + matrix2[11] );
-		rRow[3] = 0.5 * ( matrix2[14] + matrix2[15] );
-		//glProgramEnvParameter4fvARB( GL_VERTEX_PROGRAM_ARB, 20, rRow );
-		qRow[0] = matrix2[3];
-		qRow[1] = matrix2[7];
-		qRow[2] = matrix2[11];
-		qRow[3] = matrix2[15];
-		//glProgramEnvParameter4fvARB( GL_VERTEX_PROGRAM_ARB, 21, qRow );
-		*/
-		
-		//idMat4 shadowMat(sRow, tRow, rRow, qRow);
-		idMat4 shadowMat = make_idMat4Transposed( matrix2 ); //.Transpose();
-		
-		gl_deferredLightingShader->SetUniform_ShadowMatrix( shadowMat );
+		// TODO
+		//gl_deferredLightingShader->SetUniform_ShadowMatrix( shadowMat );
 	}
 #endif
 	
@@ -2041,258 +2051,7 @@ const srfTriangles_t*	RB_Exp_TrianglesForFrustum( viewLight_t* vLight, int side 
 }
 
 
-/*
-==================
-RB_Exp_SelectFrustum
-==================
-*/
-#if 0
-void	RB_Exp_SelectFrustum( viewLight_t* vLight, int side )
-{
-	glLoadMatrixf( backEnd.viewDef->worldSpace.modelViewMatrix );
-	
-	const srfTriangles_t* tri = RB_Exp_TrianglesForFrustum( vLight, side );
-	
-	idDrawVert* ac = ( idDrawVert* )vertexCache.Position( tri->ambientCache );
-	glVertexPointer( 3, GL_FLOAT, sizeof( idDrawVert ), ac->xyz.ToFloatPtr() );
-	
-	glDisable( GL_TEXTURE_2D );
-	glDisableClientState( GL_TEXTURE_COORD_ARRAY );
-	// clear stencil buffer
-	glEnable( GL_SCISSOR_TEST );
-	glEnable( GL_STENCIL_TEST );
-	glClearStencil( 1 );
-	glClear( GL_STENCIL_BUFFER_BIT );
-	
-	// draw front faces of the light frustum, incrementing the stencil buffer on depth fail
-	// so we can't draw on those pixels
-	GL_State( GLS_COLORMASK | GLS_ALPHAMASK | GLS_DEPTHMASK | GLS_DEPTHFUNC_LESS );
-	glStencilFunc( GL_ALWAYS, 0, 255 );
-	glStencilOp( GL_KEEP, GL_INCR, GL_KEEP );
-	GL_Cull( CT_FRONT_SIDED );
-	
-	RB_DrawElementsWithCounters( tri );
-	
-	// draw back faces of the light frustum with
-	// depth test greater
-	// stencil test of equal 1
-	// zero stencil stencil when depth test passes, so subsequent surface drawing
-	// can occur on those pixels
-	
-	// this pass does all the shadow filtering
-	glStencilFunc( GL_EQUAL, 1, 255 );
-	glStencilOp( GL_KEEP, GL_KEEP, GL_ZERO );
-	
-	GL_Cull( CT_BACK_SIDED );
-	glDepthFunc( GL_GREATER );
-	
-	// write to destination alpha
-	if( r_sb_showFrustumPixels.GetBool() )
-	{
-		GL_State( GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE | GLS_DEPTHMASK | GLS_DEPTHFUNC_LESS );
-		glDisable( GL_TEXTURE_2D );
-		glColor4f( 0, 0.25, 0, 1 );
-	}
-	else
-	{
-		GL_State( GLS_COLORMASK | GLS_DEPTHMASK | GLS_DEPTHFUNC_LESS );
-		glEnable( GL_VERTEX_PROGRAM_ARB );
-		glEnable( GL_FRAGMENT_PROGRAM_ARB );
-		glBindProgramARB( GL_VERTEX_PROGRAM_ARB, screenSpaceShadowVertexProgram );
-		switch( r_sb_samples.GetInteger() )
-		{
-			case 0:
-				glBindProgramARB( GL_FRAGMENT_PROGRAM_ARB, screenSpaceShadowFragmentProgram0 );
-				break;
-			case 1:
-				glBindProgramARB( GL_FRAGMENT_PROGRAM_ARB, screenSpaceShadowFragmentProgram1 );
-				break;
-			case 4:
-				glBindProgramARB( GL_FRAGMENT_PROGRAM_ARB, screenSpaceShadowFragmentProgram4 );
-				break;
-			case 16:
-				glBindProgramARB( GL_FRAGMENT_PROGRAM_ARB, screenSpaceShadowFragmentProgram16 );
-				break;
-		}
-	}
-	
-	/*
-	texture[0] = view depth texture
-	texture[1] = jitter texture
-	texture[2] = light depth texture
-	*/
-	GL_SelectTextureNoClient( 2 );
-	shadowImage[0]->Bind();
-	
-	GL_SelectTextureNoClient( 1 );
-	if( r_sb_samples.GetInteger() == 16 )
-	{
-		jitterImage16->Bind();
-	}
-	else if( r_sb_samples.GetInteger() == 4 )
-	{
-		jitterImage4->Bind();
-	}
-	else
-	{
-		jitterImage1->Bind();
-	}
-	
-	GL_SelectTextureNoClient( 0 );
-	viewDepthImage->Bind();
-	
-	/*
-	PARAM	positionToDepthTexScale		= program.local[0];	# fragment.position to screen depth texture transformation
-	PARAM	zProject					= program.local[1];	# projection[10], projection[14], 0, 0
-	PARAM	positionToViewSpace			= program.local[2];	# X add, Y add, X mul, Y mul
-	PARAM	viewToLightS				= program.local[3];
-	PARAM	viewToLightT				= program.local[4];
-	PARAM	viewToLightR				= program.local[5];
-	PARAM	viewToLightQ				= program.local[6];
-	PARAM	positionToJitterTexScale	= program.local[7];	# fragment.position to jitter texture
-	PARAM	jitterTexScale				= program.local[8];
-	PARAM	jitterTexOffset				= program.local[9];
-	*/
-	float	parm[4];
-	int		pot;
-	
-	// calculate depth projection for shadow buffer
-	float	sRow[4];
-	float	tRow[4];
-	float	rRow[4];
-	float	qRow[4];
-	float	invertedView[16];
-	float	invertedProjection[16];
-	float	matrix[16];
-	float	matrix2[16];
-	
-	// we need the inverse of the projection matrix to go from NDC to view
-	FullInvert( backEnd.viewDef->projectionMatrix, invertedProjection );
-	
-	/*
-	from window to NDC:
-		( x - xMid ) * 1.0 / xMid
-		( y - yMid ) * 1.0 / yMid
-		( z - 0.5 ) * 2
-	
-	from NDC to clip coordinates:
-		rcp(1/w)
-	
-	*/
-	
-	// we need the inverse of the viewMatrix to go from view (looking down negative Z) to world
-	InvertByTranspose( backEnd.viewDef->worldSpace.modelViewMatrix, invertedView );
-	
-	// then we go from world to light view space (looking down negative Z)
-	myGlMultMatrix( invertedView, lightMatrix, matrix );
-	
-	// then to light projection, giving X/w, Y/w, Z/w in the -1 : 1 range
-	myGlMultMatrix( matrix, lightProjectionMatrix, matrix2 );
-	
-	// the final values need to be in 0.0 : 1.0 range instead of -1 : 1
-	sRow[0] = 0.5 * ( matrix2[0] + matrix2[3] ) * lightBufferSizeFraction;
-	sRow[1] = 0.5 * ( matrix2[4] + matrix2[7] ) * lightBufferSizeFraction;
-	sRow[2] = 0.5 * ( matrix2[8] + matrix2[11] ) * lightBufferSizeFraction;
-	sRow[3] = 0.5 * ( matrix2[12] + matrix2[15] ) * lightBufferSizeFraction;
-	glProgramLocalParameter4fvARB( GL_FRAGMENT_PROGRAM_ARB, 3, sRow );
-	tRow[0] = 0.5 * ( matrix2[1] + matrix2[3] ) * lightBufferSizeFraction;
-	tRow[1] = 0.5 * ( matrix2[5] + matrix2[7] ) * lightBufferSizeFraction;
-	tRow[2] = 0.5 * ( matrix2[9] + matrix2[11] ) * lightBufferSizeFraction;
-	tRow[3] = 0.5 * ( matrix2[13] + matrix2[15] ) * lightBufferSizeFraction;
-	glProgramLocalParameter4fvARB( GL_FRAGMENT_PROGRAM_ARB, 4, tRow );
-	rRow[0] = 0.5 * ( matrix2[2] + matrix2[3] );
-	rRow[1] = 0.5 * ( matrix2[6] + matrix2[7] );
-	rRow[2] = 0.5 * ( matrix2[10] + matrix2[11] );
-	rRow[3] = 0.5 * ( matrix2[14] + matrix2[15] );
-	glProgramLocalParameter4fvARB( GL_FRAGMENT_PROGRAM_ARB, 5, rRow );
-	qRow[0] = matrix2[3];
-	qRow[1] = matrix2[7];
-	qRow[2] = matrix2[11];
-	qRow[3] = matrix2[15];
-	glProgramLocalParameter4fvARB( GL_FRAGMENT_PROGRAM_ARB, 6, qRow );
-	
-	//-----------------------------------------------------
-	// these should be constant for the entire frame
-	
-	// convert 0..viewport-1 sizes to fractions inside the POT screen depth texture
-	int	 w = viewBufferSize;
-	pot = MakePowerOfTwo( w );
-	parm[0] = 1.0 / maxViewBufferSize;	//  * ( (float)viewBufferSize / w );
-	int	 h = viewBufferHeight;
-	pot = MakePowerOfTwo( h );
-	parm[1] = parm[0]; // 1.0 / pot;
-	parm[2] = 0;
-	parm[3] = 1;
-	glProgramLocalParameter4fvARB( GL_FRAGMENT_PROGRAM_ARB, 0, parm );
-	
-	// zProject values
-	parm[0] = backEnd.viewDef->projectionMatrix[10];
-	parm[1] = backEnd.viewDef->projectionMatrix[14];
-	parm[2] = 0;
-	parm[3] = 0;
-	glProgramLocalParameter4fvARB( GL_FRAGMENT_PROGRAM_ARB, 1, parm );
-	
-	// positionToViewSpace
-	parm[0] = -1.0 / backEnd.viewDef->projectionMatrix[0];
-	parm[1] = -1.0 / backEnd.viewDef->projectionMatrix[5];
-	parm[2] = 2.0 / viewBufferSize;
-	parm[3] = 2.0 / viewBufferSize;
-	glProgramLocalParameter4fvARB( GL_FRAGMENT_PROGRAM_ARB, 2, parm );
-	
-	// positionToJitterTexScale
-	parm[0] = 1.0 / ( JITTER_SIZE * r_sb_samples.GetInteger() ) ;
-	parm[1] = 1.0 / JITTER_SIZE;
-	parm[2] = 0;
-	parm[3] = 1;
-	glProgramLocalParameter4fvARB( GL_FRAGMENT_PROGRAM_ARB, 7, parm );
-	
-	// jitter tex scale
-	parm[0] =
-		parm[1] = r_sb_jitterScale.GetFloat() * lightBufferSizeFraction;
-	parm[2] = -r_sb_biasScale.GetFloat();
-	parm[3] = 0;
-	glProgramLocalParameter4fvARB( GL_FRAGMENT_PROGRAM_ARB, 8, parm );
-	
-	// jitter tex offset
-	if( r_sb_randomize.GetBool() )
-	{
-		parm[0] = ( rand() & 255 ) / 255.0;
-		parm[1] = ( rand() & 255 ) / 255.0;
-	}
-	else
-	{
-		parm[0] = parm[1] = 0;
-	}
-	parm[2] = 0;
-	parm[3] = 0;
-	glProgramLocalParameter4fvARB( GL_FRAGMENT_PROGRAM_ARB, 9, parm );
-	//-----------------------------------------------------
-	
-	
-	
-	RB_DrawElementsWithCounters( tri );
-	
-	glDisable( GL_VERTEX_PROGRAM_ARB );
-	glDisable( GL_FRAGMENT_PROGRAM_ARB );
-	
-	GL_Cull( CT_FRONT_SIDED );
-//	glEnableClientState( GL_TEXTURE_COORD_ARRAY );
 
-	glDepthFunc( GL_LEQUAL );
-	if( r_sb_showFrustumPixels.GetBool() )
-	{
-		glEnable( GL_TEXTURE_2D );
-		glColor3f( 1, 1, 1 );
-	}
-	
-	// after all the frustums have been drawn, the surfaces that have been drawn on will get interactions
-	// scissor may still be a win even with the stencil test for very fast rejects
-	glStencilFunc( GL_EQUAL, 0, 255 );
-	glStencilOp( GL_KEEP, GL_KEEP, GL_KEEP );
-	
-	// we can avoid clearing the stencil buffer by changing the hasLight value for each light
-}
-#endif
 
 /*
 ==================
@@ -2308,8 +2067,12 @@ float	R_EXP_CalcLightAxialSize( viewLight_t* vLight )
 	
 	if( !vLight->lightDef->parms.pointLight )
 	{
+#if 0
 		idVec3	dir = vLight->lightDef->parms.target - vLight->lightDef->parms.origin;
 		max = dir.Length();
+#else
+		max = vLight->lightDef->frustumTris->bounds.GetRadius();
+#endif
 		return max;
 	}
 	
@@ -3236,7 +2999,7 @@ void    RB_Exp_DrawInteractions()
 				//Framebuffer::BindNull();
 				
 				// render a shadow buffer
-				RB_RenderShadowBuffer( vLight, side );
+				RB_EXP_RenderShadowBuffer( vLight, side );
 			}
 		}
 		
