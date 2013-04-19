@@ -1393,10 +1393,8 @@ void idInteraction::AddActiveInteraction()
 		// the shadows will always have to be added, unless we can tell they
 		// are from a surface in an unconnected area
 // RB begin
-		if( shadowTris && ( tr.backEndRenderer != BE_EXP ) )
+		if( shadowTris )
 		{
-// RB end
-
 			// check for view specific shadow suppression (player shadows, etc)
 			if( !r_skipSuppress.GetBool() )
 			{
@@ -1411,7 +1409,12 @@ void idInteraction::AddActiveInteraction()
 					continue;
 				}
 			}
-			
+		}
+		
+		if( shadowTris && ( tr.backEndRenderer != BE_EXP ) )
+// RB end
+		{
+		
 			// cull static shadows that have a non-empty bounds
 			// dynamic shadows that use the turboshadow code will not have valid
 			// bounds, because the perspective projection extends them to infinity

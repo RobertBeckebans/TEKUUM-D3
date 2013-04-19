@@ -849,6 +849,16 @@ void RB_EXP_RenderOccluders( viewLight_t* vLight )
 			continue;
 		}
 		
+		if( entityDef->parms.suppressShadowInViewID && entityDef->parms.suppressShadowInViewID == backEnd.viewDef->renderView.viewID )
+		{
+			continue;
+		}
+		
+		if( entityDef->parms.suppressShadowInLightID && entityDef->parms.suppressShadowInLightID == vLight->lightDef->parms.lightId )
+		{
+			continue;
+		}
+		
 		// no need to check for current on this, because each interaction is always
 		// a different space
 		matrix_t	modelToLightMatrix;
@@ -858,6 +868,10 @@ void RB_EXP_RenderOccluders( viewLight_t* vLight )
 #if 0
 		if( !vLight->lightDef->parms.pointLight )
 		{
+			matrix_t	modelToLightMatrix;
+			//myGlMultMatrix( inter->entityDef->modelMatrix, lightMatrix, modelToLightMatrix );
+			glLoadMatrixf( lightMatrix );
+			
 			idPlane lightProject[4];
 			for( int i = 0 ; i < 4 ; i++ )
 			{
@@ -1415,10 +1429,10 @@ static void	RB_EXP_DrawInteraction( const drawInteraction_t* din )
 		matrix_t	lightMVP;
 		
 		
-#if 0
+#if 1
 		if( !backEnd.vLight->lightDef->parms.pointLight )
 		{
-		
+			/*
 			idPlane lightProject[4];
 			for( int i = 0 ; i < 4 ; i++ )
 			{
@@ -1427,9 +1441,15 @@ static void	RB_EXP_DrawInteraction( const drawInteraction_t* din )
 			
 			idMat4 lProj( lightProject[0].ToVec4(), lightProject[1].ToVec4(), lightProject[3].ToVec4(), lightProject[2].ToVec4() );
 			lProj.TransposeSelf();
+			*/
 			
-			myGlMultMatrix( din->surf->space->modelMatrix, lightMatrix, modelToLightMatrix );
-			myGlMultMatrix( modelToLightMatrix, lProj.ToFloatPtr(), lightMVP );
+			//myGlMultMatrix( din->surf->space->modelMatrix, lightMatrix, modelToLightMatrix );
+			//myGlMultMatrix( modelToLightMatrix, lProj.ToFloatPtr(), lightMVP );
+			
+			idMat4 lProj( din->shadowProjection[0], din->shadowProjection[1], din->shadowProjection[3], din->shadowProjection[2] );
+			lProj.TransposeSelf();
+			
+			MatrixCopy( lProj.ToFloatPtr(), lightMVP );
 		}
 		else
 #endif
@@ -2065,13 +2085,14 @@ float	R_EXP_CalcLightAxialSize( viewLight_t* vLight )
 {
 	float	max = 0;
 	
-	if( !vLight->lightDef->parms.pointLight )
+	if( !vLight->lightDef->parms.pointLight && !vLight->lightDef->parms.parallel )
 	{
 #if 0
 		idVec3	dir = vLight->lightDef->parms.target - vLight->lightDef->parms.origin;
 		max = dir.Length();
 #else
-		max = vLight->lightDef->frustumTris->bounds.GetRadius();
+		//max = vLight->lightDef->frustumTris->bounds.GetRadius();
+		max = vLight->lightDef->falloffLength;
 #endif
 		return max;
 	}
@@ -2831,40 +2852,43 @@ void    RB_Exp_DrawInteractions()
 	}
 	
 	// set up for either point sampled or percentage-closer filtering for the shadow sampling
-#if 0
-	if( r_sb_linearFilter.GetBool() )
+	if( r_sb_linearFilter.IsModified() )
 	{
-		for( int i = 0; i < MAX_SHADOWMAPS; i++ )
+		if( r_sb_linearFilter.GetBool() )
 		{
-			shadowMapImage[i]->BindFragment();
-			glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
-			glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+			for( int i = 0; i < MAX_SHADOWMAPS; i++ )
+			{
+				shadowMapImage[i]->BindFragment();
+				glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+				glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+			}
+			
+			for( int i = 0; i < MAX_SHADOWMAPS; i++ )
+			{
+				shadowCubeImage[i]->BindFragment();
+				glTexParameterf( GL_TEXTURE_CUBE_MAP_EXT, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+				glTexParameterf( GL_TEXTURE_CUBE_MAP_EXT, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+			}
+		}
+		else
+		{
+			for( int i = 0; i < MAX_SHADOWMAPS; i++ )
+			{
+				shadowMapImage[i]->BindFragment();
+				glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
+				glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
+			}
+			
+			for( int i = 0; i < MAX_SHADOWMAPS; i++ )
+			{
+				shadowCubeImage[i]->BindFragment();
+				glTexParameterf( GL_TEXTURE_CUBE_MAP_EXT, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
+				glTexParameterf( GL_TEXTURE_CUBE_MAP_EXT, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
+			}
 		}
 		
-		for( int i = 0; i < MAX_SHADOWMAPS; i++ )
-		{
-			shadowCubeImage[i]->BindFragment();
-			glTexParameterf( GL_TEXTURE_CUBE_MAP_EXT, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
-			glTexParameterf( GL_TEXTURE_CUBE_MAP_EXT, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
-		}
+		r_sb_linearFilter.ClearModified();
 	}
-	else
-	{
-		for( int i = 0; i < MAX_SHADOWMAPS; i++ )
-		{
-			shadowMapImage[i]->BindFragment();
-			glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
-			glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
-		}
-		
-		for( int i = 0; i < MAX_SHADOWMAPS; i++ )
-		{
-			shadowCubeImage[i]->BindFragment();
-			glTexParameterf( GL_TEXTURE_CUBE_MAP_EXT, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
-			glTexParameterf( GL_TEXTURE_CUBE_MAP_EXT, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
-		}
-	}
-#endif
 	
 	globalImages->BindNull();
 	

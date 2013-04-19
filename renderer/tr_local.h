@@ -258,6 +258,7 @@ public:
 	// derived information
 	
 	idPlane					lightProject[4];		// RB: in global space
+	float					falloffLength;			// RB: for projective lights
 	
 	const idMaterial* 		lightShader;			// guaranteed to be valid, even if parms.shader isn't
 	idImage* 				falloffImage;
@@ -387,7 +388,7 @@ struct viewLight_t
 	idPlane					fogPlane;					// fog plane for backend fog volume rendering
 	const srfTriangles_t* 	frustumTris;				// light frustum for backend fog volume rendering
 	const idMaterial* 		lightShader;				// light shader used by backend
-	const float*				shaderRegisters;			// shader registers used by backend
+	const float*			shaderRegisters;			// shader registers used by backend
 	idImage* 				falloffImage;				// falloff image used by backend
 	
 // RB begin
@@ -530,7 +531,10 @@ struct drawInteraction_t
 // RB end
 	idVec4				localLightOrigin;
 	idVec4				localViewOrigin;
-	idVec4				lightProjection[4];	// in local coordinates, possibly with a texture matrix baked in
+	idVec4				lightProjection[4];		// in local coordinates, possibly with a texture matrix baked in
+// RB begin
+	idVec4				shadowProjection[4];	// RB: in local coordinates, no texture matrix
+// RB end
 	idVec4				bumpMatrix[2];
 	idVec4				diffuseMatrix[2];
 	idVec4				specularMatrix[2];
@@ -1381,7 +1385,7 @@ void R_RegenerateWorld_f( const idCmdArgs& args );
 
 void R_ModulateLights_f( const idCmdArgs& args );
 
-void R_SetLightProject( idPlane lightProject[4], const idVec3 origin, const idVec3 targetPoint,
+void R_SetLightProject( idPlane lightProject[4], float& falloffLength, const idVec3 origin, const idVec3 targetPoint,
 						const idVec3 rightVector, const idVec3 upVector, const idVec3 start, const idVec3 stop );
 
 void R_AddLightSurfaces();

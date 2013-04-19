@@ -329,7 +329,7 @@ Assumes that right and up are not normalized
 This is also called by dmap during map processing.
 =====================
 */
-void R_SetLightProject( idPlane lightProject[4], const idVec3 origin, const idVec3 target,
+void R_SetLightProject( idPlane lightProject[4], float& falloffLength, const idVec3 origin, const idVec3 target,
 						const idVec3 rightVector, const idVec3 upVector, const idVec3 start, const idVec3 stop )
 {
 	float		dist;
@@ -379,13 +379,17 @@ void R_SetLightProject( idPlane lightProject[4], const idVec3 origin, const idVe
 	lightProject[1].ToVec4() += ofs * lightProject[2].ToVec4();
 	
 	// set the falloff vector
-	normal = stop - start;
-	dist = normal.Normalize();
+	// RB: save the falloff length for shadowbuffer calculations
+	idVec3 falloff = stop - start;
+	dist = falloff.Normalize();
 	if( dist <= 0 )
 	{
 		dist = 1;
 	}
-	lightProject[3] = normal * ( 1.0f / dist );
+	
+	falloffLength = dist;
+	
+	lightProject[3] = falloff * ( 1.0f / dist );
 	startGlobal = start + origin;
 	lightProject[3][3] = -( startGlobal * lightProject[3].Normal() );
 }
@@ -408,12 +412,19 @@ void R_SetLightFrustum( const idPlane lightProject[4], idPlane frustum[6], matri
 	frustum[FRUSTUM_TOP] = lightProject[1];
 	frustum[FRUSTUM_LEFT] = lightProject[2] - lightProject[0];
 	frustum[FRUSTUM_BOTTOM] = lightProject[2] - lightProject[1];
+	
+	// we want the planes of s=0 and s=1 for front and rear clipping planes
+	frustum[FRUSTUM_FAR] = lightProject[3];
+	
+	frustum[FRUSTUM_NEAR] = lightProject[3];
+	frustum[FRUSTUM_NEAR][3] -= 1.0f;
+	frustum[FRUSTUM_NEAR] = -frustum[FRUSTUM_NEAR];
+	
 #else
 	frustum[FRUSTUM_LEFT] = lightProject[0];
 	frustum[FRUSTUM_BOTTOM] = lightProject[1];
 	frustum[FRUSTUM_RIGHT] = lightProject[2] - lightProject[0];
 	frustum[FRUSTUM_TOP] = lightProject[2] - lightProject[1];
-#endif
 	
 	// we want the planes of s=0 and s=1 for front and rear clipping planes
 	frustum[FRUSTUM_NEAR] = lightProject[3];
@@ -421,7 +432,10 @@ void R_SetLightFrustum( const idPlane lightProject[4], idPlane frustum[6], matri
 	frustum[FRUSTUM_FAR] = lightProject[3];
 	frustum[FRUSTUM_FAR][3] -= 1.0f;
 	frustum[FRUSTUM_FAR] = -frustum[FRUSTUM_FAR];
+#endif
 	
+	
+#if 1
 	MatrixFromPlanes( lightProjectionMatrix, frustum );
 	
 	for( i = 0 ; i < 6 ; i++ )
@@ -432,6 +446,22 @@ void R_SetLightFrustum( const idPlane lightProject[4], idPlane frustum[6], matri
 		l = frustum[i].Normalize();
 		frustum[i][3] /= l;
 	}
+#else
+	for( i = 0 ; i < 6 ; i++ )
+	{
+		float	l;
+		l = frustum[i].Normalize();
+		frustum[i][3] /= l;
+	}
+	
+	MatrixFromPlanes( lightProjectionMatrix, frustum );
+	
+	for( i = 0 ; i < 6 ; i++ )
+	{
+		frustum[i] = -frustum[i];
+	}
+	
+#endif
 }
 
 /*
@@ -513,7 +543,7 @@ void R_DeriveLightData( idRenderLightLocal* light )
 	{
 		// projected light
 		
-		R_SetLightProject( light->lightProject, vec3_origin /* light->parms.origin */, light->parms.target,
+		R_SetLightProject( light->lightProject, light->falloffLength, vec3_origin /* light->parms.origin */, light->parms.target,
 						   light->parms.right, light->parms.up, light->parms.start, light->parms.end );
 	}
 	else
@@ -532,6 +562,12 @@ void R_DeriveLightData( idRenderLightLocal* light )
 	// set the frustum planes
 	R_SetLightFrustum( light->lightProject, light->frustum, light->projectionMatrix );
 	
+#if 0
+	idMat4 lProj( light->lightProject[0].ToVec4(), light->lightProject[1].ToVec4(), light->lightProject[3].ToVec4(), light->lightProject[2].ToVec4() );
+	lProj.TransposeSelf();
+	MatrixCopy( lProj.ToFloatPtr(), light->projectionMatrix );
+#endif
+	
 	// rotate the light planes and projections by the axis
 	R_AxisToModelMatrix( light->parms.axis, light->parms.origin, light->modelMatrix );
 	
@@ -541,6 +577,7 @@ void R_DeriveLightData( idRenderLightLocal* light )
 		temp = light->frustum[i];
 		R_LocalPlaneToGlobal( light->modelMatrix, temp, light->frustum[i] );
 	}
+	
 	for( int i = 0 ; i < 4 ; i++ )
 	{
 		idPlane		temp;

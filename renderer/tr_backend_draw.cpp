@@ -901,6 +901,8 @@ void RB_CreateSingleDrawInteractions( const drawSurf_t* surf, void ( *DrawIntera
 		inter.lightImage = lightStage->texture.image;
 		
 		memcpy( inter.lightProjection, lightProject, sizeof( inter.lightProjection ) );
+		memcpy( inter.shadowProjection, lightProject, sizeof( inter.shadowProjection ) );
+		
 		// now multiply the texgen by the light texture matrix
 		if( lightStage->texture.hasMatrix )
 		{
