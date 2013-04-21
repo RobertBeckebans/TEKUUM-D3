@@ -546,6 +546,13 @@ if not _OPTIONS["android"] and not _OPTIONS["monolith"] then
 		"__DOOM_DLL__",
 	}
 end
+
+if not _OPTIONS["android"] then
+	defines
+	{
+		"ID_PC",
+	}
+end
 	
 	--
 	-- Platform Configurations
@@ -603,6 +610,7 @@ end
 			"game/gamesys/Callbacks.cpp",
 			"game/EndLevel.cpp", "game/EndLevel.h",
 			"game/gamesys/GameTypeInfo.h",
+			"game/gamesys/TypeInfo.cpp",
 		}
 		
 	configuration { "monolith", "debug-memory" }
@@ -1020,15 +1028,15 @@ end
 			"sys/posix/posix_threads.cpp",
 			--"sys/posix/posix_input.cpp",
 			"sys/linux/stack.cpp",
-			"sys/linux/main.cpp",
+			"sys/linux/linux_main.cpp",
 			--"sys/linux/glimp.cpp",
 			--"sys/linux/input.cpp",
 			"sys/sdl/sdl_glimp.cpp",
-			"sys/sdl/sdl_input.cpp",
+			"sys/sdl/sdl_events.cpp",
 			"sys/linux/sound.cpp",
 			--"sys/linux/sound_alsa.cpp",
 			"sys/linux/sound_pulse.cpp",
-			"sys/linux/libXNVCtrl/NVCtrl.c",
+			--"sys/linux/libXNVCtrl/NVCtrl.c",
 			--"sys/sdl/sdl_sound.cpp", "sys/sdl/sdl_sound.h",
 		}
 		excludes

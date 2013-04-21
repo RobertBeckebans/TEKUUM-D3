@@ -88,7 +88,7 @@ private:
 class idDeclVideo : public idDecl
 {
 public:
-	idDeclVideo() : preview( NULL ), video( NULL ), audio( NULL ) {};
+	idDeclVideo() {}
 	
 	virtual size_t			Size() const;
 	virtual const char* 	DefaultDefinition() const;

@@ -667,8 +667,8 @@ void Sys_ClearEvents()
 	while( SDL_PollEvent( &ev ) )
 		;
 		
-	kbd_polls.SetNum( 0, false );
-	mouse_polls.SetNum( 0, false );
+	kbd_polls.SetNum( 0 );
+	mouse_polls.SetNum( 0 );
 }
 
 /*
@@ -718,7 +718,7 @@ Sys_EndKeyboardInputEvents
 */
 void Sys_EndKeyboardInputEvents()
 {
-	kbd_polls.SetNum( 0, false );
+	kbd_polls.SetNum( 0 );
 }
 
 /*
@@ -753,7 +753,7 @@ Sys_EndMouseInputEvents
 */
 void Sys_EndMouseInputEvents()
 {
-	mouse_polls.SetNum( 0, false );
+	mouse_polls.SetNum( 0 );
 }
 
 //=====================================================================================

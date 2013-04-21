@@ -63,6 +63,25 @@ static SDL_Surface* window = NULL;
 
 /*
 ===================
+GLimp_PreInit
+
+ R_GetModeListForDisplay is called before GLimp_Init(), but SDL needs SDL_Init() first.
+ So do that in GLimp_PreInit()
+ Calling that function more than once doesn't make a difference
+===================
+*/
+void GLimp_PreInit() // DG: added this function for SDL compatibility
+{
+	if( !SDL_WasInit( SDL_INIT_VIDEO ) )
+	{
+		if( SDL_Init( SDL_INIT_VIDEO ) )
+			common->Error( "Error while initializing SDL: %s", SDL_GetError() );
+	}
+}
+
+
+/*
+===================
 GLimp_Init
 ===================
 */
@@ -70,19 +89,10 @@ bool GLimp_Init( glimpParms_t parms )
 {
 	common->Printf( "Initializing OpenGL subsystem\n" );
 	
-	if( !SDL_WasInit( SDL_INIT_VIDEO ) )
-	{
-		if( SDL_Init( SDL_INIT_VIDEO ) )
-		{
-			common->Error( "Error while initializing SDL: %s", SDL_GetError() );
-			return false;
-		}
-	}
-	
-	//assert( SDL_WasInit( SDL_INIT_VIDEO ) );
+	GLimp_PreInit(); // DG: make sure SDL is initialized
 	
 	// DG: make window resizable
-	Uint32 flags = SDL_WINDOW_OPENGL;// | SDL_WINDOW_RESIZABLE;
+	Uint32 flags = SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE;
 	// DG end
 	
 	if( parms.fullScreen )
@@ -232,7 +242,9 @@ bool GLimp_Init( glimpParms_t parms )
 		if( SDL_GL_SetSwapInterval( r_swapInterval.GetInteger() ) < 0 )
 			common->Warning( "SDL_GL_SWAP_CONTROL not supported" );
 			
-		SDL_GetWindowSize( window, &glConfig.vidWidth, &glConfig.vidHeight );
+		// RB begin
+		SDL_GetWindowSize( window, &glConfig.nativeScreenWidth, &glConfig.nativeScreenHeight );
+		// RB end
 		
 		glConfig.isFullscreen = ( SDL_GetWindowFlags( window ) & SDL_WINDOW_FULLSCREEN ) == SDL_WINDOW_FULLSCREEN;
 #else
@@ -252,8 +264,8 @@ bool GLimp_Init( glimpParms_t parms )
 			continue;
 		}
 		
-		glConfig.vidWidth = window->w;
-		glConfig.vidHeight = window->h;
+		glConfig.nativeScreenWidth = window->w;
+		glConfig.nativeScreenHeight = window->h;
 		
 		glConfig.isFullscreen = ( window->flags & SDL_FULLSCREEN ) == SDL_FULLSCREEN;
 #endif
@@ -267,10 +279,10 @@ bool GLimp_Init( glimpParms_t parms )
 		
 		// RB begin
 		glConfig.displayFrequency = 60;
-		//glConfig.isStereoPixelFormat = parms.stereo;
-		//glConfig.multisamples = parms.multiSamples;
+		glConfig.isStereoPixelFormat = parms.stereo;
+		glConfig.multisamples = parms.multiSamples;
 		
-		//glConfig.pixelAspect = 1.0f;	// FIXME: some monitor modes may be distorted
+		glConfig.pixelAspect = 1.0f;	// FIXME: some monitor modes may be distorted
 		// should side-by-side stereo modes be consider aspect 0.5?
 		
 		// RB end
@@ -327,7 +339,7 @@ static int ScreenParmsHandleDisplayIndex( glimpParms_t parms )
 	}
 	else // -2 == use current display
 	{
-		displayIdx = SDL_GetWindowDisplay( window );
+		displayIdx = SDL_GetWindowDisplayIndex( window );
 		if( displayIdx < 0 ) // for some reason the display for the window couldn't be detected
 			displayIdx = 0;
 	}
@@ -394,7 +406,7 @@ static bool SetScreenParmsFullscreen( glimpParms_t parms )
 static bool SetScreenParmsWindowed( glimpParms_t parms )
 {
 	SDL_SetWindowSize( window, parms.width, parms.height );
-	//SDL_SetWindowPosition( window, parms.x, parms.y );
+	SDL_SetWindowPosition( window, parms.x, parms.y );
 	
 	// if we're currently in fullscreen mode, we need to disable that
 	if( SDL_GetWindowFlags( window ) & SDL_WINDOW_FULLSCREEN )
@@ -440,6 +452,7 @@ bool GLimp_SetScreenParms( glimpParms_t parms )
 		return false;
 	}
 	
+	
 	int bitsperpixel = 24;
 	if( s->format )
 		bitsperpixel = s->format->BitsPerPixel;
@@ -466,11 +479,11 @@ bool GLimp_SetScreenParms( glimpParms_t parms )
 	SDL_GL_SetAttribute( SDL_GL_MULTISAMPLESAMPLES, parms.multiSamples );
 	
 	glConfig.isFullscreen = parms.fullScreen;
-	//glConfig.isStereoPixelFormat = parms.stereo;
-	glConfig.vidWidth = parms.width;
-	glConfig.vidHeight = parms.height;
+	glConfig.isStereoPixelFormat = parms.stereo;
+	glConfig.nativeScreenWidth = parms.width;
+	glConfig.nativeScreenHeight = parms.height;
 	glConfig.displayFrequency = parms.displayHz;
-	//glConfig.multisamples = parms.multiSamples;
+	glConfig.multisamples = parms.multiSamples;
 	
 	return true;
 }
@@ -532,26 +545,6 @@ void GLimp_SetGamma( unsigned short red[256], unsigned short green[256], unsigne
 	if( SDL_SetGammaRamp( red, green, blue ) )
 #endif
 		common->Warning( "Couldn't set gamma ramp: %s", SDL_GetError() );
-}
-
-/*
-=================
-GLimp_ActivateContext
-=================
-*/
-void GLimp_ActivateContext()
-{
-	common->DPrintf( "TODO: GLimp_ActivateContext\n" );
-}
-
-/*
-=================
-GLimp_DeactivateContext
-=================
-*/
-void GLimp_DeactivateContext()
-{
-	common->DPrintf( "TODO: GLimp_DeactivateContext\n" );
 }
 
 /*
@@ -699,3 +692,173 @@ int Sys_GetVideoRam()
 }
 
 
+
+/*
+====================
+DumpAllDisplayDevices
+====================
+*/
+void DumpAllDisplayDevices()
+{
+	common->DPrintf( "TODO: DumpAllDisplayDevices\n" );
+}
+
+
+
+class idSort_VidMode : public idSort_Quick< vidMode_t, idSort_VidMode >
+{
+public:
+	int Compare( const vidMode_t& a, const vidMode_t& b ) const
+	{
+		int wd = a.width - b.width;
+		int hd = a.height - b.height;
+		int fd = a.displayHz - b.displayHz;
+		return ( hd != 0 ) ? hd : ( wd != 0 ) ? wd : fd;
+	}
+};
+
+// RB: resolutions supported by XreaL
+static void FillStaticVidModes( idList<vidMode_t>& modeList )
+{
+	modeList.AddUnique( vidMode_t( 320,   240, 60 ) );
+	modeList.AddUnique( vidMode_t( 400,   300, 60 ) );
+	modeList.AddUnique( vidMode_t( 512,   384, 60 ) );
+	modeList.AddUnique( vidMode_t( 640,   480, 60 ) );
+	modeList.AddUnique( vidMode_t( 800,   600, 60 ) );
+	modeList.AddUnique( vidMode_t( 960,   720, 60 ) );
+	modeList.AddUnique( vidMode_t( 1024,  768, 60 ) );
+	modeList.AddUnique( vidMode_t( 1152,  864, 60 ) );
+	modeList.AddUnique( vidMode_t( 1280,  720, 60 ) );
+	modeList.AddUnique( vidMode_t( 1280,  768, 60 ) );
+	modeList.AddUnique( vidMode_t( 1280,  800, 60 ) );
+	modeList.AddUnique( vidMode_t( 1280, 1024, 60 ) );
+	modeList.AddUnique( vidMode_t( 1360,  768, 60 ) );
+	modeList.AddUnique( vidMode_t( 1440,  900, 60 ) );
+	modeList.AddUnique( vidMode_t( 1680, 1050, 60 ) );
+	modeList.AddUnique( vidMode_t( 1600, 1200, 60 ) );
+	modeList.AddUnique( vidMode_t( 1920, 1080, 60 ) );
+	modeList.AddUnique( vidMode_t( 1920, 1200, 60 ) );
+	modeList.AddUnique( vidMode_t( 2048, 1536, 60 ) );
+	modeList.AddUnique( vidMode_t( 2560, 1600, 60 ) );
+	
+	modeList.SortWithTemplate( idSort_VidMode() );
+}
+
+/*
+====================
+R_GetModeListForDisplay
+====================
+*/
+bool R_GetModeListForDisplay( const int requestedDisplayNum, idList<vidMode_t>& modeList )
+{
+	assert( requestedDisplayNum >= 0 );
+	
+	modeList.Clear();
+#if SDL_VERSION_ATLEAST(2, 0, 0)
+	// DG: SDL2 implementation
+	if( requestedDisplayNum >= SDL_GetNumVideoDisplays() )
+	{
+		// requested invalid displaynum
+		return false;
+	}
+	
+	int numModes = SDL_GetNumDisplayModes( requestedDisplayNum );
+	if( numModes > 0 )
+	{
+		for( int i = 0; i < numModes; i++ )
+		{
+			SDL_DisplayMode m;
+			int ret = SDL_GetDisplayMode( requestedDisplayNum, i, &m );
+			if( ret != 0 )
+			{
+				common->Warning( "Can't get video mode no %i, because of %s\n", i, SDL_GetError() );
+				continue;
+			}
+			
+			vidMode_t mode;
+			mode.width = m.w;
+			mode.height = m.h;
+			mode.displayHz = m.refresh_rate ? m.refresh_rate : 60; // default to 60 if unknown (0)
+			modeList.AddUnique( mode );
+		}
+		
+		if( modeList.Num() < 1 )
+		{
+			common->Warning( "Couldn't get a single video mode for display %i, using default ones..!\n", requestedDisplayNum );
+			FillStaticVidModes( modeList );
+		}
+		
+		// sort with lowest resolution first
+		modeList.SortWithTemplate( idSort_VidMode() );
+	}
+	else
+	{
+		common->Warning( "Can't get Video Info, using default modes...\n" );
+		if( numModes < 0 )
+		{
+			common->Warning( "Reason was: %s\n", SDL_GetError() );
+		}
+		FillStaticVidModes( modeList );
+	}
+	
+	return true;
+	// DG end
+	
+#else // SDL 1
+	
+	// DG: SDL1 only knows of one display - some functions rely on
+	// R_GetModeListForDisplay() returning false for invalid displaynum to iterate all displays
+	if( requestedDisplayNum >= 1 )
+	{
+		return false;
+	}
+	// DG end
+	
+	const SDL_VideoInfo* videoInfo = SDL_GetVideoInfo();
+	if( videoInfo == NULL )
+	{
+		// DG: yes, this can actually fail, e.g. if SDL_Init( SDL_INIT_VIDEO ) wasn't called
+		common->Warning( "Can't get Video Info, using default modes...\n" );
+		FillStaticVidModes( modeList );
+		return true;
+	}
+	
+	SDL_Rect** modes = SDL_ListModes( videoInfo->vfmt, SDL_OPENGL | SDL_FULLSCREEN );
+	
+	if( !modes )
+	{
+		common->Warning( "Can't get list of available modes, using default ones...\n" );
+		FillStaticVidModes( modeList );
+		return true;
+	}
+	
+	if( modes == ( SDL_Rect** ) - 1 )
+	{
+		common->Printf( "Display supports any resolution\n" );
+		FillStaticVidModes( modeList );
+		return true;
+	}
+	
+	int numModes;
+	for( numModes = 0; modes[numModes]; numModes++ );
+	
+	if( numModes > 1 )
+	{
+		for( int i = 0; i < numModes; i++ )
+		{
+			vidMode_t mode;
+			mode.width =  modes[i]->w;
+			mode.height =  modes[i]->h;
+			mode.displayHz = 60; // FIXME;
+			modeList.AddUnique( mode );
+		}
+	
+		// sort with lowest resolution first
+		modeList.SortWithTemplate( idSort_VidMode() );
+	
+		return true;
+	}
+	
+	return false;
+#endif
+}
