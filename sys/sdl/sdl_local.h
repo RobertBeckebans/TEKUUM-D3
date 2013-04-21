@@ -35,6 +35,8 @@ const int GRAB_REENABLE		= ( 1 << 1 );
 const int GRAB_HIDECURSOR	= ( 1 << 2 );
 const int GRAB_SETSTATE		= ( 1 << 3 );
 
+extern idCVar in_nograb;
+
 void GLimp_GrabInput( int flags );
 
 char*	Posix_ConsoleInput();

@@ -4,6 +4,7 @@
 Doom 3 GPL Source Code
 Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
 Copyright (C) 2012 dhewg
+Copyright (C) 2012 Daniel Gibson
 Copyright (C) 2013 Robert Beckebans
 
 This file is part of the Doom 3 GPL Source Code ("Doom 3 Source Code").
@@ -33,6 +34,7 @@ If you have questions concerning this license or the applicable additional terms
 #include "precompiled.h"
 #pragma hdrstop
 
+#include "../renderer/tr_local.h"
 #include "sdl_local.h"
 
 //#include "sys/sys_public.h"
@@ -56,6 +58,13 @@ If you have questions concerning this license or the applicable additional terms
 #define SDLK_NUMLOCKCLEAR SDLK_NUMLOCK
 #define SDLK_PRINTSCREEN SDLK_PRINT
 #endif
+
+// DG: those are needed for moving/resizing windows
+extern idCVar r_windowX;
+extern idCVar r_windowY;
+extern idCVar r_windowWidth;
+extern idCVar r_windowHeight;
+// DG end
 
 const char* kbdNames[] =
 {
@@ -499,15 +508,52 @@ sysEvent_t Sys_GetEvent()
 			
 			case SDL_VIDEOEXPOSE:
 				return res_none;
-#endif
 				
+				// DG: handle resizing and moving of window
+			case SDL_VIDEORESIZE:
+			{
+				int w = ev.resize.w;
+				int h = ev.resize.h;
+				r_windowWidth.SetInteger( w );
+				r_windowHeight.SetInteger( h );
+			
+				glConfig.nativeScreenWidth = w;
+				glConfig.nativeScreenHeight = h;
+			
+				// for some reason this needs a vid_restart in SDL1 but not SDL2 so GLimp_SetScreenParms() is called
+				PushConsoleEvent( "vid_restart" );
+			
+				return res_none;
+			}
+			// DG end
+#endif
+			
 			case SDL_KEYDOWN:
 				if( ev.key.keysym.sym == SDLK_RETURN && ( ev.key.keysym.mod & KMOD_ALT ) > 0 )
 				{
-					cvarSystem->SetCVarBool( "r_fullscreen", !renderSystem->IsFullScreen() );
+					// DG: go to fullscreen on current display, instead of always first display
+					int fullscreen = 0;
+					if( ! renderSystem->IsFullScreen() )
+					{
+						// this will be handled as "fullscreen on current window"
+						// r_fullscreen 1 means "fullscreen on first window" in d3 bfg
+						fullscreen = -2;
+					}
+					cvarSystem->SetCVarInteger( "r_fullscreen", fullscreen );
+					// DG end
 					PushConsoleEvent( "vid_restart" );
 					return res_none;
 				}
+				
+				// DG: ctrl-g to un-grab mouse - yeah, left ctrl shoots, then just use right ctrl :)
+				if( ev.key.keysym.sym == SDLK_g && ( ev.key.keysym.mod & KMOD_CTRL ) > 0 )
+				{
+					bool grab = in_nograb.GetBool();
+					grab = !grab;
+					in_nograb.SetBool( grab );
+					return res_none;
+				}
+				// DG end
 				
 				// fall through
 			case SDL_KEYUP:
