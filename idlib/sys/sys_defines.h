@@ -131,6 +131,7 @@ If you have questions concerning this license or the applicable additional terms
 #define _alloca							alloca
 
 #define ALIGN16( x )					x __attribute__ ((aligned (16)))
+#define ALIGNTYPE8						__attribute__ ((aligned (8)))
 #define ALIGNTYPE16						__attribute__ ((aligned (16)))
 #define ALIGNTYPE128					__attribute__ ((aligned (128)))
 
@@ -175,6 +176,7 @@ If you have questions concerning this license or the applicable additional terms
 #define _alloca							alloca
 
 #define ALIGN16( x )					x __attribute__ ((aligned (16)))
+#define ALIGNTYPE8						__attribute__ ((aligned (8)))
 #define ALIGNTYPE16						__attribute__ ((aligned (16)))
 #define ALIGNTYPE128					__attribute__ ((aligned (128)))
 

@@ -305,7 +305,7 @@ static void R_DecalPointCullStatic( byte* cullBits, const idPlane* planes, const
 	
 	idODSStreamedArray< idDrawVert, 16, SBT_DOUBLE, 4 > vertsODS( verts, numVerts );
 	
-	const __m128 vector_float_zero	= { 0.0f, 0.0f, 0.0f, 0.0f };
+	const __m128 vector_float_zero	= _mm_setzero_ps();
 	const __m128i vector_int_mask0	= _mm_set1_epi32( 1 << 0 );
 	const __m128i vector_int_mask1	= _mm_set1_epi32( 1 << 1 );
 	const __m128i vector_int_mask2	= _mm_set1_epi32( 1 << 2 );
@@ -637,6 +637,9 @@ static void R_CopyDecalSurface( idDrawVert* verts, int numVerts, triIndex_t* ind
 	assert( ( ( decal->numIndexes * sizeof( triIndex_t ) ) & 15 ) == 0 );
 	assert_16_byte_aligned( fadeColor );
 	
+#if defined(USE_INTRINSICS_EMU)
+	// TODO
+#else
 	
 	const __m128i vector_int_num_verts = _mm_shuffle_epi32( _mm_cvtsi32_si128( numVerts ), 0 );
 	const __m128i vector_short_num_verts = _mm_packs_epi32( vector_int_num_verts, vector_int_num_verts );
@@ -649,17 +652,17 @@ static void R_CopyDecalSurface( idDrawVert* verts, int numVerts, triIndex_t* ind
 	{
 		const idDrawVert& srcVert = decal->verts[i];
 		idDrawVert& dstVert = verts[numVerts + i];
-		
+	
 		__m128i v0 = _mm_load_si128( ( const __m128i* )( ( byte* )&srcVert +  0 ) );
 		__m128i v1 = _mm_load_si128( ( const __m128i* )( ( byte* )&srcVert + 16 ) );
 		__m128 depthFade = _mm_splat_ps( _mm_load_ss( decal->vertDepthFade + i ), 0 );
-		
+	
 		__m128 timeDepthFade = _mm_mul_ps( depthFade, vector_fade_color );
 		__m128i colorInt = _mm_cvtps_epi32( timeDepthFade );
 		__m128i colorShort = _mm_packs_epi32( colorInt, colorInt );
 		__m128i colorByte = _mm_packus_epi16( colorShort, colorShort );
 		v1 = _mm_or_si128( v1, _mm_and_si128( colorByte, vector_color_mask ) );
-		
+	
 		_mm_stream_si128( ( __m128i* )( ( byte* )&dstVert +  0 ), v0 );
 		_mm_stream_si128( ( __m128i* )( ( byte* )&dstVert + 16 ), v1 );
 	}
@@ -670,14 +673,14 @@ static void R_CopyDecalSurface( idDrawVert* verts, int numVerts, triIndex_t* ind
 	for( int i = 0; i < decal->numIndexes; i += 8 )
 	{
 		__m128i vi = _mm_load_si128( ( const __m128i* )&decal->indexes[i] );
-		
+	
 		vi = _mm_add_epi16( vi, vector_short_num_verts );
-		
+	
 		_mm_stream_si128( ( __m128i* )&indexes[numIndexes + i], vi );
 	}
 	
 	_mm_sfence();
-	
+#endif
 }
 
 /*

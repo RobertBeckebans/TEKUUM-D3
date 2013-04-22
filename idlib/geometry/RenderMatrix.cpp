@@ -927,8 +927,32 @@ can get really, really small.
 */
 bool idRenderMatrix::Inverse( const idRenderMatrix& src, idRenderMatrix& out )
 {
+#if defined(USE_INTRINSICS_EMU)
 
-
+	idMat4	am;
+	
+	for( int i = 0; i < 4; i++ )
+	{
+		for( int j = 0; j < 4; j++ )
+		{
+			am[i][j] = src.m[i * 4 + j];
+		}
+	}
+	
+	if( verify( am.InverseSelf() ) )
+	{
+		return false;
+	}
+	
+	for( int i = 0; i < 4; i++ )
+	{
+		for( int j = 0; j < 4; j++ )
+		{
+			out.m[i * 4 + j] = am[i][j];
+		}
+	}
+	
+#else
 	const __m128 r0 = _mm_loadu_ps( src.m + 0 * 4 );
 	const __m128 r1 = _mm_loadu_ps( src.m + 1 * 4 );
 	const __m128 r2 = _mm_loadu_ps( src.m + 2 * 4 );
@@ -1035,6 +1059,7 @@ bool idRenderMatrix::Inverse( const idRenderMatrix& src, idRenderMatrix& out )
 	
 	
 	return true;
+#endif
 }
 
 /*
@@ -1162,7 +1187,7 @@ DeterminantIsNegative
 
 void DeterminantIsNegative( bool& negativeDeterminant, const __m128& r0, const __m128& r1, const __m128& r2, const __m128& r3 )
 {
-
+#if !defined(USE_INTRINSICS_EMU)
 	const __m128 r1u1 = _mm_perm_ps( r1, _MM_SHUFFLE( 2, 1, 0, 3 ) );
 	const __m128 r1u2 = _mm_perm_ps( r1, _MM_SHUFFLE( 1, 0, 3, 2 ) );
 	const __m128 r1u3 = _mm_perm_ps( r1, _MM_SHUFFLE( 0, 3, 2, 1 ) );
@@ -1202,6 +1227,7 @@ void DeterminantIsNegative( bool& negativeDeterminant, const __m128& r0, const _
 	const __m128 result	= _mm_cmpgt_ps( c_zero, det );
 	
 	negativeDeterminant	= _mm_movemask_ps( result ) & 1;
+#endif
 }
 
 
@@ -1449,8 +1475,10 @@ frustum plane, but only while also being behind another one.
 */
 bool idRenderMatrix::CullBoundsToMVPbits( const idRenderMatrix& mvp, const idBounds& bounds, byte* outBits, bool zeroToOne )
 {
-
-
+#if 0 //defined(USE_INTRINSICS_EMU)
+	// TODO
+	return true;
+#else
 	__m128 mvp0 = _mm_loadu_ps( mvp[0] );
 	__m128 mvp1 = _mm_loadu_ps( mvp[1] );
 	__m128 mvp2 = _mm_loadu_ps( mvp[2] );
@@ -1548,7 +1576,7 @@ bool idRenderMatrix::CullBoundsToMVPbits( const idRenderMatrix& mvp, const idBou
 	*outBits = ( byte )( bits ^ 63 );
 	
 	return ( bits != 63 );
-	
+#endif // #if !defined(USE_INTRINSICS_EMU)
 }
 
 /*
@@ -2305,6 +2333,9 @@ static void ClipHomogeneousPolygonToSide_SSE2( idVec4* __restrict newPoints, idV
 {
 	assert( newPoints != points );
 	
+#if defined(USE_INTRINSICS_EMU)
+	// TODO
+#else
 	const __m128 side = _mm_mul_ps( sign, offset );
 	__m128i mask = _mm_sub_epi32( vector_int_0123, _mm_shuffle_epi32( _mm_cvtsi32_si128( numPoints ), 0 ) );
 	__m128i index = _mm_setzero_si128();
@@ -2321,29 +2352,29 @@ static void ClipHomogeneousPolygonToSide_SSE2( idVec4* __restrict newPoints, idV
 		const int i2 = ( i + 2 ) & ( ( i + 2 - localNumPoint ) >> 31 );
 		const int i3 = ( i + 3 ) & ( ( i + 3 - localNumPoint ) >> 31 );
 		const int i4 = ( i + 4 ) & ( ( i + 4 - localNumPoint ) >> 31 );
-		
+	
 		const __m128 p0A = _mm_load_ss( &points[i0][axis] );
 		const __m128 p1A = _mm_load_ss( &points[i1][axis] );
 		const __m128 p2A = _mm_load_ss( &points[i2][axis] );
 		const __m128 p3A = _mm_load_ss( &points[i3][axis] );
 		const __m128 p4A = _mm_load_ss( &points[i4][axis] );
-		
+	
 		const __m128 p0W = _mm_load_ss( &points[i0][3] );
 		const __m128 p1W = _mm_load_ss( &points[i1][3] );
 		const __m128 p2W = _mm_load_ss( &points[i2][3] );
 		const __m128 p3W = _mm_load_ss( &points[i3][3] );
 		const __m128 p4W = _mm_load_ss( &points[i4][3] );
-		
+	
 		const __m128 t0 = _mm_unpacklo_ps( p0A, p2A );
 		const __m128 t1 = _mm_unpacklo_ps( p1A, p3A );
 		const __m128 pa0 = _mm_unpacklo_ps( t0, t1 );
 		const __m128 pa1 = _mm_sld_ps( pa0, p4A, 4 );
-		
+	
 		const __m128 r0 = _mm_unpacklo_ps( p0W, p2W );
 		const __m128 r1 = _mm_unpacklo_ps( p1W, p3W );
 		const __m128 pw0 = _mm_unpacklo_ps( r0, r1 );
 		const __m128 pw1 = _mm_sld_ps( pw0, p4W, 4 );
-		
+	
 		{
 			const __m128 bside0 = _mm_cmpgt_ps( _mm_mul_ps( offset, pw0 ), _mm_mul_ps( sign, pa0 ) );
 			const __m128 bside1 = _mm_cmpgt_ps( _mm_mul_ps( offset, pw1 ), _mm_mul_ps( sign, pa1 ) );
@@ -2354,7 +2385,7 @@ static void ClipHomogeneousPolygonToSide_SSE2( idVec4* __restrict newPoints, idV
 			const __m128i interleavedSide1 = _mm_unpackhi_epi32( side0, xorSide );
 			const __m128i packedSide = _mm_packs_epi32( interleavedSide0, interleavedSide1 );
 			const __m128i packedMaskedSide = _mm_and_si128( packedSide, _mm_srai_epi32( mask, 31 ) );
-			
+	
 			index = _mm_add_epi16( index, _mm_slli_si128( packedMaskedSide,  2 ) );
 			index = _mm_add_epi16( index, _mm_slli_si128( packedMaskedSide,  4 ) );
 			index = _mm_add_epi16( index, _mm_slli_si128( packedMaskedSide,  6 ) );
@@ -2362,15 +2393,15 @@ static void ClipHomogeneousPolygonToSide_SSE2( idVec4* __restrict newPoints, idV
 			index = _mm_add_epi16( index, _mm_slli_si128( packedMaskedSide, 10 ) );
 			index = _mm_add_epi16( index, _mm_slli_si128( packedMaskedSide, 12 ) );
 			index = _mm_add_epi16( index, _mm_slli_si128( packedMaskedSide, 14 ) );
-			
+	
 			_mm_store_si128( ( __m128i* )&indices[i * 2], index );
-			
+	
 			mask = _mm_add_epi32( mask, vector_int_4 );
 			index = _mm_add_epi16( index, packedMaskedSide );
 			index = _mm_shufflehi_epi16( index, _MM_SHUFFLE( 3, 3, 3, 3 ) );
 			index = _mm_shuffle_epi32( index, _MM_SHUFFLE( 3, 3, 3, 3 ) );
 		}
-		
+	
 		{
 			const __m128 d0 = _mm_nmsub_ps( pw0, side, pa0 );
 			const __m128 d1 = _mm_nmsub_ps( pw1, side, pa1 );
@@ -2382,7 +2413,7 @@ static void ClipHomogeneousPolygonToSide_SSE2( idVec4* __restrict newPoints, idV
 			const __m128 fractionClamped0 = _mm_sel_ps( fraction, vector_float_one, clamp );
 			const __m128 fractionClamped1 = _mm_max_ps( fractionClamped0, vector_float_zero );
 			const __m128 fractionClamped2 = _mm_min_ps( fractionClamped1, vector_float_one );
-			
+	
 			_mm_store_ps( &clipFractions[i], fractionClamped2 );
 		}
 	}
@@ -2396,20 +2427,20 @@ static void ClipHomogeneousPolygonToSide_SSE2( idVec4* __restrict newPoints, idV
 		const int i2 = ( i + 2 ) & ( ( i + 2 - localNumPoint ) >> 31 );
 		const int i3 = ( i + 3 ) & ( ( i + 3 - localNumPoint ) >> 31 );
 		const int i4 = ( i + 4 ) & ( ( i + 4 - localNumPoint ) >> 31 );
-		
+	
 		const __m128 p0 = _mm_load_ps( points[i0].ToFloatPtr() );
 		const __m128 p1 = _mm_load_ps( points[i1].ToFloatPtr() );
 		const __m128 p2 = _mm_load_ps( points[i2].ToFloatPtr() );
 		const __m128 p3 = _mm_load_ps( points[i3].ToFloatPtr() );
 		const __m128 p4 = _mm_load_ps( points[i4].ToFloatPtr() );
-		
+	
 		const __m128 fraction = _mm_load_ps( &clipFractions[i] );
-		
+	
 		const __m128 c0 = _mm_madd_ps( _mm_splat_ps( fraction, 0 ), _mm_sub_ps( p1, p0 ), p0 );
 		const __m128 c1 = _mm_madd_ps( _mm_splat_ps( fraction, 1 ), _mm_sub_ps( p2, p1 ), p1 );
 		const __m128 c2 = _mm_madd_ps( _mm_splat_ps( fraction, 2 ), _mm_sub_ps( p3, p2 ), p2 );
 		const __m128 c3 = _mm_madd_ps( _mm_splat_ps( fraction, 3 ), _mm_sub_ps( p4, p3 ), p3 );
-		
+	
 		_mm_store_ps( newPoints[indices[i * 2 + 0]].ToFloatPtr(), p0 );
 		_mm_store_ps( newPoints[indices[i * 2 + 1]].ToFloatPtr(), c0 );
 		_mm_store_ps( newPoints[indices[i * 2 + 2]].ToFloatPtr(), p1 );
@@ -2419,6 +2450,7 @@ static void ClipHomogeneousPolygonToSide_SSE2( idVec4* __restrict newPoints, idV
 		_mm_store_ps( newPoints[indices[i * 2 + 6]].ToFloatPtr(), p3 );
 		_mm_store_ps( newPoints[indices[i * 2 + 7]].ToFloatPtr(), c3 );
 	}
+#endif // #if defined(USE_INTRINSICS_EMU)
 }
 
 /*
