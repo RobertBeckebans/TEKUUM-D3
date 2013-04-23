@@ -38,7 +38,7 @@ If you have questions concerning this license or the applicable additional terms
 //                                                        E
 //===============================================================
 
-#if !defined(USE_INTRINSICS_EMU)
+#if defined(USE_INTRINSICS) && !defined(USE_INTRINSICS_EMU)
 
 #include <xmmintrin.h>
 

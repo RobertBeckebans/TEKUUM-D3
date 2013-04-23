@@ -44,7 +44,7 @@ const float LCP_DELTA_FORCE_EPSILON		= 1e-9f;
 
 #define IGNORE_UNSATISFIABLE_VARIABLES
 
-#if !defined(USE_INTRINSICS_EMU)
+#if defined(USE_INTRINSICS) && !defined(USE_INTRINSICS_EMU)
 #define LCP_SIMD
 #endif
 
@@ -102,10 +102,17 @@ static void Multiply_SIMD( float* dst, const float* src0, const float* src1, con
 		assert_16_byte_aligned( &src0[i] );
 		assert_16_byte_aligned( &src1[i] );
 		
+#if defined(USE_INTRINSICS)
 		__m128 s0 = _mm_load_ps( src0 + i );
 		__m128 s1 = _mm_load_ps( src1 + i );
 		s0 = _mm_mul_ps( s0, s1 );
 		_mm_store_ps( dst + i, s0 );
+#else
+		dst[i + 0] = src0[i + 0] * src1[i + 0];
+		dst[i + 1] = src0[i + 1] * src1[i + 1];
+		dst[i + 2] = src0[i + 2] * src1[i + 2];
+		dst[i + 3] = src0[i + 3] * src1[i + 3];
+#endif
 	}
 	
 	
@@ -128,13 +135,13 @@ static void MultiplyAdd_SIMD( float* dst, const float constant, const float* src
 {
 	int i = 0;
 	
+#if defined(USE_INTRINSICS)
 	// RB: changed unsigned int to uintptr_t
 	for( ; ( ( uintptr_t )dst & 0xF ) != 0 && i < count; i++ )
 		// RB end
 	{
 		dst[i] += constant * src[i];
 	}
-	
 	
 	__m128 c = _mm_load1_ps( & constant );
 	for( ; i + 4 <= count; i += 4 )
@@ -147,7 +154,7 @@ static void MultiplyAdd_SIMD( float* dst, const float constant, const float* src
 		s = _mm_add_ps( _mm_mul_ps( s, c ), d );
 		_mm_store_ps( dst + i, s );
 	}
-	
+#endif
 	
 	for( ; i < count; i++ )
 	{

@@ -85,7 +85,7 @@ void CopyBuffer( byte* dst, const byte* src, int numBytes )
 	assert_16_byte_aligned( dst );
 	assert_16_byte_aligned( src );
 	
-#if defined(USE_INTRINSICS_EMU)
+#if !defined(USE_INTRINSICS) ||  defined(USE_INTRINSICS_EMU)
 	memcpy( dst, src, numBytes );
 #else
 	int i = 0;

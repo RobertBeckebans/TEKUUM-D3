@@ -30,6 +30,10 @@ If you have questions concerning this license or the applicable additional terms
 #ifndef __SYS_INTRIINSICS_H__
 #define __SYS_INTRIINSICS_H__
 
+#define USE_INTRINSICS
+
+#if defined(USE_INTRINSICS)
+
 //#define USE_INTRINSICS_EMU
 
 #if !defined(USE_INTRINSICS_EMU)
@@ -1065,6 +1069,8 @@ ID_FORCE_INLINE_EXTERN __m128i _mm_castps_si128( __m128 a )
 
 #endif // #if defined(USE_INTRINSICS_EMU)
 
+#endif // #if defined(USE_INTRINSICS)
+
 /*
 ================================================================================================
 
@@ -1141,7 +1147,7 @@ ID_FORCE_INLINE void ZeroCacheLine( void* ptr, int offset )
 	assert_128_byte_aligned( ptr );
 	char* bytePtr = ( ( char* ) ptr ) + offset;
 	
-#if !defined(USE_INTRINSICS_EMU)
+#if defined(USE_INTRINSICS) || defined(USE_INTRINSICS_EMU)
 	__m128i zero = _mm_setzero_si128();
 	_mm_store_si128( ( __m128i* )( bytePtr + 0 * 16 ), zero );
 	_mm_store_si128( ( __m128i* )( bytePtr + 1 * 16 ), zero );
@@ -1151,11 +1157,13 @@ ID_FORCE_INLINE void ZeroCacheLine( void* ptr, int offset )
 	_mm_store_si128( ( __m128i* )( bytePtr + 5 * 16 ), zero );
 	_mm_store_si128( ( __m128i* )( bytePtr + 6 * 16 ), zero );
 	_mm_store_si128( ( __m128i* )( bytePtr + 7 * 16 ), zero );
+#else
+	memset( ptr + offset, 0, 128 );
 #endif
 }
 ID_FORCE_INLINE void FlushCacheLine( const void* ptr, int offset )
 {
-#if !defined(USE_INTRINSICS_EMU)
+#if defined(USE_INTRINSICS) && !defined(USE_INTRINSICS_EMU)
 	const char* bytePtr = ( ( const char* ) ptr ) + offset;
 	_mm_clflush( bytePtr +  0 );
 	_mm_clflush( bytePtr + 64 );
@@ -1207,6 +1215,8 @@ ID_INLINE_EXTERN int CACHE_LINE_CLEAR_OVERFLOW_COUNT( int size )
 
 ================================================================================================
 */
+
+#if defined(USE_INTRINSICS)
 
 /*
 ================================================
@@ -1344,5 +1354,7 @@ ID_FORCE_INLINE_EXTERN __m128 _mm_div16_ps( __m128 x, __m128 y )
 #define _mm_loadu_bounds_0( bounds )		_mm_perm_ps( _mm_loadh_pi( _mm_load_ss( & bounds[0].x ), (__m64 *) & bounds[0].y ), _MM_SHUFFLE( 1, 3, 2, 0 ) )
 // load idBounds::GetMaxs()
 #define _mm_loadu_bounds_1( bounds )		_mm_perm_ps( _mm_loadh_pi( _mm_load_ss( & bounds[1].x ), (__m64 *) & bounds[1].y ), _MM_SHUFFLE( 1, 3, 2, 0 ) )
+
+#endif // #if defined(USE_INTRINSICS)
 
 #endif	// !__SYS_INTRIINSICS_H__

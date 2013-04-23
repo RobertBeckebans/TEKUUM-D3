@@ -217,7 +217,7 @@ ID_INLINE void VertexFloatToByte( const float& x, const float& y, const float& z
 {
 	assert_4_byte_aligned( bval );	// for __stvebx
 	
-#if defined(USE_INTRINSICS_EMU)
+#if !defined(USE_INTRINSICS) || defined(USE_INTRINSICS_EMU)
 	bval[0] = VERTEX_FLOAT_TO_BYTE( x );
 	bval[1] = VERTEX_FLOAT_TO_BYTE( y );
 	bval[2] = VERTEX_FLOAT_TO_BYTE( z );
@@ -675,7 +675,7 @@ ID_INLINE void WriteDrawVerts16( idDrawVert* destVerts, const idDrawVert* localV
 	assert_16_byte_aligned( localVerts );
 	
 	
-#if defined(USE_INTRINSICS_EMU)
+#if !defined(USE_INTRINSICS) || defined(USE_INTRINSICS_EMU)
 	memcpy( destVerts, localVerts, numVerts * DRAWVERT_SIZE );
 #else
 	for( int i = 0; i < numVerts; i++ )

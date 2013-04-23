@@ -3,6 +3,7 @@
 
 Doom 3 BFG Edition GPL Source Code
 Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2013 Robert Beckebans
 
 This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
@@ -111,7 +112,7 @@ static void R_OverlayPointCullStatic( byte* cullBits, halfFloat_t* texCoordS, ha
 	assert_16_byte_aligned( texCoordT );
 	assert_16_byte_aligned( verts );
 	
-	
+#if defined(USE_INTRINSICS)
 	idODSStreamedArray< idDrawVert, 16, SBT_DOUBLE, 4 > vertsODS( verts, numVerts );
 	
 	const __m128 vector_float_zero	= { 0.0f, 0.0f, 0.0f, 0.0f };
@@ -186,7 +187,29 @@ static void R_OverlayPointCullStatic( byte* cullBits, halfFloat_t* texCoordS, ha
 			*( unsigned int* )&cullBits[i] = _mm_cvtsi128_si32( c0 );
 		}
 	}
+#else
+	for( int i = 0; i < numVerts; i++ )
+	{
+		byte bits;
+		float d0, d1;
+		const idVec3& v = verts[i].xyz;
 	
+		d0 = planes[0].Distance( v );
+		d1 = planes[1].Distance( v );
+	
+		texCoordS[i] = F32toF16( d0 );
+		texCoordT[i] = F32toF16( d1 );
+	
+		bits  = IEEE_FLT_SIGNBITSET( d0 ) << 0;
+		d0 = 1.0f - d0;
+		bits |= IEEE_FLT_SIGNBITSET( d1 ) << 1;
+		d1 = 1.0f - d1;
+		bits |= IEEE_FLT_SIGNBITSET( d0 ) << 2;
+		bits |= IEEE_FLT_SIGNBITSET( d1 ) << 3;
+	
+		cullBits[i] = bits;
+	}
+#endif
 }
 
 /*
@@ -201,7 +224,7 @@ static void R_OverlayPointCullSkinned( byte* cullBits, halfFloat_t* texCoordS, h
 	assert_16_byte_aligned( texCoordT );
 	assert_16_byte_aligned( verts );
 	
-	
+#if defined(USE_INTRINSICS)
 	idODSStreamedArray< idDrawVert, 16, SBT_DOUBLE, 4 > vertsODS( verts, numVerts );
 	
 	const __m128 vector_float_zero	= { 0.0f, 0.0f, 0.0f, 0.0f };
@@ -276,7 +299,29 @@ static void R_OverlayPointCullSkinned( byte* cullBits, halfFloat_t* texCoordS, h
 			*( unsigned int* )&cullBits[i] = _mm_cvtsi128_si32( c0 );
 		}
 	}
+#else
+	for( int i = 0; i < numVerts; i++ )
+	{
+		byte bits;
+		float d0, d1;
+		const idVec3& v = Scalar_LoadSkinnedDrawVertPosition( verts[i], joints );
 	
+		d0 = planes[0].Distance( v );
+		d1 = planes[1].Distance( v );
+	
+		texCoordS[i] = F32toF16( d0 );
+		texCoordT[i] = F32toF16( d1 );
+	
+		bits  = IEEE_FLT_SIGNBITSET( d0 ) << 0;
+		d0 = 1.0f - d0;
+		bits |= IEEE_FLT_SIGNBITSET( d1 ) << 1;
+		d1 = 1.0f - d1;
+		bits |= IEEE_FLT_SIGNBITSET( d0 ) << 2;
+		bits |= IEEE_FLT_SIGNBITSET( d1 ) << 3;
+	
+		cullBits[i] = bits;
+	}
+#endif
 }
 
 /*
@@ -486,7 +531,7 @@ static void R_CopyOverlaySurface( idDrawVert* verts, int numVerts, triIndex_t* i
 	assert( ( ( overlay->numVerts * sizeof( idDrawVert ) ) & 15 ) == 0 );
 	assert( ( ( overlay->numIndexes * sizeof( triIndex_t ) ) & 15 ) == 0 );
 	
-#if defined(USE_INTRINSICS_EMU)
+#if !defined(USE_INTRINSICS) && !defined(USE_INTRINSICS_EMU)
 	// TODO
 #else
 	const __m128i vector_int_clear_last = _mm_set_epi32( 0, -1, -1, -1 );

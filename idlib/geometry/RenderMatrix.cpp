@@ -93,7 +93,7 @@ SIMD constants
 ================================================================================================
 */
 
-
+#if defined(USE_INTRINSICS)
 static const __m128i vector_int_1							= _mm_set1_epi32( 1 );
 static const __m128i vector_int_4							= _mm_set1_epi32( 4 );
 static const __m128i vector_int_0123						= _mm_set_epi32( 3, 2, 1, 0 );
@@ -117,6 +117,7 @@ static const __m128 vector_float_one						= { 1.0f, 1.0f, 1.0f, 1.0f };
 static const __m128 vector_float_pos_one					= { +1.0f, +1.0f, +1.0f, +1.0f };
 static const __m128 vector_float_neg_one					= { -1.0f, -1.0f, -1.0f, -1.0f };
 static const __m128 vector_float_last_one					= { 0.0f, 0.0f, 0.0f, 1.0f };
+#endif
 
 
 /*
@@ -528,6 +529,8 @@ static const struct silhouetteVertices_t
 	{ { 0, 0, 0, 0, 0, 0, 0 }, 0 }, // 111111 = 63 invalid
 };
 
+
+
 /*
 ========================
 GetBoxFrontBits
@@ -541,7 +544,7 @@ front bits:
   bit 5 = pos-Z is front facing
 ========================
 */
-
+#if defined(USE_INTRINSICS)
 static int GetBoxFrontBits_SSE2( const __m128& b0, const __m128& b1, const __m128& viewOrigin )
 {
 	const __m128 dir0 = _mm_sub_ps( viewOrigin, b0 );
@@ -552,6 +555,7 @@ static int GetBoxFrontBits_SSE2( const __m128& b0, const __m128& b1, const __m12
 	int frontBits = _mm_movemask_ps( d0 ) | ( _mm_movemask_ps( d1 ) << 3 );
 	return frontBits;
 }
+#endif
 
 
 /*
@@ -740,7 +744,7 @@ void idRenderMatrix::OffsetScaleForBounds( const idRenderMatrix& src, const idBo
 {
 	assert( &src != &out );
 	
-	
+#if defined(USE_INTRINSICS)
 	__m128 b0 = _mm_loadu_bounds_0( bounds );
 	__m128 b1 = _mm_loadu_bounds_1( bounds );
 	
@@ -785,7 +789,10 @@ void idRenderMatrix::OffsetScaleForBounds( const idRenderMatrix& src, const idBo
 	_mm_storeu_ps( out.m + 1 * 4, a1 );
 	_mm_storeu_ps( out.m + 2 * 4, a2 );
 	_mm_storeu_ps( out.m + 3 * 4, a3 );
+#else
 	
+	// TODO
+#endif
 }
 
 /*
@@ -800,7 +807,7 @@ void idRenderMatrix::InverseOffsetScaleForBounds( const idRenderMatrix& src, con
 {
 	assert( &src != &out );
 	
-	
+#if defined(USE_INTRINSICS)
 	__m128 b0 = _mm_loadu_bounds_0( bounds );
 	__m128 b1 = _mm_loadu_bounds_1( bounds );
 	
@@ -830,7 +837,30 @@ void idRenderMatrix::InverseOffsetScaleForBounds( const idRenderMatrix& src, con
 	_mm_storeu_ps( out.m + 1 * 4, a1 );
 	_mm_storeu_ps( out.m + 2 * 4, a2 );
 	_mm_storeu_ps( out.m + 3 * 4, a3 );
+#else
 	
+	// RB: FIXME add src matrix
+	// TODO
+	out.m[ 0] = 2 / ( bounds[1][0] - bounds[0][0] );
+	out.m[ 1] = 0;
+	out.m[ 2] = 0;
+	out.m[ 3] = -( bounds[1][0] + bounds[0][0] ) / ( bounds[1][0] - bounds[0][0] );
+	
+	out.m[ 4] = 0;
+	out.m[ 5] = 2 / ( bounds[1][1] - bounds[0][1] );
+	out.m[ 6] = 0;
+	out.m[ 7] = -( bounds[1][1] + bounds[0][1] ) / ( bounds[1][1] - bounds[0][1] );
+	
+	out.m[ 8] = 0;
+	out.m[ 9] = 0;
+	out.m[10] = 2 / ( bounds[1][2] - bounds[0][2] );
+	out.m[11] = -( bounds[1][2] + bounds[0][2] ) / ( bounds[1][2] - bounds[0][2] );
+	
+	out.m[12] = 0;
+	out.m[13] = 0;
+	out.m[14] = 0;
+	out.m[15] = 1;
+#endif
 }
 
 /*
@@ -842,7 +872,7 @@ void idRenderMatrix::Transpose( const idRenderMatrix& src, idRenderMatrix& out )
 {
 	assert( &src != &out );
 	
-	
+#if defined(USE_INTRINSICS)
 	const __m128 a0 = _mm_loadu_ps( src.m + 0 * 4 );
 	const __m128 a1 = _mm_loadu_ps( src.m + 1 * 4 );
 	const __m128 a2 = _mm_loadu_ps( src.m + 2 * 4 );
@@ -862,7 +892,24 @@ void idRenderMatrix::Transpose( const idRenderMatrix& src, idRenderMatrix& out )
 	_mm_storeu_ps( out.m + 1 * 4, t1 );
 	_mm_storeu_ps( out.m + 2 * 4, t2 );
 	_mm_storeu_ps( out.m + 3 * 4, t3 );
-	
+#else
+	out.m[ 0] = src.m[ 0];
+	out.m[ 1] = src.m[ 4];
+	out.m[ 2] = src.m[ 8];
+	out.m[ 3] = src.m[12];
+	out.m[ 4] = src.m[ 1];
+	out.m[ 5] = src.m[ 5];
+	out.m[ 6] = src.m[ 9];
+	out.m[ 7] = src.m[13];
+	out.m[ 8] = src.m[ 2];
+	out.m[ 9] = src.m[ 6];
+	out.m[10] = src.m[10];
+	out.m[11] = src.m[14];
+	out.m[12] = src.m[ 3];
+	out.m[13] = src.m[ 7];
+	out.m[14] = src.m[11];
+	out.m[15] = src.m[15];
+#endif
 }
 
 /*
@@ -872,8 +919,7 @@ idRenderMatrix::Multiply
 */
 void idRenderMatrix::Multiply( const idRenderMatrix& a, const idRenderMatrix& b, idRenderMatrix& out )
 {
-
-
+#if defined(USE_INTRINSICS)
 	__m128 a0 = _mm_loadu_ps( a.m + 0 * 4 );
 	__m128 a1 = _mm_loadu_ps( a.m + 1 * 4 );
 	__m128 a2 = _mm_loadu_ps( a.m + 2 * 4 );
@@ -908,7 +954,30 @@ void idRenderMatrix::Multiply( const idRenderMatrix& a, const idRenderMatrix& b,
 	_mm_storeu_ps( out.m + 1 * 4, t1 );
 	_mm_storeu_ps( out.m + 2 * 4, t2 );
 	_mm_storeu_ps( out.m + 3 * 4, t3 );
+#else
+	out.m[ 0] = b.m[ 0] * a.m[ 0] + b.m[ 1] * a.m[ 4] + b.m[ 2] * a.m[ 8] + b.m[ 3] * a.m[12];
+	out.m[ 1] = b.m[ 0] * a.m[ 1] + b.m[ 1] * a.m[ 5] + b.m[ 2] * a.m[ 9] + b.m[ 3] * a.m[13];
+	out.m[ 2] = b.m[ 0] * a.m[ 2] + b.m[ 1] * a.m[ 6] + b.m[ 2] * a.m[10] + b.m[ 3] * a.m[14];
+	out.m[ 3] = b.m[ 0] * a.m[ 3] + b.m[ 1] * a.m[ 7] + b.m[ 2] * a.m[11] + b.m[ 3] * a.m[15];
 	
+	out.m[ 4] = b.m[ 4] * a.m[ 0] + b.m[ 5] * a.m[ 4] + b.m[ 6] * a.m[ 8] + b.m[ 7] * a.m[12];
+	out.m[ 5] = b.m[ 4] * a.m[ 1] + b.m[ 5] * a.m[ 5] + b.m[ 6] * a.m[ 9] + b.m[ 7] * a.m[13];
+	out.m[ 6] = b.m[ 4] * a.m[ 2] + b.m[ 5] * a.m[ 6] + b.m[ 6] * a.m[10] + b.m[ 7] * a.m[14];
+	out.m[ 7] = b.m[ 4] * a.m[ 3] + b.m[ 5] * a.m[ 7] + b.m[ 6] * a.m[11] + b.m[ 7] * a.m[15];
+	
+	out.m[ 8] = b.m[ 8] * a.m[ 0] + b.m[ 9] * a.m[ 4] + b.m[10] * a.m[ 8] + b.m[11] * a.m[12];
+	out.m[ 9] = b.m[ 8] * a.m[ 1] + b.m[ 9] * a.m[ 5] + b.m[10] * a.m[ 9] + b.m[11] * a.m[13];
+	out.m[10] = b.m[ 8] * a.m[ 2] + b.m[ 9] * a.m[ 6] + b.m[10] * a.m[10] + b.m[11] * a.m[14];
+	out.m[11] = b.m[ 8] * a.m[ 3] + b.m[ 9] * a.m[ 7] + b.m[10] * a.m[11] + b.m[11] * a.m[15];
+	
+	out.m[12] = b.m[12] * a.m[ 0] + b.m[13] * a.m[ 4] + b.m[14] * a.m[ 8] + b.m[15] * a.m[12];
+	out.m[13] = b.m[12] * a.m[ 1] + b.m[13] * a.m[ 5] + b.m[14] * a.m[ 9] + b.m[15] * a.m[13];
+	out.m[14] = b.m[12] * a.m[ 2] + b.m[13] * a.m[ 6] + b.m[14] * a.m[10] + b.m[15] * a.m[14];
+	out.m[15] = b.m[12] * a.m[ 3] + b.m[13] * a.m[ 7] + b.m[14] * a.m[11] + b.m[15] * a.m[15];
+	
+	// RB: FIXME optimize transpose into above
+	Transpose( out, out );
+#endif
 }
 
 /*
@@ -928,7 +997,7 @@ can get really, really small.
 */
 bool idRenderMatrix::Inverse( const idRenderMatrix& src, idRenderMatrix& out )
 {
-#if defined(USE_INTRINSICS_EMU)
+#if !defined(USE_INTRINSICS) || defined(USE_INTRINSICS_EMU)
 
 	idMat4	am;
 	
@@ -1187,10 +1256,9 @@ bool idRenderMatrix::InverseByDoubles( const idRenderMatrix& src, idRenderMatrix
 DeterminantIsNegative
 ========================
 */
-
+#if defined(USE_INTRINSICS) && !defined(USE_INTRINSICS_EMU)
 void DeterminantIsNegative( bool& negativeDeterminant, const __m128& r0, const __m128& r1, const __m128& r2, const __m128& r3 )
 {
-#if !defined(USE_INTRINSICS_EMU)
 	const __m128 r1u1 = _mm_perm_ps( r1, _MM_SHUFFLE( 2, 1, 0, 3 ) );
 	const __m128 r1u2 = _mm_perm_ps( r1, _MM_SHUFFLE( 1, 0, 3, 2 ) );
 	const __m128 r1u3 = _mm_perm_ps( r1, _MM_SHUFFLE( 0, 3, 2, 1 ) );
@@ -1230,9 +1298,34 @@ void DeterminantIsNegative( bool& negativeDeterminant, const __m128& r0, const _
 	const __m128 result	= _mm_cmpgt_ps( c_zero, det );
 	
 	negativeDeterminant	= _mm_movemask_ps( result ) & 1;
+}
 #endif
+
+float idRenderMatrix::Determinant( const idRenderMatrix& mat )
+{
+	// 2x2 sub-determinants
+	float det2_01_01 = mat[0][0] * mat[1][1] - mat[0][1] * mat[1][0];
+	float det2_01_02 = mat[0][0] * mat[1][2] - mat[0][2] * mat[1][0];
+	float det2_01_03 = mat[0][0] * mat[1][3] - mat[0][3] * mat[1][0];
+	float det2_01_12 = mat[0][1] * mat[1][2] - mat[0][2] * mat[1][1];
+	float det2_01_13 = mat[0][1] * mat[1][3] - mat[0][3] * mat[1][1];
+	float det2_01_23 = mat[0][2] * mat[1][3] - mat[0][3] * mat[1][2];
+	
+	// 3x3 sub-determinants
+	float det3_201_012 = mat[2][0] * det2_01_12 - mat[2][1] * det2_01_02 + mat[2][2] * det2_01_01;
+	float det3_201_013 = mat[2][0] * det2_01_13 - mat[2][1] * det2_01_03 + mat[2][3] * det2_01_01;
+	float det3_201_023 = mat[2][0] * det2_01_23 - mat[2][2] * det2_01_03 + mat[2][3] * det2_01_02;
+	float det3_201_123 = mat[2][1] * det2_01_23 - mat[2][2] * det2_01_13 + mat[2][3] * det2_01_12;
+	
+	return ( - det3_201_123 * mat[3][0] + det3_201_023 * mat[3][1] - det3_201_013 * mat[3][2] + det3_201_012 * mat[3][3] );
 }
 
+static bool DeterminantIsNegative( const idRenderMatrix& mat )
+{
+	float det = idRenderMatrix::Determinant( mat );
+	
+	return ( det < 0.0f );
+}
 
 /*
 ========================
@@ -1246,7 +1339,7 @@ void idRenderMatrix::CopyMatrix( const idRenderMatrix& matrix, idVec4& row0, idV
 	assert_16_byte_aligned( row2.ToFloatPtr() );
 	assert_16_byte_aligned( row3.ToFloatPtr() );
 	
-	
+#if defined(USE_INTRINSICS)
 	const __m128 r0 = _mm_loadu_ps( matrix.m + 0 * 4 );
 	const __m128 r1 = _mm_loadu_ps( matrix.m + 1 * 4 );
 	const __m128 r2 = _mm_loadu_ps( matrix.m + 2 * 4 );
@@ -1256,7 +1349,24 @@ void idRenderMatrix::CopyMatrix( const idRenderMatrix& matrix, idVec4& row0, idV
 	_mm_store_ps( row1.ToFloatPtr(), r1 );
 	_mm_store_ps( row2.ToFloatPtr(), r2 );
 	_mm_store_ps( row3.ToFloatPtr(), r3 );
-	
+#else
+	row0[ 0] = matrix.m[ 0];
+	row0[1] = matrix.m[ 1];
+	row0[2] = matrix.m[ 2];
+	row0[3] = matrix.m[ 3];
+	row1[ 0] = matrix.m[ 4];
+	row1[1] = matrix.m[ 5];
+	row1[2] = matrix.m[ 6];
+	row1[3] = matrix.m[ 7];
+	row2[ 0] = matrix.m[ 8];
+	row2[1] = matrix.m[ 9];
+	row2[2] = matrix.m[10];
+	row2[3] = matrix.m[11];
+	row3[ 0] = matrix.m[12];
+	row3[1] = matrix.m[13];
+	row3[2] = matrix.m[14];
+	row3[3] = matrix.m[15];
+#endif
 }
 
 /*
@@ -1271,7 +1381,7 @@ void idRenderMatrix::SetMVP( const idRenderMatrix& mvp, idVec4& row0, idVec4& ro
 	assert_16_byte_aligned( row2.ToFloatPtr() );
 	assert_16_byte_aligned( row3.ToFloatPtr() );
 	
-	
+#if defined(USE_INTRINSICS)
 	const __m128 r0 = _mm_loadu_ps( mvp.m + 0 * 4 );
 	const __m128 r1 = _mm_loadu_ps( mvp.m + 1 * 4 );
 	const __m128 r2 = _mm_loadu_ps( mvp.m + 2 * 4 );
@@ -1283,7 +1393,26 @@ void idRenderMatrix::SetMVP( const idRenderMatrix& mvp, idVec4& row0, idVec4& ro
 	_mm_store_ps( row3.ToFloatPtr(), r3 );
 	
 	DeterminantIsNegative( negativeDeterminant, r0, r1, r2, r3 );
+#else
+	row0[ 0] = mvp.m[ 0];
+	row0[1] = mvp.m[ 1];
+	row0[2] = mvp.m[ 2];
+	row0[3] = mvp.m[ 3];
+	row1[ 0] = mvp.m[ 4];
+	row1[1] = mvp.m[ 5];
+	row1[2] = mvp.m[ 6];
+	row1[3] = mvp.m[ 7];
+	row2[ 0] = mvp.m[ 8];
+	row2[1] = mvp.m[ 9];
+	row2[2] = mvp.m[10];
+	row2[3] = mvp.m[11];
+	row3[ 0] = mvp.m[12];
+	row3[1] = mvp.m[13];
+	row3[2] = mvp.m[14];
+	row3[3] = mvp.m[15];
 	
+	negativeDeterminant = DeterminantIsNegative( mvp );
+#endif
 }
 
 /*
@@ -1291,6 +1420,7 @@ void idRenderMatrix::SetMVP( const idRenderMatrix& mvp, idVec4& row0, idVec4& ro
 idRenderMatrix::SetMVPForBounds
 ========================
 */
+#if defined(USE_INTRINSICS)
 void idRenderMatrix::SetMVPForBounds( const idRenderMatrix& mvp, const idBounds& bounds, idVec4& row0, idVec4& row1, idVec4& row2, idVec4& row3, bool& negativeDeterminant )
 {
 	assert_16_byte_aligned( row0.ToFloatPtr() );
@@ -1345,14 +1475,15 @@ void idRenderMatrix::SetMVPForBounds( const idRenderMatrix& mvp, const idBounds&
 	_mm_store_ps( row3.ToFloatPtr(), r3 );
 	
 	DeterminantIsNegative( negativeDeterminant, r0, r1, r2, r3 );
-	
 }
+#endif
 
 /*
 ========================
 idRenderMatrix::SetMVPForInverseProject
 ========================
 */
+#if defined(USE_INTRINSICS)
 void idRenderMatrix::SetMVPForInverseProject( const idRenderMatrix& mvp, const idRenderMatrix& inverseProject, idVec4& row0, idVec4& row1, idVec4& row2, idVec4& row3, bool& negativeDeterminant )
 {
 	assert_16_byte_aligned( row0.ToFloatPtr() );
@@ -1397,8 +1528,8 @@ void idRenderMatrix::SetMVPForInverseProject( const idRenderMatrix& mvp, const i
 	_mm_store_ps( row3.ToFloatPtr(), t3 );
 	
 	DeterminantIsNegative( negativeDeterminant, t0, t1, t2, t3 );
-	
 }
+#endif
 
 /*
 ========================
@@ -3362,3 +3493,5 @@ frustumCull_t idRenderMatrix::CullFrustumCornersToPlane( const frustumCorners_t&
 	return ( frustumCull_t )( front | ( back << 1 ) );
 	
 }
+
+
