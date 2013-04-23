@@ -461,6 +461,10 @@ static void StreamOut( void* dst, const void* src, int numBytes )
 	assert_16_byte_aligned( dst );
 	assert_16_byte_aligned( src );
 	
+#if defined(USE_INTRINSICS_EMU)
+	memcpy( dst, src, numBytes );
+#else
+	
 	int i = 0;
 	for( ; i + 128 <= numBytes; i += 128 )
 	{
@@ -486,6 +490,7 @@ static void StreamOut( void* dst, const void* src, int numBytes )
 		__m128i d = _mm_load_si128( ( __m128i* )( ( byte* )src + i ) );
 		_mm_stream_si128( ( __m128i* )( ( byte* )dst + i ), d );
 	}
+#endif
 }
 
 /*

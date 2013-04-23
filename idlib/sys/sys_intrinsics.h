@@ -58,27 +58,39 @@ typedef float __m64[2] ALIGNTYPE8;
 #endif
 
 
-typedef union
+union __m128
 {
 //	__int128	i128;
 	float		f32[4];
-//	int32		i32[4];
+	int32		i32[4];
 //	int16		i16[8];
-	uint8		u8[16];
-	
-} ALIGNTYPE16 __m128;
+//	uint8		u8[16];
 
-//typedef __m128 __m128i;
+} ALIGNTYPE16;
 
+//typedef __m128s __m128i;
 
-typedef union
+union __m128i
 {
+#if 0
+	__m128i() {}
+	__m128i( __m128 i )
+	{
+		i32[0] = i.i32[0];
+		i32[1] = i.i32[1];
+		i32[2] = i.i32[2];
+		i32[3] = i.i32[3];
+	}
+#endif
+	
 	__int128	i128;
+	float		f32[4];
 	int32		i32[4];
 	int16		i16[8];
+	uint8		u8[16];
+	int8		i8[16];
 	
-} ALIGNTYPE16 __m128i;
-
+} ALIGNTYPE16;
 
 
 
@@ -414,6 +426,19 @@ ID_FORCE_INLINE_EXTERN void _mm_store_ps( float* p, __m128 a )
 
 /*
 ================================================
+	Cacheability Support
+================================================
+*/
+
+// Guarantees that every preceding store is globally visible before any subsequent store.
+ID_FORCE_INLINE_EXTERN void _mm_sfence()
+{
+	// DO NOTHING
+}
+
+
+/*
+================================================
 	Miscellaneous Operations
 ================================================
 */
@@ -570,9 +595,76 @@ ID_FORCE_INLINE_EXTERN __m128i _mm_sub_epi32( __m128i a, __m128i b )
 
 /*
 ================================================
+	Logical Operations
+================================================
+*/
+
+ID_FORCE_INLINE_EXTERN __m128i _mm_and_si128( __m128i a, __m128i b )
+{
+	__m128i ret;
+	
+	ret.i32[0] = a.i32[0] & b.i32[0];
+	ret.i32[1] = a.i32[1] & b.i32[1];
+	ret.i32[2] = a.i32[2] & b.i32[2];
+	ret.i32[3] = a.i32[3] & b.i32[3];
+	
+	return ret;
+}
+
+ID_FORCE_INLINE_EXTERN __m128i _mm_andnot_si128( __m128i a, __m128i b )
+{
+	__m128i ret;
+	
+	ret.i32[0] = ~a.i32[0] & b.i32[0];
+	ret.i32[1] = ~a.i32[1] & b.i32[1];
+	ret.i32[2] = ~a.i32[2] & b.i32[2];
+	ret.i32[3] = ~a.i32[3] & b.i32[3];
+	
+	return ret;
+}
+
+ID_FORCE_INLINE_EXTERN __m128i _mm_or_si128( __m128i a, __m128i b )
+{
+	__m128i ret;
+	
+	ret.i32[0] = a.i32[0] | b.i32[0];
+	ret.i32[1] = a.i32[1] | b.i32[1];
+	ret.i32[2] = a.i32[2] | b.i32[2];
+	ret.i32[3] = a.i32[3] | b.i32[3];
+	
+	return ret;
+}
+
+ID_FORCE_INLINE_EXTERN __m128i _mm_xor_si128( __m128i a, __m128i b )
+{
+	__m128i ret;
+	
+	ret.i32[0] = a.i32[0] ^ b.i32[0];
+	ret.i32[1] = a.i32[1] ^ b.i32[1];
+	ret.i32[2] = a.i32[2] ^ b.i32[2];
+	ret.i32[3] = a.i32[3] ^ b.i32[3];
+	
+	return ret;
+}
+
+/*
+================================================
 	Integer Shift Operations
 ================================================
 */
+
+// RB: FIXME
+ID_FORCE_INLINE_EXTERN __m128i _mm_slli_si128( __m128i a, int count )
+{
+	__m128i ret;
+	
+	ret.i32[0] = a.i32[0] << count;
+	ret.i32[1] = a.i32[1] << count;
+	ret.i32[2] = a.i32[2] << count;
+	ret.i32[3] = a.i32[3] << count;
+	
+	return ret;
+}
 
 ID_FORCE_INLINE_EXTERN __m128i _mm_slli_epi32( __m128i a, int count )
 {
@@ -586,11 +678,118 @@ ID_FORCE_INLINE_EXTERN __m128i _mm_slli_epi32( __m128i a, int count )
 	return ret;
 }
 
+ID_FORCE_INLINE_EXTERN __m128i _mm_srli_epi32( __m128i a, int count )
+{
+	__m128i ret;
+	
+	ret.i32[0] = a.i32[0] >> count;
+	ret.i32[1] = a.i32[1] >> count;
+	ret.i32[2] = a.i32[2] >> count;
+	ret.i32[3] = a.i32[3] >> count;
+	
+	return ret;
+}
+
+#define _mm_srai_epi32 _mm_srli_epi32
+
+// RB: FIXME doublecheck
+#define _mm_srli_si128 _mm_srli_epi32
+
+/*
+================================================
+	Integer Comparisons
+================================================
+*/
+
+ID_FORCE_INLINE_EXTERN __m128i _mm_cmpeq_epi32( __m128i a, __m128i b )
+{
+	__m128i ret;
+	
+	ret.i32[0] = a.i32[0] == b.i32[0] ? 0xFFFFFFFF : 0;
+	ret.i32[1] = a.i32[1] == b.i32[1] ? 0xFFFFFFFF : 0;
+	ret.i32[2] = a.i32[2] == b.i32[2] ? 0xFFFFFFFF : 0;
+	ret.i32[3] = a.i32[3] == b.i32[3] ? 0xFFFFFFFF : 0;
+	
+	return ret;
+}
+
+ID_FORCE_INLINE_EXTERN __m128i _mm_cmplt_epi32( __m128i a, __m128i b )
+{
+	__m128i ret;
+	
+	ret.i32[0] = a.i32[0] < b.i32[0] ? 0xFFFFFFFF : 0;
+	ret.i32[1] = a.i32[1] < b.i32[1] ? 0xFFFFFFFF : 0;
+	ret.i32[2] = a.i32[2] < b.i32[2] ? 0xFFFFFFFF : 0;
+	ret.i32[3] = a.i32[3] < b.i32[3] ? 0xFFFFFFFF : 0;
+	
+	return ret;
+}
+
+ID_FORCE_INLINE_EXTERN __m128i _mm_cmpgt_epi32( __m128i a, __m128i b )
+{
+	__m128i ret;
+	
+	ret.i32[0] = a.i32[0] > b.i32[0] ? 0xFFFFFFFF : 0;
+	ret.i32[1] = a.i32[1] > b.i32[1] ? 0xFFFFFFFF : 0;
+	ret.i32[2] = a.i32[2] > b.i32[2] ? 0xFFFFFFFF : 0;
+	ret.i32[3] = a.i32[3] > b.i32[3] ? 0xFFFFFFFF : 0;
+	
+	return ret;
+}
+
+/*
+================================================
+	Integer Conversion Operations
+================================================
+*/
+
+ID_FORCE_INLINE_EXTERN __m128 _mm_cvtepi32_ps( __m128i a )
+{
+	__m128 ret;
+	
+	ret.f32[0] = a.f32[0];
+	ret.f32[1] = a.f32[1];
+	ret.f32[2] = a.f32[2];
+	ret.f32[3] = a.f32[3];
+	
+	return ret;
+}
+
+/*
+================================================
+	Integer Load Operations
+================================================
+*/
+
+ID_FORCE_INLINE_EXTERN __m128i _mm_load_si128( __m128i const* p )
+{
+	__m128i ret;
+	
+	ret.i32[0] = p->i32[0];
+	ret.i32[1] = p->i32[1];
+	ret.i32[2] = p->i32[2];
+	ret.i32[3] = p->i32[3];
+	
+	return ret;
+}
+
 /*
 ================================================
 	Integer Move Operations
 ================================================
 */
+
+ID_FORCE_INLINE_EXTERN __m128i _mm_cvtps_epi32( __m128 a )
+{
+	__m128i ret;
+	
+	ret.i32[0] = ( int ) a.i32[0];
+	ret.i32[1] = ( int ) a.i32[1];
+	ret.i32[2] = ( int ) a.i32[2];
+	ret.i32[3] = ( int ) a.i32[3];
+	
+	return ret;
+}
 
 ID_FORCE_INLINE_EXTERN __m128i _mm_cvtsi32_si128( int a )
 {
@@ -609,48 +808,260 @@ ID_FORCE_INLINE_EXTERN int32 _mm_cvtsi128_si32( __m128i a )
 	return a.i32[0];
 }
 
+
+/*
+================================================
+	Integer Set Operations
+================================================
+*/
+
+ID_FORCE_INLINE_EXTERN __m128i _mm_setzero_si128()
+{
+	__m128i ret;
+	
+	ret.i32[0] = 0;
+	ret.i32[1] = 0;
+	ret.i32[2] = 0;
+	ret.i32[3] = 0;
+	
+	return ret;
+}
+
+/*
+================================================
+	Integer Store Operations
+================================================
+*/
+
+// Stores the data in a to the address p without polluting the caches. If the cache line
+// containing address p is already in the cache, the cache will be updated. Address p
+// must be 16 byte aligned.
+ID_FORCE_INLINE_EXTERN void _mm_stream_si128( __m128i* p, __m128i a )
+{
+	p->i32[0] = a.i32[0];
+	p->i32[1] = a.i32[1];
+	p->i32[2] = a.i32[2];
+	p->i32[3] = a.i32[3];
+}
+
+#define _mm_store_si128 _mm_stream_si128
+
+// Stores the lower 64 bits of the value pointed to by p.
+ID_FORCE_INLINE_EXTERN void _mm_storel_epi64( __m128i* p, __m128i a )
+{
+	p->i32[0] = a.i32[0];
+	p->i32[1] = a.i32[1];
+	p->i32[2] = 0;
+	p->i32[3] = 0;
+}
+
+
 /*
 ================================================
 	Miscellaneous Operations
 ================================================
 */
 
-/*
 ID_FORCE_INLINE_EXTERN __m128i _mm_shuffle_epi32( __m128i a, int i )
 {
 	__m128i ret;
 	int32* af = &a.i32[0];
-
+	
 	ret.i32[3] = af[( i >> 6 ) & 3 ];
 	ret.i32[2] = af[( i >> 4 ) & 3 ];
 	ret.i32[1] = af[( i >> 2 ) & 3 ];
 	ret.i32[0] = af[( i >> 0 ) & 3 ];
-
+	
 	return ret;
 }
-*/
 
-/*
-ID_FORCE_INLINE_EXTERN int16 SignedSaturate(  )
+ID_FORCE_INLINE_EXTERN __m128i _mm_shufflehi_epi16( __m128i a, int i )
 {
-	// TODO
+	__m128i ret;
+	int16* af = &a.i16[4];
+	
+	ret.i32[3 + 4] = af[( i >> 6 ) & 3 ];
+	ret.i32[2 + 4] = af[( i >> 4 ) & 3 ];
+	ret.i32[1 + 4] = af[( i >> 2 ) & 3 ];
+	ret.i32[0 + 4] = af[( i >> 0 ) & 3 ];
+	
+	return ret;
 }
-*/
+
+
+ID_FORCE_INLINE_EXTERN int SignedSaturate8( int32 s )
+{
+	return s & 0x80;
+}
+
+ID_FORCE_INLINE_EXTERN int UnsignedSaturate8( int32 s )
+{
+	return s & 0xFF;
+}
+
+ID_FORCE_INLINE_EXTERN int SignedSaturate16( int32 s )
+{
+	return s & 0x8000;
+}
+
+ID_FORCE_INLINE_EXTERN int UnsignedSaturate16( int32 s )
+{
+	return s & 0xFFFF;
+}
+
+// Packs the 16 signed 16-bit integers from a and b into 8-bit integers and saturates.
+ID_FORCE_INLINE_EXTERN __m128i _mm_packs_epi16( __m128i a, __m128i b )
+{
+	__m128i ret;
+	
+	ret.i8[ 0] = SignedSaturate8( a.i16[0] );
+	ret.i8[ 1] = SignedSaturate8( a.i16[1] );
+	ret.i8[ 2] = SignedSaturate8( a.i16[2] );
+	ret.i8[ 3] = SignedSaturate8( a.i16[3] );
+	ret.i8[ 4] = SignedSaturate8( a.i16[4] );
+	ret.i8[ 5] = SignedSaturate8( a.i16[5] );
+	ret.i8[ 6] = SignedSaturate8( a.i16[6] );
+	ret.i8[ 7] = SignedSaturate8( a.i16[7] );
+	
+	ret.i8[ 8] = SignedSaturate8( b.i16[0] );
+	ret.i8[ 9] = SignedSaturate8( b.i16[1] );
+	ret.i8[10] = SignedSaturate8( b.i16[2] );
+	ret.i8[11] = SignedSaturate8( b.i16[3] );
+	ret.i8[12] = SignedSaturate8( b.i16[4] );
+	ret.i8[13] = SignedSaturate8( b.i16[5] );
+	ret.i8[14] = SignedSaturate8( b.i16[6] );
+	ret.i8[15] = SignedSaturate8( b.i16[7] );
+	
+	return ret;
+}
 
 // Packs the 8 signed 32-bit integers from a and b into signed 16-bit integers and saturates
-/*
 ID_FORCE_INLINE_EXTERN __m128i _mm_packs_epi32( __m128i a, __m128i b )
 {
-	__m128 ret;
-
-	ret.f32[0] = a.i32[0];
-	ret.f32[1] = a.i32[1];
-	ret.f32[2] = a.i32[2];
-	ret.f32[3] = a.i32[3];
-
+	__m128i ret;
+	
+	ret.i16[0] = SignedSaturate16( a.i32[0] );
+	ret.i16[1] = SignedSaturate16( a.i32[1] );
+	ret.i16[2] = SignedSaturate16( a.i32[2] );
+	ret.i16[3] = SignedSaturate16( a.i32[3] );
+	
+	ret.i16[4] = SignedSaturate16( b.i32[0] );
+	ret.i16[5] = SignedSaturate16( b.i32[1] );
+	ret.i16[6] = SignedSaturate16( b.i32[2] );
+	ret.i16[7] = SignedSaturate16( b.i32[3] );
+	
 	return ret;
 }
+
+ID_FORCE_INLINE_EXTERN __m128i _mm_packus_epi16( __m128i a, __m128i b )
+{
+	__m128i ret;
+	
+	ret.u8[ 0] = UnsignedSaturate8( a.i16[0] );
+	ret.u8[ 1] = UnsignedSaturate8( a.i16[1] );
+	ret.u8[ 2] = UnsignedSaturate8( a.i16[2] );
+	ret.u8[ 3] = UnsignedSaturate8( a.i16[3] );
+	ret.u8[ 4] = UnsignedSaturate8( a.i16[4] );
+	ret.u8[ 5] = UnsignedSaturate8( a.i16[5] );
+	ret.u8[ 6] = UnsignedSaturate8( a.i16[6] );
+	ret.u8[ 7] = UnsignedSaturate8( a.i16[7] );
+	
+	ret.u8[ 8] = UnsignedSaturate8( b.i16[0] );
+	ret.u8[ 9] = UnsignedSaturate8( b.i16[1] );
+	ret.u8[10] = UnsignedSaturate8( b.i16[2] );
+	ret.u8[11] = UnsignedSaturate8( b.i16[3] );
+	ret.u8[12] = UnsignedSaturate8( b.i16[4] );
+	ret.u8[13] = UnsignedSaturate8( b.i16[5] );
+	ret.u8[14] = UnsignedSaturate8( b.i16[6] );
+	ret.u8[15] = UnsignedSaturate8( b.i16[7] );
+	
+	return ret;
+}
+
+ID_FORCE_INLINE_EXTERN __m128i _mm_unpackhi_epi32( __m128i a, __m128i b )
+{
+	__m128i ret;
+	
+	ret.i32[0] = a.i32[2];
+	ret.i32[1] = b.i32[2];
+	ret.i32[2] = a.i32[3];
+	ret.i32[3] = b.i32[3];
+	
+	return ret;
+}
+
+ID_FORCE_INLINE_EXTERN __m128i _mm_unpacklo_epi8( __m128i a, __m128i b )
+{
+	__m128i ret;
+	
+	ret.u8[ 0] = a.u8[0];
+	ret.u8[ 1] = b.u8[0];
+	ret.u8[ 2] = a.u8[1];
+	ret.u8[ 3] = b.u8[1];
+	ret.u8[ 4] = a.u8[2];
+	ret.u8[ 5] = b.u8[2];
+	ret.u8[ 6] = a.u8[3];
+	ret.u8[ 7] = b.u8[3];
+	ret.u8[ 8] = a.u8[4];
+	ret.u8[ 9] = b.u8[4];
+	ret.u8[10] = a.u8[5];
+	ret.u8[11] = b.u8[5];
+	ret.u8[12] = a.u8[6];
+	ret.u8[13] = b.u8[6];
+	ret.u8[14] = a.u8[7];
+	ret.u8[15] = b.u8[7];
+	
+	return ret;
+}
+
+ID_FORCE_INLINE_EXTERN __m128i _mm_unpacklo_epi16( __m128i a, __m128i b )
+{
+	__m128i ret;
+	
+	ret.i16[ 0] = a.i16[0];
+	ret.i16[ 1] = b.i16[0];
+	ret.i16[ 2] = a.i16[1];
+	ret.i16[ 3] = b.i16[1];
+	ret.i16[ 4] = a.i16[2];
+	ret.i16[ 5] = b.i16[2];
+	ret.i16[ 6] = a.i16[3];
+	ret.i16[ 7] = b.i16[3];
+	
+	return ret;
+}
+
+ID_FORCE_INLINE_EXTERN __m128i _mm_unpacklo_epi32( __m128i a, __m128i b )
+{
+	__m128i ret;
+	
+	ret.i32[0] = a.i32[0];
+	ret.i32[1] = b.i32[0];
+	ret.i32[2] = a.i32[1];
+	ret.i32[3] = b.i32[1];
+	
+	return ret;
+}
+
+
+
+/*
+================================================
+	Casting Support
+================================================
 */
+
+ID_FORCE_INLINE_EXTERN __m128i _mm_castps_si128( __m128 a )
+{
+	__m128i ret;
+	
+	ret.f32[0] = a.f32[0];
+	ret.f32[1] = a.f32[1];
+	ret.f32[2] = a.f32[2];
+	ret.f32[3] = a.f32[3];
+	
+	return ret;
+}
+
 
 #endif // #if defined(USE_INTRINSICS_EMU)
 
@@ -823,10 +1234,19 @@ ID_INLINE_EXTERN int CACHE_LINE_CLEAR_OVERFLOW_COUNT( int size )
 #endif
 // DG end
 
+
 // make the intrinsics "type unsafe"
 typedef union DECLSPEC_INTRINTYPE _CRT_ALIGN( 16 ) __m128c
 {
 	__m128c() {}
+	
+#if 0 //defined(USE_INTRINSICS_EMU)
+	__m128c( __m128 f, __m128i i )
+	{
+		m128 = f;
+		m128i = i;
+	}
+#else
 	__m128c( __m128 f )
 	{
 		m128 = f;
@@ -835,6 +1255,8 @@ typedef union DECLSPEC_INTRINTYPE _CRT_ALIGN( 16 ) __m128c
 	{
 		m128i = i;
 	}
+#endif
+	
 	operator	__m128()
 	{
 		return m128;
@@ -846,6 +1268,24 @@ typedef union DECLSPEC_INTRINTYPE _CRT_ALIGN( 16 ) __m128c
 	__m128		m128;
 	__m128i		m128i;
 } __m128c;
+
+
+#if defined(USE_INTRINSICS_EMU)
+ID_FORCE_INLINE_EXTERN __m128 _mm_shuffle_epi32( __m128c ac, int i )
+{
+	__m128 ret;
+	
+	__m128i a = ac;
+	int32* af = &a.i32[0];
+	
+	ret.i32[3] = af[( i >> 6 ) & 3 ];
+	ret.i32[2] = af[( i >> 4 ) & 3 ];
+	ret.i32[1] = af[( i >> 2 ) & 3 ];
+	ret.i32[0] = af[( i >> 0 ) & 3 ];
+	
+	return ret;
+}
+#endif
 
 #define _mm_madd_ps( a, b, c )				_mm_add_ps( _mm_mul_ps( (a), (b) ), (c) )
 #define _mm_nmsub_ps( a, b, c )				_mm_sub_ps( (c), _mm_mul_ps( (a), (b) ) )
@@ -873,6 +1313,7 @@ ID_FORCE_INLINE_EXTERN __m128 _mm_msum4_ps( __m128 a, __m128 b )
 #define _mm_shufmix_epi32( x, y, perm )		__m128c( _mm_shuffle_ps( __m128c( x ), __m128c( y ), perm ) )
 #define _mm_loadh_epi64( x, address )		__m128c( _mm_loadh_pi( __m128c( x ), (__m64 *)address ) )
 #define _mm_storeh_epi64( address, x )		_mm_storeh_pi( (__m64 *)address, __m128c( x ) )
+
 
 // floating-point reciprocal with close to full precision
 ID_FORCE_INLINE_EXTERN __m128 _mm_rcp32_ps( __m128 x )

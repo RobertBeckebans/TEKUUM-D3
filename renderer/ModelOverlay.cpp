@@ -486,7 +486,9 @@ static void R_CopyOverlaySurface( idDrawVert* verts, int numVerts, triIndex_t* i
 	assert( ( ( overlay->numVerts * sizeof( idDrawVert ) ) & 15 ) == 0 );
 	assert( ( ( overlay->numIndexes * sizeof( triIndex_t ) ) & 15 ) == 0 );
 	
-	
+#if defined(USE_INTRINSICS_EMU)
+	// TODO
+#else
 	const __m128i vector_int_clear_last = _mm_set_epi32( 0, -1, -1, -1 );
 	const __m128i vector_int_num_verts = _mm_shuffle_epi32( _mm_cvtsi32_si128( numVerts ), 0 );
 	const __m128i vector_short_num_verts = _mm_packs_epi32( vector_int_num_verts, vector_int_num_verts );
@@ -497,15 +499,15 @@ static void R_CopyOverlaySurface( idDrawVert* verts, int numVerts, triIndex_t* i
 		const overlayVertex_t& overlayVert = overlay->verts[i];
 		const idDrawVert& srcVert = sourceVerts[overlayVert.vertexNum];
 		idDrawVert& dstVert = verts[numVerts + i];
-		
+	
 		__m128i v0 = _mm_load_si128( ( const __m128i* )( ( byte* )&srcVert +  0 ) );
 		__m128i v1 = _mm_load_si128( ( const __m128i* )( ( byte* )&srcVert + 16 ) );
 		__m128i st = _mm_cvtsi32_si128( *( unsigned int* )overlayVert.st );
-		
+	
 		st = _mm_shuffle_epi32( st, _MM_SHUFFLE( 0, 1, 2, 3 ) );
 		v0 = _mm_and_si128( v0, vector_int_clear_last );
 		v0 = _mm_or_si128( v0, st );
-		
+	
 		_mm_stream_si128( ( __m128i* )( ( byte* )&dstVert +  0 ), v0 );
 		_mm_stream_si128( ( __m128i* )( ( byte* )&dstVert + 16 ), v1 );
 	}
@@ -516,14 +518,14 @@ static void R_CopyOverlaySurface( idDrawVert* verts, int numVerts, triIndex_t* i
 	for( int i = 0; i < overlay->numIndexes; i += 8 )
 	{
 		__m128i vi = _mm_load_si128( ( const __m128i* )&overlay->indexes[i] );
-		
+	
 		vi = _mm_add_epi16( vi, vector_short_num_verts );
-		
+	
 		_mm_stream_si128( ( __m128i* )&indexes[numIndexes + i], vi );
 	}
 	
 	_mm_sfence();
-	
+#endif
 }
 
 /*

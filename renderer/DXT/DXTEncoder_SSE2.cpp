@@ -34,6 +34,7 @@ Contains the DxtEncoder implementation for SSE2.
 #include "DXTCodec_local.h"
 #include "DXTCodec.h"
 
+#if !defined(USE_INTRINSICS_EMU)
 
 //#define TEST_COMPRESSION
 #ifdef TEST_COMPRESSION
@@ -1626,4 +1627,6 @@ void idDxtEncoder::CompressNormalMapDXT5Fast_SSE2( const byte* inBuf, byte* outB
 	dstPadding = tmpDstPadding;
 #endif
 }
+
+#endif // #if !defined(USE_INTRINSICS_EMU)
 
