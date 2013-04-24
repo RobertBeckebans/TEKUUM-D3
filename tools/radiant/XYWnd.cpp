@@ -1681,6 +1681,10 @@ void CXYWnd::OnPaint()
 	
 	if( bPaint )
 	{
+		// RB: go back to fixed function pipeline
+		renderProgManager.Unbind();
+		// RB end
+		
 		QE_CheckOpenGLForErrors();
 		XY_Draw();
 		QE_CheckOpenGLForErrors();

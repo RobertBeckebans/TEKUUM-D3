@@ -149,6 +149,10 @@ void CZWnd::OnPaint()
 	}
 	else
 	{
+		// RB: go back to fixed function pipeline
+		renderProgManager.Unbind();
+		// RB end
+		
 		QE_CheckOpenGLForErrors();
 		
 		Z_Draw();

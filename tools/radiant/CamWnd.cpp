@@ -220,6 +220,10 @@ void CCamWnd::OnPaint()
 	}
 	else
 	{
+		// RB: go back to fixed function pipeline
+		renderProgManager.Unbind();
+		// RB end
+		
 		QE_CheckOpenGLForErrors();
 		g_pSplitList = NULL;
 		if( g_bClipMode )

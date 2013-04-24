@@ -281,6 +281,11 @@ void CNewTexWnd::OnPaint()
 	}
 	else
 	{
+		// RB: go back to fixed function pipeline
+		renderProgManager.Unbind();
+		glEnable( GL_TEXTURE_2D );
+		// RB end
+		
 		const char*	name;
 		glClearColor
 		(
@@ -391,7 +396,11 @@ void CNewTexWnd::OnPaint()
 		
 		// reset the current texture
 		globalImages->BindNull();
+		
+		glDisable( GL_TEXTURE_2D );
+		
 		glFinish();
+		
 		SwapBuffers( dc.GetSafeHdc() );
 		TRACE( "Texture Paint\n" );
 	}
