@@ -467,14 +467,8 @@ BOOL DialogDeclBrowser::OnInitDialog()
 	
 	GetClientRect( initialRect );
 	
-// RB begin
-#if _MFC_VER >= 0x0A00
 	statusBar.CreateEx( SBARS_SIZEGRIP, WS_CHILD | WS_VISIBLE | CBRS_BOTTOM, initialRect, this, AFX_IDW_STATUS_BAR );
-#else
-	statusBar.Create( WS_CHILD | WS_VISIBLE | CBRS_BOTTOM, initialRect, this, AFX_IDW_STATUS_BAR );
-#endif
-// RB end
-
+	
 	baseDeclTree.Create( 0, initialRect, this, IDC_DECLBROWSER_BASE_TREE );
 	
 	InitBaseDeclTree();
@@ -543,10 +537,10 @@ DeclBrowserRun
 */
 void DeclBrowserRun()
 {
-#if _MSC_VER >= 1300 && _MFC_VER >= 0x0A00
-	MSG* msg = AfxGetCurrentMessage();
+#if _MSC_VER >= 1300
+	MSG* msg = AfxGetCurrentMessage();			// TODO Robert fix me!!
 #else
-	MSG* msg = &AfxGetThread()->m_msgCur;
+	MSG* msg = &m_msgCur;
 #endif
 	
 	while( ::PeekMessage( msg, NULL, NULL, NULL, PM_NOREMOVE ) )
@@ -631,9 +625,6 @@ DialogDeclBrowser::OnToolTipNotify
 */
 BOOL DialogDeclBrowser::OnToolTipNotify( UINT id, NMHDR* pNMHDR, LRESULT* pResult )
 {
-
-	// RB begin
-#if _MFC_VER >= 0x0A00
 	// need to handle both ANSI and UNICODE versions of the message
 	TOOLTIPTEXTA* pTTTA = ( TOOLTIPTEXTA* )pNMHDR;
 	TOOLTIPTEXTW* pTTTW = ( TOOLTIPTEXTW* )pNMHDR;
@@ -685,12 +676,6 @@ BOOL DialogDeclBrowser::OnToolTipNotify( UINT id, NMHDR* pNMHDR, LRESULT* pResul
 	}
 	
 	return DefaultOnToolTipNotify( toolTips, id, pNMHDR, pResult );
-	
-#else
-	// FIXME with MFC6
-	return FALSE;
-#endif
-// RB end
 }
 
 /*

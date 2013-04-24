@@ -382,10 +382,10 @@ int CRadiantApp::Run()
 	LONG lIdleCount = 0;
 	
 	
-#if _MSC_VER >= 1300 && _MFC_VER >= 0x0A00
-	MSG* msg = AfxGetCurrentMessage();
+#if _MSC_VER >= 1300
+	MSG* msg = AfxGetCurrentMessage();			// TODO Robert fix me!!
 #else
-	MSG* msg = &AfxGetThread()->m_msgCur;
+	MSG* msg = &m_msgCur;
 #endif
 	
 	// phase1: check to see if we can do idle work

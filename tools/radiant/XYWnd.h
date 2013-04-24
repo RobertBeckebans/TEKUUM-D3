@@ -249,9 +249,7 @@ protected:
 	int m_nPressy;
 	idVec3 m_vPressdelta;
 	bool m_bPress_selection;
-	// RB begin
-	HGLRC hGLRC;
-	// RB end
+	
 	int m_axisHoriz; //  <axisHoriz> and <axisVert> are one of AXIS_X, AXIS_Y, AXIS_Z and
 	int m_axisVert;	 //  reflect which axes are represented horizontally and vertically in the 2d view (XY, XZ, etc)
 	

@@ -79,9 +79,6 @@ protected:
 	//CButton  m_wndShaders;
 	bool m_bNeedRange;
 	HGLRC hglrcTexture;
-	// RB begin
-	HGLRC hGLRC;
-	// RB end
 	CDC* 	hdcTexture;
 	CPoint cursor;
 	CPoint origin;
