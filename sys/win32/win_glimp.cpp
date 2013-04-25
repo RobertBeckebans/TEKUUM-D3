@@ -1296,6 +1296,7 @@ bool GLimp_Init( glimpParms_t parms )
 	}
 	
 	// RB: use glewExperimental to avoid issues with OpenGL 3.x core profiles
+	/*
 	if( r_useOpenGL32.GetInteger() > 1 )
 	{
 		glewExperimental = GL_TRUE;
@@ -1310,9 +1311,10 @@ bool GLimp_Init( glimpParms_t parms )
 	{
 		common->Printf( "Using GLEW %s\n", glewGetString( GLEW_VERSION ) );
 	}
+	*/
 	
 	// wglSwapinterval, etc
-	GLW_CheckWGLExtensions( win32.hDC );
+	//GLW_CheckWGLExtensions( win32.hDC );
 	
 	return true;
 }

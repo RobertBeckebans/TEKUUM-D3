@@ -31,14 +31,16 @@ If you have questions concerning this license or the applicable additional terms
 #include "../../../idlib/sys/sys_intrinsics.h"
 #include "../../../idlib/geometry/DrawVert_intrinsics.h"
 
-
+#if defined(USE_INTRINSICS)
 static const __m128i vector_int_neg_one		= _mm_set_epi32( -1, -1, -1, -1 );
+#endif
 
 /*
 =====================
 TriangleFacing_SSE2
 =====================
 */
+#if defined(USE_INTRINSICS)
 static ID_FORCE_INLINE __m128i TriangleFacing_SSE2(	const __m128& vert0X, const __m128& vert0Y, const __m128& vert0Z,
 		const __m128& vert1X, const __m128& vert1Y, const __m128& vert1Z,
 		const __m128& vert2X, const __m128& vert2Y, const __m128& vert2Z,
@@ -60,6 +62,7 @@ static ID_FORCE_INLINE __m128i TriangleFacing_SSE2(	const __m128& vert0X, const 
 	const __m128 delta = _mm_nmsub_ps( lightOriginX, normalX, _mm_nmsub_ps( lightOriginY, normalY, _mm_nmsub_ps( lightOriginZ, normalZ, normalW ) ) );
 	return _mm_castps_si128( _mm_cmplt_ps( delta, _mm_setzero_ps() ) );
 }
+#endif
 
 /*
 =====================
@@ -68,6 +71,7 @@ TriangleCulled
 The clip space of the 'lightProject' is assumed to be in the range [0, 1].
 =====================
 */
+#if defined(USE_INTRINSICS)
 static ID_FORCE_INLINE __m128i TriangleCulled_SSE2(	const __m128& vert0X, const __m128& vert0Y, const __m128& vert0Z,
 		const __m128& vert1X, const __m128& vert1Y, const __m128& vert1Z,
 		const __m128& vert2X, const __m128& vert2Y, const __m128& vert2Z,
@@ -127,6 +131,7 @@ static ID_FORCE_INLINE __m128i TriangleCulled_SSE2(	const __m128& vert0X, const 
 	
 	return _mm_castps_si128( _mm_cmpeq_ps( b0, zero ) );
 }
+#endif
 
 
 /*
@@ -150,6 +155,7 @@ static int CalculateTriangleFacingCulledStatic( byte* __restrict facing, byte* _
 		*insideShadowVolume = false;
 	}
 	
+#if defined(USE_INTRINSICS)
 	// calculate the start, end, dir and length of the line from the view origin to the light origin
 	const idVec3 lineStart = viewOrigin;
 	const idVec3 lineEnd = lightOrigin;
@@ -270,6 +276,10 @@ static int CalculateTriangleFacingCulledStatic( byte* __restrict facing, byte* _
 	numFrontFacing = _mm_add_epi32( numFrontFacing, _mm_shuffle_epi32( numFrontFacing, _MM_SHUFFLE( 2, 3, 0, 1 ) ) );
 	
 	return _mm_cvtsi128_si32( numFrontFacing );
+#else
+	// TODO
+	return 0;
+#endif
 	
 }
 
@@ -294,6 +304,7 @@ static int CalculateTriangleFacingCulledSkinned( byte* __restrict facing, byte* 
 		*insideShadowVolume = false;
 	}
 	
+#if defined(USE_INTRINSICS)
 	// calculate the start, end, dir and length of the line from the view origin to the light origin
 	const idVec3 lineStart = viewOrigin;
 	const idVec3 lineEnd = lightOrigin;
@@ -447,7 +458,10 @@ static int CalculateTriangleFacingCulledSkinned( byte* __restrict facing, byte* 
 	numFrontFacing = _mm_add_epi32( numFrontFacing, _mm_shuffle_epi32( numFrontFacing, _MM_SHUFFLE( 2, 3, 0, 1 ) ) );
 	
 	return _mm_cvtsi128_si32( numFrontFacing );
-	
+#else
+	// TODO
+	return 0;
+#endif
 }
 
 /*
@@ -460,6 +474,10 @@ static void StreamOut( void* dst, const void* src, int numBytes )
 	numBytes = ( numBytes + 15 ) & ~15;
 	assert_16_byte_aligned( dst );
 	assert_16_byte_aligned( src );
+	
+#if !defined(USE_INTRINSICS) || defined(USE_INTRINSICS_EMU)
+	memcpy( dst, src, numBytes );
+#else
 	
 	int i = 0;
 	for( ; i + 128 <= numBytes; i += 128 )
@@ -486,6 +504,7 @@ static void StreamOut( void* dst, const void* src, int numBytes )
 		__m128i d = _mm_load_si128( ( __m128i* )( ( byte* )src + i ) );
 		_mm_stream_si128( ( __m128i* )( ( byte* )dst + i ), d );
 	}
+#endif
 }
 
 /*
@@ -502,7 +521,7 @@ static void R_CreateShadowVolumeTriangles( triIndex_t* __restrict shadowIndices,
 	assert_not_spu_local_store( silEdges );
 	assert_not_spu_local_store( indexes );
 	
-#if 1
+#if defined(USE_INTRINSICS)
 	
 	const int IN_BUFFER_SIZE = 64;
 	const int OUT_BUFFER_SIZE = IN_BUFFER_SIZE * 8;			// each silhouette edge or cap triangle may create 6 indices (8 > 6)
@@ -809,7 +828,7 @@ void R_CreateLightTriangles( triIndex_t* __restrict lightIndices, triIndex_t* __
 	assert_not_spu_local_store( lightIndices );
 	assert_not_spu_local_store( indexes );
 	
-#if 1
+#if defined(USE_INTRINSICS)
 	
 	const int IN_BUFFER_SIZE = 256;
 	const int OUT_BUFFER_SIZE = IN_BUFFER_SIZE * 2;			// there are never more indices generated than the original indices

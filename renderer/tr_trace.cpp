@@ -3,6 +3,7 @@
 
 Doom 3 BFG Edition GPL Source Code
 Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2013 Robert Beckebans
 
 This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
@@ -44,7 +45,7 @@ static void R_TracePointCullStatic( byte* cullBits, byte& totalOr, const float r
 	assert_16_byte_aligned( cullBits );
 	assert_16_byte_aligned( verts );
 	
-	
+#if defined(USE_INTRINSICS)
 	idODSStreamedArray< idDrawVert, 16, SBT_DOUBLE, 4 > vertsODS( verts, numVerts );
 	
 	const __m128 vector_float_radius	= _mm_splat_ps( _mm_load_ss( &radius ), 0 );
@@ -166,7 +167,45 @@ static void R_TracePointCullStatic( byte* cullBits, byte& totalOr, const float r
 	__m128i vecTotalOrByte = _mm_packus_epi16( vecTotalOrShort, vecTotalOrShort );
 	
 	totalOr = ( byte ) _mm_cvtsi128_si32( vecTotalOrByte );
+#else
 	
+	totalOr = 0;
+	
+	for( int i = 0; i < numVerts; i++ )
+	{
+		byte bits;
+		float d0, d1, d2, d3, t;
+		const idVec3& v = verts[i].xyz;
+	
+		d0 = planes[0].Distance( v );
+		d1 = planes[1].Distance( v );
+		d2 = planes[2].Distance( v );
+		d3 = planes[3].Distance( v );
+	
+		t = d0 + radius;
+		bits  = IEEE_FLT_SIGNBITSET( t ) << 0;
+		t = d1 + radius;
+		bits |= IEEE_FLT_SIGNBITSET( t ) << 1;
+		t = d2 + radius;
+		bits |= IEEE_FLT_SIGNBITSET( t ) << 2;
+		t = d3 + radius;
+		bits |= IEEE_FLT_SIGNBITSET( t ) << 3;
+	
+		t = d0 - radius;
+		bits |= IEEE_FLT_SIGNBITSET( t ) << 4;
+		t = d1 - radius;
+		bits |= IEEE_FLT_SIGNBITSET( t ) << 5;
+		t = d2 - radius;
+		bits |= IEEE_FLT_SIGNBITSET( t ) << 6;
+		t = d3 - radius;
+		bits |= IEEE_FLT_SIGNBITSET( t ) << 7;
+	
+		bits ^= 0x0F;		// flip lower four bits
+	
+		totalOr |= bits;
+		cullBits[i] = bits;
+	}
+#endif
 }
 
 /*
@@ -179,7 +218,7 @@ static void R_TracePointCullSkinned( byte* cullBits, byte& totalOr, const float 
 	assert_16_byte_aligned( cullBits );
 	assert_16_byte_aligned( verts );
 	
-	
+#if defined(USE_INTRINSICS)
 	idODSStreamedArray< idDrawVert, 16, SBT_DOUBLE, 4 > vertsODS( verts, numVerts );
 	
 	const __m128 vector_float_radius	= _mm_splat_ps( _mm_load_ss( &radius ), 0 );
@@ -301,7 +340,44 @@ static void R_TracePointCullSkinned( byte* cullBits, byte& totalOr, const float 
 	__m128i vecTotalOrByte = _mm_packus_epi16( vecTotalOrShort, vecTotalOrShort );
 	
 	totalOr = ( byte ) _mm_cvtsi128_si32( vecTotalOrByte );
+#else
+	totalOr = 0;
 	
+	for( int i = 0; i < numVerts; i++ )
+	{
+		byte bits;
+		float d0, d1, d2, d3, t;
+		const idVec3& v = Scalar_LoadSkinnedDrawVertPosition( verts[i], joints );
+	
+		d0 = planes[0].Distance( v );
+		d1 = planes[1].Distance( v );
+		d2 = planes[2].Distance( v );
+		d3 = planes[3].Distance( v );
+	
+		t = d0 + radius;
+		bits  = IEEE_FLT_SIGNBITSET( t ) << 0;
+		t = d1 + radius;
+		bits |= IEEE_FLT_SIGNBITSET( t ) << 1;
+		t = d2 + radius;
+		bits |= IEEE_FLT_SIGNBITSET( t ) << 2;
+		t = d3 + radius;
+		bits |= IEEE_FLT_SIGNBITSET( t ) << 3;
+	
+		t = d0 - radius;
+		bits |= IEEE_FLT_SIGNBITSET( t ) << 4;
+		t = d1 - radius;
+		bits |= IEEE_FLT_SIGNBITSET( t ) << 5;
+		t = d2 - radius;
+		bits |= IEEE_FLT_SIGNBITSET( t ) << 6;
+		t = d3 - radius;
+		bits |= IEEE_FLT_SIGNBITSET( t ) << 7;
+	
+		bits ^= 0x0F;		// flip lower four bits
+	
+		totalOr |= bits;
+		cullBits[i] = bits;
+	}
+#endif
 }
 
 /*

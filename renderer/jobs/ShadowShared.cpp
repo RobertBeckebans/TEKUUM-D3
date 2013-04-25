@@ -92,7 +92,7 @@ static void R_ShadowVolumeCullBits( byte* cullBits, byte& totalOr, const float r
 	assert_16_byte_aligned( cullBits );
 	assert_16_byte_aligned( verts );
 	
-	
+#if defined(USE_INTRINSICS)
 	idODSStreamedArray< idShadowVert, 16, SBT_DOUBLE, 4 > vertsODS( verts, numVerts );
 	
 	const __m128 vector_float_radius	= _mm_splat_ps( _mm_load_ss( &radius ), 0 );
@@ -214,7 +214,11 @@ static void R_ShadowVolumeCullBits( byte* cullBits, byte& totalOr, const float r
 	__m128i vecTotalOrByte = _mm_packus_epi16( vecTotalOrShort, vecTotalOrShort );
 	
 	totalOr = ( byte ) _mm_cvtsi128_si32( vecTotalOrByte );
+#else
 	
+	// TODO
+	totalOr = 0;
+#endif
 }
 
 /*

@@ -450,9 +450,8 @@ void idRenderLog::Printf( const char* fmt, ... )
 idRenderLog::LogOpenBlock
 ========================
 */
-void idRenderLog::LogOpenBlock( renderLogIndentLabel_t label, const char* fmt, va_list args )
+void idRenderLog::LogOpenBlock( renderLogIndentLabel_t label, const char* fmt, ... )
 {
-
 	uint64 now = Sys_Microseconds();
 	
 	//if( logFile != NULL )

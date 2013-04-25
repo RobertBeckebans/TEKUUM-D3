@@ -74,7 +74,7 @@ R_MatrixMultiply
 */
 void R_MatrixMultiply( const float a[16], const float b[16], float out[16] )
 {
-
+#if defined(USE_INTRINSICS)
 	__m128 a0 = _mm_loadu_ps( a + 0 * 4 );
 	__m128 a1 = _mm_loadu_ps( a + 1 * 4 );
 	__m128 a2 = _mm_loadu_ps( a + 2 * 4 );
@@ -109,7 +109,27 @@ void R_MatrixMultiply( const float a[16], const float b[16], float out[16] )
 	_mm_storeu_ps( out + 1 * 4, t1 );
 	_mm_storeu_ps( out + 2 * 4, t2 );
 	_mm_storeu_ps( out + 3 * 4, t3 );
+#else
+	out[ 0] = b[ 0] * a[ 0] + b[ 1] * a[ 4] + b[ 2] * a[ 8] + b[ 3] * a[12];
+	out[ 1] = b[ 0] * a[ 1] + b[ 1] * a[ 5] + b[ 2] * a[ 9] + b[ 3] * a[13];
+	out[ 2] = b[ 0] * a[ 2] + b[ 1] * a[ 6] + b[ 2] * a[10] + b[ 3] * a[14];
+	out[ 3] = b[ 0] * a[ 3] + b[ 1] * a[ 7] + b[ 2] * a[11] + b[ 3] * a[15];
 	
+	out[ 4] = b[ 4] * a[ 0] + b[ 5] * a[ 4] + b[ 6] * a[ 8] + b[ 7] * a[12];
+	out[ 5] = b[ 4] * a[ 1] + b[ 5] * a[ 5] + b[ 6] * a[ 9] + b[ 7] * a[13];
+	out[ 6] = b[ 4] * a[ 2] + b[ 5] * a[ 6] + b[ 6] * a[10] + b[ 7] * a[14];
+	out[ 7] = b[ 4] * a[ 3] + b[ 5] * a[ 7] + b[ 6] * a[11] + b[ 7] * a[15];
+	
+	out[ 8] = b[ 8] * a[ 0] + b[ 9] * a[ 4] + b[10] * a[ 8] + b[11] * a[12];
+	out[ 9] = b[ 8] * a[ 1] + b[ 9] * a[ 5] + b[10] * a[ 9] + b[11] * a[13];
+	out[10] = b[ 8] * a[ 2] + b[ 9] * a[ 6] + b[10] * a[10] + b[11] * a[14];
+	out[11] = b[ 8] * a[ 3] + b[ 9] * a[ 7] + b[10] * a[11] + b[11] * a[15];
+	
+	out[12] = b[12] * a[ 0] + b[13] * a[ 4] + b[14] * a[ 8] + b[15] * a[12];
+	out[13] = b[12] * a[ 1] + b[13] * a[ 5] + b[14] * a[ 9] + b[15] * a[13];
+	out[14] = b[12] * a[ 2] + b[13] * a[ 6] + b[14] * a[10] + b[15] * a[14];
+	out[15] = b[12] * a[ 3] + b[13] * a[ 7] + b[14] * a[11] + b[15] * a[15];
+#endif
 }
 
 /*

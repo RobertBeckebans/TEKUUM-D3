@@ -490,7 +490,9 @@ static void R_CheckPortableExtensions()
 #if defined(USE_ANGLE)
 	glConfig.timerQueryAvailable = false;
 #else
-	glConfig.timerQueryAvailable = GLEW_ARB_timer_query != 0 || GLEW_EXT_timer_query != 0;
+	// RB: added intel check
+	glConfig.timerQueryAvailable = ( GLEW_ARB_timer_query != 0 || GLEW_EXT_timer_query != 0 ) && ( glConfig.vendor != VENDOR_INTEL || r_skipIntelWorkarounds.GetBool() );
+	// RB end
 #endif
 	
 	// GL_OES_vertex_half_float

@@ -177,6 +177,10 @@ void idGLWidget::OnPaint()
 	{
 	}
 	
+	// RB: go back to fixed function pipeline
+	renderProgManager.Unbind();
+	// RB end
+	
 	glViewport( 0, 0, rect.Width(), rect.Height() );
 	glScissor( 0, 0, rect.Width(), rect.Height() );
 	glMatrixMode( GL_PROJECTION );

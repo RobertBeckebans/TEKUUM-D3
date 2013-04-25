@@ -3,6 +3,7 @@
 
 Doom 3 GPL Source Code
 Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2012 Robert Beckebans
 
 This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
 
@@ -28,7 +29,7 @@ If you have questions concerning this license or the applicable additional terms
 #include "../../idlib/precompiled.h"
 #include "../posix/posix_public.h"
 #include "../sys_local.h"
-#include "local.h"
+//#include "local.h"
 
 #include <pthread.h>
 #include <errno.h>
@@ -36,6 +37,13 @@ If you have questions concerning this license or the applicable additional terms
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <fcntl.h>
+
+// DG: needed for Sys_ReLaunch()
+#include <dirent.h>
+
+static const char** cmdargv = NULL;
+static int cmdargc = 0;
+// DG end
 
 #ifdef ID_MCHECK
 #include <mcheck.h>
@@ -90,7 +98,7 @@ void Sys_AsyncThread()
 		elapsed = Sys_Milliseconds() - start;
 		if( elapsed < 0x10 )
 		{
-			usleep( 0x10 - elapsed );
+			usleep( ( 0x10 - elapsed ) * 1000 );
 		}
 	}
 #elif 1
@@ -438,6 +446,108 @@ double Sys_ClockTicksPerSecond()
 }
 
 /*
+========================
+Sys_CPUCount
+
+numLogicalCPUCores	- the number of logical CPU per core
+numPhysicalCPUCores	- the total number of cores per package
+numCPUPackages		- the total number of packages (physical processors)
+========================
+*/
+// RB begin
+void Sys_CPUCount( int& numLogicalCPUCores, int& numPhysicalCPUCores, int& numCPUPackages )
+{
+	static bool		init = false;
+	static double	ret;
+	
+	static int		s_numLogicalCPUCores;
+	static int		s_numPhysicalCPUCores;
+	static int		s_numCPUPackages;
+	
+	int		fd, len, pos, end;
+	char	buf[ 4096 ];
+	char	number[100];
+	
+	if( init )
+	{
+		numPhysicalCPUCores = s_numPhysicalCPUCores;
+		numLogicalCPUCores = s_numLogicalCPUCores;
+		numCPUPackages = s_numCPUPackages;
+	}
+	
+	s_numPhysicalCPUCores = 1;
+	s_numLogicalCPUCores = 1;
+	s_numCPUPackages = 1;
+	
+	fd = open( "/proc/cpuinfo", O_RDONLY );
+	if( fd != -1 )
+	{
+		len = read( fd, buf, 4096 );
+		close( fd );
+		pos = 0;
+		while( pos < len )
+		{
+			if( !idStr::Cmpn( buf + pos, "processor", 9 ) )
+			{
+				pos = strchr( buf + pos, ':' ) - buf + 2;
+				end = strchr( buf + pos, '\n' ) - buf;
+				if( pos < len && end < len )
+				{
+					idStr::Copynz( number, buf + pos, sizeof( number ) );
+					assert( ( end - pos ) > 0 && ( end - pos ) < sizeof( number ) );
+					number[ end - pos ] = '\0';
+					
+					int processor = atoi( number );
+					
+					if( ( processor + 1 ) > s_numPhysicalCPUCores )
+					{
+						s_numPhysicalCPUCores = processor + 1;
+					}
+				}
+				else
+				{
+					common->Printf( "failed parsing /proc/cpuinfo\n" );
+					break;
+				}
+			}
+			else if( !idStr::Cmpn( buf + pos, "core id", 7 ) )
+			{
+				pos = strchr( buf + pos, ':' ) - buf + 2;
+				end = strchr( buf + pos, '\n' ) - buf;
+				if( pos < len && end < len )
+				{
+					idStr::Copynz( number, buf + pos, sizeof( number ) );
+					assert( ( end - pos ) > 0 && ( end - pos ) < sizeof( number ) );
+					number[ end - pos ] = '\0';
+					
+					int coreId = atoi( number );
+					
+					if( ( coreId + 1 ) > s_numLogicalCPUCores )
+					{
+						s_numLogicalCPUCores = coreId + 1;
+					}
+				}
+				else
+				{
+					common->Printf( "failed parsing /proc/cpuinfo\n" );
+					break;
+				}
+			}
+			
+			pos = strchr( buf + pos, '\n' ) - buf + 1;
+		}
+	}
+	
+	common->Printf( "/proc/cpuinfo CPU processors: %d\n", s_numPhysicalCPUCores );
+	common->Printf( "/proc/cpuinfo CPU logical cores: %d\n", s_numLogicalCPUCores );
+	
+	numPhysicalCPUCores = s_numPhysicalCPUCores;
+	numLogicalCPUCores = s_numLogicalCPUCores;
+	numCPUPackages = s_numCPUPackages;
+}
+// RB end
+
+/*
 ================
 Sys_GetSystemRam
 returns in megabytes
@@ -465,6 +575,8 @@ int Sys_GetSystemRam()
 	mb = ( mb + 8 ) & ~15;
 	return mb;
 }
+
+
 
 /*
 ==================
@@ -674,6 +786,101 @@ void abrt_func( mcheck_status status )
 
 #endif
 
+
+/*
+========================
+Sys_GetCmdLine
+========================
+*/
+const char* Sys_GetCmdLine()
+{
+	// DG: don't use this, use cmdargv and cmdargc instead!
+	return "TODO Sys_GetCmdLine";
+}
+
+/*
+========================
+Sys_ReLaunch
+========================
+*/
+#if 0
+void Sys_ReLaunch()
+{
+	// DG: implementing this... basic old fork() exec() (+ setsid()) routine..
+	// NOTE: this function used to have parameters: the commandline arguments, but as one string..
+	//       for Linux/Unix we want one char* per argument so we'll just add the friggin'
+	//       " +set com_skipIntroVideos 1" to the other commandline arguments in this function.
+	
+	int ret = fork();
+	if( ret < 0 )
+		idLib::Error( "Sys_ReLaunch(): Couldn't fork(), reason: %s ", strerror( errno ) );
+		
+	if( ret == 0 )
+	{
+		// child process
+		
+		// get our own session so we don't depend on the (soon to be killed)
+		// parent process anymore - else we'll freeze
+		pid_t sId = setsid();
+		if( sId == ( pid_t ) - 1 )
+		{
+			idLib::Error( "Sys_ReLaunch(): setsid() failed! Reason: %s ", strerror( errno ) );
+		}
+		
+		// close all FDs (except for stdin/out/err) so we don't leak FDs
+		DIR* devfd = opendir( "/dev/fd" );
+		if( devfd != NULL )
+		{
+			struct dirent entry;
+			struct dirent* result;
+			while( readdir_r( devfd, &entry, &result ) == 0 )
+			{
+				const char* filename = result->d_name;
+				char* endptr = NULL;
+				long int fd = strtol( filename, &endptr, 0 );
+				if( endptr != filename && fd > STDERR_FILENO )
+					close( fd );
+			}
+		}
+		else
+		{
+			idLib::Warning( "Sys_ReLaunch(): Couldn't open /dev/fd/ - will leak file descriptors. Reason: %s", strerror( errno ) );
+		}
+		
+		// + 3 because "+set" "com_skipIntroVideos" "1" - and note that while we'll skip
+		// one (the first) cmdargv argument, we need one more pointer for NULL at the end.
+		int argc = cmdargc + 3;
+		const char** argv = ( const char** )calloc( argc, sizeof( char* ) );
+		
+		int i;
+		for( i = 0; i < cmdargc - 1; ++i )
+			argv[i] = cmdargv[i + 1]; // ignore cmdargv[0] == executable name
+			
+		// add +set com_skipIntroVideos 1
+		argv[i++] = "+set";
+		argv[i++] = "com_skipIntroVideos";
+		argv[i++] = "1";
+		// execv expects NULL terminated array
+		argv[i] = NULL;
+		
+		const char* exepath = Sys_EXEPath();
+		
+		errno = 0;
+		execv( exepath, ( char** )argv );
+		// we only get here if execv() fails, else the executable is restarted
+		idLib::Error( "Sys_ReLaunch(): WTF exec() failed! Reason: %s ", strerror( errno ) );
+		
+	}
+	else
+	{
+		// original process
+		// just do a clean shutdown
+		cmdSystem->AppendCommandText( "quit\n" );
+	}
+	// DG end
+}
+#endif
+
 /*
 ===============
 main
@@ -681,6 +888,10 @@ main
 */
 int main( int argc, const char** argv )
 {
+	// DG: needed for Sys_ReLaunch()
+	cmdargc = argc;
+	cmdargv = argv;
+	// DG end
 #ifdef ID_MCHECK
 	// must have -lmcheck linkage
 	mcheck( abrt_func );

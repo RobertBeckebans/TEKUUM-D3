@@ -213,15 +213,17 @@ void CCamWnd::OnPaint()
 	CPaintDC	dc( this );	// device context for painting
 	bool		bPaint = true;
 	
-	// RB begin
-	if( !wglMakeCurrent( dc.m_hDC, hGLRC ) )
-		// RB end
+	if( !wglMakeCurrent( dc.m_hDC, win32.hGLRC ) )
 	{
 		common->Printf( "ERROR: wglMakeCurrent failed..\n " );
 		common->Printf( "Please restart " EDITOR_WINDOWTEXT " if the camera view is not working\n" );
 	}
 	else
 	{
+		// RB: go back to fixed function pipeline
+		renderProgManager.Unbind();
+		// RB end
+		
 		QE_CheckOpenGLForErrors();
 		g_pSplitList = NULL;
 		if( g_bClipMode )
@@ -236,9 +238,6 @@ void CCamWnd::OnPaint()
 		QE_CheckOpenGLForErrors();
 		SwapBuffers( dc.m_hDC );
 	}
-	// RB begin
-	wglMakeCurrent( NULL, NULL );
-	// RB end
 }
 
 /*
@@ -356,19 +355,6 @@ void CCamWnd::OnRButtonUp( UINT nFlags, CPoint point )
 	OriginalMouseUp( nFlags, point );
 }
 
-// RB begin
-void CCamWnd::ToggleContext( bool active )
-{
-	CPaintDC	dc( this );	// device context for painting
-	
-	
-	if( active )
-		wglMakeCurrent( dc.m_hDC, hGLRC );
-	else
-		wglMakeCurrent( NULL, NULL );
-}
-// RB end
-
 /*
  =======================================================================================================================
  =======================================================================================================================
@@ -380,16 +366,10 @@ int CCamWnd::OnCreate( LPCREATESTRUCT lpCreateStruct )
 		return -1;
 	}
 	
-	// RB begin
-	wglMakeCurrent( NULL, NULL );
-	
 	CDC* pDC = GetDC();
 	HDC hDC = pDC->GetSafeHdc();
 	
 	QEW_SetupPixelFormat( hDC, true );
-	hGLRC = wglCreateContext( hDC );
-	wglShareLists( hGLRC, win32.hGLRC );
-	// RB end
 	
 	HFONT hfont = CreateFont(
 					  12,	// logical height of font
@@ -415,9 +395,7 @@ int CCamWnd::OnCreate( LPCREATESTRUCT lpCreateStruct )
 	
 	HFONT hOldFont = ( HFONT )SelectObject( hDC, hfont );
 	
-	// RB begin
-	wglMakeCurrent( hDC, hGLRC );
-	// RB end
+	wglMakeCurrent( hDC, win32.hGLRC );
 	
 	if( ( g_qeglobals.d_font_list = glGenLists( 256 ) ) == 0 )
 	{
@@ -2365,9 +2343,7 @@ void CCamWnd::Cam_Render()
 		return;					// not valid yet
 	}
 	
-	// RB begin
-	if( !wglMakeCurrent( dc.m_hDC, hGLRC ) )
-		// RB end
+	if( !wglMakeCurrent( dc.m_hDC, win32.hGLRC ) )
 	{
 		common->Printf( "ERROR: wglMakeCurrent failed..\n " );
 		common->Printf( "Please restart " EDITOR_WINDOWTEXT " if the camera view is not working\n" );

@@ -234,11 +234,6 @@ protected:
 	void					BracedSectionAdjustEndTabs();
 	void					BracedSectionShow();
 	void					BracedSectionHide();
-	
-// RB begin
-	static DWORD __stdcall	MEditStreamInCallback( DWORD dwCookie, LPBYTE pbBuff, LONG cb, LONG* pcb );
-	static DWORD __stdcall	MEditStreamOutCallback( DWORD dwCookie, LPBYTE pbBuff, LONG cb, LONG* pcb );
-// RB end
 };
 
 #endif /* !__CSYNTAXRICHEDITCTR_H__ */

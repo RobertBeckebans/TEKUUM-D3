@@ -145,11 +145,6 @@ int CNewTexWnd::OnCreate( LPCREATESTRUCT lpCreateStruct )
 	hdcTexture = GetDC();
 	QEW_SetupPixelFormat( hdcTexture->m_hDC, false );
 	
-	// RB begin
-	hGLRC = wglCreateContext( hdcTexture->m_hDC );
-	wglShareLists( hGLRC, win32.hGLRC );
-	// RB end
-	
 	EnableToolTips( TRUE );
 	EnableTrackingToolTips( TRUE );
 	
@@ -280,15 +275,17 @@ void CNewTexWnd::OnPaint()
 	int nOld = g_qeglobals.d_texturewin.m_nTotalHeight;
 	
 	//hdcTexture = GetDC();
-	
-	// RB begin
-	if( !wglMakeCurrent( dc.GetSafeHdc(), hGLRC ) )
-		// RB end
+	if( !wglMakeCurrent( dc.GetSafeHdc(), win32.hGLRC ) )
 	{
 		common->Printf( "ERROR: wglMakeCurrent failed..\n " );
 	}
 	else
 	{
+		// RB: go back to fixed function pipeline
+		renderProgManager.Unbind();
+		glEnable( GL_TEXTURE_2D );
+		// RB end
+		
 		const char*	name;
 		glClearColor
 		(
@@ -399,7 +396,11 @@ void CNewTexWnd::OnPaint()
 		
 		// reset the current texture
 		globalImages->BindNull();
+		
+		glDisable( GL_TEXTURE_2D );
+		
 		glFinish();
+		
 		SwapBuffers( dc.GetSafeHdc() );
 		TRACE( "Texture Paint\n" );
 	}
@@ -411,10 +412,6 @@ void CNewTexWnd::OnPaint()
 	}
 	
 	//ReleaseDC(hdcTexture);
-	
-	// RB begin
-	wglMakeCurrent( NULL, NULL );
-	// RB end
 }
 
 /*
