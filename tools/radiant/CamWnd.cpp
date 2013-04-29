@@ -1467,6 +1467,9 @@ void CCamWnd::BuildEntityRenderState( entity_t* ent, bool update )
 			}
 			
 			bmodel->FinishSurfaces();
+			// RB begin
+			bmodel->CreateVertexCache();
+			// RB end
 			
 			renderModelManager->AddModel( bmodel );
 			
@@ -2002,6 +2005,9 @@ void CCamWnd::BuildRendererState()
 	
 	// bound and clean the triangles
 	worldModel->FinishSurfaces();
+	// RB begin
+	worldModel->CreateVertexCache();
+	// RB end
 	
 	// the worldEntity just has the handle for the worldModel
 	memset( &worldEntity, 0, sizeof( worldEntity ) );
@@ -2037,6 +2043,11 @@ void CCamWnd::BuildRendererState()
 	
 	//common->Printf("Render data used %d brushes\n", numBrushes);
 	worldDirty = false;
+	
+	// RB: avoid crash in R_AddSingleLight
+	g_qeglobals.rw->GenerateAllInteractions();
+	// RB end
+	
 	UpdateCaption();
 }
 

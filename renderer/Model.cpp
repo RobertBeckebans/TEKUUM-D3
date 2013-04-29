@@ -3164,6 +3164,25 @@ void idRenderModelStatic::PurgeModel()
 	purged = true;
 }
 
+
+// RB begin
+void idRenderModelStatic::CreateVertexCache()
+{
+	if( IsLoaded() )
+	{
+		for( int j = 0; j < surfaces.Num(); j++ )
+		{
+			srfTriangles_t* tri = surfaces[j].geometry;
+			if( tri == NULL )
+			{
+				continue;
+			}
+			R_CreateStaticBuffersForTri( *tri );
+		}
+	}
+}
+// RB end
+
 /*
 ==============
 idRenderModelStatic::FreeVertexCache

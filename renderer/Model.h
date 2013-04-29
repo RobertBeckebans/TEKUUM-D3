@@ -214,6 +214,10 @@ public:
 	// are kept loaded
 	virtual void				TouchData() = 0;
 	
+	// RB begin
+	virtual void				CreateVertexCache() = 0;
+	// RB end
+	
 	// dump any ambient caches on the model surfaces
 	virtual void				FreeVertexCache() = 0;
 	

@@ -488,6 +488,9 @@ void idGLDrawableMaterial::draw( int x, int y, int w, int h )
 			// RB end
 			
 			worldModel->FinishSurfaces();
+			// RB begin
+			worldModel->CreateVertexCache();
+			// RB end
 			
 			renderEntity_t worldEntity;
 			
