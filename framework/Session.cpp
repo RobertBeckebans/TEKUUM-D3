@@ -2906,7 +2906,7 @@ void idSessionLocal::UpdateScreen( bool captureToImage, bool outOfSequence, bool
 		// this should exit right after vsync, with the GPU idle and ready to draw
 		const emptyCommand_t* cmd;
 		
-		if( com_speeds.GetBool() )
+		if( com_speeds.GetBool() || com_showFPS.GetInteger() == 1 )
 		{
 			cmd = renderSystem->SwapCommandBuffers( &time_frontend, &time_backend, &time_shadows, &time_gpu );
 		}

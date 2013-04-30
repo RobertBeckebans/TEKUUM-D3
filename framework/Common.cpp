@@ -30,6 +30,7 @@ If you have questions concerning this license or the applicable additional terms
 #pragma hdrstop
 
 #include "../renderer/Image.h"
+#include "ConsoleHistory.h"
 
 #define	MAX_PRINT_MSG_SIZE	4096
 #define MAX_WARNING_LIST	256
@@ -86,11 +87,11 @@ idCVar com_developer( "developer", "0", CVAR_BOOL | CVAR_SYSTEM | CVAR_NOCHEAT, 
 idCVar com_allowConsole( "com_allowConsole", "1", CVAR_BOOL | CVAR_SYSTEM | CVAR_NOCHEAT, "allow toggling console with the tilde key" );
 idCVar com_speeds( "com_speeds", "0", CVAR_BOOL | CVAR_SYSTEM | CVAR_NOCHEAT, "show engine timings" );
 #if defined(__ANDROID__)
-idCVar com_showFPS( "com_showFPS", "1", CVAR_BOOL | CVAR_SYSTEM | CVAR_NOCHEAT, "show frames rendered per second" );
+idCVar com_showFPS( "com_showFPS", "2", CVAR_INTEGER | CVAR_SYSTEM | CVAR_NOCHEAT, "show frames rendered per second. 0: off 1: default bfg values, 2: only show FPS (classic view)" );
 idCVar com_showMemoryUsage( "com_showMemoryUsage", "1", CVAR_BOOL | CVAR_SYSTEM | CVAR_NOCHEAT, "show total and per frame memory usage" );
 idCVar com_logFile( "logFile", "1", CVAR_SYSTEM | CVAR_NOCHEAT, "1 = buffer log, 2 = flush after each print", 0, 2, idCmdSystem::ArgCompletion_Integer<0, 2> );
 #else
-idCVar com_showFPS( "com_showFPS", "0", CVAR_BOOL | CVAR_SYSTEM | CVAR_ARCHIVE | CVAR_NOCHEAT, "show frames rendered per second" );
+idCVar com_showFPS( "com_showFPS", "0", CVAR_INTEGER | CVAR_SYSTEM | CVAR_ARCHIVE | CVAR_NOCHEAT, "show frames rendered per second. 0: off 1: default bfg values, 2: only show FPS (classic view)" );
 idCVar com_showMemoryUsage( "com_showMemoryUsage", "0", CVAR_BOOL | CVAR_SYSTEM | CVAR_NOCHEAT, "show total and per frame memory usage" );
 idCVar com_logFile( "logFile", "0", CVAR_SYSTEM | CVAR_NOCHEAT, "1 = buffer log, 2 = flush after each print", 0, 2, idCmdSystem::ArgCompletion_Integer<0, 2> );
 #endif
@@ -109,6 +110,7 @@ idCVar com_productionMode( "com_productionMode", "0", CVAR_SYSTEM | CVAR_BOOL, "
 idCVar com_product_lang_ext( "com_product_lang_ext", "1", CVAR_INTEGER | CVAR_SYSTEM | CVAR_ARCHIVE, "Extension to use when creating language files." );
 
 // com_speeds times
+int				com_frameMsec;
 int				time_gameFrame;
 int				time_gameDraw;
 uint64			time_frontend;			// renderSystem frontend time
@@ -3058,13 +3060,18 @@ void idCommonLocal::Frame()
 		}
 		
 		// report timing information
-		if( com_speeds.GetBool() )
+		if( com_speeds.GetBool() || com_showFPS.GetInteger() == 1 )
 		{
 			static int	lastTime;
 			int		nowTime = Sys_Milliseconds();
-			int		com_frameMsec = nowTime - lastTime;
+			com_frameMsec = nowTime - lastTime;
 			lastTime = nowTime;
-			Printf( "frame:%i all:%3i gfr:%3i rf:%3i bk:%3i\n", com_frameNumber, com_frameMsec, time_gameFrame, time_frontend, time_backend );
+			
+			if( com_speeds.GetBool() )
+			{
+				Printf( "frame:%i all:%3i gfr:%3i rf:%3i bk:%3i\n", com_frameNumber, com_frameMsec, time_gameFrame, time_frontend, time_backend );
+			}
+			
 			time_gameFrame = 0;
 			time_gameDraw = 0;
 		}
@@ -3617,7 +3624,7 @@ void idCommonLocal::InitGame()
 	*/
 	
 	// load the font, etc
-	console->LoadGraphics();
+	//console->LoadGraphics();
 	
 	// init journalling, etc
 	eventLoop->Init();
@@ -3735,6 +3742,10 @@ void idCommonLocal::InitGame()
 #else
 	PrintLoadingMessage( common->GetLanguageDict()->GetString( "#str_04351" ) );
 #endif
+	
+	// RB: load the console history file
+	consoleHistory.LoadHistoryFile();
+	// RB end
 	
 	// init the session
 	session->Init();

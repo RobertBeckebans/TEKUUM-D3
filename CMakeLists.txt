@@ -480,7 +480,6 @@ file(GLOB GAME_GAMESYS_INCLUDES game/gamesys/*.h)
 set(GAME_GAMESYS_SOURCES
 	#game/gamesys/Callbacks.cpp
 	game/gamesys/Class.cpp
-	game/gamesys/DebugGraph.cpp
 	game/gamesys/Event.cpp
 	game/gamesys/SaveGame.cpp
 	game/gamesys/SysCmds.cpp
