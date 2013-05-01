@@ -728,6 +728,10 @@ void CEntityDlg::AddProp()
 				bo = selected_brushes.next->modelHandle->Bounds( NULL );
 			}
 			
+			// RB begin
+			selected_brushes.next->modelHandle->CreateVertexCache();
+			// RB end
+			
 			VectorCopy( bo[0], mins );
 			VectorCopy( bo[1], maxs );
 			VectorAdd( mins, editEntity->origin, mins );

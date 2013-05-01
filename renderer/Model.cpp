@@ -3177,7 +3177,11 @@ void idRenderModelStatic::CreateVertexCache()
 			{
 				continue;
 			}
-			R_CreateStaticBuffersForTri( *tri );
+			
+			if( !vertexCache.CacheIsCurrent( tri->ambientCache ) )
+			{
+				R_CreateStaticBuffersForTri( *tri );
+			}
 		}
 	}
 }

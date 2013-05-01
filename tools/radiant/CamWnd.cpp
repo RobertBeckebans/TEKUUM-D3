@@ -1503,6 +1503,10 @@ void CCamWnd::BuildEntityRenderState( entity_t* ent, bool update )
 				}
 				const idVec3& offset = gameEdit->ANIM_GetModelOffsetFromEntityDef( spawnArgs.GetString( "classname" ) );
 				gameEdit->ANIM_CreateAnimFrame( md5, anim, refent.numJoints, refent.joints, ( frame * 1000 ) / 24, offset, false );
+				
+				// RB begin
+				md5->CreateVertexCache();
+				// RB end
 			}
 			if( ent->modelDef >= 0 )
 			{
@@ -2041,6 +2045,10 @@ void CCamWnd::BuildRendererState()
 		BuildEntityRenderState( ent, false );
 	}
 	
+	// RB begin
+	renderModelManager->CreateModelVertexCaches();
+	// RB end
+	
 	//common->Printf("Render data used %d brushes\n", numBrushes);
 	worldDirty = false;
 	
@@ -2380,6 +2388,13 @@ void CCamWnd::Cam_Render()
 	// render it
 	//renderSystem->BeginFrame( m_Camera.width, m_Camera.height );
 	
+	int oldNativeScreenWidth = glConfig.nativeScreenWidth;
+	int oldNativeScreenHeight = glConfig.nativeScreenHeight;
+	
+	glConfig.nativeScreenWidth = m_Camera.width;
+	glConfig.nativeScreenHeight = m_Camera.height;
+	
+	
 	memset( &refdef, 0, sizeof( refdef ) );
 	refdef.vieworg = m_Camera.origin;
 	
@@ -2405,6 +2420,9 @@ void CCamWnd::Cam_Render()
 
 	const emptyCommand_t* cmd = renderSystem->SwapCommandBuffers( NULL, NULL, NULL, NULL );
 	renderSystem->RenderCommandBuffers( cmd );
+	
+	glConfig.nativeScreenWidth = oldNativeScreenWidth;
+	glConfig.nativeScreenHeight = oldNativeScreenHeight;
 	
 	// RB end
 	

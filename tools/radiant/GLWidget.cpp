@@ -520,6 +520,12 @@ void idGLDrawableMaterial::draw( int x, int y, int w, int h )
 		// render it
 		//renderSystem->BeginFrame( w, h );
 		
+		int oldNativeScreenWidth = glConfig.nativeScreenWidth;
+		int oldNativeScreenHeight = glConfig.nativeScreenHeight;
+		
+		glConfig.nativeScreenWidth = w;
+		glConfig.nativeScreenHeight = h;
+		
 		memset( &refdef, 0, sizeof( refdef ) );
 		refdef.vieworg.Set( viewAngle, 0, 0 );
 		
@@ -543,6 +549,9 @@ void idGLDrawableMaterial::draw( int x, int y, int w, int h )
 		
 		const emptyCommand_t* cmd = renderSystem->SwapCommandBuffers( NULL, NULL, NULL, NULL );
 		renderSystem->RenderCommandBuffers( cmd );
+		
+		glConfig.nativeScreenWidth = oldNativeScreenWidth;
+		glConfig.nativeScreenHeight = oldNativeScreenHeight;
 		
 		glMatrixMode( GL_MODELVIEW );
 		glLoadIdentity();
@@ -794,6 +803,7 @@ void idGLDrawableModel::draw( int x, int y, int w, int h )
 		
 		// RB: avoid crash in R_AddSingleLight
 		world->GenerateAllInteractions();
+		worldModel->CreateVertexCache();
 		// RB end
 		
 		worldDirty = false;
@@ -805,6 +815,12 @@ void idGLDrawableModel::draw( int x, int y, int w, int h )
 	
 	// render it
 	//renderSystem->BeginFrame( w, h );
+	
+	int oldNativeScreenWidth = glConfig.nativeScreenWidth;
+	int oldNativeScreenHeight = glConfig.nativeScreenHeight;
+	
+	glConfig.nativeScreenWidth = w;
+	glConfig.nativeScreenHeight = h;
 	
 	memset( &refdef, 0, sizeof( refdef ) );
 	refdef.vieworg.Set( zOffset, xOffset, -yOffset );
@@ -828,6 +844,9 @@ void idGLDrawableModel::draw( int x, int y, int w, int h )
 	
 	const emptyCommand_t* cmd = renderSystem->SwapCommandBuffers( NULL, NULL, NULL, NULL );
 	renderSystem->RenderCommandBuffers( cmd );
+	
+	glConfig.nativeScreenWidth = oldNativeScreenWidth;
+	glConfig.nativeScreenHeight = oldNativeScreenHeight;
 	
 	glMatrixMode( GL_MODELVIEW );
 	glLoadIdentity();
@@ -997,11 +1016,20 @@ void idGLDrawableConsole::draw( int x, int y, int w, int h )
 	// RB: BFG interface
 	//renderSystem->BeginFrame( w, h );
 	
+	int oldNativeScreenWidth = glConfig.nativeScreenWidth;
+	int oldNativeScreenHeight = glConfig.nativeScreenHeight;
+	
+	glConfig.nativeScreenWidth = w;
+	glConfig.nativeScreenHeight = h;
+	
 	console->Draw( true );
 	
 	//renderSystem->EndFrame( NULL, NULL );
 	const emptyCommand_t* cmd = renderSystem->SwapCommandBuffers( NULL, NULL, NULL, NULL );
 	renderSystem->RenderCommandBuffers( cmd );
+	
+	glConfig.nativeScreenWidth = oldNativeScreenWidth;
+	glConfig.nativeScreenHeight = oldNativeScreenHeight;
 	
 	// RB end
 	
