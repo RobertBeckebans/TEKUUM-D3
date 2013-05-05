@@ -94,6 +94,9 @@ void idRenderProgManager::Init()
 		{ BUILTIN_TEXTURE_VERTEXCOLOR, "texture_color.vfp" },
 		{ BUILTIN_TEXTURE_VERTEXCOLOR_SKINNED, "texture_color_skinned.vfp" },
 		{ BUILTIN_TEXTURE_TEXGEN_VERTEXCOLOR, "texture_color_texgen.vfp" },
+		// RB begin
+		{ BUILTIN_TEXTURE_YCOCG, "texture_ycocg.vfp" },
+		// RB end
 		{ BUILTIN_INTERACTION, "interaction.vfp" },
 		{ BUILTIN_INTERACTION_SKINNED, "interaction_skinned.vfp" },
 		{ BUILTIN_INTERACTION_AMBIENT, "interactionAmbient.vfp" },
@@ -356,6 +359,13 @@ void idRenderProgManager::Unbind()
 	
 	glUseProgram( 0 );
 }
+
+// RB begin
+bool idRenderProgManager::IsShaderBound() const
+{
+	return ( currentVertexShader != -1 );
+}
+// RB end
 
 /*
 ================================================================================================

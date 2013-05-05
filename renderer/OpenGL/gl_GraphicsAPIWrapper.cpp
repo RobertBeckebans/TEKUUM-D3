@@ -198,6 +198,7 @@ void GL_GetDepthPassRect( idScreenRect& rect )
 GL_Color
 ====================
 */
+/*
 void GL_Color( float* color )
 {
 	if( color == NULL )
@@ -206,6 +207,19 @@ void GL_Color( float* color )
 	}
 	GL_Color( color[0], color[1], color[2], color[3] );
 }
+*/
+
+// RB begin
+void GL_Color( const idVec3& color )
+{
+	GL_Color( color[0], color[1], color[2], 1.0f );
+}
+
+void GL_Color( const idVec4& color )
+{
+	GL_Color( color[0], color[1], color[2], color[3] );
+}
+// RB end
 
 /*
 ====================

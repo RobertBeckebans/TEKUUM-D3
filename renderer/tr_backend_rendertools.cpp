@@ -84,8 +84,6 @@ int				rb_debugPolygonTime = 0;
 
 static void RB_DrawText( const char* text, const idVec3& origin, float scale, const idVec4& color, const idMat3& viewAxis, const int align );
 
-void RB_SetMVP( const idRenderMatrix& mvp );
-
 /*
 ================
 RB_DrawBounds
@@ -294,16 +292,16 @@ stencil buffer.  Stencil of 0 = black, 1 = red, 2 = green,
 static void R_ColorByStencilBuffer()
 {
 	int		i;
-	static float	colors[8][3] =
+	static idVec3	colors[8] =
 	{
-		{0, 0, 0},
-		{1, 0, 0},
-		{0, 1, 0},
-		{0, 0, 1},
-		{0, 1, 1},
-		{1, 0, 1},
-		{1, 1, 0},
-		{1, 1, 1},
+		idVec3( 0, 0, 0 ),
+		idVec3( 1, 0, 0 ),
+		idVec3( 0, 1, 0 ),
+		idVec3( 0, 0, 1 ),
+		idVec3( 0, 1, 1 ),
+		idVec3( 1, 0, 1 ),
+		idVec3( 1, 1, 0 ),
+		idVec3( 1, 1, 1 ),
 	};
 	
 	// clear color buffer to white (>6 passes)
@@ -875,7 +873,7 @@ static void RB_ShowTris( drawSurf_t** drawSurfs, int numDrawSurfs )
 		return;
 	}
 	
-	float color[4] = { 1, 1, 1, 1 };
+	idVec4 color( 1, 1, 1, 1 );
 	
 	GL_PolygonOffset( -1.0f, -2.0f );
 	

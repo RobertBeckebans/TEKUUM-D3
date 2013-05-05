@@ -1362,6 +1362,7 @@ TR_BACKEND_DRAW
 ============================================================
 */
 
+void RB_SetMVP( const idRenderMatrix& mvp );
 void RB_DrawElementsWithCounters( const drawSurf_t* surf );
 void RB_DrawViewInternal( const viewDef_t* viewDef, const int stereoEye );
 void RB_DrawView( const void* data, const int stereoEye );

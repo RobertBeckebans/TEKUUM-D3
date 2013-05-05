@@ -49,7 +49,6 @@ static int		swapIndex;		// 0 or 1 into renderSync
 static GLsync	renderSync[2];
 
 void GLimp_SwapBuffers();
-void RB_SetMVP( const idRenderMatrix& mvp );
 
 /*
 ============================================================================

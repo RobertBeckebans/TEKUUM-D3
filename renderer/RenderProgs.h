@@ -187,6 +187,13 @@ public:
 		BindShader_Builtin( BUILTIN_TEXTURE_TEXGEN_VERTEXCOLOR );
 	};
 	
+	// RB begin
+	void	BindShader_TextureYCoCG()
+	{
+		BindShader_Builtin( BUILTIN_TEXTURE_YCOCG );
+	};
+	// RB end
+	
 	void	BindShader_Interaction()
 	{
 		BindShader_Builtin( BUILTIN_INTERACTION );
@@ -355,6 +362,10 @@ public:
 	// unbind the currently bound render program
 	void	Unbind();
 	
+	// RB begin
+	bool	IsShaderBound() const;
+	// RB end
+	
 	// this should only be called via the reload shader console command
 	void	LoadAllShaders();
 	void	KillAllShaders();
@@ -386,6 +397,9 @@ protected:
 		BUILTIN_TEXTURE_VERTEXCOLOR,
 		BUILTIN_TEXTURE_VERTEXCOLOR_SKINNED,
 		BUILTIN_TEXTURE_TEXGEN_VERTEXCOLOR,
+		// RB begin
+		BUILTIN_TEXTURE_YCOCG,
+		// RB end
 		BUILTIN_INTERACTION,
 		BUILTIN_INTERACTION_SKINNED,
 		BUILTIN_INTERACTION_AMBIENT,
