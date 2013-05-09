@@ -1133,6 +1133,11 @@ void CCamWnd::Cam_Draw()
 	
 	RB_SetMVP( mvp );
 #endif
+	
+	//glGetFloatv( GL_CURRENT_COLOR, g_qeglobals.d_currentColor.ToFloatPtr() );
+	g_qeglobals.d_currentColor = colorWhite;
+	glColor4fv( colorWhite.ToFloatPtr() );
+	GL_Color( colorWhite );
 	// RB end
 	
 	for( brush = active_brushes.next; brush != &active_brushes; brush = brush->next )
@@ -1207,6 +1212,9 @@ void CCamWnd::Cam_Draw()
 	
 	// RB begin
 	GL_Color( g_qeglobals.d_savedinfo.colors[COLOR_SELBRUSHES][0], g_qeglobals.d_savedinfo.colors[COLOR_SELBRUSHES][1], g_qeglobals.d_savedinfo.colors[COLOR_SELBRUSHES][2], 0.25f );
+	
+	g_qeglobals.d_currentColor = g_qeglobals.d_savedinfo.colors[COLOR_SELBRUSHES];
+	g_qeglobals.d_currentColor.w = 0.25f;
 	
 	//renderProgManager.BindShader_Color();
 	//renderProgManager.CommitUniforms();

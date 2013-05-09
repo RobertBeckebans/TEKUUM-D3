@@ -4654,8 +4654,10 @@ void Brush_DrawModel( brush_t* b, bool camera, bool bSelected )
 		
 		Entity_GetRotationMatrixAngles( b->owner, axis, angles );
 		
-		idVec4	colorSave;
-		glGetFloatv( GL_CURRENT_COLOR, colorSave.ToFloatPtr() );
+		// RB: avoid glGetFloatv( GL_CURRENT_COLOR ) for performance reasons
+		idVec4 colorSave = g_qeglobals.d_currentColor;
+		//glGetFloatv( GL_CURRENT_COLOR, colorSave.ToFloatPtr() );
+		// RB end
 		
 		if( bSelected )
 		{
@@ -4919,8 +4921,10 @@ void Brush_DrawModelInfo( brush_t* b, bool selected )
 {
 	if( b->modelHandle > 0 )
 	{
-		idVec4	colorSave;
-		glGetFloatv( GL_CURRENT_COLOR, colorSave.ToFloatPtr() );
+		// RB: avoid glGetFloatv( GL_CURRENT_COLOR ) for performance reasons
+		idVec4 colorSave = g_qeglobals.d_currentColor;
+		//glGetFloatv( GL_CURRENT_COLOR, colorSave.ToFloatPtr() );
+		// RB end
 		if( selected )
 		{
 			glColor3fv( g_qeglobals.d_savedinfo.colors[COLOR_SELBRUSHES].ToFloatPtr() );
@@ -5011,8 +5015,10 @@ void Brush_DrawEnv( brush_t* b, bool cameraView, bool bSelected )
 			glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 		}
 		
-		idVec4	colorSave;
-		glGetFloatv( GL_CURRENT_COLOR, colorSave.ToFloatPtr() );
+		// RB: avoid glGetFloatv( GL_CURRENT_COLOR ) for performance reasons
+		idVec4 colorSave = g_qeglobals.d_currentColor;
+		//glGetFloatv( GL_CURRENT_COLOR, colorSave.ToFloatPtr() );
+		// RB end
 		
 		if( bSelected )
 		{
@@ -5498,8 +5504,10 @@ void Brush_DrawXY( brush_t* b, int nViewType, bool bSelected, bool ignoreViewTyp
 		return;
 	}
 	
-	idVec4	colorSave;
-	glGetFloatv( GL_CURRENT_COLOR, colorSave.ToFloatPtr() );
+	// RB: avoid glGetFloatv( GL_CURRENT_COLOR ) for performance reasons
+	idVec4 colorSave = g_qeglobals.d_currentColor;
+	//glGetFloatv( GL_CURRENT_COLOR, colorSave.ToFloatPtr() );
+	// RB end
 	
 	if( !( b->owner && ( b->owner->eclass->nShowFlags & ECLASS_WORLDSPAWN ) ) )
 	{

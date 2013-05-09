@@ -30,6 +30,7 @@ If you have questions concerning this license or the applicable additional terms
 #pragma hdrstop
 
 #include "splines.h"
+#include "QE3.h"
 
 idCameraDef splineList;
 idCameraDef* g_splineList = &splineList;
@@ -69,8 +70,12 @@ void glBox( idVec4& color, idVec3& point, float size )
 	maxs[0] += size;
 	maxs[1] -= size;
 	maxs[2] += size;
-	idVec4	saveColor;
-	glGetFloatv( GL_CURRENT_COLOR, saveColor.ToFloatPtr() );
+	
+	// RB: avoid glGetFloatv( GL_CURRENT_COLOR ) for performance reasons
+	idVec4 colorSave = g_qeglobals.d_currentColor;
+	//glGetFloatv( GL_CURRENT_COLOR, colorSave.ToFloatPtr() );
+	// RB end
+	
 	glColor3fv( color.ToFloatPtr() );
 	glBegin( GL_LINE_LOOP );
 	glVertex3f( mins[0], mins[1], mins[2] );
@@ -95,7 +100,8 @@ void glBox( idVec4& color, idVec3& point, float size )
 	glVertex3f( maxs[0], maxs[1], maxs[2] );
 	glVertex3f( maxs[0], maxs[1], mins[2] );
 	glEnd();
-	glColor4fv( saveColor.ToFloatPtr() );
+	
+	glColor4fv( colorSave.ToFloatPtr() );
 	
 }
 
