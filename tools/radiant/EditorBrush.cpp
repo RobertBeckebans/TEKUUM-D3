@@ -5025,7 +5025,9 @@ void Brush_DrawEnv( brush_t* b, bool cameraView, bool bSelected )
 			GL_Color( 1.f, 1.f, 1.f );
 		}
 		
-		DrawRenderModel( model, origin, axis, true );
+		// RB: cameraView instead of true
+		DrawRenderModel( model, origin, axis, cameraView );
+		// RB end
 		globalImages->BindNull();
 		delete model;
 		model = NULL;

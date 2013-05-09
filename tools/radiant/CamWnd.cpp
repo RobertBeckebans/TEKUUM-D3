@@ -235,6 +235,7 @@ void CCamWnd::OnPaint()
 		}
 		
 		Cam_Draw();
+		
 		QE_CheckOpenGLForErrors();
 		SwapBuffers( dc.m_hDC );
 	}
