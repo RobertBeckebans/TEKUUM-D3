@@ -489,7 +489,7 @@ void idGLDrawableMaterial::draw( int x, int y, int w, int h )
 			
 			worldModel->FinishSurfaces();
 			// RB begin
-			worldModel->CreateVertexCache();
+			//worldModel->CreateVertexCache();
 			// RB end
 			
 			renderEntity_t worldEntity;
@@ -617,6 +617,15 @@ idGLDrawableModel::idGLDrawableModel()
 
 void idGLDrawableModel::setMedia( const char* name )
 {
+#if 0
+	// RB: free old model vertex cache, so we don't run into out of memory problems
+	if( worldModel != NULL )
+	{
+		worldModel->FreeVertexCache();
+	}
+	// RB end
+#endif
+	
 	worldModel = renderModelManager->FindModel( name );
 	worldDirty = true;
 	xOffset = 0.0;
