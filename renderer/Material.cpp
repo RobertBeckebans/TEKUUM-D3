@@ -2687,7 +2687,7 @@ bool idMaterial::Parse( const char* text, const int textLength, bool allowBinary
 	// if we are translucent, draw with an alpha in the editor
 	if( coverage == MC_TRANSLUCENT )
 	{
-		editorAlpha = 0.5;
+		editorAlpha = 0.25;
 	}
 	else
 	{

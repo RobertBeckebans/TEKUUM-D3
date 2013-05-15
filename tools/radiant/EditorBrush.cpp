@@ -5285,6 +5285,14 @@ void Brush_DrawCam( brush_t* b, bool bSelected )
 		}
 		else
 		{
+			// RB: support qer_trans
+			if( face->d_texture->GetEditorAlpha() != 1.0f )
+			{
+				//glEnable( GL_BLEND );
+				//glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
+			}
+			// RB end
+			
 			glColor4f( face->d_color.x, face->d_color.y, face->d_color.z, face->d_texture->GetEditorAlpha() );
 			GL_Color( face->d_color.x, face->d_color.y, face->d_color.z, face->d_texture->GetEditorAlpha() );
 		}
@@ -5307,10 +5315,12 @@ void Brush_DrawCam( brush_t* b, bool bSelected )
 		
 		glEnd();
 		
-		if( model )
+		// RB: support qer_trans
+		if( model  || face->d_texture->GetEditorAlpha() != 1.0f )
 		{
 			glDisable( GL_BLEND );
 		}
+		// RB end
 	}
 	
 	globalImages->BindNull();
