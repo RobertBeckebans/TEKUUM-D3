@@ -39,7 +39,11 @@ If you have questions concerning this license or the applicable additional terms
 #endif
 // RB end
 
+#if defined(STANDALONE)
+const char* DEFAULT_FONT = "bitstream_vera_sans";
+#else
 const char* DEFAULT_FONT = "arial_narrow";
+#endif
 
 static const float old_scale2 = 0.6f;
 static const float old_scale1 = 0.3f;
