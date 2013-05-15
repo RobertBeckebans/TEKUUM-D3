@@ -336,7 +336,9 @@ idRenderModel* idRenderModelManagerLocal::GetModel( const char* _modelName, bool
 	
 	idRenderModel* model = NULL;
 	
-	if( ( extension.Icmp( "ase" ) == 0 ) || ( extension.Icmp( "lwo" ) == 0 ) || ( extension.Icmp( "flt" ) == 0 ) || ( extension.Icmp( "ma" ) == 0 ) )
+	// RB: added dae
+	if( ( extension.Icmp( "dae" ) == 0 ) || ( extension.Icmp( "ase" ) == 0 ) || ( extension.Icmp( "lwo" ) == 0 ) || ( extension.Icmp( "flt" ) == 0 ) || ( extension.Icmp( "ma" ) == 0 ) )
+		// RB end
 	{
 		model = new idRenderModelStatic;
 	}
@@ -381,9 +383,12 @@ idRenderModel* idRenderModelManagerLocal::GetModel( const char* _modelName, bool
 			{
 				model->InitFromFile( canonical );
 				
-				idFileLocal outputFile( fileSystem->OpenFileWrite( generatedFileName, "fs_basepath" ) );
-				idLib::Printf( "Writing %s\n", generatedFileName.c_str() );
-				model->WriteBinaryModel( outputFile );
+				if( !model->IsDefaultModel() )
+				{
+					idFileLocal outputFile( fileSystem->OpenFileWrite( generatedFileName, "fs_basepath" ) );
+					idLib::Printf( "Writing %s\n", generatedFileName.c_str() );
+					model->WriteBinaryModel( outputFile );
+				}
 			} /* else {
 				idLib::Printf( "loaded binary model %s from file %s\n", model->Name(), generatedFileName.c_str() );
 			} */

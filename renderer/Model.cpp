@@ -1187,7 +1187,6 @@ typedef struct matchVert_s
 
 bool idRenderModelStatic::ConvertDAEToModelSurfaces( const ColladaParser* dae )
 {
-#if 0
 	Collada::Node**		object;
 	Collada::Mesh**		mesh;
 	Collada::MeshInstance* meshInstance;
@@ -1239,7 +1238,7 @@ bool idRenderModelStatic::ConvertDAEToModelSurfaces( const ColladaParser* dae )
 	else if( !r_mergeModelSurfaces.GetBool() )
 	{
 		// don't merge any
-		for( i = 0 ; i < dae->mNodeLibrary.Num() ; i++ )
+		for( i = 0; i < dae->mNodeLibrary.Num(); i++ )
 		{
 			mergeTo[i] = i;
 			object = dae->mNodeLibrary.GetIndex( i ); //object = ase->objects[i];
@@ -1319,7 +1318,7 @@ bool idRenderModelStatic::ConvertDAEToModelSurfaces( const ColladaParser* dae )
 	idVectorSubset<idVec2, 2> texCoordSubset;
 	
 	// build the surfaces
-	for( objectNum = 0 ; objectNum < dae->mNodeLibrary.Num() ; objectNum++ )
+	for( objectNum = 0; objectNum < dae->mNodeLibrary.Num(); objectNum++ )
 	{
 		object = ( dae->mNodeLibrary.GetIndex( objectNum ) ); //object = ase->objects[objectNum];
 		
@@ -1627,7 +1626,7 @@ bool idRenderModelStatic::ConvertDAEToModelSurfaces( const ColladaParser* dae )
 			mv = &mvTable[j];
 			tri->verts[ j ].Clear();
 			tri->verts[ j ].xyz = ( *mesh )->mPositions[ mv->v ];
-			tri->verts[ j ].normal = mv->normal;
+			tri->verts[ j ].SetNormal( mv->normal );
 			*( unsigned* )tri->verts[j].color = *( unsigned* )mv->color;
 			
 			//if( mesh->numTVFaces == mesh->numFaces && mesh->numTVertexes != 0 )
@@ -1636,8 +1635,7 @@ bool idRenderModelStatic::ConvertDAEToModelSurfaces( const ColladaParser* dae )
 				const idVec2& tv = ( *mesh )->mTexCoords[ mv->tv ];
 				float u = tv.x * uTiling + uOffset;
 				float v = tv.y * vTiling + vOffset;
-				tri->verts[ j ].st[0] = u * textureCos + v * textureSin;
-				tri->verts[ j ].st[1] = u * -textureSin + v * textureCos;
+				tri->verts[ j ].SetTexCoord( u * textureCos + v * textureSin, u * -textureSin + v * textureCos );
 			}
 		}
 		
@@ -1662,9 +1660,6 @@ bool idRenderModelStatic::ConvertDAEToModelSurfaces( const ColladaParser* dae )
 	}
 	
 	return true;
-#else
-	return false;
-#endif
 }
 
 /*
