@@ -65,7 +65,14 @@ void idDeviceContext::Init()
 	colorWhite = idVec4( 1, 1, 1, 1 );
 	colorBlack = idVec4( 0, 0, 0, 1 );
 	colorNone = idVec4( 0, 0, 0, 0 );
+	
+	// RB begin
+#if defined(STANDALONE)
+	cursorImages[CURSOR_ARROW] = declManager->FindMaterial( "guis/assets/cursors/cursor_arrow.tga" );
+#else
 	cursorImages[CURSOR_ARROW] = declManager->FindMaterial( "ui/assets/guicursor_arrow.tga" );
+#endif
+	// RB end
 	cursorImages[CURSOR_HAND] = declManager->FindMaterial( "ui/assets/guicursor_hand.tga" );
 	cursorImages[CURSOR_HAND_JOY1] = declManager->FindMaterial( "ui/assets/guicursor_hand_cross.tga" );
 	cursorImages[CURSOR_HAND_JOY2] = declManager->FindMaterial( "ui/assets/guicursor_hand_circle.tga" );

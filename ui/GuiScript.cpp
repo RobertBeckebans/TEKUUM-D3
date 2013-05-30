@@ -312,6 +312,20 @@ void Script_NamedEvent( idWindow* window, idList<idGSWinVar>* src )
 		}
 	}
 }
+
+/*
+=========================
+Script_NamedEvent
+=========================
+*/
+void Script_Print( idWindow* window, idList<idGSWinVar>* src )
+{
+	idWinStr* parm = dynamic_cast<idWinStr*>( ( *src )[0].var );
+	if( parm )
+	{
+		idLib::Printf( "%s: %s\n", window->GetGui()->GetSourceFile(), parm->c_str() );
+	}
+}
 // RB end
 
 typedef struct
@@ -335,7 +349,8 @@ guiCommandDef_t commandList[] =
 	{ "runScript", Script_RunScript, 1, 1 },
 	{ "evalRegs", Script_EvalRegs, 0, 0 },
 // RB: added "namedEvent" keyword
-	{ "namedEvent", Script_NamedEvent, 1, 1 }
+	{ "namedEvent", Script_NamedEvent, 1, 1 },
+	{ "print", Script_Print, 1, 1  }
 // RB end
 };
 
