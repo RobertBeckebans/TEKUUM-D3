@@ -134,10 +134,8 @@ public:
 	// Copy or create a matrix that is stored directly into four float4 vectors which is useful for directly setting vertex program uniforms.
 	static void				CopyMatrix( const idRenderMatrix& matrix, idVec4& row0, idVec4& row1, idVec4& row2, idVec4& row3 );
 	static void				SetMVP( const idRenderMatrix& mvp, idVec4& row0, idVec4& row1, idVec4& row2, idVec4& row3, bool& negativeDeterminant );
-#if defined(USE_INTRINSICS)
 	static void				SetMVPForBounds( const idRenderMatrix& mvp, const idBounds& bounds, idVec4& row0, idVec4& row1, idVec4& row2, idVec4& row3, bool& negativeDeterminant );
 	static void				SetMVPForInverseProject( const idRenderMatrix& mvp, const idRenderMatrix& inverseProject, idVec4& row0, idVec4& row1, idVec4& row2, idVec4& row3, bool& negativeDeterminant );
-#endif
 	
 	// Cull to a Model-View-Projection (MVP) matrix.
 	static bool				CullPointToMVP( const idRenderMatrix& mvp, const idVec3& point, bool zeroToOne = false );
@@ -161,10 +159,6 @@ public:
 	static void				GetFrustumPlanes( idPlane planes[6], const idRenderMatrix& frustum, bool zeroToOne, bool normalize );
 	static void				GetFrustumCorners( frustumCorners_t& corners, const idRenderMatrix& frustumTransform, const idBounds& frustumBounds );
 	static frustumCull_t	CullFrustumCornersToPlane( const frustumCorners_t& corners, const idPlane& plane );
-	
-	// RB begin
-	static float			Determinant( const idRenderMatrix& mat );
-	// RB end
 	
 private:
 	float					m[16];

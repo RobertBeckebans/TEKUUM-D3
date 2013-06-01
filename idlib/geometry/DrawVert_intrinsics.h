@@ -50,6 +50,7 @@ static const __m128 vector_float_mask_clear_last				= __m128c( _mm_set_epi32( 0x
 static const __m128 vector_float_last_one						= {   0.0f,	  0.0f,   0.0f,   1.0f };
 static const __m128 vector_float_1_over_255						= { 1.0f / 255.0f, 1.0f / 255.0f, 1.0f / 255.0f, 1.0f / 255.0f };
 static const __m128 vector_float_1_over_4						= { 1.0f / 4.0f, 1.0f / 4.0f, 1.0f / 4.0f, 1.0f / 4.0f };
+
 #endif
 
 /*

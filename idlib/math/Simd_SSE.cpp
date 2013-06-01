@@ -38,7 +38,7 @@ If you have questions concerning this license or the applicable additional terms
 //                                                        E
 //===============================================================
 
-#if defined(USE_INTRINSICS) && !defined(USE_INTRINSICS_EMU)
+#if defined(USE_INTRINSICS)
 
 #include <xmmintrin.h>
 
@@ -974,5 +974,5 @@ void VPCALL idSIMD_SSE::UntransformJoints( idJointMat* jointMats, const int* par
 	}
 }
 
-#endif // #if !defined(USE_INTRINSICS_EMU)
+#endif // #if defined(USE_INTRINSICS)
 

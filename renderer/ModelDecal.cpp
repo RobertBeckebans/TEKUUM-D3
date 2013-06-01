@@ -405,29 +405,39 @@ static void R_DecalPointCullStatic( byte* cullBits, const idPlane* planes, const
 			*( unsigned int* )&cullBits[i] = _mm_cvtsi128_si32( b0 );
 		}
 	}
+	
 #else
-	for( int i = 0; i < numVerts; i++ )
+	
+	idODSStreamedArray< idDrawVert, 16, SBT_DOUBLE, 1 > vertsODS( verts, numVerts );
+	
+	for( int i = 0; i < numVerts; )
 	{
-		byte bits;
-		float d0, d1, d2, d3, d4, d5;
-		const idVec3& v = verts[i].xyz;
 	
-		d0 = planes[0].Distance( v );
-		d1 = planes[1].Distance( v );
-		d2 = planes[2].Distance( v );
-		d3 = planes[3].Distance( v );
-		d4 = planes[4].Distance( v );
-		d5 = planes[5].Distance( v );
+		const int nextNumVerts = vertsODS.FetchNextBatch() - 1;
 	
-		bits  = IEEE_FLT_SIGNBITSET( d0 ) << 0;
-		bits |= IEEE_FLT_SIGNBITSET( d1 ) << 1;
-		bits |= IEEE_FLT_SIGNBITSET( d2 ) << 2;
-		bits |= IEEE_FLT_SIGNBITSET( d3 ) << 3;
-		bits |= IEEE_FLT_SIGNBITSET( d4 ) << 4;
-		bits |= IEEE_FLT_SIGNBITSET( d5 ) << 5;
+		for( ; i <= nextNumVerts; i++ )
+		{
+			const idVec3& v = vertsODS[i].xyz;
 	
-		cullBits[i] = bits ^ 0x3F;		// flip lower 6 bits
+			const float d0 = planes[0].Distance( v );
+			const float d1 = planes[1].Distance( v );
+			const float d2 = planes[2].Distance( v );
+			const float d3 = planes[3].Distance( v );
+			const float d4 = planes[4].Distance( v );
+			const float d5 = planes[5].Distance( v );
+	
+			byte bits;
+			bits  = IEEE_FLT_SIGNBITNOTSET( d0 ) << 0;
+			bits |= IEEE_FLT_SIGNBITNOTSET( d1 ) << 1;
+			bits |= IEEE_FLT_SIGNBITNOTSET( d2 ) << 2;
+			bits |= IEEE_FLT_SIGNBITNOTSET( d3 ) << 3;
+			bits |= IEEE_FLT_SIGNBITNOTSET( d4 ) << 4;
+			bits |= IEEE_FLT_SIGNBITNOTSET( d5 ) << 5;
+	
+			cullBits[i] = bits;
+		}
 	}
+	
 #endif
 }
 
@@ -660,9 +670,8 @@ static void R_CopyDecalSurface( idDrawVert* verts, int numVerts, triIndex_t* ind
 	assert( ( ( decal->numIndexes * sizeof( triIndex_t ) ) & 15 ) == 0 );
 	assert_16_byte_aligned( fadeColor );
 	
-#if !defined(USE_INTRINSICS) || defined(USE_INTRINSICS_EMU)
-	// TODO
-#else
+#if defined(USE_INTRINSICS)
+	
 	const __m128i vector_int_num_verts = _mm_shuffle_epi32( _mm_cvtsi32_si128( numVerts ), 0 );
 	const __m128i vector_short_num_verts = _mm_packs_epi32( vector_int_num_verts, vector_int_num_verts );
 	const __m128 vector_fade_color = _mm_load_ps( fadeColor );
@@ -674,17 +683,17 @@ static void R_CopyDecalSurface( idDrawVert* verts, int numVerts, triIndex_t* ind
 	{
 		const idDrawVert& srcVert = decal->verts[i];
 		idDrawVert& dstVert = verts[numVerts + i];
-	
+		
 		__m128i v0 = _mm_load_si128( ( const __m128i* )( ( byte* )&srcVert +  0 ) );
 		__m128i v1 = _mm_load_si128( ( const __m128i* )( ( byte* )&srcVert + 16 ) );
 		__m128 depthFade = _mm_splat_ps( _mm_load_ss( decal->vertDepthFade + i ), 0 );
-	
+		
 		__m128 timeDepthFade = _mm_mul_ps( depthFade, vector_fade_color );
 		__m128i colorInt = _mm_cvtps_epi32( timeDepthFade );
 		__m128i colorShort = _mm_packs_epi32( colorInt, colorInt );
 		__m128i colorByte = _mm_packus_epi16( colorShort, colorShort );
 		v1 = _mm_or_si128( v1, _mm_and_si128( colorByte, vector_color_mask ) );
-	
+		
 		_mm_stream_si128( ( __m128i* )( ( byte* )&dstVert +  0 ), v0 );
 		_mm_stream_si128( ( __m128i* )( ( byte* )&dstVert + 16 ), v1 );
 	}
@@ -695,13 +704,35 @@ static void R_CopyDecalSurface( idDrawVert* verts, int numVerts, triIndex_t* ind
 	for( int i = 0; i < decal->numIndexes; i += 8 )
 	{
 		__m128i vi = _mm_load_si128( ( const __m128i* )&decal->indexes[i] );
-	
+		
 		vi = _mm_add_epi16( vi, vector_short_num_verts );
-	
+		
 		_mm_stream_si128( ( __m128i* )&indexes[numIndexes + i], vi );
 	}
 	
 	_mm_sfence();
+	
+#else
+	
+	// copy vertices and apply depth/time based fading
+	for( int i = 0; i < decal->numVerts; i++ )
+	{
+		// NOTE: bad out-of-order write-combined write, SIMD code does the right thing
+		verts[numVerts + i] = decal->verts[i];
+		for( int j = 0; j < 4; j++ )
+		{
+			verts[numVerts + i].color[j] = idMath::Ftob( fadeColor[j] * decal->vertDepthFade[i] );
+		}
+	}
+	
+	// copy indices
+	assert( ( decal->numIndexes & 1 ) == 0 );
+	for( int i = 0; i < decal->numIndexes; i += 2 )
+	{
+		assert( decal->indexes[i + 0] < decal->numVerts && decal->indexes[i + 1] < decal->numVerts );
+		WriteIndexPair( &indexes[numIndexes + i], numVerts + decal->indexes[i + 0], numVerts + decal->indexes[i + 1] );
+	}
+	
 #endif
 }
 

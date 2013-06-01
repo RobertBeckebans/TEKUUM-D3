@@ -36,7 +36,8 @@ If you have questions concerning this license or the applicable additional terms
 
 ===============================================================================
 */
-#if !defined(USE_INTRINSICS_EMU)
+
+#if defined(USE_INTRINSICS)
 
 class idSIMD_SSE : public idSIMD_Generic
 {
@@ -51,6 +52,6 @@ public:
 	virtual void VPCALL UntransformJoints( idJointMat* jointMats, const int* parents, const int firstJoint, const int lastJoint );
 };
 
-#endif // #if !defined(USE_INTRINSICS_EMU)
+#endif
 
 #endif /* !__MATH_SIMD_SSE_H__ */
