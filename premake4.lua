@@ -1066,6 +1066,7 @@ end
 			--"USE_SOUND_SDL",
 			"PNG_NO_ASSEMBLER_CODE",
 			"USE_SDL",
+			"USE_SDL_ASYNC",
 		}
 		
 	configuration { "cmdline-tools", "linux" }

@@ -72,9 +72,9 @@ GLimp_PreInit
 */
 void GLimp_PreInit() // DG: added this function for SDL compatibility
 {
-	if( !SDL_WasInit( SDL_INIT_VIDEO ) )
+	if( !SDL_WasInit( SDL_INIT_VIDEO | SDL_INIT_TIMER ) )
 	{
-		if( SDL_Init( SDL_INIT_VIDEO ) )
+		if( SDL_Init( SDL_INIT_VIDEO | SDL_INIT_TIMER ) )
 			common->Error( "Error while initializing SDL: %s", SDL_GetError() );
 	}
 }

@@ -29,6 +29,12 @@ If you have questions concerning this license or the applicable additional terms
 #include "precompiled.h"
 #pragma hdrstop
 
+// RB begin
+#if defined(USE_SDL_ASYNC)
+#include <SDL.h>
+#endif
+// RB end
+
 #include "../renderer/Image.h"
 #include "ConsoleHistory.h"
 
@@ -228,6 +234,12 @@ private:
 #ifdef ID_WRITE_VERSION
 	idCompressor* 				config_compressor;
 #endif
+	
+	// RB begin
+#if defined(USE_SDL_ASYNC)
+	SDL_TimerID					asyncTimerID;
+#endif
+	// RB end
 };
 
 idCommonLocal	commonLocal;
@@ -259,6 +271,13 @@ idCommonLocal::idCommonLocal()
 #ifdef ID_WRITE_VERSION
 	config_compressor = NULL;
 #endif
+	
+	// RB begin
+#if defined(USE_SDL_ASYNC)
+	asyncTimerID = 0;
+#endif
+	// RB end
+	
 }
 
 /*
@@ -3243,6 +3262,27 @@ void idCommonLocal::Async()
 	}
 }
 
+// RB begin
+#if defined(USE_SDL_ASYNC)
+unsigned int AsyncTimer( unsigned int interval, void* )
+{
+	common->Async();
+	
+	Sys_TriggerEvent( TRIGGER_EVENT_ONE );
+	
+	// calculate the next interval to get as close to 60fps as possible
+	unsigned int now = SDL_GetTicks();
+	unsigned int tick = com_ticNumber * USERCMD_MSEC;
+	
+	if( now >= tick )
+		return 1;
+		
+	return tick - now;
+	
+}
+#endif
+// RB end
+
 /*
 =================
 idCommonLocal::LoadGameDLL
@@ -3518,6 +3558,17 @@ void idCommonLocal::Init( int argc, const char* const* argv, const char* cmdline
 	}
 #endif
 // RB end
+
+// RB begin
+#if defined(USE_SDL_ASYNC)
+	asyncTimerID = SDL_AddTimer( USERCMD_MSEC, AsyncTimer, NULL );
+	
+	if( !asyncTimerID )
+	{
+		Sys_Error( "Error while starting the async timer: %s", SDL_GetError() );
+	}
+#endif
+// RB end
 }
 
 
@@ -3528,8 +3579,17 @@ idCommonLocal::Shutdown
 */
 void idCommonLocal::Shutdown()
 {
-
 	com_shuttingDown = true;
+	
+	// RB begin
+#if defined(USE_SDL_ASYNC)
+	if( asyncTimerID )
+	{
+		SDL_RemoveTimer( asyncTimerID );
+		asyncTimerID = 0;
+	}
+#endif
+	// RB end
 	
 	idAsyncNetwork::server.Kill();
 	idAsyncNetwork::client.Shutdown();
