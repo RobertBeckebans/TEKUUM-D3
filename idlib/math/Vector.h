@@ -1065,16 +1065,6 @@ public:
 extern idVec4 vec4_origin;
 #define vec4_zero vec4_origin
 
-
-// RB begin
-ID_INLINE idVec4::idVec4( const idVec3& v, const float w )
-{
-	this->x = v.x;
-	this->y = v.y;
-	this->z = v.z;
-	this->w = w;
-}
-// RB end
 ID_INLINE void idVec4::Set( const float x, const float y, const float z, const float w )
 {
 	this->x = x;
