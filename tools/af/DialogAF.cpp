@@ -373,15 +373,12 @@ AFEditorRun
 */
 void AFEditorRun()
 {
-
-// RB begin
-#if _MFC_VER >= 0x0A00
-	MSG* msg = AfxGetCurrentMessage();
+#if _MSC_VER >= 1300
+	MSG* msg = AfxGetCurrentMessage();			// TODO Robert fix me!!
 #else
-	MSG* msg = &AfxGetThread()->m_msgCur;
+	MSG* msg = &m_msgCur;
 #endif
-// RB end
-
+	
 	while( ::PeekMessage( msg, NULL, NULL, NULL, PM_NOREMOVE ) )
 	{
 		// pump message

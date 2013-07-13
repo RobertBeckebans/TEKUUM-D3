@@ -49,8 +49,9 @@ void Draw_ClearWindow()
 	
 	glDrawBuffer( GL_FRONT );
 	
-	RB_SetGL2D();
-	
+	// RB: FIXME
+//	RB_SetGL2D();
+
 	glClearColor( 0.5, 0.5, 0.5, 0 );
 	glClear( GL_COLOR_BUFFER_BIT );
 	

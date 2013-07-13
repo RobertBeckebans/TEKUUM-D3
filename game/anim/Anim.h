@@ -198,44 +198,6 @@ typedef struct
 	bool					anim_turn					: 1;
 } animFlags_t;
 
-
-/*
-==============================================================================================
-
-	idModelExport
-
-==============================================================================================
-*/
-
-class idModelExport
-{
-private:
-	void					Reset();
-	bool					ParseOptions( idLexer& lex );
-	int						ParseExportSection( idParser& parser );
-	
-	static bool				CheckMayaInstall();
-	static void				LoadMayaDll();
-	
-	bool					ConvertMayaToMD5();
-	static bool				initialized;
-	
-public:
-	idStr					commandLine;
-	idStr					src;
-	idStr					dest;
-	bool					force;
-	
-	idModelExport();
-	
-	static void				Shutdown();
-	
-	int						ExportDefFile( const char* filename );
-	bool					ExportModel( const char* model );
-	bool					ExportAnim( const char* anim );
-	int						ExportModels( const char* pathname, const char* extension );
-};
-
 /*
 ==============================================================================================
 
@@ -359,7 +321,7 @@ public:
 	
 	virtual size_t				Size() const;
 	virtual const char* 		DefaultDefinition() const;
-	virtual bool				Parse( const char* text, const int textLength );
+	virtual bool				Parse( const char* text, const int textLength, bool allowBinaryVersion );
 	virtual void				FreeData();
 	
 	void						Touch() const;

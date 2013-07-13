@@ -384,12 +384,25 @@ static mapTri_t* FixTriangleAgainstHashVert( const mapTri_t* a, const hashVert_t
 		// but interpolate everything else from the original tri
 		VectorCopy( *v, split.xyz );
 		frac = d / len;
-		split.st[0] = v1->st[0] + frac * ( v2->st[0] - v1->st[0] );
-		split.st[1] = v1->st[1] + frac * ( v2->st[1] - v1->st[1] );
-		split.normal[0] = v1->normal[0] + frac * ( v2->normal[0] - v1->normal[0] );
-		split.normal[1] = v1->normal[1] + frac * ( v2->normal[1] - v1->normal[1] );
-		split.normal[2] = v1->normal[2] + frac * ( v2->normal[2] - v1->normal[2] );
-		split.normal.Normalize();
+		
+		// RB begin
+		const idVec2 v1ST = v1->GetTexCoord();
+		const idVec2 v2ST = v2->GetTexCoord();
+		
+		split.SetTexCoord(	v1ST.x + frac * ( v2ST.x - v1ST.x ),
+							v1ST.y + frac * ( v2ST.y - v1ST.y ) );
+							
+		idVec3 splitNormal;
+		idVec3 v1Normal = v1->GetNormal();
+		idVec3 v2Normal = v2->GetNormal();
+		
+		splitNormal[0] = v1Normal[0] + frac * ( v2Normal[0] - v1Normal[0] );
+		splitNormal[1] = v1Normal[1] + frac * ( v2Normal[1] - v1Normal[1] );
+		splitNormal[2] = v1Normal[2] + frac * ( v2Normal[2] - v1Normal[2] );
+		splitNormal.Normalize();
+		
+		split.SetNormal( splitNormal );
+		// RB end
 		
 		// split the tri
 		new1 = CopyMapTri( a );

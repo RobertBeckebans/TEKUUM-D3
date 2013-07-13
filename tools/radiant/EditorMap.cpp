@@ -354,7 +354,9 @@ brush_t* BrushFromMapPatch( idMapPatch* mappatch, idVec3 origin )
 		for( int j = 0; j < mappatch->GetHeight(); j++ )
 		{
 			pm->ctrl( i, j ).xyz = ( *mappatch )[j * mappatch->GetWidth() + i].xyz + origin;
-			pm->ctrl( i, j ).st = ( *mappatch )[j * mappatch->GetWidth() + i].st;
+			// RB: BFG idDrawVert
+			pm->ctrl( i, j ).SetTexCoord( ( *mappatch )[j * mappatch->GetWidth() + i].GetTexCoord() );
+			// RB end
 		}
 	}
 	pm->horzSubdivisions = mappatch->GetHorzSubdivisions();
@@ -654,7 +656,9 @@ idMapPrimitive* BrushToMapPrimitive( const brush_t* b, const idVec3& origin )
 			for( int j = 0; j < b->pPatch->height; j++ )
 			{
 				( *patch )[j * patch->GetWidth() + i].xyz =  b->pPatch->ctrl( i, j ).xyz - origin;
-				( *patch )[j * patch->GetWidth() + i].st = b->pPatch->ctrl( i, j ).st;
+				// RB: BFG idDrawVert
+				( *patch )[j * patch->GetWidth() + i].SetTexCoord( b->pPatch->ctrl( i, j ).GetTexCoord() );
+				// RB end
 			}
 		}
 		patch->SetExplicitlySubdivided( b->pPatch->explicitSubdivisions );

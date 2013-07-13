@@ -49,8 +49,8 @@ If you have questions concerning this license or the applicable additional terms
 class idLib
 {
 private:
-	//static bool				mainThreadInitialized;
-	//static ID_TLS				isMainThread;
+	static bool					mainThreadInitialized;
+	static ID_TLS				isMainThread;
 	
 public:
 	static class idSys* 		sys;
@@ -72,10 +72,10 @@ public:
 	
 	// the extra check for mainThreadInitialized is necessary for this to be accurate
 	// when called by startup code that happens before idLib::Init
-	//static bool					IsMainThread()
-	//{
-	//	return ( 0 == mainThreadInitialized ) || ( 1 == isMainThread );
-	//}
+	static bool					IsMainThread()
+	{
+		return ( 0 == mainThreadInitialized ) || ( 1 == isMainThread );
+	}
 };
 
 
@@ -253,11 +253,11 @@ public:
 
 // System
 #include "sys/sys_assert.h"
-//#include "sys/sys_threading.h"
+#include "sys/sys_threading.h"
 
 // memory management and arrays
 #include "Heap.h"
-//#include "containers/Sort.h"
+#include "containers/Sort.h"
 #include "containers/List.h"
 
 // math
@@ -267,7 +267,7 @@ public:
 #include "math/Complex.h"
 #include "math/Vector.h"
 #include "math/VecX.h"
-//#include "math/VectorI.h"
+#include "math/VectorI.h"
 #include "math/Matrix.h"
 #include "math/MatX.h"
 #include "math/Angles.h"
@@ -286,11 +286,11 @@ public:
 #include "bv/Sphere.h"
 #include "bv/Bounds.h"
 #include "bv/Box.h"
-#include "bv/Frustum.h"
 
 // geometry
-#include "geometry/DrawVert.h"
+#include "geometry/RenderMatrix.h"
 #include "geometry/JointTransform.h"
+#include "geometry/DrawVert.h"
 #include "geometry/Winding.h"
 #include "geometry/Winding2D.h"
 #include "geometry/Surface.h"
@@ -332,9 +332,15 @@ public:
 // misc
 #include "Dict.h"
 #include "LangDict.h"
+#include "DataQueue.h"
 #include "BitMsg.h"
 #include "MapFile.h"
 #include "Timer.h"
+#include "Thread.h"
 #include "Swap.h"
+#include "Callback.h"
+#include "ParallelJobList.h"
+
+#include "SoftwareCache.h"
 
 #endif	/* !__LIB_H__ */

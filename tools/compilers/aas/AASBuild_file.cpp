@@ -269,7 +269,7 @@ bool idAASBuild::GetFaceForPortal( idBrushBSPPortal* portal, int side, int* face
 		if( faceEdges[numFaceEdges] )
 		{
 			// last vertex of this edge is the first vertex of the next edge
-			v1num = file->edges[ abs( faceEdges[numFaceEdges] ) ].vertexNum[ INTSIGNBITNOTSET( faceEdges[numFaceEdges] ) ];
+			v1num = file->edges[ abs( faceEdges[numFaceEdges] ) ].vertexNum[ INT32_SIGNBITNOTSET( faceEdges[numFaceEdges] ) ];
 			
 			// this edge is valid so keep it
 			numFaceEdges++;

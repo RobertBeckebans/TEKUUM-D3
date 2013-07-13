@@ -1,25 +1,25 @@
 /*
 ===========================================================================
 
-Doom 3 GPL Source Code
-Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Doom 3 BFG Edition GPL Source Code
+Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
 
-This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
+This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
-Doom 3 Source Code is free software: you can redistribute it and/or modify
+Doom 3 BFG Edition Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Doom 3 Source Code is distributed in the hope that it will be useful,
+Doom 3 BFG Edition Source Code is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Doom 3 Source Code.  If not, see <http://www.gnu.org/licenses/>.
+along with Doom 3 BFG Edition Source Code.  If not, see <http://www.gnu.org/licenses/>.
 
-In addition, the Doom 3 Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 Source Code.  If not, please request a copy in writing from id Software at the address below.
+In addition, the Doom 3 BFG Edition Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 BFG Edition Source Code.  If not, please request a copy in writing from id Software at the address below.
 
 If you have questions concerning this license or the applicable additional terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 
@@ -34,8 +34,9 @@ If you have questions concerning this license or the applicable additional terms
 ===============================================================================
 */
 
-#include "precompiled.h"
 #pragma hdrstop
+#include "precompiled.h"
+
 
 #include "CollisionModel_local.h"
 
@@ -169,7 +170,7 @@ ID_INLINE int idCollisionModelManagerLocal::TranslateEdgeThroughEdge( idVec3& cr
 	
 	t = -l1.PermutedInnerProduct( l2 );
 	// if the lines cross each other to begin with
-	if( t == 0.0f )
+	if( fabs( t ) < idMath::FLT_SMALLEST_NON_DENORMAL )
 	{
 		*fraction = 0.0f;
 		return true;
@@ -211,7 +212,7 @@ ID_INLINE void CM_SetVertexSidedness( cm_vertex_t* v, const idPluecker& vpl, con
 	{
 		float fl;
 		fl = vpl.PermutedInnerProduct( epl );
-		v->side = ( v->side & ~( 1 << bitNum ) ) | ( FLOATSIGNBITSET( fl ) << bitNum );
+		v->side = ( v->side & ~( 1 << bitNum ) ) | ( IEEE_FLT_SIGNBITSET( fl ) << bitNum );
 		v->sideSet |= ( 1 << bitNum );
 	}
 }
@@ -229,7 +230,7 @@ ID_INLINE void CM_SetEdgeSidedness( cm_edge_t* edge, const idPluecker& vpl, cons
 	{
 		float fl;
 		fl = vpl.PermutedInnerProduct( epl );
-		edge->side = ( edge->side & ~( 1 << bitNum ) ) | ( FLOATSIGNBITSET( fl ) << bitNum );
+		edge->side = ( edge->side & ~( 1 << bitNum ) ) | ( IEEE_FLT_SIGNBITSET( fl ) << bitNum );
 		edge->sideSet |= ( 1 << bitNum );
 	}
 }
@@ -273,9 +274,9 @@ void idCollisionModelManagerLocal::TranslateTrmEdgeThroughPolygon( cm_traceWork_
 			continue;
 		}
 		// get the sides at which the polygon edge vertices pass the trm edge
-		v1 = tw->model->vertices + edge->vertexNum[INTSIGNBITSET( edgeNum )];
+		v1 = tw->model->vertices + edge->vertexNum[INT32_SIGNBITSET( edgeNum )];
 		CM_SetVertexSidedness( v1, tw->polygonVertexPlueckerCache[i], trmEdge->pl, trmEdge->bitNum );
-		v2 = tw->model->vertices + edge->vertexNum[INTSIGNBITNOTSET( edgeNum )];
+		v2 = tw->model->vertices + edge->vertexNum[INT32_SIGNBITNOTSET( edgeNum )];
 		CM_SetVertexSidedness( v2, tw->polygonVertexPlueckerCache[i + 1], trmEdge->pl, trmEdge->bitNum );
 		// if the polygon edge start and end vertex do not pass the trm edge at different sides
 		if( !( ( v1->side ^ v2->side ) & ( 1 << trmEdge->bitNum ) ) )
@@ -360,17 +361,15 @@ CM_TranslationPlaneFraction
 
 #if 0
 
-float CM_TranslationPlaneFraction( idPlane& plane, idVec3& start, idVec3& end )
+float CM_TranslationPlaneFraction( const idPlane& plane, const idVec3& start, const idVec3& end )
 {
-	float d1, d2;
-	
-	d2 = plane.Distance( end );
+	const float d2 = plane.Distance( end );
 	// if the end point is closer to the plane than an epsilon we still take it for a collision
 	if( d2 >= CM_CLIP_EPSILON )
 	{
 		return 1.0f;
 	}
-	d1 = plane.Distance( start );
+	const float d1 = plane.Distance( start );
 	
 	// if completely behind the polygon
 	if( d1 <= 0.0f )
@@ -378,7 +377,7 @@ float CM_TranslationPlaneFraction( idPlane& plane, idVec3& start, idVec3& end )
 		return 1.0f;
 	}
 	// leaves polygon
-	if( d1 <= d2 )
+	if( ( d1 - d2 )  < idMath::FLT_SMALLEST_NON_DENORMAL )
 	{
 		return 1.0f;
 	}
@@ -395,14 +394,14 @@ float CM_TranslationPlaneFraction( idPlane& plane, idVec3& start, idVec3& end )
 	// if the end point is closer to the plane than an epsilon we still take it for a collision
 	// if ( d2 >= CM_CLIP_EPSILON ) {
 	d2eps = d2 - CM_CLIP_EPSILON;
-	if( FLOATSIGNBITNOTSET( d2eps ) )
+	if( IEEE_FLT_SIGNBITNOTSET( d2eps ) )
 	{
 		return 1.0f;
 	}
 	d1 = plane.Distance( start );
 
 	// if completely behind the polygon
-	if( FLOATSIGNBITSET( d1 ) )
+	if( IEEE_FLT_SIGNBITSET( d1 ) )
 	{
 		return 1.0f;
 	}
@@ -439,7 +438,7 @@ void idCollisionModelManagerLocal::TranslateTrmVertexThroughPolygon( cm_traceWor
 			edgeNum = poly->edges[i];
 			edge = tw->model->edges + abs( edgeNum );
 			CM_SetEdgeSidedness( edge, tw->polygonEdgePlueckerCache[i], v->pl, bitNum );
-			if( INTSIGNBITSET( edgeNum ) ^ ( ( edge->side >> bitNum ) & 1 ) )
+			if( INT32_SIGNBITSET( edgeNum ) ^ ( ( edge->side >> bitNum ) & 1 ) )
 			{
 				return;
 			}
@@ -495,11 +494,11 @@ void idCollisionModelManagerLocal::TranslatePointThroughPolygon( cm_traceWork_t*
 				edge->checkcount = idCollisionModelManagerLocal::checkCount;
 				pl.FromLine( tw->model->vertices[edge->vertexNum[0]].p, tw->model->vertices[edge->vertexNum[1]].p );
 				fl = v->pl.PermutedInnerProduct( pl );
-				edge->side = FLOATSIGNBITSET( fl );
+				edge->side = IEEE_FLT_SIGNBITSET( fl );
 			}
 			// if the point passes the edge at the wrong side
 			//if ( (edgeNum > 0) == edge->side ) {
-			if( INTSIGNBITSET( edgeNum ) ^ edge->side )
+			if( INT32_SIGNBITSET( edgeNum ) ^ edge->side )
 			{
 				return;
 			}
@@ -549,7 +548,7 @@ void idCollisionModelManagerLocal::TranslateVertexThroughTrmPolygon( cm_traceWor
 			edge = tw->edges + abs( edgeNum );
 			
 			CM_SetVertexSidedness( v, pl, edge->pl, edge->bitNum );
-			if( INTSIGNBITSET( edgeNum ) ^ ( ( v->side >> edge->bitNum ) & 1 ) )
+			if( INT32_SIGNBITSET( edgeNum ) ^ ( ( v->side >> edge->bitNum ) & 1 ) )
 			{
 				return;
 			}
@@ -672,7 +671,7 @@ bool idCollisionModelManagerLocal::TranslateTrmThroughPolygon( cm_traceWork_t* t
 			tw->polygonEdgePlueckerCache[i].FromLine( tw->model->vertices[e->vertexNum[0]].p,
 					tw->model->vertices[e->vertexNum[1]].p );
 					
-			v = &tw->model->vertices[e->vertexNum[INTSIGNBITSET( edgeNum )]];
+			v = &tw->model->vertices[e->vertexNum[INT32_SIGNBITSET( edgeNum )]];
 			// reset sidedness cache if this is the first time we encounter this vertex during this trace
 			if( v->checkcount != idCollisionModelManagerLocal::checkCount )
 			{
@@ -725,7 +724,7 @@ bool idCollisionModelManagerLocal::TranslateTrmThroughPolygon( cm_traceWork_t* t
 			for( k = 0; k < 2; k++ )
 			{
 			
-				v = tw->model->vertices + e->vertexNum[k ^ INTSIGNBITSET( edgeNum )];
+				v = tw->model->vertices + e->vertexNum[k ^ INT32_SIGNBITSET( edgeNum )];
 				// if this vertex is already checked
 				if( v->checkcount == idCollisionModelManagerLocal::checkCount )
 				{
@@ -1004,9 +1003,9 @@ void idCollisionModelManagerLocal::Translation( trace_t* results, const idVec3& 
 		results->c.normal = vec3_origin;
 		results->c.material = NULL;
 		results->c.point = start;
-		if( session->rw )
+		if( session->RW() )
 		{
-			session->rw->DebugArrow( colorRed, start, end, 1 );
+			session->RW()->DebugArrow( colorRed, start, end, 1 );
 		}
 		common->Printf( "idCollisionModelManagerLocal::Translation: huge translation\n" );
 		return;

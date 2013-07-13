@@ -757,6 +757,10 @@ entity_t* Entity_PostParse( entity_t* ent, brush_t* pList )
 			// model entity
 			idRenderModel* modelHandle = renderModelManager->FindModel( pModel );
 			
+			// RB begin
+			modelHandle->CreateVertexCache();
+			// RB end
+			
 			if( dynamic_cast<idRenderModelPrt*>( modelHandle ) || dynamic_cast<idRenderModelLiquid*>( modelHandle ) )
 			{
 				bo.Zero();

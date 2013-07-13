@@ -1,244 +1,614 @@
 /*
 ===========================================================================
 
-Doom 3 GPL Source Code
-Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Doom 3 BFG Edition GPL Source Code
+Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2013 Robert Beckebans
 
-This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
+This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
-Doom 3 Source Code is free software: you can redistribute it and/or modify
+Doom 3 BFG Edition Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Doom 3 Source Code is distributed in the hope that it will be useful,
+Doom 3 BFG Edition Source Code is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Doom 3 Source Code.  If not, see <http://www.gnu.org/licenses/>.
+along with Doom 3 BFG Edition Source Code.  If not, see <http://www.gnu.org/licenses/>.
 
-In addition, the Doom 3 Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 Source Code.  If not, please request a copy in writing from id Software at the address below.
+In addition, the Doom 3 BFG Edition Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 BFG Edition Source Code.  If not, please request a copy in writing from id Software at the address below.
 
 If you have questions concerning this license or the applicable additional terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 
 ===========================================================================
 */
 
-#include "precompiled.h"
 #pragma hdrstop
+#include "precompiled.h"
 
 #include "tr_local.h"
+#include "Model_local.h"
 
-//#define TEST_TRACE
-
-
-
-/*
-=================
-RB_DrawExpandedTriangles
-=================
-*/
-void RB_DrawExpandedTriangles( const srfTriangles_t* tri, const float radius, const idVec3& vieworg )
-{
-#if !defined(USE_GLES1)
-	int i, j, k;
-	idVec3 dir[6], normal, point;
-	
-	for( i = 0; i < tri->numIndexes; i += 3 )
-	{
-	
-		idVec3 p[3] = { tri->verts[ tri->indexes[ i + 0 ] ].xyz, tri->verts[ tri->indexes[ i + 1 ] ].xyz, tri->verts[ tri->indexes[ i + 2 ] ].xyz };
-		
-		dir[0] = p[0] - p[1];
-		dir[1] = p[1] - p[2];
-		dir[2] = p[2] - p[0];
-		
-		normal = dir[0].Cross( dir[1] );
-		
-		if( normal * p[0] < normal * vieworg )
-		{
-			continue;
-		}
-		
-		dir[0] = normal.Cross( dir[0] );
-		dir[1] = normal.Cross( dir[1] );
-		dir[2] = normal.Cross( dir[2] );
-		
-		dir[0].Normalize();
-		dir[1].Normalize();
-		dir[2].Normalize();
-		
-		glBegin( GL_LINE_LOOP );
-		
-		for( j = 0; j < 3; j++ )
-		{
-			k = ( j + 1 ) % 3;
-			
-			dir[4] = ( dir[j] + dir[k] ) * 0.5f;
-			dir[4].Normalize();
-			
-			dir[3] = ( dir[j] + dir[4] ) * 0.5f;
-			dir[3].Normalize();
-			
-			dir[5] = ( dir[4] + dir[k] ) * 0.5f;
-			dir[5].Normalize();
-			
-			point = p[k] + dir[j] * radius;
-			glVertex3f( point[0], point[1], point[2] );
-			
-			point = p[k] + dir[3] * radius;
-			glVertex3f( point[0], point[1], point[2] );
-			
-			point = p[k] + dir[4] * radius;
-			glVertex3f( point[0], point[1], point[2] );
-			
-			point = p[k] + dir[5] * radius;
-			glVertex3f( point[0], point[1], point[2] );
-			
-			point = p[k] + dir[k] * radius;
-			glVertex3f( point[0], point[1], point[2] );
-		}
-		
-		glEnd();
-	}
-#endif
-}
+#include "../idlib/geometry/DrawVert_intrinsics.h"
 
 /*
-================
-RB_ShowTrace
-
-Debug visualization
-================
+====================
+R_TracePointCullStatic
+====================
 */
-void RB_ShowTrace( drawSurf_t** drawSurfs, int numDrawSurfs )
+static void R_TracePointCullStatic( byte* cullBits, byte& totalOr, const float radius, const idPlane* planes, const idDrawVert* verts, const int numVerts )
 {
-	int						i;
-	const srfTriangles_t*	tri;
-	const drawSurf_t*		surf;
-	idVec3					start, end;
-	idVec3					localStart, localEnd;
-	localTrace_t			hit;
-	float					radius;
+	assert_16_byte_aligned( cullBits );
+	assert_16_byte_aligned( verts );
 	
-	if( r_showTrace.GetInteger() == 0 )
+#if defined(USE_INTRINSICS)
+	idODSStreamedArray< idDrawVert, 16, SBT_DOUBLE, 4 > vertsODS( verts, numVerts );
+	
+	const __m128 vector_float_radius	= _mm_splat_ps( _mm_load_ss( &radius ), 0 );
+	const __m128 vector_float_zero		= { 0.0f, 0.0f, 0.0f, 0.0f };
+	const __m128i vector_int_mask0		= _mm_set1_epi32( 1 << 0 );
+	const __m128i vector_int_mask1		= _mm_set1_epi32( 1 << 1 );
+	const __m128i vector_int_mask2		= _mm_set1_epi32( 1 << 2 );
+	const __m128i vector_int_mask3		= _mm_set1_epi32( 1 << 3 );
+	const __m128i vector_int_mask4		= _mm_set1_epi32( 1 << 4 );
+	const __m128i vector_int_mask5		= _mm_set1_epi32( 1 << 5 );
+	const __m128i vector_int_mask6		= _mm_set1_epi32( 1 << 6 );
+	const __m128i vector_int_mask7		= _mm_set1_epi32( 1 << 7 );
+	
+	const __m128 p0 = _mm_loadu_ps( planes[0].ToFloatPtr() );
+	const __m128 p1 = _mm_loadu_ps( planes[1].ToFloatPtr() );
+	const __m128 p2 = _mm_loadu_ps( planes[2].ToFloatPtr() );
+	const __m128 p3 = _mm_loadu_ps( planes[3].ToFloatPtr() );
+	
+	const __m128 p0X = _mm_splat_ps( p0, 0 );
+	const __m128 p0Y = _mm_splat_ps( p0, 1 );
+	const __m128 p0Z = _mm_splat_ps( p0, 2 );
+	const __m128 p0W = _mm_splat_ps( p0, 3 );
+	
+	const __m128 p1X = _mm_splat_ps( p1, 0 );
+	const __m128 p1Y = _mm_splat_ps( p1, 1 );
+	const __m128 p1Z = _mm_splat_ps( p1, 2 );
+	const __m128 p1W = _mm_splat_ps( p1, 3 );
+	
+	const __m128 p2X = _mm_splat_ps( p2, 0 );
+	const __m128 p2Y = _mm_splat_ps( p2, 1 );
+	const __m128 p2Z = _mm_splat_ps( p2, 2 );
+	const __m128 p2W = _mm_splat_ps( p2, 3 );
+	
+	const __m128 p3X = _mm_splat_ps( p3, 0 );
+	const __m128 p3Y = _mm_splat_ps( p3, 1 );
+	const __m128 p3Z = _mm_splat_ps( p3, 2 );
+	const __m128 p3W = _mm_splat_ps( p3, 3 );
+	
+	__m128i vecTotalOrInt = _mm_set_epi32( 0, 0, 0, 0 );
+	
+	for( int i = 0; i < numVerts; )
 	{
-		return;
-	}
 	
-	if( r_showTrace.GetInteger() == 2 )
-	{
-		radius = 5.0f;
-	}
-	else
-	{
-		radius = 0.0f;
-	}
-	
-	// determine the points of the trace
-	start = backEnd.viewDef->renderView.vieworg;
-	end = start + 4000 * backEnd.viewDef->renderView.viewaxis[0];
-	
-	// check and draw the surfaces
-	glDisableClientState( GL_TEXTURE_COORD_ARRAY );
-	
-#if !defined(USE_GLES2)
-	GL_TexEnv( GL_MODULATE );
-#endif
-	
-	globalImages->whiteImage->Bind();
-	
-	// find how many are ambient
-	for( i = 0 ; i < numDrawSurfs ; i++ )
-	{
-		surf = drawSurfs[i];
-		tri = surf->geo;
+		const int nextNumVerts = vertsODS.FetchNextBatch() - 4;
 		
-		if( tri == NULL || tri->verts == NULL )
+		for( ; i <= nextNumVerts; i += 4 )
 		{
-			continue;
+			const __m128 v0 = _mm_load_ps( vertsODS[i + 0].xyz.ToFloatPtr() );
+			const __m128 v1 = _mm_load_ps( vertsODS[i + 1].xyz.ToFloatPtr() );
+			const __m128 v2 = _mm_load_ps( vertsODS[i + 2].xyz.ToFloatPtr() );
+			const __m128 v3 = _mm_load_ps( vertsODS[i + 3].xyz.ToFloatPtr() );
+			
+			const __m128 r0 = _mm_unpacklo_ps( v0, v2 );	// v0.x, v2.x, v0.z, v2.z
+			const __m128 r1 = _mm_unpackhi_ps( v0, v2 );	// v0.y, v2.y, v0.w, v2.w
+			const __m128 r2 = _mm_unpacklo_ps( v1, v3 );	// v1.x, v3.x, v1.z, v3.z
+			const __m128 r3 = _mm_unpackhi_ps( v1, v3 );	// v1.y, v3.y, v1.w, v3.w
+			
+			const __m128 vX = _mm_unpacklo_ps( r0, r2 );	// v0.x, v1.x, v2.x, v3.x
+			const __m128 vY = _mm_unpackhi_ps( r0, r2 );	// v0.y, v1.y, v2.y, v3.y
+			const __m128 vZ = _mm_unpacklo_ps( r1, r3 );	// v0.z, v1.z, v2.z, v3.z
+			
+			const __m128 d0 = _mm_madd_ps( vX, p0X, _mm_madd_ps( vY, p0Y, _mm_madd_ps( vZ, p0Z, p0W ) ) );
+			const __m128 d1 = _mm_madd_ps( vX, p1X, _mm_madd_ps( vY, p1Y, _mm_madd_ps( vZ, p1Z, p1W ) ) );
+			const __m128 d2 = _mm_madd_ps( vX, p2X, _mm_madd_ps( vY, p2Y, _mm_madd_ps( vZ, p2Z, p2W ) ) );
+			const __m128 d3 = _mm_madd_ps( vX, p3X, _mm_madd_ps( vY, p3Y, _mm_madd_ps( vZ, p3Z, p3W ) ) );
+			
+			const __m128 t0 = _mm_add_ps( d0, vector_float_radius );
+			const __m128 t1 = _mm_add_ps( d1, vector_float_radius );
+			const __m128 t2 = _mm_add_ps( d2, vector_float_radius );
+			const __m128 t3 = _mm_add_ps( d3, vector_float_radius );
+			
+			const __m128 t4 = _mm_sub_ps( d0, vector_float_radius );
+			const __m128 t5 = _mm_sub_ps( d1, vector_float_radius );
+			const __m128 t6 = _mm_sub_ps( d2, vector_float_radius );
+			const __m128 t7 = _mm_sub_ps( d3, vector_float_radius );
+			
+			__m128i c0 = __m128c( _mm_cmpgt_ps( t0, vector_float_zero ) );
+			__m128i c1 = __m128c( _mm_cmpgt_ps( t1, vector_float_zero ) );
+			__m128i c2 = __m128c( _mm_cmpgt_ps( t2, vector_float_zero ) );
+			__m128i c3 = __m128c( _mm_cmpgt_ps( t3, vector_float_zero ) );
+			
+			__m128i c4 = __m128c( _mm_cmplt_ps( t4, vector_float_zero ) );
+			__m128i c5 = __m128c( _mm_cmplt_ps( t5, vector_float_zero ) );
+			__m128i c6 = __m128c( _mm_cmplt_ps( t6, vector_float_zero ) );
+			__m128i c7 = __m128c( _mm_cmplt_ps( t7, vector_float_zero ) );
+			
+			c0 = _mm_and_si128( c0, vector_int_mask0 );
+			c1 = _mm_and_si128( c1, vector_int_mask1 );
+			c2 = _mm_and_si128( c2, vector_int_mask2 );
+			c3 = _mm_and_si128( c3, vector_int_mask3 );
+			
+			c4 = _mm_and_si128( c4, vector_int_mask4 );
+			c5 = _mm_and_si128( c5, vector_int_mask5 );
+			c6 = _mm_and_si128( c6, vector_int_mask6 );
+			c7 = _mm_and_si128( c7, vector_int_mask7 );
+			
+			c0 = _mm_or_si128( c0, c1 );
+			c2 = _mm_or_si128( c2, c3 );
+			c4 = _mm_or_si128( c4, c5 );
+			c6 = _mm_or_si128( c6, c7 );
+			
+			c0 = _mm_or_si128( c0, c2 );
+			c4 = _mm_or_si128( c4, c6 );
+			c0 = _mm_or_si128( c0, c4 );
+			
+			vecTotalOrInt = _mm_or_si128( vecTotalOrInt, c0 );
+			
+			__m128i s0 = _mm_packs_epi32( c0, c0 );
+			__m128i b0 = _mm_packus_epi16( s0, s0 );
+			
+			*( unsigned int* )&cullBits[i] = _mm_cvtsi128_si32( b0 );
 		}
-		
-		// transform the points into local space
-		R_GlobalPointToLocal( surf->space->modelMatrix, start, localStart );
-		R_GlobalPointToLocal( surf->space->modelMatrix, end, localEnd );
-		
-		// check the bounding box
-		if( !tri->bounds.Expand( radius ).LineIntersection( localStart, localEnd ) )
-		{
-			continue;
-		}
-		
-		glLoadMatrixf( surf->space->modelViewMatrix );
-		
-		// highlight the surface
-		GL_State( GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA );
-		
-		glColor4f( 1, 0, 0, 0.25 );
-#if defined(USE_GLES1)
-		RB_DrawElementsWithCounters( tri );
+	}
+	
+	vecTotalOrInt = _mm_or_si128( vecTotalOrInt, _mm_shuffle_epi32( vecTotalOrInt, _MM_SHUFFLE( 1, 0, 3, 2 ) ) );
+	vecTotalOrInt = _mm_or_si128( vecTotalOrInt, _mm_shuffle_epi32( vecTotalOrInt, _MM_SHUFFLE( 2, 3, 0, 1 ) ) );
+	
+	__m128i vecTotalOrShort = _mm_packs_epi32( vecTotalOrInt, vecTotalOrInt );
+	__m128i vecTotalOrByte = _mm_packus_epi16( vecTotalOrShort, vecTotalOrShort );
+	
+	totalOr = ( byte ) _mm_cvtsi128_si32( vecTotalOrByte );
+	
 #else
-		RB_DrawElementsImmediate( tri );
-#endif
-		
-		// draw the bounding box
-		GL_State( GLS_DEPTHFUNC_ALWAYS );
-		
-		glColor4f( 1, 1, 1, 1 );
-		RB_DrawBounds( tri->bounds );
-		
-		if( radius != 0.0f )
+	
+	idODSStreamedArray< idDrawVert, 16, SBT_DOUBLE, 1 > vertsODS( verts, numVerts );
+	
+	byte tOr = 0;
+	for( int i = 0; i < numVerts; )
+	{
+	
+		const int nextNumVerts = vertsODS.FetchNextBatch() - 1;
+	
+		for( ; i <= nextNumVerts; i++ )
 		{
-			// draw the expanded triangles
-			glColor4f( 0.5f, 0.5f, 1.0f, 1.0f );
-			RB_DrawExpandedTriangles( tri, radius, localStart );
-		}
-		
-		// check the exact surfaces
-		hit = R_LocalTrace( localStart, localEnd, radius, tri );
-		if( hit.fraction < 1.0 )
-		{
-			glColor4f( 1, 1, 1, 1 );
-			RB_DrawBounds( idBounds( hit.point ).Expand( 1 ) );
+			const idVec3& v = vertsODS[i].xyz;
+	
+			const float d0 = planes[0].Distance( v );
+			const float d1 = planes[1].Distance( v );
+			const float d2 = planes[2].Distance( v );
+			const float d3 = planes[3].Distance( v );
+	
+			const float t0 = d0 + radius;
+			const float t1 = d1 + radius;
+			const float t2 = d2 + radius;
+			const float t3 = d3 + radius;
+	
+			const float s0 = d0 - radius;
+			const float s1 = d1 - radius;
+			const float s2 = d2 - radius;
+			const float s3 = d3 - radius;
+	
+			byte bits;
+			bits  = IEEE_FLT_SIGNBITSET( t0 ) << 0;
+			bits |= IEEE_FLT_SIGNBITSET( t1 ) << 1;
+			bits |= IEEE_FLT_SIGNBITSET( t2 ) << 2;
+			bits |= IEEE_FLT_SIGNBITSET( t3 ) << 3;
+	
+			bits |= IEEE_FLT_SIGNBITSET( s0 ) << 4;
+			bits |= IEEE_FLT_SIGNBITSET( s1 ) << 5;
+			bits |= IEEE_FLT_SIGNBITSET( s2 ) << 6;
+			bits |= IEEE_FLT_SIGNBITSET( s3 ) << 7;
+	
+			bits ^= 0x0F;		// flip lower four bits
+	
+			tOr |= bits;
+			cullBits[i] = bits;
 		}
 	}
+	
+	totalOr = tOr;
+	
+#endif
 }
 
+/*
+====================
+R_TracePointCullSkinned
+====================
+*/
+static void R_TracePointCullSkinned( byte* cullBits, byte& totalOr, const float radius, const idPlane* planes, const idDrawVert* verts, const int numVerts, const idJointMat* joints )
+{
+	assert_16_byte_aligned( cullBits );
+	assert_16_byte_aligned( verts );
+	
+#if defined(USE_INTRINSICS)
+	idODSStreamedArray< idDrawVert, 16, SBT_DOUBLE, 4 > vertsODS( verts, numVerts );
+	
+	const __m128 vector_float_radius	= _mm_splat_ps( _mm_load_ss( &radius ), 0 );
+	const __m128 vector_float_zero		= { 0.0f, 0.0f, 0.0f, 0.0f };
+	const __m128i vector_int_mask0		= _mm_set1_epi32( 1 << 0 );
+	const __m128i vector_int_mask1		= _mm_set1_epi32( 1 << 1 );
+	const __m128i vector_int_mask2		= _mm_set1_epi32( 1 << 2 );
+	const __m128i vector_int_mask3		= _mm_set1_epi32( 1 << 3 );
+	const __m128i vector_int_mask4		= _mm_set1_epi32( 1 << 4 );
+	const __m128i vector_int_mask5		= _mm_set1_epi32( 1 << 5 );
+	const __m128i vector_int_mask6		= _mm_set1_epi32( 1 << 6 );
+	const __m128i vector_int_mask7		= _mm_set1_epi32( 1 << 7 );
+	
+	const __m128 p0 = _mm_loadu_ps( planes[0].ToFloatPtr() );
+	const __m128 p1 = _mm_loadu_ps( planes[1].ToFloatPtr() );
+	const __m128 p2 = _mm_loadu_ps( planes[2].ToFloatPtr() );
+	const __m128 p3 = _mm_loadu_ps( planes[3].ToFloatPtr() );
+	
+	const __m128 p0X = _mm_splat_ps( p0, 0 );
+	const __m128 p0Y = _mm_splat_ps( p0, 1 );
+	const __m128 p0Z = _mm_splat_ps( p0, 2 );
+	const __m128 p0W = _mm_splat_ps( p0, 3 );
+	
+	const __m128 p1X = _mm_splat_ps( p1, 0 );
+	const __m128 p1Y = _mm_splat_ps( p1, 1 );
+	const __m128 p1Z = _mm_splat_ps( p1, 2 );
+	const __m128 p1W = _mm_splat_ps( p1, 3 );
+	
+	const __m128 p2X = _mm_splat_ps( p2, 0 );
+	const __m128 p2Y = _mm_splat_ps( p2, 1 );
+	const __m128 p2Z = _mm_splat_ps( p2, 2 );
+	const __m128 p2W = _mm_splat_ps( p2, 3 );
+	
+	const __m128 p3X = _mm_splat_ps( p3, 0 );
+	const __m128 p3Y = _mm_splat_ps( p3, 1 );
+	const __m128 p3Z = _mm_splat_ps( p3, 2 );
+	const __m128 p3W = _mm_splat_ps( p3, 3 );
+	
+	__m128i vecTotalOrInt = _mm_set_epi32( 0, 0, 0, 0 );
+	
+	for( int i = 0; i < numVerts; )
+	{
+	
+		const int nextNumVerts = vertsODS.FetchNextBatch() - 4;
+		
+		for( ; i <= nextNumVerts; i += 4 )
+		{
+			const __m128 v0 = LoadSkinnedDrawVertPosition( vertsODS[i + 0], joints );
+			const __m128 v1 = LoadSkinnedDrawVertPosition( vertsODS[i + 1], joints );
+			const __m128 v2 = LoadSkinnedDrawVertPosition( vertsODS[i + 2], joints );
+			const __m128 v3 = LoadSkinnedDrawVertPosition( vertsODS[i + 3], joints );
+			
+			const __m128 r0 = _mm_unpacklo_ps( v0, v2 );	// v0.x, v2.x, v0.z, v2.z
+			const __m128 r1 = _mm_unpackhi_ps( v0, v2 );	// v0.y, v2.y, v0.w, v2.w
+			const __m128 r2 = _mm_unpacklo_ps( v1, v3 );	// v1.x, v3.x, v1.z, v3.z
+			const __m128 r3 = _mm_unpackhi_ps( v1, v3 );	// v1.y, v3.y, v1.w, v3.w
+			
+			const __m128 vX = _mm_unpacklo_ps( r0, r2 );	// v0.x, v1.x, v2.x, v3.x
+			const __m128 vY = _mm_unpackhi_ps( r0, r2 );	// v0.y, v1.y, v2.y, v3.y
+			const __m128 vZ = _mm_unpacklo_ps( r1, r3 );	// v0.z, v1.z, v2.z, v3.z
+			
+			const __m128 d0 = _mm_madd_ps( vX, p0X, _mm_madd_ps( vY, p0Y, _mm_madd_ps( vZ, p0Z, p0W ) ) );
+			const __m128 d1 = _mm_madd_ps( vX, p1X, _mm_madd_ps( vY, p1Y, _mm_madd_ps( vZ, p1Z, p1W ) ) );
+			const __m128 d2 = _mm_madd_ps( vX, p2X, _mm_madd_ps( vY, p2Y, _mm_madd_ps( vZ, p2Z, p2W ) ) );
+			const __m128 d3 = _mm_madd_ps( vX, p3X, _mm_madd_ps( vY, p3Y, _mm_madd_ps( vZ, p3Z, p3W ) ) );
+			
+			const __m128 t0 = _mm_add_ps( d0, vector_float_radius );
+			const __m128 t1 = _mm_add_ps( d1, vector_float_radius );
+			const __m128 t2 = _mm_add_ps( d2, vector_float_radius );
+			const __m128 t3 = _mm_add_ps( d3, vector_float_radius );
+			
+			const __m128 t4 = _mm_sub_ps( d0, vector_float_radius );
+			const __m128 t5 = _mm_sub_ps( d1, vector_float_radius );
+			const __m128 t6 = _mm_sub_ps( d2, vector_float_radius );
+			const __m128 t7 = _mm_sub_ps( d3, vector_float_radius );
+			
+			__m128i c0 = __m128c( _mm_cmpgt_ps( t0, vector_float_zero ) );
+			__m128i c1 = __m128c( _mm_cmpgt_ps( t1, vector_float_zero ) );
+			__m128i c2 = __m128c( _mm_cmpgt_ps( t2, vector_float_zero ) );
+			__m128i c3 = __m128c( _mm_cmpgt_ps( t3, vector_float_zero ) );
+			
+			__m128i c4 = __m128c( _mm_cmplt_ps( t4, vector_float_zero ) );
+			__m128i c5 = __m128c( _mm_cmplt_ps( t5, vector_float_zero ) );
+			__m128i c6 = __m128c( _mm_cmplt_ps( t6, vector_float_zero ) );
+			__m128i c7 = __m128c( _mm_cmplt_ps( t7, vector_float_zero ) );
+			
+			c0 = _mm_and_si128( c0, vector_int_mask0 );
+			c1 = _mm_and_si128( c1, vector_int_mask1 );
+			c2 = _mm_and_si128( c2, vector_int_mask2 );
+			c3 = _mm_and_si128( c3, vector_int_mask3 );
+			
+			c4 = _mm_and_si128( c4, vector_int_mask4 );
+			c5 = _mm_and_si128( c5, vector_int_mask5 );
+			c6 = _mm_and_si128( c6, vector_int_mask6 );
+			c7 = _mm_and_si128( c7, vector_int_mask7 );
+			
+			c0 = _mm_or_si128( c0, c1 );
+			c2 = _mm_or_si128( c2, c3 );
+			c4 = _mm_or_si128( c4, c5 );
+			c6 = _mm_or_si128( c6, c7 );
+			
+			c0 = _mm_or_si128( c0, c2 );
+			c4 = _mm_or_si128( c4, c6 );
+			c0 = _mm_or_si128( c0, c4 );
+			
+			vecTotalOrInt = _mm_or_si128( vecTotalOrInt, c0 );
+			
+			__m128i s0 = _mm_packs_epi32( c0, c0 );
+			__m128i b0 = _mm_packus_epi16( s0, s0 );
+			
+			*( unsigned int* )&cullBits[i] = _mm_cvtsi128_si32( b0 );
+		}
+	}
+	
+	vecTotalOrInt = _mm_or_si128( vecTotalOrInt, _mm_shuffle_epi32( vecTotalOrInt, _MM_SHUFFLE( 1, 0, 3, 2 ) ) );
+	vecTotalOrInt = _mm_or_si128( vecTotalOrInt, _mm_shuffle_epi32( vecTotalOrInt, _MM_SHUFFLE( 2, 3, 0, 1 ) ) );
+	
+	__m128i vecTotalOrShort = _mm_packs_epi32( vecTotalOrInt, vecTotalOrInt );
+	__m128i vecTotalOrByte = _mm_packus_epi16( vecTotalOrShort, vecTotalOrShort );
+	
+	totalOr = ( byte ) _mm_cvtsi128_si32( vecTotalOrByte );
+	
+#else
+	
+	idODSStreamedArray< idDrawVert, 16, SBT_DOUBLE, 1 > vertsODS( verts, numVerts );
+	
+	byte tOr = 0;
+	for( int i = 0; i < numVerts; )
+	{
+	
+		const int nextNumVerts = vertsODS.FetchNextBatch() - 1;
+	
+		for( ; i <= nextNumVerts; i++ )
+		{
+			const idVec3 v = Scalar_LoadSkinnedDrawVertPosition( vertsODS[i], joints );
+	
+			const float d0 = planes[0].Distance( v );
+			const float d1 = planes[1].Distance( v );
+			const float d2 = planes[2].Distance( v );
+			const float d3 = planes[3].Distance( v );
+	
+			const float t0 = d0 + radius;
+			const float t1 = d1 + radius;
+			const float t2 = d2 + radius;
+			const float t3 = d3 + radius;
+	
+			const float s0 = d0 - radius;
+			const float s1 = d1 - radius;
+			const float s2 = d2 - radius;
+			const float s3 = d3 - radius;
+	
+			byte bits;
+			bits  = IEEE_FLT_SIGNBITSET( t0 ) << 0;
+			bits |= IEEE_FLT_SIGNBITSET( t1 ) << 1;
+			bits |= IEEE_FLT_SIGNBITSET( t2 ) << 2;
+			bits |= IEEE_FLT_SIGNBITSET( t3 ) << 3;
+	
+			bits |= IEEE_FLT_SIGNBITSET( s0 ) << 4;
+			bits |= IEEE_FLT_SIGNBITSET( s1 ) << 5;
+			bits |= IEEE_FLT_SIGNBITSET( s2 ) << 6;
+			bits |= IEEE_FLT_SIGNBITSET( s3 ) << 7;
+	
+			bits ^= 0x0F;		// flip lower four bits
+	
+			tOr |= bits;
+			cullBits[i] = bits;
+		}
+	}
+	
+	totalOr = tOr;
+	
+#endif
+}
 
 /*
-=================
-R_LocalTrace
+====================
+R_LineIntersectsTriangleExpandedWithCircle
 
-If we resort the vertexes so all silverts come first, we can save some work here.
-=================
+The triangle is expanded in the plane with a circle of the given radius.
+====================
+*/
+static bool R_LineIntersectsTriangleExpandedWithCircle( localTrace_t& hit, const idVec3& start, const idVec3& end, const float circleRadius, const idVec3& triVert0, const idVec3& triVert1, const idVec3& triVert2 )
+{
+	const idPlane plane( triVert0, triVert1, triVert2 );
+	
+	const float planeDistStart = plane.Distance( start );
+	const float planeDistEnd = plane.Distance( end );
+	
+	if( planeDistStart < 0.0f )
+	{
+		return false;		// starts past the triangle
+	}
+	
+	if( planeDistEnd > 0.0f )
+	{
+		return false;		// finishes in front of the triangle
+	}
+	
+	const float planeDelta = planeDistStart - planeDistEnd;
+	
+	if( planeDelta < idMath::FLT_SMALLEST_NON_DENORMAL )
+	{
+		return false;		// coming at the triangle from behind or parallel
+	}
+	
+	const float fraction = planeDistStart / planeDelta;
+	
+	if( fraction < 0.0f )
+	{
+		return false;		// shouldn't happen
+	}
+	
+	if( fraction >= hit.fraction )
+	{
+		return false;		// have already hit something closer
+	}
+	
+	// find the exact point of impact with the plane
+	const idVec3 point = start + fraction * ( end - start );
+	
+	// see if the point is within the three edges
+	// if radius > 0 the triangle is expanded with a circle in the triangle plane
+	
+	const float radiusSqr = circleRadius * circleRadius;
+	
+	const idVec3 dir0 = triVert0 - point;
+	const idVec3 dir1 = triVert1 - point;
+	
+	const idVec3 cross0 = dir0.Cross( dir1 );
+	float d0 = plane.Normal() * cross0;
+	if( d0 > 0.0f )
+	{
+		if( radiusSqr <= 0.0f )
+		{
+			return false;
+		}
+		idVec3 edge = triVert0 - triVert1;
+		const float edgeLengthSqr = edge.LengthSqr();
+		if( cross0.LengthSqr() > edgeLengthSqr * radiusSqr )
+		{
+			return false;
+		}
+		d0 = edge * dir0;
+		if( d0 < 0.0f )
+		{
+			edge = triVert0 - triVert2;
+			d0 = edge * dir0;
+			if( d0 < 0.0f )
+			{
+				if( dir0.LengthSqr() > radiusSqr )
+				{
+					return false;
+				}
+			}
+		}
+		else if( d0 > edgeLengthSqr )
+		{
+			edge = triVert1 - triVert2;
+			d0 = edge * dir1;
+			if( d0 < 0.0f )
+			{
+				if( dir1.LengthSqr() > radiusSqr )
+				{
+					return false;
+				}
+			}
+		}
+	}
+	
+	const idVec3 dir2 = triVert2 - point;
+	
+	const idVec3 cross1 = dir1.Cross( dir2 );
+	float d1 = plane.Normal() * cross1;
+	if( d1 > 0.0f )
+	{
+		if( radiusSqr <= 0.0f )
+		{
+			return false;
+		}
+		idVec3 edge = triVert1 - triVert2;
+		const float edgeLengthSqr = edge.LengthSqr();
+		if( cross1.LengthSqr() > edgeLengthSqr * radiusSqr )
+		{
+			return false;
+		}
+		d1 = edge * dir1;
+		if( d1 < 0.0f )
+		{
+			edge = triVert1 - triVert0;
+			d1 = edge * dir1;
+			if( d1 < 0.0f )
+			{
+				if( dir1.LengthSqr() > radiusSqr )
+				{
+					return false;
+				}
+			}
+		}
+		else if( d1 > edgeLengthSqr )
+		{
+			edge = triVert2 - triVert0;
+			d1 = edge * dir2;
+			if( d1 < 0.0f )
+			{
+				if( dir2.LengthSqr() > radiusSqr )
+				{
+					return false;
+				}
+			}
+		}
+	}
+	
+	const idVec3 cross2 = dir2.Cross( dir0 );
+	float d2 = plane.Normal() * cross2;
+	if( d2 > 0.0f )
+	{
+		if( radiusSqr <= 0.0f )
+		{
+			return false;
+		}
+		idVec3 edge = triVert2 - triVert0;
+		const float edgeLengthSqr = edge.LengthSqr();
+		if( cross2.LengthSqr() > edgeLengthSqr * radiusSqr )
+		{
+			return false;
+		}
+		d2 = edge * dir2;
+		if( d2 < 0.0f )
+		{
+			edge = triVert2 - triVert1;
+			d2 = edge * dir2;
+			if( d2 < 0.0f )
+			{
+				if( dir2.LengthSqr() > radiusSqr )
+				{
+					return false;
+				}
+			}
+		}
+		else if( d2 > edgeLengthSqr )
+		{
+			edge = triVert0 - triVert1;
+			d2 = edge * dir0;
+			if( d2 < 0.0f )
+			{
+				if( dir0.LengthSqr() > radiusSqr )
+				{
+					return false;
+				}
+			}
+		}
+	}
+	
+	// we hit this triangle
+	hit.fraction = fraction;
+	hit.normal = plane.Normal();
+	hit.point = point;
+	
+	return true;
+}
+
+/*
+====================
+R_LocalTrace
+====================
 */
 localTrace_t R_LocalTrace( const idVec3& start, const idVec3& end, const float radius, const srfTriangles_t* tri )
 {
-	int			i, j;
-	byte* 		cullBits;
-	idPlane		planes[4];
-	localTrace_t	hit;
-	int			c_testEdges, c_testPlanes, c_intersect;
-	idVec3		startDir;
-	byte		totalOr;
-	float		radiusSqr;
-	
-#ifdef TEST_TRACE
-	idTimer		trace_timer;
-	trace_timer.Start();
-#endif
-	
+	localTrace_t hit;
 	hit.fraction = 1.0f;
 	
+	ALIGNTYPE16 idPlane planes[4];
 	// create two planes orthogonal to each other that intersect along the trace
-	startDir = end - start;
+	idVec3 startDir = end - start;
 	startDir.Normalize();
 	startDir.NormalVectors( planes[0].Normal(), planes[1].Normal() );
 	planes[0][3] = - start * planes[0].Normal();
 	planes[1][3] = - start * planes[1].Normal();
-	
 	// create front and end planes so the trace is on the positive sides of both
 	planes[2] = startDir;
 	planes[2][3] = - start * planes[2].Normal();
@@ -246,250 +616,72 @@ localTrace_t R_LocalTrace( const idVec3& start, const idVec3& end, const float r
 	planes[3][3] = - end * planes[3].Normal();
 	
 	// catagorize each point against the four planes
-	cullBits = ( byte* ) _alloca16( tri->numVerts );
-	SIMDProcessor->TracePointCull( cullBits, totalOr, radius, planes, tri->verts, tri->numVerts );
+	byte* cullBits = ( byte* ) _alloca16( ALIGN( tri->numVerts, 4 ) );	// round up to a multiple of 4 for SIMD
+	byte totalOr = 0;
+	
+	const idJointMat* joints = ( tri->staticModelWithJoints != NULL && r_useGPUSkinning.GetBool() ) ? tri->staticModelWithJoints->jointsInverted : NULL;
+	if( joints != NULL )
+	{
+		R_TracePointCullSkinned( cullBits, totalOr, radius, planes, tri->verts, tri->numVerts, joints );
+	}
+	else
+	{
+		R_TracePointCullStatic( cullBits, totalOr, radius, planes, tri->verts, tri->numVerts );
+	}
 	
 	// if we don't have points on both sides of both the ray planes, no intersection
 	if( ( totalOr ^ ( totalOr >> 4 ) ) & 3 )
 	{
-		//common->Printf( "nothing crossed the trace planes\n" );
 		return hit;
 	}
 	
 	// if we don't have any points between front and end, no intersection
 	if( ( totalOr ^ ( totalOr >> 1 ) ) & 4 )
 	{
-		//common->Printf( "trace didn't reach any triangles\n" );
 		return hit;
 	}
 	
-	// scan for triangles that cross both planes
-	c_testPlanes = 0;
-	c_testEdges = 0;
-	c_intersect = 0;
+	// start streaming the indexes
+	idODSStreamedArray< triIndex_t, 256, SBT_QUAD, 3 > indexesODS( tri->indexes, tri->numIndexes );
 	
-	radiusSqr = Square( radius );
-	startDir = end - start;
-	
-	if( !tri->facePlanes || !tri->facePlanesCalculated )
+	for( int i = 0; i < tri->numIndexes; )
 	{
-		R_DeriveFacePlanes( const_cast<srfTriangles_t*>( tri ) );
+	
+		const int nextNumIndexes = indexesODS.FetchNextBatch() - 3;
+		
+		for( ; i <= nextNumIndexes; i += 3 )
+		{
+			const int i0 = indexesODS[i + 0];
+			const int i1 = indexesODS[i + 1];
+			const int i2 = indexesODS[i + 2];
+			
+			// get sidedness info for the triangle
+			const byte triOr = cullBits[i0] | cullBits[i1] | cullBits[i2];
+			
+			// if we don't have points on both sides of both the ray planes, no intersection
+			if( likely( ( triOr ^ ( triOr >> 4 ) ) & 3 ) )
+			{
+				continue;
+			}
+			
+			// if we don't have any points between front and end, no intersection
+			if( unlikely( ( triOr ^ ( triOr >> 1 ) ) & 4 ) )
+			{
+				continue;
+			}
+			
+			const idVec3 triVert0 = idDrawVert::GetSkinnedDrawVertPosition( idODSObject< idDrawVert > ( & tri->verts[i0] ), joints );
+			const idVec3 triVert1 = idDrawVert::GetSkinnedDrawVertPosition( idODSObject< idDrawVert > ( & tri->verts[i1] ), joints );
+			const idVec3 triVert2 = idDrawVert::GetSkinnedDrawVertPosition( idODSObject< idDrawVert > ( & tri->verts[i2] ), joints );
+			
+			if( R_LineIntersectsTriangleExpandedWithCircle( hit, start, end, radius, triVert0, triVert1, triVert2 ) )
+			{
+				hit.indexes[0] = i0;
+				hit.indexes[1] = i1;
+				hit.indexes[2] = i2;
+			}
+		}
 	}
 	
-	for( i = 0, j = 0; i < tri->numIndexes; i += 3, j++ )
-	{
-		float		d1, d2, f, d;
-		float		edgeLengthSqr;
-		idPlane* 	plane;
-		idVec3		point;
-		idVec3		dir[3];
-		idVec3		cross;
-		idVec3		edge;
-		byte		triOr;
-		
-		// get sidedness info for the triangle
-		triOr  = cullBits[ tri->indexes[i + 0] ];
-		triOr |= cullBits[ tri->indexes[i + 1] ];
-		triOr |= cullBits[ tri->indexes[i + 2] ];
-		
-		// if we don't have points on both sides of both the ray planes, no intersection
-		if( ( triOr ^ ( triOr >> 4 ) ) & 3 )
-		{
-			continue;
-		}
-		
-		// if we don't have any points between front and end, no intersection
-		if( ( triOr ^ ( triOr >> 1 ) ) & 4 )
-		{
-			continue;
-		}
-		
-		c_testPlanes++;
-		
-		plane = &tri->facePlanes[j];
-		d1 = plane->Distance( start );
-		d2 = plane->Distance( end );
-		
-		if( d1 <= d2 )
-		{
-			continue;		// comning at it from behind or parallel
-		}
-		
-		if( d1 < 0.0f )
-		{
-			continue;		// starts past it
-		}
-		
-		if( d2 > 0.0f )
-		{
-			continue;		// finishes in front of it
-		}
-		
-		f = d1 / ( d1 - d2 );
-		
-		if( f < 0.0f )
-		{
-			continue;		// shouldn't happen
-		}
-		
-		if( f >= hit.fraction )
-		{
-			continue;		// have already hit something closer
-		}
-		
-		c_testEdges++;
-		
-		// find the exact point of impact with the plane
-		point = start + f * startDir;
-		
-		// see if the point is within the three edges
-		// if radius > 0 the triangle is expanded with a circle in the triangle plane
-		
-		dir[0] = tri->verts[ tri->indexes[i + 0] ].xyz - point;
-		dir[1] = tri->verts[ tri->indexes[i + 1] ].xyz - point;
-		
-		cross = dir[0].Cross( dir[1] );
-		d = plane->Normal() * cross;
-		if( d > 0.0f )
-		{
-			if( radiusSqr <= 0.0f )
-			{
-				continue;
-			}
-			edge = tri->verts[ tri->indexes[i + 0] ].xyz - tri->verts[ tri->indexes[i + 1] ].xyz;
-			edgeLengthSqr = edge.LengthSqr();
-			if( cross.LengthSqr() > edgeLengthSqr * radiusSqr )
-			{
-				continue;
-			}
-			d = edge * dir[0];
-			if( d < 0.0f )
-			{
-				edge = tri->verts[ tri->indexes[i + 0] ].xyz - tri->verts[ tri->indexes[i + 2] ].xyz;
-				d = edge * dir[0];
-				if( d < 0.0f )
-				{
-					if( dir[0].LengthSqr() > radiusSqr )
-					{
-						continue;
-					}
-				}
-			}
-			else if( d > edgeLengthSqr )
-			{
-				edge = tri->verts[ tri->indexes[i + 1] ].xyz - tri->verts[ tri->indexes[i + 2] ].xyz;
-				d = edge * dir[1];
-				if( d < 0.0f )
-				{
-					if( dir[1].LengthSqr() > radiusSqr )
-					{
-						continue;
-					}
-				}
-			}
-		}
-		
-		dir[2] = tri->verts[ tri->indexes[i + 2] ].xyz - point;
-		
-		cross = dir[1].Cross( dir[2] );
-		d = plane->Normal() * cross;
-		if( d > 0.0f )
-		{
-			if( radiusSqr <= 0.0f )
-			{
-				continue;
-			}
-			edge = tri->verts[ tri->indexes[i + 1] ].xyz - tri->verts[ tri->indexes[i + 2] ].xyz;
-			edgeLengthSqr = edge.LengthSqr();
-			if( cross.LengthSqr() > edgeLengthSqr * radiusSqr )
-			{
-				continue;
-			}
-			d = edge * dir[1];
-			if( d < 0.0f )
-			{
-				edge = tri->verts[ tri->indexes[i + 1] ].xyz - tri->verts[ tri->indexes[i + 0] ].xyz;
-				d = edge * dir[1];
-				if( d < 0.0f )
-				{
-					if( dir[1].LengthSqr() > radiusSqr )
-					{
-						continue;
-					}
-				}
-			}
-			else if( d > edgeLengthSqr )
-			{
-				edge = tri->verts[ tri->indexes[i + 2] ].xyz - tri->verts[ tri->indexes[i + 0] ].xyz;
-				d = edge * dir[2];
-				if( d < 0.0f )
-				{
-					if( dir[2].LengthSqr() > radiusSqr )
-					{
-						continue;
-					}
-				}
-			}
-		}
-		
-		cross = dir[2].Cross( dir[0] );
-		d = plane->Normal() * cross;
-		if( d > 0.0f )
-		{
-			if( radiusSqr <= 0.0f )
-			{
-				continue;
-			}
-			edge = tri->verts[ tri->indexes[i + 2] ].xyz - tri->verts[ tri->indexes[i + 0] ].xyz;
-			edgeLengthSqr = edge.LengthSqr();
-			if( cross.LengthSqr() > edgeLengthSqr * radiusSqr )
-			{
-				continue;
-			}
-			d = edge * dir[2];
-			if( d < 0.0f )
-			{
-				edge = tri->verts[ tri->indexes[i + 2] ].xyz - tri->verts[ tri->indexes[i + 1] ].xyz;
-				d = edge * dir[2];
-				if( d < 0.0f )
-				{
-					if( dir[2].LengthSqr() > radiusSqr )
-					{
-						continue;
-					}
-				}
-			}
-			else if( d > edgeLengthSqr )
-			{
-				edge = tri->verts[ tri->indexes[i + 0] ].xyz - tri->verts[ tri->indexes[i + 1] ].xyz;
-				d = edge * dir[0];
-				if( d < 0.0f )
-				{
-					if( dir[0].LengthSqr() > radiusSqr )
-					{
-						continue;
-					}
-				}
-			}
-		}
-		
-		// we hit it
-		c_intersect++;
-		
-		hit.fraction = f;
-		hit.normal = plane->Normal();
-		hit.point = point;
-		hit.indexes[0] = tri->indexes[i];
-		hit.indexes[1] = tri->indexes[i + 1];
-		hit.indexes[2] = tri->indexes[i + 2];
-	}
-	
-	
-#ifdef TEST_TRACE
-	trace_timer.Stop();
-	common->Printf( "testVerts:%i c_testPlanes:%i c_testEdges:%i c_intersect:%i msec:%1.4f\n",
-					tri->numVerts, c_testPlanes, c_testEdges, c_intersect, trace_timer.Milliseconds() );
-#endif
-					
 	return hit;
 }

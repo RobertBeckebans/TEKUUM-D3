@@ -368,17 +368,7 @@ BOOL DialogScriptEditor::OnInitDialog()
 	m_hAccel = ::LoadAccelerators( AfxGetResourceHandle(), MAKEINTRESOURCE( IDR_ACCELERATOR_SCRIPTEDITOR ) );
 	
 	// create status bar
-// RB begin
-#if _MFC_VER >= 0x0A00
 	statusBar.CreateEx( SBARS_SIZEGRIP, WS_CHILD | WS_VISIBLE | CBRS_BOTTOM, initialRect, this, AFX_IDW_STATUS_BAR );
-#else
-	/*
-#if _MFC_VER >= 0x0600
-	BOOL Create(DWORD dwStyle, const RECT& rect, CWnd* pParentWnd, UINT nID);
-	*/
-	statusBar.Create( WS_CHILD | WS_VISIBLE | CBRS_BOTTOM, initialRect, this, AFX_IDW_STATUS_BAR );
-#endif
-// RB end
 	
 	scriptEdit.LimitText( 1024 * 1024 );
 	
@@ -395,7 +385,7 @@ BOOL DialogScriptEditor::OnInitDialog()
 	return FALSE; // return TRUE unless you set the focus to a control
 	// EXCEPTION: OCX Property Pages should return FALSE
 }
-	
+
 BEGIN_MESSAGE_MAP( DialogScriptEditor, CDialog )
 	ON_NOTIFY_EX_RANGE( TTN_NEEDTEXTW, 0, 0xFFFF, OnToolTipNotify )
 	ON_NOTIFY_EX_RANGE( TTN_NEEDTEXTA, 0, 0xFFFF, OnToolTipNotify )
@@ -415,7 +405,7 @@ BEGIN_MESSAGE_MAP( DialogScriptEditor, CDialog )
 	ON_BN_CLICKED( IDOK, OnBnClickedOk )
 	ON_BN_CLICKED( IDCANCEL, OnBnClickedCancel )
 END_MESSAGE_MAP()
-	
+
 /*
 ================
 ScriptEditorInit
@@ -423,7 +413,7 @@ ScriptEditorInit
 */
 void ScriptEditorInit( const idDict* spawnArgs )
 {
-	
+
 	if( renderSystem->IsFullScreen() )
 	{
 		common->Printf( "Cannot run the script editor in fullscreen mode.\n"
@@ -456,7 +446,7 @@ void ScriptEditorInit( const idDict* spawnArgs )
 	{
 	}
 }
-	
+
 /*
 ================
 ScriptEditorRun
@@ -464,10 +454,10 @@ ScriptEditorRun
 */
 void ScriptEditorRun()
 {
-#if _MSC_VER >= 1300 && _MFC_VER >= 0x0A00
-	MSG* msg = AfxGetCurrentMessage();
+#if _MSC_VER >= 1300
+	MSG* msg = AfxGetCurrentMessage();			// TODO Robert fix me!!
 #else
-	MSG* msg = &AfxGetThread()->m_msgCur;
+	MSG* msg = &m_msgCur;
 #endif
 	
 	while( ::PeekMessage( msg, NULL, NULL, NULL, PM_NOREMOVE ) )
@@ -478,7 +468,7 @@ void ScriptEditorRun()
 		}
 	}
 }
-	
+
 /*
 ================
 ScriptEditorShutdown
@@ -490,10 +480,10 @@ void ScriptEditorShutdown()
 	g_ScriptDialog = NULL;
 	scriptEvents.Clear();
 }
-	
-	
+
+
 // DialogScriptEditor message handlers
-	
+
 /*
 ================
 DialogScriptEditor::OnActivate
@@ -503,7 +493,7 @@ void DialogScriptEditor::OnActivate( UINT nState, CWnd* pWndOther, BOOL bMinimiz
 {
 	CDialog::OnActivate( nState, pWndOther, bMinimized );
 }
-	
+
 /*
 ================
 DialogScriptEditor::OnToolTipNotify
@@ -513,7 +503,7 @@ BOOL DialogScriptEditor::OnToolTipNotify( UINT id, NMHDR* pNMHDR, LRESULT* pResu
 {
 	return DefaultOnToolTipNotify( toolTips, id, pNMHDR, pResult );
 }
-	
+
 /*
 ================
 DialogScriptEditor::OnSetFocus
@@ -523,7 +513,7 @@ void DialogScriptEditor::OnSetFocus( CWnd* pOldWnd )
 {
 	CDialog::OnSetFocus( pOldWnd );
 }
-	
+
 /*
 ================
 DialogScriptEditor::OnDestroy
@@ -533,7 +523,7 @@ void DialogScriptEditor::OnDestroy()
 {
 	return CDialog::OnDestroy();
 }
-	
+
 /*
 ================
 DialogScriptEditor::OnMove
@@ -549,7 +539,7 @@ void DialogScriptEditor::OnMove( int x, int y )
 	}
 	CDialog::OnMove( x, y );
 }
-	
+
 /*
 ================
 DialogScriptEditor::OnSize
@@ -558,7 +548,7 @@ DialogScriptEditor::OnSize
 #define BORDER_SIZE			0
 #define BUTTON_SPACE		4
 #define TOOLBAR_HEIGHT		24
-	
+
 void DialogScriptEditor::OnSize( UINT nType, int cx, int cy )
 {
 	CRect clientRect, rect;
@@ -613,7 +603,7 @@ void DialogScriptEditor::OnSize( UINT nType, int cx, int cy )
 	
 	UnlockWindowUpdate();
 }
-	
+
 /*
 ================
 DialogScriptEditor::OnSizing
@@ -663,7 +653,7 @@ void DialogScriptEditor::OnSizing( UINT nSide, LPRECT lpRect )
 		}
 	}
 }
-	
+
 /*
 ================
 DialogScriptEditor::OnEditGoToLine
@@ -680,7 +670,7 @@ void DialogScriptEditor::OnEditGoToLine()
 	}
 	scriptEdit.GoToLine( goToLineDlg.GetLine() - firstLine );
 }
-	
+
 /*
 ================
 DialogScriptEditor::OnEditFind
@@ -688,7 +678,7 @@ DialogScriptEditor::OnEditFind
 */
 void DialogScriptEditor::OnEditFind()
 {
-	
+
 	CString selText = scriptEdit.GetSelText();
 	if( selText.GetLength() )
 	{
@@ -702,7 +692,7 @@ void DialogScriptEditor::OnEditFind()
 		findDlg->Create( TRUE, findStr, "", FR_DOWN, this );
 	}
 }
-	
+
 /*
 ================
 DialogScriptEditor::OnEditFindNext
@@ -719,7 +709,7 @@ void DialogScriptEditor::OnEditFindNext()
 		AfxMessageBox( "The specified text was not found.", MB_OK | MB_ICONINFORMATION, 0 );
 	}
 }
-	
+
 /*
 ================
 DialogScriptEditor::OnEditReplace
@@ -727,7 +717,7 @@ DialogScriptEditor::OnEditReplace
 */
 void DialogScriptEditor::OnEditReplace()
 {
-	
+
 	CString selText = scriptEdit.GetSelText();
 	if( selText.GetLength() )
 	{
@@ -741,7 +731,7 @@ void DialogScriptEditor::OnEditReplace()
 		findDlg->Create( FALSE, findStr, "", FR_DOWN, this );
 	}
 }
-	
+
 /*
 ================
 DialogScriptEditor::OnFindDialogMessage
@@ -766,16 +756,16 @@ LRESULT DialogScriptEditor::OnFindDialogMessage( WPARAM wParam, LPARAM lParam )
 		matchCase = findDlg->MatchCase() != FALSE;
 		matchWholeWords = findDlg->MatchWholeWord() != FALSE;
 		searchForward = findDlg->SearchDown() != FALSE;
-	
+		
 		OnEditFindNext();
 	}
 	
 	if( findDlg->ReplaceCurrent() )
 	{
 		long selStart, selEnd;
-	
+		
 		replaceStr = findDlg->GetReplaceString();
-	
+		
 		scriptEdit.GetSel( selStart, selEnd );
 		if( selEnd > selStart )
 		{
@@ -789,7 +779,7 @@ LRESULT DialogScriptEditor::OnFindDialogMessage( WPARAM wParam, LPARAM lParam )
 		findStr = findDlg->GetFindString();
 		matchCase = findDlg->MatchCase() != FALSE;
 		matchWholeWords = findDlg->MatchWholeWord() != FALSE;
-	
+		
 		int numReplaces = scriptEdit.ReplaceAll( findStr, replaceStr, matchCase, matchWholeWords );
 		if( numReplaces == 0 )
 		{
@@ -803,7 +793,7 @@ LRESULT DialogScriptEditor::OnFindDialogMessage( WPARAM wParam, LPARAM lParam )
 	
 	return 0;
 }
-	
+
 /*
 ================
 DialogScriptEditor::OnEnChangeEdit
@@ -813,7 +803,7 @@ void DialogScriptEditor::OnEnChangeEdit( NMHDR* pNMHDR, LRESULT* pResult )
 {
 	okButton.EnableWindow( TRUE );
 }
-	
+
 /*
 ================
 DialogScriptEditor::OnEnInputEdit
@@ -830,7 +820,7 @@ void DialogScriptEditor::OnEnInputEdit( NMHDR* pNMHDR, LRESULT* pResult )
 	
 	*pResult = 0;
 }
-	
+
 /*
 ================
 DialogScriptEditor::OnBnClickedOk
@@ -857,7 +847,7 @@ void DialogScriptEditor::OnBnClickedOk()
 	
 	okButton.EnableWindow( FALSE );
 }
-	
+
 /*
 ================
 DialogScriptEditor::OnBnClickedCancel
@@ -874,4 +864,3 @@ void DialogScriptEditor::OnBnClickedCancel()
 	}
 	OnCancel();
 }
-	

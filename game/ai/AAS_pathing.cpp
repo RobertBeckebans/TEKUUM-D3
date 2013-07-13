@@ -65,7 +65,7 @@ bool idAASLocal::EdgeSplitPoint( idVec3& split, int edgeNum, const idPlane& plan
 	d2 = v2 * plane.Normal() - plane.Dist();
 	
 	//if ( (d1 < CM_CLIP_EPSILON && d2 < CM_CLIP_EPSILON) || (d1 > -CM_CLIP_EPSILON && d2 > -CM_CLIP_EPSILON) ) {
-	if( FLOATSIGNBITSET( d1 ) == FLOATSIGNBITSET( d2 ) )
+	if( IEEE_FLT_SIGNBITSET( d1 ) == IEEE_FLT_SIGNBITSET( d2 ) )
 	{
 		return false;
 	}

@@ -30,10 +30,6 @@ If you have questions concerning this license or the applicable additional terms
 #include "precompiled.h"
 #pragma hdrstop
 
-#if !defined( ID_REDIRECT_NEWDELETE ) && !defined( MACOS_X )
-#define USE_STRING_DATA_ALLOCATOR
-#endif
-
 #ifdef USE_STRING_DATA_ALLOCATOR
 static idDynamicBlockAlloc < char, 1 << 18, 128 >	stringDataAllocator;
 #endif
@@ -1528,7 +1524,7 @@ int idStr::Cmp( const char* s1, const char* s2 )
 		d = c1 - c2;
 		if( d )
 		{
-			return ( INTSIGNBITNOTSET( d ) << 1 ) - 1;
+			return ( INT32_SIGNBITNOTSET( d ) << 1 ) - 1;
 		}
 	}
 	while( c1 );
@@ -1560,7 +1556,7 @@ int idStr::Cmpn( const char* s1, const char* s2, int n )
 		d = c1 - c2;
 		if( d )
 		{
-			return ( INTSIGNBITNOTSET( d ) << 1 ) - 1;
+			return ( INT32_SIGNBITNOTSET( d ) << 1 ) - 1;
 		}
 	}
 	while( c1 );
@@ -1601,7 +1597,7 @@ int idStr::Icmp( const char* s1, const char* s2 )
 					break;
 				}
 			}
-			return ( INTSIGNBITNOTSET( d ) << 1 ) - 1;
+			return ( INT32_SIGNBITNOTSET( d ) << 1 ) - 1;
 		}
 	}
 	while( c1 );
@@ -1649,7 +1645,7 @@ int idStr::Icmpn( const char* s1, const char* s2, int n )
 					break;
 				}
 			}
-			return ( INTSIGNBITNOTSET( d ) << 1 ) - 1;
+			return ( INT32_SIGNBITNOTSET( d ) << 1 ) - 1;
 		}
 	}
 	while( c1 );
@@ -1698,7 +1694,7 @@ int idStr::IcmpNoColor( const char* s1, const char* s2 )
 					break;
 				}
 			}
-			return ( INTSIGNBITNOTSET( d ) << 1 ) - 1;
+			return ( INT32_SIGNBITNOTSET( d ) << 1 ) - 1;
 		}
 	}
 	while( c1 );
@@ -1786,7 +1782,7 @@ int idStr::IcmpPath( const char* s1, const char* s2 )
 				return 1;
 			}
 			// same folder depth so use the regular compare
-			return ( INTSIGNBITNOTSET( d ) << 1 ) - 1;
+			return ( INT32_SIGNBITNOTSET( d ) << 1 ) - 1;
 		}
 	}
 	while( c1 );
@@ -1881,7 +1877,7 @@ int idStr::IcmpnPath( const char* s1, const char* s2, int n )
 				return 1;
 			}
 			// same folder depth so use the regular compare
-			return ( INTSIGNBITNOTSET( d ) << 1 ) - 1;
+			return ( INT32_SIGNBITNOTSET( d ) << 1 ) - 1;
 		}
 	}
 	while( c1 );

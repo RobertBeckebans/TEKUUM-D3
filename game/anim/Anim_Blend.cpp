@@ -3018,7 +3018,7 @@ void idDeclModelDef::SetupJoints( int* numJoints, idJointMat** jointList, idBoun
 	}
 	
 	// set up initial pose for model (with no pose, model is just a jumbled mess)
-	list = ( idJointMat* ) Mem_Alloc16( num * sizeof( list[0] ) );
+	list = ( idJointMat* ) Mem_Alloc16( SIMD_ROUND_JOINTS( num ) * sizeof( list[0] ) );
 	pose = GetDefaultPose();
 	
 	// convert the joint quaternions to joint matrices
@@ -3040,6 +3040,8 @@ void idDeclModelDef::SetupJoints( int* numJoints, idJointMat** jointList, idBoun
 	
 	// transform the joint hierarchy
 	SIMDProcessor->TransformJoints( list, jointParents.Ptr(), 1, joints.Num() - 1 );
+	
+	SIMD_INIT_LAST_JOINT( list, num );
 	
 	*numJoints = num;
 	*jointList = list;
@@ -3107,7 +3109,7 @@ bool idDeclModelDef::ParseAnim( idLexer& src, int numDefaultAnims )
 	len = alias.Length();
 	for( i = len - 1; i > 0; i-- )
 	{
-		if( !isdigit( alias[ i ] ) )
+		if( !isdigit( ( unsigned char )alias[ i ] ) )
 		{
 			break;
 		}
@@ -3265,7 +3267,7 @@ bool idDeclModelDef::ParseAnim( idLexer& src, int numDefaultAnims )
 idDeclModelDef::Parse
 ================
 */
-bool idDeclModelDef::Parse( const char* text, const int textLength )
+bool idDeclModelDef::Parse( const char* text, const int textLength, bool allowBinaryVersion )
 {
 	int					i;
 	int					num;
@@ -3971,7 +3973,7 @@ void idAnimator::Restore( idRestoreGame* savefile )
 	}
 	
 	savefile->ReadInt( numJoints );
-	joints = ( idJointMat* ) Mem_Alloc16( numJoints * sizeof( joints[0] ) );
+	joints = ( idJointMat* ) Mem_Alloc16( SIMD_ROUND_JOINTS( numJoints ) * sizeof( joints[0] ) );
 	for( i = 0; i < numJoints; i++ )
 	{
 		float* data = joints[i].ToFloatPtr();
@@ -3980,6 +3982,7 @@ void idAnimator::Restore( idRestoreGame* savefile )
 			savefile->ReadFloat( data[j] );
 		}
 	}
+	SIMD_INIT_LAST_JOINT( joints, numJoints );
 	
 	savefile->ReadInt( lastTransformTime );
 	savefile->ReadBool( stoppedAnimatingUpdate );
@@ -4815,10 +4818,10 @@ void idAnimator::InitAFPose()
 		return;
 	}
 	
-	AFPoseJoints.SetNum( modelDef->Joints().Num(), false );
-	AFPoseJoints.SetNum( 0, false );
-	AFPoseJointMods.SetNum( modelDef->Joints().Num(), false );
-	AFPoseJointFrame.SetNum( modelDef->Joints().Num(), false );
+	AFPoseJoints.SetNum( modelDef->Joints().Num() );
+	AFPoseJoints.SetNum( 0 );
+	AFPoseJointMods.SetNum( modelDef->Joints().Num() );
+	AFPoseJointFrame.SetNum( modelDef->Joints().Num() );
 }
 
 /*
@@ -4985,7 +4988,7 @@ void idAnimator::FinishAFPose( int animNum, const idBounds& bounds, const int ti
 	}
 	
 	// lock all parents of modified joints
-	AFPoseJoints.SetNum( 0, false );
+	AFPoseJoints.SetNum( 0 );
 	for( i = 0; i < numJoints; i++ )
 	{
 		if( blendJoints[i] )
@@ -5040,7 +5043,7 @@ void idAnimator::ClearAFPose()
 		ForceUpdate();
 	}
 	AFPoseBlendWeight = 1.0f;
-	AFPoseJoints.SetNum( 0, false );
+	AFPoseJoints.SetNum( 0 );
 	AFPoseBounds.Clear();
 	AFPoseTime = 0;
 }
@@ -6154,9 +6157,11 @@ idRenderModel* idGameEdit::ANIM_CreateMeshForAnim( idRenderModel* model, const c
 	}
 	
 	ent.numJoints = model->NumJoints();
-	ent.joints = ( idJointMat* )Mem_Alloc16( ent.numJoints * sizeof( *ent.joints ) );
+	ent.joints = ( idJointMat* )Mem_Alloc16( SIMD_ROUND_JOINTS( ent.numJoints ) * sizeof( *ent.joints ) );
 	
 	ANIM_CreateAnimFrame( model, md5anim, ent.numJoints, ent.joints, FRAME2MS( frame ), offset, remove_origin_offset );
+	
+	SIMD_INIT_LAST_JOINT( ent.joints, ent.numJoints );
 	
 	newmodel = model->InstantiateDynamicModel( &ent, NULL, NULL );
 	

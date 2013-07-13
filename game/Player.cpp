@@ -2822,7 +2822,7 @@ void idPlayer::UpdateHudStats( idUserInterface* _hud )
 	}
 	else
 	{
-		staminapercentage = idMath::FtoiFast( 100.0f * stamina / max_stamina );
+		staminapercentage = idMath::Ftoi( 100.0f * stamina / max_stamina );
 	}
 	
 	_hud->SetStateInt( "player_health", health );
@@ -5806,8 +5806,8 @@ idPlayer::GetBaseHeartRate
 */
 int idPlayer::GetBaseHeartRate()
 {
-	int base = idMath::FtoiFast( ( BASE_HEARTRATE + LOWHEALTH_HEARTRATE_ADJ ) - ( ( float )health / 100.0f ) * LOWHEALTH_HEARTRATE_ADJ );
-	int rate = idMath::FtoiFast( base + ( ZEROSTAMINA_HEARTRATE - base ) * ( 1.0f - stamina / pm_stamina.GetFloat() ) );
+	int base = idMath::Ftoi( ( BASE_HEARTRATE + LOWHEALTH_HEARTRATE_ADJ ) - ( ( float )health / 100.0f ) * LOWHEALTH_HEARTRATE_ADJ );
+	int rate = idMath::Ftoi( base + ( ZEROSTAMINA_HEARTRATE - base ) * ( 1.0f - stamina / pm_stamina.GetFloat() ) );
 	int diff = ( lastDmgTime ) ? gameLocal.time - lastDmgTime : 99999;
 	rate += ( diff < 5000 ) ? ( diff < 2500 ) ? ( diff < 1000 ) ? 15 : 10 : 5 : 0;
 	return rate;
@@ -5821,7 +5821,7 @@ idPlayer::SetCurrentHeartRate
 void idPlayer::SetCurrentHeartRate()
 {
 
-	int base = idMath::FtoiFast( ( BASE_HEARTRATE + LOWHEALTH_HEARTRATE_ADJ ) - ( ( float ) health / 100.0f ) * LOWHEALTH_HEARTRATE_ADJ );
+	int base = idMath::Ftoi( ( BASE_HEARTRATE + LOWHEALTH_HEARTRATE_ADJ ) - ( ( float ) health / 100.0f ) * LOWHEALTH_HEARTRATE_ADJ );
 	
 	if( PowerUpActive( ADRENALINE ) )
 	{
@@ -5829,7 +5829,7 @@ void idPlayer::SetCurrentHeartRate()
 	}
 	else
 	{
-		heartRate = idMath::FtoiFast( heartInfo.GetCurrentValue( gameLocal.time ) );
+		heartRate = idMath::Ftoi( heartInfo.GetCurrentValue( gameLocal.time ) );
 		int currentRate = GetBaseHeartRate();
 		if( health >= 0 && gameLocal.time > lastHeartAdjust + 2500 )
 		{
@@ -5837,7 +5837,7 @@ void idPlayer::SetCurrentHeartRate()
 		}
 	}
 	
-	int bps = idMath::FtoiFast( 60.0f / heartRate * 1000.0f );
+	int bps = idMath::Ftoi( 60.0f / heartRate * 1000.0f );
 	if( gameLocal.time - lastHeartBeat > bps )
 	{
 		int dmgVol = DMG_VOLUME;
@@ -8672,17 +8672,14 @@ void idPlayer::CalculateRenderView()
 	
 // RB begin
 #if defined(STANDALONE)
-	renderView->time = gameLocal.slow.time;
+	renderView->time[0] = gameLocal.slow.time;
+	renderView->time[1] = gameLocal.fast.time;
 #else
-	renderView->time = gameLocal.time;
+	renderView->time[0] = gameLocal.time;
+	renderView->time[1] = gameLocal.time;
 #endif
 // RB end
 
-	// calculate size of 3D view
-	renderView->x = 0;
-	renderView->y = 0;
-	renderView->width = SCREEN_WIDTH;
-	renderView->height = SCREEN_HEIGHT;
 	renderView->viewID = 0;
 	
 	// check if we should be drawing from a camera's POV

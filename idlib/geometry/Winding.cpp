@@ -1484,7 +1484,7 @@ float idWinding::PlaneDistance( const idPlane& plane ) const
 		if( d < min )
 		{
 			min = d;
-			if( FLOATSIGNBITSET( min ) & FLOATSIGNBITNOTSET( max ) )
+			if( IEEE_FLT_SIGNBITSET( min ) & IEEE_FLT_SIGNBITNOTSET( max ) )
 			{
 				return 0.0f;
 			}
@@ -1492,17 +1492,17 @@ float idWinding::PlaneDistance( const idPlane& plane ) const
 		if( d > max )
 		{
 			max = d;
-			if( FLOATSIGNBITSET( min ) & FLOATSIGNBITNOTSET( max ) )
+			if( IEEE_FLT_SIGNBITSET( min ) & IEEE_FLT_SIGNBITNOTSET( max ) )
 			{
 				return 0.0f;
 			}
 		}
 	}
-	if( FLOATSIGNBITNOTSET( min ) )
+	if( IEEE_FLT_SIGNBITNOTSET( min ) )
 	{
 		return min;
 	}
-	if( FLOATSIGNBITSET( max ) )
+	if( IEEE_FLT_SIGNBITSET( max ) )
 	{
 		return max;
 	}

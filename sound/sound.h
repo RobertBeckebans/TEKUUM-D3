@@ -94,7 +94,7 @@ public:
 	virtual size_t			Size() const;
 	virtual bool			SetDefaultText();
 	virtual const char* 	DefaultDefinition() const;
-	virtual bool			Parse( const char* text, const int textLength );
+	virtual bool			Parse( const char* text, const int textLength, bool allowBinaryVersion );
 	virtual void			FreeData();
 	virtual void			List() const;
 	

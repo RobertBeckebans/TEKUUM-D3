@@ -1,25 +1,25 @@
 /*
 ===========================================================================
 
-Doom 3 GPL Source Code
-Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Doom 3 BFG Edition GPL Source Code
+Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
 
-This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
+This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
-Doom 3 Source Code is free software: you can redistribute it and/or modify
+Doom 3 BFG Edition Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Doom 3 Source Code is distributed in the hope that it will be useful,
+Doom 3 BFG Edition Source Code is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Doom 3 Source Code.  If not, see <http://www.gnu.org/licenses/>.
+along with Doom 3 BFG Edition Source Code.  If not, see <http://www.gnu.org/licenses/>.
 
-In addition, the Doom 3 Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 Source Code.  If not, please request a copy in writing from id Software at the address below.
+In addition, the Doom 3 BFG Edition Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 BFG Edition Source Code.  If not, please request a copy in writing from id Software at the address below.
 
 If you have questions concerning this license or the applicable additional terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 
@@ -47,7 +47,11 @@ typedef struct commandDef_s
 	char* 					description;
 } commandDef_t;
 
-
+/*
+================================================
+idCmdSystemLocal
+================================================
+*/
 class idCmdSystemLocal : public idCmdSystem
 {
 public:
@@ -60,6 +64,8 @@ public:
 	
 	virtual void			CommandCompletion( void( *callback )( const char* s ) );
 	virtual void			ArgCompletion( const char* cmdString, void( *callback )( const char* s ) );
+	virtual void			ExecuteCommandText( const char* text );
+	virtual void			AppendCommandText( const char* text );
 	
 	virtual void			BufferCommandText( cmdExecution_t exec, const char* text );
 	virtual void			ExecuteCommandBuffer();
@@ -101,9 +107,7 @@ private:
 	
 private:
 	void					ExecuteTokenizedString( const idCmdArgs& args );
-	void					ExecuteCommandText( const char* text );
 	void					InsertCommandText( const char* text );
-	void					AppendCommandText( const char* text );
 	
 	static void				ListByFlags( const idCmdArgs& args, cmdFlags_t flags );
 	static void				List_f( const idCmdArgs& args );
@@ -123,19 +127,25 @@ private:
 idCmdSystemLocal			cmdSystemLocal;
 idCmdSystem* 				cmdSystem = &cmdSystemLocal;
 
+/*
+================================================
+idSort_CommandDef
+================================================
+*/
+class idSort_CommandDef : public idSort_Quick< commandDef_t, idSort_CommandDef >
+{
+public:
+	int Compare( const commandDef_t& a, const commandDef_t& b ) const
+	{
+		return idStr::Icmp( a.name, b.name );
+	}
+};
 
 /*
 ============
 idCmdSystemLocal::ListByFlags
 ============
 */
-// NOTE: the const wonkyness is required to make msvc happy
-template<>
-ID_INLINE int idListSortCompare( const commandDef_t* const* a, const commandDef_t* const* b )
-{
-	return idStr::Icmp( ( *a )->name, ( *b )->name );
-}
-
 void idCmdSystemLocal::ListByFlags( const idCmdArgs& args, cmdFlags_t flags )
 {
 	int i;
@@ -167,7 +177,7 @@ void idCmdSystemLocal::ListByFlags( const idCmdArgs& args, cmdFlags_t flags )
 		cmdList.Append( cmd );
 	}
 	
-	cmdList.Sort();
+	//cmdList.SortWithTemplate( idSort_CommandDef() );
 	
 	for( i = 0; i < cmdList.Num(); i++ )
 	{
@@ -366,6 +376,12 @@ void idCmdSystemLocal::Init()
 	AddCommand( "echo", Echo_f, CMD_FL_SYSTEM, "prints text" );
 	AddCommand( "parse", Parse_f, CMD_FL_SYSTEM, "prints tokenized string" );
 	AddCommand( "wait", Wait_f, CMD_FL_SYSTEM, "delays remaining buffered commands one or more frames" );
+	
+	// link in all the commands declared with static idCommandLink variables or CONSOLE_COMMAND macros
+	for( idCommandLink* link = CommandLinks(); link != NULL; link = link->next )
+	{
+		AddCommand( link->cmdName_, link->function_, CMD_FL_SYSTEM, link->description_, link->argCompletion_ );
+	}
 	
 	completionString = "*";
 	

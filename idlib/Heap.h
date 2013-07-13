@@ -1,25 +1,25 @@
 /*
 ===========================================================================
 
-Doom 3 GPL Source Code
-Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Doom 3 BFG Edition GPL Source Code
+Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
 
-This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
+This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
-Doom 3 Source Code is free software: you can redistribute it and/or modify
+Doom 3 BFG Edition Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Doom 3 Source Code is distributed in the hope that it will be useful,
+Doom 3 BFG Edition Source Code is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Doom 3 Source Code.  If not, see <http://www.gnu.org/licenses/>.
+along with Doom 3 BFG Edition Source Code.  If not, see <http://www.gnu.org/licenses/>.
 
-In addition, the Doom 3 Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 Source Code.  If not, please request a copy in writing from id Software at the address below.
+In addition, the Doom 3 BFG Edition Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 BFG Edition Source Code.  If not, please request a copy in writing from id Software at the address below.
 
 If you have questions concerning this license or the applicable additional terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 
@@ -29,245 +29,533 @@ If you have questions concerning this license or the applicable additional terms
 #ifndef __HEAP_H__
 #define __HEAP_H__
 
+#undef new
+
 /*
 ===============================================================================
 
 	Memory Management
 
-	This is a replacement for the compiler heap code (i.e. "C" malloc() and
-	free() calls). On average 2.5-3.0 times faster than MSVC malloc()/free().
-	Worst case performance is 1.65 times faster and best case > 70 times.
-
 ===============================================================================
 */
 
-
-typedef struct
+// memory tag names are used to sort allocations for sys_dumpMemory and other reporting functions
+enum memTag_t
 {
-	int		num;
-	int		minSize;
-	int		maxSize;
-	int		totalSize;
-} memoryStats_t;
+#define MEM_TAG( x )	TAG_##x,
+#include "sys/sys_alloc_tags.h"
+	TAG_NUM_TAGS,
+};
+
+static const int MAX_TAGS = 256;
 
 
-void		Mem_Init();
-void		Mem_Shutdown();
-void		Mem_EnableLeakTest( const char* name );
-void		Mem_ClearFrameStats();
-void		Mem_GetFrameStats( memoryStats_t& allocs, memoryStats_t& frees );
-void		Mem_GetStats( memoryStats_t& stats );
-void		Mem_Dump_f( const class idCmdArgs& args );
-void		Mem_DumpCompressed_f( const class idCmdArgs& args );
-void		Mem_AllocDefragBlock();
 
-
-#ifndef ID_DEBUG_MEMORY
-
-void* 		Mem_Alloc( const int size );
-void* 		Mem_ClearedAlloc( const int size );
-void		Mem_Free( void* ptr );
-char* 		Mem_CopyString( const char* in );
-void* 		Mem_Alloc16( const int size );
+// RB: 64 bit fixes, changed int to size_t
+void* 		Mem_Alloc16( const size_t size, const memTag_t tag = TAG_CRAP );
 void		Mem_Free16( void* ptr );
 
-#ifdef ID_REDIRECT_NEWDELETE
-
-__inline void* operator new( size_t s )
+ID_INLINE void* 	Mem_Alloc( const size_t size, const memTag_t tag = TAG_CRAP )
 {
-	return Mem_Alloc( s );
+	return Mem_Alloc16( size, tag );
 }
-__inline void operator delete( void* p )
+
+ID_INLINE void		Mem_Free( void* ptr )
+{
+	Mem_Free16( ptr );
+}
+
+void* 		Mem_ClearedAlloc( const size_t size, const memTag_t tag = TAG_CRAP );
+char* 		Mem_CopyString( const char* in );
+// RB end
+
+ID_INLINE void* operator new( size_t s )
+#if !defined(_MSC_VER)
+throw( std::bad_alloc ) // DG: standard signature seems to include throw(..)
+#endif
+{
+	return Mem_Alloc( s, TAG_NEW );
+}
+
+ID_INLINE void operator delete( void* p )
+#if !defined(_MSC_VER)
+throw() // DG: delete musn't throw
+#endif
 {
 	Mem_Free( p );
 }
-__inline void* operator new[]( size_t s )
+ID_INLINE void* operator new[]( size_t s )
+#if !defined(_MSC_VER)
+throw( std::bad_alloc ) // DG: standard signature seems to include throw(..)
+#endif
 {
-	return Mem_Alloc( s );
+	return Mem_Alloc( s, TAG_NEW );
 }
-__inline void operator delete[]( void* p )
+
+ID_INLINE void operator delete[]( void* p )
+#if !defined(_MSC_VER)
+throw() // DG: delete musn't throw
+#endif
 {
 	Mem_Free( p );
 }
 
+ID_INLINE void* operator new( size_t s, memTag_t tag )
+{
+	return Mem_Alloc( s, tag );
+}
+
+ID_INLINE void operator delete( void* p, memTag_t tag )
+#if !defined(_MSC_VER)
+throw() // DG: delete musn't throw
 #endif
-
-#else /* ID_DEBUG_MEMORY */
-
-void* 		Mem_Alloc( const int size, const char* fileName, const int lineNumber );
-void* 		Mem_ClearedAlloc( const int size, const char* fileName, const int lineNumber );
-void		Mem_Free( void* ptr, const char* fileName, const int lineNumber );
-char* 		Mem_CopyString( const char* in, const char* fileName, const int lineNumber );
-void* 		Mem_Alloc16( const int size, const char* fileName, const int lineNumber );
-void		Mem_Free16( void* ptr, const char* fileName, const int lineNumber );
-
-#ifdef ID_REDIRECT_NEWDELETE
-
-__inline void* operator new( size_t s, int t1, int t2, char* fileName, int lineNumber )
 {
-	return Mem_Alloc( s, fileName, lineNumber );
-}
-__inline void operator delete( void* p, int t1, int t2, char* fileName, int lineNumber )
-{
-	Mem_Free( p, fileName, lineNumber );
-}
-__inline void* operator new[]( size_t s, int t1, int t2, char* fileName, int lineNumber )
-{
-	return Mem_Alloc( s, fileName, lineNumber );
-}
-__inline void operator delete[]( void* p, int t1, int t2, char* fileName, int lineNumber )
-{
-	Mem_Free( p, fileName, lineNumber );
-}
-__inline void* operator new( size_t s )
-{
-	return Mem_Alloc( s, "", 0 );
-}
-__inline void operator delete( void* p )
-{
-	Mem_Free( p, "", 0 );
-}
-__inline void* operator new[]( size_t s )
-{
-	return Mem_Alloc( s, "", 0 );
-}
-__inline void operator delete[]( void* p )
-{
-	Mem_Free( p, "", 0 );
+	Mem_Free( p );
 }
 
-#define ID_DEBUG_NEW						new( 0, 0, __FILE__, __LINE__ )
-#undef new
-#define new									ID_DEBUG_NEW
+ID_INLINE void* operator new[]( size_t s, memTag_t tag )
+{
+	return Mem_Alloc( s, tag );
+}
 
-#endif
+ID_INLINE void operator delete[]( void* p, memTag_t tag ) throw() // DG: delete musn't throw
+{
+	Mem_Free( p );
+}
 
-#define		Mem_Alloc( size )				Mem_Alloc( size, __FILE__, __LINE__ )
-#define		Mem_ClearedAlloc( size )		Mem_ClearedAlloc( size, __FILE__, __LINE__ )
-#define		Mem_Free( ptr )					Mem_Free( ptr, __FILE__, __LINE__ )
-#define		Mem_CopyString( s )				Mem_CopyString( s, __FILE__, __LINE__ )
-#define		Mem_Alloc16( size )				Mem_Alloc16( size, __FILE__, __LINE__ )
-#define		Mem_Free16( ptr )				Mem_Free16( ptr, __FILE__, __LINE__ )
+// RB: these are added to avoid problems with afxmem.cpp
+ID_INLINE void* operator new( size_t s, const char* file, int line )
+{
+	return Mem_Alloc( s );
+}
 
-#endif /* ID_DEBUG_MEMORY */
+ID_INLINE void* operator new[]( size_t s, const char* file, int line )
+{
+	return Mem_Alloc( s );
+}
 
+ID_INLINE void operator delete( void* p, const char* file, int line )
+{
+	Mem_Free( p );
+}
+
+ID_INLINE void operator delete[]( void* p, const char* file, int line )
+{
+	Mem_Free( p );
+}
+// RB end
+
+// Define replacements for the PS3 library's aligned new operator.
+// Without these, allocations of objects with 32 byte or greater alignment
+// may not go through our memory system.
+
+/*
+================================================
+idTempArray is an array that is automatically free'd when it goes out of scope.
+There is no "cast" operator because these are very unsafe.
+
+The template parameter MUST BE POD!
+
+Compile time asserting POD-ness of the template parameter is complicated due
+to our vector classes that need a default constructor but are otherwise
+considered POD.
+================================================
+*/
+template < class T >
+class idTempArray
+{
+public:
+	idTempArray( idTempArray<T>& other );
+	idTempArray( unsigned int num );
+	
+	~idTempArray();
+	
+	T& operator []( unsigned int i )
+	{
+		assert( i < num );
+		return buffer[i];
+	}
+	const T& operator []( unsigned int i ) const
+	{
+		assert( i < num );
+		return buffer[i];
+	}
+	
+	T* Ptr()
+	{
+		return buffer;
+	}
+	const T* Ptr() const
+	{
+		return buffer;
+	}
+	
+	size_t Size( ) const
+	{
+		return num * sizeof( T );
+	}
+	unsigned int Num( ) const
+	{
+		return num;
+	}
+	
+	void Zero()
+	{
+		memset( Ptr(), 0, Size() );
+	}
+	
+private:
+	T* 				buffer;		// Ensure this buffer comes first, so this == &this->buffer
+	unsigned int	num;
+};
+
+/*
+========================
+idTempArray::idTempArray
+========================
+*/
+template < class T >
+ID_INLINE idTempArray<T>::idTempArray( idTempArray<T>& other )
+{
+	this->num = other.num;
+	this->buffer = other.buffer;
+	other.num = 0;
+	other.buffer = NULL;
+}
+
+/*
+========================
+idTempArray::idTempArray
+========================
+*/
+template < class T >
+ID_INLINE idTempArray<T>::idTempArray( unsigned int num )
+{
+	this->num = num;
+	buffer = ( T* )Mem_Alloc( num * sizeof( T ), TAG_TEMP );
+}
+
+/*
+========================
+idTempArray::~idTempArray
+========================
+*/
+template < class T >
+ID_INLINE idTempArray<T>::~idTempArray()
+{
+	Mem_Free( buffer );
+}
 
 /*
 ===============================================================================
 
 	Block based allocator for fixed size objects.
 
-	All objects of the 'type' are properly constructed.
-	However, the constructor is not called for re-used objects.
+	All objects of the 'type' are properly constructed and destructed when reused.
 
 ===============================================================================
 */
 
-template<class type, int blockSize>
+#define BLOCK_ALLOC_ALIGNMENT 16
+
+// Define this to force all block allocators to act like normal new/delete allocation
+// for tool checking.
+//#define	FORCE_DISCRETE_BLOCK_ALLOCS
+
+/*
+================================================
+idBlockAlloc is a block-based allocator for fixed-size objects.
+
+All objects are properly constructed and destructed.
+================================================
+*/
+template<class _type_, int _blockSize_, memTag_t memTag = TAG_BLOCKALLOC>
 class idBlockAlloc
 {
 public:
-	idBlockAlloc();
-	~idBlockAlloc();
+	ID_INLINE			idBlockAlloc( bool clear = false );
+	ID_INLINE			~idBlockAlloc();
 	
-	void					Shutdown();
+	// returns total size of allocated memory
+	size_t				Allocated() const
+	{
+		return total * sizeof( _type_ );
+	}
 	
-	type* 					Alloc();
-	void					Free( type* element );
+	// returns total size of allocated memory including size of (*this)
+	size_t				Size() const
+	{
+		return sizeof( *this ) + Allocated();
+	}
 	
-	int						GetTotalCount() const
+	ID_INLINE void		Shutdown();
+	ID_INLINE void		SetFixedBlocks( int numBlocks );
+	ID_INLINE void		FreeEmptyBlocks();
+	
+	ID_INLINE _type_* 	Alloc();
+	ID_INLINE void		Free( _type_ *element );
+	
+	int					GetTotalCount() const
 	{
 		return total;
 	}
-	int						GetAllocCount() const
+	int					GetAllocCount() const
 	{
 		return active;
 	}
-	int						GetFreeCount() const
+	int					GetFreeCount() const
 	{
 		return total - active;
 	}
 	
 private:
-	typedef struct element_s
+	union element_t
 	{
-		// RB: 64 bit fix, changed swapped order of t and next
-		type				t;
-		struct element_s* 	next;
-		// RB end
-	} element_t;
-	typedef struct block_s
-	{
-		element_t			elements[blockSize];
-		struct block_s* 	next;
-	} block_t;
+		_type_* 		data;	// this is a hack to make sure the save game system marks _type_ as saveable
+		element_t* 		next;
+		byte			buffer[( CONST_MAX( sizeof( _type_ ), sizeof( element_t* ) ) + ( BLOCK_ALLOC_ALIGNMENT - 1 ) ) & ~( BLOCK_ALLOC_ALIGNMENT - 1 )];
+	};
 	
-	block_t* 				blocks;
-	element_t* 				free;
-	int						total;
-	int						active;
+	class idBlock
+	{
+	public:
+		element_t		elements[_blockSize_];
+		idBlock* 		next;
+		element_t* 		free;		// list with free elements in this block (temp used only by FreeEmptyBlocks)
+		int				freeCount;	// number of free elements in this block (temp used only by FreeEmptyBlocks)
+	};
+	
+	idBlock* 			blocks;
+	element_t* 			free;
+	int					total;
+	int					active;
+	bool				allowAllocs;
+	bool				clearAllocs;
+	
+	ID_INLINE void		AllocNewBlock();
 };
 
-template<class type, int blockSize>
-idBlockAlloc<type, blockSize>::idBlockAlloc()
+/*
+========================
+idBlockAlloc<_type_,_blockSize_,align_t>::idBlockAlloc
+========================
+*/
+template<class _type_, int _blockSize_, memTag_t memTag>
+ID_INLINE idBlockAlloc<_type_, _blockSize_, memTag>::idBlockAlloc( bool clear ) :
+	blocks( NULL ),
+	free( NULL ),
+	total( 0 ),
+	active( 0 ),
+	allowAllocs( true ),
+	clearAllocs( clear )
 {
-	blocks = NULL;
-	free = NULL;
-	total = active = 0;
 }
 
-template<class type, int blockSize>
-idBlockAlloc<type, blockSize>::~idBlockAlloc()
+/*
+========================
+idBlockAlloc<_type_,_blockSize__,align_t>::~idBlockAlloc
+========================
+*/
+template<class _type_, int _blockSize_, memTag_t memTag>
+ID_INLINE idBlockAlloc<_type_, _blockSize_, memTag>::~idBlockAlloc()
 {
 	Shutdown();
 }
 
-template<class type, int blockSize>
-type* idBlockAlloc<type, blockSize>::Alloc()
+/*
+========================
+idBlockAlloc<_type_,_blockSize_,align_t>::Alloc
+========================
+*/
+template<class _type_, int _blockSize_, memTag_t memTag>
+ID_INLINE _type_* idBlockAlloc<_type_, _blockSize_, memTag>::Alloc()
 {
-	if( !free )
+#ifdef FORCE_DISCRETE_BLOCK_ALLOCS
+	// for debugging tools
+	return new _type_;
+#else
+	if( free == NULL )
 	{
-		block_t* block = new block_t;
-		block->next = blocks;
-		blocks = block;
-		for( int i = 0; i < blockSize; i++ )
+		if( !allowAllocs )
 		{
-			block->elements[i].next = free;
-			free = &block->elements[i];
+			return NULL;
 		}
-		total += blockSize;
+		AllocNewBlock();
 	}
+	
 	active++;
 	element_t* element = free;
 	free = free->next;
 	element->next = NULL;
-	return &element->t;
+	
+	_type_ * t = ( _type_* ) element->buffer;
+	if( clearAllocs )
+	{
+		memset( t, 0, sizeof( _type_ ) );
+	}
+	new( t ) _type_;
+	return t;
+#endif
 }
 
-template<class type, int blockSize>
-void idBlockAlloc<type, blockSize>::Free( type* t )
+/*
+========================
+idBlockAlloc<_type_,_blockSize_,align_t>::Free
+========================
+*/
+template<class _type_, int _blockSize_, memTag_t memTag>
+ID_INLINE void idBlockAlloc<_type_, _blockSize_, memTag>::Free( _type_ * t )
 {
-	// RB: 64 bit fix, changed swapped order of t and next
-	//element_t *element = (element_t *)( ( (unsigned char *) t ) - ( (int) &((element_t *)0)->t ) );
-	element_t* element = ( element_t* ) t;
-	// RB end
+#ifdef FORCE_DISCRETE_BLOCK_ALLOCS
+	// for debugging tools
+	delete t;
+#else
+	if( t == NULL )
+	{
+		return;
+	}
+	
+	t->~_type_();
+	
+	element_t* element = ( element_t* )( t );
 	element->next = free;
 	free = element;
 	active--;
+#endif
 }
 
-template<class type, int blockSize>
-void idBlockAlloc<type, blockSize>::Shutdown()
+/*
+========================
+idBlockAlloc<_type_,_blockSize_,align_t>::Shutdown
+========================
+*/
+template<class _type_, int _blockSize_, memTag_t memTag>
+ID_INLINE void idBlockAlloc<_type_, _blockSize_, memTag>::Shutdown()
 {
-	while( blocks )
+	while( blocks != NULL )
 	{
-		block_t* block = blocks;
+		idBlock* block = blocks;
 		blocks = blocks->next;
-		delete block;
+		Mem_Free( block );
 	}
 	blocks = NULL;
 	free = NULL;
 	total = active = 0;
+}
+
+/*
+========================
+idBlockAlloc<_type_,_blockSize_,align_t>::SetFixedBlocks
+========================
+*/
+template<class _type_, int _blockSize_, memTag_t memTag>
+ID_INLINE void idBlockAlloc<_type_, _blockSize_, memTag>::SetFixedBlocks( int numBlocks )
+{
+	int currentNumBlocks = 0;
+	for( idBlock* block = blocks; block != NULL; block = block->next )
+	{
+		currentNumBlocks++;
+	}
+	for( int i = currentNumBlocks; i < numBlocks; i++ )
+	{
+		AllocNewBlock();
+	}
+	allowAllocs = false;
+}
+
+/*
+========================
+idBlockAlloc<_type_,_blockSize_,align_t>::AllocNewBlock
+========================
+*/
+template<class _type_, int _blockSize_, memTag_t memTag>
+ID_INLINE void idBlockAlloc<_type_, _blockSize_, memTag>::AllocNewBlock()
+{
+	idBlock* block = ( idBlock* )Mem_Alloc( sizeof( idBlock ), memTag );
+	block->next = blocks;
+	blocks = block;
+	for( int i = 0; i < _blockSize_; i++ )
+	{
+		block->elements[i].next = free;
+		free = &block->elements[i];
+		
+		// RB: changed UINT_PTR to uintptr_t
+		assert( ( ( ( uintptr_t )free ) & ( BLOCK_ALLOC_ALIGNMENT - 1 ) ) == 0 );
+		// RB end
+	}
+	total += _blockSize_;
+}
+
+/*
+========================
+idBlockAlloc<_type_,_blockSize_,align_t>::FreeEmptyBlocks
+========================
+*/
+template<class _type_, int _blockSize_, memTag_t memTag>
+ID_INLINE void idBlockAlloc<_type_, _blockSize_, memTag>::FreeEmptyBlocks()
+{
+	// first count how many free elements are in each block
+	// and build up a free chain per block
+	for( idBlock* block = blocks; block != NULL; block = block->next )
+	{
+		block->free = NULL;
+		block->freeCount = 0;
+	}
+	for( element_t* element = free; element != NULL; )
+	{
+		element_t* next = element->next;
+		for( idBlock* block = blocks; block != NULL; block = block->next )
+		{
+			if( element >= block->elements && element < block->elements + _blockSize_ )
+			{
+				element->next = block->free;
+				block->free = element;
+				block->freeCount++;
+				break;
+			}
+		}
+		// if this assert fires, we couldn't find the element in any block
+		assert( element->next != next );
+		element = next;
+	}
+	// now free all blocks whose free count == _blockSize_
+	idBlock* prevBlock = NULL;
+	for( idBlock* block = blocks; block != NULL; )
+	{
+		idBlock* next = block->next;
+		if( block->freeCount == _blockSize_ )
+		{
+			if( prevBlock == NULL )
+			{
+				assert( blocks == block );
+				blocks = block->next;
+			}
+			else
+			{
+				assert( prevBlock->next == block );
+				prevBlock->next = block->next;
+			}
+			Mem_Free( block );
+			total -= _blockSize_;
+		}
+		else
+		{
+			prevBlock = block;
+		}
+		block = next;
+	}
+	// now rebuild the free chain
+	free = NULL;
+	for( idBlock* block = blocks; block != NULL; block = block->next )
+	{
+		for( element_t* element = block->free; element != NULL; )
+		{
+			element_t* next = element->next;
+			element->next = free;
+			free = element;
+			element = next;
+		}
+	}
 }
 
 /*
@@ -373,7 +661,7 @@ type* idDynamicAlloc<type, baseBlockSize, minBlockSize>::Alloc( const int num )
 	}
 	numUsedBlocks++;
 	usedBlockMemory += num * sizeof( type );
-	return ( type* ) Mem_Alloc16( num * sizeof( type ) );
+	return Mem_Alloc16( num * sizeof( type ), TAG_BLOCKALLOC );
 }
 
 template<class type, int baseBlockSize, int minBlockSize>
@@ -472,7 +760,7 @@ public:
 	idBTreeNode<idDynamicBlock<type>, int>* node;			// node in the B-Tree with free blocks
 };
 
-template<class type, int baseBlockSize, int minBlockSize>
+template<class type, int baseBlockSize, int minBlockSize, memTag_t _tag_ = TAG_BLOCKALLOC>
 class idDynamicBlockAlloc
 {
 public:
@@ -538,6 +826,8 @@ private:
 	int								numResizes;
 	int								numFrees;
 	
+	memTag_t						tag;
+	
 	void							Clear();
 	idDynamicBlock<type>* 			AllocInternal( const int num );
 	idDynamicBlock<type>* 			ResizeInternal( idDynamicBlock<type>* block, const int num );
@@ -547,26 +837,27 @@ private:
 	void							CheckMemory() const;
 };
 
-template<class type, int baseBlockSize, int minBlockSize>
-idDynamicBlockAlloc<type, baseBlockSize, minBlockSize>::idDynamicBlockAlloc()
+template<class type, int baseBlockSize, int minBlockSize, memTag_t _tag_>
+idDynamicBlockAlloc<type, baseBlockSize, minBlockSize, _tag_>::idDynamicBlockAlloc()
 {
+	tag = _tag_;
 	Clear();
 }
 
-template<class type, int baseBlockSize, int minBlockSize>
-idDynamicBlockAlloc<type, baseBlockSize, minBlockSize>::~idDynamicBlockAlloc()
+template<class type, int baseBlockSize, int minBlockSize, memTag_t _tag_>
+idDynamicBlockAlloc<type, baseBlockSize, minBlockSize, _tag_>::~idDynamicBlockAlloc()
 {
 	Shutdown();
 }
 
-template<class type, int baseBlockSize, int minBlockSize>
-void idDynamicBlockAlloc<type, baseBlockSize, minBlockSize>::Init()
+template<class type, int baseBlockSize, int minBlockSize, memTag_t _tag_>
+void idDynamicBlockAlloc<type, baseBlockSize, minBlockSize, _tag_>::Init()
 {
 	freeTree.Init();
 }
 
-template<class type, int baseBlockSize, int minBlockSize>
-void idDynamicBlockAlloc<type, baseBlockSize, minBlockSize>::Shutdown()
+template<class type, int baseBlockSize, int minBlockSize, memTag_t _tag_>
+void idDynamicBlockAlloc<type, baseBlockSize, minBlockSize, _tag_>::Shutdown()
 {
 	idDynamicBlock<type>* block;
 	
@@ -584,7 +875,7 @@ void idDynamicBlockAlloc<type, baseBlockSize, minBlockSize>::Shutdown()
 		assert( block->IsBaseBlock() );
 		if( lockMemory )
 		{
-			idLib::sys->UnlockMemory( block, block->GetSize() + ( int )sizeof( idDynamicBlock<type> ) );
+			//idLib::sys->UnlockMemory( block, block->GetSize() + (int)sizeof( idDynamicBlock<type> ) );
 		}
 		Mem_Free16( block );
 	}
@@ -594,17 +885,17 @@ void idDynamicBlockAlloc<type, baseBlockSize, minBlockSize>::Shutdown()
 	Clear();
 }
 
-template<class type, int baseBlockSize, int minBlockSize>
-void idDynamicBlockAlloc<type, baseBlockSize, minBlockSize>::SetFixedBlocks( int numBlocks )
+template<class type, int baseBlockSize, int minBlockSize, memTag_t _tag_>
+void idDynamicBlockAlloc<type, baseBlockSize, minBlockSize, _tag_>::SetFixedBlocks( int numBlocks )
 {
 	idDynamicBlock<type>* block;
 	
 	for( int i = numBaseBlocks; i < numBlocks; i++ )
 	{
-		block = ( idDynamicBlock<type>* ) Mem_Alloc16( baseBlockSize );
+		block = ( idDynamicBlock<type>* ) Mem_Alloc16( baseBlockSize, _tag_ );
 		if( lockMemory )
 		{
-			idLib::sys->LockMemory( block, baseBlockSize );
+			//idLib::sys->LockMemory( block, baseBlockSize );
 		}
 #ifdef DYNAMIC_BLOCK_ALLOC_CHECK
 		memcpy( block->id, blockId, sizeof( block->id ) );
@@ -633,14 +924,14 @@ void idDynamicBlockAlloc<type, baseBlockSize, minBlockSize>::SetFixedBlocks( int
 	allowAllocs = false;
 }
 
-template<class type, int baseBlockSize, int minBlockSize>
-void idDynamicBlockAlloc<type, baseBlockSize, minBlockSize>::SetLockMemory( bool lock )
+template<class type, int baseBlockSize, int minBlockSize, memTag_t _tag_>
+void idDynamicBlockAlloc<type, baseBlockSize, minBlockSize, _tag_>::SetLockMemory( bool lock )
 {
 	lockMemory = lock;
 }
 
-template<class type, int baseBlockSize, int minBlockSize>
-void idDynamicBlockAlloc<type, baseBlockSize, minBlockSize>::FreeEmptyBaseBlocks()
+template<class type, int baseBlockSize, int minBlockSize, memTag_t _tag_>
+void idDynamicBlockAlloc<type, baseBlockSize, minBlockSize, _tag_>::FreeEmptyBaseBlocks()
 {
 	idDynamicBlock<type>* block, *next;
 	
@@ -669,7 +960,7 @@ void idDynamicBlockAlloc<type, baseBlockSize, minBlockSize>::FreeEmptyBaseBlocks
 			}
 			if( lockMemory )
 			{
-				idLib::sys->UnlockMemory( block, block->GetSize() + ( int )sizeof( idDynamicBlock<type> ) );
+				//idLib::sys->UnlockMemory( block, block->GetSize() + (int)sizeof( idDynamicBlock<type> ) );
 			}
 			numBaseBlocks--;
 			baseBlockMemory -= block->GetSize() + ( int )sizeof( idDynamicBlock<type> );
@@ -682,8 +973,8 @@ void idDynamicBlockAlloc<type, baseBlockSize, minBlockSize>::FreeEmptyBaseBlocks
 #endif
 }
 
-template<class type, int baseBlockSize, int minBlockSize>
-int idDynamicBlockAlloc<type, baseBlockSize, minBlockSize>::GetNumEmptyBaseBlocks() const
+template<class type, int baseBlockSize, int minBlockSize, memTag_t _tag_>
+int idDynamicBlockAlloc<type, baseBlockSize, minBlockSize, _tag_>::GetNumEmptyBaseBlocks() const
 {
 	int numEmptyBaseBlocks;
 	idDynamicBlock<type>* block;
@@ -699,8 +990,8 @@ int idDynamicBlockAlloc<type, baseBlockSize, minBlockSize>::GetNumEmptyBaseBlock
 	return numEmptyBaseBlocks;
 }
 
-template<class type, int baseBlockSize, int minBlockSize>
-type* idDynamicBlockAlloc<type, baseBlockSize, minBlockSize>::Alloc( const int num )
+template<class type, int baseBlockSize, int minBlockSize, memTag_t _tag_>
+type* idDynamicBlockAlloc<type, baseBlockSize, minBlockSize, _tag_>::Alloc( const int num )
 {
 	idDynamicBlock<type>* block;
 	
@@ -732,8 +1023,8 @@ type* idDynamicBlockAlloc<type, baseBlockSize, minBlockSize>::Alloc( const int n
 	return block->GetMemory();
 }
 
-template<class type, int baseBlockSize, int minBlockSize>
-type* idDynamicBlockAlloc<type, baseBlockSize, minBlockSize>::Resize( type* ptr, const int num )
+template<class type, int baseBlockSize, int minBlockSize, memTag_t _tag_>
+type* idDynamicBlockAlloc<type, baseBlockSize, minBlockSize, _tag_>::Resize( type* ptr, const int num )
 {
 
 	numResizes++;
@@ -768,8 +1059,8 @@ type* idDynamicBlockAlloc<type, baseBlockSize, minBlockSize>::Resize( type* ptr,
 	return block->GetMemory();
 }
 
-template<class type, int baseBlockSize, int minBlockSize>
-void idDynamicBlockAlloc<type, baseBlockSize, minBlockSize>::Free( type* ptr )
+template<class type, int baseBlockSize, int minBlockSize, memTag_t _tag_>
+void idDynamicBlockAlloc<type, baseBlockSize, minBlockSize, _tag_>::Free( type* ptr )
 {
 
 	numFrees++;
@@ -791,8 +1082,8 @@ void idDynamicBlockAlloc<type, baseBlockSize, minBlockSize>::Free( type* ptr )
 #endif
 }
 
-template<class type, int baseBlockSize, int minBlockSize>
-const char* idDynamicBlockAlloc<type, baseBlockSize, minBlockSize>::CheckMemory( const type* ptr ) const
+template<class type, int baseBlockSize, int minBlockSize, memTag_t _tag_>
+const char* idDynamicBlockAlloc<type, baseBlockSize, minBlockSize, _tag_>::CheckMemory( const type* ptr ) const
 {
 	idDynamicBlock<type>* block;
 	
@@ -836,8 +1127,8 @@ const char* idDynamicBlockAlloc<type, baseBlockSize, minBlockSize>::CheckMemory(
 	return NULL;
 }
 
-template<class type, int baseBlockSize, int minBlockSize>
-void idDynamicBlockAlloc<type, baseBlockSize, minBlockSize>::Clear()
+template<class type, int baseBlockSize, int minBlockSize, memTag_t _tag_>
+void idDynamicBlockAlloc<type, baseBlockSize, minBlockSize, _tag_>::Clear()
 {
 	firstBlock = lastBlock = NULL;
 	allowAllocs = true;
@@ -859,8 +1150,8 @@ void idDynamicBlockAlloc<type, baseBlockSize, minBlockSize>::Clear()
 #endif
 }
 
-template<class type, int baseBlockSize, int minBlockSize>
-idDynamicBlock<type>* idDynamicBlockAlloc<type, baseBlockSize, minBlockSize>::AllocInternal( const int num )
+template<class type, int baseBlockSize, int minBlockSize, memTag_t _tag_>
+idDynamicBlock<type>* idDynamicBlockAlloc<type, baseBlockSize, minBlockSize, _tag_>::AllocInternal( const int num )
 {
 	idDynamicBlock<type>* block;
 	int alignedBytes = ( num * sizeof( type ) + 15 ) & ~15;
@@ -873,10 +1164,10 @@ idDynamicBlock<type>* idDynamicBlockAlloc<type, baseBlockSize, minBlockSize>::Al
 	else if( allowAllocs )
 	{
 		int allocSize = Max( baseBlockSize, alignedBytes + ( int )sizeof( idDynamicBlock<type> ) );
-		block = ( idDynamicBlock<type>* ) Mem_Alloc16( allocSize );
+		block = ( idDynamicBlock<type>* ) Mem_Alloc16( allocSize, _tag_ );
 		if( lockMemory )
 		{
-			idLib::sys->LockMemory( block, baseBlockSize );
+			//idLib::sys->LockMemory( block, baseBlockSize );
 		}
 #ifdef DYNAMIC_BLOCK_ALLOC_CHECK
 		memcpy( block->id, blockId, sizeof( block->id ) );
@@ -903,8 +1194,8 @@ idDynamicBlock<type>* idDynamicBlockAlloc<type, baseBlockSize, minBlockSize>::Al
 	return block;
 }
 
-template<class type, int baseBlockSize, int minBlockSize>
-idDynamicBlock<type>* idDynamicBlockAlloc<type, baseBlockSize, minBlockSize>::ResizeInternal( idDynamicBlock<type>* block, const int num )
+template<class type, int baseBlockSize, int minBlockSize, memTag_t _tag_>
+idDynamicBlock<type>* idDynamicBlockAlloc<type, baseBlockSize, minBlockSize, _tag_>::ResizeInternal( idDynamicBlock<type>* block, const int num )
 {
 	int alignedBytes = ( num * sizeof( type ) + 15 ) & ~15;
 	
@@ -982,8 +1273,8 @@ idDynamicBlock<type>* idDynamicBlockAlloc<type, baseBlockSize, minBlockSize>::Re
 	return block;
 }
 
-template<class type, int baseBlockSize, int minBlockSize>
-void idDynamicBlockAlloc<type, baseBlockSize, minBlockSize>::FreeInternal( idDynamicBlock<type>* block )
+template<class type, int baseBlockSize, int minBlockSize, memTag_t _tag_>
+void idDynamicBlockAlloc<type, baseBlockSize, minBlockSize, _tag_>::FreeInternal( idDynamicBlock<type>* block )
 {
 
 	assert( block->node == NULL );
@@ -1032,16 +1323,16 @@ void idDynamicBlockAlloc<type, baseBlockSize, minBlockSize>::FreeInternal( idDyn
 	}
 }
 
-template<class type, int baseBlockSize, int minBlockSize>
-ID_INLINE void idDynamicBlockAlloc<type, baseBlockSize, minBlockSize>::LinkFreeInternal( idDynamicBlock<type>* block )
+template<class type, int baseBlockSize, int minBlockSize, memTag_t _tag_>
+ID_INLINE void idDynamicBlockAlloc<type, baseBlockSize, minBlockSize, _tag_>::LinkFreeInternal( idDynamicBlock<type>* block )
 {
 	block->node = freeTree.Add( block, block->GetSize() );
 	numFreeBlocks++;
 	freeBlockMemory += block->GetSize();
 }
 
-template<class type, int baseBlockSize, int minBlockSize>
-ID_INLINE void idDynamicBlockAlloc<type, baseBlockSize, minBlockSize>::UnlinkFreeInternal( idDynamicBlock<type>* block )
+template<class type, int baseBlockSize, int minBlockSize, memTag_t _tag_>
+ID_INLINE void idDynamicBlockAlloc<type, baseBlockSize, minBlockSize, _tag_>::UnlinkFreeInternal( idDynamicBlock<type>* block )
 {
 	freeTree.Remove( block->node );
 	block->node = NULL;
@@ -1049,8 +1340,8 @@ ID_INLINE void idDynamicBlockAlloc<type, baseBlockSize, minBlockSize>::UnlinkFre
 	freeBlockMemory -= block->GetSize();
 }
 
-template<class type, int baseBlockSize, int minBlockSize>
-void idDynamicBlockAlloc<type, baseBlockSize, minBlockSize>::CheckMemory() const
+template<class type, int baseBlockSize, int minBlockSize, memTag_t _tag_>
+void idDynamicBlockAlloc<type, baseBlockSize, minBlockSize, _tag_>::CheckMemory() const
 {
 	idDynamicBlock<type>* block;
 	

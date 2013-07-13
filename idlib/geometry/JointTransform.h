@@ -51,17 +51,17 @@ public:
 	
 	idQuat			q;
 	idVec3			t;
-	//float			w;
+	float			w;
 };
 
 // offsets for SIMD code
-#define JOINTQUAT_SIZE				(7*4)		// sizeof( idJointQuat )
-//#define JOINTQUAT_SIZE_SHIFT		5			// log2( sizeof( idJointQuat ) )
+#define JOINTQUAT_SIZE				(8*4)		// sizeof( idJointQuat )
+#define JOINTQUAT_SIZE_SHIFT		5			// log2( sizeof( idJointQuat ) )
 #define JOINTQUAT_Q_OFFSET			(0*4)		// offsetof( idJointQuat, q )
 #define JOINTQUAT_T_OFFSET			(4*4)		// offsetof( idJointQuat, t )
 
 assert_sizeof( idJointQuat, JOINTQUAT_SIZE );
-//assert_sizeof( idJointQuat, ( 1 << JOINTQUAT_SIZE_SHIFT ) );
+assert_sizeof( idJointQuat, ( 1 << JOINTQUAT_SIZE_SHIFT ) );
 assert_offsetof( idJointQuat, q, JOINTQUAT_Q_OFFSET );
 assert_offsetof( idJointQuat, t, JOINTQUAT_T_OFFSET );
 

@@ -712,10 +712,10 @@ void idSaveGame::WriteRenderView( const renderView_t& view )
 	int i;
 	
 	WriteInt( view.viewID );
-	WriteInt( view.x );
-	WriteInt( view.y );
-	WriteInt( view.width );
-	WriteInt( view.height );
+	WriteInt( 0 /* view.x */ );
+	WriteInt( 0 /* view.y */ );
+	WriteInt( 0 /* view.width */ );
+	WriteInt( 0 /* view.height */ );
 	
 	WriteFloat( view.fov_x );
 	WriteFloat( view.fov_y );
@@ -724,7 +724,8 @@ void idSaveGame::WriteRenderView( const renderView_t& view )
 	
 	WriteBool( view.cramZNear );
 	
-	WriteInt( view.time );
+	WriteInt( view.time[0] );
+	WriteInt( view.time[1] );
 	
 	for( i = 0; i < MAX_GLOBAL_SHADER_PARMS; i++ )
 	{
@@ -1592,10 +1593,10 @@ void idRestoreGame::ReadRenderView( renderView_t& view )
 	int i;
 	
 	ReadInt( view.viewID );
-	ReadInt( view.x );
-	ReadInt( view.y );
-	ReadInt( view.width );
-	ReadInt( view.height );
+	ReadInt( i /* view.x */ );
+	ReadInt( i /* view.y */ );
+	ReadInt( i /* view.width */ );
+	ReadInt( i /* view.height */ );
 	
 	ReadFloat( view.fov_x );
 	ReadFloat( view.fov_y );
@@ -1604,7 +1605,8 @@ void idRestoreGame::ReadRenderView( renderView_t& view )
 	
 	ReadBool( view.cramZNear );
 	
-	ReadInt( view.time );
+	ReadInt( view.time[0] );
+	ReadInt( view.time[1] );
 	
 	for( i = 0; i < MAX_GLOBAL_SHADER_PARMS; i++ )
 	{

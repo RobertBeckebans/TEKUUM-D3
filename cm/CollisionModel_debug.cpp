@@ -1,25 +1,25 @@
 /*
 ===========================================================================
 
-Doom 3 GPL Source Code
-Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Doom 3 BFG Edition GPL Source Code
+Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
 
-This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
+This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
-Doom 3 Source Code is free software: you can redistribute it and/or modify
+Doom 3 BFG Edition Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Doom 3 Source Code is distributed in the hope that it will be useful,
+Doom 3 BFG Edition Source Code is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Doom 3 Source Code.  If not, see <http://www.gnu.org/licenses/>.
+along with Doom 3 BFG Edition Source Code.  If not, see <http://www.gnu.org/licenses/>.
 
-In addition, the Doom 3 Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 Source Code.  If not, please request a copy in writing from id Software at the address below.
+In addition, the Doom 3 BFG Edition Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 BFG Edition Source Code.  If not, please request a copy in writing from id Software at the address below.
 
 If you have questions concerning this license or the applicable additional terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 
@@ -34,8 +34,9 @@ If you have questions concerning this license or the applicable additional terms
 ===============================================================================
 */
 
-#include "precompiled.h"
 #pragma hdrstop
+#include "precompiled.h"
+
 
 #include "CollisionModel_local.h"
 
@@ -200,18 +201,18 @@ void idCollisionModelManagerLocal::DrawEdge( cm_model_t* model, int edgeNum, con
 	{
 		if( cm_drawInternal.GetBool() )
 		{
-			session->rw->DebugArrow( colorGreen, start, end, 1 );
+			session->RW()->DebugArrow( colorGreen, start, end, 1 );
 		}
 	}
 	else
 	{
 		if( edge->numUsers > 2 )
 		{
-			session->rw->DebugArrow( colorBlue, start, end, 1 );
+			session->RW()->DebugArrow( colorBlue, start, end, 1 );
 		}
 		else
 		{
-			session->rw->DebugArrow( cm_color, start, end, 1 );
+			session->RW()->DebugArrow( cm_color, start, end, 1 );
 		}
 	}
 	
@@ -226,7 +227,7 @@ void idCollisionModelManagerLocal::DrawEdge( cm_model_t* model, int edgeNum, con
 		{
 			end = mid + 5 * edge->normal;
 		}
-		session->rw->DebugArrow( colorCyan, mid, end, 1 );
+		session->RW()->DebugArrow( colorCyan, mid, end, 1 );
 	}
 }
 
@@ -272,7 +273,7 @@ void idCollisionModelManagerLocal::DrawPolygon( cm_model_t* model, cm_polygon_t*
 			center += origin;
 			end = center + 5 * p->plane.Normal();
 		}
-		session->rw->DebugArrow( colorMagenta, center, end, 1 );
+		session->RW()->DebugArrow( colorMagenta, center, end, 1 );
 	}
 	
 	if( cm_drawFilled.GetBool() )
@@ -282,9 +283,9 @@ void idCollisionModelManagerLocal::DrawPolygon( cm_model_t* model, cm_polygon_t*
 		{
 			edgeNum = p->edges[i];
 			edge = model->edges + abs( edgeNum );
-			winding += origin + model->vertices[edge->vertexNum[INTSIGNBITSET( edgeNum )]].p * axis;
+			winding += origin + model->vertices[edge->vertexNum[INT32_SIGNBITSET( edgeNum )]].p * axis;
 		}
-		session->rw->DebugPolygon( cm_color, winding );
+		session->RW()->DebugPolygon( cm_color, winding );
 	}
 	else
 	{

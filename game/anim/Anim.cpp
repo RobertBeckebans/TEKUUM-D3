@@ -34,7 +34,7 @@ If you have questions concerning this license or the applicable additional terms
 
 static idCVar g_binaryLoadAnim( "g_binaryLoadAnim", "1", 0, "enable binary load/write of idMD5Anim" );
 
-static const byte B_ANIM_MD5_VERSION = 102;
+static const byte B_ANIM_MD5_VERSION = 101;
 static const unsigned int B_ANIM_MD5_MAGIC = ( 'B' << 24 ) | ( 'M' << 16 ) | ( 'D' << 8 ) | B_ANIM_MD5_VERSION;
 
 static const int JOINT_FRAME_PAD	= 1;	// one extra to be able to read one more float than is necessary
@@ -316,7 +316,7 @@ bool idMD5Anim::LoadAnim( const char* filename )
 		parser.Parse1DMatrix( 3, baseFrame[ i ].t.ToFloatPtr() );
 		parser.Parse1DMatrix( 3, q.ToFloatPtr() );//baseFrame[ i ].q.ToFloatPtr() );
 		baseFrame[ i ].q = q.ToQuat();//.w = baseFrame[ i ].q.CalcW();
-		//baseFrame[ i ].w = 0.0f;
+		baseFrame[ i ].w = 0.0f;
 	}
 	parser.ExpectTokenString( "}" );
 	
@@ -482,7 +482,7 @@ bool idMD5Anim::LoadBinary( idFile* file, ID_TIME_T sourceTimeStamp )
 		file->ReadBig( j.q.z );
 		file->ReadBig( j.q.w );
 		file->ReadVec3( j.t );
-		//j.w = 0.0f;
+		j.w = 0.0f;
 	}
 	
 	file->ReadBig( num );
@@ -1173,7 +1173,7 @@ idMD5Anim* idAnimManager::GetAnim( const char* name )
 			return NULL;
 		}
 		
-		anim = new idMD5Anim();
+		anim = new( TAG_ANIM ) idMD5Anim();
 		if( !anim->LoadAnim( filename ) )
 		{
 			gameLocal.Warning( "Couldn't load anim: '%s'", filename.c_str() );

@@ -29,7 +29,14 @@ If you have questions concerning this license or the applicable additional terms
 #include "precompiled.h"
 #pragma hdrstop
 
+// RB begin
+#if defined(USE_SDL_ASYNC)
+#include <SDL.h>
+#endif
+// RB end
+
 #include "../renderer/Image.h"
+#include "ConsoleHistory.h"
 
 #define	MAX_PRINT_MSG_SIZE	4096
 #define MAX_WARNING_LIST	256
@@ -86,11 +93,11 @@ idCVar com_developer( "developer", "0", CVAR_BOOL | CVAR_SYSTEM | CVAR_NOCHEAT, 
 idCVar com_allowConsole( "com_allowConsole", "1", CVAR_BOOL | CVAR_SYSTEM | CVAR_NOCHEAT, "allow toggling console with the tilde key" );
 idCVar com_speeds( "com_speeds", "0", CVAR_BOOL | CVAR_SYSTEM | CVAR_NOCHEAT, "show engine timings" );
 #if defined(__ANDROID__)
-idCVar com_showFPS( "com_showFPS", "1", CVAR_BOOL | CVAR_SYSTEM | CVAR_NOCHEAT, "show frames rendered per second" );
+idCVar com_showFPS( "com_showFPS", "2", CVAR_INTEGER | CVAR_SYSTEM | CVAR_NOCHEAT, "show frames rendered per second. 0: off 1: default bfg values, 2: only show FPS (classic view)" );
 idCVar com_showMemoryUsage( "com_showMemoryUsage", "1", CVAR_BOOL | CVAR_SYSTEM | CVAR_NOCHEAT, "show total and per frame memory usage" );
 idCVar com_logFile( "logFile", "1", CVAR_SYSTEM | CVAR_NOCHEAT, "1 = buffer log, 2 = flush after each print", 0, 2, idCmdSystem::ArgCompletion_Integer<0, 2> );
 #else
-idCVar com_showFPS( "com_showFPS", "0", CVAR_BOOL | CVAR_SYSTEM | CVAR_ARCHIVE | CVAR_NOCHEAT, "show frames rendered per second" );
+idCVar com_showFPS( "com_showFPS", "0", CVAR_INTEGER | CVAR_SYSTEM | CVAR_ARCHIVE | CVAR_NOCHEAT, "show frames rendered per second. 0: off 1: default bfg values, 2: only show FPS (classic view)" );
 idCVar com_showMemoryUsage( "com_showMemoryUsage", "0", CVAR_BOOL | CVAR_SYSTEM | CVAR_NOCHEAT, "show total and per frame memory usage" );
 idCVar com_logFile( "logFile", "0", CVAR_SYSTEM | CVAR_NOCHEAT, "1 = buffer log, 2 = flush after each print", 0, 2, idCmdSystem::ArgCompletion_Integer<0, 2> );
 #endif
@@ -104,13 +111,18 @@ idCVar com_makingBuild( "com_makingBuild", "0", CVAR_BOOL | CVAR_SYSTEM, "1 when
 idCVar com_updateLoadSize( "com_updateLoadSize", "0", CVAR_BOOL | CVAR_SYSTEM | CVAR_NOCHEAT, "update the load size after loading a map" );
 idCVar com_videoRam( "com_videoRam", "64", CVAR_INTEGER | CVAR_SYSTEM | CVAR_NOCHEAT | CVAR_ARCHIVE, "holds the last amount of detected video ram" );
 
+idCVar com_productionMode( "com_productionMode", "0", CVAR_SYSTEM | CVAR_BOOL, "0 - no special behavior, 1 - building a production build, 2 - running a production build" );
+
 idCVar com_product_lang_ext( "com_product_lang_ext", "1", CVAR_INTEGER | CVAR_SYSTEM | CVAR_ARCHIVE, "Extension to use when creating language files." );
 
 // com_speeds times
+int				com_frameMsec;
 int				time_gameFrame;
 int				time_gameDraw;
-int				time_frontend;			// renderSystem frontend time
-int				time_backend;			// renderSystem backend time
+uint64			time_frontend;			// renderSystem frontend time
+uint64			time_backend;			// renderSystem backend time
+uint64			time_shadows;			// renderer backend waiting for shadow volumes to be created
+uint64			time_gpu;				// total gpu time, at least for PC
 
 int				com_frameTime;			// time for the current frame in milliseconds
 int				com_frameNumber;		// variable frame number
@@ -137,7 +149,7 @@ class idCommonLocal : public idCommon
 public:
 	idCommonLocal();
 	
-	virtual void				Init( int argc, const char** argv, const char* cmdline );
+	virtual void				Init( int argc, const char* const* argv, const char* cmdline );
 	virtual void				Shutdown();
 	virtual void				Quit();
 	virtual bool				IsInitialized() const;
@@ -185,7 +197,7 @@ private:
 	void						InitRenderSystem();
 	void						InitSIMD();
 	bool						AddStartupCommands();
-	void						ParseCommandLine( int argc, const char** argv );
+	void						ParseCommandLine( int argc, const char* const* argv );
 	void						ClearCommandLine();
 	bool						SafeMode();
 	void						CheckToolMode();
@@ -222,6 +234,12 @@ private:
 #ifdef ID_WRITE_VERSION
 	idCompressor* 				config_compressor;
 #endif
+	
+	// RB begin
+#if defined(USE_SDL_ASYNC)
+	SDL_TimerID					asyncTimerID;
+#endif
+	// RB end
 };
 
 idCommonLocal	commonLocal;
@@ -253,6 +271,13 @@ idCommonLocal::idCommonLocal()
 #ifdef ID_WRITE_VERSION
 	config_compressor = NULL;
 #endif
+	
+	// RB begin
+#if defined(USE_SDL_ASYNC)
+	asyncTimerID = 0;
+#endif
+	// RB end
+	
 }
 
 /*
@@ -404,6 +429,18 @@ void idCommonLocal::VPrintf( const char* fmt, va_list args )
 		return;
 	}
 	
+	// RB: printf should be thread-safe on Linux
+	if( !idLib::IsMainThread() )
+	{
+#if defined(_WIN32)
+		OutputDebugString( msg );
+#else
+		printf( "%s", msg );
+#endif
+		return;
+	}
+	// RB end
+	
 	// echo to console buffer
 	console->Print( msg );
 	
@@ -475,7 +512,10 @@ void idCommonLocal::VPrintf( const char* fmt, va_list args )
 		// update the console if we are in a long-running command, like dmap
 		if( com_refreshOnPrint )
 		{
-			session->UpdateScreen();
+			// RB: added captureToImage
+			const bool captureToImage = false;
+			session->UpdateScreen( captureToImage );
+			// RB end
 		}
 		
 		// let session redraw the animated loading screen if necessary
@@ -593,6 +633,13 @@ void idCommonLocal::Warning( const char* fmt, ... )
 	va_list		argptr;
 	char		msg[MAX_PRINT_MSG_SIZE];
 	
+	// RB begin
+	if( !idLib::IsMainThread() )
+	{
+		return;	// not thread safe!
+	}
+	// RB end
+	
 	va_start( argptr, fmt );
 	idStr::vsnPrintf( msg, sizeof( msg ), fmt, argptr );
 	va_end( argptr );
@@ -620,7 +667,7 @@ void idCommonLocal::PrintWarnings()
 		return;
 	}
 	
-	warningList.Sort();
+	//warningList.Sort();
 	
 	Printf( "------------- Warnings ---------------\n" );
 	Printf( "during %s...\n", warningCaption.c_str() );
@@ -674,7 +721,7 @@ void idCommonLocal::DumpWarnings()
 	
 		warningFile->Printf( "------------- Warnings ---------------\n\n" );
 		warningFile->Printf( "during %s...\n", warningCaption.c_str() );
-		warningList.Sort();
+		//warningList.Sort();
 		for( i = 0; i < warningList.Num(); i++ )
 		{
 			warningList[i].RemoveColors();
@@ -690,7 +737,7 @@ void idCommonLocal::DumpWarnings()
 		}
 		
 		warningFile->Printf( "\n\n-------------- Errors ---------------\n\n" );
-		errorList.Sort();
+		//errorList.Sort();
 		for( i = 0; i < errorList.Num(); i++ )
 		{
 			errorList[i].RemoveColors();
@@ -931,7 +978,7 @@ idCmdArgs	com_consoleLines[MAX_CONSOLE_LINES];
 idCommonLocal::ParseCommandLine
 ==================
 */
-void idCommonLocal::ParseCommandLine( int argc, const char** argv )
+void idCommonLocal::ParseCommandLine( int argc, const char* const* argv )
 {
 	int i, current_count;
 	
@@ -1792,7 +1839,7 @@ void Com_ExecMachineSpec_f( const idCmdArgs& args )
 	
 	bool oldCard = false;
 	bool nv10or20 = false;
-	renderSystem->GetCardCaps( oldCard, nv10or20 );
+	//renderSystem->GetCardCaps( oldCard, nv10or20 );
 	if( oldCard )
 	{
 		cvarSystem->SetCVarBool( "g_decals", false, CVAR_ARCHIVE );
@@ -2099,7 +2146,10 @@ void idCommonLocal::LocalizeGui( const char* fileName, idLangDict& langDict )
 		{
 			idFile* outFile = fileSystem->OpenFileWrite( fileName );
 			common->Printf( "Processing %s\n", fileName );
-			session->UpdateScreen();
+			// RB: added captureToImage
+			const bool captureToImage = false;
+			session->UpdateScreen( captureToImage );
+			// RB end
 			idToken token;
 			while( src.ReadToken( &token ) )
 			{
@@ -2808,8 +2858,8 @@ void idCommonLocal::InitCommands()
 #if	!defined(ID_DEMO_BUILD) && !defined(ID_DEDICATED) && defined(USE_CMDLINE_TOOLS)
 	// compilers
 	cmdSystem->AddCommand( "dmap", Dmap_f, CMD_FL_TOOL, "compiles a map", idCmdSystem::ArgCompletion_MapName );
-	cmdSystem->AddCommand( "renderbump", RenderBump_f, CMD_FL_TOOL, "renders a bump map", idCmdSystem::ArgCompletion_ModelName );
-	cmdSystem->AddCommand( "renderbumpFlat", RenderBumpFlat_f, CMD_FL_TOOL, "renders a flat bump map", idCmdSystem::ArgCompletion_ModelName );
+//	cmdSystem->AddCommand( "renderbump", RenderBump_f, CMD_FL_TOOL, "renders a bump map", idCmdSystem::ArgCompletion_ModelName );
+//	cmdSystem->AddCommand( "renderbumpFlat", RenderBumpFlat_f, CMD_FL_TOOL, "renders a flat bump map", idCmdSystem::ArgCompletion_ModelName );
 	cmdSystem->AddCommand( "runAAS", RunAAS_f, CMD_FL_TOOL, "compiles an AAS file for a map", idCmdSystem::ArgCompletion_MapName );
 	cmdSystem->AddCommand( "runAASDir", RunAASDir_f, CMD_FL_TOOL, "compiles AAS files for all maps in a folder", idCmdSystem::ArgCompletion_MapName );
 	cmdSystem->AddCommand( "runReach", RunReach_f, CMD_FL_TOOL, "calculates reachability for an AAS file", idCmdSystem::ArgCompletion_MapName );
@@ -2852,8 +2902,8 @@ void idCommonLocal::InitCommands()
 	cmdSystem->AddCommand( "printMemInfo", PrintMemInfo_f, CMD_FL_SYSTEM, "prints memory debugging data" );
 	
 	// idLib commands
-	cmdSystem->AddCommand( "memoryDump", Mem_Dump_f, CMD_FL_SYSTEM | CMD_FL_CHEAT, "creates a memory dump" );
-	cmdSystem->AddCommand( "memoryDumpCompressed", Mem_DumpCompressed_f, CMD_FL_SYSTEM | CMD_FL_CHEAT, "creates a compressed memory dump" );
+//	cmdSystem->AddCommand( "memoryDump", Mem_Dump_f, CMD_FL_SYSTEM | CMD_FL_CHEAT, "creates a memory dump" );
+//	cmdSystem->AddCommand( "memoryDumpCompressed", Mem_DumpCompressed_f, CMD_FL_SYSTEM | CMD_FL_CHEAT, "creates a compressed memory dump" );
 	cmdSystem->AddCommand( "showStringMemory", idStr::ShowMemoryUsage_f, CMD_FL_SYSTEM, "shows memory used by strings" );
 	cmdSystem->AddCommand( "showDictMemory", idDict::ShowMemoryUsage_f, CMD_FL_SYSTEM, "shows memory used by dictionaries" );
 	cmdSystem->AddCommand( "listDictKeys", idDict::ListKeys_f, CMD_FL_SYSTEM | CMD_FL_CHEAT, "lists all keys used by dictionaries" );
@@ -2892,6 +2942,9 @@ void idCommonLocal::InitRenderSystem()
 	
 	renderSystem->InitOpenGL();
 	
+	// initialize the renderSystem data structures
+	renderSystem->Init();
+	
 #if defined(STANDALONE)
 	PrintLoadingMessage( common->GetLanguageDict()->GetString( "#str_idCommonLocal_InitRenderSystem_Loading" ) );
 #else
@@ -2911,15 +2964,44 @@ void idCommonLocal::PrintLoadingMessage( const char* msg )
 		return;
 	}
 	
+	// RB begin
 #if defined(__ANDROID__)
 	ji.ShowProgressDialog( msg );
 #else
-	renderSystem->BeginFrame( renderSystem->GetScreenWidth(), renderSystem->GetScreenHeight() );
-	renderSystem->DrawStretchPic( 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0, 1, 1, declManager->FindMaterial( "splashScreen" ) );
+	//renderSystem->BeginFrame( renderSystem->GetWidth(), renderSystem->GetHeight() );
+	
+	const idMaterial* whiteMaterial = declManager->FindMaterial( "_white" );
+	const idMaterial* splashScreen = declManager->FindMaterial( "splashScreen" );
+	
+	const float sysWidth = renderSystem->GetWidth() * renderSystem->GetPixelAspect();
+	const float sysHeight = renderSystem->GetHeight();
+	const float sysAspect = sysWidth / sysHeight;
+	const float splashAspect = 16.0f / 9.0f;
+	const float adjustment = sysAspect / splashAspect;
+	const float barHeight = ( adjustment >= 1.0f ) ? 0.0f : ( 1.0f - adjustment ) * ( float )SCREEN_HEIGHT * 0.25f;
+	const float barWidth = ( adjustment <= 1.0f ) ? 0.0f : ( adjustment - 1.0f ) * ( float )SCREEN_WIDTH * 0.25f;
+	if( barHeight > 0.0f )
+	{
+		renderSystem->SetColor( colorBlack );
+		renderSystem->DrawStretchPic( 0, 0, SCREEN_WIDTH, barHeight, 0, 0, 1, 1, whiteMaterial );
+		renderSystem->DrawStretchPic( 0, SCREEN_HEIGHT - barHeight, SCREEN_WIDTH, barHeight, 0, 0, 1, 1, whiteMaterial );
+	}
+	if( barWidth > 0.0f )
+	{
+		renderSystem->SetColor( colorBlack );
+		renderSystem->DrawStretchPic( 0, 0, barWidth, SCREEN_HEIGHT, 0, 0, 1, 1, whiteMaterial );
+		renderSystem->DrawStretchPic( SCREEN_WIDTH - barWidth, 0, barWidth, SCREEN_HEIGHT, 0, 0, 1, 1, whiteMaterial );
+	}
+	
+	renderSystem->DrawStretchPic( 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0, 1, 1, splashScreen );
 	int len = strlen( msg );
-	renderSystem->DrawSmallStringExt( ( 640 - len * SMALLCHAR_WIDTH ) / 2, 410, msg, idVec4( 0.0f, 0.81f, 0.94f, 1.0f ), true, declManager->FindMaterial( "textures/bigchars" ) );
-	renderSystem->EndFrame( NULL, NULL );
+	renderSystem->DrawSmallStringExt( ( 640 - len * SMALLCHAR_WIDTH ) / 2, 410, msg, idVec4( 0.0f, 0.81f, 0.94f, 1.0f ), true );
+	
+	//renderSystem->EndFrame( NULL, NULL );
+	const emptyCommand_t* cmd = renderSystem->SwapCommandBuffers( NULL, NULL, NULL, NULL );
+	renderSystem->RenderCommandBuffers( cmd );
 #endif
+	// RB end
 }
 
 /*
@@ -2974,9 +3056,9 @@ void idCommonLocal::Frame()
 				
 				// RB begin
 #if defined(__ANDROID__)
-				session->UpdateScreen( false, false );
+				session->UpdateScreen( true, false, false );
 #else
-				session->UpdateScreen( false, true );
+				session->UpdateScreen( true, false, true );
 #endif
 				// RB end
 			}
@@ -2989,21 +3071,26 @@ void idCommonLocal::Frame()
 			
 			// RB begin
 #if defined(__ANDROID__)
-			session->UpdateScreen( false, false );
+			session->UpdateScreen( true, false, false );
 #else
-			session->UpdateScreen( false, true );
+			session->UpdateScreen( true, false, true );
 #endif
 			// RB end
 		}
 		
 		// report timing information
-		if( com_speeds.GetBool() )
+		if( com_speeds.GetBool() || com_showFPS.GetInteger() == 1 )
 		{
 			static int	lastTime;
 			int		nowTime = Sys_Milliseconds();
-			int		com_frameMsec = nowTime - lastTime;
+			com_frameMsec = nowTime - lastTime;
 			lastTime = nowTime;
-			Printf( "frame:%i all:%3i gfr:%3i rf:%3i bk:%3i\n", com_frameNumber, com_frameMsec, time_gameFrame, time_frontend, time_backend );
+			
+			if( com_speeds.GetBool() )
+			{
+				Printf( "frame:%i all:%3i gfr:%3i rf:%3i bk:%3i\n", com_frameNumber, com_frameMsec, time_gameFrame, time_frontend, time_backend );
+			}
+			
 			time_gameFrame = 0;
 			time_gameDraw = 0;
 		}
@@ -3046,7 +3133,11 @@ void idCommonLocal::GUIFrame( bool execCmd, bool network )
 		idAsyncNetwork::RunFrame();
 	}
 	session->Frame();
-	session->UpdateScreen( false );
+	
+	// RB: added captureToImage
+	const bool captureToImage = false;
+	session->UpdateScreen( captureToImage, false );
+	// RB end
 }
 
 /*
@@ -3170,6 +3261,27 @@ void idCommonLocal::Async()
 		lastTicMsec += ticMsec;
 	}
 }
+
+// RB begin
+#if defined(USE_SDL_ASYNC)
+unsigned int AsyncTimer( unsigned int interval, void* )
+{
+	common->Async();
+	
+	Sys_TriggerEvent( TRIGGER_EVENT_ONE );
+	
+	// calculate the next interval to get as close to 60fps as possible
+	unsigned int now = SDL_GetTicks();
+	unsigned int tick = com_ticNumber * USERCMD_MSEC;
+	
+	if( now >= tick )
+		return 1;
+		
+	return tick - now;
+	
+}
+#endif
+// RB end
 
 /*
 =================
@@ -3297,7 +3409,7 @@ void idCommonLocal::SetMachineSpec()
 	bool oldCard = false;
 	bool nv10or20 = false;
 	
-	renderSystem->GetCardCaps( oldCard, nv10or20 );
+	//renderSystem->GetCardCaps( oldCard, nv10or20 );
 	
 	Printf( "Detected\n \t%.2f GHz CPU\n\t%i MB of System memory\n\t%i MB of Video memory on %s\n\n", ghz, sysRam, vidRam, ( oldCard ) ? "a less than optimal video architecture" : "an optimal video architecture" );
 	
@@ -3329,7 +3441,7 @@ void idCommonLocal::SetMachineSpec()
 idCommonLocal::Init
 =================
 */
-void idCommonLocal::Init( int argc, const char** argv, const char* cmdline )
+void idCommonLocal::Init( int argc, const char* const* argv, const char* cmdline )
 {
 
 // RB begin
@@ -3446,6 +3558,17 @@ void idCommonLocal::Init( int argc, const char** argv, const char* cmdline )
 	}
 #endif
 // RB end
+
+// RB begin
+#if defined(USE_SDL_ASYNC)
+	asyncTimerID = SDL_AddTimer( USERCMD_MSEC, AsyncTimer, NULL );
+	
+	if( !asyncTimerID )
+	{
+		Sys_Error( "Error while starting the async timer: %s", SDL_GetError() );
+	}
+#endif
+// RB end
 }
 
 
@@ -3456,8 +3579,17 @@ idCommonLocal::Shutdown
 */
 void idCommonLocal::Shutdown()
 {
-
 	com_shuttingDown = true;
+	
+	// RB begin
+#if defined(USE_SDL_ASYNC)
+	if( asyncTimerID )
+	{
+		SDL_RemoveTimer( asyncTimerID );
+		asyncTimerID = 0;
+	}
+#endif
+	// RB end
 	
 	idAsyncNetwork::server.Kill();
 	idAsyncNetwork::client.Shutdown();
@@ -3494,8 +3626,8 @@ void idCommonLocal::Shutdown()
 	languageDict.Clear();
 	
 	// enable leak test
-	Mem_EnableLeakTest( "doom" );
-	
+//	Mem_EnableLeakTest( "doom" );
+
 	// shutdown idLib
 	idLib::ShutDown();
 }
@@ -3535,29 +3667,35 @@ void idCommonLocal::InitGame()
 		Com_ExecMachineSpec_f( args );
 	}
 	
-	// initialize the renderSystem data structures, but don't start OpenGL yet
-	renderSystem->Init();
-	
+// RB begin
+	// init the parallel job manager
+	parallelJobManager->Init();
+// RB end
+
 	// initialize string database right off so we can use it for loading messages
 	InitLanguageDict();
 	
-#if defined(STANDALONE)
+	/*
+	#if defined(STANDALONE)
 	PrintLoadingMessage( common->GetLanguageDict()->GetString( "#str_idCommonLocal_InitGame_Initialising_events" ) );
-#else
+	#else
 	PrintLoadingMessage( common->GetLanguageDict()->GetString( "#str_04344" ) );
-#endif
+	#endif
+	*/
 	
 	// load the font, etc
-	console->LoadGraphics();
+	//console->LoadGraphics();
 	
 	// init journalling, etc
 	eventLoop->Init();
 	
-#if defined(STANDALONE)
+	/*
+	#if defined(STANDALONE)
 	PrintLoadingMessage( common->GetLanguageDict()->GetString( "#str_idCommonLocal_InitGame_Executing_startup_commands" ) );
-#else
+	#else
 	PrintLoadingMessage( common->GetLanguageDict()->GetString( "#str_04345" ) );
-#endif
+	#endif
+	*/
 	
 	// exec the startup scripts
 	cmdSystem->BufferCommandText( CMD_EXEC_APPEND, "exec editor.cfg\n" );
@@ -3588,20 +3726,24 @@ void idCommonLocal::InitGame()
 	// init the user command input code
 	usercmdGen->Init();
 	
-#if defined(STANDALONE)
+	/*
+	#if defined(STANDALONE)
 	PrintLoadingMessage( common->GetLanguageDict()->GetString( "#str_idCommonLocal_InitGame_Initialising_sound" ) );
-#else
+	#else
 	PrintLoadingMessage( common->GetLanguageDict()->GetString( "#str_04346" ) );
-#endif
+	#endif
+	*/
 	
 	// start the sound system, but don't do any hardware operations yet
 	soundSystem->Init();
 	
-#if defined(STANDALONE)
+	/*
+	#if defined(STANDALONE)
 	PrintLoadingMessage( common->GetLanguageDict()->GetString( "#str_idCommonLocal_InitGame_Initialising_network" ) );
-#else
+	#else
 	PrintLoadingMessage( common->GetLanguageDict()->GetString( "#str_04347" ) );
-#endif
+	#endif
+	*/
 	
 	// init async network
 	idAsyncNetwork::Init();
@@ -3617,12 +3759,14 @@ void idCommonLocal::InitGame()
 	}
 	else
 	{
+		/*
 		// init OpenGL, which will open a window and connect sound and input hardware
 #if defined(STANDALONE)
 		PrintLoadingMessage( common->GetLanguageDict()->GetString( "#str_idCommonLocal_InitGame_Initialising_render_system" ) );
 #else
 		PrintLoadingMessage( common->GetLanguageDict()->GetString( "#str_04348" ) );
 #endif
+		*/
 	
 		InitRenderSystem();
 	}
@@ -3659,6 +3803,10 @@ void idCommonLocal::InitGame()
 	PrintLoadingMessage( common->GetLanguageDict()->GetString( "#str_04351" ) );
 #endif
 	
+	// RB: load the console history file
+	consoleHistory.LoadHistoryFile();
+	// RB end
+	
 	// init the session
 	session->Init();
 	
@@ -3674,9 +3822,11 @@ void idCommonLocal::InitGame()
 		SetMachineSpec();
 		Com_ExecMachineSpec_f( args );
 		cvarSystem->SetCVarInteger( "s_numberOfSpeakers", 6 );
-		cmdSystem->BufferCommandText( CMD_EXEC_NOW, "s_restart\n" );
-		cmdSystem->ExecuteCommandBuffer();
 	}
+	
+	// RB: start sound hardware
+	cmdSystem->BufferCommandText( CMD_EXEC_NOW, "s_restart\n" );
+	cmdSystem->ExecuteCommandBuffer();
 }
 
 /*
@@ -3722,6 +3872,10 @@ void idCommonLocal::ShutdownGame( bool reloading )
 	// shut down the event loop
 	eventLoop->Shutdown();
 	
+// RB begin
+	parallelJobManager->Shutdown();
+// RB end
+
 	// shut down the renderSystem
 	renderSystem->Shutdown();
 	

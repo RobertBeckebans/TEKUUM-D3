@@ -1365,8 +1365,8 @@ void AbsoluteToLocal( const idPlane& normal2, face_t* f, idVec3& p1, idVec3& p2,
 	// stored rot is good considering local axis base change it if necessary
 	f->texdef.rotate = -f->texdef.rotate;
 	
-	Clamp( f->texdef.shift[0], f->d_texture->GetEditorImage()->uploadWidth );
-	Clamp( f->texdef.shift[1], f->d_texture->GetEditorImage()->uploadHeight );
+	Clamp( f->texdef.shift[0], f->d_texture->GetEditorImage()->GetUploadWidth() );
+	Clamp( f->texdef.shift[1], f->d_texture->GetEditorImage()->GetUploadHeight() );
 	Clamp( f->texdef.rotate, 360 );
 }
 
@@ -2388,8 +2388,8 @@ void Select_SetDefaultTexture( const idMaterial* mat, bool fitScale, bool setTex
 		"%s (%s) W: %i H: %i",
 		mat->GetName(),
 		mat->GetDescription(),
-		mat->GetEditorImage()->uploadWidth,
-		mat->GetEditorImage()->uploadHeight
+		mat->GetEditorImage()->GetUploadWidth(),
+		mat->GetEditorImage()->GetUploadHeight()
 	);
 	g_pParentWnd->SetStatusText( 3, strTex );
 }
@@ -2518,7 +2518,9 @@ void Select_CopyPatchTextureCoords( patchMesh_t* p )
 				{
 					for( int j = 0; j < b->pPatch->height; j++ )
 					{
-						b->pPatch->ctrl( i, j ).st = p->ctrl( i, j ).st;
+						// RB: BFG idDrawVert
+						b->pPatch->ctrl( i, j ).SetTexCoord( p->ctrl( i, j ).GetTexCoord() );
+						// RB end
 					}
 				}
 			}

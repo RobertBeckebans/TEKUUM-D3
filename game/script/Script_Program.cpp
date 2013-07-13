@@ -1321,7 +1321,7 @@ idProgram::AllocType
 */
 idTypeDef* idProgram::AllocType( idTypeDef& type )
 {
-	idTypeDef* newtype	= new idTypeDef( type );
+	idTypeDef* newtype	= new( TAG_SCRIPT ) idTypeDef( type );
 	typesHash.Add( idStr::Hash( type.Name() ), types.Append( newtype ) );
 	return newtype;
 }
@@ -1333,7 +1333,7 @@ idProgram::AllocType
 */
 idTypeDef* idProgram::AllocType( etype_t etype, idVarDef* edef, const char* ename, int esize, idTypeDef* aux )
 {
-	idTypeDef* newtype	= new idTypeDef( etype, edef, ename, esize, aux );
+	idTypeDef* newtype	= new( TAG_SCRIPT ) idTypeDef( etype, edef, ename, esize, aux );
 	typesHash.Add( idStr::Hash( ename ), types.Append( newtype ) );
 	return newtype;
 }

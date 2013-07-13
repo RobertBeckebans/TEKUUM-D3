@@ -42,10 +42,6 @@ If you have questions concerning this license or the applicable additional terms
 #include <afxcmn.h>			// MFC support for Windows Common Controls
 #endif // _AFX_NO_AFXCMN_SUPPORT
 
-// RB begin
-#include <atlbase.h>
-// RB end
-
 void InitAfx();
 
 // tool tips

@@ -412,7 +412,7 @@ char* 					va( const char* fmt, ... ) id_attribute( ( format( printf, 1, 2 ) ) )
 ================================================================================================
 */
 
-#if 0
+#if 1
 class idSort_Str : public idSort_Quick< idStr, idSort_Str >
 {
 public:

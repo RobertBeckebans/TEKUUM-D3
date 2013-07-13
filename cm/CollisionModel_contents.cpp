@@ -1,25 +1,25 @@
 /*
 ===========================================================================
 
-Doom 3 GPL Source Code
-Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Doom 3 BFG Edition GPL Source Code
+Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
 
-This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
+This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
-Doom 3 Source Code is free software: you can redistribute it and/or modify
+Doom 3 BFG Edition Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Doom 3 Source Code is distributed in the hope that it will be useful,
+Doom 3 BFG Edition Source Code is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Doom 3 Source Code.  If not, see <http://www.gnu.org/licenses/>.
+along with Doom 3 BFG Edition Source Code.  If not, see <http://www.gnu.org/licenses/>.
 
-In addition, the Doom 3 Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 Source Code.  If not, please request a copy in writing from id Software at the address below.
+In addition, the Doom 3 BFG Edition Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 BFG Edition Source Code.  If not, please request a copy in writing from id Software at the address below.
 
 If you have questions concerning this license or the applicable additional terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 
@@ -34,8 +34,9 @@ If you have questions concerning this license or the applicable additional terms
 ===============================================================================
 */
 
-#include "precompiled.h"
 #pragma hdrstop
+#include "precompiled.h"
+
 
 #include "CollisionModel_local.h"
 
@@ -132,7 +133,7 @@ CM_SetTrmEdgeSidedness
 	if ( !(edge->sideSet & (1<<bitNum)) ) {											\
 		float fl;																	\
 		fl = (bpl).PermutedInnerProduct( epl );										\
-		edge->side = (edge->side & ~(1<<bitNum)) | (FLOATSIGNBITSET(fl) << bitNum);	\
+		edge->side = (edge->side & ~(1<<bitNum)) | (IEEE_FLT_SIGNBITSET(fl) << bitNum);	\
 		edge->sideSet |= (1 << bitNum);												\
 	}																				\
 }
@@ -274,7 +275,7 @@ bool idCollisionModelManagerLocal::TestTrmInPolygon( cm_traceWork_t* tw, cm_poly
 		// pluecker coordinate for edge
 		tw->polygonEdgePlueckerCache[i].FromLine( tw->model->vertices[edge->vertexNum[0]].p,
 				tw->model->vertices[edge->vertexNum[1]].p );
-		v = &tw->model->vertices[edge->vertexNum[INTSIGNBITSET( edgeNum )]];
+		v = &tw->model->vertices[edge->vertexNum[INT32_SIGNBITSET( edgeNum )]];
 		// reset sidedness cache if this is the first time we encounter this vertex
 		if( v->checkcount != idCollisionModelManagerLocal::checkCount )
 		{
@@ -299,7 +300,7 @@ bool idCollisionModelManagerLocal::TestTrmInPolygon( cm_traceWork_t* tw, cm_poly
 			continue;
 		}
 		// check from which side to which side the trm edge goes
-		flip = INTSIGNBITSET( sides[tw->edges[i].vertexNum[0]] );
+		flip = INT32_SIGNBITSET( sides[tw->edges[i].vertexNum[0]] );
 		// test if trm edge goes through the polygon between the polygon edges
 		for( j = 0; j < p->numEdges; j++ )
 		{
@@ -307,7 +308,7 @@ bool idCollisionModelManagerLocal::TestTrmInPolygon( cm_traceWork_t* tw, cm_poly
 			edge = tw->model->edges + abs( edgeNum );
 #if 1
 			CM_SetTrmEdgeSidedness( edge, tw->edges[i].pl, tw->polygonEdgePlueckerCache[j], i );
-			if( INTSIGNBITSET( edgeNum ) ^ ( ( edge->side >> i ) & 1 ) ^ flip )
+			if( INT32_SIGNBITSET( edgeNum ) ^ ( ( edge->side >> i ) & 1 ) ^ flip )
 			{
 				break;
 			}
@@ -398,7 +399,7 @@ bool idCollisionModelManagerLocal::TestTrmInPolygon( cm_traceWork_t* tw, cm_poly
 #if 1
 				bitNum = abs( trmEdgeNum );
 				CM_SetTrmEdgeSidedness( edge, trmEdge->pl, tw->polygonEdgePlueckerCache[i], bitNum );
-				if( INTSIGNBITSET( trmEdgeNum ) ^ ( ( edge->side >> bitNum ) & 1 ) ^ flip )
+				if( INT32_SIGNBITSET( trmEdgeNum ) ^ ( ( edge->side >> bitNum ) & 1 ) ^ flip )
 				{
 					break;
 				}
@@ -507,7 +508,7 @@ int idCollisionModelManagerLocal::PointContents( const idVec3 p, cmHandle_t mode
 		for( i = 0; i < b->numPlanes; i++, plane++ )
 		{
 			d = plane->Distance( p );
-			if( d >= 0 )
+			if( d >= 0.0f )
 			{
 				break;
 			}

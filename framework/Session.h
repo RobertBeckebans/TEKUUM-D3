@@ -82,7 +82,7 @@ public:
 	// but when the screen is updated in a modal manner, as with utility
 	// output, the mouse cursor will be released if running windowed.
 	// RB: added swapBuffers parameter
-	virtual void	UpdateScreen( bool outOfSequence = true, bool swapBuffers = true ) = 0;
+	virtual void	UpdateScreen( bool captureToImage, bool outOfSequence = true, bool swapBuffers = true ) = 0;
 	// RB end
 	
 	// Called when console prints happen, allowing the loading screen
@@ -156,15 +156,13 @@ public:
 	
 	virtual int		GetSaveGameVersion() = 0;
 	
-	// The render world and sound world used for this session.
-	idRenderWorld* 	rw;
-	idSoundWorld* 	sw;
+	// RB begin
+	virtual idDemoFile* 		ReadDemo() = 0;
+	virtual idDemoFile* 		WriteDemo() = 0;
 	
-	// The renderer and sound system will write changes to writeDemo.
-	// Demos can be recorded and played at the same time when splicing.
-	idDemoFile* 	readDemo;
-	idDemoFile* 	writeDemo;
-	int				renderdemoVersion;
+	virtual idRenderWorld* 		RW() = 0;
+	virtual idSoundWorld* 		SW() = 0;
+	// RB end
 };
 
 extern	idSession* 	session;

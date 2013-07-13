@@ -1,33 +1,33 @@
 /*
 ===========================================================================
 
-Doom 3 GPL Source Code
-Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Doom 3 BFG Edition GPL Source Code
+Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
 
-This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
+This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
-Doom 3 Source Code is free software: you can redistribute it and/or modify
+Doom 3 BFG Edition Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Doom 3 Source Code is distributed in the hope that it will be useful,
+Doom 3 BFG Edition Source Code is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Doom 3 Source Code.  If not, see <http://www.gnu.org/licenses/>.
+along with Doom 3 BFG Edition Source Code.  If not, see <http://www.gnu.org/licenses/>.
 
-In addition, the Doom 3 Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 Source Code.  If not, please request a copy in writing from id Software at the address below.
+In addition, the Doom 3 BFG Edition Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 BFG Edition Source Code.  If not, please request a copy in writing from id Software at the address below.
 
 If you have questions concerning this license or the applicable additional terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 
 ===========================================================================
 */
 
-#include "precompiled.h"
 #pragma hdrstop
+#include "precompiled.h"
 
 #include "DeviceContext.h"
 #include "Window.h"
@@ -122,16 +122,9 @@ void idEditWindow::CommonInit()
 	liveUpdate = true;
 	readonly = false;
 	
-	scroller = new idSliderWindow( dc, gui );
+	scroller = new idSliderWindow( gui );
 }
 
-
-idEditWindow::idEditWindow( idDeviceContext* d, idUserInterfaceLocal* g ) : idWindow( d, g )
-{
-	dc = d;
-	gui = g;
-	CommonInit();
-}
 
 idEditWindow::idEditWindow( idUserInterfaceLocal* g ) : idWindow( g )
 {
@@ -223,13 +216,12 @@ idEditWindow::HandleEvent
 const char* idEditWindow::HandleEvent( const sysEvent_t* event, bool* updateVisuals )
 {
 	static char buffer[ MAX_EDITFIELD ];
-	const char* ret = "";
 	
 	if( wrap )
 	{
 		// need to call this to allow proper focus and capturing on embedded children
-		ret = idWindow::HandleEvent( event, updateVisuals );
-		if( ret && *ret )
+		const char* ret = idWindow::HandleEvent( event, updateVisuals );
+		if( ret != NULL && *ret != '\0' )
 		{
 			return ret;
 		}
@@ -237,7 +229,7 @@ const char* idEditWindow::HandleEvent( const sysEvent_t* event, bool* updateVisu
 	
 	if( ( event->evType != SE_CHAR && event->evType != SE_KEY ) )
 	{
-		return ret;
+		return "";
 	}
 	
 	idStr::Copynz( buffer, text.c_str(), sizeof( buffer ) );
@@ -362,7 +354,7 @@ const char* idEditWindow::HandleEvent( const sysEvent_t* event, bool* updateVisu
 		{
 			if( readonly )
 			{
-				return ret;
+				return "";
 			}
 			if( cursorPos < len )
 			{
@@ -371,9 +363,35 @@ const char* idEditWindow::HandleEvent( const sysEvent_t* event, bool* updateVisu
 				UpdateCvar( false );
 				RunScript( ON_ACTION );
 			}
-			return ret;
+			return "";
 		}
 		
+		if( key == K_BACKSPACE )  	// ctrl-h is backspace
+		{
+			if( readonly )
+			{
+				return "";
+			}
+			if( cursorPos > 0 )
+			{
+				if( cursorPos >= len )
+				{
+					buffer[len - 1] = 0;
+					cursorPos = len - 1;
+				}
+				else
+				{
+					memmove( &buffer[ cursorPos - 1 ], &buffer[ cursorPos ], len + 1 - cursorPos );
+					cursorPos--;
+				}
+				
+				text = buffer;
+				UpdateCvar( false );
+				RunScript( ON_ACTION );
+			}
+			
+			return "";
+		}
 		if( key == K_RIGHTARROW )
 		{
 			if( cursorPos < len )
@@ -402,7 +420,7 @@ const char* idEditWindow::HandleEvent( const sysEvent_t* event, bool* updateVisu
 			
 			EnsureCursorVisible();
 			
-			return ret;
+			return "";
 		}
 		
 		if( key == K_LEFTARROW )
@@ -430,7 +448,7 @@ const char* idEditWindow::HandleEvent( const sysEvent_t* event, bool* updateVisu
 			
 			EnsureCursorVisible();
 			
-			return ret;
+			return "";
 		}
 		
 		if( key == K_HOME )
@@ -444,7 +462,7 @@ const char* idEditWindow::HandleEvent( const sysEvent_t* event, bool* updateVisu
 				cursorPos = breaks[cursorLine];
 			}
 			EnsureCursorVisible();
-			return ret;
+			return "";
 		}
 		
 		if( key == K_END )
@@ -458,7 +476,7 @@ const char* idEditWindow::HandleEvent( const sysEvent_t* event, bool* updateVisu
 				cursorPos = breaks[cursorLine + 1] - 1;
 			}
 			EnsureCursorVisible();
-			return ret;
+			return "";
 		}
 		
 		if( key == K_INS )
@@ -467,7 +485,7 @@ const char* idEditWindow::HandleEvent( const sysEvent_t* event, bool* updateVisu
 			{
 				dc->SetOverStrike( !dc->GetOverStrike() );
 			}
-			return ret;
+			return "";
 		}
 		
 		if( key == K_DOWNARROW )
@@ -531,7 +549,7 @@ const char* idEditWindow::HandleEvent( const sysEvent_t* event, bool* updateVisu
 		}
 	}
 	
-	return ret;
+	return "";
 }
 
 void idEditWindow::PostParse()
@@ -708,7 +726,7 @@ void idEditWindow::EnsureCursorVisible()
 					break;
 				}
 			}
-			int topLine = idMath::FtoiFast( scroller->GetValue() );
+			int topLine = idMath::Ftoi( scroller->GetValue() );
 			if( cursorLine < topLine )
 			{
 				scroller->SetValue( cursorLine );

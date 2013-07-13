@@ -141,12 +141,20 @@ idItem::UpdateRenderEntity
 bool idItem::UpdateRenderEntity( renderEntity_s* renderEntity, const renderView_t* renderView ) const
 {
 
-	if( lastRenderViewTime == renderView->time )
+	// RB: added renderViewTime
+#if defined(STANDALONE)
+	int renderViewTime = renderView->time[timeGroup];
+#else
+	int renderViewTime = renderView->time[0];
+#endif
+	
+	
+	if( lastRenderViewTime == renderViewTime )
 	{
 		return false;
 	}
 	
-	lastRenderViewTime = renderView->time;
+	lastRenderViewTime = renderViewTime;
 	
 	// check for glow highlighting if near the center of the view
 	idVec3 dir = renderEntity->origin - renderView->vieworg;
@@ -154,7 +162,7 @@ bool idItem::UpdateRenderEntity( renderEntity_s* renderEntity, const renderView_
 	float d = dir * renderView->viewaxis[0];
 	
 	// two second pulse cycle
-	float cycle = ( renderView->time - inViewTime ) / 2000.0f;
+	float cycle = ( renderViewTime - inViewTime ) / 2000.0f;
 	
 	if( d > 0.94f )
 	{
@@ -164,7 +172,7 @@ bool idItem::UpdateRenderEntity( renderEntity_s* renderEntity, const renderView_
 			if( cycle > lastCycle )
 			{
 				// restart at the beginning
-				inViewTime = renderView->time;
+				inViewTime = renderViewTime;
 				cycle = 0.0f;
 			}
 		}
@@ -177,6 +185,8 @@ bool idItem::UpdateRenderEntity( renderEntity_s* renderEntity, const renderView_
 			lastCycle = ceil( cycle );
 		}
 	}
+	
+	// RB end
 	
 	// fade down after the last pulse finishes
 	if( !inView && cycle > lastCycle )
@@ -226,9 +236,10 @@ bool idItem::ModelCallback( renderEntity_t* renderEntity, const renderView_t* re
 	}
 	
 	ent = static_cast<idItem*>( gameLocal.entities[ renderEntity->entityNum ] );
-	if( !ent )
+	if( ent == NULL )
 	{
 		gameLocal.Error( "idItem::ModelCallback: callback with NULL game entity" );
+		return false;
 	}
 	
 	return ent->UpdateRenderEntity( renderEntity, renderView );
@@ -794,6 +805,8 @@ idObjective::Event_Screenshot
 */
 void idObjective::Event_CamShot( )
 {
+#if 0
+	// RB: FIXME
 	const char* camName;
 	idStr shotName = gameLocal.GetMapName();
 	shotName.StripFileExtension();
@@ -860,6 +873,7 @@ void idObjective::Event_CamShot( )
 			renderSystem->UnCrop();
 		}
 	}
+#endif
 }
 
 /*

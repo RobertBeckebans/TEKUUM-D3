@@ -1,25 +1,25 @@
 /*
 ===========================================================================
 
-Doom 3 GPL Source Code
-Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Doom 3 BFG Edition GPL Source Code
+Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
 
-This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
+This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
-Doom 3 Source Code is free software: you can redistribute it and/or modify
+Doom 3 BFG Edition Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Doom 3 Source Code is distributed in the hope that it will be useful,
+Doom 3 BFG Edition Source Code is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Doom 3 Source Code.  If not, see <http://www.gnu.org/licenses/>.
+along with Doom 3 BFG Edition Source Code.  If not, see <http://www.gnu.org/licenses/>.
 
-In addition, the Doom 3 Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 Source Code.  If not, please request a copy in writing from id Software at the address below.
+In addition, the Doom 3 BFG Edition Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 BFG Edition Source Code.  If not, please request a copy in writing from id Software at the address below.
 
 If you have questions concerning this license or the applicable additional terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 
@@ -28,6 +28,11 @@ If you have questions concerning this license or the applicable additional terms
 
 #include "precompiled.h"
 #pragma hdrstop
+
+idCVar binaryLoadParticles( "binaryLoadParticles", "1", 0, "enable binary load/write of particle decls" );
+
+static const byte BPRT_VERSION = 101;
+static const unsigned int BPRT_MAGIC = ( 'B' << 24 ) | ( 'P' << 16 ) | ( 'R' << 8 ) | BPRT_VERSION;
 
 struct ParticleParmDesc
 {
@@ -515,10 +520,38 @@ idParticleStage* idDeclParticle::ParseParticleStage( idLexer& src )
 idDeclParticle::Parse
 ================
 */
-bool idDeclParticle::Parse( const char* text, const int textLength )
+bool idDeclParticle::Parse( const char* text, const int textLength, bool allowBinaryVersion )
 {
+	/*
+	if( cvarSystem->GetCVarBool( "fs_buildresources" ) )
+	{
+		fileSystem->AddParticlePreload( GetName() );
+	}
+	*/
+	
 	idLexer src;
 	idToken	token;
+	
+	unsigned int sourceChecksum = 0;
+	idStrStatic< MAX_OSPATH > generatedFileName;
+	if( allowBinaryVersion )
+	{
+		// Try to load the generated version of it
+		// If successful,
+		// - Create an MD5 of the hash of the source
+		// - Load the MD5 of the generated, if they differ, create a new generated
+		generatedFileName = "generated/particles/";
+		generatedFileName.AppendPath( GetName() );
+		generatedFileName.SetFileExtension( ".bprt" );
+		
+		idFileLocal file( fileSystem->OpenFileReadMemory( generatedFileName ) );
+		sourceChecksum = MD5_BlockChecksum( text, textLength );
+		
+		if( binaryLoadParticles.GetBool() && LoadBinary( file, sourceChecksum ) )
+		{
+			return true;
+		}
+	}
 	
 	src.LoadMemory( text, textLength, GetFileName(), GetLineNum() );
 	src.SetFlags( DECL_LEXER_FLAGS );
@@ -540,6 +573,12 @@ bool idDeclParticle::Parse( const char* text, const int textLength )
 		
 		if( !token.Icmp( "{" ) )
 		{
+			if( stages.Num() >= MAX_PARTICLE_STAGES )
+			{
+				src.Error( "Too many particle stages" );
+				MakeDefault();
+				return false;
+			}
 			idParticleStage* stage = ParseParticleStage( src );
 			if( !stage )
 			{
@@ -577,7 +616,215 @@ bool idDeclParticle::Parse( const char* text, const int textLength )
 		bounds = idBounds( vec3_origin ).Expand( 8.0f );
 	}
 	
+	if( allowBinaryVersion && binaryLoadParticles.GetBool() )
+	{
+		idLib::Printf( "Writing %s\n", generatedFileName.c_str() );
+		idFileLocal outputFile( fileSystem->OpenFileWrite( generatedFileName, "fs_basepath" ) );
+		WriteBinary( outputFile, sourceChecksum );
+	}
+	
 	return true;
+}
+
+/*
+========================
+idDeclParticle::LoadBinary
+========================
+*/
+bool idDeclParticle::LoadBinary( idFile* file, unsigned int checksum )
+{
+
+	if( file == NULL )
+	{
+		return false;
+	}
+	
+	struct local
+	{
+		static void LoadParticleParm( idFile* file, idParticleParm& parm )
+		{
+			idStr name;
+			file->ReadString( name );
+			if( name.IsEmpty() )
+			{
+				parm.table = NULL;
+			}
+			else
+			{
+				parm.table = ( idDeclTable* )declManager->FindType( DECL_TABLE, name, false );
+			}
+			
+			file->ReadFloat( parm.from );
+			file->ReadFloat( parm.to );
+		}
+	};
+	
+	unsigned int magic = 0;
+	file->ReadBig( magic );
+	if( magic != BPRT_MAGIC )
+	{
+		return false;
+	}
+	
+	unsigned int loadedChecksum;
+	file->ReadBig( loadedChecksum );
+	if( checksum != loadedChecksum /*&& !fileSystem->InProductionMode()*/ )
+	{
+		return false;
+	}
+	
+	int numStages;
+	file->ReadBig( numStages );
+	
+	for( int i = 0; i < numStages; i++ )
+	{
+		idParticleStage* s = new idParticleStage;
+		stages.Append( s );
+		assert( stages.Num() <= MAX_PARTICLE_STAGES );
+		
+		idStr name;
+		file->ReadString( name );
+		if( name.IsEmpty() )
+		{
+			s->material = NULL;
+		}
+		else
+		{
+			s->material = declManager->FindMaterial( name );
+		}
+		
+		file->ReadBig( s->totalParticles );
+		file->ReadFloat( s->cycles );
+		file->ReadBig( s->cycleMsec );
+		file->ReadFloat( s->spawnBunching );
+		file->ReadFloat( s->particleLife );
+		file->ReadFloat( s->timeOffset );
+		file->ReadFloat( s->deadTime );
+		file->ReadBig( s->distributionType );
+		file->ReadBigArray( s->distributionParms, sizeof( s->distributionParms ) / sizeof( s->distributionParms[0] ) );
+		file->ReadBig( s->directionType );
+		file->ReadBigArray( s->directionParms, sizeof( s->directionParms ) / sizeof( s->directionParms[0] ) );
+		local::LoadParticleParm( file, s->speed );
+		file->ReadFloat( s->gravity );
+		file->ReadBig( s->worldGravity );
+		file->ReadBig( s->randomDistribution );
+		file->ReadBig( s->entityColor );
+		file->ReadBig( s->customPathType );
+		file->ReadBigArray( s->customPathParms, sizeof( s->customPathParms ) / sizeof( s->customPathParms[0] ) );
+		file->ReadVec3( s->offset );
+		file->ReadBig( s->animationFrames );
+		file->ReadFloat( s->animationRate );
+		file->ReadFloat( s->initialAngle );
+		local::LoadParticleParm( file, s->rotationSpeed );
+		file->ReadBig( s->orientation );
+		file->ReadBigArray( s->orientationParms, sizeof( s->orientationParms ) / sizeof( s->orientationParms[0] ) );
+		local::LoadParticleParm( file, s->size );
+		local::LoadParticleParm( file, s->aspect );
+		file->ReadVec4( s->color );
+		file->ReadVec4( s->fadeColor );
+		file->ReadFloat( s->fadeInFraction );
+		file->ReadFloat( s->fadeOutFraction );
+		file->ReadFloat( s->fadeIndexFraction );
+		file->ReadBig( s->hidden );
+		file->ReadFloat( s->boundsExpansion );
+		file->ReadVec3( s->bounds[0] );
+		file->ReadVec3( s->bounds[1] );
+	}
+	
+	file->ReadVec3( bounds[0] );
+	file->ReadVec3( bounds[1] );
+	file->ReadFloat( depthHack );
+	
+	return true;
+}
+
+/*
+========================
+idDeclParticle::WriteBinary
+========================
+*/
+void idDeclParticle::WriteBinary( idFile* file, unsigned int checksum )
+{
+
+	if( file == NULL )
+	{
+		return;
+	}
+	
+	struct local
+	{
+		static void WriteParticleParm( idFile* file, idParticleParm& parm )
+		{
+			if( parm.table != NULL && parm.table->GetName() != NULL )
+			{
+				file->WriteString( parm.table->GetName() );
+			}
+			else
+			{
+				file->WriteString( "" );
+			}
+			file->WriteFloat( parm.from );
+			file->WriteFloat( parm.to );
+		}
+	};
+	
+	file->WriteBig( BPRT_MAGIC );
+	file->WriteBig( checksum );
+	file->WriteBig( stages.Num() );
+	
+	for( int i = 0; i < stages.Num(); i++ )
+	{
+		idParticleStage* s = stages[i];
+		
+		if( s->material != NULL && s->material->GetName() != NULL )
+		{
+			file->WriteString( s->material->GetName() );
+		}
+		else
+		{
+			file->WriteString( "" );
+		}
+		file->WriteBig( s->totalParticles );
+		file->WriteFloat( s->cycles );
+		file->WriteBig( s->cycleMsec );
+		file->WriteFloat( s->spawnBunching );
+		file->WriteFloat( s->particleLife );
+		file->WriteFloat( s->timeOffset );
+		file->WriteFloat( s->deadTime );
+		file->WriteBig( s->distributionType );
+		file->WriteBigArray( s->distributionParms, sizeof( s->distributionParms ) / sizeof( s->distributionParms[0] ) );
+		file->WriteBig( s->directionType );
+		file->WriteBigArray( s->directionParms, sizeof( s->directionParms ) / sizeof( s->directionParms[0] ) );
+		local::WriteParticleParm( file, s->speed );
+		file->WriteFloat( s->gravity );
+		file->WriteBig( s->worldGravity );
+		file->WriteBig( s->randomDistribution );
+		file->WriteBig( s->entityColor );
+		file->WriteBig( s->customPathType );
+		file->WriteBigArray( s->customPathParms, sizeof( s->customPathParms ) / sizeof( s->customPathParms[0] ) );
+		file->WriteVec3( s->offset );
+		file->WriteBig( s->animationFrames );
+		file->WriteFloat( s->animationRate );
+		file->WriteFloat( s->initialAngle );
+		local::WriteParticleParm( file, s->rotationSpeed );
+		file->WriteBig( s->orientation );
+		file->WriteBigArray( s->orientationParms, sizeof( s->orientationParms ) / sizeof( s->orientationParms[0] ) );
+		local::WriteParticleParm( file, s->size );
+		local::WriteParticleParm( file, s->aspect );
+		file->WriteVec4( s->color );
+		file->WriteVec4( s->fadeColor );
+		file->WriteFloat( s->fadeInFraction );
+		file->WriteFloat( s->fadeOutFraction );
+		file->WriteFloat( s->fadeIndexFraction );
+		file->WriteBig( s->hidden );
+		file->WriteFloat( s->boundsExpansion );
+		file->WriteVec3( s->bounds[0] );
+		file->WriteVec3( s->bounds[1] );
+	}
+	
+	file->WriteVec3( bounds[0] );
+	file->WriteVec3( bounds[1] );
+	file->WriteFloat( depthHack );
 }
 
 /*
@@ -1265,17 +1512,10 @@ int	idParticleStage::ParticleVerts( particleGen_t* g, idVec3 origin, idDrawVert*
 			verts_p[3].xyz = oldOrigin + left;
 			
 			// modify texcoords
-			verts_p[0].st[0] = verts[0].st[0];
-			verts_p[0].st[1] = t;
-			
-			verts_p[1].st[0] = verts[1].st[0];
-			verts_p[1].st[1] = t;
-			
-			verts_p[2].st[0] = verts[2].st[0];
-			verts_p[2].st[1] = t + height;
-			
-			verts_p[3].st[0] = verts[3].st[0];
-			verts_p[3].st[1] = t + height;
+			verts_p[0].SetTexCoordT( t );
+			verts_p[1].SetTexCoordT( t );
+			verts_p[2].SetTexCoordT( t + height );
+			verts_p[3].SetTexCoordT( t + height );
 			
 			t += height;
 			
@@ -1404,17 +1644,10 @@ void idParticleStage::ParticleTexCoords( particleGen_t* g, idDrawVert* verts ) c
 	t = 0.0f;
 	height = 1.0f;
 	
-	verts[0].st[0] = s;
-	verts[0].st[1] = t;
-	
-	verts[1].st[0] = s + width;
-	verts[1].st[1] = t;
-	
-	verts[2].st[0] = s;
-	verts[2].st[1] = t + height;
-	
-	verts[3].st[0] = s + width;
-	verts[3].st[1] = t + height;
+	verts[0].SetTexCoord( s, t );
+	verts[1].SetTexCoord( s + width, t );
+	verts[2].SetTexCoord( s, t + height );
+	verts[3].SetTexCoord( s + width, t + height );
 }
 
 /*
@@ -1450,7 +1683,7 @@ void idParticleStage::ParticleColors( particleGen_t* g, idDrawVert* verts ) cons
 	for( int i = 0 ; i < 4 ; i++ )
 	{
 		float	fcolor = ( ( entityColor ) ? g->renderEnt->shaderParms[i] : color[i] ) * fadeFraction + fadeColor[i] * ( 1.0f - fadeFraction );
-		int		icolor = idMath::FtoiFast( fcolor * 255.0f );
+		int		icolor = idMath::Ftoi( fcolor * 255.0f );
 		if( icolor < 0 )
 		{
 			icolor = 0;
@@ -1512,11 +1745,14 @@ int idParticleStage::CreateParticle( particleGen_t* g, idDrawVert* verts ) const
 	float	width = 1.0f / animationFrames;
 	float	frac = g->animationFrameFrac;
 	float	iFrac = 1.0f - frac;
+	
+	idVec2 tempST;
 	for( int i = 0 ; i < numVerts ; i++ )
 	{
 		verts[numVerts + i] = verts[i];
 		
-		verts[numVerts + i].st[0] += width;
+		tempST = verts[numVerts + i].GetTexCoord();
+		verts[numVerts + i].SetTexCoord( tempST.x + width, tempST.y );
 		
 		verts[numVerts + i].color[0] *= frac;
 		verts[numVerts + i].color[1] *= frac;

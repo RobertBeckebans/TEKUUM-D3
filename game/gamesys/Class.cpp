@@ -635,10 +635,6 @@ void idClass::Shutdown()
 idClass::new
 ================
 */
-#ifdef ID_DEBUG_MEMORY
-#undef new
-#endif
-
 void* idClass::operator new( size_t s )
 {
 	int* p;
@@ -649,47 +645,8 @@ void* idClass::operator new( size_t s )
 	memused += s;
 	numobjects++;
 	
-#ifdef ID_DEBUG_UNINITIALIZED_MEMORY
-	unsigned long* ptr = ( unsigned long* )p;
-	int size = s;
-	assert( ( size & 3 ) == 0 );
-	size >>= 3;
-	for( int i = 1; i < size; i++ )
-	{
-		ptr[i] = 0xcdcdcdcd;
-	}
-#endif
-	
 	return p + 1;
 }
-
-void* idClass::operator new( size_t s, int, int, char*, int )
-{
-	int* p;
-	
-	s += sizeof( int );
-	p = ( int* )Mem_Alloc( s );
-	*p = s;
-	memused += s;
-	numobjects++;
-	
-#ifdef ID_DEBUG_UNINITIALIZED_MEMORY
-	unsigned long* ptr = ( unsigned long* )p;
-	int size = s;
-	assert( ( size & 3 ) == 0 );
-	size >>= 3;
-	for( int i = 1; i < size; i++ )
-	{
-		ptr[i] = 0xcdcdcdcd;
-	}
-#endif
-	
-	return p + 1;
-}
-
-#ifdef ID_DEBUG_MEMORY
-#define new ID_DEBUG_NEW
-#endif
 
 /*
 ================
@@ -697,19 +654,6 @@ idClass::delete
 ================
 */
 void idClass::operator delete( void* ptr )
-{
-	int* p;
-	
-	if( ptr )
-	{
-		p = ( ( int* )ptr ) - 1;
-		memused -= *p;
-		numobjects--;
-		Mem_Free( p );
-	}
-}
-
-void idClass::operator delete( void* ptr, int, int, char*, int )
 {
 	int* p;
 	

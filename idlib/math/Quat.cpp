@@ -1,33 +1,33 @@
 /*
 ===========================================================================
 
-Doom 3 GPL Source Code
-Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Doom 3 BFG Edition GPL Source Code
+Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
 
-This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
+This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
-Doom 3 Source Code is free software: you can redistribute it and/or modify
+Doom 3 BFG Edition Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Doom 3 Source Code is distributed in the hope that it will be useful,
+Doom 3 BFG Edition Source Code is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Doom 3 Source Code.  If not, see <http://www.gnu.org/licenses/>.
+along with Doom 3 BFG Edition Source Code.  If not, see <http://www.gnu.org/licenses/>.
 
-In addition, the Doom 3 Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 Source Code.  If not, please request a copy in writing from id Software at the address below.
+In addition, the Doom 3 BFG Edition Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 BFG Edition Source Code.  If not, please request a copy in writing from id Software at the address below.
 
 If you have questions concerning this license or the applicable additional terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 
 ===========================================================================
 */
 
-#include "precompiled.h"
 #pragma hdrstop
+#include "precompiled.h"
 
 /*
 =====================
@@ -228,6 +228,54 @@ idQuat& idQuat::Slerp( const idQuat& from, const idQuat& to, float t )
 }
 
 /*
+========================
+idQuat::Lerp
+
+Approximation of spherical linear interpolation between two quaternions. The interpolation
+traces out the exact same curve as Slerp but does not maintain a constant speed across the arc.
+========================
+*/
+idQuat& idQuat::Lerp( const idQuat& from, const idQuat& to, const float t )
+{
+	if( t <= 0.0f )
+	{
+		*this = from;
+		return *this;
+	}
+	
+	if( t >= 1.0f )
+	{
+		*this = to;
+		return *this;
+	}
+	
+	if( from == to )
+	{
+		*this = to;
+		return *this;
+	}
+	
+	float cosom = from.x * to.x + from.y * to.y + from.z * to.z + from.w * to.w;
+	
+	float scale0 = 1.0f - t;
+	float scale1 = ( cosom >= 0.0f ) ? t : -t;
+	
+	x = scale0 * from.x + scale1 * to.x;
+	y = scale0 * from.y + scale1 * to.y;
+	z = scale0 * from.z + scale1 * to.z;
+	w = scale0 * from.w + scale1 * to.w;
+	
+	float s = idMath::InvSqrt( x * x + y * y + z * z + w * w );
+	
+	x *= s;
+	y *= s;
+	z *= s;
+	w *= s;
+	
+	return *this;
+}
+
+/*
 =============
 idCQuat::ToAngles
 =============
@@ -275,4 +323,16 @@ idCQuat::ToString
 const char* idCQuat::ToString( int precision ) const
 {
 	return idStr::FloatArrayToString( ToFloatPtr(), GetDimension(), precision );
+}
+
+/*
+=====================
+Slerp
+
+Spherical linear interpolation between two quaternions.
+=====================
+*/
+idQuat Slerp( const idQuat& from, const idQuat& to, const float t )
+{
+	return idQuat().Slerp( from, to, t );
 }

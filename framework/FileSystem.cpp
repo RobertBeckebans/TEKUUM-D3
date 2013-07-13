@@ -1849,7 +1849,9 @@ idFileList* idFileSystemLocal::ListFiles( const char* relativePath, const char* 
 	
 	if( sort )
 	{
-		idStrListSortPaths( fileList->list );
+		// RB begin
+		fileList->list.SortWithTemplate( idSort_PathStr() );
+		// RB end
 	}
 	
 	return fileList;
@@ -1908,7 +1910,9 @@ idFileList* idFileSystemLocal::ListFilesTree( const char* relativePath, const ch
 	
 	if( sort )
 	{
-		idStrListSortPaths( fileList->list );
+		// RB begin
+		fileList->list.SortWithTemplate( idSort_PathStr() );
+		// RB end
 	}
 	
 	return fileList;
@@ -1985,7 +1989,8 @@ idModList* idFileSystemLocal::ListMods()
 		}
 	}
 	
-	list->mods.Sort();
+	// RB: changed to SortWithTemplate
+	list->mods.SortWithTemplate( idSort_PathStr() );
 	
 	// read the descriptions for each mod - search all paths
 	for( i = 0; i < list->mods.Num(); i++ )
@@ -2385,7 +2390,12 @@ void idFileSystemLocal::TouchFileList_f( const idCmdArgs& args )
 			while( src.ReadToken( &token ) )
 			{
 				common->Printf( "%s\n", token.c_str() );
-				session->UpdateScreen();
+				
+				// RB: added captureToImage
+				const bool captureToImage = false;
+				session->UpdateScreen( captureToImage );
+				// RB end
+				
 				idFile* f = fileSystemLocal.OpenFileRead( token );
 				if( f )
 				{
@@ -2449,7 +2459,10 @@ void idFileSystemLocal::AddGameDirectory( const char* path, const char* dir )
 	
 	// sort them so that later alphabetic matches override
 	// earlier ones. This makes pak1.pk4 override pak0.pk4
-	pakfiles.Sort();
+	
+	// RB: changed to SortWithTemplate
+	pakfiles.SortWithTemplate( idSort_PathStr() );
+	// RB end
 	
 	for( i = 0; i < pakfiles.Num(); i++ )
 	{

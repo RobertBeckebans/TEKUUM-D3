@@ -1,25 +1,25 @@
 /*
 ===========================================================================
 
-Doom 3 GPL Source Code
-Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Doom 3 BFG Edition GPL Source Code
+Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
 
-This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
+This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
-Doom 3 Source Code is free software: you can redistribute it and/or modify
+Doom 3 BFG Edition Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Doom 3 Source Code is distributed in the hope that it will be useful,
+Doom 3 BFG Edition Source Code is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Doom 3 Source Code.  If not, see <http://www.gnu.org/licenses/>.
+along with Doom 3 BFG Edition Source Code.  If not, see <http://www.gnu.org/licenses/>.
 
-In addition, the Doom 3 Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 Source Code.  If not, please request a copy in writing from id Software at the address below.
+In addition, the Doom 3 BFG Edition Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 BFG Edition Source Code.  If not, please request a copy in writing from id Software at the address below.
 
 If you have questions concerning this license or the applicable additional terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 
@@ -48,8 +48,9 @@ move around it to view it from different angles.
 =============================================================================
 */
 
-#include "precompiled.h"
 #pragma hdrstop
+#include "precompiled.h"
+
 
 #include "../Game_local.h"
 
@@ -416,7 +417,7 @@ void idTestModel::Think()
 		physicsObj.SetAngularExtrapolation( extrapolation_t( EXTRAPOLATION_LINEAR | EXTRAPOLATION_NOSTOP ), gameLocal.time, 0, ang, idAngles( 0, g_testModelRotate.GetFloat() * 360.0f / 60.0f, 0 ), ang_zero );
 		
 		idClipModel* clip = physicsObj.GetClipModel();
-		if( clip && animator.ModelDef() )
+		if( clip != NULL && animator.ModelDef() )
 		{
 			idVec3 neworigin;
 			idMat3 axis;
@@ -509,7 +510,6 @@ void idTestModel::PrevAnim( const idCmdArgs& args )
 		return;
 	}
 	
-	headAnim = 0;
 	anim--;
 	if( anim < 0 )
 	{
@@ -603,6 +603,7 @@ void idTestModel::TestAnim( const idCmdArgs& args )
 {
 	idStr			name;
 	int				animNum;
+	const idAnim*	newanim;
 	
 	if( args.Argc() < 2 )
 	{
@@ -610,29 +611,10 @@ void idTestModel::TestAnim( const idCmdArgs& args )
 		return;
 	}
 	
+	newanim = NULL;
+	
 	name = args.Argv( 1 );
-#if 0
-	if( strstr( name, ".ma" ) || strstr( name, ".mb" ) )
-	{
-		const idAnim*	newanim = NULL;
-		const idMD5Anim*	md5anims[ ANIM_MaxSyncedAnims ];
-		idModelExport exporter;
-		exporter.ExportAnim( name );
-		name.SetFileExtension( MD5_ANIM_EXT );
-		md5anims[ 0 ] = animationLib.GetAnim( name );
-		if( md5anims[ 0 ] )
-		{
-			customAnim.SetAnim( animator.ModelDef(), name, name, 1, md5anims );
-			newanim = &customAnim;
-		}
-	}
-	else
-	{
-		animNum = animator.GetAnim( name );
-	}
-#else
 	animNum = animator.GetAnim( name );
-#endif
 	
 	if( !animNum )
 	{
@@ -881,14 +863,6 @@ void idTestModel::TestModel_f( const idCmdArgs& args )
 			{
 				name.DefaultFileExtension( ".ase" );
 			}
-			
-			if( strstr( name, ".ma" ) || strstr( name, ".mb" ) )
-			{
-				idModelExport exporter;
-				exporter.ExportModel( name );
-				name.SetFileExtension( MD5_MESH_EXT );
-			}
-			
 			if( !renderModelManager->CheckModel( name ) )
 			{
 				gameLocal.Printf( "Can't register model\n" );

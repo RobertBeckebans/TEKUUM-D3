@@ -1,26 +1,26 @@
 /*
 ===========================================================================
 
-Doom 3 GPL Source Code
-Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Doom 3 BFG Edition GPL Source Code
+Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
 Copyright (C) 2013 Robert Beckebans
 
-This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
+This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
-Doom 3 Source Code is free software: you can redistribute it and/or modify
+Doom 3 BFG Edition Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Doom 3 Source Code is distributed in the hope that it will be useful,
+Doom 3 BFG Edition Source Code is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Doom 3 Source Code.  If not, see <http://www.gnu.org/licenses/>.
+along with Doom 3 BFG Edition Source Code.  If not, see <http://www.gnu.org/licenses/>.
 
-In addition, the Doom 3 Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 Source Code.  If not, please request a copy in writing from id Software at the address below.
+In addition, the Doom 3 BFG Edition Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 BFG Edition Source Code.  If not, please request a copy in writing from id Software at the address below.
 
 If you have questions concerning this license or the applicable additional terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 
@@ -29,6 +29,8 @@ If you have questions concerning this license or the applicable additional terms
 
 #ifndef __RENDERWORLDLOCAL_H__
 #define __RENDERWORLDLOCAL_H__
+
+#include "BoundsTrack.h"
 
 // assume any lightDef or entityDef index above this is an internal error
 const int LUDICROUS_INDEX	= 10000;
@@ -82,7 +84,7 @@ typedef struct
 // RB begin
 struct lightGridPoint_t
 {
-#if !defined(USE_GLES1)
+#if !defined(USE_GLES2)
 	idVec3			origin;				// not saved to .proc
 #endif
 	byte			ambient[3];
@@ -91,11 +93,30 @@ struct lightGridPoint_t
 };
 // RB end
 
+struct reusableDecal_t
+{
+	qhandle_t				entityHandle;
+	int						lastStartTime;
+	idRenderModelDecal* 	decals;
+};
+
+struct reusableOverlay_t
+{
+	qhandle_t				entityHandle;
+	int						lastStartTime;
+	idRenderModelOverlay* 	overlays;
+};
+
+struct portalStack_t;
+
 class idRenderWorldLocal : public idRenderWorld
 {
 public:
 	idRenderWorldLocal();
 	virtual					~idRenderWorldLocal();
+	
+	virtual	bool			InitFromMap( const char* mapName );
+	virtual void			ResetLocalRenderModels();				// Fixes a crash when switching between expansion packs in Doom3:BFG
 	
 	virtual	qhandle_t		AddEntityDef( const renderEntity_t* re );
 	virtual	void			UpdateEntityDef( qhandle_t entityHandle, const renderEntity_t* re );
@@ -114,7 +135,7 @@ public:
 	
 	virtual void			ProjectDecalOntoWorld( const idFixedWinding& winding, const idVec3& projectionOrigin, const bool parallel, const float fadeDepth, const idMaterial* material, const int startTime );
 	virtual void			ProjectDecal( qhandle_t entityHandle, const idFixedWinding& winding, const idVec3& projectionOrigin, const bool parallel, const float fadeDepth, const idMaterial* material, const int startTime );
-	virtual void			ProjectOverlay( qhandle_t entityHandle, const idPlane localTextureAxis[2], const idMaterial* material );
+	virtual void			ProjectOverlay( qhandle_t entityHandle, const idPlane localTextureAxis[2], const idMaterial* material, const int startTime );
 	virtual void			RemoveDecals( qhandle_t entityHandle );
 	
 	virtual void			SetRenderView( const renderView_t* renderView );
@@ -139,7 +160,6 @@ public:
 	virtual void			DebugSphere( const idVec4& color, const idSphere& sphere, const int lifetime = 0, bool depthTest = false );
 	virtual void			DebugBounds( const idVec4& color, const idBounds& bounds, const idVec3& org = vec3_origin, const int lifetime = 0 );
 	virtual void			DebugBox( const idVec4& color, const idBox& box, const int lifetime = 0 );
-	virtual void			DebugFrustum( const idVec4& color, const idFrustum& frustum, const bool showFromOrigin = false, const int lifetime = 0 );
 	virtual void			DebugCone( const idVec4& color, const idVec3& apex, const idVec3& dir, float radius1, float radius2, const int lifetime = 0 );
 	virtual void			DebugScreenRect( const idVec4& color, const idScreenRect& rect, const viewDef_t* viewDef, const int lifetime = 0 );
 	virtual void			DebugAxis( const idVec3& origin, const idMat3& axis );
@@ -173,14 +193,21 @@ public:
 	idList<lightGridPoint_t> lightGridPoints;
 	// RB end
 	
-	idList<idRenderModel*>	localModels;
+	idList<idRenderModel* >	localModels;
 	
-	idList<idRenderEntityLocal*>	entityDefs;
-	idList<idRenderLightLocal*>		lightDefs;
+	idList<idRenderEntityLocal* >		entityDefs;
+	idList<idRenderLightLocal* >		lightDefs;
 	
 	idBlockAlloc<areaReference_t, 1024> areaReferenceAllocator;
 	idBlockAlloc<idInteraction, 256>	interactionAllocator;
-	idBlockAlloc<areaNumRef_t, 1024>	areaNumRefAllocator;
+	
+#ifdef ID_PC
+	static const int MAX_DECAL_SURFACES = 32;
+#else
+	static const int MAX_DECAL_SURFACES = 16;
+#endif
+	idArray<reusableDecal_t, MAX_DECAL_SURFACES>	decals;
+	idArray<reusableOverlay_t, MAX_DECAL_SURFACES>	overlays;
 	
 	// all light / entity interactions are referenced here for fast lookup without
 	// having to crawl the doubly linked lists.  EnntityDefs are sequential for better
@@ -190,7 +217,6 @@ public:
 	idInteraction** 		interactionTable;
 	int						interactionTableWidth;		// entityDefs
 	int						interactionTableHeight;		// lightDefs
-	
 	
 	bool					generateAllInteractionsCalled;
 	
@@ -215,43 +241,38 @@ public:
 	void					TouchWorldModels();
 	void					AddWorldModelEntities();
 	void					ClearPortalStates();
-	virtual	bool			InitFromMap( const char* mapName );
-	
-private:
-	// RB begin
 	void					ReadBinaryAreaPortals( idFile* file );
 	void					ReadBinaryNodes( idFile* file );
 	idRenderModel* 			ReadBinaryModel( idFile* file );
 	idRenderModel* 			ReadBinaryShadowModel( idFile* file );
+	// RB begin
 	void					ReadBinaryLightGridPoints( idFile* file );
 	// RB end
 	
-public:
 	//--------------------------
 	// RenderWorld_portals.cpp
 	
-	idScreenRect			ScreenRectFromWinding( const idWinding* w, viewEntity_t* space );
+	bool					CullEntityByPortals( const idRenderEntityLocal* entity, const portalStack_t* ps );
+	void					AddAreaViewEntities( int areaNum, const portalStack_t* ps );
+	bool					CullLightByPortals( const idRenderLightLocal* light, const portalStack_t* ps );
+	void					AddAreaViewLights( int areaNum, const portalStack_t* ps );
+	void					AddAreaToView( int areaNum, const portalStack_t* ps );
+	idScreenRect			ScreenRectFromWinding( const idWinding* w, const viewEntity_t* space );
 	bool					PortalIsFoggedOut( const portal_t* p );
-	void					FloodViewThroughArea_r( const idVec3 origin, int areaNum, const struct portalStack_s* ps );
-	void					FlowViewThroughPortals( const idVec3 origin, int numPlanes, const idPlane* planes );
-	void					FloodLightThroughArea_r( idRenderLightLocal* light, int areaNum, const struct portalStack_s* ps );
-	void					FlowLightThroughPortals( idRenderLightLocal* light );
-	areaNumRef_t* 			FloodFrustumAreas_r( const idFrustum& frustum, const int areaNum, const idBounds& bounds, areaNumRef_t* areas );
-	areaNumRef_t* 			FloodFrustumAreas( const idFrustum& frustum, areaNumRef_t* areas );
-	bool					CullEntityByPortals( const idRenderEntityLocal* entity, const struct portalStack_s* ps );
-	void					AddAreaEntityRefs( int areaNum, const struct portalStack_s* ps );
-	bool					CullLightByPortals( const idRenderLightLocal* light, const struct portalStack_s* ps );
-	void					AddAreaLightRefs( int areaNum, const struct portalStack_s* ps );
-	void					AddAreaRefs( int areaNum, const struct portalStack_s* ps );
+	void					FloodViewThroughArea_r( const idVec3& origin, int areaNum, const portalStack_t* ps );
+	void					FlowViewThroughPortals( const idVec3& origin, int numPlanes, const idPlane* planes );
 	void					BuildConnectedAreas_r( int areaNum );
 	void					BuildConnectedAreas();
 	void					FindViewLightsAndEntities();
+	
+	void					FloodLightThroughArea_r( idRenderLightLocal* light, int areaNum, const portalStack_t* ps );
+	void					FlowLightThroughPortals( idRenderLightLocal* light );
 	
 	int						NumPortals() const;
 	qhandle_t				FindPortal( const idBounds& b ) const;
 	void					SetPortalState( qhandle_t portal, int blockingBits );
 	int						GetPortalState( qhandle_t portal );
-	bool					AreasAreConnected( int areaNum1, int areaNum2, portalConnection_t connection );
+	bool					AreasAreConnected( int areaNum1, int areaNum2, portalConnection_t connection ) const;
 	void					FloodConnectedAreas( portalArea_t* area, int portalAttributeIndex );
 	idScreenRect& 			GetAreaScreenRect( int areaNum ) const
 	{
@@ -286,27 +307,29 @@ public:
 	void					AddLightRefToArea( idRenderLightLocal* light, portalArea_t* area );
 	
 	void					RecurseProcBSP_r( modelTrace_t* results, int parentNodeNum, int nodeNum, float p1f, float p2f, const idVec3& p1, const idVec3& p2 ) const;
-	
 	void					BoundsInAreas_r( int nodeNum, const idBounds& bounds, int* areas, int* numAreas, int maxAreas ) const;
 	
 	float					DrawTextLength( const char* text, float scale, int len = 0 );
 	
 	void					FreeInteractions();
 	
-	void					PushVolumeIntoTree_r( idRenderEntityLocal* def, idRenderLightLocal* light, const idSphere* sphere, int numPoints, const idVec3( *points ), int nodeNum );
+	void					PushFrustumIntoTree_r( idRenderEntityLocal* def, idRenderLightLocal* light, const frustumCorners_t& corners, int nodeNum );
+	void					PushFrustumIntoTree( idRenderEntityLocal* def, idRenderLightLocal* light, const idRenderMatrix& frustumTransform, const idBounds& frustumBounds );
 	
-	void					PushVolumeIntoTree( idRenderEntityLocal* def, idRenderLightLocal* light, int numPoints, const idVec3( *points ) );
+	idRenderModelDecal* 	AllocDecal( qhandle_t newEntityHandle, int startTime );
+	idRenderModelOverlay* 	AllocOverlay( qhandle_t newEntityHandle, int startTime );
 	
 	//-------------------------------
 	// tr_light.c
-	void					CreateLightDefInteractions( idRenderLightLocal* ldef );
-	
-	
-	//--------------------------
-	// RenderWorld_lightgrid.cpp
-	
-private:
-	void					SetupEntityLightingGrid( idRenderEntityLocal* def );
+	void					CreateLightDefInteractions( idRenderLightLocal* const ldef, const int renderViewID );
 };
+
+// if an entity / light combination has been evaluated and found to not genrate any surfaces or shadows,
+// the constant INTERACTION_EMPTY will be stored in the interaction table, int contrasts to NULL, which
+// means that the combination has not yet been tested for having surfaces.
+static idInteraction* const INTERACTION_EMPTY = ( idInteraction* )1;
+
+void R_ListRenderLightDefs_f( const idCmdArgs& args );
+void R_ListRenderEntityDefs_f( const idCmdArgs& args );
 
 #endif /* !__RENDERWORLDLOCAL_H__ */

@@ -1,33 +1,33 @@
 /*
 ===========================================================================
 
-Doom 3 GPL Source Code
-Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Doom 3 BFG Edition GPL Source Code
+Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
 
-This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
+This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
-Doom 3 Source Code is free software: you can redistribute it and/or modify
+Doom 3 BFG Edition Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Doom 3 Source Code is distributed in the hope that it will be useful,
+Doom 3 BFG Edition Source Code is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Doom 3 Source Code.  If not, see <http://www.gnu.org/licenses/>.
+along with Doom 3 BFG Edition Source Code.  If not, see <http://www.gnu.org/licenses/>.
 
-In addition, the Doom 3 Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 Source Code.  If not, please request a copy in writing from id Software at the address below.
+In addition, the Doom 3 BFG Edition Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 BFG Edition Source Code.  If not, please request a copy in writing from id Software at the address below.
 
 If you have questions concerning this license or the applicable additional terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 
 ===========================================================================
 */
 
-#include "precompiled.h"
 #pragma hdrstop
+#include "precompiled.h"
 
 #include "Model_ma.h"
 
@@ -138,10 +138,7 @@ bool MA_ReadVec3( idParser& parser, idVec3& vec )
 	idToken token;
 	if( !parser.SkipUntilString( "double3" ) )
 	{
-#if defined(USE_EXCEPTIONS)
 		throw idException( va( "Maya Loader '%s': Invalid Vec3", parser.GetFileName() ) );
-#endif
-		return false;
 	}
 	
 	
@@ -461,10 +458,7 @@ bool MA_ParseFace( idParser& parser, maAttribHeader_t* header )
 			int count = parser.ParseInt();
 			if( count != 3 )
 			{
-#if defined(USE_EXCEPTIONS)
 				throw idException( va( "Maya Loader '%s': Face is not a triangle.", parser.GetFileName() ) );
-#endif
-				return false;
 			}
 			//Increment the face number because a new face always starts with an "f" token
 			currentFace++;
@@ -482,13 +476,11 @@ bool MA_ParseFace( idParser& parser, maAttribHeader_t* header )
 		else if( !token.Icmp( "mu" ) )
 		{
 			int uvstIndex = parser.ParseInt();
+			uvstIndex;
 			int count = parser.ParseInt();
 			if( count != 3 )
 			{
-#if defined(USE_EXCEPTIONS)
 				throw idException( va( "Maya Loader '%s': Invalid texture coordinates.", parser.GetFileName() ) );
-#endif
-				return false;
 			}
 			pMesh->faces[currentFace].tVertexNum[0] = parser.ParseInt();
 			pMesh->faces[currentFace].tVertexNum[1] = parser.ParseInt();
@@ -500,10 +492,7 @@ bool MA_ParseFace( idParser& parser, maAttribHeader_t* header )
 			int count = parser.ParseInt();
 			if( count != 3 )
 			{
-#if defined(USE_EXCEPTIONS)
 				throw idException( va( "Maya Loader '%s': Invalid texture coordinates.", parser.GetFileName() ) );
-#endif
-				return false;
 			}
 			pMesh->faces[currentFace].tVertexNum[0] = parser.ParseInt();
 			pMesh->faces[currentFace].tVertexNum[1] = parser.ParseInt();
@@ -516,10 +505,7 @@ bool MA_ParseFace( idParser& parser, maAttribHeader_t* header )
 			int count = parser.ParseInt();
 			if( count != 3 )
 			{
-#if defined(USE_EXCEPTIONS)
 				throw idException( va( "Maya Loader '%s': Invalid vertex color.", parser.GetFileName() ) );
-#endif
-				return false;
 			}
 			pMesh->faces[currentFace].vertexColors[0] = parser.ParseInt();
 			pMesh->faces[currentFace].vertexColors[1] = parser.ParseInt();
@@ -817,9 +803,7 @@ void MA_ParseMesh( idParser& parser )
 					if( pMesh->nextNormal >= pMesh->numNormals )
 					{
 						//We are using more normals than exist
-#if defined(USE_EXCEPTIONS)
 						throw idException( va( "Maya Loader '%s': Invalid Normals Index.", parser.GetFileName() ) );
-#endif
 					}
 					pMesh->faces[i].vertexNormals[j] = pMesh->normals[pMesh->nextNormal];
 					pMesh->nextNormal++;
@@ -996,10 +980,7 @@ bool MA_ParseConnectAttr( idParser& parser )
 	int dot = temp.Find( "." );
 	if( dot == -1 )
 	{
-#if defined(USE_EXCEPTIONS)
 		throw idException( va( "Maya Loader '%s': Invalid Connect Attribute.", parser.GetFileName() ) );
-#endif
-		return false;
 	}
 	srcName = temp.Left( dot );
 	srcType = temp.Right( temp.Length() - dot - 1 );
@@ -1009,10 +990,7 @@ bool MA_ParseConnectAttr( idParser& parser )
 	dot = temp.Find( "." );
 	if( dot == -1 )
 	{
-#if defined(USE_EXCEPTIONS)
 		throw idException( va( "Maya Loader '%s': Invalid Connect Attribute.", parser.GetFileName() ) );
-#endif
-		return false;
 	}
 	destName = temp.Left( dot );
 	destType = temp.Right( temp.Length() - dot - 1 );
@@ -1226,16 +1204,11 @@ maModel_t* MA_Load( const char* fileName )
 		return NULL;
 	}
 	
-// RB begin
-#if defined(USE_EXCEPTIONS)
 	try
-#endif
 	{
 		ma = MA_Parse( buf, fileName, false );
 		ma->timeStamp = timeStamp;
 	}
-	
-#if defined(USE_EXCEPTIONS)
 	catch( idException& e )
 	{
 		common->Warning( "%s", e.GetError() );
@@ -1245,7 +1218,6 @@ maModel_t* MA_Load( const char* fileName )
 		}
 		ma = NULL;
 	}
-#endif
 	
 	fileSystem->FreeFile( buf );
 	

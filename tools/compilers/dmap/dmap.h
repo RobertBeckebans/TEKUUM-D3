@@ -197,6 +197,8 @@ typedef struct
 	char				name[MAX_QPATH];		// for naming the shadow volume surface and interactions
 	srfTriangles_t*		shadowTris;
 	
+	idPlane				frustumPlanes[6];		// RB: should be calculated after R_DeriveLightData()
+	
 	// RB: extra info for vertex lighting
 	int					photons;
 	// RB end
@@ -525,11 +527,12 @@ void WriteOutputFile();
 //=============================================================================
 
 // shadowopt.cpp
-
+#if 0
 srfTriangles_t* CreateLightShadow( optimizeGroup_t* shadowerGroups, const mapLight_t* light );
 void		FreeBeamTree( struct beamTree_s* beamTree );
 
 void		CarveTriByBeamTree( const struct beamTree_s* beamTree, const mapTri_t* tri, mapTri_t** lit, mapTri_t** unLit );
+#endif
 
 //=============================================================================
 

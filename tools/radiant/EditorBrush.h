@@ -45,7 +45,7 @@ void		Brush_BuildWindings( brush_t* b, bool bSnap = true, bool keepOnPlaneWindin
 brush_t* 	Brush_Clone( brush_t* b );
 brush_t* 	Brush_FullClone( brush_t* b );
 brush_t* 	Brush_Create( idVec3 mins, idVec3 maxs, texdef_t* texdef );
-void		Brush_Draw( brush_t* b, bool bSelected = false );
+void		Brush_DrawCam( brush_t* b, bool bSelected = false );
 void		Brush_DrawXY( brush_t* b, int nViewType, bool bSelected = false, bool ignoreViewType = false );
 void		Brush_SplitBrushByFace( brush_t* in, face_t* f, brush_t** front, brush_t** back );
 void		Brush_SelectFaceForDragging( brush_t* b, face_t* f, bool shear );

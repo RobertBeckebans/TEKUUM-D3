@@ -1,25 +1,25 @@
 /*
 ===========================================================================
 
-Doom 3 GPL Source Code
-Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Doom 3 BFG Edition GPL Source Code
+Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
 
-This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
+This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
-Doom 3 Source Code is free software: you can redistribute it and/or modify
+Doom 3 BFG Edition Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Doom 3 Source Code is distributed in the hope that it will be useful,
+Doom 3 BFG Edition Source Code is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Doom 3 Source Code.  If not, see <http://www.gnu.org/licenses/>.
+along with Doom 3 BFG Edition Source Code.  If not, see <http://www.gnu.org/licenses/>.
 
-In addition, the Doom 3 Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 Source Code.  If not, please request a copy in writing from id Software at the address below.
+In addition, the Doom 3 BFG Edition Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 BFG Edition Source Code.  If not, please request a copy in writing from id Software at the address below.
 
 If you have questions concerning this license or the applicable additional terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 
@@ -44,6 +44,7 @@ If you have questions concerning this license or the applicable additional terms
 class idHashIndex
 {
 public:
+	static const int NULL_INDEX = -1;
 	idHashIndex();
 	idHashIndex( const int initialHashSize, const int initialIndexSize );
 	~idHashIndex();
@@ -62,6 +63,17 @@ public:
 	int				First( const int key ) const;
 	// get the next index from the hash, returns -1 if at the end of the hash chain
 	int				Next( const int index ) const;
+	
+	// For porting purposes...
+	int				GetFirst( const int key ) const
+	{
+		return First( key );
+	}
+	int				GetNext( const int index ) const
+	{
+		return Next( index );
+	}
+	
 	// insert an entry into the index and add it to the hash, increasing all indexes >= index
 	void			InsertIndex( const int key, const int index );
 	// remove an entry from the index and remove it from the hash, decreasing all indexes >= index
@@ -88,6 +100,8 @@ public:
 	int				GenerateKey( const idVec3& v ) const;
 	// returns a key for two integers
 	int				GenerateKey( const int n1, const int n2 ) const;
+	// returns a key for a single integer
+	int				GenerateKey( const int n ) const;
 	
 private:
 	int				hashSize;
@@ -455,6 +469,16 @@ idHashIndex::GenerateKey
 ID_INLINE int idHashIndex::GenerateKey( const int n1, const int n2 ) const
 {
 	return ( ( n1 + n2 ) & hashMask );
+}
+
+/*
+================
+idHashIndex::GenerateKey
+================
+*/
+ID_INLINE int idHashIndex::GenerateKey( const int n ) const
+{
+	return n & hashMask;
 }
 
 #endif /* !__HASHINDEX_H__ */

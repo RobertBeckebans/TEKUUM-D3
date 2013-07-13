@@ -11,7 +11,6 @@ project "idlib"
 				
 		"bv/Bounds.cpp", "bv/Bounds.h",
 		"bv/Box.cpp", "bv/Box.h",
-		"bv/Frustum.cpp", "bv/Frustum.h",
 		"bv/Sphere.cpp", "bv/Sphere.h",
 		
 		"containers/*.cpp", "containers/*.h",
@@ -24,7 +23,7 @@ project "idlib"
 	}
 	excludes
 	{
-		"math/Simd_AltiVec.cpp", "math/Simd_AltiVec.h",
+		--"math/Simd_AltiVec.cpp", "math/Simd_AltiVec.h",
 		--"bv/Frustum_gcc.cpp",
 	}
 	includedirs
@@ -33,7 +32,7 @@ project "idlib"
 		--"idlib",
 	}
 	defines
-	{ 
+	{
 		"__IDLIB__",
 		"__DOOM_DLL__",
 		"USE_EXCEPTIONS",
@@ -83,8 +82,15 @@ project "idlib"
 	configuration { "linux" }
 		files
 		{
-			"bv/Frustum_gcc.cpp",
+			"sys/posix/posix_thread.cpp",
 		}
+			
+	if not _OPTIONS["android"] then
+		defines
+		{
+			"ID_PC"
+		}
+	end
 		
 	
 		

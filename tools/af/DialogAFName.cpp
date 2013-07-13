@@ -26,8 +26,6 @@ If you have questions concerning this license or the applicable additional terms
 ===========================================================================
 */
 
-#include <string>
-
 #include "precompiled.h"
 #pragma hdrstop
 
@@ -146,15 +144,7 @@ void EditVerifyName( CEdit* edit )
 				( strIn[i] >= 'A' && strIn[i] <= 'Z' ) ||
 				( strIn[i] == '_' ) || ( strIn[i] >= '0' && strIn[i] <= '9' ) )
 		{
-		
-		
-			// RB begin
-#if _MFC_VER >= 0x0A00
 			strOut.AppendChar( strIn[i] );
-#else
-			strOut += strIn[i];
-#endif
-			// RB end
 		}
 	}
 	edit->SetWindowText( strOut );
@@ -178,15 +168,7 @@ void DialogAFName::OnBnClickedOk()
 	UpdateData( TRUE );
 	if( m_combo && m_combo->FindStringExact( -1, m_editName ) != -1 )
 	{
-// RB begin
-#if _MFC_VER >= 0x0A00
 		MessageBox( va( "The name %s is already used.", m_editName.GetBuffer() ), "Name", MB_OK );
-#else
-		//std::string s((LPCTSTR)m_editName);
-		MessageBox( va( "The name %s is already used.", m_editName.GetBuffer( 0 ) ), "Name", MB_OK );
-#endif
-// RB end
-
 	}
 	else
 	{

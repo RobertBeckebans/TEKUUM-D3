@@ -62,15 +62,15 @@ elseif(MSVC)
 	# Omit Frame Pointers
 	# "/Oy",
 	
-	set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} /D _DEBUG /MP /MTd")
-	set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} /MP /Oi /Oy /MT")
-	set(CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELWITHDEBINFO} /MP /Oi /MTd")
-	set(CMAKE_C_FLAGS_MINSIZEREL "${CMAKE_C_FLAGS_MINSIZEREL} /MP /Oi /Oy /MT")
+	set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} /D _DEBUG /MP /MDd")
+	set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} /MP /Oi /Oy /MD")
+	set(CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELWITHDEBINFO} /MP /Oi /MDd")
+	set(CMAKE_C_FLAGS_MINSIZEREL "${CMAKE_C_FLAGS_MINSIZEREL} /MP /Oi /Oy /MD")
 	
-	set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MP /MTd")
-	set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MP /Oi /Oy /MT")
-	set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} /MP /MTd")
-	set(CMAKE_CXX_FLAGS_MINSIZEREL "${CMAKE_CXX_FLAGS_MINSIZEREL} /MP /Oi /Oy /MT")
+	set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MP /MDd")
+	set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MP /Oi /Oy /MD")
+	set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} /MP /MDd")
+	set(CMAKE_CXX_FLAGS_MINSIZEREL "${CMAKE_CXX_FLAGS_MINSIZEREL} /MP /Oi /Oy /MD")
 
 	add_definitions(-DWIN32 
 					-D_WINDOWS
@@ -86,12 +86,12 @@ elseif(MSVC)
 	endif()
 					
 	if(USE_MFC_TOOLS)
-		# add_definitions(-D_AFXDLL)
+		add_definitions(-D_AFXDLL)
 		
 		# 0: Use Standard Windows Libraries
 		# 1: Use MFC in a Static Library
 		# 2: Use MFC in a Shared DLL 
-		set(CMAKE_MFC_FLAG 1)
+		set(CMAKE_MFC_FLAG 2)
 	endif()
 endif()
 
@@ -136,95 +136,96 @@ file(GLOB FRAMEWORK_SOURCES framework/*.cpp)
 file(GLOB FRAMEWORK_ASYNC_INCLUDES framework/async/*.h)
 file(GLOB FRAMEWORK_ASYNC_SOURCES framework/async/*.cpp)
 
-set(RENDERER_INCLUDES
-	renderer/Cinematic.h
-	renderer/Framebuffer.h
-	renderer/GLShader.h
-	renderer/GLShader_strings.h
-	renderer/GuiModel.h
-	renderer/Image.h
-	renderer/Interaction.h
-	renderer/Material.h
-	renderer/MegaTexture.h
-	renderer/Model.h
-	renderer/ModelDecal.h
-	renderer/ModelManager.h
-	renderer/ModelOverlay.h
-	renderer/Model_ase.h
-	renderer/Model_ColladaHelper.h
-	renderer/Model_ColladaParser.h
-	renderer/Model_local.h
-	renderer/Model_lwo.h
-	renderer/Model_ma.h
-	renderer/Model_md3.h
-	renderer/RenderSystem.h
-	renderer/RenderWorld.h
-	renderer/RenderWorld_local.h
-	renderer/VertexCache.h
-	renderer/simplex.h
-	renderer/tr_local.h)
+file(GLOB_RECURSE RENDERER_INCLUDES renderer/*.h)
+# set(RENDERER_INCLUDES
+	# renderer/Cinematic.h
+	# renderer/Framebuffer.h
+	# renderer/GLShader.h
+	# renderer/GLShader_strings.h
+	# renderer/GuiModel.h
+	# renderer/Image.h
+	# renderer/Interaction.h
+	# renderer/Material.h
+	# renderer/MegaTexture.h
+	# renderer/Model.h
+	# renderer/ModelDecal.h
+	# renderer/ModelManager.h
+	# renderer/ModelOverlay.h
+	# renderer/Model_ase.h
+	# renderer/Model_ColladaHelper.h
+	# renderer/Model_ColladaParser.h
+	# renderer/Model_local.h
+	# renderer/Model_lwo.h
+	# renderer/Model_ma.h
+	# renderer/Model_md3.h
+	# renderer/RenderSystem.h
+	# renderer/RenderWorld.h
+	# renderer/RenderWorld_local.h
+	# renderer/VertexCache.h
+	# renderer/simplex.h
+	# renderer/tr_local.h)
 
-
-set(RENDERER_SOURCES
-	renderer/Cinematic.cpp
-	renderer/Framebuffer.cpp
-	renderer/GLShader.cpp
-	renderer/GuiModel.cpp
-	renderer/Image_files.cpp
-	renderer/Image_init.cpp
-	renderer/Image_load.cpp
-	renderer/Image_process.cpp
-	renderer/Image_program.cpp
-	renderer/Interaction.cpp
-	renderer/Material.cpp
-	renderer/MegaTexture.cpp
-	renderer/Model.cpp
-	renderer/ModelDecal.cpp
-	renderer/ModelManager.cpp
-	renderer/ModelOverlay.cpp
-	renderer/Model_ase.cpp
-	renderer/Model_beam.cpp
-	renderer/Model_ColladaParser.cpp
-	renderer/Model_liquid.cpp
-	renderer/Model_lwo.cpp
-	renderer/Model_ma.cpp
-	renderer/Model_md3.cpp
-	renderer/Model_md5.cpp
-	renderer/Model_prt.cpp
-	renderer/Model_sprite.cpp
-	renderer/RenderEntity.cpp
-	renderer/RenderSystem.cpp
-	renderer/RenderSystem_init.cpp
-	renderer/RenderWorld.cpp
-	renderer/RenderWorld_demo.cpp
-	renderer/RenderWorld_lightgrid.cpp
-	renderer/RenderWorld_load.cpp
-	renderer/RenderWorld_portals.cpp
-	renderer/RenderWorld_defs.cpp
-	renderer/VertexCache.cpp
-	renderer/draw_arb.cpp
-	renderer/draw_arb2.cpp
-	renderer/draw_glsl.cpp
-	renderer/draw_common.cpp
-	renderer/draw_exp.cpp
-	renderer/tr_backend.cpp
-	renderer/tr_backend_draw.cpp
-	renderer/tr_backend_rendertools.cpp
-	renderer/tr_font.cpp
-	renderer/tr_frontend_deform.cpp
-	renderer/tr_frontend_guisurf.cpp
-	renderer/tr_frontend_main.cpp
-	renderer/tr_frontend_subview.cpp
-	renderer/tr_legacy.cpp
-	renderer/tr_light.cpp
-	renderer/tr_math.cpp
-	renderer/tr_orderIndexes.cpp
-	renderer/tr_polytope.cpp
-	renderer/tr_shadowbounds.cpp
-	renderer/tr_stencilshadow.cpp
-	renderer/tr_trace.cpp
-	renderer/tr_trisurf.cpp
-	renderer/tr_turboshadow.cpp)
+file(GLOB_RECURSE RENDERER_SOURCES renderer/*.cpp)
+# set(RENDERER_SOURCES
+	# renderer/Cinematic.cpp
+	# renderer/Framebuffer.cpp
+	# renderer/GLShader.cpp
+	# renderer/GuiModel.cpp
+	# renderer/Image_files.cpp
+	# renderer/Image_init.cpp
+	# renderer/Image_load.cpp
+	# renderer/Image_process.cpp
+	# renderer/Image_program.cpp
+	# renderer/Interaction.cpp
+	# renderer/Material.cpp
+	# renderer/MegaTexture.cpp
+	# renderer/Model.cpp
+	# renderer/ModelDecal.cpp
+	# renderer/ModelManager.cpp
+	# renderer/ModelOverlay.cpp
+	# renderer/Model_ase.cpp
+	# renderer/Model_beam.cpp
+	# renderer/Model_ColladaParser.cpp
+	# renderer/Model_liquid.cpp
+	# renderer/Model_lwo.cpp
+	# renderer/Model_ma.cpp
+	# renderer/Model_md3.cpp
+	# renderer/Model_md5.cpp
+	# renderer/Model_prt.cpp
+	# renderer/Model_sprite.cpp
+	# renderer/RenderEntity.cpp
+	# renderer/RenderSystem.cpp
+	# renderer/RenderSystem_init.cpp
+	# renderer/RenderWorld.cpp
+	# renderer/RenderWorld_demo.cpp
+	# renderer/RenderWorld_lightgrid.cpp
+	# renderer/RenderWorld_load.cpp
+	# renderer/RenderWorld_portals.cpp
+	# renderer/RenderWorld_defs.cpp
+	# renderer/VertexCache.cpp
+	# renderer/draw_arb.cpp
+	# renderer/draw_arb2.cpp
+	# renderer/draw_glsl.cpp
+	# renderer/draw_common.cpp
+	# renderer/draw_exp.cpp
+	# renderer/tr_backend.cpp
+	# renderer/tr_backend_draw.cpp
+	# renderer/tr_backend_rendertools.cpp
+	# renderer/tr_font.cpp
+	# renderer/tr_frontend_deform.cpp
+	# renderer/tr_frontend_guisurf.cpp
+	# renderer/tr_frontend_main.cpp
+	# renderer/tr_frontend_subview.cpp
+	# renderer/tr_legacy.cpp
+	# renderer/tr_light.cpp
+	# renderer/tr_math.cpp
+	# renderer/tr_orderIndexes.cpp
+	# renderer/tr_polytope.cpp
+	# renderer/tr_shadowbounds.cpp
+	# renderer/tr_stencilshadow.cpp
+	# renderer/tr_trace.cpp
+	# renderer/tr_trisurf.cpp
+	# renderer/tr_turboshadow.cpp)
 
 if(GLES1)
 	add_definitions(-DUSE_GLES1)
@@ -490,7 +491,6 @@ file(GLOB GAME_GAMESYS_INCLUDES game/gamesys/*.h)
 set(GAME_GAMESYS_SOURCES
 	#game/gamesys/Callbacks.cpp
 	game/gamesys/Class.cpp
-	game/gamesys/DebugGraph.cpp
 	game/gamesys/Event.cpp
 	game/gamesys/SaveGame.cpp
 	game/gamesys/SysCmds.cpp
@@ -512,9 +512,6 @@ file(GLOB COMPILER_AAS_SOURCES tools/compilers/aas/*.cpp)
 
 file(GLOB COMPILER_DMAP_INCLUDES tools/compilers/dmap/*.h)
 file(GLOB COMPILER_DMAP_SOURCES tools/compilers/dmap/*.cpp)
-
-file(GLOB COMPILER_RENDERBUMP_INCLUDES tools/compilers/renderbump/*.h)
-file(GLOB COMPILER_RENDERBUMP_SOURCES tools/compilers/renderbump/*.cpp)
 
 file(GLOB COMPILER_ROQVQ_INCLUDES tools/compilers/roqvq/*.h)
 file(GLOB COMPILER_ROQVQ_SOURCES tools/compilers/roqvq/*.cpp)
@@ -889,9 +886,6 @@ source_group("tools\\compilers\\aas" FILES ${COMPILER_AAS_SOURCES})
 source_group("tools\\compilers\\dmap" FILES ${COMPILER_DMAP_INCLUDES})
 source_group("tools\\compilers\\dmap" FILES ${COMPILER_DMAP_SOURCES})
 
-source_group("tools\\compilers\\renderbump" FILES ${COMPILER_RENDERBUMP_INCLUDES})
-source_group("tools\\compilers\\renderbump" FILES ${COMPILER_RENDERBUMP_SOURCES})
-
 source_group("tools\\compilers\\roqvq" FILES ${COMPILER_ROQVQ_INCLUDES})
 source_group("tools\\compilers\\roqvq" FILES ${COMPILER_ROQVQ_SOURCES})
 
@@ -1025,13 +1019,11 @@ if(USE_CMDLINE_TOOLS)
 		${COMPILER_INCLUDES}
 		${COMPILER_AAS_INCLUDES}
 		${COMPILER_DMAP_INCLUDES}
-		${COMPILER_RENDERBUMP_INCLUDES}
 		${COMPILER_ROQVQ_INCLUDES})
 		
 	list(APPEND TEKUUM_SOURCES
 		${COMPILER_AAS_SOURCES}
 		${COMPILER_DMAP_SOURCES}
-		${COMPILER_RENDERBUMP_SOURCES}
 		${COMPILER_ROQVQ_SOURCES})
 endif()
 
@@ -1183,6 +1175,29 @@ if(MSVC)
 	set(TEKUUM_PRECOMPILED_SOURCES ${TEKUUM_SOURCES})
 	list(REMOVE_ITEM TEKUUM_PRECOMPILED_SOURCES ${JPEG_SOURCES} ${PNG_SOURCES} ${ETC1_SOURCES} ${ZLIB_SOURCES} ${GLEW_SOURCES} ${FREETYPE_SOURCES} ${OGGVORBIS_SOURCES})		
 	list(REMOVE_ITEM TEKUUM_PRECOMPILED_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/game/gamesys/TypeInfo.cpp)
+	list(REMOVE_ITEM TEKUUM_PRECOMPILED_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/renderer/DXT/DXTDecoder.cpp)
+	list(REMOVE_ITEM TEKUUM_PRECOMPILED_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/renderer/DXT/DXTEncoder.cpp)
+	list(REMOVE_ITEM TEKUUM_PRECOMPILED_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/renderer/DXT/DXTEncoder_SSE2.cpp)
+	list(REMOVE_ITEM TEKUUM_PRECOMPILED_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/renderer/jobs/dynamicshadowvolume/DynamicShadowVolume.cpp)
+	list(REMOVE_ITEM TEKUUM_PRECOMPILED_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/renderer/jobs/prelightshadowvolume/PreLightShadowVolume.cpp)
+	list(REMOVE_ITEM TEKUUM_PRECOMPILED_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/renderer/jobs/staticshadowvolume/StaticShadowVolume.cpp)
+	list(REMOVE_ITEM TEKUUM_PRECOMPILED_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/renderer/jobs/ShadowShared.cpp)
+	list(REMOVE_ITEM TEKUUM_PRECOMPILED_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/renderer/RenderLog.cpp)
+	
+	# list(REMOVE_ITEM TEKUUM_PRECOMPILED_SOURCES ${TOOLS_COMAFX_SOURCES})
+	# list(REMOVE_ITEM TEKUUM_PRECOMPILED_SOURCES ${TOOLS_COMMON_SOURCES})
+	# list(REMOVE_ITEM TEKUUM_PRECOMPILED_SOURCES ${TOOLS_COMMON_PROPTREE_SOURCES})
+	
+	# list(REMOVE_ITEM TEKUUM_PRECOMPILED_SOURCES ${EDITOR_AF_SOURCES})
+	# #list(REMOVE_ITEM TEKUUM_PRECOMPILED_SOURCES #${EDITOR_DEBUGGER_SOURCES})
+	# list(REMOVE_ITEM TEKUUM_PRECOMPILED_SOURCES ${EDITOR_DECL_SOURCES})
+	# #list(REMOVE_ITEM TEKUUM_PRECOMPILED_SOURCES #${EDITOR_GUIED_SOURCES})
+	# #list(REMOVE_ITEM TEKUUM_PRECOMPILED_SOURCES #${EDITOR_MATERIALEDITOR_SOURCES})
+	# list(REMOVE_ITEM TEKUUM_PRECOMPILED_SOURCES ${EDITOR_PARTICLE_SOURCES})
+	# list(REMOVE_ITEM TEKUUM_PRECOMPILED_SOURCES ${EDITOR_PDA_SOURCES})
+	# list(REMOVE_ITEM TEKUUM_PRECOMPILED_SOURCES ${EDITOR_RADIANT_SOURCES})
+	# list(REMOVE_ITEM TEKUUM_PRECOMPILED_SOURCES ${EDITOR_SCRIPT_SOURCES})
+	# list(REMOVE_ITEM TEKUUM_PRECOMPILED_SOURCES ${EDITOR_SOUND_SOURCES})
 	
 	foreach( src_file ${TEKUUM_PRECOMPILED_SOURCES} )
 		#message(STATUS "/Yuprecompiled.h for ${src_file}")

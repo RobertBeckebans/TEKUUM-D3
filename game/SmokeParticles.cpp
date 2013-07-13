@@ -1,25 +1,25 @@
 /*
 ===========================================================================
 
-Doom 3 GPL Source Code
-Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Doom 3 BFG Edition GPL Source Code
+Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
 
-This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
+This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
-Doom 3 Source Code is free software: you can redistribute it and/or modify
+Doom 3 BFG Edition Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Doom 3 Source Code is distributed in the hope that it will be useful,
+Doom 3 BFG Edition Source Code is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Doom 3 Source Code.  If not, see <http://www.gnu.org/licenses/>.
+along with Doom 3 BFG Edition Source Code.  If not, see <http://www.gnu.org/licenses/>.
 
-In addition, the Doom 3 Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 Source Code.  If not, please request a copy in writing from id Software at the address below.
+In addition, the Doom 3 BFG Edition Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 BFG Edition Source Code.  If not, please request a copy in writing from id Software at the address below.
 
 If you have questions concerning this license or the applicable additional terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 
@@ -256,7 +256,7 @@ bool idSmokeParticles::EmitSmoke( const idDeclParticle* smoke, const int systemS
 		int		finalParticleTime = stage->cycleMsec * stage->spawnBunching;
 		int		deltaMsec = gameLocal.time - systemStartTime;
 		
-		int		nowCount, prevCount;
+		int		nowCount = 0, prevCount = 0;
 		if( finalParticleTime == 0 )
 		{
 			// if spawnBunching is 0, they will all come out at once
@@ -297,7 +297,7 @@ bool idSmokeParticles::EmitSmoke( const idDeclParticle* smoke, const int systemS
 		}
 		
 		// find an activeSmokeStage that matches this
-		activeSmokeStage_t*	active;
+		activeSmokeStage_t*	active = NULL;
 		int i;
 		for( i = 0 ; i < activeStages.Num() ; i++ )
 		{
@@ -319,7 +319,7 @@ bool idSmokeParticles::EmitSmoke( const idDeclParticle* smoke, const int systemS
 		}
 		
 		// add all the required particles
-		for( prevCount++ ; prevCount <= nowCount ; prevCount++ )
+		for( prevCount++ ; prevCount <= nowCount && active != NULL ; prevCount++ )
 		{
 			if( !freeSmokes )
 			{
@@ -358,22 +358,35 @@ idSmokeParticles::UpdateRenderEntity
 bool idSmokeParticles::UpdateRenderEntity( renderEntity_s* renderEntity, const renderView_t* renderView )
 {
 
-	// FIXME: re-use model surfaces
-	renderEntity->hModel->InitEmpty( smokeParticle_SnapshotName );
-	
 	// this may be triggered by a model trace or other non-view related source,
 	// to which we should look like an empty model
 	if( !renderView )
 	{
+		// FIXME: re-use model surfaces
+		renderEntity->hModel->InitEmpty( smokeParticle_SnapshotName );
 		return false;
 	}
 	
 	// don't regenerate it if it is current
-	if( renderView->time == currentParticleTime && !renderView->forceUpdate )
+// RB begin
+#if defined(STANDALONE)
+	if( renderView->time[renderEntity->timeGroup] == currentParticleTime && !renderView->forceUpdate )
+#else
+	if( renderView->time[0] == currentParticleTime && !renderView->forceUpdate )
+#endif
 	{
 		return false;
 	}
-	currentParticleTime = renderView->time;
+	
+#if defined(STANDALONE)
+	currentParticleTime = renderView->time[renderEntity->timeGroup];
+#else
+	currentParticleTime = renderView->time[0];
+#endif
+	// RB end
+	
+	// FIXME: re-use model surfaces
+	renderEntity->hModel->InitEmpty( smokeParticle_SnapshotName );
 	
 	particleGen_t g;
 	

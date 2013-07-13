@@ -93,7 +93,9 @@ typedef struct
 	int		iTexMenu;		// nearest, linear, etc
 	float	fGamma;			// gamma for textures
 	char	szProject[256];	// last project loaded
-	idVec3	colors[COLOR_LAST];
+	// RB begin
+	idVec4	colors[COLOR_LAST];
+	// RB end
 	bool	show_names;
 	bool	show_coordinates;
 	int		exclude;
@@ -214,6 +216,10 @@ typedef struct
 	bool	bSurfacePropertiesPlugin;
 	// tells we are using a BSP frontend plugin
 	bool	bBSPFrontendPlugin;
+	
+	// RB begin
+	idVec4		d_currentColor;
+	// RB end
 	
 	// the editor has its own soundWorld and renderWorld, completely distinct from the game
 	idRenderWorld*	rw;

@@ -141,7 +141,7 @@ void CZWnd::OnPaint()
 {
 	CPaintDC dc( this ); // device context for painting
 	//if (!wglMakeCurrent(m_dcZ, m_hglrcZ))
-	//if (!qwglMakeCurrent(dc.m_hDC, m_hglrcZ))
+	//if (!wglMakeCurrent(dc.m_hDC, m_hglrcZ))
 	if( !wglMakeCurrent( dc.m_hDC, win32.hGLRC ) )
 	{
 		common->Printf( "ERROR: wglMakeCurrent failed..\n " );
@@ -149,6 +149,10 @@ void CZWnd::OnPaint()
 	}
 	else
 	{
+		// RB: go back to fixed function pipeline
+		renderProgManager.Unbind();
+		// RB end
+		
 		QE_CheckOpenGLForErrors();
 		
 		Z_Draw();

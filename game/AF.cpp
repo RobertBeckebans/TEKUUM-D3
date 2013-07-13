@@ -513,7 +513,7 @@ void idAF::AddBody( idAFBody* body, const idJointMat* joints, const char* jointN
 	axis = joints[ handle ].ToMat3();
 	
 	index = jointMods.Num();
-	jointMods.SetNum( index + 1, false );
+	jointMods.SetNum( index + 1 );
 	jointMods[index].bodyId = physicsObj.GetBodyId( body );
 	jointMods[index].jointHandle = handle;
 	jointMods[index].jointMod = mod;
@@ -989,7 +989,7 @@ bool idAF::Load( idEntity* ent, const char* fileName )
 	physicsObj.SetSelfCollision( file->selfCollision );
 	
 	// clear the list with transforms from joints to bodies
-	jointMods.SetNum( 0, false );
+	jointMods.SetNum( 0 );
 	
 	// clear the joint to body conversion list
 	jointBody.AssureSize( animator->NumJoints() );

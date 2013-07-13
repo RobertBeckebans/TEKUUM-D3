@@ -1593,7 +1593,14 @@ void idEntity::ProjectOverlay( const idVec3& origin, const idVec3& dir, float si
 	const idMaterial* mtr = declManager->FindMaterial( material );
 	
 	// project an overlay onto the model
-	gameRenderWorld->ProjectOverlay( modelDefHandle, localPlane, mtr );
+	
+	// RB begin
+#if defined(STANDALONE)
+	gameRenderWorld->ProjectOverlay( modelDefHandle, localPlane, mtr, gameLocal.slow.time );
+#else
+	gameRenderWorld->ProjectOverlay( modelDefHandle, localPlane, mtr, gameLocal.time );
+#endif
+	// RB end
 	
 	// make sure non-animating models update their overlay
 	UpdateVisuals();
@@ -1751,7 +1758,15 @@ renderView_t* idEntity::GetRenderView()
 	
 	renderView->globalMaterial = gameLocal.GetGlobalMaterial();
 	
-	renderView->time = gameLocal.time;
+	// RB begin
+#if defined(STANDALONE)
+	renderView->time[0] = gameLocal.slow.time;
+	renderView->time[1] = gameLocal.fast.time;
+#else
+	renderView->time[0] = gameLocal.time;
+	renderView->time[1] = gameLocal.time;
+#endif
+	// RB end
 	
 	return renderView;
 }

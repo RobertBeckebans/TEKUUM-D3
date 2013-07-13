@@ -3,6 +3,7 @@
 
 Doom 3 GPL Source Code
 Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2013 Robert Beckebans
 
 This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
 
@@ -46,6 +47,48 @@ const char* l_gameTypes[] =
 };
 
 static idServerScan* l_serverScan = NULL;
+
+// RB begin
+class rbSort_networkServer_t : public idSort_Quick< int, rbSort_networkServer_t >
+{
+public:
+	int Compare( const int& a, const int& b ) const
+	{
+		networkServer_t serv1, serv2;
+		idStr s1, s2;
+		int ret;
+		
+		serv1 = ( *l_serverScan )[ a ];
+		serv2 = ( *l_serverScan )[ b ];
+		switch( l_serverScan->GetSorting() )
+		{
+			case SORT_PING:
+				ret = serv1.ping < serv2.ping ? -1 : ( serv1.ping > serv2.ping ? 1 : 0 );
+				return ret;
+			case SORT_SERVERNAME:
+				serv1.serverInfo.GetString( "si_name", "", s1 );
+				serv2.serverInfo.GetString( "si_name", "", s2 );
+				return s1.IcmpNoColor( s2 );
+			case SORT_PLAYERS:
+				ret = serv1.clients < serv2.clients ? -1 : ( serv1.clients > serv2.clients ? 1 : 0 );
+				return ret;
+			case SORT_GAMETYPE:
+				serv1.serverInfo.GetString( "si_gameType", "", s1 );
+				serv2.serverInfo.GetString( "si_gameType", "", s2 );
+				return s1.Icmp( s2 );
+			case SORT_MAP:
+				serv1.serverInfo.GetString( "si_mapName", "", s1 );
+				serv2.serverInfo.GetString( "si_mapName", "", s2 );
+				return s1.Icmp( s2 );
+			case SORT_GAME:
+				serv1.serverInfo.GetString( "fs_game", "", s1 );
+				serv2.serverInfo.GetString( "fs_game", "", s2 );
+				return s1.Icmp( s2 );
+		}
+		return 0;
+	}
+};
+// RB end
 
 /*
 ================
@@ -239,7 +282,9 @@ void idServerScan::EndServers( )
 {
 	incoming_net = false;
 	l_serverScan = this;
-	m_sortedServers.Sort( idServerScan::Cmp );
+	// RB begin
+	m_sortedServers.SortWithTemplate( rbSort_networkServer_t() );
+	// RB end
 	ApplyFilter();
 }
 
@@ -678,47 +723,8 @@ bool idServerScan::IsFiltered( const networkServer_t server )
 	return false;
 }
 
-/*
-================
-idServerScan::Cmp
-================
-*/
 
-int idServerScan::Cmp( const int* a, const int* b )
-{
-	networkServer_t serv1, serv2;
-	idStr s1, s2;
-	int ret;
-	
-	serv1 = ( *l_serverScan )[ *a ];
-	serv2 = ( *l_serverScan )[ *b ];
-	switch( l_serverScan->m_sort )
-	{
-		case SORT_PING:
-			ret = serv1.ping < serv2.ping ? -1 : ( serv1.ping > serv2.ping ? 1 : 0 );
-			return ret;
-		case SORT_SERVERNAME:
-			serv1.serverInfo.GetString( "si_name", "", s1 );
-			serv2.serverInfo.GetString( "si_name", "", s2 );
-			return s1.IcmpNoColor( s2 );
-		case SORT_PLAYERS:
-			ret = serv1.clients < serv2.clients ? -1 : ( serv1.clients > serv2.clients ? 1 : 0 );
-			return ret;
-		case SORT_GAMETYPE:
-			serv1.serverInfo.GetString( "si_gameType", "", s1 );
-			serv2.serverInfo.GetString( "si_gameType", "", s2 );
-			return s1.Icmp( s2 );
-		case SORT_MAP:
-			serv1.serverInfo.GetString( "si_mapName", "", s1 );
-			serv2.serverInfo.GetString( "si_mapName", "", s2 );
-			return s1.Icmp( s2 );
-		case SORT_GAME:
-			serv1.serverInfo.GetString( "fs_game", "", s1 );
-			serv2.serverInfo.GetString( "fs_game", "", s2 );
-			return s1.Icmp( s2 );
-	}
-	return 0;
-}
+
 
 /*
 ================
@@ -736,7 +742,9 @@ void idServerScan::SetSorting( serverSort_t sort )
 	{
 		m_sort = sort;
 		m_sortAscending = true; // is the default for any new sort
-		m_sortedServers.Sort( idServerScan::Cmp );
+		// RB begin
+		m_sortedServers.SortWithTemplate( rbSort_networkServer_t() );
+		// RB end
 	}
 	// trigger a redraw
 	ApplyFilter();

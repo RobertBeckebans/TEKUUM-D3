@@ -431,31 +431,28 @@ bool idBrittleFracture::UpdateRenderEntity( renderEntity_s* renderEntity, const 
 			v = &tris->verts[tris->numVerts++];
 			v->Clear();
 			v->xyz = origin + winding[0].ToVec3() * axis;
-			v->st[0] = winding[0].s;
-			v->st[1] = winding[0].t;
-			v->normal = tangents[0];
-			v->tangents[0] = tangents[1];
-			v->tangents[1] = tangents[2];
+			v->SetTexCoord( winding[0].s, winding[0].t );
+			v->SetNormal( tangents[0] );
+			v->SetTangent( tangents[1] );
+			v->SetBiTangent( tangents[2] );
 			v->SetColor( packedColor );
 			
 			v = &tris->verts[tris->numVerts++];
 			v->Clear();
 			v->xyz = origin + winding[j - 1].ToVec3() * axis;
-			v->st[0] = winding[j - 1].s;
-			v->st[1] = winding[j - 1].t;
-			v->normal = tangents[0];
-			v->tangents[0] = tangents[1];
-			v->tangents[1] = tangents[2];
+			v->SetTexCoord( winding[j - 1].s, winding[j - 1].t );
+			v->SetNormal( tangents[0] );
+			v->SetTangent( tangents[1] );
+			v->SetBiTangent( tangents[2] );
 			v->SetColor( packedColor );
 			
 			v = &tris->verts[tris->numVerts++];
 			v->Clear();
 			v->xyz = origin + winding[j].ToVec3() * axis;
-			v->st[0] = winding[j].s;
-			v->st[1] = winding[j].t;
-			v->normal = tangents[0];
-			v->tangents[0] = tangents[1];
-			v->tangents[1] = tangents[2];
+			v->SetTexCoord( winding[j].s, winding[j].t );
+			v->SetNormal( tangents[0] );
+			v->SetTangent( tangents[1] );
+			v->SetBiTangent( tangents[2] );
 			v->SetColor( packedColor );
 			
 			tris->indexes[tris->numIndexes++] = tris->numVerts - 3;
@@ -481,31 +478,28 @@ bool idBrittleFracture::UpdateRenderEntity( renderEntity_s* renderEntity, const 
 				v = &decalTris->verts[decalTris->numVerts++];
 				v->Clear();
 				v->xyz = origin + decalWinding[0].ToVec3() * axis;
-				v->st[0] = decalWinding[0].s;
-				v->st[1] = decalWinding[0].t;
-				v->normal = tangents[0];
-				v->tangents[0] = tangents[1];
-				v->tangents[1] = tangents[2];
+				v->SetTexCoord( decalWinding[0].s, decalWinding[0].t );
+				v->SetNormal( tangents[0] );
+				v->SetTangent( tangents[1] );
+				v->SetBiTangent( tangents[2] );
 				v->SetColor( packedColor );
 				
 				v = &decalTris->verts[decalTris->numVerts++];
 				v->Clear();
 				v->xyz = origin + decalWinding[j - 1].ToVec3() * axis;
-				v->st[0] = decalWinding[j - 1].s;
-				v->st[1] = decalWinding[j - 1].t;
-				v->normal = tangents[0];
-				v->tangents[0] = tangents[1];
-				v->tangents[1] = tangents[2];
+				v->SetTexCoord( decalWinding[j - 1].s, decalWinding[j - 1].t );
+				v->SetNormal( tangents[0] );
+				v->SetTangent( tangents[1] );
+				v->SetBiTangent( tangents[2] );
 				v->SetColor( packedColor );
 				
 				v = &decalTris->verts[decalTris->numVerts++];
 				v->Clear();
 				v->xyz = origin + decalWinding[j].ToVec3() * axis;
-				v->st[0] = decalWinding[j].s;
-				v->st[1] = decalWinding[j].t;
-				v->normal = tangents[0];
-				v->tangents[0] = tangents[1];
-				v->tangents[1] = tangents[2];
+				v->SetTexCoord( decalWinding[j].s, decalWinding[j].t );
+				v->SetNormal( tangents[0] );
+				v->SetTangent( tangents[1] );
+				v->SetBiTangent( tangents[2] );
 				v->SetColor( packedColor );
 				
 				decalTris->indexes[decalTris->numIndexes++] = decalTris->numVerts - 3;
@@ -554,9 +548,10 @@ bool idBrittleFracture::ModelCallback( renderEntity_s* renderEntity, const rende
 	const idBrittleFracture* ent;
 	
 	ent = static_cast<idBrittleFracture*>( gameLocal.entities[ renderEntity->entityNum ] );
-	if( !ent )
+	if( ent == NULL )
 	{
 		gameLocal.Error( "idBrittleFracture::ModelCallback: callback with NULL game entity" );
+		return false;
 	}
 	
 	return ent->UpdateRenderEntity( renderEntity, renderView );
@@ -817,12 +812,12 @@ void idBrittleFracture::ProjectDecal( const idVec3& point, const idVec3& dir, co
 			st[j].x = d0 = textureAxis[0].Distance( p );
 			st[j].y = d1 = textureAxis[1].Distance( p );
 			
-			bits = FLOATSIGNBITSET( d0 );
+			bits = IEEE_FLT_SIGNBITSET( d0 );
 			d0 = 1.0f - d0;
-			bits |= FLOATSIGNBITSET( d1 ) << 2;
+			bits |= IEEE_FLT_SIGNBITSET( d1 ) << 2;
 			d1 = 1.0f - d1;
-			bits |= FLOATSIGNBITSET( d0 ) << 1;
-			bits |= FLOATSIGNBITSET( d1 ) << 3;
+			bits |= IEEE_FLT_SIGNBITSET( d0 ) << 1;
+			bits |= IEEE_FLT_SIGNBITSET( d1 ) << 3;
 			
 			clipBits &= bits;
 		}
@@ -1229,8 +1224,12 @@ void idBrittleFracture::CreateFractures( const idRenderModel* renderModel )
 			{
 				v = &surf->geometry->verts[ surf->geometry->indexes[ j + 2 - k ] ];
 				w.AddPoint( v->xyz );
-				w[k].s = v->st[0];
-				w[k].t = v->st[1];
+				
+				// RB begin
+				const idVec2 vST = v->GetTexCoord();
+				w[k].s = vST.x;
+				w[k].t = vST.y;
+				// RB end
 			}
 			Fracture_r( w );
 		}
