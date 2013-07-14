@@ -3271,7 +3271,7 @@ unsigned int AsyncTimer( unsigned int interval, void* )
 	Sys_TriggerEvent( TRIGGER_EVENT_ONE );
 	
 	// calculate the next interval to get as close to 60fps as possible
-	unsigned int now = SDL_GetTicks();
+	unsigned int now = Sys_Milliseconds();
 	unsigned int tick = com_ticNumber * USERCMD_MSEC;
 	
 	if( now >= tick )
