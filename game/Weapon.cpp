@@ -2193,7 +2193,13 @@ bool idWeapon::BloodSplat( float size )
 	
 	const idMaterial* mtr = declManager->FindMaterial( "textures/decals/duffysplatgun" );
 	
-	gameRenderWorld->ProjectOverlay( modelDefHandle, localPlane, mtr );
+	// RB begin
+#if defined(STANDALONE)
+	gameRenderWorld->ProjectOverlay( modelDefHandle, localPlane, mtr, gameLocal.slow.time );
+#else
+	gameRenderWorld->ProjectOverlay( modelDefHandle, localPlane, mtr, gameLocal.time );
+#endif
+	// RB end
 	
 	return true;
 }

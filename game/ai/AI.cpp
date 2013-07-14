@@ -1,33 +1,34 @@
 /*
 ===========================================================================
 
-Doom 3 GPL Source Code
-Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Doom 3 BFG Edition GPL Source Code
+Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
 
-This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
+This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
-Doom 3 Source Code is free software: you can redistribute it and/or modify
+Doom 3 BFG Edition Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Doom 3 Source Code is distributed in the hope that it will be useful,
+Doom 3 BFG Edition Source Code is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Doom 3 Source Code.  If not, see <http://www.gnu.org/licenses/>.
+along with Doom 3 BFG Edition Source Code.  If not, see <http://www.gnu.org/licenses/>.
 
-In addition, the Doom 3 Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 Source Code.  If not, please request a copy in writing from id Software at the address below.
+In addition, the Doom 3 BFG Edition Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 BFG Edition Source Code.  If not, please request a copy in writing from id Software at the address below.
 
 If you have questions concerning this license or the applicable additional terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 
 ===========================================================================
 */
 
-#include "precompiled.h"
 #pragma hdrstop
+#include "precompiled.h"
+
 
 #include "../Game_local.h"
 
@@ -3307,7 +3308,7 @@ void idAI::SlideMove()
 	vel += goalDelta * MS2SEC( gameLocal.msec );
 	
 	// cap our speed
-	vel.Truncate( fly_speed );
+	vel = vel.Truncate( fly_speed );
 	vel.z = z;
 	physicsObj.SetLinearVelocity( vel );
 	physicsObj.UseVelocityMove( true );
@@ -3343,7 +3344,7 @@ void idAI::SlideMove()
 	else
 	{
 		idEntity* blockEnt = physicsObj.GetSlideMoveEntity();
-		if( blockEnt && blockEnt->IsType( idMoveable::Type ) && blockEnt->GetPhysics()->IsPushable() )
+		if( blockEnt != NULL && blockEnt->IsType( idMoveable::Type ) && blockEnt->GetPhysics()->IsPushable() )
 		{
 			KickObstacles( viewAxis[ 0 ], kickForce, blockEnt );
 		}
@@ -3640,7 +3641,7 @@ void idAI::FlyMove()
 	else
 	{
 		idEntity* blockEnt = physicsObj.GetSlideMoveEntity();
-		if( blockEnt && blockEnt->IsType( idMoveable::Type ) && blockEnt->GetPhysics()->IsPushable() )
+		if( blockEnt != NULL && blockEnt->IsType( idMoveable::Type ) && blockEnt->GetPhysics()->IsPushable() )
 		{
 			KickObstacles( viewAxis[ 0 ], kickForce, blockEnt );
 		}
@@ -4203,7 +4204,7 @@ void idAI::TalkTo( idActor* actor )
 // RB begin
 #if defined(STANDALONE)
 	// Wake up monsters that are pretending to be NPC's
-	if( team == 1 && actor->team != team )
+	if( team == 1 && actor && actor->team != team )
 	{
 		ProcessEvent( &EV_Activate, actor );
 	}
@@ -4324,7 +4325,7 @@ void idAI::SetEnemyPosition()
 	idActor*		enemyEnt = enemy.GetEntity();
 	int			enemyAreaNum;
 	int			areaNum;
-	int			lastVisibleReachableEnemyAreaNum;
+	int			lastVisibleReachableEnemyAreaNum = 0;
 	aasPath_t	path;
 	idVec3		pos;
 	bool		onGround;
@@ -4789,10 +4790,11 @@ idProjectile* idAI::CreateProjectile( const idVec3& pos, const idVec3& dir )
 	if( !projectile.GetEntity() )
 	{
 		gameLocal.SpawnEntityDef( *projectileDef, &ent, false );
-		if( !ent )
+		if( ent == NULL )
 		{
 			clsname = projectileDef->GetString( "classname" );
 			gameLocal.Error( "Could not spawn entityDef '%s'", clsname );
+			return NULL;
 		}
 		
 		if( !ent->IsType( idProjectile::Type ) )
@@ -5026,9 +5028,10 @@ void idAI::DirectDamage( const char* meleeDefName, idEntity* ent )
 	const idSoundShader* shader;
 	
 	meleeDef = gameLocal.FindEntityDefDict( meleeDefName, false );
-	if( !meleeDef )
+	if( meleeDef == NULL )
 	{
 		gameLocal.Error( "Unknown damage def '%s' on '%s'", meleeDefName, name.c_str() );
+		return;
 	}
 	
 	if( !ent->fl.takedamage )
@@ -5042,7 +5045,7 @@ void idAI::DirectDamage( const char* meleeDefName, idEntity* ent )
 	// do the damage
 	//
 	p = meleeDef->GetString( "snd_hit" );
-	if( p && *p )
+	if( p != NULL && *p != '\0' )
 	{
 		shader = declManager->FindSound( p );
 		StartSoundShader( shader, SND_CHANNEL_DAMAGE, 0, false, NULL );
@@ -5135,15 +5138,16 @@ bool idAI::AttackMelee( const char* meleeDefName )
 	const idSoundShader* shader;
 	
 	meleeDef = gameLocal.FindEntityDefDict( meleeDefName, false );
-	if( !meleeDef )
+	if( meleeDef == NULL )
 	{
 		gameLocal.Error( "Unknown melee '%s'", meleeDefName );
+		return false;
 	}
 	
-	if( !enemyEnt )
+	if( enemyEnt == NULL )
 	{
 		p = meleeDef->GetString( "snd_miss" );
-		if( p && *p )
+		if( p != NULL && *p != '\0' )
 		{
 			shader = declManager->FindSound( p );
 			StartSoundShader( shader, SND_CHANNEL_DAMAGE, 0, false, NULL );
@@ -5181,7 +5185,7 @@ bool idAI::AttackMelee( const char* meleeDefName )
 	{
 		// missed
 		p = meleeDef->GetString( "snd_miss" );
-		if( p && *p )
+		if( p != NULL && *p != '\0' )
 		{
 			shader = declManager->FindSound( p );
 			StartSoundShader( shader, SND_CHANNEL_DAMAGE, 0, false, NULL );
@@ -5193,7 +5197,7 @@ bool idAI::AttackMelee( const char* meleeDefName )
 	// do the damage
 	//
 	p = meleeDef->GetString( "snd_hit" );
-	if( p && *p )
+	if( p != NULL && *p != '\0' )
 	{
 		shader = declManager->FindSound( p );
 		StartSoundShader( shader, SND_CHANNEL_DAMAGE, 0, false, NULL );
@@ -5437,7 +5441,7 @@ void idAI::SetChatSound()
 		snd = NULL;
 	}
 	
-	if( snd && *snd )
+	if( snd != NULL && *snd != '\0' )
 	{
 		chat_snd = declManager->FindSound( snd );
 		
@@ -6076,7 +6080,7 @@ void idCombatNode::DrawDebugInfo()
 		{
 			color = colorMdGrey;
 		}
-		else if( player && node->EntityInView( player, player->GetPhysics()->GetOrigin() ) )
+		else if( player != NULL && node->EntityInView( player, player->GetPhysics()->GetOrigin() ) )
 		{
 			color = colorYellow;
 		}

@@ -57,9 +57,7 @@ idCVar Win32Vars_t::in_xbox360ControllerThreshold( "in_xbox360ControllerThreshol
 idCVar Win32Vars_t::win_allowAltTab( "win_allowAltTab", "0", CVAR_SYSTEM | CVAR_BOOL, "allow Alt-Tab when fullscreen" );
 idCVar Win32Vars_t::win_notaskkeys( "win_notaskkeys", "0", CVAR_SYSTEM | CVAR_INTEGER, "disable windows task keys" );
 idCVar Win32Vars_t::win_username( "win_username", "", CVAR_SYSTEM | CVAR_INIT, "windows user name" );
-idCVar Win32Vars_t::win_xpos( "win_xpos", "3", CVAR_SYSTEM | CVAR_ARCHIVE | CVAR_INTEGER, "horizontal position of window" );
-idCVar Win32Vars_t::win_ypos( "win_ypos", "22", CVAR_SYSTEM | CVAR_ARCHIVE | CVAR_INTEGER, "vertical position of window" );
-idCVar Win32Vars_t::win_outputDebugString( "win_outputDebugString", "0", CVAR_SYSTEM | CVAR_BOOL, "" );
+idCVar Win32Vars_t::win_outputDebugString( "win_outputDebugString", "1", CVAR_SYSTEM | CVAR_BOOL, "" );
 idCVar Win32Vars_t::win_outputEditString( "win_outputEditString", "1", CVAR_SYSTEM | CVAR_BOOL, "" );
 idCVar Win32Vars_t::win_viewlog( "win_viewlog", "0", CVAR_SYSTEM | CVAR_INTEGER, "" );
 idCVar Win32Vars_t::win_timerUpdate( "win_timerUpdate", "0", CVAR_SYSTEM | CVAR_BOOL, "allows the game to be updated while dragging the window" );
@@ -412,14 +410,16 @@ void Sys_Printf( const char *fmt, ... ) {
 	va_end(argptr);
 	msg[sizeof(msg)-1] = '\0';
 
-	if ( win32.win_outputDebugString.GetBool() ) {
+	// RB: added thread check
+	if ( win32.win_outputDebugString.GetBool() && idLib::IsMainThread() ) {
 		OutputDebugString( msg );
 	}
 #if !defined(USE_QT_WINDOWING)
-	if ( win32.win_outputEditString.GetBool() ) {
+	if ( win32.win_outputEditString.GetBool() && idLib::IsMainThread() ) {
 		Conbuf_AppendText( msg );
 	}
 #endif
+	// RB end
 }
 
 /*

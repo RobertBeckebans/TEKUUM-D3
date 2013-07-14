@@ -1,34 +1,33 @@
 /*
 ===========================================================================
 
-Doom 3 GPL Source Code
-Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Doom 3 BFG Edition GPL Source Code
+Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
 
-This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
+This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
-Doom 3 Source Code is free software: you can redistribute it and/or modify
+Doom 3 BFG Edition Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Doom 3 Source Code is distributed in the hope that it will be useful,
+Doom 3 BFG Edition Source Code is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Doom 3 Source Code.  If not, see <http://www.gnu.org/licenses/>.
+along with Doom 3 BFG Edition Source Code.  If not, see <http://www.gnu.org/licenses/>.
 
-In addition, the Doom 3 Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 Source Code.  If not, please request a copy in writing from id Software at the address below.
+In addition, the Doom 3 BFG Edition Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 BFG Edition Source Code.  If not, please request a copy in writing from id Software at the address below.
 
 If you have questions concerning this license or the applicable additional terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 
 ===========================================================================
 */
 
-#include "precompiled.h"
 #pragma hdrstop
-
+#include "precompiled.h"
 
 /*
 ====================
@@ -164,11 +163,11 @@ void idSurface_SweptSpline::Tessellate( const int splineSubdivisions, const int 
 		return;
 	}
 	
-	verts.SetNum( splineSubdivisions * sweptSplineSubdivisions, false );
+	verts.SetNum( splineSubdivisions * sweptSplineSubdivisions );
 	
 	// calculate the points and first derivatives for the swept spline
 	totalTime = sweptSpline->GetTime( sweptSpline->GetNumValues() - 1 ) - sweptSpline->GetTime( 0 ) + sweptSpline->GetCloseTime();
-	sweptSplineDiv = sweptSpline->GetBoundaryType() == idCurve_Spline<idVec3>::BT_CLOSED ? sweptSplineSubdivisions : sweptSplineSubdivisions - 1;
+	sweptSplineDiv = sweptSpline->GetBoundaryType() == idCurve_Spline<idVec4>::BT_CLOSED ? sweptSplineSubdivisions : sweptSplineSubdivisions - 1;
 	baseOffset = ( splineSubdivisions - 1 ) * sweptSplineSubdivisions;
 	for( i = 0; i < sweptSplineSubdivisions; i++ )
 	{
@@ -176,14 +175,15 @@ void idSurface_SweptSpline::Tessellate( const int splineSubdivisions, const int 
 		splinePos = sweptSpline->GetCurrentValue( t );
 		splineD1 = sweptSpline->GetCurrentFirstDerivative( t );
 		verts[baseOffset + i].xyz = splinePos.ToVec3();
-		verts[baseOffset + i].st[0] = splinePos.w;
-		verts[baseOffset + i].tangents[0] = splineD1.ToVec3();
+		verts[baseOffset + i].SetTexCoordS( splinePos.w );
+		verts[baseOffset + i].SetTangent( splineD1.ToVec3() );
 	}
 	
 	// sweep the spline
 	totalTime = spline->GetTime( spline->GetNumValues() - 1 ) - spline->GetTime( 0 ) + spline->GetCloseTime();
-	splineDiv = spline->GetBoundaryType() == idCurve_Spline<idVec3>::BT_CLOSED ? splineSubdivisions : splineSubdivisions - 1;
+	splineDiv = spline->GetBoundaryType() == idCurve_Spline<idVec4>::BT_CLOSED ? splineSubdivisions : splineSubdivisions - 1;
 	splineMat.Identity();
+	idVec3 tempNormal;
 	for( i = 0; i < splineSubdivisions; i++ )
 	{
 		t = totalTime * i / splineDiv;
@@ -198,17 +198,17 @@ void idSurface_SweptSpline::Tessellate( const int splineSubdivisions, const int 
 		{
 			idDrawVert* v = &verts[offset + j];
 			v->xyz = splinePos.ToVec3() + verts[baseOffset + j].xyz * splineMat;
-			v->st[0] = verts[baseOffset + j].st[0];
-			v->st[1] = splinePos.w;
-			v->tangents[0] = verts[baseOffset + j].tangents[0] * splineMat;
-			v->tangents[1] = splineD1.ToVec3();
-			v->normal = v->tangents[1].Cross( v->tangents[0] );
-			v->normal.Normalize();
+			v->SetTexCoord( verts[baseOffset + j].GetTexCoord().x, splinePos.w );
+			v->SetTangent( verts[baseOffset + j].GetTangent() * splineMat );
+			v->SetBiTangent( splineD1.ToVec3() );
+			tempNormal = v->GetBiTangent().Cross( v->GetTangent() );
+			tempNormal.Normalize();
+			v->SetNormal( tempNormal );
 			v->color[0] = v->color[1] = v->color[2] = v->color[3] = 0;
 		}
 	}
 	
-	indexes.SetNum( splineDiv * sweptSplineDiv * 2 * 3, false );
+	indexes.SetNum( splineDiv * sweptSplineDiv * 2 * 3 );
 	
 	// create indexes for the triangles
 	for( offset = i = 0; i < splineDiv; i++ )

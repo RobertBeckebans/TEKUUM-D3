@@ -109,10 +109,6 @@ DefaultOnToolTipNotify
 */
 BOOL DefaultOnToolTipNotify( const toolTip_t* toolTips, UINT id, NMHDR* pNMHDR, LRESULT* pResult )
 {
-
-	// RB begin
-#if _MFC_VER >= 0x0A00
-	
 	// need to handle both ANSI and UNICODE versions of the message
 	TOOLTIPTEXTA* pTTTA = ( TOOLTIPTEXTA* )pNMHDR;
 	TOOLTIPTEXTW* pTTTW = ( TOOLTIPTEXTW* )pNMHDR;
@@ -149,12 +145,6 @@ BOOL DefaultOnToolTipNotify( const toolTip_t* toolTips, UINT id, NMHDR* pNMHDR, 
 		_mbstowcsz( pTTTW->szText, toolTips[i].tip, sizeof( pTTTW->szText ) );
 	}
 	return TRUE;
-	
-#else
-	// FIXME with MFC6
-	return FALSE;
-#endif
-// RB end
 }
 
 
@@ -185,13 +175,7 @@ bool EditControlEnterHit( CEdit* edit )
 		{
 			if( strIn[i] >= ' ' )
 			{
-// RB begin
-#if _MFC_VER >= 0x0A00
 				strOut.AppendChar( strIn[i] );
-#else
-				strOut += strIn[i];
-#endif
-// RB end
 			}
 		}
 		edit->SetWindowText( strOut );
@@ -220,37 +204,17 @@ float EditVerifyFloat( CEdit* edit, bool allowNegative )
 		// first character may be a minus sign
 		if( allowNegative && strOut.GetLength() == 0 && strIn[i] == '-' )
 		{
-		
-			// RB begin
-#if _MFC_VER >= 0x0A00
 			strOut.AppendChar( '-' );
-#else
-			strOut += '-';
-#endif
-			// RB end
 		}
 		// the string may contain one dot
 		else if( !dot && strIn[i] == '.' )
 		{
-		
-			// RB begin
-#if _MFC_VER >= 0x0A00
 			strOut.AppendChar( strIn[i] );
-#else
-			strOut += strIn[i];
-#endif
-			// RB end
 			dot = true;
 		}
 		else if( strIn[i] >= '0' && strIn[i] <= '9' )
 		{
-			// RB begin
-#if _MFC_VER >= 0x0A00
 			strOut.AppendChar( strIn[i] );
-#else
-			strOut += strIn[i];
-#endif
-			// RB end
 		}
 	}
 	edit->SetWindowText( strOut );
@@ -288,14 +252,7 @@ void SpinFloatString( CString& str, bool up )
 	}
 	if( digitIndex == -1 )
 	{
-		// RB begin
-#if _MFC_VER >= 0x0A00
 		str.SetString( "1" );
-#else
-		str = "1";
-#endif
-		// RB end
-		
 		return;
 	}
 	
@@ -339,13 +296,7 @@ void SpinFloatString( CString& str, bool up )
 			if( str[digitIndex + 1] == '\0' )
 			{
 				str.SetAt( digitIndex, '0' );
-				
-				// RB begin
-#if _MFC_VER >= 0x0A00
 				str.AppendChar( '9' );
-#else
-				str += '9';
-#endif
 			}
 			else if( str[digitIndex + 1] == '0' )
 			{

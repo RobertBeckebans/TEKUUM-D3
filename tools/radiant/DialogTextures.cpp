@@ -787,10 +787,12 @@ void CDialogTextures::addMaterials( bool rootItems )
 				materials.Append( mat->GetName() );
 			}
 		}
-		idStrListSortPaths( textures );
+		// RB: BFG sort
+		textures.SortWithTemplate( idSort_PathStr() );
 		addStrList( TypeNames[TEXTURES], textures, TEXTURES );
-		idStrListSortPaths( materials );
+		materials.SortWithTemplate( idSort_PathStr() );
 		addStrList( TypeNames[MATERIALS], materials, MATERIALS );
+		// RB end
 	}
 }
 
@@ -816,7 +818,9 @@ void CDialogTextures::addParticles( bool rootItems )
 			}
 			list.Append( ips->GetName() );
 		}
-		idStrListSortPaths( list );
+		// RB: BFG sort
+		list.SortWithTemplate( idSort_PathStr() );
+		// RB end
 		addStrList( TypeNames[PARTICLES], list, PARTICLES );
 	}
 }
@@ -837,7 +841,10 @@ void CDialogTextures::addSounds( bool rootItems )
 		const idSoundShader* poo = declManager->SoundByIndex( i, false );
 		list.AddUnique( poo->GetFileName() );
 	}
-	idStrListSortPaths( list );
+	
+	// RB: BFG sort
+	list.SortWithTemplate( idSort_PathStr() );
+	// RB end
 	
 	for( i = 0; i < list.Num(); i++ )
 	{
@@ -853,7 +860,11 @@ void CDialogTextures::addSounds( bool rootItems )
 				list2.Append( poo->GetName() );
 			}
 		}
-		idStrListSortPaths( list2 );
+		
+		// RB: BFG sort
+		list2.SortWithTemplate( idSort_PathStr() );
+		// RB end
+		
 		for( j = 0; j < list2.Num(); j++ )
 		{
 			HTREEITEM child2 = m_treeTextures.InsertItem( list2[j], child );

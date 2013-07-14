@@ -969,10 +969,10 @@ void idAsyncClient::ProcessUnreliableServerMessage( const idBitMsg& msg )
 			}
 			
 			// adjust the client prediction time based on the snapshot time
-			clientPrediction -= ( 1 - ( INTSIGNBITSET( aheadOfServer - idAsyncNetwork::clientPrediction.GetInteger() ) << 1 ) );
+			clientPrediction -= ( 1 - ( INT32_SIGNBITSET( aheadOfServer - idAsyncNetwork::clientPrediction.GetInteger() ) << 1 ) );
 			clientPrediction = idMath::ClampInt( idAsyncNetwork::clientPrediction.GetInteger(), idAsyncNetwork::clientMaxPrediction.GetInteger(), clientPrediction );
 			delta = gameTime - ( snapshotGameTime + clientPrediction );
-			clientPredictTime -= ( delta / PREDICTION_FAST_ADJUST ) + ( 1 - ( INTSIGNBITSET( delta ) << 1 ) );
+			clientPredictTime -= ( delta / PREDICTION_FAST_ADJUST ) + ( 1 - ( INT32_SIGNBITSET( delta ) << 1 ) );
 			
 			lastSnapshotTime = clientTime;
 			

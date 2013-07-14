@@ -593,7 +593,10 @@ void CPreviewDlg::AddSounds( bool rootItems )
 		const idSoundShader* poo = declManager->SoundByIndex( i, false );
 		list.AddUnique( poo->GetFileName() );
 	}
-	list.Sort();
+	
+	// RB: BFG sort
+	list.SortWithTemplate( idSort_PathStr() );
+	// RB end
 	
 	for( i = 0; i < list.Num(); i++ )
 	{
@@ -609,7 +612,11 @@ void CPreviewDlg::AddSounds( bool rootItems )
 				list2.Append( poo->GetName() );
 			}
 		}
-		list2.Sort();
+		
+		// RB: BFG sort
+		list2.SortWithTemplate( idSort_PathStr() );
+		// RB end
+		
 		for( j = 0; j < list2.Num(); j++ )
 		{
 			HTREEITEM child2 = treeMedia.InsertItem( list2[j], child );
@@ -726,7 +733,11 @@ void CPreviewDlg::AddMaterials( bool rootItems )
 			}
 			list.Append( mat->GetName() );
 		}
-		list.Sort();
+		
+		// RB: BFG sort
+		list.SortWithTemplate( idSort_PathStr() );
+		// RB end
+		
 		AddStrList( "Materials", list, MATERIALS );
 	}
 	
@@ -750,7 +761,11 @@ void CPreviewDlg::AddParticles( bool rootItems )
 			}
 			list.Append( ips->GetName() );
 		}
-		list.Sort();
+		
+		// RB: BFG sort
+		list.SortWithTemplate( idSort_PathStr() );
+		// RB end
+		
 		AddStrList( "Particles", list, PARTICLES );
 	}
 }
@@ -787,8 +802,12 @@ void CPreviewDlg::AddSkins( bool rootItems )
 			}
 			list2.Append( skin->GetName() );
 		}
-		list.Sort();
-		list2.Sort();
+		
+		// RB: BFG sort
+		list.SortWithTemplate( idSort_PathStr() );
+		list2.SortWithTemplate( idSort_PathStr() );
+		// RB end
+		
 		AddStrList( "Matching Skins", list, SKINS );
 		AddStrList( "Skins", list2, SKINS );
 	}

@@ -1,33 +1,33 @@
 /*
 ===========================================================================
 
-Doom 3 GPL Source Code
-Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Doom 3 BFG Edition GPL Source Code
+Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
 
-This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
+This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
-Doom 3 Source Code is free software: you can redistribute it and/or modify
+Doom 3 BFG Edition Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Doom 3 Source Code is distributed in the hope that it will be useful,
+Doom 3 BFG Edition Source Code is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Doom 3 Source Code.  If not, see <http://www.gnu.org/licenses/>.
+along with Doom 3 BFG Edition Source Code.  If not, see <http://www.gnu.org/licenses/>.
 
-In addition, the Doom 3 Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 Source Code.  If not, please request a copy in writing from id Software at the address below.
+In addition, the Doom 3 BFG Edition Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 BFG Edition Source Code.  If not, please request a copy in writing from id Software at the address below.
 
 If you have questions concerning this license or the applicable additional terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 
 ===========================================================================
 */
 
-#include "precompiled.h"
 #pragma hdrstop
+#include "precompiled.h"
 
 #include "ListGUILocal.h"
 #include "DeviceContext.h"
@@ -40,6 +40,17 @@ extern idCVar r_skipGuiShaders;		// 1 = don't render any gui elements on surface
 idUserInterfaceManagerLocal	uiManagerLocal;
 idUserInterfaceManager* 	uiManager = &uiManagerLocal;
 
+// These used to be in every window, but they all pointed at the same one in idUserInterfaceManagerLocal.
+// Made a global so it can be switched out dynamically to test optimized versions.
+idDeviceContext* dc;
+
+idCVar g_useNewGuiCode(	"g_useNewGuiCode",	"1", CVAR_GAME | CVAR_INTEGER, "use optimized device context code, 2 = toggle on/off every frame" );
+
+extern idCVar sys_lang;
+
+
+
+
 /*
 ===============================================================================
 
@@ -51,14 +62,39 @@ idUserInterfaceManager* 	uiManager = &uiManagerLocal;
 void idUserInterfaceManagerLocal::Init()
 {
 	screenRect = idRectangle( 0, 0, 640, 480 );
-	dc.Init();
+	dcOld.Init();
+	dcOptimized.Init();
+	
+	SetDrawingDC();
+	
 }
 
 void idUserInterfaceManagerLocal::Shutdown()
 {
 	guis.DeleteContents( true );
 	demoGuis.DeleteContents( true );
-	dc.Shutdown();
+	dcOld.Shutdown();
+	dcOptimized.Shutdown();
+	//mapParser.Clear();
+}
+
+void idUserInterfaceManagerLocal::SetDrawingDC()
+{
+	static int toggle;
+	
+	// to make it more obvious that there is a difference between the old and
+	// new paths, toggle between them every frame if g_useNewGuiCode is set to 2
+	toggle++;
+	
+	if( g_useNewGuiCode.GetInteger() == 1 ||
+			( g_useNewGuiCode.GetInteger() == 2 && ( toggle & 1 ) ) )
+	{
+		dc = &dcOptimized;
+	}
+	else
+	{
+		dc = &dcOld;
+	}
 }
 
 void idUserInterfaceManagerLocal::Touch( const char* name )
@@ -83,8 +119,18 @@ void idUserInterfaceManagerLocal::WritePrecacheCommands( idFile* f )
 
 void idUserInterfaceManagerLocal::SetSize( float width, float height )
 {
-	dc.SetSize( width, height );
+	dc->SetSize( width, height );
 }
+
+/*
+void idUserInterfaceManagerLocal::Preload( const char* mapName )
+{
+	if( mapName != NULL && mapName[ 0 ] != '\0' )
+	{
+		mapParser.LoadFromFile( va( "generated/guis/%s.bgui", mapName ) );
+	}
+}
+*/
 
 void idUserInterfaceManagerLocal::BeginLevelLoad()
 {
@@ -103,7 +149,7 @@ void idUserInterfaceManagerLocal::BeginLevelLoad()
 	}
 }
 
-void idUserInterfaceManagerLocal::EndLevelLoad()
+void idUserInterfaceManagerLocal::EndLevelLoad( const char* mapName )
 {
 	int c = guis.Num();
 	for( int i = 0; i < c; i++ )
@@ -131,7 +177,18 @@ void idUserInterfaceManagerLocal::EndLevelLoad()
 				c--;
 			}
 		}
+		//session->PacifierUpdate();
 	}
+	/*
+	if( cvarSystem->GetCVarBool( "fs_buildresources" ) && mapName != NULL && mapName[ 0 ] != '\0' )
+	{
+		mapParser.WriteToFile( va( "generated/guis/%s.bgui", mapName ) );
+		idFile* f = fileSystem->OpenFileRead( va( "generated/guis/%s.bgui", mapName ) );
+		delete f;
+	}
+	*/
+	dcOld.Init();
+	dcOptimized.Init();
 }
 
 void idUserInterfaceManagerLocal::Reload( bool all )
@@ -221,11 +278,21 @@ idUserInterface* idUserInterfaceManagerLocal::FindGui( const char* qpath, bool a
 	for( int i = 0; i < c; i++ )
 	{
 		idUserInterfaceLocal* gui = guis[i];
-		if( !idStr::Icmp( guis[i]->GetSourceFile(), qpath ) )
+		if( gui == NULL )
+		{
+			continue;
+		}
+		
+		if( !idStr::Icmp( gui->GetSourceFile(), qpath ) )
 		{
 			if( !forceNOTUnique && ( needUnique || guis[i]->IsInteractive() ) )
 			{
 				break;
+			}
+			// Reload the gui if it's been cleared
+			if( guis[i]->GetRefs() == 0 )
+			{
+				guis[i]->InitFromFile( guis[i]->GetSourceFile() );
 			}
 			guis[i]->AddRef();
 			return guis[i];
@@ -399,7 +466,6 @@ bool idUserInterfaceLocal::InitFromFile( const char* qpath, bool rebuild, bool c
 		{
 			if( idStr::Icmp( token, "windowDef" ) == 0 )
 			{
-				desktop->SetDC( &uiManagerLocal.dc );
 				if( desktop->Parse( &src, rebuild ) )
 				{
 					desktop->SetFlag( WIN_DESKTOP );
@@ -415,7 +481,6 @@ bool idUserInterfaceLocal::InitFromFile( const char* qpath, bool rebuild, bool c
 	*/
 	if( RunLuaFunction( "main", "w", desktop ) )
 	{
-		desktop->SetDC( &uiManagerLocal.dc );
 		desktop->SetFlag( WIN_DESKTOP );
 		desktop->FixupParms();
 		
@@ -440,21 +505,18 @@ bool idUserInterfaceLocal::InitFromFile( const char* qpath, bool rebuild, bool c
 		desktop->SetupFromState();
 		common->Warning( "Couldn't load gui: '%s'", filename.c_str() );
 	}
-	
 	interactive = desktop->Interactive();
-	
 	if( uiManagerLocal.guis.Find( this ) == NULL )
 	{
 		uiManagerLocal.guis.Append( this );
 	}
-	
 	loading = false;
-	
 	return true;
 }
 
 const char* idUserInterfaceLocal::HandleEvent( const sysEvent_t* event, int _time, bool* updateVisuals )
 {
+
 	time = _time;
 	
 	if( bindHandler && event->evType == SE_KEY && event->evValue2 == 1 )
@@ -502,7 +564,7 @@ void idUserInterfaceLocal::HandleNamedEvent( const char* eventName )
 	desktop->RunNamedEvent( eventName );
 }
 
-void idUserInterfaceLocal::Redraw( int _time )
+void idUserInterfaceLocal::Redraw( int _time, bool hud )
 {
 	if( r_skipGuiShaders.GetInteger() > 5 )
 	{
@@ -511,9 +573,9 @@ void idUserInterfaceLocal::Redraw( int _time )
 	if( !loading && desktop )
 	{
 		time = _time;
-		uiManagerLocal.dc.PushClipRect( uiManagerLocal.screenRect );
-		desktop->Redraw( 0, 0 );
-		uiManagerLocal.dc.PopClipRect();
+		dc->PushClipRect( uiManagerLocal.screenRect );
+		desktop->Redraw( 0, 0, hud );
+		dc->PopClipRect();
 	}
 }
 
@@ -521,11 +583,11 @@ void idUserInterfaceLocal::DrawCursor()
 {
 	if( !desktop || desktop->GetFlags() & WIN_MENUGUI )
 	{
-		uiManagerLocal.dc.DrawCursor( &cursorX, &cursorY, 32.0f );
+		dc->DrawCursor( &cursorX, &cursorY, 32.0f );
 	}
 	else
 	{
-		uiManagerLocal.dc.DrawCursor( &cursorX, &cursorY, 64.0f );
+		dc->DrawCursor( &cursorX, &cursorY, 56.0f );
 	}
 }
 
@@ -636,7 +698,6 @@ void idUserInterfaceLocal::ReadFromDemoFile( class idDemoFile* f )
 		f->Log( "creating new gui\n" );
 		desktop = new idWindow( this );
 		desktop->SetFlag( WIN_DESKTOP );
-		desktop->SetDC( &uiManagerLocal.dc );
 		desktop->ReadFromDemoFile( f );
 	}
 	else

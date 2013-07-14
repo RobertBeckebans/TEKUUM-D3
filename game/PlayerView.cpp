@@ -1,25 +1,25 @@
 /*
 ===========================================================================
 
-Doom 3 GPL Source Code
-Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Doom 3 BFG Edition GPL Source Code
+Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
 
-This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
+This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
-Doom 3 Source Code is free software: you can redistribute it and/or modify
+Doom 3 BFG Edition Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Doom 3 Source Code is distributed in the hope that it will be useful,
+Doom 3 BFG Edition Source Code is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Doom 3 Source Code.  If not, see <http://www.gnu.org/licenses/>.
+along with Doom 3 BFG Edition Source Code.  If not, see <http://www.gnu.org/licenses/>.
 
-In addition, the Doom 3 Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 Source Code.  If not, please request a copy in writing from id Software at the address below.
+In addition, the Doom 3 BFG Edition Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 BFG Edition Source Code.  If not, please request a copy in writing from id Software at the address below.
 
 If you have questions concerning this license or the applicable additional terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 
@@ -786,6 +786,137 @@ void idPlayerView::InfluenceVision( idUserInterface* hud, const renderView_t* vi
 	}
 }
 
+// RB begin
+idCVar	stereoRender_interOccularCentimeters( "stereoRender_interOccularCentimeters", "3.0", CVAR_ARCHIVE | CVAR_RENDERER, "Distance between eyes" );
+idCVar	stereoRender_convergence( "stereoRender_convergence", "6", CVAR_RENDERER, "0 = head mounted display, otherwise world units to convergence plane" );
+
+extern	idCVar stereoRender_screenSeparation;	// screen units from center to eyes
+extern	idCVar stereoRender_swapEyes;
+
+// In a head mounted display with separate displays for each eye,
+// screen separation will be zero and world separation will be the eye distance.
+struct stereoDistances_t
+{
+	// Offset to projection matrix, positive one eye, negative the other.
+	// Total distance is twice this, so 0.05 would give a 10% of screen width
+	// separation for objects at infinity.
+	float	screenSeparation;
+	
+	// Game world units from one eye to the centerline.
+	// Total distance is twice this.
+	float	worldSeparation;
+};
+
+float CentimetersToInches( const float cm )
+{
+	return cm / 2.54f;
+}
+
+float CentimetersToWorldUnits( const float cm )
+{
+	// In Doom 3, one world unit == one inch
+	return CentimetersToInches( cm );
+}
+
+float	CalculateWorldSeparation(
+	const float screenSeparation,
+	const float convergenceDistance,
+	const float fov_x_degrees )
+{
+
+	const float fovRadians = DEG2RAD( fov_x_degrees );
+	const float screen = tan( fovRadians * 0.5f ) * fabs( screenSeparation );
+	const float worldSeparation = screen * convergenceDistance / 0.5f;
+	
+	return worldSeparation;
+}
+
+stereoDistances_t	CaclulateStereoDistances(
+	const float	interOcularCentimeters,		// distance between two eyes, typically 6.0 - 7.0
+	const float screenWidthCentimeters,		// read from operating system
+	const float convergenceWorldUnits,		// pass 0 for head mounted display mode
+	const float	fov_x_degrees )  			// edge to edge horizontal field of view, typically 60 - 90
+{
+
+	stereoDistances_t	dists = {};
+	
+	if( convergenceWorldUnits == 0.0f )
+	{
+		// head mounted display mode
+		dists.worldSeparation = CentimetersToInches( interOcularCentimeters * 0.5 );
+		dists.screenSeparation = 0.0f;
+		return dists;
+	}
+	
+	// 3DTV mode
+	dists.screenSeparation = 0.5f * interOcularCentimeters / screenWidthCentimeters;
+	dists.worldSeparation = CalculateWorldSeparation( dists.screenSeparation, convergenceWorldUnits, fov_x_degrees );
+	
+	return dists;
+}
+
+float	GetScreenSeparationForGuis()
+{
+	const stereoDistances_t dists = CaclulateStereoDistances(
+										stereoRender_interOccularCentimeters.GetFloat(),
+										renderSystem->GetPhysicalScreenWidthInCentimeters(),
+										stereoRender_convergence.GetFloat(),
+										80.0f /* fov */ );
+										
+	return dists.screenSeparation;
+}
+
+/*
+===================
+idPlayerView::EmitStereoEyeView
+===================
+*/
+void idPlayerView::EmitStereoEyeView( const int eye, idUserInterface* hud )
+{
+	renderView_t* view = player->GetRenderView();
+	if( view == NULL )
+	{
+		return;
+	}
+	
+	renderView_t eyeView = *view;
+	
+	const stereoDistances_t dists = CaclulateStereoDistances(
+										stereoRender_interOccularCentimeters.GetFloat(),
+										renderSystem->GetPhysicalScreenWidthInCentimeters(),
+										stereoRender_convergence.GetFloat(),
+										view->fov_x );
+										
+	eyeView.vieworg += eye * dists.worldSeparation * eyeView.viewaxis[1];
+	
+	eyeView.viewEyeBuffer = stereoRender_swapEyes.GetBool() ? eye : -eye;
+	eyeView.stereoScreenSeparation = eye * dists.screenSeparation;
+	
+	SingleView( hud, &eyeView );
+}
+
+/*
+===================
+IsGameStereoRendered
+
+The crosshair is swapped for a laser sight in stereo rendering
+===================
+*/
+bool	IsGameStereoRendered()
+{
+	if( renderSystem->GetStereo3DMode() != STEREO3D_OFF )
+	{
+		return true;
+	}
+	return false;
+}
+
+int EyeForHalfRateFrame( const int frameCount )
+{
+	return ( renderSystem->GetFrameCount() & 1 ) ? -1 : 1;
+}
+// RB end
+
 /*
 ===================
 idPlayerView::RenderPlayerView
@@ -797,7 +928,18 @@ void idPlayerView::RenderPlayerView( idUserInterface* hud )
 	
 	if( g_skipViewEffects.GetBool() )
 	{
-		SingleView( hud, view );
+		if( renderSystem->GetStereo3DMode() != STEREO3D_OFF )
+		{
+			// render both eye views each frame on the PC
+			for( int eye = 1 ; eye >= -1 ; eye -= 2 )
+			{
+				EmitStereoEyeView( eye, hud );
+			}
+		}
+		else
+		{
+			SingleView( hud, view );
+		}
 	}
 	else
 	{

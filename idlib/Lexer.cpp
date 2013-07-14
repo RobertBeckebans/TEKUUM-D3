@@ -1,25 +1,25 @@
 /*
 ===========================================================================
 
-Doom 3 GPL Source Code
-Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Doom 3 BFG Edition GPL Source Code
+Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
 
-This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
+This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
-Doom 3 Source Code is free software: you can redistribute it and/or modify
+Doom 3 BFG Edition Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Doom 3 Source Code is distributed in the hope that it will be useful,
+Doom 3 BFG Edition Source Code is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Doom 3 Source Code.  If not, see <http://www.gnu.org/licenses/>.
+along with Doom 3 BFG Edition Source Code.  If not, see <http://www.gnu.org/licenses/>.
 
-In addition, the Doom 3 Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 Source Code.  If not, please request a copy in writing from id Software at the address below.
+In addition, the Doom 3 BFG Edition Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 BFG Edition Source Code.  If not, please request a copy in writing from id Software at the address below.
 
 If you have questions concerning this license or the applicable additional terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 
@@ -400,6 +400,113 @@ int idLexer::ReadWhiteSpace()
 		break;
 	}
 	return 1;
+}
+
+/*
+========================
+idLexer::SkipWhiteSpace
+
+Reads spaces, tabs, C-like comments etc. When a newline character is found, the scripts line
+counter is increased. Returns false if there is no token left to be read.
+========================
+*/
+bool idLexer::SkipWhiteSpace( bool currentLine )
+{
+	while( 1 )
+	{
+		assert( script_p <= end_p );
+		if( script_p == end_p )
+		{
+			return false;
+		}
+		// skip white space
+		while( *script_p <= ' ' )
+		{
+			if( script_p == end_p )
+			{
+				return false;
+			}
+			if( !*script_p )
+			{
+				return false;
+			}
+			if( *script_p == '\n' )
+			{
+				line++;
+				if( currentLine )
+				{
+					script_p++;
+					return true;
+				}
+			}
+			script_p++;
+		}
+		// skip comments
+		if( *script_p == '/' )
+		{
+			// comments //
+			if( *( script_p + 1 ) == '/' )
+			{
+				script_p++;
+				do
+				{
+					script_p++;
+					if( !*script_p )
+					{
+						return false;
+					}
+				}
+				while( *script_p != '\n' );
+				line++;
+				script_p++;
+				if( currentLine )
+				{
+					return true;
+				}
+				if( !*script_p )
+				{
+					return false;
+				}
+				continue;
+			}
+			// comments /* */
+			else if( *( script_p + 1 ) == '*' )
+			{
+				script_p++;
+				while( 1 )
+				{
+					script_p++;
+					if( !*script_p )
+					{
+						return false;
+					}
+					if( *script_p == '\n' )
+					{
+						line++;
+					}
+					else if( *script_p == '/' )
+					{
+						if( *( script_p - 1 ) == '*' )
+						{
+							break;
+						}
+						if( *( script_p + 1 ) == '*' )
+						{
+							Warning( "nested comment" );
+						}
+					}
+				}
+				script_p++;
+				if( !*script_p )
+				{
+					return false;
+				}
+				continue;
+			}
+		}
+		break;
+	}
+	return true;
 }
 
 /*
@@ -931,7 +1038,7 @@ idLexer::ReadPunctuation
 int idLexer::ReadPunctuation( idToken* token )
 {
 	int l, n, i;
-	char* p;
+	const char* p;
 	const punctuation_t* punc;
 	
 #ifdef PUNCTABLE
@@ -986,6 +1093,11 @@ int idLexer::ReadToken( idToken* token )
 	if( !loaded )
 	{
 		idLib::common->Error( "idLexer::ReadToken: no file loaded" );
+		return 0;
+	}
+	
+	if( script_p == NULL )
+	{
 		return 0;
 	}
 	
@@ -1819,6 +1931,42 @@ const char* idLexer::ParseRestOfLine( idStr& out )
 }
 
 /*
+========================
+idLexer::ParseCompleteLine
+
+Returns a string up to the \n, but doesn't eat any whitespace at the beginning of the next line.
+========================
+*/
+const char* idLexer::ParseCompleteLine( idStr& out )
+{
+	idToken token;
+	const char*	start;
+	
+	start = script_p;
+	
+	while( 1 )
+	{
+		// end of buffer
+		if( *script_p == 0 )
+		{
+			break;
+		}
+		if( *script_p == '\n' )
+		{
+			line++;
+			script_p++;
+			break;
+		}
+		script_p++;
+	}
+	
+	out.Empty();
+	out.Append( start, script_p - start );
+	
+	return out.c_str();
+}
+
+/*
 ================
 idLexer::GetLastWhiteSpace
 ================
@@ -1882,7 +2030,7 @@ void idLexer::Reset()
 idLexer::EndOfFile
 ================
 */
-int idLexer::EndOfFile()
+bool idLexer::EndOfFile()
 {
 	return idLexer::script_p >= idLexer::end_p;
 }

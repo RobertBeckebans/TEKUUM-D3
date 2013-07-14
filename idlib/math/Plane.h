@@ -1,25 +1,25 @@
 /*
 ===========================================================================
 
-Doom 3 GPL Source Code
-Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Doom 3 BFG Edition GPL Source Code
+Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
 
-This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
+This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
-Doom 3 Source Code is free software: you can redistribute it and/or modify
+Doom 3 BFG Edition Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Doom 3 Source Code is distributed in the hope that it will be useful,
+Doom 3 BFG Edition Source Code is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Doom 3 Source Code.  If not, see <http://www.gnu.org/licenses/>.
+along with Doom 3 BFG Edition Source Code.  If not, see <http://www.gnu.org/licenses/>.
 
-In addition, the Doom 3 Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 Source Code.  If not, please request a copy in writing from id Software at the address below.
+In addition, the Doom 3 BFG Edition Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 BFG Edition Source Code.  If not, please request a copy in writing from id Software at the address below.
 
 If you have questions concerning this license or the applicable additional terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 
@@ -72,8 +72,9 @@ class idPlane
 {
 public:
 	idPlane();
-	idPlane( float a, float b, float c, float d );
-	idPlane( const idVec3& normal, const float dist );
+	explicit idPlane( float a, float b, float c, float d );
+	explicit idPlane( const idVec3& normal, const float dist );
+	explicit idPlane( const idVec3& v0, const idVec3& v1, const idVec3& v2, bool fixDegenerate = false );
 	
 	float			operator[]( int index ) const;
 	float& 			operator[]( int index );
@@ -81,6 +82,7 @@ public:
 	idPlane& 		operator=( const idVec3& v );			// sets normal and sets idPlane::d to zero
 	idPlane			operator+( const idPlane& p ) const;	// add plane equations
 	idPlane			operator-( const idPlane& p ) const;	// subtract plane equations
+	idPlane			operator*( const float s ) const;		// scale plane
 	idPlane& 		operator*=( const idMat3& m );			// Normal() *= m
 	
 	bool			Compare( const idPlane& p ) const;						// exact compare, no epsilon
@@ -155,6 +157,11 @@ ID_INLINE idPlane::idPlane( const idVec3& normal, const float dist )
 	this->d = -dist;
 }
 
+ID_INLINE idPlane::idPlane( const idVec3& v0, const idVec3& v1, const idVec3& v2, bool fixDegenerate )
+{
+	FromPoints( v0, v1, v2, fixDegenerate );
+}
+
 ID_INLINE float idPlane::operator[]( int index ) const
 {
 	return ( &a )[ index ];
@@ -187,6 +194,11 @@ ID_INLINE idPlane idPlane::operator+( const idPlane& p ) const
 ID_INLINE idPlane idPlane::operator-( const idPlane& p ) const
 {
 	return idPlane( a - p.a, b - p.b, c - p.c, d - p.d );
+}
+
+ID_INLINE idPlane idPlane::operator*( const float s ) const
+{
+	return idPlane( a * s, b * s, c * s, d * s );
 }
 
 ID_INLINE idPlane& idPlane::operator*=( const idMat3& m )

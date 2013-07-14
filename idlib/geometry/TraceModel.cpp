@@ -1,36 +1,34 @@
 /*
 ===========================================================================
 
-Doom 3 GPL Source Code
-Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Doom 3 BFG Edition GPL Source Code
+Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
 
-This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
+This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
-Doom 3 Source Code is free software: you can redistribute it and/or modify
+Doom 3 BFG Edition Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Doom 3 Source Code is distributed in the hope that it will be useful,
+Doom 3 BFG Edition Source Code is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Doom 3 Source Code.  If not, see <http://www.gnu.org/licenses/>.
+along with Doom 3 BFG Edition Source Code.  If not, see <http://www.gnu.org/licenses/>.
 
-In addition, the Doom 3 Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 Source Code.  If not, please request a copy in writing from id Software at the address below.
+In addition, the Doom 3 BFG Edition Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 BFG Edition Source Code.  If not, please request a copy in writing from id Software at the address below.
 
 If you have questions concerning this license or the applicable additional terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 
 ===========================================================================
 */
 
-#include "precompiled.h"
 #pragma hdrstop
-
+#include "precompiled.h"
 #include "TraceModel.h"
-
 
 /*
 ============
@@ -203,9 +201,9 @@ void idTraceModel::SetupOctahedron( const idBounds& octBounds )
 	{
 		e0 = polys[i].edges[0];
 		e1 = polys[i].edges[1];
-		v0 = edges[abs( e0 )].v[INTSIGNBITSET( e0 )];
-		v1 = edges[abs( e0 )].v[INTSIGNBITNOTSET( e0 )];
-		v2 = edges[abs( e1 )].v[INTSIGNBITNOTSET( e1 )];
+		v0 = edges[abs( e0 )].v[INT32_SIGNBITSET( e0 )];
+		v1 = edges[abs( e0 )].v[INT32_SIGNBITNOTSET( e0 )];
+		v2 = edges[abs( e1 )].v[INT32_SIGNBITNOTSET( e1 )];
 		// polygon plane
 		polys[i].normal = ( verts[v1] - verts[v0] ).Cross( verts[v2] - verts[v0] );
 		polys[i].normal.Normalize();
@@ -390,11 +388,11 @@ void idTraceModel::SetupDodecahedron( const idBounds& dodBounds )
 		e1 = polys[i].edges[1];
 		e2 = polys[i].edges[2];
 		e3 = polys[i].edges[3];
-		v0 = edges[abs( e0 )].v[INTSIGNBITSET( e0 )];
-		v1 = edges[abs( e0 )].v[INTSIGNBITNOTSET( e0 )];
-		v2 = edges[abs( e1 )].v[INTSIGNBITNOTSET( e1 )];
-		v3 = edges[abs( e2 )].v[INTSIGNBITNOTSET( e2 )];
-		v4 = edges[abs( e3 )].v[INTSIGNBITNOTSET( e3 )];
+		v0 = edges[abs( e0 )].v[INT32_SIGNBITSET( e0 )];
+		v1 = edges[abs( e0 )].v[INT32_SIGNBITNOTSET( e0 )];
+		v2 = edges[abs( e1 )].v[INT32_SIGNBITNOTSET( e1 )];
+		v3 = edges[abs( e2 )].v[INT32_SIGNBITNOTSET( e2 )];
+		v4 = edges[abs( e3 )].v[INT32_SIGNBITNOTSET( e3 )];
 		// polygon plane
 		polys[i].normal = ( verts[v1] - verts[v0] ).Cross( verts[v2] - verts[v0] );
 		polys[i].normal.Normalize();
@@ -1151,9 +1149,9 @@ void idTraceModel::Rotate( const idMat3& rotation )
 		for( j = 0; j < polys[i].numEdges; j++ )
 		{
 			edgeNum = polys[i].edges[j];
-			polys[i].bounds.AddPoint( verts[edges[abs( edgeNum )].v[INTSIGNBITSET( edgeNum )]] );
+			polys[i].bounds.AddPoint( verts[edges[abs( edgeNum )].v[INT32_SIGNBITSET( edgeNum )]] );
 		}
-		polys[i].dist = polys[i].normal * verts[edges[abs( edgeNum )].v[INTSIGNBITSET( edgeNum )]];
+		polys[i].dist = polys[i].normal * verts[edges[abs( edgeNum )].v[INT32_SIGNBITSET( edgeNum )]];
 		bounds += polys[i].bounds;
 	}
 	
@@ -1177,7 +1175,7 @@ void idTraceModel::Shrink( const float m )
 		{
 			edgeNum = polys[0].edges[i];
 			edge = &edges[abs( edgeNum )];
-			dir = verts[ edge->v[ INTSIGNBITSET( edgeNum ) ] ] - verts[ edge->v[ INTSIGNBITNOTSET( edgeNum ) ] ];
+			dir = verts[ edge->v[ INT32_SIGNBITSET( edgeNum ) ] ] - verts[ edge->v[ INT32_SIGNBITNOTSET( edgeNum ) ] ];
 			if( dir.Normalize() < 2.0f * m )
 			{
 				continue;
@@ -1197,7 +1195,7 @@ void idTraceModel::Shrink( const float m )
 		{
 			edgeNum = polys[i].edges[j];
 			edge = &edges[abs( edgeNum )];
-			verts[ edge->v[ INTSIGNBITSET( edgeNum ) ] ] -= polys[i].normal * m;
+			verts[ edge->v[ INT32_SIGNBITSET( edgeNum ) ] ] -= polys[i].normal * m;
 		}
 	}
 }
@@ -1264,11 +1262,11 @@ float idTraceModel::GetPolygonArea( int polyNum ) const
 	}
 	poly = &polys[polyNum];
 	total = 0.0f;
-	base = verts[ edges[ abs( poly->edges[0] ) ].v[ INTSIGNBITSET( poly->edges[0] ) ] ];
+	base = verts[ edges[ abs( poly->edges[0] ) ].v[ INT32_SIGNBITSET( poly->edges[0] ) ] ];
 	for( i = 0; i < poly->numEdges; i++ )
 	{
-		v1 = verts[ edges[ abs( poly->edges[i] ) ].v[ INTSIGNBITSET( poly->edges[i] ) ] ] - base;
-		v2 = verts[ edges[ abs( poly->edges[i] ) ].v[ INTSIGNBITNOTSET( poly->edges[i] ) ] ] - base;
+		v1 = verts[ edges[ abs( poly->edges[i] ) ].v[ INT32_SIGNBITSET( poly->edges[i] ) ] ] - base;
+		v2 = verts[ edges[ abs( poly->edges[i] ) ].v[ INT32_SIGNBITNOTSET( poly->edges[i] ) ] ] - base;
 		cross = v1.Cross( v2 );
 		total += cross.Length();
 	}
@@ -1345,7 +1343,7 @@ int idTraceModel::GetProjectionSilhouetteEdges( const idVec3& projectionOrigin, 
 	{
 		poly = &polys[i];
 		edgeNum = poly->edges[0];
-		dir = verts[ edges[abs( edgeNum )].v[ INTSIGNBITSET( edgeNum ) ] ] - projectionOrigin;
+		dir = verts[ edges[abs( edgeNum )].v[ INT32_SIGNBITSET( edgeNum ) ] ] - projectionOrigin;
 		if( dir * poly->normal < 0.0f )
 		{
 			for( j = 0; j < poly->numEdges; j++ )

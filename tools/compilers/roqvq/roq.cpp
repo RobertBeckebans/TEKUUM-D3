@@ -172,7 +172,7 @@ void roq::EncodeStream( const char* paramInputFile )
 			f2 = paramFile->GetNextImageFilename();
 		}
 		morestuff--;
-		session->UpdateScreen();
+		session->UpdateScreen( false );
 	}
 	
 //	if (numberOfFrames != 1) {

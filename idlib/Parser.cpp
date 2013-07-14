@@ -1,25 +1,25 @@
 /*
 ===========================================================================
 
-Doom 3 GPL Source Code
-Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Doom 3 BFG Edition GPL Source Code
+Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
 
-This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
+This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
-Doom 3 Source Code is free software: you can redistribute it and/or modify
+Doom 3 BFG Edition Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Doom 3 Source Code is distributed in the hope that it will be useful,
+Doom 3 BFG Edition Source Code is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Doom 3 Source Code.  If not, see <http://www.gnu.org/licenses/>.
+along with Doom 3 BFG Edition Source Code.  If not, see <http://www.gnu.org/licenses/>.
 
-In addition, the Doom 3 Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 Source Code.  If not, please request a copy in writing from id Software at the address below.
+In addition, the Doom 3 BFG Edition Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 BFG Edition Source Code.  If not, please request a copy in writing from id Software at the address below.
 
 If you have questions concerning this license or the applicable additional terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 
@@ -506,6 +506,7 @@ int idParser::ReadSourceToken( idToken* token )
 	*token = idParser::tokens;
 	// remove the token from the source
 	t = idParser::tokens;
+	assert( idParser::tokens != NULL );
 	idParser::tokens = idParser::tokens->next;
 	delete t;
 	return true;
@@ -705,7 +706,7 @@ void idParser::AddBuiltinDefines()
 	define_t* define;
 	struct builtin
 	{
-		char* string;
+		const char* string;
 		int id;
 	} builtin[] =
 	{
@@ -751,6 +752,56 @@ define_t* idParser::CopyFirstDefine()
 	return NULL;
 }
 
+static idStr PreProcessorDate()
+{
+	time_t t = time( NULL );
+	char* curtime = ctime( &t );
+	if( idStr::Length( curtime ) < 24 )
+	{
+		return idStr( "*** BAD CURTIME ***" );
+	}
+	idStr	str = "\"";
+	// skip DAY, extract MMM DD
+	for( int i = 4 ; i < 10 ; i++ )
+	{
+		str.Append( curtime[i] );
+	}
+	// skip time, extract space+YYYY
+	for( int i = 19 ; i < 24 ; i++ )
+	{
+		str.Append( curtime[i] );
+	}
+	str.Append( "\"" );
+	return str;
+}
+
+static idStr PreProcessorTime()
+{
+	time_t t = time( NULL );
+	char* curtime = ctime( &t );
+	if( idStr::Length( curtime ) < 24 )
+	{
+		return idStr( "*** BAD CURTIME ***" );
+	}
+	
+	idStr	str = "\"";
+	for( int i = 11 ; i < 19 ; i++ )
+	{
+		str.Append( curtime[i] );
+	}
+	str.Append( "\"" );
+	return str;
+}
+
+/*
+RB: TODO
+CONSOLE_COMMAND( TestPreprocessorMacros, "check analyze warning", 0 )
+{
+	idLib::Printf( "%s : %s\n", __DATE__, PreProcessorDate().c_str() );
+	idLib::Printf( "%s : %s\n", __TIME__, PreProcessorTime().c_str() );
+}
+*/
+
 /*
 ================
 idParser::ExpandBuiltinDefine
@@ -759,8 +810,6 @@ idParser::ExpandBuiltinDefine
 int idParser::ExpandBuiltinDefine( idToken* deftoken, define_t* define, idToken** firsttoken, idToken** lasttoken )
 {
 	idToken* token;
-	time_t t;
-	char* curtime;
 	char buf[MAX_STRING_CHARS];
 	
 	token = new idToken( deftoken );
@@ -795,15 +844,7 @@ int idParser::ExpandBuiltinDefine( idToken* deftoken, define_t* define, idToken*
 		}
 		case BUILTIN_DATE:
 		{
-			t = time( NULL );
-			curtime = ctime( &t );
-			( *token ) = "\"";
-			token->Append( curtime + 4 );
-			token[7] = '\0';
-			token->Append( curtime + 20 );
-			token[10] = '\0';
-			token->Append( "\"" );
-			free( curtime );
+			*token = PreProcessorDate();
 			token->type = TT_STRING;
 			token->subtype = token->Length();
 			token->line = deftoken->line;
@@ -815,13 +856,7 @@ int idParser::ExpandBuiltinDefine( idToken* deftoken, define_t* define, idToken*
 		}
 		case BUILTIN_TIME:
 		{
-			t = time( NULL );
-			curtime = ctime( &t );
-			( *token ) = "\"";
-			token->Append( curtime + 11 );
-			token[8] = '\0';
-			token->Append( "\"" );
-			free( curtime );
+			*token = PreProcessorTime();
 			token->type = TT_STRING;
 			token->subtype = token->Length();
 			token->line = deftoken->line;
@@ -1479,7 +1514,7 @@ typedef struct operator_s
 
 typedef struct value_s
 {
-	signed long int intvalue;
+	signed int intvalue; // DG: use int instead of long for 64bit compatibility
 	double floatvalue;
 	int parentheses;
 	struct value_s* prev, *next;
@@ -1574,7 +1609,7 @@ int PC_OperatorPriority( int op )
 
 #define FreeOperator(op)
 
-int idParser::EvaluateTokens( idToken* tokens, signed long int* intvalue, double* floatvalue, int integer )
+int idParser::EvaluateTokens( idToken* tokens, signed int* intvalue, double* floatvalue, int integer )
 {
 	operator_t* o, *firstoperator, *lastoperator;
 	value_t* v, *firstvalue, *lastvalue, *v1, *v2;
@@ -2085,7 +2120,7 @@ int idParser::EvaluateTokens( idToken* tokens, signed long int* intvalue, double
 idParser::Evaluate
 ================
 */
-int idParser::Evaluate( signed long int* intvalue, double* floatvalue, int integer )
+int idParser::Evaluate( signed int* intvalue, double* floatvalue, int integer )
 {
 	idToken token, *firsttoken, *lasttoken;
 	idToken* t, *nexttoken;
@@ -2192,7 +2227,7 @@ int idParser::Evaluate( signed long int* intvalue, double* floatvalue, int integ
 idParser::DollarEvaluate
 ================
 */
-int idParser::DollarEvaluate( signed long int* intvalue, double* floatvalue, int integer )
+int idParser::DollarEvaluate( signed int* intvalue, double* floatvalue, int integer )
 {
 	int indent, defined = false;
 	idToken token, *firsttoken, *lasttoken;
@@ -2313,7 +2348,7 @@ idParser::Directive_elif
 */
 int idParser::Directive_elif()
 {
-	signed long int value;
+	signed int value; // DG: use int instead of long for 64bit compatibility
 	int type, skip;
 	
 	idParser::PopIndent( &type, &skip );
@@ -2338,7 +2373,7 @@ idParser::Directive_if
 */
 int idParser::Directive_if()
 {
-	signed long int value;
+	signed int value; // DG: use int instead of long for 64bit compatibility
 	int skip;
 	
 	if( !idParser::Evaluate( &value, NULL, true ) )
@@ -2445,7 +2480,7 @@ idParser::Directive_eval
 */
 int idParser::Directive_eval()
 {
-	signed long int value;
+	signed int value; // DG: use int instead of long for 64bit compatibility
 	idToken token;
 	char buf[128];
 	
@@ -2612,7 +2647,7 @@ idParser::DollarDirective_evalint
 */
 int idParser::DollarDirective_evalint()
 {
-	signed long int value;
+	signed int value; // DG: use int instead of long for 64bit compatibility
 	idToken token;
 	char buf[128];
 	
@@ -2665,7 +2700,7 @@ int idParser::DollarDirective_evalfloat()
 	token = buf;
 	token.type = TT_NUMBER;
 	token.subtype = TT_FLOAT | TT_LONG | TT_DECIMAL | TT_VALUESVALID;
-	token.intvalue = ( unsigned long ) fabs( value );
+	token.intvalue = ( unsigned int ) fabs( value ); // DG: use int instead of long for 64bit compatibility
 	token.floatvalue = fabs( value );
 	idParser::UnreadSourceToken( &token );
 	if( value < 0 )
@@ -3096,35 +3131,38 @@ const char* idParser::ParseBracedSectionExact( idStr& out, int tabs )
 	return scriptstack->ParseBracedSectionExact( out, tabs );
 }
 
+
 /*
-=================
+========================
 idParser::ParseBracedSection
 
-The next token should be an open brace.
-Parses until a matching close brace is found.
-Internal brace depths are properly skipped.
-=================
+The next token should be an open brace. Parses until a matching close brace is found. Internal
+brace depths are properly skipped.
+========================
 */
-const char* idParser::ParseBracedSection( idStr& out, int tabs )
+const char* idParser::ParseBracedSection( idStr& out, int tabs, bool parseFirstBrace, char intro, char outro )
 {
 	idToken token;
 	int i, depth;
-	bool doTabs = false;
-	if( tabs >= 0 )
-	{
-		doTabs = true;
-	}
+	bool doTabs;
+	
+	char temp[ 2 ] = { 0, 0 };
+	*temp = intro;
 	
 	out.Empty();
-	if( !idParser::ExpectTokenString( "{" ) )
+	if( parseFirstBrace )
 	{
-		return out.c_str();
+		if( !ExpectTokenString( temp ) )
+		{
+			return out.c_str();
+		}
+		out = temp;
 	}
-	out = "{";
 	depth = 1;
+	doTabs = ( tabs >= 0 );
 	do
 	{
-		if( !idParser::ReadToken( &token ) )
+		if( !ReadToken( &token ) )
 		{
 			Error( "missing closing brace" );
 			return out.c_str();
@@ -3139,7 +3177,7 @@ const char* idParser::ParseBracedSection( idStr& out, int tabs )
 		if( doTabs && token.linesCrossed )
 		{
 			i = tabs;
-			if( token[0] == '}' && i > 0 )
+			if( token[ 0 ] == outro && i > 0 )
 			{
 				i--;
 			}
@@ -3148,9 +3186,17 @@ const char* idParser::ParseBracedSection( idStr& out, int tabs )
 				out += "\t";
 			}
 		}
-		if( token.type == TT_PUNCTUATION )
+		if( token.type == TT_STRING )
 		{
-			if( token[0] == '{' )
+			out += "\"" + token + "\"";
+		}
+		else if( token.type == TT_LITERAL )
+		{
+			out += "\'" + token + "\'";
+		}
+		else
+		{
+			if( token[ 0 ] == intro )
 			{
 				depth++;
 				if( doTabs )
@@ -3158,7 +3204,7 @@ const char* idParser::ParseBracedSection( idStr& out, int tabs )
 					tabs++;
 				}
 			}
-			else if( token[0] == '}' )
+			else if( token[ 0 ] == outro )
 			{
 				depth--;
 				if( doTabs )
@@ -3166,14 +3212,6 @@ const char* idParser::ParseBracedSection( idStr& out, int tabs )
 					tabs--;
 				}
 			}
-		}
-		
-		if( token.type == TT_STRING )
-		{
-			out += "\"" + token + "\"";
-		}
-		else
-		{
 			out += token;
 		}
 		out += " ";
@@ -3799,5 +3837,19 @@ idParser::~idParser
 idParser::~idParser()
 {
 	idParser::FreeSource( false );
+}
+
+/*
+========================
+idParser::EndOfFile
+========================
+*/
+bool idParser::EndOfFile()
+{
+	if( scriptstack != NULL )
+	{
+		return ( bool ) scriptstack->EndOfFile();
+	}
+	return true;
 }
 

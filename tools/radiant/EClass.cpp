@@ -128,6 +128,11 @@ bool LoadModel( const char* pLocation, eclass_t* e, idVec3& vMin, idVec3& vMax, 
 	{
 		idBounds b;
 		e->modelHandle = renderModelManager->FindModel( pLocation );
+		
+		// RB begin
+		e->modelHandle->CreateVertexCache();
+		// RB end
+		
 		b = e->modelHandle->Bounds( NULL );
 		VectorCopy( b[0], vMin );
 		VectorCopy( b[1], vMax );

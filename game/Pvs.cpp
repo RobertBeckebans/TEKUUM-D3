@@ -1,25 +1,25 @@
 /*
 ===========================================================================
 
-Doom 3 GPL Source Code
-Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Doom 3 BFG Edition GPL Source Code
+Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
 
-This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
+This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
-Doom 3 Source Code is free software: you can redistribute it and/or modify
+Doom 3 BFG Edition Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Doom 3 Source Code is distributed in the hope that it will be useful,
+Doom 3 BFG Edition Source Code is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Doom 3 Source Code.  If not, see <http://www.gnu.org/licenses/>.
+along with Doom 3 BFG Edition Source Code.  If not, see <http://www.gnu.org/licenses/>.
 
-In addition, the Doom 3 Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 Source Code.  If not, please request a copy in writing from id Software at the address below.
+In addition, the Doom 3 BFG Edition Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 BFG Edition Source Code.  If not, please request a copy in writing from id Software at the address below.
 
 If you have questions concerning this license or the applicable additional terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 
@@ -367,7 +367,9 @@ pvsStack_t* idPVS::FloodPassagePVS_r( pvsPortal_t* source, const pvsPortal_t* po
 	pvsArea_t* area;
 	pvsStack_t* stack;
 	pvsPassage_t* passage;
-	long* sourceVis, *passageVis, *portalVis, *mightSee, *prevMightSee, more;
+	// RB: 64 bit fixes, changed long to int
+	int* sourceVis, *passageVis, *portalVis, *mightSee, *prevMightSee, more;
+	// RB end
 	
 	area = &pvsAreas[portal->areaNum];
 	
@@ -406,16 +408,22 @@ pvsStack_t* idPVS::FloodPassagePVS_r( pvsPortal_t* source, const pvsPortal_t* po
 		source->vis[n >> 3] |= ( 1 << ( n & 7 ) );
 		
 		// get pointers to vis data
-		prevMightSee = reinterpret_cast<long*>( prevStack->mightSee );
-		passageVis = reinterpret_cast<long*>( passage->canSee );
-		sourceVis = reinterpret_cast<long*>( source->vis );
-		mightSee = reinterpret_cast<long*>( stack->mightSee );
+		
+		// RB: 64 bit fixes, changed long to int
+		prevMightSee = reinterpret_cast<int*>( prevStack->mightSee );
+		passageVis = reinterpret_cast<int*>( passage->canSee );
+		sourceVis = reinterpret_cast<int*>( source->vis );
+		mightSee = reinterpret_cast<int*>( stack->mightSee );
+		// RB end
 		
 		more = 0;
 		// use the portal PVS if it has been calculated
 		if( p->done )
 		{
-			portalVis = reinterpret_cast<long*>( p->vis );
+			// RB: 64 bit fixes, changed long to int
+			portalVis = reinterpret_cast<int*>( p->vis );
+			// RB end
+			
 			for( j = 0; j < portalVisLongs; j++ )
 			{
 				// get new PVS which is decreased by going through this passage
@@ -828,7 +836,9 @@ idPVS::AreaPVSFromPortalPVS
 int idPVS::AreaPVSFromPortalPVS() const
 {
 	int i, j, k, areaNum, totalVisibleAreas;
-	long* p1, *p2;
+	// RB: 64 bit fixes, changed long to int
+	int* p1, *p2;
+	// RB end
 	byte* pvs, *portalPVS;
 	pvsArea_t* area;
 	
@@ -857,8 +867,11 @@ int idPVS::AreaPVSFromPortalPVS() const
 		// store the PVS of all portals in this area at the first portal
 		for( j = 1; j < area->numPortals; j++ )
 		{
-			p1 = reinterpret_cast<long*>( area->portals[0]->vis );
-			p2 = reinterpret_cast<long*>( area->portals[j]->vis );
+			// RB: 64 bit fixes, changed long to int
+			p1 = reinterpret_cast<int*>( area->portals[0]->vis );
+			p2 = reinterpret_cast<int*>( area->portals[j]->vis );
+			// RB end
+			
 			for( k = 0; k < portalVisLongs; k++ )
 			{
 				*p1++ |= *p2++;
@@ -917,7 +930,9 @@ void idPVS::Init()
 	areaQueue = new int[numAreas];
 	
 	areaVisBytes = ( ( ( numAreas + 31 )&~31 ) >> 3 );
-	areaVisLongs = areaVisBytes / sizeof( long );
+	// RB: 64 bit fixes, changed long to int
+	areaVisLongs = areaVisBytes / sizeof( int );
+	// RB end
 	
 	areaPVS = new byte[numAreas * areaVisBytes];
 	memset( areaPVS, 0xFF, numAreas * areaVisBytes );
@@ -925,7 +940,9 @@ void idPVS::Init()
 	numPortals = GetPortalCount();
 	
 	portalVisBytes = ( ( ( numPortals + 31 )&~31 ) >> 3 );
-	portalVisLongs = portalVisBytes / sizeof( long );
+	// RB: 64 bit fixes, changed long to int
+	portalVisLongs = portalVisBytes / sizeof( int );
+	// RB end
 	
 	for( int i = 0; i < MAX_CURRENT_PVS; i++ )
 	{
@@ -1150,7 +1167,9 @@ pvsHandle_t idPVS::SetupCurrentPVS( const int* sourceAreas, const int numSourceA
 {
 	int i, j;
 	unsigned int h;
-	long* vis, *pvs;
+	// RB: 64 bit fixes, changed long to int
+	int* vis, *pvs;
+	// RB end
 	pvsHandle_t handle;
 	
 	h = 0;
@@ -1175,8 +1194,10 @@ pvsHandle_t idPVS::SetupCurrentPVS( const int* sourceAreas, const int numSourceA
 		
 			assert( sourceAreas[i] >= 0 && sourceAreas[i] < numAreas );
 			
-			vis = reinterpret_cast<long*>( areaPVS + sourceAreas[i] * areaVisBytes );
-			pvs = reinterpret_cast<long*>( currentPVS[handle.i].pvs );
+			// RB: 64 bit fixes, changed long to int
+			vis = reinterpret_cast<int*>( areaPVS + sourceAreas[i] * areaVisBytes );
+			pvs = reinterpret_cast<int*>( currentPVS[handle.i].pvs );
+			// RB end
 			for( j = 0; j < areaVisLongs; j++ )
 			{
 				*pvs++ |= *vis++;
@@ -1224,20 +1245,25 @@ idPVS::MergeCurrentPVS
 pvsHandle_t idPVS::MergeCurrentPVS( pvsHandle_t pvs1, pvsHandle_t pvs2 ) const
 {
 	int i;
-	long* pvs1Ptr, *pvs2Ptr, *ptr;
-	pvsHandle_t handle;
+	// RB: 64 bit fixes, changed long to int
+	int* pvs1Ptr, *pvs2Ptr, *ptr;
+	// RB end
+	pvsHandle_t handle = { 0 };
 	
 	if( pvs1.i < 0 || pvs1.i >= MAX_CURRENT_PVS || pvs1.h != currentPVS[pvs1.i].handle.h ||
 			pvs2.i < 0 || pvs2.i >= MAX_CURRENT_PVS || pvs2.h != currentPVS[pvs2.i].handle.h )
 	{
 		gameLocal.Error( "idPVS::MergeCurrentPVS: invalid handle" );
+		return handle;
 	}
 	
 	handle = AllocCurrentPVS( pvs1.h ^ pvs2.h );
 	
-	ptr = reinterpret_cast<long*>( currentPVS[handle.i].pvs );
-	pvs1Ptr = reinterpret_cast<long*>( currentPVS[pvs1.i].pvs );
-	pvs2Ptr = reinterpret_cast<long*>( currentPVS[pvs2.i].pvs );
+	// RB: 64 bit fixes, changed long to int
+	ptr = reinterpret_cast<int*>( currentPVS[handle.i].pvs );
+	pvs1Ptr = reinterpret_cast<int*>( currentPVS[pvs1.i].pvs );
+	pvs2Ptr = reinterpret_cast<int*>( currentPVS[pvs2.i].pvs );
+	// RB end
 	
 	for( i = 0; i < areaVisLongs; i++ )
 	{
@@ -1284,6 +1310,7 @@ void idPVS::FreeCurrentPVS( pvsHandle_t handle ) const
 	if( handle.i < 0 || handle.i >= MAX_CURRENT_PVS || handle.h != currentPVS[handle.i].handle.h )
 	{
 		gameLocal.Error( "idPVS::FreeCurrentPVS: invalid handle" );
+		return;
 	}
 	currentPVS[handle.i].handle.i = -1;
 }
@@ -1300,7 +1327,8 @@ bool idPVS::InCurrentPVS( const pvsHandle_t handle, const idVec3& target ) const
 	if( handle.i < 0 || handle.i >= MAX_CURRENT_PVS ||
 			handle.h != currentPVS[handle.i].handle.h )
 	{
-		gameLocal.Error( "idPVS::InCurrentPVS: invalid handle" );
+		gameLocal.Warning( "idPVS::InCurrentPVS: invalid handle" );
+		return false;
 	}
 	
 	targetArea = gameRenderWorld->PointInArea( target );
@@ -1325,7 +1353,8 @@ bool idPVS::InCurrentPVS( const pvsHandle_t handle, const idBounds& target ) con
 	if( handle.i < 0 || handle.i >= MAX_CURRENT_PVS ||
 			handle.h != currentPVS[handle.i].handle.h )
 	{
-		gameLocal.Error( "idPVS::InCurrentPVS: invalid handle" );
+		gameLocal.Warning( "idPVS::InCurrentPVS: invalid handle" );
+		return false;
 	}
 	
 	numTargetAreas = gameRenderWorld->BoundsInAreas( target, targetAreas, MAX_BOUNDS_AREAS );
@@ -1351,7 +1380,8 @@ bool idPVS::InCurrentPVS( const pvsHandle_t handle, const int targetArea ) const
 	if( handle.i < 0 || handle.i >= MAX_CURRENT_PVS ||
 			handle.h != currentPVS[handle.i].handle.h )
 	{
-		gameLocal.Error( "idPVS::InCurrentPVS: invalid handle" );
+		gameLocal.Warning( "idPVS::InCurrentPVS: invalid handle" );
+		return false;
 	}
 	
 	if( targetArea < 0 || targetArea >= numAreas )
@@ -1374,7 +1404,8 @@ bool idPVS::InCurrentPVS( const pvsHandle_t handle, const int* targetAreas, int 
 	if( handle.i < 0 || handle.i >= MAX_CURRENT_PVS ||
 			handle.h != currentPVS[handle.i].handle.h )
 	{
-		gameLocal.Error( "idPVS::InCurrentPVS: invalid handle" );
+		gameLocal.Warning( "idPVS::InCurrentPVS: invalid handle" );
+		return false;
 	}
 	
 	for( i = 0; i < numTargetAreas; i++ )
@@ -1537,6 +1568,7 @@ void idPVS::DrawCurrentPVS( const pvsHandle_t handle, const idVec3& source ) con
 			handle.h != currentPVS[handle.i].handle.h )
 	{
 		gameLocal.Error( "idPVS::DrawCurrentPVS: invalid handle" );
+		return;
 	}
 	
 	sourceArea = gameRenderWorld->PointInArea( source );

@@ -1,25 +1,25 @@
 /*
 ===========================================================================
 
-Doom 3 GPL Source Code
-Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Doom 3 BFG Edition GPL Source Code
+Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
 
-This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
+This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
-Doom 3 Source Code is free software: you can redistribute it and/or modify
+Doom 3 BFG Edition Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Doom 3 Source Code is distributed in the hope that it will be useful,
+Doom 3 BFG Edition Source Code is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Doom 3 Source Code.  If not, see <http://www.gnu.org/licenses/>.
+along with Doom 3 BFG Edition Source Code.  If not, see <http://www.gnu.org/licenses/>.
 
-In addition, the Doom 3 Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 Source Code.  If not, please request a copy in writing from id Software at the address below.
+In addition, the Doom 3 BFG Edition Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 BFG Edition Source Code.  If not, please request a copy in writing from id Software at the address below.
 
 If you have questions concerning this license or the applicable additional terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 
@@ -187,7 +187,7 @@ idCurve::GetCurrentFirstDerivative
 template< class type >
 ID_INLINE type idCurve<type>::GetCurrentFirstDerivative( const float time ) const
 {
-	return ( values[0] - values[0] );
+	return ( values[0] - values[0] ); //-V501
 }
 
 /*
@@ -200,7 +200,7 @@ idCurve::GetCurrentSecondDerivative
 template< class type >
 ID_INLINE type idCurve<type>::GetCurrentSecondDerivative( const float time ) const
 {
-	return ( values[0] - values[0] );
+	return ( values[0] - values[0] ); //-V501
 }
 
 /*
@@ -1380,7 +1380,7 @@ ID_INLINE void idCurve_NaturalCubicSpline<type>::SetupFree() const
 	
 	beta[0] = 1.0f;
 	gamma[0] = 0.0f;
-	delta[0] = this->values[0] - this->values[0];
+	delta[0] = this->values[0] - this->values[0]; //-V501
 	
 	for( i = 1; i < this->values.Num() - 1; i++ )
 	{
@@ -1390,13 +1390,13 @@ ID_INLINE void idCurve_NaturalCubicSpline<type>::SetupFree() const
 		delta[i] = inv * ( alpha[i] - d0[i - 1] * delta[i - 1] );
 	}
 	beta[this->values.Num() - 1] = 1.0f;
-	delta[this->values.Num() - 1] = this->values[0] - this->values[0];
+	delta[this->values.Num() - 1] = this->values[0] - this->values[0]; //-V501
 	
 	b.AssureSize( this->values.Num() );
 	c.AssureSize( this->values.Num() );
 	d.AssureSize( this->values.Num() );
 	
-	c[this->values.Num() - 1] = this->values[0] - this->values[0];
+	c[this->values.Num() - 1] = this->values[0] - this->values[0]; //-V501
 	
 	for( i = this->values.Num() - 2; i >= 0; i-- )
 	{
@@ -1615,7 +1615,7 @@ ID_INLINE type idCurve_CatmullRomSpline<type>::GetCurrentValue( const float time
 	clampedTime = this->ClampedTime( time );
 	i = this->IndexForTime( clampedTime );
 	Basis( i - 1, clampedTime, bvals );
-	v = this->values[0] - this->values[0];
+	v = this->values[0] - this->values[0]; //-V501
 	for( j = 0; j < 4; j++ )
 	{
 		k = i + j - 2;
@@ -1640,13 +1640,13 @@ ID_INLINE type idCurve_CatmullRomSpline<type>::GetCurrentFirstDerivative( const 
 	
 	if( this->times.Num() == 1 )
 	{
-		return ( this->values[0] - this->values[0] );
+		return ( this->values[0] - this->values[0] ); //-V501
 	}
 	
 	clampedTime = this->ClampedTime( time );
 	i = this->IndexForTime( clampedTime );
 	BasisFirstDerivative( i - 1, clampedTime, bvals );
-	v = this->values[0] - this->values[0];
+	v = this->values[0] - this->values[0]; //-V501
 	for( j = 0; j < 4; j++ )
 	{
 		k = i + j - 2;
@@ -1672,13 +1672,13 @@ ID_INLINE type idCurve_CatmullRomSpline<type>::GetCurrentSecondDerivative( const
 	
 	if( this->times.Num() == 1 )
 	{
-		return ( this->values[0] - this->values[0] );
+		return ( this->values[0] - this->values[0] ); //-V501
 	}
 	
 	clampedTime = this->ClampedTime( time );
 	i = this->IndexForTime( clampedTime );
 	BasisSecondDerivative( i - 1, clampedTime, bvals );
-	v = this->values[0] - this->values[0];
+	v = this->values[0] - this->values[0]; //-V501
 	for( j = 0; j < 4; j++ )
 	{
 		k = i + j - 2;
@@ -1894,7 +1894,7 @@ ID_INLINE type idCurve_KochanekBartelsSpline<type>::GetCurrentFirstDerivative( c
 	
 	if( this->times.Num() == 1 )
 	{
-		return ( this->values[0] - this->values[0] );
+		return ( this->values[0] - this->values[0] ); //-V501
 	}
 	
 	clampedTime = this->ClampedTime( time );
@@ -1925,7 +1925,7 @@ ID_INLINE type idCurve_KochanekBartelsSpline<type>::GetCurrentSecondDerivative( 
 	
 	if( this->times.Num() == 1 )
 	{
-		return ( this->values[0] - this->values[0] );
+		return ( this->values[0] - this->values[0] ); //-V501
 	}
 	
 	clampedTime = this->ClampedTime( time );
@@ -2101,7 +2101,7 @@ ID_INLINE type idCurve_BSpline<type>::GetCurrentValue( const float time ) const
 	
 	clampedTime = this->ClampedTime( time );
 	i = this->IndexForTime( clampedTime );
-	v = this->values[0] - this->values[0];
+	v = this->values[0] - this->values[0]; //-V501
 	for( j = 0; j < order; j++ )
 	{
 		k = i + j - ( order >> 1 );
@@ -2131,7 +2131,7 @@ ID_INLINE type idCurve_BSpline<type>::GetCurrentFirstDerivative( const float tim
 	
 	clampedTime = this->ClampedTime( time );
 	i = this->IndexForTime( clampedTime );
-	v = this->values[0] - this->values[0];
+	v = this->values[0] - this->values[0]; //-V501
 	for( j = 0; j < order; j++ )
 	{
 		k = i + j - ( order >> 1 );
@@ -2161,7 +2161,7 @@ ID_INLINE type idCurve_BSpline<type>::GetCurrentSecondDerivative( const float ti
 	
 	clampedTime = this->ClampedTime( time );
 	i = this->IndexForTime( clampedTime );
-	v = this->values[0] - this->values[0];
+	v = this->values[0] - this->values[0]; //-V501
 	for( j = 0; j < order; j++ )
 	{
 		k = i + j - ( order >> 1 );
@@ -2296,7 +2296,7 @@ ID_INLINE type idCurve_UniformCubicBSpline<type>::GetCurrentValue( const float t
 	clampedTime = this->ClampedTime( time );
 	i = this->IndexForTime( clampedTime );
 	Basis( i - 1, clampedTime, bvals );
-	v = this->values[0] - this->values[0];
+	v = this->values[0] - this->values[0]; //-V501
 	for( j = 0; j < 4; j++ )
 	{
 		k = i + j - 2;
@@ -2321,13 +2321,13 @@ ID_INLINE type idCurve_UniformCubicBSpline<type>::GetCurrentFirstDerivative( con
 	
 	if( this->times.Num() == 1 )
 	{
-		return ( this->values[0] - this->values[0] );
+		return ( this->values[0] - this->values[0] ); //-V501
 	}
 	
 	clampedTime = this->ClampedTime( time );
 	i = this->IndexForTime( clampedTime );
 	BasisFirstDerivative( i - 1, clampedTime, bvals );
-	v = this->values[0] - this->values[0];
+	v = this->values[0] - this->values[0]; //-V501
 	for( j = 0; j < 4; j++ )
 	{
 		k = i + j - 2;
@@ -2353,13 +2353,13 @@ ID_INLINE type idCurve_UniformCubicBSpline<type>::GetCurrentSecondDerivative( co
 	
 	if( this->times.Num() == 1 )
 	{
-		return ( this->values[0] - this->values[0] );
+		return ( this->values[0] - this->values[0] ); //-V501
 	}
 	
 	clampedTime = this->ClampedTime( time );
 	i = this->IndexForTime( clampedTime );
 	BasisSecondDerivative( i - 1, clampedTime, bvals );
-	v = this->values[0] - this->values[0];
+	v = this->values[0] - this->values[0]; //-V501
 	for( j = 0; j < 4; j++ )
 	{
 		k = i + j - 2;
@@ -2479,7 +2479,7 @@ ID_INLINE type idCurve_NonUniformBSpline<type>::GetCurrentValue( const float tim
 	clampedTime = this->ClampedTime( time );
 	i = this->IndexForTime( clampedTime );
 	Basis( i - 1, this->order, clampedTime, bvals );
-	v = this->values[0] - this->values[0];
+	v = this->values[0] - this->values[0]; //-V501
 	for( j = 0; j < this->order; j++ )
 	{
 		k = i + j - ( this->order >> 1 );
@@ -2505,13 +2505,13 @@ ID_INLINE type idCurve_NonUniformBSpline<type>::GetCurrentFirstDerivative( const
 	
 	if( this->times.Num() == 1 )
 	{
-		return ( this->values[0] - this->values[0] );
+		return ( this->values[0] - this->values[0] ); //-V501
 	}
 	
 	clampedTime = this->ClampedTime( time );
 	i = this->IndexForTime( clampedTime );
 	BasisFirstDerivative( i - 1, this->order, clampedTime, bvals );
-	v = this->values[0] - this->values[0];
+	v = this->values[0] - this->values[0]; //-V501
 	for( j = 0; j < this->order; j++ )
 	{
 		k = i + j - ( this->order >> 1 );
@@ -2537,13 +2537,13 @@ ID_INLINE type idCurve_NonUniformBSpline<type>::GetCurrentSecondDerivative( cons
 	
 	if( this->times.Num() == 1 )
 	{
-		return ( this->values[0] - this->values[0] );
+		return ( this->values[0] - this->values[0] ); //-V501
 	}
 	
 	clampedTime = this->ClampedTime( time );
 	i = this->IndexForTime( clampedTime );
 	BasisSecondDerivative( i - 1, this->order, clampedTime, bvals );
-	v = this->values[0] - this->values[0];
+	v = this->values[0] - this->values[0]; //-V501
 	for( j = 0; j < this->order; j++ )
 	{
 		k = i + j - ( this->order >> 1 );
@@ -2740,7 +2740,7 @@ ID_INLINE type idCurve_NURBS<type>::GetCurrentValue( const float time ) const
 	clampedTime = this->ClampedTime( time );
 	i = this->IndexForTime( clampedTime );
 	this->Basis( i - 1, this->order, clampedTime, bvals );
-	v = this->values[0] - this->values[0];
+	v = this->values[0] - this->values[0]; //-V501
 	w = 0.0f;
 	for( j = 0; j < this->order; j++ )
 	{
@@ -2778,7 +2778,7 @@ ID_INLINE type idCurve_NURBS<type>::GetCurrentFirstDerivative( const float time 
 	i = this->IndexForTime( clampedTime );
 	this->Basis( i - 1, this->order, clampedTime, bvals );
 	this->BasisFirstDerivative( i - 1, this->order, clampedTime, d1vals );
-	vb = vd1 = this->values[0] - this->values[0];
+	vb = vd1 = this->values[0] - this->values[0]; //-V501
 	wb = wd1 = 0.0f;
 	for( j = 0; j < this->order; j++ )
 	{
@@ -2823,7 +2823,7 @@ ID_INLINE type idCurve_NURBS<type>::GetCurrentSecondDerivative( const float time
 	this->Basis( i - 1, this->order, clampedTime, bvals );
 	this->BasisFirstDerivative( i - 1, this->order, clampedTime, d1vals );
 	this->BasisSecondDerivative( i - 1, this->order, clampedTime, d2vals );
-	vb = vd1 = vd2 = this->values[0] - this->values[0];
+	vb = vd1 = vd2 = this->values[0] - this->values[0]; //-V501
 	wb = wd1 = wd2 = 0.0f;
 	for( j = 0; j < this->order; j++ )
 	{

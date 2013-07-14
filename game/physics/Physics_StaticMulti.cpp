@@ -204,8 +204,8 @@ void idPhysics_StaticMulti::SetClipModel( idClipModel* model, float density, int
 			break;
 		}
 	}
-	current.SetNum( i + 1, false );
-	clipModels.SetNum( i + 1, false );
+	current.SetNum( i + 1 );
+	clipModels.SetNum( i + 1 );
 }
 
 /*

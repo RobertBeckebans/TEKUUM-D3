@@ -128,10 +128,10 @@ void CWaitDlg::AllowCancel( bool enable )
 
 bool CWaitDlg::CancelPressed()
 {
-#if _MSC_VER >= 1300 && _MFC_VER >= 0x0A00
-	MSG* msg = AfxGetCurrentMessage();
+#if _MSC_VER >= 1300
+	MSG* msg = AfxGetCurrentMessage();			// TODO Robert fix me!!
 #else
-	MSG* msg = &AfxGetThread()->m_msgCur;
+	MSG* msg = &m_msgCur;
 #endif
 	
 	while( ::PeekMessage( msg, NULL, NULL, NULL, PM_NOREMOVE ) )

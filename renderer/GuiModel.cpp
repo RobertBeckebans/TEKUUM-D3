@@ -1,36 +1,39 @@
 /*
 ===========================================================================
 
-Doom 3 GPL Source Code
-Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Doom 3 BFG Edition GPL Source Code
+Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
 
-This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
+This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
-Doom 3 Source Code is free software: you can redistribute it and/or modify
+Doom 3 BFG Edition Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Doom 3 Source Code is distributed in the hope that it will be useful,
+Doom 3 BFG Edition Source Code is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Doom 3 Source Code.  If not, see <http://www.gnu.org/licenses/>.
+along with Doom 3 BFG Edition Source Code.  If not, see <http://www.gnu.org/licenses/>.
 
-In addition, the Doom 3 Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 Source Code.  If not, please request a copy in writing from id Software at the address below.
+In addition, the Doom 3 BFG Edition Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 BFG Edition Source Code.  If not, please request a copy in writing from id Software at the address below.
 
 If you have questions concerning this license or the applicable additional terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 
 ===========================================================================
 */
 
-#include "precompiled.h"
 #pragma hdrstop
+#include "precompiled.h"
 
 #include "tr_local.h"
 
+const float idGuiModel::STEREO_DEPTH_NEAR = 0.0f;
+const float idGuiModel::STEREO_DEPTH_MID  = 0.5f;
+const float idGuiModel::STEREO_DEPTH_FAR  = 1.0f;
 
 /*
 ================
@@ -39,8 +42,11 @@ idGuiModel::idGuiModel
 */
 idGuiModel::idGuiModel()
 {
-	indexes.SetGranularity( 1000 );
-	verts.SetGranularity( 1000 );
+	// identity color for drawsurf register evaluation
+	for( int i = 0; i < MAX_ENTITY_SHADER_PARMS; i++ )
+	{
+		shaderParms[i] = 1.0f;
+	}
 }
 
 /*
@@ -52,9 +58,7 @@ Begins collecting draw commands into surfaces
 */
 void idGuiModel::Clear()
 {
-	surfaces.SetNum( 0, false );
-	indexes.SetNum( 0, false );
-	verts.SetNum( 0, false );
+	surfaces.SetNum( 0 );
 	AdvanceSurf();
 }
 
@@ -65,47 +69,6 @@ idGuiModel::WriteToDemo
 */
 void idGuiModel::WriteToDemo( idDemoFile* demo )
 {
-	int		i, j;
-	
-	i = verts.Num();
-	demo->WriteInt( i );
-	for( j = 0; j < i; j++ )
-	{
-		demo->WriteVec3( verts[j].xyz );
-		demo->WriteVec2( verts[j].st );
-		demo->WriteVec3( verts[j].normal );
-		demo->WriteVec3( verts[j].tangents[0] );
-		demo->WriteVec3( verts[j].tangents[1] );
-		demo->WriteUnsignedChar( verts[j].color[0] );
-		demo->WriteUnsignedChar( verts[j].color[1] );
-		demo->WriteUnsignedChar( verts[j].color[2] );
-		demo->WriteUnsignedChar( verts[j].color[3] );
-	}
-	
-	i = indexes.Num();
-	demo->WriteInt( i );
-	for( j = 0; j < i; j++ )
-	{
-		demo->WriteInt( indexes[j] );
-	}
-	
-	i = surfaces.Num();
-	demo->WriteInt( i );
-	for( j = 0 ; j < i ; j++ )
-	{
-		guiModelSurface_t*	surf = &surfaces[j];
-		
-		demo->WriteInt( ( int& )surf->material );
-		demo->WriteFloat( surf->color[0] );
-		demo->WriteFloat( surf->color[1] );
-		demo->WriteFloat( surf->color[2] );
-		demo->WriteFloat( surf->color[3] );
-		demo->WriteInt( surf->firstVert );
-		demo->WriteInt( surf->numVerts );
-		demo->WriteInt( surf->firstIndex );
-		demo->WriteInt( surf->numIndexes );
-		demo->WriteHashString( surf->material->GetName() );
-	}
 }
 
 /*
@@ -115,102 +78,130 @@ idGuiModel::ReadFromDemo
 */
 void idGuiModel::ReadFromDemo( idDemoFile* demo )
 {
-	int		i, j;
-	
-	i = verts.Num();
-	demo->ReadInt( i );
-	verts.SetNum( i, false );
-	for( j = 0; j < i; j++ )
-	{
-		demo->ReadVec3( verts[j].xyz );
-		demo->ReadVec2( verts[j].st );
-		demo->ReadVec3( verts[j].normal );
-		demo->ReadVec3( verts[j].tangents[0] );
-		demo->ReadVec3( verts[j].tangents[1] );
-		demo->ReadUnsignedChar( verts[j].color[0] );
-		demo->ReadUnsignedChar( verts[j].color[1] );
-		demo->ReadUnsignedChar( verts[j].color[2] );
-		demo->ReadUnsignedChar( verts[j].color[3] );
-	}
-	
-	i = indexes.Num();
-	demo->ReadInt( i );
-	indexes.SetNum( i, false );
-	for( j = 0; j < i; j++ )
-	{
-		int index;
-		demo->ReadInt( index );
-		indexes[j] = index;
-	}
-	
-	i = surfaces.Num();
-	demo->ReadInt( i );
-	surfaces.SetNum( i, false );
-	for( j = 0 ; j < i ; j++ )
-	{
-		guiModelSurface_t*	surf = &surfaces[j];
-		
-		demo->ReadInt( ( int& )surf->material );
-		demo->ReadFloat( surf->color[0] );
-		demo->ReadFloat( surf->color[1] );
-		demo->ReadFloat( surf->color[2] );
-		demo->ReadFloat( surf->color[3] );
-		demo->ReadInt( surf->firstVert );
-		demo->ReadInt( surf->numVerts );
-		demo->ReadInt( surf->firstIndex );
-		demo->ReadInt( surf->numIndexes );
-		surf->material = declManager->FindMaterial( demo->ReadHashString() );
-	}
 }
 
 /*
 ================
-EmitSurface
+idGuiModel::BeginFrame
 ================
 */
-void idGuiModel::EmitSurface( guiModelSurface_t* surf, float modelMatrix[16], float modelViewMatrix[16], bool depthHack )
+void idGuiModel::BeginFrame()
 {
-	srfTriangles_t*	tri;
-	
-	if( surf->numVerts == 0 )
-	{
-		return;		// nothing in the surface
-	}
-	
-	// copy verts and indexes
-	tri = ( srfTriangles_t* )R_ClearedFrameAlloc( sizeof( *tri ) );
-	
-	tri->numIndexes = surf->numIndexes;
-	tri->numVerts = surf->numVerts;
-	tri->indexes = ( glIndex_t* )R_FrameAlloc( tri->numIndexes * sizeof( tri->indexes[0] ) );
-	memcpy( tri->indexes, &indexes[surf->firstIndex], tri->numIndexes * sizeof( tri->indexes[0] ) );
-	
-	// we might be able to avoid copying these and just let them reference the list vars
-	// but some things, like deforms and recursive
-	// guis, need to access the verts in cpu space, not just through the vertex range
-	tri->verts = ( idDrawVert* )R_FrameAlloc( tri->numVerts * sizeof( tri->verts[0] ) );
-	memcpy( tri->verts, &verts[surf->firstVert], tri->numVerts * sizeof( tri->verts[0] ) );
-	
-	// move the verts to the vertex cache
-	tri->ambientCache = vertexCache.AllocFrameTemp( tri->verts, tri->numVerts * sizeof( tri->verts[0] ) );
-	
-	// if we are out of vertex cache, don't create the surface
-	if( !tri->ambientCache )
-	{
-		return;
-	}
-	
-	renderEntity_t renderEntity;
-	memset( &renderEntity, 0, sizeof( renderEntity ) );
-	memcpy( renderEntity.shaderParms, surf->color, sizeof( surf->color ) );
-	
-	viewEntity_t* guiSpace = ( viewEntity_t* )R_ClearedFrameAlloc( sizeof( *guiSpace ) );
+	vertexBlock = vertexCache.AllocVertex( NULL, ALIGN( MAX_VERTS * sizeof( idDrawVert ), VERTEX_CACHE_ALIGN ) );
+	indexBlock = vertexCache.AllocIndex( NULL, ALIGN( MAX_INDEXES * sizeof( triIndex_t ), INDEX_CACHE_ALIGN ) );
+	vertexPointer = ( idDrawVert* )vertexCache.MappedVertexBuffer( vertexBlock );
+	indexPointer = ( triIndex_t* )vertexCache.MappedIndexBuffer( indexBlock );
+	numVerts = 0;
+	numIndexes = 0;
+	Clear();
+}
+
+idCVar	stereoRender_defaultGuiDepth( "stereoRender_defaultGuiDepth", "0", CVAR_RENDERER, "Fraction of separation when not specified" );
+/*
+================
+EmitSurfaces
+
+For full screen GUIs, we can add in per-surface stereoscopic depth effects
+================
+*/
+void idGuiModel::EmitSurfaces( float modelMatrix[16], float modelViewMatrix[16],
+							   bool depthHack, bool allowFullScreenStereoDepth, bool linkAsEntity )
+{
+
+	viewEntity_t* guiSpace = ( viewEntity_t* )R_ClearedFrameAlloc( sizeof( *guiSpace ), FRAME_ALLOC_VIEW_ENTITY );
 	memcpy( guiSpace->modelMatrix, modelMatrix, sizeof( guiSpace->modelMatrix ) );
 	memcpy( guiSpace->modelViewMatrix, modelViewMatrix, sizeof( guiSpace->modelViewMatrix ) );
 	guiSpace->weaponDepthHack = depthHack;
+	guiSpace->isGuiSurface = true;
 	
-	// add the surface, which might recursively create another gui
-	R_AddDrawSurf( tri, guiSpace, &renderEntity, surf->material, tr.viewDef->scissor );
+	// If this is an in-game gui, we need to be able to find the matrix again for head mounted
+	// display bypass matrix fixup.
+	if( linkAsEntity )
+	{
+		guiSpace->next = tr.viewDef->viewEntitys;
+		tr.viewDef->viewEntitys = guiSpace;
+	}
+	
+	//---------------------------
+	// make a tech5 renderMatrix
+	//---------------------------
+	idRenderMatrix viewMat;
+	idRenderMatrix::Transpose( *( idRenderMatrix* )modelViewMatrix, viewMat );
+	idRenderMatrix::Multiply( tr.viewDef->projectionRenderMatrix, viewMat, guiSpace->mvp );
+	if( depthHack )
+	{
+		idRenderMatrix::ApplyDepthHack( guiSpace->mvp );
+	}
+	
+	// to allow 3D-TV effects in the menu system, we define surface flags to set
+	// depth fractions between 0=screen and 1=infinity, which directly modulate the
+	// screenSeparation parameter for an X offset.
+	// The value is stored in the drawSurf sort value, which adjusts the matrix in the
+	// backend.
+	float defaultStereoDepth = stereoRender_defaultGuiDepth.GetFloat();	// default to at-screen
+	
+	// add the surfaces to this view
+	for( int i = 0; i < surfaces.Num(); i++ )
+	{
+		const guiModelSurface_t& guiSurf = surfaces[i];
+		if( guiSurf.numIndexes == 0 )
+		{
+			continue;
+		}
+		
+		const idMaterial* shader = guiSurf.material;
+		drawSurf_t* drawSurf = ( drawSurf_t* )R_FrameAlloc( sizeof( *drawSurf ), FRAME_ALLOC_DRAW_SURFACE );
+		
+		drawSurf->numIndexes = guiSurf.numIndexes;
+		drawSurf->ambientCache = vertexBlock;
+		// build a vertCacheHandle_t that points inside the allocated block
+		drawSurf->indexCache = indexBlock + ( ( int64 )( guiSurf.firstIndex * sizeof( triIndex_t ) ) << VERTCACHE_OFFSET_SHIFT );
+		drawSurf->shadowCache = 0;
+		drawSurf->jointCache = 0;
+		drawSurf->frontEndGeo = NULL;
+		drawSurf->space = guiSpace;
+		drawSurf->material = shader;
+		drawSurf->extraGLState = guiSurf.glState;
+		drawSurf->scissorRect = tr.viewDef->scissor;
+		drawSurf->sort = shader->GetSort();
+		drawSurf->renderZFail = 0;
+		// process the shader expressions for conditionals / color / texcoords
+		const float*	constRegs = shader->ConstantRegisters();
+		if( constRegs )
+		{
+			// shader only uses constant values
+			drawSurf->shaderRegisters = constRegs;
+		}
+		else
+		{
+			float* regs = ( float* )R_FrameAlloc( shader->GetNumRegisters() * sizeof( float ), FRAME_ALLOC_SHADER_REGISTER );
+			drawSurf->shaderRegisters = regs;
+			shader->EvaluateRegisters( regs, shaderParms, tr.viewDef->renderView.shaderParms, tr.viewDef->renderView.time[1] * 0.001f, NULL );
+		}
+		R_LinkDrawSurfToView( drawSurf, tr.viewDef );
+		if( allowFullScreenStereoDepth )
+		{
+			// override sort with the stereoDepth
+			//drawSurf->sort = stereoDepth;
+			
+			switch( guiSurf.stereoType )
+			{
+				case STEREO_DEPTH_TYPE_NEAR:
+					drawSurf->sort = STEREO_DEPTH_NEAR;
+					break;
+				case STEREO_DEPTH_TYPE_MID:
+					drawSurf->sort = STEREO_DEPTH_MID;
+					break;
+				case STEREO_DEPTH_TYPE_FAR:
+					drawSurf->sort = STEREO_DEPTH_FAR;
+					break;
+				case STEREO_DEPTH_TYPE_NONE:
+				default:
+					drawSurf->sort = defaultStereoDepth;
+					break;
+			}
+		}
+	}
 }
 
 /*
@@ -222,14 +213,16 @@ void idGuiModel::EmitToCurrentView( float modelMatrix[16], bool depthHack )
 {
 	float	modelViewMatrix[16];
 	
-	myGlMultMatrix( modelMatrix, tr.viewDef->worldSpace.modelViewMatrix,
-					modelViewMatrix );
-					
-	for( int i = 0 ; i < surfaces.Num() ; i++ )
-	{
-		EmitSurface( &surfaces[i], modelMatrix, modelViewMatrix, depthHack );
-	}
+	R_MatrixMultiply( modelMatrix, tr.viewDef->worldSpace.modelViewMatrix, modelViewMatrix );
+	
+	EmitSurfaces( modelMatrix, modelViewMatrix, depthHack, false /* stereoDepthSort */, true /* link as entity */ );
 }
+
+// DG: move function declaration here (=> out of EmitFullScreen() method) because it confused clang
+// (and possibly other compilers that just didn't complain and silently made it a float variable
+// initialized to something, probably 0.0f)
+float GetScreenSeparationForGuis();
+// DG end
 
 /*
 ================
@@ -240,81 +233,94 @@ Creates a view that covers the screen and emit the surfaces
 */
 void idGuiModel::EmitFullScreen()
 {
-	viewDef_t*	viewDef;
-	
-	if( surfaces[0].numVerts == 0 )
+
+	if( surfaces[0].numIndexes == 0 )
 	{
 		return;
 	}
 	
-	viewDef = ( viewDef_t* )R_ClearedFrameAlloc( sizeof( *viewDef ) );
+	SCOPED_PROFILE_EVENT( "Gui::EmitFullScreen" );
 	
-	// for gui editor
-	if( !tr.viewDef || !tr.viewDef->isEditor )
+	viewDef_t* viewDef = ( viewDef_t* )R_ClearedFrameAlloc( sizeof( *viewDef ), FRAME_ALLOC_VIEW_DEF );
+	viewDef->is2Dgui = true;
+	tr.GetCroppedViewport( &viewDef->viewport );
+	
+	bool stereoEnabled = ( renderSystem->GetStereo3DMode() != STEREO3D_OFF );
+	if( stereoEnabled )
 	{
-		viewDef->renderView.x = 0;
-		viewDef->renderView.y = 0;
-		viewDef->renderView.width = SCREEN_WIDTH;
-		viewDef->renderView.height = SCREEN_HEIGHT;
+		const float screenSeparation = GetScreenSeparationForGuis();
 		
-		tr.RenderViewToViewport( &viewDef->renderView, &viewDef->viewport );
+		// this will be negated on the alternate eyes, both rendered each frame
+		viewDef->renderView.stereoScreenSeparation = screenSeparation;
 		
-		viewDef->scissor.x1 = 0;
-		viewDef->scissor.y1 = 0;
-		viewDef->scissor.x2 = viewDef->viewport.x2 - viewDef->viewport.x1;
-		viewDef->scissor.y2 = viewDef->viewport.y2 - viewDef->viewport.y1;
-	}
-	else
-	{
-		viewDef->renderView.x = tr.viewDef->renderView.x;
-		viewDef->renderView.y = tr.viewDef->renderView.y;
-		viewDef->renderView.width = tr.viewDef->renderView.width;
-		viewDef->renderView.height = tr.viewDef->renderView.height;
-		
-		viewDef->viewport.x1 = tr.viewDef->renderView.x;
-		viewDef->viewport.x2 = tr.viewDef->renderView.x + tr.viewDef->renderView.width;
-		viewDef->viewport.y1 = tr.viewDef->renderView.y;
-		viewDef->viewport.y2 = tr.viewDef->renderView.y + tr.viewDef->renderView.height;
-		
-		viewDef->scissor.x1 = tr.viewDef->scissor.x1;
-		viewDef->scissor.y1 = tr.viewDef->scissor.y1;
-		viewDef->scissor.x2 = tr.viewDef->scissor.x2;
-		viewDef->scissor.y2 = tr.viewDef->scissor.y2;
+		extern idCVar stereoRender_swapEyes;
+		viewDef->renderView.viewEyeBuffer = 0;	// render to both buffers
+		if( stereoRender_swapEyes.GetBool() )
+		{
+			viewDef->renderView.stereoScreenSeparation = -screenSeparation;
+		}
 	}
 	
-	viewDef->floatTime = tr.frameShaderTime;
+	viewDef->scissor.x1 = 0;
+	viewDef->scissor.y1 = 0;
+	viewDef->scissor.x2 = viewDef->viewport.x2 - viewDef->viewport.x1;
+	viewDef->scissor.y2 = viewDef->viewport.y2 - viewDef->viewport.y1;
 	
-	// qglOrtho( 0, 640, 480, 0, 0, 1 );		// always assume 640x480 virtual coordinates
-	viewDef->projectionMatrix[0] = 2.0f / 640.0f;
-	viewDef->projectionMatrix[5] = -2.0f / 480.0f;
-	viewDef->projectionMatrix[10] = -2.0f / 1.0f;
-	viewDef->projectionMatrix[12] = -1.0f;
-	viewDef->projectionMatrix[13] = 1.0f;
-	viewDef->projectionMatrix[14] = -1.0f;
-	viewDef->projectionMatrix[15] = 1.0f;
+	viewDef->projectionMatrix[0 * 4 + 0] = 2.0f / SCREEN_WIDTH;
+	viewDef->projectionMatrix[0 * 4 + 1] = 0.0f;
+	viewDef->projectionMatrix[0 * 4 + 2] = 0.0f;
+	viewDef->projectionMatrix[0 * 4 + 3] = 0.0f;
 	
-	viewDef->worldSpace.modelViewMatrix[0] = 1.0f;
-	viewDef->worldSpace.modelViewMatrix[5] = 1.0f;
-	viewDef->worldSpace.modelViewMatrix[10] = 1.0f;
-	viewDef->worldSpace.modelViewMatrix[15] = 1.0f;
+	viewDef->projectionMatrix[1 * 4 + 0] = 0.0f;
+	viewDef->projectionMatrix[1 * 4 + 1] = -2.0f / SCREEN_HEIGHT;
+	viewDef->projectionMatrix[1 * 4 + 2] = 0.0f;
+	viewDef->projectionMatrix[1 * 4 + 3] = 0.0f;
+	
+	viewDef->projectionMatrix[2 * 4 + 0] = 0.0f;
+	viewDef->projectionMatrix[2 * 4 + 1] = 0.0f;
+	viewDef->projectionMatrix[2 * 4 + 2] = -2.0f;
+	viewDef->projectionMatrix[2 * 4 + 3] = 0.0f;
+	
+	viewDef->projectionMatrix[3 * 4 + 0] = -1.0f;
+	viewDef->projectionMatrix[3 * 4 + 1] = 1.0f;
+	viewDef->projectionMatrix[3 * 4 + 2] = -1.0f;
+	viewDef->projectionMatrix[3 * 4 + 3] = 1.0f;
+	
+	// make a tech5 renderMatrix for faster culling
+	idRenderMatrix::Transpose( *( idRenderMatrix* )viewDef->projectionMatrix, viewDef->projectionRenderMatrix );
+	
+	viewDef->worldSpace.modelMatrix[0 * 4 + 0] = 1.0f;
+	viewDef->worldSpace.modelMatrix[1 * 4 + 1] = 1.0f;
+	viewDef->worldSpace.modelMatrix[2 * 4 + 2] = 1.0f;
+	viewDef->worldSpace.modelMatrix[3 * 4 + 3] = 1.0f;
+	
+	viewDef->worldSpace.modelViewMatrix[0 * 4 + 0] = 1.0f;
+	viewDef->worldSpace.modelViewMatrix[1 * 4 + 1] = 1.0f;
+	viewDef->worldSpace.modelViewMatrix[2 * 4 + 2] = 1.0f;
+	viewDef->worldSpace.modelViewMatrix[3 * 4 + 3] = 1.0f;
 	
 	viewDef->maxDrawSurfs = surfaces.Num();
-	viewDef->drawSurfs = ( drawSurf_t** )R_FrameAlloc( viewDef->maxDrawSurfs * sizeof( viewDef->drawSurfs[0] ) );
+	viewDef->drawSurfs = ( drawSurf_t** )R_FrameAlloc( viewDef->maxDrawSurfs * sizeof( viewDef->drawSurfs[0] ), FRAME_ALLOC_DRAW_SURFACE_POINTER );
 	viewDef->numDrawSurfs = 0;
 	
-	viewDef_t*	oldViewDef = tr.viewDef;
+#if 1
+	// RB: give renderView the current time to calculate 2D shader effects
+	int shaderTime = tr.frameShaderTime * 1000; //Sys_Milliseconds();
+	viewDef->renderView.time[0] = shaderTime;
+	viewDef->renderView.time[1] = shaderTime;
+	// RB end
+#endif
+	
+	viewDef_t* oldViewDef = tr.viewDef;
 	tr.viewDef = viewDef;
 	
-	// add the surfaces to this view
-	for( int i = 0 ; i < surfaces.Num() ; i++ )
-	{
-		EmitSurface( &surfaces[i], viewDef->worldSpace.modelMatrix, viewDef->worldSpace.modelViewMatrix, false );
-	}
-	
+	EmitSurfaces( viewDef->worldSpace.modelMatrix, viewDef->worldSpace.modelViewMatrix,
+				  false /* depthHack */ , stereoEnabled /* stereoDepthSort */, false /* link as entity */ );
+				  
 	tr.viewDef = oldViewDef;
 	
 	// add the command to draw this view
-	R_AddDrawViewCmd( viewDef );
+	R_AddDrawViewCmd( viewDef, true );
 }
 
 /*
@@ -328,24 +334,20 @@ void idGuiModel::AdvanceSurf()
 	
 	if( surfaces.Num() )
 	{
-		s.color[0] = surf->color[0];
-		s.color[1] = surf->color[1];
-		s.color[2] = surf->color[2];
-		s.color[3] = surf->color[3];
 		s.material = surf->material;
+		s.glState = surf->glState;
 	}
 	else
 	{
-		s.color[0] = 1;
-		s.color[1] = 1;
-		s.color[2] = 1;
-		s.color[3] = 1;
 		s.material = tr.defaultMaterial;
+		s.glState = 0;
 	}
+	
+	// advance indexes so the pointer to each surface will be 16 byte aligned
+	numIndexes = ALIGN( numIndexes, 8 );
+	
 	s.numIndexes = 0;
-	s.firstIndex = indexes.Num();
-	s.numVerts = 0;
-	s.firstVert = verts.Num();
+	s.firstIndex = numIndexes;
 	
 	surfaces.Append( s );
 	surf = &surfaces[ surfaces.Num() - 1 ];
@@ -353,366 +355,73 @@ void idGuiModel::AdvanceSurf()
 
 /*
 =============
-SetColor
+AllocTris
 =============
 */
-void idGuiModel::SetColor( float r, float g, float b, float a )
+idDrawVert* idGuiModel::AllocTris( int vertCount, const triIndex_t* tempIndexes, int indexCount, const idMaterial* material, const uint64 glState, const stereoDepthType_t stereoType )
 {
-	if( !glConfig.isInitialized )
+	if( material == NULL )
 	{
-		return;
+		return NULL;
 	}
-	if( r == surf->color[0] && g == surf->color[1]
-			&& b == surf->color[2] && a == surf->color[3] )
+	if( numIndexes + indexCount > MAX_INDEXES )
 	{
-		return;	// no change
+		static int warningFrame = 0;
+		if( warningFrame != tr.frameCount )
+		{
+			warningFrame = tr.frameCount;
+			idLib::Warning( "idGuiModel::AllocTris: MAX_INDEXES exceeded" );
+		}
+		return NULL;
 	}
-	
-	if( surf->numVerts )
+	if( numVerts + vertCount > MAX_VERTS )
 	{
-		AdvanceSurf();
-	}
-	
-	// change the parms
-	surf->color[0] = r;
-	surf->color[1] = g;
-	surf->color[2] = b;
-	surf->color[3] = a;
-}
-
-/*
-=============
-DrawStretchPic
-=============
-*/
-void idGuiModel::DrawStretchPic( const idDrawVert* dverts, const glIndex_t* dindexes, int vertCount, int indexCount, const idMaterial* hShader,
-								 bool clip, float min_x, float min_y, float max_x, float max_y )
-{
-	if( !glConfig.isInitialized )
-	{
-		return;
-	}
-	if( !( dverts && dindexes && vertCount && indexCount && hShader ) )
-	{
-		return;
+		static int warningFrame = 0;
+		if( warningFrame != tr.frameCount )
+		{
+			warningFrame = tr.frameCount;
+			idLib::Warning( "idGuiModel::AllocTris: MAX_VERTS exceeded" );
+		}
+		return NULL;
 	}
 	
-	// break the current surface if we are changing to a new material
-	if( hShader != surf->material )
+	// break the current surface if we are changing to a new material or we can't
+	// fit the data into our allocated block
+	if( material != surf->material || glState != surf->glState || stereoType != surf->stereoType )
 	{
-		if( surf->numVerts )
+		if( surf->numIndexes )
 		{
 			AdvanceSurf();
 		}
-		const_cast<idMaterial*>( hShader )->EnsureNotPurged();	// in case it was a gui item started before a level change
-		surf->material = hShader;
+		surf->material = material;
+		surf->glState = glState;
+		surf->stereoType = stereoType;
 	}
 	
-	// add the verts and indexes to the current surface
+	int startVert = numVerts;
+	int startIndex = numIndexes;
 	
-	if( clip )
+	numVerts += vertCount;
+	numIndexes += indexCount;
+	
+	surf->numIndexes += indexCount;
+	
+	if( ( startIndex & 1 ) || ( indexCount & 1 ) )
 	{
-		int i, j;
-		
-		// FIXME:	this is grim stuff, and should be rewritten if we have any significant
-		//			number of guis asking for clipping
-		idFixedWinding w;
-		for( i = 0; i < indexCount; i += 3 )
+		// slow for write combined memory!
+		// this should be very rare, since quads are always an even index count
+		for( int i = 0; i < indexCount; i++ )
 		{
-			w.Clear();
-			w.AddPoint( idVec5( dverts[dindexes[i]].xyz.x, dverts[dindexes[i]].xyz.y, dverts[dindexes[i]].xyz.z, dverts[dindexes[i]].st.x, dverts[dindexes[i]].st.y ) );
-			w.AddPoint( idVec5( dverts[dindexes[i + 1]].xyz.x, dverts[dindexes[i + 1]].xyz.y, dverts[dindexes[i + 1]].xyz.z, dverts[dindexes[i + 1]].st.x, dverts[dindexes[i + 1]].st.y ) );
-			w.AddPoint( idVec5( dverts[dindexes[i + 2]].xyz.x, dverts[dindexes[i + 2]].xyz.y, dverts[dindexes[i + 2]].xyz.z, dverts[dindexes[i + 2]].st.x, dverts[dindexes[i + 2]].st.y ) );
-			
-			for( j = 0; j < 3; j++ )
-			{
-				if( w[j].x < min_x || w[j].x > max_x ||
-						w[j].y < min_y || w[j].y > max_y )
-				{
-					break;
-				}
-			}
-			if( j < 3 )
-			{
-				idPlane p;
-				p.Normal().y = p.Normal().z = 0.0f;
-				p.Normal().x = 1.0f;
-				p.SetDist( min_x );
-				w.ClipInPlace( p );
-				p.Normal().y = p.Normal().z = 0.0f;
-				p.Normal().x = -1.0f;
-				p.SetDist( -max_x );
-				w.ClipInPlace( p );
-				p.Normal().x = p.Normal().z = 0.0f;
-				p.Normal().y = 1.0f;
-				p.SetDist( min_y );
-				w.ClipInPlace( p );
-				p.Normal().x = p.Normal().z = 0.0f;
-				p.Normal().y = -1.0f;
-				p.SetDist( -max_y );
-				w.ClipInPlace( p );
-			}
-			
-			int	numVerts = verts.Num();
-			verts.SetNum( numVerts + w.GetNumPoints(), false );
-			for( j = 0 ; j < w.GetNumPoints() ; j++ )
-			{
-				idDrawVert* dv = &verts[numVerts + j];
-				
-				dv->xyz.x = w[j].x;
-				dv->xyz.y = w[j].y;
-				dv->xyz.z = w[j].z;
-				dv->st.x = w[j].s;
-				dv->st.y = w[j].t;
-				dv->normal.Set( 0, 0, 1 );
-				dv->tangents[0].Set( 1, 0, 0 );
-				dv->tangents[1].Set( 0, 1, 0 );
-			}
-			surf->numVerts += w.GetNumPoints();
-			
-			for( j = 2; j < w.GetNumPoints(); j++ )
-			{
-				indexes.Append( numVerts - surf->firstVert );
-				indexes.Append( numVerts + j - 1 - surf->firstVert );
-				indexes.Append( numVerts + j - surf->firstVert );
-				surf->numIndexes += 3;
-			}
+			indexPointer[startIndex + i] = startVert + tempIndexes[i];
 		}
-		
 	}
 	else
 	{
-	
-		int numVerts = verts.Num();
-		int numIndexes = indexes.Num();
-		
-		verts.AssureSize( numVerts + vertCount );
-		indexes.AssureSize( numIndexes + indexCount );
-		
-		surf->numVerts += vertCount;
-		surf->numIndexes += indexCount;
-		
-		for( int i = 0; i < indexCount; i++ )
+		for( int i = 0; i < indexCount; i += 2 )
 		{
-			indexes[numIndexes + i] = numVerts + dindexes[i] - surf->firstVert;
+			WriteIndexPair( indexPointer + startIndex + i, startVert + tempIndexes[i], startVert + tempIndexes[i + 1] );
 		}
-		
-		memcpy( &verts[numVerts], dverts, vertCount * sizeof( verts[0] ) );
 	}
+	
+	return vertexPointer + startVert;
 }
-
-/*
-=============
-DrawStretchPic
-
-x/y/w/h are in the 0,0 to 640,480 range
-=============
-*/
-void idGuiModel::DrawStretchPic( float x, float y, float w, float h, float s1, float t1, float s2, float t2, const idMaterial* hShader )
-{
-	idDrawVert verts[4];
-	glIndex_t indexes[6];
-	
-	if( !glConfig.isInitialized )
-	{
-		return;
-	}
-	if( !hShader )
-	{
-		return;
-	}
-	
-	// clip to edges, because the pic may be going into a guiShader
-	// instead of full screen
-	if( x < 0 )
-	{
-		s1 += ( s2 - s1 ) * -x / w;
-		w += x;
-		x = 0;
-	}
-	if( y < 0 )
-	{
-		t1 += ( t2 - t1 ) * -y / h;
-		h += y;
-		y = 0;
-	}
-	if( x + w > 640 )
-	{
-		s2 -= ( s2 - s1 ) * ( x + w - 640 ) / w;
-		w = 640 - x;
-	}
-	if( y + h > 480 )
-	{
-		t2 -= ( t2 - t1 ) * ( y + h - 480 ) / h;
-		h = 480 - y;
-	}
-	
-	if( w <= 0 || h <= 0 )
-	{
-		return;		// completely clipped away
-	}
-	
-	indexes[0] = 3;
-	indexes[1] = 0;
-	indexes[2] = 2;
-	indexes[3] = 2;
-	indexes[4] = 0;
-	indexes[5] = 1;
-	verts[0].xyz[0] = x;
-	verts[0].xyz[1] = y;
-	verts[0].xyz[2] = 0;
-	verts[0].st[0] = s1;
-	verts[0].st[1] = t1;
-	verts[0].normal[0] = 0;
-	verts[0].normal[1] = 0;
-	verts[0].normal[2] = 1;
-	verts[0].tangents[0][0] = 1;
-	verts[0].tangents[0][1] = 0;
-	verts[0].tangents[0][2] = 0;
-	verts[0].tangents[1][0] = 0;
-	verts[0].tangents[1][1] = 1;
-	verts[0].tangents[1][2] = 0;
-	verts[1].xyz[0] = x + w;
-	verts[1].xyz[1] = y;
-	verts[1].xyz[2] = 0;
-	verts[1].st[0] = s2;
-	verts[1].st[1] = t1;
-	verts[1].normal[0] = 0;
-	verts[1].normal[1] = 0;
-	verts[1].normal[2] = 1;
-	verts[1].tangents[0][0] = 1;
-	verts[1].tangents[0][1] = 0;
-	verts[1].tangents[0][2] = 0;
-	verts[1].tangents[1][0] = 0;
-	verts[1].tangents[1][1] = 1;
-	verts[1].tangents[1][2] = 0;
-	verts[2].xyz[0] = x + w;
-	verts[2].xyz[1] = y + h;
-	verts[2].xyz[2] = 0;
-	verts[2].st[0] = s2;
-	verts[2].st[1] = t2;
-	verts[2].normal[0] = 0;
-	verts[2].normal[1] = 0;
-	verts[2].normal[2] = 1;
-	verts[2].tangents[0][0] = 1;
-	verts[2].tangents[0][1] = 0;
-	verts[2].tangents[0][2] = 0;
-	verts[2].tangents[1][0] = 0;
-	verts[2].tangents[1][1] = 1;
-	verts[2].tangents[1][2] = 0;
-	verts[3].xyz[0] = x;
-	verts[3].xyz[1] = y + h;
-	verts[3].xyz[2] = 0;
-	verts[3].st[0] = s1;
-	verts[3].st[1] = t2;
-	verts[3].normal[0] = 0;
-	verts[3].normal[1] = 0;
-	verts[3].normal[2] = 1;
-	verts[3].tangents[0][0] = 1;
-	verts[3].tangents[0][1] = 0;
-	verts[3].tangents[0][2] = 0;
-	verts[3].tangents[1][0] = 0;
-	verts[3].tangents[1][1] = 1;
-	verts[3].tangents[1][2] = 0;
-	
-	DrawStretchPic( &verts[0], &indexes[0], 4, 6, hShader, false, 0.0f, 0.0f, 640.0f, 480.0f );
-}
-
-/*
-=============
-DrawStretchTri
-
-x/y/w/h are in the 0,0 to 640,480 range
-=============
-*/
-void idGuiModel::DrawStretchTri( idVec2 p1, idVec2 p2, idVec2 p3, idVec2 t1, idVec2 t2, idVec2 t3, const idMaterial* material )
-{
-	idDrawVert tempVerts[3];
-	glIndex_t tempIndexes[3];
-	int vertCount = 3;
-	int indexCount = 3;
-	
-	if( !glConfig.isInitialized )
-	{
-		return;
-	}
-	if( !material )
-	{
-		return;
-	}
-	
-	tempIndexes[0] = 1;
-	tempIndexes[1] = 0;
-	tempIndexes[2] = 2;
-	tempVerts[0].xyz[0] = p1.x;
-	tempVerts[0].xyz[1] = p1.y;
-	tempVerts[0].xyz[2] = 0;
-	tempVerts[0].st[0] = t1.x;
-	tempVerts[0].st[1] = t1.y;
-	tempVerts[0].normal[0] = 0;
-	tempVerts[0].normal[1] = 0;
-	tempVerts[0].normal[2] = 1;
-	tempVerts[0].tangents[0][0] = 1;
-	tempVerts[0].tangents[0][1] = 0;
-	tempVerts[0].tangents[0][2] = 0;
-	tempVerts[0].tangents[1][0] = 0;
-	tempVerts[0].tangents[1][1] = 1;
-	tempVerts[0].tangents[1][2] = 0;
-	tempVerts[1].xyz[0] = p2.x;
-	tempVerts[1].xyz[1] = p2.y;
-	tempVerts[1].xyz[2] = 0;
-	tempVerts[1].st[0] = t2.x;
-	tempVerts[1].st[1] = t2.y;
-	tempVerts[1].normal[0] = 0;
-	tempVerts[1].normal[1] = 0;
-	tempVerts[1].normal[2] = 1;
-	tempVerts[1].tangents[0][0] = 1;
-	tempVerts[1].tangents[0][1] = 0;
-	tempVerts[1].tangents[0][2] = 0;
-	tempVerts[1].tangents[1][0] = 0;
-	tempVerts[1].tangents[1][1] = 1;
-	tempVerts[1].tangents[1][2] = 0;
-	tempVerts[2].xyz[0] = p3.x;
-	tempVerts[2].xyz[1] = p3.y;
-	tempVerts[2].xyz[2] = 0;
-	tempVerts[2].st[0] = t3.x;
-	tempVerts[2].st[1] = t3.y;
-	tempVerts[2].normal[0] = 0;
-	tempVerts[2].normal[1] = 0;
-	tempVerts[2].normal[2] = 1;
-	tempVerts[2].tangents[0][0] = 1;
-	tempVerts[2].tangents[0][1] = 0;
-	tempVerts[2].tangents[0][2] = 0;
-	tempVerts[2].tangents[1][0] = 0;
-	tempVerts[2].tangents[1][1] = 1;
-	tempVerts[2].tangents[1][2] = 0;
-	
-	// break the current surface if we are changing to a new material
-	if( material != surf->material )
-	{
-		if( surf->numVerts )
-		{
-			AdvanceSurf();
-		}
-		const_cast<idMaterial*>( material )->EnsureNotPurged();	// in case it was a gui item started before a level change
-		surf->material = material;
-	}
-	
-	
-	int numVerts = verts.Num();
-	int numIndexes = indexes.Num();
-	
-	verts.AssureSize( numVerts + vertCount );
-	indexes.AssureSize( numIndexes + indexCount );
-	
-	surf->numVerts += vertCount;
-	surf->numIndexes += indexCount;
-	
-	for( int i = 0; i < indexCount; i++ )
-	{
-		indexes[numIndexes + i] = numVerts + tempIndexes[i] - surf->firstVert;
-	}
-	
-	memcpy( &verts[numVerts], tempVerts, vertCount * sizeof( verts[0] ) );
-}
-

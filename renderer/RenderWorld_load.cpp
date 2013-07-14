@@ -104,7 +104,6 @@ void idRenderWorldLocal::FreeWorld()
 	
 	areaReferenceAllocator.Shutdown();
 	interactionAllocator.Shutdown();
-	areaNumRefAllocator.Shutdown();
 	
 	mapName = "<FREED>";
 }
@@ -140,6 +139,8 @@ idRenderModel* idRenderWorldLocal::ReadBinaryModel( idFile* fileIn )
 	return NULL;
 }
 
+extern idCVar r_binaryLoadRenderModels;
+
 /*
 ================
 idRenderWorldLocal::ParseModel
@@ -161,7 +162,8 @@ idRenderModel* idRenderWorldLocal::ParseModel( idLexer* src, const char* mapName
 	if( fileOut != NULL )
 	{
 		// write out the type so the binary reader knows what to instantiate
-		fileOut->WriteString( "shadowmodel" );
+		// RB: changed "shadowmodel" to "model"
+		fileOut->WriteString( "model" );
 		fileOut->WriteString( token );
 	}
 	
@@ -188,44 +190,175 @@ idRenderModel* idRenderWorldLocal::ParseModel( idLexer* src, const char* mapName
 		tri->numVerts = src->ParseInt();
 		tri->numIndexes = src->ParseInt();
 		
+		// parse the vertices
+		
+		// RB: changed for new .proc format
+		idTempArray<float> verts( tri->numVerts * ( procVersion == PROC_EXT_VERSION ? 12 : 8 ) );
+		if( procVersion == PROC_EXT_VERSION )
+		{
+			for( int j = 0; j < tri->numVerts; j++ )
+			{
+				src->Parse1DMatrix( 12, &verts[j * 12] );
+			}
+		}
+		else
+		{
+			for( int j = 0; j < tri->numVerts; j++ )
+			{
+				src->Parse1DMatrix( 8, &verts[j * 8] );
+			}
+		}
+		//idTempArray<float> verts( tri->numVerts * 8 );
+		//for( int j = 0; j < tri->numVerts; j++ )
+		//{
+		//	src->Parse1DMatrix( 8, &verts[j * 8] );
+		//}
+		
+		// parse the indices
+		idTempArray<triIndex_t> indexes( tri->numIndexes );
+		for( int j = 0; j < tri->numIndexes; j++ )
+		{
+			indexes[j] = src->ParseInt();
+		}
+		
+#if 1
+		// find the island that each vertex belongs to
+		idTempArray<int> vertIslands( tri->numVerts );
+		idTempArray<bool> trisVisited( tri->numIndexes );
+		vertIslands.Zero();
+		trisVisited.Zero();
+		int numIslands = 0;
+		for( int j = 0; j < tri->numIndexes; j += 3 )
+		{
+			if( trisVisited[j] )
+			{
+				continue;
+			}
+			
+			int islandNum = ++numIslands;
+			vertIslands[indexes[j + 0]] = islandNum;
+			vertIslands[indexes[j + 1]] = islandNum;
+			vertIslands[indexes[j + 2]] = islandNum;
+			trisVisited[j] = true;
+			
+			idList<int> queue;
+			queue.Append( j );
+			for( int n = 0; n < queue.Num(); n++ )
+			{
+				int t = queue[n];
+				for( int k = 0; k < tri->numIndexes; k += 3 )
+				{
+					if( trisVisited[k] )
+					{
+						continue;
+					}
+					bool connected =	indexes[t + 0] == indexes[k + 0] || indexes[t + 0] == indexes[k + 1] || indexes[t + 0] == indexes[k + 2] ||
+										indexes[t + 1] == indexes[k + 0] || indexes[t + 1] == indexes[k + 1] || indexes[t + 1] == indexes[k + 2] ||
+										indexes[t + 2] == indexes[k + 0] || indexes[t + 2] == indexes[k + 1] || indexes[t + 2] == indexes[k + 2];
+					if( connected )
+					{
+						vertIslands[indexes[k + 0]] = islandNum;
+						vertIslands[indexes[k + 1]] = islandNum;
+						vertIslands[indexes[k + 2]] = islandNum;
+						trisVisited[k] = true;
+						queue.Append( k );
+					}
+				}
+			}
+		}
+		
+		// center the texture coordinates for each island for maximum 16-bit precision
+		for( int j = 1; j <= numIslands; j++ )
+		{
+			float minS = idMath::INFINITY;
+			float minT = idMath::INFINITY;
+			float maxS = -idMath::INFINITY;
+			float maxT = -idMath::INFINITY;
+			for( int k = 0; k < tri->numVerts; k++ )
+			{
+				if( vertIslands[k] == j )
+				{
+					// RB: changed for new .proc format
+					if( procVersion == PROC_EXT_VERSION )
+					{
+						minS = Min( minS, verts[k * 12 + 3] );
+						maxS = Max( maxS, verts[k * 12 + 3] );
+						minT = Min( minT, verts[k * 12 + 4] );
+						maxT = Max( maxT, verts[k * 12 + 4] );
+					}
+					else
+					{
+						minS = Min( minS, verts[k * 8 + 3] );
+						maxS = Max( maxS, verts[k * 8 + 3] );
+						minT = Min( minT, verts[k * 8 + 4] );
+						maxT = Max( maxT, verts[k * 8 + 4] );
+					}
+					// RB end
+				}
+			}
+			const float averageS = idMath::Ftoi( ( minS + maxS ) * 0.5f );
+			const float averageT = idMath::Ftoi( ( minT + maxT ) * 0.5f );
+			for( int k = 0; k < tri->numVerts; k++ )
+			{
+				if( vertIslands[k] == j )
+				{
+					// RB: changed for new .proc format
+					if( procVersion == PROC_EXT_VERSION )
+					{
+						verts[k * 12 + 3] -= averageS;
+						verts[k * 12 + 4] -= averageT;
+					}
+					else
+					{
+						verts[k * 8 + 3] -= averageS;
+						verts[k * 8 + 4] -= averageT;
+					}
+					// RB end
+				}
+			}
+		}
+#endif
+		
 		R_AllocStaticTriSurfVerts( tri, tri->numVerts );
-		for( int j = 0 ; j < tri->numVerts ; j++ )
+		for( int j = 0; j < tri->numVerts; j++ )
 		{
 			// RB: changed for new .proc format
 			if( procVersion == PROC_EXT_VERSION )
 			{
-				float	vec[12];
+				tri->verts[j].xyz[0] = verts[j * 12 + 0];
+				tri->verts[j].xyz[1] = verts[j * 12 + 1];
+				tri->verts[j].xyz[2] = verts[j * 12 + 2];
+				tri->verts[j].SetTexCoord( verts[j * 12 + 3], verts[j * 12 + 4] );
+				tri->verts[j].SetNormal( verts[j * 12 + 5], verts[j * 12 + 6], verts[j * 12 + 7] );
 				
-				src->Parse1DMatrix( 12, vec );
+				tri->verts[j].color[0] = ( byte )( verts[j * 12 + 8] * 255.0f );
+				tri->verts[j].color[1] = ( byte )( verts[j * 12 + 9] * 255.0f );
+				tri->verts[j].color[2] = ( byte )( verts[j * 12 + 10] * 255.0f );
+				tri->verts[j].color[3] = ( byte )( verts[j * 12 + 11] * 255.0f );
 				
-				tri->verts[j].xyz[0] = vec[0];
-				tri->verts[j].xyz[1] = vec[1];
-				tri->verts[j].xyz[2] = vec[2];
-				tri->verts[j].st[0] = vec[3];
-				tri->verts[j].st[1] = vec[4];
-				tri->verts[j].normal[0] = vec[5];
-				tri->verts[j].normal[1] = vec[6];
-				tri->verts[j].normal[2] = vec[7];
-				
-				tri->verts[j].color[0] = ( byte )( vec[8] * 255.0f );
-				tri->verts[j].color[1] = ( byte )( vec[9] * 255.0f );
-				tri->verts[j].color[2] = ( byte )( vec[10] * 255.0f );
-				tri->verts[j].color[3] = ( byte )( vec[11] * 255.0f );
+				tri->verts[j].color2[0] = 0;
+				tri->verts[j].color2[1] = 0;
+				tri->verts[j].color2[2] = 0;
+				tri->verts[j].color2[3] = 0;
 			}
 			else
 			{
-				float	vec[8];
+				tri->verts[j].xyz[0] = verts[j * 8 + 0];
+				tri->verts[j].xyz[1] = verts[j * 8 + 1];
+				tri->verts[j].xyz[2] = verts[j * 8 + 2];
+				tri->verts[j].SetTexCoord( verts[j * 8 + 3], verts[j * 8 + 4] );
+				tri->verts[j].SetNormal( verts[j * 8 + 5], verts[j * 8 + 6], verts[j * 8 + 7] );
 				
-				src->Parse1DMatrix( 8, vec );
+				// RB: clear colors
+				tri->verts[j].color[0] = 0;
+				tri->verts[j].color[1] = 0;
+				tri->verts[j].color[2] = 0;
+				tri->verts[j].color[3] = 0;
 				
-				tri->verts[j].xyz[0] = vec[0];
-				tri->verts[j].xyz[1] = vec[1];
-				tri->verts[j].xyz[2] = vec[2];
-				tri->verts[j].st[0] = vec[3];
-				tri->verts[j].st[1] = vec[4];
-				tri->verts[j].normal[0] = vec[5];
-				tri->verts[j].normal[1] = vec[6];
-				tri->verts[j].normal[2] = vec[7];
+				tri->verts[j].color2[0] = 0;
+				tri->verts[j].color2[1] = 0;
+				tri->verts[j].color2[2] = 0;
+				tri->verts[j].color2[3] = 0;
 			}
 			// RB end
 		}
@@ -233,7 +366,7 @@ idRenderModel* idRenderWorldLocal::ParseModel( idLexer* src, const char* mapName
 		R_AllocStaticTriSurfIndexes( tri, tri->numIndexes );
 		for( int j = 0; j < tri->numIndexes; j++ )
 		{
-			tri->indexes[j] = src->ParseInt();
+			tri->indexes[j] = indexes[j];
 		}
 		src->ExpectTokenString( "}" );
 		
@@ -304,20 +437,28 @@ idRenderModel* idRenderWorldLocal::ParseShadowModel( idLexer* src, idFile* fileO
 	
 	assert( ( tri->numVerts & 1 ) == 0 );
 	
-	R_AllocStaticTriSurfShadowVerts( tri, tri->numVerts );
+	R_AllocStaticTriSurfPreLightShadowVerts( tri, ALIGN( tri->numVerts, 2 ) );
 	tri->bounds.Clear();
 	for( int j = 0; j < tri->numVerts; j++ )
 	{
-		float	vec[8];
+		float vec[8];
 		
 		src->Parse1DMatrix( 3, vec );
-		tri->shadowVertexes[j].xyz[0] = vec[0];
-		tri->shadowVertexes[j].xyz[1] = vec[1];
-		tri->shadowVertexes[j].xyz[2] = vec[2];
-		tri->shadowVertexes[j].xyz[3] = 1;		// no homogenous value
+		tri->preLightShadowVertexes[j].xyzw[0] = vec[0];
+		tri->preLightShadowVertexes[j].xyzw[1] = vec[1];
+		tri->preLightShadowVertexes[j].xyzw[2] = vec[2];
+		tri->preLightShadowVertexes[j].xyzw[3] = 1.0f;		// no homogenous value
 		
-		tri->bounds.AddPoint( tri->shadowVertexes[j].xyz.ToVec3() );
+		tri->bounds.AddPoint( tri->preLightShadowVertexes[j].xyzw.ToVec3() );
 	}
+	// clear the last vertex if it wasn't stored
+	if( ( tri->numVerts & 1 ) != 0 )
+	{
+		tri->preLightShadowVertexes[ALIGN( tri->numVerts, 2 ) - 1].xyzw.Zero();
+	}
+	
+	// to be consistent set the number of vertices to half the number of shadow vertices
+	tri->numVerts = ALIGN( tri->numVerts, 2 ) / 2;
 	
 	R_AllocStaticTriSurfIndexes( tri, tri->numIndexes );
 	for( int j = 0; j < tri->numIndexes; j++ )
@@ -352,18 +493,14 @@ idRenderWorldLocal::SetupAreaRefs
 */
 void idRenderWorldLocal::SetupAreaRefs()
 {
-	int		i;
-	
 	connectedAreaNum = 0;
-	for( i = 0 ; i < numPortalAreas ; i++ )
+	for( int i = 0; i < numPortalAreas; i++ )
 	{
 		portalAreas[i].areaNum = i;
 		portalAreas[i].lightRefs.areaNext =
-			portalAreas[i].lightRefs.areaPrev =
-				&portalAreas[i].lightRefs;
+			portalAreas[i].lightRefs.areaPrev = &portalAreas[i].lightRefs;
 		portalAreas[i].entityRefs.areaNext =
-			portalAreas[i].entityRefs.areaPrev =
-				&portalAreas[i].entityRefs;
+			portalAreas[i].entityRefs.areaPrev = &portalAreas[i].entityRefs;
 	}
 }
 
@@ -889,6 +1026,18 @@ void idRenderWorldLocal::FreeDefs()
 			entityDefs[i] = NULL;
 		}
 	}
+	
+	// Reset decals and overlays
+	for( int i = 0; i < decals.Num(); i++ )
+	{
+		decals[i].entityHandle = -1;
+		decals[i].lastStartTime = 0;
+	}
+	for( int i = 0; i < overlays.Num(); i++ )
+	{
+		overlays[i].entityHandle = -1;
+		overlays[i].lastStartTime = 0;
+	}
 }
 
 /*
@@ -944,7 +1093,7 @@ bool idRenderWorldLocal::InitFromMap( const char* name )
 	
 	if( name == mapName )
 	{
-		if( sourceTimeStamp != FILE_NOT_FOUND_TIMESTAMP && sourceTimeStamp == mapTimeStamp )
+		if( /*fileSystem->InProductionMode() ||*/ ( sourceTimeStamp != FILE_NOT_FOUND_TIMESTAMP && sourceTimeStamp == mapTimeStamp ) )
 		{
 			common->Printf( "idRenderWorldLocal::InitFromMap: retaining existing map\n" );
 			FreeDefs();
@@ -960,7 +1109,7 @@ bool idRenderWorldLocal::InitFromMap( const char* name )
 	
 	
 	// see if we have a generated version of this
-	static const byte BPROC_VERSION = 5;
+	static const byte BPROC_VERSION = 2;
 	static const unsigned int BPROC_MAGIC = ( 'P' << 24 ) | ( 'R' << 16 ) | ( 'O' << 8 ) | BPROC_VERSION;
 	bool loaded = false;
 	
@@ -990,7 +1139,7 @@ bool idRenderWorldLocal::InitFromMap( const char* name )
 			file->ReadString( mapName );
 			
 			// if we are writing a demo, archive the load command
-			if( session->writeDemo )
+			if( session->WriteDemo() )
 			{
 				WriteLoadMap();
 			}
@@ -1060,7 +1209,7 @@ bool idRenderWorldLocal::InitFromMap( const char* name )
 		mapTimeStamp = sourceTimeStamp;
 		
 		// if we are writing a demo, archive the load command
-		if( session->writeDemo )
+		if( session->WriteDemo() )
 		{
 			WriteLoadMap();
 		}
@@ -1102,7 +1251,7 @@ bool idRenderWorldLocal::InitFromMap( const char* name )
 				break;
 			}
 			
-			session->PacifierUpdate();
+			//session->PacifierUpdate();
 			
 			if( token == "model" )
 			{
@@ -1226,10 +1375,9 @@ void idRenderWorldLocal::AddWorldModelEntities()
 	// based on the bounding box, rather than explicitly into the correct area
 	for( int i = 0; i < numPortalAreas; i++ )
 	{
-		session->PacifierUpdate();
+		//session->PacifierUpdate();
 		
-		
-		idRenderEntityLocal* def = new idRenderEntityLocal;
+		idRenderEntityLocal*	 def = new idRenderEntityLocal;
 		
 		// try and reuse a free spot
 		int index = entityDefs.FindNull();
@@ -1263,21 +1411,23 @@ void idRenderWorldLocal::AddWorldModelEntities()
 			}
 		}
 		
-		def->referenceBounds = def->parms.hModel->Bounds();
+		// the local and global reference bounds are the same for area models
+		def->localReferenceBounds = def->parms.hModel->Bounds();
+		def->globalReferenceBounds = def->parms.hModel->Bounds();
 		
-		def->parms.axis[0][0] = 1;
-		def->parms.axis[1][1] = 1;
-		def->parms.axis[2][2] = 1;
-		
-		R_AxisToModelMatrix( def->parms.axis, def->parms.origin, def->modelMatrix );
+		def->parms.axis[0][0] = 1.0f;
+		def->parms.axis[1][1] = 1.0f;
+		def->parms.axis[2][2] = 1.0f;
 		
 		// in case an explicit shader is used on the world, we don't
 		// want it to have a 0 alpha or color
-		def->parms.shaderParms[0] =
-			def->parms.shaderParms[1] =
-				def->parms.shaderParms[2] =
-					def->parms.shaderParms[3] = 1;
-					
+		def->parms.shaderParms[0] = 1.0f;
+		def->parms.shaderParms[1] = 1.0f;
+		def->parms.shaderParms[2] = 1.0f;
+		def->parms.shaderParms[3] = 1.0f;
+		
+		R_DeriveEntityData( def );
+		
 		AddEntityRefToArea( def, &portalAreas[i] );
 	}
 }
@@ -1302,4 +1452,14 @@ bool idRenderWorldLocal::CheckAreaForPortalSky( int areaNum )
 	}
 	
 	return false;
+}
+
+/*
+=====================
+ResetLocalRenderModels
+=====================
+*/
+void idRenderWorldLocal::ResetLocalRenderModels()
+{
+	localModels.Clear();	// Clear out the list when switching between expansion packs, so InitFromMap doesn't try to delete the list whose content has already been deleted by the model manager being re-started
 }

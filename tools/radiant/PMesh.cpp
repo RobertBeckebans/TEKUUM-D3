@@ -139,7 +139,9 @@ bool Patch_Intersect( patchMesh_t* pm, idVec3 origin, idVec3 direction, float& s
 		for( j = 0; j < pm->height; j++ )
 		{
 			( cp )[j * cp.GetWidth() + i].xyz = pm->ctrl( i, j ).xyz;
-			( cp )[j * cp.GetWidth() + i].st = pm->ctrl( i, j ).st;
+			// RB begin
+			( cp )[j * cp.GetWidth() + i].SetTexCoord( pm->ctrl( i, j ).GetTexCoord() );
+			// RB end
 		}
 	}
 	
@@ -956,8 +958,10 @@ void Patch_MeshNormals( patchMesh_t* in )
 				count = 1;
 				//continue;
 			}
-			dv->normal = sum;
-			dv->normal.Normalize();
+			// RB begin
+			sum.Normalize();
+			dv->SetNormal( sum );
+			// RB end
 		}
 	}
 }
@@ -1266,8 +1270,8 @@ void Patch_Naturalize( patchMesh_t* p, bool horz, bool vert, bool alt )
 {
 	int		i, j;
 	
-	int		nWidth		= p->d_texture->GetEditorImage()->uploadWidth * 0.5;
-	int		nHeight		= p->d_texture->GetEditorImage()->uploadHeight * 0.5;
+	int		nWidth		= p->d_texture->GetEditorImage()->GetUploadWidth() * 0.5;
+	int		nHeight		= p->d_texture->GetEditorImage()->GetUploadHeight() * 0.5;
 	float	fPWidth		= Patch_Width( p );
 	float	fPHeight	= Patch_Height( p );
 	float	xAccum		= 0;
@@ -1278,8 +1282,12 @@ void Patch_Naturalize( patchMesh_t* p, bool horz, bool vert, bool alt )
 		{
 			int	r	= ( ( alt ) ? j : i );
 			int	c	= ( ( alt ) ? i : j );
-			p->ctrl( r, c ).st[0] = ( fPWidth / nWidth ) * xAccum / fPWidth;
-			p->ctrl( r, c ).st[1] = ( fPHeight / nHeight ) * yAccum / fPHeight;
+			
+			// RB: BFG idDrawVert
+			p->ctrl( r, c ).SetTexCoord(	( fPWidth / nWidth ) * xAccum / fPWidth,
+											( fPHeight / nHeight ) * yAccum / fPHeight	);
+			// RB end
+			
 			if( alt )
 			{
 				yAccum = Patch_WidthDistanceTo( p, j + 1 );
@@ -1415,8 +1423,8 @@ void Patch_CapTexture( patchMesh_t* p, bool bFaceCycle = false, bool alt = false
 	float	fScale[2];
 	fScale[0] = f->texdef.scale[0];
 	fScale[1] = f->texdef.scale[1];
-	f->texdef.scale[0] = ( float ) p->d_texture->GetEditorImage()->uploadWidth / 32.0f;
-	f->texdef.scale[1] = ( float ) p->d_texture->GetEditorImage()->uploadHeight / 32.0f;
+	f->texdef.scale[0] = ( float ) p->d_texture->GetEditorImage()->GetUploadWidth() / 32.0f;
+	f->texdef.scale[1] = ( float ) p->d_texture->GetEditorImage()->GetUploadHeight() / 32.0f;
 	float	fShift[2];
 	fShift[0] = f->texdef.shift[0];
 	fShift[1] = f->texdef.shift[1];
@@ -1429,15 +1437,19 @@ void Patch_CapTexture( patchMesh_t* p, bool bFaceCycle = false, bool alt = false
 		{
 			if( !bFaceCycle )
 			{
-				VectorCopy( p->ctrl( i, j ).normal, f->plane );
+				// RB: BFG idDrawVert
+				VectorCopy( p->ctrl( i, j ).GetNormal(), f->plane );
+				// RB end
 			}
 			idVec5	temp;
 			temp.x = p->ctrl( i, j ).xyz.x;
 			temp.y = p->ctrl( i, j ).xyz.y;
 			temp.z = p->ctrl( i, j ).xyz.z;
 			EmitTextureCoordinates( temp, f->d_texture, f, true );
-			p->ctrl( i, j ).st.x = temp.s;
-			p->ctrl( i, j ).st.y = temp.t;
+			
+			// RB: BFG idDrawVert
+			p->ctrl( i, j ).SetTexCoord( temp.s, temp.t );
+			// RB end
 		}
 	}
 	
@@ -2672,7 +2684,9 @@ void DrawPatchMesh( patchMesh_t* pm, bool bPoints, int* list, bool bShade = fals
 			for( j = 0; j < pm->height; j++ )
 			{
 				( *cp )[j * cp->GetWidth() + i].xyz = pm->ctrl( i, j ).xyz;
-				( *cp )[j * cp->GetWidth() + i].st = pm->ctrl( i, j ).st;
+				// RB begin
+				( *cp )[j * cp->GetWidth() + i].SetTexCoord( pm->ctrl( i, j ).GetTexCoord() );
+				// RB end
 			}
 		}
 		
@@ -2754,20 +2768,22 @@ void DrawPatchMesh( patchMesh_t* pm, bool bPoints, int* list, bool bShade = fals
 				float	f;
 				v1 = j * width + i;
 				v2 = v1 + 1;
+				// RB begin
 				if( bShade )
 				{
-					f = ShadeForNormal( ( *cp )[v2].normal );
+					f = ShadeForNormal( ( *cp )[v2].GetNormal() );
 					glColor3f( f, f, f );
 				}
-				glTexCoord2fv( ( *cp )[v2].st.ToFloatPtr() );
+				glTexCoord2fv( ( *cp )[v2].GetTexCoord().ToFloatPtr() );
 				glVertex3fv( ( *cp )[v2].xyz.ToFloatPtr() );
 				if( bShade )
 				{
-					f = ShadeForNormal( ( *cp )[v1].normal );
+					f = ShadeForNormal( ( *cp )[v1].GetNormal() );
 					glColor3f( f, f, f );
 				}
-				glTexCoord2fv( ( *cp )[v1].st.ToFloatPtr() );
+				glTexCoord2fv( ( *cp )[v1].GetTexCoord().ToFloatPtr() );
 				glVertex3fv( ( *cp )[v1].xyz.ToFloatPtr() );
+				// RB end
 			}
 			glEnd();
 		}
@@ -3053,6 +3069,18 @@ void Patch_DrawCam( patchMesh_t* pm, bool selected )
 		
 		if( nDrawMode == cd_texture || nDrawMode == cd_light )
 		{
+			// RB begin
+			const idImageOpts& opts = pm->d_texture->GetEditorImage()->GetOpts();
+			if( opts.colorFormat == CFM_YCOCG_DXT5 )
+			{
+				renderProgManager.BindShader_TextureYCoCG();
+			}
+			else
+			{
+				renderProgManager.BindShader_Texture();
+			}
+			// RB end
+			
 			pm->d_texture->GetEditorImage()->Bind();
 		}
 		
@@ -3891,8 +3919,9 @@ brush_t* Patch_Parse( bool bOld )
 			pm->ctrl( w, h ).xyz[0] = ctrl[w][h][0];
 			pm->ctrl( w, h ).xyz[1] = ctrl[w][h][1];
 			pm->ctrl( w, h ).xyz[2] = ctrl[w][h][2];
-			pm->ctrl( w, h ).st[0] = ctrl[w][h][3];
-			pm->ctrl( w, h ).st[1] = ctrl[w][h][4];
+			// RB: BFG idDrawVert
+			pm->ctrl( w, h ).SetTexCoord( ctrl[w][h][3], ctrl[w][h][4] );
+			// RB end
 		}
 	}
 	
@@ -3955,8 +3984,10 @@ void Patch_Write( patchMesh_t* p, CMemFile* file )
 			ctrl[w][h][0] = p->ctrl( w, h ).xyz[0];
 			ctrl[w][h][1] = p->ctrl( w, h ).xyz[1];
 			ctrl[w][h][2] = p->ctrl( w, h ).xyz[2];
-			ctrl[w][h][3] = p->ctrl( w, h ).st[0];
-			ctrl[w][h][4] = p->ctrl( w, h ).st[1];
+			// RB: BFG idDrawVert
+			ctrl[w][h][3] = p->ctrl( w, h ).GetTexCoord().x;
+			ctrl[w][h][4] = p->ctrl( w, h ).GetTexCoord().y;
+			// RB end
 		}
 	}
 	
@@ -4002,8 +4033,10 @@ void Patch_Write( patchMesh_t* p, FILE* file )
 			ctrl[w][h][0] = p->ctrl( w, h ).xyz[0];
 			ctrl[w][h][1] = p->ctrl( w, h ).xyz[1];
 			ctrl[w][h][2] = p->ctrl( w, h ).xyz[2];
-			ctrl[w][h][3] = p->ctrl( w, h ).st[0];
-			ctrl[w][h][4] = p->ctrl( w, h ).st[1];
+			// RB: BFG idDrawVert
+			ctrl[w][h][3] = p->ctrl( w, h ).GetTexCoord().x;
+			ctrl[w][h][4] = p->ctrl( w, h ).GetTexCoord().y;
+			// RB end
 		}
 	}
 	
@@ -4044,10 +4077,12 @@ void Patch_RotateTexture( patchMesh_t* p, float fAngle )
 				continue;
 			}
 			
-			float	x	= p->ctrl( w, h ).st[0];
-			float	y	= p->ctrl( w, h ).st[1];
-			p->ctrl( w, h ).st[0] = x * cos( DEG2RAD( fAngle ) ) - y * sin( DEG2RAD( fAngle ) );
-			p->ctrl( w, h ).st[1] = y * cos( DEG2RAD( fAngle ) ) + x * sin( DEG2RAD( fAngle ) );
+			// RB: BFG idDrawVert
+			float	x	= p->ctrl( w, h ).GetTexCoord().x;
+			float	y	= p->ctrl( w, h ).GetTexCoord().y;
+			p->ctrl( w, h ).SetTexCoord(	x * cos( DEG2RAD( fAngle ) ) - y * sin( DEG2RAD( fAngle ) ),
+											y * cos( DEG2RAD( fAngle ) ) + x * sin( DEG2RAD( fAngle ) )	);
+			// RB end
 		}
 	}
 }
@@ -4082,8 +4117,11 @@ void Patch_ScaleTexture( patchMesh_t* p, float fx, float fy, bool absolute )
 			{
 				continue;
 			}
-			p->ctrl( w, h ).st[0] *= fx;
-			p->ctrl( w, h ).st[1] *= fy;
+			
+			// RB: BFG idDrawVert
+			idVec2 st = p->ctrl( w, h ).GetTexCoord() * fx;
+			p->ctrl( w, h ).SetTexCoord( st );
+			// RB end
 		}
 	}
 	Patch_MakeDirty( p );
@@ -4103,8 +4141,8 @@ void Patch_ShiftTexture( patchMesh_t* p, float fx, float fy, bool autoAdjust )
 	
 	if( autoAdjust )
 	{
-		fx /= p->d_texture->GetEditorImage()->uploadWidth;
-		fy /= p->d_texture->GetEditorImage()->uploadHeight;
+		fx /= p->d_texture->GetEditorImage()->GetUploadWidth();
+		fy /= p->d_texture->GetEditorImage()->GetUploadHeight();
 	}
 	
 	for( int w = 0; w < p->width; w++ )
@@ -4114,8 +4152,12 @@ void Patch_ShiftTexture( patchMesh_t* p, float fx, float fy, bool autoAdjust )
 			if( g_qeglobals.d_select_mode == sel_curvepoint && PointInMoveList( &p->ctrl( w, h ).xyz ) == -1 )
 				continue;
 				
-			p->ctrl( w, h ).st[0] += fx;
-			p->ctrl( w, h ).st[1] += fy;
+			// RB: BFG idDrawVert
+			idVec2 st = p->ctrl( w, h ).GetTexCoord();
+			st.x += fx;
+			st.y += fx;
+			p->ctrl( w, h ).SetTexCoord( st );
+			// RB end
 		}
 	}
 	Patch_MakeDirty( p );
@@ -4171,9 +4213,11 @@ void Patch_FlipTexture( patchMesh_t* p, bool y )
 		{
 			for( int j = 0; j < p->width / 2; j++ )
 			{
-				temp = p->ctrl( p->width - 1 - j, i ).st;
-				p->ctrl( p->width - 1 - j, i ).st = p->ctrl( j, i ).st;
-				p->ctrl( j, i ).st = temp;
+				// RB begin
+				temp = p->ctrl( p->width - 1 - j, i ).GetTexCoord();
+				p->ctrl( p->width - 1 - j, i ).SetTexCoord( p->ctrl( j, i ).GetTexCoord() );
+				p->ctrl( j, i ).SetTexCoord( temp );
+				// RB end
 			}
 		}
 	}
@@ -4183,9 +4227,11 @@ void Patch_FlipTexture( patchMesh_t* p, bool y )
 		{
 			for( int j = 0; j < p->height / 2; j++ )
 			{
-				temp = p->ctrl( i, p->height - 1 - j ).st;
-				p->ctrl( i, p->height - 1 - j ).st = p->ctrl( i, j ).st;
-				p->ctrl( i, j ).st = temp;
+				// RB begin
+				temp = p->ctrl( i, p->height - 1 - j ).GetTexCoord();
+				p->ctrl( i, p->height - 1 - j ).SetTexCoord( p->ctrl( i, j ).GetTexCoord() );
+				p->ctrl( i, j ).SetTexCoord( temp );
+				// RB end
 			}
 		}
 	}
@@ -4265,8 +4311,10 @@ void Patch_FitTexture( patchMesh_t* p, float fx, float fy )
 	{
 		for( int j = 0 ; j < p->height ; j++ )
 		{
-			p->ctrl( i, j ).st[0] = fx * ( float ) i / ( p->width - 1 );
-			p->ctrl( i, j ).st[1] = fy * ( float ) j / ( p->height - 1 );
+			// RB: BFG idDrawVert
+			p->ctrl( i, j ).SetTexCoord(	fx * ( float ) i / ( p->width - 1 ),
+											fy * ( float ) j / ( p->height - 1 )	);
+			// RB end
 		}
 	}
 }
@@ -4283,8 +4331,10 @@ void Patch_ResetTexturing( float fx, float fy )
 			{
 				for( int j = 0 ; j < p->height ; j++ )
 				{
-					p->ctrl( i, j ).st[0] = fx * ( float ) i / ( p->width - 1 );
-					p->ctrl( i, j ).st[1] = fy * ( float ) j / ( p->height - 1 );
+					// RB: BFG idDrawVert
+					p->ctrl( i, j ).SetTexCoord(	fx * ( float ) i / ( p->width - 1 ),
+													fy * ( float ) j / ( p->height - 1 )	);
+					// RB end
 				}
 			}
 		}
@@ -4304,8 +4354,10 @@ void Patch_FitTexturing()
 			{
 				for( int j = 0 ; j < p->height ; j++ )
 				{
-					p->ctrl( i, j ).st[0] = 1 * ( float ) i / ( p->width - 1 );
-					p->ctrl( i, j ).st[1] = 1 * ( float ) j / ( p->height - 1 );
+					// RB: BFG idDrawVert
+					p->ctrl( i, j ).SetTexCoord(	1 * ( float ) i / ( p->width - 1 ),
+													1 * ( float ) j / ( p->height - 1 )	);
+					// RB end
 				}
 			}
 		}
@@ -4923,7 +4975,9 @@ void Patch_Thicken( int nAmount, bool bSeam )
 		{
 			for( j = 0; j < p->height; j++ )
 			{
-				VectorMA( p->ctrl( i, j ).xyz, nAmount, p->ctrl( i, j ).normal, pNew->ctrl( i, j ).xyz );
+				// RB: BFG idDrawVert
+				VectorMA( p->ctrl( i, j ).xyz, nAmount, p->ctrl( i, j ).GetNormal(), pNew->ctrl( i, j ).xyz );
+				// RB end
 			}
 		}
 		
@@ -5263,36 +5317,28 @@ void Patch_FromTriangle( idVec5 vx, idVec5 vy, idVec5 vz )
 	vMidXY.Lerp( vx, vy, 0.5 );
 	vMidYZ.Lerp( vy, vz, 0.5 );
 	
+	// RB: BFG idDrawVert
 	p->ctrl( 0, 0 ).xyz = vx.ToVec3();
 	p->ctrl( 0, 1 ).xyz = vx.ToVec3();
 	p->ctrl( 0, 2 ).xyz = vx.ToVec3();
-	p->ctrl( 0, 0 ).st[0] = vx[3];
-	p->ctrl( 0, 0 ).st[1] = vx[4];
-	p->ctrl( 0, 1 ).st[0] = vx[3];
-	p->ctrl( 0, 1 ).st[1] = vx[4];
-	p->ctrl( 0, 2 ).st[0] = vx[3];
-	p->ctrl( 0, 2 ).st[1] = vx[4];
+	p->ctrl( 0, 0 ).SetTexCoord( vx[3], vx[4] );
+	p->ctrl( 0, 1 ).SetTexCoord( vx[3], vx[4] );
+	p->ctrl( 0, 2 ).SetTexCoord( vx[3], vx[4] );
 	
 	p->ctrl( 1, 0 ).xyz = vMidXY.ToVec3();
 	p->ctrl( 1, 1 ).xyz = vx.ToVec3();
 	p->ctrl( 1, 2 ).xyz = vMidXZ.ToVec3();
-	p->ctrl( 1, 0 ).st[0] = vMidXY[3];
-	p->ctrl( 1, 0 ).st[1] = vMidXY[4];
-	p->ctrl( 1, 1 ).st[0] = vx[3];
-	p->ctrl( 1, 1 ).st[1] = vx[4];
-	p->ctrl( 1, 2 ).st[0] = vMidXZ[3];
-	p->ctrl( 1, 2 ).st[1] = vMidXZ[4];
+	p->ctrl( 1, 0 ).SetTexCoord( vMidXY[3], vMidXY[4] );
+	p->ctrl( 1, 1 ).SetTexCoord( vx[3], vx[4] );
+	p->ctrl( 1, 2 ).SetTexCoord( vMidXZ[3], vMidXZ[4] );
 	
 	p->ctrl( 2, 0 ).xyz = vy.ToVec3();
 	p->ctrl( 2, 1 ).xyz = vMidYZ.ToVec3();
 	p->ctrl( 2, 2 ).xyz = vz.ToVec3();
-	p->ctrl( 2, 0 ).st[0] = vy[3];
-	p->ctrl( 2, 0 ).st[1] = vy[4];
-	p->ctrl( 2, 1 ).st[0] = vMidYZ[3];
-	p->ctrl( 2, 1 ).st[1] = vMidYZ[4];
-	p->ctrl( 2, 2 ).st[0] = vz[3];
-	p->ctrl( 2, 2 ).st[1] = vz[4];
-	
+	p->ctrl( 2, 0 ).SetTexCoord( vy[3], vy[4] );
+	p->ctrl( 2, 1 ).SetTexCoord( vMidYZ[3], vMidYZ[4] );
+	p->ctrl( 2, 2 ).SetTexCoord( vz[3], vz[4] );
+	// RB end
 	
 	//Patch_Naturalize(p);
 	

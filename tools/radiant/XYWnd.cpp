@@ -1681,6 +1681,10 @@ void CXYWnd::OnPaint()
 	
 	if( bPaint )
 	{
+		// RB: go back to fixed function pipeline
+		renderProgManager.Unbind();
+		// RB end
+		
 		QE_CheckOpenGLForErrors();
 		XY_Draw();
 		QE_CheckOpenGLForErrors();
@@ -4111,10 +4115,21 @@ void CXYWnd::XY_Draw()
 		if( brush->owner != e && brush->owner )
 		{
 			glColor3fv( brush->owner->eclass->color.ToFloatPtr() );
+			
+			// RB: avoid glGetFloatv( GL_CURRENT_COLOR ) for performance reasons
+			g_qeglobals.d_currentColor.x = brush->owner->eclass->color.x;
+			g_qeglobals.d_currentColor.y = brush->owner->eclass->color.y;
+			g_qeglobals.d_currentColor.z = brush->owner->eclass->color.z;
+			g_qeglobals.d_currentColor.w = 1.0f;
+			// RB end
 		}
 		else
 		{
 			glColor3fv( g_qeglobals.d_savedinfo.colors[COLOR_BRUSHES].ToFloatPtr() );
+			
+			// RB: avoid glGetFloatv( GL_CURRENT_COLOR ) for performance reasons
+			g_qeglobals.d_currentColor = g_qeglobals.d_savedinfo.colors[COLOR_BRUSHES];
+			// RB end
 		}
 		
 		Brush_DrawXY( brush, m_nViewType );

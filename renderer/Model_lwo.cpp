@@ -1,33 +1,34 @@
 /*
 ===========================================================================
 
-Doom 3 GPL Source Code
-Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Doom 3 BFG Edition GPL Source Code
+Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
 
-This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
+This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
-Doom 3 Source Code is free software: you can redistribute it and/or modify
+Doom 3 BFG Edition Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Doom 3 Source Code is distributed in the hope that it will be useful,
+Doom 3 BFG Edition Source Code is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Doom 3 Source Code.  If not, see <http://www.gnu.org/licenses/>.
+along with Doom 3 BFG Edition Source Code.  If not, see <http://www.gnu.org/licenses/>.
 
-In addition, the Doom 3 Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 Source Code.  If not, please request a copy in writing from id Software at the address below.
+In addition, the Doom 3 BFG Edition Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 BFG Edition Source Code.  If not, please request a copy in writing from id Software at the address below.
 
 If you have questions concerning this license or the applicable additional terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 
 ===========================================================================
 */
 
-#include "precompiled.h"
 #pragma hdrstop
+#include "precompiled.h"
+
 
 #include "Model_lwo.h"
 
@@ -352,9 +353,9 @@ Read an ENVL chunk from an LWO2 file.
 
 lwEnvelope* lwGetEnvelope( idFile* fp, int cksize )
 {
-	lwEnvelope* env;
-	lwKey* key;
-	lwPlugin* plug;
+	lwEnvelope* env = NULL;
+	lwKey* key = NULL;
+	lwPlugin* plug = NULL;
 	unsigned int id;
 	unsigned short sz;
 	float f[ 4 ];
@@ -416,7 +417,7 @@ lwEnvelope* lwGetEnvelope( idFile* fp, int cksize )
 				break;
 				
 			case ID_SPAN:
-				if( !key ) goto Fail;
+				if( key == NULL ) goto Fail;
 				key->shape = getU4( fp );
 				
 				nparams = ( sz - 4 ) / 4;
@@ -759,7 +760,6 @@ static float incoming( lwKey* key0, lwKey* key1 )
 			if( key1->next )
 				in *= ( key1->time - key0->time ) / ( key1->next->time - key0->time );
 			break;
-			return in;
 			
 		case ID_BEZ2:
 			in = key1->param[ 1 ] * ( key1->time - key0->time );
@@ -793,23 +793,28 @@ float evalEnvelope( lwEnvelope* env, float time )
 	float t, h1, h2, h3, h4, in, out, offset = 0.0f;
 	int noff;
 	
+	// Start key
+	skey = ekey = env->key;
 	
 	/* if there's no key, the value is 0 */
-	
-	if( env->nkeys == 0 ) return 0.0f;
+	if( env->nkeys == 0 || skey == NULL )
+	{
+		return 0.0f;
+	}
 	
 	/* if there's only one key, the value is constant */
-	
 	if( env->nkeys == 1 )
+	{
 		return env->key->value;
-		
-	/* find the first and last keys */
+	}
 	
-	skey = ekey = env->key;
-	while( ekey->next ) ekey = ekey->next;
+	/* find the last keys */
+	while( ekey->next != NULL )
+	{
+		ekey = ekey->next;
+	}
 	
 	/* use pre-behavior if time is before first key time */
-	
 	if( time < skey->time )
 	{
 		switch( env->behavior[ 0 ] )
@@ -836,9 +841,16 @@ float evalEnvelope( lwEnvelope* env, float time )
 				break;
 				
 			case BEH_LINEAR:
-				out = outgoing( skey, skey->next )
-					  / ( skey->next->time - skey->time );
-				return out * ( time - skey->time ) + skey->value;
+				if( skey->next != NULL )
+				{
+					out = outgoing( skey, skey->next )
+						  / ( skey->next->time - skey->time );
+					return out * ( time - skey->time ) + skey->value;
+				}
+				else
+				{
+					return 0.0f;
+				}
 		}
 	}
 	
@@ -879,9 +891,17 @@ float evalEnvelope( lwEnvelope* env, float time )
 	/* get the endpoints of the interval being evaluated */
 	
 	key0 = env->key;
+	if( key0 == NULL || key0->next == NULL )
+	{
+		return 0.0f;
+	}
 	while( time > key0->next->time )
 		key0 = key0->next;
 	key1 = key0->next;
+	if( key1 == NULL )
+	{
+		return 0.0f;
+	}
 	
 	/* check for singularities first */
 	
@@ -952,10 +972,10 @@ Append a node to a list.
 
 void lwListAdd( void** list, void* node )
 {
-	lwNode* head, *tail;
+	lwNode* head = NULL, *tail = NULL;
 	
 	head = *( ( lwNode** ) list );
-	if( !head )
+	if( head == NULL )
 	{
 		*list = node;
 		return;
@@ -1245,7 +1265,7 @@ float getF4( idFile* fp )
 	BigRevBytes( &f, 4, 1 );
 	flen += 4;
 	
-	if( FLOAT_IS_DENORMAL( f ) )
+	if( IEEE_FLT_IS_DENORMAL( f ) )
 	{
 		f = 0.0f;
 	}
@@ -1307,41 +1327,42 @@ char* getS0( idFile* fp )
 
 int sgetI1( unsigned char** bp )
 {
+	assert( bp != NULL && *bp != NULL ); // remove compiler warning
 	int i;
 	
 	if( flen == FLEN_ERROR ) return 0;
 	i = **bp;
 	if( i > 127 ) i -= 256;
 	flen += 1;
-	// RB: 64 bit fix, changed *bp++ to *bp += 1
-	*bp += 1;
-	// RB end
+	( *bp )++;
 	return i;
 }
 
 
 short sgetI2( unsigned char** bp )
 {
+	assert( bp != NULL && *bp != NULL ); // remove compiler warning
 	short i;
 	
 	if( flen == FLEN_ERROR ) return 0;
 	memcpy( &i, *bp, 2 );
 	BigRevBytes( &i, 2, 1 );
 	flen += 2;
-	*bp += 2;
+	( *bp ) += 2;
 	return i;
 }
 
 
 int sgetI4( unsigned char** bp )
 {
-	int i;
+	assert( bp != NULL && *bp != NULL ); // remove compiler warning
+	short i;
 	
 	if( flen == FLEN_ERROR ) return 0;
-	memcpy( &i, *bp, 4 );
+	memcpy( &i, *bp, sizeof( i ) );
 	BigRevBytes( &i, 4, 1 );
 	flen += 4;
-	*bp += 4;
+	( *bp ) += 4;
 	return i;
 }
 
@@ -1353,9 +1374,7 @@ unsigned char sgetU1( unsigned char** bp )
 	if( flen == FLEN_ERROR ) return 0;
 	c = **bp;
 	flen += 1;
-	// RB: 64 bit fix, changed *bp++ to *bp += 1
-	*bp += 1;
-	// RB end
+	( *bp )++;
 	return c;
 }
 
@@ -1368,7 +1387,7 @@ unsigned short sgetU2( unsigned char** bp )
 	if( flen == FLEN_ERROR ) return 0;
 	i = ( buf[ 0 ] << 8 ) | buf[ 1 ];
 	flen += 2;
-	*bp += 2;
+	( *bp ) += 2;
 	return i;
 }
 
@@ -1381,7 +1400,7 @@ unsigned int sgetU4( unsigned char** bp )
 	memcpy( &i, *bp, 4 );
 	BigRevBytes( &i, 4, 1 );
 	flen += 4;
-	*bp += 4;
+	( *bp ) += 4;
 	return i;
 }
 
@@ -1397,13 +1416,13 @@ int sgetVX( unsigned char** bp )
 	{
 		i = buf[ 0 ] << 8 | buf[ 1 ];
 		flen += 2;
-		*bp += 2;
+		( *bp ) += 2;
 	}
 	else
 	{
 		i = ( buf[ 1 ] << 16 ) | ( buf[ 2 ] << 8 ) | buf[ 3 ];
 		flen += 4;
-		*bp += 4;
+		( *bp ) += 4;
 	}
 	return i;
 }
@@ -1417,9 +1436,9 @@ float sgetF4( unsigned char** bp )
 	memcpy( &f, *bp, 4 );
 	BigRevBytes( &f, 4, 1 );
 	flen += 4;
-	*bp += 4;
+	( *bp ) += 4;
 	
-	if( FLOAT_IS_DENORMAL( f ) )
+	if( IEEE_FLT_IS_DENORMAL( f ) )
 	{
 		f = 0.0f;
 	}
@@ -1439,7 +1458,7 @@ char* sgetS0( unsigned char** bp )
 	if( len == 1 )
 	{
 		flen += 2;
-		*bp += 2;
+		( *bp ) += 2;
 		return NULL;
 	}
 	len += len & 1;
@@ -1452,7 +1471,7 @@ char* sgetS0( unsigned char** bp )
 	
 	memcpy( s, buf, len );
 	flen += len;
-	*bp += len;
+	( *bp ) += len;
 	return s;
 }
 
@@ -1781,17 +1800,15 @@ static int add_clip( char* s, lwClip** clist, int* nclips )
 	char* p;
 	
 	clip = ( lwClip* )Mem_ClearedAlloc( sizeof( lwClip ) );
-	if( !clip ) return 0;
+	if( clip == NULL ) return 0;
 	
 	clip->contrast.val = 1.0f;
 	clip->brightness.val = 1.0f;
 	clip->saturation.val = 1.0f;
 	clip->gamma.val = 1.0f;
 	
-	// RB: fixed missing parenthesis
-	if( ( p = strstr( s, "(sequence)" ) ) )
+	if( ( p = strstr( s, "(sequence)" ) ) != NULL )
 	{
-		// RB end
 		p[ -1 ] = 0;
 		clip->type = ID_ISEQ;
 		clip->source.seq.prefix = s;
@@ -1803,9 +1820,7 @@ static int add_clip( char* s, lwClip** clist, int* nclips )
 		clip->source.still.name = s;
 	}
 	
-	// RB: fixed unused value
-	*nclips += 1;
-	// RB end
+	( *nclips )++;
 	clip->index = *nclips;
 	
 	lwListAdd( ( void** )clist, clip );
@@ -1824,8 +1839,8 @@ parameters.
 
 static int add_tvel( float pos[], float vel[], lwEnvelope** elist, int* nenvs )
 {
-	lwEnvelope* env;
-	lwKey* key0, *key1;
+	lwEnvelope* env = NULL;
+	lwKey* key0 = NULL, *key1 = NULL;
 	int i;
 	
 	for( i = 0; i < 3; i++ )
@@ -1858,6 +1873,7 @@ static int add_tvel( float pos[], float vel[], lwEnvelope** elist, int* nenvs )
 		
 		lwListAdd( ( void** )elist, env );
 	}
+	assert( env != NULL );
 	
 	*nenvs += 3;
 	return env->index - 2;
@@ -1915,14 +1931,14 @@ Read an lwSurface from an LWOB file.
 
 lwSurface* lwGetSurface5( idFile* fp, int cksize, lwObject* obj )
 {
-	lwSurface* surf;
-	lwTexture* tex;
-	lwPlugin* shdr;
-	char* s;
+	lwSurface* surf = NULL;
+	lwTexture* tex = NULL;
+	lwPlugin* shdr = NULL;
+	char* s = NULL;
 	float v[ 3 ];
 	unsigned int id, flags;
 	unsigned short sz;
-	int pos, rlen, i;
+	int pos, rlen, i = 0;
 	
 	
 	/* allocate the Surface structure */
@@ -2082,6 +2098,7 @@ lwSurface* lwGetSurface5( idFile* fp, int cksize, lwObject* obj )
 				break;
 				
 			case ID_TFLG:
+				assert( tex != NULL );
 				flags = getU2( fp );
 				
 				if( flags & 1 ) i = 0;
@@ -2104,21 +2121,25 @@ lwSurface* lwGetSurface5( idFile* fp, int cksize, lwObject* obj )
 				break;
 				
 			case ID_TSIZ:
+				assert( tex != NULL );
 				for( i = 0; i < 3; i++ )
 					tex->tmap.size.val[ i ] = getF4( fp );
 				break;
 				
 			case ID_TCTR:
+				assert( tex != NULL );
 				for( i = 0; i < 3; i++ )
 					tex->tmap.center.val[ i ] = getF4( fp );
 				break;
 				
 			case ID_TFAL:
+				assert( tex != NULL );
 				for( i = 0; i < 3; i++ )
 					tex->tmap.falloff.val[ i ] = getF4( fp );
 				break;
 				
 			case ID_TVEL:
+				assert( tex != NULL );
 				for( i = 0; i < 3; i++ )
 					v[ i ] = getF4( fp );
 				tex->tmap.center.eindex = add_tvel( tex->tmap.center.val, v,
@@ -2126,44 +2147,53 @@ lwSurface* lwGetSurface5( idFile* fp, int cksize, lwObject* obj )
 				break;
 				
 			case ID_TCLR:
+				assert( tex != NULL );
 				if( tex->type == ID_PROC )
 					for( i = 0; i < 3; i++ )
 						tex->param.proc.value[ i ] = getU1( fp ) / 255.0f;
 				break;
 				
 			case ID_TVAL:
+				assert( tex != NULL );
 				tex->param.proc.value[ 0 ] = getI2( fp ) / 256.0f;
 				break;
 				
 			case ID_TAMP:
+				assert( tex != NULL );
 				if( tex->type == ID_IMAP )
 					tex->param.imap.amplitude.val = getF4( fp );
 				break;
 				
 			case ID_TIMG:
+				assert( tex != NULL );
 				s = getS0( fp );
 				tex->param.imap.cindex = add_clip( s, &obj->clip, &obj->nclips );
 				break;
 				
 			case ID_TAAS:
+				assert( tex != NULL );
 				tex->param.imap.aa_strength = getF4( fp );
 				tex->param.imap.aas_flags = 1;
 				break;
 				
 			case ID_TREF:
+				assert( tex != NULL );
 				tex->tmap.ref_object = ( char* )getbytes( fp, sz );
 				break;
 				
 			case ID_TOPC:
+				assert( tex != NULL );
 				tex->opacity.val = getF4( fp );
 				break;
 				
 			case ID_TFP0:
+				assert( tex != NULL );
 				if( tex->type == ID_IMAP )
 					tex->param.imap.wrapw.val = getF4( fp );
 				break;
 				
 			case ID_TFP1:
+				assert( tex != NULL );
 				if( tex->type == ID_IMAP )
 					tex->param.imap.wraph.val = getF4( fp );
 				break;
@@ -2177,6 +2207,7 @@ lwSurface* lwGetSurface5( idFile* fp, int cksize, lwObject* obj )
 				break;
 				
 			case ID_SDAT:
+				assert( shdr != NULL );
 				shdr->data = getbytes( fp, sz );
 				break;
 				
@@ -2228,10 +2259,7 @@ int lwGetPolygons5( idFile* fp, int cksize, lwPolygonList* plist, int ptoffset )
 	lwPolygon* pp;
 	lwPolVert* pv;
 	unsigned char* buf, *bp;
-	// RB: fixed int to pointer cast
-	int i, nv, nverts, npols;
-	ptrdiff_t j;
-	// RB end
+	int i, j, nv, nverts, npols;
 	
 	
 	if( cksize == 0 ) return 1;
@@ -2283,7 +2311,7 @@ int lwGetPolygons5( idFile* fp, int cksize, lwPolygonList* plist, int ptoffset )
 			bp += 2;
 		}
 		j -= 1;
-		pp->surf = ( lwSurface* ) j;
+		pp->surf = ( lwSurface* ) j; // DG: FIXME: cast int to pointer?!
 		
 		pp++;
 		pv += nv;
@@ -2807,10 +2835,7 @@ int lwResolvePolySurfaces( lwPolygonList* polygon, lwTagList* tlist,
 						   lwSurface** surf, int* nsurfs )
 {
 	lwSurface** s, *st;
-	// RB: fixed int to pointer cast
 	int i;
-	ptrdiff_t index;
-	// RB end
 	
 	if( tlist->count == 0 ) return 1;
 	
@@ -2830,12 +2855,13 @@ int lwResolvePolySurfaces( lwPolygonList* polygon, lwTagList* tlist,
 			st = st->next;
 		}
 	}
-	
+	// RB: 64 bit fixes
+	uintptr_t index;
 	for( i = 0; i < polygon->count; i++ )
 	{
-		// RB: fixed int to pointer cast
-		index = ( ptrdiff_t ) polygon->pol[ i ].surf;
+		index = ( uintptr_t ) polygon->pol[ i ].surf;
 		// RB end
+		
 		if( index < 0 || index > tlist->count ) return 0;
 		if( !s[ index ] )
 		{
@@ -3005,10 +3031,7 @@ Read polygon tags from a PTAG chunk in an LWO2 file.
 int lwGetPolygonTags( idFile* fp, int cksize, lwTagList* tlist, lwPolygonList* plist )
 {
 	unsigned int type;
-	// RB: fixed int to pointer cast
-	int rlen = 0, i;
-	ptrdiff_t j;
-	// RB end
+	int rlen = 0, i, j;
 	
 	set_flen( 0 );
 	type = getU4( fp );
@@ -3031,7 +3054,7 @@ int lwGetPolygonTags( idFile* fp, int cksize, lwTagList* tlist, lwPolygonList* p
 		switch( type )
 		{
 			case ID_SURF:
-				plist->pol[ i ].surf = ( lwSurface* ) j;
+				plist->pol[ i ].surf = ( lwSurface* ) j; // DG: FIXME: cast int to pointer?!
 				break;
 			case ID_PART:
 				plist->pol[ i ].part = j;

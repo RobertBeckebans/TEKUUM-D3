@@ -1,34 +1,33 @@
 /*
 ===========================================================================
 
-Doom 3 GPL Source Code
-Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Doom 3 BFG Edition GPL Source Code
+Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
 
-This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
+This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
-Doom 3 Source Code is free software: you can redistribute it and/or modify
+Doom 3 BFG Edition Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Doom 3 Source Code is distributed in the hope that it will be useful,
+Doom 3 BFG Edition Source Code is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Doom 3 Source Code.  If not, see <http://www.gnu.org/licenses/>.
+along with Doom 3 BFG Edition Source Code.  If not, see <http://www.gnu.org/licenses/>.
 
-In addition, the Doom 3 Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 Source Code.  If not, please request a copy in writing from id Software at the address below.
+In addition, the Doom 3 BFG Edition Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 BFG Edition Source Code.  If not, please request a copy in writing from id Software at the address below.
 
 If you have questions concerning this license or the applicable additional terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 
 ===========================================================================
 */
 
-#include "precompiled.h"
 #pragma hdrstop
-
+#include "precompiled.h"
 
 //===============================================================
 //
@@ -120,7 +119,7 @@ bool idMat2::InverseFastSelf()
 	d = mat[0 * 2 + 1] * di;
 	mat[0 * 2 + 0] += mat[1 * 2 + 0] * d;
 	
-	return ( s != 0.0f && !FLOAT_IS_NAN( s ) );
+	return ( s != 0.0f && !IEEE_FLT_IS_NAN( s ) );
 #endif
 }
 
@@ -145,43 +144,27 @@ idMat3 mat3_zero( idVec3( 0, 0, 0 ), idVec3( 0, 0, 0 ), idVec3( 0, 0, 0 ) );
 idMat3 mat3_identity( idVec3( 1, 0, 0 ), idVec3( 0, 1, 0 ), idVec3( 0, 0, 1 ) );
 
 /*
-============
+========================
 idMat3::ToAngles
-============
+
+returns the pitch/yaw/roll each in the range [-180, 180] degrees
+========================
 */
 idAngles idMat3::ToAngles() const
 {
-	idAngles	angles;
-	double		theta;
-	double		cp;
-	float		sp;
-	
-	sp = mat[ 0 ][ 2 ];
-	
-	// cap off our sin value so that we don't get any NANs
-	if( sp > 1.0f )
+	idAngles angles;
+	float s = idMath::Sqrt( mat[0][0] * mat[0][0] + mat[0][1] * mat[0][1] );
+	if( s > idMath::FLT_EPSILON )
 	{
-		sp = 1.0f;
-	}
-	else if( sp < -1.0f )
-	{
-		sp = -1.0f;
-	}
-	
-	theta = -asin( sp );
-	cp = cos( theta );
-	
-	if( cp > 8192.0f * idMath::FLT_EPSILON )
-	{
-		angles.pitch	= RAD2DEG( theta );
-		angles.yaw		= RAD2DEG( atan2( mat[ 0 ][ 1 ], mat[ 0 ][ 0 ] ) );
-		angles.roll		= RAD2DEG( atan2( mat[ 1 ][ 2 ], mat[ 2 ][ 2 ] ) );
+		angles.pitch = RAD2DEG( - idMath::ATan( mat[0][2], s ) );
+		angles.yaw = RAD2DEG( idMath::ATan( mat[0][1], mat[0][0] ) );
+		angles.roll = RAD2DEG( idMath::ATan( mat[1][2], mat[2][2] ) );
 	}
 	else
 	{
-		angles.pitch	= RAD2DEG( theta );
-		angles.yaw		= RAD2DEG( -atan2( mat[ 1 ][ 0 ], mat[ 1 ][ 1 ] ) );
-		angles.roll		= 0;
+		angles.pitch = mat[0][2] < 0.0f ? 90.0f : -90.0f;
+		angles.yaw = RAD2DEG( - idMath::ATan( mat[1][0], mat[1][1] ) );
+		angles.roll = 0.0f;
 	}
 	return angles;
 }
@@ -310,19 +293,20 @@ idRotation idMat3::ToRotation() const
 		r.vec[j]	= ( mat[ j ][ i ] + mat[ i ][ j ] ) * s;
 		r.vec[k]	= ( mat[ k ][ i ] + mat[ i ][ k ] ) * s;
 	}
+	
 	r.angle = idMath::ACos( r.angle );
-	if( idMath::Fabs( r.angle ) < 1e-10f )
+	float lengthSqr = r.vec.LengthSqr();
+	if( ( idMath::Fabs( r.angle ) < 1e-10f ) || ( lengthSqr < 1e-10f ) )
 	{
 		r.vec.Set( 0.0f, 0.0f, 1.0f );
 		r.angle = 0.0f;
 	}
 	else
 	{
-		//vec *= (1.0f / sin( angle ));
-		r.vec.Normalize();
-		r.vec.FixDegenerateNormal();
+		r.vec *= idMath::InvSqrt( lengthSqr );
 		r.angle *= 2.0f * idMath::M_RAD2DEG;
 	}
+	
 	
 	r.origin.Zero();
 	r.axis = *this;
@@ -499,7 +483,7 @@ bool idMat3::InverseFastSelf()
 	mat[3] += mat[6] * d;
 	mat[4] += mat[7] * d;
 	
-	return ( s != 0.0f && !FLOAT_IS_NAN( s ) );
+	return ( s != 0.0f && !IEEE_FLT_IS_NAN( s ) );
 #else
 	//	4*2+4*4 = 24 multiplications
 	//		2*1 =  2 divisions
@@ -1001,7 +985,7 @@ bool idMat4::InverseFastSelf()
 	mat[9] += mat[13] * d;
 	mat[10] += mat[14] * d;
 	
-	return ( s != 0.0f && !FLOAT_IS_NAN( s ) );
+	return ( s != 0.0f && !IEEE_FLT_IS_NAN( s ) );
 #else
 	//	6*8+2*6 = 60 multiplications
 	//		2*1 =  2 divisions
@@ -1686,7 +1670,7 @@ bool idMat5::InverseFastSelf()
 	mat[17] += mat[22] * d;
 	mat[18] += mat[23] * d;
 	
-	return ( s != 0.0f && !FLOAT_IS_NAN( s ) );
+	return ( s != 0.0f && !IEEE_FLT_IS_NAN( s ) );
 #else
 	// 86+30+6 = 122 multiplications
 	//	  2*1  =   2 divisions
@@ -2847,7 +2831,7 @@ bool idMat6::InverseFastSelf()
 	mat[27] += mat[33] * d;
 	mat[28] += mat[34] * d;
 	
-	return ( s != 0.0f && !FLOAT_IS_NAN( s ) );
+	return ( s != 0.0f && !IEEE_FLT_IS_NAN( s ) );
 #else
 	// 6*27+2*30 = 222 multiplications
 	//		2*1  =	 2 divisions

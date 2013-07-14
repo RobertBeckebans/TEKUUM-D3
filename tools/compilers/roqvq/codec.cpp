@@ -1977,7 +1977,7 @@ void codec::VQ( const int numEntries, const int dimension, const unsigned char* 
 			if( ( numFinalEntries & 511 ) == 0 )
 			{
 				common->Printf( "VQ: has %d entries to process\n", numFinalEntries );
-				session->UpdateScreen();
+				session->UpdateScreen( false );
 			}
 		}
 		while( numFinalEntries > 256 );

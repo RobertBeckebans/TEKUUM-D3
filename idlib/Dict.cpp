@@ -1,25 +1,25 @@
 /*
 ===========================================================================
 
-Doom 3 GPL Source Code
-Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Doom 3 BFG Edition GPL Source Code
+Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
 
-This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
+This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
-Doom 3 Source Code is free software: you can redistribute it and/or modify
+Doom 3 BFG Edition Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Doom 3 Source Code is distributed in the hope that it will be useful,
+Doom 3 BFG Edition Source Code is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Doom 3 Source Code.  If not, see <http://www.gnu.org/licenses/>.
+along with Doom 3 BFG Edition Source Code.  If not, see <http://www.gnu.org/licenses/>.
 
-In addition, the Doom 3 Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 Source Code.  If not, please request a copy in writing from id Software at the address below.
+In addition, the Doom 3 BFG Edition Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 BFG Edition Source Code.  If not, please request a copy in writing from id Software at the address below.
 
 If you have questions concerning this license or the applicable additional terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 
@@ -273,7 +273,7 @@ int	idDict::Checksum() const
 	int i, n;
 	
 	idList<idKeyValue> sorted = args;
-	sorted.Sort( KeyCompare );
+	sorted.SortWithTemplate( idSort_KeyValue() );
 	n = sorted.Num();
 	CRC32_InitChecksum( ret );
 	for( i = 0; i < n; i++ )
@@ -378,6 +378,66 @@ bool idDict::GetBool( const char* key, const char* defaultString, bool& out ) co
 	found = GetString( key, defaultString, &s );
 	out = ( atoi( s ) != 0 );
 	return found;
+}
+
+/*
+================
+idDict::GetFloat
+================
+*/
+bool idDict::GetFloat( const char* key, const float defaultFloat, float& out ) const
+{
+	const idKeyValue* kv = FindKey( key );
+	if( kv )
+	{
+		out = atof( kv->GetValue() );
+		return true;
+	}
+	else
+	{
+		out = defaultFloat;
+		return false;
+	}
+}
+
+/*
+================
+idDict::GetInt
+================
+*/
+bool idDict::GetInt( const char* key, const int defaultInt, int& out ) const
+{
+	const idKeyValue* kv = FindKey( key );
+	if( kv )
+	{
+		out = atoi( kv->GetValue() );
+		return true;
+	}
+	else
+	{
+		out = defaultInt;
+		return false;
+	}
+}
+
+/*
+================
+idDict::GetBool
+================
+*/
+bool idDict::GetBool( const char* key, const bool defaultBool, bool& out ) const
+{
+	const idKeyValue* kv = FindKey( key );
+	if( kv )
+	{
+		out = ( atoi( kv->GetValue() ) != 0 );
+		return true;
+	}
+	else
+	{
+		out = defaultBool;
+		return false;
+	}
 }
 
 /*
@@ -634,7 +694,7 @@ const char* idDict::RandomPrefix( const char* prefix, idRandom& random ) const
 	const idKeyValue* kv;
 	
 	list[0] = "";
-	for( count = 0, kv = MatchPrefix( prefix ); kv && count < MAX_RANDOM_KEYS; kv = MatchPrefix( prefix, kv ) )
+	for( count = 0, kv = MatchPrefix( prefix ); kv != NULL && count < MAX_RANDOM_KEYS; kv = MatchPrefix( prefix, kv ) )
 	{
 		list[count++] = kv->GetValue().c_str();
 	}
@@ -734,22 +794,8 @@ idDict::ShowMemoryUsage_f
 */
 void idDict::ShowMemoryUsage_f( const idCmdArgs& args )
 {
-	// RB: 64 bit fix, changed %5d to %5zd for size_t conversion
-	idLib::common->Printf( "%5zd KB in %d keys\n", globalKeys.Size() >> 10, globalKeys.Num() );
-	idLib::common->Printf( "%5zd KB in %d values\n", globalValues.Size() >> 10, globalValues.Num() );
-	// RB end
-}
-
-/*
-================
-idDictStringSortCmp
-================
-*/
-// NOTE: the const wonkyness is required to make msvc happy
-template<>
-ID_INLINE int idListSortCompare( const idPoolStr* const* a, const idPoolStr* const* b )
-{
-	return ( *a )->Icmp( **b );
+	idLib::common->Printf( "%5d KB in %d keys\n", globalKeys.Size() >> 10, globalKeys.Num() );
+	idLib::common->Printf( "%5d KB in %d values\n", globalValues.Size() >> 10, globalValues.Num() );
 }
 
 /*
@@ -759,19 +805,18 @@ idDict::ListKeys_f
 */
 void idDict::ListKeys_f( const idCmdArgs& args )
 {
-	int i;
-	idList<const idPoolStr*> keyStrings;
+	idLib::Printf( "Not implemented due to sort impl issues.\n" );
+	//int i;
+	//idList<const idPoolStr *> keyStrings;
 	
-	for( i = 0; i < globalKeys.Num(); i++ )
-	{
-		keyStrings.Append( globalKeys[i] );
-	}
-	keyStrings.Sort();
-	for( i = 0; i < keyStrings.Num(); i++ )
-	{
-		idLib::common->Printf( "%s\n", keyStrings[i]->c_str() );
-	}
-	idLib::common->Printf( "%5d keys\n", keyStrings.Num() );
+	//for ( i = 0; i < globalKeys.Num(); i++ ) {
+	//	keyStrings.Append( globalKeys[i] );
+	//}
+	//keyStrings.SortWithTemplate( idSort_PoolStrPtr() );
+	//for ( i = 0; i < keyStrings.Num(); i++ ) {
+	//	idLib::common->Printf( "%s\n", keyStrings[i]->c_str() );
+	//}
+	//idLib::common->Printf( "%5d keys\n", keyStrings.Num() );
 }
 
 /*
@@ -781,17 +826,16 @@ idDict::ListValues_f
 */
 void idDict::ListValues_f( const idCmdArgs& args )
 {
-	int i;
-	idList<const idPoolStr*> valueStrings;
+	idLib::Printf( "Not implemented due to sort impl issues.\n" );
+	//int i;
+	//idList<const idPoolStr *> valueStrings;
 	
-	for( i = 0; i < globalValues.Num(); i++ )
-	{
-		valueStrings.Append( globalValues[i] );
-	}
-	valueStrings.Sort();
-	for( i = 0; i < valueStrings.Num(); i++ )
-	{
-		idLib::common->Printf( "%s\n", valueStrings[i]->c_str() );
-	}
-	idLib::common->Printf( "%5d values\n", valueStrings.Num() );
+	//for ( i = 0; i < globalValues.Num(); i++ ) {
+	//	valueStrings.Append( globalValues[i] );
+	//}
+	//valueStrings.SortWithTemplate( idSort_PoolStrPtr() );
+	//for ( i = 0; i < valueStrings.Num(); i++ ) {
+	//	idLib::common->Printf( "%s\n", valueStrings[i]->c_str() );
+	//}
+	//idLib::common->Printf( "%5d values\n", valueStrings.Num() );
 }

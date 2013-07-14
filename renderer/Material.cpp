@@ -1,33 +1,34 @@
 /*
 ===========================================================================
 
-Doom 3 GPL Source Code
-Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Doom 3 BFG Edition GPL Source Code
+Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
 
-This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
+This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
-Doom 3 Source Code is free software: you can redistribute it and/or modify
+Doom 3 BFG Edition Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Doom 3 Source Code is distributed in the hope that it will be useful,
+Doom 3 BFG Edition Source Code is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Doom 3 Source Code.  If not, see <http://www.gnu.org/licenses/>.
+along with Doom 3 BFG Edition Source Code.  If not, see <http://www.gnu.org/licenses/>.
 
-In addition, the Doom 3 Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 Source Code.  If not, please request a copy in writing from id Software at the address below.
+In addition, the Doom 3 BFG Edition Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 BFG Edition Source Code.  If not, please request a copy in writing from id Software at the address below.
 
 If you have questions concerning this license or the applicable additional terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 
 ===========================================================================
 */
 
-#include "precompiled.h"
 #pragma hdrstop
+#include "precompiled.h"
+
 
 #include "tr_local.h"
 
@@ -69,6 +70,7 @@ typedef struct mtrParsingData_s
 	bool			forceOverlays;
 } mtrParsingData_t;
 
+idCVar r_forceSoundOpAmplitude( "r_forceSoundOpAmplitude", "0", CVAR_FLOAT, "Don't call into the sound system for amplitudes" );
 
 /*
 =============
@@ -83,6 +85,7 @@ void idMaterial::CommonInit()
 	surfaceFlags = SURFTYPE_NONE;
 	materialFlags = 0;
 	sort = SS_BAD;
+	stereoEye = 0;
 	coverage = MC_BAD;
 	cullType = CT_FRONT_SIDED;
 	deform = DFRM_NONE;
@@ -113,6 +116,10 @@ void idMaterial::CommonInit()
 	suppressInSubview = false;
 	refCount = 0;
 	portalSky = false;
+	fastPathBumpImage = NULL;
+	fastPathDiffuseImage = NULL;
+	fastPathSpecularImage = NULL;
+	deformDecl = NULL;
 	
 	decalInfo.stayTime = 10000;
 	decalInfo.fadeTime = 4000;
@@ -125,6 +132,7 @@ void idMaterial::CommonInit()
 	decalInfo.end[2] = 0;
 	decalInfo.end[3] = 0;
 }
+
 
 /*
 =============
@@ -234,7 +242,7 @@ idImage* idMaterial::GetEditorImage() const
 	else
 	{
 		// look for an explicit one
-		editorImage = globalImages->ImageFromFile( editorImageName, TF_DEFAULT, true, TR_REPEAT, TD_DEFAULT );
+		editorImage = globalImages->ImageFromFile( editorImageName, TF_DEFAULT, TR_REPEAT, TD_DEFAULT );
 	}
 	
 	if( !editorImage )
@@ -249,7 +257,7 @@ idImage* idMaterial::GetEditorImage() const
 // info parms
 typedef struct
 {
-	char*	name;
+	const char*	name;
 	int		clearSolid, surfaceFlags, contents;
 } infoParm_t;
 
@@ -299,9 +307,7 @@ static infoParm_t	infoParms[] =
 	{"ricochet",	0,	SURFTYPE_RICOCHET,	0 },	// behaves like metal but causes a ricochet sound
 	
 	// unassigned surface types
-// RB begin
-	{"wallwalk",	0,	SURFTYPE_WALLWALK,	0 },
-// RB end
+	{"surftype10",	0,	SURFTYPE_10,	0 },
 	{"surftype11",	0,	SURFTYPE_11,	0 },
 	{"surftype12",	0,	SURFTYPE_12,	0 },
 	{"surftype13",	0,	SURFTYPE_13,	0 },
@@ -419,6 +425,36 @@ void idMaterial::ParseSort( idLexer& src )
 	else
 	{
 		sort = atof( token );
+	}
+}
+
+/*
+=================
+idMaterial::ParseStereoEye
+=================
+*/
+void idMaterial::ParseStereoEye( idLexer& src )
+{
+	idToken token;
+	
+	if( !src.ReadTokenOnLine( &token ) )
+	{
+		src.Warning( "missing eye parameter" );
+		SetMaterialFlag( MF_DEFAULTED );
+		return;
+	}
+	
+	if( !token.Icmp( "left" ) )
+	{
+		stereoEye = -1;
+	}
+	else if( !token.Icmp( "right" ) )
+	{
+		stereoEye = 1;
+	}
+	else
+	{
+		stereoEye = 0;
 	}
 }
 
@@ -706,7 +742,7 @@ int idMaterial::ParseTerm( idLexer& src )
 	}
 	if( !token.Icmp( "fragmentPrograms" ) )
 	{
-		return GetExpressionConstant( ( float ) glConfig.ARBFragmentProgramAvailable );
+		return 1.0f;
 	}
 	
 	if( !token.Icmp( "sound" ) )
@@ -914,7 +950,8 @@ int idMaterial::NameToSrcBlendMode( const idStr& name )
 	}
 	else if( !name.Icmp( "GL_SRC_ALPHA_SATURATE" ) )
 	{
-		return GLS_SRCBLEND_ALPHA_SATURATE;
+		assert( 0 ); // FIX ME
+		return GLS_SRCBLEND_SRC_ALPHA;
 	}
 	
 	common->Warning( "unknown blend mode '%s' in material '%s'", name.c_str(), GetName() );
@@ -1093,6 +1130,37 @@ void idMaterial::ParseVertexParm( idLexer& src, newShaderStage_t* newStage )
 	newStage->vertexParms[parm][3] = ParseExpression( src );
 }
 
+/*
+================
+idMaterial::ParseVertexParm2
+================
+*/
+void idMaterial::ParseVertexParm2( idLexer& src, newShaderStage_t* newStage )
+{
+	idToken	token;
+	src.ReadTokenOnLine( &token );
+	int	parm = token.GetIntValue();
+	if( !token.IsNumeric() || parm < 0 || parm >= MAX_VERTEX_PARMS )
+	{
+		common->Warning( "bad vertexParm number\n" );
+		SetMaterialFlag( MF_DEFAULTED );
+		return;
+	}
+	
+	if( parm >= newStage->numVertexParms )
+	{
+		newStage->numVertexParms = parm + 1;
+	}
+	
+	newStage->vertexParms[parm][0] = ParseExpression( src );
+	MatchToken( src, "," );
+	newStage->vertexParms[parm][1] = ParseExpression( src );
+	MatchToken( src, "," );
+	newStage->vertexParms[parm][2] = ParseExpression( src );
+	MatchToken( src, "," );
+	newStage->vertexParms[parm][3] = ParseExpression( src );
+}
+
 
 /*
 ================
@@ -1104,15 +1172,13 @@ void idMaterial::ParseFragmentMap( idLexer& src, newShaderStage_t* newStage )
 	const char*			str;
 	textureFilter_t		tf;
 	textureRepeat_t		trp;
-	textureDepth_t		td;
+	textureUsage_t		td;
 	cubeFiles_t			cubeMap;
-	bool				allowPicmip;
 	idToken				token;
 	
 	tf = TF_DEFAULT;
 	trp = TR_REPEAT;
 	td = TD_DEFAULT;
-	allowPicmip = true;
 	cubeMap = CF_2D;
 	
 	src.ReadTokenOnLine( &token );
@@ -1181,21 +1247,18 @@ void idMaterial::ParseFragmentMap( idLexer& src, newShaderStage_t* newStage )
 		}
 		if( !token.Icmp( "forceHighQuality" ) )
 		{
-			td = TD_HIGH_QUALITY;
 			continue;
 		}
-		
-		if( !token.Icmp( "uncompressed" ) || !token.Icmp( "highquality" ) )
+		if( !token.Icmp( "highquality" ) )
 		{
-			if( !globalImages->image_ignoreHighQuality.GetInteger() )
-			{
-				td = TD_HIGH_QUALITY;
-			}
+			continue;
+		}
+		if( !token.Icmp( "uncompressed" ) )
+		{
 			continue;
 		}
 		if( !token.Icmp( "nopicmip" ) )
 		{
-			allowPicmip = false;
 			continue;
 		}
 		
@@ -1206,7 +1269,7 @@ void idMaterial::ParseFragmentMap( idLexer& src, newShaderStage_t* newStage )
 	str = R_ParsePastImageProgram( src );
 	
 	newStage->fragmentProgramImages[unit] =
-		globalImages->ImageFromFile( str, tf, allowPicmip, trp, td, cubeMap );
+		globalImages->ImageFromFile( str, tf, trp, td, cubeMap );
 	if( !newStage->fragmentProgramImages[unit] )
 	{
 		newStage->fragmentProgramImages[unit] = globalImages->defaultImage;
@@ -1282,9 +1345,8 @@ void idMaterial::ParseStage( idLexer& src, const textureRepeat_t trpDefault )
 	textureStage_t*		ts;
 	textureFilter_t		tf;
 	textureRepeat_t		trp;
-	textureDepth_t		td;
+	textureUsage_t		td;
 	cubeFiles_t			cubeMap;
-	bool				allowPicmip;
 	char				imageName[MAX_IMAGE_NAME];
 	int					a, b;
 	int					matrix[2][3];
@@ -1299,12 +1361,12 @@ void idMaterial::ParseStage( idLexer& src, const textureRepeat_t trpDefault )
 	tf = TF_DEFAULT;
 	trp = trpDefault;
 	td = TD_DEFAULT;
-	allowPicmip = true;
 	cubeMap = CF_2D;
 	
 	imageName[0] = 0;
 	
 	memset( &newStage, 0, sizeof( newStage ) );
+	newStage.glslProgram = -1;
 	
 	ss = &pd->parseStages[numStages];
 	ts = &ss->texture;
@@ -1478,22 +1540,20 @@ void idMaterial::ParseStage( idLexer& src, const textureRepeat_t trpDefault )
 			trp = TR_CLAMP_TO_ZERO_ALPHA;
 			continue;
 		}
-		if( !token.Icmp( "uncompressed" ) || !token.Icmp( "highquality" ) )
-		{
-			if( !globalImages->image_ignoreHighQuality.GetInteger() )
-			{
-				td = TD_HIGH_QUALITY;
-			}
-			continue;
-		}
 		if( !token.Icmp( "forceHighQuality" ) )
 		{
-			td = TD_HIGH_QUALITY;
+			continue;
+		}
+		if( !token.Icmp( "highquality" ) )
+		{
+			continue;
+		}
+		if( !token.Icmp( "uncompressed" ) )
+		{
 			continue;
 		}
 		if( !token.Icmp( "nopicmip" ) )
 		{
-			allowPicmip = false;
 			continue;
 		}
 		if( !token.Icmp( "vertexColor" ) )
@@ -1760,10 +1820,8 @@ void idMaterial::ParseStage( idLexer& src, const textureRepeat_t trpDefault )
 		{
 			if( src.ReadTokenOnLine( &token ) )
 			{
-#if !defined(USE_GLES1)
-				newStage.vertexProgram = R_FindARBProgram( GL_VERTEX_PROGRAM_ARB, token.c_str() );
-				newStage.fragmentProgram = R_FindARBProgram( GL_FRAGMENT_PROGRAM_ARB, token.c_str() );
-#endif
+				newStage.vertexProgram = renderProgManager.FindVertexShader( token.c_str() );
+				newStage.fragmentProgram = renderProgManager.FindFragmentShader( token.c_str() );
 			}
 			continue;
 		}
@@ -1771,9 +1829,7 @@ void idMaterial::ParseStage( idLexer& src, const textureRepeat_t trpDefault )
 		{
 			if( src.ReadTokenOnLine( &token ) )
 			{
-#if !defined(USE_GLES1)
-				newStage.fragmentProgram = R_FindARBProgram( GL_FRAGMENT_PROGRAM_ARB, token.c_str() );
-#endif
+				newStage.fragmentProgram = renderProgManager.FindFragmentShader( token.c_str() );
 			}
 			continue;
 		}
@@ -1781,31 +1837,16 @@ void idMaterial::ParseStage( idLexer& src, const textureRepeat_t trpDefault )
 		{
 			if( src.ReadTokenOnLine( &token ) )
 			{
-#if !defined(USE_GLES1)
-				newStage.vertexProgram = R_FindARBProgram( GL_VERTEX_PROGRAM_ARB, token.c_str() );
-#endif
+				newStage.vertexProgram = renderProgManager.FindVertexShader( token.c_str() );
 			}
 			continue;
 		}
-		if( !token.Icmp( "megaTexture" ) )
-		{
-			if( src.ReadTokenOnLine( &token ) )
-			{
-				newStage.megaTexture = new idMegaTexture;
-				if( !newStage.megaTexture->InitFromMegaFile( token.c_str() ) )
-				{
-					delete newStage.megaTexture;
-					SetMaterialFlag( MF_DEFAULTED );
-					continue;
-				}
-#if !defined(USE_GLES1)
-				newStage.vertexProgram = R_FindARBProgram( GL_VERTEX_PROGRAM_ARB, "megaTexture.vfp" );
-				newStage.fragmentProgram = R_FindARBProgram( GL_FRAGMENT_PROGRAM_ARB, "megaTexture.vfp" );
-#endif
-				continue;
-			}
-		}
 		
+		if( !token.Icmp( "vertexParm2" ) )
+		{
+			ParseVertexParm2( src, &newStage );
+			continue;
+		}
 		
 		if( !token.Icmp( "vertexParm" ) )
 		{
@@ -1829,6 +1870,7 @@ void idMaterial::ParseStage( idLexer& src, const textureRepeat_t trpDefault )
 	// if we are using newStage, allocate a copy of it
 	if( newStage.fragmentProgram || newStage.vertexProgram )
 	{
+		newStage.glslProgram = renderProgManager.FindGLSLProgram( GetName(), newStage.vertexProgram, newStage.fragmentProgram );
 		ss->newStage = ( newShaderStage_t* )Mem_Alloc( sizeof( newStage ) );
 		*( ss->newStage ) = newStage;
 	}
@@ -1855,10 +1897,41 @@ void idMaterial::ParseStage( idLexer& src, const textureRepeat_t trpDefault )
 		}
 	}
 	
+	// create a new coverage stage on the fly - copy all data from the current stage
+	if( ( td == TD_DIFFUSE ) && ss->hasAlphaTest )
+	{
+		// create new coverage stage
+		shaderStage_t* newCoverageStage = &pd->parseStages[numStages];
+		numStages++;
+		// copy it
+		*newCoverageStage = *ss;
+		// toggle alphatest off for the current stage so it doesn't get called during the depth fill pass
+		ss->hasAlphaTest = false;
+		// toggle alpha test on for the coverage stage
+		newCoverageStage->hasAlphaTest = true;
+		newCoverageStage->lighting = SL_COVERAGE;
+		textureStage_t* coverageTS = &newCoverageStage->texture;
+		
+		// now load the image with all the parms we parsed for the coverage stage
+		if( imageName[0] )
+		{
+			coverageTS->image = globalImages->ImageFromFile( imageName, tf, trp, TD_COVERAGE, cubeMap );
+			if( !coverageTS->image )
+			{
+				coverageTS->image = globalImages->defaultImage;
+			}
+		}
+		else if( !coverageTS->cinematic && !coverageTS->dynamic && !ss->newStage )
+		{
+			common->Warning( "material '%s' had stage with no image", GetName() );
+			coverageTS->image = globalImages->defaultImage;
+		}
+	}
+	
 	// now load the image with all the parms we parsed
 	if( imageName[0] )
 	{
-		ts->image = globalImages->ImageFromFile( imageName, tf, allowPicmip, trp, td, cubeMap );
+		ts->image = globalImages->ImageFromFile( imageName, tf, trp, td, cubeMap );
 		if( !ts->image )
 		{
 			ts->image = globalImages->defaultImage;
@@ -2126,7 +2199,7 @@ void idMaterial::ParseMaterial( idLexer& src )
 	}
 	
 	numStages = 0;
-	
+	pd->registersAreConstant = true;			// until shown otherwise
 	textureRepeat_t	trpDefault = TR_REPEAT;		// allow a global setting for repeat
 	
 	while( 1 )
@@ -2320,7 +2393,7 @@ void idMaterial::ParseMaterial( idLexer& src )
 			idStr	copy;
 			
 			copy = str;	// so other things don't step on it
-			lightFalloffImage = globalImages->ImageFromFile( copy, TF_DEFAULT, false, TR_CLAMP /* TR_CLAMP_TO_ZERO */, TD_DEFAULT );
+			lightFalloffImage = globalImages->ImageFromFile( copy, TF_DEFAULT, TR_CLAMP /* TR_CLAMP_TO_ZERO */, TD_DEFAULT );
 			continue;
 		}
 		// guisurf <guifile> | guisurf entity
@@ -2351,6 +2424,11 @@ void idMaterial::ParseMaterial( idLexer& src )
 		else if( !token.Icmp( "sort" ) )
 		{
 			ParseSort( src );
+			continue;
+		}
+		else if( !token.Icmp( "stereoeye" ) )
+		{
+			ParseStereoEye( src );
 			continue;
 		}
 		// spectrum <integer>
@@ -2508,7 +2586,7 @@ idMaterial::Parse
 Parses the current material definition and finds all necessary images.
 =========================
 */
-bool idMaterial::Parse( const char* text, const int textLength )
+bool idMaterial::Parse( const char* text, const int textLength, bool allowBinaryVersion )
 {
 	idLexer	src;
 	idToken	token;
@@ -2609,7 +2687,7 @@ bool idMaterial::Parse( const char* text, const int textLength )
 	// if we are translucent, draw with an alpha in the editor
 	if( coverage == MC_TRANSLUCENT )
 	{
-		editorAlpha = 0.5;
+		editorAlpha = 0.25;
 	}
 	else
 	{
@@ -2639,7 +2717,7 @@ bool idMaterial::Parse( const char* text, const int textLength )
 	for( i = 0 ; i < numStages ; i++ )
 	{
 		shaderStage_t*	pStage = &pd->parseStages[i];
-		if( pStage->texture.image == globalImages->currentRenderImage )
+		if( pStage->texture.image == globalImages->originalCurrentRenderImage )
 		{
 			if( sort != SS_PORTAL_SKY )
 			{
@@ -2652,7 +2730,7 @@ bool idMaterial::Parse( const char* text, const int textLength )
 		{
 			for( int j = 0 ; j < pStage->newStage->numFragmentProgramImages ; j++ )
 			{
-				if( pStage->newStage->fragmentProgramImages[j] == globalImages->currentRenderImage )
+				if( pStage->newStage->fragmentProgramImages[j] == globalImages->originalCurrentRenderImage )
 				{
 					if( sort != SS_PORTAL_SKY )
 					{
@@ -2750,6 +2828,9 @@ bool idMaterial::Parse( const char* text, const int textLength )
 	// per-surface
 	CheckForConstantRegisters();
 	
+	// See if the material is trivial for the fast path
+	SetFastPathImages();
+	
 	pd = NULL;	// the pointer will be invalid after exiting this function
 	
 	// finish things up
@@ -2766,7 +2847,7 @@ bool idMaterial::Parse( const char* text, const int textLength )
 idMaterial::Print
 ===================
 */
-char* opNames[] =
+const char* opNames[] =
 {
 	"OP_TYPE_ADD",
 	"OP_TYPE_SUBTRACT",
@@ -2846,9 +2927,14 @@ then all expressions are evaluated, leaving the material registers
 set to their apropriate values.
 ===============
 */
-void idMaterial::EvaluateRegisters( float* registers, const float shaderParms[MAX_ENTITY_SHADER_PARMS],
-									const viewDef_t* view, idSoundEmitter* soundEmitter ) const
+void idMaterial::EvaluateRegisters(
+	float* 			registers,
+	const float		localShaderParms[MAX_ENTITY_SHADER_PARMS],
+	const float		globalShaderParms[MAX_GLOBAL_SHADER_PARMS],
+	const float		floatTime,
+	idSoundEmitter* soundEmitter ) const
 {
+
 	int		i, b;
 	expOp_t*	op;
 	
@@ -2859,27 +2945,27 @@ void idMaterial::EvaluateRegisters( float* registers, const float shaderParms[MA
 	}
 	
 	// copy the local and global parameters
-	registers[EXP_REG_TIME] = view->floatTime;
-	registers[EXP_REG_PARM0] = shaderParms[0];
-	registers[EXP_REG_PARM1] = shaderParms[1];
-	registers[EXP_REG_PARM2] = shaderParms[2];
-	registers[EXP_REG_PARM3] = shaderParms[3];
-	registers[EXP_REG_PARM4] = shaderParms[4];
-	registers[EXP_REG_PARM5] = shaderParms[5];
-	registers[EXP_REG_PARM6] = shaderParms[6];
-	registers[EXP_REG_PARM7] = shaderParms[7];
-	registers[EXP_REG_PARM8] = shaderParms[8];
-	registers[EXP_REG_PARM9] = shaderParms[9];
-	registers[EXP_REG_PARM10] = shaderParms[10];
-	registers[EXP_REG_PARM11] = shaderParms[11];
-	registers[EXP_REG_GLOBAL0] = view->renderView.shaderParms[0];
-	registers[EXP_REG_GLOBAL1] = view->renderView.shaderParms[1];
-	registers[EXP_REG_GLOBAL2] = view->renderView.shaderParms[2];
-	registers[EXP_REG_GLOBAL3] = view->renderView.shaderParms[3];
-	registers[EXP_REG_GLOBAL4] = view->renderView.shaderParms[4];
-	registers[EXP_REG_GLOBAL5] = view->renderView.shaderParms[5];
-	registers[EXP_REG_GLOBAL6] = view->renderView.shaderParms[6];
-	registers[EXP_REG_GLOBAL7] = view->renderView.shaderParms[7];
+	registers[EXP_REG_TIME] = floatTime;
+	registers[EXP_REG_PARM0] = localShaderParms[0];
+	registers[EXP_REG_PARM1] = localShaderParms[1];
+	registers[EXP_REG_PARM2] = localShaderParms[2];
+	registers[EXP_REG_PARM3] = localShaderParms[3];
+	registers[EXP_REG_PARM4] = localShaderParms[4];
+	registers[EXP_REG_PARM5] = localShaderParms[5];
+	registers[EXP_REG_PARM6] = localShaderParms[6];
+	registers[EXP_REG_PARM7] = localShaderParms[7];
+	registers[EXP_REG_PARM8] = localShaderParms[8];
+	registers[EXP_REG_PARM9] = localShaderParms[9];
+	registers[EXP_REG_PARM10] = localShaderParms[10];
+	registers[EXP_REG_PARM11] = localShaderParms[11];
+	registers[EXP_REG_GLOBAL0] = globalShaderParms[0];
+	registers[EXP_REG_GLOBAL1] = globalShaderParms[1];
+	registers[EXP_REG_GLOBAL2] = globalShaderParms[2];
+	registers[EXP_REG_GLOBAL3] = globalShaderParms[3];
+	registers[EXP_REG_GLOBAL4] = globalShaderParms[4];
+	registers[EXP_REG_GLOBAL5] = globalShaderParms[5];
+	registers[EXP_REG_GLOBAL6] = globalShaderParms[6];
+	registers[EXP_REG_GLOBAL7] = globalShaderParms[7];
 	
 	op = ops;
 	for( i = 0 ; i < numOps ; i++, op++ )
@@ -2910,7 +2996,11 @@ void idMaterial::EvaluateRegisters( float* registers, const float shaderParms[MA
 			}
 			break;
 			case OP_TYPE_SOUND:
-				if( soundEmitter )
+				if( r_forceSoundOpAmplitude.GetFloat() > 0 )
+				{
+					registers[op->c] = r_forceSoundOpAmplitude.GetFloat();
+				}
+				else if( soundEmitter )
 				{
 					registers[op->c] = soundEmitter->CurrentAmplitude();
 				}
@@ -2979,7 +3069,7 @@ idMaterial::GetImageWidth
 int idMaterial::GetImageWidth() const
 {
 	assert( GetStage( 0 ) && GetStage( 0 )->texture.image );
-	return GetStage( 0 )->texture.image->uploadWidth;
+	return GetStage( 0 )->texture.image->GetUploadWidth();
 }
 
 /*
@@ -2990,7 +3080,7 @@ idMaterial::GetImageHeight
 int idMaterial::GetImageHeight() const
 {
 	assert( GetStage( 0 ) && GetStage( 0 )->texture.image );
-	return GetStage( 0 )->texture.image->uploadHeight;
+	return GetStage( 0 )->texture.image->GetUploadHeight();
 }
 
 /*
@@ -3018,7 +3108,7 @@ void idMaterial::UpdateCinematic( int time ) const
 	{
 		return;
 	}
-	stages[0].texture.cinematic->ImageForTime( tr.primaryRenderView.time );
+	stages[0].texture.cinematic->ImageForTime( tr.primaryRenderView.time[0] );
 }
 
 /*
@@ -3057,16 +3147,23 @@ void idMaterial::ResetCinematicTime( int time ) const
 
 /*
 =============
-idMaterial::ConstantRegisters
+idMaterial::GetCinematicStartTime
 =============
 */
-const float* idMaterial::ConstantRegisters() const
+int idMaterial::GetCinematicStartTime() const
 {
-	if( !r_useConstantMaterials.GetBool() )
+#if 0
+	for( int i = 0; i < numStages; i++ )
 	{
-		return NULL;
+		if( stages[i].texture.cinematic )
+		{
+			return stages[i].texture.cinematic->GetStartTime();
+		}
 	}
-	return constantRegisters;
+	return -1;
+#else
+	return -1;
+#endif
 }
 
 /*
@@ -3075,13 +3172,17 @@ idMaterial::CheckForConstantRegisters
 
 As of 5/2/03, about half of the unique materials loaded on typical
 maps are constant, but 2/3 of the surface references are.
-This is probably an optimization of dubious value.
 ==================
 */
-static int	c_constant, c_variable;
 void idMaterial::CheckForConstantRegisters()
 {
+	assert( constantRegisters == NULL );
+	
 	if( !pd->registersAreConstant )
+	{
+		return;
+	}
+	if( !r_useConstantMaterials.GetBool() )
 	{
 		return;
 	}
@@ -3094,7 +3195,7 @@ void idMaterial::CheckForConstantRegisters()
 	viewDef_t	viewDef;
 	memset( &viewDef, 0, sizeof( viewDef ) );
 	
-	EvaluateRegisters( constantRegisters, shaderParms, &viewDef, 0 );
+	EvaluateRegisters( constantRegisters, shaderParms, viewDef.renderView.shaderParms, 0.0f, 0 );
 }
 
 /*
@@ -3111,28 +3212,9 @@ const char* idMaterial::ImageName() const
 	idImage*	image = stages[0].texture.image;
 	if( image )
 	{
-		return image->imgName;
+		return image->GetName();
 	}
 	return "_scratch";
-}
-
-/*
-===================
-idMaterial::SetImageClassifications
-
-Just for image resource tracking.
-===================
-*/
-void idMaterial::SetImageClassifications( int tag ) const
-{
-	for( int i = 0 ; i < numStages ; i++ )
-	{
-		idImage*	image = stages[i].texture.image;
-		if( image )
-		{
-			image->SetClassification( tag );
-		}
-	}
 }
 
 /*
@@ -3224,13 +3306,113 @@ void idMaterial::ReloadImages( bool force ) const
 			{
 				if( stages[i].newStage->fragmentProgramImages[j] )
 				{
-					stages[i].newStage->fragmentProgramImages[j]->Reload( false, force );
+					stages[i].newStage->fragmentProgramImages[j]->Reload( force );
 				}
 			}
 		}
 		else if( stages[i].texture.image )
 		{
-			stages[i].texture.image->Reload( false, force );
+			stages[i].texture.image->Reload( force );
 		}
 	}
+}
+
+/*
+=============
+idMaterial::SetFastPathImages
+
+See if the material is trivial for the fast path
+=============
+*/
+void idMaterial::SetFastPathImages()
+{
+	fastPathBumpImage = NULL;
+	fastPathDiffuseImage = NULL;
+	fastPathSpecularImage = NULL;
+	
+	if( constantRegisters == NULL )
+	{
+		return;
+	}
+	
+	// go through the individual surface stages
+	//
+	// We also have the very rare case of some materials that have conditional interactions
+	// for the "hell writing" that can be shined on them.
+	
+	for( int surfaceStageNum = 0; surfaceStageNum < GetNumStages(); surfaceStageNum++ )
+	{
+		const shaderStage_t*	surfaceStage = GetStage( surfaceStageNum );
+		
+		if( surfaceStage->texture.hasMatrix )
+		{
+			goto fail;
+		}
+		
+		// check for vertex coloring
+		if( surfaceStage->vertexColor != SVC_IGNORE )
+		{
+			goto fail;
+		}
+		
+		// check for non-identity colors
+		for( int i = 0; i < 4; i++ )
+		{
+			if( idMath::Fabs( constantRegisters[surfaceStage->color.registers[i]] - 1.0f ) > 0.1f )
+			{
+				goto fail;
+			}
+		}
+		
+		switch( surfaceStage->lighting )
+		{
+			case SL_COVERAGE:
+			case SL_AMBIENT:
+				break;
+			case SL_BUMP:
+			{
+				if( fastPathBumpImage )
+				{
+					goto fail;
+				}
+				fastPathBumpImage = surfaceStage->texture.image;
+				break;
+			}
+			case SL_DIFFUSE:
+			{
+				if( fastPathDiffuseImage )
+				{
+					goto fail;
+				}
+				fastPathDiffuseImage = surfaceStage->texture.image;
+				break;
+			}
+			case SL_SPECULAR:
+			{
+				if( fastPathSpecularImage )
+				{
+					goto fail;
+				}
+				fastPathSpecularImage = surfaceStage->texture.image;
+			}
+		}
+	}
+	// need a bump image, but specular can default
+	// we also need a diffuse image, because we can't get a pure black with our YCoCg conversion
+	// from 565 DXT.  The general-path code also sets the diffuse color to 0 in the default case,
+	// but the fast path can't.
+	if( fastPathBumpImage == NULL || fastPathDiffuseImage == NULL )
+	{
+		goto fail;
+	}
+	if( fastPathSpecularImage == NULL )
+	{
+		fastPathSpecularImage = globalImages->blackImage;
+	}
+	return;
+	
+fail:
+	fastPathBumpImage = NULL;
+	fastPathDiffuseImage = NULL;
+	fastPathSpecularImage = NULL;
 }

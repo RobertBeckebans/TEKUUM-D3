@@ -1,33 +1,34 @@
 /*
 ===========================================================================
 
-Doom 3 GPL Source Code
-Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Doom 3 BFG Edition GPL Source Code
+Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2012 Robert Beckebans
 
-This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
+This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
-Doom 3 Source Code is free software: you can redistribute it and/or modify
+Doom 3 BFG Edition Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Doom 3 Source Code is distributed in the hope that it will be useful,
+Doom 3 BFG Edition Source Code is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Doom 3 Source Code.  If not, see <http://www.gnu.org/licenses/>.
+along with Doom 3 BFG Edition Source Code.  If not, see <http://www.gnu.org/licenses/>.
 
-In addition, the Doom 3 Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 Source Code.  If not, please request a copy in writing from id Software at the address below.
+In addition, the Doom 3 BFG Edition Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 BFG Edition Source Code.  If not, please request a copy in writing from id Software at the address below.
 
 If you have questions concerning this license or the applicable additional terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 
 ===========================================================================
 */
 
-#include "precompiled.h"
 #pragma hdrstop
+#include "precompiled.h"
 
 #include "DeviceContext.h"
 #include "Window.h"
@@ -38,8 +39,8 @@ If you have questions concerning this license or the applicable additional terms
 #include "BindWindow.h"
 #include "ListWindow.h"
 #include "RenderWindow.h"
-#include "MarkerWindow.h"
 #include "FieldWindow.h"
+#include "MarkerWindow.h"
 
 
 
@@ -49,6 +50,8 @@ bool idWindow::registerIsTemporary[MAX_EXPRESSION_REGISTERS];		// statics to ass
 
 idCVar idWindow::gui_debug( "gui_debug", "0", CVAR_GUI | CVAR_BOOL, "" );
 idCVar idWindow::gui_edit( "gui_edit", "0", CVAR_GUI | CVAR_BOOL, "" );
+
+idCVar hud_titlesafe( "hud_titlesafe", "0.0", CVAR_GUI | CVAR_FLOAT, "fraction of the screen to leave around hud for titlesafe area" );
 
 extern idCVar r_skipGuiShaders;		// 1 = don't render any gui elements on surfaces
 
@@ -111,7 +114,7 @@ void idWindow::CommonInit()
 	flags = 0;
 	lastTimeRun = 0;
 	origin.Zero();
-	fontNum = 0;
+	font = renderSystem->RegisterFont( "" );
 	timeLine = -1;
 	xOffset = yOffset = 0.0;
 	cursor = 0;
@@ -236,19 +239,6 @@ idWindow::idWindow
 */
 idWindow::idWindow( idUserInterfaceLocal* ui )
 {
-	dc = NULL;
-	gui = ui;
-	CommonInit();
-}
-
-/*
-================
-idWindow::idWindow
-================
-*/
-idWindow::idWindow( idDeviceContext* d, idUserInterfaceLocal* ui )
-{
-	dc = d;
 	gui = ui;
 	CommonInit();
 }
@@ -318,7 +308,7 @@ idWindow::SetFont
 */
 void idWindow::SetFont()
 {
-	dc->SetFont( fontNum );
+	dc->SetFont( font );
 }
 
 /*
@@ -454,6 +444,37 @@ void idWindow::MouseExit()
 	RunScript( ON_MOUSEEXIT );
 }
 
+/*
+================
+idWindow::GetChildWithOnAction
+================
+*/
+idWindow* idWindow::GetChildWithOnAction( float xd, float yd )
+{
+
+	int c = children.Num();
+	while( c > 0 )
+	{
+		idWindow* child = children[--c];
+		if( child->visible && child->Contains( child->drawRect, gui->CursorX(), gui->CursorY() ) && !child->noEvents )
+		{
+			child->hover = true;
+			if( child->cursor > 0 )
+			{
+				return child;
+			}
+		}
+		
+		idWindow* check = child->GetChildWithOnAction( xd, yd );
+		if( check != NULL && check != child )
+		{
+			return check;
+		}
+	}
+	
+	return this;
+	
+}
 
 /*
 ================
@@ -474,58 +495,34 @@ const char* idWindow::RouteMouseCoords( float xd, float yd )
 		return "";
 	}
 	
-	int c = children.Num();
-	while( c > 0 )
+	idWindow* child = GetChildWithOnAction( xd, yd );
+	if( overChild != child )
 	{
-		idWindow* child = children[--c];
-		if( child->visible && !child->noEvents && child->Contains( child->drawRect, gui->CursorX(), gui->CursorY() ) )
+		if( overChild )
 		{
-		
-			dc->SetCursor( child->cursor );
-			child->hover = true;
+			overChild->MouseExit();
+			str = overChild->cmd;
+			if( str.Length() )
+			{
+				gui->GetDesktop()->AddCommand( str );
+				overChild->cmd = "";
+			}
+		}
+		overChild = child;
+		if( overChild )
+		{
+			overChild->MouseEnter();
+			str = overChild->cmd;
+			if( str.Length() )
+			{
+				gui->GetDesktop()->AddCommand( str );
+				overChild->cmd = "";
+			}
 			
-			if( overChild != child )
-			{
-				if( overChild )
-				{
-					overChild->MouseExit();
-					str = overChild->cmd;
-					if( str.Length() )
-					{
-						gui->GetDesktop()->AddCommand( str );
-						overChild->cmd = "";
-					}
-				}
-				overChild = child;
-				overChild->MouseEnter();
-				str = overChild->cmd;
-				if( str.Length() )
-				{
-					gui->GetDesktop()->AddCommand( str );
-					overChild->cmd = "";
-				}
-			}
-			else
-			{
-				if( !( child->flags & WIN_HOLDCAPTURE ) )
-				{
-					child->RouteMouseCoords( xd, yd );
-				}
-			}
-			return "";
+			dc->SetCursor( overChild->cursor );
 		}
 	}
-	if( overChild )
-	{
-		overChild->MouseExit();
-		str = overChild->cmd;
-		if( str.Length() )
-		{
-			gui->GetDesktop()->AddCommand( str );
-			overChild->cmd = "";
-		}
-		overChild = NULL;
-	}
+	
 	return "";
 }
 
@@ -599,17 +596,20 @@ void idWindow::StateChanged( bool redraw )
 		}
 	}
 	
+#if 0
 	if( redraw )
 	{
 		if( flags & WIN_DESKTOP )
 		{
-			Redraw( 0.0f, 0.0f );
+			// RB: FIXME hud parameter
+			Redraw( 0.0f, 0.0f, false );
 		}
 		if( background && background->CinematicLength() )
 		{
 			background->UpdateCinematic( gui->GetTime() );
 		}
 	}
+#endif
 }
 
 /*
@@ -672,7 +672,7 @@ idWindow::RunTimeEvents
 bool idWindow::RunTimeEvents( int time )
 {
 
-	if( time - lastTimeRun < USERCMD_MSEC )
+	if( time == lastTimeRun )
 	{
 		//common->Printf("Skipping gui time events at %i\n", time);
 		return false;
@@ -821,7 +821,15 @@ const char* idWindow::HandleEvent( const sysEvent_t* event, bool* updateVisuals 
 		}
 		RunTimeEvents( gui->GetTime() );
 		CalcRects( 0, 0 );
-		dc->SetCursor( idDeviceContext::CURSOR_ARROW );
+		
+		if( overChild != NULL )
+		{
+			dc->SetCursor( overChild->cursor );
+		}
+		else
+		{
+			dc->SetCursor( idDeviceContext::CURSOR_ARROW );
+		}
 	}
 	
 	if( visible && !noEvents )
@@ -867,7 +875,7 @@ const char* idWindow::HandleEvent( const sysEvent_t* event, bool* updateVisuals 
 							//}
 							SetFocus( child );
 							const char* childRet = child->HandleEvent( event, updateVisuals );
-							if( childRet && *childRet )
+							if( childRet != NULL && *childRet != '\0' )
 							{
 								return childRet;
 							}
@@ -899,7 +907,7 @@ const char* idWindow::HandleEvent( const sysEvent_t* event, bool* updateVisuals 
 					actionDownRun = RunScript( ON_ACTION );
 					
 					// MF begin: keep mouse events more consistent
-					RouteMouseCoords( 0.0f, 0.0f );
+					//RouteMouseCoords( 0.0f, 0.0f );
 					// MF end
 					
 				}
@@ -908,7 +916,7 @@ const char* idWindow::HandleEvent( const sysEvent_t* event, bool* updateVisuals 
 					actionUpRun = RunScript( ON_ACTIONRELEASE );
 					
 					// MF begin: keep mouse events more consistent
-					RouteMouseCoords( 0.0f, 0.0f );
+					//RouteMouseCoords( 0.0f, 0.0f );
 					// MF end
 				}
 			}
@@ -1115,7 +1123,7 @@ const char* idWindow::HandleEvent( const sysEvent_t* event, bool* updateVisuals 
 				*updateVisuals = true;
 			}
 			const char* mouseRet = RouteMouseCoords( event->evValue, event->evValue2 );
-			if( mouseRet && *mouseRet )
+			if( mouseRet != NULL && *mouseRet != '\0' )
 			{
 				return mouseRet;
 			}
@@ -1154,7 +1162,7 @@ idWindow::DebugDraw
 */
 void idWindow::DebugDraw( int time, float x, float y )
 {
-	static char buff[16384];
+	static char buff[16384] = { 0 };
 	if( dc )
 	{
 		dc->EnableClipping( false );
@@ -1211,7 +1219,7 @@ void idWindow::Transition()
 		if( v4 == NULL )
 		{
 			r = dynamic_cast<idWinRectangle*>( data->data );
-			if( !r )
+			if( r == NULL )
 			{
 				val = dynamic_cast<idWinFloat*>( data->data );
 			}
@@ -1226,7 +1234,7 @@ void idWindow::Transition()
 			{
 				*val = data->interp.GetEndValue()[0];
 			}
-			else
+			else if( r != NULL )
 			{
 				*r = data->interp.GetEndValue();
 			}
@@ -1244,7 +1252,7 @@ void idWindow::Transition()
 				{
 					*val = data->interp.GetCurrentValue( gui->GetTime() )[0];
 				}
-				else
+				else if( r != NULL )
 				{
 					*r = data->interp.GetCurrentValue( gui->GetTime() );
 				}
@@ -1258,7 +1266,7 @@ void idWindow::Transition()
 	
 	if( clear )
 	{
-		transitions.SetNum( 0, false );
+		transitions.SetNum( 0 );
 		flags &= ~WIN_INTRANSITION;
 	}
 }
@@ -1295,8 +1303,13 @@ void idWindow::Time()
 			}
 		}
 	}
+	
 	if( gui->Active() )
 	{
+		if( gui->GetPendingCmd().Length() > 0 )
+		{
+			gui->GetPendingCmd() += ";";
+		}
 		gui->GetPendingCmd() += cmd;
 	}
 }
@@ -1440,7 +1453,7 @@ void idWindow::CalcRects( float x, float y )
 idWindow::Redraw
 ================
 */
-void idWindow::Redraw( float x, float y )
+void idWindow::Redraw( float x, float y, bool hud )
 {
 	idStr str;
 	
@@ -1482,10 +1495,19 @@ void idWindow::Redraw( float x, float y )
 	CalcClientRect( 0, 0 );
 	
 	SetFont();
-	//if (flags & WIN_DESKTOP) {
-	// see if this window forces a new aspect ratio
-	dc->SetSize( forceAspectWidth, forceAspectHeight );
-	//}
+	
+	if( hud )
+	{
+		float tileSafeOffset = hud_titlesafe.GetFloat();
+		float tileSafeScale = 1.0f / ( 1.0f - hud_titlesafe.GetFloat() * 2.0f );
+		dc->SetSize( forceAspectWidth * tileSafeScale, forceAspectHeight * tileSafeScale );
+		dc->SetOffset( forceAspectWidth * tileSafeOffset, forceAspectHeight * tileSafeOffset );
+	}
+	else
+	{
+		dc->SetSize( forceAspectWidth, forceAspectHeight );
+		dc->SetOffset( 0.0f, 0.0f );
+	}
 	
 	//FIXME: go to screen coord tracking
 	drawRect.Offset( x, y );
@@ -1523,7 +1545,7 @@ void idWindow::Redraw( float x, float y )
 	{
 		if( drawWindows[i].win )
 		{
-			drawWindows[i].win->Redraw( clientRect.x + xOffset, clientRect.y + yOffset );
+			drawWindows[i].win->Redraw( clientRect.x + xOffset, clientRect.y + yOffset, hud );
 		}
 		else
 		{
@@ -1557,24 +1579,6 @@ void idWindow::Redraw( float x, float y )
 	drawRect.Offset( -x, -y );
 	clientRect.Offset( -x, -y );
 	textRect.Offset( -x, -y );
-}
-
-/*
-================
-idWindow::SetDC
-================
-*/
-void idWindow::SetDC( idDeviceContext* d )
-{
-	dc = d;
-	//if (flags & WIN_DESKTOP) {
-	dc->SetSize( forceAspectWidth, forceAspectHeight );
-	//}
-	int c = children.Num();
-	for( int i = 0; i < c; i++ )
-	{
-		children[i]->SetDC( d );
-	}
 }
 
 /*
@@ -1675,8 +1679,7 @@ void idWindow::SetupBackground()
 	if( backGroundName.Length() )
 	{
 		background = declManager->FindMaterial( backGroundName );
-		background->SetImageClassifications( 1 );	// just for resource tracking
-		if( background && !background->TestMaterialFlag( MF_DEFAULTED ) )
+		if( background != NULL && !background->TestMaterialFlag( MF_DEFAULTED ) )
 		{
 			background->SetSort( SS_GUI );
 		}
@@ -2033,12 +2036,29 @@ void idWindow::DisableRegister( const char* _name )
 }
 
 /*
+================================
+idSort_TimeLine
+================================
+*/
+class idSort_TimeLine : public idSort_Quick< idTimeLineEvent*, idSort_TimeLine >
+{
+public:
+	int Compare( idTimeLineEvent* const& a, idTimeLineEvent* const& b ) const
+	{
+		return a->time - b->time;
+	}
+};
+
+/*
 ================
 idWindow::PostParse
 ================
 */
 void idWindow::PostParse()
 {
+	// Sort timeline events
+	idSort_TimeLine sorter;
+	timeLineEvents.SortWithTemplate( sorter );
 }
 
 /*
@@ -2465,9 +2485,9 @@ bool idWindow::ParseInternalVar( const char* _name, idParser* src )
 	}
 	if( idStr::Icmp( _name, "font" ) == 0 )
 	{
-		idStr fontStr;
-		ParseString( src, fontStr );
-		fontNum = dc->FindFont( fontStr );
+		idStr fontName;
+		ParseString( src, fontName );
+		font = renderSystem->RegisterFont( fontName );
 		return true;
 	}
 	return false;
@@ -2623,7 +2643,7 @@ bool idWindow::Parse( idParser* src, bool rebuild )
 			token2 = token;
 			src->UnreadToken( &token );
 			drawWin_t* dw = FindChildByName( token2.c_str() );
-			if( dw && dw->win )
+			if( dw != NULL && dw->win != NULL )
 			{
 				SaveExpressionParseState();
 				dw->win->Parse( src, rebuild );
@@ -2631,7 +2651,7 @@ bool idWindow::Parse( idParser* src, bool rebuild )
 			}
 			else
 			{
-				idWindow* win = new idWindow( dc, gui );
+				idWindow* win = new idWindow( gui );
 				SaveExpressionParseState();
 				win->Parse( src, rebuild );
 				RestoreExpressionParseState();
@@ -2656,7 +2676,7 @@ bool idWindow::Parse( idParser* src, bool rebuild )
 		}
 		else if( token == "editDef" )
 		{
-			idEditWindow* win = new idEditWindow( dc, gui );
+			idEditWindow* win = new idEditWindow( gui );
 			SaveExpressionParseState();
 			win->Parse( src, rebuild );
 			RestoreExpressionParseState();
@@ -2668,7 +2688,7 @@ bool idWindow::Parse( idParser* src, bool rebuild )
 		}
 		else if( token == "choiceDef" )
 		{
-			idChoiceWindow* win = new idChoiceWindow( dc, gui );
+			idChoiceWindow* win = new idChoiceWindow( gui );
 			SaveExpressionParseState();
 			win->Parse( src, rebuild );
 			RestoreExpressionParseState();
@@ -2680,7 +2700,7 @@ bool idWindow::Parse( idParser* src, bool rebuild )
 		}
 		else if( token == "sliderDef" )
 		{
-			idSliderWindow* win = new idSliderWindow( dc, gui );
+			idSliderWindow* win = new idSliderWindow( gui );
 			SaveExpressionParseState();
 			win->Parse( src, rebuild );
 			RestoreExpressionParseState();
@@ -2692,7 +2712,7 @@ bool idWindow::Parse( idParser* src, bool rebuild )
 		}
 		else if( token == "markerDef" )
 		{
-			idMarkerWindow* win = new idMarkerWindow( dc, gui );
+			idMarkerWindow* win = new idMarkerWindow( gui );
 			SaveExpressionParseState();
 			win->Parse( src, rebuild );
 			RestoreExpressionParseState();
@@ -2704,7 +2724,7 @@ bool idWindow::Parse( idParser* src, bool rebuild )
 		}
 		else if( token == "bindDef" )
 		{
-			idBindWindow* win = new idBindWindow( dc, gui );
+			idBindWindow* win = new idBindWindow( gui );
 			SaveExpressionParseState();
 			win->Parse( src, rebuild );
 			RestoreExpressionParseState();
@@ -2716,7 +2736,7 @@ bool idWindow::Parse( idParser* src, bool rebuild )
 		}
 		else if( token == "listDef" )
 		{
-			idListWindow* win = new idListWindow( dc, gui );
+			idListWindow* win = new idListWindow( gui );
 			SaveExpressionParseState();
 			win->Parse( src, rebuild );
 			RestoreExpressionParseState();
@@ -2728,7 +2748,7 @@ bool idWindow::Parse( idParser* src, bool rebuild )
 		}
 		else if( token == "fieldDef" )
 		{
-			idFieldWindow* win = new idFieldWindow( dc, gui );
+			idFieldWindow* win = new idFieldWindow( gui );
 			SaveExpressionParseState();
 			win->Parse( src, rebuild );
 			RestoreExpressionParseState();
@@ -2740,7 +2760,7 @@ bool idWindow::Parse( idParser* src, bool rebuild )
 		}
 		else if( token == "renderDef" )
 		{
-			idRenderWindow* win = new idRenderWindow( dc, gui );
+			idRenderWindow* win = new idRenderWindow( gui );
 			SaveExpressionParseState();
 			win->Parse( src, rebuild );
 			RestoreExpressionParseState();
@@ -4068,7 +4088,7 @@ void idWindow::WriteSaveGameTransition( idTransitionData& trans, idFile* savefil
 		winName = ( dw.win ) ? dw.win->GetName() : dw.simp->name.c_str();
 	}
 	fdw = gui->GetDesktop()->FindChildByName( winName );
-	if( offset != -1 && fdw && ( fdw->win || fdw->simp ) )
+	if( offset != -1 && fdw != NULL && ( fdw->win != NULL || fdw->simp != NULL ) )
 	{
 		savefile->Write( &offset, sizeof( offset ) );
 		WriteSaveGameString( winName, savefile );
@@ -4126,7 +4146,6 @@ void idWindow::WriteToSaveGame( idFile* savefile )
 	savefile->Write( &drawRect, sizeof( drawRect ) );
 	savefile->Write( &clientRect, sizeof( clientRect ) );
 	savefile->Write( &origin, sizeof( origin ) );
-	savefile->Write( &fontNum, sizeof( fontNum ) );
 	savefile->Write( &timeLine, sizeof( timeLine ) );
 	savefile->Write( &xOffset, sizeof( xOffset ) );
 	savefile->Write( &yOffset, sizeof( yOffset ) );
@@ -4141,6 +4160,8 @@ void idWindow::WriteToSaveGame( idFile* savefile )
 	savefile->Write( &textAligny, sizeof( textAligny ) );
 	savefile->Write( &textShadow, sizeof( textShadow ) );
 	savefile->Write( &shear, sizeof( shear ) );
+	
+	savefile->WriteString( font->GetName() );
 	
 	WriteSaveGameString( name, savefile );
 	WriteSaveGameString( comment, savefile );
@@ -4231,6 +4252,14 @@ void idWindow::WriteToSaveGame( idFile* savefile )
 	// regList
 	regList.WriteToSaveGame( savefile );
 	
+	if( background )
+	{
+		savefile->WriteInt( background->GetCinematicStartTime() );
+	}
+	else
+	{
+		savefile->WriteInt( -1 );
+	}
 	
 	// Save children
 	for( i = 0; i < drawWindows.Num(); i++ )
@@ -4288,7 +4317,11 @@ void idWindow::ReadFromSaveGame( idFile* savefile )
 	savefile->Read( &drawRect, sizeof( drawRect ) );
 	savefile->Read( &clientRect, sizeof( clientRect ) );
 	savefile->Read( &origin, sizeof( origin ) );
-	savefile->Read( &fontNum, sizeof( fontNum ) );
+	/*	if ( savefile->GetFileVersion() < BUILD_NUMBER_8TH_ANNIVERSARY_1 ) {
+			unsigned char fontNum;
+			savefile->Read( &fontNum, sizeof( fontNum ) );
+			font = renderSystem->RegisterFont( "" );
+		}*/
 	savefile->Read( &timeLine, sizeof( timeLine ) );
 	savefile->Read( &xOffset, sizeof( xOffset ) );
 	savefile->Read( &yOffset, sizeof( yOffset ) );
@@ -4304,6 +4337,12 @@ void idWindow::ReadFromSaveGame( idFile* savefile )
 	savefile->Read( &textShadow, sizeof( textShadow ) );
 	savefile->Read( &shear, sizeof( shear ) );
 	
+//	if ( savefile->GetFileVersion() >= BUILD_NUMBER_8TH_ANNIVERSARY_1 ) {
+	idStr fontName;
+	savefile->ReadString( fontName );
+	font = renderSystem->RegisterFont( fontName );
+//	}
+
 	ReadSaveGameString( name, savefile );
 	ReadSaveGameString( comment, savefile );
 	
@@ -4321,15 +4360,7 @@ void idWindow::ReadFromSaveGame( idFile* savefile )
 	rotate.ReadFromSaveGame( savefile );
 	text.ReadFromSaveGame( savefile );
 	backGroundName.ReadFromSaveGame( savefile );
-	
-	if( session->GetSaveGameVersion() >= 17 )
-	{
-		hideCursor.ReadFromSaveGame( savefile );
-	}
-	else
-	{
-		hideCursor = false;
-	}
+	hideCursor.ReadFromSaveGame( savefile );
 	
 	// Defined Vars
 	for( i = 0; i < definedVars.Num(); i++ )
@@ -4421,6 +4452,13 @@ void idWindow::ReadFromSaveGame( idFile* savefile )
 	
 	// regList
 	regList.ReadFromSaveGame( savefile );
+	
+	int cinematicStartTime = 0;
+	savefile->ReadInt( cinematicStartTime );
+	if( background )
+	{
+		background->ResetCinematicTime( cinematicStartTime );
+	}
 	
 	// Read children
 	for( i = 0; i < drawWindows.Num(); i++ )

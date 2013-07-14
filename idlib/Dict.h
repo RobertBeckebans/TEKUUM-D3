@@ -1,25 +1,25 @@
 /*
 ===========================================================================
 
-Doom 3 GPL Source Code
-Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Doom 3 BFG Edition GPL Source Code
+Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
 
-This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
+This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
-Doom 3 Source Code is free software: you can redistribute it and/or modify
+Doom 3 BFG Edition Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Doom 3 Source Code is distributed in the hope that it will be useful,
+Doom 3 BFG Edition Source Code is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Doom 3 Source Code.  If not, see <http://www.gnu.org/licenses/>.
+along with Doom 3 BFG Edition Source Code.  If not, see <http://www.gnu.org/licenses/>.
 
-In addition, the Doom 3 Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 Source Code.  If not, please request a copy in writing from id Software at the address below.
+In addition, the Doom 3 BFG Edition Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 BFG Edition Source Code.  If not, please request a copy in writing from id Software at the address below.
 
 If you have questions concerning this license or the applicable additional terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 
@@ -78,6 +78,20 @@ private:
 	const idPoolStr* 	value;
 };
 
+/*
+================================================
+idSort_KeyValue
+================================================
+*/
+class idSort_KeyValue : public idSort_Quick< idKeyValue, idSort_KeyValue >
+{
+public:
+	int Compare( const idKeyValue& a, const idKeyValue& b ) const
+	{
+		return a.GetKey().Icmp( b.GetKey() );
+	}
+};
+
 class idDict
 {
 public:
@@ -122,9 +136,12 @@ public:
 	
 	// these return default values of 0.0, 0 and false
 	const char* 		GetString( const char* key, const char* defaultString = "" ) const;
-	float				GetFloat( const char* key, const char* defaultString = "0" ) const;
-	int					GetInt( const char* key, const char* defaultString = "0" ) const;
-	bool				GetBool( const char* key, const char* defaultString = "0" ) const;
+	float				GetFloat( const char* key, const char* defaultString ) const;
+	int					GetInt( const char* key, const char* defaultString ) const;
+	bool				GetBool( const char* key, const char* defaultString ) const;
+	float				GetFloat( const char* key, const float defaultFloat = 0.0f ) const;
+	int					GetInt( const char* key, const int defaultInt = 0 ) const;
+	bool				GetBool( const char* key, const bool defaultBool = false ) const;
 	idVec3				GetVector( const char* key, const char* defaultString = NULL ) const;
 	idVec2				GetVec2( const char* key, const char* defaultString = NULL ) const;
 	idVec4				GetVec4( const char* key, const char* defaultString = NULL ) const;
@@ -136,6 +153,9 @@ public:
 	bool				GetFloat( const char* key, const char* defaultString, float& out ) const;
 	bool				GetInt( const char* key, const char* defaultString, int& out ) const;
 	bool				GetBool( const char* key, const char* defaultString, bool& out ) const;
+	bool				GetFloat( const char* key, const float defaultFloat, float& out ) const;
+	bool				GetInt( const char* key, const int defaultInt, int& out ) const;
+	bool				GetBool( const char* key, const bool defaultBool, bool& out ) const;
 	bool				GetVector( const char* key, const char* defaultString, idVec3& out ) const;
 	bool				GetVec2( const char* key, const char* defaultString, idVec2& out ) const;
 	bool				GetVec4( const char* key, const char* defaultString, idVec4& out ) const;
@@ -298,6 +318,36 @@ ID_INLINE int idDict::GetInt( const char* key, const char* defaultString ) const
 ID_INLINE bool idDict::GetBool( const char* key, const char* defaultString ) const
 {
 	return ( atoi( GetString( key, defaultString ) ) != 0 );
+}
+
+ID_INLINE float idDict::GetFloat( const char* key, const float defaultFloat ) const
+{
+	const idKeyValue* kv = FindKey( key );
+	if( kv )
+	{
+		return atof( kv->GetValue() );
+	}
+	return defaultFloat;
+}
+
+ID_INLINE int idDict::GetInt( const char* key, int defaultInt ) const
+{
+	const idKeyValue* kv = FindKey( key );
+	if( kv )
+	{
+		return atoi( kv->GetValue() );
+	}
+	return defaultInt;
+}
+
+ID_INLINE bool idDict::GetBool( const char* key, const bool defaultBool ) const
+{
+	const idKeyValue* kv = FindKey( key );
+	if( kv )
+	{
+		return atoi( kv->GetValue() ) != 0;
+	}
+	return defaultBool;
 }
 
 ID_INLINE idVec3 idDict::GetVector( const char* key, const char* defaultString ) const

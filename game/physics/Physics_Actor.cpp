@@ -122,7 +122,7 @@ void idPhysics_Actor::SetClipModelAxis()
 	idMat3 prevClipModelAxis = clipModelAxis;
 	
 	// align clip model to gravity direction
-#if 0
+#if !defined(STANDALONE)
 	if( ( gravityNormal[2] == -1.0f ) || ( gravityNormal == vec3_zero ) )
 	{
 		clipModelAxis.Identity();
@@ -130,7 +130,7 @@ void idPhysics_Actor::SetClipModelAxis()
 	else
 #endif
 	{
-#if 1
+#if defined(STANDALONE)
 		// project old forward vector along new gravity up normal
 		idVec3 oldForward = prevClipModelAxis[0];
 		idVec3 up = -gravityNormal;

@@ -1,25 +1,25 @@
 /*
 ===========================================================================
 
-Doom 3 GPL Source Code
-Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Doom 3 BFG Edition GPL Source Code
+Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
 
-This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
+This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
-Doom 3 Source Code is free software: you can redistribute it and/or modify
+Doom 3 BFG Edition Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Doom 3 Source Code is distributed in the hope that it will be useful,
+Doom 3 BFG Edition Source Code is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Doom 3 Source Code.  If not, see <http://www.gnu.org/licenses/>.
+along with Doom 3 BFG Edition Source Code.  If not, see <http://www.gnu.org/licenses/>.
 
-In addition, the Doom 3 Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 Source Code.  If not, please request a copy in writing from id Software at the address below.
+In addition, the Doom 3 BFG Edition Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 BFG Edition Source Code.  If not, please request a copy in writing from id Software at the address below.
 
 If you have questions concerning this license or the applicable additional terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 
@@ -34,8 +34,9 @@ If you have questions concerning this license or the applicable additional terms
 ===============================================================================
 */
 
-#include "precompiled.h"
 #pragma hdrstop
+#include "precompiled.h"
+
 
 #include "CollisionModel_local.h"
 
@@ -565,8 +566,8 @@ void idCollisionModelManagerLocal::RotateTrmEdgeThroughPolygon( cm_traceWork_t* 
 			continue;
 		}
 		
-		v1 = tw->model->vertices + edge->vertexNum[INTSIGNBITSET( edgeNum )];
-		v2 = tw->model->vertices + edge->vertexNum[INTSIGNBITNOTSET( edgeNum )];
+		v1 = tw->model->vertices + edge->vertexNum[INT32_SIGNBITSET( edgeNum )];
+		v2 = tw->model->vertices + edge->vertexNum[INT32_SIGNBITNOTSET( edgeNum )];
 		
 		// edge bounds
 		for( j = 0; j < 3; j++ )
@@ -1259,14 +1260,14 @@ bool idCollisionModelManagerLocal::RotateTrmThroughPolygon( cm_traceWork_t* tw, 
 		bv = tw->vertices + i;
 		// calculate polygon side this vertex is on
 		d = p->plane.Distance( bv->p );
-		bv->polygonSide = FLOATSIGNBITSET( d );
+		bv->polygonSide = IEEE_FLT_SIGNBITSET( d );
 	}
 	
 	for( i = 0; i < p->numEdges; i++ )
 	{
 		edgeNum = p->edges[i];
 		e = tw->model->edges + abs( edgeNum );
-		v = tw->model->vertices + e->vertexNum[INTSIGNBITSET( edgeNum )];
+		v = tw->model->vertices + e->vertexNum[INT32_SIGNBITSET( edgeNum )];
 		
 		// pluecker coordinate for edge
 		tw->polygonEdgePlueckerCache[i].FromLine( tw->model->vertices[e->vertexNum[0]].p,
@@ -1326,7 +1327,7 @@ bool idCollisionModelManagerLocal::RotateTrmThroughPolygon( cm_traceWork_t* tw, 
 			for( k = 0; k < 2; k++ )
 			{
 			
-				v = tw->model->vertices + e->vertexNum[k ^ INTSIGNBITSET( edgeNum )];
+				v = tw->model->vertices + e->vertexNum[k ^ INT32_SIGNBITSET( edgeNum )];
 				
 				// if this vertex is already checked
 				if( v->checkcount == idCollisionModelManagerLocal::checkCount )
@@ -1459,7 +1460,7 @@ void idCollisionModelManagerLocal::Rotation180( trace_t* results, const idVec3& 
 	tw.start = start - modelOrigin;
 	// rotation axis, axis is assumed to be normalized
 	tw.axis = axis;
-	assert( tw.axis[0] * tw.axis[0] + tw.axis[1] * tw.axis[1] + tw.axis[2] * tw.axis[2] > 0.99f );
+//	assert( tw.axis[0] * tw.axis[0] + tw.axis[1] * tw.axis[1] + tw.axis[2] * tw.axis[2] > 0.99f );
 	// rotation origin projected into rotation plane through tw.start
 	tw.origin = rorg - modelOrigin;
 	d = ( tw.axis * tw.origin ) - ( tw.axis * tw.start );
@@ -1765,12 +1766,12 @@ void idCollisionModelManagerLocal::Rotation180( trace_t* results, const idVec3& 
 				{
 					edgeNum = poly->edges[j];
 					edge = tw.edges + abs( edgeNum );
-					if( !( edge->bitNum & 2 ) )
+					if( ( edge->bitNum & 2 ) == 0 )
 					{
 						d = plaxis.PermutedInnerProduct( edge->pl );
-						edge->bitNum = FLOATSIGNBITSET( d ) | 2;
+						edge->bitNum = IEEE_FLT_SIGNBITSET( d ) | 2;
 					}
-					if( ( edge->bitNum ^ INTSIGNBITSET( edgeNum ) ) & 1 )
+					if( ( edge->bitNum ^ INT32_SIGNBITSET( edgeNum ) ) & 1 )
 					{
 						break;
 					}

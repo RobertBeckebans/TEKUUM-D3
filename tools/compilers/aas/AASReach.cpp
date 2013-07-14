@@ -126,7 +126,7 @@ void idAASReach::Reachability_Fly( int areaNum )
 		faceNum = file->faceIndex[area->firstFace + i];
 		face = &file->faces[abs( faceNum )];
 		
-		otherAreaNum = face->areas[INTSIGNBITNOTSET( faceNum )];
+		otherAreaNum = face->areas[INT32_SIGNBITNOTSET( faceNum )];
 		
 		if( otherAreaNum == 0 )
 		{
@@ -182,7 +182,7 @@ void idAASReach::Reachability_Swim( int areaNum )
 		faceNum = file->faceIndex[area->firstFace + i];
 		face = &file->faces[abs( faceNum )];
 		
-		otherAreaNum = face->areas[INTSIGNBITNOTSET( faceNum )];
+		otherAreaNum = face->areas[INT32_SIGNBITNOTSET( faceNum )];
 		
 		if( otherAreaNum == 0 )
 		{
@@ -243,7 +243,7 @@ void idAASReach::Reachability_EqualFloorHeight( int areaNum )
 		faceNum = file->faceIndex[area->firstFace + i];
 		face = &file->faces[abs( faceNum )];
 		
-		otherAreaNum = face->areas[INTSIGNBITNOTSET( faceNum )];
+		otherAreaNum = face->areas[INT32_SIGNBITNOTSET( faceNum )];
 		if( !AreaHasFloor( otherAreaNum ) )
 		{
 			continue;
@@ -909,7 +909,7 @@ void idAASReach::Reachability_WalkOffLedge( int areaNum )
 			v1 = file->vertices[edge->vertexNum[side]];
 			v2 = file->vertices[edge->vertexNum[!side]];
 			
-			plane = &file->planeList[face->planeNum ^ INTSIGNBITSET( faceNum ) ];
+			plane = &file->planeList[face->planeNum ^ INT32_SIGNBITSET( faceNum ) ];
 			
 			// get the direction into the other area
 			dir = plane->Normal().Cross( v2 - v1 );

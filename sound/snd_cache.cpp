@@ -648,7 +648,7 @@ void idSoundSample::Load()
 							else if( destData[i * 4] > 32767.0f )
 								( ( short* )destData )[i] = 32767;
 							else
-								( ( short* )destData )[i] = idMath::FtoiFast( destData[i * 4] );
+								( ( short* )destData )[i] = idMath::Ftoi( destData[i * 4] );
 						}
 					}
 					else if( objectInfo.nSamplesPerSec == 22050 )
@@ -660,7 +660,7 @@ void idSoundSample::Load()
 							else if( destData[i * 2] > 32767.0f )
 								( ( short* )destData )[i] = 32767;
 							else
-								( ( short* )destData )[i] = idMath::FtoiFast( destData[i * 2] );
+								( ( short* )destData )[i] = idMath::Ftoi( destData[i * 2] );
 						}
 					}
 					else
@@ -672,7 +672,7 @@ void idSoundSample::Load()
 							else if( destData[i] > 32767.0f )
 								( ( short* )destData )[i] = 32767;
 							else
-								( ( short* )destData )[i] = idMath::FtoiFast( destData[i] );
+								( ( short* )destData )[i] = idMath::Ftoi( destData[i] );
 						}
 					}
 					

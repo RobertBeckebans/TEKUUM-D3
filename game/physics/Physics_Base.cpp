@@ -599,7 +599,7 @@ void idPhysics_Base::ClearContacts()
 			ent->RemoveContactEntity( self );
 		}
 	}
-	contacts.SetNum( 0, false );
+	contacts.SetNum( 0 );
 }
 
 /*
@@ -803,13 +803,13 @@ void idPhysics_Base::AddGroundContacts( const idClipModel* clipModel )
 	int index, num;
 	
 	index = contacts.Num();
-	contacts.SetNum( index + 10, false );
+	contacts.SetNum( index + 10 );
 	
 	dir.SubVec3( 0 ) = gravityNormal;
 	dir.SubVec3( 1 ) = vec3_origin;
 	num = gameLocal.clip.Contacts( &contacts[index], 10, clipModel->GetOrigin(),
 								   dir, CONTACT_EPSILON, clipModel, clipModel->GetAxis(), clipMask, self );
-	contacts.SetNum( index + num, false );
+	contacts.SetNum( index + num );
 }
 
 /*

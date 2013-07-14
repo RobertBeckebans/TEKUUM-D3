@@ -1,25 +1,25 @@
 /*
 ===========================================================================
 
-Doom 3 GPL Source Code
-Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Doom 3 BFG Edition GPL Source Code
+Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
 
-This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
+This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
-Doom 3 Source Code is free software: you can redistribute it and/or modify
+Doom 3 BFG Edition Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Doom 3 Source Code is distributed in the hope that it will be useful,
+Doom 3 BFG Edition Source Code is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Doom 3 Source Code.  If not, see <http://www.gnu.org/licenses/>.
+along with Doom 3 BFG Edition Source Code.  If not, see <http://www.gnu.org/licenses/>.
 
-In addition, the Doom 3 Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 Source Code.  If not, please request a copy in writing from id Software at the address below.
+In addition, the Doom 3 BFG Edition Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 BFG Edition Source Code.  If not, please request a copy in writing from id Software at the address below.
 
 If you have questions concerning this license or the applicable additional terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 
@@ -113,7 +113,7 @@ public:
 protected:
 	virtual bool				SetDefaultText();
 	virtual const char* 		DefaultDefinition() const;
-	virtual bool				Parse( const char* text, const int textLength );
+	virtual bool				Parse( const char* text, const int textLength, bool allowBinaryVersion );
 	virtual void				FreeData();
 	virtual void				List() const;
 	virtual void				Print() const;
@@ -183,6 +183,7 @@ class idDeclManagerLocal : public idDeclManager
 	
 public:
 	virtual void				Init();
+	virtual void				Init2();
 	virtual void				Shutdown();
 	virtual void				Reload( bool force );
 	virtual void				BeginLevelLoad();
@@ -208,7 +209,7 @@ public:
 	//BSM Added for the material editors rename capabilities
 	virtual bool				RenameDecl( declType_t type, const char* oldName, const char* newName );
 	
-	virtual void				MediaPrint( const char* fmt, ... ) id_attribute( ( format( printf, 2, 3 ) ) );
+	virtual void				MediaPrint( VERIFY_FORMAT_STRING const char* fmt, ... );
 	virtual void				WritePrecacheCommands( idFile* f );
 	
 	virtual const idMaterial* 		FindMaterial( const char* name, bool makeDefault = true );
@@ -218,6 +219,8 @@ public:
 	virtual const idMaterial* 		MaterialByIndex( int index, bool forceParse = true );
 	virtual const idDeclSkin* 		SkinByIndex( int index, bool forceParse = true );
 	virtual const idSoundShader* 	SoundByIndex( int index, bool forceParse = true );
+	
+	virtual void					Touch( const idDecl* decl );
 	
 public:
 	static void					MakeNameCanonical( const char* name, char* result, int maxLength );
@@ -232,11 +235,15 @@ public:
 		return &implicitDecls;
 	}
 	
+	void						ConvertPDAsToStrings( const idCmdArgs& args );
+	
 private:
-	idList<idDeclType*>		declTypes;
+	idSysMutex					mutex;
+	
+	idList<idDeclType*>			declTypes;
 	idList<idDeclFolder*>		declFolders;
 	
-	idList<idDeclFile*>		loadedFiles;
+	idList<idDeclFile*>			loadedFiles;
 	idHashIndex					hashTables[DECL_MAX_TYPES];
 	idList<idDeclLocal*>		linearLists[DECL_MAX_TYPES];
 	idDeclFile					implicitDecls;	// this holds all the decls that were created because explicit
@@ -279,7 +286,7 @@ typedef struct huffmanNode_s
 
 typedef struct huffmanCode_s
 {
-	unsigned long			bits[8];
+	unsigned int			bits[8]; // DG: use int instead of long for 64bit compatibility
 	int						numBits;
 } huffmanCode_t;
 
@@ -577,6 +584,11 @@ void ListHuffmanFrequencies_f( const idCmdArgs& args )
 	common->Printf( "}\n" );
 }
 
+void ConvertPDAsToStrings_f( const idCmdArgs& args )
+{
+	declManagerLocal.ConvertPDAsToStrings( args );
+}
+
 /*
 ====================================================================================
 
@@ -712,7 +724,7 @@ int idDeclFile::LoadAndParse()
 		for( i = 0; i < numTypes; i++ )
 		{
 			idDeclType* typeInfo = declManagerLocal.GetDeclType( i );
-			if( typeInfo && typeInfo->typeName.Icmp( token ) == 0 )
+			if( typeInfo != NULL && typeInfo->typeName.Icmp( token ) == 0 )
 			{
 				identifiedType = ( declType_t ) typeInfo->type;
 				break;
@@ -940,7 +952,15 @@ void idDeclManagerLocal::Init()
 	
 	cmdSystem->AddCommand( "listHuffmanFrequencies", ListHuffmanFrequencies_f, CMD_FL_SYSTEM, "lists decl text character frequencies" );
 	
+	cmdSystem->AddCommand( "convertPDAsToStrings", ConvertPDAsToStrings_f, CMD_FL_SYSTEM, "Converts *.pda files to text which can be plugged into *.lang files." );
+	
 	common->Printf( "------------------------------\n" );
+}
+
+void idDeclManagerLocal::Init2()
+{
+	RegisterDeclFolder( "skins",			".skin",			DECL_SKIN );
+	RegisterDeclFolder( "sound",			".sndshd",			DECL_SOUND );
 }
 
 /*
@@ -1233,6 +1253,8 @@ const idDecl* idDeclManagerLocal::FindType( declType_t type, const char* name, b
 {
 	idDeclLocal* decl;
 	
+	idScopedCriticalSection cs( mutex );
+	
 	if( !name || !name[0] )
 	{
 		name = "_emptyName";
@@ -1250,6 +1272,12 @@ const idDecl* idDeclManagerLocal::FindType( declType_t type, const char* name, b
 	// if it hasn't been parsed yet, parse it now
 	if( decl->declState == DS_UNPARSED )
 	{
+		if( !idLib::IsMainThread() )
+		{
+			// we can't load images from a background thread on OpenGL,
+			// the renderer on the main thread should parse it if needed
+			idLib::Error( "Attempted to load %s decl '%s' from game thread!", GetDeclNameFromType( type ), name );
+		}
 		decl->ParseLocal();
 	}
 	
@@ -1310,6 +1338,7 @@ int idDeclManagerLocal::GetNumDecls( declType_t type )
 	if( typeIndex < 0 || typeIndex >= declTypes.Num() || declTypes[typeIndex] == NULL )
 	{
 		common->FatalError( "idDeclManager::GetNumDecls: bad type: %i", typeIndex );
+		return 0;
 	}
 	return linearLists[ typeIndex ].Num();
 }
@@ -1326,6 +1355,7 @@ const idDecl* idDeclManagerLocal::DeclByIndex( declType_t type, int index, bool 
 	if( typeIndex < 0 || typeIndex >= declTypes.Num() || declTypes[typeIndex] == NULL )
 	{
 		common->FatalError( "idDeclManager::DeclByIndex: bad type: %i", typeIndex );
+		return NULL;
 	}
 	if( index < 0 || index >= linearLists[ typeIndex ].Num() )
 	{
@@ -1514,9 +1544,10 @@ idDecl* idDeclManagerLocal::CreateNewDecl( declType_t type, const char* name, co
 	int typeIndex = ( int )type;
 	int i, hash;
 	
-	if( typeIndex < 0 || typeIndex >= declTypes.Num() || declTypes[typeIndex] == NULL )
+	if( typeIndex < 0 || typeIndex >= declTypes.Num() || declTypes[typeIndex] == NULL || typeIndex >= DECL_MAX_TYPES )
 	{
 		common->FatalError( "idDeclManager::CreateNewDecl: bad type: %i", typeIndex );
+		return NULL;
 	}
 	
 	char  canonicalName[MAX_STRING_CHARS];
@@ -1745,6 +1776,21 @@ const idSoundShader* idDeclManagerLocal::SoundByIndex( int index, bool forcePars
 
 /*
 ===================
+idDeclManagerLocal::Touch
+===================
+*/
+void idDeclManagerLocal::Touch( const idDecl* decl )
+{
+
+	if( decl->base->GetState() ==  DS_UNPARSED )
+	{
+		// This should parse the decl as well.
+		FindType( decl->GetType(), decl->GetName() );
+	}
+}
+
+/*
+===================
 idDeclManagerLocal::MakeNameCanonical
 ===================
 */
@@ -1916,9 +1962,10 @@ idDeclLocal* idDeclManagerLocal::FindTypeWithoutParsing( declType_t type, const 
 	int typeIndex = ( int )type;
 	int i, hash;
 	
-	if( typeIndex < 0 || typeIndex >= declTypes.Num() || declTypes[typeIndex] == NULL )
+	if( typeIndex < 0 || typeIndex >= declTypes.Num() || declTypes[typeIndex] == NULL || typeIndex >= DECL_MAX_TYPES )
 	{
 		common->FatalError( "idDeclManager::FindTypeWithoutParsing: bad type: %i", typeIndex );
+		return NULL;
 	}
 	
 	char canonicalName[MAX_STRING_CHARS];
@@ -1964,6 +2011,190 @@ idDeclLocal* idDeclManagerLocal::FindTypeWithoutParsing( declType_t type, const 
 	return decl;
 }
 
+/*
+=================
+idDeclManagerLocal::ConvertPDAsToStrings
+=================
+*/
+void idDeclManagerLocal::ConvertPDAsToStrings( const idCmdArgs& args )
+{
+
+	idStr pdaStringsFileName = "temppdas/pdas.lang";
+	idFileLocal file( fileSystem->OpenFileWrite( pdaStringsFileName ) );
+	
+	if( file == NULL )
+	{
+		idLib::Printf( "Failed to Convert PDA data to Strings.\n" );
+	}
+	
+	int totalEmailCount = 0;
+	int totalAudioCount = 0;
+	int totalVideoCount = 0;
+	idStr headEnd = "\t\"#str_%s_";
+	idStr tailEnd = "\"\t\"%s\"\n";
+	idStr temp;
+	
+	int count = linearLists[ DECL_PDA ].Num();
+	for( int i = 0; i < count; i++ )
+	{
+		const idDeclPDA* decl = static_cast< const idDeclPDA* >( FindType( DECL_PDA, linearLists[ DECL_PDA ][ i ]->GetName(), false ) );
+		
+		idStr pdaBaseStrId = va( headEnd.c_str(), decl->GetName() );
+		
+		temp = va( "\n\n//////// %s PDA ////////////\n", decl->GetName() );
+		file->Write( temp, temp.Length() );
+		
+		idStr pdaBase = pdaBaseStrId + "pda_%s" + tailEnd;
+		// Pda Name
+		temp = va( pdaBase.c_str(), "name", decl->GetPdaName() );
+		file->Write( temp, temp.Length() );
+		// Full Name
+		temp = va( pdaBase.c_str(), "fullname", decl->GetFullName() );
+		file->Write( temp, temp.Length() );
+		// ID
+		temp = va( pdaBase.c_str(), "id", decl->GetID() );
+		file->Write( temp, temp.Length() );
+		// Post
+		temp = va( pdaBase.c_str(), "post", decl->GetPost() );
+		file->Write( temp, temp.Length() );
+		// Title
+		temp = va( pdaBase.c_str(), "title", decl->GetTitle() );
+		file->Write( temp, temp.Length() );
+		// Security
+		temp = va( pdaBase.c_str(), "security", decl->GetSecurity() );
+		file->Write( temp, temp.Length() );
+		
+		int emailCount = decl->GetNumEmails();
+		for( int emailIter = 0; emailIter < emailCount; emailIter++ )
+		{
+			const idDeclEmail* email = decl->GetEmailByIndex( emailIter );
+			
+			idStr emailBaseStrId = va( headEnd.c_str(), email->GetName() );
+			idStr emailBase = emailBaseStrId + "email_%s" + tailEnd;
+			
+			file->Write( "\t//Email\n", 9 );
+			// Date
+			temp = va( emailBase, "date", email->GetDate() );
+			file->Write( temp, temp.Length() );
+			// To
+			temp = va( emailBase, "to", email->GetTo() );
+			file->Write( temp, temp.Length() );
+			// From
+			temp = va( emailBase, "from", email->GetFrom() );
+			file->Write( temp, temp.Length() );
+			// Subject
+			temp = va( emailBase, "subject", email->GetSubject() );
+			file->Write( temp, temp.Length() );
+			// Body
+			idStr body = email->GetBody();
+			body.Replace( "\n", "\\n" );
+			temp = va( emailBase, "text", body.c_str() );
+			file->Write( temp, temp.Length() );
+			
+			totalEmailCount++;
+		}
+		
+		int audioCount = decl->GetNumAudios();
+		for( int audioIter = 0; audioIter < audioCount; audioIter++ )
+		{
+			const idDeclAudio* audio = decl->GetAudioByIndex( audioIter );
+			
+			idStr audioBaseStrId = va( headEnd.c_str(), audio->GetName() );
+			idStr audioBase = audioBaseStrId + "audio_%s" + tailEnd;
+			
+			file->Write( "\t//Audio\n", 9 );
+			// Name
+			temp = va( audioBase, "name", audio->GetAudioName() );
+			file->Write( temp, temp.Length() );
+			// Info
+			idStr info = audio->GetInfo();
+			info.Replace( "\n", "\\n" );
+			temp = va( audioBase, "info", info.c_str() );
+			file->Write( temp, temp.Length() );
+			
+			totalAudioCount++;
+		}
+	}
+	
+	int infoEmailCount = linearLists[ DECL_EMAIL ].Num();
+	if( infoEmailCount > 0 )
+	{
+		temp = "\n\n//////// PDA Info Emails ////////////\n";
+		file->Write( temp, temp.Length() );
+	}
+	for( int i = 0; i < infoEmailCount; i++ )
+	{
+		const idDeclEmail* email = static_cast< const idDeclEmail* >( FindType( DECL_EMAIL, linearLists[ DECL_EMAIL ][ i ]->GetName(), false ) );
+		
+		idStr filename = email->base->GetFileName();
+		if( filename.Icmp( "newpdas/info_emails.pda" ) != 0 )
+		{
+			continue;
+		}
+		
+		idStr emailBaseStrId = va( "\t\"#str_%s_", email->GetName() );
+		idStr emailBase = emailBaseStrId + "email_%s" + tailEnd;
+		
+		file->Write( "\t//Email\n", 9 );
+		
+		// Date
+		temp = va( emailBase, "date", email->GetDate() );
+		file->Write( temp, temp.Length() );
+		// To
+		temp = va( emailBase, "to", email->GetTo() );
+		file->Write( temp, temp.Length() );
+		// From
+		temp = va( emailBase, "from", email->GetFrom() );
+		file->Write( temp, temp.Length() );
+		// Subject
+		temp = va( emailBase, "subject", email->GetSubject() );
+		file->Write( temp, temp.Length() );
+		// Body
+		idStr body = email->GetBody();
+		body.Replace( "\n", "\\n" );
+		temp = va( emailBase, "text", body.c_str() );
+		file->Write( temp, temp.Length() );
+		
+		totalEmailCount++;
+	}
+	
+	int videoCount = linearLists[ DECL_VIDEO ].Num();
+	if( videoCount > 0 )
+	{
+		temp = "\n\n//////// PDA Videos ////////////\n";
+		file->Write( temp, temp.Length() );
+	}
+	for( int i = 0; i < videoCount; i++ )
+	{
+		const idDeclVideo* video = static_cast< const idDeclVideo* >( FindType( DECL_VIDEO, linearLists[ DECL_VIDEO ][ i ]->GetName(), false ) );
+		
+		idStr videoBaseStrId = va( "\t\"#str_%s_", video->GetName() );
+		idStr videoBase = videoBaseStrId + "video_%s" + tailEnd;
+		
+		file->Write( "\t//Video\n", 9 );
+		
+		// Name
+		temp = va( videoBase, "name", video->GetVideoName() );
+		file->Write( temp, temp.Length() );
+		// Info
+		idStr info = video->GetInfo();
+		info.Replace( "\n", "\\n" );
+		temp = va( videoBase, "info", info.c_str() );
+		file->Write( temp, temp.Length() );
+		
+		totalVideoCount++;
+	}
+	
+	file->Flush();
+	
+	idLib::Printf( "\nData written to %s\n", pdaStringsFileName.c_str() );
+	idLib::Printf( "----------------------------\n" );
+	idLib::Printf( "Wrote %d PDAs.\n", count );
+	idLib::Printf( "Wrote %d Emails.\n", totalEmailCount );
+	idLib::Printf( "Wrote %d Audio Records.\n", totalAudioCount );
+	idLib::Printf( "Wrote %d Video Records.\n", totalVideoCount );
+	idLib::Printf( "Please copy the results into the appropriate .lang file.\n" );
+}
 
 /*
 ====================================================================================
@@ -2188,7 +2419,6 @@ idDeclLocal::ReplaceSourceFileText
 bool idDeclLocal::ReplaceSourceFileText()
 {
 	int oldFileLength, newFileLength;
-	char* buffer;
 	idFile* file;
 	
 	common->Printf( "Writing \'%s\' to \'%s\'...\n", GetName(), GetFileName() );
@@ -2202,7 +2432,8 @@ bool idDeclLocal::ReplaceSourceFileText()
 	// get length and allocate buffer to hold the file
 	oldFileLength = sourceFile->fileSize;
 	newFileLength = oldFileLength - sourceTextLength + textLength;
-	buffer = ( char* ) Mem_Alloc( Max( newFileLength, oldFileLength ) );
+	idTempArray<char> buffer( Max( newFileLength, oldFileLength ) );
+	memset( buffer.Ptr(), 0, buffer.Size() );
 	
 	// read original file
 	if( sourceFile->fileSize )
@@ -2211,24 +2442,21 @@ bool idDeclLocal::ReplaceSourceFileText()
 		file = fileSystem->OpenFileRead( GetFileName() );
 		if( !file )
 		{
-			Mem_Free( buffer );
 			common->Warning( "Couldn't open %s for reading.", GetFileName() );
 			return false;
 		}
 		
 		if( file->Length() != sourceFile->fileSize || file->Timestamp() != sourceFile->timestamp )
 		{
-			Mem_Free( buffer );
 			common->Warning( "The file %s has been modified outside of the engine.", GetFileName() );
 			return false;
 		}
 		
-		file->Read( buffer, oldFileLength );
+		file->Read( buffer.Ptr(), oldFileLength );
 		fileSystem->CloseFile( file );
 		
-		if( MD5_BlockChecksum( buffer, oldFileLength ) != sourceFile->checksum )
+		if( MD5_BlockChecksum( buffer.Ptr(), oldFileLength ) != ( unsigned int )sourceFile->checksum )
 		{
-			Mem_Free( buffer );
 			common->Warning( "The file %s has been modified outside of the engine.", GetFileName() );
 			return false;
 		}
@@ -2237,27 +2465,23 @@ bool idDeclLocal::ReplaceSourceFileText()
 	// insert new text
 	char* declText = ( char* ) _alloca( textLength + 1 );
 	GetText( declText );
-	memmove( buffer + sourceTextOffset + textLength, buffer + sourceTextOffset + sourceTextLength, oldFileLength - sourceTextOffset - sourceTextLength );
-	memcpy( buffer + sourceTextOffset, declText, textLength );
+	memmove( buffer.Ptr() + sourceTextOffset + textLength, buffer.Ptr() + sourceTextOffset + sourceTextLength, oldFileLength - sourceTextOffset - sourceTextLength );
+	memcpy( buffer.Ptr() + sourceTextOffset, declText, textLength );
 	
 	// write out new file
-	file = fileSystem->OpenFileWrite( GetFileName(), "fs_devpath" );
+	file = fileSystem->OpenFileWrite( GetFileName(), "fs_basepath" );
 	if( !file )
 	{
-		Mem_Free( buffer );
 		common->Warning( "Couldn't open %s for writing.", GetFileName() );
 		return false;
 	}
-	file->Write( buffer, newFileLength );
+	file->Write( buffer.Ptr(), newFileLength );
 	fileSystem->CloseFile( file );
 	
 	// set new file size, checksum and timestamp
 	sourceFile->fileSize = newFileLength;
-	sourceFile->checksum = MD5_BlockChecksum( buffer, newFileLength );
+	sourceFile->checksum = MD5_BlockChecksum( buffer.Ptr(), newFileLength );
 	fileSystem->ReadFile( GetFileName(), NULL, &sourceFile->timestamp );
-	
-	// free buffer
-	Mem_Free( buffer );
 	
 	// move all decls in the same file
 	for( idDeclLocal* decl = sourceFile->decls; decl; decl = decl->nextInFile )
@@ -2329,7 +2553,7 @@ void idDeclLocal::MakeDefault()
 	self->FreeData();
 	
 	// parse
-	self->Parse( defaultText, strlen( defaultText ) );
+	self->Parse( defaultText, strlen( defaultText ), false );
 	
 	// we could still eventually hit the recursion if we have enough Error() calls inside Parse...
 	--recursionLevel;
@@ -2360,7 +2584,7 @@ const char* idDeclLocal::DefaultDefinition() const
 idDeclLocal::Parse
 =================
 */
-bool idDeclLocal::Parse( const char* text, const int textLength )
+bool idDeclLocal::Parse( const char* text, const int textLength, bool allowBinaryVersion )
 {
 	idLexer src;
 	
@@ -2461,13 +2685,13 @@ void idDeclLocal::ParseLocal()
 	// parse
 	char* declText = ( char* ) _alloca( ( GetTextLength() + 1 ) * sizeof( char ) );
 	GetText( declText );
-	self->Parse( declText, GetTextLength() );
+	self->Parse( declText, GetTextLength(), true );
 	
 	// free generated text
 	if( generatedDefaultText )
 	{
 		Mem_Free( textSource );
-		textSource = 0;
+		textSource = NULL;
 		textLength = 0;
 	}
 	

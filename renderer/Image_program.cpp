@@ -1,25 +1,25 @@
 /*
 ===========================================================================
 
-Doom 3 GPL Source Code
-Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Doom 3 BFG Edition GPL Source Code
+Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
 
-This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
+This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
-Doom 3 Source Code is free software: you can redistribute it and/or modify
+Doom 3 BFG Edition Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Doom 3 Source Code is distributed in the hope that it will be useful,
+Doom 3 BFG Edition Source Code is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Doom 3 Source Code.  If not, see <http://www.gnu.org/licenses/>.
+along with Doom 3 BFG Edition Source Code.  If not, see <http://www.gnu.org/licenses/>.
 
-In addition, the Doom 3 Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 Source Code.  If not, please request a copy in writing from id Software at the address below.
+In addition, the Doom 3 BFG Edition Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 BFG Edition Source Code.  If not, please request a copy in writing from id Software at the address below.
 
 If you have questions concerning this license or the applicable additional terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 
@@ -50,8 +50,9 @@ Manager
 
 */
 
-#include "precompiled.h"
 #pragma hdrstop
+#include "precompiled.h"
+
 
 // tr_imageprogram.c
 
@@ -415,20 +416,36 @@ used to parse an image program from a text stream.
 ===================
 */
 static bool R_ParseImageProgram_r( idLexer& src, byte** pic, int* width, int* height,
-								   ID_TIME_T* timestamps, textureDepth_t* depth )
+								   ID_TIME_T* timestamps, textureUsage_t* usage )
 {
 	idToken		token;
 	float		scale;
 	ID_TIME_T		timestamp;
 	
 	src.ReadToken( &token );
+	
+	// Since all interaction shaders now assume YCoCG diffuse textures.  We replace all entries for the intrinsic
+	// _black texture to the black texture on disk.  Doing this will cause a YCoCG compliant texture to be generated.
+	// Without a YCoCG compliant black texture we will get color artifacts for any interaction
+	// material that specifies the _black texture.
+	if( token == "_black" )
+	{
+		token = "textures\\black";
+	}
+	
+	// also check for _white
+	if( token == "_white" )
+	{
+		token = "guis\\assets\\white";
+	}
+	
 	AppendToken( token );
 	
 	if( !token.Icmp( "heightmap" ) )
 	{
 		MatchAndAppendToken( src, "(" );
 		
-		if( !R_ParseImageProgram_r( src, pic, width, height, timestamps, depth ) )
+		if( !R_ParseImageProgram_r( src, pic, width, height, timestamps, usage ) )
 		{
 			return false;
 		}
@@ -443,9 +460,9 @@ static bool R_ParseImageProgram_r( idLexer& src, byte** pic, int* width, int* he
 		if( pic )
 		{
 			R_HeightmapToNormalMap( *pic, *width, *height, scale );
-			if( depth )
+			if( usage )
 			{
-				*depth = TD_BUMP;
+				*usage = TD_BUMP;
 			}
 		}
 		
@@ -455,19 +472,19 @@ static bool R_ParseImageProgram_r( idLexer& src, byte** pic, int* width, int* he
 	
 	if( !token.Icmp( "addnormals" ) )
 	{
-		byte*	pic2;
+		byte*	pic2 = NULL;
 		int		width2, height2;
 		
 		MatchAndAppendToken( src, "(" );
 		
-		if( !R_ParseImageProgram_r( src, pic, width, height, timestamps, depth ) )
+		if( !R_ParseImageProgram_r( src, pic, width, height, timestamps, usage ) )
 		{
 			return false;
 		}
 		
 		MatchAndAppendToken( src, "," );
 		
-		if( !R_ParseImageProgram_r( src, pic ? &pic2 : NULL, &width2, &height2, timestamps, depth ) )
+		if( !R_ParseImageProgram_r( src, pic ? &pic2 : NULL, &width2, &height2, timestamps, usage ) )
 		{
 			if( pic )
 			{
@@ -482,9 +499,9 @@ static bool R_ParseImageProgram_r( idLexer& src, byte** pic, int* width, int* he
 		{
 			R_AddNormalMaps( *pic, *width, *height, pic2, width2, height2 );
 			R_StaticFree( pic2 );
-			if( depth )
+			if( usage )
 			{
-				*depth = TD_BUMP;
+				*usage = TD_BUMP;
 			}
 		}
 		
@@ -496,7 +513,7 @@ static bool R_ParseImageProgram_r( idLexer& src, byte** pic, int* width, int* he
 	{
 		MatchAndAppendToken( src, "(" );
 		
-		if( !R_ParseImageProgram_r( src, pic, width, height, timestamps, depth ) )
+		if( !R_ParseImageProgram_r( src, pic, width, height, timestamps, usage ) )
 		{
 			return false;
 		}
@@ -504,9 +521,9 @@ static bool R_ParseImageProgram_r( idLexer& src, byte** pic, int* width, int* he
 		if( pic )
 		{
 			R_SmoothNormalMap( *pic, *width, *height );
-			if( depth )
+			if( usage )
 			{
-				*depth = TD_BUMP;
+				*usage = TD_BUMP;
 			}
 		}
 		
@@ -516,19 +533,19 @@ static bool R_ParseImageProgram_r( idLexer& src, byte** pic, int* width, int* he
 	
 	if( !token.Icmp( "add" ) )
 	{
-		byte*	pic2;
+		byte*	pic2 = NULL;
 		int		width2, height2;
 		
 		MatchAndAppendToken( src, "(" );
 		
-		if( !R_ParseImageProgram_r( src, pic, width, height, timestamps, depth ) )
+		if( !R_ParseImageProgram_r( src, pic, width, height, timestamps, usage ) )
 		{
 			return false;
 		}
 		
 		MatchAndAppendToken( src, "," );
 		
-		if( !R_ParseImageProgram_r( src, pic ? &pic2 : NULL, &width2, &height2, timestamps, depth ) )
+		if( !R_ParseImageProgram_r( src, pic ? &pic2 : NULL, &width2, &height2, timestamps, usage ) )
 		{
 			if( pic )
 			{
@@ -556,7 +573,7 @@ static bool R_ParseImageProgram_r( idLexer& src, byte** pic, int* width, int* he
 		
 		MatchAndAppendToken( src, "(" );
 		
-		R_ParseImageProgram_r( src, pic, width, height, timestamps, depth );
+		R_ParseImageProgram_r( src, pic, width, height, timestamps, usage );
 		
 		for( i = 0 ; i < 4 ; i++ )
 		{
@@ -580,7 +597,7 @@ static bool R_ParseImageProgram_r( idLexer& src, byte** pic, int* width, int* he
 	{
 		MatchAndAppendToken( src, "(" );
 		
-		R_ParseImageProgram_r( src, pic, width, height, timestamps, depth );
+		R_ParseImageProgram_r( src, pic, width, height, timestamps, usage );
 		
 		// process it
 		if( pic )
@@ -596,7 +613,7 @@ static bool R_ParseImageProgram_r( idLexer& src, byte** pic, int* width, int* he
 	{
 		MatchAndAppendToken( src, "(" );
 		
-		R_ParseImageProgram_r( src, pic, width, height, timestamps, depth );
+		R_ParseImageProgram_r( src, pic, width, height, timestamps, usage );
 		
 		// process it
 		if( pic )
@@ -614,7 +631,7 @@ static bool R_ParseImageProgram_r( idLexer& src, byte** pic, int* width, int* he
 		
 		MatchAndAppendToken( src, "(" );
 		
-		R_ParseImageProgram_r( src, pic, width, height, timestamps, depth );
+		R_ParseImageProgram_r( src, pic, width, height, timestamps, usage );
 		
 		// copy red to green, blue, and alpha
 		if( pic )
@@ -639,7 +656,7 @@ static bool R_ParseImageProgram_r( idLexer& src, byte** pic, int* width, int* he
 		
 		MatchAndAppendToken( src, "(" );
 		
-		R_ParseImageProgram_r( src, pic, width, height, timestamps, depth );
+		R_ParseImageProgram_r( src, pic, width, height, timestamps, usage );
 		
 		// average RGB into alpha, then set RGB to white
 		if( pic )
@@ -692,7 +709,7 @@ static bool R_ParseImageProgram_r( idLexer& src, byte** pic, int* width, int* he
 R_LoadImageProgram
 ===================
 */
-void R_LoadImageProgram( const char* name, byte** pic, int* width, int* height, ID_TIME_T* timestamps, textureDepth_t* depth )
+void R_LoadImageProgram( const char* name, byte** pic, int* width, int* height, ID_TIME_T* timestamps, textureUsage_t* usage )
 {
 	idLexer src;
 	
@@ -705,7 +722,7 @@ void R_LoadImageProgram( const char* name, byte** pic, int* width, int* height, 
 		*timestamps = 0;
 	}
 	
-	R_ParseImageProgram_r( src, pic, width, height, timestamps, depth );
+	R_ParseImageProgram_r( src, pic, width, height, timestamps, usage );
 	
 	src.FreeSource();
 }

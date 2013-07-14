@@ -127,14 +127,20 @@ static void TexVecForTri( textureVectors_t* texVec, mapTri_t* tri )
 	d0[0] = b->xyz[0] - a->xyz[0];
 	d0[1] = b->xyz[1] - a->xyz[1];
 	d0[2] = b->xyz[2] - a->xyz[2];
-	d0[3] = b->st[0] - a->st[0];
-	d0[4] = b->st[1] - a->st[1];
+	
+	// RB begin
+	const idVec2 aST = a->GetTexCoord();
+	const idVec2 bST = b->GetTexCoord();
+	d0[3] = bST.x - aST.x;
+	d0[4] = bST.y - aST.y;
 	
 	d1[0] = c->xyz[0] - a->xyz[0];
 	d1[1] = c->xyz[1] - a->xyz[1];
 	d1[2] = c->xyz[2] - a->xyz[2];
-	d1[3] = c->st[0] - a->st[0];
-	d1[4] = c->st[1] - a->st[1];
+	
+	const idVec2 cST = c->GetTexCoord();
+	d1[3] = cST.x - aST.x;
+	d1[4] = cST.y - aST.y;
 	
 	area = d0[3] * d1[4] - d0[4] * d1[3];
 	inva = 1.0 / area;
@@ -144,14 +150,15 @@ static void TexVecForTri( textureVectors_t* texVec, mapTri_t* tri )
 	temp[2] = ( d0[2] * d1[4] - d0[4] * d1[2] ) * inva;
 	temp.Normalize();
 	texVec->v[0].ToVec3() = temp;
-	texVec->v[0][3] = tri->v[0].xyz * texVec->v[0].ToVec3() - tri->v[0].st[0];
+	texVec->v[0][3] = tri->v[0].xyz * texVec->v[0].ToVec3() - tri->v[0].GetTexCoord().x;
 	
 	temp[0] = ( d0[3] * d1[0] - d0[0] * d1[3] ) * inva;
 	temp[1] = ( d0[3] * d1[1] - d0[1] * d1[3] ) * inva;
 	temp[2] = ( d0[3] * d1[2] - d0[2] * d1[3] ) * inva;
 	temp.Normalize();
 	texVec->v[1].ToVec3() = temp;
-	texVec->v[1][3] = tri->v[0].xyz * texVec->v[0].ToVec3() - tri->v[0].st[1];
+	texVec->v[1][3] = tri->v[0].xyz * texVec->v[0].ToVec3() - tri->v[0].GetTexCoord().y;
+	// RB end
 }
 
 
@@ -224,17 +231,21 @@ mapTri_t* TriListForSide( const side_t* s, const idWinding* w )
 #else
 				VectorCopy( *vec, dv->xyz );
 #endif
+				// RB begin
 				
 				// calculate texture s/t from brush primitive texture matrix
-				dv->st[0] = DotProduct( dv->xyz, s->texVec.v[0] ) + s->texVec.v[0][3];
-				dv->st[1] = DotProduct( dv->xyz, s->texVec.v[1] ) + s->texVec.v[1][3];
-				
+				dv->SetTexCoord(	DotProduct( dv->xyz, s->texVec.v[0] ) + s->texVec.v[0][3],
+									DotProduct( dv->xyz, s->texVec.v[1] ) + s->texVec.v[1][3] );
+									
 				// copy normal
-				dv->normal = dmapGlobals.mapPlanes[s->planenum].Normal();
-				if( dv->normal.Length() < 0.9 || dv->normal.Length() > 1.1 )
+				
+				
+				dv->SetNormal( dmapGlobals.mapPlanes[s->planenum].Normal() );
+				if( dv->GetNormal().Length() < 0.9 || dv->GetNormal().Length() > 1.1 )
 				{
 					common->Error( "Bad normal in TriListForSide" );
 				}
+				// RB end
 			}
 		}
 	}
@@ -272,16 +283,19 @@ mapTri_t* TriListForSide( const side_t* s, const idWinding* w )
 				
 				VectorCopy( *vec, dv->xyz );
 				
-				// calculate texture s/t from brush primitive texture matrix
-				dv->st[0] = DotProduct( dv->xyz, s->texVec.v[0] ) + s->texVec.v[0][3];
-				dv->st[1] = DotProduct( dv->xyz, s->texVec.v[1] ) + s->texVec.v[1][3];
+				// RB begin
 				
+				// calculate texture s/t from brush primitive texture matrix
+				dv->SetTexCoord(	DotProduct( dv->xyz, s->texVec.v[0] ) + s->texVec.v[0][3],
+									DotProduct( dv->xyz, s->texVec.v[1] ) + s->texVec.v[1][3]	);
+									
 				// copy normal
-				dv->normal = dmapGlobals.mapPlanes[s->planenum].Normal();
-				if( dv->normal.Length() < 0.9f || dv->normal.Length() > 1.1f )
+				dv->SetNormal( dmapGlobals.mapPlanes[s->planenum].Normal() );
+				if( dv->GetNormal().Length() < 0.9f || dv->GetNormal().Length() > 1.1f )
 				{
 					common->Error( "Bad normal in TriListForSide" );
 				}
+				// RB end
 			}
 		}
 	}
@@ -776,8 +790,10 @@ void PutPrimitivesInAreas( uEntity_t* e )
 						
 						mapTri.v[k].xyz = v * axis + origin;
 						
-						mapTri.v[k].normal = tri->verts[tri->indexes[j + k]].normal * axis;
-						mapTri.v[k].st = tri->verts[tri->indexes[j + k]].st;
+						// RB begin
+						mapTri.v[k].SetNormal( tri->verts[tri->indexes[j + k]].GetNormal() * axis );
+						mapTri.v[k].SetTexCoord( tri->verts[tri->indexes[j + k]].GetTexCoord() );
+						// RB end
 					}
 					AddMapTriToAreas( &mapTri, e );
 				}
@@ -822,8 +838,10 @@ static void ClipTriByLight( const mapLight_t* light, const mapTri_t* tri,
 		oldInside = inside;
 		if( oldInside )
 		{
-			oldInside->Split( light->def.frustum[i], 0, &outside[i], &inside );
+			// RB begin
+			oldInside->Split( light->frustumPlanes[i], 0, &outside[i], &inside );
 			delete oldInside;
+			// RB end
 		}
 		else
 		{
@@ -953,7 +971,7 @@ static void BuildLightShadows( uEntity_t* e, mapLight_t* light )
 				
 				// if the group bounds doesn't intersect the light bounds,
 				// skip it
-				if( !group->bounds.IntersectsBounds( light->def.frustumTris->bounds ) )
+				if( !group->bounds.IntersectsBounds( light->def.globalLightBounds ) )
 				{
 					continue;
 				}
@@ -1012,8 +1030,11 @@ static void BuildLightShadows( uEntity_t* e, mapLight_t* light )
 		}
 	}
 	
+	
+	// RB FIXME
 	// take the shadower group list and create a beam tree and shadow volume
-	light->shadowTris = CreateLightShadow( shadowerGroups, light );
+	//light->shadowTris = CreateLightShadow( shadowerGroups, light );
+	light->shadowTris = NULL;
 	
 	if( light->shadowTris && hasPerforatedSurface )
 	{
@@ -1054,7 +1075,7 @@ static void CarveGroupsByLight( uEntity_t* e, mapLight_t* light )
 			// if the surface doesn't get lit, don't carve it up
 			if( ( light->def.lightShader->IsFogLight() && !group->material->ReceivesFog() )
 					|| ( !light->def.lightShader->IsFogLight() && !group->material->ReceivesLighting() )
-					|| !group->bounds.IntersectsBounds( light->def.frustumTris->bounds ) )
+					|| !group->bounds.IntersectsBounds( light->def.globalLightBounds ) )
 			{
 			
 				group->nextGroup = carvedGroups;

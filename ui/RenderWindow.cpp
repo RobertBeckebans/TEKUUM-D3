@@ -1,45 +1,44 @@
 /*
 ===========================================================================
 
-Doom 3 GPL Source Code
-Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Doom 3 BFG Edition GPL Source Code
+Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
 
-This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
+This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
-Doom 3 Source Code is free software: you can redistribute it and/or modify
+Doom 3 BFG Edition Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Doom 3 Source Code is distributed in the hope that it will be useful,
+Doom 3 BFG Edition Source Code is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Doom 3 Source Code.  If not, see <http://www.gnu.org/licenses/>.
+along with Doom 3 BFG Edition Source Code.  If not, see <http://www.gnu.org/licenses/>.
 
-In addition, the Doom 3 Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 Source Code.  If not, please request a copy in writing from id Software at the address below.
+In addition, the Doom 3 BFG Edition Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 BFG Edition Source Code.  If not, please request a copy in writing from id Software at the address below.
 
 If you have questions concerning this license or the applicable additional terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 
 ===========================================================================
 */
 
-#include "precompiled.h"
 #pragma hdrstop
+#include "precompiled.h"
 
 #include "DeviceContext.h"
 #include "Window.h"
 #include "UserInterfaceLocal.h"
 #include "RenderWindow.h"
 
-idRenderWindow::idRenderWindow( idDeviceContext* d, idUserInterfaceLocal* g ) : idWindow( d, g )
-{
-	dc = d;
-	gui = g;
-	CommonInit();
-}
+// NO LONGER SUPPORTED!
+//
+// D3 could render a 3D model in a subrect of a full screen
+// GUI for the main menus, but we have cut that ability so
+// we don't need to deal with offset viewports on all platforms.
 
 idRenderWindow::idRenderWindow( idUserInterfaceLocal* g ) : idWindow( g )
 {
@@ -79,7 +78,7 @@ void idRenderWindow::BuildAnimation( int time )
 	if( animName.Length() && animClass.Length() )
 	{
 		worldEntity.numJoints = worldEntity.hModel->NumJoints();
-		worldEntity.joints = ( idJointMat* )Mem_Alloc16( worldEntity.numJoints * sizeof( *worldEntity.joints ) );
+		worldEntity.joints = ( idJointMat* )Mem_Alloc16( SIMD_ROUND_JOINTS( worldEntity.numJoints ) * sizeof( *worldEntity.joints ) );
 		modelAnim = gameEdit->ANIM_GetAnimFromEntityDef( animClass, animName );
 		if( modelAnim )
 		{
@@ -123,6 +122,11 @@ void idRenderWindow::PreRender()
 			worldEntity.shaderParms[3] = 1;
 			modelDef = world->AddEntityDef( &worldEntity );
 		}
+		
+		// RB: added to avoid crash in the renderer
+		world->GenerateAllInteractions();
+		// RB end
+		
 		needsRender = false;
 	}
 }
@@ -171,14 +175,11 @@ void idRenderWindow::Draw( int time, float x, float y )
 	refdef.shaderParms[2] = 1;
 	refdef.shaderParms[3] = 1;
 	
-	refdef.x = drawRect.x;
-	refdef.y = drawRect.y;
-	refdef.width = drawRect.w;
-	refdef.height = drawRect.h;
 	refdef.fov_x = 90;
 	refdef.fov_y = 2 * atan( ( float )drawRect.h / drawRect.w ) * idMath::M_RAD2DEG;
 	
-	refdef.time = time;
+	refdef.time[0] = time;
+	refdef.time[1] = time;
 	world->RenderScene( &refdef );
 }
 

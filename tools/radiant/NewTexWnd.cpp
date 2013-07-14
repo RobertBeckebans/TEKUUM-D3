@@ -238,8 +238,8 @@ const idMaterial* CNewTexWnd::NextPos()
 	// ensure it is uploaded
 	declManager->FindMaterial( mat->GetName() );
 	
-	int width = mat->GetEditorImage()->uploadWidth * ( ( float )g_PrefsDlg.m_nTextureScale / 100 );
-	int height = mat->GetEditorImage()->uploadHeight * ( ( float )g_PrefsDlg.m_nTextureScale / 100 );
+	int width = mat->GetEditorImage()->GetUploadWidth() * ( ( float )g_PrefsDlg.m_nTextureScale / 100 );
+	int height = mat->GetEditorImage()->GetUploadHeight() * ( ( float )g_PrefsDlg.m_nTextureScale / 100 );
 	
 	if( current.x + width > rectClient.Width() - 8 && currentRow )
 	{
@@ -281,6 +281,10 @@ void CNewTexWnd::OnPaint()
 	}
 	else
 	{
+		// RB: go back to fixed function pipeline
+		renderProgManager.Unbind();
+		// RB end
+		
 		const char*	name;
 		glClearColor
 		(
@@ -299,6 +303,25 @@ void CNewTexWnd::OnPaint()
 		glOrtho( 0, rectClient.Width(), origin.y - rectClient.Height(), origin.y, -100, 100 );
 		glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
 		
+		// RB: shaders require uniforms
+		float	modelViewMatrix[16];
+		float	projectionMatrix[16];
+		
+		glGetFloatv( GL_MODELVIEW_MATRIX, &modelViewMatrix[0] );
+		glGetFloatv( GL_PROJECTION_MATRIX, &projectionMatrix[0] );
+		
+		idRenderMatrix projectionRenderMatrix;
+		idRenderMatrix::Transpose( *( idRenderMatrix* )projectionMatrix, projectionRenderMatrix );
+		
+		idRenderMatrix modelViewRenderMatrix;
+		idRenderMatrix::Transpose( *( idRenderMatrix* )modelViewMatrix, modelViewRenderMatrix );
+		
+		idRenderMatrix mvp;
+		idRenderMatrix::Multiply( projectionRenderMatrix, modelViewRenderMatrix, mvp );
+		
+		RB_SetMVP( mvp );
+		// RB end
+		
 		// init stuff
 		current.x = 8;
 		current.y = -8;
@@ -312,15 +335,18 @@ void CNewTexWnd::OnPaint()
 				break;
 			}
 			
-			int width = mat->GetEditorImage()->uploadWidth * ( ( float )g_PrefsDlg.m_nTextureScale / 100 );
-			int height = mat->GetEditorImage()->uploadHeight * ( ( float )g_PrefsDlg.m_nTextureScale / 100 );
+			int width = mat->GetEditorImage()->GetUploadWidth() * ( ( float )g_PrefsDlg.m_nTextureScale / 100 );
+			int height = mat->GetEditorImage()->GetUploadHeight() * ( ( float )g_PrefsDlg.m_nTextureScale / 100 );
 			
 			// Is this texture visible?
 			if( ( draw.y - height - FONT_HEIGHT < origin.y ) && ( draw.y > origin.y - rectClient.Height() ) )
 			{
 				// if in use, draw a background
 				glLineWidth( 1 );
+				
 				glColor3f( 1, 1, 1 );
+				GL_Color( 1, 1, 1 );
+				
 				globalImages->BindNull();
 				glBegin( GL_LINE_LOOP );
 				glVertex2f( draw.x - 1, draw.y + 1 - FONT_HEIGHT );
@@ -331,6 +357,20 @@ void CNewTexWnd::OnPaint()
 				
 				// Draw the texture
 				float	fScale = ( g_PrefsDlg.m_bHiColorTextures == TRUE ) ? ( ( float )g_PrefsDlg.m_nTextureScale / 100 ) : 1.0;
+				
+				// RB begin
+				const idImageOpts& opts = mat->GetEditorImage()->GetOpts();
+				if( opts.colorFormat == CFM_YCOCG_DXT5 )
+				{
+					renderProgManager.BindShader_TextureYCoCG();
+				}
+				else
+				{
+					renderProgManager.BindShader_Texture();
+				}
+				
+				renderProgManager.CommitUniforms();
+				// RB end
 				
 				mat->GetEditorImage()->Bind();
 				QE_CheckOpenGLForErrors();
@@ -345,6 +385,10 @@ void CNewTexWnd::OnPaint()
 				glTexCoord2f( 0, 1 );
 				glVertex2f( draw.x, draw.y - FONT_HEIGHT - height );
 				glEnd();
+				
+				// RB begin
+				renderProgManager.Unbind();
+				// RB end
 				
 				// draw the selection border
 				if( !idStr::Icmp( g_qeglobals.d_texturewin.texdef.name, mat->GetName() ) )
@@ -391,7 +435,13 @@ void CNewTexWnd::OnPaint()
 		
 		// reset the current texture
 		globalImages->BindNull();
+		
+		// RB: go back to fixed function pipeline
+		renderProgManager.Unbind();
+		// RB end
+		
 		glFinish();
+		
 		SwapBuffers( dc.GetSafeHdc() );
 		TRACE( "Texture Paint\n" );
 	}
@@ -512,8 +562,8 @@ const idMaterial* CNewTexWnd::getMaterialAtPoint( CPoint point )
 			return NULL;
 		}
 		
-		int width = mat->GetEditorImage()->uploadWidth * ( ( float )g_PrefsDlg.m_nTextureScale / 100 );
-		int height = mat->GetEditorImage()->uploadHeight * ( ( float )g_PrefsDlg.m_nTextureScale / 100 );
+		int width = mat->GetEditorImage()->GetUploadWidth() * ( ( float )g_PrefsDlg.m_nTextureScale / 100 );
+		int height = mat->GetEditorImage()->GetUploadHeight() * ( ( float )g_PrefsDlg.m_nTextureScale / 100 );
 		//if (point.x > draw.x && point.x - draw.x < width && my < draw.y && my + draw.y < height + FONT_HEIGHT) {
 		if( point.x > draw.x && point.x - draw.x < width && my < draw.y &&  draw.y - my < height + FONT_HEIGHT )
 		{
@@ -945,8 +995,8 @@ void CNewTexWnd::EnsureTextureIsVisible( const char* name )
 			break;
 		}
 		
-		int width = mat->GetEditorImage()->uploadWidth * ( ( float )g_PrefsDlg.m_nTextureScale / 100 );
-		int height = mat->GetEditorImage()->uploadHeight * ( ( float )g_PrefsDlg.m_nTextureScale / 100 );
+		int width = mat->GetEditorImage()->GetUploadWidth() * ( ( float )g_PrefsDlg.m_nTextureScale / 100 );
+		int height = mat->GetEditorImage()->GetUploadHeight() * ( ( float )g_PrefsDlg.m_nTextureScale / 100 );
 		
 		if( !idStr::Icmp( name, mat->GetName() ) )
 		{

@@ -257,7 +257,7 @@ EVENT( AI_TestAnimMove,						idAI::Event_TestAnimMove )
 EVENT( AI_TestMoveToPosition,				idAI::Event_TestMoveToPosition )
 EVENT( AI_TestMeleeAttack,					idAI::Event_TestMeleeAttack )
 EVENT( AI_TestAnimAttack,					idAI::Event_TestAnimAttack )
-EVENT( AI_Shrivel,							idAI::Event_Shrivel )
+//EVENT( AI_Shrivel,							idAI::Event_Shrivel )
 EVENT( AI_Burn,								idAI::Event_Burn )
 EVENT( AI_PreBurn,							idAI::Event_PreBurn )
 EVENT( AI_SetSmokeVisibility,				idAI::Event_SetSmokeVisibility )
@@ -921,7 +921,7 @@ void idAI::Event_MeleeAttackToJoint( const char* jointname, const char* meleeDef
 	if( trace.fraction < 1.0f )
 	{
 		hitEnt = gameLocal.GetTraceEntity( trace );
-		if( hitEnt && hitEnt->IsType( idActor::Type ) )
+		if( hitEnt != NULL && hitEnt->IsType( idActor::Type ) )
 		{
 			DirectDamage( meleeDefName, hitEnt );
 			idThread::ReturnInt( true );
@@ -2217,6 +2217,7 @@ void idAI::Event_TestAnimAttack( const char* animname )
 idAI::Event_Shrivel
 =====================
 */
+#if 0
 void idAI::Event_Shrivel( float shrivel_time )
 {
 	float t;
@@ -2247,6 +2248,7 @@ void idAI::Event_Shrivel( float shrivel_time )
 	renderEntity.shaderParms[ SHADERPARM_MD5_SKINSCALE ] = 1.0f - t * 0.5f;
 	UpdateVisuals();
 }
+#endif
 
 /*
 =====================

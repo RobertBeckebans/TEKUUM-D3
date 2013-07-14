@@ -1,25 +1,26 @@
 /*
 ===========================================================================
 
-Doom 3 GPL Source Code
-Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Doom 3 BFG Edition GPL Source Code
+Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2012 Robert Beckebans
 
-This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
+This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
-Doom 3 Source Code is free software: you can redistribute it and/or modify
+Doom 3 BFG Edition Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Doom 3 Source Code is distributed in the hope that it will be useful,
+Doom 3 BFG Edition Source Code is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Doom 3 Source Code.  If not, see <http://www.gnu.org/licenses/>.
+along with Doom 3 BFG Edition Source Code.  If not, see <http://www.gnu.org/licenses/>.
 
-In addition, the Doom 3 Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 Source Code.  If not, please request a copy in writing from id Software at the address below.
+In addition, the Doom 3 BFG Edition Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 BFG Edition Source Code.  If not, please request a copy in writing from id Software at the address below.
 
 If you have questions concerning this license or the applicable additional terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 
@@ -39,10 +40,12 @@ class idSaveGame;
 class idRestoreGame;
 
 #define MAX_STRING_LEN		128
-#define MAX_GLOBALS			196608			// in bytes
+#define MAX_GLOBALS			296608			// in bytes
 #define MAX_STRINGS			1024
-#define MAX_FUNCS			3072
-#define MAX_STATEMENTS		81920			// statement_t - 18 bytes last I checked
+
+#define MAX_FUNCS			3584
+
+#define MAX_STATEMENTS		131072			// statement_t - 18 bytes last I checked
 
 typedef enum
 {
@@ -492,6 +495,7 @@ private:
 	idStaticList<function_t, MAX_FUNCS>			functions;
 	idStaticList<statement_t, MAX_STATEMENTS>	statements;
 	idList<idTypeDef*>							types;
+	idHashIndex									typesHash;
 	idList<idVarDefName*>						varDefNames;
 	idHashIndex									varDefNameHash;
 	idList<idVarDef*>							varDefs;

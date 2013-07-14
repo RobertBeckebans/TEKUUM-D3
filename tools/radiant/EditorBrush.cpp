@@ -63,8 +63,28 @@ void DrawRenderModel( idRenderModel* model, idVec3& origin, idMat3& axis, bool c
 		
 		if( cameraView && ( nDrawMode == cd_texture || nDrawMode == cd_light ) )
 		{
+			// RB begin
+			const idImageOpts& opts = material->GetEditorImage()->GetOpts();
+			if( opts.colorFormat == CFM_YCOCG_DXT5 )
+			{
+				renderProgManager.BindShader_TextureYCoCG();
+			}
+			else
+			{
+				renderProgManager.BindShader_Texture();
+			}
+			// RB end
+			
 			material->GetEditorImage()->Bind();
 		}
+		
+		// RB: FIXME slow
+		if( renderProgManager.IsShaderBound() )
+		{
+			//renderProgManager.BindShader_Color();
+			renderProgManager.CommitUniforms();
+		}
+		//renderProgManager.Unbind();
 		
 		glBegin( GL_TRIANGLES );
 		
@@ -75,10 +95,14 @@ void DrawRenderModel( idRenderModel* model, idVec3& origin, idMat3& axis, bool c
 			{
 				int		index = tri->indexes[j + k];
 				idVec3	v;
+				idVec2	st;
 				
+				// RB begin
 				v = tri->verts[index].xyz * axis + origin;
-				glTexCoord2f( tri->verts[index].st.x, tri->verts[index].st.y );
+				st = tri->verts[index].GetTexCoord();
+				glTexCoord2fv( st.ToFloatPtr() );
 				glVertex3fv( v.ToFloatPtr() );
+				// RB end
 			}
 		}
 		
@@ -410,8 +434,8 @@ void Face_MoveTexture( face_t* f, idVec3 delta )
 		f->texdef.shift[1] -= vShift[1] / f->texdef.scale[1];
 		
 		// clamp the shifts
-		Clamp( f->texdef.shift[0], f->d_texture->GetEditorImage()->uploadWidth );
-		Clamp( f->texdef.shift[1], f->d_texture->GetEditorImage()->uploadHeight );
+		Clamp( f->texdef.shift[0], f->d_texture->GetEditorImage()->GetUploadWidth() );
+		Clamp( f->texdef.shift[1], f->d_texture->GetEditorImage()->GetUploadHeight() );
 	}
 }
 
@@ -565,8 +589,8 @@ void Face_TextureVectors( face_t* f, float STfromXYZ[2][4] )
 	
 	for( j = 0; j < 4; j++ )
 	{
-		STfromXYZ[0][j] /= q->GetEditorImage()->uploadWidth;
-		STfromXYZ[1][j] /= q->GetEditorImage()->uploadHeight;
+		STfromXYZ[0][j] /= q->GetEditorImage()->GetUploadWidth();
+		STfromXYZ[1][j] /= q->GetEditorImage()->GetUploadHeight();
 	}
 }
 
@@ -3545,7 +3569,7 @@ void Brush_UpdateLightPoints( brush_t* b, const idVec3& offset )
 		const idMaterial*	q = Texture_LoadLight( str );
 		if( q )
 		{
-			b->lightTexture = q->GetEditorImage()->texnum;
+			//b->lightTexture = q->GetEditorImage()->GetTe;
 		}
 	}
 	
@@ -4098,8 +4122,17 @@ void Brush_DrawFacingAngle( brush_t* b, entity_t* e, bool particle )
 	VectorMA( endpoint, -dist, ( particle ) ? up : forward, tip1 );
 	VectorMA( tip1, -dist, ( particle ) ? forward : up, tip1 );
 	VectorMA( tip1, 2 * dist, ( particle ) ? forward : up, tip2 );
+	
 	globalImages->BindNull();
+	
+	// RB begin
 	glColor4f( 1, 1, 1, 1 );
+	GL_Color( 1, 1, 1, 1 );
+	
+	renderProgManager.BindShader_Color();
+	renderProgManager.CommitUniforms();
+	// RB end
+	
 	glLineWidth( 2 );
 	glBegin( GL_LINES );
 	glVertex3fv( start.ToFloatPtr() );
@@ -4144,6 +4177,10 @@ void DrawProjectedLight( brush_t* b, bool bSelected, bool texture )
 	R_RenderLightFrustum( parms, planes );
 	
 	tri = R_PolytopeSurface( 6, planes, NULL );
+	
+	// RB begin
+	renderProgManager.Unbind();
+	// RB end
 	
 	glColor3f( 1, 0, 1 );
 	for( i = 0; i < tri->numIndexes; i += 3 )
@@ -4315,6 +4352,9 @@ void DrawSpeaker( brush_t* b, bool bSelected, bool twoD )
 		return;
 	}
 	
+	// RB begin
+	renderProgManager.Unbind();
+	// RB end
 	
 	// convert from meters to doom units
 	min *= METERS_TO_DOOM;
@@ -4407,6 +4447,10 @@ void DrawLight( brush_t* b, bool bSelected )
 			vTriColor[2] = fB;
 		}
 	}
+	
+	// RB begin
+	renderProgManager.Unbind();
+	// RB end
 	
 	glColor3f( vTriColor[0], vTriColor[1], vTriColor[2] );
 	
@@ -4502,6 +4546,8 @@ void Control_Draw( brush_t* b )
 		}
 		
 		glColor4f( 1, 1, .5, 1 );
+		GL_Color( 1, 1, .5, 1 );
+		
 		glBegin( GL_POLYGON );
 		for( i = 0; i < w->GetNumPoints(); i++ )
 		{
@@ -4608,17 +4654,21 @@ void Brush_DrawModel( brush_t* b, bool camera, bool bSelected )
 		
 		Entity_GetRotationMatrixAngles( b->owner, axis, angles );
 		
-		idVec4	colorSave;
-		glGetFloatv( GL_CURRENT_COLOR, colorSave.ToFloatPtr() );
+		// RB: avoid glGetFloatv( GL_CURRENT_COLOR ) for performance reasons
+		idVec4 colorSave = g_qeglobals.d_currentColor;
+		//glGetFloatv( GL_CURRENT_COLOR, colorSave.ToFloatPtr() );
+		// RB end
 		
 		if( bSelected )
 		{
 			glColor3fv( g_qeglobals.d_savedinfo.colors[COLOR_SELBRUSHES].ToFloatPtr() );
+			GL_Color( g_qeglobals.d_savedinfo.colors[COLOR_SELBRUSHES] );
 		}
 		
 		DrawRenderModel( model, b->owner->origin, axis, camera );
 		
 		glColor4fv( colorSave.ToFloatPtr() );
+		GL_Color( colorSave );
 		
 		if( bSelected && camera )
 		{
@@ -4633,13 +4683,21 @@ void Brush_DrawModel( brush_t* b, bool camera, bool bSelected )
 			}
 			*/
 			
+			// RB begin
+			glColor4f( 1, 1, 1, 1 );
+			GL_Color( 1, 1, 1, 1 );
+			
+			renderProgManager.BindShader_Color();
+			renderProgManager.CommitUniforms();
+			// RB end
+			
 			//draw white triangle outlines
 			globalImages->BindNull();
 			
 			glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 			glDisable( GL_BLEND );
 			glDisable( GL_DEPTH_TEST );
-			glColor3f( 1.0f, 1.0f, 1.0f );
+			
 			glPolygonOffset( 1.0f, 3.0f );
 			DrawRenderModel( model, b->owner->origin, axis, false );
 			glEnable( GL_DEPTH_TEST );
@@ -4762,6 +4820,10 @@ void Brush_DrawAxis( brush_t* b )
 {
 	if( g_pParentWnd->ActiveXY()->RotateMode() && b->modelHandle )
 	{
+		// RB begin
+		renderProgManager.Unbind();
+		// RB end
+		
 		bool matrix = false;
 		idMat3 mat;
 		float a, s, c;
@@ -4859,19 +4921,25 @@ void Brush_DrawModelInfo( brush_t* b, bool selected )
 {
 	if( b->modelHandle > 0 )
 	{
-		GLfloat color[4];
-		glGetFloatv( GL_CURRENT_COLOR, &color[0] );
+		// RB: avoid glGetFloatv( GL_CURRENT_COLOR ) for performance reasons
+		idVec4 colorSave = g_qeglobals.d_currentColor;
+		//glGetFloatv( GL_CURRENT_COLOR, colorSave.ToFloatPtr() );
+		// RB end
 		if( selected )
 		{
 			glColor3fv( g_qeglobals.d_savedinfo.colors[COLOR_SELBRUSHES].ToFloatPtr() );
+			GL_Color( g_qeglobals.d_savedinfo.colors[COLOR_SELBRUSHES] );
 		}
 		else
 		{
 			glColor3fv( b->owner->eclass->color.ToFloatPtr() );
+			GL_Color( b->owner->eclass->color );
 		}
 		
 		Brush_DrawModel( b, true, selected );
-		glColor4fv( color );
+		
+		glColor4fv( colorSave.ToFloatPtr() );
+		GL_Color( colorSave );
 		
 		if( selected )
 		{
@@ -4896,10 +4964,12 @@ void Brush_DrawEmitter( brush_t* b, bool bSelected, bool cam )
 	if( bSelected )
 	{
 		glColor4f( g_qeglobals.d_savedinfo.colors[COLOR_SELBRUSHES].x, g_qeglobals.d_savedinfo.colors[COLOR_SELBRUSHES].y, g_qeglobals.d_savedinfo.colors[COLOR_SELBRUSHES].z, .5 );
+		GL_Color( g_qeglobals.d_savedinfo.colors[COLOR_SELBRUSHES].x, g_qeglobals.d_savedinfo.colors[COLOR_SELBRUSHES].y, g_qeglobals.d_savedinfo.colors[COLOR_SELBRUSHES].z, .5 );
 	}
 	else
 	{
 		glColor4f( b->owner->eclass->color.x, b->owner->eclass->color.y, b->owner->eclass->color.z, .5 );
+		GL_Color( b->owner->eclass->color.x, b->owner->eclass->color.y, b->owner->eclass->color.z, .5 );
 	}
 	
 	if( cam )
@@ -4945,23 +5015,31 @@ void Brush_DrawEnv( brush_t* b, bool cameraView, bool bSelected )
 			glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 		}
 		
-		idVec4	colorSave;
-		glGetFloatv( GL_CURRENT_COLOR, colorSave.ToFloatPtr() );
+		// RB: avoid glGetFloatv( GL_CURRENT_COLOR ) for performance reasons
+		idVec4 colorSave = g_qeglobals.d_currentColor;
+		//glGetFloatv( GL_CURRENT_COLOR, colorSave.ToFloatPtr() );
+		// RB end
 		
 		if( bSelected )
 		{
 			glColor3fv( g_qeglobals.d_savedinfo.colors[COLOR_SELBRUSHES].ToFloatPtr() );
+			GL_Color( g_qeglobals.d_savedinfo.colors[COLOR_SELBRUSHES] );
 		}
 		else
 		{
 			glColor3f( 1.f, 1.f, 1.f );
+			GL_Color( 1.f, 1.f, 1.f );
 		}
-		DrawRenderModel( model, origin, axis, true );
+		
+		// RB: cameraView instead of true
+		DrawRenderModel( model, origin, axis, cameraView );
+		// RB end
 		globalImages->BindNull();
 		delete model;
 		model = NULL;
 		
 		glColor4fv( colorSave.ToFloatPtr() );
+		GL_Color( colorSave );
 	}
 }
 
@@ -5044,10 +5122,10 @@ void Brush_DrawCombatNode( brush_t* b, bool cameraView, bool bSelected )
 
 /*
 ================
-Brush_Draw
+Brush_DrawCam
 ================
 */
-void Brush_Draw( brush_t* b, bool bSelected )
+void Brush_DrawCam( brush_t* b, bool bSelected )
 {
 	face_t*		face;
 	int			i, order;
@@ -5105,7 +5183,14 @@ void Brush_Draw( brush_t* b, bool bSelected )
 	
 	if( !( b->owner && ( b->owner->eclass->nShowFlags & ECLASS_WORLDSPAWN ) ) )
 	{
+		// RB begin
 		glColor4f( 1.0f, 0.0f, 0.0f, 0.8f );
+		GL_Color( 1.0f, 0.0f, 0.0f, 0.8f );
+		
+		renderProgManager.BindShader_Color();
+		renderProgManager.CommitUniforms();
+		// RB end
+		
 		glPointSize( 4 );
 		glBegin( GL_POINTS );
 		glVertex3fv( b->owner->origin.ToFloatPtr() );
@@ -5115,6 +5200,8 @@ void Brush_Draw( brush_t* b, bool bSelected )
 	if( b->owner->eclass->entityModel )
 	{
 		glColor3fv( b->owner->eclass->color.ToFloatPtr() );
+		GL_Color( b->owner->eclass->color );
+		
 		Brush_DrawModel( b, true, bSelected );
 		return;
 	}
@@ -5161,23 +5248,58 @@ void Brush_Draw( brush_t* b, bool bSelected )
 			}
 		}
 		
-		if( ( nDrawMode == cd_texture || nDrawMode == cd_light ) && face->d_texture != prev && !b->forceWireFrame )
+		// RB: YCoCG
+		if( ( nDrawMode == cd_texture || nDrawMode == cd_light ) && !b->forceWireFrame )
 		{
-			// set the texture for this face
-			prev = face->d_texture;
-			face->d_texture->GetEditorImage()->Bind();
+			if( face->d_texture != prev )
+			{
+				// set the texture for this face
+				prev = face->d_texture;
+				
+				face->d_texture->GetEditorImage()->Bind();
+			}
+			
+			const idImageOpts& opts = face->d_texture->GetEditorImage()->GetOpts();
+			if( opts.colorFormat == CFM_YCOCG_DXT5 )
+			{
+				renderProgManager.BindShader_TextureYCoCG();
+			}
+			else
+			{
+				renderProgManager.BindShader_Texture();
+			}
 		}
+		else
+		{
+			renderProgManager.BindShader_Color();
+		}
+		// RB end
 		
 		if( model )
 		{
 			glEnable( GL_BLEND );
 			glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
+			
 			glColor4f( face->d_color.x, face->d_color.y, face->d_color.z, 0.1f );
+			GL_Color( face->d_color.x, face->d_color.y, face->d_color.z, 0.1f );
 		}
 		else
 		{
+			// RB: support qer_trans
+			if( face->d_texture->GetEditorAlpha() != 1.0f )
+			{
+				//glEnable( GL_BLEND );
+				//glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
+			}
+			// RB end
+			
 			glColor4f( face->d_color.x, face->d_color.y, face->d_color.z, face->d_texture->GetEditorAlpha() );
+			GL_Color( face->d_color.x, face->d_color.y, face->d_color.z, face->d_texture->GetEditorAlpha() );
 		}
+		
+		// RB begin
+		renderProgManager.CommitUniforms();
+		// RB end
 		
 		glBegin( GL_POLYGON );
 		
@@ -5193,13 +5315,19 @@ void Brush_Draw( brush_t* b, bool bSelected )
 		
 		glEnd();
 		
-		if( model )
+		// RB: support qer_trans
+		if( model  || face->d_texture->GetEditorAlpha() != 1.0f )
 		{
 			glDisable( GL_BLEND );
 		}
+		// RB end
 	}
 	
 	globalImages->BindNull();
+	
+	// RB begin
+	renderProgManager.Unbind();
+	// RB end
 }
 
 /*
@@ -5279,7 +5407,10 @@ void Brush_DrawCurve( brush_t* b, bool bSelected, bool cam )
 	
 	int maxage = b->owner->curve->GetNumValues();
 	int i, time = 0;
+	
 	glColor3f( 0.0f, 0.0f, 1.0f );
+	GL_Color( 0.0f, 0.0f, 1.0f );
+	
 	for( i = 0; i < maxage; i++ )
 	{
 	
@@ -5383,8 +5514,10 @@ void Brush_DrawXY( brush_t* b, int nViewType, bool bSelected, bool ignoreViewTyp
 		return;
 	}
 	
-	idVec4	colorSave;
-	glGetFloatv( GL_CURRENT_COLOR, colorSave.ToFloatPtr() );
+	// RB: avoid glGetFloatv( GL_CURRENT_COLOR ) for performance reasons
+	idVec4 colorSave = g_qeglobals.d_currentColor;
+	//glGetFloatv( GL_CURRENT_COLOR, colorSave.ToFloatPtr() );
+	// RB end
 	
 	if( !( b->owner && ( b->owner->eclass->nShowFlags & ECLASS_WORLDSPAWN ) ) )
 	{
@@ -5945,19 +6078,19 @@ void Face_FitTexture( face_t* face, float nHeight, float nWidth )
 		 * { min_s = s; } if (i<2) { if (t < min_t) { min_t = t; } } else { if (t > max_t)
 		 * { max_t = t; } } } } rot_width = (max_s - min_s); rot_height = (max_t - min_t);
 		 * td->scale[0] =
-		 * -(rot_width/((float)(face->d_texture->GetEditorImage()->uploadWidth*nWidth)));
+		 * -(rot_width/((float)(face->d_texture->GetEditorImage()->GetUploadWidth()*nWidth)));
 		 * td->scale[1] =
-		 * -(rot_height/((float)(face->d_texture->GetEditorImage()->uploadHeight*nHeight)));
+		 * -(rot_height/((float)(face->d_texture->GetEditorImage()->GetUploadHeight()*nHeight)));
 		 * td->shift[0] = min_s/td->scale[0]; temp = (int)(td->shift[0] /
-		 * (face->d_texture->GetEditorImage()->uploadWidth*nWidth)); temp =
-		 * (temp+1)*face->d_texture->GetEditorImage()->uploadWidth*nWidth; td->shift[0] =
+		 * (face->d_texture->GetEditorImage()->GetUploadWidth()*nWidth)); temp =
+		 * (temp+1)*face->d_texture->GetEditorImage()->GetUploadWidth()*nWidth; td->shift[0] =
 		 * (int)(temp -
-		 * td->shift[0])%(face->d_texture->GetEditorImage()->uploadWidth*nWidth);
+		 * td->shift[0])%(face->d_texture->GetEditorImage()->GetUploadWidth()*nWidth);
 		 * td->shift[1] = min_t/td->scale[1]; temp = (int)(td->shift[1] /
-		 * (face->d_texture->GetEditorImage()->uploadHeight*nHeight)); temp =
-		 * (temp+1)*(face->d_texture->GetEditorImage()->uploadHeight*nHeight);
+		 * (face->d_texture->GetEditorImage()->GetUploadHeight()*nHeight)); temp =
+		 * (temp+1)*(face->d_texture->GetEditorImage()->GetUploadHeight()*nHeight);
 		 * td->shift[1] = (int)(temp -
-		 * td->shift[1])%(face->d_texture->GetEditorImage()->uploadHeight*nHeight);
+		 * td->shift[1])%(face->d_texture->GetEditorImage()->GetUploadHeight()*nHeight);
 		 */
 	}
 }

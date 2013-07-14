@@ -1,33 +1,33 @@
 /*
 ===========================================================================
 
-Doom 3 GPL Source Code
-Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Doom 3 BFG Edition GPL Source Code
+Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
 
-This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
+This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
-Doom 3 Source Code is free software: you can redistribute it and/or modify
+Doom 3 BFG Edition Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Doom 3 Source Code is distributed in the hope that it will be useful,
+Doom 3 BFG Edition Source Code is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Doom 3 Source Code.  If not, see <http://www.gnu.org/licenses/>.
+along with Doom 3 BFG Edition Source Code.  If not, see <http://www.gnu.org/licenses/>.
 
-In addition, the Doom 3 Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 Source Code.  If not, please request a copy in writing from id Software at the address below.
+In addition, the Doom 3 BFG Edition Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 BFG Edition Source Code.  If not, please request a copy in writing from id Software at the address below.
 
 If you have questions concerning this license or the applicable additional terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 
 ===========================================================================
 */
 
-#include "precompiled.h"
 #pragma hdrstop
+#include "precompiled.h"
 
 idBox box_zero( vec3_zero, vec3_zero, mat3_identity );
 
@@ -860,17 +860,17 @@ int idBox::GetProjectionSilhouetteVerts( const idVec3& projectionOrigin, idVec3 
 	dir1 = points[0] - projectionOrigin;
 	dir2 = points[6] - projectionOrigin;
 	f = dir1 * axis[0];
-	planeBits = FLOATSIGNBITNOTSET( f );
+	planeBits = IEEE_FLT_SIGNBITNOTSET( f );
 	f = dir2 * axis[0];
-	planeBits |= FLOATSIGNBITSET( f ) << 1;
+	planeBits |= IEEE_FLT_SIGNBITSET( f ) << 1;
 	f = dir1 * axis[1];
-	planeBits |= FLOATSIGNBITNOTSET( f ) << 2;
+	planeBits |= IEEE_FLT_SIGNBITNOTSET( f ) << 2;
 	f = dir2 * axis[1];
-	planeBits |= FLOATSIGNBITSET( f ) << 3;
+	planeBits |= IEEE_FLT_SIGNBITSET( f ) << 3;
 	f = dir1 * axis[2];
-	planeBits |= FLOATSIGNBITNOTSET( f ) << 4;
+	planeBits |= IEEE_FLT_SIGNBITNOTSET( f ) << 4;
 	f = dir2 * axis[2];
-	planeBits |= FLOATSIGNBITSET( f ) << 5;
+	planeBits |= IEEE_FLT_SIGNBITSET( f ) << 5;
 	
 	index = boxPlaneBitsSilVerts[planeBits];
 	for( i = 0; i < index[0]; i++ )
@@ -896,19 +896,19 @@ int idBox::GetParallelProjectionSilhouetteVerts( const idVec3& projectionDir, id
 	
 	planeBits = 0;
 	f = projectionDir * axis[0];
-	if( FLOATNOTZERO( f ) )
+	if( IEEE_FLT_ISNOTZERO( f ) )
 	{
-		planeBits = 1 << FLOATSIGNBITSET( f );
+		planeBits = 1 << IEEE_FLT_SIGNBITSET( f );
 	}
 	f = projectionDir * axis[1];
-	if( FLOATNOTZERO( f ) )
+	if( IEEE_FLT_ISNOTZERO( f ) )
 	{
-		planeBits |= 4 << FLOATSIGNBITSET( f );
+		planeBits |= 4 << IEEE_FLT_SIGNBITSET( f );
 	}
 	f = projectionDir * axis[2];
-	if( FLOATNOTZERO( f ) )
+	if( IEEE_FLT_ISNOTZERO( f ) )
 	{
-		planeBits |= 16 << FLOATSIGNBITSET( f );
+		planeBits |= 16 << IEEE_FLT_SIGNBITSET( f );
 	}
 	
 	index = boxPlaneBitsSilVerts[planeBits];

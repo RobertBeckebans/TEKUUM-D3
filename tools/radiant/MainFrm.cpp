@@ -1143,6 +1143,12 @@ void MFCCreate( HINSTANCE hInstance )
 		g_qeglobals.d_savedinfo.colors[COLOR_VIEWNAME][1] = 0.0;
 		g_qeglobals.d_savedinfo.colors[COLOR_VIEWNAME][2] = 0.75;
 		
+		// RB begin
+		for( int i = 0; i < COLOR_LAST; i++ )
+		{
+			g_qeglobals.d_savedinfo.colors[i][3] = 1.0f;
+		}
+		// RB end
 		
 		// old size was smaller, reload original prefs
 		if( nOldSize > 0 && nOldSize < sizeof( g_qeglobals.d_savedinfo ) )
@@ -4839,6 +4845,13 @@ void CMainFrame::OnColorSetSuperMal()
 	g_qeglobals.d_savedinfo.colors[COLOR_VIEWNAME][1] = 0.0f;
 	g_qeglobals.d_savedinfo.colors[COLOR_VIEWNAME][2] = 0.74f;
 	
+	// RB begin
+	for( int i = 0; i < COLOR_LAST; i++ )
+	{
+		g_qeglobals.d_savedinfo.colors[i][3] = 1.0f;
+	}
+	// RB end
+	
 	
 	Sys_UpdateWindows( W_ALL );
 }
@@ -7869,7 +7882,10 @@ void CMainFrame::OnGenerateMaterialsList()
 		}
 	}
 	
-	mtrList.Sort();
+	// RB: BFG sort
+	mtrList.SortWithTemplate( idSort_PathStr() );
+	// RB end
+	
 	for( int i = 0 ; i < mtrList.Num() ; i++ )
 	{
 		common->Printf( "%s\n" , mtrList[i].c_str() );

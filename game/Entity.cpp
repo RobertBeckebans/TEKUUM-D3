@@ -1406,7 +1406,7 @@ void idEntity::UpdateModel()
 	
 	// check if the entity has an MD5 model
 	idAnimator* animator = GetAnimator();
-	if( animator && animator->ModelHandle() )
+	if( animator != NULL && animator->ModelHandle() != NULL )
 	{
 		// set the callback to update the joints
 		renderEntity.callback = idEntity::ModelCallback;
@@ -1448,7 +1448,7 @@ void idEntity::UpdatePVSAreas()
 	// the first MAX_PVS_AREAS may not be visible to a network client and as a result the particle system may not show up when it should
 	if( localNumPVSAreas > MAX_PVS_AREAS )
 	{
-		localNumPVSAreas = gameLocal.pvs.GetPVSAreas( idBounds( modelAbsBounds.GetCenter() ).Expand( 64.0f ), localPVSAreas, sizeof( localPVSAreas ) / sizeof( localPVSAreas[0] ) );
+		localNumPVSAreas = gameLocal.pvs.GetPVSAreas( idBounds( renderEntity.origin ).Expand( 64.0f ), localPVSAreas, sizeof( localPVSAreas ) / sizeof( localPVSAreas[0] ) );
 	}
 	
 	for( numPVSAreas = 0; numPVSAreas < MAX_PVS_AREAS && numPVSAreas < localNumPVSAreas; numPVSAreas++ )
@@ -1593,7 +1593,14 @@ void idEntity::ProjectOverlay( const idVec3& origin, const idVec3& dir, float si
 	const idMaterial* mtr = declManager->FindMaterial( material );
 	
 	// project an overlay onto the model
-	gameRenderWorld->ProjectOverlay( modelDefHandle, localPlane, mtr );
+	
+	// RB begin
+#if defined(STANDALONE)
+	gameRenderWorld->ProjectOverlay( modelDefHandle, localPlane, mtr, gameLocal.slow.time );
+#else
+	gameRenderWorld->ProjectOverlay( modelDefHandle, localPlane, mtr, gameLocal.time );
+#endif
+	// RB end
 	
 	// make sure non-animating models update their overlay
 	UpdateVisuals();
@@ -1751,7 +1758,15 @@ renderView_t* idEntity::GetRenderView()
 	
 	renderView->globalMaterial = gameLocal.GetGlobalMaterial();
 	
-	renderView->time = gameLocal.time;
+	// RB begin
+#if defined(STANDALONE)
+	renderView->time[0] = gameLocal.slow.time;
+	renderView->time[1] = gameLocal.fast.time;
+#else
+	renderView->time[0] = gameLocal.time;
+	renderView->time[1] = gameLocal.time;
+#endif
+	// RB end
 	
 	return renderView;
 }

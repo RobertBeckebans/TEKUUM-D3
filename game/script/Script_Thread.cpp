@@ -1,33 +1,34 @@
 /*
 ===========================================================================
 
-Doom 3 GPL Source Code
-Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Doom 3 BFG Edition GPL Source Code
+Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
 
-This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
+This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
-Doom 3 Source Code is free software: you can redistribute it and/or modify
+Doom 3 BFG Edition Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Doom 3 Source Code is distributed in the hope that it will be useful,
+Doom 3 BFG Edition Source Code is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Doom 3 Source Code.  If not, see <http://www.gnu.org/licenses/>.
+along with Doom 3 BFG Edition Source Code.  If not, see <http://www.gnu.org/licenses/>.
 
-In addition, the Doom 3 Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 Source Code.  If not, please request a copy in writing from id Software at the address below.
+In addition, the Doom 3 BFG Edition Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 BFG Edition Source Code.  If not, please request a copy in writing from id Software at the address below.
 
 If you have questions concerning this license or the applicable additional terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 
 ===========================================================================
 */
 
-#include "precompiled.h"
 #pragma hdrstop
+#include "precompiled.h"
+
 
 #include "../Game_local.h"
 
@@ -49,6 +50,7 @@ const idEventDef EV_Thread_Trigger( "trigger", "e" );
 const idEventDef EV_Thread_SetCvar( "setcvar", "ss" );
 const idEventDef EV_Thread_GetCvar( "getcvar", "s", 's' );
 const idEventDef EV_Thread_Random( "random", "f", 'f' );
+const idEventDef EV_Thread_RandomInt( "randomInt", "d", 'd' );
 const idEventDef EV_Thread_GetTime( "getTime", NULL, 'f' );
 const idEventDef EV_Thread_KillThread( "killthread", "s" );
 const idEventDef EV_Thread_SetThreadName( "threadname", "s" );
@@ -69,12 +71,16 @@ const idEventDef EV_Thread_AngToRight( "angToRight", "v", 'v' );
 const idEventDef EV_Thread_AngToUp( "angToUp", "v", 'v' );
 const idEventDef EV_Thread_Sine( "sin", "f", 'f' );
 const idEventDef EV_Thread_Cosine( "cos", "f", 'f' );
+const idEventDef EV_Thread_ArcSine( "asin", "f", 'f' );
+const idEventDef EV_Thread_ArcCosine( "acos", "f", 'f' );
 const idEventDef EV_Thread_SquareRoot( "sqrt", "f", 'f' );
 const idEventDef EV_Thread_Normalize( "vecNormalize", "v", 'v' );
 const idEventDef EV_Thread_VecLength( "vecLength", "v", 'f' );
 const idEventDef EV_Thread_VecDotProduct( "DotProduct", "vv", 'f' );
 const idEventDef EV_Thread_VecCrossProduct( "CrossProduct", "vv", 'v' );
 const idEventDef EV_Thread_VecToAngles( "VecToAngles", "v", 'v' );
+const idEventDef EV_Thread_VecToOrthoBasisAngles( "VecToOrthoBasisAngles", "v", 'v' );
+const idEventDef EV_Thread_RotateVector( "rotateVector", "vv", 'v' );
 const idEventDef EV_Thread_OnSignal( "onSignal", "des" );
 const idEventDef EV_Thread_ClearSignal( "clearSignalThread", "de" );
 const idEventDef EV_Thread_SetCamera( "setCamera", "e" );
@@ -127,6 +133,7 @@ EVENT( EV_Thread_Trigger,				idThread::Event_Trigger )
 EVENT( EV_Thread_SetCvar,				idThread::Event_SetCvar )
 EVENT( EV_Thread_GetCvar,				idThread::Event_GetCvar )
 EVENT( EV_Thread_Random,				idThread::Event_Random )
+EVENT( EV_Thread_RandomInt,				idThread::Event_RandomInt )
 EVENT( EV_Thread_GetTime,				idThread::Event_GetTime )
 EVENT( EV_Thread_KillThread,			idThread::Event_KillThread )
 EVENT( EV_Thread_SetThreadName,			idThread::Event_SetThreadName )
@@ -147,12 +154,16 @@ EVENT( EV_Thread_AngToRight,			idThread::Event_AngToRight )
 EVENT( EV_Thread_AngToUp,				idThread::Event_AngToUp )
 EVENT( EV_Thread_Sine,					idThread::Event_GetSine )
 EVENT( EV_Thread_Cosine,				idThread::Event_GetCosine )
+EVENT( EV_Thread_ArcSine,				idThread::Event_GetArcSine )
+EVENT( EV_Thread_ArcCosine,				idThread::Event_GetArcCosine )
 EVENT( EV_Thread_SquareRoot,			idThread::Event_GetSquareRoot )
 EVENT( EV_Thread_Normalize,				idThread::Event_VecNormalize )
 EVENT( EV_Thread_VecLength,				idThread::Event_VecLength )
 EVENT( EV_Thread_VecDotProduct,			idThread::Event_VecDotProduct )
 EVENT( EV_Thread_VecCrossProduct,		idThread::Event_VecCrossProduct )
 EVENT( EV_Thread_VecToAngles,			idThread::Event_VecToAngles )
+EVENT( EV_Thread_VecToOrthoBasisAngles, idThread::Event_VecToOrthoBasisAngles )
+EVENT( EV_Thread_RotateVector,			idThread::Event_RotateVector )
 EVENT( EV_Thread_OnSignal,				idThread::Event_OnSignal )
 EVENT( EV_Thread_ClearSignal,			idThread::Event_ClearSignalThread )
 EVENT( EV_Thread_SetCamera,				idThread::Event_SetCamera )
@@ -231,9 +242,10 @@ idThread::BeginMultiFrameEvent
 */
 bool idThread::BeginMultiFrameEvent( idEntity* ent, const idEventDef* event )
 {
-	if( !currentThread )
+	if( currentThread == NULL )
 	{
 		gameLocal.Error( "idThread::BeginMultiFrameEvent called without a current thread" );
+		return false;
 	}
 	return currentThread->interpreter.BeginMultiFrameEvent( ent, event );
 }
@@ -245,9 +257,10 @@ idThread::EndMultiFrameEvent
 */
 void idThread::EndMultiFrameEvent( idEntity* ent, const idEventDef* event )
 {
-	if( !currentThread )
+	if( currentThread == NULL )
 	{
 		gameLocal.Error( "idThread::EndMultiFrameEvent called without a current thread" );
+		return;
 	}
 	currentThread->interpreter.EndMultiFrameEvent( ent, event );
 }
@@ -512,7 +525,7 @@ void idThread::DisplayInfo()
 		{
 			gameLocal.Printf( "Waiting for thread #%3i '%s'\n", waitingForThread->GetThreadNum(), waitingForThread->GetThreadName() );
 		}
-		else if( ( waitingFor != ENTITYNUM_NONE ) && ( gameLocal.entities[ waitingFor ] ) )
+		else if( ( waitingFor != ENTITYNUM_NONE ) && ( waitingFor < MAX_GENTITIES ) && ( gameLocal.entities[ waitingFor ] ) )
 		{
 			gameLocal.Printf( "Waiting for entity #%3i '%s'\n", waitingFor, gameLocal.entities[ waitingFor ]->name.c_str() );
 		}
@@ -1193,6 +1206,15 @@ void idThread::Event_Random( float range ) const
 	ReturnFloat( range * result );
 }
 
+
+void idThread::Event_RandomInt( int range ) const
+{
+	int result;
+	result = gameLocal.random.RandomInt( range );
+	ReturnFloat( result );
+}
+
+
 /*
 ================
 idThread::Event_GetTime
@@ -1200,7 +1222,16 @@ idThread::Event_GetTime
 */
 void idThread::Event_GetTime()
 {
+
 	ReturnFloat( MS2SEC( gameLocal.realClientTime ) );
+	
+	/*  Script always uses realClient time to determine scripty stuff. ( This Fixes Weapon Animation timing bugs )
+	if ( common->IsMultiplayer() ) {
+		ReturnFloat( MS2SEC( gameLocal.GetServerGameTimeMs() ) );
+	} else {
+		ReturnFloat( MS2SEC( gameLocal.realClientTime ) );
+	}
+	*/
 }
 
 /*
@@ -1231,6 +1262,7 @@ void idThread::Event_GetEntity( const char* name )
 		if( ( entnum < 0 ) || ( entnum >= MAX_GENTITIES ) )
 		{
 			Error( "Entity number in string out of range." );
+			return;
 		}
 		ReturnEntity( gameLocal.entities[ entnum ] );
 	}
@@ -1433,6 +1465,26 @@ void idThread::Event_GetCosine( float angle )
 
 /*
 ================
+idThread::Event_GetArcSine
+================
+*/
+void idThread::Event_GetArcSine( float a )
+{
+	ReturnFloat( RAD2DEG( idMath::ASin( a ) ) );
+}
+
+/*
+================
+idThread::Event_GetArcCosine
+================
+*/
+void idThread::Event_GetArcCosine( float a )
+{
+	ReturnFloat( RAD2DEG( idMath::ACos( a ) ) );
+}
+
+/*
+================
 idThread::Event_GetSquareRoot
 ================
 */
@@ -1498,6 +1550,34 @@ void idThread::Event_VecToAngles( idVec3& vec )
 
 /*
 ================
+idThread::Event_VecToOrthoBasisAngles
+================
+*/
+void idThread::Event_VecToOrthoBasisAngles( idVec3& vec )
+{
+	idVec3 left, up;
+	idAngles ang;
+	
+	vec.OrthogonalBasis( left, up );
+	idMat3 axis( left, up, vec );
+	
+	ang = axis.ToAngles();
+	
+	ReturnVector( idVec3( ang[0], ang[1], ang[2] ) );
+}
+
+void idThread::Event_RotateVector( idVec3& vec, idVec3& ang )
+{
+
+	idAngles tempAng( ang );
+	idMat3 axis = tempAng.ToMat3();
+	idVec3 ret = vec * axis;
+	ReturnVector( ret );
+	
+}
+
+/*
+================
 idThread::Event_OnSignal
 ================
 */
@@ -1507,9 +1587,10 @@ void idThread::Event_OnSignal( int signal, idEntity* ent, const char* func )
 	
 	assert( func );
 	
-	if( !ent )
+	if( ent == NULL )
 	{
 		Error( "Entity not found" );
+		return;
 	}
 	
 	if( ( signal < 0 ) || ( signal >= NUM_SIGNALS ) )
@@ -1533,9 +1614,10 @@ idThread::Event_ClearSignalThread
 */
 void idThread::Event_ClearSignalThread( int signal, idEntity* ent )
 {
-	if( !ent )
+	if( ent == NULL )
 	{
 		Error( "Entity not found" );
+		return;
 	}
 	
 	if( ( signal < 0 ) || ( signal >= NUM_SIGNALS ) )
@@ -1768,6 +1850,7 @@ void idThread::Event_SetShaderParm( int parmnum, float value )
 	if( ( parmnum < 0 ) || ( parmnum >= MAX_GLOBAL_SHADER_PARMS ) )
 	{
 		Error( "shader parm index (%d) out of range", parmnum );
+		return;
 	}
 	
 	gameLocal.globalShaderParms[ parmnum ] = value;
@@ -2059,7 +2142,7 @@ void idThread::Event_InfluenceActive()
 	idPlayer* player;
 	
 	player = gameLocal.GetLocalPlayer();
-	if( player && player->GetInfluenceLevel() )
+	if( player != NULL && player->GetInfluenceLevel() )
 	{
 		idThread::ReturnInt( true );
 	}

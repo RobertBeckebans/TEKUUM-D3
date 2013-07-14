@@ -652,7 +652,7 @@ int idSoundSystemLocal::GetCurrent44kHzTime() const
 	{
 		// NOTE: this would overflow 31bits within about 1h20 ( not that important since we get a snd_audio_hw right away pbly )
 		//return ( ( Sys_Milliseconds()*441 ) / 10 ) * 4;
-		return idMath::FtoiFast( ( float )Sys_Milliseconds() * 176.4f );
+		return idMath::Ftoi( ( float )Sys_Milliseconds() * 176.4f );
 	}
 }
 

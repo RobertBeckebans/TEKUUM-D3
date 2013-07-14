@@ -4791,7 +4791,7 @@ void idAFBody::SetDensity( float density, const idMat3& inertiaScale )
 	clipModel->GetMassProperties( density, mass, centerOfMass, inertiaTensor );
 	
 	// make sure we have a valid mass
-	if( mass <= 0.0f || FLOAT_IS_NAN( mass ) )
+	if( mass <= 0.0f || IEEE_FLT_IS_NAN( mass ) )
 	{
 		gameLocal.Warning( "idAFBody::SetDensity: invalid mass for body '%s'", name.c_str() );
 		mass = 1.0f;
@@ -5560,8 +5560,8 @@ idPhysics_AF::RemoveFrameConstraints
 void idPhysics_AF::RemoveFrameConstraints()
 {
 	// remove all the frame constraints from the auxiliary constraints
-	auxiliaryConstraints.SetNum( auxiliaryConstraints.Num() - frameConstraints.Num(), false );
-	frameConstraints.SetNum( 0, false );
+	auxiliaryConstraints.SetNum( auxiliaryConstraints.Num() - frameConstraints.Num() );
+	frameConstraints.SetNum( 0 );
 }
 
 /*
@@ -6255,7 +6255,7 @@ void idPhysics_AF::CheckForCollisions( float timeStep )
 	idEntity* passEntity;
 	
 	// clear list with collisions
-	collisions.SetNum( 0, false );
+	collisions.SetNum( 0 );
 	
 	if( !enableCollision )
 	{
@@ -6295,7 +6295,7 @@ void idPhysics_AF::CheckForCollisions( float timeStep )
 				
 				// add collision to the list
 				index = collisions.Num();
-				collisions.SetNum( index + 1, false );
+				collisions.SetNum( index + 1 );
 				collisions[index].trace = collision;
 				collisions[index].body = body;
 			}
@@ -6335,7 +6335,7 @@ bool idPhysics_AF::EvaluateContacts()
 	// remove all existing contacts
 	ClearContacts();
 	
-	contactBodies.SetNum( 0, false );
+	contactBodies.SetNum( 0 );
 	
 	if( !enableCollision )
 	{
@@ -6423,7 +6423,7 @@ void idPhysics_AF::SetupContactConstraints()
 	
 	// make sure enough contact constraints are allocated
 	contactConstraints.AssureSizeAlloc( contacts.Num(), idListNewElement<idAFConstraint_Contact> );
-	contactConstraints.SetNum( contacts.Num(), false );
+	contactConstraints.SetNum( contacts.Num() );
 	
 	// setup contact constraints
 	for( i = 0; i < contacts.Num(); i++ )
@@ -7284,8 +7284,8 @@ void DrawTraceModelSilhouette( const idVec3& projectionOrigin, const idClipModel
 	numSilEdges = trm->GetProjectionSilhouetteEdges( ( projectionOrigin - origin ) * axis.Transpose(), silEdges );
 	for( i = 0; i < numSilEdges; i++ )
 	{
-		v1 = trm->verts[ trm->edges[ abs( silEdges[i] ) ].v[ INTSIGNBITSET( silEdges[i] ) ] ];
-		v2 = trm->verts[ trm->edges[ abs( silEdges[i] ) ].v[ INTSIGNBITNOTSET( silEdges[i] ) ] ];
+		v1 = trm->verts[ trm->edges[ abs( silEdges[i] ) ].v[ INT32_SIGNBITSET( silEdges[i] ) ] ];
+		v2 = trm->verts[ trm->edges[ abs( silEdges[i] ) ].v[ INT32_SIGNBITNOTSET( silEdges[i] ) ] ];
 		gameRenderWorld->DebugArrow( colorRed, origin + v1 * axis, origin + v2 * axis, 1 );
 	}
 }
@@ -7546,7 +7546,7 @@ idPhysics_AF::~idPhysics_AF()
 		delete constraints[i];
 	}
 	
-	contactConstraints.SetNum( contactConstraints.NumAllocated(), false );
+	contactConstraints.SetNum( contactConstraints.NumAllocated() );
 	for( i = 0; i < contactConstraints.NumAllocated(); i++ )
 	{
 		delete contactConstraints[i];
@@ -7789,7 +7789,7 @@ void idPhysics_AF::BuildTrees()
 		b = bodies[i];
 		b->parent = NULL;
 		b->primaryConstraint = NULL;
-		b->constraints.SetNum( 0, false );
+		b->constraints.SetNum( 0 );
 		b->children.Clear();
 		b->tree = NULL;
 		totalMass += b->mass;
