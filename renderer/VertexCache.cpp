@@ -141,6 +141,11 @@ idVertexCache::Shutdown
 */
 void idVertexCache::Shutdown()
 {
+	// RB: missing cleanup
+	staticData.vertexBuffer.FreeBufferObject();
+	staticData.indexBuffer.FreeBufferObject();
+	// RB end
+	
 	for( int i = 0; i < VERTCACHE_NUM_FRAMES; i++ )
 	{
 		frameData[i].vertexBuffer.FreeBufferObject();
