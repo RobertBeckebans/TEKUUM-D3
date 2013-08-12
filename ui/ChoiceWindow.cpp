@@ -142,7 +142,8 @@ const char* idChoiceWindow::HandleEvent( const sysEvent_t* event, bool* updateVi
 	{
 		key = event->evValue;
 		
-		if( key == K_RIGHTARROW || key == K_KP_RIGHTARROW || key == K_MOUSE1 )
+		// RB: added gamepad controls
+		if( key == K_RIGHTARROW || key == K_KP_RIGHTARROW || key == K_MOUSE1 || key == K_XINPUT_GAMEPAD_DPAD_RIGHT || key == K_XINPUT_GAMEPAD_A )
 		{
 			// never affects the state, but we want to execute script handlers anyway
 			if( !event->evValue2 )
@@ -158,7 +159,7 @@ const char* idChoiceWindow::HandleEvent( const sysEvent_t* event, bool* updateVi
 			runAction = true;
 		}
 		
-		if( key == K_LEFTARROW || key == K_KP_LEFTARROW || key == K_MOUSE2 )
+		if( key == K_LEFTARROW || key == K_KP_LEFTARROW || key == K_MOUSE2 || key == K_XINPUT_GAMEPAD_DPAD_LEFT || key == K_XINPUT_GAMEPAD_B )
 		{
 			// never affects the state, but we want to execute script handlers anyway
 			if( !event->evValue2 )
@@ -173,6 +174,7 @@ const char* idChoiceWindow::HandleEvent( const sysEvent_t* event, bool* updateVi
 			}
 			runAction = true;
 		}
+		// RB end
 		
 		if( !event->evValue2 )
 		{

@@ -285,6 +285,7 @@ void			Sys_EndMouseInputEvents();
 
 // RB begin
 // gamepad input polling
+bool			Sys_IsXbox360ControllerAvailable();
 int				Sys_PollXbox360ControllerInputEvents();
 int				Sys_ReturnXbox360ControllerInputEvent( const int n, int& action, int& value, int& value2 );
 void			Sys_EndXbox360ControllerInputEvents();

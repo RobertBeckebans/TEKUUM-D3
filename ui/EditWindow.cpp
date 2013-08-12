@@ -137,7 +137,7 @@ idEditWindow::~idEditWindow()
 
 }
 
-void idEditWindow::GainFocus()
+void idEditWindow::GainFocus( bool scripts )
 {
 	cursorPos = text.Length();
 	EnsureCursorVisible();

@@ -115,6 +115,7 @@ public:
 	// network tells wether one should still run the network loop in a wait dialog
 	virtual const char* MessageBox( msgBoxType_t type, const char* message, const char* title = NULL, bool wait = false, const char* fire_yes = NULL, const char* fire_no = NULL, bool network = false ) = 0;
 	virtual void	StopBox() = 0;
+	
 	// monitor this download in a progress box to either abort or completion
 	virtual void	DownloadProgressBox( backgroundDownload_t* bgl, const char* title, int progress_start = 0, int progress_end = 100 ) = 0;
 	

@@ -1253,6 +1253,14 @@ static void IN_XBox360TriggerToButton( byte triggerAxis, byte oldTriggerAxis, in
 	}
 }
 
+bool Sys_IsXbox360ControllerAvailable()
+{
+	XINPUT_STATE state;
+	DWORD dwResult = XInputGetState( 0, &state );
+
+	return ( dwResult == ERROR_SUCCESS );
+}
+
 int Sys_PollXbox360ControllerInputEvents()
 {
 	if( !win32.in_xbox360Controller.GetBool() )
@@ -1265,7 +1273,10 @@ int Sys_PollXbox360ControllerInputEvents()
 
 	if( dwResult == ERROR_SUCCESS )
 	{
-		win32.g_ControllerAvailable = true;
+		if( !win32.g_ControllerAvailable )
+		{
+			win32.g_ControllerAvailable = true;
+		}
 
 		// always send the axis
 
@@ -1495,6 +1506,10 @@ int Sys_PollXbox360ControllerInputEvents()
 
 		win32.g_Controller = state;
 		return s_pollGamepadEventsCount;
+	}
+	else
+	{
+		win32.g_ControllerAvailable = false;
 	}
 
 	return 0;
