@@ -301,6 +301,7 @@ CreateOpenGLContextOnDC
 */
 static HGLRC CreateOpenGLContextOnDC( const HDC hdc, const bool debugContext )
 {
+	// RB begin
 #if defined(USE_GLES2)
 	int useOpenGL32 = 0;
 #else

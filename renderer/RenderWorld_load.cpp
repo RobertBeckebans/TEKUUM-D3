@@ -768,7 +768,7 @@ void idRenderWorldLocal::ParseLightGridPoints( idLexer* src, idFile* fileOut )
 
 void idRenderWorldLocal::CalculateLightGridPointPositions()
 {
-#if !defined(USE_GLES1)
+#if !defined(USE_GLES2)
 	int             gridStep[3];
 	int             pos[3];
 	idVec3          posFloat;

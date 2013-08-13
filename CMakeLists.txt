@@ -21,9 +21,6 @@ option(MONOLITH
 option(STANDALONE
 		"Skip Doom 3 base/ folder" ON)
 		
-option(GLES1
-		"Only use OpenGL ES 1.0 functions" OFF)
-		
 option(GLES2
 		"Only use OpenGL ES 2.0 functions" OFF)
 		
@@ -226,18 +223,6 @@ file(GLOB_RECURSE RENDERER_SOURCES renderer/*.cpp)
 	# renderer/tr_trace.cpp
 	# renderer/tr_trisurf.cpp
 	# renderer/tr_turboshadow.cpp)
-
-if(GLES1)
-	add_definitions(-DUSE_GLES1)
-	
-	list(REMOVE_ITEM RENDERER_INCLUDES renderer/GLShader.h)
-	list(REMOVE_ITEM RENDERER_INCLUDES renderer/GLShader_strings.h)
-	
-	list(REMOVE_ITEM RENDERER_SOURCES renderer/GLShader.cpp)
-	list(REMOVE_ITEM RENDERER_SOURCES renderer/Framebuffer.cpp)
-	list(REMOVE_ITEM RENDERER_SOURCES renderer/draw_glsl.cpp)
-	list(REMOVE_ITEM RENDERER_SOURCES renderer/draw_exp.cpp)
-endif()
 
 file(GLOB IRRXML_INCLUDES libs/irrxml/src/*.h)
 file(GLOB IRRXML_SOURCES libs/irrxml/src/*.cpp)
@@ -937,14 +922,7 @@ if(ANGLE OR GLES2)
 		include_directories(libs/angle/include)
 	endif()
 	
-	add_definitions(-DUSE_GLES1)
 	add_definitions(-DUSE_GLES2)
-	
-	list(REMOVE_ITEM RENDERER_SOURCES renderer/Framebuffer.cpp)
-	#list(REMOVE_ITEM RENDERER_SOURCES renderer/draw_glsl.cpp)
-	list(REMOVE_ITEM RENDERER_SOURCES renderer/draw_exp.cpp)
-	list(REMOVE_ITEM RENDERER_SOURCES renderer/draw_arb.cpp)
-	list(REMOVE_ITEM RENDERER_SOURCES renderer/draw_arb2.cpp)
 endif()
 
 set(TEKUUM_INCLUDES
@@ -991,8 +969,6 @@ add_definitions(-D__DOOM__
 				-DFT2_BUILD_LIBRARY)
 				
 
-				
-endif()
 				
 if(MONOLITH)
 	list(APPEND TEKUUM_INCLUDES
