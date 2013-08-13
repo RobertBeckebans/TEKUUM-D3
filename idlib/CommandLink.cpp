@@ -25,33 +25,38 @@ If you have questions concerning this license or the applicable additional terms
 
 ===========================================================================
 */
-
-#ifndef __MATH_SIMD_SSE_H__
-#define __MATH_SIMD_SSE_H__
+#pragma hdrstop
+#include "precompiled.h"
 
 /*
-===============================================================================
+========================
+CommandLinks
 
-	SSE implementation of idSIMDProcessor
-
-===============================================================================
+The command system is not required for idLib, but we want to be able
+to use the CONSOLE_COMMAND() macro inside idlib, so these must be here.
+========================
 */
-
-#if defined(USE_INTRINSICS)
-
-class idSIMD_SSE : public idSIMD_Generic
+idCommandLink* CommandLinks( idCommandLink* cl )
 {
-public:
-	virtual const char* VPCALL GetName() const;
-	
-	virtual void VPCALL BlendJoints( idJointQuat* joints, const idJointQuat* blendJoints, const float lerp, const int* index, const int numJoints );
-	virtual void VPCALL BlendJointsFast( idJointQuat* joints, const idJointQuat* blendJoints, const float lerp, const int* index, const int numJoints );
-	virtual void VPCALL ConvertJointQuatsToJointMats( idJointMat* jointMats, const idJointQuat* jointQuats, const int numJoints );
-	virtual void VPCALL ConvertJointMatsToJointQuats( idJointQuat* jointQuats, const idJointMat* jointMats, const int numJoints );
-	virtual void VPCALL TransformJoints( idJointMat* jointMats, const int* parents, const int firstJoint, const int lastJoint );
-	virtual void VPCALL UntransformJoints( idJointMat* jointMats, const int* parents, const int firstJoint, const int lastJoint );
-};
+	static idCommandLink* commandLinks = NULL;
+	if( cl != NULL )
+	{
+		commandLinks = cl;
+	}
+	return commandLinks;
+}
 
-#endif
 
-#endif /* !__MATH_SIMD_SSE_H__ */
+idCommandLink* commandLinks = NULL;
+
+idCommandLink::idCommandLink( const char* cmdName, cmdFunction_t function,
+							  const char* description, argCompletion_t argCompletion )
+{
+	next = CommandLinks();
+	CommandLinks( this );
+	cmdName_ = cmdName;
+	function_ = function;
+	description_ = description;
+	argCompletion_ = argCompletion;
+}
+

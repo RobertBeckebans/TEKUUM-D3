@@ -79,15 +79,13 @@ void UnbindBufferObjects()
 	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, 0 );
 }
 
+#if defined(USE_INTRINSICS)
 
 void CopyBuffer( byte* dst, const byte* src, int numBytes )
 {
 	assert_16_byte_aligned( dst );
 	assert_16_byte_aligned( src );
 	
-#if !defined(USE_INTRINSICS) ||  defined(USE_INTRINSICS_EMU)
-	memcpy( dst, src, numBytes );
-#else
 	int i = 0;
 	for( ; i + 128 <= numBytes; i += 128 )
 	{
@@ -122,9 +120,18 @@ void CopyBuffer( byte* dst, const byte* src, int numBytes )
 		dst[i] = src[i];
 	}
 	_mm_sfence();
-#endif
 }
 
+#else
+
+void CopyBuffer( byte* dst, const byte* src, int numBytes )
+{
+	assert_16_byte_aligned( dst );
+	assert_16_byte_aligned( src );
+	memcpy( dst, src, numBytes );
+}
+
+#endif
 
 /*
 ================================================================================================

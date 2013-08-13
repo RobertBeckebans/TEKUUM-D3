@@ -488,6 +488,9 @@ void idGLDrawableMaterial::draw( int x, int y, int w, int h )
 			// RB end
 			
 			worldModel->FinishSurfaces();
+			// RB begin
+			//worldModel->CreateVertexCache();
+			// RB end
 			
 			renderEntity_t worldEntity;
 			
@@ -517,6 +520,12 @@ void idGLDrawableMaterial::draw( int x, int y, int w, int h )
 		// render it
 		//renderSystem->BeginFrame( w, h );
 		
+		int oldNativeScreenWidth = glConfig.nativeScreenWidth;
+		int oldNativeScreenHeight = glConfig.nativeScreenHeight;
+		
+		glConfig.nativeScreenWidth = w;
+		glConfig.nativeScreenHeight = h;
+		
 		memset( &refdef, 0, sizeof( refdef ) );
 		refdef.vieworg.Set( viewAngle, 0, 0 );
 		
@@ -540,6 +549,9 @@ void idGLDrawableMaterial::draw( int x, int y, int w, int h )
 		
 		const emptyCommand_t* cmd = renderSystem->SwapCommandBuffers( NULL, NULL, NULL, NULL );
 		renderSystem->RenderCommandBuffers( cmd );
+		
+		glConfig.nativeScreenWidth = oldNativeScreenWidth;
+		glConfig.nativeScreenHeight = oldNativeScreenHeight;
 		
 		glMatrixMode( GL_MODELVIEW );
 		glLoadIdentity();
@@ -605,6 +617,15 @@ idGLDrawableModel::idGLDrawableModel()
 
 void idGLDrawableModel::setMedia( const char* name )
 {
+#if 0
+	// RB: free old model vertex cache, so we don't run into out of memory problems
+	if( worldModel != NULL )
+	{
+		worldModel->FreeVertexCache();
+	}
+	// RB end
+#endif
+	
 	worldModel = renderModelManager->FindModel( name );
 	worldDirty = true;
 	xOffset = 0.0;
@@ -791,6 +812,7 @@ void idGLDrawableModel::draw( int x, int y, int w, int h )
 		
 		// RB: avoid crash in R_AddSingleLight
 		world->GenerateAllInteractions();
+		worldModel->CreateVertexCache();
 		// RB end
 		
 		worldDirty = false;
@@ -802,6 +824,12 @@ void idGLDrawableModel::draw( int x, int y, int w, int h )
 	
 	// render it
 	//renderSystem->BeginFrame( w, h );
+	
+	int oldNativeScreenWidth = glConfig.nativeScreenWidth;
+	int oldNativeScreenHeight = glConfig.nativeScreenHeight;
+	
+	glConfig.nativeScreenWidth = w;
+	glConfig.nativeScreenHeight = h;
 	
 	memset( &refdef, 0, sizeof( refdef ) );
 	refdef.vieworg.Set( zOffset, xOffset, -yOffset );
@@ -825,6 +853,9 @@ void idGLDrawableModel::draw( int x, int y, int w, int h )
 	
 	const emptyCommand_t* cmd = renderSystem->SwapCommandBuffers( NULL, NULL, NULL, NULL );
 	renderSystem->RenderCommandBuffers( cmd );
+	
+	glConfig.nativeScreenWidth = oldNativeScreenWidth;
+	glConfig.nativeScreenHeight = oldNativeScreenHeight;
 	
 	glMatrixMode( GL_MODELVIEW );
 	glLoadIdentity();
@@ -994,11 +1025,20 @@ void idGLDrawableConsole::draw( int x, int y, int w, int h )
 	// RB: BFG interface
 	//renderSystem->BeginFrame( w, h );
 	
+	int oldNativeScreenWidth = glConfig.nativeScreenWidth;
+	int oldNativeScreenHeight = glConfig.nativeScreenHeight;
+	
+	glConfig.nativeScreenWidth = w;
+	glConfig.nativeScreenHeight = h;
+	
 	console->Draw( true );
 	
 	//renderSystem->EndFrame( NULL, NULL );
 	const emptyCommand_t* cmd = renderSystem->SwapCommandBuffers( NULL, NULL, NULL, NULL );
 	renderSystem->RenderCommandBuffers( cmd );
+	
+	glConfig.nativeScreenWidth = oldNativeScreenWidth;
+	glConfig.nativeScreenHeight = oldNativeScreenHeight;
 	
 	// RB end
 	

@@ -24,8 +24,11 @@ option(STANDALONE
 option(GLES1
 		"Only use OpenGL ES 1.0 functions" OFF)
 		
+option(GLES2
+		"Only use OpenGL ES 2.0 functions" OFF)
+		
 option(ANGLE
-		"Only use OpenGL ES 2.0 functions through ANGLE" ON)
+		"Only use OpenGL ES 2.0 functions through ANGLE" OFF)
 		
 option(DEBUG_MEMORY
 		"Enables memory logging to file" OFF)
@@ -34,7 +37,7 @@ option(DEBUG_MEMORY
 #	set(USE_QT_WINDOWING TRUE)
 #endif()
 
-if(ANGLE)
+if(ANGLE OR GLES2)
 	set(USE_CMDLINE_TOOLS FALSE)
 endif()
 
@@ -488,7 +491,6 @@ file(GLOB GAME_GAMESYS_INCLUDES game/gamesys/*.h)
 set(GAME_GAMESYS_SOURCES
 	#game/gamesys/Callbacks.cpp
 	game/gamesys/Class.cpp
-	game/gamesys/DebugGraph.cpp
 	game/gamesys/Event.cpp
 	game/gamesys/SaveGame.cpp
 	game/gamesys/SysCmds.cpp
@@ -639,7 +641,8 @@ else()
 	
 	if(ANGLE)
 		list(REMOVE_ITEM WIN32_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/sys/win32/win_glimp.cpp)
-		list(APPEND WIN32_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/sys/win32/win_egl.cpp)
+	else()
+		list(REMOVE_ITEM WIN32_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/sys/win32/win_egl.cpp)
 	endif()
 
 	set(WIN32_RESOURCES
@@ -928,6 +931,22 @@ source_group("tools\\sound" FILES ${EDITOR_SOUND_INCLUDES})
 source_group("tools\\sound" FILES ${EDITOR_SOUND_SOURCES})
 
 
+if(ANGLE OR GLES2)
+	if(ANGLE)
+		add_definitions(-DUSE_ANGLE)
+		include_directories(libs/angle/include)
+	endif()
+	
+	add_definitions(-DUSE_GLES1)
+	add_definitions(-DUSE_GLES2)
+	
+	list(REMOVE_ITEM RENDERER_SOURCES renderer/Framebuffer.cpp)
+	#list(REMOVE_ITEM RENDERER_SOURCES renderer/draw_glsl.cpp)
+	list(REMOVE_ITEM RENDERER_SOURCES renderer/draw_exp.cpp)
+	list(REMOVE_ITEM RENDERER_SOURCES renderer/draw_arb.cpp)
+	list(REMOVE_ITEM RENDERER_SOURCES renderer/draw_arb2.cpp)
+endif()
+
 set(TEKUUM_INCLUDES
 			${AAS_INCLUDES}
 			${CM_INCLUDES}
@@ -939,11 +958,9 @@ set(TEKUUM_INCLUDES
 			${PNG_INCLUDES}
 			${ETC1_INCLUDES}
 			${ZLIB_INCLUDES}
-			#${GLEW_INCLUDES}
 			${SOUND_INCLUDES}
 			${OGGVORBIS_INCLUDES}
 			${UI_INCLUDES}
-			
 			)
 			
 set(TEKUUM_SOURCES
@@ -957,21 +974,24 @@ set(TEKUUM_SOURCES
 			${PNG_SOURCES}
 			${ETC1_SOURCES}
 			${ZLIB_SOURCES}
-			#${GLEW_SOURCES}
 			${FREETYPE_SOURCES}
 			${SOUND_SOURCES}
 			${OGGVORBIS_SOURCES}
 			${UI_SOURCES}
-			
 			)
+			
+if(NOT ANGLE)
+	list(APPEND TEKUUM_INCLUDES ${GLEW_INCLUDES})
+	list(APPEND TEKUUM_SOURCES ${GLEW_SOURCES})
+endif()
 
 add_definitions(-D__DOOM__
 				-DGLEW_STATIC
 				-DBUILD_FREETYPE
 				-DFT2_BUILD_LIBRARY)
 				
-if(ANGLE)
-	add_definitions(-DUSE_ANGLE)
+
+				
 endif()
 				
 if(MONOLITH)
@@ -1015,7 +1035,6 @@ include_directories(
 			#libs/openal/include
 			libs/glew/include
 			libs/freetype/include
-			libs/angle/include
 			libs/zlib)
 			
 link_directories(
@@ -1156,7 +1175,7 @@ if(MSVC)
 	list(REMOVE_DUPLICATES TEKUUM_SOURCES)
 	
 	set(TEKUUM_PRECOMPILED_SOURCES ${TEKUUM_SOURCES})
-	list(REMOVE_ITEM TEKUUM_PRECOMPILED_SOURCES ${JPEG_SOURCES} ${PNG_SOURCES} ${ETC1_SOURCES} ${ZLIB_SOURCES} ${FREETYPE_SOURCES} ${OGGVORBIS_SOURCES})		
+	list(REMOVE_ITEM TEKUUM_PRECOMPILED_SOURCES ${JPEG_SOURCES} ${PNG_SOURCES} ${ETC1_SOURCES} ${ZLIB_SOURCES} ${GLEW_SOURCES} ${FREETYPE_SOURCES} ${OGGVORBIS_SOURCES})		
 	list(REMOVE_ITEM TEKUUM_PRECOMPILED_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/game/gamesys/TypeInfo.cpp)
 	list(REMOVE_ITEM TEKUUM_PRECOMPILED_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/renderer/DXT/DXTDecoder.cpp)
 	list(REMOVE_ITEM TEKUUM_PRECOMPILED_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/renderer/DXT/DXTEncoder.cpp)
@@ -1210,21 +1229,35 @@ if(MSVC)
 		
 	if(ANGLE)
 		add_dependencies(Tekuum idlib libANGLE)
+		target_link_libraries(Tekuum
+			idlib
+			libANGLE
+			${DirectX_LIBRARIES}
+			${QT_LIBRARIES}
+			#libcurl 
+			#openal32 
+			#opengl32
+			glu32
+			dbghelp
+			eaxguid
+			iphlpapi
+			winmm
+			ws2_32.lib)
 	else()
 		add_dependencies(Tekuum idlib)
+			target_link_libraries(Tekuum
+			idlib
+	
+			${DirectX_LIBRARIES}
+			${QT_LIBRARIES}
+			#libcurl 
+			#openal32 
+			opengl32
+			glu32
+			dbghelp
+			eaxguid
+			iphlpapi
+			winmm
+			ws2_32.lib)
 	endif()
-	target_link_libraries(Tekuum
-		idlib
-		libANGLE
-		${DirectX_LIBRARIES}
-		${QT_LIBRARIES}
-		#libcurl 
-		#openal32 
-		#opengl32
-		glu32
-		dbghelp
-		eaxguid
-		iphlpapi
-		winmm
-		ws2_32.lib)
 endif()

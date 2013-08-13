@@ -51,6 +51,9 @@ public:
 	virtual void			AddModel( idRenderModel* model );
 	virtual void			RemoveModel( idRenderModel* model );
 	virtual void			ReloadModels( bool forceAll = false );
+	// RB begin
+	virtual void			CreateModelVertexCaches();
+	// RB end
 	virtual void			FreeModelVertexCaches();
 	virtual void			WritePrecacheCommands( idFile* file );
 	virtual void			BeginLevelLoad();
@@ -333,7 +336,9 @@ idRenderModel* idRenderModelManagerLocal::GetModel( const char* _modelName, bool
 	
 	idRenderModel* model = NULL;
 	
-	if( ( extension.Icmp( "ase" ) == 0 ) || ( extension.Icmp( "lwo" ) == 0 ) || ( extension.Icmp( "flt" ) == 0 ) || ( extension.Icmp( "ma" ) == 0 ) )
+	// RB: added dae
+	if( ( extension.Icmp( "dae" ) == 0 ) || ( extension.Icmp( "ase" ) == 0 ) || ( extension.Icmp( "lwo" ) == 0 ) || ( extension.Icmp( "flt" ) == 0 ) || ( extension.Icmp( "ma" ) == 0 ) )
+		// RB end
 	{
 		model = new idRenderModelStatic;
 	}
@@ -378,9 +383,12 @@ idRenderModel* idRenderModelManagerLocal::GetModel( const char* _modelName, bool
 			{
 				model->InitFromFile( canonical );
 				
-				idFileLocal outputFile( fileSystem->OpenFileWrite( generatedFileName, "fs_basepath" ) );
-				idLib::Printf( "Writing %s\n", generatedFileName.c_str() );
-				model->WriteBinaryModel( outputFile );
+				if( !model->IsDefaultModel() )
+				{
+					idFileLocal outputFile( fileSystem->OpenFileWrite( generatedFileName, "fs_basepath" ) );
+					idLib::Printf( "Writing %s\n", generatedFileName.c_str() );
+					model->WriteBinaryModel( outputFile );
+				}
 			} /* else {
 				idLib::Printf( "loaded binary model %s from file %s\n", model->Name(), generatedFileName.c_str() );
 			} */
@@ -589,6 +597,17 @@ void idRenderModelManagerLocal::ReloadModels( bool forceAll )
 	R_ReCreateWorldReferences();
 }
 
+// RB begin
+void idRenderModelManagerLocal::CreateModelVertexCaches()
+{
+	for( int i = 0; i < models.Num(); i++ )
+	{
+		idRenderModel* model = models[i];
+		model->CreateVertexCache();
+	}
+}
+// RB end
+
 /*
 =================
 idRenderModelManagerLocal::FreeModelVertexCaches
@@ -753,7 +772,6 @@ void idRenderModelManagerLocal::EndLevelLoad()
 	{
 		session->PacifierUpdate();
 		
-		
 		idRenderModel* model = models[i];
 		
 		if( model->IsLevelLoadReferenced() && !model->IsLoaded() && model->IsReloadable() )
@@ -768,15 +786,10 @@ void idRenderModelManagerLocal::EndLevelLoad()
 	{
 		session->PacifierUpdate();
 		
-		
 		idRenderModel* model = models[i];
-		if( model->IsLoaded() )
-		{
-			for( int j = 0; j < model->NumSurfaces(); j++ )
-			{
-				R_CreateStaticBuffersForTri( *( model->Surface( j )->geometry ) );
-			}
-		}
+		// RB begin
+		model->CreateVertexCache();
+		// RB end
 	}
 	
 	

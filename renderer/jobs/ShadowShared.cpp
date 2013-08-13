@@ -214,10 +214,56 @@ static void R_ShadowVolumeCullBits( byte* cullBits, byte& totalOr, const float r
 	__m128i vecTotalOrByte = _mm_packus_epi16( vecTotalOrShort, vecTotalOrShort );
 	
 	totalOr = ( byte ) _mm_cvtsi128_si32( vecTotalOrByte );
+	
 #else
 	
-	// TODO
-	totalOr = 0;
+	idODSStreamedArray< idShadowVert, 16, SBT_DOUBLE, 1 > vertsODS( verts, numVerts );
+	
+	byte tOr = 0;
+	for( int i = 0; i < numVerts; )
+	{
+	
+		const int nextNumVerts = vertsODS.FetchNextBatch() - 1;
+	
+		for( ; i <= nextNumVerts; i++ )
+		{
+			const idVec3& v = vertsODS[i].xyzw.ToVec3();
+	
+			const float d0 = planes[0].Distance( v );
+			const float d1 = planes[1].Distance( v );
+			const float d2 = planes[2].Distance( v );
+			const float d3 = planes[3].Distance( v );
+	
+			const float t0 = d0 + radius;
+			const float t1 = d1 + radius;
+			const float t2 = d2 + radius;
+			const float t3 = d3 + radius;
+	
+			const float s0 = d0 - radius;
+			const float s1 = d1 - radius;
+			const float s2 = d2 - radius;
+			const float s3 = d3 - radius;
+	
+			byte bits;
+			bits  = IEEE_FLT_SIGNBITSET( t0 ) << 0;
+			bits |= IEEE_FLT_SIGNBITSET( t1 ) << 1;
+			bits |= IEEE_FLT_SIGNBITSET( t2 ) << 2;
+			bits |= IEEE_FLT_SIGNBITSET( t3 ) << 3;
+	
+			bits |= IEEE_FLT_SIGNBITSET( s0 ) << 4;
+			bits |= IEEE_FLT_SIGNBITSET( s1 ) << 5;
+			bits |= IEEE_FLT_SIGNBITSET( s2 ) << 6;
+			bits |= IEEE_FLT_SIGNBITSET( s3 ) << 7;
+	
+			bits ^= 0x0F;		// flip lower four bits
+	
+			tOr |= bits;
+			cullBits[i] = bits;
+		}
+	}
+	
+	totalOr = tOr;
+	
 #endif
 }
 

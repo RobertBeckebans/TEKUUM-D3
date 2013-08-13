@@ -34,7 +34,7 @@ If you have questions concerning this license or the applicable additional terms
 idVertexCache vertexCache;
 
 idCVar r_showVertexCache( "r_showVertexCache", "0", CVAR_RENDERER | CVAR_BOOL, "Print stats about the vertex cache every frame" );
-idCVar r_showVertexCacheTimings( "r_showVertexCache", "0", CVAR_RENDERER | CVAR_BOOL, "Print stats about the vertex cache every frame" );
+idCVar r_showVertexCacheTimings( "r_showVertexCacheTimings", "0", CVAR_RENDERER | CVAR_BOOL, "Print stats about the vertex cache every frame" );
 
 
 /*
@@ -149,6 +149,11 @@ idVertexCache::Shutdown
 */
 void idVertexCache::Shutdown()
 {
+	// RB: missing cleanup
+	staticData.vertexBuffer.FreeBufferObject();
+	staticData.indexBuffer.FreeBufferObject();
+	// RB end
+	
 	for( int i = 0; i < VERTCACHE_NUM_FRAMES; i++ )
 	{
 		frameData[i].vertexBuffer.FreeBufferObject();

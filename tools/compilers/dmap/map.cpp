@@ -534,6 +534,12 @@ static void CreateMapLight( const idMapEntity* mapEnt )
 	
 	// RB begin
 	idRenderMatrix::GetFrustumPlanes( light->frustumPlanes, light->def.baseLightProject, true, true );
+	
+	// the DOOM 3 frustum planes point outside the frustum
+	for( int i = 0; i < 6; i++ )
+	{
+		light->frustumPlanes[i] = -light->frustumPlanes[i];
+	}
 	// RB end
 	
 	// get the name for naming the shadow surfaces

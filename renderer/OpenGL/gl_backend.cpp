@@ -52,7 +52,6 @@ static GLsync	renderSync[2];
 #endif
 
 void GLimp_SwapBuffers();
-void RB_SetMVP( const idRenderMatrix& mvp );
 
 /*
 ============================================================================

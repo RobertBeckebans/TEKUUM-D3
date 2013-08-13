@@ -45,7 +45,7 @@ public:
 	virtual void		Draw( int time, float x, float y );
 	virtual const char* HandleEvent( const sysEvent_t* event, bool* updateVisuals );
 	virtual void		PostParse();
-	virtual void		GainFocus();
+	virtual void		GainFocus( bool scripts );
 	virtual size_t		Allocated()
 	{
 		return idWindow::Allocated();

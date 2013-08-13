@@ -217,11 +217,8 @@ ID_INLINE void VertexFloatToByte( const float& x, const float& y, const float& z
 {
 	assert_4_byte_aligned( bval );	// for __stvebx
 	
-#if !defined(USE_INTRINSICS) || defined(USE_INTRINSICS_EMU)
-	bval[0] = VERTEX_FLOAT_TO_BYTE( x );
-	bval[1] = VERTEX_FLOAT_TO_BYTE( y );
-	bval[2] = VERTEX_FLOAT_TO_BYTE( z );
-#else
+#if defined(USE_INTRINSICS)
+	
 	const __m128 vector_float_one			= { 1.0f, 1.0f, 1.0f, 1.0f };
 	const __m128 vector_float_half			= { 0.5f, 0.5f, 0.5f, 0.5f };
 	const __m128 vector_float_255_over_2	= { 255.0f / 2.0f, 255.0f / 2.0f, 255.0f / 2.0f, 255.0f / 2.0f };
@@ -236,6 +233,13 @@ ID_INLINE void VertexFloatToByte( const float& x, const float& y, const float& z
 	bval[0] = ( byte )_mm_extract_epi16( xyz16, 0 );	// cannot use _mm_extract_epi8 because it is an SSE4 instruction
 	bval[1] = ( byte )_mm_extract_epi16( xyz16, 1 );
 	bval[2] = ( byte )_mm_extract_epi16( xyz16, 2 );
+	
+#else
+	
+	bval[0] = VERTEX_FLOAT_TO_BYTE( x );
+	bval[1] = VERTEX_FLOAT_TO_BYTE( y );
+	bval[2] = VERTEX_FLOAT_TO_BYTE( z );
+	
 #endif
 }
 
@@ -674,10 +678,8 @@ ID_INLINE void WriteDrawVerts16( idDrawVert* destVerts, const idDrawVert* localV
 	assert_16_byte_aligned( destVerts );
 	assert_16_byte_aligned( localVerts );
 	
+#if defined(USE_INTRINSICS)
 	
-#if !defined(USE_INTRINSICS) || defined(USE_INTRINSICS_EMU)
-	memcpy( destVerts, localVerts, numVerts * DRAWVERT_SIZE );
-#else
 	for( int i = 0; i < numVerts; i++ )
 	{
 		__m128i v0 = _mm_load_si128( ( const __m128i* )( ( byte* )( localVerts + i ) +  0 ) );
@@ -685,6 +687,11 @@ ID_INLINE void WriteDrawVerts16( idDrawVert* destVerts, const idDrawVert* localV
 		_mm_stream_si128( ( __m128i* )( ( byte* )( destVerts + i ) +  0 ), v0 );
 		_mm_stream_si128( ( __m128i* )( ( byte* )( destVerts + i ) + 16 ), v1 );
 	}
+	
+#else
+	
+	memcpy( destVerts, localVerts, numVerts * sizeof( idDrawVert ) );
+	
 #endif
 }
 

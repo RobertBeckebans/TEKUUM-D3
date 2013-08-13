@@ -705,7 +705,7 @@ static void RB_FillDepthBufferGeneric( const drawSurf_t* const* drawSurfs, int n
 		}
 		
 		// subviews will just down-modulate the color buffer
-		float color[4];
+		idVec4 color;
 		if( shader->GetSort() == SS_SUBVIEW )
 		{
 			surfGLState |= GLS_SRCBLEND_DST_COLOR | GLS_DSTBLEND_ZERO | GLS_DEPTHFUNC_LESS;
@@ -2381,7 +2381,7 @@ static int RB_DrawShaderPasses( const drawSurf_t* const* const drawSurfs, const 
 			//--------------------------
 			
 			// set the color
-			float color[4];
+			idVec4 color;
 			color[0] = regs[ pStage->color.registers[0] ];
 			color[1] = regs[ pStage->color.registers[1] ];
 			color[2] = regs[ pStage->color.registers[2] ];
@@ -2634,7 +2634,7 @@ static void RB_BlendLight( const drawSurf_t* drawSurfs, const drawSurf_t* drawSu
 		}
 		
 		// get the modulate values from the light, including alpha, unlike normal lights
-		float lightColor[4];
+		idVec4 lightColor;
 		lightColor[0] = regs[ stage->color.registers[0] ];
 		lightColor[1] = regs[ stage->color.registers[1] ];
 		lightColor[2] = regs[ stage->color.registers[2] ];
@@ -2749,7 +2749,7 @@ static void RB_FogPass( const drawSurf_t* drawSurfs,  const drawSurf_t* drawSurf
 	// assume fog shaders have only a single stage
 	const shaderStage_t* stage = lightShader->GetStage( 0 );
 	
-	float lightColor[4];
+	idVec4 lightColor;
 	lightColor[0] = regs[ stage->color.registers[0] ];
 	lightColor[1] = regs[ stage->color.registers[1] ];
 	lightColor[2] = regs[ stage->color.registers[2] ];

@@ -539,6 +539,12 @@ void R_RenderLightFrustum( const renderLight_t& renderLight, idPlane lightFrustu
 	R_DeriveLightData( &fakeLight );
 	
 	idRenderMatrix::GetFrustumPlanes( lightFrustum, fakeLight.baseLightProject, true, true );
+	
+	// the DOOM 3 frustum planes point outside the frustum
+	for( int i = 0; i < 6; i++ )
+	{
+		lightFrustum[i] = -lightFrustum[i];
+	}
 }
 
 

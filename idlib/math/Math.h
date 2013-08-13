@@ -528,9 +528,7 @@ idMath::InvSqrt16
 */
 ID_INLINE float idMath::InvSqrt16( float x )
 {
-
 	return ( x > FLT_SMALLEST_NON_DENORMAL ) ? sqrtf( 1.0f / x ) : INFINITY;
-	
 }
 
 /*
@@ -1326,8 +1324,17 @@ ID_INLINE int idMath::Ftoi( float f )
 #if defined(USE_INTRINSICS)
 	__m128 x = _mm_load_ss( &f );
 	return _mm_cvttss_si32( x );
+#elif 0 // round chop (C/C++ standard)
+	int i, s, e, m, shift;
+	i = *reinterpret_cast<int*>( &f );
+	s = i >> IEEE_FLT_SIGN_BIT;
+	e = ( ( i >> IEEE_FLT_MANTISSA_BITS ) & ( ( 1 << IEEE_FLT_EXPONENT_BITS ) - 1 ) ) - IEEE_FLT_EXPONENT_BIAS;
+	m = ( i & ( ( 1 << IEEE_FLT_MANTISSA_BITS ) - 1 ) ) | ( 1 << IEEE_FLT_MANTISSA_BITS );
+	shift = e - IEEE_FLT_MANTISSA_BITS;
+	return ( ( ( ( m >> -shift ) | ( m << shift ) ) & ~( e >> INT32_SIGN_BIT ) ) ^ s ) - s;
 #else
-	return ( int ) f;
+	// If a converted result is larger than the maximum signed doubleword integer the result is undefined.
+	return C_FLOAT_TO_INT( f );
 #endif
 }
 
@@ -1344,7 +1351,17 @@ ID_INLINE char idMath::Ftoi8( float f )
 	x = _mm_min_ss( x, SIMD_SP_max_char );
 	return static_cast<char>( _mm_cvttss_si32( x ) );
 #else
-	return ClampChar( ( int ) f );
+	// The converted result is clamped to the range [-128,127].
+	int i = C_FLOAT_TO_INT( f );
+	if( i < -128 )
+	{
+		return -128;
+	}
+	else if( i > 127 )
+	{
+		return 127;
+	}
+	return static_cast<char>( i );
 #endif
 }
 
@@ -1361,7 +1378,17 @@ ID_INLINE short idMath::Ftoi16( float f )
 	x = _mm_min_ss( x, SIMD_SP_max_short );
 	return static_cast<short>( _mm_cvttss_si32( x ) );
 #else
-	return ClampShort( ( int ) f );
+	// The converted result is clamped to the range [-32768,32767].
+	int i = C_FLOAT_TO_INT( f );
+	if( i < -32768 )
+	{
+		return -32768;
+	}
+	else if( i > 32767 )
+	{
+		return 32767;
+	}
+	return static_cast<short>( i );
 #endif
 }
 
@@ -1403,7 +1430,17 @@ ID_INLINE byte idMath::Ftob( float f )
 	x = _mm_min_ss( x, SIMD_SP_255 );
 	return static_cast<byte>( _mm_cvttss_si32( x ) );
 #else
-	return ClampInt( 0, 255, ( int ) f );
+	// The converted result is clamped to the range [0,255].
+	int i = C_FLOAT_TO_INT( f );
+	if( i < 0 )
+	{
+		return 0;
+	}
+	else if( i > 255 )
+	{
+		return 255;
+	}
+	return static_cast<byte>( i );
 #endif
 }
 

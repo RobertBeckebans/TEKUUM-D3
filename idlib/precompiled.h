@@ -111,7 +111,6 @@ const int MAX_EXPRESSION_REGISTERS = 4096;
 #endif
 
 
-
 #if defined(USE_GLES2)
 
 #define glClearDepth glClearDepthf
@@ -239,6 +238,7 @@ const int MAX_EXPRESSION_REGISTERS = 4096;
 #include "../framework/EventLoop.h"
 #include "../framework/KeyInput.h"
 #include "../framework/EditField.h"
+#include "../framework/DebugGraph.h"
 #include "../framework/Console.h"
 #include "../framework/DemoFile.h"
 #include "../framework/Session.h"

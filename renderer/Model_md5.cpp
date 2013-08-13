@@ -561,9 +561,8 @@ idMD5Mesh::CalculateBounds
 */
 void idMD5Mesh::CalculateBounds( const idJointMat* entJoints, idBounds& bounds ) const
 {
-#if !defined(USE_INTRINSICS)
-	// TODO
-#else
+#if defined(USE_INTRINSICS)
+
 	__m128 minX = vector_float_posInfinity;
 	__m128 minY = vector_float_posInfinity;
 	__m128 minZ = vector_float_posInfinity;
@@ -596,6 +595,17 @@ void idMD5Mesh::CalculateBounds( const idJointMat* entJoints, idBounds& bounds )
 	_mm_store_ss( bounds.ToFloatPtr() + 3, _mm_splat_ps( maxX, 3 ) );
 	_mm_store_ss( bounds.ToFloatPtr() + 4, _mm_splat_ps( maxY, 3 ) );
 	_mm_store_ss( bounds.ToFloatPtr() + 5, _mm_splat_ps( maxZ, 3 ) );
+	
+#else
+	
+	bounds.Clear();
+	for( int i = 0; i < numMeshJoints; i++ )
+	{
+		const idJointMat& joint = entJoints[meshJoints[i]];
+		bounds.AddPoint( joint.GetTranslation() );
+	}
+	bounds.ExpandSelf( maxJointVertDist );
+	
 #endif
 }
 
@@ -1222,9 +1232,8 @@ static void TransformJoints( idJointMat* __restrict outJoints, const int numJoin
 	assert_16_byte_aligned( inFloats1 );
 	assert_16_byte_aligned( inFloats2 );
 	
-#if !defined(USE_INTRINSICS)
-	// TODO
-#else
+#if defined(USE_INTRINSICS)
+	
 	const __m128 mask_keep_last = __m128c( _mm_set_epi32( 0xFFFFFFFF, 0x00000000, 0x00000000, 0x00000000 ) );
 	
 	for( int i = 0; i < numJoints; i += 2, inFloats1 += 2 * 12, inFloats2 += 2 * 12, outFloats += 2 * 12 )
@@ -1235,63 +1244,63 @@ static void TransformJoints( idJointMat* __restrict outJoints, const int numJoin
 		__m128 m1a1 = _mm_load_ps( inFloats1 + 1 * 12 + 0 );
 		__m128 m1b1 = _mm_load_ps( inFloats1 + 1 * 12 + 4 );
 		__m128 m1c1 = _mm_load_ps( inFloats1 + 1 * 12 + 8 );
-	
+		
 		__m128 m2a0 = _mm_load_ps( inFloats2 + 0 * 12 + 0 );
 		__m128 m2b0 = _mm_load_ps( inFloats2 + 0 * 12 + 4 );
 		__m128 m2c0 = _mm_load_ps( inFloats2 + 0 * 12 + 8 );
 		__m128 m2a1 = _mm_load_ps( inFloats2 + 1 * 12 + 0 );
 		__m128 m2b1 = _mm_load_ps( inFloats2 + 1 * 12 + 4 );
 		__m128 m2c1 = _mm_load_ps( inFloats2 + 1 * 12 + 8 );
-	
+		
 		__m128 tj0 = _mm_and_ps( m1a0, mask_keep_last );
 		__m128 tk0 = _mm_and_ps( m1b0, mask_keep_last );
 		__m128 tl0 = _mm_and_ps( m1c0, mask_keep_last );
 		__m128 tj1 = _mm_and_ps( m1a1, mask_keep_last );
 		__m128 tk1 = _mm_and_ps( m1b1, mask_keep_last );
 		__m128 tl1 = _mm_and_ps( m1c1, mask_keep_last );
-	
+		
 		__m128 ta0 = _mm_splat_ps( m1a0, 0 );
 		__m128 td0 = _mm_splat_ps( m1b0, 0 );
 		__m128 tg0 = _mm_splat_ps( m1c0, 0 );
 		__m128 ta1 = _mm_splat_ps( m1a1, 0 );
 		__m128 td1 = _mm_splat_ps( m1b1, 0 );
 		__m128 tg1 = _mm_splat_ps( m1c1, 0 );
-	
+		
 		__m128 ra0 = _mm_add_ps( tj0, _mm_mul_ps( ta0, m2a0 ) );
 		__m128 rd0 = _mm_add_ps( tk0, _mm_mul_ps( td0, m2a0 ) );
 		__m128 rg0 = _mm_add_ps( tl0, _mm_mul_ps( tg0, m2a0 ) );
 		__m128 ra1 = _mm_add_ps( tj1, _mm_mul_ps( ta1, m2a1 ) );
 		__m128 rd1 = _mm_add_ps( tk1, _mm_mul_ps( td1, m2a1 ) );
 		__m128 rg1 = _mm_add_ps( tl1, _mm_mul_ps( tg1, m2a1 ) );
-	
+		
 		__m128 tb0 = _mm_splat_ps( m1a0, 1 );
 		__m128 te0 = _mm_splat_ps( m1b0, 1 );
 		__m128 th0 = _mm_splat_ps( m1c0, 1 );
 		__m128 tb1 = _mm_splat_ps( m1a1, 1 );
 		__m128 te1 = _mm_splat_ps( m1b1, 1 );
 		__m128 th1 = _mm_splat_ps( m1c1, 1 );
-	
+		
 		__m128 rb0 = _mm_add_ps( ra0, _mm_mul_ps( tb0, m2b0 ) );
 		__m128 re0 = _mm_add_ps( rd0, _mm_mul_ps( te0, m2b0 ) );
 		__m128 rh0 = _mm_add_ps( rg0, _mm_mul_ps( th0, m2b0 ) );
 		__m128 rb1 = _mm_add_ps( ra1, _mm_mul_ps( tb1, m2b1 ) );
 		__m128 re1 = _mm_add_ps( rd1, _mm_mul_ps( te1, m2b1 ) );
 		__m128 rh1 = _mm_add_ps( rg1, _mm_mul_ps( th1, m2b1 ) );
-	
+		
 		__m128 tc0 = _mm_splat_ps( m1a0, 2 );
 		__m128 tf0 = _mm_splat_ps( m1b0, 2 );
 		__m128 ti0 = _mm_splat_ps( m1c0, 2 );
 		__m128 tf1 = _mm_splat_ps( m1b1, 2 );
 		__m128 ti1 = _mm_splat_ps( m1c1, 2 );
 		__m128 tc1 = _mm_splat_ps( m1a1, 2 );
-	
+		
 		__m128 rc0 = _mm_add_ps( rb0, _mm_mul_ps( tc0, m2c0 ) );
 		__m128 rf0 = _mm_add_ps( re0, _mm_mul_ps( tf0, m2c0 ) );
 		__m128 ri0 = _mm_add_ps( rh0, _mm_mul_ps( ti0, m2c0 ) );
 		__m128 rc1 = _mm_add_ps( rb1, _mm_mul_ps( tc1, m2c1 ) );
 		__m128 rf1 = _mm_add_ps( re1, _mm_mul_ps( tf1, m2c1 ) );
 		__m128 ri1 = _mm_add_ps( rh1, _mm_mul_ps( ti1, m2c1 ) );
-	
+		
 		_mm_store_ps( outFloats + 0 * 12 + 0, rc0 );
 		_mm_store_ps( outFloats + 0 * 12 + 4, rf0 );
 		_mm_store_ps( outFloats + 0 * 12 + 8, ri0 );
@@ -1299,6 +1308,14 @@ static void TransformJoints( idJointMat* __restrict outJoints, const int numJoin
 		_mm_store_ps( outFloats + 1 * 12 + 4, rf1 );
 		_mm_store_ps( outFloats + 1 * 12 + 8, ri1 );
 	}
+	
+#else
+	
+	for( int i = 0; i < numJoints; i++ )
+	{
+		idJointMat::Multiply( outJoints[i], inJoints1[i], inJoints2[i] );
+	}
+	
 #endif
 }
 

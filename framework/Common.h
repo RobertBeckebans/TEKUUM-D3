@@ -118,9 +118,10 @@ extern idCVar		com_updateLoadSize;
 extern idCVar		com_videoRam;
 extern idCVar		com_productionMode;
 
+// RB begin
+extern int			com_frameMsec;			// game logic + present time
 extern int			time_gameFrame;			// game logic time
 extern int			time_gameDraw;			// game present time
-// RB begin
 extern uint64		time_frontend;			// renderer frontend time
 extern uint64		time_backend;			// renderer backend time
 extern uint64		time_shadows;			// renderer backend waiting for shadow volumes to be created

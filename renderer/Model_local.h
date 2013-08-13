@@ -71,6 +71,9 @@ public:
 	virtual void				InitEmpty( const char* name );
 	virtual void				AddSurface( modelSurface_t surface );
 	virtual void				FinishSurfaces();
+	// RB begin
+	virtual void				CreateVertexCache();
+	// RB end
 	virtual void				FreeVertexCache();
 	virtual const char* 		Name() const;
 	virtual void				Print() const;

@@ -94,7 +94,6 @@ void gameError( const char* fmt, ... );
 #include "gamesys/SysCvar.h"
 #include "gamesys/SysCmds.h"
 #include "gamesys/SaveGame.h"
-#include "gamesys/DebugGraph.h"
 
 #include "script/Script_Program.h"
 

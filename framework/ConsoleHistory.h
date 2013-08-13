@@ -25,33 +25,58 @@ If you have questions concerning this license or the applicable additional terms
 
 ===========================================================================
 */
-
-#ifndef __MATH_SIMD_SSE_H__
-#define __MATH_SIMD_SSE_H__
+#ifndef __CONSOLEHISTORY_H__
+#define __CONSOLEHISTORY_H__
 
 /*
-===============================================================================
 
-	SSE implementation of idSIMDProcessor
+This should behave like the windows command prompt, with the addition
+of a persistant history file.
 
-===============================================================================
+Note that commands bound to keys do not go through the console history.
+
 */
 
-#if defined(USE_INTRINSICS)
-
-class idSIMD_SSE : public idSIMD_Generic
+class idConsoleHistory
 {
 public:
-	virtual const char* VPCALL GetName() const;
+	idConsoleHistory() :
+		upPoint( 0 ),
+		downPoint( 0 ),
+		returnLine( 0 ),
+		numHistory( 0 )
+	{
+		ClearHistory();
+	}
 	
-	virtual void VPCALL BlendJoints( idJointQuat* joints, const idJointQuat* blendJoints, const float lerp, const int* index, const int numJoints );
-	virtual void VPCALL BlendJointsFast( idJointQuat* joints, const idJointQuat* blendJoints, const float lerp, const int* index, const int numJoints );
-	virtual void VPCALL ConvertJointQuatsToJointMats( idJointMat* jointMats, const idJointQuat* jointQuats, const int numJoints );
-	virtual void VPCALL ConvertJointMatsToJointQuats( idJointQuat* jointQuats, const idJointMat* jointMats, const int numJoints );
-	virtual void VPCALL TransformJoints( idJointMat* jointMats, const int* parents, const int firstJoint, const int lastJoint );
-	virtual void VPCALL UntransformJoints( idJointMat* jointMats, const int* parents, const int firstJoint, const int lastJoint );
+	void	LoadHistoryFile();
+	
+	// the line should not have a \n
+	// Empty lines are never added to the history.
+	// If the command is the same as the last returned history line, nothing is changed.
+	void	AddToHistory( const char* line, bool writeHistoryFile = true );
+	
+	// the string will not have a \n
+	// Returns an empty string if there is nothing to retrieve in that
+	// direction.
+	idStr	RetrieveFromHistory( bool backward );
+	
+	// console commands
+	void	PrintHistory();
+	void	ClearHistory();
+	
+private:
+	int		upPoint;	// command to be retrieved with next up-arrow
+	int		downPoint;	// command to be retrieved with next down-arrow
+	int		returnLine;	// last returned by RetrieveFromHistory()
+	int		numHistory;
+	
+	static const int COMMAND_HISTORY = 64;
+	idArray<idStr, COMMAND_HISTORY>	historyLines;
+	
+	compile_time_assert( CONST_ISPOWEROFTWO( COMMAND_HISTORY ) );	// we use the binary 'and' operator for wrapping
 };
 
-#endif
+extern idConsoleHistory consoleHistory;
 
-#endif /* !__MATH_SIMD_SSE_H__ */
+#endif // !__CONSOLEHISTORY_H__

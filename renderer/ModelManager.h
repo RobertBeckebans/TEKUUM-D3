@@ -90,6 +90,10 @@ public:
 	// write "touchModel <model>" commands for each non-world-map model
 	virtual	void			WritePrecacheCommands( idFile* f ) = 0;
 	
+	// RB: required by the tools
+	virtual void			CreateModelVertexCaches() = 0;
+	// RB end
+	
 	// called during vid_restart
 	virtual	void			FreeModelVertexCaches() = 0;
 	

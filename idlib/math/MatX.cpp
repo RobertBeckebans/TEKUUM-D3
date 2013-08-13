@@ -192,6 +192,184 @@ idMatX& idMatX::RemoveRowColumn( int r )
 }
 
 /*
+========================
+idMatX::CopyLowerToUpperTriangle
+========================
+*/
+void idMatX::CopyLowerToUpperTriangle()
+{
+	assert( ( GetNumColumns() & 3 ) == 0 );
+	assert( GetNumColumns() >= GetNumRows() );
+	
+#if defined(USE_INTRINSICS)
+	
+	const int n = GetNumColumns();
+	const int m = GetNumRows();
+	
+	const int n0 = 0;
+	const int n1 = n;
+	const int n2 = ( n << 1 );
+	const int n3 = ( n << 1 ) + n;
+	const int n4 = ( n << 2 );
+	
+	const int b1 = ( ( m - 0 ) >> 1 ) & 1;	// ( m & 3 ) > 1
+	const int b2 = ( ( m - 1 ) >> 1 ) & 1;	// ( m & 3 ) > 2 (provided ( m & 3 ) > 0)
+	
+	const int n1_masked = ( n & -b1 );
+	const int n2_masked = ( n & -b1 ) + ( n & -b2 );
+	
+	const __m128 mask0 = __m128c( _mm_set_epi32( 0,  0,  0, -1 ) );
+	const __m128 mask1 = __m128c( _mm_set_epi32( 0,  0, -1, -1 ) );
+	const __m128 mask2 = __m128c( _mm_set_epi32( 0, -1, -1, -1 ) );
+	const __m128 mask3 = __m128c( _mm_set_epi32( -1, -1, -1, -1 ) );
+	
+	const __m128 bottomMask[2] = { __m128c( _mm_set1_epi32( 0 ) ), __m128c( _mm_set1_epi32( -1 ) ) };
+	
+	float* __restrict basePtr = ToFloatPtr();
+	
+	for( int i = 0; i < m - 3; i += 4 )
+	{
+	
+		// copy top left diagonal 4x4 block elements
+		__m128 r0 = _mm_and_ps( _mm_load_ps( basePtr + n0 ), mask0 );
+		__m128 r1 = _mm_and_ps( _mm_load_ps( basePtr + n1 ), mask1 );
+		__m128 r2 = _mm_and_ps( _mm_load_ps( basePtr + n2 ), mask2 );
+		__m128 r3 = _mm_and_ps( _mm_load_ps( basePtr + n3 ), mask3 );
+		
+		__m128 t0 = _mm_unpacklo_ps( r0, r2 );	// x0, z0, x1, z1
+		__m128 t1 = _mm_unpackhi_ps( r0, r2 );	// x2, z2, x3, z3
+		__m128 t2 = _mm_unpacklo_ps( r1, r3 );	// y0, w0, y1, w1
+		__m128 t3 = _mm_unpackhi_ps( r1, r3 );	// y2, w2, y3, w3
+		
+		__m128 s0 = _mm_unpacklo_ps( t0, t2 );	// x0, y0, z0, w0
+		__m128 s1 = _mm_unpackhi_ps( t0, t2 );	// x1, y1, z1, w1
+		__m128 s2 = _mm_unpacklo_ps( t1, t3 );	// x2, y2, z2, w2
+		__m128 s3 = _mm_unpackhi_ps( t1, t3 );	// x3, y3, z3, w3
+		
+		r0 = _mm_or_ps( r0, s0 );
+		r1 = _mm_or_ps( r1, s1 );
+		r2 = _mm_or_ps( r2, s2 );
+		r3 = _mm_or_ps( r3, s3 );
+		
+		_mm_store_ps( basePtr + n0, r0 );
+		_mm_store_ps( basePtr + n1, r1 );
+		_mm_store_ps( basePtr + n2, r2 );
+		_mm_store_ps( basePtr + n3, r3 );
+		
+		// copy one column of 4x4 blocks to one row of 4x4 blocks
+		const float* __restrict srcPtr = basePtr;
+		float* __restrict dstPtr = basePtr;
+		
+		for( int j = i + 4; j < m - 3; j += 4 )
+		{
+			srcPtr += n4;
+			dstPtr += 4;
+			
+			__m128 r0 = _mm_load_ps( srcPtr + n0 );
+			__m128 r1 = _mm_load_ps( srcPtr + n1 );
+			__m128 r2 = _mm_load_ps( srcPtr + n2 );
+			__m128 r3 = _mm_load_ps( srcPtr + n3 );
+			
+			__m128 t0 = _mm_unpacklo_ps( r0, r2 );	// x0, z0, x1, z1
+			__m128 t1 = _mm_unpackhi_ps( r0, r2 );	// x2, z2, x3, z3
+			__m128 t2 = _mm_unpacklo_ps( r1, r3 );	// y0, w0, y1, w1
+			__m128 t3 = _mm_unpackhi_ps( r1, r3 );	// y2, w2, y3, w3
+			
+			r0 = _mm_unpacklo_ps( t0, t2 );			// x0, y0, z0, w0
+			r1 = _mm_unpackhi_ps( t0, t2 );			// x1, y1, z1, w1
+			r2 = _mm_unpacklo_ps( t1, t3 );			// x2, y2, z2, w2
+			r3 = _mm_unpackhi_ps( t1, t3 );			// x3, y3, z3, w3
+			
+			_mm_store_ps( dstPtr + n0, r0 );
+			_mm_store_ps( dstPtr + n1, r1 );
+			_mm_store_ps( dstPtr + n2, r2 );
+			_mm_store_ps( dstPtr + n3, r3 );
+		}
+		
+		// copy the last partial 4x4 block elements
+		if( m & 3 )
+		{
+			srcPtr += n4;
+			dstPtr += 4;
+			
+			__m128 r0 = _mm_load_ps( srcPtr + n0 );
+			__m128 r1 = _mm_and_ps( _mm_load_ps( srcPtr + n1_masked ), bottomMask[b1] );
+			__m128 r2 = _mm_and_ps( _mm_load_ps( srcPtr + n2_masked ), bottomMask[b2] );
+			__m128 r3 = _mm_setzero_ps();
+			
+			__m128 t0 = _mm_unpacklo_ps( r0, r2 );	// x0, z0, x1, z1
+			__m128 t1 = _mm_unpackhi_ps( r0, r2 );	// x2, z2, x3, z3
+			__m128 t2 = _mm_unpacklo_ps( r1, r3 );	// y0, w0, y1, w1
+			__m128 t3 = _mm_unpackhi_ps( r1, r3 );	// y2, w2, y3, w3
+			
+			r0 = _mm_unpacklo_ps( t0, t2 );			// x0, y0, z0, w0
+			r1 = _mm_unpackhi_ps( t0, t2 );			// x1, y1, z1, w1
+			r2 = _mm_unpacklo_ps( t1, t3 );			// x2, y2, z2, w2
+			r3 = _mm_unpackhi_ps( t1, t3 );			// x3, y3, z3, w3
+			
+			_mm_store_ps( dstPtr + n0, r0 );
+			_mm_store_ps( dstPtr + n1, r1 );
+			_mm_store_ps( dstPtr + n2, r2 );
+			_mm_store_ps( dstPtr + n3, r3 );
+		}
+		
+		basePtr += n4 + 4;
+	}
+	
+	// copy the lower right partial diagonal 4x4 block elements
+	if( m & 3 )
+	{
+		__m128 r0 = _mm_and_ps( _mm_load_ps( basePtr + n0 ), mask0 );
+		__m128 r1 = _mm_and_ps( _mm_load_ps( basePtr + n1_masked ), _mm_and_ps( mask1, bottomMask[b1] ) );
+		__m128 r2 = _mm_and_ps( _mm_load_ps( basePtr + n2_masked ), _mm_and_ps( mask2, bottomMask[b2] ) );
+		__m128 r3 = _mm_setzero_ps();
+		
+		__m128 t0 = _mm_unpacklo_ps( r0, r2 );	// x0, z0, x1, z1
+		__m128 t1 = _mm_unpackhi_ps( r0, r2 );	// x2, z2, x3, z3
+		__m128 t2 = _mm_unpacklo_ps( r1, r3 );	// y0, w0, y1, w1
+		__m128 t3 = _mm_unpackhi_ps( r1, r3 );	// y2, w2, y3, w3
+		
+		__m128 s0 = _mm_unpacklo_ps( t0, t2 );	// x0, y0, z0, w0
+		__m128 s1 = _mm_unpackhi_ps( t0, t2 );	// x1, y1, z1, w1
+		__m128 s2 = _mm_unpacklo_ps( t1, t3 );	// x2, y2, z2, w2
+		
+		r0 = _mm_or_ps( r0, s0 );
+		r1 = _mm_or_ps( r1, s1 );
+		r2 = _mm_or_ps( r2, s2 );
+		
+		_mm_store_ps( basePtr + n2_masked, r2 );
+		_mm_store_ps( basePtr + n1_masked, r1 );
+		_mm_store_ps( basePtr + n0, r0 );
+	}
+	
+#else
+	
+	const int n = GetNumColumns();
+	const int m = GetNumRows();
+	for( int i = 0; i < m; i++ )
+	{
+		const float* __restrict ptr = ToFloatPtr() + ( i + 1 ) * n + i;
+		float* __restrict dstPtr = ToFloatPtr() + i * n;
+		for( int j = i + 1; j < m; j++ )
+		{
+			dstPtr[j] = ptr[0];
+			ptr += n;
+		}
+	}
+	
+#endif
+	
+#ifdef _DEBUG
+	for( int i = 0; i < numRows; i++ )
+	{
+		for( int j = 0; j < numRows; j++ )
+		{
+			assert( mat[ i * numColumns + j ] == mat[ j * numColumns + i ] );
+		}
+	}
+#endif
+}
+/*
 ============
 idMatX::IsOrthogonal
 

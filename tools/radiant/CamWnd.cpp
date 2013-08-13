@@ -235,6 +235,7 @@ void CCamWnd::OnPaint()
 		}
 		
 		Cam_Draw();
+		
 		QE_CheckOpenGLForErrors();
 		SwapBuffers( dc.m_hDC );
 	}
@@ -926,6 +927,11 @@ void setGLMode( int mode )
 			glDisable( GL_BLEND );
 			glDisable( GL_DEPTH_TEST );
 			glColor3f( 1.0f, 1.0f, 1.0f );
+			GL_Color( 1.0f, 1.0f, 1.0f );
+			
+			// RB begin
+			renderProgManager.Unbind();
+			// RB end
 			break;
 			
 		case cd_solid:
@@ -937,6 +943,10 @@ void setGLMode( int mode )
 			glDisable( GL_BLEND );
 			glEnable( GL_DEPTH_TEST );
 			glDepthFunc( GL_LEQUAL );
+			
+			// RB begin
+			renderProgManager.Unbind();
+			// RB end
 			break;
 			
 		case cd_texture:
@@ -947,6 +957,10 @@ void setGLMode( int mode )
 			glDisable( GL_BLEND );
 			glEnable( GL_DEPTH_TEST );
 			glDepthFunc( GL_LEQUAL );
+			
+			//glEnable( GL_TEXTURE_2D );
+			//renderProgManager.BindShader_Texture();
+			//renderProgManager.CommitUniforms();
 			break;
 			
 		case cd_blend:
@@ -957,6 +971,10 @@ void setGLMode( int mode )
 			glDisable( GL_DEPTH_TEST );
 			glEnable( GL_BLEND );
 			glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
+			
+			// RB begin
+			renderProgManager.Unbind();
+			// RB end
 			break;
 	}
 }
@@ -1096,9 +1114,34 @@ void CCamWnd::Cam_Draw()
 	
 	Cam_BuildMatrix();
 	
+	// RB begin
+#if 1
+	float	modelViewMatrix[16];
+	float	projectionMatrix[16];
+	
+	glGetFloatv( GL_MODELVIEW_MATRIX, &modelViewMatrix[0] );
+	glGetFloatv( GL_PROJECTION_MATRIX, &projectionMatrix[0] );
+	
+	idRenderMatrix projectionRenderMatrix;
+	idRenderMatrix::Transpose( *( idRenderMatrix* )projectionMatrix, projectionRenderMatrix );
+	
+	idRenderMatrix modelViewRenderMatrix;
+	idRenderMatrix::Transpose( *( idRenderMatrix* )modelViewMatrix, modelViewRenderMatrix );
+	
+	idRenderMatrix mvp;
+	idRenderMatrix::Multiply( projectionRenderMatrix, modelViewRenderMatrix, mvp );
+	
+	RB_SetMVP( mvp );
+#endif
+	
+	//glGetFloatv( GL_CURRENT_COLOR, g_qeglobals.d_currentColor.ToFloatPtr() );
+	g_qeglobals.d_currentColor = colorWhite;
+	glColor4fv( colorWhite.ToFloatPtr() );
+	GL_Color( colorWhite );
+	// RB end
+	
 	for( brush = active_brushes.next; brush != &active_brushes; brush = brush->next )
 	{
-	
 		if( CullBrush( brush, false ) )
 		{
 			continue;
@@ -1118,7 +1161,7 @@ void CCamWnd::Cam_Draw()
 		}
 		
 		setGLMode( m_Camera.draw_mode );
-		Brush_Draw( brush );
+		Brush_DrawCam( brush, false );
 	}
 	
 	
@@ -1126,6 +1169,24 @@ void CCamWnd::Cam_Draw()
 	glMatrixMode( GL_PROJECTION );
 	
 	glTranslatef( g_qeglobals.d_select_translate[0], g_qeglobals.d_select_translate[1], g_qeglobals.d_select_translate[2] );
+	
+	// RB begin
+#if 0
+	glGetFloatv( GL_PROJECTION_MATRIX, &projectionMatrix[0] );
+	
+	idRenderMatrix::Transpose( *( idRenderMatrix* )projectionMatrix, projectionRenderMatrix );
+	idRenderMatrix::Multiply( projectionRenderMatrix, modelViewRenderMatrix, mvp );
+	
+	RB_SetMVP( mvp );
+#else
+	glGetFloatv( GL_MODELVIEW_MATRIX, &modelViewMatrix[0] );
+	
+	idRenderMatrix::Transpose( *( idRenderMatrix* )modelViewMatrix, modelViewRenderMatrix );
+	idRenderMatrix::Multiply( projectionRenderMatrix, modelViewRenderMatrix, mvp );
+	
+	RB_SetMVP( mvp );
+#endif
+	// RB end
 	
 	brush_t* pList = ( g_bClipMode && g_pSplitList ) ? g_pSplitList : &selected_brushes;
 	
@@ -1139,7 +1200,7 @@ void CCamWnd::Cam_Draw()
 				continue;
 			}
 			setGLMode( m_Camera.draw_mode );
-			Brush_Draw( brush, true );
+			Brush_DrawCam( brush, true );
 		}
 	}
 	
@@ -1148,15 +1209,28 @@ void CCamWnd::Cam_Draw()
 	setGLMode( m_Camera.draw_mode );
 	glDisable( GL_LIGHTING );
 	glColor4f( g_qeglobals.d_savedinfo.colors[COLOR_SELBRUSHES][0], g_qeglobals.d_savedinfo.colors[COLOR_SELBRUSHES][1], g_qeglobals.d_savedinfo.colors[COLOR_SELBRUSHES][2], 0.25f );
+	
+	// RB begin
+	GL_Color( g_qeglobals.d_savedinfo.colors[COLOR_SELBRUSHES][0], g_qeglobals.d_savedinfo.colors[COLOR_SELBRUSHES][1], g_qeglobals.d_savedinfo.colors[COLOR_SELBRUSHES][2], 0.25f );
+	
+	g_qeglobals.d_currentColor = g_qeglobals.d_savedinfo.colors[COLOR_SELBRUSHES];
+	g_qeglobals.d_currentColor.w = 0.25f;
+	
+	//renderProgManager.BindShader_Color();
+	//renderProgManager.CommitUniforms();
+	renderProgManager.Unbind();
+	// RB end
+	
 	glEnable( GL_BLEND );
 	glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
 	glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
 	globalImages->BindNull();
+	
 	for( brush = pList->next; brush != pList; brush = brush->next )
 	{
 		if( brush->pPatch || brush->modelHandle > 0 )
 		{
-			Brush_Draw( brush, true );
+			Brush_DrawCam( brush, true );
 			
 			// DHM - Nerve:: patch display lists/models mess with the state
 			glEnable( GL_BLEND );
@@ -1171,11 +1245,17 @@ void CCamWnd::Cam_Draw()
 			continue;
 		}
 		
+		renderProgManager.Unbind();
+		
 		for( face = brush->brush_faces; face; face = face->next )
 		{
 			Face_Draw( face );
 		}
 	}
+	
+	// RB begin
+	renderProgManager.Unbind();
+	// RB end
 	
 	int nCount = g_ptrSelectedFaces.GetSize();
 	
@@ -1217,6 +1297,7 @@ void CCamWnd::Cam_Draw()
 			Face_Draw( face );
 		}
 	}
+	
 	// edge / vertex flags
 	if( g_qeglobals.d_select_mode == sel_vertex )
 	{
@@ -1271,6 +1352,10 @@ void CCamWnd::Cam_Draw()
 	// using/modifying texture maps between contexts
 	//
 	globalImages->BindNull();
+	
+	// RB begin
+	renderProgManager.Unbind();
+	// RB end
 	
 	glFinish();
 	QE_CheckOpenGLForErrors();
@@ -1467,6 +1552,9 @@ void CCamWnd::BuildEntityRenderState( entity_t* ent, bool update )
 			}
 			
 			bmodel->FinishSurfaces();
+			// RB begin
+			bmodel->CreateVertexCache();
+			// RB end
 			
 			renderModelManager->AddModel( bmodel );
 			
@@ -1500,6 +1588,10 @@ void CCamWnd::BuildEntityRenderState( entity_t* ent, bool update )
 				}
 				const idVec3& offset = gameEdit->ANIM_GetModelOffsetFromEntityDef( spawnArgs.GetString( "classname" ) );
 				gameEdit->ANIM_CreateAnimFrame( md5, anim, refent.numJoints, refent.joints, ( frame * 1000 ) / 24, offset, false );
+				
+				// RB begin
+				md5->CreateVertexCache();
+				// RB end
 			}
 			if( ent->modelDef >= 0 )
 			{
@@ -2002,6 +2094,9 @@ void CCamWnd::BuildRendererState()
 	
 	// bound and clean the triangles
 	worldModel->FinishSurfaces();
+	// RB begin
+	worldModel->CreateVertexCache();
+	// RB end
 	
 	// the worldEntity just has the handle for the worldModel
 	memset( &worldEntity, 0, sizeof( worldEntity ) );
@@ -2035,8 +2130,17 @@ void CCamWnd::BuildRendererState()
 		BuildEntityRenderState( ent, false );
 	}
 	
+	// RB begin
+	renderModelManager->CreateModelVertexCaches();
+	// RB end
+	
 	//common->Printf("Render data used %d brushes\n", numBrushes);
 	worldDirty = false;
+	
+	// RB: avoid crash in R_AddSingleLight
+	g_qeglobals.rw->GenerateAllInteractions();
+	// RB end
+	
 	UpdateCaption();
 }
 
@@ -2369,6 +2473,13 @@ void CCamWnd::Cam_Render()
 	// render it
 	//renderSystem->BeginFrame( m_Camera.width, m_Camera.height );
 	
+	int oldNativeScreenWidth = glConfig.nativeScreenWidth;
+	int oldNativeScreenHeight = glConfig.nativeScreenHeight;
+	
+	glConfig.nativeScreenWidth = m_Camera.width;
+	glConfig.nativeScreenHeight = m_Camera.height;
+	
+	
 	memset( &refdef, 0, sizeof( refdef ) );
 	refdef.vieworg = m_Camera.origin;
 	
@@ -2394,6 +2505,9 @@ void CCamWnd::Cam_Render()
 
 	const emptyCommand_t* cmd = renderSystem->SwapCommandBuffers( NULL, NULL, NULL, NULL );
 	renderSystem->RenderCommandBuffers( cmd );
+	
+	glConfig.nativeScreenWidth = oldNativeScreenWidth;
+	glConfig.nativeScreenHeight = oldNativeScreenHeight;
 	
 	// RB end
 	

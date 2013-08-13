@@ -3069,6 +3069,18 @@ void Patch_DrawCam( patchMesh_t* pm, bool selected )
 		
 		if( nDrawMode == cd_texture || nDrawMode == cd_light )
 		{
+			// RB begin
+			const idImageOpts& opts = pm->d_texture->GetEditorImage()->GetOpts();
+			if( opts.colorFormat == CFM_YCOCG_DXT5 )
+			{
+				renderProgManager.BindShader_TextureYCoCG();
+			}
+			else
+			{
+				renderProgManager.BindShader_Texture();
+			}
+			// RB end
+			
 			pm->d_texture->GetEditorImage()->Bind();
 		}
 		
