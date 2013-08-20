@@ -38,7 +38,11 @@ idCVar r_useParallelAddModels( "r_useParallelAddModels", "1", CVAR_RENDERER | CV
 idCVar r_useParallelAddShadows( "r_useParallelAddShadows", "1", CVAR_RENDERER | CVAR_INTEGER, "0 = off, 1 = threaded", 0, 1 );
 idCVar r_useShadowPreciseInsideTest( "r_useShadowPreciseInsideTest", "1", CVAR_RENDERER | CVAR_BOOL, "use a precise and more expensive test to determine whether the view is inside a shadow volume" );
 idCVar r_cullDynamicShadowTriangles( "r_cullDynamicShadowTriangles", "1", CVAR_RENDERER | CVAR_BOOL, "cull occluder triangles that are outside the light frustum so they do not contribute to the dynamic shadow volume" );
+#if defined(USE_ANGLE)
+idCVar r_cullDynamicLightTriangles( "r_cullDynamicLightTriangles", "0", CVAR_RENDERER | CVAR_BOOL, "cull surface triangles that are outside the light frustum so they do not get rendered for interactions" );
+#else
 idCVar r_cullDynamicLightTriangles( "r_cullDynamicLightTriangles", "1", CVAR_RENDERER | CVAR_BOOL, "cull surface triangles that are outside the light frustum so they do not get rendered for interactions" );
+#endif
 idCVar r_forceShadowCaps( "r_forceShadowCaps", "0", CVAR_RENDERER | CVAR_BOOL, "0 = skip rendering shadow caps if view is outside shadow volume, 1 = always render shadow caps" );
 
 static const float CHECK_BOUNDS_EPSILON = 1.0f;

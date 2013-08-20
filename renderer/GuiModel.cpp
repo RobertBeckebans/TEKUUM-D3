@@ -47,6 +47,13 @@ idGuiModel::idGuiModel()
 	{
 		shaderParms[i] = 1.0f;
 	}
+	
+	// RB: added alternative interface for no glMapBuffer support
+#if defined(USE_ANGLE)
+	verts.SetNum( MAX_VERTS );
+	indexes.SetNum( MAX_INDEXES );
+#endif
+	// RB end
 }
 
 /*
@@ -87,10 +94,16 @@ idGuiModel::BeginFrame
 */
 void idGuiModel::BeginFrame()
 {
+	// RB: added alternative interface for no glMapBuffer support
+#if !defined(USE_ANGLE)
 	vertexBlock = vertexCache.AllocVertex( NULL, ALIGN( MAX_VERTS * sizeof( idDrawVert ), VERTEX_CACHE_ALIGN ) );
 	indexBlock = vertexCache.AllocIndex( NULL, ALIGN( MAX_INDEXES * sizeof( triIndex_t ), INDEX_CACHE_ALIGN ) );
+	
 	vertexPointer = ( idDrawVert* )vertexCache.MappedVertexBuffer( vertexBlock );
 	indexPointer = ( triIndex_t* )vertexCache.MappedIndexBuffer( indexBlock );
+#endif
+	// RB end
+	
 	numVerts = 0;
 	numIndexes = 0;
 	Clear();
@@ -152,10 +165,19 @@ void idGuiModel::EmitSurfaces( float modelMatrix[16], float modelViewMatrix[16],
 		const idMaterial* shader = guiSurf.material;
 		drawSurf_t* drawSurf = ( drawSurf_t* )R_FrameAlloc( sizeof( *drawSurf ), FRAME_ALLOC_DRAW_SURFACE );
 		
+		//vertexBlock = ;
+		//indexBlock = vertexCache.AllocIndex( NULL, ALIGN( MAX_INDEXES * sizeof( triIndex_t ), INDEX_CACHE_ALIGN ) );
+		
 		drawSurf->numIndexes = guiSurf.numIndexes;
+		
+#if defined(USE_ANGLE)
+		drawSurf->ambientCache = vertexCache.AllocVertex( &verts[guiSurf.firstVert], ALIGN( guiSurf.numVerts * sizeof( idDrawVert ), VERTEX_CACHE_ALIGN ) );
+		drawSurf->indexCache = vertexCache.AllocIndex( &indexes[guiSurf.firstIndex], ALIGN( guiSurf.firstIndex * sizeof( triIndex_t ), INDEX_CACHE_ALIGN ) );
+#else
 		drawSurf->ambientCache = vertexBlock;
 		// build a vertCacheHandle_t that points inside the allocated block
 		drawSurf->indexCache = indexBlock + ( ( int64 )( guiSurf.firstIndex * sizeof( triIndex_t ) ) << VERTCACHE_OFFSET_SHIFT );
+#endif
 		drawSurf->shadowCache = 0;
 		drawSurf->jointCache = 0;
 		drawSurf->frontEndGeo = NULL;
@@ -349,6 +371,13 @@ void idGuiModel::AdvanceSurf()
 	s.numIndexes = 0;
 	s.firstIndex = numIndexes;
 	
+	// RB: added alternative interface for no glMapBuffer support
+#if defined(USE_ANGLE)
+	s.numVerts = 0;
+	s.firstVert = numVerts;
+#endif
+	// RB end
+	
 	surfaces.Append( s );
 	surf = &surfaces[ surfaces.Num() - 1 ];
 }
@@ -358,11 +387,13 @@ void idGuiModel::AdvanceSurf()
 AllocTris
 =============
 */
-idDrawVert* idGuiModel::AllocTris( int vertCount, const triIndex_t* tempIndexes, int indexCount, const idMaterial* material, const uint64 glState, const stereoDepthType_t stereoType )
+// RB: added alternative interface for no glMapBuffer support
+#if defined(USE_ANGLE)
+void idGuiModel::AllocTris( const idDrawVert* tempVerts, int vertCount, const triIndex_t* tempIndexes, int indexCount, const idMaterial* material, const uint64 glState, const stereoDepthType_t stereoType )
 {
 	if( material == NULL )
 	{
-		return NULL;
+		return;
 	}
 	if( numIndexes + indexCount > MAX_INDEXES )
 	{
@@ -372,7 +403,7 @@ idDrawVert* idGuiModel::AllocTris( int vertCount, const triIndex_t* tempIndexes,
 			warningFrame = tr.frameCount;
 			idLib::Warning( "idGuiModel::AllocTris: MAX_INDEXES exceeded" );
 		}
-		return NULL;
+		return;
 	}
 	if( numVerts + vertCount > MAX_VERTS )
 	{
@@ -382,7 +413,7 @@ idDrawVert* idGuiModel::AllocTris( int vertCount, const triIndex_t* tempIndexes,
 			warningFrame = tr.frameCount;
 			idLib::Warning( "idGuiModel::AllocTris: MAX_VERTS exceeded" );
 		}
-		return NULL;
+		return;
 	}
 	
 	// break the current surface if we are changing to a new material or we can't
@@ -412,6 +443,74 @@ idDrawVert* idGuiModel::AllocTris( int vertCount, const triIndex_t* tempIndexes,
 		// this should be very rare, since quads are always an even index count
 		for( int i = 0; i < indexCount; i++ )
 		{
+			indexes[startIndex + i] = startVert + tempIndexes[i];
+		}
+	}
+	else
+	{
+		for( int i = 0; i < indexCount; i += 2 )
+		{
+			WriteIndexPair( &indexes[startIndex + i], startVert + tempIndexes[i], startVert + tempIndexes[i + 1] );
+		}
+	}
+	
+	WriteDrawVerts16( &verts[startVert], tempVerts, vertCount );
+}
+#else
+idDrawVert* idGuiModel::AllocTris( int vertCount, const triIndex_t* tempIndexes, int indexCount, const idMaterial* material, const uint64 glState, const stereoDepthType_t stereoType )
+{
+	if( material == NULL )
+	{
+		return NULL;
+	}
+	if( numIndexes + indexCount > MAX_INDEXES )
+	{
+		static int warningFrame = 0;
+		if( warningFrame != tr.frameCount )
+		{
+			warningFrame = tr.frameCount;
+			idLib::Warning( "idGuiModel::AllocTris: MAX_INDEXES exceeded" );
+		}
+		return NULL;
+	}
+	if( numVerts + vertCount > MAX_VERTS )
+	{
+		static int warningFrame = 0;
+		if( warningFrame != tr.frameCount )
+		{
+			warningFrame = tr.frameCount;
+			idLib::Warning( "idGuiModel::AllocTris: MAX_VERTS exceeded" );
+		}
+		return NULL;
+	}
+
+	// break the current surface if we are changing to a new material or we can't
+	// fit the data into our allocated block
+	if( material != surf->material || glState != surf->glState || stereoType != surf->stereoType )
+	{
+		if( surf->numIndexes )
+		{
+			AdvanceSurf();
+		}
+		surf->material = material;
+		surf->glState = glState;
+		surf->stereoType = stereoType;
+	}
+
+	int startVert = numVerts;
+	int startIndex = numIndexes;
+
+	numVerts += vertCount;
+	numIndexes += indexCount;
+
+	surf->numIndexes += indexCount;
+
+	if( ( startIndex & 1 ) || ( indexCount & 1 ) )
+	{
+		// slow for write combined memory!
+		// this should be very rare, since quads are always an even index count
+		for( int i = 0; i < indexCount; i++ )
+		{
 			indexPointer[startIndex + i] = startVert + tempIndexes[i];
 		}
 	}
@@ -422,6 +521,8 @@ idDrawVert* idGuiModel::AllocTris( int vertCount, const triIndex_t* tempIndexes,
 			WriteIndexPair( indexPointer + startIndex + i, startVert + tempIndexes[i], startVert + tempIndexes[i + 1] );
 		}
 	}
-	
+
 	return vertexPointer + startVert;
 }
+#endif // #if defined(USE_ANGLE)
+// RB end

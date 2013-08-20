@@ -278,7 +278,8 @@ vertCacheHandle_t idVertexCache::ActuallyAlloc( geoBufferSet_t& vcs, const void*
 		idVertexBuffer vertexBuffer;
 		if( GetVertexBuffer( handle, &vertexBuffer ) )
 		{
-			vertexBuffer.AllocBufferObject( data, bytes );
+			//vertexBuffer.AllocBufferObject( data, bytes );
+			vertexBuffer.Update( data, bytes );
 		}
 	}
 	else if( type == CACHE_INDEX )
@@ -286,7 +287,8 @@ vertCacheHandle_t idVertexCache::ActuallyAlloc( geoBufferSet_t& vcs, const void*
 		idIndexBuffer indexBuffer;
 		if( GetIndexBuffer( handle, &indexBuffer ) )
 		{
-			indexBuffer.AllocBufferObject( data, bytes );
+			//indexBuffer.AllocBufferObject( data, bytes );
+			indexBuffer.Update( data, bytes );
 		}
 	}
 #endif

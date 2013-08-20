@@ -286,6 +286,28 @@ void idDeviceContext::DrawWinding( idWinding& w, const idMaterial* mat )
 	}
 	assert( numIndexes == ( w.GetNumPoints() - 2 ) * 3 );
 	
+	// RB: added alternative interface for no glMapBuffer support
+#if defined(USE_ANGLE)
+	
+	uint32 currentColor = renderSystem->GetColor();
+	
+	static ALIGNTYPE16 idDrawVert verts[MAX_POINTS_ON_WINDING];
+	for( int j = 0 ; j < w.GetNumPoints() ; j++ )
+	{
+		verts[j].xyz.x = xOffset + w[j].x * xScale;
+		verts[j].xyz.y = yOffset + w[j].y * yScale;
+		verts[j].xyz.z = w[j].z;
+		verts[j].SetTexCoord( w[j].s, w[j].t );
+		verts[j].SetColor( currentColor );
+		verts[j].ClearColor2();
+		verts[j].SetNormal( 0.0f, 0.0f, 1.0f );
+		verts[j].SetTangent( 1.0f, 0.0f, 0.0f );
+		verts[j].SetBiTangent( 0.0f, 1.0f, 0.0f );
+	}
+	
+	renderSystem->AllocTris( verts, w.GetNumPoints(), tempIndexes, numIndexes, mat );
+	
+#else
 	idDrawVert* verts = renderSystem->AllocTris( w.GetNumPoints(), tempIndexes, numIndexes, mat );
 	if( verts == NULL )
 	{
@@ -305,6 +327,8 @@ void idDeviceContext::DrawWinding( idWinding& w, const idMaterial* mat )
 		verts[j].SetTangent( 1.0f, 0.0f, 0.0f );
 		verts[j].SetBiTangent( 0.0f, 1.0f, 0.0f );
 	}
+#endif
+	// RB end
 }
 
 void idDeviceContext::DrawStretchPic( float x, float y, float w, float h, float s1, float t1, float s2, float t2, const idMaterial* shader )
@@ -1253,6 +1277,43 @@ int idDeviceContextOptimized::DrawText( float x, float y, float scale, idVec4 co
 			float x2 = xOffset + ( drawX + w ) * xScale;
 			float y1 = yOffset + drawY * yScale;
 			float y2 = yOffset + ( drawY + h ) * yScale;
+			
+			
+			// RB: added alternative interface for no glMapBuffer support
+#if defined(USE_ANGLE)
+			
+			static ALIGNTYPE16 idDrawVert verts[4];
+			
+			verts[0].xyz[0] = x1;
+			verts[0].xyz[1] = y1;
+			verts[0].xyz[2] = 0.0f;
+			verts[0].SetTexCoord( s, t );
+			verts[0].SetNativeOrderColor( currentColorNativeByteOrder );
+			verts[0].ClearColor2();
+			
+			verts[1].xyz[0] = x2;
+			verts[1].xyz[1] = y1;
+			verts[1].xyz[2] = 0.0f;
+			verts[1].SetTexCoord( s2, t );
+			verts[1].SetNativeOrderColor( currentColorNativeByteOrder );
+			verts[1].ClearColor2();
+			
+			verts[2].xyz[0] = x2;
+			verts[2].xyz[1] = y2;
+			verts[2].xyz[2] = 0.0f;
+			verts[2].SetTexCoord( s2, t2 );
+			verts[2].SetNativeOrderColor( currentColorNativeByteOrder );
+			verts[2].ClearColor2();
+			
+			verts[3].xyz[0] = x1;
+			verts[3].xyz[1] = y2;
+			verts[3].xyz[2] = 0.0f;
+			verts[3].SetTexCoord( s, t2 );
+			verts[3].SetNativeOrderColor( currentColorNativeByteOrder );
+			verts[3].ClearColor2();
+			
+			renderSystem->AllocTris( verts, 4, quadPicIndexes, 6, glyphInfo.material, STEREO_DEPTH_TYPE_NONE );
+#else
 			idDrawVert* verts = renderSystem->AllocTris( 4, quadPicIndexes, 6, glyphInfo.material, STEREO_DEPTH_TYPE_NONE );
 			if( verts != NULL )
 			{
@@ -1262,21 +1323,21 @@ int idDeviceContextOptimized::DrawText( float x, float y, float scale, idVec4 co
 				verts[0].SetTexCoord( s, t );
 				verts[0].SetNativeOrderColor( currentColorNativeByteOrder );
 				verts[0].ClearColor2();
-				
+			
 				verts[1].xyz[0] = x2;
 				verts[1].xyz[1] = y1;
 				verts[1].xyz[2] = 0.0f;
 				verts[1].SetTexCoord( s2, t );
 				verts[1].SetNativeOrderColor( currentColorNativeByteOrder );
 				verts[1].ClearColor2();
-				
+			
 				verts[2].xyz[0] = x2;
 				verts[2].xyz[1] = y2;
 				verts[2].xyz[2] = 0.0f;
 				verts[2].SetTexCoord( s2, t2 );
 				verts[2].SetNativeOrderColor( currentColorNativeByteOrder );
 				verts[2].ClearColor2();
-				
+			
 				verts[3].xyz[0] = x1;
 				verts[3].xyz[1] = y2;
 				verts[3].xyz[2] = 0.0f;
@@ -1284,6 +1345,8 @@ int idDeviceContextOptimized::DrawText( float x, float y, float scale, idVec4 co
 				verts[3].SetNativeOrderColor( currentColorNativeByteOrder );
 				verts[3].ClearColor2();
 			}
+#endif
+			// RB end
 		}
 		
 		x += glyphInfo.xSkip + adjust;

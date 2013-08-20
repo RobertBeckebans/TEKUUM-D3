@@ -28,10 +28,17 @@ If you have questions concerning this license or the applicable additional terms
 
 struct guiModelSurface_t
 {
-	const idMaterial* 	material;
-	uint64				glState;
-	int					firstIndex;
-	int					numIndexes;
+	const idMaterial* 		material;
+	uint64					glState;
+	
+	// RB: added alternative interface for no glMapBuffer support
+#if defined(USE_ANGLE)
+	int						firstVert;
+	int						numVerts;
+#endif
+	// RB end
+	int						firstIndex;
+	int						numIndexes;
 	stereoDepthType_t		stereoType;
 };
 
@@ -55,9 +62,17 @@ public:
 	
 	// the returned pointer will be in write-combined memory, so only make contiguous
 	// 32 bit writes and never read from it.
+	
+	// RB: added alternative interface for no glMapBuffer support
+#if defined(USE_ANGLE)
+	void	AllocTris( const idDrawVert* verts, int numVerts, const triIndex_t* indexes, int numIndexes, const idMaterial* material,
+					   const uint64 glState, const stereoDepthType_t stereoType );
+#else
 	idDrawVert* AllocTris( int numVerts, const triIndex_t* indexes, int numIndexes, const idMaterial* material,
 						   const uint64 glState, const stereoDepthType_t stereoType );
-						   
+#endif
+	// RB end
+	
 	//---------------------------
 private:
 	void	AdvanceSurf();
@@ -76,10 +91,18 @@ private:
 	static const int MAX_INDEXES = ( 20000 * 6 );
 	static const int MAX_VERTS	 = ( 20000 * 4 );
 	
+	// RB: added alternative interface for no glMapBuffer support
+#if defined(USE_ANGLE)
+	idList<idDrawVert>			verts;
+	idList<triIndex_t>			indexes;
+#else
 	vertCacheHandle_t			vertexBlock;
 	vertCacheHandle_t			indexBlock;
+	
 	idDrawVert* 				vertexPointer;
 	triIndex_t* 				indexPointer;
+#endif
+	// RB end
 	
 	int		numVerts;
 	int		numIndexes;
