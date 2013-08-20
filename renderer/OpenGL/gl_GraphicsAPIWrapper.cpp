@@ -3,6 +3,7 @@
 
 Doom 3 BFG Edition GPL Source Code
 Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2013 Robert Beckebans
 
 This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
@@ -149,7 +150,7 @@ GL_DepthBoundsTest
 */
 void GL_DepthBoundsTest( const float zmin, const float zmax )
 {
-#if !defined(USE_ANGLE)
+#if !defined(USE_GLES2)
 	if( !glConfig.depthBoundsTestAvailable || zmin > zmax )
 	{
 		return;
@@ -285,7 +286,7 @@ void GL_SetDefaultState()
 {
 	RENDERLOG_PRINTF( "--- GL_SetDefaultState ---\n" );
 	
-#if defined(USE_ANGLE)
+#if defined(USE_GLES2)
 	glClearDepthf( 1.0f );
 #else
 	glClearDepth( 1.0f );
@@ -307,11 +308,11 @@ void GL_SetDefaultState()
 	glDisable( GL_STENCIL_TEST );
 	glDisable( GL_POLYGON_OFFSET_FILL );
 	
-#if !defined(USE_ANGLE)
+#if !defined(USE_GLES2)
 	glDisable( GL_POLYGON_OFFSET_LINE );
 #endif
 	
-#if !defined(USE_ANGLE)
+#if !defined(USE_GLES2)
 	glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
 #endif
 	
@@ -323,7 +324,7 @@ void GL_SetDefaultState()
 	glEnable( GL_BLEND );
 	glEnable( GL_SCISSOR_TEST );
 	
-#if !defined(USE_ANGLE)
+#if !defined(USE_GLES2)
 	glDrawBuffer( GL_BACK );
 	glReadBuffer( GL_BACK );
 #endif
@@ -490,7 +491,7 @@ void GL_State( uint64 stateBits, bool forceGlState )
 	//
 	// fill/line mode
 	//
-#if !defined(USE_ANGLE)
+#if 1 //!defined(USE_GLES2)
 	if( diff & GLS_POLYMODE_LINE )
 	{
 		if( stateBits & GLS_POLYMODE_LINE )
@@ -513,14 +514,14 @@ void GL_State( uint64 stateBits, bool forceGlState )
 		{
 			glPolygonOffset( backEnd.glState.polyOfsScale, backEnd.glState.polyOfsBias );
 			glEnable( GL_POLYGON_OFFSET_FILL );
-#if !defined(USE_ANGLE)
+#if 1 //!defined(USE_GLES2)
 			glEnable( GL_POLYGON_OFFSET_LINE );
 #endif
 		}
 		else
 		{
 			glDisable( GL_POLYGON_OFFSET_FILL );
-#if !defined(USE_ANGLE)
+#if 1 //!defined(USE_GLES2)
 			glDisable( GL_POLYGON_OFFSET_LINE );
 #endif
 		}

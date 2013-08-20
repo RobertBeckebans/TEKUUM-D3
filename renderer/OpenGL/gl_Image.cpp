@@ -3,6 +3,7 @@
 
 Doom 3 BFG Edition GPL Source Code
 Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2013 Robert Beckebans
 
 This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
@@ -105,7 +106,7 @@ void idImage::SubImageUpload( int mipLevel, int x, int y, int z, int width, int 
 	
 	if( opts.format == FMT_RGB565 )
 	{
-#if !defined(USE_ANGLE)
+#if !defined(USE_GLES2)
 		glPixelStorei( GL_UNPACK_SWAP_BYTES, GL_TRUE );
 #endif
 	}
@@ -141,7 +142,7 @@ void idImage::SubImageUpload( int mipLevel, int x, int y, int z, int width, int 
 	
 	if( opts.format == FMT_RGB565 )
 	{
-#if !defined(USE_ANGLE)
+#if !defined(USE_GLES2)
 		glPixelStorei( GL_UNPACK_SWAP_BYTES, GL_FALSE );
 #endif
 	}
@@ -183,7 +184,7 @@ void idImage::SetTexParameters()
 			return;
 	}
 	
-#if !defined(USE_ANGLE)
+#if !defined(USE_GLES2)
 	
 	// ALPHA, LUMINANCE, LUMINANCE_ALPHA, and INTENSITY have been removed
 	// in OpenGL 3.2. In order to mimic those modes, we use the swizzle operators
@@ -247,7 +248,7 @@ void idImage::SetTexParameters()
 	}
 #endif
 	
-#endif // #if !defined(USE_ANGLE)
+#endif // #if !defined(USE_GLES2)
 	
 	switch( filter )
 	{
@@ -296,7 +297,7 @@ void idImage::SetTexParameters()
 		}
 	}
 	
-#if !defined(USE_ANGLE)
+#if !defined(USE_GLES2)
 	if( glConfig.textureLODBiasAvailable && ( usage != TD_FONT ) )
 	{
 		// use a blurring LOD bias in combination with high anisotropy to fix our aliasing grate textures...
@@ -311,7 +312,7 @@ void idImage::SetTexParameters()
 			glTexParameterf( target, GL_TEXTURE_WRAP_S, GL_REPEAT );
 			glTexParameterf( target, GL_TEXTURE_WRAP_T, GL_REPEAT );
 			break;
-#if !defined(USE_ANGLE)
+#if !defined(USE_GLES2)
 		case TR_CLAMP_TO_ZERO:
 		{
 			float color[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
@@ -359,7 +360,7 @@ void idImage::AllocImage()
 	switch( opts.format )
 	{
 		case FMT_RGBA8:
-#if defined(USE_ANGLE)
+#if defined(USE_GLES2)
 			internalFormat = GL_RGBA;
 #else
 			internalFormat = GL_RGBA8;
@@ -378,7 +379,7 @@ void idImage::AllocImage()
 			dataType = GL_UNSIGNED_SHORT_5_6_5;
 			break;
 		case FMT_ALPHA:
-#if defined( USE_ANGLE )
+#if defined( USE_GLES2 )
 			internalFormat = GL_ALPHA;
 			dataFormat = GL_ALPHA;
 #elif defined( USE_CORE_PROFILE )
@@ -391,7 +392,7 @@ void idImage::AllocImage()
 			dataType = GL_UNSIGNED_BYTE;
 			break;
 		case FMT_L8A8:
-#if defined( USE_ANGLE )
+#if defined( USE_GLES2 )
 			internalFormat = GL_LUMINANCE_ALPHA;
 			dataFormat = GL_LUMINANCE_ALPHA;
 #elif defined( USE_CORE_PROFILE )
@@ -404,7 +405,7 @@ void idImage::AllocImage()
 			dataType = GL_UNSIGNED_BYTE;
 			break;
 		case FMT_LUM8:
-#if defined( USE_ANGLE )
+#if defined( USE_GLES2 )
 			internalFormat = GL_LUMINANCE;
 			dataFormat = GL_LUMINANCE;
 #elif defined( USE_CORE_PROFILE )
@@ -417,7 +418,7 @@ void idImage::AllocImage()
 			dataType = GL_UNSIGNED_BYTE;
 			break;
 		case FMT_INT8:
-#if defined( USE_ANGLE )
+#if defined( USE_GLES2 )
 			internalFormat = GL_LUMINANCE;
 			dataFormat = GL_LUMINANCE;
 #elif defined( USE_CORE_PROFILE )
@@ -434,7 +435,7 @@ void idImage::AllocImage()
 			dataFormat = GL_RGBA;
 			dataType = GL_UNSIGNED_BYTE;
 			break;
-#if !defined(USE_ANGLE)
+#if !defined(USE_GLES2)
 		case FMT_DXT5:
 			internalFormat = GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
 			dataFormat = GL_RGBA;
@@ -446,7 +447,7 @@ void idImage::AllocImage()
 			dataFormat = GL_DEPTH_COMPONENT;
 			dataType = GL_UNSIGNED_BYTE;
 			break;
-#if !defined(USE_ANGLE)
+#if !defined(USE_GLES2)
 		case FMT_X16:
 			internalFormat = GL_INTENSITY16;
 			dataFormat = GL_LUMINANCE;
@@ -559,7 +560,7 @@ void idImage::AllocImage()
 		}
 	}
 	
-#if !defined(USE_ANGLE)
+#if !defined(USE_GLES2)
 	glTexParameteri( target, GL_TEXTURE_MAX_LEVEL, opts.numLevels - 1 );
 #endif
 	

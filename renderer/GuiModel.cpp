@@ -3,6 +3,7 @@
 
 Doom 3 BFG Edition GPL Source Code
 Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2013 Robert Beckebans
 
 This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
@@ -49,7 +50,7 @@ idGuiModel::idGuiModel()
 	}
 	
 	// RB: added alternative interface for no glMapBuffer support
-#if defined(USE_ANGLE)
+#if defined(NO_GL_MAPBUFFER)
 	verts.SetNum( MAX_VERTS );
 	indexes.SetNum( MAX_INDEXES );
 #endif
@@ -95,7 +96,7 @@ idGuiModel::BeginFrame
 void idGuiModel::BeginFrame()
 {
 	// RB: added alternative interface for no glMapBuffer support
-#if !defined(USE_ANGLE)
+#if !defined(NO_GL_MAPBUFFER)
 	vertexBlock = vertexCache.AllocVertex( NULL, ALIGN( MAX_VERTS * sizeof( idDrawVert ), VERTEX_CACHE_ALIGN ) );
 	indexBlock = vertexCache.AllocIndex( NULL, ALIGN( MAX_INDEXES * sizeof( triIndex_t ), INDEX_CACHE_ALIGN ) );
 	
@@ -170,7 +171,7 @@ void idGuiModel::EmitSurfaces( float modelMatrix[16], float modelViewMatrix[16],
 		
 		drawSurf->numIndexes = guiSurf.numIndexes;
 		
-#if defined(USE_ANGLE)
+#if defined(NO_GL_MAPBUFFER)
 		drawSurf->ambientCache = vertexCache.AllocVertex( &verts[guiSurf.firstVert], ALIGN( guiSurf.numVerts * sizeof( idDrawVert ), VERTEX_CACHE_ALIGN ) );
 		drawSurf->indexCache = vertexCache.AllocIndex( &indexes[guiSurf.firstIndex], ALIGN( guiSurf.firstIndex * sizeof( triIndex_t ), INDEX_CACHE_ALIGN ) );
 #else
@@ -372,7 +373,7 @@ void idGuiModel::AdvanceSurf()
 	s.firstIndex = numIndexes;
 	
 	// RB: added alternative interface for no glMapBuffer support
-#if defined(USE_ANGLE)
+#if defined(NO_GL_MAPBUFFER)
 	s.numVerts = 0;
 	s.firstVert = numVerts;
 #endif
@@ -388,7 +389,7 @@ AllocTris
 =============
 */
 // RB: added alternative interface for no glMapBuffer support
-#if defined(USE_ANGLE)
+#if defined(NO_GL_MAPBUFFER)
 void idGuiModel::AllocTris( const idDrawVert* tempVerts, int vertCount, const triIndex_t* tempIndexes, int indexCount, const idMaterial* material, const uint64 glState, const stereoDepthType_t stereoType )
 {
 	if( material == NULL )
@@ -524,5 +525,5 @@ idDrawVert* idGuiModel::AllocTris( int vertCount, const triIndex_t* tempIndexes,
 
 	return vertexPointer + startVert;
 }
-#endif // #if defined(USE_ANGLE)
+#endif // #if defined(USE_GLES2)
 // RB end

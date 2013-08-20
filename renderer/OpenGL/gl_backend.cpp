@@ -3,6 +3,7 @@
 
 Doom 3 BFG Edition GPL Source Code
 Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2013 Robert Beckebans
 
 This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
@@ -47,7 +48,7 @@ idCVar r_syncEveryFrame( "r_syncEveryFrame", "1", CVAR_BOOL, "Don't let the GPU 
 
 static int		swapIndex;		// 0 or 1 into renderSync
 
-#if !defined(USE_ANGLE)
+#if !defined(USE_GLES2)
 static GLsync	renderSync[2];
 #endif
 
@@ -157,7 +158,7 @@ const void GL_BlockingSwapBuffers()
 	}
 	
 // RB begin
-#if !defined(USE_ANGLE)
+#if !defined(USE_GLES2)
 	if( glConfig.syncAvailable )
 	{
 		swapIndex ^= 1;
@@ -250,7 +251,7 @@ void RB_StereoRenderExecuteBackEndCommands( const emptyCommand_t* const allCmds 
 	// textures anyway, so there isn't any benefit to rendering to BACK_RIGHT for
 	// that eye.
 	
-#if !defined(USE_ANGLE)
+#if !defined(USE_GLES2)
 	glDrawBuffer( GL_BACK_LEFT );
 #endif
 	
@@ -353,7 +354,7 @@ void RB_StereoRenderExecuteBackEndCommands( const emptyCommand_t* const allCmds 
 	// make sure we draw to both eyes.  This is likely to be sub-optimal
 	// performance on most cards and drivers, but it is better than getting
 	// a confusing, half-ghosted view.
-#if !defined(USE_ANGLE)
+#if !defined(USE_GLES2)
 	if( renderSystem->GetStereo3DMode() != STEREO3D_QUAD_BUFFER )
 	{
 		glDrawBuffer( GL_BACK );
@@ -380,7 +381,7 @@ void RB_StereoRenderExecuteBackEndCommands( const emptyCommand_t* const allCmds 
 	
 	switch( renderSystem->GetStereo3DMode() )
 	{
-#if !defined(USE_ANGLE)
+#if !defined(USE_GLES2)
 		case STEREO3D_QUAD_BUFFER:
 			glDrawBuffer( GL_BACK_RIGHT );
 			GL_SelectTexture( 0 );
@@ -588,7 +589,7 @@ void RB_ExecuteBackEndCommands( const emptyCommand_t* cmds )
 	// If we have a stereo pixel format, this will draw to both
 	// the back left and back right buffers, which will have a
 	// performance penalty.
-#if !defined(USE_ANGLE)
+#if !defined(USE_GLES2)
 	glDrawBuffer( GL_BACK );
 #endif
 	

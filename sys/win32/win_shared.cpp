@@ -3,6 +3,7 @@
 
 Doom 3 BFG Edition GPL Source Code
 Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2013 Robert Beckebans
 
 This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
@@ -149,7 +150,7 @@ int Sys_GetVideoRam()
 #else
 	int retSize = 64;
 	
-#if !defined(USE_ANGLE)
+#if !defined(USE_GLES2)
 	// RB: added check with OpenGL extensions for GFX cards with more than 2 GB ram
 	if( GLEW_NVX_gpu_memory_info != 0 )
 	{

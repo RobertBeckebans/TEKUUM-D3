@@ -3,6 +3,7 @@
 
 Doom 3 BFG Edition GPL Source Code
 Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2013 Robert Beckebans
 
 This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
@@ -287,7 +288,7 @@ void idDeviceContext::DrawWinding( idWinding& w, const idMaterial* mat )
 	assert( numIndexes == ( w.GetNumPoints() - 2 ) * 3 );
 	
 	// RB: added alternative interface for no glMapBuffer support
-#if defined(USE_ANGLE)
+#if defined(NO_GL_MAPBUFFER)
 	
 	uint32 currentColor = renderSystem->GetColor();
 	
@@ -1280,7 +1281,7 @@ int idDeviceContextOptimized::DrawText( float x, float y, float scale, idVec4 co
 			
 			
 			// RB: added alternative interface for no glMapBuffer support
-#if defined(USE_ANGLE)
+#if defined(NO_GL_MAPBUFFER)
 			
 			static ALIGNTYPE16 idDrawVert verts[4];
 			

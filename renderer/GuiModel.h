@@ -3,6 +3,7 @@
 
 Doom 3 BFG Edition GPL Source Code
 Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2013 Robert Beckebans
 
 This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
@@ -32,7 +33,7 @@ struct guiModelSurface_t
 	uint64					glState;
 	
 	// RB: added alternative interface for no glMapBuffer support
-#if defined(USE_ANGLE)
+#if defined(NO_GL_MAPBUFFER)
 	int						firstVert;
 	int						numVerts;
 #endif
@@ -64,7 +65,7 @@ public:
 	// 32 bit writes and never read from it.
 	
 	// RB: added alternative interface for no glMapBuffer support
-#if defined(USE_ANGLE)
+#if defined(NO_GL_MAPBUFFER)
 	void	AllocTris( const idDrawVert* verts, int numVerts, const triIndex_t* indexes, int numIndexes, const idMaterial* material,
 					   const uint64 glState, const stereoDepthType_t stereoType );
 #else
@@ -92,7 +93,7 @@ private:
 	static const int MAX_VERTS	 = ( 20000 * 4 );
 	
 	// RB: added alternative interface for no glMapBuffer support
-#if defined(USE_ANGLE)
+#if defined(NO_GL_MAPBUFFER)
 	idList<idDrawVert>			verts;
 	idList<triIndex_t>			indexes;
 #else

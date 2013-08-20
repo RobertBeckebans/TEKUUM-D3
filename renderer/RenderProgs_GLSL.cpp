@@ -3,7 +3,7 @@
 
 Doom 3 BFG Edition GPL Source Code
 Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
-Copyright (C) 2012 Robert Beckebans
+Copyright (C) 2013 Robert Beckebans
 
 This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
@@ -33,7 +33,11 @@ If you have questions concerning this license or the applicable additional terms
 #include "tr_local.h"
 
 idCVar r_skipStripDeadCode( "r_skipStripDeadCode", "0", CVAR_BOOL, "Skip stripping dead code" );
+#if defined(USE_GLES2)
+idCVar r_useUniformArrays( "r_useUniformArrays", "0", CVAR_BOOL, "" );
+#else
 idCVar r_useUniformArrays( "r_useUniformArrays", "1", CVAR_BOOL, "" );
+#endif
 // DG: the AMD drivers output a lot of useless warnings which are fscking annoying, added this CVar to suppress them
 idCVar r_displayGLSLCompilerMessages( "r_displayGLSLCompilerMessages", "1", CVAR_BOOL | CVAR_ARCHIVE, "Show info messages the GPU driver outputs when compiling the shaders" );
 // DG end
@@ -115,7 +119,7 @@ attribInfo_t attribsPC[] =
 	{ "float4",		"color2",		"COLOR1",		"in_Color2",			PC_ATTRIB_INDEX_COLOR2,			AT_VS_IN,		VERTEX_MASK_COLOR2 },
 	
 	// pre-defined vertex program output
-#if defined(USE_ANGLE)
+#if defined(USE_GLES2)
 	{ "float4",		"position",		"POSITION",		"gl_Position",			0,	AT_VS_OUT | AT_VS_OUT_RESERVED,		0 },
 #else
 	{ "float4",		"position",		"POSITION",		"gl_Position",			0,	AT_VS_OUT,		0 },
@@ -128,7 +132,7 @@ attribInfo_t attribsPC[] =
 	{ "float",		"clip5",		"CLP5",			"gl_ClipDistance[5]",	0,	AT_VS_OUT,		0 },
 	
 	// pre-defined fragment program input
-#if defined(USE_ANGLE)
+#if defined(USE_GLES2)
 	{ "float4",		"position",		"WPOS",			"gl_FragCoord",			0,	AT_PS_IN | AT_PS_IN_RESERVED,		0 },
 	{ "half4",		"hposition",	"WPOS",			"gl_FragCoord",			0,	AT_PS_IN | AT_PS_IN_RESERVED,		0 },
 	{ "float",		"facing",		"FACE",			"gl_FrontFacing",		0,	AT_PS_IN | AT_PS_IN_RESERVED,		0 },
@@ -139,7 +143,7 @@ attribInfo_t attribsPC[] =
 #endif
 	
 	// fragment program output
-#if defined(USE_ANGLE)
+#if defined(USE_GLES2)
 	{ "float4",		"color",		"COLOR",		"gl_FragColor",		0,	AT_PS_OUT | AT_PS_OUT_RESERVED,		0 }, // GLSL version 1.2 doesn't allow for custom color name mappings
 	{ "half4",		"hcolor",		"COLOR",		"gl_FragColor",		0,	AT_PS_OUT | AT_PS_OUT_RESERVED,		0 },
 	{ "float4",		"color0",		"COLOR0",		"gl_FragColor",		0,	AT_PS_OUT | AT_PS_OUT_RESERVED,		0 },
@@ -158,7 +162,7 @@ attribInfo_t attribsPC[] =
 #endif
 	
 	// vertex to fragment program pass through
-#if 0 //defined(USE_ANGLE)
+#if 0 //defined(USE_GLES2)
 	{ "float4",		"color",		"COLOR",		"vofi_FrontColor",			0,	AT_VS_OUT | AT_VS_OUT_RESERVED,	0 },
 	{ "float4",		"color0",		"COLOR0",		"vofi_Color",				0,	AT_VS_OUT | AT_VS_OUT_RESERVED,	0 },
 	{ "float4",		"color1",		"COLOR1",		"vofi_FrontSecondaryColor",	0,	AT_VS_OUT | AT_VS_OUT_RESERVED,	0 },
@@ -350,6 +354,10 @@ idStr StripDeadCode( const idStr& in, const char* name )
 	idParser src( LEXFL_NOFATALERRORS );
 	src.LoadMemory( in.c_str(), in.Length(), name );
 	src.AddDefine( "PC" );
+	
+#if defined(USE_GLES2)
+	src.AddDefine( "GLES2" );
+#endif
 	
 	idList< idCGBlock > blocks;
 	
@@ -591,10 +599,11 @@ struct typeConversion_t
 };
 
 // RB begin
-#if defined(USE_ANGLE)
+#if defined(USE_GLES2)
 const char* vertexInsert =
 {
 	"#version 100\n"
+	"#define GLES2\n"
 	"#define PC\n"
 	"precision mediump float;\n"
 	"\n"
@@ -618,13 +627,14 @@ const char* vertexInsert =
 	"vec4 tex2Dlod( sampler2D sampler, vec4 texcoord ) { return textureLod( sampler, texcoord.xy, texcoord.w ); }\n"
 	"\n"
 };
-#endif // #if defined(USE_ANGLE)
+#endif // #if defined(USE_GLES2)
 
 
-#if defined(USE_ANGLE)
+#if defined(USE_GLES2)
 const char* fragmentInsert =
 {
 	"#version 100\n"
+	"#define GLES2\n"
 	"#define PC\n"
 	"precision mediump float;\n"
 	"#extension GL_OES_standard_derivatives : enable\n"
@@ -703,7 +713,7 @@ const char* fragmentInsert =
 	"vec4 texCUBElod( samplerCube sampler, vec4 texcoord ) { return textureLod( sampler, texcoord.xyz, texcoord.w ); }\n"
 	"\n"
 };
-#endif // #if defined(USE_ANGLE)
+#endif // #if defined(USE_GLES2)
 // RB end
 
 struct builtinConversion_t
@@ -867,7 +877,7 @@ idStr ConvertCG2GLSL( const idStr& in, const char* name, bool isVertexProgram, i
 					if( varsIn[i].declareInOut )
 					{
 // RB begin
-#if defined(USE_ANGLE)
+#if defined(USE_GLES2)
 						program += "attribute " + varsIn[i].type + " " + varsIn[i].nameGLSL + ";\n";
 #else
 						program += "in " + varsIn[i].type + " " + varsIn[i].nameGLSL + ";\n";
@@ -888,7 +898,7 @@ idStr ConvertCG2GLSL( const idStr& in, const char* name, bool isVertexProgram, i
 					if( varsOut[i].declareInOut )
 					{
 // RB begin
-#if defined(USE_ANGLE)
+#if defined(USE_GLES2)
 						program += "varying " + varsOut[i].type + " " + varsOut[i].nameGLSL + ";\n";
 #else
 						program += "out " + varsOut[i].type + " " + varsOut[i].nameGLSL + ";\n";
@@ -907,7 +917,7 @@ idStr ConvertCG2GLSL( const idStr& in, const char* name, bool isVertexProgram, i
 					if( varsIn[i].declareInOut )
 					{
 // RB begin
-#if defined(USE_ANGLE)
+#if defined(USE_GLES2)
 						program += "varying " + varsIn[i].type + " " + varsIn[i].nameGLSL + ";\n";
 #else
 						program += "in " + varsIn[i].type + " " + varsIn[i].nameGLSL + ";\n";
@@ -1187,7 +1197,7 @@ GLuint idRenderProgManager::LoadGLSLShader( GLenum target, const char* name, idL
 	inFile.StripFileExtension();
 	outFileHLSL.Format( "renderprogs/hlsl/%s", name );
 	outFileHLSL.StripFileExtension();
-#if defined(USE_ANGLE)
+#if defined(USE_GLES2)
 	outFileGLSL.Format( "renderprogs/glsles-1.0/%s", name );
 #else
 	outFileGLSL.Format( "renderprogs/glsl-1.50/%s", name );
@@ -1602,7 +1612,7 @@ void idRenderProgManager::LoadGLSLProgram( const int programIndex, const int ver
 		prog.uniformLocations.SortWithTemplate( idSort_QuickUniforms() );
 	}
 	
-#if !defined(USE_ANGLE)
+#if !defined(USE_GLES2)
 	// get the uniform buffer binding for skinning joint matrices
 	GLint blockIndex = glGetUniformBlockIndex( program, "matrices_ubo" );
 	if( blockIndex != -1 )

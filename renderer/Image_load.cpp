@@ -3,6 +3,7 @@
 
 Doom 3 BFG Edition GPL Source Code
 Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2013 Robert Beckebans
 
 This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
@@ -87,14 +88,18 @@ ID_INLINE void idImage::DeriveOpts()
 		switch( usage )
 		{
 			case TD_COVERAGE:
+#if defined( USE_GLES2 )
+				opts.format = FMT_RGBA8;
+#else
 				opts.format = FMT_DXT1;
 				opts.colorFormat = CFM_GREEN_ALPHA;
+#endif
 				break;
 			case TD_DEPTH:
 				opts.format = FMT_DEPTH;
 				break;
 			case TD_DIFFUSE:
-#if defined( USE_ANGLE )
+#if defined( USE_GLES2 )
 				// TD_DIFFUSE gets only set to when its a diffuse texture for an interaction
 				//opts.gammaMips = true;
 				opts.format = FMT_RGBA8;
@@ -111,10 +116,10 @@ ID_INLINE void idImage::DeriveOpts()
 				opts.colorFormat = CFM_DEFAULT;
 				break;
 			case TD_DEFAULT:
-#if defined( USE_ANGLE )
+#if defined( USE_GLES2 )
 				opts.gammaMips = true;
 				opts.format = FMT_RGBA8;
-				opts.colorFormat = CFM_YCOCG_RGBA8;
+				opts.colorFormat = CFM_DEFAULT;
 #else
 				opts.gammaMips = true;
 				opts.format = FMT_DXT5;
@@ -122,8 +127,8 @@ ID_INLINE void idImage::DeriveOpts()
 #endif
 				break;
 			case TD_BUMP:
-#if defined( USE_ANGLE )
-				opts.format = FMT_DXT1;
+#if defined( USE_GLES2 )
+				opts.format = FMT_RGBA8;
 				opts.colorFormat = CFM_DEFAULT;
 #else
 				opts.format = FMT_DXT5;
@@ -131,14 +136,19 @@ ID_INLINE void idImage::DeriveOpts()
 #endif
 				break;
 			case TD_FONT:
+				// RB: FIXME mobile version
 				opts.format = FMT_DXT1;
 				opts.colorFormat = CFM_GREEN_ALPHA;
 				opts.numLevels = 4; // We only support 4 levels because we align to 16 in the exporter
 				opts.gammaMips = true;
 				break;
 			case TD_LIGHT:
+#if defined( USE_GLES2 )
+				opts.format = FMT_RGBA8;
+#else
 				opts.format = FMT_RGB565;
 				opts.gammaMips = true;
+#endif
 				break;
 			case TD_LOOKUP_TABLE_MONO:
 				opts.format = FMT_INT8;
@@ -544,7 +554,7 @@ void idImage::Bind()
 			tmu->current2DMap = texnum;
 			
 			// RB begin
-#if !defined(USE_ANGLE)
+#if !defined(USE_GLES2)
 			if( glConfig.directStateAccess )
 			{
 				glBindMultiTextureEXT( GL_TEXTURE0 + texUnit, GL_TEXTURE_2D, texnum );
@@ -565,7 +575,7 @@ void idImage::Bind()
 			tmu->currentCubeMap = texnum;
 			
 			// RB begin
-#if !defined(USE_ANGLE)
+#if !defined(USE_GLES2)
 			if( glConfig.directStateAccess )
 			{
 				glBindMultiTextureEXT( GL_TEXTURE0 + texUnit, GL_TEXTURE_CUBE_MAP, texnum );
@@ -605,14 +615,14 @@ void idImage::CopyFramebuffer( int x, int y, int imageWidth, int imageHeight )
 {
 	glBindTexture( ( opts.textureType == TT_CUBIC ) ? GL_TEXTURE_CUBE_MAP : GL_TEXTURE_2D, texnum );
 	
-#if !defined(USE_ANGLE)
+#if !defined(USE_GLES2)
 	glReadBuffer( GL_BACK );
 #endif
 	
 	opts.width = imageWidth;
 	opts.height = imageHeight;
 	
-#if defined(USE_ANGLE)
+#if defined(USE_GLES2)
 	glCopyTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, x, y, imageWidth, imageHeight, 0 );
 #else
 	glCopyTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA8, x, y, imageWidth, imageHeight, 0 );

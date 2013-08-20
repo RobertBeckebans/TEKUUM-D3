@@ -3,7 +3,7 @@
 
 Doom 3 BFG Edition GPL Source Code
 Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
-Copyright (C) 2012 Robert Beckebans
+Copyright (C) 2013 Robert Beckebans
 
 This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
@@ -350,11 +350,11 @@ void* idVertexBuffer::MapBuffer( bufferMapType_t mapType ) const
 	
 	glBindBuffer( GL_ARRAY_BUFFER, bufferObject );
 	
-#if !defined(USE_ANGLE)
+#if !defined(NO_GL_MAPBUFFER)
 	
 	if( mapType == BM_READ )
 	{
-#if 0 //defined(USE_ANGLE)
+#if 0 //defined(USE_GLES2)
 		buffer = glMapBufferOES( GL_ARRAY_BUFFER, GL_READ_ONLY );
 #else
 		buffer = glMapBufferRange( GL_ARRAY_BUFFER, 0, GetAllocedSize(), GL_MAP_READ_BIT | GL_MAP_INVALIDATE_RANGE_BIT | GL_MAP_UNSYNCHRONIZED_BIT );
@@ -366,7 +366,7 @@ void* idVertexBuffer::MapBuffer( bufferMapType_t mapType ) const
 	}
 	else if( mapType == BM_WRITE )
 	{
-#if 0 //defined(USE_ANGLE)
+#if 0 //defined(USE_GLES2)
 		buffer = glMapBuffer( GL_ARRAY_BUFFER, GL_WRITE_ONLY );
 #else
 		buffer = glMapBufferRange( GL_ARRAY_BUFFER, 0, GetAllocedSize(), GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_RANGE_BIT | GL_MAP_UNSYNCHRONIZED_BIT );
@@ -400,7 +400,7 @@ idVertexBuffer::UnmapBuffer
 */
 void idVertexBuffer::UnmapBuffer() const
 {
-#if !defined(USE_ANGLE)
+#if !defined(NO_GL_MAPBUFFER)
 	assert( apiObject != NULL );
 	assert( IsMapped() );
 	
@@ -650,7 +650,7 @@ void* idIndexBuffer::MapBuffer( bufferMapType_t mapType ) const
 	
 	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, bufferObject );
 	
-#if !defined(USE_ANGLE)
+#if !defined(NO_GL_MAPBUFFER)
 	if( mapType == BM_READ )
 	{
 		//buffer = glMapBufferARB( GL_ELEMENT_ARRAY_BUFFER_ARB, GL_READ_ONLY_ARB );
@@ -693,7 +693,7 @@ idIndexBuffer::UnmapBuffer
 */
 void idIndexBuffer::UnmapBuffer() const
 {
-#if !defined(USE_ANGLE)
+#if !defined(NO_GL_MAPBUFFER)
 	assert( apiObject != NULL );
 	assert( IsMapped() );
 	
@@ -731,7 +731,7 @@ void idIndexBuffer::ClearWithoutFreeing()
 ================================================================================================
 */
 
-#if !defined(USE_ANGLE)
+#if !defined(USE_GLES2)
 /*
 ========================
 idJointBuffer::idJointBuffer
@@ -989,4 +989,4 @@ void idJointBuffer::Swap( idJointBuffer& other )
 	SwapValues( other.apiObject, apiObject );
 }
 
-#endif // #if !defined(USE_ANGLE)
+#endif // #if !defined(USE_GLES2)

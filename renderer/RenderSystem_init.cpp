@@ -3,7 +3,7 @@
 
 Doom 3 BFG Edition GPL Source Code
 Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
-Copyright (C) 2012 Robert Beckebans
+Copyright (C) 2012-2013 Robert Beckebans
 
 This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
@@ -298,7 +298,7 @@ static void R_CheckPortableExtensions()
 {
 	glConfig.glVersion = atof( glConfig.version_string );
 	const char* badVideoCard = common->GetLanguageDict()->GetString( "#str_06780" );
-#if !defined(USE_ANGLE)
+#if !defined(USE_GLES2)
 	if( glConfig.glVersion < 2.0f )
 	{
 		idLib::FatalError( badVideoCard );
@@ -319,14 +319,14 @@ static void R_CheckPortableExtensions()
 	}
 	
 	// GL_ARB_multitexture
-#if defined(USE_ANGLE)
+#if defined(USE_GLES2)
 	glConfig.multitextureAvailable = true;
 #else
 	glConfig.multitextureAvailable = GLEW_ARB_multitexture != 0;
 #endif
 	
 	// GL_EXT_direct_state_access
-#if defined(USE_ANGLE)
+#if defined(USE_GLES2)
 	glConfig.directStateAccess = 0;
 #else
 	glConfig.directStateAccess = GLEW_EXT_direct_state_access != 0;
@@ -335,14 +335,14 @@ static void R_CheckPortableExtensions()
 	
 	// GL_ARB_texture_compression + GL_S3_s3tc
 	// DRI drivers may have GL_ARB_texture_compression but no GL_EXT_texture_compression_s3tc
-#if defined(USE_ANGLE)
+#if defined(USE_GLES2)
 	glConfig.textureCompressionAvailable = R_CheckExtension( "GL_EXT_texture_compression_dxt1" );
 #else
 	glConfig.textureCompressionAvailable = GLEW_ARB_texture_compression != 0;// && GLEW_EXT_texture_compression_s3tc != 0;
 #endif
 	
 	// GL_EXT_texture_filter_anisotropic
-#if defined(USE_ANGLE)
+#if defined(USE_GLES2)
 	glConfig.anisotropicFilterAvailable = R_CheckExtension( "GL_EXT_texture_filter_anisotropic" );
 #else
 	glConfig.anisotropicFilterAvailable = GLEW_EXT_texture_filter_anisotropic != 0;
@@ -360,7 +360,7 @@ static void R_CheckPortableExtensions()
 	// GL_EXT_texture_lod_bias
 	// The actual extension is broken as specificed, storing the state in the texture unit instead
 	// of the texture object.  The behavior in GL 1.4 is the behavior we use.
-#if defined(USE_ANGLE)
+#if defined(USE_GLES2)
 	glConfig.textureLODBiasAvailable = false;
 #else
 	glConfig.textureLODBiasAvailable = ( glConfig.glVersion >= 1.4 || GLEW_EXT_texture_lod_bias != 0 );
@@ -375,7 +375,7 @@ static void R_CheckPortableExtensions()
 	}
 	
 	// GL_ARB_seamless_cube_map
-#if defined(USE_ANGLE)
+#if defined(USE_GLES2)
 	glConfig.seamlessCubeMapAvailable = false;
 #else
 	glConfig.seamlessCubeMapAvailable = GLEW_ARB_seamless_cube_map != 0;
@@ -383,7 +383,7 @@ static void R_CheckPortableExtensions()
 	r_useSeamlessCubeMap.SetModified();		// the CheckCvars() next frame will enable / disable it
 	
 	// GL_ARB_framebuffer_sRGB
-#if defined(USE_ANGLE)
+#if defined(USE_GLES2)
 	glConfig.sRGBFramebufferAvailable = false;
 #else
 	glConfig.sRGBFramebufferAvailable = GLEW_ARB_framebuffer_sRGB != 0;
@@ -391,35 +391,39 @@ static void R_CheckPortableExtensions()
 	r_useSRGB.SetModified();		// the CheckCvars() next frame will enable / disable it
 	
 	// GL_ARB_vertex_buffer_object
-#if defined(USE_ANGLE)
+#if defined(USE_GLES2)
 	glConfig.vertexBufferObjectAvailable = false;
 #else
 	glConfig.vertexBufferObjectAvailable = GLEW_ARB_vertex_buffer_object != 0;
 #endif
 	
 	// GL_ARB_map_buffer_range, map a section of a buffer object's data store
-#if defined(USE_ANGLE)
+#if defined(USE_GLES2)
 	glConfig.mapBufferRangeAvailable = false;
 #else
 	glConfig.mapBufferRangeAvailable = GLEW_ARB_map_buffer_range != 0;
 #endif
 	
 	// GL_ARB_vertex_array_object
-#if defined(USE_ANGLE)
+#if defined(USE_GLES2)
 	glConfig.vertexArrayObjectAvailable = false;
 #else
 	glConfig.vertexArrayObjectAvailable = GLEW_ARB_vertex_array_object != 0;
 #endif
 	
 	// GL_ARB_draw_elements_base_vertex
-#if defined(USE_ANGLE)
+#if defined(USE_GLES2)
 	glConfig.drawElementsBaseVertexAvailable = false;
 #else
 	glConfig.drawElementsBaseVertexAvailable = GLEW_ARB_draw_elements_base_vertex != 0;
 #endif
 	
 	// GL_ARB_vertex_program / GL_ARB_fragment_program
-#if !defined(USE_ANGLE)
+#if defined(USE_GLES2)
+	// RB: not supported and not used
+	//glGetIntegerv( GL_MAX_TEXTURE_COORDS, ( GLint* )&glConfig.maxTextureCoords );
+	glGetIntegerv( GL_MAX_TEXTURE_IMAGE_UNITS, ( GLint* )&glConfig.maxTextureImageUnits );
+#else
 	if( r_useOpenGL32.GetInteger() == 2 )
 	{
 		glConfig.fragmentProgramAvailable = true;
@@ -441,8 +445,11 @@ static void R_CheckPortableExtensions()
 	glConfig.glslAvailable = ( glConfig.glVersion >= 2.0f );
 	
 	// GL_ARB_uniform_buffer_object
-#if defined(USE_ANGLE)
+#if defined(USE_GLES2)
 	glConfig.uniformBufferAvailable = false;
+	
+	// RB: needed to calculate the bones on the CPU
+	glConfig.uniformBufferOffsetAlignment = 256;
 #else
 	glConfig.uniformBufferAvailable = GLEW_ARB_uniform_buffer_object != 0;
 	if( glConfig.uniformBufferAvailable )
@@ -456,21 +463,21 @@ static void R_CheckPortableExtensions()
 #endif
 	
 	// ATI_separate_stencil / OpenGL 2.0 separate stencil
-#if defined(USE_ANGLE)
+#if defined(USE_GLES2)
 	glConfig.twoSidedStencilAvailable = false;
 #else
 	glConfig.twoSidedStencilAvailable = ( glConfig.glVersion >= 2.0f ) || GLEW_ATI_separate_stencil != 0;
 #endif
 	
 	// GL_EXT_depth_bounds_test
-#if defined(USE_ANGLE)
+#if defined(USE_GLES2)
 	glConfig.depthBoundsTestAvailable = false;
 #else
 	glConfig.depthBoundsTestAvailable = GLEW_EXT_depth_bounds_test != 0;
 #endif
 	
 	// GL_ARB_sync
-#if defined(USE_ANGLE)
+#if defined(USE_GLES2)
 	glConfig.syncAvailable = false;
 #else
 	glConfig.syncAvailable = GLEW_ARB_sync &&
@@ -480,14 +487,14 @@ static void R_CheckPortableExtensions()
 #endif
 	
 	// GL_ARB_occlusion_query
-#if defined(USE_ANGLE)
+#if defined(USE_GLES2)
 	glConfig.occlusionQueryAvailable = false;
 #else
 	glConfig.occlusionQueryAvailable = GLEW_ARB_occlusion_query != 0;
 #endif
 	
 	// GL_ARB_timer_query
-#if defined(USE_ANGLE)
+#if defined(USE_GLES2)
 	glConfig.timerQueryAvailable = false;
 #else
 	// RB: added intel check
@@ -496,14 +503,14 @@ static void R_CheckPortableExtensions()
 #endif
 	
 	// GL_OES_vertex_half_float
-#if defined(USE_ANGLE)
+#if defined(USE_GLES2)
 	glConfig.vertexHalfFloatAvailable = R_CheckExtension( "GL_OES_vertex_half_float" );
 #else
 	glConfig.vertexHalfFloatAvailable = true;
 #endif
 	
 	// GREMEDY_string_marker
-#if defined(USE_ANGLE)
+#if defined(USE_GLES2)
 	glConfig.gremedyStringMarkerAvailable = false;
 #else
 	glConfig.gremedyStringMarkerAvailable = GLEW_GREMEDY_string_marker != 0;
@@ -518,7 +525,7 @@ static void R_CheckPortableExtensions()
 	}
 	
 	// GL_ARB_debug_output
-#if defined(USE_ANGLE)
+#if defined(USE_GLES2)
 	glConfig.debugOutputAvailable = false;
 #else
 	glConfig.debugOutputAvailable = GLEW_ARB_debug_output != 0;
@@ -544,7 +551,7 @@ static void R_CheckPortableExtensions()
 	}
 #endif
 	
-#if !defined(USE_ANGLE)
+#if !defined(USE_GLES2)
 	// GL_ARB_multitexture
 	if( !glConfig.multitextureAvailable )
 	{
@@ -752,7 +759,7 @@ safeMode:
 	}
 }
 
-#if !defined(USE_ANGLE)
+#if !defined(USE_GLES2)
 idStr extensions_string;
 #endif
 
@@ -799,7 +806,7 @@ void R_InitOpenGL()
 	glConfig.shading_language_string = ( const char* )glGetString( GL_SHADING_LANGUAGE_VERSION );
 	glConfig.extensions_string = ( const char* )glGetString( GL_EXTENSIONS );
 	
-#if !defined(USE_ANGLE)
+#if !defined(USE_GLES2)
 	if( glConfig.extensions_string == NULL )
 	{
 		// As of OpenGL 3.2, glGetStringi is required to obtain the available extensions
@@ -918,7 +925,7 @@ void GL_CheckErrors()
 			case GL_INVALID_OPERATION:
 				strcpy( s, "GL_INVALID_OPERATION" );
 				break;
-#if !defined(USE_ANGLE)
+#if !defined(USE_GLES2)
 			case GL_STACK_OVERFLOW:
 				strcpy( s, "GL_STACK_OVERFLOW" );
 				break;
@@ -1228,7 +1235,7 @@ void R_ReadTiledPixels( int width, int height, byte* buffer, renderView_t* ref =
 				h = height - yo;
 			}
 			
-#if !defined(USE_ANGLE)
+#if !defined(USE_GLES2)
 			glReadBuffer( GL_FRONT );
 #endif
 			
@@ -1781,7 +1788,7 @@ void GfxInfo_f( const idCmdArgs& args )
 	common->Printf( "GL_MAX_TEXTURE_IMAGE_UNITS_ARB: %d\n", glConfig.maxTextureImageUnits );
 	
 	// RB begin
-#if !defined(USE_ANGLE) //!defined(USE_GLES1)
+#if !defined(USE_GLES2)
 	if( r_useOpenGL32.GetInteger() > 0 )
 	{
 		int				contextFlags, profile;
@@ -1842,7 +1849,7 @@ void GfxInfo_f( const idCmdArgs& args )
 	common->Printf( "-------\n" );
 	
 	// RB begin
-#if defined(_WIN32) && !defined(USE_ANGLE)
+#if defined(_WIN32) && !defined(USE_GLES2)
 	// WGL_EXT_swap_interval
 	typedef BOOL ( WINAPI * PFNWGLSWAPINTERVALEXTPROC )( int interval );
 	extern	PFNWGLSWAPINTERVALEXTPROC wglSwapIntervalEXT;

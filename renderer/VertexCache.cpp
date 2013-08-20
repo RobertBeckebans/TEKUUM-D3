@@ -3,6 +3,7 @@
 
 Doom 3 BFG Edition GPL Source Code
 Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2013 Robert Beckebans
 
 This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
@@ -65,7 +66,7 @@ static void MapGeoBufferSet( geoBufferSet_t& gbs )
 	{
 		gbs.mappedIndexBase = ( byte* )gbs.indexBuffer.MapBuffer( BM_WRITE );
 	}
-#if !defined(USE_ANGLE)
+#if !defined(USE_GLES2)
 	if( gbs.mappedJointBase == NULL && gbs.jointBuffer.GetAllocedSize() != 0 )
 	{
 		gbs.mappedJointBase = ( byte* )gbs.jointBuffer.MapBuffer( BM_WRITE );
@@ -90,7 +91,7 @@ static void UnmapGeoBufferSet( geoBufferSet_t& gbs )
 		gbs.indexBuffer.UnmapBuffer();
 		gbs.mappedIndexBase = NULL;
 	}
-#if !defined(USE_ANGLE)
+#if !defined(USE_GLES2)
 	if( gbs.mappedJointBase != NULL )
 	{
 		gbs.jointBuffer.UnmapBuffer();
@@ -109,7 +110,7 @@ static void AllocGeoBufferSet( geoBufferSet_t& gbs, const int vertexBytes, const
 	gbs.vertexBuffer.AllocBufferObject( NULL, vertexBytes );
 	gbs.indexBuffer.AllocBufferObject( NULL, indexBytes );
 	
-#if !defined(USE_ANGLE)
+#if !defined(USE_GLES2)
 	if( jointBytes != 0 )
 	{
 		gbs.jointBuffer.AllocBufferObject( NULL, jointBytes / sizeof( idJointMat ) );
@@ -159,7 +160,7 @@ void idVertexCache::Shutdown()
 		frameData[i].vertexBuffer.FreeBufferObject();
 		frameData[i].indexBuffer.FreeBufferObject();
 		
-#if !defined(USE_ANGLE)
+#if !defined(USE_GLES2)
 		frameData[i].jointBuffer.FreeBufferObject();
 #endif
 	}
@@ -230,7 +231,7 @@ vertCacheHandle_t idVertexCache::ActuallyAlloc( geoBufferSet_t& vcs, const void*
 			idLib::Error( "Out of vertex cache" );
 		}
 	}
-#if !defined(USE_ANGLE)
+#if !defined(USE_GLES2)
 	else if( type == CACHE_JOINT )
 	{
 		base = &vcs.mappedJointBase;
@@ -248,8 +249,10 @@ vertCacheHandle_t idVertexCache::ActuallyAlloc( geoBufferSet_t& vcs, const void*
 	
 	vcs.allocations++;
 	
+	
 	int offset = endPos - bytes;
 	
+#if !defined(NO_GL_MAPBUFFER)
 	// Actually perform the data transfer
 	if( data != NULL )
 	{
@@ -263,6 +266,7 @@ vertCacheHandle_t idVertexCache::ActuallyAlloc( geoBufferSet_t& vcs, const void*
 		
 		}
 	}
+#endif
 	
 	vertCacheHandle_t handle =	( ( uint64 )( currentFrame & VERTCACHE_FRAME_MASK ) << VERTCACHE_FRAME_SHIFT ) |
 								( ( uint64 )( offset & VERTCACHE_OFFSET_MASK ) << VERTCACHE_OFFSET_SHIFT ) |
@@ -272,7 +276,7 @@ vertCacheHandle_t idVertexCache::ActuallyAlloc( geoBufferSet_t& vcs, const void*
 		handle |= VERTCACHE_STATIC;
 	}
 	
-#if defined(USE_ANGLE)
+#if defined(NO_GL_MAPBUFFER)
 	if( type == CACHE_VERTEX )
 	{
 		idVertexBuffer vertexBuffer;
@@ -349,7 +353,7 @@ bool idVertexCache::GetIndexBuffer( vertCacheHandle_t handle, idIndexBuffer* ib 
 idVertexCache::GetJointBuffer
 ==============
 */
-#if !defined(USE_ANGLE)
+#if !defined(USE_GLES2)
 bool idVertexCache::GetJointBuffer( vertCacheHandle_t handle, idJointBuffer* jb )
 {
 	const int isStatic = handle & VERTCACHE_STATIC;

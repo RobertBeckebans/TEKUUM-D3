@@ -3,6 +3,7 @@
 
 Doom 3 BFG Edition GPL Source Code
 Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2013 Robert Beckebans
 
 This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
@@ -126,7 +127,7 @@ void idRenderSystemLocal::RenderCommandBuffers( const emptyCommand_t* const cmdH
 	// draw 2D graphics
 	if( !r_skipBackEnd.GetBool() )
 	{
-#if !defined(USE_ANGLE)
+#if !defined(USE_GLES2)
 		if( glConfig.timerQueryAvailable )
 		{
 			if( tr.timerQueryId == 0 )
@@ -261,7 +262,7 @@ static void R_CheckCvars()
 		}
 	}
 	
-#if !defined(USE_ANGLE)
+#if !defined(USE_GLES2)
 	extern idCVar r_useSeamlessCubeMap;
 	if( r_useSeamlessCubeMap.IsModified() )
 	{
@@ -307,7 +308,7 @@ static void R_CheckCvars()
 			glDisable( GL_MULTISAMPLE_ARB );
 		}
 	}
-#endif // #if !defined(USE_ANGLE)
+#endif // #if !defined(USE_GLES2)
 }
 
 /*
@@ -401,7 +402,7 @@ void idRenderSystemLocal::DrawStretchPic( const idVec4& topLeft, const idVec4& t
 	}
 	
 	// RB: added alternative interface for no glMapBuffer support
-#if defined(USE_ANGLE)
+#if defined(NO_GL_MAPBUFFER)
 	
 	ALIGNTYPE16 idDrawVert localVerts[4];
 	
@@ -496,7 +497,7 @@ void idRenderSystemLocal::DrawStretchTri( const idVec2& p1, const idVec2& p2, co
 	triIndex_t tempIndexes[3] = { 1, 0, 2 };
 	
 	// RB: added alternative interface for no glMapBuffer support
-#if defined(USE_ANGLE)
+#if defined(NO_GL_MAPBUFFER)
 	
 	ALIGNTYPE16 idDrawVert localVerts[3];
 	
@@ -563,7 +564,7 @@ idRenderSystemLocal::AllocTris
 =============
 */
 // RB: added alternative interface for no glMapBuffer support
-#if defined(USE_ANGLE)
+#if defined(NO_GL_MAPBUFFER)
 void idRenderSystemLocal::AllocTris( const idDrawVert* verts, int numVerts, const triIndex_t* indexes, int numIndexes, const idMaterial* material, const stereoDepthType_t stereoType )
 {
 	guiModel->AllocTris( verts, numVerts, indexes, numIndexes, material, currentGLState, stereoType );
@@ -807,7 +808,7 @@ void idRenderSystemLocal::SwapCommandBuffers_FinishRendering(
 		GL_BlockingSwapBuffers();
 	}
 	
-#if !defined(USE_ANGLE)
+#if !defined(USE_GLES2)
 	// read back the start and end timer queries from the previous frame
 	if( glConfig.timerQueryAvailable )
 	{
@@ -1139,7 +1140,7 @@ void idRenderSystemLocal::CaptureRenderToFile( const char* fileName, bool fixAlp
 	guiModel->Clear();
 	RenderCommandBuffers( frameData->cmdHead );
 	
-#if !defined(USE_ANGLE)
+#if !defined(USE_GLES2)
 	glReadBuffer( GL_BACK );
 #endif
 	
