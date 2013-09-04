@@ -84,7 +84,7 @@ typedef struct
 // RB begin
 struct lightGridPoint_t
 {
-#if !defined(USE_GLES2)
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 	idVec3			origin;				// not saved to .proc
 #endif
 	byte			ambient[3];

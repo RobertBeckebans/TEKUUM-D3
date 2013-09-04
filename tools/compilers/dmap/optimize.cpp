@@ -280,7 +280,7 @@ static	void DrawAllEdges()
 	Draw_ClearWindow();
 	
 	// RB begin
-#if !defined(USE_GLES2)
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 	glBegin( GL_LINES );
 	for( i = 0 ; i < numOptEdges ; i++ )
 	{
@@ -320,7 +320,7 @@ static void DrawVerts( optIsland_t* island )
 	glBlendFunc( GL_ONE, GL_ONE );
 	
 	// RB begin
-#if !defined(USE_GLES2)
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 	glColor3f( 0.3f, 0.3f, 0.3f );
 	glPointSize( 3 );
 	glBegin( GL_POINTS );
@@ -353,7 +353,7 @@ static	void DrawEdges( optIsland_t* island )
 	Draw_ClearWindow();
 	
 	// RB begin
-#if !defined(USE_GLES2)
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 	glBegin( GL_LINES );
 	for( edge = island->edges ; edge ; edge = edge->islandLink )
 	{
@@ -580,7 +580,7 @@ static	bool TryAddNewEdge( optVertex_t* v1, optVertex_t* v2, optIsland_t* island
 	if( dmapGlobals.drawflag )
 	{
 		// RB begin
-#if !defined(USE_GLES2)
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 		glBegin( GL_LINES );
 		glColor3f( 0, ( 128 + orandom.RandomInt( 127 ) ) / 255.0, 0 );
 		glVertex3fv( v1->pv.ToFloatPtr() );
@@ -830,7 +830,7 @@ static	void RemoveIfColinear( optVertex_t* ov, optIsland_t* island )
 	if( dmapGlobals.drawflag )
 	{
 		// RB begin
-#if !defined(USE_GLES2)
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 		glBegin( GL_LINES );
 		glColor3f( 1, 1, 0 );
 		glVertex3fv( v1->pv.ToFloatPtr() );
@@ -1147,7 +1147,7 @@ static void CreateOptTri( optVertex_t* first, optEdge_t* e1, optEdge_t* e2, optI
 
 	// identify the third edge
 	// RB begin
-#if !defined(USE_GLES2)
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 	if( dmapGlobals.drawflag )
 	{
 		glColor3f( 1, 1, 0 );
@@ -1193,7 +1193,7 @@ static void CreateOptTri( optVertex_t* first, optEdge_t* e1, optEdge_t* e2, optI
 	}
 	
 	// RB begin
-#if !defined(USE_GLES2)
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 	if( dmapGlobals.drawflag )
 	{
 		glColor3f( 1, 0, 1 );
@@ -1218,7 +1218,7 @@ static void CreateOptTri( optVertex_t* first, optEdge_t* e1, optEdge_t* e2, optI
 	if( dmapGlobals.drawflag )
 	{
 		// RB begin
-#if !defined(USE_GLES2)
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 		glColor3f( 1, 1, 1 );
 		glPointSize( 4 );
 		glBegin( GL_POINTS );
@@ -1257,7 +1257,7 @@ static void CreateOptTri( optVertex_t* first, optEdge_t* e1, optEdge_t* e2, optI
 			glColor4f( 0, ( 128 + orandom.RandomInt( 127 ) ) / 255.0, 0, 1 );
 		}
 		// RB begin
-#if !defined(USE_GLES2)
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 		glBegin( GL_TRIANGLES );
 		glVertex3fv( optTri->v[0]->pv.ToFloatPtr() );
 		glVertex3fv( optTri->v[1]->pv.ToFloatPtr() );
@@ -1650,7 +1650,7 @@ static void DrawOriginalEdges( int numOriginalEdges, originalEdges_t* originalEd
 	Draw_ClearWindow();
 	
 	// RB begin
-#if !defined(USE_GLES2)
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 	glBegin( GL_LINES );
 	for( i = 0 ; i < numOriginalEdges ; i++ )
 	{
@@ -1797,7 +1797,7 @@ void SplitOriginalEdgesAtCrossings( optimizeGroup_t* opt )
 			DrawOriginalEdges( numOriginalEdges, originalEdges );
 			
 			// RB begin
-#if !defined(USE_GLES2)
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 			glBegin( GL_LINES );
 			glColor3f( 0, 1, 0 );
 			glVertex3fv( originalEdges[i].v1->pv.ToFloatPtr() );

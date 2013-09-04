@@ -88,7 +88,7 @@ ID_INLINE void idImage::DeriveOpts()
 		switch( usage )
 		{
 			case TD_COVERAGE:
-#if defined( USE_GLES2 )
+#if defined(USE_GLES2) || defined(USE_GLES3)
 				opts.format = FMT_RGBA8;
 #else
 				opts.format = FMT_DXT1;
@@ -99,7 +99,7 @@ ID_INLINE void idImage::DeriveOpts()
 				opts.format = FMT_DEPTH;
 				break;
 			case TD_DIFFUSE:
-#if defined( USE_GLES2 )
+#if defined(USE_GLES2) || defined(USE_GLES3)
 				// TD_DIFFUSE gets only set to when its a diffuse texture for an interaction
 				//opts.gammaMips = true;
 				opts.format = FMT_RGBA8;
@@ -111,12 +111,18 @@ ID_INLINE void idImage::DeriveOpts()
 #endif
 				break;
 			case TD_SPECULAR:
+#if defined(USE_GLES2) || defined(USE_GLES3)
+				opts.gammaMips = true;
+				opts.format = FMT_RGBA8;
+				opts.colorFormat = CFM_DEFAULT;
+#else
 				opts.gammaMips = true;
 				opts.format = FMT_DXT1;
 				opts.colorFormat = CFM_DEFAULT;
+#endif
 				break;
 			case TD_DEFAULT:
-#if defined( USE_GLES2 )
+#if defined(USE_GLES2) || defined(USE_GLES3)
 				opts.gammaMips = true;
 				opts.format = FMT_RGBA8;
 				opts.colorFormat = CFM_DEFAULT;
@@ -127,7 +133,7 @@ ID_INLINE void idImage::DeriveOpts()
 #endif
 				break;
 			case TD_BUMP:
-#if defined( USE_GLES2 )
+#if defined(USE_GLES2) || defined(USE_GLES3)
 				opts.format = FMT_RGBA8;
 				opts.colorFormat = CFM_DEFAULT;
 #else
@@ -143,7 +149,7 @@ ID_INLINE void idImage::DeriveOpts()
 				opts.gammaMips = true;
 				break;
 			case TD_LIGHT:
-#if defined( USE_GLES2 )
+#if defined(USE_GLES2) || defined(USE_GLES3)
 				opts.format = FMT_RGBA8;
 #else
 				opts.format = FMT_RGB565;
@@ -554,7 +560,7 @@ void idImage::Bind()
 			tmu->current2DMap = texnum;
 			
 			// RB begin
-#if !defined(USE_GLES2)
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 			if( glConfig.directStateAccess )
 			{
 				glBindMultiTextureEXT( GL_TEXTURE0 + texUnit, GL_TEXTURE_2D, texnum );
@@ -575,7 +581,7 @@ void idImage::Bind()
 			tmu->currentCubeMap = texnum;
 			
 			// RB begin
-#if !defined(USE_GLES2)
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 			if( glConfig.directStateAccess )
 			{
 				glBindMultiTextureEXT( GL_TEXTURE0 + texUnit, GL_TEXTURE_CUBE_MAP, texnum );

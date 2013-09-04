@@ -177,7 +177,7 @@ public:
 		BindShader_Builtin( BUILTIN_TEXTURE_VERTEXCOLOR );
 	};
 	
-#if !defined(USE_GLES2)
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 	void	BindShader_TextureVertexColorSkinned()
 	{
 		BindShader_Builtin( BUILTIN_TEXTURE_VERTEXCOLOR_SKINNED );
@@ -201,7 +201,7 @@ public:
 		BindShader_Builtin( BUILTIN_INTERACTION );
 	}
 	
-#if !defined(USE_GLES2)
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 	void	BindShader_InteractionSkinned()
 	{
 		BindShader_Builtin( BUILTIN_INTERACTION_SKINNED );
@@ -213,7 +213,7 @@ public:
 		BindShader_Builtin( BUILTIN_INTERACTION_AMBIENT );
 	}
 	
-#if !defined(USE_GLES2)
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 	void	BindShader_InteractionAmbientSkinned()
 	{
 		BindShader_Builtin( BUILTIN_INTERACTION_AMBIENT_SKINNED );
@@ -230,7 +230,7 @@ public:
 		BindShader_Builtin( BUILTIN_ENVIRONMENT );
 	}
 	
-#if !defined(USE_GLES2)
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 	void	BindShader_EnvironmentSkinned()
 	{
 		BindShader_Builtin( BUILTIN_ENVIRONMENT_SKINNED );
@@ -242,7 +242,7 @@ public:
 		BindShader_Builtin( BUILTIN_BUMPY_ENVIRONMENT );
 	}
 	
-#if !defined(USE_GLES2)
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 	void	BindShader_BumpyEnvironmentSkinned()
 	{
 		BindShader_Builtin( BUILTIN_BUMPY_ENVIRONMENT_SKINNED );
@@ -254,7 +254,7 @@ public:
 		BindShader_Builtin( BUILTIN_DEPTH );
 	}
 	
-#if !defined(USE_GLES2)
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 	void	BindShader_DepthSkinned()
 	{
 		BindShader_Builtin( BUILTIN_DEPTH_SKINNED );
@@ -266,7 +266,7 @@ public:
 		BindShader( builtinShaders[BUILTIN_SHADOW], -1 );
 	}
 	
-#if !defined(USE_GLES2)
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 	void	BindShader_ShadowSkinned()
 	{
 		BindShader( builtinShaders[BUILTIN_SHADOW_SKINNED], -1 );
@@ -278,7 +278,7 @@ public:
 		BindShader_Builtin( BUILTIN_SHADOW_DEBUG );
 	}
 	
-#if !defined(USE_GLES2)
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 	void	BindShader_ShadowDebugSkinned()
 	{
 		BindShader_Builtin( BUILTIN_SHADOW_DEBUG_SKINNED );
@@ -291,7 +291,7 @@ public:
 	}
 	
 	// RB begin
-#if !defined(USE_GLES2)
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 	void	BindShader_BlendLightSkinned()
 	{
 		BindShader_Builtin( BUILTIN_BLENDLIGHT_SKINNED );
@@ -304,7 +304,7 @@ public:
 		BindShader_Builtin( BUILTIN_FOG );
 	}
 	
-#if !defined(USE_GLES2)
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 	void	BindShader_FogSkinned()
 	{
 		BindShader_Builtin( BUILTIN_FOG_SKINNED );
@@ -365,7 +365,7 @@ public:
 	}
 	// RB end
 	
-#if !defined(USE_GLES2)
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 	void	BindShader_MotionBlur()
 	{
 		BindShader_Builtin( BUILTIN_MOTION_BLUR );
@@ -419,7 +419,7 @@ protected:
 		BUILTIN_SIMPLESHADE,
 		BUILTIN_TEXTURED,
 		BUILTIN_TEXTURE_VERTEXCOLOR,
-#if !defined(USE_GLES2)
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 		BUILTIN_TEXTURE_VERTEXCOLOR_SKINNED,
 #endif
 		BUILTIN_TEXTURE_TEXGEN_VERTEXCOLOR,
@@ -427,42 +427,42 @@ protected:
 		BUILTIN_TEXTURE_YCOCG,
 		// RB end
 		BUILTIN_INTERACTION,
-#if !defined(USE_GLES2)
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 		BUILTIN_INTERACTION_SKINNED,
 #endif
 		BUILTIN_INTERACTION_AMBIENT,
-#if !defined(USE_GLES2)
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 		BUILTIN_INTERACTION_AMBIENT_SKINNED,
 #endif
 		BUILTIN_ENVIRONMENT,
-#if !defined(USE_GLES2)
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 		BUILTIN_ENVIRONMENT_SKINNED,
 #endif
 		BUILTIN_BUMPY_ENVIRONMENT,
-#if !defined(USE_GLES2)
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 		BUILTIN_BUMPY_ENVIRONMENT_SKINNED,
 #endif
 		BUILTIN_DEPTH,
-#if !defined(USE_GLES2)
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 		BUILTIN_DEPTH_SKINNED,
 #endif
 		BUILTIN_SHADOW,
-#if !defined(USE_GLES2)
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 		BUILTIN_SHADOW_SKINNED,
 #endif
 		BUILTIN_SHADOW_DEBUG,
-#if !defined(USE_GLES2)
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 		BUILTIN_SHADOW_DEBUG_SKINNED,
 #endif
 		
 		BUILTIN_BLENDLIGHT,
 		// RB begin
-#if !defined(USE_GLES2)
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 		BUILTIN_BLENDLIGHT_SKINNED,
 #endif
 		// RB end
 		BUILTIN_FOG,
-#if !defined(USE_GLES2)
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 		BUILTIN_FOG_SKINNED,
 #endif
 		BUILTIN_SKYBOX,
@@ -478,7 +478,7 @@ protected:
 		BUILTIN_ROQ,
 		// RB end
 		BUILTIN_STEREO_INTERLACE,
-#if !defined(USE_GLES2)
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 		BUILTIN_MOTION_BLUR,
 #endif
 		

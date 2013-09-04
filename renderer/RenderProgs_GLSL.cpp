@@ -33,7 +33,7 @@ If you have questions concerning this license or the applicable additional terms
 #include "tr_local.h"
 
 idCVar r_skipStripDeadCode( "r_skipStripDeadCode", "0", CVAR_BOOL, "Skip stripping dead code" );
-#if defined(USE_GLES2)
+#if defined(USE_GLES2) || defined(USE_GLES3)
 idCVar r_useUniformArrays( "r_useUniformArrays", "0", CVAR_BOOL, "" );
 #else
 idCVar r_useUniformArrays( "r_useUniformArrays", "1", CVAR_BOOL, "" );
@@ -119,7 +119,7 @@ attribInfo_t attribsPC[] =
 	{ "float4",		"color2",		"COLOR1",		"in_Color2",			PC_ATTRIB_INDEX_COLOR2,			AT_VS_IN,		VERTEX_MASK_COLOR2 },
 	
 	// pre-defined vertex program output
-#if defined(USE_GLES2)
+#if defined(USE_GLES2) || defined(USE_GLES3)
 	{ "float4",		"position",		"POSITION",		"gl_Position",			0,	AT_VS_OUT | AT_VS_OUT_RESERVED,		0 },
 #else
 	{ "float4",		"position",		"POSITION",		"gl_Position",			0,	AT_VS_OUT,		0 },
@@ -132,7 +132,7 @@ attribInfo_t attribsPC[] =
 	{ "float",		"clip5",		"CLP5",			"gl_ClipDistance[5]",	0,	AT_VS_OUT,		0 },
 	
 	// pre-defined fragment program input
-#if defined(USE_GLES2)
+#if defined(USE_GLES2) || defined(USE_GLES3)
 	{ "float4",		"position",		"WPOS",			"gl_FragCoord",			0,	AT_PS_IN | AT_PS_IN_RESERVED,		0 },
 	{ "half4",		"hposition",	"WPOS",			"gl_FragCoord",			0,	AT_PS_IN | AT_PS_IN_RESERVED,		0 },
 	{ "float",		"facing",		"FACE",			"gl_FrontFacing",		0,	AT_PS_IN | AT_PS_IN_RESERVED,		0 },
@@ -143,7 +143,7 @@ attribInfo_t attribsPC[] =
 #endif
 	
 	// fragment program output
-#if defined(USE_GLES2)
+#if defined(USE_GLES2) || defined(USE_GLES3)
 	{ "float4",		"color",		"COLOR",		"gl_FragColor",		0,	AT_PS_OUT | AT_PS_OUT_RESERVED,		0 }, // GLSL version 1.2 doesn't allow for custom color name mappings
 	{ "half4",		"hcolor",		"COLOR",		"gl_FragColor",		0,	AT_PS_OUT | AT_PS_OUT_RESERVED,		0 },
 	{ "float4",		"color0",		"COLOR0",		"gl_FragColor",		0,	AT_PS_OUT | AT_PS_OUT_RESERVED,		0 },
@@ -355,7 +355,7 @@ idStr StripDeadCode( const idStr& in, const char* name )
 	src.LoadMemory( in.c_str(), in.Length(), name );
 	src.AddDefine( "PC" );
 	
-#if defined(USE_GLES2)
+#if defined(USE_GLES2) || defined(USE_GLES3)
 	src.AddDefine( "GLES2" );
 #endif
 	
@@ -614,6 +614,21 @@ const char* vertexInsert =
 	//"vec4 tex2Dlod( sampler2D sampler, vec4 texcoord ) { return textureLod( sampler, texcoord.xy, texcoord.w ); }\n"
 	"\n"
 };
+#elif defined(USE_GLES3)
+const char* vertexInsert =
+{
+	"#version 100\n"
+	"#define GLES2\n"
+	"#define PC\n"
+	"precision mediump float;\n"
+	"\n"
+	"float saturate( float v ) { return clamp( v, 0.0, 1.0 ); }\n"
+	"vec2 saturate( vec2 v ) { return clamp( v, 0.0, 1.0 ); }\n"
+	"vec3 saturate( vec3 v ) { return clamp( v, 0.0, 1.0 ); }\n"
+	"vec4 saturate( vec4 v ) { return clamp( v, 0.0, 1.0 ); }\n"
+	//"vec4 tex2Dlod( sampler2D sampler, vec4 texcoord ) { return textureLod( sampler, texcoord.xy, texcoord.w ); }\n"
+	"\n"
+};
 #else
 const char* vertexInsert =
 {
@@ -627,10 +642,53 @@ const char* vertexInsert =
 	"vec4 tex2Dlod( sampler2D sampler, vec4 texcoord ) { return textureLod( sampler, texcoord.xy, texcoord.w ); }\n"
 	"\n"
 };
-#endif // #if defined(USE_GLES2)
+#endif // #if defined(USE_GLES3)
 
 
 #if defined(USE_GLES2)
+const char* fragmentInsert =
+{
+	"#version 100\n"
+	"#define GLES2\n"
+	"#define PC\n"
+	"precision mediump float;\n"
+	"#extension GL_OES_standard_derivatives : enable\n"
+	"\n"
+	"void clip( float v ) { if ( v < 0.0 ) { discard; } }\n"
+	"void clip( vec2 v ) { if ( any( lessThan( v, vec2( 0.0 ) ) ) ) { discard; } }\n"
+	"void clip( vec3 v ) { if ( any( lessThan( v, vec3( 0.0 ) ) ) ) { discard; } }\n"
+	"void clip( vec4 v ) { if ( any( lessThan( v, vec4( 0.0 ) ) ) ) { discard; } }\n"
+	"\n"
+	"float saturate( float v ) { return clamp( v, 0.0, 1.0 ); }\n"
+	"vec2 saturate( vec2 v ) { return clamp( v, 0.0, 1.0 ); }\n"
+	"vec3 saturate( vec3 v ) { return clamp( v, 0.0, 1.0 ); }\n"
+	"vec4 saturate( vec4 v ) { return clamp( v, 0.0, 1.0 ); }\n"
+	"\n"
+	"vec4 tex2D( sampler2D sampler, vec2 texcoord ) { return texture2D( sampler, texcoord.xy ); }\n"
+	//"vec4 tex2D( sampler2DShadow sampler, vec3 texcoord ) { return vec4( texture( sampler, texcoord.xyz ) ); }\n"
+	"\n"
+	//"vec4 tex2D( sampler2D sampler, vec2 texcoord, vec2 dx, vec2 dy ) { return textureGrad( sampler, texcoord.xy, dx, dy ); }\n"
+	//"vec4 tex2D( sampler2DShadow sampler, vec3 texcoord, vec2 dx, vec2 dy ) { return vec4( textureGrad( sampler, texcoord.xyz, dx, dy ) ); }\n"
+	//"\n"
+	"vec4 texCUBE( samplerCube sampler, vec3 texcoord ) { return textureCube( sampler, texcoord.xyz ); }\n"
+	//"vec4 texCUBE( samplerCubeShadow sampler, vec4 texcoord ) { return vec4( textureCube( sampler, texcoord.xyzw ) ); }\n"
+	"\n"
+	//"vec4 tex1Dproj( sampler1D sampler, vec2 texcoord ) { return textureProj( sampler, texcoord ); }\n"
+	"vec4 tex2Dproj( sampler2D sampler, vec3 texcoord ) { return texture2DProj( sampler, texcoord ); }\n"
+	//"vec4 tex3Dproj( sampler3D sampler, vec4 texcoord ) { return textureProj( sampler, texcoord ); }\n"
+	"\n"
+	//"vec4 tex1Dbias( sampler1D sampler, vec4 texcoord ) { return texture( sampler, texcoord.x, texcoord.w ); }\n"
+	//"vec4 tex2Dbias( sampler2D sampler, vec4 texcoord ) { return texture( sampler, texcoord.xy, texcoord.w ); }\n"
+	//"vec4 tex3Dbias( sampler3D sampler, vec4 texcoord ) { return texture( sampler, texcoord.xyz, texcoord.w ); }\n"
+	//"vec4 texCUBEbias( samplerCube sampler, vec4 texcoord ) { return texture( sampler, texcoord.xyz, texcoord.w ); }\n"
+	//"\n"
+	//"vec4 tex1Dlod( sampler1D sampler, vec4 texcoord ) { return textureLod( sampler, texcoord.x, texcoord.w ); }\n"
+	//"vec4 tex2Dlod( sampler2D sampler, vec4 texcoord ) { return textureLod( sampler, texcoord.xy, texcoord.w ); }\n"
+	//"vec4 tex3Dlod( sampler3D sampler, vec4 texcoord ) { return textureLod( sampler, texcoord.xyz, texcoord.w ); }\n"
+	//"vec4 texCUBElod( samplerCube sampler, vec4 texcoord ) { return textureLod( sampler, texcoord.xyz, texcoord.w ); }\n"
+	//"\n"
+};
+#elif defined(USE_GLES3)
 const char* fragmentInsert =
 {
 	"#version 100\n"
@@ -877,7 +935,7 @@ idStr ConvertCG2GLSL( const idStr& in, const char* name, bool isVertexProgram, i
 					if( varsIn[i].declareInOut )
 					{
 // RB begin
-#if defined(USE_GLES2)
+#if defined(USE_GLES2) || defined(USE_GLES3)
 						program += "attribute " + varsIn[i].type + " " + varsIn[i].nameGLSL + ";\n";
 #else
 						program += "in " + varsIn[i].type + " " + varsIn[i].nameGLSL + ";\n";
@@ -898,7 +956,7 @@ idStr ConvertCG2GLSL( const idStr& in, const char* name, bool isVertexProgram, i
 					if( varsOut[i].declareInOut )
 					{
 // RB begin
-#if defined(USE_GLES2)
+#if defined(USE_GLES2) || defined(USE_GLES3)
 						program += "varying " + varsOut[i].type + " " + varsOut[i].nameGLSL + ";\n";
 #else
 						program += "out " + varsOut[i].type + " " + varsOut[i].nameGLSL + ";\n";
@@ -917,7 +975,7 @@ idStr ConvertCG2GLSL( const idStr& in, const char* name, bool isVertexProgram, i
 					if( varsIn[i].declareInOut )
 					{
 // RB begin
-#if defined(USE_GLES2)
+#if defined(USE_GLES2) || defined(USE_GLES3)
 						program += "varying " + varsIn[i].type + " " + varsIn[i].nameGLSL + ";\n";
 #else
 						program += "in " + varsIn[i].type + " " + varsIn[i].nameGLSL + ";\n";
@@ -1197,7 +1255,7 @@ GLuint idRenderProgManager::LoadGLSLShader( GLenum target, const char* name, idL
 	inFile.StripFileExtension();
 	outFileHLSL.Format( "renderprogs/hlsl/%s", name );
 	outFileHLSL.StripFileExtension();
-#if defined(USE_GLES2)
+#if defined(USE_GLES2) || defined(USE_GLES3)
 	outFileGLSL.Format( "renderprogs/glsles-1.0/%s", name );
 #else
 	outFileGLSL.Format( "renderprogs/glsl-1.50/%s", name );
@@ -1612,7 +1670,7 @@ void idRenderProgManager::LoadGLSLProgram( const int programIndex, const int ver
 		prog.uniformLocations.SortWithTemplate( idSort_QuickUniforms() );
 	}
 	
-#if !defined(USE_GLES2)
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 	// get the uniform buffer binding for skinning joint matrices
 	GLint blockIndex = glGetUniformBlockIndex( program, "matrices_ubo" );
 	if( blockIndex != -1 )

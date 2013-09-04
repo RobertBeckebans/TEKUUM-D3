@@ -163,8 +163,8 @@ void JE_QueueMotionEvent( int action, float x, float y, float pressure )
 #endif
 	
 #if 1
-	int rx = idMath::ClampInt( 0, 99, idMath::Ftoi( ( x / ( float )glConfig.vidWidth ) * 100 ) );
-	int ry = idMath::ClampInt( 0, 99, idMath::Ftoi( ( y / ( float )glConfig.vidHeight ) * 100 ) );
+	int rx = idMath::ClampInt( 0, 99, idMath::Ftoi( ( x / ( float )glConfig.nativeScreenWidth ) * 100 ) );
+	int ry = idMath::ClampInt( 0, 99, idMath::Ftoi( ( y / ( float )glConfig.nativeScreenHeight ) * 100 ) );
 	
 	switch( action )
 	{
@@ -411,6 +411,11 @@ static void IN_XBox360Axis( int action, float thumbAxis, float scale )
 		IN_AddGamepadPollEvent( action, f * scale, 0 );
 	}
 #endif
+}
+
+bool Sys_IsXbox360ControllerAvailable()
+{
+	return false;
 }
 
 int Sys_PollXbox360ControllerInputEvents()

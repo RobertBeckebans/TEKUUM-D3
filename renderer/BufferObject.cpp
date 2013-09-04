@@ -731,7 +731,7 @@ void idIndexBuffer::ClearWithoutFreeing()
 ================================================================================================
 */
 
-#if !defined(USE_GLES2)
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 /*
 ========================
 idJointBuffer::idJointBuffer
@@ -827,10 +827,10 @@ void idJointBuffer::FreeBufferObject()
 	}
 	
 	// RB: 64 bit fixes, changed GLuint to GLintptrARB
-	GLintptrARB buffer = reinterpret_cast< GLintptrARB >( apiObject );
+	GLintptr buffer = reinterpret_cast< GLintptr >( apiObject );
 	
-	glBindBufferARB( GL_UNIFORM_BUFFER, 0 );
-	glDeleteBuffersARB( 1, ( const GLuint* )& buffer );
+	glBindBuffer( GL_UNIFORM_BUFFER, 0 );
+	glDeleteBuffers( 1, ( const GLuint* )& buffer );
 	// RB end
 	
 	ClearWithoutFreeing();
@@ -897,10 +897,10 @@ void idJointBuffer::Update( const float* joints, int numUpdateJoints ) const
 	const int numBytes = numUpdateJoints * 3 * 4 * sizeof( float );
 	
 	// RB: 64 bit fixes, changed GLuint to GLintptrARB
-	glBindBufferARB( GL_UNIFORM_BUFFER, reinterpret_cast< GLintptrARB >( apiObject ) );
+	glBindBuffer( GL_UNIFORM_BUFFER, reinterpret_cast< GLintptr >( apiObject ) );
 	// RB end
 	
-	glBufferSubDataARB( GL_UNIFORM_BUFFER, GetOffset(), ( GLsizeiptrARB )numBytes, joints );
+	glBufferSubData( GL_UNIFORM_BUFFER, GetOffset(), ( GLsizeiptr )numBytes, joints );
 }
 
 /*
@@ -919,7 +919,7 @@ float* idJointBuffer::MapBuffer( bufferMapType_t mapType ) const
 	void* buffer = NULL;
 	
 	// RB: 64 bit fixes, changed GLuint to GLintptrARB
-	glBindBufferARB( GL_UNIFORM_BUFFER, reinterpret_cast< GLintptrARB >( apiObject ) );
+	glBindBuffer( GL_UNIFORM_BUFFER, reinterpret_cast< GLintptr >( apiObject ) );
 	// RB end
 	
 	numBytes = numBytes;
@@ -951,10 +951,10 @@ void idJointBuffer::UnmapBuffer() const
 	assert( IsMapped() );
 	
 	// RB: 64 bit fixes, changed GLuint to GLintptrARB
-	glBindBufferARB( GL_UNIFORM_BUFFER, reinterpret_cast< GLintptrARB >( apiObject ) );
+	glBindBuffer( GL_UNIFORM_BUFFER, reinterpret_cast< GLintptr >( apiObject ) );
 	// RB end
 	
-	if( !glUnmapBufferARB( GL_UNIFORM_BUFFER ) )
+	if( !glUnmapBuffer( GL_UNIFORM_BUFFER ) )
 	{
 		idLib::Printf( "idJointBuffer::UnmapBuffer failed\n" );
 	}

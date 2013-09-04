@@ -102,7 +102,10 @@ const int MAX_EXPRESSION_REGISTERS = 4096;
 
 #if defined(__ANDROID__)
 
-#if defined(USE_GLES2)
+#if defined(USE_GLES3)
+#include <GLES3/gl3.h>
+//#include <GLES3/gl3ext.h>
+#elif defined(USE_GLES2)
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
 #elif defined(USE_GLES1)

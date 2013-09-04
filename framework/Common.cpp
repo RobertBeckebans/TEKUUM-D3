@@ -3056,7 +3056,7 @@ void idCommonLocal::Frame()
 				
 				// RB begin
 #if defined(__ANDROID__)
-				session->UpdateScreen( true, false, false );
+				session->UpdateScreen( true, false, true );
 #else
 				session->UpdateScreen( true, false, true );
 #endif
@@ -3071,7 +3071,7 @@ void idCommonLocal::Frame()
 			
 			// RB begin
 #if defined(__ANDROID__)
-			session->UpdateScreen( true, false, false );
+			session->UpdateScreen( true, false, true );
 #else
 			session->UpdateScreen( true, false, true );
 #endif

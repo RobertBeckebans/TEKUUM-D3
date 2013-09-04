@@ -922,7 +922,7 @@ if(ANGLE OR GLES2)
 		include_directories(libs/angle/include)
 	endif()
 	
-	add_definitions(-DUSE_GLES2)
+	add_definitions(-DUSE_GLES3)
 endif()
 
 set(TEKUUM_INCLUDES

@@ -1579,7 +1579,7 @@ idConsoleLocal::CreateGraph
 */
 idDebugGraph* idConsoleLocal::CreateGraph( int numItems )
 {
-	idDebugGraph* graph = new( TAG_SYSTEM ) idDebugGraph( numItems );
+	idDebugGraph* graph = new idDebugGraph( numItems );
 	debugGraphs.Append( graph );
 	return graph;
 }

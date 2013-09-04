@@ -154,7 +154,11 @@ struct glconfig_t
 	
 	float				pixelAspect;
 	
+	// RB begin
+#if !defined(__ANDROID__)
 	GLuint				global_vao;
+#endif
+	// RB end
 };
 
 

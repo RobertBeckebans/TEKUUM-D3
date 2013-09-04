@@ -31,7 +31,7 @@ If you have questions concerning this license or the applicable additional terms
 
 #include "snd_local.h"
 
-#if defined(ID_DEDICATED) //|| defined(__ANDROID__)
+#if defined(ID_DEDICATED) || defined(__ANDROID__)
 idCVar idSoundSystemLocal::s_noSound( "s_noSound", "1", CVAR_SOUND | CVAR_BOOL | CVAR_ROM, "" );
 #else
 idCVar idSoundSystemLocal::s_noSound( "s_noSound", "0", CVAR_SOUND | CVAR_BOOL | CVAR_NOCHEAT, "" );

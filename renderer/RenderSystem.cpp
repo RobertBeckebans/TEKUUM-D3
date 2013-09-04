@@ -127,16 +127,16 @@ void idRenderSystemLocal::RenderCommandBuffers( const emptyCommand_t* const cmdH
 	// draw 2D graphics
 	if( !r_skipBackEnd.GetBool() )
 	{
-#if !defined(USE_GLES2)
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 		if( glConfig.timerQueryAvailable )
 		{
 			if( tr.timerQueryId == 0 )
 			{
-				glGenQueriesARB( 1, & tr.timerQueryId );
+				glGenQueries( 1, & tr.timerQueryId );
 			}
-			glBeginQueryARB( GL_TIME_ELAPSED_EXT, tr.timerQueryId );
+			glBeginQuery( GL_TIME_ELAPSED_EXT, tr.timerQueryId );
 			RB_ExecuteBackEndCommands( cmdHead );
-			glEndQueryARB( GL_TIME_ELAPSED_EXT );
+			glEndQuery( GL_TIME_ELAPSED_EXT );
 			glFlush();
 		}
 		else
@@ -262,7 +262,7 @@ static void R_CheckCvars()
 		}
 	}
 	
-#if !defined(USE_GLES2)
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 	extern idCVar r_useSeamlessCubeMap;
 	if( r_useSeamlessCubeMap.IsModified() )
 	{
@@ -808,7 +808,7 @@ void idRenderSystemLocal::SwapCommandBuffers_FinishRendering(
 		GL_BlockingSwapBuffers();
 	}
 	
-#if !defined(USE_GLES2)
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 	// read back the start and end timer queries from the previous frame
 	if( glConfig.timerQueryAvailable )
 	{

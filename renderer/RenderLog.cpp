@@ -409,7 +409,7 @@ idRenderLog::Printf
 */
 void idRenderLog::Printf( const char* fmt, ... )
 {
-#if !defined(USE_GLES2)
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 	if( activeLevel <= LOG_LEVEL_BLOCKS_ONLY )
 	{
 		return;
@@ -463,7 +463,7 @@ void idRenderLog::LogOpenBlock( renderLogIndentLabel_t label, const char* fmt, .
 		//logFile->Printf( "%s%1.1f msec gap from last closeblock\n", indentString, ( now - closeBlockTime ) * ( 1.0f / 1000.0f ) );
 		//}
 		
-#if !defined(USE_GLES2)
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 		if( glConfig.gremedyStringMarkerAvailable )
 		{
 			//Printf( fmt, args );

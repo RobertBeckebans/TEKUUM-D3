@@ -48,7 +48,7 @@ idCVar r_syncEveryFrame( "r_syncEveryFrame", "1", CVAR_BOOL, "Don't let the GPU 
 
 static int		swapIndex;		// 0 or 1 into renderSync
 
-#if !defined(USE_GLES2)
+#if !defined(USE_GLES2) //&& !defined(USE_GLES3)
 static GLsync	renderSync[2];
 #endif
 
@@ -158,7 +158,7 @@ const void GL_BlockingSwapBuffers()
 	}
 	
 // RB begin
-#if !defined(USE_GLES2)
+#if !defined(USE_GLES2) //&& !defined(USE_GLES3)
 	if( glConfig.syncAvailable )
 	{
 		swapIndex ^= 1;
@@ -251,7 +251,7 @@ void RB_StereoRenderExecuteBackEndCommands( const emptyCommand_t* const allCmds 
 	// textures anyway, so there isn't any benefit to rendering to BACK_RIGHT for
 	// that eye.
 	
-#if !defined(USE_GLES2)
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 	glDrawBuffer( GL_BACK_LEFT );
 #endif
 	
@@ -354,7 +354,7 @@ void RB_StereoRenderExecuteBackEndCommands( const emptyCommand_t* const allCmds 
 	// make sure we draw to both eyes.  This is likely to be sub-optimal
 	// performance on most cards and drivers, but it is better than getting
 	// a confusing, half-ghosted view.
-#if !defined(USE_GLES2)
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 	if( renderSystem->GetStereo3DMode() != STEREO3D_QUAD_BUFFER )
 	{
 		glDrawBuffer( GL_BACK );
@@ -379,9 +379,9 @@ void RB_StereoRenderExecuteBackEndCommands( const emptyCommand_t* const allCmds 
 	renderProgManager.BindShader_Texture();
 	GL_Color( 1, 1, 1, 1 );
 	
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 	switch( renderSystem->GetStereo3DMode() )
 	{
-#if !defined(USE_GLES2)
 		case STEREO3D_QUAD_BUFFER:
 			glDrawBuffer( GL_BACK_RIGHT );
 			GL_SelectTexture( 0 );
@@ -397,7 +397,6 @@ void RB_StereoRenderExecuteBackEndCommands( const emptyCommand_t* const allCmds 
 			stereoRenderImages[0]->Bind();
 			RB_DrawElementsWithCounters( &backEnd.unitSquareSurface );
 			break;
-#endif
 			
 		case STEREO3D_HDMI_720:
 			// HDMI 720P 3D
@@ -534,6 +533,7 @@ void RB_StereoRenderExecuteBackEndCommands( const emptyCommand_t* const allCmds 
 			
 			break;
 	}
+#endif
 	
 	// debug tool
 	RB_DrawFlickerBox();
@@ -589,7 +589,7 @@ void RB_ExecuteBackEndCommands( const emptyCommand_t* cmds )
 	// If we have a stereo pixel format, this will draw to both
 	// the back left and back right buffers, which will have a
 	// performance penalty.
-#if !defined(USE_GLES2)
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 	glDrawBuffer( GL_BACK );
 #endif
 	

@@ -43,7 +43,7 @@ static const char* MD5_SnapshotName = "_MD5_Snapshot_";
 static const byte MD5B_VERSION = 106;
 static const unsigned int MD5B_MAGIC = ( '5' << 24 ) | ( 'D' << 16 ) | ( 'M' << 8 ) | MD5B_VERSION;
 
-#if defined(USE_GLES2)
+#if defined(USE_GLES2) || defined(USE_GLES3)
 idCVar r_useGPUSkinning( "r_useGPUSkinning", "0", CVAR_INTEGER, "animate normals and tangents instead of deriving" );
 #else
 idCVar r_useGPUSkinning( "r_useGPUSkinning", "1", CVAR_INTEGER, "animate normals and tangents instead of deriving" );

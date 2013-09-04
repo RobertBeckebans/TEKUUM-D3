@@ -106,12 +106,12 @@ void idImage::SubImageUpload( int mipLevel, int x, int y, int z, int width, int 
 	
 	if( opts.format == FMT_RGB565 )
 	{
-#if !defined(USE_GLES2)
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 		glPixelStorei( GL_UNPACK_SWAP_BYTES, GL_TRUE );
 #endif
 	}
 	
-#ifdef DEBUG
+#if defined(DEBUG) || defined(__ANDROID__)
 	GL_CheckErrors();
 #endif
 	if( IsCompressed() )
@@ -136,13 +136,14 @@ void idImage::SubImageUpload( int mipLevel, int x, int y, int z, int width, int 
 		
 		glTexSubImage2D( uploadTarget, mipLevel, x, y, width, height, dataFormat, dataType, pic );
 	}
-#ifdef DEBUG
+	
+#if defined(DEBUG) || defined(__ANDROID__)
 	GL_CheckErrors();
 #endif
 	
 	if( opts.format == FMT_RGB565 )
 	{
-#if !defined(USE_GLES2)
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 		glPixelStorei( GL_UNPACK_SWAP_BYTES, GL_FALSE );
 #endif
 	}
@@ -184,7 +185,7 @@ void idImage::SetTexParameters()
 			return;
 	}
 	
-#if !defined(USE_GLES2)
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 	
 	// ALPHA, LUMINANCE, LUMINANCE_ALPHA, and INTENSITY have been removed
 	// in OpenGL 3.2. In order to mimic those modes, we use the swizzle operators
@@ -250,6 +251,10 @@ void idImage::SetTexParameters()
 	
 #endif // #if !defined(USE_GLES2)
 	
+#if defined(DEBUG) || defined(__ANDROID__)
+	GL_CheckErrors();
+#endif
+	
 	switch( filter )
 	{
 		case TF_DEFAULT:
@@ -275,6 +280,7 @@ void idImage::SetTexParameters()
 			common->FatalError( "%s: bad texture filter %d", GetName(), filter );
 	}
 	
+#if !defined(USE_GLES3)
 	if( glConfig.anisotropicFilterAvailable )
 	{
 		// only do aniso filtering on mip mapped images
@@ -296,13 +302,18 @@ void idImage::SetTexParameters()
 			glTexParameterf( target, GL_TEXTURE_MAX_ANISOTROPY_EXT, 1 );
 		}
 	}
+#endif
 	
-#if !defined(USE_GLES2)
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 	if( glConfig.textureLODBiasAvailable && ( usage != TD_FONT ) )
 	{
 		// use a blurring LOD bias in combination with high anisotropy to fix our aliasing grate textures...
-		glTexParameterf( target, GL_TEXTURE_LOD_BIAS_EXT, r_lodBias.GetFloat() );
+		glTexParameterf( target, GL_TEXTURE_LOD_BIAS, r_lodBias.GetFloat() );
 	}
+#endif
+	
+#if defined(DEBUG) || defined(__ANDROID__)
+	GL_CheckErrors();
 #endif
 	
 	// set the wrap/clamp modes
@@ -312,7 +323,7 @@ void idImage::SetTexParameters()
 			glTexParameterf( target, GL_TEXTURE_WRAP_S, GL_REPEAT );
 			glTexParameterf( target, GL_TEXTURE_WRAP_T, GL_REPEAT );
 			break;
-#if !defined(USE_GLES2)
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 		case TR_CLAMP_TO_ZERO:
 		{
 			float color[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
@@ -360,7 +371,7 @@ void idImage::AllocImage()
 	switch( opts.format )
 	{
 		case FMT_RGBA8:
-#if defined(USE_GLES2)
+#if defined(USE_GLES2) || defined(USE_GLES3)
 			internalFormat = GL_RGBA;
 #else
 			internalFormat = GL_RGBA8;
@@ -379,7 +390,7 @@ void idImage::AllocImage()
 			dataType = GL_UNSIGNED_SHORT_5_6_5;
 			break;
 		case FMT_ALPHA:
-#if defined( USE_GLES2 )
+#if defined(USE_GLES2) || defined(USE_GLES3)
 			internalFormat = GL_ALPHA;
 			dataFormat = GL_ALPHA;
 #elif defined( USE_CORE_PROFILE )
@@ -392,7 +403,7 @@ void idImage::AllocImage()
 			dataType = GL_UNSIGNED_BYTE;
 			break;
 		case FMT_L8A8:
-#if defined( USE_GLES2 )
+#if defined(USE_GLES2) || defined(USE_GLES3)
 			internalFormat = GL_LUMINANCE_ALPHA;
 			dataFormat = GL_LUMINANCE_ALPHA;
 #elif defined( USE_CORE_PROFILE )
@@ -405,7 +416,7 @@ void idImage::AllocImage()
 			dataType = GL_UNSIGNED_BYTE;
 			break;
 		case FMT_LUM8:
-#if defined( USE_GLES2 )
+#if defined(USE_GLES2) || defined(USE_GLES3)
 			internalFormat = GL_LUMINANCE;
 			dataFormat = GL_LUMINANCE;
 #elif defined( USE_CORE_PROFILE )
@@ -418,7 +429,7 @@ void idImage::AllocImage()
 			dataType = GL_UNSIGNED_BYTE;
 			break;
 		case FMT_INT8:
-#if defined( USE_GLES2 )
+#if defined(USE_GLES2) || defined(USE_GLES3)
 			internalFormat = GL_LUMINANCE;
 			dataFormat = GL_LUMINANCE;
 #elif defined( USE_CORE_PROFILE )
@@ -435,7 +446,7 @@ void idImage::AllocImage()
 			dataFormat = GL_RGBA;
 			dataType = GL_UNSIGNED_BYTE;
 			break;
-#if !defined(USE_GLES2)
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 		case FMT_DXT5:
 			internalFormat = GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
 			dataFormat = GL_RGBA;
@@ -447,7 +458,7 @@ void idImage::AllocImage()
 			dataFormat = GL_DEPTH_COMPONENT;
 			dataType = GL_UNSIGNED_BYTE;
 			break;
-#if !defined(USE_GLES2)
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 		case FMT_X16:
 			internalFormat = GL_INTENSITY16;
 			dataFormat = GL_LUMINANCE;
@@ -540,7 +551,7 @@ void idImage::AllocImage()
 				}
 #else
 				byte* data = ( byte* )Mem_Alloc( compressedSize, TAG_TEMP );
-				glCompressedTexImage2DARB( uploadTarget + side, level, internalFormat, w, h, 0, compressedSize, data );
+				glCompressedTexImage2D( uploadTarget + side, level, internalFormat, w, h, 0, compressedSize, data );
 				if( data != NULL )
 				{
 					Mem_Free( data );

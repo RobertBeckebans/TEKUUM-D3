@@ -86,7 +86,11 @@ idCVar r_maxAnisotropicFiltering( "r_maxAnisotropicFiltering", "8", CVAR_RENDERE
 idCVar r_useTrilinearFiltering( "r_useTrilinearFiltering", "1", CVAR_RENDERER | CVAR_ARCHIVE | CVAR_BOOL, "Extra quality filtering" );
 idCVar r_lodBias( "r_lodBias", "0.5", CVAR_RENDERER | CVAR_ARCHIVE, "image lod bias" );
 
+#if defined(USE_GLES2) || defined(USE_GLES3)
+idCVar r_useStateCaching( "r_useStateCaching", "0", CVAR_RENDERER | CVAR_BOOL, "avoid redundant state changes in GL_*() calls" );
+#else
 idCVar r_useStateCaching( "r_useStateCaching", "1", CVAR_RENDERER | CVAR_BOOL, "avoid redundant state changes in GL_*() calls" );
+#endif
 
 idCVar r_znear( "r_znear", "3", CVAR_RENDERER | CVAR_FLOAT, "near Z clip plane distance", 0.001f, 200.0f );
 
@@ -298,7 +302,7 @@ static void R_CheckPortableExtensions()
 {
 	glConfig.glVersion = atof( glConfig.version_string );
 	const char* badVideoCard = common->GetLanguageDict()->GetString( "#str_06780" );
-#if !defined(USE_GLES2)
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 	if( glConfig.glVersion < 2.0f )
 	{
 		idLib::FatalError( badVideoCard );
@@ -319,14 +323,14 @@ static void R_CheckPortableExtensions()
 	}
 	
 	// GL_ARB_multitexture
-#if defined(USE_GLES2)
+#if defined(USE_GLES2) || defined(USE_GLES3)
 	glConfig.multitextureAvailable = true;
 #else
 	glConfig.multitextureAvailable = GLEW_ARB_multitexture != 0;
 #endif
 	
 	// GL_EXT_direct_state_access
-#if defined(USE_GLES2)
+#if defined(USE_GLES2) || defined(USE_GLES3)
 	glConfig.directStateAccess = 0;
 #else
 	glConfig.directStateAccess = GLEW_EXT_direct_state_access != 0;
@@ -335,14 +339,18 @@ static void R_CheckPortableExtensions()
 	
 	// GL_ARB_texture_compression + GL_S3_s3tc
 	// DRI drivers may have GL_ARB_texture_compression but no GL_EXT_texture_compression_s3tc
-#if defined(USE_GLES2)
+#if defined(USE_GLES2) || defined(USE_GLES3)
 	glConfig.textureCompressionAvailable = R_CheckExtension( "GL_EXT_texture_compression_dxt1" );
 #else
 	glConfig.textureCompressionAvailable = GLEW_ARB_texture_compression != 0;// && GLEW_EXT_texture_compression_s3tc != 0;
 #endif
 	
 	// GL_EXT_texture_filter_anisotropic
-#if defined(USE_GLES2)
+#if defined(USE_GLES3)
+	glConfig.anisotropicFilterAvailable = false;
+	glConfig.maxTextureAnisotropy = 1;
+#else
+#if defined(USE_GLES2) || defined(USE_GLES3)
 	glConfig.anisotropicFilterAvailable = R_CheckExtension( "GL_EXT_texture_filter_anisotropic" );
 #else
 	glConfig.anisotropicFilterAvailable = GLEW_EXT_texture_filter_anisotropic != 0;
@@ -356,11 +364,12 @@ static void R_CheckPortableExtensions()
 	{
 		glConfig.maxTextureAnisotropy = 1;
 	}
+#endif
 	
 	// GL_EXT_texture_lod_bias
 	// The actual extension is broken as specificed, storing the state in the texture unit instead
 	// of the texture object.  The behavior in GL 1.4 is the behavior we use.
-#if defined(USE_GLES2)
+#if defined(USE_GLES2) || defined(USE_GLES3)
 	glConfig.textureLODBiasAvailable = false;
 #else
 	glConfig.textureLODBiasAvailable = ( glConfig.glVersion >= 1.4 || GLEW_EXT_texture_lod_bias != 0 );
@@ -375,7 +384,7 @@ static void R_CheckPortableExtensions()
 	}
 	
 	// GL_ARB_seamless_cube_map
-#if defined(USE_GLES2)
+#if defined(USE_GLES2) || defined(USE_GLES3)
 	glConfig.seamlessCubeMapAvailable = false;
 #else
 	glConfig.seamlessCubeMapAvailable = GLEW_ARB_seamless_cube_map != 0;
@@ -383,7 +392,7 @@ static void R_CheckPortableExtensions()
 	r_useSeamlessCubeMap.SetModified();		// the CheckCvars() next frame will enable / disable it
 	
 	// GL_ARB_framebuffer_sRGB
-#if defined(USE_GLES2)
+#if defined(USE_GLES2) || defined(USE_GLES3)
 	glConfig.sRGBFramebufferAvailable = false;
 #else
 	glConfig.sRGBFramebufferAvailable = GLEW_ARB_framebuffer_sRGB != 0;
@@ -391,35 +400,37 @@ static void R_CheckPortableExtensions()
 	r_useSRGB.SetModified();		// the CheckCvars() next frame will enable / disable it
 	
 	// GL_ARB_vertex_buffer_object
-#if defined(USE_GLES2)
+#if defined(USE_GLES2) || defined(USE_GLES3)
 	glConfig.vertexBufferObjectAvailable = false;
 #else
 	glConfig.vertexBufferObjectAvailable = GLEW_ARB_vertex_buffer_object != 0;
 #endif
 	
 	// GL_ARB_map_buffer_range, map a section of a buffer object's data store
-#if defined(USE_GLES2)
+#if defined(USE_GLES3)
+	glConfig.mapBufferRangeAvailable = true;
+#elif defined(USE_GLES2)
 	glConfig.mapBufferRangeAvailable = false;
 #else
 	glConfig.mapBufferRangeAvailable = GLEW_ARB_map_buffer_range != 0;
 #endif
 	
 	// GL_ARB_vertex_array_object
-#if defined(USE_GLES2)
+#if defined(USE_GLES2) || defined(USE_GLES3)
 	glConfig.vertexArrayObjectAvailable = false;
 #else
 	glConfig.vertexArrayObjectAvailable = GLEW_ARB_vertex_array_object != 0;
 #endif
 	
 	// GL_ARB_draw_elements_base_vertex
-#if defined(USE_GLES2)
+#if defined(USE_GLES2) || defined(USE_GLES3)
 	glConfig.drawElementsBaseVertexAvailable = false;
 #else
 	glConfig.drawElementsBaseVertexAvailable = GLEW_ARB_draw_elements_base_vertex != 0;
 #endif
 	
 	// GL_ARB_vertex_program / GL_ARB_fragment_program
-#if defined(USE_GLES2)
+#if defined(USE_GLES2) || defined(USE_GLES3)
 	// RB: not supported and not used
 	//glGetIntegerv( GL_MAX_TEXTURE_COORDS, ( GLint* )&glConfig.maxTextureCoords );
 	glGetIntegerv( GL_MAX_TEXTURE_IMAGE_UNITS, ( GLint* )&glConfig.maxTextureImageUnits );
@@ -451,7 +462,15 @@ static void R_CheckPortableExtensions()
 	// RB: needed to calculate the bones on the CPU
 	glConfig.uniformBufferOffsetAlignment = 256;
 #else
+	
+#if defined(USE_GLES3)
+	glConfig.uniformBufferAvailable = false;
+	
+	// RB: needed to calculate the bones on the CPU
+	glConfig.uniformBufferOffsetAlignment = 256;
+#else
 	glConfig.uniformBufferAvailable = GLEW_ARB_uniform_buffer_object != 0;
+#endif
 	if( glConfig.uniformBufferAvailable )
 	{
 		glGetIntegerv( GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT, ( GLint* )&glConfig.uniformBufferOffsetAlignment );
@@ -463,14 +482,14 @@ static void R_CheckPortableExtensions()
 #endif
 	
 	// ATI_separate_stencil / OpenGL 2.0 separate stencil
-#if defined(USE_GLES2)
+#if defined(USE_GLES2) || defined(USE_GLES3)
 	glConfig.twoSidedStencilAvailable = false;
 #else
 	glConfig.twoSidedStencilAvailable = ( glConfig.glVersion >= 2.0f ) || GLEW_ATI_separate_stencil != 0;
 #endif
 	
 	// GL_EXT_depth_bounds_test
-#if defined(USE_GLES2)
+#if defined(USE_GLES2) || defined(USE_GLES3)
 	glConfig.depthBoundsTestAvailable = false;
 #else
 	glConfig.depthBoundsTestAvailable = GLEW_EXT_depth_bounds_test != 0;
@@ -479,6 +498,10 @@ static void R_CheckPortableExtensions()
 	// GL_ARB_sync
 #if defined(USE_GLES2)
 	glConfig.syncAvailable = false;
+	
+#elif defined(USE_GLES3)
+	glConfig.syncAvailable = false;
+	
 #else
 	glConfig.syncAvailable = GLEW_ARB_sync &&
 							 // as of 5/24/2012 (driver version 15.26.12.64.2761) sync objects
@@ -487,14 +510,14 @@ static void R_CheckPortableExtensions()
 #endif
 	
 	// GL_ARB_occlusion_query
-#if defined(USE_GLES2)
+#if defined(USE_GLES2) || defined(USE_GLES3)
 	glConfig.occlusionQueryAvailable = false;
 #else
 	glConfig.occlusionQueryAvailable = GLEW_ARB_occlusion_query != 0;
 #endif
 	
-	// GL_ARB_timer_query
-#if defined(USE_GLES2)
+	// GL_ARB_timer_query || defined(USE_GLES3)
+#if defined(USE_GLES2) || defined(USE_GLES3)
 	glConfig.timerQueryAvailable = false;
 #else
 	// RB: added intel check
@@ -503,14 +526,14 @@ static void R_CheckPortableExtensions()
 #endif
 	
 	// GL_OES_vertex_half_float
-#if defined(USE_GLES2)
+#if defined(USE_GLES2) || defined(USE_GLES3)
 	glConfig.vertexHalfFloatAvailable = R_CheckExtension( "GL_OES_vertex_half_float" );
 #else
 	glConfig.vertexHalfFloatAvailable = true;
 #endif
 	
 	// GREMEDY_string_marker
-#if defined(USE_GLES2)
+#if defined(USE_GLES2) || defined(USE_GLES3)
 	glConfig.gremedyStringMarkerAvailable = false;
 #else
 	glConfig.gremedyStringMarkerAvailable = GLEW_GREMEDY_string_marker != 0;
@@ -525,7 +548,7 @@ static void R_CheckPortableExtensions()
 	}
 	
 	// GL_ARB_debug_output
-#if defined(USE_GLES2)
+#if defined(USE_GLES2) || defined(USE_GLES3)
 	glConfig.debugOutputAvailable = false;
 #else
 	glConfig.debugOutputAvailable = GLEW_ARB_debug_output != 0;
@@ -551,7 +574,7 @@ static void R_CheckPortableExtensions()
 	}
 #endif
 	
-#if !defined(USE_GLES2)
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 	// GL_ARB_multitexture
 	if( !glConfig.multitextureAvailable )
 	{
@@ -900,20 +923,29 @@ void R_InitOpenGL()
 GL_CheckErrors
 ==================
 */
-void GL_CheckErrors()
+// RB: added filename, line parms
+bool GL_CheckErrors_( const char* filename, int line )
 {
 	int		err;
 	char	s[64];
 	int		i;
 	
+	if( r_ignoreGLErrors.GetBool() )
+	{
+		return false;
+	}
+	
 	// check for up to 10 errors pending
+	bool error = false;
 	for( i = 0 ; i < 10 ; i++ )
 	{
 		err = glGetError();
 		if( err == GL_NO_ERROR )
 		{
-			return;
+			break;
 		}
+		
+		error = true;
 		switch( err )
 		{
 			case GL_INVALID_ENUM:
@@ -925,7 +957,7 @@ void GL_CheckErrors()
 			case GL_INVALID_OPERATION:
 				strcpy( s, "GL_INVALID_OPERATION" );
 				break;
-#if !defined(USE_GLES2)
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 			case GL_STACK_OVERFLOW:
 				strcpy( s, "GL_STACK_OVERFLOW" );
 				break;
@@ -941,12 +973,15 @@ void GL_CheckErrors()
 				break;
 		}
 		
-		if( !r_ignoreGLErrors.GetBool() )
-		{
-			common->Printf( "GL_CheckErrors: %s\n", s );
-		}
+		//if( !r_ignoreGLErrors.GetBool() )
+		//{
+		common->Printf( "caught OpenGL error: %s in file %s line %i\n", s, filename, line );
+		//}
 	}
+	
+	return error;
 }
+// RB end
 
 /*
 =====================
@@ -1462,6 +1497,7 @@ Save out a screenshot showing the stencil buffer expanded by 16x range
 */
 void R_StencilShot()
 {
+#if !defined(USE_GLES3)
 	int			i, c;
 	
 	int	width = tr.GetWidth();
@@ -1494,6 +1530,7 @@ void R_StencilShot()
 	buffer[16] = 24;	// pixel size
 	
 	fileSystem->WriteFile( "screenshots/stencilShot.tga", buffer.Ptr(), c, "fs_savepath" );
+#endif
 }
 
 
@@ -1788,7 +1825,7 @@ void GfxInfo_f( const idCmdArgs& args )
 	common->Printf( "GL_MAX_TEXTURE_IMAGE_UNITS_ARB: %d\n", glConfig.maxTextureImageUnits );
 	
 	// RB begin
-#if !defined(USE_GLES2)
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 	if( r_useOpenGL32.GetInteger() > 0 )
 	{
 		int				contextFlags, profile;
@@ -2120,6 +2157,8 @@ R_InitCommands
 */
 void R_InitCommands()
 {
+	common->Printf( "R_InitCommands()\n" );
+	
 	cmdSystem->AddCommand( "sizeUp", R_SizeUp_f, CMD_FL_RENDERER, "makes the rendered view larger" );
 	cmdSystem->AddCommand( "sizeDown", R_SizeDown_f, CMD_FL_RENDERER, "makes the rendered view smaller" );
 	cmdSystem->AddCommand( "reloadGuis", R_ReloadGuis_f, CMD_FL_RENDERER, "reloads guis" );

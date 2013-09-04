@@ -558,7 +558,7 @@ void idFont::Touch()
 
 
 
-
+#ifdef BUILD_FREETYPE
 
 static FT_Library ftLibrary = NULL;
 
@@ -853,6 +853,8 @@ static void FinalizeFontInfoEx( const char* fontName, fontInfoEx_t& font, idFont
 	}
 }
 #endif
+
+#endif // #ifdef BUILD_FREETYPE
 
 bool idFont::LoadFromTrueTypeFont()
 {

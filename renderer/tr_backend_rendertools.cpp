@@ -92,7 +92,7 @@ RB_DrawBounds
 */
 void RB_DrawBounds( const idBounds& bounds )
 {
-#if !defined(USE_GLES2)
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 	if( bounds.IsCleared() )
 	{
 		return;
@@ -188,7 +188,7 @@ stenciling will matter.
 */
 void RB_PolygonClear()
 {
-#if !defined(USE_GLES2)
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 	glPushMatrix();
 	glPushAttrib( GL_ALL_ATTRIB_BITS );
 	glLoadIdentity();
@@ -228,6 +228,7 @@ Debugging tool to see what values are in the stencil buffer
 */
 void RB_ScanStencilBuffer()
 {
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 	int		counts[256];
 	int		i;
 	byte*	stencilReadback;
@@ -253,6 +254,7 @@ void RB_ScanStencilBuffer()
 			common->Printf( "%i: %i\n", i, counts[i] );
 		}
 	}
+#endif
 }
 
 
@@ -265,6 +267,7 @@ Print an overdraw count based on stencil index values
 */
 static void RB_CountStencilBuffer()
 {
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 	int		count;
 	int		i;
 	byte*	stencilReadback;
@@ -283,6 +286,7 @@ static void RB_CountStencilBuffer()
 	
 	// print some stats (not supposed to do from back end in SMP...)
 	common->Printf( "overdraw: %5.1f\n", ( float )count / ( renderSystem->GetWidth() * renderSystem->GetHeight() ) );
+#endif
 }
 
 /*
@@ -425,7 +429,7 @@ the resulting color shading from red at 0 to green at 128 to blue at 255
 */
 static void RB_ShowIntensity()
 {
-#if !defined(USE_GLES2)
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 	byte*	colorReadback;
 	int		i, j, c;
 	
@@ -492,7 +496,7 @@ Draw the depth buffer as colors
 */
 static void RB_ShowDepthBuffer()
 {
-#if !defined(USE_GLES2)
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 	void*	depthReadback;
 	
 	if( !r_showDepth.GetBool() )
@@ -777,7 +781,7 @@ FIXME: not thread safe!
 */
 static void RB_ShowSilhouette()
 {
-#if !defined(USE_GLES2)
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 	int		i;
 	const drawSurf_t*	surf;
 	const viewLight_t*	vLight;
@@ -1073,7 +1077,7 @@ green if they have a negative texture area, or blue if degenerate area
 */
 static void RB_ShowTexturePolarity( drawSurf_t** drawSurfs, int numDrawSurfs )
 {
-#if !defined(USE_GLES2)
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 	int		i, j;
 	drawSurf_t*	drawSurf;
 	const srfTriangles_t*	tri;
@@ -1154,7 +1158,7 @@ Shade materials that are using unsmoothed tangents
 */
 static void RB_ShowUnsmoothedTangents( drawSurf_t** drawSurfs, int numDrawSurfs )
 {
-#if !defined(USE_GLES2)
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 	int		i, j;
 	drawSurf_t*	drawSurf;
 	const srfTriangles_t*	tri;
@@ -1217,7 +1221,7 @@ Shade a triangle by the RGB colors of its tangent space
 */
 static void RB_ShowTangentSpace( drawSurf_t** drawSurfs, int numDrawSurfs )
 {
-#if !defined(USE_GLES2)
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 	int		i, j;
 	drawSurf_t*	drawSurf;
 	const srfTriangles_t*	tri;
@@ -1284,7 +1288,7 @@ Draw each triangle with the solid vertex colors
 */
 static void RB_ShowVertexColor( drawSurf_t** drawSurfs, int numDrawSurfs )
 {
-#if !defined(USE_GLES2)
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 	int		i, j;
 	drawSurf_t*	drawSurf;
 	const srfTriangles_t*	tri;
@@ -1340,7 +1344,7 @@ Debugging tool
 */
 static void RB_ShowNormals( drawSurf_t** drawSurfs, int numDrawSurfs )
 {
-#if !defined(USE_GLES2)
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 	int			i, j;
 	drawSurf_t*	drawSurf;
 	idVec3		end;
@@ -1530,7 +1534,7 @@ Draw texture vectors in the center of each triangle
 */
 static void RB_ShowTextureVectors( drawSurf_t** drawSurfs, int numDrawSurfs )
 {
-#if !defined(USE_GLES2)
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 	if( r_showTextureVectors.GetFloat() == 0.0f )
 	{
 		return;
@@ -1634,7 +1638,7 @@ Draw lines from each vertex to the dominant triangle center
 */
 static void RB_ShowDominantTris( drawSurf_t** drawSurfs, int numDrawSurfs )
 {
-#if !defined(USE_GLES2)
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 	int			i, j;
 	drawSurf_t*	drawSurf;
 	const srfTriangles_t*	tri;
@@ -1702,7 +1706,7 @@ Debugging tool
 */
 static void RB_ShowEdges( drawSurf_t** drawSurfs, int numDrawSurfs )
 {
-#if !defined(USE_GLES2)
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 	int			i, j, k, m, n, o;
 	drawSurf_t*	drawSurf;
 	const srfTriangles_t*	tri;
@@ -2022,7 +2026,7 @@ RB_DrawText
 */
 static void RB_DrawText( const char* text, const idVec3& origin, float scale, const idVec4& color, const idMat3& viewAxis, const int align )
 {
-#if !defined(USE_GLES2)
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 	renderProgManager.BindShader_Color();
 	
 	// RB begin
@@ -2247,7 +2251,7 @@ RB_ShowDebugLines
 */
 void RB_ShowDebugLines()
 {
-#if !defined(USE_GLES2)
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 	int			i;
 	int			width;
 	debugLine_t*	line;
@@ -2391,7 +2395,7 @@ RB_ShowDebugPolygons
 */
 void RB_ShowDebugPolygons()
 {
-#if !defined(USE_GLES2)
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 	int				i, j;
 	debugPolygon_t*	poly;
 	
@@ -2545,7 +2549,7 @@ RB_TestGamma
 
 void RB_TestGamma()
 {
-#if !defined(USE_GLES2)
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 	byte	image[G_HEIGHT][G_WIDTH][4];
 	int		i, j;
 	int		c, comp;
@@ -2658,7 +2662,7 @@ RB_TestGammaBias
 */
 static void RB_TestGammaBias()
 {
-#if !defined(USE_GLES2)
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 	byte	image[G_HEIGHT][G_WIDTH][4];
 	
 	if( r_testGammaBias.GetInteger() <= 0 )
@@ -2837,7 +2841,7 @@ RB_DrawExpandedTriangles
 */
 void RB_DrawExpandedTriangles( const srfTriangles_t* tri, const float radius, const idVec3& vieworg )
 {
-#if !defined(USE_GLES2)
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 	int i, j, k;
 	idVec3 dir[6], normal, point;
 	
@@ -2912,7 +2916,7 @@ FIXME: not thread safe!
 */
 void RB_ShowTrace( drawSurf_t** drawSurfs, int numDrawSurfs )
 {
-#if !defined(USE_GLES2)
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 	int						i;
 	const srfTriangles_t*	tri;
 	const drawSurf_t*		surf;

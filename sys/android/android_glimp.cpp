@@ -44,8 +44,14 @@ void JE_SetResolution( int width, int height )
 {
 	common->Printf( "JNI_SetResolution( %i, %i )\n", width, height );
 	
-	glConfig.vidWidth = width;
-	glConfig.vidHeight = height;
+	glConfig.nativeScreenWidth = width;
+	glConfig.nativeScreenHeight = height;
+}
+
+
+
+void GLimp_PreInit()
+{
 }
 
 bool GLimp_Init( glimpParms_t parms )
@@ -63,6 +69,12 @@ bool GLimp_Init( glimpParms_t parms )
 	glConfig.colorBits = 16;
 	glConfig.depthBits = 24;
 	glConfig.stencilBits = 8;
+	
+	glConfig.displayFrequency = 60;
+	glConfig.isStereoPixelFormat = false;
+	glConfig.multisamples = false;
+	
+	glConfig.pixelAspect = 1.0f;	// FIXME: some monitor modes may be distorted
 	
 	//glstring = (const char *) glGetString(GL_VENDOR);
 	//common->Printf("GL_VENDOR: %s\n", glstring);
@@ -91,6 +103,8 @@ void GLimp_Shutdown()
 
 void GLimp_SwapBuffers()
 {
+	//common->Printf( "GLimp_SwapBuffers()\n" );
+	
 	eglSwapBuffers( eglGetCurrentDisplay(), eglGetCurrentSurface( EGL_DRAW ) );
 }
 
@@ -102,34 +116,34 @@ void GLimp_SetGamma( unsigned short red[256], unsigned short green[256], unsigne
 
 void GLimp_WakeBackEnd( void* a )
 {
-	common->DPrintf( "GLimp_WakeBackEnd stub\n" );
+	//common->DPrintf( "GLimp_WakeBackEnd stub\n" );
 }
 
 void GLimp_FrontEndSleep()
 {
-	common->DPrintf( "GLimp_FrontEndSleep stub\n" );
+	//common->DPrintf( "GLimp_FrontEndSleep stub\n" );
 }
 
 void* GLimp_BackEndSleep()
 {
-	common->DPrintf( "GLimp_BackEndSleep stub\n" );
+	//common->DPrintf( "GLimp_BackEndSleep stub\n" );
 	return 0;
 }
 
 bool GLimp_SpawnRenderThread( void ( *a )() )
 {
-	common->DPrintf( "GLimp_SpawnRenderThread stub\n" );
+	//common->DPrintf( "GLimp_SpawnRenderThread stub\n" );
 	return false;
 }
 
 void GLimp_ActivateContext()
 {
-	common->DPrintf( "GLimp_ActivateContext stub\n" );
+	//common->DPrintf( "GLimp_ActivateContext stub\n" );
 }
 
 void GLimp_DeactivateContext()
 {
-	common->DPrintf( "GLimp_DeactivateContext stub\n" );
+	//common->DPrintf( "GLimp_DeactivateContext stub\n" );
 }
 
 /*
@@ -201,6 +215,59 @@ int Sys_GetVideoRam()
 }
 
 
+class idSort_VidMode : public idSort_Quick< vidMode_t, idSort_VidMode >
+{
+public:
+	int Compare( const vidMode_t& a, const vidMode_t& b ) const
+	{
+		int wd = a.width - b.width;
+		int hd = a.height - b.height;
+		int fd = a.displayHz - b.displayHz;
+		return ( hd != 0 ) ? hd : ( wd != 0 ) ? wd : fd;
+	}
+};
+
+static void FillStaticVidModes( idList<vidMode_t>& modeList )
+{
+	modeList.AddUnique( vidMode_t( 320,   240, 60 ) );
+	modeList.AddUnique( vidMode_t( 400,   300, 60 ) );
+	modeList.AddUnique( vidMode_t( 512,   384, 60 ) );
+	modeList.AddUnique( vidMode_t( 640,   480, 60 ) );
+	modeList.AddUnique( vidMode_t( 800,   600, 60 ) );
+	modeList.AddUnique( vidMode_t( 960,   720, 60 ) );
+	modeList.AddUnique( vidMode_t( 1024,  768, 60 ) );
+	modeList.AddUnique( vidMode_t( 1152,  864, 60 ) );
+	modeList.AddUnique( vidMode_t( 1280,  720, 60 ) );
+	modeList.AddUnique( vidMode_t( 1280,  768, 60 ) );
+	modeList.AddUnique( vidMode_t( 1280,  800, 60 ) );
+	modeList.AddUnique( vidMode_t( 1280, 1024, 60 ) );
+	modeList.AddUnique( vidMode_t( 1360,  768, 60 ) );
+	modeList.AddUnique( vidMode_t( 1440,  900, 60 ) );
+	modeList.AddUnique( vidMode_t( 1680, 1050, 60 ) );
+	modeList.AddUnique( vidMode_t( 1600, 1200, 60 ) );
+	modeList.AddUnique( vidMode_t( 1920, 1080, 60 ) );
+	modeList.AddUnique( vidMode_t( 1920, 1200, 60 ) );
+	modeList.AddUnique( vidMode_t( 2048, 1536, 60 ) );
+	modeList.AddUnique( vidMode_t( 2560, 1600, 60 ) );
+	
+	modeList.SortWithTemplate( idSort_VidMode() );
+}
+
+/*
+====================
+R_GetModeListForDisplay
+====================
+*/
+bool R_GetModeListForDisplay( const int requestedDisplayNum, idList<vidMode_t>& modeList )
+{
+	assert( requestedDisplayNum >= 0 );
+	
+	modeList.Clear();
+	
+	FillStaticVidModes( modeList );
+	
+	return true;
+}
 
 
 

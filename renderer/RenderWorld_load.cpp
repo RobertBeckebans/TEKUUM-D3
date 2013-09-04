@@ -768,7 +768,7 @@ void idRenderWorldLocal::ParseLightGridPoints( idLexer* src, idFile* fileOut )
 
 void idRenderWorldLocal::CalculateLightGridPointPositions()
 {
-#if !defined(USE_GLES2)
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 	int             gridStep[3];
 	int             pos[3];
 	idVec3          posFloat;
@@ -1113,7 +1113,7 @@ bool idRenderWorldLocal::InitFromMap( const char* name )
 	static const unsigned int BPROC_MAGIC = ( 'P' << 24 ) | ( 'R' << 16 ) | ( 'O' << 8 ) | BPROC_VERSION;
 	bool loaded = false;
 	
-#if 1
+#if 0
 	
 	// RB: don't waste memory on low memory systems
 #if defined(__ANDROID__)

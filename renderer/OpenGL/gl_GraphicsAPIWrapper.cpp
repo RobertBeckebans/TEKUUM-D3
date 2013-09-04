@@ -150,7 +150,7 @@ GL_DepthBoundsTest
 */
 void GL_DepthBoundsTest( const float zmin, const float zmax )
 {
-#if !defined(USE_GLES2)
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 	if( !glConfig.depthBoundsTestAvailable || zmin > zmax )
 	{
 		return;
@@ -286,7 +286,7 @@ void GL_SetDefaultState()
 {
 	RENDERLOG_PRINTF( "--- GL_SetDefaultState ---\n" );
 	
-#if defined(USE_GLES2)
+#if defined(USE_GLES2) || defined(USE_GLES3)
 	glClearDepthf( 1.0f );
 #else
 	glClearDepth( 1.0f );
@@ -308,11 +308,11 @@ void GL_SetDefaultState()
 	glDisable( GL_STENCIL_TEST );
 	glDisable( GL_POLYGON_OFFSET_FILL );
 	
-#if !defined(USE_GLES2)
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 	glDisable( GL_POLYGON_OFFSET_LINE );
 #endif
 	
-#if !defined(USE_GLES2)
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 	glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
 #endif
 	
@@ -324,7 +324,7 @@ void GL_SetDefaultState()
 	glEnable( GL_BLEND );
 	glEnable( GL_SCISSOR_TEST );
 	
-#if !defined(USE_GLES2)
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 	glDrawBuffer( GL_BACK );
 	glReadBuffer( GL_BACK );
 #endif
@@ -491,7 +491,7 @@ void GL_State( uint64 stateBits, bool forceGlState )
 	//
 	// fill/line mode
 	//
-#if 1 //!defined(USE_GLES2)
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 	if( diff & GLS_POLYMODE_LINE )
 	{
 		if( stateBits & GLS_POLYMODE_LINE )
@@ -514,14 +514,14 @@ void GL_State( uint64 stateBits, bool forceGlState )
 		{
 			glPolygonOffset( backEnd.glState.polyOfsScale, backEnd.glState.polyOfsBias );
 			glEnable( GL_POLYGON_OFFSET_FILL );
-#if 1 //!defined(USE_GLES2)
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 			glEnable( GL_POLYGON_OFFSET_LINE );
 #endif
 		}
 		else
 		{
 			glDisable( GL_POLYGON_OFFSET_FILL );
-#if 1 //!defined(USE_GLES2)
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 			glDisable( GL_POLYGON_OFFSET_LINE );
 #endif
 		}
