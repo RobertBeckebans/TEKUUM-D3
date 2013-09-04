@@ -3,6 +3,7 @@
 
 Doom 3 BFG Edition GPL Source Code
 Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2013 Robert Beckebans
 
 This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
@@ -75,6 +76,10 @@ enum textureFormat_t
 	
 	FMT_DXT1,			// 4 bpp
 	FMT_DXT5,			// 8 bpp
+	
+	// RB begin
+	FMT_ETC1_RGB8_OES,	// 4 bpp
+	// RB end
 	
 	//------------------------
 	// Depth buffer formats

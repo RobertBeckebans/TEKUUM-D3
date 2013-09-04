@@ -1824,7 +1824,7 @@ static void RB_StencilShadowPass( const drawSurf_t* drawSurfs, const viewLight_t
 				glDisableVertexAttribArray( PC_ATTRIB_INDEX_ST );
 				glDisableVertexAttribArray( PC_ATTRIB_INDEX_TANGENT );
 				
-#if defined(USE_GLES2) || defined(USE_GLES3)
+#if 0 //defined(USE_GLES2) || defined(USE_GLES3)
 				glVertexAttribPointer( PC_ATTRIB_INDEX_VERTEX, 4, GL_FLOAT, GL_FALSE, sizeof( idShadowVert ), ( void* )( vertOffset + SHADOWVERT_XYZW_OFFSET ) );
 #else
 				glVertexAttribPointer( PC_ATTRIB_INDEX_VERTEX, 4, GL_FLOAT, GL_FALSE, sizeof( idShadowVert ), ( void* )( SHADOWVERT_XYZW_OFFSET ) );

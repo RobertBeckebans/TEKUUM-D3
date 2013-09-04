@@ -153,7 +153,12 @@ idCVar r_testGammaBias( "r_testGammaBias", "0", CVAR_RENDERER | CVAR_FLOAT, "if 
 idCVar r_lightScale( "r_lightScale", "3", CVAR_ARCHIVE | CVAR_RENDERER | CVAR_FLOAT, "all light intensities are multiplied by this" );
 idCVar r_flareSize( "r_flareSize", "1", CVAR_RENDERER | CVAR_FLOAT, "scale the flare deforms from the material def" );
 
+#if defined(USE_GLES2) || defined(USE_GLES3)
+idCVar r_skipPrelightShadows( "r_skipPrelightShadows", "1", CVAR_RENDERER | CVAR_BOOL, "skip the dmap generated static shadow volumes" );
+#else
 idCVar r_skipPrelightShadows( "r_skipPrelightShadows", "0", CVAR_RENDERER | CVAR_BOOL, "skip the dmap generated static shadow volumes" );
+#endif
+
 idCVar r_useScissor( "r_useScissor", "1", CVAR_RENDERER | CVAR_BOOL, "scissor clip as portals and lights are processed" );
 idCVar r_useLightDepthBounds( "r_useLightDepthBounds", "1", CVAR_RENDERER | CVAR_BOOL, "use depth bounds test on lights to reduce both shadow and interaction fill" );
 idCVar r_useShadowDepthBounds( "r_useShadowDepthBounds", "1", CVAR_RENDERER | CVAR_BOOL, "use depth bounds test on individual shadow volumes to reduce shadow fill" );
@@ -500,7 +505,7 @@ static void R_CheckPortableExtensions()
 	glConfig.syncAvailable = false;
 	
 #elif defined(USE_GLES3)
-	glConfig.syncAvailable = false;
+	glConfig.syncAvailable = true;
 	
 #else
 	glConfig.syncAvailable = GLEW_ARB_sync &&
@@ -2157,7 +2162,7 @@ R_InitCommands
 */
 void R_InitCommands()
 {
-	common->Printf( "R_InitCommands()\n" );
+	//common->Printf( "R_InitCommands()\n" );
 	
 	cmdSystem->AddCommand( "sizeUp", R_SizeUp_f, CMD_FL_RENDERER, "makes the rendered view larger" );
 	cmdSystem->AddCommand( "sizeDown", R_SizeDown_f, CMD_FL_RENDERER, "makes the rendered view smaller" );

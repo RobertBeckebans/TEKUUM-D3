@@ -258,7 +258,11 @@ void idImage::SetTexParameters()
 	switch( filter )
 	{
 		case TF_DEFAULT:
-			if( r_useTrilinearFiltering.GetBool() )
+			if( opts.format == FMT_ETC1_RGB8_OES )
+			{
+				glTexParameterf( target, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+			}
+			else if( r_useTrilinearFiltering.GetBool() )
 			{
 				glTexParameterf( target, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR );
 			}
@@ -453,6 +457,11 @@ void idImage::AllocImage()
 			dataType = GL_UNSIGNED_BYTE;
 			break;
 #endif
+		case FMT_ETC1_RGB8_OES:
+			internalFormat = GL_ETC1_RGB8_OES;
+			dataFormat = GL_RGBA;
+			dataType = GL_UNSIGNED_BYTE;
+			break;
 		case FMT_DEPTH:
 			internalFormat = GL_DEPTH_COMPONENT;
 			dataFormat = GL_DEPTH_COMPONENT;

@@ -1113,7 +1113,7 @@ bool idRenderWorldLocal::InitFromMap( const char* name )
 	static const unsigned int BPROC_MAGIC = ( 'P' << 24 ) | ( 'R' << 16 ) | ( 'O' << 8 ) | BPROC_VERSION;
 	bool loaded = false;
 	
-#if 0
+#if 1
 	
 	// RB: don't waste memory on low memory systems
 #if defined(__ANDROID__)

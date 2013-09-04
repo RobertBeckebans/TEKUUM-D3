@@ -172,7 +172,9 @@ public:
 	
 	bool		IsCompressed() const
 	{
-		return ( opts.format == FMT_DXT1 || opts.format == FMT_DXT5 );
+		// RB: added ETC compression
+		return ( opts.format == FMT_DXT1 || opts.format == FMT_DXT5 || opts.format == FMT_ETC1_RGB8_OES );
+		// RB end
 	}
 	
 	void		SetTexParameters();	// update aniso and trilinear

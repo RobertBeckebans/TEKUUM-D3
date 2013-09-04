@@ -39,6 +39,7 @@ If you have questions concerning this license or the applicable additional terms
 #include "tr_local.h"
 #include "DXT/DXTCodec.h"
 #include "Color/ColorSpace.h"
+#include "../libs/etc1/etc1.h"
 
 idCVar image_highQualityCompression( "image_highQualityCompression", "0", CVAR_BOOL, "Use high quality (slow) compression" );
 
@@ -100,7 +101,9 @@ void idBinaryImage::Load2DFromMemory( int width, int height, const byte* pic_con
 		byte* dxtPic = pic;
 		int	dxtWidth = 0;
 		int	dxtHeight = 0;
-		if( textureFormat == FMT_DXT5 || textureFormat == FMT_DXT1 )
+		
+		// RB: added ETC1
+		if( textureFormat == FMT_DXT5 || textureFormat == FMT_DXT1 || textureFormat == FMT_ETC1_RGB8_OES )
 		{
 			if( ( scaledWidth & 3 ) || ( scaledHeight & 3 ) )
 			{
@@ -178,6 +181,15 @@ void idBinaryImage::Load2DFromMemory( int width, int height, const byte* pic_con
 				}
 			}
 		}
+		// RB begin
+		else if( textureFormat == FMT_ETC1_RGB8_OES )
+		{
+			etc1_uint32 encodedSize = etc1_get_encoded_data_size( width, height );
+			img.Alloc( encodedSize );
+			
+			etc1_encode_image( dxtPic, dxtWidth, dxtHeight, 4, dxtWidth * 4, img.data );
+		}
+		// RB end
 		else if( textureFormat == FMT_LUM8 || textureFormat == FMT_INT8 )
 		{
 			// LUM8 and INT8 just read the red channel

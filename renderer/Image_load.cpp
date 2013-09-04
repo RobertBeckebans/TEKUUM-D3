@@ -61,6 +61,10 @@ int BitsForFormat( textureFormat_t format )
 			return 4;
 		case FMT_DXT5:
 			return 8;
+			// RB: added ETC compression
+		case FMT_ETC1_RGB8_OES:
+			return 4;
+			// RB end
 		case FMT_DEPTH:
 			return 32;
 		case FMT_X16:
@@ -88,7 +92,10 @@ ID_INLINE void idImage::DeriveOpts()
 		switch( usage )
 		{
 			case TD_COVERAGE:
-#if defined(USE_GLES2) || defined(USE_GLES3)
+#if defined(__ANDROID__)
+				opts.format = FMT_ETC1_RGB8_OES;
+				
+#elif defined(USE_GLES2) || defined(USE_GLES3)
 				opts.format = FMT_RGBA8;
 #else
 				opts.format = FMT_DXT1;
@@ -111,7 +118,12 @@ ID_INLINE void idImage::DeriveOpts()
 #endif
 				break;
 			case TD_SPECULAR:
-#if defined(USE_GLES2) || defined(USE_GLES3)
+#if defined(__ANDROID__)
+				opts.format = FMT_ETC1_RGB8_OES;
+				opts.gammaMips = true;
+				opts.colorFormat = CFM_DEFAULT;
+				
+#elif defined(USE_GLES2) || defined(USE_GLES3)
 				opts.gammaMips = true;
 				opts.format = FMT_RGBA8;
 				opts.colorFormat = CFM_DEFAULT;
@@ -133,7 +145,11 @@ ID_INLINE void idImage::DeriveOpts()
 #endif
 				break;
 			case TD_BUMP:
-#if defined(USE_GLES2) || defined(USE_GLES3)
+#if defined(__ANDROID__)
+				opts.format = FMT_ETC1_RGB8_OES;
+				opts.colorFormat = CFM_DEFAULT;
+				
+#elif defined(USE_GLES2) || defined(USE_GLES3)
 				opts.format = FMT_RGBA8;
 				opts.colorFormat = CFM_DEFAULT;
 #else
@@ -188,7 +204,7 @@ ID_INLINE void idImage::DeriveOpts()
 			{
 				temp_width >>= 1;
 				temp_height >>= 1;
-				if( ( opts.format == FMT_DXT1 || opts.format == FMT_DXT5 ) &&
+				if( ( opts.format == FMT_DXT1 || opts.format == FMT_DXT5 || opts.format == FMT_ETC1_RGB8_OES ) &&
 						( ( temp_width & 0x3 ) != 0 || ( temp_height & 0x3 ) != 0 ) )
 				{
 					break;
@@ -772,7 +788,7 @@ void idImage::Print() const
 	
 	switch( opts.format )
 	{
-#define NAME_FORMAT( x ) case FMT_##x: common->Printf( "%-6s ", #x ); break;
+#define NAME_FORMAT( x ) case FMT_##x: common->Printf( "%-16s ", #x ); break;
 			NAME_FORMAT( NONE );
 			NAME_FORMAT( RGBA8 );
 			NAME_FORMAT( XRGB8 );
@@ -783,6 +799,9 @@ void idImage::Print() const
 			NAME_FORMAT( INT8 );
 			NAME_FORMAT( DXT1 );
 			NAME_FORMAT( DXT5 );
+			// RB begin
+			NAME_FORMAT( ETC1_RGB8_OES );
+			// RB end
 			NAME_FORMAT( DEPTH );
 			NAME_FORMAT( X16 );
 			NAME_FORMAT( Y16_X16 );

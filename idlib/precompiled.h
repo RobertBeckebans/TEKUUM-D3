@@ -172,19 +172,28 @@ const int MAX_EXPRESSION_REGISTERS = 4096;
 
 #endif
 
-/* -------------------- GL_EXT_texture_compression_s3tc -------------------- */
+
+
+
+#endif // defined(__ANDROID__)
+
+
+/* -------------------- OpenGL Extensions -------------------- */
+
 
 #ifndef GL_EXT_texture_compression_s3tc
 #define GL_EXT_texture_compression_s3tc 1
 
-#define GL_COMPRESSED_RGB_S3TC_DXT1_EXT 0x83F0
-#define GL_COMPRESSED_RGBA_S3TC_DXT1_EXT 0x83F1
-#define GL_COMPRESSED_RGBA_S3TC_DXT3_EXT 0x83F2
-#define GL_COMPRESSED_RGBA_S3TC_DXT5_EXT 0x83F3
+#define GL_COMPRESSED_RGB_S3TC_DXT1_EXT							0x83F0
+#define GL_COMPRESSED_RGBA_S3TC_DXT1_EXT						0x83F1
+#define GL_COMPRESSED_RGBA_S3TC_DXT3_EXT						0x83F2
+#define GL_COMPRESSED_RGBA_S3TC_DXT5_EXT						0x83F3
 
-#endif /* GL_EXT_texture_compression_s3tc */
+#endif // GL_EXT_texture_compression_s3tc
 
-#endif // defined(__ANDROID__)
+#ifndef GL_OES_compressed_ETC1_RGB8_texture
+#define GL_ETC1_RGB8_OES                                        0x8D64
+#endif
 
 // RB end
 #include "../renderer/Cinematic.h"
