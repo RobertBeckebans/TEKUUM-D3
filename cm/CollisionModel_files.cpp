@@ -635,7 +635,7 @@ bool idCollisionModelManagerLocal::LoadCollisionModelFile( const char* name, uns
 	bool loaded = false;
 	
 	// RB: don't waste memory on low memory systems
-#if defined(__ANDROID__)
+#if 0 //defined(__ANDROID__)
 	idFileLocal file( fileSystem->OpenFileRead( generatedFileName ) );
 #else
 	idFileLocal file( fileSystem->OpenFileReadMemory( generatedFileName ) );

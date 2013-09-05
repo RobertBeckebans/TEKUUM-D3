@@ -34,7 +34,7 @@ If you have questions concerning this license or the applicable additional terms
 
 idCVar r_skipStripDeadCode( "r_skipStripDeadCode", "0", CVAR_BOOL, "Skip stripping dead code" );
 #if defined(USE_GLES2) || defined(USE_GLES3)
-idCVar r_useUniformArrays( "r_useUniformArrays", "0", CVAR_BOOL, "" );
+idCVar r_useUniformArrays( "r_useUniformArrays", "1", CVAR_BOOL, "" );
 #else
 idCVar r_useUniformArrays( "r_useUniformArrays", "1", CVAR_BOOL, "" );
 #endif
@@ -1536,6 +1536,8 @@ void idRenderProgManager::CommitUniforms()
 			glUniform4fv( uniformLocation.uniformIndex, 1, glslUniforms[uniformLocation.parmIndex].ToFloatPtr() );
 		}
 	}
+	
+	//GL_CheckErrors();
 }
 
 class idSort_QuickUniforms : public idSort_Quick< glslUniformLocation_t, idSort_QuickUniforms >

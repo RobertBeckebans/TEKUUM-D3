@@ -3675,7 +3675,7 @@ idCollisionModelManagerLocal::LoadBinaryModel
 cm_model_t* idCollisionModelManagerLocal::LoadBinaryModel( const char* fileName, ID_TIME_T sourceTimeStamp )
 {
 	// RB: don't waste memory on low memory systems
-#if defined(__ANDROID__)
+#if 0 //defined(__ANDROID__)
 	idFileLocal file( fileSystem->OpenFileRead( fileName ) );
 #else
 	idFileLocal file( fileSystem->OpenFileReadMemory( fileName ) );

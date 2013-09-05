@@ -1116,7 +1116,7 @@ bool idRenderWorldLocal::InitFromMap( const char* name )
 #if 1
 	
 	// RB: don't waste memory on low memory systems
-#if defined(__ANDROID__)
+#if 0 //defined(__ANDROID__)
 	idFileLocal file( fileSystem->OpenFileRead( generatedFileName ) );
 #else
 	idFileLocal file( fileSystem->OpenFileReadMemory( generatedFileName ) );

@@ -778,6 +778,13 @@ void R_AddSingleModel( viewEntity_t* vEntity )
 			}
 		}
 		
+		// RB: relax renderer frontend
+		if( r_skipInteractions.GetBool() )
+		{
+			continue;
+		}
+		// RB end
+		
 		//----------------------------------------
 		// add all light interactions
 		//----------------------------------------
