@@ -767,10 +767,11 @@ const emptyCommand_t* idRenderSystemLocal::SwapCommandBuffers(
 	uint64* frontEndMicroSec,
 	uint64* backEndMicroSec,
 	uint64* shadowMicroSec,
-	uint64* gpuMicroSec )
+	uint64* gpuMicroSec,
+	bool swapBuffers )
 {
 
-	SwapCommandBuffers_FinishRendering( frontEndMicroSec, backEndMicroSec, shadowMicroSec, gpuMicroSec );
+	SwapCommandBuffers_FinishRendering( frontEndMicroSec, backEndMicroSec, shadowMicroSec, gpuMicroSec, swapBuffers );
 	
 	return SwapCommandBuffers_FinishCommandBuffers();
 }
@@ -784,7 +785,8 @@ void idRenderSystemLocal::SwapCommandBuffers_FinishRendering(
 	uint64* frontEndMicroSec,
 	uint64* backEndMicroSec,
 	uint64* shadowMicroSec,
-	uint64* gpuMicroSec )
+	uint64* gpuMicroSec,
+	bool swapBuffers )
 {
 	SCOPED_PROFILE_EVENT( "SwapCommandBuffers" );
 	
@@ -800,7 +802,7 @@ void idRenderSystemLocal::SwapCommandBuffers_FinishRendering(
 	
 	
 	// After coming back from an autoswap, we won't have anything to render
-	if( frameData->cmdHead->next != NULL )
+	if( frameData->cmdHead->next != NULL && swapBuffers )
 	{
 		// wait for our fence to hit, which means the swap has actually happened
 		// We must do this before clearing any resources the GPU may be using

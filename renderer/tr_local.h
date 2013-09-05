@@ -766,9 +766,9 @@ public:
 	
 	virtual void			WriteDemoPics();
 	virtual void			DrawDemoPics();
-	virtual const emptyCommand_t* 	SwapCommandBuffers( uint64* frontEndMicroSec, uint64* backEndMicroSec, uint64* shadowMicroSec, uint64* gpuMicroSec );
+	virtual const emptyCommand_t* 	SwapCommandBuffers( uint64* frontEndMicroSec, uint64* backEndMicroSec, uint64* shadowMicroSec, uint64* gpuMicroSec, bool swapBuffers );
 	
-	virtual void			SwapCommandBuffers_FinishRendering( uint64* frontEndMicroSec, uint64* backEndMicroSec, uint64* shadowMicroSec, uint64* gpuMicroSec );
+	virtual void			SwapCommandBuffers_FinishRendering( uint64* frontEndMicroSec, uint64* backEndMicroSec, uint64* shadowMicroSec, uint64* gpuMicroSec, bool swapBuffers );
 	virtual const emptyCommand_t* 	SwapCommandBuffers_FinishCommandBuffers();
 	
 	virtual void			RenderCommandBuffers( const emptyCommand_t* commandBuffers );

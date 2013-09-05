@@ -2998,7 +2998,7 @@ void idCommonLocal::PrintLoadingMessage( const char* msg )
 	renderSystem->DrawSmallStringExt( ( 640 - len * SMALLCHAR_WIDTH ) / 2, 410, msg, idVec4( 0.0f, 0.81f, 0.94f, 1.0f ), true );
 	
 	//renderSystem->EndFrame( NULL, NULL );
-	const emptyCommand_t* cmd = renderSystem->SwapCommandBuffers( NULL, NULL, NULL, NULL );
+	const emptyCommand_t* cmd = renderSystem->SwapCommandBuffers( NULL, NULL, NULL, NULL, true );
 	renderSystem->RenderCommandBuffers( cmd );
 #endif
 	// RB end
@@ -3056,7 +3056,7 @@ void idCommonLocal::Frame()
 				
 				// RB begin
 #if defined(__ANDROID__)
-				session->UpdateScreen( true, false, true );
+				session->UpdateScreen( true, false, false );
 #else
 				session->UpdateScreen( true, false, true );
 #endif
@@ -3071,7 +3071,7 @@ void idCommonLocal::Frame()
 			
 			// RB begin
 #if defined(__ANDROID__)
-			session->UpdateScreen( true, false, true );
+			session->UpdateScreen( false, false, false );
 #else
 			session->UpdateScreen( true, false, true );
 #endif

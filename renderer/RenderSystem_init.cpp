@@ -1247,13 +1247,13 @@ void R_ReadTiledPixels( int width, int height, byte* buffer, renderView_t* ref =
 			if( ref )
 			{
 				// discard anything currently on the list
-				tr.SwapCommandBuffers( NULL, NULL, NULL, NULL );
+				tr.SwapCommandBuffers( NULL, NULL, NULL, NULL, true );
 				
 				// build commands to render the scene
 				tr.primaryWorld->RenderScene( ref );
 				
 				// finish off these commands
-				const emptyCommand_t* cmd = tr.SwapCommandBuffers( NULL, NULL, NULL, NULL );
+				const emptyCommand_t* cmd = tr.SwapCommandBuffers( NULL, NULL, NULL, NULL, true );
 				
 				// issue the commands to the GPU
 				tr.RenderCommandBuffers( cmd );
@@ -2498,7 +2498,7 @@ void idRenderSystemLocal::Init()
 	frontEndJobList = parallelJobManager->AllocJobList( JOBLIST_RENDERER_FRONTEND, JOBLIST_PRIORITY_MEDIUM, 2048, 0, NULL );
 	
 	// make sure the command buffers are ready to accept the first screen update
-	SwapCommandBuffers( NULL, NULL, NULL, NULL );
+	SwapCommandBuffers( NULL, NULL, NULL, NULL, true );
 	
 	common->Printf( "renderSystem initialized.\n" );
 	common->Printf( "--------------------------------------\n" );

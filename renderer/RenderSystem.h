@@ -299,11 +299,11 @@ public:
 	//
 	// After this is called, new command buffers can be built up in parallel
 	// with the rendering of the closed off command buffers by RenderCommandBuffers()
-	virtual const emptyCommand_t* 	SwapCommandBuffers( uint64* frontEndMicroSec, uint64* backEndMicroSec, uint64* shadowMicroSec, uint64* gpuMicroSec ) = 0;
+	virtual const emptyCommand_t* 	SwapCommandBuffers( uint64* frontEndMicroSec, uint64* backEndMicroSec, uint64* shadowMicroSec, uint64* gpuMicroSec, bool swapBuffers ) = 0;
 	
 	// SwapCommandBuffers operation can be split in two parts for non-smp rendering
 	// where the GPU is idled intentionally for minimal latency.
-	virtual void			SwapCommandBuffers_FinishRendering( uint64* frontEndMicroSec, uint64* backEndMicroSec, uint64* shadowMicroSec, uint64* gpuMicroSec ) = 0;
+	virtual void			SwapCommandBuffers_FinishRendering( uint64* frontEndMicroSec, uint64* backEndMicroSec, uint64* shadowMicroSec, uint64* gpuMicroSec, bool swapBuffers ) = 0;
 	virtual const emptyCommand_t* 	SwapCommandBuffers_FinishCommandBuffers() = 0;
 	
 	// issues GPU commands to render a built up list of command buffers returned

@@ -2901,24 +2901,22 @@ void idSessionLocal::UpdateScreen( bool captureToImage, bool outOfSequence, bool
 	}
 	
 	// RB begin
-	if( swapBuffers )
+	
+	// this should exit right after vsync, with the GPU idle and ready to draw
+	const emptyCommand_t* cmd;
+	
+	if( com_speeds.GetBool() || com_showFPS.GetInteger() == 1 )
 	{
-		// this should exit right after vsync, with the GPU idle and ready to draw
-		const emptyCommand_t* cmd;
-		
-		if( com_speeds.GetBool() || com_showFPS.GetInteger() == 1 )
-		{
-			cmd = renderSystem->SwapCommandBuffers( &time_frontend, &time_backend, &time_shadows, &time_gpu );
-		}
-		else
-		{
-			cmd = renderSystem->SwapCommandBuffers( NULL, NULL, NULL, NULL );
-		}
-		
-		// get the GPU busy with new commands
-		renderSystem->RenderCommandBuffers( cmd );
-		
+		cmd = renderSystem->SwapCommandBuffers( &time_frontend, &time_backend, &time_shadows, &time_gpu, swapBuffers );
 	}
+	else
+	{
+		cmd = renderSystem->SwapCommandBuffers( NULL, NULL, NULL, NULL, swapBuffers );
+	}
+	
+	// get the GPU busy with new commands
+	renderSystem->RenderCommandBuffers( cmd );
+	
 	// RB end
 	
 	insideUpdateScreen = false;
