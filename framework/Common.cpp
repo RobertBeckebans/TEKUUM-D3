@@ -1955,6 +1955,31 @@ static void Com_GenerateSinCosTables_f( const idCmdArgs& args )
 	
 	fileSystem->CloseFile( file );
 }
+
+#if defined(USE_ANDROID_NDK_PROFILER)
+//#include "../libs/android-ndk-profiler/jni/prof.h"
+#include "../../android/jni/prof.h"
+
+static void Com_StartAndroidProfiling_f( const idCmdArgs& args )
+{
+	common->Printf( "starting Android NDK Profiler ...\n" );
+	
+	//setenv( "CPUPROFILE", "/data/data/com.robertbeckebans.tekuum/files/gmon.out", 1 );
+	setenv( "CPUPROFILE", "/sdcard/tekuum/gmon.out", 1 );
+	
+	setenv( "CPUPROFILE_FREQUENCY", "500", 1 );
+	
+	monstartup( "libtekuum.so" );
+}
+
+static void Com_StopAndroidProfiling_f( const idCmdArgs& args )
+{
+	common->Printf( "stopping Android NDK Profiler ...\n" );
+	
+	moncleanup();
+}
+
+#endif
 // RB end
 
 /*
@@ -2897,6 +2922,10 @@ void idCommonLocal::InitCommands()
 	
 	cmdSystem->AddCommand( "generateMaterialTables", Com_GenerateSinCosTables_f, CMD_FL_SYSTEM | CMD_FL_CHEAT, "generates tables required by the engine to run" );
 	
+#if defined(USE_ANDROID_NDK_PROFILER)
+	cmdSystem->AddCommand( "startAndroidProfiling", Com_StartAndroidProfiling_f, CMD_FL_SYSTEM, "" );
+	cmdSystem->AddCommand( "stopAndroidProfiling", Com_StopAndroidProfiling_f, CMD_FL_SYSTEM, "" );
+#endif
 	// RB end
 	
 	cmdSystem->AddCommand( "printMemInfo", PrintMemInfo_f, CMD_FL_SYSTEM, "prints memory debugging data" );
