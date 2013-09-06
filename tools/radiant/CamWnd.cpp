@@ -2503,7 +2503,7 @@ void CCamWnd::Cam_Render()
 	//renderSystem->EndFrame( &frontEnd, &backEnd );
 //common->Printf( "front:%i back:%i\n", frontEnd, backEnd );
 
-	const emptyCommand_t* cmd = renderSystem->SwapCommandBuffers( NULL, NULL, NULL, NULL );
+	const emptyCommand_t* cmd = renderSystem->SwapCommandBuffers( NULL, NULL, NULL, NULL, true );
 	renderSystem->RenderCommandBuffers( cmd );
 	
 	glConfig.nativeScreenWidth = oldNativeScreenWidth;

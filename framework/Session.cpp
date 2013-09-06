@@ -2895,10 +2895,12 @@ void idSessionLocal::UpdateScreen( bool captureToImage, bool outOfSequence, bool
 	// draw everything
 	Draw();
 	
+#if !defined(__ANDROID__)
 	if( captureToImage )
 	{
 		renderSystem->CaptureRenderToImage( "_currentRender", false );
 	}
+#endif
 	
 	// RB begin
 	

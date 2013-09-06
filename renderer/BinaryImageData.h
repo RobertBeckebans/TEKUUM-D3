@@ -43,11 +43,11 @@ This is where the Binary image headers go that are also included by external too
 
 // RB: FIXME
 #if defined(__ANDROID__)
-#define BIMAGE_VERSION 17
+#define BIMAGE_VERSION 18
 #elif defined(USE_GLES2)
-#define BIMAGE_VERSION 14
+#define BIMAGE_VERSION 19
 #elif defined(USE_GLES3)
-#define BIMAGE_VERSION 15
+#define BIMAGE_VERSION 20
 #else
 #define BIMAGE_VERSION 10
 #endif
