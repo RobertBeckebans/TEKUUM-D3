@@ -410,6 +410,7 @@ private:
 	int				joystickAxis[MAX_JOYSTICK_AXIS];	// set by joystick events
 	
 	// RB: rectangles for touch screen interfaces
+	idRectangle		touchMove;
 	idRectangle		touchAttack;
 	idRectangle		touchJump;
 	idRectangle		touchCrouch;
@@ -1274,6 +1275,11 @@ void idUsercmdGenLocal::TouchScreen()
 		int sysWidth = glConfig.nativeScreenWidth;
 		int sysHeight = glConfig.nativeScreenHeight;
 		
+		touchMove.x = 0;
+		touchMove.y = sysHeight - 400;
+		touchMove.w = 400;
+		touchMove.h = 400;
+		
 		touchAttack.x = sysWidth / 2 - 150;
 		touchAttack.y = sysHeight - 300;
 		touchAttack.w = 300;
@@ -1357,31 +1363,48 @@ void idUsercmdGenLocal::TouchScreen()
 						
 						Key( 'f' , action == TOUCH_MOTION_DOWN );
 					}
-					
+					else if( action == TOUCH_MOTION_UP )
+					{
+						// reset all keys
+						mouseButton = K_MOUSE1;
+						mouseDown = false;
+						Key( mouseButton, mouseDown );
+						
+						Key( K_SPACE , false );
+						Key( 'c' , false );
+						Key( K_MWHEELDOWN , false );
+						Key( K_MWHEELUP , false );
+						Key( 'f' , false );
+					}
 				}
 				else if( action == TOUCH_MOTION_DELTA_XY )
 				{
+					float x = idMath::ClampFloat( 0, sysWidth - 1, value * 0.001f * sysWidth );
+					float y = idMath::ClampFloat( 0, sysHeight - 1, value2 * 0.001f * sysHeight );
+					
+					/*
 					if( lastAction == TOUCH_MOTION_DOWN )
 					{
-						float x = idMath::ClampFloat( 0, sysWidth - 1, value * 0.001f * sysWidth );
-						float y = idMath::ClampFloat( 0, sysHeight - 1, value2 * 0.001f * sysHeight );
-						
 						if( touchAttack.Contains( x, y ) )
 						{
 							common->Printf( "idUsercmdGenLocal::TouchScreen() ( %i , %i ) inside touchAttack %s\n", ( int ) x, ( int ) y, touchAttack.String() );
-							
+					
 							mouseButton = K_MOUSE1;
 							mouseDown = true; // continue fire ( action == TOUCH_MOTION_DOWN );
 							Key( mouseButton, mouseDown );
 						}
 					}
 					else
+					*/
 					{
-						mouseDx += value3 * 4.0f;
-						continuousMouseX += value3 * 4.0f;
-						
-						mouseDy += value4 * 4.0f;
-						continuousMouseY += value4 * 4.0f;
+						if( !touchMove.Contains( x, y ) ) //&& !touchJump.Contains( x, y ) && !touchCrouch.Contains( x, y ) && )
+						{
+							mouseDx += value3 * 4.0f;
+							continuousMouseX += value3 * 4.0f;
+							
+							mouseDy += value4 * 4.0f;
+							continuousMouseY += value4 * 4.0f;
+						}
 					}
 				}
 				

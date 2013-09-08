@@ -157,6 +157,16 @@ enum MotionEventAction
 	MOTION_EVENT_ACTION_DOWN = 0,
 	MOTION_EVENT_ACTION_UP = 1,
 	MOTION_EVENT_ACTION_MOVE = 2,
+	
+	MOTION_EVENT_ACTION_POINTER_1_DOWN = 5,
+	MOTION_EVENT_ACTION_POINTER_1_UP = 6,
+	
+	MOTION_EVENT_ACTION_POINTER_2_DOWN = 261,
+	MOTION_EVENT_ACTION_POINTER_2_UP = 262,
+	
+	MOTION_EVENT_ACTION_POINTER_3_DOWN = 517,
+	MOTION_EVENT_ACTION_POINTER_3_UP = 518,
+	
 };
 
 void JE_QueueMotionEvent( int action, float x, float y, float pressure )
@@ -175,6 +185,8 @@ void JE_QueueMotionEvent( int action, float x, float y, float pressure )
 	switch( action )
 	{
 		case MOTION_EVENT_ACTION_DOWN:
+		case MOTION_EVENT_ACTION_POINTER_1_DOWN:
+		case MOTION_EVENT_ACTION_POINTER_2_DOWN:
 			Posix_QueEvent( SE_TOUCH_MOTION_DOWN, rx, ry, 0, NULL );
 			//Posix_QueEvent( SE_KEY, K_MOUSE1, true, 0, NULL );
 			
@@ -182,6 +194,8 @@ void JE_QueueMotionEvent( int action, float x, float y, float pressure )
 			break;
 			
 		case MOTION_EVENT_ACTION_UP:
+		case MOTION_EVENT_ACTION_POINTER_1_UP:
+		case MOTION_EVENT_ACTION_POINTER_2_UP:
 			Posix_QueEvent( SE_TOUCH_MOTION_UP, rx, ry, 0, NULL );
 			
 			//if( ( idMath::Fabs( mdx - x ) < 3 ) && ( idMath::Fabs( mdy - y ) < 3 ) )
