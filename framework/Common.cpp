@@ -93,7 +93,7 @@ idCVar com_developer( "developer", "0", CVAR_BOOL | CVAR_SYSTEM | CVAR_NOCHEAT, 
 idCVar com_allowConsole( "com_allowConsole", "1", CVAR_BOOL | CVAR_SYSTEM | CVAR_NOCHEAT, "allow toggling console with the tilde key" );
 idCVar com_speeds( "com_speeds", "0", CVAR_BOOL | CVAR_SYSTEM | CVAR_NOCHEAT, "show engine timings" );
 #if defined(__ANDROID__)
-idCVar com_showFPS( "com_showFPS", "2", CVAR_INTEGER | CVAR_SYSTEM | CVAR_NOCHEAT, "show frames rendered per second. 0: off 1: default bfg values, 2: only show FPS (classic view)" );
+idCVar com_showFPS( "com_showFPS", "1", CVAR_INTEGER | CVAR_SYSTEM | CVAR_NOCHEAT, "show frames rendered per second. 0: off 1: default bfg values, 2: only show FPS (classic view)" );
 idCVar com_showMemoryUsage( "com_showMemoryUsage", "1", CVAR_BOOL | CVAR_SYSTEM | CVAR_NOCHEAT, "show total and per frame memory usage" );
 idCVar com_logFile( "logFile", "1", CVAR_SYSTEM | CVAR_NOCHEAT, "1 = buffer log, 2 = flush after each print", 0, 2, idCmdSystem::ArgCompletion_Integer<0, 2> );
 #else
@@ -2999,6 +2999,8 @@ void idCommonLocal::PrintLoadingMessage( const char* msg )
 #else
 	//renderSystem->BeginFrame( renderSystem->GetWidth(), renderSystem->GetHeight() );
 	
+	const emptyCommand_t* cmd = renderSystem->SwapCommandBuffers_FinishCommandBuffers();
+	
 	const idMaterial* whiteMaterial = declManager->FindMaterial( "_white" );
 	const idMaterial* splashScreen = declManager->FindMaterial( "splashScreen" );
 	
@@ -3027,8 +3029,20 @@ void idCommonLocal::PrintLoadingMessage( const char* msg )
 	renderSystem->DrawSmallStringExt( ( 640 - len * SMALLCHAR_WIDTH ) / 2, 410, msg, idVec4( 0.0f, 0.81f, 0.94f, 1.0f ), true );
 	
 	//renderSystem->EndFrame( NULL, NULL );
-	const emptyCommand_t* cmd = renderSystem->SwapCommandBuffers( NULL, NULL, NULL, NULL, true );
+	
 	renderSystem->RenderCommandBuffers( cmd );
+	
+	if( com_speeds.GetBool() || com_showFPS.GetInteger() == 1 )
+	{
+		renderSystem->SwapCommandBuffers_FinishRendering( &time_frontend, &time_backend, &time_shadows, &time_gpu, true );
+	}
+	else
+	{
+		renderSystem->SwapCommandBuffers_FinishRendering( NULL, NULL, NULL, NULL, true );
+	}
+	
+	//const emptyCommand_t* cmd = renderSystem->SwapCommandBuffers( NULL, NULL, NULL, NULL, true );
+	//renderSystem->RenderCommandBuffers( cmd );
 #endif
 	// RB end
 }
@@ -3752,9 +3766,6 @@ void idCommonLocal::InitGame()
 	// cvars are initialized, but not the rendering system. Allow preference startup dialog
 	Sys_DoPreferences();
 	
-	// init the user command input code
-	usercmdGen->Init();
-	
 	/*
 	#if defined(STANDALONE)
 	PrintLoadingMessage( common->GetLanguageDict()->GetString( "#str_idCommonLocal_InitGame_Initialising_sound" ) );
@@ -3806,6 +3817,10 @@ void idCommonLocal::InitGame()
 #else
 	PrintLoadingMessage( common->GetLanguageDict()->GetString( "#str_04349" ) );
 #endif
+	
+	// RB: moved down here to build rectangles for touch screen interfaces
+	// init the user command input code
+	usercmdGen->Init();
 	
 	// initialize the user interfaces
 	uiManager->Init();

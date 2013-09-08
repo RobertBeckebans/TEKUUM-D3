@@ -93,18 +93,30 @@ ID_INLINE void idImage::DeriveOpts()
 		{
 			case TD_COVERAGE:
 #if defined(__ANDROID__)
+				//if( opts.width > 64 && opts.height > 64 )
+			{
 				opts.format = FMT_ETC1_RGB8_OES;
-				
-#elif defined(USE_GLES2) || defined(USE_GLES3)
-				opts.format = FMT_RGBA8;
-#else
-				opts.format = FMT_DXT1;
 				opts.colorFormat = CFM_GREEN_ALPHA;
+			}
+			//else
+			//{
+			//	opts.format = FMT_RGBA8;
+			//	opts.colorFormat = CFM_GREEN_ALPHA;
+			//}
+			
+#elif defined(USE_GLES2) || defined(USE_GLES3)
+			opts.format = FMT_RGBA8;
+			opts.colorFormat = CFM_GREEN_ALPHA;
+#else
+			opts.format = FMT_DXT1;
+			opts.colorFormat = CFM_GREEN_ALPHA;
 #endif
-				break;
+			break;
+			
 			case TD_DEPTH:
 				opts.format = FMT_DEPTH;
 				break;
+				
 			case TD_DIFFUSE:
 #if defined(USE_GLES2) || defined(USE_GLES3)
 				// TD_DIFFUSE gets only set to when its a diffuse texture for an interaction
@@ -117,46 +129,58 @@ ID_INLINE void idImage::DeriveOpts()
 				opts.colorFormat = CFM_YCOCG_DXT5;
 #endif
 				break;
+				
 			case TD_SPECULAR:
 #if defined(__ANDROID__)
+				//if( opts.width > 64 && opts.height > 64 )
+			{
+				opts.gammaMips = true;
 				opts.format = FMT_ETC1_RGB8_OES;
-				opts.gammaMips = true;
-				opts.colorFormat = CFM_DEFAULT;
-				
+			}
+			//else
+			//{
+			//	opts.format = FMT_RGBA8;
+			//	opts.gammaMips = true;
+			//}
+			
 #elif defined(USE_GLES2) || defined(USE_GLES3)
-				opts.gammaMips = true;
-				opts.format = FMT_RGBA8;
-				opts.colorFormat = CFM_DEFAULT;
+			opts.gammaMips = true;
+			opts.format = FMT_RGBA8;
 #else
-				opts.gammaMips = true;
-				opts.format = FMT_DXT1;
-				opts.colorFormat = CFM_DEFAULT;
+			opts.gammaMips = true;
+			opts.format = FMT_DXT1;
 #endif
-				break;
+			break;
+			
 			case TD_DEFAULT:
 #if defined(USE_GLES2) || defined(USE_GLES3)
 				opts.gammaMips = true;
 				opts.format = FMT_RGBA8;
-				opts.colorFormat = CFM_DEFAULT;
 #else
 				opts.gammaMips = true;
 				opts.format = FMT_DXT5;
-				opts.colorFormat = CFM_DEFAULT;
 #endif
 				break;
+				
 			case TD_BUMP:
 #if defined(__ANDROID__)
+				//if( opts.width > 64 && opts.height > 64 )
+			{
 				opts.format = FMT_ETC1_RGB8_OES;
-				opts.colorFormat = CFM_DEFAULT;
-				
+			}
+			//else
+			//{
+			//	opts.format = FMT_RGBA8;
+			//}
+			
 #elif defined(USE_GLES2) || defined(USE_GLES3)
-				opts.format = FMT_RGBA8;
-				opts.colorFormat = CFM_DEFAULT;
+			opts.format = FMT_RGBA8;
 #else
-				opts.format = FMT_DXT5;
-				opts.colorFormat = CFM_NORMAL_DXT5;
+			opts.format = FMT_DXT5;
+			opts.colorFormat = CFM_NORMAL_DXT5;
 #endif
-				break;
+			break;
+			
 			case TD_FONT:
 				// RB: FIXME mobile version
 				opts.format = FMT_DXT1;
@@ -164,24 +188,34 @@ ID_INLINE void idImage::DeriveOpts()
 				opts.numLevels = 4; // We only support 4 levels because we align to 16 in the exporter
 				opts.gammaMips = true;
 				break;
+				
 			case TD_LIGHT:
 #if defined(USE_GLES2) || defined(USE_GLES3)
 				opts.format = FMT_RGBA8;
+				opts.gammaMips = true;
 #else
 				opts.format = FMT_RGB565;
 				opts.gammaMips = true;
 #endif
 				break;
+				
 			case TD_LOOKUP_TABLE_MONO:
 				opts.format = FMT_INT8;
 				break;
+				
 			case TD_LOOKUP_TABLE_ALPHA:
+#if defined(USE_GLES2) || defined(USE_GLES3)
+				opts.format = FMT_RGBA8;
+#else
 				opts.format = FMT_ALPHA;
+#endif
 				break;
+				
 			case TD_LOOKUP_TABLE_RGB1:
 			case TD_LOOKUP_TABLE_RGBA:
 				opts.format = FMT_RGBA8;
 				break;
+				
 			default:
 				assert( false );
 				opts.format = FMT_RGBA8;

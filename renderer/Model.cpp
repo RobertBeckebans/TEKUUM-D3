@@ -379,8 +379,8 @@ bool idRenderModelStatic::LoadBinaryModel( idFile* file, const ID_TIME_T sourceT
 		return false;
 	}
 	
-//	session->PacifierUpdate();
-
+	//session->PacifierUpdate();
+	
 	int numSurfaces;
 	file->ReadBig( numSurfaces );
 	surfaces.SetNum( numSurfaces );

@@ -908,7 +908,6 @@ int idImageManager::LoadLevelImages( bool pacifier )
 		if( pacifier )
 		{
 			session->PacifierUpdate();
-			
 		}
 		
 		idImage*	image = images[ i ];

@@ -127,7 +127,7 @@ enum sys_mEvents
 };
 
 // RB begin
-typedef enum
+enum sysGamePadEvent_t
 {
 	GP_AXIS_SIDE,
 	GP_AXIS_FORWARD,
@@ -136,7 +136,14 @@ typedef enum
 	GP_AXIS_YAW,
 	GP_AXIS_PITCH,
 	GP_BUTTON,
-} sysGamePadEvent_t;
+};
+
+enum sysTouchScreenEvent_t
+{
+	TOUCH_MOTION_DOWN,
+	TOUCH_MOTION_UP,
+	TOUCH_MOTION_DELTA_XY,
+};
 // RB end
 
 typedef struct sysEvent_s
@@ -289,6 +296,11 @@ bool			Sys_IsXbox360ControllerAvailable();
 int				Sys_PollXbox360ControllerInputEvents();
 int				Sys_ReturnXbox360ControllerInputEvent( const int n, int& action, int& value, int& value2 );
 void			Sys_EndXbox360ControllerInputEvents();
+
+// touch screen input polling
+int				Sys_PollTouchScreenInputEvents();
+int				Sys_ReturnTouchScreenInputEvent( const int n, int& action, int& value, int& value2, int& value3, int& value4 );
+void			Sys_EndTouchScreenInputEvents();
 // RB end
 
 // when the console is down, or the game is about to perform a lengthy

@@ -3,6 +3,7 @@
 
 Doom 3 GPL Source Code
 Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2013 Robert Beckebans
 
 This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
 
@@ -30,6 +31,8 @@ If you have questions concerning this license or the applicable additional terms
 #pragma hdrstop
 
 #include "Session_local.h"
+#include "../ui/Rectangle.h"
+#include "../renderer/tr_local.h"
 
 /*
 ================
@@ -375,6 +378,7 @@ private:
 	void			Joystick();
 // RB begin
 	void			Xbox360Controller();
+	void			TouchScreen();
 // RB end
 
 	void			Key( int keyNum, bool down );
@@ -404,6 +408,15 @@ private:
 	
 	int				mouseDx, mouseDy;	// added to by mouse events
 	int				joystickAxis[MAX_JOYSTICK_AXIS];	// set by joystick events
+	
+	// RB: rectangles for touch screen interfaces
+	idRectangle		touchAttack;
+	idRectangle		touchJump;
+	idRectangle		touchCrouch;
+	idRectangle		touchNextWeapon;
+	idRectangle		touchPrevWeapon;
+	idRectangle		touchFlashLight;
+	// RB end
 	
 	static idCVar	in_yawSpeed;
 	static idCVar	in_pitchSpeed;
@@ -1192,6 +1205,7 @@ void idUsercmdGenLocal::Joystick()
 	memset( joystickAxis, 0, sizeof( joystickAxis ) );
 }
 
+// RB begin
 void idUsercmdGenLocal::Xbox360Controller()
 {
 	int numEvents = Sys_PollXbox360ControllerInputEvents();
@@ -1250,6 +1264,135 @@ void idUsercmdGenLocal::Xbox360Controller()
 	
 	Sys_EndXbox360ControllerInputEvents();
 }
+
+void idUsercmdGenLocal::TouchScreen()
+{
+	int numEvents = Sys_PollTouchScreenInputEvents();
+	
+	if( numEvents )
+	{
+		int sysWidth = glConfig.nativeScreenWidth;
+		int sysHeight = glConfig.nativeScreenHeight;
+		
+		touchAttack.x = sysWidth / 2 - 150;
+		touchAttack.y = sysHeight - 300;
+		touchAttack.w = 300;
+		touchAttack.h = 300;
+		
+		touchJump.x = sysWidth - 200;
+		touchJump.y = sysHeight - 400;
+		touchJump.w = 200;
+		touchJump.h = 200;
+		
+		touchCrouch.x = sysWidth - 200;
+		touchCrouch.y = sysHeight - 200;
+		touchCrouch.w = 200;
+		touchCrouch.h = 200;
+		
+		touchNextWeapon.x = sysWidth - 200;
+		touchNextWeapon.y = 0;
+		touchNextWeapon.w = 200;
+		touchNextWeapon.h = 200;
+		
+		touchPrevWeapon.x = sysWidth - 400;
+		touchPrevWeapon.y = 0;
+		touchPrevWeapon.w = 200;
+		touchPrevWeapon.h = 200;
+		
+		touchFlashLight.x = sysWidth - 600;
+		touchFlashLight.y = 0;
+		touchFlashLight.w = 200;
+		touchFlashLight.h = 200;
+		
+		//common->Printf( "idUsercmdGenLocal::TouchScreen() touchAttack: %s\n", touchAttack.String() );
+		
+		static int lastAction = -1;
+		
+		for( int i = 0; i < numEvents; i++ )
+		{
+			int action, value, value2, value3, value4;
+			
+			if( Sys_ReturnTouchScreenInputEvent( i, action, value, value2, value3, value4 ) )
+			{
+				if( action == TOUCH_MOTION_DOWN || action == TOUCH_MOTION_UP )
+				{
+					float x = idMath::ClampFloat( 0, sysWidth - 1, value * 0.001f * sysWidth );
+					float y = idMath::ClampFloat( 0, sysHeight - 1, value2 * 0.001f * sysHeight );
+					
+					if( touchAttack.Contains( x, y ) )
+					{
+						common->Printf( "idUsercmdGenLocal::TouchScreen() ( %i , %i ) inside touchAttack %s\n", ( int ) x, ( int ) y, touchAttack.String() );
+						
+						mouseButton = K_MOUSE1;
+						mouseDown = ( action == TOUCH_MOTION_DOWN );
+						Key( mouseButton, mouseDown );
+					}
+					else if( touchJump.Contains( x, y ) )
+					{
+						common->Printf( "idUsercmdGenLocal::TouchScreen() ( %i , %i ) inside touchJump %s\n", ( int ) x, ( int ) y, touchJump.String() );
+						
+						Key( K_SPACE, action == TOUCH_MOTION_DOWN );
+					}
+					else if( touchCrouch.Contains( x, y ) )
+					{
+						common->Printf( "idUsercmdGenLocal::TouchScreen() ( %i , %i ) inside touchCrouch %s\n", ( int ) x, ( int ) y, touchCrouch.String() );
+						
+						Key( 'c' , action == TOUCH_MOTION_DOWN );
+					}
+					else if( touchNextWeapon.Contains( x, y ) )
+					{
+						common->Printf( "idUsercmdGenLocal::TouchScreen() ( %i , %i ) inside touchNextWeapon %s\n", ( int ) x, ( int ) y, touchNextWeapon.String() );
+						
+						Key( K_MWHEELDOWN , action == TOUCH_MOTION_DOWN );
+					}
+					else if( touchPrevWeapon.Contains( x, y ) )
+					{
+						common->Printf( "idUsercmdGenLocal::TouchScreen() ( %i , %i ) inside touchPrevWeapon %s\n", ( int ) x, ( int ) y, touchPrevWeapon.String() );
+						
+						Key( K_MWHEELUP, action == TOUCH_MOTION_DOWN );
+					}
+					else if( touchFlashLight.Contains( x, y ) )
+					{
+						common->Printf( "idUsercmdGenLocal::TouchScreen() ( %i , %i ) inside touchFlashLight %s\n", ( int ) x, ( int ) y, touchFlashLight.String() );
+						
+						Key( 'f' , action == TOUCH_MOTION_DOWN );
+					}
+					
+				}
+				else if( action == TOUCH_MOTION_DELTA_XY )
+				{
+					if( lastAction == TOUCH_MOTION_DOWN )
+					{
+						float x = idMath::ClampFloat( 0, sysWidth - 1, value * 0.001f * sysWidth );
+						float y = idMath::ClampFloat( 0, sysHeight - 1, value2 * 0.001f * sysHeight );
+						
+						if( touchAttack.Contains( x, y ) )
+						{
+							common->Printf( "idUsercmdGenLocal::TouchScreen() ( %i , %i ) inside touchAttack %s\n", ( int ) x, ( int ) y, touchAttack.String() );
+							
+							mouseButton = K_MOUSE1;
+							mouseDown = true; // continue fire ( action == TOUCH_MOTION_DOWN );
+							Key( mouseButton, mouseDown );
+						}
+					}
+					else
+					{
+						mouseDx += value3 * 4.0f;
+						continuousMouseX += value3 * 4.0f;
+						
+						mouseDy += value4 * 4.0f;
+						continuousMouseY += value4 * 4.0f;
+					}
+				}
+				
+				lastAction = action;
+			}
+		}
+	}
+	
+	Sys_EndTouchScreenInputEvents();
+}
+// RB end
 
 /*
 ================
@@ -1320,10 +1463,12 @@ usercmd_t idUsercmdGenLocal::GetDirectUsercmd()
 	// process the system joystick events
 	Joystick();
 	
-// RB begin
+	// RB begin
 	Xbox360Controller();
-// RB end
-
+	
+	TouchScreen();
+	// RB end
+	
 	// create the usercmd
 	MakeCurrent();
 	

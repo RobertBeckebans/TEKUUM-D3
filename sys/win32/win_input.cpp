@@ -1529,8 +1529,25 @@ int	Sys_ReturnXbox360ControllerInputEvent( const int n, int& action, int& value,
 	return 1;
 }
 
-void Sys_EndXbox360ControllerInputEvents() { }
+void Sys_EndXbox360ControllerInputEvents()
+{
+}
 
 #endif // #if !defined(USE_XINPUT)
+
+// touch screen input polling
+int Sys_PollTouchScreenInputEvents()
+{
+	return 0;
+}
+
+int	Sys_ReturnTouchScreenInputEvent( const int n, int& action, int& value, int& value2 )
+{
+	return 0;
+}
+
+void Sys_EndTouchScreenInputEvents()
+{
+}
 
 // RB end

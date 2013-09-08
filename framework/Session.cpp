@@ -2725,7 +2725,7 @@ void idSessionLocal::PacifierUpdate()
 	
 	// RB: added captureToImage
 	const bool captureToImage = false;
-	UpdateScreen( captureToImage );
+	UpdateScreen( captureToImage, true, true );
 	// RB end
 	
 	idAsyncNetwork::client.PacifierUpdate();
@@ -2878,7 +2878,7 @@ void idSessionLocal::UpdateScreen( bool captureToImage, bool outOfSequence, bool
 	if( insideUpdateScreen )
 	{
 		return;
-//		common->FatalError( "idSessionLocal::UpdateScreen: recursively called" );
+		//common->FatalError( "idSessionLocal::UpdateScreen: recursively called" );
 	}
 	
 	insideUpdateScreen = true;
@@ -2891,6 +2891,7 @@ void idSessionLocal::UpdateScreen( bool captureToImage, bool outOfSequence, bool
 	}
 	
 	//renderSystem->BeginFrame( renderSystem->GetScreenWidth(), renderSystem->GetScreenHeight() );
+	const emptyCommand_t* cmd = renderSystem->SwapCommandBuffers_FinishCommandBuffers();
 	
 	// draw everything
 	Draw();
@@ -2903,6 +2904,20 @@ void idSessionLocal::UpdateScreen( bool captureToImage, bool outOfSequence, bool
 #endif
 	
 	// RB begin
+	
+#if 1
+	renderSystem->RenderCommandBuffers( cmd );
+	
+	if( com_speeds.GetBool() || com_showFPS.GetInteger() == 1 )
+	{
+		renderSystem->SwapCommandBuffers_FinishRendering( &time_frontend, &time_backend, &time_shadows, &time_gpu, swapBuffers );
+	}
+	else
+	{
+		renderSystem->SwapCommandBuffers_FinishRendering( NULL, NULL, NULL, NULL, swapBuffers );
+	}
+#else
+	// BFG style
 	
 	// this should exit right after vsync, with the GPU idle and ready to draw
 	const emptyCommand_t* cmd;
@@ -2918,6 +2933,7 @@ void idSessionLocal::UpdateScreen( bool captureToImage, bool outOfSequence, bool
 	
 	// get the GPU busy with new commands
 	renderSystem->RenderCommandBuffers( cmd );
+#endif
 	
 	// RB end
 	

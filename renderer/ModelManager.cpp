@@ -746,7 +746,6 @@ void idRenderModelManagerLocal::EndLevelLoad()
 		
 		if( !model->IsLevelLoadReferenced() && model->IsLoaded() && model->IsReloadable() )
 		{
-		
 //			common->Printf( "purging %s\n", model->Name() );
 
 			purgeCount++;
@@ -758,19 +757,18 @@ void idRenderModelManagerLocal::EndLevelLoad()
 		}
 		else
 		{
-		
 //			common->Printf( "keeping %s\n", model->Name() );
 
 			keepCount++;
 		}
 		
-		session->PacifierUpdate();
+		//session->PacifierUpdate();
 	}
 	
 	// load any new ones
 	for( int i = 0; i < models.Num(); i++ )
 	{
-		session->PacifierUpdate();
+		////session->PacifierUpdate();
 		
 		idRenderModel* model = models[i];
 		
@@ -778,6 +776,11 @@ void idRenderModelManagerLocal::EndLevelLoad()
 		{
 			loadCount++;
 			model->LoadModel();
+			
+			//if( ( loadCount & 15 ) == 0 )
+			{
+				session->PacifierUpdate();
+			}
 		}
 	}
 	
@@ -787,6 +790,7 @@ void idRenderModelManagerLocal::EndLevelLoad()
 		session->PacifierUpdate();
 		
 		idRenderModel* model = models[i];
+		
 		// RB begin
 		model->CreateVertexCache();
 		// RB end

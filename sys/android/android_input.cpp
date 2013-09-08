@@ -3,7 +3,7 @@
 
 Doom 3 GPL Source Code
 Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
-Copyright (C) 2012 Robert Beckebans
+Copyright (C) 2012-2013 Robert Beckebans
 
 This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
 
@@ -90,42 +90,48 @@ static int mouse_accel_numerator;
 static int mouse_accel_denominator;
 static int mouse_threshold;
 
-typedef struct poll_mouse_event_s
+struct motion_poll_t
 {
 	int action;
 	int value;
-} poll_mouse_event_t;
+	int value2;
+	int value3;
+	int value4;
+	
+	motion_poll_t()
+	{
+	}
+	
+	motion_poll_t( int a, int v, int v2, int v3, int v4 )
+	{
+		action = a;
+		value = v;
+		value2 = v2;
+		value3 = v3;
+		value4 = v4;
+	}
+};
 
-#define MAX_POLL_EVENTS 50
-#define POLL_EVENTS_HEADROOM 2 // some situations require to add several events
-
-static poll_mouse_event_t poll_events_mouse[MAX_POLL_EVENTS + POLL_EVENTS_HEADROOM];
-static int poll_mouse_event_count = 0;
-
-/*
-==========
-Android_AddMousePollEvent
-==========
-*/
-static bool Android_AddMousePollEvent( int action, int value )
+struct mouse_poll_t
 {
-	//common->Printf( "Android_AddMousePollEvent( action = %i, value = %i )\n", action, value );
+	int action;
+	int value;
 	
-	if( poll_mouse_event_count >= MAX_POLL_EVENTS + POLL_EVENTS_HEADROOM )
+	mouse_poll_t()
 	{
-		common->FatalError( "poll_mouse_event_count exceeded MAX_POLL_EVENT + POLL_EVENTS_HEADROOM\n" );
 	}
 	
-	poll_events_mouse[poll_mouse_event_count].action = action;
-	poll_events_mouse[poll_mouse_event_count++].value = value;
-	if( poll_mouse_event_count >= MAX_POLL_EVENTS )
+	mouse_poll_t( int a, int v )
 	{
-		common->DPrintf( "WARNING: reached MAX_POLL_EVENT poll_mouse_event_count\n" );
-		return false;
+		action = a;
+		value = v;
 	}
-	
-	return true;
-}
+};
+
+static idList<motion_poll_t> motion_polls;
+static idList<mouse_poll_t> mouse_polls;
+
+
 
 
 void JE_QueueKeyEvent( int key, int state )
@@ -159,20 +165,20 @@ void JE_QueueMotionEvent( int action, float x, float y, float pressure )
 	if( !common || !common->IsInitialized() )
 		return;
 		
-	//common->Printf( "JE_QueueMotionEvent( action = %i, x = %f, y = %f, pressure = %f )\n", action, x, y, pressure );
+	common->Printf( "JE_QueueMotionEvent( action = %i, x = %f, y = %f, pressure = %f )\n", action, x, y, pressure );
 #endif
 	
 #if 1
-	int rx = idMath::ClampInt( 0, 99, idMath::Ftoi( ( x / ( float )glConfig.nativeScreenWidth ) * 100 ) );
-	int ry = idMath::ClampInt( 0, 99, idMath::Ftoi( ( y / ( float )glConfig.nativeScreenHeight ) * 100 ) );
+	int rx = idMath::ClampInt( 0, 999, idMath::Ftoi( ( x / ( float )glConfig.nativeScreenWidth ) * 1000 ) );
+	int ry = idMath::ClampInt( 0, 999, idMath::Ftoi( ( y / ( float )glConfig.nativeScreenHeight ) * 1000 ) );
 	
 	switch( action )
 	{
 		case MOTION_EVENT_ACTION_DOWN:
 			Posix_QueEvent( SE_TOUCH_MOTION_DOWN, rx, ry, 0, NULL );
-			Posix_QueEvent( SE_KEY, K_MOUSE1, true, 0, NULL );
+			//Posix_QueEvent( SE_KEY, K_MOUSE1, true, 0, NULL );
 			
-			Android_AddMousePollEvent( M_ACTION1, true );
+			motion_polls.Append( motion_poll_t( TOUCH_MOTION_DOWN, rx, ry, 0, 0 ) );
 			break;
 			
 		case MOTION_EVENT_ACTION_UP:
@@ -180,15 +186,22 @@ void JE_QueueMotionEvent( int action, float x, float y, float pressure )
 			
 			//if( ( idMath::Fabs( mdx - x ) < 3 ) && ( idMath::Fabs( mdy - y ) < 3 ) )
 			{
-				Posix_QueEvent( SE_KEY, K_MOUSE1, false, 0, NULL );
+				//Posix_QueEvent( SE_KEY, K_MOUSE1, false, 0, NULL );
 			}
 			
-			Android_AddMousePollEvent( M_ACTION1, false );
+			motion_polls.Append( motion_poll_t( TOUCH_MOTION_UP, rx, ry , 0, 0 ) );
 			break;
 			
 		case MOTION_EVENT_ACTION_MOVE:
+		{
+			int dx = ( ( int ) x - mwx );
+			int dy = ( ( int ) y - mwy );
+			
 			Posix_QueEvent( SE_TOUCH_MOTION_MOVE, rx, ry, 0, NULL );
+			
+			motion_polls.Append( motion_poll_t( TOUCH_MOTION_DELTA_XY, rx, ry, dx, dy ) );
 			break;
+		}
 	}
 #else
 	
@@ -282,12 +295,14 @@ int JE_IsConsoleActive()
 
 void Sys_InitInput()
 {
-	poll_mouse_event_count = 0;
+	motion_polls.SetGranularity( 64 );
+	mouse_polls.SetGranularity( 64 );
 }
 
 void Sys_ShutdownInput()
 {
-	poll_mouse_event_count = 0;
+	motion_polls.Clear();
+	mouse_polls.Clear();
 }
 
 unsigned char Sys_MapCharForKey( int key )
@@ -311,31 +326,66 @@ void			Sys_EndKeyboardInputEvents() {}
 int				Sys_PollMouseInputEvents()
 {
 #if 0
-	if( poll_mouse_event_count > 0 )
+	if( mouse_polls.Num() > 0 )
 	{
-		common->Printf( "Sys_PollMouseInputEvents() = %i )\n", poll_mouse_event_count );
+		common->Printf( "Sys_PollMouseInputEvents() = %i )\n", mouse_polls.Num() );
 	}
 #endif
 	
-	return poll_mouse_event_count;
+	return mouse_polls.Num();
 }
 
 int				Sys_ReturnMouseInputEvent( const int n, int& action, int& value )
 {
-	if( n >= poll_mouse_event_count )
+	if( n >= mouse_polls.Num() )
 	{
 		return 0;
 	}
 	
-	action = poll_events_mouse[ n ].action;
-	value = poll_events_mouse[ n ].value;
+	action = mouse_polls[ n ].action;
+	value = mouse_polls[ n ].value;
 	
 	return 1;
 }
 
 void			Sys_EndMouseInputEvents()
 {
-	poll_mouse_event_count = 0;
+	mouse_polls.SetNum( 0 );
+}
+
+
+// touch screen input polling
+int				Sys_PollTouchScreenInputEvents()
+{
+#if 0
+	if( motion_polls.Num() > 0 )
+	{
+		common->Printf( "Sys_PollTouchScreenInputEvents() = %i )\n", motion_polls.Num() );
+	}
+#endif
+	
+	return motion_polls.Num();
+}
+
+int				Sys_ReturnTouchScreenInputEvent( const int n, int& action, int& value, int& value2, int& value3, int& value4 )
+{
+	if( n >= motion_polls.Num() )
+	{
+		return 0;
+	}
+	
+	action = motion_polls[ n ].action;
+	value = motion_polls[ n ].value;
+	value2 = motion_polls[ n ].value2;
+	value3 = motion_polls[ n ].value3;
+	value4 = motion_polls[ n ].value4;
+	
+	return 1;
+}
+
+void			Sys_EndTouchScreenInputEvents()
+{
+	motion_polls.SetNum( 0 );
 }
 
 //=====================================================================================

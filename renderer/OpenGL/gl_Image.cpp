@@ -185,7 +185,7 @@ void idImage::SetTexParameters()
 			return;
 	}
 	
-#if !defined(USE_GLES2) && !defined(USE_GLES3)
+#if !defined(USE_GLES2) //&& !defined(USE_GLES3)
 	
 	// ALPHA, LUMINANCE, LUMINANCE_ALPHA, and INTENSITY have been removed
 	// in OpenGL 3.2. In order to mimic those modes, we use the swizzle operators
@@ -260,7 +260,7 @@ void idImage::SetTexParameters()
 		case TF_DEFAULT:
 			if( opts.format == FMT_ETC1_RGB8_OES )
 			{
-				glTexParameterf( target, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+				glTexParameterf( target, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST );
 			}
 			else if( r_useTrilinearFiltering.GetBool() )
 			{
