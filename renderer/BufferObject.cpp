@@ -731,7 +731,7 @@ void idIndexBuffer::ClearWithoutFreeing()
 ================================================================================================
 */
 
-#if !defined(USE_GLES2) && !defined(USE_GLES3)
+#if defined(USE_GPU_SKINNING)
 /*
 ========================
 idJointBuffer::idJointBuffer

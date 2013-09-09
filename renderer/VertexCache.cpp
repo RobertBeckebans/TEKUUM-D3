@@ -62,11 +62,13 @@ static void MapGeoBufferSet( geoBufferSet_t& gbs )
 	{
 		gbs.mappedVertexBase = ( byte* )gbs.vertexBuffer.MapBuffer( BM_WRITE );
 	}
+	
 	if( gbs.mappedIndexBase == NULL )
 	{
 		gbs.mappedIndexBase = ( byte* )gbs.indexBuffer.MapBuffer( BM_WRITE );
 	}
-#if !defined(USE_GLES2) && !defined(USE_GLES3)
+	
+#if defined(USE_GPU_SKINNING)
 	if( gbs.mappedJointBase == NULL && gbs.jointBuffer.GetAllocedSize() != 0 )
 	{
 		gbs.mappedJointBase = ( byte* )gbs.jointBuffer.MapBuffer( BM_WRITE );
@@ -86,12 +88,14 @@ static void UnmapGeoBufferSet( geoBufferSet_t& gbs )
 		gbs.vertexBuffer.UnmapBuffer();
 		gbs.mappedVertexBase = NULL;
 	}
+	
 	if( gbs.mappedIndexBase != NULL )
 	{
 		gbs.indexBuffer.UnmapBuffer();
 		gbs.mappedIndexBase = NULL;
 	}
-#if !defined(USE_GLES2) && !defined(USE_GLES3)
+	
+#if defined(USE_GPU_SKINNING)
 	if( gbs.mappedJointBase != NULL )
 	{
 		gbs.jointBuffer.UnmapBuffer();
@@ -110,7 +114,7 @@ static void AllocGeoBufferSet( geoBufferSet_t& gbs, const int vertexBytes, const
 	gbs.vertexBuffer.AllocBufferObject( NULL, vertexBytes );
 	gbs.indexBuffer.AllocBufferObject( NULL, indexBytes );
 	
-#if !defined(USE_GLES2) && !defined(USE_GLES3)
+#if defined(USE_GPU_SKINNING)
 	if( jointBytes != 0 )
 	{
 		gbs.jointBuffer.AllocBufferObject( NULL, jointBytes / sizeof( idJointMat ) );
@@ -160,7 +164,7 @@ void idVertexCache::Shutdown()
 		frameData[i].vertexBuffer.FreeBufferObject();
 		frameData[i].indexBuffer.FreeBufferObject();
 		
-#if !defined(USE_GLES2) && !defined(USE_GLES3)
+#if defined(USE_GPU_SKINNING)
 		frameData[i].jointBuffer.FreeBufferObject();
 #endif
 	}
@@ -231,7 +235,7 @@ vertCacheHandle_t idVertexCache::ActuallyAlloc( geoBufferSet_t& vcs, const void*
 			idLib::Error( "Out of vertex cache" );
 		}
 	}
-#if !defined(USE_GLES2) && !defined(USE_GLES3)
+#if defined(USE_GPU_SKINNING)
 	else if( type == CACHE_JOINT )
 	{
 		base = &vcs.mappedJointBase;
@@ -353,7 +357,7 @@ bool idVertexCache::GetIndexBuffer( vertCacheHandle_t handle, idIndexBuffer* ib 
 idVertexCache::GetJointBuffer
 ==============
 */
-#if !defined(USE_GLES2) && !defined(USE_GLES3)
+#if defined(USE_GPU_SKINNING)
 bool idVertexCache::GetJointBuffer( vertCacheHandle_t handle, idJointBuffer* jb )
 {
 	const int isStatic = handle & VERTCACHE_STATIC;

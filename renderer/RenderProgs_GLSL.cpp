@@ -359,6 +359,10 @@ idStr StripDeadCode( const idStr& in, const char* name )
 	src.AddDefine( "GLES2" );
 #endif
 	
+#if defined(USE_GPU_SKINNING)
+	src.AddDefine( "USE_GPU_SKINNING" );
+#endif
+	
 	idList< idCGBlock > blocks;
 	
 	blocks.SetNum( 100 );
@@ -620,7 +624,16 @@ const char* vertexInsert =
 	"#version 100\n"
 	"#define GLES2\n"
 	"#define PC\n"
+
+#if 1 //defined(__ANDROID__)
 	"precision mediump float;\n"
+#else
+	"precision highp float;\n"
+#endif
+
+#if defined(USE_GPU_SKINNING) && !defined(__ANDROID__)
+	"#extension GL_ARB_gpu_shader5 : enable\n"
+#endif
 	"\n"
 	"float saturate( float v ) { return clamp( v, 0.0, 1.0 ); }\n"
 	"vec2 saturate( vec2 v ) { return clamp( v, 0.0, 1.0 ); }\n"
@@ -694,8 +707,13 @@ const char* fragmentInsert =
 	"#version 100\n"
 	"#define GLES2\n"
 	"#define PC\n"
+
+#if 1 //defined(__ANDROID__)
 	"precision mediump float;\n"
 	"#extension GL_OES_standard_derivatives : enable\n"
+#else
+	"precision highp float;\n"
+#endif
 	"\n"
 	"void clip( float v ) { if ( v < 0.0 ) { discard; } }\n"
 	"void clip( vec2 v ) { if ( any( lessThan( v, vec2( 0.0 ) ) ) ) { discard; } }\n"
@@ -1255,13 +1273,15 @@ GLuint idRenderProgManager::LoadGLSLShader( GLenum target, const char* name, idL
 	inFile.StripFileExtension();
 	outFileHLSL.Format( "renderprogs/hlsl/%s", name );
 	outFileHLSL.StripFileExtension();
+	
 #if defined(USE_GLES2) || defined(USE_GLES3)
 	outFileGLSL.Format( "renderprogs/glsles-1.0/%s", name );
+	outFileUniforms.Format( "renderprogs/glsles-1.0/%s", name );
 #else
 	outFileGLSL.Format( "renderprogs/glsl-1.50/%s", name );
+	outFileUniforms.Format( "renderprogs/glsl-1.50/%s", name );
 #endif
 	outFileGLSL.StripFileExtension();
-	outFileUniforms.Format( "renderprogs/glsl/%s", name );
 	outFileUniforms.StripFileExtension();
 	// RB end
 	
@@ -1672,7 +1692,7 @@ void idRenderProgManager::LoadGLSLProgram( const int programIndex, const int ver
 		prog.uniformLocations.SortWithTemplate( idSort_QuickUniforms() );
 	}
 	
-#if !defined(USE_GLES2) && !defined(USE_GLES3)
+#if defined(USE_GPU_SKINNING)
 	// get the uniform buffer binding for skinning joint matrices
 	GLint blockIndex = glGetUniformBlockIndex( program, "matrices_ubo" );
 	if( blockIndex != -1 )
