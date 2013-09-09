@@ -590,7 +590,7 @@ end
 	configuration "gles3"
 		defines
 		{
-			"USE_GLES3",
+ 			"USE_GLES3",
 		}
 		
 	configuration "monolith"
