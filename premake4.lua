@@ -127,8 +127,8 @@ newoption
 
 newoption
 {
-	trigger = "gles1",
-	description = "Only use OpenGL ES 1.0 functions",
+	trigger = "gles3",
+	description = "Only use OpenGL ES 3.0 functions",
 }
 
 newoption
@@ -587,17 +587,10 @@ end
 			"ID_REDIRECT_NEWDELETE",
 		}
 		
-	configuration "gles1"
+	configuration "gles3"
 		defines
 		{
-			"USE_GLES1",
-		}
-		excludes
-		{
-			"renderer/GLShader.cpp",
-			"renderer/Framebuffer.cpp",
-			"renderer/draw_glsl.cpp",
-			"renderer/draw_exp.cpp",
+			"USE_GLES3",
 		}
 		
 	configuration "monolith"

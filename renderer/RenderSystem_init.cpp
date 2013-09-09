@@ -1859,6 +1859,7 @@ void GfxInfo_f( const idCmdArgs& args )
 			common->Printf( S_COLOR_RED "Context is NOT forward compatible\n" );
 		}
 		
+#if defined(_WIN32)
 		// check if context is forward compatible
 		glGetIntegerv( GL_CONTEXT_FLAGS, &contextFlags );
 		if( contextFlags & WGL_CONTEXT_ES2_PROFILE_BIT_EXT )
@@ -1869,6 +1870,7 @@ void GfxInfo_f( const idCmdArgs& args )
 		{
 			common->Printf( S_COLOR_RED "Context is NOT OpenGL ES 2.0 compatible\n" );
 		}
+#endif
 	}
 #endif
 	// RB end
