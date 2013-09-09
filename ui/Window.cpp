@@ -908,7 +908,7 @@ const char* idWindow::HandleEvent( const sysEvent_t* event, bool* updateVisuals 
 				*updateVisuals = true;
 			}
 			
-			if( event->evValue == K_MOUSE1 )
+			if( event->evValue == K_MOUSE1 )//|| event->evType == SE_TOUCH_MOTION_DOWN )
 			{
 				if( !event->evValue2 && GetCaptureChild() )
 				{
@@ -1213,6 +1213,96 @@ const char* idWindow::HandleEvent( const sysEvent_t* event, bool* updateVisuals 
 				return mouseRet;
 			}
 		}
+		// RB: added touch screen events
+		else if( event->evType == SE_TOUCH_MOTION_DOWN || event->evType == SE_TOUCH_MOTION_UP )
+		{
+			EvalRegs( -1, true );
+			if( updateVisuals )
+			{
+				*updateVisuals = true;
+			}
+			
+			//if( event->evType == SE_TOUCH_MOTION_DOWN )
+			{
+				if( event->evType == SE_TOUCH_MOTION_UP && GetCaptureChild() )
+				{
+					// RB: key up
+					GetCaptureChild()->LoseCapture();
+					gui->GetDesktop()->captureChild = NULL;
+					return "";
+				}
+				
+				int c = children.Num();
+				while( --c >= 0 )
+				{
+					idWindow* child = children[c];
+					
+					if( child->visible && !child->noEvents && child->Contains( children[c]->drawRect, gui->CursorX(), gui->CursorY() ) )
+					{
+						if( event->evType == SE_TOUCH_MOTION_DOWN )
+						{
+							// RB: bring modal windows like pop up windows to top and let them eat all events
+							BringToTop( child );
+							
+							SetFocus( child );
+							
+							if( child->flags & WIN_HOLDCAPTURE )
+							{
+								SetCapture( child );
+							}
+						}
+						
+						if( child->Contains( child->clientRect, gui->CursorX(), gui->CursorY() ) )
+						{
+							//if ((gui_edit.GetBool() && (child->flags & WIN_SELECTED)) || (!gui_edit.GetBool() && (child->flags & WIN_MOVABLE))) {
+							//	SetCapture(child);
+							//}
+							
+							SetFocus( child );
+							
+							const char* childRet = child->HandleEvent( event, updateVisuals );
+							if( childRet != NULL && *childRet != '\0' )
+							{
+								return childRet;
+							}
+							
+							if( child->flags & WIN_MODAL )
+							{
+								return "";
+							}
+						}
+						else
+						{
+							if( event->evType == SE_TOUCH_MOTION_DOWN )
+							{
+								// RB: key down
+								SetFocus( child );
+								
+								bool capture = true;
+								if( capture && ( ( child->flags & WIN_MOVABLE ) || gui_edit.GetBool() ) )
+								{
+									SetCapture( child );
+								}
+								return "";
+							}
+							else
+							{
+							}
+						}
+					}
+				}
+				
+				if( event->evType == SE_TOUCH_MOTION_DOWN && !actionDownRun )
+				{
+					actionDownRun = RunScript( ON_ACTION );
+				}
+				else if( !actionUpRun )
+				{
+					actionUpRun = RunScript( ON_ACTIONRELEASE );
+				}
+			}
+		}
+		// RB end
 		else if( event->evType == SE_NONE )
 		{
 		}

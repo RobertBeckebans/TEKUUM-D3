@@ -154,7 +154,7 @@ idCVar r_lightScale( "r_lightScale", "3", CVAR_ARCHIVE | CVAR_RENDERER | CVAR_FL
 idCVar r_flareSize( "r_flareSize", "1", CVAR_RENDERER | CVAR_FLOAT, "scale the flare deforms from the material def" );
 
 #if defined(USE_GLES2) || defined(USE_GLES3)
-idCVar r_skipPrelightShadows( "r_skipPrelightShadows", "1", CVAR_RENDERER | CVAR_BOOL, "skip the dmap generated static shadow volumes" );
+idCVar r_skipPrelightShadows( "r_skipPrelightShadows", "0", CVAR_RENDERER | CVAR_BOOL, "skip the dmap generated static shadow volumes" );
 #else
 idCVar r_skipPrelightShadows( "r_skipPrelightShadows", "0", CVAR_RENDERER | CVAR_BOOL, "skip the dmap generated static shadow volumes" );
 #endif
