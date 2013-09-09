@@ -48,7 +48,10 @@ public:
 	
 	// Systems that don't have accurate GPU timing can pass 0
 	// to this, which will effectively disable resolution scaling.
-	void	SetCurrentGPUFrameTime( int microseconds );
+	
+	// RB: changed to milliseconds
+	void	SetCurrentGPUFrameTime( int milliseconds );
+	// RB end
 	
 	// return console display text
 	void	GetConsoleText( idStr& s );

@@ -270,8 +270,8 @@ float idConsoleLocal::DrawFPS( float y )
 	const int rendererGPUTime = time_gpu; //commonLocal.GetRendererGPUMicroseconds();
 	const int maxTime = 16;
 	
-	time_gameFrame = 0;
-	time_gameDraw = 0;
+	//time_gameFrame = 0;
+	//time_gameDraw = 0;
 	
 	y += SMALLCHAR_HEIGHT + 4;
 	idStr timeStr;

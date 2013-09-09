@@ -117,12 +117,17 @@ idCVar com_product_lang_ext( "com_product_lang_ext", "1", CVAR_INTEGER | CVAR_SY
 
 // com_speeds times
 int				com_frameMsec;
+
 int				time_gameFrame;
 int				time_gameDraw;
+
+int				time_lastGameFrame;
+int				time_lastGameDraw;
+
 uint64			time_frontend;			// renderSystem frontend time
 uint64			time_backend;			// renderSystem backend time
 uint64			time_shadows;			// renderer backend waiting for shadow volumes to be created
-uint64			time_gpu;				// total gpu time, at least for PC
+uint64			time_gpu;				// total gpu time, at least for PC in microseconds
 
 int				com_frameTime;			// time for the current frame in milliseconds
 int				com_frameNumber;		// variable frame number
@@ -3122,7 +3127,9 @@ void idCommonLocal::Frame()
 		}
 		
 		// report timing information
-		if( com_speeds.GetBool() || com_showFPS.GetInteger() == 1 )
+		
+		// RB: changed to have the last game frame time for the next dynamic screen resolution calculation
+		//if( com_speeds.GetBool() || com_showFPS.GetInteger() == 1 )
 		{
 			static int	lastTime;
 			int		nowTime = Sys_Milliseconds();
@@ -3134,9 +3141,13 @@ void idCommonLocal::Frame()
 				Printf( "frame:%i all:%3i gfr:%3i rf:%3i bk:%3i\n", com_frameNumber, com_frameMsec, time_gameFrame, time_frontend, time_backend );
 			}
 			
+			time_lastGameFrame = time_gameFrame;
+			time_lastGameDraw = time_gameDraw;
+			
 			time_gameFrame = 0;
 			time_gameDraw = 0;
 		}
+		// RB end
 		
 		com_frameNumber++;
 		

@@ -564,8 +564,9 @@ void RB_ExecuteBackEndCommands( const emptyCommand_t* cmds )
 	int c_setBuffers = 0;
 	int c_copyRenders = 0;
 	
-	// RB FIXME
-	//resolutionScale.SetCurrentGPUFrameTime( commonLocal.GetRendererGPUMicroseconds() );
+	// RB: we have no GPU timer queries with OpenGL ES 3.0 :(
+	resolutionScale.SetCurrentGPUFrameTime( time_lastGameFrame + time_lastGameDraw ); //commonLocal.GetRendererGPUMicroseconds() );
+	// RB end
 	
 	renderLog.StartFrame();
 	
