@@ -335,7 +335,7 @@ static void R_CheckPortableExtensions()
 #endif
 	
 	// GL_EXT_direct_state_access
-#if defined(USE_GLES2) || defined(USE_GLES3)
+#if ( defined(USE_GLES2) || defined(USE_GLES3) ) && !defined(USE_MESA)
 	glConfig.directStateAccess = 0;
 #else
 	glConfig.directStateAccess = GLEW_EXT_direct_state_access != 0;
@@ -344,18 +344,18 @@ static void R_CheckPortableExtensions()
 	
 	// GL_ARB_texture_compression + GL_S3_s3tc
 	// DRI drivers may have GL_ARB_texture_compression but no GL_EXT_texture_compression_s3tc
-#if defined(USE_GLES2) || defined(USE_GLES3)
+#if ( defined(USE_GLES2) || defined(USE_GLES3) ) && !defined(USE_MESA)
 	glConfig.textureCompressionAvailable = R_CheckExtension( "GL_EXT_texture_compression_dxt1" );
 #else
 	glConfig.textureCompressionAvailable = GLEW_ARB_texture_compression != 0;// && GLEW_EXT_texture_compression_s3tc != 0;
 #endif
 	
 	// GL_EXT_texture_filter_anisotropic
-#if defined(USE_GLES3)
+#if defined(USE_GLES3) && !defined(USE_MESA)
 	glConfig.anisotropicFilterAvailable = false;
 	glConfig.maxTextureAnisotropy = 1;
 #else
-#if defined(USE_GLES2) || defined(USE_GLES3)
+#if defined(USE_GLES2)
 	glConfig.anisotropicFilterAvailable = R_CheckExtension( "GL_EXT_texture_filter_anisotropic" );
 #else
 	glConfig.anisotropicFilterAvailable = GLEW_EXT_texture_filter_anisotropic != 0;
@@ -374,7 +374,7 @@ static void R_CheckPortableExtensions()
 	// GL_EXT_texture_lod_bias
 	// The actual extension is broken as specificed, storing the state in the texture unit instead
 	// of the texture object.  The behavior in GL 1.4 is the behavior we use.
-#if defined(USE_GLES2) || defined(USE_GLES3)
+#if ( defined(USE_GLES2) || defined(USE_GLES3) ) && !defined(USE_MESA)
 	glConfig.textureLODBiasAvailable = false;
 #else
 	glConfig.textureLODBiasAvailable = ( glConfig.glVersion >= 1.4 || GLEW_EXT_texture_lod_bias != 0 );
@@ -389,7 +389,7 @@ static void R_CheckPortableExtensions()
 	}
 	
 	// GL_ARB_seamless_cube_map
-#if defined(USE_GLES2) || defined(USE_GLES3)
+#if ( defined(USE_GLES2) || defined(USE_GLES3) ) && !defined(USE_MESA)
 	glConfig.seamlessCubeMapAvailable = false;
 #else
 	glConfig.seamlessCubeMapAvailable = GLEW_ARB_seamless_cube_map != 0;
@@ -405,14 +405,14 @@ static void R_CheckPortableExtensions()
 	r_useSRGB.SetModified();		// the CheckCvars() next frame will enable / disable it
 	
 	// GL_ARB_vertex_buffer_object
-#if defined(USE_GLES2) || defined(USE_GLES3)
+#if ( defined(USE_GLES2) || defined(USE_GLES3) ) && !defined(USE_MESA)
 	glConfig.vertexBufferObjectAvailable = false;
 #else
 	glConfig.vertexBufferObjectAvailable = GLEW_ARB_vertex_buffer_object != 0;
 #endif
 	
 	// GL_ARB_map_buffer_range, map a section of a buffer object's data store
-#if defined(USE_GLES3)
+#if defined(USE_GLES3) && !defined(USE_MESA)
 	glConfig.mapBufferRangeAvailable = true;
 #elif defined(USE_GLES2)
 	glConfig.mapBufferRangeAvailable = false;

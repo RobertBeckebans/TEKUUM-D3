@@ -220,10 +220,12 @@ public:
 	}
 #endif
 	
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 	void	BindShader_SimpleShade()
 	{
 		BindShader_Builtin( BUILTIN_SIMPLESHADE );
 	}
+#endif
 	
 	void	BindShader_Environment()
 	{
@@ -416,7 +418,9 @@ protected:
 		// RB begin
 		BUILTIN_VERTEXCOLOR,
 		// RB end
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 		BUILTIN_SIMPLESHADE,
+#endif
 		BUILTIN_TEXTURED,
 		BUILTIN_TEXTURE_VERTEXCOLOR,
 #if defined(USE_GPU_SKINNING)

@@ -90,7 +90,9 @@ void idRenderProgManager::Init()
 		// RB begin
 		{ BUILTIN_VERTEXCOLOR, "vertex_color.vfp" },
 		// RB end
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 		{ BUILTIN_SIMPLESHADE, "simpleshade.vfp" },
+#endif
 		{ BUILTIN_TEXTURED, "texture.vfp" },
 		{ BUILTIN_TEXTURE_VERTEXCOLOR, "texture_color.vfp" },
 #if defined(USE_GPU_SKINNING)

@@ -355,7 +355,7 @@ idStr StripDeadCode( const idStr& in, const char* name )
 	src.LoadMemory( in.c_str(), in.Length(), name );
 	src.AddDefine( "PC" );
 	
-#if defined(USE_GLES2) || defined(USE_GLES3)
+#if ( defined(USE_GLES2) || defined(USE_GLES3) ) && !defined(USE_MESA)
 	src.AddDefine( "GLES2" );
 #endif
 	
@@ -622,7 +622,11 @@ const char* vertexInsert =
 const char* vertexInsert =
 {
 	"#version 100\n"
+
+#if !defined(USE_MESA)
 	"#define GLES2\n"
+#endif
+
 	"#define PC\n"
 
 #if 1 //defined(__ANDROID__)
@@ -705,12 +709,16 @@ const char* fragmentInsert =
 const char* fragmentInsert =
 {
 	"#version 100\n"
+
+#if !defined(USE_MESA)
 	"#define GLES2\n"
+#endif
+
 	"#define PC\n"
 
 #if 1 //defined(__ANDROID__)
 	"precision mediump float;\n"
-	"#extension GL_OES_standard_derivatives : enable\n"
+	//"#extension GL_OES_standard_derivatives : enable\n"
 #else
 	"precision highp float;\n"
 #endif

@@ -104,7 +104,7 @@ ID_INLINE void idImage::DeriveOpts()
 			//	opts.colorFormat = CFM_GREEN_ALPHA;
 			//}
 			
-#elif defined(USE_GLES2) || defined(USE_GLES3)
+#elif ( defined(USE_GLES2) || defined(USE_GLES3) ) && !defined(USE_MESA)
 			opts.format = FMT_RGBA8;
 			opts.colorFormat = CFM_GREEN_ALPHA;
 #else
@@ -118,7 +118,7 @@ ID_INLINE void idImage::DeriveOpts()
 				break;
 				
 			case TD_DIFFUSE:
-#if defined(USE_GLES2) || defined(USE_GLES3)
+#if ( defined(USE_GLES2) || defined(USE_GLES3) ) && !defined(USE_MESA)
 				// TD_DIFFUSE gets only set to when its a diffuse texture for an interaction
 				//opts.gammaMips = true;
 				opts.format = FMT_RGBA8;
@@ -143,7 +143,7 @@ ID_INLINE void idImage::DeriveOpts()
 			//	opts.gammaMips = true;
 			//}
 			
-#elif defined(USE_GLES2) || defined(USE_GLES3)
+#elif ( defined(USE_GLES2) || defined(USE_GLES3) ) && !defined(USE_MESA)
 			opts.gammaMips = true;
 			opts.format = FMT_RGBA8;
 #else
@@ -153,7 +153,7 @@ ID_INLINE void idImage::DeriveOpts()
 			break;
 			
 			case TD_DEFAULT:
-#if defined(USE_GLES2) || defined(USE_GLES3)
+#if ( defined(USE_GLES2) || defined(USE_GLES3) ) && !defined(USE_MESA)
 				opts.gammaMips = true;
 				opts.format = FMT_RGBA8;
 #else
@@ -173,7 +173,7 @@ ID_INLINE void idImage::DeriveOpts()
 			//	opts.format = FMT_RGBA8;
 			//}
 			
-#elif defined(USE_GLES2) || defined(USE_GLES3)
+#elif ( defined(USE_GLES2) || defined(USE_GLES3) ) && !defined(USE_MESA)
 			opts.format = FMT_RGBA8;
 #else
 			opts.format = FMT_DXT5;
@@ -190,7 +190,7 @@ ID_INLINE void idImage::DeriveOpts()
 				break;
 				
 			case TD_LIGHT:
-#if defined(USE_GLES2) || defined(USE_GLES3)
+#if ( defined(USE_GLES2) || defined(USE_GLES3) ) && !defined(USE_MESA)
 				opts.format = FMT_RGBA8;
 				opts.gammaMips = true;
 #else
@@ -204,7 +204,7 @@ ID_INLINE void idImage::DeriveOpts()
 				break;
 				
 			case TD_LOOKUP_TABLE_ALPHA:
-#if defined(USE_GLES2) || defined(USE_GLES3)
+#if ( defined(USE_GLES2) || defined(USE_GLES3) ) && !defined(USE_MESA)
 				opts.format = FMT_RGBA8;
 #else
 				opts.format = FMT_ALPHA;
