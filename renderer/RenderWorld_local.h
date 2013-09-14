@@ -322,6 +322,15 @@ public:
 	//-------------------------------
 	// tr_light.c
 	void					CreateLightDefInteractions( idRenderLightLocal* const ldef, const int renderViewID );
+	
+// RB begin
+
+	//--------------------------
+	// RenderWorld_lightgrid.cpp
+	
+private:
+	void					SetupEntityLightingGrid( idRenderEntityLocal* def );
+// RB end
 };
 
 // if an entity / light combination has been evaluated and found to not genrate any surfaces or shadows,

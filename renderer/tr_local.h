@@ -274,6 +274,14 @@ public:
 	idInteraction* 			lastInteraction;
 	
 	bool					needsPortalSky;
+	
+	// RB begin
+	idVec3					volumeMidPoint;
+	bool					lightgridCalculated;
+	idVec3					lightDir;				// normalized direction towards light
+	idVec3					ambientLight;			// color normalized to 0-1
+	idVec3					directedLight;
+	// RB end
 };
 
 struct shadowOnlyEntity_t
@@ -372,6 +380,12 @@ struct viewEntity_t
 	// R_AddSingleModel will build a chain of parameters here to setup shadow volumes
 	staticShadowVolumeParms_t* 		staticShadowVolumes;
 	dynamicShadowVolumeParms_t* 	dynamicShadowVolumes;
+	
+	// RB: copied from entityDef if using precomputed lighting
+	idVec3					gridLightDir;				// global normalized direction towards light
+	idVec3					gridAmbientLight;			// color normalized to 0-1
+	idVec3					gridDirectedLight;
+	// RB end
 };
 
 
@@ -916,6 +930,9 @@ extern idCVar r_useEntityCallbacks;			// if 0, issue the callback immediately at
 extern idCVar r_lightAllBackFaces;			// light all the back faces, even when they would be shadowed
 extern idCVar r_useLightDepthBounds;		// use depth bounds test on lights to reduce both shadow and interaction fill
 extern idCVar r_useShadowDepthBounds;		// use depth bounds test on individual shadows to reduce shadow fill
+// RB begin
+extern idCVar r_usePrecomputedLighting;		// enable Q3A style precomputed lighting (vertex lighting/lightgrid)
+// RB end
 
 extern idCVar r_skipStaticInteractions;		// skip interactions created at level load
 extern idCVar r_skipDynamicInteractions;	// skip interactions created after level load
@@ -981,6 +998,9 @@ extern idCVar r_showPrimitives;				// report vertex/index/draw counts
 extern idCVar r_showPortals;				// draw portal outlines in color based on passed / not passed
 extern idCVar r_showSkel;					// draw the skeleton when model animates
 extern idCVar r_showOverDraw;				// show overdraw
+// RB begin
+extern idCVar r_showLightGrid;				// show Q3A style light grid points
+// RB end
 extern idCVar r_jointNameScale;				// size of joint names when r_showskel is set to 1
 extern idCVar r_jointNameOffset;			// offset of joint names when r_showskel is set to 1
 

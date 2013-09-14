@@ -1878,6 +1878,72 @@ static void RB_ShowLights()
 //	glLoadIdentity();
 }
 
+void RB_ShowLightGrid()
+{
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
+
+	if( r_showLightGrid.GetFloat() == 0.0f || !tr.primaryWorld )
+	{
+		return;
+	}
+	
+	// all volumes are expressed in world coordinates
+	RB_SimpleWorldSetup();
+	
+	globalImages->BindNull();
+	
+	renderProgManager.BindShader_VertexColor();
+	renderProgManager.CommitUniforms();
+	
+	GL_Cull( CT_TWO_SIDED );
+	glDisable( GL_DEPTH_TEST );
+	
+	GL_State( GLS_POLYMODE_LINE | GLS_DEPTHFUNC_ALWAYS );
+	
+	for( int i = 0; i < tr.primaryWorld->lightGridPoints.Num(); i++ )
+	{
+		lightGridPoint_t* gridPoint = &tr.primaryWorld->lightGridPoints[i];
+		
+		idVec3 distanceToCam = gridPoint->origin - backEnd.viewDef->renderView.vieworg;
+		if( distanceToCam.LengthSqr() > ( 1024 * 1024 ) )
+			continue;
+			
+		idVec4 c;
+		c[0] = idMath::ClampFloat( 0, 1, gridPoint->directed[0] * ( 1.0f / 255.0f ) );
+		c[1] = idMath::ClampFloat( 0, 1, gridPoint->directed[1] * ( 1.0f / 255.0f ) );
+		c[2] = idMath::ClampFloat( 0, 1, gridPoint->directed[2] * ( 1.0f / 255.0f ) );
+		
+		glColor4f( c[0], c[1], c[2], 1 );
+		
+		float lattitude = DEG2RAD( gridPoint->latLong[1] * ( 360.0f / 255.0f ) );
+		float longitude = DEG2RAD( gridPoint->latLong[0] * ( 360.0f / 255.0f ) );
+		
+		idVec3 dir;
+		dir[0] = idMath::Cos( lattitude ) * idMath::Sin( longitude );
+		dir[1] = idMath::Sin( lattitude ) * idMath::Sin( longitude );
+		dir[2] = idMath::Cos( longitude );
+		
+		idVec3 pos2 = gridPoint->origin - dir * r_showLightGrid.GetFloat();
+		
+		glBegin( GL_LINES );
+		
+		glColor4f( c[0], c[1], c[2], 1 );
+		//glColor4f( 1, 1, 1, 1 );
+		glVertex3fv( gridPoint->origin.ToFloatPtr() );
+		
+		glColor4f( 0, 0, 0, 1 );
+		glVertex3fv( pos2.ToFloatPtr() );
+		glEnd();
+	}
+	
+	//glEnable( GL_DEPTH_TEST );
+	//GL_State( GLS_DEFAULT );
+	//GL_Cull( CT_FRONT_SIDED );
+	
+#endif
+}
+// RB end
+
 /*
 =====================
 RB_ShowPortals
@@ -3036,6 +3102,10 @@ void RB_RenderDebugTools( drawSurf_t** drawSurfs, int numDrawSurfs )
 	RB_ShowNormals( drawSurfs, numDrawSurfs );
 	RB_ShowViewEntitys( backEnd.viewDef->viewEntitys );
 	RB_ShowLights();
+	// RB begin
+	RB_ShowLightGrid();
+	// RB end
+	
 	RB_ShowTextureVectors( drawSurfs, numDrawSurfs );
 	RB_ShowDominantTris( drawSurfs, numDrawSurfs );
 	if( r_testGamma.GetInteger() > 0 )  	// test here so stack check isn't so damn slow on debug builds

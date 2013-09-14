@@ -901,6 +901,13 @@ on the 360.
 */
 static void RB_FillDepthBufferFast( drawSurf_t** drawSurfs, int numDrawSurfs )
 {
+	// RB begin
+	if( r_usePrecomputedLighting.GetBool() )
+	{
+		return;
+	}
+	// RB end
+	
 	if( numDrawSurfs == 0 )
 	{
 		return;
@@ -1003,6 +1010,7 @@ static void RB_FillDepthBufferFast( drawSurf_t** drawSurfs, int numDrawSurfs )
 	renderLog.CloseBlock();
 	renderLog.CloseMainBlock();
 }
+
 
 /*
 =========================================================================================
@@ -1534,6 +1542,457 @@ static void RB_RenderInteractions( const drawSurf_t* surfList, const viewLight_t
 	
 	renderProgManager.Unbind();
 }
+
+// RB begin
+
+/*
+=========================================================================================
+
+AMBIENT PASS RENDERING
+
+=========================================================================================
+*/
+
+/*
+==================
+RB_AmbientPass
+==================
+*/
+static void RB_AmbientPass( const drawSurf_t* const* drawSurfs, int numDrawSurfs )
+{
+	if( !r_usePrecomputedLighting.GetBool() )
+	{
+		return;
+	}
+	
+	if( numDrawSurfs == 0 )
+	{
+		return;
+	}
+	
+	// if we are just doing 2D rendering, no need to fill the depth buffer
+	if( backEnd.viewDef->viewEntitys == NULL )
+	{
+		return;
+	}
+	
+	renderLog.OpenMainBlock( MRB_FILL_DEPTH_BUFFER );
+	renderLog.OpenBlock( "RB_AmbientPassFast" );
+	
+	// RB: not needed
+	// GL_StartDepthPass( backEnd.viewDef->scissor );
+	
+	// force MVP change on first surface
+	backEnd.currentSpace = NULL;
+	
+	// draw all the subview surfaces, which will already be at the start of the sorted list,
+	// with the general purpose path
+	GL_State( GLS_DEFAULT );
+	
+	const float lightScale = 1.0f; //r_lightScale.GetFloat();
+	const idVec4 lightColor = colorWhite * lightScale;
+	// apply the world-global overbright and the 2x factor for specular
+	const idVec4 diffuseColor = lightColor;
+	const idVec4 specularColor = lightColor * 2.0f;
+	
+	// setup renderparms assuming we will be drawing trivial surfaces first
+	RB_SetupForFastPathInteractions( diffuseColor, specularColor );
+	
+	for( int i = 0; i < numDrawSurfs; i++ )
+	{
+		const drawSurf_t* drawSurf = drawSurfs[i];
+		const idMaterial* surfaceMaterial = drawSurf->material;
+		
+		// translucent surfaces don't put anything in the depth buffer and don't
+		// test against it, which makes them fail the mirror clip plane operation
+		if( surfaceMaterial->Coverage() == MC_TRANSLUCENT )
+		{
+			continue;
+		}
+		
+		// get the expressions for conditionals / color / texcoords
+		const float* surfaceRegs = drawSurf->shaderRegisters;
+		
+		// if all stages of a material have been conditioned off, don't do anything
+		int stage = 0;
+		for( ; stage < surfaceMaterial->GetNumStages(); stage++ )
+		{
+			const shaderStage_t* pStage = surfaceMaterial->GetStage( stage );
+			// check the stage enable condition
+			if( surfaceRegs[ pStage->conditionRegister ] != 0 )
+			{
+				break;
+			}
+		}
+		if( stage == surfaceMaterial->GetNumStages() )
+		{
+			continue;
+		}
+		
+		bool isWorldModel = ( drawSurf->space->entityDef->parms.origin == vec3_origin );
+		
+		if( isWorldModel )
+		{
+			renderProgManager.BindShader_VertexLighting();
+		}
+		else
+		{
+			// take lighting from grid
+#if defined(USE_GPU_SKINNING)
+			if( surf->jointCache )
+			{
+				renderProgManager.BindShader_GridLightingSkinned();
+			}
+			else
+#endif
+			{
+				renderProgManager.BindShader_GridLighting();
+			}
+		}
+		
+		// change the matrix if needed
+		if( drawSurf->space != backEnd.currentSpace )
+		{
+			backEnd.currentSpace = drawSurf->space;
+			
+			RB_SetMVP( drawSurf->space->mvp );
+			
+			// tranform the view origin into model local space
+			idVec4 localViewOrigin( 1.0f );
+			R_GlobalPointToLocal( drawSurf->space->modelMatrix, backEnd.viewDef->renderView.vieworg, localViewOrigin.ToVec3() );
+			SetVertexParm( RENDERPARM_LOCALVIEWORIGIN, localViewOrigin.ToFloatPtr() );
+			
+			if( !isWorldModel )
+			{
+				// tranform the light direction into model local space
+				idVec4 localLightDirection( 0.0f );
+				R_GlobalVectorToLocal( drawSurf->space->modelMatrix, drawSurf->space->gridLightDir, localLightDirection.ToVec3() );
+				
+				SetVertexParm( RENDERPARM_LOCALLIGHTORIGIN, localLightDirection.ToFloatPtr() );
+			}
+		}
+		
+		
+		
+		if( !isWorldModel )
+		{
+			idVec4 directedColor;
+			directedColor.x = drawSurf->space->gridDirectedLight.x;
+			directedColor.y = drawSurf->space->gridDirectedLight.y;
+			directedColor.z = drawSurf->space->gridDirectedLight.z;
+			directedColor.w = 1;
+			
+			idVec4 ambientColor;
+			ambientColor.x = drawSurf->space->gridAmbientLight.x;
+			ambientColor.y = drawSurf->space->gridAmbientLight.y;
+			ambientColor.z = drawSurf->space->gridAmbientLight.z;
+			ambientColor.w = 1;
+			
+			renderProgManager.SetRenderParm( RENDERPARM_COLOR, directedColor.ToFloatPtr() );
+			renderProgManager.SetRenderParm( RENDERPARM_AMBIENT_COLOR, ambientColor.ToFloatPtr() );
+		}
+		
+		uint64 surfGLState = 0;
+		
+		// set polygon offset if necessary
+		if( surfaceMaterial->TestMaterialFlag( MF_POLYGONOFFSET ) )
+		{
+			surfGLState |= GLS_POLYGON_OFFSET;
+			GL_PolygonOffset( r_offsetFactor.GetFloat(), r_offsetUnits.GetFloat() * surfaceMaterial->GetPolygonOffset() );
+		}
+		
+		// subviews will just down-modulate the color buffer
+		idVec4 color;
+		if( surfaceMaterial->GetSort() == SS_SUBVIEW )
+		{
+			surfGLState |= GLS_SRCBLEND_DST_COLOR | GLS_DSTBLEND_ZERO | GLS_DEPTHFUNC_LESS;
+			color[0] = 1.0f;
+			color[1] = 1.0f;
+			color[2] = 1.0f;
+			color[3] = 1.0f;
+		}
+		else
+		{
+			// others just draw black
+#if 0
+			color[0] = 0.0f;
+			color[1] = 0.0f;
+			color[2] = 0.0f;
+			color[3] = 1.0f;
+#else
+			color = colorWhite;
+#endif
+		}
+		
+		// check for the fast path
+		if( surfaceMaterial->GetFastPathBumpImage() && !r_skipInteractionFastPath.GetBool() )
+		{
+			renderLog.OpenBlock( surfaceMaterial->GetName() );
+			
+			// texture 0 will be the per-surface bump map
+			GL_SelectTexture( INTERACTION_TEXUNIT_BUMP );
+			surfaceMaterial->GetFastPathBumpImage()->Bind();
+			
+			// texture 3 is the per-surface diffuse map
+			GL_SelectTexture( INTERACTION_TEXUNIT_DIFFUSE );
+			surfaceMaterial->GetFastPathDiffuseImage()->Bind();
+			
+			// texture 4 is the per-surface specular map
+			GL_SelectTexture( INTERACTION_TEXUNIT_SPECULAR );
+			surfaceMaterial->GetFastPathSpecularImage()->Bind();
+			
+			RB_DrawElementsWithCounters( drawSurf );
+			
+			renderLog.CloseBlock();
+			continue;
+		}
+		
+		renderLog.OpenBlock( surfaceMaterial->GetName() );
+		
+		//bool drawSolid = false;
+		
+		
+		// we may have multiple alpha tested stages
+		// if the only alpha tested stages are condition register omitted,
+		// draw a normal opaque surface
+		bool didDraw = false;
+		
+		drawInteraction_t inter = {};
+		inter.surf = drawSurf;
+		inter.bumpImage = NULL;
+		inter.specularImage = NULL;
+		inter.diffuseImage = NULL;
+		
+		if( !isWorldModel )
+		{
+#if 0
+			inter.diffuseColor[0] = drawSurf->space->gridDirectedLight[0];
+			inter.diffuseColor[1] = drawSurf->space->gridDirectedLight[1];
+			inter.diffuseColor[2] = drawSurf->space->gridDirectedLight[2];
+#else
+			inter.diffuseColor = colorRed;
+#endif
+			inter.diffuseColor[3] = 1;
+		}
+		else
+		{
+			inter.diffuseColor[0] = inter.diffuseColor[1] = inter.diffuseColor[2] = inter.diffuseColor[3] = 1;
+		}
+		inter.specularColor[0] = inter.specularColor[1] = inter.specularColor[2] = inter.specularColor[3] = 0;
+		//inter.ambientLight = lightShader->IsAmbientLight();
+		
+		// perforated surfaces may have multiple alpha tested stages
+		for( stage = 0; stage < surfaceMaterial->GetNumStages(); stage++ )
+		{
+			const shaderStage_t* surfaceStage = surfaceMaterial->GetStage( stage );
+			
+			switch( surfaceStage->lighting )
+			{
+				case SL_COVERAGE:
+				{
+					// ignore any coverage stages since they should only be used for the depth fill pass
+					// for diffuse stages that use alpha test.
+					
+#if 0
+					if( !pStage->hasAlphaTest )
+					{
+						continue;
+					}
+					
+					// check the stage enable condition
+					if( regs[ pStage->conditionRegister ] == 0 )
+					{
+						continue;
+					}
+					
+					// if we at least tried to draw an alpha tested stage,
+					// we won't draw the opaque surface
+					didDraw = true;
+					
+					// set the alpha modulate
+					color[3] = regs[ pStage->color.registers[3] ];
+					
+					// skip the entire stage if alpha would be black
+					if( color[3] <= 0.0f )
+					{
+						continue;
+					}
+					
+					uint64 stageGLState = surfGLState;
+					
+					// set privatePolygonOffset if necessary
+					if( pStage->privatePolygonOffset )
+					{
+						GL_PolygonOffset( r_offsetFactor.GetFloat(), r_offsetUnits.GetFloat() * pStage->privatePolygonOffset );
+						stageGLState |= GLS_POLYGON_OFFSET;
+					}
+					
+					GL_Color( color );
+					
+#ifdef USE_CORE_PROFILE
+					GL_State( stageGLState );
+					idVec4 alphaTestValue( regs[ pStage->alphaTestRegister ] );
+					SetFragmentParm( RENDERPARM_ALPHA_TEST, alphaTestValue.ToFloatPtr() );
+#else
+					GL_State( stageGLState | GLS_ALPHATEST_FUNC_GREATER | GLS_ALPHATEST_MAKE_REF( idMath::Ftob( 255.0f * regs[ pStage->alphaTestRegister ] ) ) );
+#endif
+					
+#if defined(USE_GPU_SKINNING)
+					if( drawSurf->jointCache )
+					{
+						renderProgManager.BindShader_TextureVertexColorSkinned();
+					}
+					else
+#endif
+					{
+						renderProgManager.BindShader_TextureVertexColor();
+					}
+					
+					RB_SetVertexColorParms( SVC_IGNORE );
+					
+					// bind the texture
+					GL_SelectTexture( 0 );
+					pStage->texture.image->Bind();
+					
+					// set texture matrix and texGens
+					RB_PrepareStageTexturing( pStage, drawSurf );
+					
+					// must render with less-equal for Z-Cull to work properly
+					assert( ( GL_GetCurrentState() & GLS_DEPTHFUNC_BITS ) == GLS_DEPTHFUNC_LESS );
+					
+					// draw it
+					RB_DrawElementsWithCounters( drawSurf );
+					
+					// clean up
+					RB_FinishStageTexturing( pStage, drawSurf );
+					
+					// unset privatePolygonOffset if necessary
+					if( pStage->privatePolygonOffset )
+					{
+						GL_PolygonOffset( r_offsetFactor.GetFloat(), r_offsetUnits.GetFloat() * material->GetPolygonOffset() );
+					}
+#endif
+					break;
+				}
+				
+				case SL_AMBIENT:
+				{
+					// ignore ambient stages while drawing interactions
+					break;
+				}
+				
+				case SL_BUMP:
+				{
+					// ignore stage that fails the condition
+					if( !surfaceRegs[ surfaceStage->conditionRegister ] )
+					{
+						break;
+					}
+					// draw any previous interaction
+					if( inter.bumpImage != NULL )
+					{
+						RB_DrawSingleInteraction( &inter );
+					}
+					inter.bumpImage = surfaceStage->texture.image;
+					inter.diffuseImage = NULL;
+					inter.specularImage = NULL;
+					RB_SetupInteractionStage( surfaceStage, surfaceRegs, NULL,
+											  inter.bumpMatrix, NULL );
+					break;
+				}
+				
+				case SL_DIFFUSE:
+				{
+					// ignore stage that fails the condition
+					if( !surfaceRegs[ surfaceStage->conditionRegister ] )
+					{
+						break;
+					}
+					// draw any previous interaction
+					if( inter.diffuseImage != NULL )
+					{
+						RB_DrawSingleInteraction( &inter );
+					}
+					inter.diffuseImage = surfaceStage->texture.image;
+					inter.vertexColor = surfaceStage->vertexColor;
+					RB_SetupInteractionStage( surfaceStage, surfaceRegs, diffuseColor.ToFloatPtr(),
+											  inter.diffuseMatrix, inter.diffuseColor.ToFloatPtr() );
+					break;
+				}
+				
+				case SL_SPECULAR:
+				{
+					// ignore stage that fails the condition
+					if( !surfaceRegs[ surfaceStage->conditionRegister ] )
+					{
+						break;
+					}
+					// draw any previous interaction
+					if( inter.specularImage != NULL )
+					{
+						RB_DrawSingleInteraction( &inter );
+					}
+					inter.specularImage = surfaceStage->texture.image;
+					inter.vertexColor = surfaceStage->vertexColor;
+					RB_SetupInteractionStage( surfaceStage, surfaceRegs, specularColor.ToFloatPtr(),
+											  inter.specularMatrix, inter.specularColor.ToFloatPtr() );
+					break;
+				}
+			}
+		}
+		
+		// draw the final interaction
+		RB_DrawSingleInteraction( &inter );
+		
+		// draw the entire surface solid
+		/*
+		if( drawSolid )
+		{
+			if( shader->GetSort() == SS_SUBVIEW )
+			{
+				renderProgManager.BindShader_Color();
+				GL_Color( color );
+				GL_State( surfGLState );
+			}
+			else
+			{
+		#if defined(USE_GPU_SKINNING)
+				if( drawSurf->jointCache )
+				{
+					renderProgManager.BindShader_TextureVertexColorSkinned();
+				}
+				else
+		#endif
+				{
+					renderProgManager.BindShader_TextureVertexColor();
+				}
+				GL_State( surfGLState | GLS_ALPHAMASK );
+			}
+		
+			// must render with less-equal for Z-Cull to work properly
+			assert( ( GL_GetCurrentState() & GLS_DEPTHFUNC_BITS ) == GLS_DEPTHFUNC_LESS );
+		
+			// draw it
+			RB_DrawElementsWithCounters( drawSurf );
+		}
+		*/
+		
+		renderLog.CloseBlock();
+	}
+	
+#ifdef USE_CORE_PROFILE
+	SetFragmentParm( RENDERPARM_ALPHA_TEST, vec4_zero.ToFloatPtr() );
+#endif
+	
+	// Allow platform specific data to be collected after the depth pass.
+	// RB: not needed
+	// GL_FinishDepthPass();
+	
+	renderLog.CloseBlock();
+	renderLog.CloseMainBlock();
+}
+
+// RB end
 
 /*
 ==============================================================================================
@@ -3007,6 +3466,11 @@ void RB_DrawViewInternal( const viewDef_t* viewDef, const int stereoEye )
 	RB_FillDepthBufferFast( drawSurfs, numDrawSurfs );
 	
 	//-------------------------------------------------
+	// fill the depth buffer and the color buffer with precomputed Q3A style lighting
+	//-------------------------------------------------
+	RB_AmbientPass( drawSurfs, numDrawSurfs );
+	
+	//-------------------------------------------------
 	// main light renderer
 	//-------------------------------------------------
 	RB_DrawInteractions();
@@ -3160,7 +3624,7 @@ void RB_MotionBlur()
 		}
 		
 		// this could just be a color, but we don't have a skinned color-only prog
-#if !defined(USE_GLES2)
+#if defined(USE_GPU_SKINNING)
 		if( surf->jointCache )
 		{
 			renderProgManager.BindShader_TextureVertexColorSkinned();

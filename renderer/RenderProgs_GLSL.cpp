@@ -335,7 +335,11 @@ static const char* GLSLParmNames[] =
 	
 	"rpOverbright",
 	"rpEnableSkinning",
-	"rpAlphaTest"
+	"rpAlphaTest",
+	
+	// RB begin
+	"rpAmbientColor",
+	// RB end
 };
 
 /*

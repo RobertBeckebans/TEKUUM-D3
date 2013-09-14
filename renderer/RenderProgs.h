@@ -115,6 +115,10 @@ enum renderParm_t
 	RENDERPARM_ENABLE_SKINNING,
 	RENDERPARM_ALPHA_TEST,
 	
+	// RB begin
+	RENDERPARM_AMBIENT_COLOR,
+	// RB end
+	
 	RENDERPARM_TOTAL,
 	RENDERPARM_USER = 128,
 };
@@ -163,8 +167,25 @@ public:
 	// RB begin
 	void	BindShader_VertexColor( )
 	{
-		BindShader_Builtin( BUILTIN_VERTEXCOLOR );
+		BindShader_Builtin( BUILTIN_VERTEX_COLOR );
 	}
+	
+	void	BindShader_VertexLighting()
+	{
+		BindShader_Builtin( BUILTIN_VERTEX_LIGHTING );
+	}
+	
+	void	BindShader_GridLighting()
+	{
+		BindShader_Builtin( BUILTIN_GRID_LIGHTING );
+	}
+	
+#if defined(USE_GPU_SKINNING)
+	void	BindShader_GridLightingSkinned()
+	{
+		BindShader_Builtin( BUILTIN_GRID_LIGHTING_SKINNED );
+	}
+#endif
 	// RB end
 	
 	void	BindShader_Texture( )
@@ -416,7 +437,16 @@ protected:
 		BUILTIN_GUI,
 		BUILTIN_COLOR,
 		// RB begin
-		BUILTIN_VERTEXCOLOR,
+		BUILTIN_VERTEX_COLOR,
+		BUILTIN_VERTEX_LIGHTING,
+		BUILTIN_GRID_LIGHTING,
+#if defined(USE_GPU_SKINNING)
+		BUILTIN_GRID_LIGHTING_SKINNED,
+#endif
+		//BUILTIN_GRID_LIGHTING,
+//#if defined(USE_GPU_SKINNING)
+//		BUILTIN_GRID_LIGHTING_SKINNED,
+//#endif
 		// RB end
 #if !defined(USE_GLES2) && !defined(USE_GLES3)
 		BUILTIN_SIMPLESHADE,
