@@ -1639,7 +1639,7 @@ static void RB_AmbientPass( const drawSurf_t* const* drawSurfs, int numDrawSurfs
 		{
 			// take lighting from grid
 #if defined(USE_GPU_SKINNING)
-			if( surf->jointCache )
+			if( drawSurf->jointCache )
 			{
 				renderProgManager.BindShader_GridLightingSkinned();
 			}

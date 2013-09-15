@@ -743,6 +743,17 @@ static void RB_RenderDrawSurfListWithFunction( drawSurf_t** drawSurfs, int numDr
 			}
 		}
 #endif
+		
+#if defined(USE_GPU_SKINNING)
+		if( drawSurf->jointCache )
+		{
+			renderProgManager.BindShader_ColorSkinned();
+		}
+		else
+		{
+			renderProgManager.BindShader_Color();
+		}
+#endif
 		// RB end
 		
 		// change the scissor if needed
@@ -913,7 +924,6 @@ static void RB_ShowTris( drawSurf_t** drawSurfs, int numDrawSurfs )
 	}
 	
 	GL_Color( color );
-	renderProgManager.BindShader_Color();
 	
 	RB_RenderDrawSurfListWithFunction( drawSurfs, numDrawSurfs, RB_DrawElementsWithCounters );
 	

@@ -165,6 +165,13 @@ public:
 	}
 	
 	// RB begin
+#if defined(USE_GPU_SKINNING)
+	void	BindShader_ColorSkinned( )
+	{
+		BindShader_Builtin( BUILTIN_COLOR_SKINNED );
+	}
+#endif
+	
 	void	BindShader_VertexColor( )
 	{
 		BindShader_Builtin( BUILTIN_VERTEX_COLOR );
@@ -437,6 +444,9 @@ protected:
 		BUILTIN_GUI,
 		BUILTIN_COLOR,
 		// RB begin
+#if defined(USE_GPU_SKINNING)
+		BUILTIN_COLOR_SKINNED,
+#endif
 		BUILTIN_VERTEX_COLOR,
 		BUILTIN_VERTEX_LIGHTING,
 		BUILTIN_GRID_LIGHTING,

@@ -171,7 +171,7 @@ enum MotionEventAction
 
 void JE_QueueMotionEvent( int action, float x, float y, float pressure )
 {
-#if 1
+#if 0
 	if( !common || !common->IsInitialized() )
 		return;
 		

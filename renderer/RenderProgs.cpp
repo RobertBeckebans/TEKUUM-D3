@@ -88,6 +88,9 @@ void idRenderProgManager::Init()
 		{ BUILTIN_GUI, "gui.vfp" },
 		{ BUILTIN_COLOR, "color.vfp" },
 		// RB begin
+#if defined(USE_GPU_SKINNING)
+		{ BUILTIN_COLOR_SKINNED, "color_skinned.vfp" },
+#endif
 		{ BUILTIN_VERTEX_COLOR, "vertex_color.vfp" },
 		{ BUILTIN_VERTEX_LIGHTING, "vertex_lighting.vfp" },
 		{ BUILTIN_GRID_LIGHTING, "grid_lighting.vfp" },
@@ -200,8 +203,9 @@ void idRenderProgManager::Init()
 	vertexShaders[builtinShaders[BUILTIN_SHADOW_DEBUG_SKINNED]].usesJoints = true;
 	vertexShaders[builtinShaders[BUILTIN_FOG_SKINNED]].usesJoints = true;
 	// RB begin
-	vertexShaders[builtinShaders[BUILTIN_BLENDLIGHT_SKINNED]].usesJoints = true;
+	vertexShaders[builtinShaders[BUILTIN_COLOR_SKINNED]].usesJoints = true;
 	vertexShaders[builtinShaders[BUILTIN_GRID_LIGHTING_SKINNED]].usesJoints = true;
+	vertexShaders[builtinShaders[BUILTIN_BLENDLIGHT_SKINNED]].usesJoints = true;
 	// RB end
 #endif
 	
