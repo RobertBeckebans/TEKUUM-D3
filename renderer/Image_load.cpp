@@ -31,6 +31,11 @@ If you have questions concerning this license or the applicable additional terms
 #include "precompiled.h"
 
 #include "tr_local.h"
+#include "../renderer/DXT//DXTCodec.h"
+
+// RB begin
+idCVar image_exportPNG( "image_exportPNG", "0", CVAR_RENDERER | CVAR_BOOL, "export certain images as PNG files (development tool)" );
+// RB end
 
 /*
 ================
@@ -182,8 +187,11 @@ ID_INLINE void idImage::DeriveOpts()
 			break;
 			
 			case TD_FONT:
-				// RB: FIXME mobile version
+#if ( defined(USE_GLES2) || defined(USE_GLES3) ) && !defined(USE_MESA)
+				opts.format = FMT_RGBA8;
+#else
 				opts.format = FMT_DXT1;
+#endif
 				opts.colorFormat = CFM_GREEN_ALPHA;
 				opts.numLevels = 4; // We only support 4 levels because we align to 16 in the exporter
 				opts.gammaMips = true;
@@ -475,6 +483,110 @@ void idImage::ActuallyLoadImage( bool fromBackEnd )
 #endif
 	
 	const bimageFile_t& header = im.GetFileHeader();
+	
+	// RB begin
+	if( image_exportPNG.GetBool() && ( usage == TD_FONT ) && binaryFileTime != FILE_NOT_FOUND_TIMESTAMP )
+	{
+		const bimageImage_t& img = im.GetImageHeader( 0 );
+		
+		const byte* data = im.GetImageData( 0 );
+		
+		//( img.level, 0, 0, img.destZ, img.width, img.height, data );
+		
+		idTempArray<byte> rgba( img.width * img.height * 4 );
+		memset( rgba.Ptr(), 255, rgba.Size() );
+		
+		if( header.format == FMT_DXT1 )
+		{
+			idDxtDecoder dxt;
+			dxt.DecompressImageDXT1( data, rgba.Ptr(), img.width, img.height );
+			
+			if( header.colorFormat == CFM_GREEN_ALPHA )
+			{
+				byte* pic = rgba.Ptr();
+				for( int i = 0; i < img.width * img.height; i++ )
+				{
+					pic[i * 4 + 3] = pic[i * 4 + 1];
+					pic[i * 4 + 0] = 255;
+					pic[i * 4 + 1] = 255;
+					pic[i * 4 + 2] = 255;
+				}
+			}
+		}
+		else if( header.format == FMT_DXT5 )
+		{
+			idDxtDecoder dxt;
+			
+			if( header.colorFormat == CFM_NORMAL_DXT5 )
+			{
+				dxt.DecompressNormalMapDXT5( data, rgba.Ptr(), img.width, img.height );
+			}
+			else if( header.colorFormat == CFM_YCOCG_DXT5 )
+			{
+				dxt.DecompressYCoCgDXT5( data, rgba.Ptr(), img.width, img.height );
+			}
+			else
+			{
+			
+				dxt.DecompressImageDXT5( data, rgba.Ptr(), img.width, img.height );
+			}
+		}
+		else if( header.format == FMT_LUM8 || header.format == FMT_INT8 )
+		{
+			// LUM8 and INT8 just read the red channel
+			byte* pic = rgba.Ptr();
+			for( int i = 0; i < img.dataSize; i++ )
+			{
+				pic[ i * 4 ] = data[ i ];
+			}
+		}
+		else if( header.format == FMT_ALPHA )
+		{
+			// ALPHA reads the alpha channel
+			byte* pic = rgba.Ptr();
+			for( int i = 0; i < img.dataSize; i++ )
+			{
+				pic[ i * 4 + 3 ] = data[ i ];
+			}
+		}
+		else if( header.format == FMT_L8A8 )
+		{
+			// L8A8 reads the alpha and red channels
+			byte* pic = rgba.Ptr();
+			for( int i = 0; i < img.dataSize / 2; i++ )
+			{
+				pic[ i * 4 + 0 ] = data[ i * 2 + 0 ];
+				pic[ i * 4 + 3 ] = data[ i * 2 + 1 ];
+			}
+		}
+		else if( header.format == FMT_RGB565 )
+		{
+			// FIXME
+			/*
+			byte* pic = rgba.Ptr();
+			for( int i = 0; i < img.dataSize / 2; i++ )
+			{
+				unsigned short color = ( ( pic[ i * 4 + 0 ] >> 3 ) << 11 ) | ( ( pic[ i * 4 + 1 ] >> 2 ) << 5 ) | ( pic[ i * 4 + 2 ] >> 3 );
+				img.data[ i * 2 + 0 ] = ( color >> 8 ) & 0xFF;
+				img.data[ i * 2 + 1 ] = color & 0xFF;
+			}
+			*/
+		}
+		else
+		{
+			byte* pic = rgba.Ptr();
+			for( int i = 0; i < img.dataSize; i++ )
+			{
+				pic[ i ] = data[ i ];
+			}
+		}
+		
+		idStr pngFileNameExport = generatedName;
+		pngFileNameExport.SetFileExtension( ".png" );
+		
+		R_WritePNG( pngFileNameExport, rgba.Ptr(), 4, img.width, img.height, true, "fs_basepath" );
+	}
+	// RB end
 	
 	
 	// RB TODO
