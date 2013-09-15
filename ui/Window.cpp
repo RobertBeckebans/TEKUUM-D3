@@ -121,7 +121,11 @@ void idWindow::CommonInit()
 	flags = 0;
 	lastTimeRun = 0;
 	origin.Zero();
+#if defined(USE_IDFONT)
 	font = renderSystem->RegisterFont( "" );
+#else
+	fontNum = 0;
+#endif
 	timeLine = -1;
 	xOffset = yOffset = 0.0;
 	cursor = 0;
@@ -306,7 +310,11 @@ idWindow::SetFont
 */
 void idWindow::SetFont()
 {
+#if defined(USE_IDFONT)
 	dc->SetFont( font );
+#else
+	dc->SetFont( fontNum );
+#endif
 }
 
 /*
@@ -2689,7 +2697,11 @@ bool idWindow::ParseInternalVar( const char* _name, idParser* src )
 	{
 		idStr fontName;
 		ParseString( src, fontName );
+#if defined(USE_IDFONT)
 		font = renderSystem->RegisterFont( fontName );
+#else
+		fontNum = dc->FindFont( fontName );
+#endif
 		return true;
 	}
 	return false;
@@ -4348,6 +4360,11 @@ void idWindow::WriteToSaveGame( idFile* savefile )
 	savefile->Write( &drawRect, sizeof( drawRect ) );
 	savefile->Write( &clientRect, sizeof( clientRect ) );
 	savefile->Write( &origin, sizeof( origin ) );
+	
+#if !defined(USE_IDFONT)
+	savefile->Write( &fontNum, sizeof( fontNum ) );
+#endif
+	
 	savefile->Write( &timeLine, sizeof( timeLine ) );
 	savefile->Write( &xOffset, sizeof( xOffset ) );
 	savefile->Write( &yOffset, sizeof( yOffset ) );
@@ -4363,7 +4380,9 @@ void idWindow::WriteToSaveGame( idFile* savefile )
 	savefile->Write( &textShadow, sizeof( textShadow ) );
 	savefile->Write( &shear, sizeof( shear ) );
 	
+#if defined(USE_IDFONT)
 	savefile->WriteString( font->GetName() );
+#endif
 	
 	WriteSaveGameString( name, savefile );
 	WriteSaveGameString( comment, savefile );
@@ -4524,6 +4543,9 @@ void idWindow::ReadFromSaveGame( idFile* savefile )
 			savefile->Read( &fontNum, sizeof( fontNum ) );
 			font = renderSystem->RegisterFont( "" );
 		}*/
+#if !defined(USE_IDFONT)
+	savefile->Read( &fontNum, sizeof( fontNum ) );
+#endif
 	savefile->Read( &timeLine, sizeof( timeLine ) );
 	savefile->Read( &xOffset, sizeof( xOffset ) );
 	savefile->Read( &yOffset, sizeof( yOffset ) );
@@ -4539,11 +4561,13 @@ void idWindow::ReadFromSaveGame( idFile* savefile )
 	savefile->Read( &textShadow, sizeof( textShadow ) );
 	savefile->Read( &shear, sizeof( shear ) );
 	
+#if defined(USE_IDFONT)
 //	if ( savefile->GetFileVersion() >= BUILD_NUMBER_8TH_ANNIVERSARY_1 ) {
 	idStr fontName;
 	savefile->ReadString( fontName );
 	font = renderSystem->RegisterFont( fontName );
 //	}
+#endif
 
 	ReadSaveGameString( name, savefile );
 	ReadSaveGameString( comment, savefile );

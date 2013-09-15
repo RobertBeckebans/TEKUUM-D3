@@ -43,7 +43,11 @@ idSimpleWindow::idSimpleWindow( idWindow* win )
 	clientRect = win->clientRect;
 	textRect = win->textRect;
 	origin = win->origin;
+#if defined(USE_IDFONT)
 	font = win->font;
+#else
+	fontNum = win->fontNum;
+#endif
 	name = win->name;
 	matScalex = win->matScalex;
 	matScaley = win->matScaley;
@@ -262,7 +266,11 @@ void idSimpleWindow::Redraw( float x, float y )
 	}
 	
 	CalcClientRect( 0, 0 );
+#if defined(USE_IDFONT)
 	dc->SetFont( font );
+#else
+	dc->SetFont( fontNum );
+#endif
 	drawRect.Offset( x, y );
 	clientRect.Offset( x, y );
 	textRect.Offset( x, y );
@@ -406,6 +414,10 @@ void idSimpleWindow::WriteToSaveGame( idFile* savefile )
 	savefile->Write( &clientRect, sizeof( clientRect ) );
 	savefile->Write( &textRect, sizeof( textRect ) );
 	savefile->Write( &origin, sizeof( origin ) );
+	
+#if !defined(USE_IDFONT)
+	savefile->Write( &fontNum, sizeof( fontNum ) );
+#endif
 	savefile->Write( &matScalex, sizeof( matScalex ) );
 	savefile->Write( &matScaley, sizeof( matScaley ) );
 	savefile->Write( &borderSize, sizeof( borderSize ) );
@@ -413,7 +425,10 @@ void idSimpleWindow::WriteToSaveGame( idFile* savefile )
 	savefile->Write( &textAlignx, sizeof( textAlignx ) );
 	savefile->Write( &textAligny, sizeof( textAligny ) );
 	savefile->Write( &textShadow, sizeof( textShadow ) );
+	
+#if defined(USE_IDFONT)
 	savefile->WriteString( font->GetName() );
+#endif
 	
 	text.WriteToSaveGame( savefile );
 	visible.WriteToSaveGame( savefile );
@@ -456,11 +471,16 @@ void idSimpleWindow::ReadFromSaveGame( idFile* savefile )
 	savefile->Read( &clientRect, sizeof( clientRect ) );
 	savefile->Read( &textRect, sizeof( textRect ) );
 	savefile->Read( &origin, sizeof( origin ) );
+	
+#if !defined(USE_IDFONT)
+	savefile->Read( &fontNum, sizeof( fontNum ) );
+	
 	/*	if ( savefile->GetFileVersion() < BUILD_NUMBER_8TH_ANNIVERSARY_1 ) {
 			int fontNum;
 			savefile->Read( &fontNum, sizeof( fontNum ) );
 			font = renderSystem->RegisterFont( "" );
 		} */
+#endif
 	savefile->Read( &matScalex, sizeof( matScalex ) );
 	savefile->Read( &matScaley, sizeof( matScaley ) );
 	savefile->Read( &borderSize, sizeof( borderSize ) );
@@ -468,11 +488,14 @@ void idSimpleWindow::ReadFromSaveGame( idFile* savefile )
 	savefile->Read( &textAlignx, sizeof( textAlignx ) );
 	savefile->Read( &textAligny, sizeof( textAligny ) );
 	savefile->Read( &textShadow, sizeof( textShadow ) );
+	
+#if defined(USE_IDFONT)
 //	if ( savefile->GetFileVersion() >= BUILD_NUMBER_8TH_ANNIVERSARY_1 ) {
 	idStr fontName;
 	savefile->ReadString( fontName );
 	font = renderSystem->RegisterFont( fontName );
 //	}
+#endif
 
 	text.ReadFromSaveGame( savefile );
 	visible.ReadFromSaveGame( savefile );

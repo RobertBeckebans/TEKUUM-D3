@@ -2477,6 +2477,9 @@ void idRenderSystemLocal::Init()
 	guiModel = new idGuiModel;
 	guiModel->Clear();
 	tr_guiModel = guiModel;	// for DeviceContext fast path
+	// RB: added direct freetype support
+	R_InitFreeType();
+	// RB end
 	
 	globalImages->Init();
 	
@@ -2528,7 +2531,11 @@ void idRenderSystemLocal::Shutdown()
 {
 	common->Printf( "idRenderSystem::Shutdown()\n" );
 	
+#if defined(USE_IDFONT)
 	fonts.DeleteContents();
+#else
+	R_DoneFreeType();
+#endif
 	
 	if( R_IsInitialized() )
 	{
@@ -2651,6 +2658,8 @@ bool idRenderSystemLocal::AreAutomaticBackgroundSwapsRunning( autoRenderIconType
 	return false;
 }
 
+
+#if defined(USE_IDFONT)
 /*
 ============
 idRenderSystemLocal::RegisterFont
@@ -2683,6 +2692,8 @@ void idRenderSystemLocal::ResetFonts()
 {
 	fonts.DeleteContents( true );
 }
+#endif
+
 /*
 ========================
 idRenderSystemLocal::InitOpenGL

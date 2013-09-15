@@ -755,8 +755,15 @@ public:
 	virtual void			EndAutomaticBackgroundSwaps();
 	virtual bool			AreAutomaticBackgroundSwapsRunning( autoRenderIconType_t* usingAlternateIcon = NULL ) const;
 	
-	virtual idFont* 		RegisterFont( const char* fontName );
+	// RB begin
+#if defined(USE_IDFONT)
+	virtual class idFont* 	RegisterFont( const char* fontName );
 	virtual void			ResetFonts();
+#else
+	virtual bool			RegisterFont( const char* fontName, fontInfoEx_t& font );
+#endif
+	// RB end
+	
 	virtual void			PrintMemInfo( MemInfo_t* mi );
 	
 	virtual void			SetColor( const idVec4& color );
@@ -855,7 +862,9 @@ public:
 	uint64					currentGLState;
 	class idGuiModel* 		guiModel;
 	
+#if defined(USE_IDFONT)
 	idList<idFont* >		fonts;
+#endif
 	
 	unsigned short			gammaTable[256];	// brightness / gamma modify this
 	
@@ -1420,6 +1429,20 @@ void RB_ShowDestinationAlpha();
 void RB_ShowOverdraw();
 void RB_RenderDebugTools( drawSurf_t** drawSurfs, int numDrawSurfs );
 void RB_ShutdownDebugTools();
+
+
+/*
+=============================================================
+
+TR_FONT
+
+=============================================================
+*/
+
+void R_InitFreeType();
+void R_DoneFreeType();
+
+
 
 //=============================================
 

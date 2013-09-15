@@ -127,7 +127,7 @@ If you have questions concerning this license or the applicable additional terms
 #endif
 
 // RB: Android is 32 bit only so far
-#define CPU_EASYARGS					1
+//#define CPU_EASYARGS					1
 
 #endif
 

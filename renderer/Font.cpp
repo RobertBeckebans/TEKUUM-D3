@@ -29,6 +29,8 @@ If you have questions concerning this license or the applicable additional terms
 #include "precompiled.h"
 #include "Font.h"
 
+#if defined(USE_IDFONT)
+
 #ifdef BUILD_FREETYPE
 // RB: changed to local includes
 //#include <freetype/fterrors.h>
@@ -1014,3 +1016,5 @@ bool idFont::WriteFont()
 	// TODO
 	return false;
 }
+
+#endif

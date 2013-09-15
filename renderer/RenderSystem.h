@@ -167,6 +167,55 @@ struct emptyCommand_t;
 
 bool R_IsInitialized();
 
+
+// RB: legacy font support
+const int GLYPH_START			= 0;
+const int GLYPH_END				= 255;
+const int GLYPH_CHARSTART		= 32;
+const int GLYPH_CHAREND			= 127;
+const int GLYPHS_PER_FONT		= GLYPH_END - GLYPH_START + 1;
+
+typedef struct
+{
+	int					height;			// number of scan lines
+	int					top;			// top of glyph in buffer
+	int					bottom;			// bottom of glyph in buffer
+	int					pitch;			// width for copying
+	int					xSkip;			// x adjustment
+	int					imageWidth;		// width of actual image
+	int					imageHeight;	// height of actual image
+	float				s;				// x offset in image where glyph starts
+	float				t;				// y offset in image where glyph starts
+	float				s2;
+	float				t2;
+	const idMaterial* 	glyph;			// shader with the glyph
+	char				shaderName[32];
+} glyphInfo_t;
+
+typedef struct
+{
+	glyphInfo_t			glyphs [GLYPHS_PER_FONT];
+	float				glyphScale;
+	char				name[64];
+} fontInfo_t;
+
+typedef struct
+{
+	fontInfo_t			fontInfoSmall;
+	fontInfo_t			fontInfoMedium;
+	fontInfo_t			fontInfoLarge;
+	int					maxHeight;
+	int					maxWidth;
+	int					maxHeightSmall;
+	int					maxWidthSmall;
+	int					maxHeightMedium;
+	int					maxWidthMedium;
+	int					maxHeightLarge;
+	int					maxWidthLarge;
+	char				name[64];
+} fontInfoEx_t;
+// RB end
+
 const int SMALLCHAR_WIDTH		= 8;
 const int SMALLCHAR_HEIGHT		= 16;
 const int BIGCHAR_WIDTH			= 16;
@@ -246,8 +295,14 @@ public:
 	virtual bool			AreAutomaticBackgroundSwapsRunning( autoRenderIconType_t* icon = NULL ) const = 0;
 	
 	// font support
+	// RB begin
+#if defined(USE_IDFONT)
 	virtual class idFont* 	RegisterFont( const char* fontName ) = 0;
 	virtual void			ResetFonts() = 0;
+#else
+	virtual bool			RegisterFont( const char* fontName, fontInfoEx_t& font ) = 0;
+#endif
+	// RB end
 	
 	virtual void			SetColor( const idVec4& rgba ) = 0;
 	virtual void			SetColor4( float r, float g, float b, float a )
