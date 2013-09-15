@@ -902,10 +902,10 @@ on the 360.
 static void RB_FillDepthBufferFast( drawSurf_t** drawSurfs, int numDrawSurfs )
 {
 	// RB begin
-	if( r_usePrecomputedLighting.GetBool() )
-	{
-		return;
-	}
+	//if( r_usePrecomputedLighting.GetBool() )
+	//{
+	//	return;
+	//}
 	// RB end
 	
 	if( numDrawSurfs == 0 )
@@ -1587,7 +1587,8 @@ static void RB_AmbientPass( const drawSurf_t* const* drawSurfs, int numDrawSurfs
 	
 	// draw all the subview surfaces, which will already be at the start of the sorted list,
 	// with the general purpose path
-	GL_State( GLS_DEFAULT );
+	//GL_State( GLS_DEFAULT );
+	GL_State( GLS_DEPTHFUNC_EQUAL );
 	
 	const float lightScale = 1.0f; //r_lightScale.GetFloat();
 	const idVec4 lightColor = colorWhite * lightScale;
@@ -1672,8 +1673,6 @@ static void RB_AmbientPass( const drawSurf_t* const* drawSurfs, int numDrawSurfs
 			}
 		}
 		
-		
-		
 		if( !isWorldModel )
 		{
 			idVec4 directedColor;
@@ -1692,6 +1691,7 @@ static void RB_AmbientPass( const drawSurf_t* const* drawSurfs, int numDrawSurfs
 			renderProgManager.SetRenderParm( RENDERPARM_AMBIENT_COLOR, ambientColor.ToFloatPtr() );
 		}
 		
+		/*
 		uint64 surfGLState = 0;
 		
 		// set polygon offset if necessary
@@ -1714,15 +1714,16 @@ static void RB_AmbientPass( const drawSurf_t* const* drawSurfs, int numDrawSurfs
 		else
 		{
 			// others just draw black
-#if 0
+		#if 0
 			color[0] = 0.0f;
 			color[1] = 0.0f;
 			color[2] = 0.0f;
 			color[3] = 1.0f;
-#else
+		#else
 			color = colorWhite;
-#endif
+		#endif
 		}
+		*/
 		
 		// check for the fast path
 		if( surfaceMaterial->GetFastPathBumpImage() && !r_skipInteractionFastPath.GetBool() )
@@ -1763,23 +1764,8 @@ static void RB_AmbientPass( const drawSurf_t* const* drawSurfs, int numDrawSurfs
 		inter.specularImage = NULL;
 		inter.diffuseImage = NULL;
 		
-		if( !isWorldModel )
-		{
-#if 0
-			inter.diffuseColor[0] = drawSurf->space->gridDirectedLight[0];
-			inter.diffuseColor[1] = drawSurf->space->gridDirectedLight[1];
-			inter.diffuseColor[2] = drawSurf->space->gridDirectedLight[2];
-#else
-			inter.diffuseColor = colorRed;
-#endif
-			inter.diffuseColor[3] = 1;
-		}
-		else
-		{
-			inter.diffuseColor[0] = inter.diffuseColor[1] = inter.diffuseColor[2] = inter.diffuseColor[3] = 1;
-		}
+		inter.diffuseColor[0] = inter.diffuseColor[1] = inter.diffuseColor[2] = inter.diffuseColor[3] = 1;
 		inter.specularColor[0] = inter.specularColor[1] = inter.specularColor[2] = inter.specularColor[3] = 0;
-		//inter.ambientLight = lightShader->IsAmbientLight();
 		
 		// perforated surfaces may have multiple alpha tested stages
 		for( stage = 0; stage < surfaceMaterial->GetNumStages(); stage++ )
@@ -1794,41 +1780,66 @@ static void RB_AmbientPass( const drawSurf_t* const* drawSurfs, int numDrawSurfs
 					// for diffuse stages that use alpha test.
 					
 #if 0
-					if( !pStage->hasAlphaTest )
+					// ignore stage that fails the condition
+					if( !surfaceRegs[ surfaceStage->conditionRegister ] )
+					{
+						break;
+					}
+					
+					// draw any previous interaction
+					if( inter.diffuseImage != NULL )
+					{
+						RB_DrawSingleInteraction( &inter );
+					}
+					
+#ifdef USE_CORE_PROFILE
+					//GL_State( stageGLState );
+					idVec4 alphaTestValue( surfaceRegs[ surfaceStage->alphaTestRegister ] );
+					SetFragmentParm( RENDERPARM_ALPHA_TEST, alphaTestValue.ToFloatPtr() );
+#else
+					GL_State( stageGLState | GLS_ALPHATEST_FUNC_GREATER | GLS_ALPHATEST_MAKE_REF( idMath::Ftob( 255.0f * regs[ pStage->alphaTestRegister ] ) ) );
+#endif
+					
+					inter.diffuseImage = surfaceStage->texture.image;
+					inter.vertexColor = surfaceStage->vertexColor;
+					RB_SetupInteractionStage( surfaceStage, surfaceRegs, diffuseColor.ToFloatPtr(),
+											  inter.diffuseMatrix, inter.diffuseColor.ToFloatPtr() );
+#elif 0
+					if( !surfaceStage->hasAlphaTest )
 					{
 						continue;
 					}
-					
+											  
 					// check the stage enable condition
-					if( regs[ pStage->conditionRegister ] == 0 )
+					if( surfaceRegs[ surfaceStage->conditionRegister ] == 0 )
 					{
 						continue;
 					}
-					
+											  
 					// if we at least tried to draw an alpha tested stage,
 					// we won't draw the opaque surface
 					didDraw = true;
-					
+											  
 					// set the alpha modulate
-					color[3] = regs[ pStage->color.registers[3] ];
-					
+					color[3] = surfaceRegs[ surfaceStage->color.registers[3] ];
+											  
 					// skip the entire stage if alpha would be black
 					if( color[3] <= 0.0f )
 					{
 						continue;
 					}
-					
+											  
 					uint64 stageGLState = surfGLState;
-					
+											  
 					// set privatePolygonOffset if necessary
 					if( pStage->privatePolygonOffset )
 					{
 						GL_PolygonOffset( r_offsetFactor.GetFloat(), r_offsetUnits.GetFloat() * pStage->privatePolygonOffset );
 						stageGLState |= GLS_POLYGON_OFFSET;
 					}
-					
+											  
 					GL_Color( color );
-					
+											  
 #ifdef USE_CORE_PROFILE
 					GL_State( stageGLState );
 					idVec4 alphaTestValue( regs[ pStage->alphaTestRegister ] );
@@ -1836,7 +1847,7 @@ static void RB_AmbientPass( const drawSurf_t* const* drawSurfs, int numDrawSurfs
 #else
 					GL_State( stageGLState | GLS_ALPHATEST_FUNC_GREATER | GLS_ALPHATEST_MAKE_REF( idMath::Ftob( 255.0f * regs[ pStage->alphaTestRegister ] ) ) );
 #endif
-					
+											  
 #if defined(USE_GPU_SKINNING)
 					if( drawSurf->jointCache )
 					{
@@ -1847,25 +1858,25 @@ static void RB_AmbientPass( const drawSurf_t* const* drawSurfs, int numDrawSurfs
 					{
 						renderProgManager.BindShader_TextureVertexColor();
 					}
-					
+											  
 					RB_SetVertexColorParms( SVC_IGNORE );
-					
+											  
 					// bind the texture
 					GL_SelectTexture( 0 );
 					pStage->texture.image->Bind();
-					
+											  
 					// set texture matrix and texGens
 					RB_PrepareStageTexturing( pStage, drawSurf );
-					
+											  
 					// must render with less-equal for Z-Cull to work properly
 					assert( ( GL_GetCurrentState() & GLS_DEPTHFUNC_BITS ) == GLS_DEPTHFUNC_LESS );
-					
+											  
 					// draw it
 					RB_DrawElementsWithCounters( drawSurf );
-					
+											  
 					// clean up
 					RB_FinishStageTexturing( pStage, drawSurf );
-					
+											  
 					// unset privatePolygonOffset if necessary
 					if( pStage->privatePolygonOffset )
 					{
@@ -1908,11 +1919,13 @@ static void RB_AmbientPass( const drawSurf_t* const* drawSurfs, int numDrawSurfs
 					{
 						break;
 					}
+					
 					// draw any previous interaction
 					if( inter.diffuseImage != NULL )
 					{
 						RB_DrawSingleInteraction( &inter );
 					}
+					
 					inter.diffuseImage = surfaceStage->texture.image;
 					inter.vertexColor = surfaceStage->vertexColor;
 					RB_SetupInteractionStage( surfaceStage, surfaceRegs, diffuseColor.ToFloatPtr(),
