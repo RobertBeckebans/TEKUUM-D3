@@ -750,10 +750,10 @@ static void RB_RenderDrawSurfListWithFunction( drawSurf_t** drawSurfs, int numDr
 			renderProgManager.BindShader_ColorSkinned();
 		}
 		else
+#endif
 		{
 			renderProgManager.BindShader_Color();
 		}
-#endif
 		// RB end
 		
 		// change the scissor if needed
