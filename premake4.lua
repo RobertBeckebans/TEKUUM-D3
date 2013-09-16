@@ -1,4 +1,4 @@
---
+-- --
 -- Tekuum build configuration script
 -- 
 
@@ -659,7 +659,7 @@ end
 			"libs/lua/src",
 		}
 	
-	configuration { "cmdline-tools", "vs*" }
+	configuration { "cmdline-tools" }
 		defines
 		{
 			"USE_CMDLINE_TOOLS",
