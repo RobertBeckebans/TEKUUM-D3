@@ -607,8 +607,7 @@ static void R_CopyOverlaySurface( idDrawVert* verts, int numVerts, triIndex_t* i
 		verts[numVerts + i] = sourceVerts[overlayVert.vertexNum];
 	
 		// RB begin
-		verts[numVerts + i].SetTexCoordS( overlayVert.st[0] );
-		verts[numVerts + i].SetTexCoordT( overlayVert.st[1] );
+		verts[numVerts + i].SetTexCoordNative( overlayVert.st[0], overlayVert.st[1] );
 		// RB end
 	}
 	
