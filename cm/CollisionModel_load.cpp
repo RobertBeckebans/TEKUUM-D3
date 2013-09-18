@@ -3,6 +3,7 @@
 
 Doom 3 BFG Edition GPL Source Code
 Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2013 Robert Beckebans
 
 This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
@@ -3425,8 +3426,7 @@ void idCollisionModelManagerLocal::FinishModel( cm_model_t* model )
 						model->numBrushRefs * sizeof( cm_brushRef_t );
 }
 
-static const byte BCM_VERSION = 101;
-static const unsigned int BCM_MAGIC = ( 'B' << 24 ) | ( 'C' << 16 ) | ( 'M' << 16 ) | BCM_VERSION;
+
 
 /*
 ================
