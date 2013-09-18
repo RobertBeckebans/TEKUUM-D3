@@ -2890,8 +2890,10 @@ void idSessionLocal::UpdateScreen( bool captureToImage, bool outOfSequence, bool
 		Sys_GrabMouseCursor( false );
 	}
 	
+#if 0
 	//renderSystem->BeginFrame( renderSystem->GetScreenWidth(), renderSystem->GetScreenHeight() );
 	const emptyCommand_t* cmd = renderSystem->SwapCommandBuffers_FinishCommandBuffers();
+#endif
 	
 	// draw everything
 	Draw();
@@ -2905,7 +2907,7 @@ void idSessionLocal::UpdateScreen( bool captureToImage, bool outOfSequence, bool
 	
 	// RB begin
 	
-#if 1
+#if 0
 	renderSystem->RenderCommandBuffers( cmd );
 	
 	if( com_speeds.GetBool() || com_showFPS.GetInteger() == 1 )
