@@ -178,7 +178,7 @@ idCVar r_lightAllBackFaces( "r_lightAllBackFaces", "0", CVAR_RENDERER | CVAR_BOO
 #if defined(__ANDROID__)
 idCVar r_usePrecomputedLighting( "r_usePrecomputedLighting", "1", CVAR_RENDERER | CVAR_BOOL, "enable Q3A style precomputed lighting (vertex lighting/lightgrid)" );
 #else
-idCVar r_usePrecomputedLighting( "r_usePrecomputedLighting", "1", CVAR_RENDERER | CVAR_BOOL, "enable Q3A style precomputed lighting (vertex lighting/lightgrid)" );
+idCVar r_usePrecomputedLighting( "r_usePrecomputedLighting", "0", CVAR_RENDERER | CVAR_BOOL, "enable Q3A style precomputed lighting (vertex lighting/lightgrid)" );
 #endif
 // RB end
 
