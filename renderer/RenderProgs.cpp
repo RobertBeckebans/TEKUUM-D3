@@ -299,15 +299,17 @@ int idRenderProgManager::FindVertexShader( const char* name )
 	LoadVertexShader( index );
 	currentVertexShader = index;
 	
-	// FIXME: we should really scan the program source code for using rpEnableSkinning but at this
-	// point we directly load a binary and the program source code is not available on the consoles
-	if(	idStr::Icmp( name, "heatHaze.vfp" ) == 0 ||
-			idStr::Icmp( name, "heatHazeWithMask.vfp" ) == 0 ||
-			idStr::Icmp( name, "heatHazeWithMaskAndVertex.vfp" ) == 0 )
+	// RB: removed idStr::Icmp( name, "heatHaze.vfp" ) == 0  hack
+	// this requires r_useUniformArrays 1
+	for( int i = 0; i < vertexShaders[index].uniforms.Num(); i++ )
 	{
-		vertexShaders[index].usesJoints = true;
-		vertexShaders[index].optionalSkinning = true;
+		if( vertexShaders[index].uniforms[i] == RENDERPARM_ENABLE_SKINNING )
+		{
+			vertexShaders[index].usesJoints = true;
+			vertexShaders[index].optionalSkinning = true;
+		}
 	}
+	// RB end
 	
 	return index;
 }
@@ -371,22 +373,54 @@ void idRenderProgManager::LoadFragmentShader( int index )
 idRenderProgManager::BindShader
 ================================================================================================
 */
-void idRenderProgManager::BindShader( int vIndex, int fIndex )
+// RB begin
+void idRenderProgManager::BindShader( int progIndex, int vIndex, int fIndex, bool builtin )
 {
 	if( currentVertexShader == vIndex && currentFragmentShader == fIndex )
 	{
 		return;
 	}
-	currentVertexShader = vIndex;
-	currentFragmentShader = fIndex;
-	// vIndex denotes the GLSL program
-	if( vIndex >= 0 && vIndex < glslPrograms.Num() )
+	
+	if( builtin )
 	{
-		currentRenderProgram = vIndex;
-		RENDERLOG_PRINTF( "Binding GLSL Program %s\n", glslPrograms[vIndex].name.c_str() );
-		glUseProgram( glslPrograms[vIndex].progId );
+		currentVertexShader = vIndex;
+		currentFragmentShader = fIndex;
+		
+		// vIndex denotes the GLSL program
+		if( vIndex >= 0 && vIndex < glslPrograms.Num() )
+		{
+			currentRenderProgram = vIndex;
+			RENDERLOG_PRINTF( "Binding GLSL Program %s\n", glslPrograms[vIndex].name.c_str() );
+			glUseProgram( glslPrograms[vIndex].progId );
+		}
+	}
+	else
+	{
+		if( progIndex == -1 )
+		{
+			// RB: FIXME linear search
+			for( int i = 0; i < glslPrograms.Num(); ++i )
+			{
+				if( ( glslPrograms[i].vertexShaderIndex == vIndex ) && ( glslPrograms[i].fragmentShaderIndex == fIndex ) )
+				{
+					progIndex = i;
+					break;
+				}
+			}
+		}
+		
+		currentVertexShader = vIndex;
+		currentFragmentShader = fIndex;
+		
+		if( progIndex >= 0 && progIndex < glslPrograms.Num() )
+		{
+			currentRenderProgram = progIndex;
+			RENDERLOG_PRINTF( "Binding GLSL Program %s\n", glslPrograms[progIndex].name.c_str() );
+			glUseProgram( glslPrograms[progIndex].progId );
+		}
 	}
 }
+// RB end
 
 /*
 ================================================================================================

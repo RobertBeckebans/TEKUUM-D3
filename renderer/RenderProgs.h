@@ -152,7 +152,9 @@ public:
 	int		FindVertexShader( const char* name );
 	int		FindFragmentShader( const char* name );
 	
-	void	BindShader( int vIndex, int fIndex );
+	// RB: added progIndex to handle many custom renderprogs
+	void	BindShader( int progIndex, int vIndex, int fIndex, bool builtin );
+	// RB end
 	
 	void	BindShader_GUI( )
 	{
@@ -293,13 +295,17 @@ public:
 	
 	void	BindShader_Shadow()
 	{
-		BindShader( builtinShaders[BUILTIN_SHADOW], -1 );
+		// RB begin
+		BindShader( -1, builtinShaders[BUILTIN_SHADOW], -1, true );
+		// RB end
 	}
 	
 #if defined(USE_GPU_SKINNING)
 	void	BindShader_ShadowSkinned()
 	{
-		BindShader( builtinShaders[BUILTIN_SHADOW_SKINNED], -1 );
+		// RB begin
+		BindShader( -1, builtinShaders[BUILTIN_SHADOW_SKINNED], -1, true );
+		// RB end
 	}
 #endif
 	
@@ -531,7 +537,7 @@ protected:
 	int builtinShaders[MAX_BUILTINS];
 	void BindShader_Builtin( int i )
 	{
-		BindShader( builtinShaders[i], builtinShaders[i] );
+		BindShader( -1, builtinShaders[i], builtinShaders[i], true );
 	}
 	
 	bool	CompileGLSL( GLenum target, const char* name );
