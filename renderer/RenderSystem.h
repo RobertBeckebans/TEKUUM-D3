@@ -310,7 +310,10 @@ public:
 		SetColor( idVec4( r, g, b, a ) );
 	}
 	
-	virtual uint32			GetColor() = 0;
+	// RB: separated GetColor and GetColorNativeOrder
+	virtual const idVec4&	GetColor() = 0;
+	virtual uint32			GetColorPacked() = 0;
+	// RB end
 	
 	virtual void			SetGLState( const uint64 glState ) = 0;
 	

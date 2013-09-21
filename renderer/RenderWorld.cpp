@@ -371,7 +371,7 @@ void idRenderWorldLocal::UpdateEntityDef( qhandle_t entityHandle, const renderEn
 	R_CreateEntityRefs( def );
 	
 	// RB begin
-	if( r_usePrecomputedLighting.GetBool() )
+	if( r_usePrecomputedLight.GetBool() )
 	{
 		SetupEntityLightingGrid( def );
 	}

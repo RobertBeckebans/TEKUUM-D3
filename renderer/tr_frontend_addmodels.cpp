@@ -432,7 +432,7 @@ void R_AddSingleModel( viewEntity_t* vEntity )
 	idInteraction* staticInteractions[MAX_CONTACTED_LIGHTS];
 	
 	// RB: added precomputed lighting
-	if( ( renderEntity->hModel == NULL || renderEntity->hModel->ModelHasInteractingSurfaces() || renderEntity->hModel->ModelHasShadowCastingSurfaces() ) && !r_usePrecomputedLighting.GetBool() )
+	if( ( renderEntity->hModel == NULL || renderEntity->hModel->ModelHasInteractingSurfaces() || renderEntity->hModel->ModelHasShadowCastingSurfaces() ) && !r_usePrecomputedLight.GetBool() )
 	{
 		// RB end
 		SCOPED_PROFILE_EVENT( "Find lights" );
@@ -577,7 +577,7 @@ void R_AddSingleModel( viewEntity_t* vEntity )
 	vEntity->skipMotionBlur = renderEntity->skipMotionBlur;
 	
 	// RB begin
-	if( r_usePrecomputedLighting.GetBool() )
+	if( r_usePrecomputedLight.GetBool() )
 	{
 		vEntity->gridLightDir = entityDef->lightDir;
 		vEntity->gridAmbientLight = entityDef->ambientLight;
@@ -788,7 +788,7 @@ void R_AddSingleModel( viewEntity_t* vEntity )
 		}
 		
 		// RB: relax renderer frontend
-		if( r_usePrecomputedLighting.GetBool() )
+		if( r_usePrecomputedLight.GetBool() )
 		{
 			continue;
 		}
@@ -1219,7 +1219,7 @@ void R_AddModels()
 	//-------------------------------------------------
 	
 	// RB begin
-	if( !r_usePrecomputedLighting.GetBool() )
+	if( !r_usePrecomputedLight.GetBool() )
 	{
 		if( r_useParallelAddShadows.GetInteger() == 1 )
 		{

@@ -767,7 +767,12 @@ public:
 	virtual void			PrintMemInfo( MemInfo_t* mi );
 	
 	virtual void			SetColor( const idVec4& color );
-	virtual uint32			GetColor();
+	
+	// RB: separated GetColor and GetColorNativeOrder
+	virtual const idVec4&	GetColor();
+	virtual uint32			GetColorPacked();
+	// RB end
+	
 	virtual void			SetGLState( const uint64 glState ) ;
 	virtual void			DrawFilled( const idVec4& color, float x, float y, float w, float h );
 	virtual void			DrawStretchPic( float x, float y, float w, float h, float s1, float t1, float s2, float t2, const idMaterial* material );
@@ -858,7 +863,11 @@ public:
 	
 	// GUI drawing variables for surface creation
 	int						guiRecursionLevel;		// to prevent infinite overruns
+	
+	// RB: added float colors to bypass parm0 - parm3 as floats
+	idVec4					currentColor;
 	uint32					currentColorNativeBytesOrder;
+	// RB end
 	uint64					currentGLState;
 	class idGuiModel* 		guiModel;
 	

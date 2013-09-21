@@ -190,7 +190,7 @@ static void R_AddSingleLight( viewLight_t* vLight )
 		}
 		
 		// RB: skip dynamic lights
-		if( r_usePrecomputedLighting.GetBool() )
+		if( r_usePrecomputedLight.GetBool() )
 		{
 			return;
 		}
@@ -580,7 +580,7 @@ void R_AddLights()
 	//-------------------------------------------------
 	
 	// RB begin
-	if( r_usePrecomputedLighting.GetBool() )
+	if( r_usePrecomputedLight.GetBool() )
 	{
 		return;
 	}

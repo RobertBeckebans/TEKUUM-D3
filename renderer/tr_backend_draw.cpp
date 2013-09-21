@@ -902,7 +902,7 @@ on the 360.
 static void RB_FillDepthBufferFast( drawSurf_t** drawSurfs, int numDrawSurfs )
 {
 	// RB begin
-	//if( r_usePrecomputedLighting.GetBool() )
+	//if( r_usePrecomputedLight.GetBool() )
 	//{
 	//	return;
 	//}
@@ -1560,7 +1560,7 @@ RB_AmbientPass
 */
 static void RB_AmbientPass( const drawSurf_t* const* drawSurfs, int numDrawSurfs )
 {
-	if( !r_usePrecomputedLighting.GetBool() )
+	if( !r_usePrecomputedLight.GetBool() )
 	{
 		return;
 	}

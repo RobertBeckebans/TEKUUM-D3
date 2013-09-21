@@ -338,8 +338,10 @@ idRenderSystemLocal::~idRenderSystemLocal()
 idRenderSystemLocal::SetColor
 =============
 */
+// RB: separated GetColor and GetColorNativeOrder
 void idRenderSystemLocal::SetColor( const idVec4& rgba )
 {
+	currentColor = rgba;
 	currentColorNativeBytesOrder = LittleLong( PackColor( rgba ) );
 }
 
@@ -348,10 +350,21 @@ void idRenderSystemLocal::SetColor( const idVec4& rgba )
 idRenderSystemLocal::GetColor
 =============
 */
-uint32 idRenderSystemLocal::GetColor()
+const idVec4& idRenderSystemLocal::GetColor()
+{
+	return currentColor;
+}
+
+/*
+=============
+idRenderSystemLocal::GetColorPacked
+=============
+*/
+uint32 idRenderSystemLocal::GetColorPacked()
 {
 	return LittleLong( currentColorNativeBytesOrder );
 }
+// RB end
 
 /*
 =============
