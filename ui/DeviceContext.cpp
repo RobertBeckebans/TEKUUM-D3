@@ -401,7 +401,7 @@ void idDeviceContext::DrawWinding( idWinding& w, const idMaterial* mat )
 	{
 		return;
 	}
-	uint32 currentColor = renderSystem->GetColor();
+	uint32 currentColor = renderSystem->GetColorPacked();
 	
 	for( int j = 0 ; j < w.GetNumPoints() ; j++ )
 	{
