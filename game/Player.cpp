@@ -1078,7 +1078,7 @@ idPlayer::idPlayer()
 	memset( &usercmd, 0, sizeof( usercmd ) );
 	
 	noclip					= false;
-	godmode					= false;
+	nodamage				= false;
 	
 	spawnAnglesSet			= false;
 	spawnAngles				= ang_zero;
@@ -1337,7 +1337,7 @@ void idPlayer::Init()
 	const idKeyValue*	kv;
 	
 	noclip					= false;
-	godmode					= false;
+	nodamage				= false;
 	
 	oldButtons				= 0;
 	oldFlags				= 0;
@@ -1816,7 +1816,7 @@ void idPlayer::Save( idSaveGame* savefile ) const
 	playerView.Save( savefile );
 	
 	savefile->WriteBool( noclip );
-	savefile->WriteBool( godmode );
+	savefile->WriteBool( nodamage );
 	
 	// don't save spawnAnglesSet, since we'll have to reset them after loading the savegame
 	savefile->WriteAngles( spawnAngles );
@@ -2040,7 +2040,7 @@ void idPlayer::Restore( idRestoreGame* savefile )
 	playerView.Restore( savefile );
 	
 	savefile->ReadBool( noclip );
-	savefile->ReadBool( godmode );
+	savefile->ReadBool( nodamage );
 	
 	savefile->ReadAngles( spawnAngles );
 	savefile->ReadAngles( viewAngles );
@@ -7641,7 +7641,7 @@ void idPlayer::Kill( bool delayRespawn, bool nodamage )
 	}
 	else if( health > 0 )
 	{
-		godmode = false;
+		this->nodamage = false;
 		if( nodamage )
 		{
 			ServerSpectate( true );
@@ -7860,10 +7860,10 @@ void idPlayer::CalcDamagePoints( idEntity* inflictor, idEntity* attacker, const 
 	}
 	
 	// check for completely getting out of the damage
-	if( !damageDef->GetBool( "noGod" ) )
+	if( !damageDef->GetBool( "noDamage" ) || !damageDef->GetBool( "noGod" ) )
 	{
 		// check for godmode
-		if( godmode )
+		if( nodamage )
 		{
 			damage = 0;
 		}
