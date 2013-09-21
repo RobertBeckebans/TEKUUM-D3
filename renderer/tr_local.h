@@ -940,7 +940,7 @@ extern idCVar r_lightAllBackFaces;			// light all the back faces, even when they
 extern idCVar r_useLightDepthBounds;		// use depth bounds test on lights to reduce both shadow and interaction fill
 extern idCVar r_useShadowDepthBounds;		// use depth bounds test on individual shadows to reduce shadow fill
 // RB begin
-extern idCVar r_usePrecomputedLighting;		// enable Q3A style precomputed lighting (vertex lighting/lightgrid)
+extern idCVar r_usePrecomputedLight;		// enable Q3A style precomputed lighting (vertex lighting/lightgrid)
 // RB end
 
 extern idCVar r_skipStaticInteractions;		// skip interactions created at level load
