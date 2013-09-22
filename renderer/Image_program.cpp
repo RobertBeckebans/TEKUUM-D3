@@ -217,6 +217,13 @@ static void R_AddNormalMaps( byte* data1, int width1, int height1, byte* data2, 
 	int		i, j;
 	byte*	newMap;
 	
+	// RB begin
+	if( data2 == NULL )
+	{
+		return;
+	}
+	// RB end
+	
 	// resample pic2 to the same size as pic1
 	if( width2 != width1 || height2 != height1 )
 	{
