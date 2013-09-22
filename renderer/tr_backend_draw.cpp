@@ -1588,7 +1588,7 @@ static void RB_AmbientPass( const drawSurf_t* const* drawSurfs, int numDrawSurfs
 	// draw all the subview surfaces, which will already be at the start of the sorted list,
 	// with the general purpose path
 	//GL_State( GLS_DEFAULT );
-	GL_State( GLS_DEPTHFUNC_EQUAL );
+	GL_State( GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE | GLS_DEPTHMASK | GLS_DEPTHFUNC_EQUAL );
 	
 	const float lightScale = 1.0f; //r_lightScale.GetFloat();
 	const idVec4 lightColor = colorWhite * lightScale;
