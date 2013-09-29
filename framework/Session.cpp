@@ -555,6 +555,7 @@ void idSessionLocal::CompleteWipe()
 		UpdateScreen( captureToImage, true );
 		return;
 	}
+	
 	while( com_ticNumber < wipeStopTic )
 	{
 #if ID_CONSOLE_LOCK
@@ -2892,7 +2893,9 @@ void idSessionLocal::UpdateScreen( bool captureToImage, bool outOfSequence, bool
 		Sys_GrabMouseCursor( false );
 	}
 	
-#if 0
+//#define USE_OLD_SYNCING
+
+#if defined(USE_OLD_SYNCING)
 	//renderSystem->BeginFrame( renderSystem->GetScreenWidth(), renderSystem->GetScreenHeight() );
 	const emptyCommand_t* cmd = renderSystem->SwapCommandBuffers_FinishCommandBuffers();
 #endif
@@ -2900,7 +2903,7 @@ void idSessionLocal::UpdateScreen( bool captureToImage, bool outOfSequence, bool
 	// draw everything
 	Draw();
 	
-#if !defined(__ANDROID__)
+#if 0 //!defined(__ANDROID__)
 	if( captureToImage )
 	{
 		renderSystem->CaptureRenderToImage( "_currentRender", false );
@@ -2909,7 +2912,7 @@ void idSessionLocal::UpdateScreen( bool captureToImage, bool outOfSequence, bool
 	
 	// RB begin
 	
-#if 0
+#if defined(USE_OLD_SYNCING)
 	renderSystem->RenderCommandBuffers( cmd );
 	
 	if( com_speeds.GetBool() || com_showFPS.GetInteger() == 1 )
@@ -2938,6 +2941,8 @@ void idSessionLocal::UpdateScreen( bool captureToImage, bool outOfSequence, bool
 	// get the GPU busy with new commands
 	renderSystem->RenderCommandBuffers( cmd );
 #endif
+	
+#undef USE_OLD_SYNCING
 	
 	// RB end
 	
