@@ -2722,7 +2722,9 @@ bool idMaterial::Parse( const char* text, const int textLength, bool allowBinary
 			if( sort != SS_PORTAL_SKY )
 			{
 				sort = SS_POST_PROCESS;
-				coverage = MC_TRANSLUCENT;
+				// RB: we want post process shaders that operate on opaque surfaces
+				//coverage = MC_TRANSLUCENT;
+				// RB end
 			}
 			break;
 		}
@@ -2735,7 +2737,9 @@ bool idMaterial::Parse( const char* text, const int textLength, bool allowBinary
 					if( sort != SS_PORTAL_SKY )
 					{
 						sort = SS_POST_PROCESS;
-						coverage = MC_TRANSLUCENT;
+						// RB: we want post process shaders that operate on opaque surfaces
+						//coverage = MC_TRANSLUCENT;
+						// RB end
 					}
 					i = numStages;
 					break;

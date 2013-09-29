@@ -329,7 +329,7 @@ public:
 	// RenderWorld_lightgrid.cpp
 	
 private:
-	void					SetupEntityLightingGrid( idRenderEntityLocal* def );
+	void					SetupEntityGridLighting( idRenderEntityLocal* def );
 // RB end
 };
 
