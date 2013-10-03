@@ -514,19 +514,8 @@ void idPlayerView::SingleView( idUserInterface* hud, const renderView_t* view )
 				renderSystem->DrawStretchPic( blob->x, blob->y, blob->w, blob->h, blob->s1, blob->t1, blob->s2, blob->t2, blob->material );
 			}
 		}
-		player->DrawHUD( hud );
 		
-		// armor impulse feedback
-		float	armorPulse = ( gameLocal.time - player->lastArmorPulse ) / 250.0f;
-		
-		if( armorPulse > 0.0f && armorPulse < 1.0f )
-		{
-			renderSystem->SetColor4( 1, 1, 1, 1.0 - armorPulse );
-			renderSystem->DrawStretchPic( 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0, 1, 1, armorMaterial );
-		}
-		
-		
-		// tunnel vision
+		// RB: chromatic tunnel vision
 		float	health = 0.0f;
 		if( g_testHealthVision.GetFloat() != 0.0f )
 		{
@@ -546,11 +535,10 @@ void idPlayerView::SingleView( idUserInterface* hud, const renderView_t* view )
 			alpha = 1.0f;
 		}
 		
-		// RB: disabled textures/decals/tunnel because it is completely broken with normalized colors in the renderer for SetColor
 		if( alpha < 1.0f )
 		{
 			// start fading if within several seconds of going away
-			const int tunnelTimeFadeSeconds = 7000;
+			const int tunnelTimeFadeSeconds = 3000;
 			
 			if( g_testHealthVision.GetBool() )
 			{
@@ -569,6 +557,20 @@ void idPlayerView::SingleView( idUserInterface* hud, const renderView_t* view )
 			renderSystem->DrawStretchPic( 0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT, 0.0f, 0.0f, 1.0f, 1.0f, tunnelMaterial );
 		}
 		// RB end
+		
+		player->DrawHUD( hud );
+		
+		// armor impulse feedback
+		float	armorPulse = ( gameLocal.time - player->lastArmorPulse ) / 250.0f;
+		
+		if( armorPulse > 0.0f && armorPulse < 1.0f )
+		{
+			renderSystem->SetColor4( 1, 1, 1, 1.0 - armorPulse );
+			renderSystem->DrawStretchPic( 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0, 1, 1, armorMaterial );
+		}
+		
+		
+		
 		
 		if( player->PowerUpActive( BERSERK ) )
 		{
