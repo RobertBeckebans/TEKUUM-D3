@@ -414,6 +414,14 @@ void Cmd_Give_f( const idCmdArgs& args )
 		return;
 	}
 	
+	// RB begin
+	if( idStr::Icmp( name, "adrenaline" ) == 0 )
+	{
+		player->GivePowerUp( ADRENALINE, SEC2MS( 30.0f ) );
+		return;
+	}
+	// RB end
+	
 	if( !give_all && !player->Give( args.Argv( 1 ), args.Argv( 2 ) ) )
 	{
 		gameLocal.Printf( "unknown item\n" );
