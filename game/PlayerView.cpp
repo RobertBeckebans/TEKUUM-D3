@@ -43,7 +43,10 @@ idPlayerView::idPlayerView()
 	memset( &view, 0, sizeof( view ) );
 	player = NULL;
 	dvMaterial = declManager->FindMaterial( "_scratch" );
-	tunnelMaterial = declManager->FindMaterial( "textures/decals/tunnel" );
+	
+	//tunnelMaterial = declManager->FindMaterial( "textures/decals/tunnel" );
+	tunnelMaterial = declManager->FindMaterial( "postprocess/chromatic_aberration/blurred" );
+	
 	armorMaterial = declManager->FindMaterial( "armorViewEffect" );
 	berserkMaterial = declManager->FindMaterial( "textures/decals/berserk" );
 	irGogglesMaterial = declManager->FindMaterial( "textures/decals/irblend" );
@@ -544,13 +547,27 @@ void idPlayerView::SingleView( idUserInterface* hud, const renderView_t* view )
 		}
 		
 		// RB: disabled textures/decals/tunnel because it is completely broken with normalized colors in the renderer for SetColor
-		/*
 		if( alpha < 1.0f )
 		{
-			renderSystem->SetColor4( ( player->health <= 0.0f ) ? MS2SEC( gameLocal.time ) : lastDamageTime, 1.0f, 1.0f, ( player->health <= 0.0f ) ? 0.0f : alpha );
+			// start fading if within several seconds of going away
+			const int tunnelTimeFadeSeconds = 7000;
+			
+			if( g_testHealthVision.GetBool() )
+			{
+				alpha = 1.0f - alpha;
+			}
+			else
+			{
+				int tunnelTime = idMath::Abs( SEC2MS( lastDamageTime ) - gameLocal.time );
+				
+				alpha = ( tunnelTime < tunnelTimeFadeSeconds ) ? ( 1.0f - ( ( float )tunnelTime / tunnelTimeFadeSeconds ) ) : 0.0f;
+				alpha *= ( 1.0f - ( Min( 100.0f, Max( 1.0f, health ) ) / 100.0f ) );
+			}
+			
+			renderSystem->SetColor4( 1.0f, 1.0f, 1.0f, alpha );
+			
 			renderSystem->DrawStretchPic( 0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT, 0.0f, 0.0f, 1.0f, 1.0f, tunnelMaterial );
 		}
-		*/
 		// RB end
 		
 		if( player->PowerUpActive( BERSERK ) )
