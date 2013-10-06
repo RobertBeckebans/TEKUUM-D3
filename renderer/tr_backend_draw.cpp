@@ -2793,6 +2793,7 @@ static int RB_DrawShaderPasses( const drawSurf_t* const* const drawSurfs, const 
 				continue;
 			}
 			
+			
 			// see if we are a new-style stage
 			newShaderStage_t* newStage = pStage->newStage;
 			if( newStage != NULL )
@@ -2835,7 +2836,7 @@ static int RB_DrawShaderPasses( const drawSurf_t* const* const drawSurfs, const 
 				// bind texture units
 				for( int j = 0; j < newStage->numFragmentProgramImages; j++ )
 				{
-					idImage* image = newStage->fragmentProgramImages[j];
+					idImage* image = newStage->fragmentProgramImages[j].image;
 					if( image != NULL )
 					{
 						GL_SelectTexture( j );
@@ -2849,7 +2850,7 @@ static int RB_DrawShaderPasses( const drawSurf_t* const* const drawSurfs, const 
 				// unbind texture units
 				for( int j = 0; j < newStage->numFragmentProgramImages; j++ )
 				{
-					idImage* image = newStage->fragmentProgramImages[j];
+					idImage* image = newStage->fragmentProgramImages[j].image;
 					if( image != NULL )
 					{
 						GL_SelectTexture( j );

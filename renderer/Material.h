@@ -3,6 +3,7 @@
 
 Doom 3 BFG Edition GPL Source Code
 Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2013 Robert Beckebans
 
 This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
@@ -40,6 +41,10 @@ If you have questions concerning this license or the applicable additional terms
 class idImage;
 class idCinematic;
 class idUserInterface;
+
+// RB: add extra names to stages for more robust binary materials
+//#define USE_EXTENDED_BINARY_MATERIALS 1
+// RB end
 
 // moved from image.h for default parm
 typedef enum
@@ -161,19 +166,66 @@ typedef enum
 	TG_GLASSWARP
 } texgen_t;
 
-typedef struct
+struct textureStage_t
 {
-	idCinematic* 		cinematic;
-	idImage* 			image;
-	texgen_t			texgen;
-	bool				hasMatrix;
-	int					matrix[2][3];	// we only allow a subset of the full projection matrix
+	//textureStage_t()
+	//{
+	//	Clear();
+	//}
+	
+	// RB begin
+#if defined(USE_EXTENDED_BINARY_MATERIALS)
+	void Clear()
+	{
+		cinematicLoop = false;
+		cinematic = NULL;
+		
+		textureFilter = TF_LINEAR;
+		textureRepeat = TR_REPEAT;
+		textureUsage = 0; //TD_DEFAULT;
+		cubeMap = 0; //CF_2D;
+		
+		image = NULL;
+		texgen = TG_EXPLICIT;
+		
+		hasMatrix = false;
+		memset( &matrix, 0, sizeof( matrix ) );
+		
+		dynamic = DI_STATIC;
+		width = 0;
+		height = 0;
+		dynamicFrameCount = 0;
+	}
+#endif
+	// RB end
+	
+#if defined(USE_EXTENDED_BINARY_MATERIALS)
+	idStr					cinematicName;
+#endif
+	bool					cinematicLoop;
+	idCinematic* 			cinematic;
+	// RB: only used for binary cache
+	textureFilter_t			textureFilter;
+	textureRepeat_t			textureRepeat;
+	/*textureUsage_t*/
+	byte	textureUsage;
+	/*cubeFiles_t*/
+	byte	cubeMap;
+	
+#if defined(USE_EXTENDED_BINARY_MATERIALS)
+	idStr					imageName;
+#endif
+	// RB end
+	idImage* 				image;
+	texgen_t				texgen;
+	bool					hasMatrix;
+	int						matrix[2][3];	// we only allow a subset of the full projection matrix
 	
 	// dynamic image variables
-	dynamicidImage_t	dynamic;
-	int					width, height;
-	int					dynamicFrameCount;
-} textureStage_t;
+	dynamicidImage_t		dynamic;
+	int						width, height;
+	int						dynamicFrameCount;
+};
 
 // the order BUMP / DIFFUSE / SPECULAR is necessary for interactions to draw correctly on low end cards
 typedef enum
@@ -197,20 +249,75 @@ typedef enum
 static const int	MAX_FRAGMENT_IMAGES = 8;
 static const int	MAX_VERTEX_PARMS = 4;
 
-typedef struct
+// RB begin
+struct newTextureStage_t
 {
+	textureFilter_t			textureFilter;
+	textureRepeat_t			textureRepeat;
+	/*textureUsage_t*/
+	byte	textureUsage;
+	/*cubeFiles_t*/
+	byte	cubeMap;
+#if defined(USE_EXTENDED_BINARY_MATERIALS)
+	idStr					imageName;
+#endif
+	idImage* 				image;
+};
+
+struct newShaderStage_t
+{
+	newShaderStage_t()
+	{
+		vertexProgram = 0;
+		numVertexParms = 0;
+		memset( vertexParms, 0, sizeof( vertexParms ) );
+		
+		fragmentProgram = 0;
+		glslProgram = -1;
+		
+		numFragmentProgramImages = 0;
+	}
+	
+	// RB: names for binary files
+	idStr				vertexProgramName;
+	idStr				fragmentProgramName;
+	
 	int					vertexProgram;
 	int					numVertexParms;
 	int					vertexParms[MAX_VERTEX_PARMS][4];	// evaluated register indexes
 	
 	int					fragmentProgram;
 	int					glslProgram;
+	
 	int					numFragmentProgramImages;
-	idImage* 			fragmentProgramImages[MAX_FRAGMENT_IMAGES];
-} newShaderStage_t;
+	newTextureStage_t	fragmentProgramImages[MAX_FRAGMENT_IMAGES];
+};
+// RB end
 
 typedef struct
 {
+	// RB begin
+#if defined(USE_EXTENDED_BINARY_MATERIALS)
+	void Clear()
+	{
+		conditionRegister = 0;
+		lighting = SL_AMBIENT;
+		drawStateBits = 0;
+		memset( &color, 0, sizeof( color ) );
+		hasAlphaTest = false;
+		alphaTestRegister = 0;
+		
+		texture.Clear();
+		
+		vertexColor = SVC_IGNORE;
+		ignoreAlphaTest = false;
+		privatePolygonOffset = 0;
+		
+		newStage = NULL;
+	}
+#endif
+	// RB end
+	
 	int					conditionRegister;	// if registers[conditionRegister] == 0, skip stage
 	stageLighting_t		lighting;			// determines which passes interact with lights
 	uint64				drawStateBits;
@@ -823,11 +930,22 @@ private:
 	void				CheckForConstantRegisters();
 	void				SetFastPathImages();
 	
+	// RB begin
+	// Loaded instead of re-parsing, written if MD5 hash different
+	bool					LoadBinary( idFile* file, unsigned int checksum );
+	void					WriteBinary( idFile* file, unsigned int checksum );
+	// RB end
+	
 private:
 	idStr				desc;				// description
 	idStr				renderBump;			// renderbump command options, without the "renderbump" at the start
 	
-	idImage*				lightFalloffImage;	// only for light shaders
+	// RB begin
+#if defined(USE_EXTENDED_BINARY_MATERIALS)
+	idStr				lightFalloffImageName;
+#endif
+	// RB end
+	idImage*			lightFalloffImage;	// only for light shaders
 	
 	idImage* 			fastPathBumpImage;	// if any of these are set, they all will be
 	idImage* 			fastPathDiffuseImage;
@@ -836,6 +954,12 @@ private:
 	int					entityGui;			// draw a gui with the idUserInterface from the renderEntity_t
 	// non zero will draw gui, gui2, or gui3 from renderEnitty_t
 	mutable idUserInterface*	gui;			// non-custom guis are shared by all users of a material
+	
+	// RB begin
+#if defined(USE_EXTENDED_BINARY_MATERIALS)
+	idStr				guiName;
+#endif
+	// RB end
 	
 	bool				noFog;				// surface does not create fog interactions
 	
@@ -855,6 +979,9 @@ private:
 	deform_t			deform;
 	int					deformRegisters[4];		// numeric parameter for deforms
 	const idDecl*		deformDecl;			// for surface emitted particle deforms and tables
+	// RB begin
+	idStr				deformDeclName;
+	// RB end
 	
 	int					texGenRegisters[MAX_TEXGEN_REGISTERS];	// for wobbleSky
 	
