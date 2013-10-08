@@ -3,6 +3,7 @@
 
 Doom 3 BFG Edition GPL Source Code
 Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2013 Robert Beckebans
 
 This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
@@ -199,6 +200,10 @@ public:
 		ON_ACTIONRELEASE,
 		ON_ENTER,
 		ON_ENTERRELEASE,
+		// RB begin
+		ON_FOCUSGAIN,
+		ON_FOCUSLOSE,
+		// RB end
 		SCRIPT_COUNT
 	};
 	
@@ -290,8 +295,8 @@ public:
 	virtual void		PostParse();
 	virtual void		Activate( bool activate, idStr& act );
 	virtual void		Trigger();
-	virtual void		GainFocus();
-	virtual void		LoseFocus();
+	virtual void		GainFocus( bool scripts );
+	virtual void		LoseFocus( bool scripts );
 	virtual void		GainCapture();
 	virtual void		LoseCapture();
 	virtual void		Sized();
@@ -488,7 +493,7 @@ protected:
 	
 	idWindow*			focusedChild;			// if a child window has the focus
 	idWindow*			captureChild;			// if a child window has mouse capture
-	idWindow*			overChild;			// if a child window has mouse capture
+	idWindow*			overChild;				// if a child window has mouse capture
 	bool				hover;
 	
 	idUserInterfaceLocal* gui;

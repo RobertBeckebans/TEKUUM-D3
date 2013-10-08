@@ -100,7 +100,11 @@ const char* idWindow::ScriptNames[] =
 	"onTrigger",
 	"onActionRelease",
 	"onEnter",
-	"onEnterRelease"
+	"onEnterRelease",
+	// RB begin
+	"onFocusGain",
+	"onFocusLose",
+	// RB end
 };
 
 /*
@@ -374,7 +378,6 @@ idWindow::BringToTop
 */
 void idWindow::BringToTop( idWindow* w )
 {
-
 	if( w && !( w->flags & WIN_MODAL ) )
 	{
 		return;
@@ -419,7 +422,6 @@ idWindow::MouseEnter
 */
 void idWindow::MouseEnter()
 {
-
 	if( noEvents )
 	{
 		return;
@@ -435,7 +437,6 @@ idWindow::MouseExit
 */
 void idWindow::MouseExit()
 {
-
 	if( noEvents )
 	{
 		return;
@@ -453,9 +454,9 @@ idWindow* idWindow::GetChildWithOnAction( float xd, float yd )
 {
 
 	int c = children.Num();
-	while( c > 0 )
+	while( --c >= 0 )
 	{
-		idWindow* child = children[--c];
+		idWindow* child = children[c];
 		if( child->visible && child->Contains( child->drawRect, gui->CursorX(), gui->CursorY() ) && !child->noEvents )
 		{
 			child->hover = true;
@@ -465,11 +466,13 @@ idWindow* idWindow::GetChildWithOnAction( float xd, float yd )
 			}
 		}
 		
+#if 1
 		idWindow* check = child->GetChildWithOnAction( xd, yd );
 		if( check != NULL && check != child )
 		{
 			return check;
 		}
+#endif
 	}
 	
 	return this;
@@ -495,12 +498,14 @@ const char* idWindow::RouteMouseCoords( float xd, float yd )
 		return "";
 	}
 	
+#if 0
 	idWindow* child = GetChildWithOnAction( xd, yd );
 	if( overChild != child )
 	{
 		if( overChild )
 		{
 			overChild->MouseExit();
+			
 			str = overChild->cmd;
 			if( str.Length() )
 			{
@@ -508,10 +513,15 @@ const char* idWindow::RouteMouseCoords( float xd, float yd )
 				overChild->cmd = "";
 			}
 		}
+		
 		overChild = child;
 		if( overChild )
 		{
 			overChild->MouseEnter();
+			
+			// RB
+			SetFocus( overChild, true );
+			
 			str = overChild->cmd;
 			if( str.Length() )
 			{
@@ -522,6 +532,69 @@ const char* idWindow::RouteMouseCoords( float xd, float yd )
 			dc->SetCursor( overChild->cursor );
 		}
 	}
+#else
+	int c = children.Num();
+	while( --c >= 0 )
+	{
+		idWindow* child = children[c];
+	
+		if( child->visible && !child->noEvents && child->Contains( child->drawRect, gui->CursorX(), gui->CursorY() ) )
+		{
+			dc->SetCursor( child->cursor );
+			child->hover = true;
+	
+			if( overChild != child )
+			{
+				if( overChild )
+				{
+					// RB: clear old overChild
+					overChild->MouseExit();
+					str = overChild->cmd;
+					if( str.Length() )
+					{
+						gui->GetDesktop()->AddCommand( str );
+						overChild->cmd = "";
+					}
+				}
+	
+				overChild = child;
+				if( overChild )
+				{
+					overChild->MouseEnter();
+					SetFocus( overChild, true );
+	
+					str = overChild->cmd;
+					if( str.Length() )
+					{
+						gui->GetDesktop()->AddCommand( str );
+						overChild->cmd = "";
+					}
+				}
+			}
+			else
+			{
+				if( !( child->flags & WIN_HOLDCAPTURE ) )
+				{
+					child->RouteMouseCoords( xd, yd );
+				}
+			}
+	
+			return "";
+		}
+	}
+	
+	if( overChild )
+	{
+		overChild->MouseExit();
+		str = overChild->cmd;
+		if( str.Length() )
+		{
+			gui->GetDesktop()->AddCommand( str );
+			overChild->cmd = "";
+		}
+		overChild = NULL;
+	}
+#endif
 	
 	return "";
 }
@@ -533,7 +606,6 @@ idWindow::Activate
 */
 void idWindow::Activate( bool activate,	idStr& act )
 {
-
 	int n = ( activate ) ? ON_ACTIVATE : ON_DEACTIVATE;
 	
 	//  make sure win vars are updated before activation
@@ -560,11 +632,13 @@ idWindow::Trigger
 void idWindow::Trigger()
 {
 	RunScript( ON_TRIGGER );
+	
 	int c = children.Num();
 	for( int i = 0; i < c; i++ )
 	{
 		children[i]->Trigger();
 	}
+	
 	StateChanged( true );
 }
 
@@ -575,7 +649,6 @@ idWindow::StateChanged
 */
 void idWindow::StateChanged( bool redraw )
 {
-
 	UpdateWinVars();
 	
 	if( expressionRegisters.Num() && ops.Num() )
@@ -671,7 +744,6 @@ idWindow::RunTimeEvents
 */
 bool idWindow::RunTimeEvents( int time )
 {
-
 	if( time == lastTimeRun )
 	{
 		//common->Printf("Skipping gui time events at %i\n", time);
@@ -834,7 +906,6 @@ const char* idWindow::HandleEvent( const sysEvent_t* event, bool* updateVisuals 
 	
 	if( visible && !noEvents )
 	{
-	
 		if( event->evType == SE_KEY )
 		{
 			EvalRegs( -1, true );
@@ -845,9 +916,9 @@ const char* idWindow::HandleEvent( const sysEvent_t* event, bool* updateVisuals 
 			
 			if( event->evValue == K_MOUSE1 )
 			{
-			
 				if( !event->evValue2 && GetCaptureChild() )
 				{
+					// RB: key up
 					GetCaptureChild()->LoseCapture();
 					gui->GetDesktop()->captureChild = NULL;
 					return "";
@@ -856,29 +927,37 @@ const char* idWindow::HandleEvent( const sysEvent_t* event, bool* updateVisuals 
 				int c = children.Num();
 				while( --c >= 0 )
 				{
-					if( children[c]->visible && children[c]->Contains( children[c]->drawRect, gui->CursorX(), gui->CursorY() ) && !( children[c]->noEvents ) )
+					idWindow* child = children[c];
+					
+					if( child->visible && !child->noEvents && child->Contains( children[c]->drawRect, gui->CursorX(), gui->CursorY() ) )
 					{
-						idWindow* child = children[c];
 						if( event->evValue2 )
 						{
+							// RB: bring modal windows like pop up windows to top and let them eat all events
 							BringToTop( child );
+							
 							SetFocus( child );
+							
 							if( child->flags & WIN_HOLDCAPTURE )
 							{
 								SetCapture( child );
 							}
 						}
+						
 						if( child->Contains( child->clientRect, gui->CursorX(), gui->CursorY() ) )
 						{
 							//if ((gui_edit.GetBool() && (child->flags & WIN_SELECTED)) || (!gui_edit.GetBool() && (child->flags & WIN_MOVABLE))) {
 							//	SetCapture(child);
 							//}
+							
 							SetFocus( child );
+							
 							const char* childRet = child->HandleEvent( event, updateVisuals );
 							if( childRet != NULL && *childRet != '\0' )
 							{
 								return childRet;
 							}
+							
 							if( child->flags & WIN_MODAL )
 							{
 								return "";
@@ -888,7 +967,9 @@ const char* idWindow::HandleEvent( const sysEvent_t* event, bool* updateVisuals 
 						{
 							if( event->evValue2 )
 							{
+								// RB: key down
 								SetFocus( child );
+								
 								bool capture = true;
 								if( capture && ( ( child->flags & WIN_MOVABLE ) || gui_edit.GetBool() ) )
 								{
@@ -902,6 +983,7 @@ const char* idWindow::HandleEvent( const sysEvent_t* event, bool* updateVisuals 
 						}
 					}
 				}
+				
 				if( event->evValue2 && !actionDownRun )
 				{
 					actionDownRun = RunScript( ON_ACTION );
@@ -941,17 +1023,20 @@ const char* idWindow::HandleEvent( const sysEvent_t* event, bool* updateVisuals 
 							BringToTop( child );
 							SetFocus( child );
 						}
+						
 						if( child->Contains( child->clientRect, gui->CursorX(), gui->CursorY() ) || GetCaptureChild() == child )
 						{
 							if( ( gui_edit.GetBool() && ( child->flags & WIN_SELECTED ) ) || ( !gui_edit.GetBool() && ( child->flags & WIN_MOVABLE ) ) )
 							{
 								SetCapture( child );
 							}
+							
 							const char* childRet = child->HandleEvent( event, updateVisuals );
 							if( childRet && *childRet )
 							{
 								return childRet;
 							}
+							
 							if( child->flags & WIN_MODAL )
 							{
 								return "";
@@ -982,7 +1067,7 @@ const char* idWindow::HandleEvent( const sysEvent_t* event, bool* updateVisuals 
 					}
 				}
 			}
-			else if( event->evValue == K_TAB && event->evValue2 )
+			else if( ( event->evValue == K_TAB || event->evValue == K_XINPUT_GAMEPAD_DPAD_DOWN || event->evValue == K_XINPUT_GAMEPAD_DPAD_UP ) && event->evValue2 )
 			{
 				if( GetFocusedChild() )
 				{
@@ -996,7 +1081,7 @@ const char* idWindow::HandleEvent( const sysEvent_t* event, bool* updateVisuals 
 					// or the previous window if shift is held down
 					
 					int direction = 1;
-					if( idKeyInput::IsDown( K_SHIFT ) )
+					if( idKeyInput::IsDown( K_SHIFT ) || event->evValue == K_XINPUT_GAMEPAD_DPAD_UP )
 					{
 						direction = -1;
 					}
@@ -1009,6 +1094,7 @@ const char* idWindow::HandleEvent( const sysEvent_t* event, bool* updateVisuals 
 						bool foundFocus = false;
 						bool recurse = false;
 						int index = 0;
+						
 						if( child )
 						{
 							index = parent->GetChildIndex( child ) + direction;
@@ -1017,6 +1103,7 @@ const char* idWindow::HandleEvent( const sysEvent_t* event, bool* updateVisuals 
 						{
 							index = parent->GetChildCount() - 1;
 						}
+						
 						while( index < parent->GetChildCount() && index >= 0 )
 						{
 							idWindow* testWindow = parent->GetChild( index );
@@ -1026,6 +1113,7 @@ const char* idWindow::HandleEvent( const sysEvent_t* event, bool* updateVisuals 
 								foundFocus = true;
 								break;
 							}
+							
 							if( testWindow && !testWindow->noEvents && testWindow->visible )
 							{
 								if( testWindow->flags & WIN_CANFOCUS )
@@ -1042,8 +1130,10 @@ const char* idWindow::HandleEvent( const sysEvent_t* event, bool* updateVisuals 
 									break;
 								}
 							}
+							
 							index += direction;
 						}
+						
 						if( foundFocus )
 						{
 							// We found a child to focus on
@@ -1069,7 +1159,7 @@ const char* idWindow::HandleEvent( const sysEvent_t* event, bool* updateVisuals 
 					}
 				}
 			}
-			else if( event->evValue == K_ESCAPE && event->evValue2 )
+			else if( ( event->evValue == K_ESCAPE || event->evValue == K_XINPUT_GAMEPAD_B ) && event->evValue2 )
 			{
 				if( GetFocusedChild() )
 				{
@@ -1081,7 +1171,7 @@ const char* idWindow::HandleEvent( const sysEvent_t* event, bool* updateVisuals 
 				}
 				RunScript( ON_ESC );
 			}
-			else if( event->evValue == K_ENTER )
+			else if( event->evValue == K_ENTER || event->evValue == K_XINPUT_GAMEPAD_A )
 			{
 				if( GetFocusedChild() )
 				{
@@ -1091,7 +1181,8 @@ const char* idWindow::HandleEvent( const sysEvent_t* event, bool* updateVisuals 
 						return childRet;
 					}
 				}
-				if( flags & WIN_WANTENTER )
+				
+				//if( flags & WIN_WANTENTER )
 				{
 					if( event->evValue2 )
 					{
@@ -1278,7 +1369,6 @@ idWindow::Time
 */
 void idWindow::Time()
 {
-
 	if( noTime )
 	{
 		return;
@@ -1710,6 +1800,7 @@ void idWindow::SetupFromState()
 	}
 	
 	CalcClientRect( 0, 0 );
+	
 	if( scripts[ ON_ACTION ] )
 	{
 		cursor = idDeviceContext::CURSOR_HAND;
@@ -1740,8 +1831,18 @@ void idWindow::Sized()
 idWindow::GainFocus
 ================
 */
-void idWindow::GainFocus()
+void idWindow::GainFocus( bool scripts )
 {
+	if( noEvents || !scripts )
+	{
+		return;
+	}
+	
+	UpdateWinVars();
+	
+	RunScript( ON_FOCUSGAIN );
+	
+	StateChanged( true );
 }
 
 /*
@@ -1749,8 +1850,18 @@ void idWindow::GainFocus()
 idWindow::LoseFocus
 ================
 */
-void idWindow::LoseFocus()
+void idWindow::LoseFocus( bool scripts )
 {
+	if( noEvents || !scripts )
+	{
+		return;
+	}
+	
+	UpdateWinVars();
+	
+	RunScript( ON_FOCUSLOSE );
+	
+	StateChanged( true );
 }
 
 /*
@@ -1844,10 +1955,17 @@ idWindow* idWindow::SetFocus( idWindow* w, bool scripts )
 	if( w->flags & WIN_CANFOCUS )
 	{
 		lastFocus = gui->GetDesktop()->focusedChild;
+		
+		// RB: don't call focus functions if we still have the same window focused
+		if( lastFocus == w )
+		{
+			return w;
+		}
+		
 		if( lastFocus )
 		{
 			lastFocus->flags &= ~WIN_FOCUS;
-			lastFocus->LoseFocus();
+			lastFocus->LoseFocus( scripts );
 		}
 		
 		//  call on lose focus
@@ -1864,7 +1982,7 @@ idWindow* idWindow::SetFocus( idWindow* w, bool scripts )
 		}
 		
 		w->flags |= WIN_FOCUS;
-		w->GainFocus();
+		w->GainFocus( scripts );
 		gui->GetDesktop()->focusedChild = w;
 	}
 	

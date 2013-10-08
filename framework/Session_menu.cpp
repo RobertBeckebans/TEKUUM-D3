@@ -384,6 +384,10 @@ void idSessionLocal::SetMainMenuGuiVars()
 #endif
 	
 	SetPbMenuGuiVars();
+	
+	// RB begin
+	guiMainMenu->SetStateString( "gamepad", Sys_IsXbox360ControllerAvailable() ? "1" : "0" );
+	// RB end
 }
 
 /*
