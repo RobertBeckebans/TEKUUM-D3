@@ -301,6 +301,7 @@ CreateOpenGLContextOnDC
 */
 static HGLRC CreateOpenGLContextOnDC( const HDC hdc, const bool debugContext )
 {
+	// RB begin
 #if defined(USE_GLES2)
 	int useOpenGL32 = 0;
 #else
@@ -330,6 +331,7 @@ static HGLRC CreateOpenGLContextOnDC( const HDC hdc, const bool debugContext )
 			glProfileMask,					glProfile,
 			0
 		};
+		// RB end
 		
 		m_hrc = wglCreateContextAttribsARB( hdc, 0, attribs );
 		if( m_hrc != NULL )

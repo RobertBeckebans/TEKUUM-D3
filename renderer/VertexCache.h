@@ -3,6 +3,7 @@
 
 Doom 3 BFG Edition GPL Source Code
 Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2013 Robert Beckebans
 
 This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
@@ -64,7 +65,9 @@ struct geoBufferSet_t
 {
 	idIndexBuffer			indexBuffer;
 	idVertexBuffer			vertexBuffer;
+#if defined(USE_GPU_SKINNING)
 	idJointBuffer			jointBuffer;
+#endif
 	byte* 					mappedVertexBase;
 	byte* 					mappedIndexBase;
 	byte* 					mappedJointBase;
@@ -160,7 +163,9 @@ public:
 	// vb/ib is a temporary reference -- don't store it
 	bool			GetVertexBuffer( vertCacheHandle_t handle, idVertexBuffer* vb );
 	bool			GetIndexBuffer( vertCacheHandle_t handle, idIndexBuffer* ib );
+#if defined(USE_GPU_SKINNING)
 	bool			GetJointBuffer( vertCacheHandle_t handle, idJointBuffer* jb );
+#endif
 	
 	void			BeginBackEnd();
 	

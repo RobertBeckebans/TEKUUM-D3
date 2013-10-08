@@ -1954,11 +1954,16 @@ void idAsyncServer::ProcessConnectMessage( const netadr_t from, const idBitMsg& 
 	clientRate = msg.ReadLong();
 	
 	// check the client data - only for non pure servers
+	
+	// RB: bad for android development
+#if 0
 	if( !sessLocal.mapSpawnData.serverInfo.GetInt( "si_pure" ) && clientDataChecksum != serverDataChecksum )
 	{
 		PrintOOB( from, SERVER_PRINT_MISC, "#str_04842" );
 		return;
 	}
+#endif
+	// RB end
 	
 	if( ( ichallenge = ValidateChallenge( from, challenge, clientId ) ) == -1 )
 	{

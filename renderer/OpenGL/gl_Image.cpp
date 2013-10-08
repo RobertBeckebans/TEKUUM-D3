@@ -3,6 +3,7 @@
 
 Doom 3 BFG Edition GPL Source Code
 Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2013 Robert Beckebans
 
 This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
@@ -86,8 +87,8 @@ void idImage::SubImageUpload( int mipLevel, int x, int y, int z, int width, int 
 	}
 	else if( opts.textureType == TT_CUBIC )
 	{
-		target = GL_TEXTURE_CUBE_MAP_EXT;
-		uploadTarget = GL_TEXTURE_CUBE_MAP_POSITIVE_X_EXT + z;
+		target = GL_TEXTURE_CUBE_MAP;
+		uploadTarget = GL_TEXTURE_CUBE_MAP_POSITIVE_X + z;
 	}
 	else
 	{
@@ -102,16 +103,20 @@ void idImage::SubImageUpload( int mipLevel, int x, int y, int z, int width, int 
 	{
 		glPixelStorei( GL_UNPACK_ROW_LENGTH, pixelPitch );
 	}
+	
 	if( opts.format == FMT_RGB565 )
 	{
+#if defined(USE_MESA) || ( !defined(USE_GLES2) && !defined(USE_GLES3) )
 		glPixelStorei( GL_UNPACK_SWAP_BYTES, GL_TRUE );
+#endif
 	}
-#ifdef DEBUG
+	
+#if defined(DEBUG) || defined(__ANDROID__)
 	GL_CheckErrors();
 #endif
 	if( IsCompressed() )
 	{
-		glCompressedTexSubImage2DARB( uploadTarget, mipLevel, x, y, width, height, internalFormat, compressedSize, pic );
+		glCompressedTexSubImage2D( uploadTarget, mipLevel, x, y, width, height, internalFormat, compressedSize, pic );
 	}
 	else
 	{
@@ -131,13 +136,18 @@ void idImage::SubImageUpload( int mipLevel, int x, int y, int z, int width, int 
 		
 		glTexSubImage2D( uploadTarget, mipLevel, x, y, width, height, dataFormat, dataType, pic );
 	}
-#ifdef DEBUG
+	
+#if defined(DEBUG) || defined(__ANDROID__)
 	GL_CheckErrors();
 #endif
+	
 	if( opts.format == FMT_RGB565 )
 	{
+#if defined(USE_MESA) || ( !defined(USE_GLES2) && !defined(USE_GLES3) )
 		glPixelStorei( GL_UNPACK_SWAP_BYTES, GL_FALSE );
+#endif
 	}
+	
 	if( pixelPitch != 0 )
 	{
 		glPixelStorei( GL_UNPACK_ROW_LENGTH, 0 );
@@ -168,12 +178,14 @@ void idImage::SetTexParameters()
 			target = GL_TEXTURE_2D;
 			break;
 		case TT_CUBIC:
-			target = GL_TEXTURE_CUBE_MAP_EXT;
+			target = GL_TEXTURE_CUBE_MAP;
 			break;
 		default:
 			idLib::FatalError( "%s: bad texture type %d", GetName(), opts.textureType );
 			return;
 	}
+	
+#if !defined(USE_GLES2) //&& !defined(USE_GLES3)
 	
 	// ALPHA, LUMINANCE, LUMINANCE_ALPHA, and INTENSITY have been removed
 	// in OpenGL 3.2. In order to mimic those modes, we use the swizzle operators
@@ -237,10 +249,20 @@ void idImage::SetTexParameters()
 	}
 #endif
 	
+#endif // #if !defined(USE_GLES2)
+	
+#if defined(DEBUG) || defined(__ANDROID__)
+	GL_CheckErrors();
+#endif
+	
 	switch( filter )
 	{
 		case TF_DEFAULT:
-			if( r_useTrilinearFiltering.GetBool() )
+			if( opts.format == FMT_ETC1_RGB8_OES )
+			{
+				glTexParameterf( target, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST );
+			}
+			else if( r_useTrilinearFiltering.GetBool() )
 			{
 				glTexParameterf( target, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR );
 			}
@@ -262,6 +284,7 @@ void idImage::SetTexParameters()
 			common->FatalError( "%s: bad texture filter %d", GetName(), filter );
 	}
 	
+#if !defined(USE_GLES3) || defined(USE_MESA)
 	if( glConfig.anisotropicFilterAvailable )
 	{
 		// only do aniso filtering on mip mapped images
@@ -283,11 +306,19 @@ void idImage::SetTexParameters()
 			glTexParameterf( target, GL_TEXTURE_MAX_ANISOTROPY_EXT, 1 );
 		}
 	}
+#endif
+	
+#if defined(USE_MESA) || ( !defined(USE_GLES2) && !defined(USE_GLES3) )
 	if( glConfig.textureLODBiasAvailable && ( usage != TD_FONT ) )
 	{
 		// use a blurring LOD bias in combination with high anisotropy to fix our aliasing grate textures...
-		glTexParameterf( target, GL_TEXTURE_LOD_BIAS_EXT, r_lodBias.GetFloat() );
+		glTexParameterf( target, GL_TEXTURE_LOD_BIAS, r_lodBias.GetFloat() );
 	}
+#endif
+	
+#if defined(DEBUG) || defined(__ANDROID__)
+	GL_CheckErrors();
+#endif
 	
 	// set the wrap/clamp modes
 	switch( repeat )
@@ -296,6 +327,7 @@ void idImage::SetTexParameters()
 			glTexParameterf( target, GL_TEXTURE_WRAP_S, GL_REPEAT );
 			glTexParameterf( target, GL_TEXTURE_WRAP_T, GL_REPEAT );
 			break;
+#if defined(USE_MESA) || ( !defined(USE_GLES2) && !defined(USE_GLES3) )
 		case TR_CLAMP_TO_ZERO:
 		{
 			float color[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
@@ -312,6 +344,10 @@ void idImage::SetTexParameters()
 			glTexParameterf( target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER );
 		}
 		break;
+#else
+		case TR_CLAMP_TO_ZERO:
+		case TR_CLAMP_TO_ZERO_ALPHA:
+#endif
 		case TR_CLAMP:
 			glTexParameterf( target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
 			glTexParameterf( target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
@@ -339,7 +375,11 @@ void idImage::AllocImage()
 	switch( opts.format )
 	{
 		case FMT_RGBA8:
+#if ( defined(USE_GLES2) || defined(USE_GLES3) ) && !defined(USE_MESA)
+			internalFormat = GL_RGBA;
+#else
 			internalFormat = GL_RGBA8;
+#endif
 			dataFormat = GL_RGBA;
 			dataType = GL_UNSIGNED_BYTE;
 			break;
@@ -354,7 +394,10 @@ void idImage::AllocImage()
 			dataType = GL_UNSIGNED_SHORT_5_6_5;
 			break;
 		case FMT_ALPHA:
-#if defined( USE_CORE_PROFILE )
+#if defined(USE_GLES2) || defined(USE_GLES3)
+			internalFormat = GL_ALPHA;
+			dataFormat = GL_ALPHA;
+#elif defined( USE_CORE_PROFILE )
 			internalFormat = GL_R8;
 			dataFormat = GL_RED;
 #else
@@ -364,7 +407,10 @@ void idImage::AllocImage()
 			dataType = GL_UNSIGNED_BYTE;
 			break;
 		case FMT_L8A8:
-#if defined( USE_CORE_PROFILE )
+#if ( defined(USE_GLES2) || defined(USE_GLES3) ) && !defined(USE_MESA)
+			internalFormat = GL_LUMINANCE_ALPHA;
+			dataFormat = GL_LUMINANCE_ALPHA;
+#elif defined( USE_CORE_PROFILE )
 			internalFormat = GL_RG8;
 			dataFormat = GL_RG;
 #else
@@ -374,7 +420,10 @@ void idImage::AllocImage()
 			dataType = GL_UNSIGNED_BYTE;
 			break;
 		case FMT_LUM8:
-#if defined( USE_CORE_PROFILE )
+#if ( defined(USE_GLES2) || defined(USE_GLES3) ) && !defined(USE_MESA)
+			internalFormat = GL_LUMINANCE;
+			dataFormat = GL_LUMINANCE;
+#elif defined( USE_CORE_PROFILE )
 			internalFormat = GL_R8;
 			dataFormat = GL_RED;
 #else
@@ -384,7 +433,10 @@ void idImage::AllocImage()
 			dataType = GL_UNSIGNED_BYTE;
 			break;
 		case FMT_INT8:
-#if defined( USE_CORE_PROFILE )
+#if ( defined(USE_GLES2) || defined(USE_GLES3) ) && !defined(USE_MESA)
+			internalFormat = GL_LUMINANCE;
+			dataFormat = GL_LUMINANCE;
+#elif defined( USE_CORE_PROFILE )
 			internalFormat = GL_R8;
 			dataFormat = GL_RED;
 #else
@@ -398,8 +450,15 @@ void idImage::AllocImage()
 			dataFormat = GL_RGBA;
 			dataType = GL_UNSIGNED_BYTE;
 			break;
+#if defined(USE_MESA) || ( !defined(USE_GLES2) && !defined(USE_GLES3) )
 		case FMT_DXT5:
 			internalFormat = GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
+			dataFormat = GL_RGBA;
+			dataType = GL_UNSIGNED_BYTE;
+			break;
+#endif
+		case FMT_ETC1_RGB8_OES:
+			internalFormat = GL_ETC1_RGB8_OES;
 			dataFormat = GL_RGBA;
 			dataType = GL_UNSIGNED_BYTE;
 			break;
@@ -408,6 +467,7 @@ void idImage::AllocImage()
 			dataFormat = GL_DEPTH_COMPONENT;
 			dataType = GL_UNSIGNED_BYTE;
 			break;
+#if defined(USE_MESA) || ( !defined(USE_GLES2) && !defined(USE_GLES3) )
 		case FMT_X16:
 			internalFormat = GL_INTENSITY16;
 			dataFormat = GL_LUMINANCE;
@@ -418,6 +478,7 @@ void idImage::AllocImage()
 			dataFormat = GL_LUMINANCE_ALPHA;
 			dataType = GL_UNSIGNED_SHORT;
 			break;
+#endif
 		default:
 			idLib::Error( "Unhandled image format %d in %s\n", opts.format, GetName() );
 	}
@@ -449,8 +510,8 @@ void idImage::AllocImage()
 	}
 	else if( opts.textureType == TT_CUBIC )
 	{
-		target = GL_TEXTURE_CUBE_MAP_EXT;
-		uploadTarget = GL_TEXTURE_CUBE_MAP_POSITIVE_X_EXT;
+		target = GL_TEXTURE_CUBE_MAP;
+		uploadTarget = GL_TEXTURE_CUBE_MAP_POSITIVE_X;
 		numSides = 6;
 	}
 	else
@@ -492,14 +553,14 @@ void idImage::AllocImage()
 				// RB begin
 #if defined(_WIN32)
 				void* data = HeapAlloc( GetProcessHeap(), 0, compressedSize );
-				glCompressedTexImage2DARB( uploadTarget + side, level, internalFormat, w, h, 0, compressedSize, data );
+				glCompressedTexImage2D( uploadTarget + side, level, internalFormat, w, h, 0, compressedSize, data );
 				if( data != NULL )
 				{
 					HeapFree( GetProcessHeap(), 0, data );
 				}
 #else
 				byte* data = ( byte* )Mem_Alloc( compressedSize, TAG_TEMP );
-				glCompressedTexImage2DARB( uploadTarget + side, level, internalFormat, w, h, 0, compressedSize, data );
+				glCompressedTexImage2D( uploadTarget + side, level, internalFormat, w, h, 0, compressedSize, data );
 				if( data != NULL )
 				{
 					Mem_Free( data );
@@ -519,7 +580,9 @@ void idImage::AllocImage()
 		}
 	}
 	
+#if !defined(USE_GLES2)
 	glTexParameteri( target, GL_TEXTURE_MAX_LEVEL, opts.numLevels - 1 );
+#endif
 	
 	// see if we messed anything up
 	GL_CheckErrors();

@@ -84,7 +84,7 @@ typedef struct
 // RB begin
 struct lightGridPoint_t
 {
-#if !defined(USE_GLES2)
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 	idVec3			origin;				// not saved to .proc
 #endif
 	byte			ambient[3];
@@ -322,6 +322,15 @@ public:
 	//-------------------------------
 	// tr_light.c
 	void					CreateLightDefInteractions( idRenderLightLocal* const ldef, const int renderViewID );
+	
+// RB begin
+
+	//--------------------------
+	// RenderWorld_lightgrid.cpp
+	
+private:
+	void					SetupEntityGridLighting( idRenderEntityLocal* def );
+// RB end
 };
 
 // if an entity / light combination has been evaluated and found to not genrate any surfaces or shadows,

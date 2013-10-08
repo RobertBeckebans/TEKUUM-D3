@@ -29,6 +29,8 @@ If you have questions concerning this license or the applicable additional terms
 #include "precompiled.h"
 #include "Font.h"
 
+#if defined(USE_IDFONT)
+
 #ifdef BUILD_FREETYPE
 // RB: changed to local includes
 //#include <freetype/fterrors.h>
@@ -558,7 +560,7 @@ void idFont::Touch()
 
 
 
-
+#ifdef BUILD_FREETYPE
 
 static FT_Library ftLibrary = NULL;
 
@@ -854,6 +856,8 @@ static void FinalizeFontInfoEx( const char* fontName, fontInfoEx_t& font, idFont
 }
 #endif
 
+#endif // #ifdef BUILD_FREETYPE
+
 bool idFont::LoadFromTrueTypeFont()
 {
 #if 1
@@ -1012,3 +1016,5 @@ bool idFont::WriteFont()
 	// TODO
 	return false;
 }
+
+#endif

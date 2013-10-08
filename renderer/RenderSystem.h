@@ -3,6 +3,7 @@
 
 Doom 3 BFG Edition GPL Source Code
 Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2013 Robert Beckebans
 
 This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
@@ -132,6 +133,7 @@ struct glconfig_t
 	
 	// RB begin
 	bool				gremedyStringMarkerAvailable;
+	bool				vertexHalfFloatAvailable;
 	// RB end
 	
 	stereo3DMode_t		stereo3Dmode;
@@ -152,7 +154,11 @@ struct glconfig_t
 	
 	float				pixelAspect;
 	
+	// RB begin
+#if !defined(__ANDROID__)
 	GLuint				global_vao;
+#endif
+	// RB end
 };
 
 
@@ -160,6 +166,55 @@ struct glconfig_t
 struct emptyCommand_t;
 
 bool R_IsInitialized();
+
+
+// RB: legacy font support
+const int GLYPH_START			= 0;
+const int GLYPH_END				= 255;
+const int GLYPH_CHARSTART		= 32;
+const int GLYPH_CHAREND			= 127;
+const int GLYPHS_PER_FONT		= GLYPH_END - GLYPH_START + 1;
+
+typedef struct
+{
+	int					height;			// number of scan lines
+	int					top;			// top of glyph in buffer
+	int					bottom;			// bottom of glyph in buffer
+	int					pitch;			// width for copying
+	int					xSkip;			// x adjustment
+	int					imageWidth;		// width of actual image
+	int					imageHeight;	// height of actual image
+	float				s;				// x offset in image where glyph starts
+	float				t;				// y offset in image where glyph starts
+	float				s2;
+	float				t2;
+	const idMaterial* 	glyph;			// shader with the glyph
+	char				shaderName[32];
+} glyphInfo_t;
+
+typedef struct
+{
+	glyphInfo_t			glyphs [GLYPHS_PER_FONT];
+	float				glyphScale;
+	char				name[64];
+} fontInfo_t;
+
+typedef struct
+{
+	fontInfo_t			fontInfoSmall;
+	fontInfo_t			fontInfoMedium;
+	fontInfo_t			fontInfoLarge;
+	int					maxHeight;
+	int					maxWidth;
+	int					maxHeightSmall;
+	int					maxWidthSmall;
+	int					maxHeightMedium;
+	int					maxWidthMedium;
+	int					maxHeightLarge;
+	int					maxWidthLarge;
+	char				name[64];
+} fontInfoEx_t;
+// RB end
 
 const int SMALLCHAR_WIDTH		= 8;
 const int SMALLCHAR_HEIGHT		= 16;
@@ -240,8 +295,14 @@ public:
 	virtual bool			AreAutomaticBackgroundSwapsRunning( autoRenderIconType_t* icon = NULL ) const = 0;
 	
 	// font support
+	// RB begin
+#if defined(USE_IDFONT)
 	virtual class idFont* 	RegisterFont( const char* fontName ) = 0;
 	virtual void			ResetFonts() = 0;
+#else
+	virtual bool			RegisterFont( const char* fontName, fontInfoEx_t& font ) = 0;
+#endif
+	// RB end
 	
 	virtual void			SetColor( const idVec4& rgba ) = 0;
 	virtual void			SetColor4( float r, float g, float b, float a )
@@ -249,7 +310,10 @@ public:
 		SetColor( idVec4( r, g, b, a ) );
 	}
 	
-	virtual uint32			GetColor() = 0;
+	// RB: separated GetColor and GetColorNativeOrder
+	virtual const idVec4&	GetColor() = 0;
+	virtual uint32			GetColorPacked() = 0;
+	// RB end
 	
 	virtual void			SetGLState( const uint64 glState ) = 0;
 	
@@ -261,7 +325,14 @@ public:
 	}
 	virtual void			DrawStretchPic( const idVec4& topLeft, const idVec4& topRight, const idVec4& bottomRight, const idVec4& bottomLeft, const idMaterial* material ) = 0;
 	virtual void			DrawStretchTri( const idVec2& p1, const idVec2& p2, const idVec2& p3, const idVec2& t1, const idVec2& t2, const idVec2& t3, const idMaterial* material ) = 0;
+	
+	// RB: added alternative interface for no glMapBuffer support
+#if defined(NO_GL_MAPBUFFER)
+	virtual void			AllocTris( const idDrawVert* verts, int numVerts, const triIndex_t* indexes, int numIndexes, const idMaterial* material, const stereoDepthType_t stereoType = STEREO_DEPTH_TYPE_NONE ) = 0;
+#else
 	virtual idDrawVert* 	AllocTris( int numVerts, const triIndex_t* indexes, int numIndexes, const idMaterial* material, const stereoDepthType_t stereoType = STEREO_DEPTH_TYPE_NONE ) = 0;
+#endif
+	// RB end
 	
 	virtual void			PrintMemInfo( MemInfo_t* mi ) = 0;
 	
@@ -286,11 +357,11 @@ public:
 	//
 	// After this is called, new command buffers can be built up in parallel
 	// with the rendering of the closed off command buffers by RenderCommandBuffers()
-	virtual const emptyCommand_t* 	SwapCommandBuffers( uint64* frontEndMicroSec, uint64* backEndMicroSec, uint64* shadowMicroSec, uint64* gpuMicroSec ) = 0;
+	virtual const emptyCommand_t* 	SwapCommandBuffers( uint64* frontEndMicroSec, uint64* backEndMicroSec, uint64* shadowMicroSec, uint64* gpuMicroSec, bool swapBuffers ) = 0;
 	
 	// SwapCommandBuffers operation can be split in two parts for non-smp rendering
 	// where the GPU is idled intentionally for minimal latency.
-	virtual void			SwapCommandBuffers_FinishRendering( uint64* frontEndMicroSec, uint64* backEndMicroSec, uint64* shadowMicroSec, uint64* gpuMicroSec ) = 0;
+	virtual void			SwapCommandBuffers_FinishRendering( uint64* frontEndMicroSec, uint64* backEndMicroSec, uint64* shadowMicroSec, uint64* gpuMicroSec, bool swapBuffers ) = 0;
 	virtual const emptyCommand_t* 	SwapCommandBuffers_FinishCommandBuffers() = 0;
 	
 	// issues GPU commands to render a built up list of command buffers returned

@@ -29,7 +29,9 @@ If you have questions concerning this license or the applicable additional terms
 #ifndef __LIST_H__
 #define __LIST_H__
 
+#if defined(__ANDROID__)
 //#include <new>
+#endif
 
 /*
 ===============================================================================
@@ -40,68 +42,7 @@ If you have questions concerning this license or the applicable additional terms
 ===============================================================================
 */
 
-/*
-========================
-idListArrayNew
-========================
-*/
-template< typename _type_ >
-ID_INLINE void* idListArrayNew( int num, bool zeroBuffer )
-{
-	_type_ * ptr = NULL;
-	if( zeroBuffer )
-	{
-		ptr = ( _type_* )Mem_ClearedAlloc( sizeof( _type_ ) * num );
-	}
-	else
-	{
-		ptr = ( _type_* )Mem_Alloc( sizeof( _type_ ) * num );
-	}
-	for( int i = 0; i < num; i++ )
-	{
-		new( &ptr[i] ) _type_;
-	}
-	return ptr;
-}
 
-/*
-========================
-idListArrayDelete
-========================
-*/
-template< typename _type_ >
-ID_INLINE void idListArrayDelete( void* ptr, int num )
-{
-	// Call the destructors on all the elements
-	for( int i = 0; i < num; i++ )
-	{
-		( ( _type_* )ptr )[i].~_type_();
-	}
-	Mem_Free( ptr );
-}
-
-/*
-========================
-idListArrayResize
-========================
-*/
-template< typename _type_ >
-ID_INLINE void* idListArrayResize( void* voldptr, int oldNum, int newNum, bool zeroBuffer )
-{
-	_type_ * oldptr = ( _type_* )voldptr;
-	_type_ * newptr = NULL;
-	if( newNum > 0 )
-	{
-		newptr = ( _type_* )idListArrayNew<_type_>( newNum, zeroBuffer );
-		int overlap = Min( oldNum, newNum );
-		for( int i = 0; i < overlap; i++ )
-		{
-			newptr[i] = oldptr[i];
-		}
-	}
-	idListArrayDelete<_type_>( voldptr, oldNum );
-	return newptr;
-}
 
 /*
 ================
@@ -109,7 +50,7 @@ idListNewElement<type>
 ================
 */
 template< class type >
-ID_INLINE type* idListNewElement( void )
+ID_INLINE type* idListNewElement()
 {
 	return new type;
 }
@@ -169,49 +110,18 @@ public:
 	void			Swap( idList& other );								// swap the contents of the lists
 	void			DeleteContents( bool clear = true );				// delete the contents of the list
 	
-	//------------------------
-	// auto-cast to other idList types with a different memory tag
-	//------------------------
-	/*
-	template< memTag_t _t_ >
-	operator idList<_type_, _t_>& ()
-	{
-		return *reinterpret_cast<idList<_type_, _t_> *>( this );
-	}
 	
-	template< memTag_t _t_>
-	operator const idList<_type_, _t_>& () const
-	{
-		return *reinterpret_cast<const idList<_type_, _t_> *>( this );
-	}
-	
-	//------------------------
-	// memTag
-	//
-	// Changing the memTag when the list has an allocated buffer will
-	// result in corruption of the memory statistics.
-	//------------------------
-	memTag_t		GetMemTag() const
-	{
-		return ( memTag_t )memTag;
-	};
-	void			SetMemTag( memTag_t tag_ )
-	{
-		memTag = ( byte )tag_;
-	};
-	*/
 	
 private:
 	int				num;
 	int				size;
 	int				granularity;
 	_type_* 		list;
-//	byte			memTag;
 };
 
 /*
 ================
-idList<_type_,_tag_>::idList( int )
+idList<_type_>::idList( int )
 ================
 */
 template< typename _type_ >
@@ -221,7 +131,6 @@ ID_INLINE idList<_type_>::idList( int newgranularity )
 	
 	list		= NULL;
 	granularity	= newgranularity;
-//	memTag		= _tag_;
 	Clear();
 }
 
@@ -260,7 +169,7 @@ ID_INLINE void idList<_type_>::Clear()
 {
 	if( list )
 	{
-		idListArrayDelete< _type_ >( list, size );
+		delete[] list;
 	}
 	
 	list	= NULL;
@@ -455,6 +364,9 @@ Contents are copied using their = operator so that data is correnctly instantiat
 template< typename _type_ >
 ID_INLINE void idList<_type_>::Resize( int newsize )
 {
+	_type_*	temp;
+	int		i;
+	
 	assert( newsize >= 0 );
 	
 	// free up the list if no data is being reserved
@@ -470,17 +382,30 @@ ID_INLINE void idList<_type_>::Resize( int newsize )
 		return;
 	}
 	
-	list = ( _type_* )idListArrayResize< _type_ >( list, size, newsize, false );
-	size = newsize;
+	temp	= list;
+	size	= newsize;
 	if( size < num )
 	{
 		num = size;
+	}
+	
+	// copy the old list into our new one
+	list = new _type_[ size ];
+	for( i = 0; i < num; i++ )
+	{
+		list[ i ] = temp[ i ];
+	}
+	
+	// delete the old list if it exists
+	if( temp )
+	{
+		delete[] temp;
 	}
 }
 
 /*
 ================
-idList<_type_,_tag_>::Resize
+idList<_type_>::Resize
 
 Allocates memory for the amount of elements requested while keeping the contents intact.
 Contents are copied using their = operator so that data is correnctly instantiated.
@@ -489,6 +414,9 @@ Contents are copied using their = operator so that data is correnctly instantiat
 template< typename _type_ >
 ID_INLINE void idList<_type_>::Resize( int newsize, int newgranularity )
 {
+	_type_*	temp;
+	int		i;
+	
 	assert( newsize >= 0 );
 	
 	assert( newgranularity > 0 );
@@ -501,11 +429,24 @@ ID_INLINE void idList<_type_>::Resize( int newsize, int newgranularity )
 		return;
 	}
 	
-	list = ( _type_* )idListArrayResize< _type_ >( list, size, newsize, false );
-	size = newsize;
+	temp	= list;
+	size	= newsize;
 	if( size < num )
 	{
 		num = size;
+	}
+	
+	// copy the old list into our new one
+	list = new _type_[ size ];
+	for( i = 0; i < num; i++ )
+	{
+		list[ i ] = temp[ i ];
+	}
+	
+	// delete the old list if it exists
+	if( temp )
+	{
+		delete[] temp;
 	}
 }
 
@@ -625,11 +566,10 @@ ID_INLINE idList<_type_>& idList<_type_>::operator=( const idList<_type_>& other
 	num			= other.num;
 	size		= other.size;
 	granularity	= other.granularity;
-//	memTag		= other.memTag;
-
+	
 	if( size )
 	{
-		list = ( _type_* )idListArrayNew< _type_>( size, false );
+		list = new _type_[ size ];
 		for( i = 0; i < num; i++ )
 		{
 			list[ i ] = other.list[ i ];

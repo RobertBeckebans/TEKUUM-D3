@@ -3,6 +3,7 @@
 
 Doom 3 GPL Source Code
 Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2013 Robert Beckebans
 
 This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
 
@@ -90,6 +91,15 @@ public:
 	
 	// closes the file and frees all allocated memory
 	virtual void		ResetTime( int time );
+	
+	// RB begin
+	virtual bool		IsLooping();
+	
+	const char*			GetSourceName();
+	
+protected:
+	idStr				sourceName;
+	// RB end
 };
 
 /*
@@ -113,6 +123,10 @@ public:
 	bool				InitFromFile( const char* qpath, bool looping );
 	cinData_t			ImageForTime( int milliseconds );
 	int					AnimationLength();
+	
+	// RB begin
+	virtual bool		IsLooping();
+	// RB end
 	
 private:
 	bool				showWaveform;

@@ -121,7 +121,7 @@ uintptr_t Sys_CreateThread( xthread_t function, void* parms, xthreadPriority pri
 	pthread_attr_destroy( &attr );
 	
 	
-#if 1
+#if !defined(__ANDROID__)
 	// RB: realtime policies require root privileges
 	
 	// all Linux threads have one of the following scheduling policies:
@@ -251,7 +251,11 @@ Sys_Yield
 */
 void Sys_Yield()
 {
+#if defined(__ANDROID__)
+	sched_yield();
+#else
 	pthread_yield();
+#endif
 }
 
 /*

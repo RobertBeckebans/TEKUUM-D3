@@ -414,6 +414,14 @@ void Cmd_Give_f( const idCmdArgs& args )
 		return;
 	}
 	
+	// RB begin
+	if( idStr::Icmp( name, "adrenaline" ) == 0 )
+	{
+		player->GivePowerUp( ADRENALINE, SEC2MS( 30.0f ) );
+		return;
+	}
+	// RB end
+	
 	if( !give_all && !player->Give( args.Argv( 1 ), args.Argv( 2 ) ) )
 	{
 		gameLocal.Printf( "unknown item\n" );
@@ -447,12 +455,12 @@ void Cmd_CenterView_f( const idCmdArgs& args )
 ==================
 Cmd_God_f
 
-Sets client to godmode
+Sets client to nodamage
 
-argv(0) god
+argv(0) nodamage
 ==================
 */
-void Cmd_God_f( const idCmdArgs& args )
+void Cmd_Nodamage_f( const idCmdArgs& args )
 {
 	char*		msg;
 	idPlayer*	player;
@@ -463,15 +471,15 @@ void Cmd_God_f( const idCmdArgs& args )
 		return;
 	}
 	
-	if( player->godmode )
+	if( player->nodamage )
 	{
-		player->godmode = false;
-		msg = "godmode OFF\n";
+		player->nodamage = false;
+		msg = "nodamage OFF\n";
 	}
 	else
 	{
-		player->godmode = true;
-		msg = "godmode ON\n";
+		player->nodamage = true;
+		msg = "nodamage ON\n";
 	}
 	
 	gameLocal.Printf( "%s", msg );
@@ -2653,7 +2661,7 @@ void idGameLocal::InitConsoleCommands()
 	cmdSystem->AddCommand( "gameKick",				Cmd_Kick_f,					CMD_FL_GAME,				"same as kick, but recognizes player names" );
 	cmdSystem->AddCommand( "give",					Cmd_Give_f,					CMD_FL_GAME | CMD_FL_CHEAT,	"gives one or more items" );
 	cmdSystem->AddCommand( "centerview",			Cmd_CenterView_f,			CMD_FL_GAME,				"centers the view" );
-	cmdSystem->AddCommand( "god",					Cmd_God_f,					CMD_FL_GAME | CMD_FL_CHEAT,	"enables god mode" );
+	cmdSystem->AddCommand( "nodamage",				Cmd_Nodamage_f,				CMD_FL_GAME | CMD_FL_CHEAT,	"disables damage for the player" );
 	cmdSystem->AddCommand( "notarget",				Cmd_Notarget_f,				CMD_FL_GAME | CMD_FL_CHEAT,	"disables the player as a target" );
 	cmdSystem->AddCommand( "noclip",				Cmd_Noclip_f,				CMD_FL_GAME | CMD_FL_CHEAT,	"disables collision detection for the player" );
 	cmdSystem->AddCommand( "kill",					Cmd_Kill_f,					CMD_FL_GAME,				"kills the player" );

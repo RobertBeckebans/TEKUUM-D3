@@ -3,6 +3,7 @@
 
 Doom 3 BFG Edition GPL Source Code
 Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2013 Robert Beckebans
 
 This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
@@ -32,13 +33,22 @@ If you have questions concerning this license or the applicable additional terms
 #include "tr_local.h"
 #include "Model_local.h"
 
+#if defined(USE_GLES2) || defined(USE_GLES3)
+idCVar r_skipStaticShadows( "r_skipStaticShadows", "0", CVAR_RENDERER | CVAR_BOOL, "skip static shadows" );
+idCVar r_skipDynamicShadows( "r_skipDynamicShadows", "", CVAR_RENDERER | CVAR_BOOL, "skip dynamic shadows" );
+idCVar r_useParallelAddModels( "r_useParallelAddModels", "1", CVAR_RENDERER | CVAR_BOOL, "add all models in parallel with jobs" );
+idCVar r_useParallelAddShadows( "r_useParallelAddShadows", "1", CVAR_RENDERER | CVAR_INTEGER, "0 = off, 1 = threaded", 0, 1 );
+idCVar r_cullDynamicLightTriangles( "r_cullDynamicLightTriangles", "0", CVAR_RENDERER | CVAR_BOOL, "cull surface triangles that are outside the light frustum so they do not get rendered for interactions" );
+#else
 idCVar r_skipStaticShadows( "r_skipStaticShadows", "0", CVAR_RENDERER | CVAR_BOOL, "skip static shadows" );
 idCVar r_skipDynamicShadows( "r_skipDynamicShadows", "0", CVAR_RENDERER | CVAR_BOOL, "skip dynamic shadows" );
 idCVar r_useParallelAddModels( "r_useParallelAddModels", "1", CVAR_RENDERER | CVAR_BOOL, "add all models in parallel with jobs" );
 idCVar r_useParallelAddShadows( "r_useParallelAddShadows", "1", CVAR_RENDERER | CVAR_INTEGER, "0 = off, 1 = threaded", 0, 1 );
+idCVar r_cullDynamicLightTriangles( "r_cullDynamicLightTriangles", "1", CVAR_RENDERER | CVAR_BOOL, "cull surface triangles that are outside the light frustum so they do not get rendered for interactions" );
+#endif
+
 idCVar r_useShadowPreciseInsideTest( "r_useShadowPreciseInsideTest", "1", CVAR_RENDERER | CVAR_BOOL, "use a precise and more expensive test to determine whether the view is inside a shadow volume" );
 idCVar r_cullDynamicShadowTriangles( "r_cullDynamicShadowTriangles", "1", CVAR_RENDERER | CVAR_BOOL, "cull occluder triangles that are outside the light frustum so they do not contribute to the dynamic shadow volume" );
-idCVar r_cullDynamicLightTriangles( "r_cullDynamicLightTriangles", "1", CVAR_RENDERER | CVAR_BOOL, "cull surface triangles that are outside the light frustum so they do not get rendered for interactions" );
 idCVar r_forceShadowCaps( "r_forceShadowCaps", "0", CVAR_RENDERER | CVAR_BOOL, "0 = skip rendering shadow caps if view is outside shadow volume, 1 = always render shadow caps" );
 
 static const float CHECK_BOUNDS_EPSILON = 1.0f;
@@ -421,10 +431,10 @@ void R_AddSingleModel( viewEntity_t* vEntity )
 	viewLight_t* contactedLights[MAX_CONTACTED_LIGHTS];
 	idInteraction* staticInteractions[MAX_CONTACTED_LIGHTS];
 	
-	if( renderEntity->hModel == NULL ||
-			renderEntity->hModel->ModelHasInteractingSurfaces() ||
-			renderEntity->hModel->ModelHasShadowCastingSurfaces() )
+	// RB: added precomputed lighting
+	if( ( renderEntity->hModel == NULL || renderEntity->hModel->ModelHasInteractingSurfaces() || renderEntity->hModel->ModelHasShadowCastingSurfaces() ) && !r_usePrecomputedLight.GetBool() )
 	{
+		// RB end
 		SCOPED_PROFILE_EVENT( "Find lights" );
 		for( viewLight_t* vLight = viewDef->viewLights; vLight != NULL; vLight = vLight->next )
 		{
@@ -565,6 +575,15 @@ void R_AddSingleModel( viewEntity_t* vEntity )
 	vEntity->modelDepthHack = renderEntity->modelDepthHack;
 	vEntity->weaponDepthHack = renderEntity->weaponDepthHack;
 	vEntity->skipMotionBlur = renderEntity->skipMotionBlur;
+	
+	// RB begin
+	if( r_usePrecomputedLight.GetBool() )
+	{
+		vEntity->gridLightDir = entityDef->lightDir;
+		vEntity->gridAmbientLight = entityDef->ambientLight;
+		vEntity->gridDirectedLight = entityDef->directedLight;
+	}
+	// RB end
 	
 	memcpy( vEntity->modelMatrix, entityDef->modelMatrix, sizeof( vEntity->modelMatrix ) );
 	R_MatrixMultiply( entityDef->modelMatrix, viewDef->worldSpace.modelViewMatrix, vEntity->modelViewMatrix );
@@ -767,6 +786,13 @@ void R_AddSingleModel( viewEntity_t* vEntity )
 				vEntity->drawSurfs = baseDrawSurf;
 			}
 		}
+		
+		// RB: relax renderer frontend
+		if( r_usePrecomputedLight.GetBool() )
+		{
+			continue;
+		}
+		// RB end
 		
 		//----------------------------------------
 		// add all light interactions
@@ -1192,46 +1218,51 @@ void R_AddModels()
 	// Kick off jobs to setup static and dynamic shadow volumes.
 	//-------------------------------------------------
 	
-	if( r_useParallelAddShadows.GetInteger() == 1 )
+	// RB begin
+	if( !r_usePrecomputedLight.GetBool() )
 	{
-		for( viewEntity_t* vEntity = tr.viewDef->viewEntitys; vEntity != NULL; vEntity = vEntity->next )
+		if( r_useParallelAddShadows.GetInteger() == 1 )
 		{
-			for( staticShadowVolumeParms_t* shadowParms = vEntity->staticShadowVolumes; shadowParms != NULL; shadowParms = shadowParms->next )
+			for( viewEntity_t* vEntity = tr.viewDef->viewEntitys; vEntity != NULL; vEntity = vEntity->next )
 			{
-				tr.frontEndJobList->AddParallelJob( ( jobRun_t )StaticShadowVolumeJob, shadowParms );
+				for( staticShadowVolumeParms_t* shadowParms = vEntity->staticShadowVolumes; shadowParms != NULL; shadowParms = shadowParms->next )
+				{
+					tr.frontEndJobList->AddParallelJob( ( jobRun_t )StaticShadowVolumeJob, shadowParms );
+				}
+				for( dynamicShadowVolumeParms_t* shadowParms = vEntity->dynamicShadowVolumes; shadowParms != NULL; shadowParms = shadowParms->next )
+				{
+					tr.frontEndJobList->AddParallelJob( ( jobRun_t )DynamicShadowVolumeJob, shadowParms );
+				}
+				vEntity->staticShadowVolumes = NULL;
+				vEntity->dynamicShadowVolumes = NULL;
 			}
-			for( dynamicShadowVolumeParms_t* shadowParms = vEntity->dynamicShadowVolumes; shadowParms != NULL; shadowParms = shadowParms->next )
-			{
-				tr.frontEndJobList->AddParallelJob( ( jobRun_t )DynamicShadowVolumeJob, shadowParms );
-			}
-			vEntity->staticShadowVolumes = NULL;
-			vEntity->dynamicShadowVolumes = NULL;
+			tr.frontEndJobList->Submit();
+			// wait here otherwise the shadow volume index buffer may be unmapped before all shadow volumes have been constructed
+			tr.frontEndJobList->Wait();
 		}
-		tr.frontEndJobList->Submit();
-		// wait here otherwise the shadow volume index buffer may be unmapped before all shadow volumes have been constructed
-		tr.frontEndJobList->Wait();
-	}
-	else
-	{
-		int start = Sys_Microseconds();
-		
-		for( viewEntity_t* vEntity = tr.viewDef->viewEntitys; vEntity != NULL; vEntity = vEntity->next )
+		else
 		{
-			for( staticShadowVolumeParms_t* shadowParms = vEntity->staticShadowVolumes; shadowParms != NULL; shadowParms = shadowParms->next )
+			int start = Sys_Microseconds();
+			
+			for( viewEntity_t* vEntity = tr.viewDef->viewEntitys; vEntity != NULL; vEntity = vEntity->next )
 			{
-				StaticShadowVolumeJob( shadowParms );
+				for( staticShadowVolumeParms_t* shadowParms = vEntity->staticShadowVolumes; shadowParms != NULL; shadowParms = shadowParms->next )
+				{
+					StaticShadowVolumeJob( shadowParms );
+				}
+				for( dynamicShadowVolumeParms_t* shadowParms = vEntity->dynamicShadowVolumes; shadowParms != NULL; shadowParms = shadowParms->next )
+				{
+					DynamicShadowVolumeJob( shadowParms );
+				}
+				vEntity->staticShadowVolumes = NULL;
+				vEntity->dynamicShadowVolumes = NULL;
 			}
-			for( dynamicShadowVolumeParms_t* shadowParms = vEntity->dynamicShadowVolumes; shadowParms != NULL; shadowParms = shadowParms->next )
-			{
-				DynamicShadowVolumeJob( shadowParms );
-			}
-			vEntity->staticShadowVolumes = NULL;
-			vEntity->dynamicShadowVolumes = NULL;
+			
+			int end = Sys_Microseconds();
+			backEnd.pc.shadowMicroSec += end - start;
 		}
-		
-		int end = Sys_Microseconds();
-		backEnd.pc.shadowMicroSec += end - start;
 	}
+	// RB end
 	
 	//-------------------------------------------------
 	// Move the draw surfs to the view.

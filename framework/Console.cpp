@@ -270,8 +270,8 @@ float idConsoleLocal::DrawFPS( float y )
 	const int rendererGPUTime = time_gpu; //commonLocal.GetRendererGPUMicroseconds();
 	const int maxTime = 16;
 	
-	time_gameFrame = 0;
-	time_gameDraw = 0;
+	//time_gameFrame = 0;
+	//time_gameDraw = 0;
 	
 	y += SMALLCHAR_HEIGHT + 4;
 	idStr timeStr;
@@ -1579,7 +1579,7 @@ idConsoleLocal::CreateGraph
 */
 idDebugGraph* idConsoleLocal::CreateGraph( int numItems )
 {
-	idDebugGraph* graph = new( TAG_SYSTEM ) idDebugGraph( numItems );
+	idDebugGraph* graph = new idDebugGraph( numItems );
 	debugGraphs.Append( graph );
 	return graph;
 }

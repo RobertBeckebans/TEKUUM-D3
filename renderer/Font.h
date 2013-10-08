@@ -3,6 +3,7 @@
 
 Doom 3 BFG Edition GPL Source Code
 Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2013 Robert Beckebans
 
 This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
@@ -27,6 +28,8 @@ If you have questions concerning this license or the applicable additional terms
 */
 #ifndef __FONT_H__
 #define __FONT_H__
+
+#if defined(USE_IDFONT)
 
 struct scaledGlyphInfo_t
 {
@@ -70,6 +73,16 @@ private:
 public:
 	struct glyphInfo_t
 	{
+		// RB: FIXME byte is signed on ARM
+#if defined(__ARM_ARCH_7__) || defined(__ARM_ARCH_7A__) || defined(__ARM_ARCH_5__)
+		char	width;	// width of glyph in pixels
+		char	height;	// height of glyph in pixels
+		byte	top;	// distance in pixels from the base line to the top of the glyph
+		byte	left;	// distance in pixels from the pen to the left edge of the glyph
+		char	xSkip;	// x adjustment after rendering this glyph
+		uint16	s;		// x offset in image where glyph starts (in pixels)
+		uint16	t;		// y offset in image where glyph starts (in pixels)
+#else
 		byte	width;	// width of glyph in pixels
 		byte	height;	// height of glyph in pixels
 		char	top;	// distance in pixels from the base line to the top of the glyph
@@ -77,6 +90,8 @@ public:
 		byte	xSkip;	// x adjustment after rendering this glyph
 		uint16	s;		// x offset in image where glyph starts (in pixels)
 		uint16	t;		// y offset in image where glyph starts (in pixels)
+#endif
+		// RB end
 	};
 	struct fontInfo_t
 	{
@@ -112,5 +127,7 @@ private:
 	// If the font is NOT an alias, this is where the font data is located
 	fontInfo_t* fontInfo;
 };
+
+#endif // #if defined(USE_IDFONT)
 
 #endif

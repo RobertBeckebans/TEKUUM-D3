@@ -3,6 +3,7 @@
 
 Doom 3 BFG Edition GPL Source Code
 Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2013 Robert Beckebans
 
 This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
@@ -177,7 +178,18 @@ void			GL_SelectTexture( int unit );
 
 void			GL_Flush();		// flush the GPU command buffer
 void			GL_Finish();	// wait for the GPU to have executed all commands
-void			GL_CheckErrors();
+
+
+// RB begin
+bool			GL_CheckErrors_( const char* filename, int line );
+#if 1 // !defined(RETAIL)
+#define         GL_CheckErrors()	GL_CheckErrors_(__FILE__, __LINE__)
+#else
+#define         GL_CheckErrors()	false
+#endif
+
+const void		GL_BlockingSwapBuffers();
+// RB end
 
 wrapperStats_t	GL_GetCurrentStats();
 void			GL_ClearStats();

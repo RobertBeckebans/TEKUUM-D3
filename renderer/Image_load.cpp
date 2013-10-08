@@ -3,6 +3,7 @@
 
 Doom 3 BFG Edition GPL Source Code
 Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2013 Robert Beckebans
 
 This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
@@ -30,6 +31,11 @@ If you have questions concerning this license or the applicable additional terms
 #include "precompiled.h"
 
 #include "tr_local.h"
+#include "../renderer/DXT//DXTCodec.h"
+
+// RB begin
+idCVar image_exportPNG( "image_exportPNG", "0", CVAR_RENDERER | CVAR_BOOL, "export certain images as PNG files (development tool)" );
+// RB end
 
 /*
 ================
@@ -60,6 +66,10 @@ int BitsForFormat( textureFormat_t format )
 			return 4;
 		case FMT_DXT5:
 			return 8;
+			// RB: added ETC compression
+		case FMT_ETC1_RGB8_OES:
+			return 4;
+			// RB end
 		case FMT_DEPTH:
 			return 32;
 		case FMT_X16:
@@ -87,52 +97,133 @@ ID_INLINE void idImage::DeriveOpts()
 		switch( usage )
 		{
 			case TD_COVERAGE:
-				opts.format = FMT_DXT1;
+#if defined(__ANDROID__)
+				//if( opts.width > 64 && opts.height > 64 )
+			{
+				opts.format = FMT_ETC1_RGB8_OES;
 				opts.colorFormat = CFM_GREEN_ALPHA;
-				break;
+			}
+			//else
+			//{
+			//	opts.format = FMT_RGBA8;
+			//	opts.colorFormat = CFM_GREEN_ALPHA;
+			//}
+			
+#elif ( defined(USE_GLES2) || defined(USE_GLES3) ) && !defined(USE_MESA)
+			opts.format = FMT_RGBA8;
+			opts.colorFormat = CFM_GREEN_ALPHA;
+#else
+			opts.format = FMT_DXT1;
+			opts.colorFormat = CFM_GREEN_ALPHA;
+#endif
+			break;
+			
 			case TD_DEPTH:
 				opts.format = FMT_DEPTH;
 				break;
+				
 			case TD_DIFFUSE:
+#if ( defined(USE_GLES2) || defined(USE_GLES3) ) && !defined(USE_MESA)
 				// TD_DIFFUSE gets only set to when its a diffuse texture for an interaction
+				//opts.gammaMips = true;
+				opts.format = FMT_RGBA8;
+				opts.colorFormat = CFM_YCOCG_RGBA8;
+#else
 				opts.gammaMips = true;
 				opts.format = FMT_DXT5;
 				opts.colorFormat = CFM_YCOCG_DXT5;
+#endif
 				break;
+				
 			case TD_SPECULAR:
+#if defined(__ANDROID__)
+				//if( opts.width > 64 && opts.height > 64 )
+			{
 				opts.gammaMips = true;
-				opts.format = FMT_DXT1;
-				opts.colorFormat = CFM_DEFAULT;
-				break;
+				opts.format = FMT_ETC1_RGB8_OES;
+			}
+			//else
+			//{
+			//	opts.format = FMT_RGBA8;
+			//	opts.gammaMips = true;
+			//}
+			
+#elif ( defined(USE_GLES2) || defined(USE_GLES3) ) && !defined(USE_MESA)
+			opts.gammaMips = true;
+			opts.format = FMT_RGBA8;
+#else
+			opts.gammaMips = true;
+			opts.format = FMT_DXT1;
+#endif
+			break;
+			
 			case TD_DEFAULT:
+#if ( defined(USE_GLES2) || defined(USE_GLES3) ) && !defined(USE_MESA)
+				opts.gammaMips = true;
+				opts.format = FMT_RGBA8;
+#else
 				opts.gammaMips = true;
 				opts.format = FMT_DXT5;
-				opts.colorFormat = CFM_DEFAULT;
+#endif
 				break;
+				
 			case TD_BUMP:
-				opts.format = FMT_DXT5;
-				opts.colorFormat = CFM_NORMAL_DXT5;
-				break;
+#if defined(__ANDROID__)
+				//if( opts.width > 64 && opts.height > 64 )
+			{
+				opts.format = FMT_ETC1_RGB8_OES;
+			}
+			//else
+			//{
+			//	opts.format = FMT_RGBA8;
+			//}
+			
+#elif ( defined(USE_GLES2) || defined(USE_GLES3) ) && !defined(USE_MESA)
+			opts.format = FMT_RGBA8;
+#else
+			opts.format = FMT_DXT5;
+			opts.colorFormat = CFM_NORMAL_DXT5;
+#endif
+			break;
+			
 			case TD_FONT:
+#if ( defined(USE_GLES2) || defined(USE_GLES3) ) && !defined(USE_MESA)
+				opts.format = FMT_RGBA8;
+#else
 				opts.format = FMT_DXT1;
+#endif
 				opts.colorFormat = CFM_GREEN_ALPHA;
 				opts.numLevels = 4; // We only support 4 levels because we align to 16 in the exporter
 				opts.gammaMips = true;
 				break;
+				
 			case TD_LIGHT:
+#if ( defined(USE_GLES2) || defined(USE_GLES3) ) && !defined(USE_MESA)
+				opts.format = FMT_RGBA8;
+				opts.gammaMips = true;
+#else
 				opts.format = FMT_RGB565;
 				opts.gammaMips = true;
+#endif
 				break;
+				
 			case TD_LOOKUP_TABLE_MONO:
 				opts.format = FMT_INT8;
 				break;
+				
 			case TD_LOOKUP_TABLE_ALPHA:
+#if ( defined(USE_GLES2) || defined(USE_GLES3) ) && !defined(USE_MESA)
+				opts.format = FMT_RGBA8;
+#else
 				opts.format = FMT_ALPHA;
+#endif
 				break;
+				
 			case TD_LOOKUP_TABLE_RGB1:
 			case TD_LOOKUP_TABLE_RGBA:
 				opts.format = FMT_RGBA8;
 				break;
+				
 			default:
 				assert( false );
 				opts.format = FMT_RGBA8;
@@ -155,7 +246,7 @@ ID_INLINE void idImage::DeriveOpts()
 			{
 				temp_width >>= 1;
 				temp_height >>= 1;
-				if( ( opts.format == FMT_DXT1 || opts.format == FMT_DXT5 ) &&
+				if( ( opts.format == FMT_DXT1 || opts.format == FMT_DXT5 || opts.format == FMT_ETC1_RGB8_OES ) &&
 						( ( temp_width & 0x3 ) != 0 || ( temp_height & 0x3 ) != 0 ) )
 				{
 					break;
@@ -393,6 +484,110 @@ void idImage::ActuallyLoadImage( bool fromBackEnd )
 	
 	const bimageFile_t& header = im.GetFileHeader();
 	
+	// RB begin
+	if( image_exportPNG.GetBool() && ( usage == TD_FONT ) && binaryFileTime != FILE_NOT_FOUND_TIMESTAMP )
+	{
+		const bimageImage_t& img = im.GetImageHeader( 0 );
+		
+		const byte* data = im.GetImageData( 0 );
+		
+		//( img.level, 0, 0, img.destZ, img.width, img.height, data );
+		
+		idTempArray<byte> rgba( img.width * img.height * 4 );
+		memset( rgba.Ptr(), 255, rgba.Size() );
+		
+		if( header.format == FMT_DXT1 )
+		{
+			idDxtDecoder dxt;
+			dxt.DecompressImageDXT1( data, rgba.Ptr(), img.width, img.height );
+			
+			if( header.colorFormat == CFM_GREEN_ALPHA )
+			{
+				byte* pic = rgba.Ptr();
+				for( int i = 0; i < img.width * img.height; i++ )
+				{
+					pic[i * 4 + 3] = pic[i * 4 + 1];
+					pic[i * 4 + 0] = 255;
+					pic[i * 4 + 1] = 255;
+					pic[i * 4 + 2] = 255;
+				}
+			}
+		}
+		else if( header.format == FMT_DXT5 )
+		{
+			idDxtDecoder dxt;
+			
+			if( header.colorFormat == CFM_NORMAL_DXT5 )
+			{
+				dxt.DecompressNormalMapDXT5( data, rgba.Ptr(), img.width, img.height );
+			}
+			else if( header.colorFormat == CFM_YCOCG_DXT5 )
+			{
+				dxt.DecompressYCoCgDXT5( data, rgba.Ptr(), img.width, img.height );
+			}
+			else
+			{
+			
+				dxt.DecompressImageDXT5( data, rgba.Ptr(), img.width, img.height );
+			}
+		}
+		else if( header.format == FMT_LUM8 || header.format == FMT_INT8 )
+		{
+			// LUM8 and INT8 just read the red channel
+			byte* pic = rgba.Ptr();
+			for( int i = 0; i < img.dataSize; i++ )
+			{
+				pic[ i * 4 ] = data[ i ];
+			}
+		}
+		else if( header.format == FMT_ALPHA )
+		{
+			// ALPHA reads the alpha channel
+			byte* pic = rgba.Ptr();
+			for( int i = 0; i < img.dataSize; i++ )
+			{
+				pic[ i * 4 + 3 ] = data[ i ];
+			}
+		}
+		else if( header.format == FMT_L8A8 )
+		{
+			// L8A8 reads the alpha and red channels
+			byte* pic = rgba.Ptr();
+			for( int i = 0; i < img.dataSize / 2; i++ )
+			{
+				pic[ i * 4 + 0 ] = data[ i * 2 + 0 ];
+				pic[ i * 4 + 3 ] = data[ i * 2 + 1 ];
+			}
+		}
+		else if( header.format == FMT_RGB565 )
+		{
+			// FIXME
+			/*
+			byte* pic = rgba.Ptr();
+			for( int i = 0; i < img.dataSize / 2; i++ )
+			{
+				unsigned short color = ( ( pic[ i * 4 + 0 ] >> 3 ) << 11 ) | ( ( pic[ i * 4 + 1 ] >> 2 ) << 5 ) | ( pic[ i * 4 + 2 ] >> 3 );
+				img.data[ i * 2 + 0 ] = ( color >> 8 ) & 0xFF;
+				img.data[ i * 2 + 1 ] = color & 0xFF;
+			}
+			*/
+		}
+		else
+		{
+			byte* pic = rgba.Ptr();
+			for( int i = 0; i < img.dataSize; i++ )
+			{
+				pic[ i ] = data[ i ];
+			}
+		}
+		
+		idStr pngFileNameExport = generatedName;
+		pngFileNameExport.SetFileExtension( ".png" );
+		
+		R_WritePNG( pngFileNameExport, rgba.Ptr(), 4, img.width, img.height, true, "fs_basepath" );
+	}
+	// RB end
+	
 	
 	// RB TODO
 	if( /*( fileSystem->InProductionMode() && binaryFileTime != FILE_NOT_FOUND_TIMESTAMP ) ||*/ ( ( binaryFileTime != FILE_NOT_FOUND_TIMESTAMP )
@@ -527,13 +722,15 @@ void idImage::Bind()
 			tmu->current2DMap = texnum;
 			
 			// RB begin
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 			if( glConfig.directStateAccess )
 			{
-				glBindMultiTextureEXT( GL_TEXTURE0_ARB + texUnit, GL_TEXTURE_2D, texnum );
+				glBindMultiTextureEXT( GL_TEXTURE0 + texUnit, GL_TEXTURE_2D, texnum );
 			}
 			else
+#endif
 			{
-				glActiveTextureARB( GL_TEXTURE0_ARB + texUnit );
+				glActiveTexture( GL_TEXTURE0 + texUnit );
 				glBindTexture( GL_TEXTURE_2D, texnum );
 			}
 			// RB end
@@ -546,14 +743,16 @@ void idImage::Bind()
 			tmu->currentCubeMap = texnum;
 			
 			// RB begin
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 			if( glConfig.directStateAccess )
 			{
-				glBindMultiTextureEXT( GL_TEXTURE0_ARB + texUnit, GL_TEXTURE_CUBE_MAP_EXT, texnum );
+				glBindMultiTextureEXT( GL_TEXTURE0 + texUnit, GL_TEXTURE_CUBE_MAP, texnum );
 			}
 			else
+#endif
 			{
-				glActiveTextureARB( GL_TEXTURE0_ARB + texUnit );
-				glBindTexture( GL_TEXTURE_CUBE_MAP_EXT, texnum );
+				glActiveTexture( GL_TEXTURE0 + texUnit );
+				glBindTexture( GL_TEXTURE_CUBE_MAP, texnum );
 			}
 			// RB end
 		}
@@ -582,15 +781,20 @@ CopyFramebuffer
 */
 void idImage::CopyFramebuffer( int x, int y, int imageWidth, int imageHeight )
 {
-
-
-	glBindTexture( ( opts.textureType == TT_CUBIC ) ? GL_TEXTURE_CUBE_MAP_EXT : GL_TEXTURE_2D, texnum );
+	glBindTexture( ( opts.textureType == TT_CUBIC ) ? GL_TEXTURE_CUBE_MAP : GL_TEXTURE_2D, texnum );
 	
+#if !defined(USE_GLES2)
 	glReadBuffer( GL_BACK );
+#endif
 	
 	opts.width = imageWidth;
 	opts.height = imageHeight;
+	
+#if defined(USE_GLES2)
+	glCopyTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, x, y, imageWidth, imageHeight, 0 );
+#else
 	glCopyTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA8, x, y, imageWidth, imageHeight, 0 );
+#endif
 	
 	// these shouldn't be necessary if the image was initialized properly
 	glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
@@ -609,7 +813,7 @@ CopyDepthbuffer
 */
 void idImage::CopyDepthbuffer( int x, int y, int imageWidth, int imageHeight )
 {
-	glBindTexture( ( opts.textureType == TT_CUBIC ) ? GL_TEXTURE_CUBE_MAP_EXT : GL_TEXTURE_2D, texnum );
+	glBindTexture( ( opts.textureType == TT_CUBIC ) ? GL_TEXTURE_CUBE_MAP : GL_TEXTURE_2D, texnum );
 	
 	opts.width = imageWidth;
 	opts.height = imageHeight;
@@ -730,7 +934,7 @@ void idImage::Print() const
 	
 	switch( opts.format )
 	{
-#define NAME_FORMAT( x ) case FMT_##x: common->Printf( "%-6s ", #x ); break;
+#define NAME_FORMAT( x ) case FMT_##x: common->Printf( "%-16s ", #x ); break;
 			NAME_FORMAT( NONE );
 			NAME_FORMAT( RGBA8 );
 			NAME_FORMAT( XRGB8 );
@@ -741,6 +945,9 @@ void idImage::Print() const
 			NAME_FORMAT( INT8 );
 			NAME_FORMAT( DXT1 );
 			NAME_FORMAT( DXT5 );
+			// RB begin
+			NAME_FORMAT( ETC1_RGB8_OES );
+			// RB end
 			NAME_FORMAT( DEPTH );
 			NAME_FORMAT( X16 );
 			NAME_FORMAT( Y16_X16 );
@@ -844,6 +1051,6 @@ void idImage::SetSamplerState( textureFilter_t tf, textureRepeat_t tr )
 	}
 	filter = tf;
 	repeat = tr;
-	glBindTexture( ( opts.textureType == TT_CUBIC ) ? GL_TEXTURE_CUBE_MAP_EXT : GL_TEXTURE_2D, texnum );
+	glBindTexture( ( opts.textureType == TT_CUBIC ) ? GL_TEXTURE_CUBE_MAP : GL_TEXTURE_2D, texnum );
 	SetTexParameters();
 }

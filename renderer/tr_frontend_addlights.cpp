@@ -37,7 +37,12 @@ extern idCVar r_forceShadowCaps;
 extern idCVar r_useShadowPreciseInsideTest;
 
 idCVar r_useAreasConnectedForShadowCulling( "r_useAreasConnectedForShadowCulling", "2", CVAR_RENDERER | CVAR_INTEGER, "cull entities cut off by doors" );
+
+#if defined(USE_GLES2) || defined(USE_GLES3)
 idCVar r_useParallelAddLights( "r_useParallelAddLights", "1", CVAR_RENDERER | CVAR_BOOL, "aadd all lights in parallel with jobs" );
+#else
+idCVar r_useParallelAddLights( "r_useParallelAddLights", "1", CVAR_RENDERER | CVAR_BOOL, "aadd all lights in parallel with jobs" );
+#endif
 
 /*
 ============================
@@ -174,6 +179,7 @@ static void R_AddSingleLight( viewLight_t* vLight )
 				break;
 			}
 		}
+		
 		if( lightStageNum == lightShader->GetNumStages() )
 		{
 			// we went through all the stages and didn't find one that adds anything
@@ -182,7 +188,15 @@ static void R_AddSingleLight( viewLight_t* vLight )
 			// create a shadow for it
 			return;
 		}
+		
+		// RB: skip dynamic lights
+		if( r_usePrecomputedLight.GetBool() )
+		{
+			return;
+		}
+		// RB end
 	}
+	
 	
 	//--------------------------------------------
 	// copy data used by backend
@@ -475,10 +489,13 @@ static void R_AddSingleLight( viewLight_t* vLight )
 			shadowParms->shadowVolumeState = & shadowDrawSurf->shadowVolumeState;
 			
 			// the pre-light shadow volume "_prelight_light_3297" in "d3xpdm2" is malformed in that it contains the light origin so the precise inside test always fails
-			if( tr.primaryWorld->mapName.IcmpPath( "maps/game/mp/d3xpdm2.map" ) == 0 && idStr::Icmp( light->parms.prelightModel->Name(), "_prelight_light_3297" ) == 0 )
-			{
-				shadowParms->useShadowPreciseInsideTest = false;
-			}
+			
+			// RB: no need to support D3XP hacks
+			//if( tr.primaryWorld->mapName.IcmpPath( "maps/game/mp/d3xpdm2.map" ) == 0 && idStr::Icmp( light->parms.prelightModel->Name(), "_prelight_light_3297" ) == 0 )
+			//{
+			//	shadowParms->useShadowPreciseInsideTest = false;
+			//}
+			// RB end
 			
 			shadowDrawSurf->shadowVolumeState = SHADOWVOLUME_UNFINISHED;
 			
@@ -561,6 +578,13 @@ void R_AddLights()
 	//-------------------------------------------------
 	// Add jobs to setup pre-light shadow volumes.
 	//-------------------------------------------------
+	
+	// RB begin
+	if( r_usePrecomputedLight.GetBool() )
+	{
+		return;
+	}
+	// RB end
 	
 	if( r_useParallelAddShadows.GetInteger() == 1 )
 	{

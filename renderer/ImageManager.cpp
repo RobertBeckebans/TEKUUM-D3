@@ -902,13 +902,41 @@ idImageManager::LoadLevelImages
 */
 int idImageManager::LoadLevelImages( bool pacifier )
 {
+	if( pacifier )
+	{
+		common->Printf( "...loading images\n" );
+		common->Printf( "0%%  10   20   30   40   50   60   70   80   90   100%%\n" );
+		common->Printf( "|----|----|----|----|----|----|----|----|----|----|\n" );
+	}
+	
+	size_t tics = 0;
+	size_t nextTicCount = 0;
 	int	loadCount = 0;
+	
 	for( int i = 0 ; i < images.Num() ; i++ )
 	{
 		if( pacifier )
 		{
-			session->PacifierUpdate();
+			if( ( i + 1 ) >= nextTicCount )
+			{
+				size_t ticsNeeded = ( size_t )( ( ( double )( i + 1 ) / images.Num() ) * 50.0 );
+				
+				do
+				{
+					common->Printf( "*" );
+				}
+				while( ++tics < ticsNeeded );
+				
+				nextTicCount = ( size_t )( ( tics / 50.0 ) * images.Num() );
+				if( i == ( images.Num() - 1 ) )
+				{
+					if( tics < 51 )
+						common->Printf( "*" );
+					common->Printf( "\n" );
+				}
+			}
 			
+			session->PacifierUpdate();
 		}
 		
 		idImage*	image = images[ i ];

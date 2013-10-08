@@ -3,6 +3,7 @@
 
 Doom 3 BFG Edition GPL Source Code
 Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2013 Robert Beckebans
 
 This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
@@ -87,49 +88,83 @@ void idRenderProgManager::Init()
 		{ BUILTIN_GUI, "gui.vfp" },
 		{ BUILTIN_COLOR, "color.vfp" },
 		// RB begin
-		{ BUILTIN_VERTEXCOLOR, "vertex_color.vfp" },
+#if defined(USE_GPU_SKINNING)
+		{ BUILTIN_COLOR_SKINNED, "color_skinned.vfp" },
+#endif
+		{ BUILTIN_VERTEX_COLOR, "vertex_color.vfp" },
+		{ BUILTIN_VERTEX_LIGHTING, "vertex_lighting.vfp" },
+		{ BUILTIN_GRID_LIGHTING, "grid_lighting.vfp" },
+#if defined(USE_GPU_SKINNING)
+		{ BUILTIN_GRID_LIGHTING_SKINNED, "grid_lighting_skinned.vfp" },
+#endif
 		// RB end
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 		{ BUILTIN_SIMPLESHADE, "simpleshade.vfp" },
+#endif
 		{ BUILTIN_TEXTURED, "texture.vfp" },
 		{ BUILTIN_TEXTURE_VERTEXCOLOR, "texture_color.vfp" },
+#if defined(USE_GPU_SKINNING)
 		{ BUILTIN_TEXTURE_VERTEXCOLOR_SKINNED, "texture_color_skinned.vfp" },
+#endif
 		{ BUILTIN_TEXTURE_TEXGEN_VERTEXCOLOR, "texture_color_texgen.vfp" },
 		// RB begin
 		{ BUILTIN_TEXTURE_YCOCG, "texture_ycocg.vfp" },
 		// RB end
 		{ BUILTIN_INTERACTION, "interaction.vfp" },
+#if defined(USE_GPU_SKINNING)
 		{ BUILTIN_INTERACTION_SKINNED, "interaction_skinned.vfp" },
+#endif
 		{ BUILTIN_INTERACTION_AMBIENT, "interactionAmbient.vfp" },
+#if defined(USE_GPU_SKINNING)
 		{ BUILTIN_INTERACTION_AMBIENT_SKINNED, "interactionAmbient_skinned.vfp" },
+#endif
 		{ BUILTIN_ENVIRONMENT, "environment.vfp" },
+#if defined(USE_GPU_SKINNING)
 		{ BUILTIN_ENVIRONMENT_SKINNED, "environment_skinned.vfp" },
+#endif
 		{ BUILTIN_BUMPY_ENVIRONMENT, "bumpyEnvironment.vfp" },
+#if defined(USE_GPU_SKINNING)
 		{ BUILTIN_BUMPY_ENVIRONMENT_SKINNED, "bumpyEnvironment_skinned.vfp" },
+#endif
 		
 		{ BUILTIN_DEPTH, "depth.vfp" },
+#if defined(USE_GPU_SKINNING)
 		{ BUILTIN_DEPTH_SKINNED, "depth_skinned.vfp" },
+#endif
 		{ BUILTIN_SHADOW_DEBUG, "shadowDebug.vfp" },
+#if defined(USE_GPU_SKINNING)
 		{ BUILTIN_SHADOW_DEBUG_SKINNED, "shadowDebug_skinned.vfp" },
+#endif
 		
 		// RB begin
 		{ BUILTIN_BLENDLIGHT, "blendLight.vfp" },
+#if defined(USE_GPU_SKINNING)
 		{ BUILTIN_BLENDLIGHT_SKINNED, "blendLight_skinned.vfp" },
+#endif
 		// RB end
 		{ BUILTIN_FOG, "fog.vfp" },
+#if defined(USE_GPU_SKINNING)
 		{ BUILTIN_FOG_SKINNED, "fog_skinned.vfp" },
+#endif
 		{ BUILTIN_SKYBOX, "skybox.vfp" },
 		{ BUILTIN_WOBBLESKY, "wobblesky.vfp" },
 		{ BUILTIN_POSTPROCESS, "postprocess.vfp" },
 		{ BUILTIN_STEREO_DEGHOST, "stereoDeGhost.vfp" },
 		{ BUILTIN_STEREO_WARP, "stereoWarp.vfp" },
-		{ BUILTIN_ZCULL_RECONSTRUCT, "zcullReconstruct.vfp" },
+//		{ BUILTIN_ZCULL_RECONSTRUCT, "zcullReconstruct.vfp" },
 		{ BUILTIN_BINK, "bink.vfp" },
 		{ BUILTIN_BINK_GUI, "bink_gui.vfp" },
 		// RB begin
 		{ BUILTIN_ROQ, "roq.vfp" },
 		// RB end
 		{ BUILTIN_STEREO_INTERLACE, "stereoInterlace.vfp" },
+#if 1//defined(USE_GLES2) && !defined(USE_GLES3)
+		{ BUILTIN_SHADOW, "shadow.vfp" },
+#endif
+		
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 		{ BUILTIN_MOTION_BLUR, "motionBlur.vfp" },
+#endif
 	};
 	int numBuiltins = sizeof( builtins ) / sizeof( builtins[0] );
 	vertexShaders.SetNum( numBuiltins );
@@ -147,14 +182,17 @@ void idRenderProgManager::Init()
 	}
 	
 	// Special case handling for fastZ shaders
+#if defined(USE_GPU_SKINNING)
 	builtinShaders[BUILTIN_SHADOW] = FindVertexShader( "shadow.vp" );
 	builtinShaders[BUILTIN_SHADOW_SKINNED] = FindVertexShader( "shadow_skinned.vp" );
 	
 	FindGLSLProgram( "shadow.vp", builtinShaders[BUILTIN_SHADOW], -1 );
 	FindGLSLProgram( "shadow_skinned.vp", builtinShaders[BUILTIN_SHADOW_SKINNED], -1 );
+#endif
 	
 	glslUniforms.SetNum( RENDERPARM_USER + MAX_GLSL_USER_PARMS, vec4_zero );
 	
+#if defined(USE_GPU_SKINNING)
 	vertexShaders[builtinShaders[BUILTIN_TEXTURE_VERTEXCOLOR_SKINNED]].usesJoints = true;
 	vertexShaders[builtinShaders[BUILTIN_INTERACTION_SKINNED]].usesJoints = true;
 	vertexShaders[builtinShaders[BUILTIN_INTERACTION_AMBIENT_SKINNED]].usesJoints = true;
@@ -165,8 +203,11 @@ void idRenderProgManager::Init()
 	vertexShaders[builtinShaders[BUILTIN_SHADOW_DEBUG_SKINNED]].usesJoints = true;
 	vertexShaders[builtinShaders[BUILTIN_FOG_SKINNED]].usesJoints = true;
 	// RB begin
+	vertexShaders[builtinShaders[BUILTIN_COLOR_SKINNED]].usesJoints = true;
+	vertexShaders[builtinShaders[BUILTIN_GRID_LIGHTING_SKINNED]].usesJoints = true;
 	vertexShaders[builtinShaders[BUILTIN_BLENDLIGHT_SKINNED]].usesJoints = true;
 	// RB end
+#endif
 	
 	cmdSystem->AddCommand( "reloadShaders", R_ReloadShaders, CMD_FL_RENDERER, "reloads shaders" );
 }
@@ -258,15 +299,17 @@ int idRenderProgManager::FindVertexShader( const char* name )
 	LoadVertexShader( index );
 	currentVertexShader = index;
 	
-	// FIXME: we should really scan the program source code for using rpEnableSkinning but at this
-	// point we directly load a binary and the program source code is not available on the consoles
-	if(	idStr::Icmp( name, "heatHaze.vfp" ) == 0 ||
-			idStr::Icmp( name, "heatHazeWithMask.vfp" ) == 0 ||
-			idStr::Icmp( name, "heatHazeWithMaskAndVertex.vfp" ) == 0 )
+	// RB: removed idStr::Icmp( name, "heatHaze.vfp" ) == 0  hack
+	// this requires r_useUniformArrays 1
+	for( int i = 0; i < vertexShaders[index].uniforms.Num(); i++ )
 	{
-		vertexShaders[index].usesJoints = true;
-		vertexShaders[index].optionalSkinning = true;
+		if( vertexShaders[index].uniforms[i] == RENDERPARM_ENABLE_SKINNING )
+		{
+			vertexShaders[index].usesJoints = true;
+			vertexShaders[index].optionalSkinning = true;
+		}
 	}
+	// RB end
 	
 	return index;
 }
@@ -330,22 +373,54 @@ void idRenderProgManager::LoadFragmentShader( int index )
 idRenderProgManager::BindShader
 ================================================================================================
 */
-void idRenderProgManager::BindShader( int vIndex, int fIndex )
+// RB begin
+void idRenderProgManager::BindShader( int progIndex, int vIndex, int fIndex, bool builtin )
 {
 	if( currentVertexShader == vIndex && currentFragmentShader == fIndex )
 	{
 		return;
 	}
-	currentVertexShader = vIndex;
-	currentFragmentShader = fIndex;
-	// vIndex denotes the GLSL program
-	if( vIndex >= 0 && vIndex < glslPrograms.Num() )
+	
+	if( builtin )
 	{
-		currentRenderProgram = vIndex;
-		RENDERLOG_PRINTF( "Binding GLSL Program %s\n", glslPrograms[vIndex].name.c_str() );
-		glUseProgram( glslPrograms[vIndex].progId );
+		currentVertexShader = vIndex;
+		currentFragmentShader = fIndex;
+		
+		// vIndex denotes the GLSL program
+		if( vIndex >= 0 && vIndex < glslPrograms.Num() )
+		{
+			currentRenderProgram = vIndex;
+			RENDERLOG_PRINTF( "Binding GLSL Program %s\n", glslPrograms[vIndex].name.c_str() );
+			glUseProgram( glslPrograms[vIndex].progId );
+		}
+	}
+	else
+	{
+		if( progIndex == -1 )
+		{
+			// RB: FIXME linear search
+			for( int i = 0; i < glslPrograms.Num(); ++i )
+			{
+				if( ( glslPrograms[i].vertexShaderIndex == vIndex ) && ( glslPrograms[i].fragmentShaderIndex == fIndex ) )
+				{
+					progIndex = i;
+					break;
+				}
+			}
+		}
+		
+		currentVertexShader = vIndex;
+		currentFragmentShader = fIndex;
+		
+		if( progIndex >= 0 && progIndex < glslPrograms.Num() )
+		{
+			currentRenderProgram = progIndex;
+			RENDERLOG_PRINTF( "Binding GLSL Program %s\n", glslPrograms[progIndex].name.c_str() );
+			glUseProgram( glslPrograms[progIndex].progId );
+		}
 	}
 }
+// RB end
 
 /*
 ================================================================================================

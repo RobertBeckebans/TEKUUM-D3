@@ -3,6 +3,7 @@
 
 Doom 3 BFG Edition GPL Source Code
 Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2013 Robert Beckebans
 
 This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
@@ -61,6 +62,25 @@ same texture matrix calculations a half dozen times.
 // keep all of these on the stack, when they are static it makes material parsing non-reentrant
 typedef struct mtrParsingData_s
 {
+	// RB begin
+#if defined(USE_EXTENDED_BINARY_MATERIALS)
+	void Clear()
+	{
+		memset( registerIsTemporary, 0, sizeof( registerIsTemporary ) );
+		memset( shaderRegisters, 0, sizeof( shaderRegisters ) );
+		memset( shaderOps, 0, sizeof( shaderOps ) );
+		
+		for( int i = 0; i < MAX_SHADER_STAGES; i++ )
+		{
+			parseStages[i].Clear();
+		}
+		
+		registersAreConstant = false;
+		forceOverlays = false;
+	}
+#endif
+	// RB end
+	
 	bool			registerIsTemporary[MAX_EXPRESSION_REGISTERS];
 	float			shaderRegisters[MAX_EXPRESSION_REGISTERS];
 	expOp_t			shaderOps[MAX_EXPRESSION_OPS];
@@ -71,6 +91,13 @@ typedef struct mtrParsingData_s
 } mtrParsingData_t;
 
 idCVar r_forceSoundOpAmplitude( "r_forceSoundOpAmplitude", "0", CVAR_FLOAT, "Don't call into the sound system for amplitudes" );
+
+// RB begin
+idCVar r_binaryLoadMaterials( "r_binaryLoadMaterials", "1", 0, "enable binary load/write of material decls" );
+
+static const byte BMTR_VERSION = 103;
+static const unsigned int BMTR_MAGIC = ( 'B' << 24 ) | ( 'M' << 16 ) | ( 'R' << 8 ) | BMTR_VERSION;
+// RB end
 
 /*
 =============
@@ -178,11 +205,18 @@ void idMaterial::FreeData()
 			}
 			if( stages[i].newStage != NULL )
 			{
-				Mem_Free( stages[i].newStage );
+				// RB: changed Mem_Free to delete
+				delete stages[i].newStage;
+				// RB end
 				stages[i].newStage = NULL;
 			}
 		}
+		
+		// RB: changed R_StaticFree to delete for proper string dtors
 		R_StaticFree( stages );
+		//delete[] stages;
+		// RB end
+		
 		stages = NULL;
 	}
 	if( expressionRegisters != NULL )
@@ -1268,11 +1302,20 @@ void idMaterial::ParseFragmentMap( idLexer& src, newShaderStage_t* newStage )
 	}
 	str = R_ParsePastImageProgram( src );
 	
-	newStage->fragmentProgramImages[unit] =
-		globalImages->ImageFromFile( str, tf, trp, td, cubeMap );
-	if( !newStage->fragmentProgramImages[unit] )
+	// RB begin
+	newStage->fragmentProgramImages[unit].textureFilter = tf;
+	newStage->fragmentProgramImages[unit].textureRepeat = trp;
+	newStage->fragmentProgramImages[unit].textureUsage = td;
+	newStage->fragmentProgramImages[unit].cubeMap = cubeMap;
+#if defined(USE_EXTENDED_BINARY_MATERIALS)
+	newStage->fragmentProgramImages[unit].imageName = str;
+#endif
+	// RB end
+	
+	newStage->fragmentProgramImages[unit].image = globalImages->ImageFromFile( str, tf, trp, td, cubeMap );
+	if( !newStage->fragmentProgramImages[unit].image )
 	{
-		newStage->fragmentProgramImages[unit] = globalImages->defaultImage;
+		newStage->fragmentProgramImages[unit].image = globalImages->defaultImage;
 	}
 }
 
@@ -1365,8 +1408,11 @@ void idMaterial::ParseStage( idLexer& src, const textureRepeat_t trpDefault )
 	
 	imageName[0] = 0;
 	
-	memset( &newStage, 0, sizeof( newStage ) );
-	newStage.glslProgram = -1;
+	// RB: replaced memset
+	//newStage.Clear();
+	//memset( &newStage, 0, sizeof( newStage ) );
+	//newStage.glslProgram = -1;
+	// RB end
 	
 	ss = &pd->parseStages[numStages];
 	ts = &ss->texture;
@@ -1474,6 +1520,13 @@ void idMaterial::ParseStage( idLexer& src, const textureRepeat_t trpDefault )
 			}
 			ts->cinematic = idCinematic::Alloc();
 			ts->cinematic->InitFromFile( token.c_str(), loop );
+			
+			// RB begin
+#if defined(USE_EXTENDED_BINARY_MATERIALS)
+			ts->cinematicName = token;
+#endif
+			ts->cinematicLoop = loop;
+			// RB end
 			continue;
 		}
 		
@@ -1820,6 +1873,11 @@ void idMaterial::ParseStage( idLexer& src, const textureRepeat_t trpDefault )
 		{
 			if( src.ReadTokenOnLine( &token ) )
 			{
+				// RB begin
+				newStage.vertexProgramName = token;
+				newStage.fragmentProgramName = token;
+				// RB end
+				
 				newStage.vertexProgram = renderProgManager.FindVertexShader( token.c_str() );
 				newStage.fragmentProgram = renderProgManager.FindFragmentShader( token.c_str() );
 			}
@@ -1829,6 +1887,10 @@ void idMaterial::ParseStage( idLexer& src, const textureRepeat_t trpDefault )
 		{
 			if( src.ReadTokenOnLine( &token ) )
 			{
+				// RB begin
+				newStage.fragmentProgramName = token;
+				// RB end
+				
 				newStage.fragmentProgram = renderProgManager.FindFragmentShader( token.c_str() );
 			}
 			continue;
@@ -1837,6 +1899,10 @@ void idMaterial::ParseStage( idLexer& src, const textureRepeat_t trpDefault )
 		{
 			if( src.ReadTokenOnLine( &token ) )
 			{
+				// RB begin
+				newStage.vertexProgramName = token;
+				// RB end
+				
 				newStage.vertexProgram = renderProgManager.FindVertexShader( token.c_str() );
 			}
 			continue;
@@ -1871,7 +1937,7 @@ void idMaterial::ParseStage( idLexer& src, const textureRepeat_t trpDefault )
 	if( newStage.fragmentProgram || newStage.vertexProgram )
 	{
 		newStage.glslProgram = renderProgManager.FindGLSLProgram( GetName(), newStage.vertexProgram, newStage.fragmentProgram );
-		ss->newStage = ( newShaderStage_t* )Mem_Alloc( sizeof( newStage ) );
+		ss->newStage = new newShaderStage_t;
 		*( ss->newStage ) = newStage;
 	}
 	
@@ -1897,6 +1963,16 @@ void idMaterial::ParseStage( idLexer& src, const textureRepeat_t trpDefault )
 		}
 	}
 	
+	// RB begin
+	ss->texture.textureFilter = tf;
+	ss->texture.textureRepeat = trp;
+	ss->texture.textureUsage = td;
+	ss->texture.cubeMap = cubeMap;
+#if defined(USE_EXTENDED_BINARY_MATERIALS)
+	ss->texture.imageName = imageName;
+#endif
+	// RB end
+	
 	// create a new coverage stage on the fly - copy all data from the current stage
 	if( ( td == TD_DIFFUSE ) && ss->hasAlphaTest )
 	{
@@ -1911,6 +1987,10 @@ void idMaterial::ParseStage( idLexer& src, const textureRepeat_t trpDefault )
 		newCoverageStage->hasAlphaTest = true;
 		newCoverageStage->lighting = SL_COVERAGE;
 		textureStage_t* coverageTS = &newCoverageStage->texture;
+		
+		// RB begin
+		newCoverageStage->texture.textureUsage = TD_COVERAGE;
+		// RB end
 		
 		// now load the image with all the parms we parsed for the coverage stage
 		if( imageName[0] )
@@ -2002,6 +2082,11 @@ void idMaterial::ParseDeform( idLexer& src )
 			SetMaterialFlag( MF_DEFAULTED );
 			return;
 		}
+		
+		// RB begin
+		deformDeclName = token;
+		// RB end
+		
 		deformDecl = declManager->FindType( DECL_TABLE, token.c_str(), true );
 		
 		deformRegisters[0] = ParseExpression( src );
@@ -2023,6 +2108,11 @@ void idMaterial::ParseDeform( idLexer& src )
 			SetMaterialFlag( MF_DEFAULTED );
 			return;
 		}
+		
+		// RB begin
+		deformDeclName = token;
+		// RB end
+		
 		deformDecl = declManager->FindType( DECL_PARTICLE, token.c_str(), true );
 		return;
 	}
@@ -2035,6 +2125,11 @@ void idMaterial::ParseDeform( idLexer& src )
 			SetMaterialFlag( MF_DEFAULTED );
 			return;
 		}
+		
+		// RB begin
+		deformDeclName = token;
+		// RB end
+		
 		deformDecl = declManager->FindType( DECL_PARTICLE, token.c_str(), true );
 		return;
 	}
@@ -2416,6 +2511,11 @@ void idMaterial::ParseMaterial( idLexer& src )
 			}
 			else
 			{
+				// RB begin
+#if defined(USE_EXTENDED_BINARY_MATERIALS)
+				guiName = token;
+#endif
+				// RB end
 				gui = uiManager->FindGui( token.c_str(), true );
 			}
 			continue;
@@ -2588,6 +2688,38 @@ Parses the current material definition and finds all necessary images.
 */
 bool idMaterial::Parse( const char* text, const int textLength, bool allowBinaryVersion )
 {
+	// RB begin
+	unsigned int sourceChecksum = 0;
+	idStrStatic< MAX_OSPATH > generatedFileName;
+	if( allowBinaryVersion )
+	{
+		// Try to load the generated version of it
+		// If successful,
+		// - Create an MD5 of the hash of the source
+		// - Load the MD5 of the generated, if they differ, create a new generated
+		generatedFileName = "generated/materials/";
+		generatedFileName.AppendPath( GetName() );
+		generatedFileName.SetFileExtension( ".bmtr" );
+		
+		idFileLocal file( fileSystem->OpenFileReadMemory( generatedFileName ) );
+		sourceChecksum = MD5_BlockChecksum( text, textLength );
+		
+		if( r_binaryLoadMaterials.GetBool() && LoadBinary( file, sourceChecksum ) )
+		{
+			// see if the registers are completely constant, and don't need to be evaluated
+			// per-surface
+			//CheckForConstantRegisters();
+			
+			// See if the material is trivial for the fast path
+			SetFastPathImages();
+			
+			pd = NULL;	// the pointer will be invalid after exiting this function
+			
+			return true;
+		}
+	}
+	// RB end
+	
 	idLexer	src;
 	idToken	token;
 	mtrParsingData_t parsingData;
@@ -2599,7 +2731,13 @@ bool idMaterial::Parse( const char* text, const int textLength, bool allowBinary
 	// reset to the unparsed state
 	CommonInit();
 	
+	// RB: replaced memset
+#if defined(USE_EXTENDED_BINARY_MATERIALS)
+	parsingData.Clear();
+#else
 	memset( &parsingData, 0, sizeof( parsingData ) );
+#endif
+	// RB end
 	
 	pd = &parsingData;	// this is only valid during parse
 	
@@ -2722,7 +2860,9 @@ bool idMaterial::Parse( const char* text, const int textLength, bool allowBinary
 			if( sort != SS_PORTAL_SKY )
 			{
 				sort = SS_POST_PROCESS;
-				coverage = MC_TRANSLUCENT;
+				// RB: we want post process shaders that operate on opaque surfaces
+				//coverage = MC_TRANSLUCENT;
+				// RB end
 			}
 			break;
 		}
@@ -2730,12 +2870,14 @@ bool idMaterial::Parse( const char* text, const int textLength, bool allowBinary
 		{
 			for( int j = 0 ; j < pStage->newStage->numFragmentProgramImages ; j++ )
 			{
-				if( pStage->newStage->fragmentProgramImages[j] == globalImages->originalCurrentRenderImage )
+				if( pStage->newStage->fragmentProgramImages[j].image == globalImages->originalCurrentRenderImage )
 				{
 					if( sort != SS_PORTAL_SKY )
 					{
 						sort = SS_POST_PROCESS;
-						coverage = MC_TRANSLUCENT;
+						// RB: we want post process shaders that operate on opaque surfaces
+						//coverage = MC_TRANSLUCENT;
+						// RB end
 					}
 					i = numStages;
 					break;
@@ -2808,7 +2950,10 @@ bool idMaterial::Parse( const char* text, const int textLength, bool allowBinary
 	
 	if( numStages )
 	{
+		// RB begin
 		stages = ( shaderStage_t* )R_StaticAlloc( numStages * sizeof( stages[0] ) );
+		//stages = new shaderStage_t[numStages];
+		// RB end
 		memcpy( stages, pd->parseStages, numStages * sizeof( stages[0] ) );
 	}
 	
@@ -2839,8 +2984,539 @@ bool idMaterial::Parse( const char* text, const int textLength, bool allowBinary
 		MakeDefault();
 		return false;
 	}
+	
+	// RB begin
+	if( allowBinaryVersion && r_binaryLoadMaterials.GetBool() )
+	{
+		idLib::Printf( "Writing %s\n", generatedFileName.c_str() );
+		idFileLocal outputFile( fileSystem->OpenFileWrite( generatedFileName, "fs_basepath" ) );
+		WriteBinary( outputFile, sourceChecksum );
+	}
+	// RB end
+	
 	return true;
 }
+
+// RB begin
+/*
+========================
+idMaterial::LoadBinary
+========================
+*/
+bool idMaterial::LoadBinary( idFile* file, unsigned int checksum )
+{
+	if( file == NULL )
+	{
+		return false;
+	}
+	
+	unsigned int magic = 0;
+	file->ReadBig( magic );
+	if( magic != BMTR_MAGIC )
+	{
+		return false;
+	}
+	
+	unsigned int loadedChecksum;
+	file->ReadBig( loadedChecksum );
+	if( checksum != loadedChecksum /*&& !fileSystem->InProductionMode()*/ )
+	{
+		return false;
+	}
+	
+	file->ReadString( desc );
+	file->ReadString( renderBump );
+	
+	idStr str;
+	file->ReadString( str );
+	if( str.IsEmpty() )
+	{
+		lightFalloffImage = NULL;
+	}
+	else
+	{
+		lightFalloffImage = globalImages->ImageFromFile( str, TF_DEFAULT, TR_CLAMP /* TR_CLAMP_TO_ZERO */, TD_DEFAULT );
+	}
+	
+	//idImage* 			fastPathBumpImage;	// if any of these are set, they all will be
+	//idImage* 			fastPathDiffuseImage;
+	//idImage* 			fastPathSpecularImage;
+	
+	file->ReadBig( entityGui );
+	file->ReadString( str );
+	if( str.IsEmpty() )
+	{
+		gui = NULL;
+	}
+	else
+	{
+		gui = uiManager->FindGui( str.c_str(), true );
+	}
+	
+	file->ReadBig( noFog );
+	
+	file->ReadBig(	spectrum );
+	
+	file->ReadBig(	polygonOffset );
+	
+	file->ReadBig(	contentFlags );
+	file->ReadBig(	surfaceFlags );
+	file->ReadBig(	materialFlags );
+	
+	file->ReadBig( decalInfo.stayTime );
+	file->ReadBig( decalInfo.fadeTime );
+	file->ReadBigArray( decalInfo.start, sizeof( decalInfo.start ) / sizeof( decalInfo.start[0] ) );
+	file->ReadBigArray( decalInfo.end, sizeof( decalInfo.end ) / sizeof( decalInfo.end[0] ) );
+	
+	file->ReadBig(	sort );
+	file->ReadBig(	stereoEye );
+	file->ReadBig(	deform );
+	file->ReadBigArray( deformRegisters, sizeof( deformRegisters ) / sizeof( deformRegisters[0] ) );
+	
+	file->ReadString( deformDeclName );
+	if( deformDeclName.IsEmpty() )
+	{
+		deformDecl = NULL;
+	}
+	else
+	{
+		switch( deform )
+		{
+			case DFRM_TURB:
+				deformDecl = declManager->FindType( DECL_TABLE, deformDeclName.c_str(), true );
+				break;
+				
+			case DFRM_PARTICLE:
+			case DFRM_PARTICLE2:
+				deformDecl = declManager->FindType( DECL_PARTICLE, deformDeclName.c_str(), true );
+				break;
+		}
+	}
+	
+	file->ReadBigArray( texGenRegisters, sizeof( texGenRegisters ) / sizeof( texGenRegisters[0] ) );
+	
+	file->ReadBig( coverage );
+	file->ReadBig( cullType );
+	file->ReadBig( shouldCreateBackSides );
+	
+	file->ReadBig(	fogLight );
+	file->ReadBig( blendLight );
+	file->ReadBig( ambientLight );
+	file->ReadBig( unsmoothedTangents );
+	file->ReadBig( hasSubview );
+	file->ReadBig( allowOverlays );
+	
+	file->ReadBig( numOps );
+	if( numOps )
+	{
+		ops = ( expOp_t* )R_StaticAlloc( numOps * sizeof( ops[0] ) );
+		
+		for( int j = 0; j < numOps; j++ )
+		{
+			file->ReadBig( ops[j].opType );
+			file->ReadBig( ops[j].a );
+			file->ReadBig( ops[j].b );
+			file->ReadBig( ops[j].c );
+		}
+	}
+	
+	file->ReadBig( numRegisters );
+	bool hasExpressionRegisters;
+	file->ReadBig( hasExpressionRegisters );
+	if( hasExpressionRegisters )
+	{
+		expressionRegisters = ( float* )R_StaticAlloc( numRegisters * sizeof( expressionRegisters[0] ) );
+		file->ReadBigArray( expressionRegisters, numRegisters );
+	}
+	
+	bool hasConstantRegisters;
+	file->ReadBig( hasConstantRegisters );
+	if( hasConstantRegisters )
+	{
+		constantRegisters = ( float* )R_StaticAlloc( numRegisters * sizeof( constantRegisters[0] ) );
+		file->ReadBigArray( constantRegisters, numRegisters );
+	}
+	
+	file->ReadBig( numStages );
+	file->ReadBig( numAmbientStages );
+	
+	if( numStages )
+	{
+		stages = ( shaderStage_t* )R_StaticAlloc( numStages * sizeof( stages[0] ) );
+		//stages = new shaderStage_t[numStages];
+	}
+	
+	for( int i = 0; i < numStages; i++ )
+	{
+#if defined(USE_EXTENDED_BINARY_MATERIALS)
+		stages[i].Clear();
+#endif
+		
+		file->ReadBig( stages[i].conditionRegister );
+		file->ReadBig( stages[i].lighting );
+		file->ReadBig( stages[i].drawStateBits );
+		file->ReadBigArray( stages[i].color.registers, sizeof( stages[i].color.registers ) / sizeof( stages[i].color.registers[0] ) );
+		
+		file->ReadBig( stages[i].hasAlphaTest );
+		file->ReadBig( stages[i].alphaTestRegister );
+		
+		file->ReadBig( stages[i].texture.cinematicLoop );
+		
+		file->ReadString( str );
+		if( str.IsEmpty() )
+		{
+			stages[i].texture.cinematic = NULL;
+		}
+		else
+		{
+			stages[i].texture.cinematic = idCinematic::Alloc();
+			stages[i].texture.cinematic->InitFromFile( str, stages[i].texture.cinematicLoop );
+		}
+		
+		file->ReadBig( stages[i].texture.textureFilter );
+		file->ReadBig( stages[i].texture.textureRepeat );
+		file->ReadBig( stages[i].texture.textureUsage );
+		file->ReadBig( stages[i].texture.cubeMap );
+		
+		file->ReadString( str );
+		if( str.IsEmpty() )
+		{
+			stages[i].texture.image = globalImages->defaultImage;
+		}
+		else
+		{
+			stages[i].texture.image = globalImages->ImageFromFile( str.c_str(), stages[i].texture.textureFilter, stages[i].texture.textureRepeat, ( textureUsage_t ) stages[i].texture.textureUsage, ( cubeFiles_t ) stages[i].texture.cubeMap );
+		}
+		
+		file->ReadBig( stages[i].texture.texgen );
+		file->ReadBig( stages[i].texture.hasMatrix );
+		file->ReadBigArray( &stages[i].texture.matrix[0][0], 6 );
+		
+		file->ReadBig( stages[i].texture.dynamic );
+		file->ReadBig( stages[i].texture.width );
+		file->ReadBig( stages[i].texture.height );
+		
+		//int					dynamicFrameCount;
+		
+		file->ReadBig( stages[i].vertexColor );
+		file->ReadBig( stages[i].ignoreAlphaTest );
+		
+		file->ReadBig( stages[i].privatePolygonOffset );
+		
+		bool newStage;
+		file->ReadBig( newStage );
+		if( newStage )
+		{
+			newShaderStage_t* ns = new newShaderStage_t;
+			
+			file->ReadString( ns->vertexProgramName );
+			file->ReadString( ns->fragmentProgramName );
+			
+			ns->vertexProgram = renderProgManager.FindVertexShader( ns->vertexProgramName );
+			ns->fragmentProgram = renderProgManager.FindFragmentShader( ns->fragmentProgramName );
+			
+			ns->glslProgram = renderProgManager.FindGLSLProgram( GetName(), ns->vertexProgram, ns->fragmentProgram );
+			
+			file->ReadBig( ns->numVertexParms );
+			file->ReadBigArray( &ns->vertexParms[0][0], MAX_VERTEX_PARMS * 4 );
+			
+			//int					fragmentProgram;
+			//int					glslProgram;
+			
+			file->ReadBig( ns->numFragmentProgramImages );
+			
+			for( int j = 0; j < ns->numFragmentProgramImages; j++ )
+			{
+				newTextureStage_t* ts = &ns->fragmentProgramImages[j];
+				
+				file->ReadBig( ts->textureFilter );
+				file->ReadBig( ts->textureRepeat );
+				file->ReadBig( ts->textureUsage );
+				file->ReadBig( ts->cubeMap );
+				
+				file->ReadString( str );
+				if( str.IsEmpty() )
+				{
+					ts->image = globalImages->defaultImage;
+				}
+				else
+				{
+					ts->image = globalImages->ImageFromFile( str, ts->textureFilter, ts->textureRepeat, ( textureUsage_t ) ts->textureUsage, ( cubeFiles_t ) ts->cubeMap );
+					if( !ts->image )
+					{
+						ts->image = globalImages->defaultImage;
+					}
+				}
+			}
+			
+			stages[i].newStage = ns;
+		}
+		else
+		{
+			stages[i].newStage = NULL;
+		}
+	}
+	
+	//shaderStage_t* 		stages;
+	
+	//struct mtrParsingData_s*	pd;			// only used during parsing
+	
+	file->ReadBig( surfaceArea );
+	
+	// we defer loading of the editor image until it is asked for, so the game doesn't load up
+	// all the invisible and uncompressed images.
+	// If editorImage is NULL, it will atempt to load editorImageName, and set editorImage to that or defaultImage
+	
+	//mutable idImage* 	editorImage;		// image used for non-shaded preview
+	
+	file->ReadString( editorImageName );
+	file->ReadBig( editorAlpha );
+	
+	file->ReadBig(	suppressInSubview );
+	file->ReadBig( portalSky );
+	
+	return true;
+}
+
+/*
+========================
+idMaterial::WriteBinary
+========================
+*/
+void idMaterial::WriteBinary( idFile* file, unsigned int checksum )
+{
+	if( file == NULL )
+	{
+		return;
+	}
+	
+	file->WriteBig( BMTR_MAGIC );
+	file->WriteBig( checksum );
+	
+	file->WriteString( desc );
+	file->WriteString( renderBump );
+	
+#if defined(USE_EXTENDED_BINARY_MATERIALS)
+	file->WriteString( lightFalloffImageName );
+#else
+	if( lightFalloffImage != NULL && lightFalloffImage->GetName() != NULL )
+	{
+		file->WriteString( lightFalloffImage->GetName() );
+	}
+	else
+	{
+		file->WriteString( "" );
+	}
+#endif
+	
+	//idImage* 			fastPathBumpImage;	// if any of these are set, they all will be
+	//idImage* 			fastPathDiffuseImage;
+	//idImage* 			fastPathSpecularImage;
+	
+	file->WriteBig( entityGui );
+	
+#if defined(USE_EXTENDED_BINARY_MATERIALS)
+	file->WriteString( guiName );
+#else
+	if( gui != NULL && gui->Name() != NULL )
+	{
+		file->WriteString( gui->Name() );
+	}
+	else
+	{
+		file->WriteString( "" );
+	}
+#endif
+	
+	file->WriteBig( noFog );
+	
+	file->WriteBig(	spectrum );
+	
+	file->WriteBig(	polygonOffset );
+	
+	file->WriteBig(	contentFlags );
+	file->WriteBig(	surfaceFlags );
+	file->WriteBig(	materialFlags );
+	
+	file->WriteBig( decalInfo.stayTime );
+	file->WriteBig( decalInfo.fadeTime );
+	file->WriteBigArray( decalInfo.start, sizeof( decalInfo.start ) / sizeof( decalInfo.start[0] ) );
+	file->WriteBigArray( decalInfo.end, sizeof( decalInfo.end ) / sizeof( decalInfo.end[0] ) );
+	
+	file->WriteBig(	sort );
+	file->WriteBig(	stereoEye );
+	file->WriteBig(	deform );
+	file->WriteBigArray( deformRegisters, sizeof( deformRegisters ) / sizeof( deformRegisters[0] ) );
+	
+#if defined(USE_EXTENDED_BINARY_MATERIALS)
+	file->WriteString( deformDeclName );
+#else
+	if( deformDecl != NULL && deformDecl->GetName() != NULL )
+	{
+		file->WriteString( deformDecl->GetName() );
+	}
+	else
+	{
+		file->WriteString( "" );
+	}
+#endif
+	
+	file->WriteBigArray( texGenRegisters, sizeof( texGenRegisters ) / sizeof( texGenRegisters[0] ) );
+	
+	file->WriteBig( coverage );
+	file->WriteBig( cullType );
+	file->WriteBig( shouldCreateBackSides );
+	
+	file->WriteBig(	fogLight );
+	file->WriteBig( blendLight );
+	file->WriteBig( ambientLight );
+	file->WriteBig( unsmoothedTangents );
+	file->WriteBig( hasSubview );
+	file->WriteBig( allowOverlays );
+	
+	file->WriteBig( numOps );
+	if( numOps )
+	{
+		for( int j = 0; j < numOps; j++ )
+		{
+			file->WriteBig( ops[j].opType );
+			file->WriteBig( ops[j].a );
+			file->WriteBig( ops[j].b );
+			file->WriteBig( ops[j].c );
+		}
+	}
+	
+	file->WriteBig( numRegisters );
+	file->WriteBig( expressionRegisters != NULL );
+	if( expressionRegisters != NULL )
+	{
+		file->WriteBigArray( expressionRegisters, numRegisters );
+	}
+	
+	file->WriteBig( constantRegisters != NULL );
+	if( constantRegisters != NULL )
+	{
+		file->WriteBigArray( constantRegisters, numRegisters );
+	}
+	
+	file->WriteBig( numStages );
+	file->WriteBig( numAmbientStages );
+	
+	for( int i = 0; i < numStages; i++ )
+	{
+		file->WriteBig( stages[i].conditionRegister );
+		file->WriteBig( stages[i].lighting );
+		file->WriteBig( stages[i].drawStateBits );
+		file->WriteBigArray( stages[i].color.registers, sizeof( stages[i].color.registers ) / sizeof( stages[i].color.registers[0] ) );
+		
+		file->WriteBig( stages[i].hasAlphaTest );
+		file->WriteBig( stages[i].alphaTestRegister );
+		
+		file->WriteBig( stages[i].texture.cinematicLoop );
+#if defined(USE_EXTENDED_BINARY_MATERIALS)
+		file->WriteString( stages[i].texture.cinematicName );
+#else
+		if( stages[i].texture.cinematic != NULL && stages[i].texture.cinematic->GetSourceName() != NULL )
+		{
+			file->WriteString( stages[i].texture.cinematic->GetSourceName() );
+		}
+		else
+		{
+			file->WriteString( "" );
+		}
+#endif
+		
+		file->WriteBig( stages[i].texture.textureFilter );
+		file->WriteBig( stages[i].texture.textureRepeat );
+		file->WriteBig( stages[i].texture.textureUsage );
+		file->WriteBig( stages[i].texture.cubeMap );
+		
+#if defined(USE_EXTENDED_BINARY_MATERIALS)
+		file->WriteString( stages[i].texture.imageName );
+#else
+		if( stages[i].texture.image != NULL && stages[i].texture.image->GetName() != NULL )
+		{
+			file->WriteString( stages[i].texture.image->GetName() );
+		}
+		else
+		{
+			file->WriteString( "" );
+		}
+#endif
+		
+		file->WriteBig( stages[i].texture.texgen );
+		file->WriteBig( stages[i].texture.hasMatrix );
+		file->WriteBigArray( &stages[i].texture.matrix[0][0], 6 );
+		
+		file->WriteBig( stages[i].texture.dynamic );
+		file->WriteBig( stages[i].texture.width );
+		file->WriteBig( stages[i].texture.height );
+		
+		//int					dynamicFrameCount;
+		
+		file->WriteBig( stages[i].vertexColor );
+		file->WriteBig( stages[i].ignoreAlphaTest );
+		
+		file->WriteBig( stages[i].privatePolygonOffset );
+		
+		//newShaderStage_t*	newStage;
+		
+		file->WriteBig( stages[i].newStage != NULL );
+		if( stages[i].newStage != NULL )
+		{
+			file->WriteString( stages[i].newStage->vertexProgramName );
+			file->WriteString( stages[i].newStage->fragmentProgramName );
+			
+			file->WriteBig( stages[i].newStage->numVertexParms );
+			file->WriteBigArray( &stages[i].newStage->vertexParms[0][0], MAX_VERTEX_PARMS * 4 );
+			
+			//int					fragmentProgram;
+			//int					glslProgram;
+			
+			file->WriteBig( stages[i].newStage->numFragmentProgramImages );
+			
+			for( int j = 0; j < stages[i].newStage->numFragmentProgramImages; j++ )
+			{
+				file->WriteBig( stages[i].newStage->fragmentProgramImages[j].textureFilter );
+				file->WriteBig( stages[i].newStage->fragmentProgramImages[j].textureRepeat );
+				file->WriteBig( stages[i].newStage->fragmentProgramImages[j].textureUsage );
+				file->WriteBig( stages[i].newStage->fragmentProgramImages[j].cubeMap );
+				
+#if defined(USE_EXTENDED_BINARY_MATERIALS)
+				file->WriteString( stages[i].newStage->fragmentProgramImages[j].imageName );
+#else
+				if( stages[i].newStage->fragmentProgramImages[j].image != NULL && stages[i].newStage->fragmentProgramImages[j].image->GetName() != NULL )
+				{
+					file->WriteString( stages[i].newStage->fragmentProgramImages[j].image->GetName() );
+				}
+				else
+				{
+					file->WriteString( "" );
+				}
+#endif
+			}
+		}
+	}
+	
+	//shaderStage_t* 		stages;
+	
+	//struct mtrParsingData_s*	pd;			// only used during parsing
+	
+	file->WriteBig( surfaceArea );
+	
+	// we defer loading of the editor image until it is asked for, so the game doesn't load up
+	// all the invisible and uncompressed images.
+	// If editorImage is NULL, it will atempt to load editorImageName, and set editorImage to that or defaultImage
+	
+	//mutable idImage* 	editorImage;		// image used for non-shaded preview
+	
+	file->WriteString( editorImageName );
+	file->WriteBig( editorAlpha );
+	
+	file->WriteBig(	suppressInSubview );
+	file->WriteBig( portalSky );
+}
+// RB end
 
 /*
 ===================
@@ -3304,9 +3980,9 @@ void idMaterial::ReloadImages( bool force ) const
 		{
 			for( int j = 0 ; j < stages[i].newStage->numFragmentProgramImages ; j++ )
 			{
-				if( stages[i].newStage->fragmentProgramImages[j] )
+				if( stages[i].newStage->fragmentProgramImages[j].image )
 				{
-					stages[i].newStage->fragmentProgramImages[j]->Reload( force );
+					stages[i].newStage->fragmentProgramImages[j].image->Reload( force );
 				}
 			}
 		}

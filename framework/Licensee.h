@@ -3,6 +3,7 @@
 
 Doom 3 GPL Source Code
 Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2013 Robert Beckebans
 
 This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
 
@@ -35,6 +36,7 @@ If you have questions concerning this license or the applicable additional terms
 */
 
 #define GAME_NAME						"Tekuum"		// appears on window titles and errors
+#define GAME_NAME_LOWER					"tekuum"		// appears in screenshot names
 
 #define ENGINE_VERSION					"Tekuum 0.4.0"	// printed in console
 

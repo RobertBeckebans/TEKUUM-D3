@@ -3,6 +3,7 @@
 
 Doom 3 BFG Edition GPL Source Code
 Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2013 Robert Beckebans
 
 This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
@@ -149,6 +150,7 @@ GL_DepthBoundsTest
 */
 void GL_DepthBoundsTest( const float zmin, const float zmax )
 {
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 	if( !glConfig.depthBoundsTestAvailable || zmin > zmax )
 	{
 		return;
@@ -163,6 +165,7 @@ void GL_DepthBoundsTest( const float zmin, const float zmax )
 		glEnable( GL_DEPTH_BOUNDS_TEST_EXT );
 		glDepthBoundsEXT( zmin, zmax );
 	}
+#endif
 }
 
 /*
@@ -283,7 +286,11 @@ void GL_SetDefaultState()
 {
 	RENDERLOG_PRINTF( "--- GL_SetDefaultState ---\n" );
 	
+#if defined(USE_GLES2) || defined(USE_GLES3)
+	glClearDepthf( 1.0f );
+#else
 	glClearDepth( 1.0f );
+#endif
 	
 	// make sure our GL state vector is set correctly
 	memset( &backEnd.glState, 0, sizeof( backEnd.glState ) );
@@ -300,8 +307,14 @@ void GL_SetDefaultState()
 	glDepthFunc( GL_LESS );
 	glDisable( GL_STENCIL_TEST );
 	glDisable( GL_POLYGON_OFFSET_FILL );
+	
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 	glDisable( GL_POLYGON_OFFSET_LINE );
+#endif
+	
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 	glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+#endif
 	
 	// These should never be changed
 	// DG: deprecated in opengl 3.2 and not needed because we don't do fixed function pipeline
@@ -310,8 +323,11 @@ void GL_SetDefaultState()
 	glEnable( GL_DEPTH_TEST );
 	glEnable( GL_BLEND );
 	glEnable( GL_SCISSOR_TEST );
+	
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 	glDrawBuffer( GL_BACK );
 	glReadBuffer( GL_BACK );
+#endif
 	
 	if( r_useScissor.GetBool() )
 	{
@@ -475,6 +491,7 @@ void GL_State( uint64 stateBits, bool forceGlState )
 	//
 	// fill/line mode
 	//
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 	if( diff & GLS_POLYMODE_LINE )
 	{
 		if( stateBits & GLS_POLYMODE_LINE )
@@ -486,6 +503,7 @@ void GL_State( uint64 stateBits, bool forceGlState )
 			glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
 		}
 	}
+#endif
 	
 	//
 	// polygon offset
@@ -496,12 +514,16 @@ void GL_State( uint64 stateBits, bool forceGlState )
 		{
 			glPolygonOffset( backEnd.glState.polyOfsScale, backEnd.glState.polyOfsBias );
 			glEnable( GL_POLYGON_OFFSET_FILL );
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 			glEnable( GL_POLYGON_OFFSET_LINE );
+#endif
 		}
 		else
 		{
 			glDisable( GL_POLYGON_OFFSET_FILL );
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 			glDisable( GL_POLYGON_OFFSET_LINE );
+#endif
 		}
 	}
 	

@@ -93,7 +93,7 @@ idCVar com_developer( "developer", "0", CVAR_BOOL | CVAR_SYSTEM | CVAR_NOCHEAT, 
 idCVar com_allowConsole( "com_allowConsole", "1", CVAR_BOOL | CVAR_SYSTEM | CVAR_NOCHEAT, "allow toggling console with the tilde key" );
 idCVar com_speeds( "com_speeds", "0", CVAR_BOOL | CVAR_SYSTEM | CVAR_NOCHEAT, "show engine timings" );
 #if defined(__ANDROID__)
-idCVar com_showFPS( "com_showFPS", "2", CVAR_INTEGER | CVAR_SYSTEM | CVAR_NOCHEAT, "show frames rendered per second. 0: off 1: default bfg values, 2: only show FPS (classic view)" );
+idCVar com_showFPS( "com_showFPS", "1", CVAR_INTEGER | CVAR_SYSTEM | CVAR_NOCHEAT, "show frames rendered per second. 0: off 1: default bfg values, 2: only show FPS (classic view)" );
 idCVar com_showMemoryUsage( "com_showMemoryUsage", "1", CVAR_BOOL | CVAR_SYSTEM | CVAR_NOCHEAT, "show total and per frame memory usage" );
 idCVar com_logFile( "logFile", "1", CVAR_SYSTEM | CVAR_NOCHEAT, "1 = buffer log, 2 = flush after each print", 0, 2, idCmdSystem::ArgCompletion_Integer<0, 2> );
 #else
@@ -117,12 +117,17 @@ idCVar com_product_lang_ext( "com_product_lang_ext", "1", CVAR_INTEGER | CVAR_SY
 
 // com_speeds times
 int				com_frameMsec;
+
 int				time_gameFrame;
 int				time_gameDraw;
+
+int				time_lastGameFrame;
+int				time_lastGameDraw;
+
 uint64			time_frontend;			// renderSystem frontend time
 uint64			time_backend;			// renderSystem backend time
 uint64			time_shadows;			// renderer backend waiting for shadow volumes to be created
-uint64			time_gpu;				// total gpu time, at least for PC
+uint64			time_gpu;				// total gpu time, at least for PC in microseconds
 
 int				com_frameTime;			// time for the current frame in milliseconds
 int				com_frameNumber;		// variable frame number
@@ -1955,6 +1960,31 @@ static void Com_GenerateSinCosTables_f( const idCmdArgs& args )
 	
 	fileSystem->CloseFile( file );
 }
+
+#if defined(USE_ANDROID_NDK_PROFILER)
+//#include "../libs/android-ndk-profiler/jni/prof.h"
+#include "../../android/jni/prof.h"
+
+static void Com_StartAndroidProfiling_f( const idCmdArgs& args )
+{
+	common->Printf( "starting Android NDK Profiler ...\n" );
+	
+	//setenv( "CPUPROFILE", "/data/data/com.robertbeckebans.tekuum/files/gmon.out", 1 );
+	setenv( "CPUPROFILE", "/sdcard/tekuum/gmon.out", 1 );
+	
+	setenv( "CPUPROFILE_FREQUENCY", "500", 1 );
+	
+	monstartup( "libtekuum.so" );
+}
+
+static void Com_StopAndroidProfiling_f( const idCmdArgs& args )
+{
+	common->Printf( "stopping Android NDK Profiler ...\n" );
+	
+	moncleanup();
+}
+
+#endif
 // RB end
 
 /*
@@ -2897,6 +2927,10 @@ void idCommonLocal::InitCommands()
 	
 	cmdSystem->AddCommand( "generateMaterialTables", Com_GenerateSinCosTables_f, CMD_FL_SYSTEM | CMD_FL_CHEAT, "generates tables required by the engine to run" );
 	
+#if defined(USE_ANDROID_NDK_PROFILER)
+	cmdSystem->AddCommand( "startAndroidProfiling", Com_StartAndroidProfiling_f, CMD_FL_SYSTEM, "" );
+	cmdSystem->AddCommand( "stopAndroidProfiling", Com_StopAndroidProfiling_f, CMD_FL_SYSTEM, "" );
+#endif
 	// RB end
 	
 	cmdSystem->AddCommand( "printMemInfo", PrintMemInfo_f, CMD_FL_SYSTEM, "prints memory debugging data" );
@@ -2970,6 +3004,8 @@ void idCommonLocal::PrintLoadingMessage( const char* msg )
 #else
 	//renderSystem->BeginFrame( renderSystem->GetWidth(), renderSystem->GetHeight() );
 	
+	const emptyCommand_t* cmd = renderSystem->SwapCommandBuffers_FinishCommandBuffers();
+	
 	const idMaterial* whiteMaterial = declManager->FindMaterial( "_white" );
 	const idMaterial* splashScreen = declManager->FindMaterial( "splashScreen" );
 	
@@ -2998,8 +3034,20 @@ void idCommonLocal::PrintLoadingMessage( const char* msg )
 	renderSystem->DrawSmallStringExt( ( 640 - len * SMALLCHAR_WIDTH ) / 2, 410, msg, idVec4( 0.0f, 0.81f, 0.94f, 1.0f ), true );
 	
 	//renderSystem->EndFrame( NULL, NULL );
-	const emptyCommand_t* cmd = renderSystem->SwapCommandBuffers( NULL, NULL, NULL, NULL );
+	
 	renderSystem->RenderCommandBuffers( cmd );
+	
+	if( com_speeds.GetBool() || com_showFPS.GetInteger() == 1 )
+	{
+		renderSystem->SwapCommandBuffers_FinishRendering( &time_frontend, &time_backend, &time_shadows, &time_gpu, true );
+	}
+	else
+	{
+		renderSystem->SwapCommandBuffers_FinishRendering( NULL, NULL, NULL, NULL, true );
+	}
+	
+	//const emptyCommand_t* cmd = renderSystem->SwapCommandBuffers( NULL, NULL, NULL, NULL, true );
+	//renderSystem->RenderCommandBuffers( cmd );
 #endif
 	// RB end
 }
@@ -3079,7 +3127,9 @@ void idCommonLocal::Frame()
 		}
 		
 		// report timing information
-		if( com_speeds.GetBool() || com_showFPS.GetInteger() == 1 )
+		
+		// RB: changed to have the last game frame time for the next dynamic screen resolution calculation
+		//if( com_speeds.GetBool() || com_showFPS.GetInteger() == 1 )
 		{
 			static int	lastTime;
 			int		nowTime = Sys_Milliseconds();
@@ -3091,9 +3141,13 @@ void idCommonLocal::Frame()
 				Printf( "frame:%i all:%3i gfr:%3i rf:%3i bk:%3i\n", com_frameNumber, com_frameMsec, time_gameFrame, time_frontend, time_backend );
 			}
 			
+			time_lastGameFrame = time_gameFrame;
+			time_lastGameDraw = time_gameDraw;
+			
 			time_gameFrame = 0;
 			time_gameDraw = 0;
 		}
+		// RB end
 		
 		com_frameNumber++;
 		
@@ -3723,9 +3777,6 @@ void idCommonLocal::InitGame()
 	// cvars are initialized, but not the rendering system. Allow preference startup dialog
 	Sys_DoPreferences();
 	
-	// init the user command input code
-	usercmdGen->Init();
-	
 	/*
 	#if defined(STANDALONE)
 	PrintLoadingMessage( common->GetLanguageDict()->GetString( "#str_idCommonLocal_InitGame_Initialising_sound" ) );
@@ -3777,6 +3828,10 @@ void idCommonLocal::InitGame()
 #else
 	PrintLoadingMessage( common->GetLanguageDict()->GetString( "#str_04349" ) );
 #endif
+	
+	// RB: moved down here to build rectangles for touch screen interfaces
+	// init the user command input code
+	usercmdGen->Init();
 	
 	// initialize the user interfaces
 	uiManager->Init();

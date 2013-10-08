@@ -806,6 +806,11 @@ void Sys_EndMouseInputEvents()
 
 // RB begin
 
+bool Sys_IsXbox360ControllerAvailable()
+{
+	return false;
+}
+
 int Sys_PollXbox360ControllerInputEvents()
 {
 	// TODO
@@ -818,7 +823,24 @@ int	Sys_ReturnXbox360ControllerInputEvent( const int n, int& action, int& value,
 	return 0;
 }
 
-void Sys_EndXbox360ControllerInputEvents() { }
+void Sys_EndXbox360ControllerInputEvents()
+{
+}
+
+// touch screen input polling
+int Sys_PollTouchScreenInputEvents()
+{
+	return 0;
+}
+
+int	Sys_ReturnTouchScreenInputEvent( const int n, int& action, int& value, int& value2, int& value3, int& value4 )
+{
+	return 0;
+}
+
+void Sys_EndTouchScreenInputEvents()
+{
+}
 
 // RB end
 

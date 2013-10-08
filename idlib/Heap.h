@@ -69,9 +69,9 @@ void* 		Mem_ClearedAlloc( const size_t size, const memTag_t tag = TAG_CRAP );
 char* 		Mem_CopyString( const char* in );
 // RB end
 
-ID_INLINE void* operator new( size_t s )
-#if !defined(_MSC_VER)
-throw( std::bad_alloc ) // DG: standard signature seems to include throw(..)
+ID_INLINE void* operator new( size_t s )// throw( std::bad_alloc )
+#if !defined(_MSC_VER) //&& !defined(__ANDROID__)
+//throw( std::bad_alloc ) // DG: standard signature seems to include throw(..)
 #endif
 {
 	return Mem_Alloc( s, TAG_NEW );
@@ -85,7 +85,7 @@ throw() // DG: delete musn't throw
 	Mem_Free( p );
 }
 ID_INLINE void* operator new[]( size_t s )
-#if !defined(_MSC_VER)
+#if !defined(_MSC_VER) && !defined(__ANDROID__)
 throw( std::bad_alloc ) // DG: standard signature seems to include throw(..)
 #endif
 {
@@ -100,6 +100,7 @@ throw() // DG: delete musn't throw
 	Mem_Free( p );
 }
 
+#if 1//!defined(__ANDROID__)
 ID_INLINE void* operator new( size_t s, memTag_t tag )
 {
 	return Mem_Alloc( s, tag );
@@ -122,8 +123,10 @@ ID_INLINE void operator delete[]( void* p, memTag_t tag ) throw() // DG: delete 
 {
 	Mem_Free( p );
 }
+#endif
 
 // RB: these are added to avoid problems with afxmem.cpp
+#if !defined(__ANDROID__)
 ID_INLINE void* operator new( size_t s, const char* file, int line )
 {
 	return Mem_Alloc( s );
@@ -143,6 +146,7 @@ ID_INLINE void operator delete[]( void* p, const char* file, int line )
 {
 	Mem_Free( p );
 }
+#endif
 // RB end
 
 // Define replacements for the PS3 library's aligned new operator.
@@ -260,7 +264,9 @@ ID_INLINE idTempArray<T>::~idTempArray()
 
 // Define this to force all block allocators to act like normal new/delete allocation
 // for tool checking.
-//#define	FORCE_DISCRETE_BLOCK_ALLOCS
+#if defined(__ANDROID__)
+#define	FORCE_DISCRETE_BLOCK_ALLOCS
+#endif
 
 /*
 ================================================

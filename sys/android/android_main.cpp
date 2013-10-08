@@ -447,6 +447,108 @@ double Sys_ClockTicksPerSecond()
 }
 
 /*
+========================
+Sys_CPUCount
+
+numLogicalCPUCores	- the number of logical CPU per core
+numPhysicalCPUCores	- the total number of cores per package
+numCPUPackages		- the total number of packages (physical processors)
+========================
+*/
+// RB begin
+void Sys_CPUCount( int& numLogicalCPUCores, int& numPhysicalCPUCores, int& numCPUPackages )
+{
+	static bool		init = false;
+	static double	ret;
+	
+	static int		s_numLogicalCPUCores;
+	static int		s_numPhysicalCPUCores;
+	static int		s_numCPUPackages;
+	
+	int		fd, len, pos, end;
+	char	buf[ 4096 ];
+	char	number[100];
+	
+	if( init )
+	{
+		numPhysicalCPUCores = s_numPhysicalCPUCores;
+		numLogicalCPUCores = s_numLogicalCPUCores;
+		numCPUPackages = s_numCPUPackages;
+	}
+	
+	s_numPhysicalCPUCores = 1;
+	s_numLogicalCPUCores = 1;
+	s_numCPUPackages = 1;
+	
+	fd = open( "/proc/cpuinfo", O_RDONLY );
+	if( fd != -1 )
+	{
+		len = read( fd, buf, 4096 );
+		close( fd );
+		pos = 0;
+		while( pos < len )
+		{
+			if( !idStr::Cmpn( buf + pos, "processor", 9 ) )
+			{
+				pos = strchr( buf + pos, ':' ) - buf + 2;
+				end = strchr( buf + pos, '\n' ) - buf;
+				if( pos < len && end < len )
+				{
+					idStr::Copynz( number, buf + pos, sizeof( number ) );
+					assert( ( end - pos ) > 0 && ( end - pos ) < sizeof( number ) );
+					number[ end - pos ] = '\0';
+					
+					int processor = atoi( number );
+					
+					if( ( processor + 1 ) > s_numPhysicalCPUCores )
+					{
+						s_numPhysicalCPUCores = processor + 1;
+					}
+				}
+				else
+				{
+					common->Printf( "failed parsing /proc/cpuinfo\n" );
+					break;
+				}
+			}
+			else if( !idStr::Cmpn( buf + pos, "core id", 7 ) )
+			{
+				pos = strchr( buf + pos, ':' ) - buf + 2;
+				end = strchr( buf + pos, '\n' ) - buf;
+				if( pos < len && end < len )
+				{
+					idStr::Copynz( number, buf + pos, sizeof( number ) );
+					assert( ( end - pos ) > 0 && ( end - pos ) < sizeof( number ) );
+					number[ end - pos ] = '\0';
+					
+					int coreId = atoi( number );
+					
+					if( ( coreId + 1 ) > s_numLogicalCPUCores )
+					{
+						s_numLogicalCPUCores = coreId + 1;
+					}
+				}
+				else
+				{
+					common->Printf( "failed parsing /proc/cpuinfo\n" );
+					break;
+				}
+			}
+			
+			pos = strchr( buf + pos, '\n' ) - buf + 1;
+		}
+	}
+	
+	common->Printf( "/proc/cpuinfo CPU processors: %d\n", s_numPhysicalCPUCores );
+	common->Printf( "/proc/cpuinfo CPU logical cores: %d\n", s_numLogicalCPUCores );
+	
+	numPhysicalCPUCores = s_numPhysicalCPUCores;
+	numLogicalCPUCores = s_numLogicalCPUCores;
+	numCPUPackages = s_numCPUPackages;
+}
+// RB end
+
+/*
 ================
 Sys_GetSystemRam
 returns in megabytes
@@ -474,6 +576,8 @@ int Sys_GetSystemRam()
 	mb = ( mb + 8 ) & ~15;
 	return mb;
 }
+
+
 
 /*
 ==================

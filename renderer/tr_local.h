@@ -3,7 +3,7 @@
 
 Doom 3 BFG Edition GPL Source Code
 Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
-Copyright (C) 2012 Robert Beckebans
+Copyright (C) 2012-2013 Robert Beckebans
 
 This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
@@ -274,6 +274,14 @@ public:
 	idInteraction* 			lastInteraction;
 	
 	bool					needsPortalSky;
+	
+	// RB begin
+	idVec3					volumeMidPoint;
+	bool					lightgridCalculated;
+	idVec3					lightDir;				// normalized direction towards light
+	idVec3					ambientLight;			// color normalized to 0-1
+	idVec3					directedLight;
+	// RB end
 };
 
 struct shadowOnlyEntity_t
@@ -372,6 +380,12 @@ struct viewEntity_t
 	// R_AddSingleModel will build a chain of parameters here to setup shadow volumes
 	staticShadowVolumeParms_t* 		staticShadowVolumes;
 	dynamicShadowVolumeParms_t* 	dynamicShadowVolumes;
+	
+	// RB: copied from entityDef if using precomputed lighting
+	idVec3					gridLightDir;				// global normalized direction towards light
+	idVec3					gridAmbientLight;			// color normalized to 0-1
+	idVec3					gridDirectedLight;
+	// RB end
 };
 
 
@@ -741,18 +755,36 @@ public:
 	virtual void			EndAutomaticBackgroundSwaps();
 	virtual bool			AreAutomaticBackgroundSwapsRunning( autoRenderIconType_t* usingAlternateIcon = NULL ) const;
 	
-	virtual idFont* 		RegisterFont( const char* fontName );
+	// RB begin
+#if defined(USE_IDFONT)
+	virtual class idFont* 	RegisterFont( const char* fontName );
 	virtual void			ResetFonts();
+#else
+	virtual bool			RegisterFont( const char* fontName, fontInfoEx_t& font );
+#endif
+	// RB end
+	
 	virtual void			PrintMemInfo( MemInfo_t* mi );
 	
 	virtual void			SetColor( const idVec4& color );
-	virtual uint32			GetColor();
+	
+	// RB: separated GetColor and GetColorNativeOrder
+	virtual const idVec4&	GetColor();
+	virtual uint32			GetColorPacked();
+	// RB end
+	
 	virtual void			SetGLState( const uint64 glState ) ;
 	virtual void			DrawFilled( const idVec4& color, float x, float y, float w, float h );
 	virtual void			DrawStretchPic( float x, float y, float w, float h, float s1, float t1, float s2, float t2, const idMaterial* material );
 	virtual void			DrawStretchPic( const idVec4& topLeft, const idVec4& topRight, const idVec4& bottomRight, const idVec4& bottomLeft, const idMaterial* material );
 	virtual void			DrawStretchTri( const idVec2& p1, const idVec2& p2, const idVec2& p3, const idVec2& t1, const idVec2& t2, const idVec2& t3, const idMaterial* material );
+	// RB: added alternative interface for no glMapBuffer support
+#if defined(NO_GL_MAPBUFFER)
+	virtual void			AllocTris( const idDrawVert* verts, int numVerts, const triIndex_t* indexes, int numIndexes, const idMaterial* material, const stereoDepthType_t stereoType = STEREO_DEPTH_TYPE_NONE );
+#else
 	virtual idDrawVert* 	AllocTris( int numVerts, const triIndex_t* indexes, int numIndexes, const idMaterial* material, const stereoDepthType_t stereoType = STEREO_DEPTH_TYPE_NONE );
+#endif
+	// RB end
 	virtual void			DrawSmallChar( int x, int y, int ch );
 	virtual void			DrawSmallStringExt( int x, int y, const char* string, const idVec4& setColor, bool forceColor );
 	virtual void			DrawBigChar( int x, int y, int ch );
@@ -760,9 +792,9 @@ public:
 	
 	virtual void			WriteDemoPics();
 	virtual void			DrawDemoPics();
-	virtual const emptyCommand_t* 	SwapCommandBuffers( uint64* frontEndMicroSec, uint64* backEndMicroSec, uint64* shadowMicroSec, uint64* gpuMicroSec );
+	virtual const emptyCommand_t* 	SwapCommandBuffers( uint64* frontEndMicroSec, uint64* backEndMicroSec, uint64* shadowMicroSec, uint64* gpuMicroSec, bool swapBuffers );
 	
-	virtual void			SwapCommandBuffers_FinishRendering( uint64* frontEndMicroSec, uint64* backEndMicroSec, uint64* shadowMicroSec, uint64* gpuMicroSec );
+	virtual void			SwapCommandBuffers_FinishRendering( uint64* frontEndMicroSec, uint64* backEndMicroSec, uint64* shadowMicroSec, uint64* gpuMicroSec, bool swapBuffers );
 	virtual const emptyCommand_t* 	SwapCommandBuffers_FinishCommandBuffers();
 	
 	virtual void			RenderCommandBuffers( const emptyCommand_t* commandBuffers );
@@ -831,11 +863,17 @@ public:
 	
 	// GUI drawing variables for surface creation
 	int						guiRecursionLevel;		// to prevent infinite overruns
+	
+	// RB: added float colors to bypass parm0 - parm3 as floats
+	idVec4					currentColor;
 	uint32					currentColorNativeBytesOrder;
+	// RB end
 	uint64					currentGLState;
 	class idGuiModel* 		guiModel;
 	
+#if defined(USE_IDFONT)
 	idList<idFont* >		fonts;
+#endif
 	
 	unsigned short			gammaTable[256];	// brightness / gamma modify this
 	
@@ -863,6 +901,7 @@ extern glconfig_t			glConfig;		// outside of TR since it shouldn't be cleared du
 // cvars
 //
 extern idCVar r_useOpenGL32;
+extern idCVar r_useOpenGLES;
 extern idCVar r_debugContext;				// enable various levels of context debug
 extern idCVar r_glDriver;					// "opengl32", etc
 extern idCVar r_skipIntelWorkarounds;		// skip work arounds for Intel driver bugs
@@ -909,6 +948,9 @@ extern idCVar r_useEntityCallbacks;			// if 0, issue the callback immediately at
 extern idCVar r_lightAllBackFaces;			// light all the back faces, even when they would be shadowed
 extern idCVar r_useLightDepthBounds;		// use depth bounds test on lights to reduce both shadow and interaction fill
 extern idCVar r_useShadowDepthBounds;		// use depth bounds test on individual shadows to reduce shadow fill
+// RB begin
+extern idCVar r_usePrecomputedLight;		// enable Q3A style precomputed lighting (vertex lighting/lightgrid)
+// RB end
 
 extern idCVar r_skipStaticInteractions;		// skip interactions created at level load
 extern idCVar r_skipDynamicInteractions;	// skip interactions created after level load
@@ -974,6 +1016,9 @@ extern idCVar r_showPrimitives;				// report vertex/index/draw counts
 extern idCVar r_showPortals;				// draw portal outlines in color based on passed / not passed
 extern idCVar r_showSkel;					// draw the skeleton when model animates
 extern idCVar r_showOverDraw;				// show overdraw
+// RB begin
+extern idCVar r_showLightGrid;				// show Q3A style light grid points
+// RB end
 extern idCVar r_jointNameScale;				// size of joint names when r_showskel is set to 1
 extern idCVar r_jointNameOffset;			// offset of joint names when r_showskel is set to 1
 
@@ -1393,6 +1438,20 @@ void RB_ShowDestinationAlpha();
 void RB_ShowOverdraw();
 void RB_RenderDebugTools( drawSurf_t** drawSurfs, int numDrawSurfs );
 void RB_ShutdownDebugTools();
+
+
+/*
+=============================================================
+
+TR_FONT
+
+=============================================================
+*/
+
+void R_InitFreeType();
+void R_DoneFreeType();
+
+
 
 //=============================================
 

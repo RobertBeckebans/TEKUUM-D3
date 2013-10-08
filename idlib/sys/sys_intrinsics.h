@@ -29,7 +29,9 @@ If you have questions concerning this license or the applicable additional terms
 #ifndef __SYS_INTRIINSICS_H__
 #define __SYS_INTRIINSICS_H__
 
+#if !defined(__ANDROID__)
 #define USE_INTRINSICS
+#endif
 
 #if defined(USE_INTRINSICS)
 #include <emmintrin.h>

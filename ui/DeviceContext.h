@@ -3,6 +3,7 @@
 
 Doom 3 BFG Edition GPL Source Code
 Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2013 Robert Beckebans
 
 This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
@@ -33,7 +34,10 @@ If you have questions concerning this license or the applicable additional terms
 //
 
 #include "Rectangle.h"
+
+#if defined(USE_IDFONT)
 #include "../renderer/Font.h"
+#endif
 
 const int VIRTUAL_WIDTH = 640;
 const int VIRTUAL_HEIGHT = 480;
@@ -88,10 +92,19 @@ public:
 	virtual void		PopClipRect();
 	virtual void		EnableClipping( bool b );
 	
+	// RB begin
+#if defined(USE_IDFONT)
 	void				SetFont( idFont* font )
 	{
 		activeFont = font;
 	}
+#else
+	void				SetFont( int num );
+	
+	int					FindFont( const char* name );
+	void				SetupFonts();
+#endif
+	// RB end
 	
 	void				SetOverStrike( bool b )
 	{
@@ -147,13 +160,29 @@ public:
 	
 protected:
 	virtual int			DrawText( float x, float y, float scale, idVec4 color, const char* text, float adjust, int limit, int style, int cursor = -1 );
+	
+	// RB begin
+#if defined(USE_IDFONT)
 	void				PaintChar( float x, float y, const scaledGlyphInfo_t& glyphInfo );
+	idFont* 			activeFont;
+#else
+	void				PaintChar( float x, float y, float width, float height, float scale, float	s, float	t, float	s2, float t2, const idMaterial* hShader );
+	void				SetFontByScale( float scale );
+	
+	fontInfoEx_t*		activeFont;
+	fontInfo_t*			useFont;
+	idStr				fontName;
+	
+	static idList<fontInfoEx_t> fonts;
+	idStr				fontLang;
+#endif
+	// RB end
+	
 	void				Clear();
 	
 	const idMaterial* 	cursorImages[CURSOR_COUNT];
 	const idMaterial* 	scrollBarImages[SCROLLBAR_COUNT];
 	const idMaterial* 	whiteImage;
-	idFont* 			activeFont;
 	
 	float				xScale;
 	float				yScale;
@@ -174,6 +203,7 @@ protected:
 	bool				initialized;
 };
 
+
 class idDeviceContextOptimized : public idDeviceContext
 {
 
@@ -182,12 +212,15 @@ class idDeviceContextOptimized : public idDeviceContext
 	virtual void		PopClipRect();
 	virtual void		EnableClipping( bool b );
 	
+#if defined(USE_IDFONT)
 	virtual int			DrawText( float x, float y, float scale, idVec4 color, const char* text, float adjust, int limit, int style, int cursor = -1 );
+#endif
 	
 	float				clipX1;
 	float				clipX2;
 	float				clipY1;
 	float				clipY2;
 };
+
 
 #endif /* !__DEVICECONTEXT_H__ */

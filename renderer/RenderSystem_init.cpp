@@ -3,7 +3,7 @@
 
 Doom 3 BFG Edition GPL Source Code
 Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
-Copyright (C) 2012 Robert Beckebans
+Copyright (C) 2012-2013 Robert Beckebans
 
 This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
@@ -49,6 +49,7 @@ glconfig_t	glConfig;
 idCVar r_requestStereoPixelFormat( "r_requestStereoPixelFormat", "1", CVAR_RENDERER, "Ask for a stereo GL pixel format on startup" );
 // RB begin
 idCVar r_useOpenGL32( "r_useOpenGL32", "1", CVAR_INTEGER, "0 = OpenGL 2.0, 1 = OpenGL 3.2 compatibility profile, 2 = OpenGL 3.2 core profile", 0, 2 );
+idCVar r_useOpenGLES( "r_useOpenGLES", "0", CVAR_INTEGER, "0 = Desktop OpenGL, 1 = OpenGL ES 2.0, 2 = OpenGL ES 3.0", 0, 2 );
 // RB end
 idCVar r_debugContext( "r_debugContext", "0", CVAR_RENDERER, "Enable various levels of context debug." );
 idCVar r_glDriver( "r_glDriver", "", CVAR_RENDERER, "\"opengl32\", etc." );
@@ -85,7 +86,11 @@ idCVar r_maxAnisotropicFiltering( "r_maxAnisotropicFiltering", "8", CVAR_RENDERE
 idCVar r_useTrilinearFiltering( "r_useTrilinearFiltering", "1", CVAR_RENDERER | CVAR_ARCHIVE | CVAR_BOOL, "Extra quality filtering" );
 idCVar r_lodBias( "r_lodBias", "0.5", CVAR_RENDERER | CVAR_ARCHIVE, "image lod bias" );
 
+#if defined(USE_GLES2) || defined(USE_GLES3)
+idCVar r_useStateCaching( "r_useStateCaching", "0", CVAR_RENDERER | CVAR_BOOL, "avoid redundant state changes in GL_*() calls" );
+#else
 idCVar r_useStateCaching( "r_useStateCaching", "1", CVAR_RENDERER | CVAR_BOOL, "avoid redundant state changes in GL_*() calls" );
+#endif
 
 idCVar r_znear( "r_znear", "3", CVAR_RENDERER | CVAR_FLOAT, "near Z clip plane distance", 0.001f, 200.0f );
 
@@ -135,10 +140,12 @@ idCVar r_useLightAreaCulling( "r_useLightAreaCulling", "1", CVAR_RENDERER | CVAR
 idCVar r_useLightScissors( "r_useLightScissors", "3", CVAR_RENDERER | CVAR_INTEGER, "0 = no scissor, 1 = non-clipped scissor, 2 = near-clipped scissor, 3 = fully-clipped scissor", 0, 3, idCmdSystem::ArgCompletion_Integer<0, 3> );
 idCVar r_useEntityPortalCulling( "r_useEntityPortalCulling", "1", CVAR_RENDERER | CVAR_INTEGER, "0 = none, 1 = cull frustum corners to plane, 2 = exact clip the frustum faces", 0, 2, idCmdSystem::ArgCompletion_Integer<0, 2> );
 idCVar r_logFile( "r_logFile", "0", CVAR_RENDERER | CVAR_INTEGER, "number of frames to emit GL logs" );
-idCVar r_clear( "r_clear", "2", CVAR_RENDERER, "force screen clear every frame, 1 = purple, 2 = black, 'r g b' = custom" );
+idCVar r_clear( "r_clear", "1", CVAR_RENDERER, "force screen clear every frame, 1 = purple, 2 = black, 'r g b' = custom" );
 
+// RB: offset factor was 0, and units were -600 which caused some very ugly polygon offsets on Android so I reverted the values to the same as in Q3A
 idCVar r_offsetFactor( "r_offsetfactor", "0", CVAR_RENDERER | CVAR_FLOAT, "polygon offset parameter" );
-idCVar r_offsetUnits( "r_offsetunits", "-600", CVAR_RENDERER | CVAR_FLOAT, "polygon offset parameter" );
+idCVar r_offsetUnits( "r_offsetunits", "-2", CVAR_RENDERER | CVAR_FLOAT, "polygon offset parameter" );
+// RB end
 
 idCVar r_shadowPolygonOffset( "r_shadowPolygonOffset", "-1", CVAR_RENDERER | CVAR_FLOAT, "bias value added to depth test for stencil shadow drawing" );
 idCVar r_shadowPolygonFactor( "r_shadowPolygonFactor", "0", CVAR_RENDERER | CVAR_FLOAT, "scale value for stencil shadow drawing" );
@@ -148,7 +155,12 @@ idCVar r_testGammaBias( "r_testGammaBias", "0", CVAR_RENDERER | CVAR_FLOAT, "if 
 idCVar r_lightScale( "r_lightScale", "3", CVAR_ARCHIVE | CVAR_RENDERER | CVAR_FLOAT, "all light intensities are multiplied by this" );
 idCVar r_flareSize( "r_flareSize", "1", CVAR_RENDERER | CVAR_FLOAT, "scale the flare deforms from the material def" );
 
+#if defined(USE_GLES2) || defined(USE_GLES3)
 idCVar r_skipPrelightShadows( "r_skipPrelightShadows", "0", CVAR_RENDERER | CVAR_BOOL, "skip the dmap generated static shadow volumes" );
+#else
+idCVar r_skipPrelightShadows( "r_skipPrelightShadows", "0", CVAR_RENDERER | CVAR_BOOL, "skip the dmap generated static shadow volumes" );
+#endif
+
 idCVar r_useScissor( "r_useScissor", "1", CVAR_RENDERER | CVAR_BOOL, "scissor clip as portals and lights are processed" );
 idCVar r_useLightDepthBounds( "r_useLightDepthBounds", "1", CVAR_RENDERER | CVAR_BOOL, "use depth bounds test on lights to reduce both shadow and interaction fill" );
 idCVar r_useShadowDepthBounds( "r_useShadowDepthBounds", "1", CVAR_RENDERER | CVAR_BOOL, "use depth bounds test on individual shadow volumes to reduce shadow fill" );
@@ -161,6 +173,14 @@ idCVar r_singleSurface( "r_singleSurface", "-1", CVAR_RENDERER | CVAR_INTEGER, "
 idCVar r_singleArea( "r_singleArea", "0", CVAR_RENDERER | CVAR_BOOL, "only draw the portal area the view is actually in" );
 idCVar r_orderIndexes( "r_orderIndexes", "1", CVAR_RENDERER | CVAR_BOOL, "perform index reorganization to optimize vertex use" );
 idCVar r_lightAllBackFaces( "r_lightAllBackFaces", "0", CVAR_RENDERER | CVAR_BOOL, "light all the back faces, even when they would be shadowed" );
+
+// RB begin
+#if defined(__ANDROID__)
+idCVar r_usePrecomputedLight( "r_usePrecomputedLight", "1", CVAR_RENDERER | CVAR_BOOL, "enable Q3A style precomputed lighting (vertex lighting/lightgrid)" );
+#else
+idCVar r_usePrecomputedLight( "r_usePrecomputedLight", "0", CVAR_RENDERER | CVAR_BOOL, "enable Q3A style precomputed lighting (vertex lighting/lightgrid)" );
+#endif
+// RB end
 
 // visual debugging info
 idCVar r_showPortals( "r_showPortals", "0", CVAR_RENDERER | CVAR_BOOL, "draw portal outlines in color based on passed / not passed" );
@@ -192,6 +212,9 @@ idCVar r_showTangentSpace( "r_showTangentSpace", "0", CVAR_RENDERER | CVAR_INTEG
 idCVar r_showDominantTri( "r_showDominantTri", "0", CVAR_RENDERER | CVAR_BOOL, "draw lines from vertexes to center of dominant triangles" );
 idCVar r_showTextureVectors( "r_showTextureVectors", "0", CVAR_RENDERER | CVAR_FLOAT, " if > 0 draw each triangles texture (tangent) vectors" );
 idCVar r_showOverDraw( "r_showOverDraw", "0", CVAR_RENDERER | CVAR_INTEGER, "1 = geometry overdraw, 2 = light interaction overdraw, 3 = geometry and light interaction overdraw", 0, 3, idCmdSystem::ArgCompletion_Integer<0, 3> );
+// RB begin
+idCVar r_showLightGrid( "r_showLightGrid", "0", CVAR_RENDERER | CVAR_FLOAT, "show Q3A style light grid points" );
+// RB end
 
 idCVar r_useEntityCallbacks( "r_useEntityCallbacks", "1", CVAR_RENDERER | CVAR_BOOL, "if 0, issue the callback immediately at update time, rather than defering" );
 
@@ -271,6 +294,23 @@ static void CALLBACK DebugCallback( unsigned int source, unsigned int type,
 }
 
 /*
+=================
+R_CheckExtension
+=================
+*/
+bool R_CheckExtension( char* name )
+{
+	if( !strstr( glConfig.extensions_string, name ) )
+	{
+		common->Printf( "X..%s not found\n", name );
+		return false;
+	}
+	
+	common->Printf( "...using %s\n", name );
+	return true;
+}
+
+/*
 ==================
 R_CheckPortableExtensions
 ==================
@@ -280,10 +320,12 @@ static void R_CheckPortableExtensions()
 {
 	glConfig.glVersion = atof( glConfig.version_string );
 	const char* badVideoCard = common->GetLanguageDict()->GetString( "#str_06780" );
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 	if( glConfig.glVersion < 2.0f )
 	{
 		idLib::FatalError( badVideoCard );
 	}
+#endif
 	
 	if( idStr::Icmpn( glConfig.renderer_string, "ATI ", 4 ) == 0 || idStr::Icmpn( glConfig.renderer_string, "AMD ", 4 ) == 0 )
 	{
@@ -299,18 +341,38 @@ static void R_CheckPortableExtensions()
 	}
 	
 	// GL_ARB_multitexture
+#if defined(USE_GLES2) || defined(USE_GLES3)
+	glConfig.multitextureAvailable = true;
+#else
 	glConfig.multitextureAvailable = GLEW_ARB_multitexture != 0;
+#endif
 	
 	// GL_EXT_direct_state_access
+#if ( defined(USE_GLES2) || defined(USE_GLES3) ) && !defined(USE_MESA)
+	glConfig.directStateAccess = 0;
+#else
 	glConfig.directStateAccess = GLEW_EXT_direct_state_access != 0;
+#endif
 	
 	
 	// GL_ARB_texture_compression + GL_S3_s3tc
 	// DRI drivers may have GL_ARB_texture_compression but no GL_EXT_texture_compression_s3tc
-	glConfig.textureCompressionAvailable = GLEW_ARB_texture_compression != 0 && GLEW_EXT_texture_compression_s3tc != 0;
+#if ( defined(USE_GLES2) || defined(USE_GLES3) ) && !defined(USE_MESA)
+	glConfig.textureCompressionAvailable = R_CheckExtension( "GL_EXT_texture_compression_dxt1" );
+#else
+	glConfig.textureCompressionAvailable = GLEW_ARB_texture_compression != 0;// && GLEW_EXT_texture_compression_s3tc != 0;
+#endif
 	
 	// GL_EXT_texture_filter_anisotropic
+#if defined(USE_GLES3) && !defined(USE_MESA)
+	glConfig.anisotropicFilterAvailable = false;
+	glConfig.maxTextureAnisotropy = 1;
+#else
+#if defined(USE_GLES2)
+	glConfig.anisotropicFilterAvailable = R_CheckExtension( "GL_EXT_texture_filter_anisotropic" );
+#else
 	glConfig.anisotropicFilterAvailable = GLEW_EXT_texture_filter_anisotropic != 0;
+#endif
 	if( glConfig.anisotropicFilterAvailable )
 	{
 		glGetFloatv( GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &glConfig.maxTextureAnisotropy );
@@ -320,11 +382,16 @@ static void R_CheckPortableExtensions()
 	{
 		glConfig.maxTextureAnisotropy = 1;
 	}
+#endif
 	
 	// GL_EXT_texture_lod_bias
 	// The actual extension is broken as specificed, storing the state in the texture unit instead
 	// of the texture object.  The behavior in GL 1.4 is the behavior we use.
+#if ( defined(USE_GLES2) || defined(USE_GLES3) ) && !defined(USE_MESA)
+	glConfig.textureLODBiasAvailable = false;
+#else
 	glConfig.textureLODBiasAvailable = ( glConfig.glVersion >= 1.4 || GLEW_EXT_texture_lod_bias != 0 );
+#endif
 	if( glConfig.textureLODBiasAvailable )
 	{
 		common->Printf( "...using %s\n", "GL_EXT_texture_lod_bias" );
@@ -335,38 +402,93 @@ static void R_CheckPortableExtensions()
 	}
 	
 	// GL_ARB_seamless_cube_map
+#if ( defined(USE_GLES2) || defined(USE_GLES3) ) && !defined(USE_MESA)
+	glConfig.seamlessCubeMapAvailable = false;
+#else
 	glConfig.seamlessCubeMapAvailable = GLEW_ARB_seamless_cube_map != 0;
+#endif
 	r_useSeamlessCubeMap.SetModified();		// the CheckCvars() next frame will enable / disable it
 	
 	// GL_ARB_framebuffer_sRGB
+#if defined(USE_GLES2) || defined(USE_GLES3)
+	glConfig.sRGBFramebufferAvailable = false;
+#else
 	glConfig.sRGBFramebufferAvailable = GLEW_ARB_framebuffer_sRGB != 0;
+#endif
 	r_useSRGB.SetModified();		// the CheckCvars() next frame will enable / disable it
 	
 	// GL_ARB_vertex_buffer_object
+#if ( defined(USE_GLES2) || defined(USE_GLES3) ) && !defined(USE_MESA)
+	glConfig.vertexBufferObjectAvailable = false;
+#else
 	glConfig.vertexBufferObjectAvailable = GLEW_ARB_vertex_buffer_object != 0;
+#endif
 	
 	// GL_ARB_map_buffer_range, map a section of a buffer object's data store
+#if defined(USE_GLES3) && !defined(USE_MESA)
+	glConfig.mapBufferRangeAvailable = true;
+#elif defined(USE_GLES2)
+	glConfig.mapBufferRangeAvailable = false;
+#else
 	glConfig.mapBufferRangeAvailable = GLEW_ARB_map_buffer_range != 0;
+#endif
 	
 	// GL_ARB_vertex_array_object
+#if defined(USE_GLES2) || defined(USE_GLES3)
+	glConfig.vertexArrayObjectAvailable = false;
+#else
 	glConfig.vertexArrayObjectAvailable = GLEW_ARB_vertex_array_object != 0;
+#endif
 	
 	// GL_ARB_draw_elements_base_vertex
+#if defined(USE_GLES2) || defined(USE_GLES3)
+	glConfig.drawElementsBaseVertexAvailable = false;
+#else
 	glConfig.drawElementsBaseVertexAvailable = GLEW_ARB_draw_elements_base_vertex != 0;
+#endif
 	
 	// GL_ARB_vertex_program / GL_ARB_fragment_program
-	glConfig.fragmentProgramAvailable = GLEW_ARB_fragment_program != 0;
-	if( glConfig.fragmentProgramAvailable )
+#if defined(USE_GLES2) || defined(USE_GLES3)
+	// RB: not supported and not used
+	//glGetIntegerv( GL_MAX_TEXTURE_COORDS, ( GLint* )&glConfig.maxTextureCoords );
+	glGetIntegerv( GL_MAX_TEXTURE_IMAGE_UNITS, ( GLint* )&glConfig.maxTextureImageUnits );
+#else
+	if( r_useOpenGL32.GetInteger() == 2 )
 	{
-		glGetIntegerv( GL_MAX_TEXTURE_COORDS_ARB, ( GLint* )&glConfig.maxTextureCoords );
-		glGetIntegerv( GL_MAX_TEXTURE_IMAGE_UNITS_ARB, ( GLint* )&glConfig.maxTextureImageUnits );
+		glConfig.fragmentProgramAvailable = true;
+		glGetIntegerv( GL_MAX_TEXTURE_COORDS, ( GLint* )&glConfig.maxTextureCoords );
+		glGetIntegerv( GL_MAX_TEXTURE_IMAGE_UNITS, ( GLint* )&glConfig.maxTextureImageUnits );
 	}
+	else
+	{
+		glConfig.fragmentProgramAvailable = GLEW_ARB_fragment_program != 0;
+		if( glConfig.fragmentProgramAvailable )
+		{
+			glGetIntegerv( GL_MAX_TEXTURE_COORDS_ARB, ( GLint* )&glConfig.maxTextureCoords );
+			glGetIntegerv( GL_MAX_TEXTURE_IMAGE_UNITS_ARB, ( GLint* )&glConfig.maxTextureImageUnits );
+		}
+	}
+#endif
 	
 	// GLSL, core in OpenGL > 2.0
 	glConfig.glslAvailable = ( glConfig.glVersion >= 2.0f );
 	
 	// GL_ARB_uniform_buffer_object
+#if defined(USE_GLES2)
+	glConfig.uniformBufferAvailable = false;
+	
+	// RB: needed to calculate the bones on the CPU
+	glConfig.uniformBufferOffsetAlignment = 256;
+#else
+	
+#if defined(USE_GLES3)
+	glConfig.uniformBufferAvailable = false;
+	
+	// RB: needed to calculate the bones on the CPU
+	glConfig.uniformBufferOffsetAlignment = 256;
+#else
 	glConfig.uniformBufferAvailable = GLEW_ARB_uniform_buffer_object != 0;
+#endif
 	if( glConfig.uniformBufferAvailable )
 	{
 		glGetIntegerv( GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT, ( GLint* )&glConfig.uniformBufferOffsetAlignment );
@@ -375,30 +497,66 @@ static void R_CheckPortableExtensions()
 			glConfig.uniformBufferOffsetAlignment = 256;
 		}
 	}
+#endif
 	
 	// ATI_separate_stencil / OpenGL 2.0 separate stencil
+#if defined(USE_GLES2) || defined(USE_GLES3)
+	glConfig.twoSidedStencilAvailable = false;
+#else
 	glConfig.twoSidedStencilAvailable = ( glConfig.glVersion >= 2.0f ) || GLEW_ATI_separate_stencil != 0;
+#endif
 	
 	// GL_EXT_depth_bounds_test
+#if defined(USE_GLES2) || defined(USE_GLES3)
+	glConfig.depthBoundsTestAvailable = false;
+#else
 	glConfig.depthBoundsTestAvailable = GLEW_EXT_depth_bounds_test != 0;
+#endif
 	
 	// GL_ARB_sync
+#if defined(USE_GLES2)
+	glConfig.syncAvailable = false;
+	
+#elif defined(USE_GLES3)
+	glConfig.syncAvailable = false;
+	
+#else
 	glConfig.syncAvailable = GLEW_ARB_sync &&
 							 // as of 5/24/2012 (driver version 15.26.12.64.2761) sync objects
 							 // do not appear to work for the Intel HD 4000 graphics
 							 ( glConfig.vendor != VENDOR_INTEL || r_skipIntelWorkarounds.GetBool() );
-							 
-	// GL_ARB_occlusion_query
-	glConfig.occlusionQueryAvailable = GLEW_ARB_occlusion_query != 0;
+#endif
 	
-	// GL_ARB_timer_query
+	// GL_ARB_occlusion_query
+#if defined(USE_GLES2) || defined(USE_GLES3)
+	glConfig.occlusionQueryAvailable = false;
+#else
+	glConfig.occlusionQueryAvailable = GLEW_ARB_occlusion_query != 0;
+#endif
+	
+	// GL_ARB_timer_query || defined(USE_GLES3)
+#if defined(USE_GLES2) || defined(USE_GLES3)
+	glConfig.timerQueryAvailable = false;
+#else
 	// RB: added intel check
 	glConfig.timerQueryAvailable = ( GLEW_ARB_timer_query != 0 || GLEW_EXT_timer_query != 0 ) && ( glConfig.vendor != VENDOR_INTEL || r_skipIntelWorkarounds.GetBool() );
 	// RB end
+#endif
+	
+	// GL_OES_vertex_half_float
+#if defined(USE_GLES2) || defined(USE_GLES3)
+	glConfig.vertexHalfFloatAvailable = R_CheckExtension( "GL_OES_vertex_half_float" );
+#else
+	glConfig.vertexHalfFloatAvailable = true;
+#endif
 	
 	// GREMEDY_string_marker
+#if defined(USE_GLES2) || defined(USE_GLES3)
+	glConfig.gremedyStringMarkerAvailable = false;
+#else
 	glConfig.gremedyStringMarkerAvailable = GLEW_GREMEDY_string_marker != 0;
-	if( glConfig.textureLODBiasAvailable )
+#endif
+	if( glConfig.gremedyStringMarkerAvailable )
 	{
 		common->Printf( "...using %s\n", "GLEW_GREMEDY_string_marker" );
 	}
@@ -408,6 +566,9 @@ static void R_CheckPortableExtensions()
 	}
 	
 	// GL_ARB_debug_output
+#if defined(USE_GLES2) || defined(USE_GLES3)
+	glConfig.debugOutputAvailable = false;
+#else
 	glConfig.debugOutputAvailable = GLEW_ARB_debug_output != 0;
 	if( glConfig.debugOutputAvailable )
 	{
@@ -429,7 +590,9 @@ static void R_CheckPortableExtensions()
 									  0, NULL, true );
 		}
 	}
+#endif
 	
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 	// GL_ARB_multitexture
 	if( !glConfig.multitextureAvailable )
 	{
@@ -484,6 +647,7 @@ static void R_CheckPortableExtensions()
 	// generate one global Vertex Array Object (VAO)
 	glGenVertexArrays( 1, &glConfig.global_vao );
 	glBindVertexArray( glConfig.global_vao );
+#endif
 }
 // RB end
 
@@ -636,7 +800,9 @@ safeMode:
 	}
 }
 
+#if !defined(USE_GLES2)
 idStr extensions_string;
+#endif
 
 /*
 ==================
@@ -681,6 +847,7 @@ void R_InitOpenGL()
 	glConfig.shading_language_string = ( const char* )glGetString( GL_SHADING_LANGUAGE_VERSION );
 	glConfig.extensions_string = ( const char* )glGetString( GL_EXTENSIONS );
 	
+#if !defined(USE_GLES2)
 	if( glConfig.extensions_string == NULL )
 	{
 		// As of OpenGL 3.2, glGetStringi is required to obtain the available extensions
@@ -701,13 +868,14 @@ void R_InitOpenGL()
 		}
 		glConfig.extensions_string = extensions_string.c_str();
 	}
+#endif
 	
 	
-	float glVersion = atof( glConfig.version_string );
-	float glslVersion = atof( glConfig.shading_language_string );
-	idLib::Printf( "OpenGL Version: %3.1f\n", glVersion );
+	//float glVersion = atof( glConfig.version_string );
+	//float glslVersion = atof( glConfig.shading_language_string );
+	idLib::Printf( "OpenGL Version: %s\n", glConfig.version_string );
 	idLib::Printf( "OpenGL Vendor : %s\n", glConfig.vendor_string );
-	idLib::Printf( "OpenGL GLSL   : %3.1f\n", glslVersion );
+	idLib::Printf( "OpenGL GLSL   : %s\n", glConfig.shading_language_string );
 	
 	// OpenGL driver constants
 	GLint temp;
@@ -773,20 +941,29 @@ void R_InitOpenGL()
 GL_CheckErrors
 ==================
 */
-void GL_CheckErrors()
+// RB: added filename, line parms
+bool GL_CheckErrors_( const char* filename, int line )
 {
 	int		err;
 	char	s[64];
 	int		i;
 	
+	if( r_ignoreGLErrors.GetBool() )
+	{
+		return false;
+	}
+	
 	// check for up to 10 errors pending
+	bool error = false;
 	for( i = 0 ; i < 10 ; i++ )
 	{
 		err = glGetError();
 		if( err == GL_NO_ERROR )
 		{
-			return;
+			break;
 		}
+		
+		error = true;
 		switch( err )
 		{
 			case GL_INVALID_ENUM:
@@ -798,12 +975,14 @@ void GL_CheckErrors()
 			case GL_INVALID_OPERATION:
 				strcpy( s, "GL_INVALID_OPERATION" );
 				break;
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 			case GL_STACK_OVERFLOW:
 				strcpy( s, "GL_STACK_OVERFLOW" );
 				break;
 			case GL_STACK_UNDERFLOW:
 				strcpy( s, "GL_STACK_UNDERFLOW" );
 				break;
+#endif
 			case GL_OUT_OF_MEMORY:
 				strcpy( s, "GL_OUT_OF_MEMORY" );
 				break;
@@ -812,12 +991,15 @@ void GL_CheckErrors()
 				break;
 		}
 		
-		if( !r_ignoreGLErrors.GetBool() )
-		{
-			common->Printf( "GL_CheckErrors: %s\n", s );
-		}
+		//if( !r_ignoreGLErrors.GetBool() )
+		//{
+		common->Printf( "caught OpenGL error: %s in file %s line %i\n", s, filename, line );
+		//}
 	}
+	
+	return error;
 }
+// RB end
 
 /*
 =====================
@@ -1078,13 +1260,13 @@ void R_ReadTiledPixels( int width, int height, byte* buffer, renderView_t* ref =
 			if( ref )
 			{
 				// discard anything currently on the list
-				tr.SwapCommandBuffers( NULL, NULL, NULL, NULL );
+				tr.SwapCommandBuffers( NULL, NULL, NULL, NULL, true );
 				
 				// build commands to render the scene
 				tr.primaryWorld->RenderScene( ref );
 				
 				// finish off these commands
-				const emptyCommand_t* cmd = tr.SwapCommandBuffers( NULL, NULL, NULL, NULL );
+				const emptyCommand_t* cmd = tr.SwapCommandBuffers( NULL, NULL, NULL, NULL, true );
 				
 				// issue the commands to the GPU
 				tr.RenderCommandBuffers( cmd );
@@ -1106,7 +1288,10 @@ void R_ReadTiledPixels( int width, int height, byte* buffer, renderView_t* ref =
 				h = height - yo;
 			}
 			
+#if !defined(USE_GLES2)
 			glReadBuffer( GL_FRONT );
+#endif
+			
 			glReadPixels( 0, 0, w, h, GL_RGB, GL_UNSIGNED_BYTE, temp );
 			
 			int	row = ( w * 3 + 3 ) & ~3;		// OpenGL pads to dword boundaries
@@ -1135,8 +1320,10 @@ Downsample is the number of steps to mipmap the image before saving it
 If ref == NULL, common->UpdateScreen will be used
 ==================
 */
+// RB: changed .tga to .png
 void idRenderSystemLocal::TakeScreenshot( int width, int height, const char* fileName, int blends, renderView_t* ref )
 {
+#if 0
 	byte*		buffer;
 	int			i, j, c, temp;
 	
@@ -1197,12 +1384,75 @@ void idRenderSystemLocal::TakeScreenshot( int width, int height, const char* fil
 		buffer[i + 2] = temp;
 	}
 	
-	fileSystem->WriteFile( fileName, buffer, c );
+	// _D3XP adds viewnote screenie save to cdpath
+	if( strstr( fileName, "viewnote" ) )
+	{
+		fileSystem->WriteFile( fileName, buffer, c, "fs_cdpath" );
+	}
+	else
+	{
+		fileSystem->WriteFile( fileName, buffer, c );
+	}
 	
 	R_StaticFree( buffer );
+#else
+	byte*		buffer;
+	int			i, j;
+	
+	takingScreenshot = true;
+	
+	int	pix = width * height;
+	
+	buffer = ( byte* )R_StaticAlloc( pix * 3 );
+	
+	if( blends <= 1 )
+	{
+		R_ReadTiledPixels( width, height, buffer, ref );
+	}
+	else
+	{
+		unsigned short* shortBuffer = ( unsigned short* )R_StaticAlloc( pix * 2 * 3 );
+		memset( shortBuffer, 0, pix * 2 * 3 );
+	
+		// enable anti-aliasing jitter
+		r_jitter.SetBool( true );
+	
+		for( i = 0 ; i < blends ; i++ )
+		{
+			R_ReadTiledPixels( width, height, buffer, ref );
+	
+			for( j = 0 ; j < pix * 3 ; j++ )
+			{
+				shortBuffer[j] += buffer[j];
+			}
+		}
+	
+		// divide back to bytes
+		for( i = 0 ; i < pix * 3 ; i++ )
+		{
+			buffer[i] = shortBuffer[i] / blends;
+		}
+	
+		R_StaticFree( shortBuffer );
+		r_jitter.SetBool( false );
+	}
+	
+	// _D3XP adds viewnote screenie save to cdpath
+	if( strstr( fileName, "viewnote" ) )
+	{
+		R_WritePNG( fileName, buffer, 3, width, height, false, "fs_cdpath" );
+	}
+	else
+	{
+		R_WritePNG( fileName, buffer, 3, width, height, false );
+	}
+	
+	R_StaticFree( buffer );
+#endif
 	
 	takingScreenshot = false;
 }
+// RB end
 
 /*
 ==================
@@ -1216,8 +1466,6 @@ thousands of shots
 */
 void R_ScreenshotFilename( int& lastNumber, const char* base, idStr& fileName )
 {
-	int	a, b, c, d, e;
-	
 	bool restrict = cvarSystem->GetCVarBool( "fs_restrict" );
 	cvarSystem->SetCVarBool( "fs_restrict", false );
 	
@@ -1228,7 +1476,11 @@ void R_ScreenshotFilename( int& lastNumber, const char* base, idStr& fileName )
 	}
 	for( ; lastNumber < 99999 ; lastNumber++ )
 	{
+	
+		// RB: added date to screenshot name
+#if 0
 		int	frac = lastNumber;
+		int	a, b, c, d, e;
 		
 		a = frac / 10000;
 		frac -= a * 10000;
@@ -1240,7 +1492,16 @@ void R_ScreenshotFilename( int& lastNumber, const char* base, idStr& fileName )
 		frac -= d * 10;
 		e = frac;
 		
-		sprintf( fileName, "%s%i%i%i%i%i.tga", base, a, b, c, d, e );
+		sprintf( fileName, "%s%i%i%i%i%i.png", base, a, b, c, d, e );
+#else
+		time_t aclock;
+		time( &aclock );
+		struct tm* t = localtime( &aclock );
+		
+		sprintf( fileName, "%s%s-%04d%02d%02d-%02d%02d%02d-%03d.png", base, GAME_NAME_LOWER,
+				 1900 + t->tm_year, 1 + t->tm_mon, t->tm_mday, t->tm_hour, t->tm_min, t->tm_sec, lastNumber );
+#endif
+		// RB end
 		if( lastNumber == 99999 )
 		{
 			break;
@@ -1281,7 +1542,7 @@ void R_ScreenShot_f( const idCmdArgs& args )
 			width = renderSystem->GetWidth();
 			height = renderSystem->GetHeight();
 			blends = 1;
-			R_ScreenshotFilename( lastNumber, "screenshots/shot", checkname );
+			R_ScreenshotFilename( lastNumber, "screenshots/", checkname );
 			break;
 		case 2:
 			width = renderSystem->GetWidth();
@@ -1293,7 +1554,7 @@ void R_ScreenShot_f( const idCmdArgs& args )
 			width = atoi( args.Argv( 1 ) );
 			height = atoi( args.Argv( 2 ) );
 			blends = 1;
-			R_ScreenshotFilename( lastNumber, "screenshots/shot", checkname );
+			R_ScreenshotFilename( lastNumber, "screenshots/", checkname );
 			break;
 		case 4:
 			width = atoi( args.Argv( 1 ) );
@@ -1307,7 +1568,7 @@ void R_ScreenShot_f( const idCmdArgs& args )
 			{
 				blends = MAX_BLENDS;
 			}
-			R_ScreenshotFilename( lastNumber, "screenshots/shot", checkname );
+			R_ScreenshotFilename( lastNumber, "screenshots/", checkname );
 			break;
 		default:
 			common->Printf( "usage: screenshot\n       screenshot <filename>\n       screenshot <width> <height>\n       screenshot <width> <height> <blends>\n" );
@@ -1330,6 +1591,7 @@ Save out a screenshot showing the stencil buffer expanded by 16x range
 */
 void R_StencilShot()
 {
+#if !defined(USE_GLES3)
 	int			i, c;
 	
 	int	width = tr.GetWidth();
@@ -1362,6 +1624,7 @@ void R_StencilShot()
 	buffer[16] = 24;	// pixel size
 	
 	fileSystem->WriteFile( "screenshots/stencilShot.tga", buffer.Ptr(), c, "fs_savepath" );
+#endif
 }
 
 
@@ -1655,6 +1918,52 @@ void GfxInfo_f( const idCmdArgs& args )
 	common->Printf( "GL_MAX_TEXTURE_COORDS_ARB: %d\n", glConfig.maxTextureCoords );
 	common->Printf( "GL_MAX_TEXTURE_IMAGE_UNITS_ARB: %d\n", glConfig.maxTextureImageUnits );
 	
+	// RB begin
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
+	if( r_useOpenGL32.GetInteger() > 0 )
+	{
+		int				contextFlags, profile;
+		
+		common->Printf( S_COLOR_GREEN "Using OpenGL 3.x context\n" );
+		
+		// check if we have a core-profile
+		glGetIntegerv( GL_CONTEXT_PROFILE_MASK, &profile );
+		if( profile == GL_CONTEXT_CORE_PROFILE_BIT )
+		{
+			common->Printf( S_COLOR_GREEN "Having a core profile\n" );
+		}
+		else
+		{
+			common->Printf( S_COLOR_RED "Having a compatibility profile\n" );
+		}
+		
+		// check if context is forward compatible
+		glGetIntegerv( GL_CONTEXT_FLAGS, &contextFlags );
+		if( contextFlags & GL_CONTEXT_FLAG_FORWARD_COMPATIBLE_BIT )
+		{
+			common->Printf( S_COLOR_GREEN "Context is forward compatible\n" );
+		}
+		else
+		{
+			common->Printf( S_COLOR_RED "Context is NOT forward compatible\n" );
+		}
+		
+#if defined(_WIN32)
+		// check if context is forward compatible
+		glGetIntegerv( GL_CONTEXT_FLAGS, &contextFlags );
+		if( contextFlags & WGL_CONTEXT_ES2_PROFILE_BIT_EXT )
+		{
+			common->Printf( S_COLOR_GREEN "Context OpenGL ES 2.0 compatible\n" );
+		}
+		else
+		{
+			common->Printf( S_COLOR_RED "Context is NOT OpenGL ES 2.0 compatible\n" );
+		}
+#endif
+	}
+#endif
+	// RB end
+	
 	// print all the display adapters, monitors, and video modes
 	//void DumpAllDisplayDevices();
 	//DumpAllDisplayDevices();
@@ -1673,7 +1982,7 @@ void GfxInfo_f( const idCmdArgs& args )
 	common->Printf( "-------\n" );
 	
 	// RB begin
-#if defined(_WIN32)
+#if defined(_WIN32) && !defined(USE_GLES2)
 	// WGL_EXT_swap_interval
 	typedef BOOL ( WINAPI * PFNWGLSWAPINTERVALEXTPROC )( int interval );
 	extern	PFNWGLSWAPINTERVALEXTPROC wglSwapIntervalEXT;
@@ -1944,6 +2253,8 @@ R_InitCommands
 */
 void R_InitCommands()
 {
+	//common->Printf( "R_InitCommands()\n" );
+	
 	cmdSystem->AddCommand( "sizeUp", R_SizeUp_f, CMD_FL_RENDERER, "makes the rendered view larger" );
 	cmdSystem->AddCommand( "sizeDown", R_SizeDown_f, CMD_FL_RENDERER, "makes the rendered view smaller" );
 	cmdSystem->AddCommand( "reloadGuis", R_ReloadGuis_f, CMD_FL_RENDERER, "reloads guis" );
@@ -2242,6 +2553,9 @@ void idRenderSystemLocal::Init()
 	guiModel = new idGuiModel;
 	guiModel->Clear();
 	tr_guiModel = guiModel;	// for DeviceContext fast path
+	// RB: added direct freetype support
+	R_InitFreeType();
+	// RB end
 	
 	globalImages->Init();
 	
@@ -2278,7 +2592,7 @@ void idRenderSystemLocal::Init()
 	frontEndJobList = parallelJobManager->AllocJobList( JOBLIST_RENDERER_FRONTEND, JOBLIST_PRIORITY_MEDIUM, 2048, 0, NULL );
 	
 	// make sure the command buffers are ready to accept the first screen update
-	SwapCommandBuffers( NULL, NULL, NULL, NULL );
+	SwapCommandBuffers( NULL, NULL, NULL, NULL, true );
 	
 	common->Printf( "renderSystem initialized.\n" );
 	common->Printf( "--------------------------------------\n" );
@@ -2293,7 +2607,11 @@ void idRenderSystemLocal::Shutdown()
 {
 	common->Printf( "idRenderSystem::Shutdown()\n" );
 	
+#if defined(USE_IDFONT)
 	fonts.DeleteContents();
+#else
+	R_DoneFreeType();
+#endif
 	
 	if( R_IsInitialized() )
 	{
@@ -2416,6 +2734,8 @@ bool idRenderSystemLocal::AreAutomaticBackgroundSwapsRunning( autoRenderIconType
 	return false;
 }
 
+
+#if defined(USE_IDFONT)
 /*
 ============
 idRenderSystemLocal::RegisterFont
@@ -2448,6 +2768,8 @@ void idRenderSystemLocal::ResetFonts()
 {
 	fonts.DeleteContents( true );
 }
+#endif
+
 /*
 ========================
 idRenderSystemLocal::InitOpenGL

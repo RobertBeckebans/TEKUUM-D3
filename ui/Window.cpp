@@ -118,7 +118,11 @@ void idWindow::CommonInit()
 	flags = 0;
 	lastTimeRun = 0;
 	origin.Zero();
+#if defined(USE_IDFONT)
 	font = renderSystem->RegisterFont( "" );
+#else
+	fontNum = 0;
+#endif
 	timeLine = -1;
 	xOffset = yOffset = 0.0;
 	cursor = 0;
@@ -312,7 +316,11 @@ idWindow::SetFont
 */
 void idWindow::SetFont()
 {
+#if defined(USE_IDFONT)
 	dc->SetFont( font );
+#else
+	dc->SetFont( fontNum );
+#endif
 }
 
 /*
@@ -914,7 +922,7 @@ const char* idWindow::HandleEvent( const sysEvent_t* event, bool* updateVisuals 
 				*updateVisuals = true;
 			}
 			
-			if( event->evValue == K_MOUSE1 )
+			if( event->evValue == K_MOUSE1 )//|| event->evType == SE_TOUCH_MOTION_DOWN )
 			{
 				if( !event->evValue2 && GetCaptureChild() )
 				{
@@ -1219,6 +1227,96 @@ const char* idWindow::HandleEvent( const sysEvent_t* event, bool* updateVisuals 
 				return mouseRet;
 			}
 		}
+		// RB: added touch screen events
+		else if( event->evType == SE_TOUCH_MOTION_DOWN || event->evType == SE_TOUCH_MOTION_UP )
+		{
+			EvalRegs( -1, true );
+			if( updateVisuals )
+			{
+				*updateVisuals = true;
+			}
+			
+			//if( event->evType == SE_TOUCH_MOTION_DOWN )
+			{
+				if( event->evType == SE_TOUCH_MOTION_UP && GetCaptureChild() )
+				{
+					// RB: key up
+					GetCaptureChild()->LoseCapture();
+					gui->GetDesktop()->captureChild = NULL;
+					return "";
+				}
+				
+				int c = children.Num();
+				while( --c >= 0 )
+				{
+					idWindow* child = children[c];
+					
+					if( child->visible && !child->noEvents && child->Contains( children[c]->drawRect, gui->CursorX(), gui->CursorY() ) )
+					{
+						if( event->evType == SE_TOUCH_MOTION_DOWN )
+						{
+							// RB: bring modal windows like pop up windows to top and let them eat all events
+							BringToTop( child );
+							
+							SetFocus( child );
+							
+							if( child->flags & WIN_HOLDCAPTURE )
+							{
+								SetCapture( child );
+							}
+						}
+						
+						if( child->Contains( child->clientRect, gui->CursorX(), gui->CursorY() ) )
+						{
+							//if ((gui_edit.GetBool() && (child->flags & WIN_SELECTED)) || (!gui_edit.GetBool() && (child->flags & WIN_MOVABLE))) {
+							//	SetCapture(child);
+							//}
+							
+							SetFocus( child );
+							
+							const char* childRet = child->HandleEvent( event, updateVisuals );
+							if( childRet != NULL && *childRet != '\0' )
+							{
+								return childRet;
+							}
+							
+							if( child->flags & WIN_MODAL )
+							{
+								return "";
+							}
+						}
+						else
+						{
+							if( event->evType == SE_TOUCH_MOTION_DOWN )
+							{
+								// RB: key down
+								SetFocus( child );
+								
+								bool capture = true;
+								if( capture && ( ( child->flags & WIN_MOVABLE ) || gui_edit.GetBool() ) )
+								{
+									SetCapture( child );
+								}
+								return "";
+							}
+							else
+							{
+							}
+						}
+					}
+				}
+				
+				if( event->evType == SE_TOUCH_MOTION_DOWN && !actionDownRun )
+				{
+					actionDownRun = RunScript( ON_ACTION );
+				}
+				else if( !actionUpRun )
+				{
+					actionUpRun = RunScript( ON_ACTIONRELEASE );
+				}
+			}
+		}
+		// RB end
 		else if( event->evType == SE_NONE )
 		{
 		}
@@ -2605,7 +2703,11 @@ bool idWindow::ParseInternalVar( const char* _name, idParser* src )
 	{
 		idStr fontName;
 		ParseString( src, fontName );
+#if defined(USE_IDFONT)
 		font = renderSystem->RegisterFont( fontName );
+#else
+		fontNum = dc->FindFont( fontName );
+#endif
 		return true;
 	}
 	return false;
@@ -4264,6 +4366,11 @@ void idWindow::WriteToSaveGame( idFile* savefile )
 	savefile->Write( &drawRect, sizeof( drawRect ) );
 	savefile->Write( &clientRect, sizeof( clientRect ) );
 	savefile->Write( &origin, sizeof( origin ) );
+	
+#if !defined(USE_IDFONT)
+	savefile->Write( &fontNum, sizeof( fontNum ) );
+#endif
+	
 	savefile->Write( &timeLine, sizeof( timeLine ) );
 	savefile->Write( &xOffset, sizeof( xOffset ) );
 	savefile->Write( &yOffset, sizeof( yOffset ) );
@@ -4279,7 +4386,9 @@ void idWindow::WriteToSaveGame( idFile* savefile )
 	savefile->Write( &textShadow, sizeof( textShadow ) );
 	savefile->Write( &shear, sizeof( shear ) );
 	
+#if defined(USE_IDFONT)
 	savefile->WriteString( font->GetName() );
+#endif
 	
 	WriteSaveGameString( name, savefile );
 	WriteSaveGameString( comment, savefile );
@@ -4440,6 +4549,9 @@ void idWindow::ReadFromSaveGame( idFile* savefile )
 			savefile->Read( &fontNum, sizeof( fontNum ) );
 			font = renderSystem->RegisterFont( "" );
 		}*/
+#if !defined(USE_IDFONT)
+	savefile->Read( &fontNum, sizeof( fontNum ) );
+#endif
 	savefile->Read( &timeLine, sizeof( timeLine ) );
 	savefile->Read( &xOffset, sizeof( xOffset ) );
 	savefile->Read( &yOffset, sizeof( yOffset ) );
@@ -4455,11 +4567,13 @@ void idWindow::ReadFromSaveGame( idFile* savefile )
 	savefile->Read( &textShadow, sizeof( textShadow ) );
 	savefile->Read( &shear, sizeof( shear ) );
 	
+#if defined(USE_IDFONT)
 //	if ( savefile->GetFileVersion() >= BUILD_NUMBER_8TH_ANNIVERSARY_1 ) {
 	idStr fontName;
 	savefile->ReadString( fontName );
 	font = renderSystem->RegisterFont( fontName );
 //	}
+#endif
 
 	ReadSaveGameString( name, savefile );
 	ReadSaveGameString( comment, savefile );

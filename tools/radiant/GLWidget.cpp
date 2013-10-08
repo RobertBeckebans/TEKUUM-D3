@@ -547,7 +547,7 @@ void idGLDrawableMaterial::draw( int x, int y, int w, int h )
 		//int frontEnd, backEnd;
 		//renderSystem->EndFrame( &frontEnd, &backEnd );
 		
-		const emptyCommand_t* cmd = renderSystem->SwapCommandBuffers( NULL, NULL, NULL, NULL );
+		const emptyCommand_t* cmd = renderSystem->SwapCommandBuffers( NULL, NULL, NULL, NULL, true );
 		renderSystem->RenderCommandBuffers( cmd );
 		
 		glConfig.nativeScreenWidth = oldNativeScreenWidth;
@@ -851,7 +851,7 @@ void idGLDrawableModel::draw( int x, int y, int w, int h )
 	//int frontEnd, backEnd;
 	//renderSystem->EndFrame( &frontEnd, &backEnd );
 	
-	const emptyCommand_t* cmd = renderSystem->SwapCommandBuffers( NULL, NULL, NULL, NULL );
+	const emptyCommand_t* cmd = renderSystem->SwapCommandBuffers( NULL, NULL, NULL, NULL, true );
 	renderSystem->RenderCommandBuffers( cmd );
 	
 	glConfig.nativeScreenWidth = oldNativeScreenWidth;
@@ -1034,7 +1034,7 @@ void idGLDrawableConsole::draw( int x, int y, int w, int h )
 	console->Draw( true );
 	
 	//renderSystem->EndFrame( NULL, NULL );
-	const emptyCommand_t* cmd = renderSystem->SwapCommandBuffers( NULL, NULL, NULL, NULL );
+	const emptyCommand_t* cmd = renderSystem->SwapCommandBuffers( NULL, NULL, NULL, NULL, true );
 	renderSystem->RenderCommandBuffers( cmd );
 	
 	glConfig.nativeScreenWidth = oldNativeScreenWidth;

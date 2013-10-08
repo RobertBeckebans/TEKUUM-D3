@@ -3,6 +3,7 @@
 
 Doom 3 GPL Source Code
 Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2013 Robert Beckebans
 
 This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
 
@@ -54,6 +55,10 @@ public:
 	virtual int				AnimationLength();
 	virtual void			Close();
 	virtual void			ResetTime( int time );
+	
+	// RB begin
+	virtual bool			IsLooping();
+	// RB end
 	
 private:
 	// RB: 64 bit fixes, changed long to int
@@ -276,6 +281,18 @@ void idCinematic::Close()
 {
 }
 
+// RB begin
+bool idCinematic::IsLooping()
+{
+	return false;
+}
+
+const char* idCinematic::GetSourceName()
+{
+	return sourceName;
+}
+// RB end
+
 //===========================================
 
 /*
@@ -322,6 +339,10 @@ bool idCinematicLocal::InitFromFile( const char* qpath, bool amilooping )
 	
 	inMemory = 0;
 	animationLength = 100000;
+	
+	// RB begin
+	sourceName = qpath;
+	// RB end
 	
 	if( strstr( qpath, "/" ) == NULL && strstr( qpath, "\\" ) == NULL )
 	{
@@ -398,6 +419,13 @@ int idCinematicLocal::AnimationLength()
 {
 	return animationLength;
 }
+
+// RB begin
+bool idCinematicLocal::IsLooping()
+{
+	return looping;
+}
+// RB end
 
 /*
 ==============
@@ -2007,6 +2035,10 @@ idSndWindow::InitFromFile
 */
 bool idSndWindow::InitFromFile( const char* qpath, bool looping )
 {
+	// RB begin
+	sourceName = qpath;
+	// RB end
+	
 	idStr fname = qpath;
 	
 	fname.ToLower();
@@ -2040,3 +2072,11 @@ int idSndWindow::AnimationLength()
 {
 	return -1;
 }
+
+
+// RB begin
+bool idSndWindow::IsLooping()
+{
+	return true;
+}
+// RB end

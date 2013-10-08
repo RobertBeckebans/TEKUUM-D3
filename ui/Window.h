@@ -461,7 +461,9 @@ protected:
 	idStr				comment;
 	idVec2				shear;
 	
+#if defined(USE_IDFONT)
 	class idFont*		font;
+#endif
 	signed char			textShadow;
 	unsigned char		fontNum;
 	unsigned char		cursor;					//

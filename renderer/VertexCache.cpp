@@ -3,6 +3,7 @@
 
 Doom 3 BFG Edition GPL Source Code
 Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2013 Robert Beckebans
 
 This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
@@ -61,14 +62,18 @@ static void MapGeoBufferSet( geoBufferSet_t& gbs )
 	{
 		gbs.mappedVertexBase = ( byte* )gbs.vertexBuffer.MapBuffer( BM_WRITE );
 	}
+	
 	if( gbs.mappedIndexBase == NULL )
 	{
 		gbs.mappedIndexBase = ( byte* )gbs.indexBuffer.MapBuffer( BM_WRITE );
 	}
+	
+#if defined(USE_GPU_SKINNING)
 	if( gbs.mappedJointBase == NULL && gbs.jointBuffer.GetAllocedSize() != 0 )
 	{
 		gbs.mappedJointBase = ( byte* )gbs.jointBuffer.MapBuffer( BM_WRITE );
 	}
+#endif
 }
 
 /*
@@ -83,16 +88,20 @@ static void UnmapGeoBufferSet( geoBufferSet_t& gbs )
 		gbs.vertexBuffer.UnmapBuffer();
 		gbs.mappedVertexBase = NULL;
 	}
+	
 	if( gbs.mappedIndexBase != NULL )
 	{
 		gbs.indexBuffer.UnmapBuffer();
 		gbs.mappedIndexBase = NULL;
 	}
+	
+#if defined(USE_GPU_SKINNING)
 	if( gbs.mappedJointBase != NULL )
 	{
 		gbs.jointBuffer.UnmapBuffer();
 		gbs.mappedJointBase = NULL;
 	}
+#endif
 }
 
 /*
@@ -104,10 +113,14 @@ static void AllocGeoBufferSet( geoBufferSet_t& gbs, const int vertexBytes, const
 {
 	gbs.vertexBuffer.AllocBufferObject( NULL, vertexBytes );
 	gbs.indexBuffer.AllocBufferObject( NULL, indexBytes );
+	
+#if defined(USE_GPU_SKINNING)
 	if( jointBytes != 0 )
 	{
 		gbs.jointBuffer.AllocBufferObject( NULL, jointBytes / sizeof( idJointMat ) );
 	}
+#endif
+	
 	ClearGeoBufferSet( gbs );
 }
 
@@ -150,7 +163,10 @@ void idVertexCache::Shutdown()
 	{
 		frameData[i].vertexBuffer.FreeBufferObject();
 		frameData[i].indexBuffer.FreeBufferObject();
+		
+#if defined(USE_GPU_SKINNING)
 		frameData[i].jointBuffer.FreeBufferObject();
+#endif
 	}
 }
 
@@ -219,6 +235,7 @@ vertCacheHandle_t idVertexCache::ActuallyAlloc( geoBufferSet_t& vcs, const void*
 			idLib::Error( "Out of vertex cache" );
 		}
 	}
+#if defined(USE_GPU_SKINNING)
 	else if( type == CACHE_JOINT )
 	{
 		base = &vcs.mappedJointBase;
@@ -228,6 +245,7 @@ vertCacheHandle_t idVertexCache::ActuallyAlloc( geoBufferSet_t& vcs, const void*
 			idLib::Error( "Out of joint buffer cache" );
 		}
 	}
+#endif
 	else
 	{
 		assert( false );
@@ -235,14 +253,24 @@ vertCacheHandle_t idVertexCache::ActuallyAlloc( geoBufferSet_t& vcs, const void*
 	
 	vcs.allocations++;
 	
+	
 	int offset = endPos - bytes;
 	
+#if !defined(NO_GL_MAPBUFFER)
 	// Actually perform the data transfer
 	if( data != NULL )
 	{
 		MapGeoBufferSet( vcs );
-		CopyBuffer( *base + offset, ( const byte* )data, bytes );
+		if( *base != NULL )
+		{
+			CopyBuffer( *base + offset, ( const byte* )data, bytes );
+		}
+		else
+		{
+		
+		}
 	}
+#endif
 	
 	vertCacheHandle_t handle =	( ( uint64 )( currentFrame & VERTCACHE_FRAME_MASK ) << VERTCACHE_FRAME_SHIFT ) |
 								( ( uint64 )( offset & VERTCACHE_OFFSET_MASK ) << VERTCACHE_OFFSET_SHIFT ) |
@@ -251,6 +279,28 @@ vertCacheHandle_t idVertexCache::ActuallyAlloc( geoBufferSet_t& vcs, const void*
 	{
 		handle |= VERTCACHE_STATIC;
 	}
+	
+#if defined(NO_GL_MAPBUFFER)
+	if( type == CACHE_VERTEX )
+	{
+		idVertexBuffer vertexBuffer;
+		if( GetVertexBuffer( handle, &vertexBuffer ) )
+		{
+			//vertexBuffer.AllocBufferObject( data, bytes );
+			vertexBuffer.Update( data, bytes );
+		}
+	}
+	else if( type == CACHE_INDEX )
+	{
+		idIndexBuffer indexBuffer;
+		if( GetIndexBuffer( handle, &indexBuffer ) )
+		{
+			//indexBuffer.AllocBufferObject( data, bytes );
+			indexBuffer.Update( data, bytes );
+		}
+	}
+#endif
+	
 	return handle;
 }
 
@@ -307,6 +357,7 @@ bool idVertexCache::GetIndexBuffer( vertCacheHandle_t handle, idIndexBuffer* ib 
 idVertexCache::GetJointBuffer
 ==============
 */
+#if defined(USE_GPU_SKINNING)
 bool idVertexCache::GetJointBuffer( vertCacheHandle_t handle, idJointBuffer* jb )
 {
 	const int isStatic = handle & VERTCACHE_STATIC;
@@ -326,6 +377,7 @@ bool idVertexCache::GetJointBuffer( vertCacheHandle_t handle, idJointBuffer* jb 
 	jb->Reference( frameData[drawListNum].jointBuffer, jointOffset, numJoints );
 	return true;
 }
+#endif
 
 /*
 ==============

@@ -115,6 +115,10 @@ enum renderParm_t
 	RENDERPARM_ENABLE_SKINNING,
 	RENDERPARM_ALPHA_TEST,
 	
+	// RB begin
+	RENDERPARM_AMBIENT_COLOR,
+	// RB end
+	
 	RENDERPARM_TOTAL,
 	RENDERPARM_USER = 128,
 };
@@ -148,7 +152,9 @@ public:
 	int		FindVertexShader( const char* name );
 	int		FindFragmentShader( const char* name );
 	
-	void	BindShader( int vIndex, int fIndex );
+	// RB: added progIndex to handle many custom renderprogs
+	void	BindShader( int progIndex, int vIndex, int fIndex, bool builtin );
+	// RB end
 	
 	void	BindShader_GUI( )
 	{
@@ -161,10 +167,34 @@ public:
 	}
 	
 	// RB begin
+#if defined(USE_GPU_SKINNING)
+	void	BindShader_ColorSkinned( )
+	{
+		BindShader_Builtin( BUILTIN_COLOR_SKINNED );
+	}
+#endif
+	
 	void	BindShader_VertexColor( )
 	{
-		BindShader_Builtin( BUILTIN_VERTEXCOLOR );
+		BindShader_Builtin( BUILTIN_VERTEX_COLOR );
 	}
+	
+	void	BindShader_VertexLighting()
+	{
+		BindShader_Builtin( BUILTIN_VERTEX_LIGHTING );
+	}
+	
+	void	BindShader_GridLighting()
+	{
+		BindShader_Builtin( BUILTIN_GRID_LIGHTING );
+	}
+	
+#if defined(USE_GPU_SKINNING)
+	void	BindShader_GridLightingSkinned()
+	{
+		BindShader_Builtin( BUILTIN_GRID_LIGHTING_SKINNED );
+	}
+#endif
 	// RB end
 	
 	void	BindShader_Texture( )
@@ -177,10 +207,12 @@ public:
 		BindShader_Builtin( BUILTIN_TEXTURE_VERTEXCOLOR );
 	};
 	
+#if defined(USE_GPU_SKINNING)
 	void	BindShader_TextureVertexColorSkinned()
 	{
 		BindShader_Builtin( BUILTIN_TEXTURE_VERTEXCOLOR_SKINNED );
 	};
+#endif
 	
 	void	BindShader_TextureTexGenVertexColor()
 	{
@@ -199,75 +231,95 @@ public:
 		BindShader_Builtin( BUILTIN_INTERACTION );
 	}
 	
+#if defined(USE_GPU_SKINNING)
 	void	BindShader_InteractionSkinned()
 	{
 		BindShader_Builtin( BUILTIN_INTERACTION_SKINNED );
 	}
+#endif
 	
 	void	BindShader_InteractionAmbient()
 	{
 		BindShader_Builtin( BUILTIN_INTERACTION_AMBIENT );
 	}
 	
+#if defined(USE_GPU_SKINNING)
 	void	BindShader_InteractionAmbientSkinned()
 	{
 		BindShader_Builtin( BUILTIN_INTERACTION_AMBIENT_SKINNED );
 	}
+#endif
 	
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 	void	BindShader_SimpleShade()
 	{
 		BindShader_Builtin( BUILTIN_SIMPLESHADE );
 	}
+#endif
 	
 	void	BindShader_Environment()
 	{
 		BindShader_Builtin( BUILTIN_ENVIRONMENT );
 	}
 	
+#if defined(USE_GPU_SKINNING)
 	void	BindShader_EnvironmentSkinned()
 	{
 		BindShader_Builtin( BUILTIN_ENVIRONMENT_SKINNED );
 	}
+#endif
 	
 	void	BindShader_BumpyEnvironment()
 	{
 		BindShader_Builtin( BUILTIN_BUMPY_ENVIRONMENT );
 	}
 	
+#if defined(USE_GPU_SKINNING)
 	void	BindShader_BumpyEnvironmentSkinned()
 	{
 		BindShader_Builtin( BUILTIN_BUMPY_ENVIRONMENT_SKINNED );
 	}
+#endif
 	
 	void	BindShader_Depth()
 	{
 		BindShader_Builtin( BUILTIN_DEPTH );
 	}
 	
+#if defined(USE_GPU_SKINNING)
 	void	BindShader_DepthSkinned()
 	{
 		BindShader_Builtin( BUILTIN_DEPTH_SKINNED );
 	}
+#endif
 	
 	void	BindShader_Shadow()
 	{
-		BindShader( builtinShaders[BUILTIN_SHADOW], -1 );
+		// RB begin
+		BindShader( -1, builtinShaders[BUILTIN_SHADOW], -1, true );
+		// RB end
 	}
 	
+#if defined(USE_GPU_SKINNING)
 	void	BindShader_ShadowSkinned()
 	{
-		BindShader( builtinShaders[BUILTIN_SHADOW_SKINNED], -1 );
+		// RB begin
+		BindShader( -1, builtinShaders[BUILTIN_SHADOW_SKINNED], -1, true );
+		// RB end
 	}
+#endif
 	
 	void	BindShader_ShadowDebug()
 	{
 		BindShader_Builtin( BUILTIN_SHADOW_DEBUG );
 	}
 	
+#if defined(USE_GPU_SKINNING)
 	void	BindShader_ShadowDebugSkinned()
 	{
 		BindShader_Builtin( BUILTIN_SHADOW_DEBUG_SKINNED );
 	}
+#endif
 	
 	void	BindShader_BlendLight()
 	{
@@ -275,10 +327,12 @@ public:
 	}
 	
 	// RB begin
+#if defined(USE_GPU_SKINNING)
 	void	BindShader_BlendLightSkinned()
 	{
 		BindShader_Builtin( BUILTIN_BLENDLIGHT_SKINNED );
 	}
+#endif
 	// RB end
 	
 	void	BindShader_Fog()
@@ -286,10 +340,12 @@ public:
 		BindShader_Builtin( BUILTIN_FOG );
 	}
 	
+#if defined(USE_GPU_SKINNING)
 	void	BindShader_FogSkinned()
 	{
 		BindShader_Builtin( BUILTIN_FOG_SKINNED );
 	}
+#endif
 	
 	void	BindShader_SkyBox()
 	{
@@ -321,10 +377,12 @@ public:
 		BindShader_Builtin( BUILTIN_POSTPROCESS );
 	}
 	
+#if 0
 	void	BindShader_ZCullReconstruct()
 	{
 		BindShader_Builtin( BUILTIN_ZCULL_RECONSTRUCT );
 	}
+#endif
 	
 	void	BindShader_Bink()
 	{
@@ -343,10 +401,12 @@ public:
 	}
 	// RB end
 	
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 	void	BindShader_MotionBlur()
 	{
 		BindShader_Builtin( BUILTIN_MOTION_BLUR );
 	}
+#endif
 	
 	// the joints buffer should only be bound for vertex programs that use joints
 	bool	ShaderUsesJoints() const
@@ -390,58 +450,94 @@ protected:
 		BUILTIN_GUI,
 		BUILTIN_COLOR,
 		// RB begin
-		BUILTIN_VERTEXCOLOR,
+#if defined(USE_GPU_SKINNING)
+		BUILTIN_COLOR_SKINNED,
+#endif
+		BUILTIN_VERTEX_COLOR,
+		BUILTIN_VERTEX_LIGHTING,
+		BUILTIN_GRID_LIGHTING,
+#if defined(USE_GPU_SKINNING)
+		BUILTIN_GRID_LIGHTING_SKINNED,
+#endif
+		//BUILTIN_GRID_LIGHTING,
+//#if defined(USE_GPU_SKINNING)
+//		BUILTIN_GRID_LIGHTING_SKINNED,
+//#endif
 		// RB end
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 		BUILTIN_SIMPLESHADE,
+#endif
 		BUILTIN_TEXTURED,
 		BUILTIN_TEXTURE_VERTEXCOLOR,
+#if defined(USE_GPU_SKINNING)
 		BUILTIN_TEXTURE_VERTEXCOLOR_SKINNED,
+#endif
 		BUILTIN_TEXTURE_TEXGEN_VERTEXCOLOR,
 		// RB begin
 		BUILTIN_TEXTURE_YCOCG,
 		// RB end
 		BUILTIN_INTERACTION,
+#if defined(USE_GPU_SKINNING)
 		BUILTIN_INTERACTION_SKINNED,
+#endif
 		BUILTIN_INTERACTION_AMBIENT,
+#if defined(USE_GPU_SKINNING)
 		BUILTIN_INTERACTION_AMBIENT_SKINNED,
+#endif
 		BUILTIN_ENVIRONMENT,
+#if defined(USE_GPU_SKINNING)
 		BUILTIN_ENVIRONMENT_SKINNED,
+#endif
 		BUILTIN_BUMPY_ENVIRONMENT,
+#if defined(USE_GPU_SKINNING)
 		BUILTIN_BUMPY_ENVIRONMENT_SKINNED,
-		
+#endif
 		BUILTIN_DEPTH,
+#if defined(USE_GPU_SKINNING)
 		BUILTIN_DEPTH_SKINNED,
+#endif
 		BUILTIN_SHADOW,
+#if defined(USE_GPU_SKINNING)
 		BUILTIN_SHADOW_SKINNED,
+#endif
 		BUILTIN_SHADOW_DEBUG,
+#if defined(USE_GPU_SKINNING)
 		BUILTIN_SHADOW_DEBUG_SKINNED,
+#endif
 		
 		BUILTIN_BLENDLIGHT,
 		// RB begin
+#if defined(USE_GPU_SKINNING)
 		BUILTIN_BLENDLIGHT_SKINNED,
+#endif
 		// RB end
 		BUILTIN_FOG,
+#if defined(USE_GPU_SKINNING)
 		BUILTIN_FOG_SKINNED,
+#endif
 		BUILTIN_SKYBOX,
 		BUILTIN_WOBBLESKY,
 		BUILTIN_POSTPROCESS,
 		BUILTIN_STEREO_DEGHOST,
 		BUILTIN_STEREO_WARP,
-		BUILTIN_ZCULL_RECONSTRUCT,
+		// RB: not used
+//		BUILTIN_ZCULL_RECONSTRUCT,
 		BUILTIN_BINK,
 		BUILTIN_BINK_GUI,
 		// RB: RoQ videos
 		BUILTIN_ROQ,
 		// RB end
 		BUILTIN_STEREO_INTERLACE,
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 		BUILTIN_MOTION_BLUR,
+#endif
 		
 		MAX_BUILTINS
 	};
 	int builtinShaders[MAX_BUILTINS];
 	void BindShader_Builtin( int i )
 	{
-		BindShader( builtinShaders[i], builtinShaders[i] );
+		BindShader( -1, builtinShaders[i], builtinShaders[i], true );
 	}
 	
 	bool	CompileGLSL( GLenum target, const char* name );

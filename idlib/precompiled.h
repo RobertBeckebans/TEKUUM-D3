@@ -85,51 +85,34 @@ const int MAX_EXPRESSION_OPS = 4096;
 const int MAX_EXPRESSION_REGISTERS = 4096;
 
 // renderer
+
+// RB begin
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
+#define USE_GPU_SKINNING			1
+#endif
+// RB end
+
 // RB begin
 #if defined(USE_ANGLE)
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
+
+#define GL_CLAMP_TO_BORDER GL_CLAMP_TO_EDGE
+
+//#define glClearDepth glClearDepthf
+//#define glDepthRange glDepthRangef
+
 #elif !defined(ID_TYPEINFO) && !defined(__ANDROID__)
 #include "../libs/glew/include/GL/glew.h"
 //#include "../renderer/qgl.h"
 #endif
 
-#if defined(USE_ANGLE) || defined(USE_GLES2)
-#define GL_CLAMP_TO_BORDER GL_CLAMP_TO_EDGE
-
-#define glClearDepth glClearDepthf
-#define glDepthRange glDepthRangef
-
-#define glLoadIdentity esLoadIdentity
-#define glLoadMatrixf esLoadMatrixf
-#define glMatrixMode esMatrixMode
-#define glOrtho esOrthof
-#define glPushMatrix esPushMatrix
-#define glPopMatrix esPopMatrix
-
-#define glEnableClientState esEnableClientState
-#define glDisableClientState esDisableClientState
-
-#define glVertexPointer esVertexPointer
-#define glNormalPointer esNormalPointer
-#define glTexCoordPointer esTexCoordPointer
-#define glColorPointer esColorPointer
-
-#define glColor4f esColor4f
-
-#define GL_MODELVIEW 0x1700
-#define GL_PROJECTION 0x1701
-
-#define GL_VERTEX_ARRAY 0x8074
-#define GL_NORMAL_ARRAY 0x8075
-#define GL_COLOR_ARRAY 0x8076
-#define GL_TEXTURE_COORD_ARRAY 0x8078
-
-#endif
-
 #if defined(__ANDROID__)
 
-#if defined(USE_GLES2)
+#if defined(USE_GLES3)
+#include <GLES3/gl3.h>
+//#include <GLES3/gl3ext.h>
+#elif defined(USE_GLES2)
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
 #elif defined(USE_GLES1)
@@ -196,19 +179,28 @@ const int MAX_EXPRESSION_REGISTERS = 4096;
 
 #endif
 
-/* -------------------- GL_EXT_texture_compression_s3tc -------------------- */
+
+
+
+#endif // defined(__ANDROID__)
+
+
+/* -------------------- OpenGL Extensions -------------------- */
+
 
 #ifndef GL_EXT_texture_compression_s3tc
 #define GL_EXT_texture_compression_s3tc 1
 
-#define GL_COMPRESSED_RGB_S3TC_DXT1_EXT 0x83F0
-#define GL_COMPRESSED_RGBA_S3TC_DXT1_EXT 0x83F1
-#define GL_COMPRESSED_RGBA_S3TC_DXT3_EXT 0x83F2
-#define GL_COMPRESSED_RGBA_S3TC_DXT5_EXT 0x83F3
+#define GL_COMPRESSED_RGB_S3TC_DXT1_EXT							0x83F0
+#define GL_COMPRESSED_RGBA_S3TC_DXT1_EXT						0x83F1
+#define GL_COMPRESSED_RGBA_S3TC_DXT3_EXT						0x83F2
+#define GL_COMPRESSED_RGBA_S3TC_DXT5_EXT						0x83F3
 
-#endif /* GL_EXT_texture_compression_s3tc */
+#endif // GL_EXT_texture_compression_s3tc
 
-#endif // defined(__ANDROID__)
+#ifndef GL_OES_compressed_ETC1_RGB8_texture
+#define GL_ETC1_RGB8_OES                                        0x8D64
+#endif
 
 // RB end
 #include "../renderer/Cinematic.h"

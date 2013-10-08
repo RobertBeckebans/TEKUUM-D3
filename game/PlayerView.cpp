@@ -43,7 +43,10 @@ idPlayerView::idPlayerView()
 	memset( &view, 0, sizeof( view ) );
 	player = NULL;
 	dvMaterial = declManager->FindMaterial( "_scratch" );
-	tunnelMaterial = declManager->FindMaterial( "textures/decals/tunnel" );
+	
+	//tunnelMaterial = declManager->FindMaterial( "textures/decals/tunnel" );
+	tunnelMaterial = declManager->FindMaterial( "postprocess/chromatic_aberration/blurred" );
+	
 	armorMaterial = declManager->FindMaterial( "armorViewEffect" );
 	berserkMaterial = declManager->FindMaterial( "textures/decals/berserk" );
 	irGogglesMaterial = declManager->FindMaterial( "textures/decals/irblend" );
@@ -511,19 +514,8 @@ void idPlayerView::SingleView( idUserInterface* hud, const renderView_t* view )
 				renderSystem->DrawStretchPic( blob->x, blob->y, blob->w, blob->h, blob->s1, blob->t1, blob->s2, blob->t2, blob->material );
 			}
 		}
-		player->DrawHUD( hud );
 		
-		// armor impulse feedback
-		float	armorPulse = ( gameLocal.time - player->lastArmorPulse ) / 250.0f;
-		
-		if( armorPulse > 0.0f && armorPulse < 1.0f )
-		{
-			renderSystem->SetColor4( 1, 1, 1, 1.0 - armorPulse );
-			renderSystem->DrawStretchPic( 0, 0, 640, 480, 0, 0, 1, 1, armorMaterial );
-		}
-		
-		
-		// tunnel vision
+		// RB: chromatic tunnel vision
 		float	health = 0.0f;
 		if( g_testHealthVision.GetFloat() != 0.0f )
 		{
@@ -545,9 +537,40 @@ void idPlayerView::SingleView( idUserInterface* hud, const renderView_t* view )
 		
 		if( alpha < 1.0f )
 		{
-			renderSystem->SetColor4( ( player->health <= 0.0f ) ? MS2SEC( gameLocal.time ) : lastDamageTime, 1.0f, 1.0f, ( player->health <= 0.0f ) ? 0.0f : alpha );
-			renderSystem->DrawStretchPic( 0.0f, 0.0f, 640.0f, 480.0f, 0.0f, 0.0f, 1.0f, 1.0f, tunnelMaterial );
+			// start fading if within several seconds of going away
+			const int tunnelTimeFadeSeconds = 3000;
+			
+			if( g_testHealthVision.GetBool() )
+			{
+				alpha = 1.0f - alpha;
+			}
+			else
+			{
+				int tunnelTime = idMath::Abs( SEC2MS( lastDamageTime ) - gameLocal.time );
+				
+				alpha = ( tunnelTime < tunnelTimeFadeSeconds ) ? ( 1.0f - ( ( float )tunnelTime / tunnelTimeFadeSeconds ) ) : 0.0f;
+				alpha *= ( 1.0f - ( Min( 100.0f, Max( 1.0f, health ) ) / 100.0f ) );
+			}
+			
+			renderSystem->SetColor4( 1.0f, 1.0f, 1.0f, alpha );
+			
+			renderSystem->DrawStretchPic( 0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT, 0.0f, 0.0f, 1.0f, 1.0f, tunnelMaterial );
 		}
+		// RB end
+		
+		player->DrawHUD( hud );
+		
+		// armor impulse feedback
+		float	armorPulse = ( gameLocal.time - player->lastArmorPulse ) / 250.0f;
+		
+		if( armorPulse > 0.0f && armorPulse < 1.0f )
+		{
+			renderSystem->SetColor4( 1, 1, 1, 1.0 - armorPulse );
+			renderSystem->DrawStretchPic( 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0, 1, 1, armorMaterial );
+		}
+		
+		
+		
 		
 		if( player->PowerUpActive( BERSERK ) )
 		{
@@ -557,14 +580,14 @@ void idPlayerView::SingleView( idUserInterface* hud, const renderView_t* view )
 				// start fading if within 10 seconds of going away
 				alpha = ( berserkTime < 10000 ) ? ( float )berserkTime / 10000 : 1.0f;
 				renderSystem->SetColor4( 1.0f, 1.0f, 1.0f, alpha );
-				renderSystem->DrawStretchPic( 0.0f, 0.0f, 640.0f, 480.0f, 0.0f, 0.0f, 1.0f, 1.0f, berserkMaterial );
+				renderSystem->DrawStretchPic( 0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT, 0.0f, 0.0f, 1.0f, 1.0f, berserkMaterial );
 			}
 		}
 		
 		if( bfgVision )
 		{
 			renderSystem->SetColor4( 1.0f, 1.0f, 1.0f, 1.0f );
-			renderSystem->DrawStretchPic( 0.0f, 0.0f, 640.0f, 480.0f, 0.0f, 0.0f, 1.0f, 1.0f, bfgMaterial );
+			renderSystem->DrawStretchPic( 0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT, 0.0f, 0.0f, 1.0f, 1.0f, bfgMaterial );
 		}
 		
 	}
@@ -581,7 +604,7 @@ void idPlayerView::SingleView( idUserInterface* hud, const renderView_t* view )
 		else
 		{
 			renderSystem->SetColor4( 1.0f, 1.0f, 1.0f, 1.0f );
-			renderSystem->DrawStretchPic( 0.0f, 0.0f, 640.0f, 480.0f, 0.0f, 0.0f, 1.0f, 1.0f, mtr );
+			renderSystem->DrawStretchPic( 0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT, 0.0f, 0.0f, 1.0f, 1.0f, mtr );
 		}
 	}
 }
@@ -744,7 +767,7 @@ void idPlayerView::ScreenFade()
 	if( fadeColor[ 3 ] != 0.0f )
 	{
 		renderSystem->SetColor4( fadeColor[ 0 ], fadeColor[ 1 ], fadeColor[ 2 ], fadeColor[ 3 ] );
-		renderSystem->DrawStretchPic( 0, 0, 640, 480, 0, 0, 1, 1, declManager->FindMaterial( "_white" ) );
+		renderSystem->DrawStretchPic( 0, 0, SCREEN_WIDTH, SCREEN_WIDTH, 0, 0, 1, 1, declManager->FindMaterial( "_white" ) );
 	}
 }
 
@@ -772,7 +795,7 @@ void idPlayerView::InfluenceVision( idUserInterface* hud, const renderView_t* vi
 		SingleView( hud, view );
 		renderSystem->CaptureRenderToImage( "_currentRender" );
 		renderSystem->SetColor4( 1.0f, 1.0f, 1.0f, pct );
-		renderSystem->DrawStretchPic( 0.0f, 0.0f, 640.0f, 480.0f, 0.0f, 0.0f, 1.0f, 1.0f, player->GetInfluenceMaterial() );
+		renderSystem->DrawStretchPic( 0.0f, 0.0f, SCREEN_WIDTH, SCREEN_WIDTH, 0.0f, 0.0f, 1.0f, 1.0f, player->GetInfluenceMaterial() );
 	}
 	else if( player->GetInfluenceEntity() == NULL )
 	{

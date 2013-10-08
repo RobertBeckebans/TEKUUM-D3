@@ -232,7 +232,7 @@ public:
 	class idPlayerView		playerView;			// handles damage kicks and effects
 	
 	bool					noclip;
-	bool					godmode;
+	bool					nodamage;
 	
 	bool					spawnAnglesSet;		// on first usercmd, we must set deltaAngles
 	idAngles				spawnAngles;

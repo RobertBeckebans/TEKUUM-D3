@@ -152,6 +152,7 @@ void RB_DrawElementsWithCounters( const drawSurf_t* surf )
 		}
 		vertexBuffer = &vertexCache.frameData[vertexCache.drawListNum].vertexBuffer;
 	}
+	
 	const int vertOffset = ( int )( vbHandle >> VERTCACHE_OFFSET_SHIFT ) & VERTCACHE_OFFSET_MASK;
 	
 	// get index buffer
@@ -172,7 +173,7 @@ void RB_DrawElementsWithCounters( const drawSurf_t* surf )
 		indexBuffer = &vertexCache.frameData[vertexCache.drawListNum].indexBuffer;
 	}
 	// RB: 64 bit fixes, changed int to GLintptrARB
-	const GLintptrARB indexOffset = ( GLintptrARB )( ibHandle >> VERTCACHE_OFFSET_SHIFT ) & VERTCACHE_OFFSET_MASK;
+	const GLintptr indexOffset = ( GLintptr )( ibHandle >> VERTCACHE_OFFSET_SHIFT ) & VERTCACHE_OFFSET_MASK;
 	// RB end
 	
 	RENDERLOG_PRINTF( "Binding Buffers: %p:%i %p:%i\n", vertexBuffer, vertOffset, indexBuffer, indexOffset );
@@ -192,7 +193,7 @@ void RB_DrawElementsWithCounters( const drawSurf_t* surf )
 		}
 	}
 	
-	
+#if defined(USE_GPU_SKINNING)
 	if( surf->jointCache )
 	{
 		idJointBuffer jointBuffer;
@@ -204,51 +205,72 @@ void RB_DrawElementsWithCounters( const drawSurf_t* surf )
 		assert( ( jointBuffer.GetOffset() & ( glConfig.uniformBufferOffsetAlignment - 1 ) ) == 0 );
 		
 		// RB: 64 bit fixes, changed GLuint to GLintptrARB
-		const GLintptrARB ubo = reinterpret_cast< GLintptrARB >( jointBuffer.GetAPIObject() );
+		const GLintptr ubo = reinterpret_cast< GLintptr >( jointBuffer.GetAPIObject() );
 		// RB end
 		
 		glBindBufferRange( GL_UNIFORM_BUFFER, 0, ubo, jointBuffer.GetOffset(), jointBuffer.GetNumJoints() * sizeof( idJointMat ) );
 	}
+#endif
 	
 	renderProgManager.CommitUniforms();
 	
 	// RB: 64 bit fixes, changed GLuint to GLintptrARB
-	if( backEnd.glState.currentIndexBuffer != ( GLintptrARB )indexBuffer->GetAPIObject() || !r_useStateCaching.GetBool() )
+	if( backEnd.glState.currentIndexBuffer != ( GLintptr )indexBuffer->GetAPIObject() || !r_useStateCaching.GetBool() )
 	{
-		glBindBufferARB( GL_ELEMENT_ARRAY_BUFFER_ARB, ( GLintptrARB )indexBuffer->GetAPIObject() );
-		backEnd.glState.currentIndexBuffer = ( GLintptrARB )indexBuffer->GetAPIObject();
+		glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, ( GLintptr )indexBuffer->GetAPIObject() );
+		backEnd.glState.currentIndexBuffer = ( GLintptr )indexBuffer->GetAPIObject();
 	}
 	
-	if( ( backEnd.glState.vertexLayout != LAYOUT_DRAW_VERT ) || ( backEnd.glState.currentVertexBuffer != ( GLintptrARB )vertexBuffer->GetAPIObject() ) || !r_useStateCaching.GetBool() )
+	if( ( backEnd.glState.vertexLayout != LAYOUT_DRAW_VERT ) || ( backEnd.glState.currentVertexBuffer != ( GLintptr )vertexBuffer->GetAPIObject() ) || !r_useStateCaching.GetBool() )
 	{
-		glBindBufferARB( GL_ARRAY_BUFFER_ARB, ( GLintptrARB )vertexBuffer->GetAPIObject() );
-		backEnd.glState.currentVertexBuffer = ( GLintptrARB )vertexBuffer->GetAPIObject();
+		glBindBuffer( GL_ARRAY_BUFFER, ( GLintptr )vertexBuffer->GetAPIObject() );
+		backEnd.glState.currentVertexBuffer = ( GLintptr )vertexBuffer->GetAPIObject();
 		
-		glEnableVertexAttribArrayARB( PC_ATTRIB_INDEX_VERTEX );
-		glEnableVertexAttribArrayARB( PC_ATTRIB_INDEX_NORMAL );
-		glEnableVertexAttribArrayARB( PC_ATTRIB_INDEX_COLOR );
-		glEnableVertexAttribArrayARB( PC_ATTRIB_INDEX_COLOR2 );
-		glEnableVertexAttribArrayARB( PC_ATTRIB_INDEX_ST );
-		glEnableVertexAttribArrayARB( PC_ATTRIB_INDEX_TANGENT );
+		glEnableVertexAttribArray( PC_ATTRIB_INDEX_VERTEX );
+		glEnableVertexAttribArray( PC_ATTRIB_INDEX_NORMAL );
+		glEnableVertexAttribArray( PC_ATTRIB_INDEX_COLOR );
+		glEnableVertexAttribArray( PC_ATTRIB_INDEX_COLOR2 );
+		glEnableVertexAttribArray( PC_ATTRIB_INDEX_ST );
+		glEnableVertexAttribArray( PC_ATTRIB_INDEX_TANGENT );
 		
-		glVertexAttribPointerARB( PC_ATTRIB_INDEX_VERTEX, 3, GL_FLOAT, GL_FALSE, sizeof( idDrawVert ), ( void* )( DRAWVERT_XYZ_OFFSET ) );
-		glVertexAttribPointerARB( PC_ATTRIB_INDEX_NORMAL, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof( idDrawVert ), ( void* )( DRAWVERT_NORMAL_OFFSET ) );
-		glVertexAttribPointerARB( PC_ATTRIB_INDEX_COLOR, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof( idDrawVert ), ( void* )( DRAWVERT_COLOR_OFFSET ) );
-		glVertexAttribPointerARB( PC_ATTRIB_INDEX_COLOR2, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof( idDrawVert ), ( void* )( DRAWVERT_COLOR2_OFFSET ) );
-		glVertexAttribPointerARB( PC_ATTRIB_INDEX_ST, 2, GL_HALF_FLOAT, GL_TRUE, sizeof( idDrawVert ), ( void* )( DRAWVERT_ST_OFFSET ) );
-		glVertexAttribPointerARB( PC_ATTRIB_INDEX_TANGENT, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof( idDrawVert ), ( void* )( DRAWVERT_TANGENT_OFFSET ) );
+#if defined(USE_GLES2) || defined(USE_GLES3)
+		glVertexAttribPointer( PC_ATTRIB_INDEX_VERTEX, 3, GL_FLOAT, GL_FALSE, sizeof( idDrawVert ), ( void* )( vertOffset + DRAWVERT_XYZ_OFFSET ) );
+		glVertexAttribPointer( PC_ATTRIB_INDEX_NORMAL, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof( idDrawVert ), ( void* )( vertOffset + DRAWVERT_NORMAL_OFFSET ) );
+		glVertexAttribPointer( PC_ATTRIB_INDEX_COLOR, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof( idDrawVert ), ( void* )( vertOffset + DRAWVERT_COLOR_OFFSET ) );
+		glVertexAttribPointer( PC_ATTRIB_INDEX_COLOR2, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof( idDrawVert ), ( void* )( vertOffset + DRAWVERT_COLOR2_OFFSET ) );
+#if defined(USE_ANGLE)
+		glVertexAttribPointer( PC_ATTRIB_INDEX_ST, 2, GL_HALF_FLOAT_OES, GL_TRUE, sizeof( idDrawVert ), ( void* )( vertOffset + DRAWVERT_ST_OFFSET ) );
+#else
+		glVertexAttribPointer( PC_ATTRIB_INDEX_ST, 2, GL_HALF_FLOAT, GL_TRUE, sizeof( idDrawVert ), ( void* )( vertOffset + DRAWVERT_ST_OFFSET ) );
+#endif
+		glVertexAttribPointer( PC_ATTRIB_INDEX_TANGENT, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof( idDrawVert ), ( void* )( vertOffset + DRAWVERT_TANGENT_OFFSET ) );
+		
+#else
+		glVertexAttribPointer( PC_ATTRIB_INDEX_VERTEX, 3, GL_FLOAT, GL_FALSE, sizeof( idDrawVert ), ( void* )( DRAWVERT_XYZ_OFFSET ) );
+		glVertexAttribPointer( PC_ATTRIB_INDEX_NORMAL, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof( idDrawVert ), ( void* )( DRAWVERT_NORMAL_OFFSET ) );
+		glVertexAttribPointer( PC_ATTRIB_INDEX_COLOR, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof( idDrawVert ), ( void* )( DRAWVERT_COLOR_OFFSET ) );
+		glVertexAttribPointer( PC_ATTRIB_INDEX_COLOR2, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof( idDrawVert ), ( void* )( DRAWVERT_COLOR2_OFFSET ) );
+		glVertexAttribPointer( PC_ATTRIB_INDEX_ST, 2, GL_HALF_FLOAT, GL_TRUE, sizeof( idDrawVert ), ( void* )( DRAWVERT_ST_OFFSET ) );
+		glVertexAttribPointer( PC_ATTRIB_INDEX_TANGENT, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof( idDrawVert ), ( void* )( DRAWVERT_TANGENT_OFFSET ) );
+#endif // #if defined(USE_GLES2) || defined(USE_GLES3)
 		
 		backEnd.glState.vertexLayout = LAYOUT_DRAW_VERT;
 	}
 	// RB end
 	
+#if defined(USE_GLES3) //defined(USE_GLES2)
+	glDrawElements(	GL_TRIANGLES,
+					r_singleTriangle.GetBool() ? 3 : surf->numIndexes,
+					GL_INDEX_TYPE,
+					( triIndex_t* )indexOffset );
+#else
 	glDrawElementsBaseVertex( GL_TRIANGLES,
 							  r_singleTriangle.GetBool() ? 3 : surf->numIndexes,
 							  GL_INDEX_TYPE,
 							  ( triIndex_t* )indexOffset,
 							  vertOffset / sizeof( idDrawVert ) );
-							  
-							  
+#endif
+					
 }
 
 /*
@@ -450,11 +472,13 @@ static void RB_PrepareStageTexturing( const shaderStage_t* pStage,  const drawSu
 			GL_SelectTexture( 0 );
 			
 			RENDERLOG_PRINTF( "TexGen: TG_REFLECT_CUBE: Bumpy Environment\n" );
+#if defined(USE_GPU_SKINNING)
 			if( surf->jointCache )
 			{
 				renderProgManager.BindShader_BumpyEnvironmentSkinned();
 			}
 			else
+#endif
 			{
 				renderProgManager.BindShader_BumpyEnvironment();
 			}
@@ -462,11 +486,13 @@ static void RB_PrepareStageTexturing( const shaderStage_t* pStage,  const drawSu
 		else
 		{
 			RENDERLOG_PRINTF( "TexGen: TG_REFLECT_CUBE: Environment\n" );
+#if defined(USE_GPU_SKINNING)
 			if( surf->jointCache )
 			{
 				renderProgManager.BindShader_EnvironmentSkinned();
 			}
 			else
+#endif
 			{
 				renderProgManager.BindShader_Environment();
 			}
@@ -774,11 +800,13 @@ static void RB_FillDepthBufferGeneric( const drawSurf_t* const* drawSurfs, int n
 				GL_State( stageGLState | GLS_ALPHATEST_FUNC_GREATER | GLS_ALPHATEST_MAKE_REF( idMath::Ftob( 255.0f * regs[ pStage->alphaTestRegister ] ) ) );
 #endif
 				
+#if defined(USE_GPU_SKINNING)
 				if( drawSurf->jointCache )
 				{
 					renderProgManager.BindShader_TextureVertexColorSkinned();
 				}
 				else
+#endif
 				{
 					renderProgManager.BindShader_TextureVertexColor();
 				}
@@ -825,11 +853,13 @@ static void RB_FillDepthBufferGeneric( const drawSurf_t* const* drawSurfs, int n
 			}
 			else
 			{
+#if defined(USE_GPU_SKINNING)
 				if( drawSurf->jointCache )
 				{
 					renderProgManager.BindShader_DepthSkinned();
 				}
 				else
+#endif
 				{
 					renderProgManager.BindShader_Depth();
 				}
@@ -871,6 +901,13 @@ on the 360.
 */
 static void RB_FillDepthBufferFast( drawSurf_t** drawSurfs, int numDrawSurfs )
 {
+	// RB begin
+	//if( r_usePrecomputedLight.GetBool() )
+	//{
+	//	return;
+	//}
+	// RB end
+	
 	if( numDrawSurfs == 0 )
 	{
 		return;
@@ -941,11 +978,13 @@ static void RB_FillDepthBufferFast( drawSurf_t** drawSurfs, int numDrawSurfs )
 		
 		renderLog.OpenBlock( shader->GetName() );
 		
+#if defined(USE_GPU_SKINNING)
 		if( surf->jointCache )
 		{
 			renderProgManager.BindShader_DepthSkinned();
 		}
 		else
+#endif
 		{
 			renderProgManager.BindShader_Depth();
 		}
@@ -971,6 +1010,7 @@ static void RB_FillDepthBufferFast( drawSurf_t** drawSurfs, int numDrawSurfs )
 	renderLog.CloseBlock();
 	renderLog.CloseMainBlock();
 }
+
 
 /*
 =========================================================================================
@@ -1286,22 +1326,26 @@ static void RB_RenderInteractions( const drawSurf_t* surfList, const viewLight_t
 			// select the render prog
 			if( lightShader->IsAmbientLight() )
 			{
+#if defined(USE_GPU_SKINNING)
 				if( surf->jointCache )
 				{
 					renderProgManager.BindShader_InteractionAmbientSkinned();
 				}
 				else
+#endif
 				{
 					renderProgManager.BindShader_InteractionAmbient();
 				}
 			}
 			else
 			{
+#if defined(USE_GPU_SKINNING)
 				if( surf->jointCache )
 				{
 					renderProgManager.BindShader_InteractionSkinned();
 				}
 				else
+#endif
 				{
 					renderProgManager.BindShader_Interaction();
 				}
@@ -1499,6 +1543,470 @@ static void RB_RenderInteractions( const drawSurf_t* surfList, const viewLight_t
 	renderProgManager.Unbind();
 }
 
+// RB begin
+
+/*
+=========================================================================================
+
+AMBIENT PASS RENDERING
+
+=========================================================================================
+*/
+
+/*
+==================
+RB_AmbientPass
+==================
+*/
+static void RB_AmbientPass( const drawSurf_t* const* drawSurfs, int numDrawSurfs )
+{
+	if( !r_usePrecomputedLight.GetBool() )
+	{
+		return;
+	}
+	
+	if( numDrawSurfs == 0 )
+	{
+		return;
+	}
+	
+	// if we are just doing 2D rendering, no need to fill the depth buffer
+	if( backEnd.viewDef->viewEntitys == NULL )
+	{
+		return;
+	}
+	
+	renderLog.OpenMainBlock( MRB_FILL_DEPTH_BUFFER );
+	renderLog.OpenBlock( "RB_AmbientPassFast" );
+	
+	// RB: not needed
+	// GL_StartDepthPass( backEnd.viewDef->scissor );
+	
+	// force MVP change on first surface
+	backEnd.currentSpace = NULL;
+	
+	// draw all the subview surfaces, which will already be at the start of the sorted list,
+	// with the general purpose path
+	//GL_State( GLS_DEFAULT );
+	GL_State( GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE | GLS_DEPTHMASK | GLS_DEPTHFUNC_EQUAL );
+	
+	const float lightScale = 1.0f; //r_lightScale.GetFloat();
+	const idVec4 lightColor = colorWhite * lightScale;
+	// apply the world-global overbright and the 2x factor for specular
+	const idVec4 diffuseColor = lightColor;
+	const idVec4 specularColor = lightColor * 2.0f;
+	
+	// setup renderparms assuming we will be drawing trivial surfaces first
+	RB_SetupForFastPathInteractions( diffuseColor, specularColor );
+	
+	for( int i = 0; i < numDrawSurfs; i++ )
+	{
+		const drawSurf_t* drawSurf = drawSurfs[i];
+		const idMaterial* surfaceMaterial = drawSurf->material;
+		
+		// translucent surfaces don't put anything in the depth buffer and don't
+		// test against it, which makes them fail the mirror clip plane operation
+		if( surfaceMaterial->Coverage() == MC_TRANSLUCENT )
+		{
+			continue;
+		}
+		
+		// get the expressions for conditionals / color / texcoords
+		const float* surfaceRegs = drawSurf->shaderRegisters;
+		
+		// if all stages of a material have been conditioned off, don't do anything
+		int stage = 0;
+		for( ; stage < surfaceMaterial->GetNumStages(); stage++ )
+		{
+			const shaderStage_t* pStage = surfaceMaterial->GetStage( stage );
+			// check the stage enable condition
+			if( surfaceRegs[ pStage->conditionRegister ] != 0 )
+			{
+				break;
+			}
+		}
+		if( stage == surfaceMaterial->GetNumStages() )
+		{
+			continue;
+		}
+		
+		bool isWorldModel = ( drawSurf->space->entityDef->parms.origin == vec3_origin );
+		
+		if( isWorldModel )
+		{
+			renderProgManager.BindShader_VertexLighting();
+		}
+		else
+		{
+			// take lighting from grid
+#if defined(USE_GPU_SKINNING)
+			if( drawSurf->jointCache )
+			{
+				renderProgManager.BindShader_GridLightingSkinned();
+			}
+			else
+#endif
+			{
+				renderProgManager.BindShader_GridLighting();
+			}
+		}
+		
+		// change the matrix if needed
+		if( drawSurf->space != backEnd.currentSpace )
+		{
+			backEnd.currentSpace = drawSurf->space;
+			
+			RB_SetMVP( drawSurf->space->mvp );
+			
+			// tranform the view origin into model local space
+			idVec4 localViewOrigin( 1.0f );
+			R_GlobalPointToLocal( drawSurf->space->modelMatrix, backEnd.viewDef->renderView.vieworg, localViewOrigin.ToVec3() );
+			SetVertexParm( RENDERPARM_LOCALVIEWORIGIN, localViewOrigin.ToFloatPtr() );
+			
+			if( !isWorldModel )
+			{
+				// tranform the light direction into model local space
+				idVec4 localLightDirection( 0.0f );
+				R_GlobalVectorToLocal( drawSurf->space->modelMatrix, drawSurf->space->gridLightDir, localLightDirection.ToVec3() );
+				
+				SetVertexParm( RENDERPARM_LOCALLIGHTORIGIN, localLightDirection.ToFloatPtr() );
+			}
+		}
+		
+		if( !isWorldModel )
+		{
+			idVec4 directedColor;
+			directedColor.x = drawSurf->space->gridDirectedLight.x;
+			directedColor.y = drawSurf->space->gridDirectedLight.y;
+			directedColor.z = drawSurf->space->gridDirectedLight.z;
+			directedColor.w = 1;
+			
+			idVec4 ambientColor;
+			ambientColor.x = drawSurf->space->gridAmbientLight.x;
+			ambientColor.y = drawSurf->space->gridAmbientLight.y;
+			ambientColor.z = drawSurf->space->gridAmbientLight.z;
+			ambientColor.w = 1;
+			
+			renderProgManager.SetRenderParm( RENDERPARM_COLOR, directedColor.ToFloatPtr() );
+			renderProgManager.SetRenderParm( RENDERPARM_AMBIENT_COLOR, ambientColor.ToFloatPtr() );
+		}
+		
+		/*
+		uint64 surfGLState = 0;
+		
+		// set polygon offset if necessary
+		if( surfaceMaterial->TestMaterialFlag( MF_POLYGONOFFSET ) )
+		{
+			surfGLState |= GLS_POLYGON_OFFSET;
+			GL_PolygonOffset( r_offsetFactor.GetFloat(), r_offsetUnits.GetFloat() * surfaceMaterial->GetPolygonOffset() );
+		}
+		
+		// subviews will just down-modulate the color buffer
+		idVec4 color;
+		if( surfaceMaterial->GetSort() == SS_SUBVIEW )
+		{
+			surfGLState |= GLS_SRCBLEND_DST_COLOR | GLS_DSTBLEND_ZERO | GLS_DEPTHFUNC_LESS;
+			color[0] = 1.0f;
+			color[1] = 1.0f;
+			color[2] = 1.0f;
+			color[3] = 1.0f;
+		}
+		else
+		{
+			// others just draw black
+		#if 0
+			color[0] = 0.0f;
+			color[1] = 0.0f;
+			color[2] = 0.0f;
+			color[3] = 1.0f;
+		#else
+			color = colorWhite;
+		#endif
+		}
+		*/
+		
+		// check for the fast path
+		if( surfaceMaterial->GetFastPathBumpImage() && !r_skipInteractionFastPath.GetBool() )
+		{
+			renderLog.OpenBlock( surfaceMaterial->GetName() );
+			
+			// texture 0 will be the per-surface bump map
+			GL_SelectTexture( INTERACTION_TEXUNIT_BUMP );
+			surfaceMaterial->GetFastPathBumpImage()->Bind();
+			
+			// texture 3 is the per-surface diffuse map
+			GL_SelectTexture( INTERACTION_TEXUNIT_DIFFUSE );
+			surfaceMaterial->GetFastPathDiffuseImage()->Bind();
+			
+			// texture 4 is the per-surface specular map
+			GL_SelectTexture( INTERACTION_TEXUNIT_SPECULAR );
+			surfaceMaterial->GetFastPathSpecularImage()->Bind();
+			
+			RB_DrawElementsWithCounters( drawSurf );
+			
+			renderLog.CloseBlock();
+			continue;
+		}
+		
+		renderLog.OpenBlock( surfaceMaterial->GetName() );
+		
+		//bool drawSolid = false;
+		
+		
+		// we may have multiple alpha tested stages
+		// if the only alpha tested stages are condition register omitted,
+		// draw a normal opaque surface
+		bool didDraw = false;
+		
+		drawInteraction_t inter = {};
+		inter.surf = drawSurf;
+		inter.bumpImage = NULL;
+		inter.specularImage = NULL;
+		inter.diffuseImage = NULL;
+		
+		inter.diffuseColor[0] = inter.diffuseColor[1] = inter.diffuseColor[2] = inter.diffuseColor[3] = 1;
+		inter.specularColor[0] = inter.specularColor[1] = inter.specularColor[2] = inter.specularColor[3] = 0;
+		
+		// perforated surfaces may have multiple alpha tested stages
+		for( stage = 0; stage < surfaceMaterial->GetNumStages(); stage++ )
+		{
+			const shaderStage_t* surfaceStage = surfaceMaterial->GetStage( stage );
+			
+			switch( surfaceStage->lighting )
+			{
+				case SL_COVERAGE:
+				{
+					// ignore any coverage stages since they should only be used for the depth fill pass
+					// for diffuse stages that use alpha test.
+					
+#if 0
+					// ignore stage that fails the condition
+					if( !surfaceRegs[ surfaceStage->conditionRegister ] )
+					{
+						break;
+					}
+					
+					// draw any previous interaction
+					if( inter.diffuseImage != NULL )
+					{
+						RB_DrawSingleInteraction( &inter );
+					}
+					
+#ifdef USE_CORE_PROFILE
+					//GL_State( stageGLState );
+					idVec4 alphaTestValue( surfaceRegs[ surfaceStage->alphaTestRegister ] );
+					SetFragmentParm( RENDERPARM_ALPHA_TEST, alphaTestValue.ToFloatPtr() );
+#else
+					GL_State( stageGLState | GLS_ALPHATEST_FUNC_GREATER | GLS_ALPHATEST_MAKE_REF( idMath::Ftob( 255.0f * regs[ pStage->alphaTestRegister ] ) ) );
+#endif
+					
+					inter.diffuseImage = surfaceStage->texture.image;
+					inter.vertexColor = surfaceStage->vertexColor;
+					RB_SetupInteractionStage( surfaceStage, surfaceRegs, diffuseColor.ToFloatPtr(),
+											  inter.diffuseMatrix, inter.diffuseColor.ToFloatPtr() );
+#elif 0
+					if( !surfaceStage->hasAlphaTest )
+					{
+						continue;
+					}
+											  
+					// check the stage enable condition
+					if( surfaceRegs[ surfaceStage->conditionRegister ] == 0 )
+					{
+						continue;
+					}
+											  
+					// if we at least tried to draw an alpha tested stage,
+					// we won't draw the opaque surface
+					didDraw = true;
+											  
+					// set the alpha modulate
+					color[3] = surfaceRegs[ surfaceStage->color.registers[3] ];
+											  
+					// skip the entire stage if alpha would be black
+					if( color[3] <= 0.0f )
+					{
+						continue;
+					}
+											  
+					uint64 stageGLState = surfGLState;
+											  
+					// set privatePolygonOffset if necessary
+					if( pStage->privatePolygonOffset )
+					{
+						GL_PolygonOffset( r_offsetFactor.GetFloat(), r_offsetUnits.GetFloat() * pStage->privatePolygonOffset );
+						stageGLState |= GLS_POLYGON_OFFSET;
+					}
+											  
+					GL_Color( color );
+											  
+#ifdef USE_CORE_PROFILE
+					GL_State( stageGLState );
+					idVec4 alphaTestValue( regs[ pStage->alphaTestRegister ] );
+					SetFragmentParm( RENDERPARM_ALPHA_TEST, alphaTestValue.ToFloatPtr() );
+#else
+					GL_State( stageGLState | GLS_ALPHATEST_FUNC_GREATER | GLS_ALPHATEST_MAKE_REF( idMath::Ftob( 255.0f * regs[ pStage->alphaTestRegister ] ) ) );
+#endif
+											  
+#if defined(USE_GPU_SKINNING)
+					if( drawSurf->jointCache )
+					{
+						renderProgManager.BindShader_TextureVertexColorSkinned();
+					}
+					else
+#endif
+					{
+						renderProgManager.BindShader_TextureVertexColor();
+					}
+											  
+					RB_SetVertexColorParms( SVC_IGNORE );
+											  
+					// bind the texture
+					GL_SelectTexture( 0 );
+					pStage->texture.image->Bind();
+											  
+					// set texture matrix and texGens
+					RB_PrepareStageTexturing( pStage, drawSurf );
+											  
+					// must render with less-equal for Z-Cull to work properly
+					assert( ( GL_GetCurrentState() & GLS_DEPTHFUNC_BITS ) == GLS_DEPTHFUNC_LESS );
+											  
+					// draw it
+					RB_DrawElementsWithCounters( drawSurf );
+											  
+					// clean up
+					RB_FinishStageTexturing( pStage, drawSurf );
+											  
+					// unset privatePolygonOffset if necessary
+					if( pStage->privatePolygonOffset )
+					{
+						GL_PolygonOffset( r_offsetFactor.GetFloat(), r_offsetUnits.GetFloat() * material->GetPolygonOffset() );
+					}
+#endif
+					break;
+				}
+				
+				case SL_AMBIENT:
+				{
+					// ignore ambient stages while drawing interactions
+					break;
+				}
+				
+				case SL_BUMP:
+				{
+					// ignore stage that fails the condition
+					if( !surfaceRegs[ surfaceStage->conditionRegister ] )
+					{
+						break;
+					}
+					// draw any previous interaction
+					if( inter.bumpImage != NULL )
+					{
+						RB_DrawSingleInteraction( &inter );
+					}
+					inter.bumpImage = surfaceStage->texture.image;
+					inter.diffuseImage = NULL;
+					inter.specularImage = NULL;
+					RB_SetupInteractionStage( surfaceStage, surfaceRegs, NULL,
+											  inter.bumpMatrix, NULL );
+					break;
+				}
+				
+				case SL_DIFFUSE:
+				{
+					// ignore stage that fails the condition
+					if( !surfaceRegs[ surfaceStage->conditionRegister ] )
+					{
+						break;
+					}
+					
+					// draw any previous interaction
+					if( inter.diffuseImage != NULL )
+					{
+						RB_DrawSingleInteraction( &inter );
+					}
+					
+					inter.diffuseImage = surfaceStage->texture.image;
+					inter.vertexColor = surfaceStage->vertexColor;
+					RB_SetupInteractionStage( surfaceStage, surfaceRegs, diffuseColor.ToFloatPtr(),
+											  inter.diffuseMatrix, inter.diffuseColor.ToFloatPtr() );
+					break;
+				}
+				
+				case SL_SPECULAR:
+				{
+					// ignore stage that fails the condition
+					if( !surfaceRegs[ surfaceStage->conditionRegister ] )
+					{
+						break;
+					}
+					// draw any previous interaction
+					if( inter.specularImage != NULL )
+					{
+						RB_DrawSingleInteraction( &inter );
+					}
+					inter.specularImage = surfaceStage->texture.image;
+					inter.vertexColor = surfaceStage->vertexColor;
+					RB_SetupInteractionStage( surfaceStage, surfaceRegs, specularColor.ToFloatPtr(),
+											  inter.specularMatrix, inter.specularColor.ToFloatPtr() );
+					break;
+				}
+			}
+		}
+		
+		// draw the final interaction
+		RB_DrawSingleInteraction( &inter );
+		
+		// draw the entire surface solid
+		/*
+		if( drawSolid )
+		{
+			if( shader->GetSort() == SS_SUBVIEW )
+			{
+				renderProgManager.BindShader_Color();
+				GL_Color( color );
+				GL_State( surfGLState );
+			}
+			else
+			{
+		#if defined(USE_GPU_SKINNING)
+				if( drawSurf->jointCache )
+				{
+					renderProgManager.BindShader_TextureVertexColorSkinned();
+				}
+				else
+		#endif
+				{
+					renderProgManager.BindShader_TextureVertexColor();
+				}
+				GL_State( surfGLState | GLS_ALPHAMASK );
+			}
+		
+			// must render with less-equal for Z-Cull to work properly
+			assert( ( GL_GetCurrentState() & GLS_DEPTHFUNC_BITS ) == GLS_DEPTHFUNC_LESS );
+		
+			// draw it
+			RB_DrawElementsWithCounters( drawSurf );
+		}
+		*/
+		
+		renderLog.CloseBlock();
+	}
+	
+#ifdef USE_CORE_PROFILE
+	SetFragmentParm( RENDERPARM_ALPHA_TEST, vec4_zero.ToFloatPtr() );
+#endif
+	
+	// Allow platform specific data to be collected after the depth pass.
+	// RB: not needed
+	// GL_FinishDepthPass();
+	
+	renderLog.CloseBlock();
+	renderLog.CloseMainBlock();
+}
+
+// RB end
+
 /*
 ==============================================================================================
 
@@ -1625,22 +2133,26 @@ static void RB_StencilShadowPass( const drawSurf_t* drawSurfs, const viewLight_t
 		
 		if( r_showShadows.GetInteger() == 0 )
 		{
+#if defined(USE_GPU_SKINNING)
 			if( drawSurf->jointCache )
 			{
 				renderProgManager.BindShader_ShadowSkinned();
 			}
 			else
+#endif
 			{
 				renderProgManager.BindShader_Shadow();
 			}
 		}
 		else
 		{
+#if defined(USE_GPU_SKINNING)
 			if( drawSurf->jointCache )
 			{
 				renderProgManager.BindShader_ShadowDebugSkinned();
 			}
 			else
+#endif
 			{
 				renderProgManager.BindShader_ShadowDebug();
 			}
@@ -1727,12 +2239,13 @@ static void RB_StencilShadowPass( const drawSurf_t* drawSurfs, const viewLight_t
 		RENDERLOG_PRINTF( "Binding Buffers: %p %p\n", vertexBuffer, indexBuffer );
 		
 		// RB: 64 bit fixes, changed GLuint to GLintptrARB
-		if( backEnd.glState.currentIndexBuffer != ( GLintptrARB )indexBuffer->GetAPIObject() || !r_useStateCaching.GetBool() )
+		if( backEnd.glState.currentIndexBuffer != ( GLintptr )indexBuffer->GetAPIObject() || !r_useStateCaching.GetBool() )
 		{
-			glBindBufferARB( GL_ELEMENT_ARRAY_BUFFER_ARB, ( GLintptrARB )indexBuffer->GetAPIObject() );
-			backEnd.glState.currentIndexBuffer = ( GLintptrARB )indexBuffer->GetAPIObject();
+			glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, ( GLintptr )indexBuffer->GetAPIObject() );
+			backEnd.glState.currentIndexBuffer = ( GLintptr )indexBuffer->GetAPIObject();
 		}
 		
+#if defined(USE_GPU_SKINNING)
 		if( drawSurf->jointCache )
 		{
 			assert( renderProgManager.ShaderUsesJoints() );
@@ -1745,45 +2258,55 @@ static void RB_StencilShadowPass( const drawSurf_t* drawSurfs, const viewLight_t
 			}
 			assert( ( jointBuffer.GetOffset() & ( glConfig.uniformBufferOffsetAlignment - 1 ) ) == 0 );
 			
-			const GLintptrARB ubo = reinterpret_cast< GLintptrARB >( jointBuffer.GetAPIObject() );
+			const GLintptr ubo = reinterpret_cast< GLintptr >( jointBuffer.GetAPIObject() );
 			glBindBufferRange( GL_UNIFORM_BUFFER, 0, ubo, jointBuffer.GetOffset(), jointBuffer.GetNumJoints() * sizeof( idJointMat ) );
 			
-			if( ( backEnd.glState.vertexLayout != LAYOUT_DRAW_SHADOW_VERT_SKINNED ) || ( backEnd.glState.currentVertexBuffer != ( GLintptrARB )vertexBuffer->GetAPIObject() ) || !r_useStateCaching.GetBool() )
+			if( ( backEnd.glState.vertexLayout != LAYOUT_DRAW_SHADOW_VERT_SKINNED ) || ( backEnd.glState.currentVertexBuffer != ( GLintptr )vertexBuffer->GetAPIObject() ) || !r_useStateCaching.GetBool() )
 			{
-				glBindBufferARB( GL_ARRAY_BUFFER_ARB, ( GLintptrARB )vertexBuffer->GetAPIObject() );
-				backEnd.glState.currentVertexBuffer = ( GLintptrARB )vertexBuffer->GetAPIObject();
+				glBindBuffer( GL_ARRAY_BUFFER, ( GLintptr )vertexBuffer->GetAPIObject() );
+				backEnd.glState.currentVertexBuffer = ( GLintptr )vertexBuffer->GetAPIObject();
 				
-				glEnableVertexAttribArrayARB( PC_ATTRIB_INDEX_VERTEX );
-				glDisableVertexAttribArrayARB( PC_ATTRIB_INDEX_NORMAL );
-				glEnableVertexAttribArrayARB( PC_ATTRIB_INDEX_COLOR );
-				glEnableVertexAttribArrayARB( PC_ATTRIB_INDEX_COLOR2 );
-				glDisableVertexAttribArrayARB( PC_ATTRIB_INDEX_ST );
-				glDisableVertexAttribArrayARB( PC_ATTRIB_INDEX_TANGENT );
+				glEnableVertexAttribArray( PC_ATTRIB_INDEX_VERTEX );
+				glDisableVertexAttribArray( PC_ATTRIB_INDEX_NORMAL );
+				glEnableVertexAttribArray( PC_ATTRIB_INDEX_COLOR );
+				glEnableVertexAttribArray( PC_ATTRIB_INDEX_COLOR2 );
+				glDisableVertexAttribArray( PC_ATTRIB_INDEX_ST );
+				glDisableVertexAttribArray( PC_ATTRIB_INDEX_TANGENT );
 				
-				glVertexAttribPointerARB( PC_ATTRIB_INDEX_VERTEX, 4, GL_FLOAT, GL_FALSE, sizeof( idShadowVertSkinned ), ( void* )( SHADOWVERTSKINNED_XYZW_OFFSET ) );
-				glVertexAttribPointerARB( PC_ATTRIB_INDEX_COLOR, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof( idShadowVertSkinned ), ( void* )( SHADOWVERTSKINNED_COLOR_OFFSET ) );
-				glVertexAttribPointerARB( PC_ATTRIB_INDEX_COLOR2, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof( idShadowVertSkinned ), ( void* )( SHADOWVERTSKINNED_COLOR2_OFFSET ) );
+#if defined(USE_GLES2) || defined(USE_GLES3)
+				glVertexAttribPointer( PC_ATTRIB_INDEX_VERTEX, 4, GL_FLOAT, GL_FALSE, sizeof( idShadowVertSkinned ), ( void* )( vertOffset + SHADOWVERTSKINNED_XYZW_OFFSET ) );
+				glVertexAttribPointer( PC_ATTRIB_INDEX_COLOR, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof( idShadowVertSkinned ), ( void* )( vertOffset + SHADOWVERTSKINNED_COLOR_OFFSET ) );
+				glVertexAttribPointer( PC_ATTRIB_INDEX_COLOR2, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof( idShadowVertSkinned ), ( void* )( vertOffset + SHADOWVERTSKINNED_COLOR2_OFFSET ) );
+#else
+				glVertexAttribPointer( PC_ATTRIB_INDEX_VERTEX, 4, GL_FLOAT, GL_FALSE, sizeof( idShadowVertSkinned ), ( void* )( SHADOWVERTSKINNED_XYZW_OFFSET ) );
+				glVertexAttribPointer( PC_ATTRIB_INDEX_COLOR, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof( idShadowVertSkinned ), ( void* )( SHADOWVERTSKINNED_COLOR_OFFSET ) );
+				glVertexAttribPointer( PC_ATTRIB_INDEX_COLOR2, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof( idShadowVertSkinned ), ( void* )( SHADOWVERTSKINNED_COLOR2_OFFSET ) );
+#endif
 				
 				backEnd.glState.vertexLayout = LAYOUT_DRAW_SHADOW_VERT_SKINNED;
 			}
 			
 		}
 		else
+#endif
 		{
-		
-			if( ( backEnd.glState.vertexLayout != LAYOUT_DRAW_SHADOW_VERT ) || ( backEnd.glState.currentVertexBuffer != ( GLintptrARB )vertexBuffer->GetAPIObject() ) || !r_useStateCaching.GetBool() )
+			if( ( backEnd.glState.vertexLayout != LAYOUT_DRAW_SHADOW_VERT ) || ( backEnd.glState.currentVertexBuffer != ( GLintptr )vertexBuffer->GetAPIObject() ) || !r_useStateCaching.GetBool() )
 			{
-				glBindBufferARB( GL_ARRAY_BUFFER_ARB, ( GLintptrARB )vertexBuffer->GetAPIObject() );
-				backEnd.glState.currentVertexBuffer = ( GLintptrARB )vertexBuffer->GetAPIObject();
+				glBindBuffer( GL_ARRAY_BUFFER, ( GLintptr )vertexBuffer->GetAPIObject() );
+				backEnd.glState.currentVertexBuffer = ( GLintptr )vertexBuffer->GetAPIObject();
 				
-				glEnableVertexAttribArrayARB( PC_ATTRIB_INDEX_VERTEX );
-				glDisableVertexAttribArrayARB( PC_ATTRIB_INDEX_NORMAL );
-				glDisableVertexAttribArrayARB( PC_ATTRIB_INDEX_COLOR );
-				glDisableVertexAttribArrayARB( PC_ATTRIB_INDEX_COLOR2 );
-				glDisableVertexAttribArrayARB( PC_ATTRIB_INDEX_ST );
-				glDisableVertexAttribArrayARB( PC_ATTRIB_INDEX_TANGENT );
+				glEnableVertexAttribArray( PC_ATTRIB_INDEX_VERTEX );
+				glDisableVertexAttribArray( PC_ATTRIB_INDEX_NORMAL );
+				glDisableVertexAttribArray( PC_ATTRIB_INDEX_COLOR );
+				glDisableVertexAttribArray( PC_ATTRIB_INDEX_COLOR2 );
+				glDisableVertexAttribArray( PC_ATTRIB_INDEX_ST );
+				glDisableVertexAttribArray( PC_ATTRIB_INDEX_TANGENT );
 				
-				glVertexAttribPointerARB( PC_ATTRIB_INDEX_VERTEX, 4, GL_FLOAT, GL_FALSE, sizeof( idShadowVert ), ( void* )( SHADOWVERT_XYZW_OFFSET ) );
+#if defined(USE_GLES2) || defined(USE_GLES3)
+				glVertexAttribPointer( PC_ATTRIB_INDEX_VERTEX, 4, GL_FLOAT, GL_FALSE, sizeof( idShadowVert ), ( void* )( vertOffset + SHADOWVERT_XYZW_OFFSET ) );
+#else
+				glVertexAttribPointer( PC_ATTRIB_INDEX_VERTEX, 4, GL_FLOAT, GL_FALSE, sizeof( idShadowVert ), ( void* )( SHADOWVERT_XYZW_OFFSET ) );
+#endif
 				
 				backEnd.glState.vertexLayout = LAYOUT_DRAW_SHADOW_VERT;
 			}
@@ -1794,11 +2317,19 @@ static void RB_StencilShadowPass( const drawSurf_t* drawSurfs, const viewLight_t
 		
 		if( drawSurf->jointCache )
 		{
+#if defined(USE_GLES3) //defined(USE_GLES2)
+			glDrawElements( GL_TRIANGLES, r_singleTriangle.GetBool() ? 3 : drawSurf->numIndexes, GL_INDEX_TYPE, ( triIndex_t* )indexOffset );
+#else
 			glDrawElementsBaseVertex( GL_TRIANGLES, r_singleTriangle.GetBool() ? 3 : drawSurf->numIndexes, GL_INDEX_TYPE, ( triIndex_t* )indexOffset, vertOffset / sizeof( idShadowVertSkinned ) );
+#endif
 		}
 		else
 		{
+#if defined(USE_GLES3)
+			glDrawElements( GL_TRIANGLES, r_singleTriangle.GetBool() ? 3 : drawSurf->numIndexes, GL_INDEX_TYPE, ( triIndex_t* )indexOffset );
+#else
 			glDrawElementsBaseVertex( GL_TRIANGLES, r_singleTriangle.GetBool() ? 3 : drawSurf->numIndexes, GL_INDEX_TYPE, ( triIndex_t* )indexOffset, vertOffset / sizeof( idShadowVert ) );
+#endif
 		}
 		
 		if( !renderZPass && r_useStencilShadowPreload.GetBool() )
@@ -1809,11 +2340,19 @@ static void RB_StencilShadowPass( const drawSurf_t* drawSurfs, const viewLight_t
 			
 			if( drawSurf->jointCache )
 			{
+#if defined(USE_GLES3)
+				glDrawElements( GL_TRIANGLES, r_singleTriangle.GetBool() ? 3 : drawSurf->numIndexes, GL_INDEX_TYPE, ( triIndex_t* )indexOffset );
+#else
 				glDrawElementsBaseVertex( GL_TRIANGLES, r_singleTriangle.GetBool() ? 3 : drawSurf->numIndexes, GL_INDEX_TYPE, ( triIndex_t* )indexOffset, vertOffset / sizeof( idShadowVertSkinned ) );
+#endif
 			}
 			else
 			{
+#if defined(USE_GLES3)
+				glDrawElements( GL_TRIANGLES, r_singleTriangle.GetBool() ? 3 : drawSurf->numIndexes, GL_INDEX_TYPE, ( triIndex_t* )indexOffset );
+#else
 				glDrawElementsBaseVertex( GL_TRIANGLES, r_singleTriangle.GetBool() ? 3 : drawSurf->numIndexes, GL_INDEX_TYPE, ( triIndex_t* )indexOffset, vertOffset / sizeof( idShadowVert ) );
+#endif
 			}
 		}
 	}
@@ -2254,6 +2793,7 @@ static int RB_DrawShaderPasses( const drawSurf_t* const* const drawSurfs, const 
 				continue;
 			}
 			
+			
 			// see if we are a new-style stage
 			newShaderStage_t* newStage = pStage->newStage;
 			if( newStage != NULL )
@@ -2273,7 +2813,7 @@ static int RB_DrawShaderPasses( const drawSurf_t* const* const drawSurfs, const 
 				
 				// RB: CRITICAL BUGFIX: changed newStage->glslProgram to vertexProgram and fragmentProgram
 				// otherwise it will result in an out of bounds crash in RB_DrawElementsWithCounters
-				renderProgManager.BindShader( newStage->vertexProgram, newStage->fragmentProgram );
+				renderProgManager.BindShader( newStage->glslProgram, newStage->vertexProgram, newStage->fragmentProgram, false );
 				// RB end
 				
 				for( int j = 0; j < newStage->numVertexParms; j++ )
@@ -2296,7 +2836,7 @@ static int RB_DrawShaderPasses( const drawSurf_t* const* const drawSurfs, const 
 				// bind texture units
 				for( int j = 0; j < newStage->numFragmentProgramImages; j++ )
 				{
-					idImage* image = newStage->fragmentProgramImages[j];
+					idImage* image = newStage->fragmentProgramImages[j].image;
 					if( image != NULL )
 					{
 						GL_SelectTexture( j );
@@ -2310,7 +2850,7 @@ static int RB_DrawShaderPasses( const drawSurf_t* const* const drawSurfs, const 
 				// unbind texture units
 				for( int j = 0; j < newStage->numFragmentProgramImages; j++ )
 				{
-					idImage* image = newStage->fragmentProgramImages[j];
+					idImage* image = newStage->fragmentProgramImages[j].image;
 					if( image != NULL )
 					{
 						GL_SelectTexture( j );
@@ -2394,11 +2934,13 @@ static int RB_DrawShaderPasses( const drawSurf_t* const* const drawSurfs, const 
 					}
 					else
 					{
+#if defined(USE_GPU_SKINNING)
 						if( surf->jointCache )
 						{
 							renderProgManager.BindShader_TextureVertexColorSkinned();
 						}
 						else
+#endif
 						{
 							renderProgManager.BindShader_TextureVertexColor();
 						}
@@ -2416,11 +2958,13 @@ static int RB_DrawShaderPasses( const drawSurf_t* const* const drawSurfs, const 
 			}
 			else
 			{
+#if defined(USE_GPU_SKINNING)
 				if( surf->jointCache )
 				{
 					renderProgManager.BindShader_TextureVertexColorSkinned();
 				}
 				else
+#endif
 				{
 					renderProgManager.BindShader_TextureVertexColor();
 				}
@@ -2522,11 +3066,13 @@ static void RB_T_BlendLight( const drawSurf_t* drawSurfs, const viewLight_t* vLi
 		}
 		
 		// RB begin
+#if defined(USE_GPU_SKINNING)
 		if( drawSurf->jointCache )
 		{
 			renderProgManager.BindShader_BlendLightSkinned();
 		}
 		else
+#endif
 		{
 			renderProgManager.BindShader_BlendLight();
 		}
@@ -2671,11 +3217,13 @@ static void RB_T_BasicFog( const drawSurf_t* drawSurfs, const idPlane fogPlanes[
 			backEnd.currentSpace = ( inverseBaseLightProject == NULL ) ? drawSurf->space : NULL;
 		}
 		
+#if defined(USE_GPU_SKINNING)
 		if( drawSurf->jointCache )
 		{
 			renderProgManager.BindShader_FogSkinned();
 		}
 		else
+#endif
 		{
 			renderProgManager.BindShader_Fog();
 		}
@@ -2888,7 +3436,7 @@ void RB_DrawViewInternal( const viewDef_t* viewDef, const int stereoEye )
 	// normal face culling
 	GL_Cull( CT_FRONT_SIDED );
 	
-#ifdef USE_CORE_PROFILE
+#if defined(USE_CORE_PROFILE) && !defined(USE_GLES2) && !defined(USE_GLES3)
 	// bind one global Vertex Array Object (VAO)
 	glBindVertexArray( glConfig.global_vao );
 #endif
@@ -2930,6 +3478,11 @@ void RB_DrawViewInternal( const viewDef_t* viewDef, const int stereoEye )
 	// fill the depth buffer and clear color buffer to black except on subviews
 	//-------------------------------------------------
 	RB_FillDepthBufferFast( drawSurfs, numDrawSurfs );
+	
+	//-------------------------------------------------
+	// fill the depth buffer and the color buffer with precomputed Q3A style lighting
+	//-------------------------------------------------
+	RB_AmbientPass( drawSurfs, numDrawSurfs );
 	
 	//-------------------------------------------------
 	// main light renderer
@@ -3032,6 +3585,7 @@ Experimental feature
 */
 void RB_MotionBlur()
 {
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 	if( !backEnd.viewDef->viewEntitys )
 	{
 		// 3D views only
@@ -3084,11 +3638,13 @@ void RB_MotionBlur()
 		}
 		
 		// this could just be a color, but we don't have a skinned color-only prog
+#if defined(USE_GPU_SKINNING)
 		if( surf->jointCache )
 		{
 			renderProgManager.BindShader_TextureVertexColorSkinned();
 		}
 		else
+#endif
 		{
 			renderProgManager.BindShader_TextureVertexColor();
 		}
@@ -3133,6 +3689,7 @@ void RB_MotionBlur()
 	
 	RB_DrawElementsWithCounters( &backEnd.unitSquareSurface );
 	GL_CheckErrors();
+#endif
 }
 
 /*

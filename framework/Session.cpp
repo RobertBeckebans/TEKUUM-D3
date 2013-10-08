@@ -34,7 +34,9 @@ If you have questions concerning this license or the applicable additional terms
 idCVar	idSessionLocal::com_showAngles( "com_showAngles", "0", CVAR_SYSTEM | CVAR_BOOL, "" );
 idCVar	idSessionLocal::com_minTics( "com_minTics", "1", CVAR_SYSTEM, "" );
 idCVar	idSessionLocal::com_showTics( "com_showTics", "0", CVAR_SYSTEM | CVAR_BOOL, "" );
-idCVar	idSessionLocal::com_fixedTic( "com_fixedTic", "0", CVAR_SYSTEM | CVAR_INTEGER, "", 0, 10 );
+// RB: changed range from [0 .. 10] to [-1 .. 10]
+idCVar	idSessionLocal::com_fixedTic( "com_fixedTic", "0", CVAR_SYSTEM | CVAR_INTEGER, "", -1, 10 );
+// RB end
 idCVar	idSessionLocal::com_showDemo( "com_showDemo", "0", CVAR_SYSTEM | CVAR_BOOL, "" );
 idCVar	idSessionLocal::com_skipGameDraw( "com_skipGameDraw", "0", CVAR_SYSTEM | CVAR_BOOL, "" );
 idCVar	idSessionLocal::com_aviDemoSamples( "com_aviDemoSamples", "16", CVAR_SYSTEM, "" );
@@ -553,6 +555,7 @@ void idSessionLocal::CompleteWipe()
 		UpdateScreen( captureToImage, true );
 		return;
 	}
+	
 	while( com_ticNumber < wipeStopTic )
 	{
 #if ID_CONSOLE_LOCK
@@ -997,7 +1000,7 @@ void idSessionLocal::StopPlayingRenderDemo()
 		float	demoFPS = numDemoFrames / demoSeconds;
 		idStr	message = va( "%i frames rendered in %3.1f seconds = %3.1f fps\n", numDemoFrames, demoSeconds, demoFPS );
 		
-		common->Printf( message );
+		common->Printf( "%s", message.c_str() );
 		if( timeDemo == TD_YES_THEN_QUIT )
 		{
 			cmdSystem->BufferCommandText( CMD_EXEC_APPEND, "quit\n" );
@@ -2725,7 +2728,7 @@ void idSessionLocal::PacifierUpdate()
 	
 	// RB: added captureToImage
 	const bool captureToImage = false;
-	UpdateScreen( captureToImage );
+	UpdateScreen( captureToImage, true, true );
 	// RB end
 	
 	idAsyncNetwork::client.PacifierUpdate();
@@ -2878,7 +2881,7 @@ void idSessionLocal::UpdateScreen( bool captureToImage, bool outOfSequence, bool
 	if( insideUpdateScreen )
 	{
 		return;
-//		common->FatalError( "idSessionLocal::UpdateScreen: recursively called" );
+		//common->FatalError( "idSessionLocal::UpdateScreen: recursively called" );
 	}
 	
 	insideUpdateScreen = true;
@@ -2890,35 +2893,57 @@ void idSessionLocal::UpdateScreen( bool captureToImage, bool outOfSequence, bool
 		Sys_GrabMouseCursor( false );
 	}
 	
+//#define USE_OLD_SYNCING
+
+#if defined(USE_OLD_SYNCING)
 	//renderSystem->BeginFrame( renderSystem->GetScreenWidth(), renderSystem->GetScreenHeight() );
+	const emptyCommand_t* cmd = renderSystem->SwapCommandBuffers_FinishCommandBuffers();
+#endif
 	
 	// draw everything
 	Draw();
 	
+#if 0 //!defined(__ANDROID__)
 	if( captureToImage )
 	{
 		renderSystem->CaptureRenderToImage( "_currentRender", false );
 	}
+#endif
 	
 	// RB begin
-	if( swapBuffers )
+	
+#if defined(USE_OLD_SYNCING)
+	renderSystem->RenderCommandBuffers( cmd );
+	
+	if( com_speeds.GetBool() || com_showFPS.GetInteger() == 1 )
 	{
-		// this should exit right after vsync, with the GPU idle and ready to draw
-		const emptyCommand_t* cmd;
-		
-		if( com_speeds.GetBool() || com_showFPS.GetInteger() == 1 )
-		{
-			cmd = renderSystem->SwapCommandBuffers( &time_frontend, &time_backend, &time_shadows, &time_gpu );
-		}
-		else
-		{
-			cmd = renderSystem->SwapCommandBuffers( NULL, NULL, NULL, NULL );
-		}
-		
-		// get the GPU busy with new commands
-		renderSystem->RenderCommandBuffers( cmd );
-		
+		renderSystem->SwapCommandBuffers_FinishRendering( &time_frontend, &time_backend, &time_shadows, &time_gpu, swapBuffers );
 	}
+	else
+	{
+		renderSystem->SwapCommandBuffers_FinishRendering( NULL, NULL, NULL, NULL, swapBuffers );
+	}
+#else
+	// BFG style
+	
+	// this should exit right after vsync, with the GPU idle and ready to draw
+	const emptyCommand_t* cmd;
+	
+	if( com_speeds.GetBool() || com_showFPS.GetInteger() == 1 )
+	{
+		cmd = renderSystem->SwapCommandBuffers( &time_frontend, &time_backend, &time_shadows, &time_gpu, swapBuffers );
+	}
+	else
+	{
+		cmd = renderSystem->SwapCommandBuffers( NULL, NULL, NULL, NULL, swapBuffers );
+	}
+	
+	// get the GPU busy with new commands
+	renderSystem->RenderCommandBuffers( cmd );
+#endif
+	
+#undef USE_OLD_SYNCING
+	
 	// RB end
 	
 	insideUpdateScreen = false;

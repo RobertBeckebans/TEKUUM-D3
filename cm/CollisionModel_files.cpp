@@ -3,6 +3,7 @@
 
 Doom 3 BFG Edition GPL Source Code
 Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2013 Robert Beckebans
 
 This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
@@ -44,6 +45,7 @@ If you have questions concerning this license or the applicable additional terms
 #define CM_BINARYFILE_EXT	"bcm"
 #define CM_FILEID			"CM"
 #define CM_FILEVERSION		"1.00"
+
 
 
 /*
@@ -635,7 +637,7 @@ bool idCollisionModelManagerLocal::LoadCollisionModelFile( const char* name, uns
 	bool loaded = false;
 	
 	// RB: don't waste memory on low memory systems
-#if defined(__ANDROID__)
+#if 0 //defined(__ANDROID__)
 	idFileLocal file( fileSystem->OpenFileRead( generatedFileName ) );
 #else
 	idFileLocal file( fileSystem->OpenFileReadMemory( generatedFileName ) );
@@ -643,15 +645,18 @@ bool idCollisionModelManagerLocal::LoadCollisionModelFile( const char* name, uns
 	// RB end
 	if( file != NULL )
 	{
+		unsigned int magic = 0;
+		file->ReadBig( magic );
+		
 		int numEntries = 0;
 		file->ReadBig( numEntries );
-		file->ReadString( mapName );
+		//file->ReadString( mapName );
 		file->ReadBig( crc );
-		idStrStatic< 32 > fileID;
-		idStrStatic< 32 > fileVersion;
-		file->ReadString( fileID );
-		file->ReadString( fileVersion );
-		if( fileID == CM_FILEID && fileVersion == CM_FILEVERSION && crc == mapFileCRC && numEntries > 0 )
+		//idStrStatic< 32 > fileID;
+		//idStrStatic< 32 > fileVersion;
+		//file->ReadString( fileID );
+		//file->ReadString( fileVersion );
+		if( magic == BCM_MAGIC /*&& fileID == CM_FILEID && fileVersion == CM_FILEVERSION*/ && crc == mapFileCRC && numEntries > 0 )
 		{
 			loaded = true;
 			for( int i = 0; i < numEntries; i++ )
@@ -699,11 +704,12 @@ bool idCollisionModelManagerLocal::LoadCollisionModelFile( const char* name, uns
 		idFileLocal outputFile( fileSystem->OpenFileWrite( generatedFileName, "fs_basepath" ) );
 		if( outputFile != NULL )
 		{
+			outputFile->WriteBig( BCM_MAGIC );
 			outputFile->WriteBig( numEntries );
-			outputFile->WriteString( mapName );
+			//outputFile->WriteString( mapName );
 			outputFile->WriteBig( mapFileCRC );
-			outputFile->WriteString( CM_FILEID );
-			outputFile->WriteString( CM_FILEVERSION );
+			//outputFile->WriteString( CM_FILEID );
+			//outputFile->WriteString( CM_FILEVERSION );
 		}
 		
 		if( !src->ExpectTokenString( CM_FILEID ) )

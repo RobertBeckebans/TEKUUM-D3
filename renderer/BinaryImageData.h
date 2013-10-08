@@ -3,6 +3,7 @@
 
 Doom 3 BFG Edition GPL Source Code
 Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2013 Robert Beckebans
 
 This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
@@ -39,7 +40,21 @@ This is where the Binary image headers go that are also included by external too
 // These structures are used for memory mapping bimage files, but
 // not for the normal loading, so be careful making changes.
 // Values are big endien to reduce effort on consoles.
+
+// RB begin
+#define BIMAGE_VERSION_GLES			21
+
+#if defined(__ANDROID__)
+#define BIMAGE_VERSION				( BIMAGE_VERSION_GLES + 1 )
+#elif defined(USE_GLES2)
+#define BIMAGE_VERSION				( BIMAGE_VERSION_GLES + 2 )
+#elif defined(USE_GLES3) && !defined(USE_MESA)
+#define BIMAGE_VERSION				( BIMAGE_VERSION_GLES + 3 )
+#else
 #define BIMAGE_VERSION 10
+#endif
+// RB end
+
 #define BIMAGE_MAGIC (unsigned int)( ('B'<<0)|('I'<<8)|('M'<<16)|(BIMAGE_VERSION<<24) )
 
 struct bimageImage_t

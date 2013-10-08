@@ -39,6 +39,7 @@ If you have questions concerning this license or the applicable additional terms
 #include "tr_local.h"
 #include "DXT/DXTCodec.h"
 #include "Color/ColorSpace.h"
+#include "../libs/etc1/etc1.h"
 
 idCVar image_highQualityCompression( "image_highQualityCompression", "0", CVAR_BOOL, "Use high quality (slow) compression" );
 
@@ -59,7 +60,7 @@ void idBinaryImage::Load2DFromMemory( int width, int height, const byte* pic_con
 	byte* pic = ( byte* )Mem_Alloc( width * height * 4 );
 	memcpy( pic, pic_const, width * height * 4 );
 	
-	if( colorFormat == CFM_YCOCG_DXT5 )
+	if( colorFormat == CFM_YCOCG_DXT5 || colorFormat == CFM_YCOCG_RGBA8 )
 	{
 		// convert the image data to YCoCg and use the YCoCgDXT5 compressor
 		idColorSpace::ConvertRGBToCoCg_Y( pic, pic, width, height );
@@ -100,9 +101,11 @@ void idBinaryImage::Load2DFromMemory( int width, int height, const byte* pic_con
 		byte* dxtPic = pic;
 		int	dxtWidth = 0;
 		int	dxtHeight = 0;
-		if( textureFormat == FMT_DXT5 || textureFormat == FMT_DXT1 )
+		
+		// RB: added ETC1
+		if( textureFormat == FMT_DXT5 || textureFormat == FMT_DXT1 || textureFormat == FMT_ETC1_RGB8_OES )
 		{
-			if( ( scaledWidth & 3 ) || ( scaledHeight & 3 ) )
+			if( ( scaledWidth & 3 ) || ( scaledHeight & 3 ) || textureFormat == FMT_ETC1_RGB8_OES )
 			{
 				dxtWidth = ( scaledWidth + 3 ) & ~3;
 				dxtHeight = ( scaledHeight + 3 ) & ~3;
@@ -178,6 +181,15 @@ void idBinaryImage::Load2DFromMemory( int width, int height, const byte* pic_con
 				}
 			}
 		}
+		// RB begin
+		else if( textureFormat == FMT_ETC1_RGB8_OES )
+		{
+			etc1_uint32 encodedSize = etc1_get_encoded_data_size( width, height );
+			img.Alloc( encodedSize );
+			
+			etc1_encode_image( dxtPic, dxtWidth, dxtHeight, 4, dxtWidth * 4, img.data );
+		}
+		// RB end
 		else if( textureFormat == FMT_LUM8 || textureFormat == FMT_INT8 )
 		{
 			// LUM8 and INT8 just read the red channel
@@ -389,7 +401,7 @@ ID_TIME_T idBinaryImage::WriteGeneratedFile( ID_TIME_T sourceFileTime )
 		idLib::Warning( "idBinaryImage: Could not open file '%s'", binaryFileName.c_str() );
 		return FILE_NOT_FOUND_TIMESTAMP;
 	}
-	idLib::Printf( "Writing %s\n", binaryFileName.c_str() );
+	idLib::Printf( "Writing %s: %ix%i\n", binaryFileName.c_str(), fileData.width, fileData.height );
 	
 	fileData.headerMagic = BIMAGE_MAGIC;
 	fileData.sourceFileTime = sourceFileTime;

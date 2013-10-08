@@ -41,6 +41,7 @@ If you have questions concerning this license or the applicable additional terms
 #if defined(WIN32) || defined(_WIN32)
 
 #define	CPUSTRING						"x86"
+#define CPU_EASYARGS					1
 
 #define	BUILD_STRING					"win-" CPUSTRING
 #define BUILD_OS_ID						0
@@ -111,8 +112,10 @@ If you have questions concerning this license or the applicable additional terms
 
 #if defined(__i386__)
 #define	CPUSTRING						"x86"
+#define CPU_EASYARGS					1
 #elif defined(__x86_64__)
 #define CPUSTRING						"x86_86"
+#define CPU_EASYARGS					0
 #elif defined(__ARMEL__)
 
 #if defined(__ARM_ARCH_7__) || defined(__ARM_ARCH_7A__)
@@ -122,6 +125,9 @@ If you have questions concerning this license or the applicable additional terms
 #else//lif defined(__ARM_ARCH_5__)
 #define CPUSTRING						"armv5"
 #endif
+
+// RB: Android is 32 bit only so far
+//#define CPU_EASYARGS					1
 
 #endif
 
@@ -166,8 +172,10 @@ If you have questions concerning this license or the applicable additional terms
 
 #if defined(__i386__)
 #define	CPUSTRING						"x86"
+#define CPU_EASYARGS					1
 #elif defined(__x86_64__)
 #define CPUSTRING						"x86_86"
+#define CPU_EASYARGS					0
 #endif
 
 #define	BUILD_STRING					"linux-" CPUSTRING

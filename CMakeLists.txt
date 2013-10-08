@@ -21,9 +21,6 @@ option(MONOLITH
 option(STANDALONE
 		"Skip Doom 3 base/ folder" ON)
 		
-option(GLES1
-		"Only use OpenGL ES 1.0 functions" OFF)
-		
 option(GLES2
 		"Only use OpenGL ES 2.0 functions" OFF)
 		
@@ -37,9 +34,9 @@ option(DEBUG_MEMORY
 #	set(USE_QT_WINDOWING TRUE)
 #endif()
 
-if(ANGLE OR GLES2)
-	set(USE_CMDLINE_TOOLS FALSE)
-endif()
+# if(ANGLE OR GLES2)
+	# set(USE_CMDLINE_TOOLS FALSE)
+# endif()
 
 
 if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
@@ -136,108 +133,22 @@ file(GLOB FRAMEWORK_SOURCES framework/*.cpp)
 file(GLOB FRAMEWORK_ASYNC_INCLUDES framework/async/*.h)
 file(GLOB FRAMEWORK_ASYNC_SOURCES framework/async/*.cpp)
 
-file(GLOB_RECURSE RENDERER_INCLUDES renderer/*.h)
-# set(RENDERER_INCLUDES
-	# renderer/Cinematic.h
-	# renderer/Framebuffer.h
-	# renderer/GLShader.h
-	# renderer/GLShader_strings.h
-	# renderer/GuiModel.h
-	# renderer/Image.h
-	# renderer/Interaction.h
-	# renderer/Material.h
-	# renderer/MegaTexture.h
-	# renderer/Model.h
-	# renderer/ModelDecal.h
-	# renderer/ModelManager.h
-	# renderer/ModelOverlay.h
-	# renderer/Model_ase.h
-	# renderer/Model_ColladaHelper.h
-	# renderer/Model_ColladaParser.h
-	# renderer/Model_local.h
-	# renderer/Model_lwo.h
-	# renderer/Model_ma.h
-	# renderer/Model_md3.h
-	# renderer/RenderSystem.h
-	# renderer/RenderWorld.h
-	# renderer/RenderWorld_local.h
-	# renderer/VertexCache.h
-	# renderer/simplex.h
-	# renderer/tr_local.h)
-
-file(GLOB_RECURSE RENDERER_SOURCES renderer/*.cpp)
-# set(RENDERER_SOURCES
-	# renderer/Cinematic.cpp
-	# renderer/Framebuffer.cpp
-	# renderer/GLShader.cpp
-	# renderer/GuiModel.cpp
-	# renderer/Image_files.cpp
-	# renderer/Image_init.cpp
-	# renderer/Image_load.cpp
-	# renderer/Image_process.cpp
-	# renderer/Image_program.cpp
-	# renderer/Interaction.cpp
-	# renderer/Material.cpp
-	# renderer/MegaTexture.cpp
-	# renderer/Model.cpp
-	# renderer/ModelDecal.cpp
-	# renderer/ModelManager.cpp
-	# renderer/ModelOverlay.cpp
-	# renderer/Model_ase.cpp
-	# renderer/Model_beam.cpp
-	# renderer/Model_ColladaParser.cpp
-	# renderer/Model_liquid.cpp
-	# renderer/Model_lwo.cpp
-	# renderer/Model_ma.cpp
-	# renderer/Model_md3.cpp
-	# renderer/Model_md5.cpp
-	# renderer/Model_prt.cpp
-	# renderer/Model_sprite.cpp
-	# renderer/RenderEntity.cpp
-	# renderer/RenderSystem.cpp
-	# renderer/RenderSystem_init.cpp
-	# renderer/RenderWorld.cpp
-	# renderer/RenderWorld_demo.cpp
-	# renderer/RenderWorld_lightgrid.cpp
-	# renderer/RenderWorld_load.cpp
-	# renderer/RenderWorld_portals.cpp
-	# renderer/RenderWorld_defs.cpp
-	# renderer/VertexCache.cpp
-	# renderer/draw_arb.cpp
-	# renderer/draw_arb2.cpp
-	# renderer/draw_glsl.cpp
-	# renderer/draw_common.cpp
-	# renderer/draw_exp.cpp
-	# renderer/tr_backend.cpp
-	# renderer/tr_backend_draw.cpp
-	# renderer/tr_backend_rendertools.cpp
-	# renderer/tr_font.cpp
-	# renderer/tr_frontend_deform.cpp
-	# renderer/tr_frontend_guisurf.cpp
-	# renderer/tr_frontend_main.cpp
-	# renderer/tr_frontend_subview.cpp
-	# renderer/tr_legacy.cpp
-	# renderer/tr_light.cpp
-	# renderer/tr_math.cpp
-	# renderer/tr_orderIndexes.cpp
-	# renderer/tr_polytope.cpp
-	# renderer/tr_shadowbounds.cpp
-	# renderer/tr_stencilshadow.cpp
-	# renderer/tr_trace.cpp
-	# renderer/tr_trisurf.cpp
-	# renderer/tr_turboshadow.cpp)
-
-if(GLES1)
-	add_definitions(-DUSE_GLES1)
-	
-	list(REMOVE_ITEM RENDERER_INCLUDES renderer/GLShader.h)
-	list(REMOVE_ITEM RENDERER_INCLUDES renderer/GLShader_strings.h)
-	
-	list(REMOVE_ITEM RENDERER_SOURCES renderer/GLShader.cpp)
-	list(REMOVE_ITEM RENDERER_SOURCES renderer/Framebuffer.cpp)
-	list(REMOVE_ITEM RENDERER_SOURCES renderer/draw_glsl.cpp)
-	list(REMOVE_ITEM RENDERER_SOURCES renderer/draw_exp.cpp)
-endif()
+file(GLOB RENDERER_INCLUDES renderer/*.h)
+file(GLOB RENDERER_SOURCES renderer/*.cpp)
+file(GLOB RENDERER_COLOR_INCLUDES renderer/Color/*.h)
+file(GLOB RENDERER_COLOR_SOURCES renderer/Color/*.cpp)
+file(GLOB RENDERER_DXT_INCLUDES renderer/DXT/*.h)
+file(GLOB RENDERER_DXT_SOURCES renderer/DXT/*.cpp)
+file(GLOB RENDERER_JOBS_INCLUDES renderer/jobs/*.h)
+file(GLOB RENDERER_JOBS_SOURCES renderer/jobs/*.cpp)
+file(GLOB RENDERER_JOBS_DYNAMICSHADOWVOLUME_INCLUDES renderer/jobs/dynamicshadowvolume/*.h)
+file(GLOB RENDERER_JOBS_DYNAMICSHADOWVOLUME_SOURCES renderer/jobs/dynamicshadowvolume/*.cpp)
+file(GLOB RENDERER_JOBS_PRELIGHTSHADOWVOLUME_INCLUDES renderer/jobs/prelightshadowvolume/*.h)
+file(GLOB RENDERER_JOBS_PRELIGHTSHADOWVOLUME_SOURCES renderer/jobs/prelightshadowvolume/*.cpp)
+file(GLOB RENDERER_JOBS_STATICSHADOWVOLUME_INCLUDES renderer/jobs/staticshadowvolume/*.h)
+file(GLOB RENDERER_JOBS_STATICSHADOWVOLUME_SOURCES renderer/jobs/staticshadowvolume/*.cpp)
+file(GLOB RENDERER_OPENGL_INCLUDES renderer/OpenGL/*.h)
+file(GLOB RENDERER_OPENGL_SOURCES renderer/OpenGL/*.cpp)
 
 file(GLOB IRRXML_INCLUDES libs/irrxml/src/*.h)
 file(GLOB IRRXML_SOURCES libs/irrxml/src/*.cpp)
@@ -913,6 +824,26 @@ source_group("framework\\async" FILES ${FRAMEWORK_ASYNC_SOURCES})
 source_group("renderer" FILES ${RENDERER_INCLUDES})
 source_group("renderer" FILES ${RENDERER_SOURCES})
 
+source_group("renderer\\Color" FILES ${RENDERER_COLOR_INCLUDES})
+source_group("renderer\\Color" FILES ${RENDERER_COLOR_SOURCES})
+
+source_group("renderer\\DXT" FILES ${RENDERER_DXT_INCLUDES})
+source_group("renderer\\DXT" FILES ${RENDERER_DXT_SOURCES})
+
+source_group("renderer\\jobs" FILES ${RENDERER_JOBS_INCLUDES})
+source_group("renderer\\jobs" FILES ${RENDERER_JOBS_SOURCES})
+
+source_group("renderer\\jobs\\dynamicshadowvolume" FILES ${RENDERER_JOBS_DYNAMICSHADOWVOLUME_INCLUDES})
+source_group("renderer\\jobs\\dynamicshadowvolume" FILES ${RENDERER_JOBS_DYNAMICSHADOWVOLUME_SOURCES})
+
+source_group("renderer\\jobs\\prelightshadowvolume" FILES ${RENDERER_JOBS_PRELIGHTSHADOWVOLUME_INCLUDES})
+source_group("renderer\\jobs\\prelightshadowvolume" FILES ${RENDERER_JOBS_PRELIGHTSHADOWVOLUME_SOURCES})
+
+source_group("renderer\\jobs\\staticshadowvolume" FILES ${RENDERER_JOBS_STATICSHADOWVOLUME_INCLUDES})
+source_group("renderer\\jobs\\staticshadowvolume" FILES ${RENDERER_JOBS_STATICSHADOWVOLUME_SOURCES})
+
+source_group("renderer\\OpenGL" FILES ${RENDERER_OPENGL_INCLUDES})
+source_group("renderer\\OpenGL" FILES ${RENDERER_OPENGL_SOURCES})
 
 source_group("libs\\irrxml" FILES ${IRRXML_INCLUDES})
 source_group("libs\\irrxml" FILES ${IRRXML_SOURCES})
@@ -975,6 +906,21 @@ source_group("game\\script" FILES ${GAME_SCRIPT_SOURCES})
 
 
 
+
+
+
+#source_group("sys\\win32" FILES ${WIN32_INCLUDES})
+#source_group("sys\\win32" FILES ${WIN32_SOURCES})
+#source_group("sys\\win32\\Resources" FILES ${WIN32_RESOURCES})
+
+source_group("sys\\posix" FILES ${POSIX_INCLUDES})
+source_group("sys\\posix" FILES ${POSIX_SOURCES})
+
+source_group("sys\\common" FILES ${COMMON_INCLUDES})
+source_group("sys\\common" FILES ${COMMON_SOURCES})
+
+source_group("sys\\sdl" FILES ${SDL_INCLUDES})
+source_group("sys\\sdl" FILES ${SDL_SOURCES})
 
 #if(USE_QT_WINDOWING)
 #	source_group("sys\\win32" FILES ${WIN32_INCLUDES})
@@ -1045,14 +991,7 @@ if(ANGLE OR GLES2)
 		include_directories(libs/angle/include)
 	endif()
 	
-	add_definitions(-DUSE_GLES1)
-	add_definitions(-DUSE_GLES2)
-	
-	list(REMOVE_ITEM RENDERER_SOURCES renderer/Framebuffer.cpp)
-	#list(REMOVE_ITEM RENDERER_SOURCES renderer/draw_glsl.cpp)
-	list(REMOVE_ITEM RENDERER_SOURCES renderer/draw_exp.cpp)
-	list(REMOVE_ITEM RENDERER_SOURCES renderer/draw_arb.cpp)
-	list(REMOVE_ITEM RENDERER_SOURCES renderer/draw_arb2.cpp)
+	add_definitions(-DUSE_GLES3)
 endif()
 
 set(TEKUUM_INCLUDES
@@ -1061,6 +1000,13 @@ set(TEKUUM_INCLUDES
 			${FRAMEWORK_INCLUDES}
 			${FRAMEWORK_ASYNC_INCLUDES}
 			${RENDERER_INCLUDES}
+			${RENDERER_COLOR_INCLUDES}
+			${RENDERER_DXT_INCLUDES}
+			${RENDERER_JOBS_INCLUDES}
+			${RENDERER_JOBS_DYNAMICSHADOWVOLUME_INCLUDES}
+			${RENDERER_JOBS_PRELIGHTSHADOWVOLUME_INCLUDES}
+			${RENDERER_JOBS_STATICSHADOWVOLUME_INCLUDES}
+			${RENDERER_OPENGL_INCLUDES}
 			${IRRXML_INCLUDES}
 			${JPEG_INCLUDES}
 			${PNG_INCLUDES}
@@ -1080,6 +1026,13 @@ set(TEKUUM_SOURCES
 			${FRAMEWORK_SOURCES}
 			${FRAMEWORK_ASYNC_SOURCES} 
 			${RENDERER_SOURCES}
+			${RENDERER_COLOR_SOURCES}
+			${RENDERER_DXT_SOURCES}
+			${RENDERER_JOBS_SOURCES}
+			${RENDERER_JOBS_DYNAMICSHADOWVOLUME_SOURCES}
+			${RENDERER_JOBS_PRELIGHTSHADOWVOLUME_SOURCES}
+			${RENDERER_JOBS_STATICSHADOWVOLUME_SOURCES}
+			${RENDERER_OPENGL_SOURCES}
 			${IRRXML_SOURCES}
 			${JPEG_SOURCES}
 			${PNG_SOURCES}

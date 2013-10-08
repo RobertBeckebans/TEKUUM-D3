@@ -1,4 +1,4 @@
---
+-- --
 -- Tekuum build configuration script
 -- 
 
@@ -127,8 +127,14 @@ newoption
 
 newoption
 {
-	trigger = "gles1",
-	description = "Only use OpenGL ES 1.0 functions",
+	trigger = "mesa",
+	description = "Only use OpenGL ES 3.0 functions together with DXT compression",
+}
+
+newoption
+{
+	trigger = "gles3",
+	description = "Only use OpenGL ES 3.0 functions to emulate Android behaviour",
 }
 
 newoption
@@ -192,6 +198,7 @@ solution "Tekuum"
 		flags
 		{
 			"Symbols",
+			--"EnableSSE"
 			--"StaticRuntime",
 			--"NoRuntimeChecks"
 		}
@@ -207,12 +214,25 @@ solution "Tekuum"
 	
 	-- OptimizeSpeed and Symbols do not work together with Visual Studio
 	if not os.is("windows") then
+	  
+		configuration "Debug"
+			flags
+			{
+				"EnableSSE2",
+			}
+				
+		configuration "Release"
+			flags
+			{
+				"EnableSSE2",
+			}
+	  
 		configuration "Profile"
 			defines     "NDEBUG"
 			flags
 			{
 				"OptimizeSpeed",
-				-- --"EnableSSE",
+				"EnableSSE2",
 				"Symbols",
 				-- --"StaticRuntime"
 			}
@@ -587,17 +607,17 @@ end
 			"ID_REDIRECT_NEWDELETE",
 		}
 		
-	configuration "gles1"
+	configuration "mesa"
 		defines
 		{
-			"USE_GLES1",
+			"USE_MESA",
+ 			"USE_GLES3",
 		}
-		excludes
+			
+	configuration "gles3"
+		defines
 		{
-			"renderer/GLShader.cpp",
-			"renderer/Framebuffer.cpp",
-			"renderer/draw_glsl.cpp",
-			"renderer/draw_exp.cpp",
+ 			"USE_GLES3",
 		}
 		
 	configuration "monolith"
@@ -639,7 +659,7 @@ end
 			"libs/lua/src",
 		}
 	
-	configuration { "cmdline-tools", "vs*" }
+	configuration { "cmdline-tools" }
 		defines
 		{
 			"USE_CMDLINE_TOOLS",

@@ -177,7 +177,7 @@ void idUserInterfaceManagerLocal::EndLevelLoad( const char* mapName )
 				c--;
 			}
 		}
-		//session->PacifierUpdate();
+		session->PacifierUpdate();
 	}
 	/*
 	if( cvarSystem->GetCVarBool( "fs_buildresources" ) && mapName != NULL && mapName[ 0 ] != '\0' )
@@ -546,8 +546,8 @@ const char* idUserInterfaceLocal::HandleEvent( const sysEvent_t* event, int _tim
 	{
 		//common->Printf( "idUserInterfaceLocal::HandleEvent( motionEvent = %i, x = %i, y = %i )\n", event->evType, event->evValue, event->evValue2 );
 		
-		cursorX = idMath::ClampFloat( 0, SCREEN_WIDTH - 1, event->evValue * 0.01f * SCREEN_WIDTH );
-		cursorY = idMath::ClampFloat( 0, SCREEN_HEIGHT - 1, event->evValue2 * 0.01f * SCREEN_HEIGHT );
+		cursorX = idMath::ClampFloat( 0, SCREEN_WIDTH - 1, event->evValue * 0.001f * SCREEN_WIDTH );
+		cursorY = idMath::ClampFloat( 0, SCREEN_HEIGHT - 1, event->evValue2 * 0.001f * SCREEN_HEIGHT );
 	}
 	// RB end
 	

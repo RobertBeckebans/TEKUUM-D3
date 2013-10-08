@@ -3,6 +3,7 @@
 
 Doom 3 BFG Edition GPL Source Code
 Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2013 Robert Beckebans
 
 This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
@@ -126,18 +127,20 @@ void idRenderSystemLocal::RenderCommandBuffers( const emptyCommand_t* const cmdH
 	// draw 2D graphics
 	if( !r_skipBackEnd.GetBool() )
 	{
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 		if( glConfig.timerQueryAvailable )
 		{
 			if( tr.timerQueryId == 0 )
 			{
-				glGenQueriesARB( 1, & tr.timerQueryId );
+				glGenQueries( 1, & tr.timerQueryId );
 			}
-			glBeginQueryARB( GL_TIME_ELAPSED_EXT, tr.timerQueryId );
+			glBeginQuery( GL_TIME_ELAPSED_EXT, tr.timerQueryId );
 			RB_ExecuteBackEndCommands( cmdHead );
-			glEndQueryARB( GL_TIME_ELAPSED_EXT );
+			glEndQuery( GL_TIME_ELAPSED_EXT );
 			glFlush();
 		}
 		else
+#endif
 		{
 			RB_ExecuteBackEndCommands( cmdHead );
 		}
@@ -259,6 +262,7 @@ static void R_CheckCvars()
 		}
 	}
 	
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 	extern idCVar r_useSeamlessCubeMap;
 	if( r_useSeamlessCubeMap.IsModified() )
 	{
@@ -297,13 +301,14 @@ static void R_CheckCvars()
 	{
 		if( r_multiSamples.GetInteger() > 0 )
 		{
-			glEnable( GL_MULTISAMPLE_ARB );
+			glEnable( GL_MULTISAMPLE );
 		}
 		else
 		{
 			glDisable( GL_MULTISAMPLE_ARB );
 		}
 	}
+#endif // #if !defined(USE_GLES2)
 }
 
 /*
@@ -333,8 +338,10 @@ idRenderSystemLocal::~idRenderSystemLocal()
 idRenderSystemLocal::SetColor
 =============
 */
+// RB: separated GetColor and GetColorNativeOrder
 void idRenderSystemLocal::SetColor( const idVec4& rgba )
 {
+	currentColor = rgba;
 	currentColorNativeBytesOrder = LittleLong( PackColor( rgba ) );
 }
 
@@ -343,10 +350,21 @@ void idRenderSystemLocal::SetColor( const idVec4& rgba )
 idRenderSystemLocal::GetColor
 =============
 */
-uint32 idRenderSystemLocal::GetColor()
+const idVec4& idRenderSystemLocal::GetColor()
+{
+	return currentColor;
+}
+
+/*
+=============
+idRenderSystemLocal::GetColorPacked
+=============
+*/
+uint32 idRenderSystemLocal::GetColorPacked()
 {
 	return LittleLong( currentColorNativeBytesOrder );
 }
+// RB end
 
 /*
 =============
@@ -396,6 +414,42 @@ void idRenderSystemLocal::DrawStretchPic( const idVec4& topLeft, const idVec4& t
 		return;
 	}
 	
+	// RB: added alternative interface for no glMapBuffer support
+#if defined(NO_GL_MAPBUFFER)
+	
+	ALIGNTYPE16 idDrawVert localVerts[4];
+	
+	localVerts[0].Clear();
+	localVerts[0].xyz[0] = topLeft.x;
+	localVerts[0].xyz[1] = topLeft.y;
+	localVerts[0].SetTexCoord( topLeft.z, topLeft.w );
+	localVerts[0].SetNativeOrderColor( currentColorNativeBytesOrder );
+	localVerts[0].ClearColor2();
+	
+	localVerts[1].Clear();
+	localVerts[1].xyz[0] = topRight.x;
+	localVerts[1].xyz[1] = topRight.y;
+	localVerts[1].SetTexCoord( topRight.z, topRight.w );
+	localVerts[1].SetNativeOrderColor( currentColorNativeBytesOrder );
+	localVerts[1].ClearColor2();
+	
+	localVerts[2].Clear();
+	localVerts[2].xyz[0] = bottomRight.x;
+	localVerts[2].xyz[1] = bottomRight.y;
+	localVerts[2].SetTexCoord( bottomRight.z, bottomRight.w );
+	localVerts[2].SetNativeOrderColor( currentColorNativeBytesOrder );
+	localVerts[2].ClearColor2();
+	
+	localVerts[3].Clear();
+	localVerts[3].xyz[0] = bottomLeft.x;
+	localVerts[3].xyz[1] = bottomLeft.y;
+	localVerts[3].SetTexCoord( bottomLeft.z, bottomLeft.w );
+	localVerts[3].SetNativeOrderColor( currentColorNativeBytesOrder );
+	localVerts[3].ClearColor2();
+	
+	guiModel->AllocTris( localVerts, 4, quadPicIndexes, 6, material, currentGLState, STEREO_DEPTH_TYPE_NONE );
+	
+#else
 	idDrawVert* verts = guiModel->AllocTris( 4, quadPicIndexes, 6, material, currentGLState, STEREO_DEPTH_TYPE_NONE );
 	if( verts == NULL )
 	{
@@ -433,6 +487,8 @@ void idRenderSystemLocal::DrawStretchPic( const idVec4& topLeft, const idVec4& t
 	localVerts[3].ClearColor2();
 	
 	WriteDrawVerts16( verts, localVerts, 4 );
+#endif
+	// RB end
 }
 
 /*
@@ -453,6 +509,35 @@ void idRenderSystemLocal::DrawStretchTri( const idVec2& p1, const idVec2& p2, co
 	
 	triIndex_t tempIndexes[3] = { 1, 0, 2 };
 	
+	// RB: added alternative interface for no glMapBuffer support
+#if defined(NO_GL_MAPBUFFER)
+	
+	ALIGNTYPE16 idDrawVert localVerts[3];
+	
+	localVerts[0].Clear();
+	localVerts[0].xyz[0] = p1.x;
+	localVerts[0].xyz[1] = p1.y;
+	localVerts[0].SetTexCoord( t1 );
+	localVerts[0].SetNativeOrderColor( currentColorNativeBytesOrder );
+	localVerts[0].ClearColor2();
+	
+	localVerts[1].Clear();
+	localVerts[1].xyz[0] = p2.x;
+	localVerts[1].xyz[1] = p2.y;
+	localVerts[1].SetTexCoord( t2 );
+	localVerts[1].SetNativeOrderColor( currentColorNativeBytesOrder );
+	localVerts[1].ClearColor2();
+	
+	localVerts[2].Clear();
+	localVerts[2].xyz[0] = p3.x;
+	localVerts[2].xyz[1] = p3.y;
+	localVerts[2].SetTexCoord( t3 );
+	localVerts[2].SetNativeOrderColor( currentColorNativeBytesOrder );
+	localVerts[2].ClearColor2();
+	
+	guiModel->AllocTris( localVerts, 3, tempIndexes, 3, material, currentGLState, STEREO_DEPTH_TYPE_NONE );
+	
+#else
 	idDrawVert* verts = guiModel->AllocTris( 3, tempIndexes, 3, material, currentGLState, STEREO_DEPTH_TYPE_NONE );
 	if( verts == NULL )
 	{
@@ -483,6 +568,7 @@ void idRenderSystemLocal::DrawStretchTri( const idVec2& p1, const idVec2& p2, co
 	localVerts[2].ClearColor2();
 	
 	WriteDrawVerts16( verts, localVerts, 3 );
+#endif
 }
 
 /*
@@ -490,10 +576,19 @@ void idRenderSystemLocal::DrawStretchTri( const idVec2& p1, const idVec2& p2, co
 idRenderSystemLocal::AllocTris
 =============
 */
+// RB: added alternative interface for no glMapBuffer support
+#if defined(NO_GL_MAPBUFFER)
+void idRenderSystemLocal::AllocTris( const idDrawVert* verts, int numVerts, const triIndex_t* indexes, int numIndexes, const idMaterial* material, const stereoDepthType_t stereoType )
+{
+	guiModel->AllocTris( verts, numVerts, indexes, numIndexes, material, currentGLState, stereoType );
+}
+#else
 idDrawVert* idRenderSystemLocal::AllocTris( int numVerts, const triIndex_t* indexes, int numIndexes, const idMaterial* material, const stereoDepthType_t stereoType )
 {
 	return guiModel->AllocTris( numVerts, indexes, numIndexes, material, currentGLState, stereoType );
 }
+#endif
+// RB end
 
 /*
 =====================
@@ -685,10 +780,11 @@ const emptyCommand_t* idRenderSystemLocal::SwapCommandBuffers(
 	uint64* frontEndMicroSec,
 	uint64* backEndMicroSec,
 	uint64* shadowMicroSec,
-	uint64* gpuMicroSec )
+	uint64* gpuMicroSec,
+	bool swapBuffers )
 {
 
-	SwapCommandBuffers_FinishRendering( frontEndMicroSec, backEndMicroSec, shadowMicroSec, gpuMicroSec );
+	SwapCommandBuffers_FinishRendering( frontEndMicroSec, backEndMicroSec, shadowMicroSec, gpuMicroSec, swapBuffers );
 	
 	return SwapCommandBuffers_FinishCommandBuffers();
 }
@@ -702,7 +798,8 @@ void idRenderSystemLocal::SwapCommandBuffers_FinishRendering(
 	uint64* frontEndMicroSec,
 	uint64* backEndMicroSec,
 	uint64* shadowMicroSec,
-	uint64* gpuMicroSec )
+	uint64* gpuMicroSec,
+	bool swapBuffers )
 {
 	SCOPED_PROFILE_EVENT( "SwapCommandBuffers" );
 	
@@ -718,14 +815,14 @@ void idRenderSystemLocal::SwapCommandBuffers_FinishRendering(
 	
 	
 	// After coming back from an autoswap, we won't have anything to render
-	if( frameData->cmdHead->next != NULL )
+	if( frameData->cmdHead->next != NULL && swapBuffers )
 	{
 		// wait for our fence to hit, which means the swap has actually happened
 		// We must do this before clearing any resources the GPU may be using
-		void GL_BlockingSwapBuffers();
 		GL_BlockingSwapBuffers();
 	}
 	
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 	// read back the start and end timer queries from the previous frame
 	if( glConfig.timerQueryAvailable )
 	{
@@ -742,6 +839,7 @@ void idRenderSystemLocal::SwapCommandBuffers_FinishRendering(
 			*gpuMicroSec = drawingTimeNanoseconds / 1000;
 		}
 	}
+#endif
 	
 	//------------------------------
 	
@@ -1056,7 +1154,9 @@ void idRenderSystemLocal::CaptureRenderToFile( const char* fileName, bool fixAlp
 	guiModel->Clear();
 	RenderCommandBuffers( frameData->cmdHead );
 	
+#if !defined(USE_GLES2)
 	glReadBuffer( GL_BACK );
+#endif
 	
 	// include extra space for OpenGL padding to word boundaries
 	int	c = ( rc.GetWidth() + 3 ) * rc.GetHeight();
