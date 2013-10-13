@@ -48,7 +48,7 @@ public:
 
 private:
 	void CommonInit();
-	virtual bool ParseInternalVar( const char* name, idParser* src );
+	virtual bool ParseInternalVar( const char* name, idTokenParser* src );
 	void Render( int time );
 	void PreRender();
 	void BuildAnimation( int time );

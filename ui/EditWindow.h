@@ -62,7 +62,7 @@ public:
 	
 private:
 
-	virtual bool		ParseInternalVar( const char* name, idParser* src );
+	virtual bool		ParseInternalVar( const char* name, idTokenParser* src );
 	
 	void				InitCvar();
 	// true: read the updated cvar from cvar system

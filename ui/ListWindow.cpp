@@ -293,7 +293,7 @@ const char* idListWindow::HandleEvent( const sysEvent_t* event, bool* updateVisu
 }
 
 
-bool idListWindow::ParseInternalVar( const char* _name, idParser* src )
+bool idListWindow::ParseInternalVar( const char* _name, idTokenParser* src )
 {
 	if( idStr::Icmp( _name, "horizontal" ) == 0 )
 	{

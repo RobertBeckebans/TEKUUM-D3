@@ -428,21 +428,26 @@ bool idUserInterfaceLocal::InitFromFile( const char* qpath, bool rebuild, bool c
 	}
 	state.Set( "text", "Test Text!" );
 	
-	idParser src( LEXFL_NOFATALERRORS | LEXFL_NOSTRINGCONCAT | LEXFL_ALLOWMULTICHARLITERALS | LEXFL_ALLOWBACKSLASHSTRINGCONCAT );
-	
-	//Load the timestamp so reload guis will work correctly
-	fileSystem->ReadFile( qpath, NULL, &timeStamp );
-	
-	src.LoadFile( qpath );
-	
-	if( src.IsLoaded() )
+	idTokenParser& bsrc = uiManagerLocal.GetBinaryParser();
+	if( !bsrc.IsLoaded() || !bsrc.StartParsing( source ) )
+	{
+		idParser src( LEXFL_NOFATALERRORS | LEXFL_NOSTRINGCONCAT | LEXFL_ALLOWMULTICHARLITERALS | LEXFL_ALLOWBACKSLASHSTRINGCONCAT );
+		src.LoadFile( source );
+		if( src.IsLoaded() )
+		{
+			bsrc.LoadFromParser( src, source );
+			ID_TIME_T ts = fileSystem->GetTimestamp( source );
+			bsrc.UpdateTimeStamp( ts );
+		}
+	}
+	if( bsrc.IsLoaded() && bsrc.StartParsing( source ) )
 	{
 		idToken token;
-		while( src.ReadToken( &token ) )
+		while( bsrc.ReadToken( &token ) )
 		{
 			if( idStr::Icmp( token, "windowDef" ) == 0 )
 			{
-				if( desktop->Parse( &src, rebuild ) )
+				if( desktop->Parse( &bsrc, rebuild ) )
 				{
 					desktop->SetFlag( WIN_DESKTOP );
 					desktop->FixupParms();
@@ -450,8 +455,8 @@ bool idUserInterfaceLocal::InitFromFile( const char* qpath, bool rebuild, bool c
 				continue;
 			}
 		}
-		
-		state.Set( "name", qpath );
+		state.Set( "name", qpath );	// don't use localized name
+		bsrc.DoneParsing();
 	}
 	else
 	{

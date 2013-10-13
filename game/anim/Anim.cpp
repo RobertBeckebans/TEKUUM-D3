@@ -32,7 +32,7 @@ If you have questions concerning this license or the applicable additional terms
 
 #include "../Game_local.h"
 
-static idCVar g_binaryLoadAnim( "g_binaryLoadAnim", "1", 0, "enable binary load/write of idMD5Anim" );
+static idCVar binaryLoadAnim( "binaryLoadAnim", "1", 0, "enable binary load/write of idMD5Anim" );
 
 static const byte B_ANIM_MD5_VERSION = 101;
 static const unsigned int B_ANIM_MD5_MAGIC = ( 'B' << 24 ) | ( 'M' << 16 ) | ( 'D' << 8 ) | B_ANIM_MD5_VERSION;
@@ -189,7 +189,7 @@ bool idMD5Anim::LoadAnim( const char* filename )
 	ID_TIME_T sourceTimeStamp = fileSystem->GetTimestamp( filename );
 	
 	idFileLocal file( fileSystem->OpenFileReadMemory( generatedFileName ) );
-	if( g_binaryLoadAnim.GetBool() && LoadBinary( file, sourceTimeStamp ) )
+	if( binaryLoadAnim.GetBool() && LoadBinary( file, sourceTimeStamp ) )
 	{
 		name = filename;
 		/*
@@ -396,7 +396,7 @@ bool idMD5Anim::LoadAnim( const char* filename )
 	// we don't count last frame because it would cause a 1 frame pause at the end
 	animLength = ( ( numFrames - 1 ) * 1000 + frameRate - 1 ) / frameRate;
 	
-	if( g_binaryLoadAnim.GetBool() )
+	if( binaryLoadAnim.GetBool() )
 	{
 		idLib::Printf( "writing %s\n", generatedFileName.c_str() );
 		idFileLocal outputFile( fileSystem->OpenFileWrite( generatedFileName, "fs_basepath" ) );

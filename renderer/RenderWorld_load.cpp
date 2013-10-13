@@ -139,7 +139,7 @@ idRenderModel* idRenderWorldLocal::ReadBinaryModel( idFile* fileIn )
 	return NULL;
 }
 
-extern idCVar r_binaryLoadRenderModels;
+extern idCVar binaryLoadRenderModels;
 
 /*
 ================
@@ -378,7 +378,7 @@ idRenderModel* idRenderWorldLocal::ParseModel( idLexer* src, const char* mapName
 	
 	model->FinishSurfaces();
 	
-	if( fileOut != NULL && model->SupportsBinaryModel() && r_binaryLoadRenderModels.GetBool() )
+	if( fileOut != NULL && model->SupportsBinaryModel() && binaryLoadRenderModels.GetBool() )
 	{
 		model->WriteBinaryModel( fileOut, &mapTimeStamp );
 	}
@@ -478,7 +478,7 @@ idRenderModel* idRenderWorldLocal::ParseShadowModel( idLexer* src, idFile* fileO
 	
 	// NOTE: we do NOT do a model->FinishSurfaceces, because we don't need sil edges, planes, tangents, etc.
 	
-	if( fileOut != NULL && model->SupportsBinaryModel() && r_binaryLoadRenderModels.GetBool() )
+	if( fileOut != NULL && model->SupportsBinaryModel() && binaryLoadRenderModels.GetBool() )
 	{
 		model->WriteBinaryModel( fileOut, &mapTimeStamp );
 	}

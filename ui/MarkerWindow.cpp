@@ -59,7 +59,7 @@ idMarkerWindow::~idMarkerWindow()
 {
 }
 
-bool idMarkerWindow::ParseInternalVar( const char* _name, idParser* src )
+bool idMarkerWindow::ParseInternalVar( const char* _name, idTokenParser* src )
 {
 	if( idStr::Icmp( _name, "markerMat" ) == 0 )
 	{

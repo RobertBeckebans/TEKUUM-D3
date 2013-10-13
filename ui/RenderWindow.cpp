@@ -232,7 +232,7 @@ idWinVar* idRenderWindow::GetWinVarByName( const char* _name, bool fixup, drawWi
 //
 }
 
-bool idRenderWindow::ParseInternalVar( const char* _name, idParser* src )
+bool idRenderWindow::ParseInternalVar( const char* _name, idTokenParser* src )
 {
 	if( idStr::Icmp( _name, "animClass" ) == 0 )
 	{

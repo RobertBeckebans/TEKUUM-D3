@@ -67,7 +67,7 @@ public:
 	void				UpdateList();
 	
 private:
-	virtual bool		ParseInternalVar( const char* name, idParser* src );
+	virtual bool		ParseInternalVar( const char* name, idTokenParser* src );
 	void				CommonInit();
 	void				InitScroller( bool horizontal );
 	void				SetCurrentSel( int sel );

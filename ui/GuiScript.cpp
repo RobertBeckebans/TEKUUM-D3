@@ -453,7 +453,7 @@ void idGuiScript::ReadFromSaveGame( idFile* savefile )
 idGuiScript::Parse
 =========================
 */
-bool idGuiScript::Parse( idParser* src )
+bool idGuiScript::Parse( idTokenParser* src )
 {
 	int i;
 	

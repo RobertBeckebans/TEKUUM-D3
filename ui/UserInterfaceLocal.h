@@ -192,7 +192,10 @@ public:
 	virtual idUserInterface* 	FindDemoGui( const char* qpath );
 	virtual	idListGUI* 			AllocListGUI() const;
 	virtual void				FreeListGUI( idListGUI* listgui );
-	
+	idTokenParser& 				GetBinaryParser()
+	{
+		return mapParser;
+	}
 private:
 	idRectangle					screenRect;
 	idDeviceContext				dcOld;
@@ -201,6 +204,7 @@ private:
 	idList<idUserInterfaceLocal*> guis;
 	idList<idUserInterfaceLocal*> demoGuis;
 	
+	idTokenParser				mapParser;
 };
 
 // These used to be in every window, but they all pointed at the same one in idUserInterfaceManagerLocal.

@@ -93,7 +93,7 @@ typedef struct mtrParsingData_s
 idCVar r_forceSoundOpAmplitude( "r_forceSoundOpAmplitude", "0", CVAR_FLOAT, "Don't call into the sound system for amplitudes" );
 
 // RB begin
-idCVar r_binaryLoadMaterials( "r_binaryLoadMaterials", "1", 0, "enable binary load/write of material decls" );
+idCVar binaryLoadMaterials( "binaryLoadMaterials", "1", 0, "enable binary load/write of material decls" );
 
 static const byte BMTR_VERSION = 103;
 static const unsigned int BMTR_MAGIC = ( 'B' << 24 ) | ( 'M' << 16 ) | ( 'R' << 8 ) | BMTR_VERSION;
@@ -2704,7 +2704,7 @@ bool idMaterial::Parse( const char* text, const int textLength, bool allowBinary
 		idFileLocal file( fileSystem->OpenFileReadMemory( generatedFileName ) );
 		sourceChecksum = MD5_BlockChecksum( text, textLength );
 		
-		if( r_binaryLoadMaterials.GetBool() && LoadBinary( file, sourceChecksum ) )
+		if( binaryLoadMaterials.GetBool() && LoadBinary( file, sourceChecksum ) )
 		{
 			// see if the registers are completely constant, and don't need to be evaluated
 			// per-surface
@@ -2986,7 +2986,7 @@ bool idMaterial::Parse( const char* text, const int textLength, bool allowBinary
 	}
 	
 	// RB begin
-	if( allowBinaryVersion && r_binaryLoadMaterials.GetBool() )
+	if( allowBinaryVersion && binaryLoadMaterials.GetBool() )
 	{
 		idLib::Printf( "Writing %s\n", generatedFileName.c_str() );
 		idFileLocal outputFile( fileSystem->OpenFileWrite( generatedFileName, "fs_basepath" ) );

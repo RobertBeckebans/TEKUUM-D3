@@ -69,7 +69,7 @@ idSliderWindow::~idSliderWindow()
 
 }
 
-bool idSliderWindow::ParseInternalVar( const char* _name, idParser* src )
+bool idSliderWindow::ParseInternalVar( const char* _name, idTokenParser* src )
 {
 	if( idStr::Icmp( _name, "stepsize" ) == 0 || idStr::Icmp( _name, "step" ) == 0 )
 	{
