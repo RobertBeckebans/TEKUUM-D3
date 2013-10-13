@@ -400,5 +400,5 @@ IMAGEPROGRAM
 */
 
 void R_LoadImageProgram( const char* name, byte** pic, int* width, int* height, ID_TIME_T* timestamp, textureUsage_t* usage = NULL );
-const char* R_ParsePastImageProgram( idLexer& src );
+const char* R_ParsePastImageProgram( idTokenParser& src );
 
