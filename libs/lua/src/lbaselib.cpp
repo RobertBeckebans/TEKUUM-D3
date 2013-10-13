@@ -84,7 +84,7 @@ static int luaB_print( lua_State* L )
 	}
 	
 	//luai_writeline();
-	idLib::Printf( "<lua>%s", text.c_str() );
+	idLib::Printf( "<lua> %s", text.c_str() );
 	return 0;
 }
 #endif

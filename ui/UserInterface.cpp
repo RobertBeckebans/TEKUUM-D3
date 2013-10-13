@@ -494,7 +494,7 @@ bool idUserInterfaceLocal::InitFromFile( const char* qpath, bool rebuild, bool c
 	}
 	else
 	{
-		desktop->SetDC( &uiManagerLocal.dc );
+		//desktop->SetDC( &uiManagerLocal.dc );
 		desktop->SetFlag( WIN_DESKTOP );
 		desktop->name = "Desktop";
 		desktop->text = va( "Invalid GUI: %s", filename.c_str() );
