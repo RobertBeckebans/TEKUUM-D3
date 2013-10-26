@@ -75,6 +75,10 @@ project "idlib"
 			"_USE_32BIT_TIME_T",
 			"_MBCS",
 		}
+    files
+    {
+      "sys/win32/win_thread.cpp",
+    }
 		--pchheader "precompiled.h"
 		--pchsource "precompiled.cpp"
 		

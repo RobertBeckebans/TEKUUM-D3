@@ -884,6 +884,7 @@ end
 		}
 		excludes
 		{
+      "sys/win32/win_egl.cpp",
 			"sys/win32/win_gamma.cpp",
 			--"sys/win32/win_snd.cpp",
 		}

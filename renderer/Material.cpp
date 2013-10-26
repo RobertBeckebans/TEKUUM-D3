@@ -2659,26 +2659,6 @@ bool idMaterial::Parse( const char* text, const int textLength, bool allowBinary
 			
 			loadedFromBinary = true;
 		}
-		
-		
-		
-		//if( bsrc.IsLoaded() && bsrc.StartParsing( source ) )
-		
-		/*
-		if( binaryLoadMaterials.GetBool() && LoadBinary( file, sourceChecksum ) )
-		{
-			// see if the registers are completely constant, and don't need to be evaluated
-			// per-surface
-			//CheckForConstantRegisters();
-		
-			// See if the material is trivial for the fast path
-			SetFastPathImages();
-		
-			pd = NULL;	// the pointer will be invalid after exiting this function
-		
-			return true;
-		}
-		*/
 	}
 	// RB end
 	
@@ -2692,14 +2672,9 @@ bool idMaterial::Parse( const char* text, const int textLength, bool allowBinary
 	
 	if( magic != BMTR_MAGIC || sourceChecksum != loadedChecksum || !bsrc.IsLoaded() || !bsrc.StartParsing( GetName() ) )
 	{
-		//if( src.IsLoaded() )
-		{
-			loadedFromBinary = false;
-			
-			bsrc.LoadFromLexer( src, GetName() );
-			//ID_TIME_T ts = fileSystem->GetTimestamp( source );
-			//bsrc.UpdateTimeStamp( ts );
-		}
+		loadedFromBinary = false;
+		
+		bsrc.LoadFromLexer( src, GetName() );
 	}
 	
 	// reset to the unparsed state
