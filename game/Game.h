@@ -39,9 +39,9 @@ If you have questions concerning this license or the applicable additional terms
 
 // default scripts
 // RB begin
-#if defined(STANDALONE)
-#define SCRIPT_DEFAULTDEFS			"script/tekuum_defs.script"
-#define SCRIPT_DEFAULT				"script/tekuum_main.script"
+#if defined(USE_DOOMSHARP)
+#define SCRIPT_DEFAULTDEFS			"scriptsharp/doom_defs.cs"
+#define SCRIPT_DEFAULT				"scriptsharp/doom_main.script"
 #define SCRIPT_DEFAULTFUNC			"main"
 #else
 #define SCRIPT_DEFAULTDEFS			"script/doom_defs.script"

@@ -1104,6 +1104,17 @@ idTypeDef* idCompiler::CheckType()
 	{
 		type = &type_void;
 	}
+	// RB begin
+#if defined(USE_DOOMSHARP)
+	else if( token == "class" )
+	{
+		type = &type_object;
+	}
+	else if( token == "bool" )
+	{
+		type = &type_boolean;
+	}
+#else
 	else if( token == "object" )
 	{
 		type = &type_object;
@@ -1112,6 +1123,8 @@ idTypeDef* idCompiler::CheckType()
 	{
 		type = &type_boolean;
 	}
+#endif
+	// RB end
 	else if( token == "namespace" )
 	{
 		type = &type_namespace;
@@ -3189,6 +3202,13 @@ void idCompiler::CompileFile( const char* text, const char* filename, bool toCon
 	
 	parser.SetFlags( LEXFL_ALLOWMULTICHARLITERALS );
 	parser.LoadMemory( text, strlen( text ), filename );
+	
+	// RB begin
+#if defined(USE_DOOMSHARP)
+	parser.AddDefine( "CSHARP 0" );
+#endif
+	// RB end
+	
 	parserPtr = &parser;
 	
 	// unread tokens to include script defines

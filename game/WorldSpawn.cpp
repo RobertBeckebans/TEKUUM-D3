@@ -80,7 +80,14 @@ void idWorldspawn::Spawn()
 	
 	// load script
 	scriptname = gameLocal.GetMapName();
+	
+	// RB begin
+#if defined(USE_DOOMSHARP)
+	scriptname.SetFileExtension( ".cs" );
+#else
 	scriptname.SetFileExtension( ".script" );
+#endif
+	// RB end
 	if( fileSystem->ReadFile( scriptname, NULL, NULL ) > 0 )
 	{
 		gameLocal.program.CompileFile( scriptname );

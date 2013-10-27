@@ -425,7 +425,11 @@ if not _OPTIONS["android"] then
 end
 
 
-
+if _OPTIONS["standalone"] then
+	include "../assets/scriptsharp"
+else
+  include "../base/scriptsharp"
+end
 
 
 

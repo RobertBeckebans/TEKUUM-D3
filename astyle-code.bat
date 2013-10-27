@@ -5,4 +5,6 @@ astyle.exe -v -Q --options=astyle-options.ini --recursive ../android/src/*.java
 REM style.exe -v --options=astyle-options.ini --recursive ../android/jni/*.h
 astyle.exe -v -Q --options=astyle-options.ini --recursive ../android/jni/*.c
 
+astyle.exe -v -Q --options=astyle-options.ini ../base/scriptsharp/weapon_base.cs
+
 pause
