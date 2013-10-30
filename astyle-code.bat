@@ -6,5 +6,7 @@ REM style.exe -v --options=astyle-options.ini --recursive ../android/jni/*.h
 astyle.exe -v -Q --options=astyle-options.ini --recursive ../android/jni/*.c
 
 astyle.exe -v -Q --options=astyle-options.ini ../base/scriptsharp/weapon_base.cs
+astyle.exe -v -Q --options=astyle-options.ini ../base/scriptsharp/weapon_bfg.cs
+astyle.exe -v -Q --options=astyle-options.ini ../base/scriptsharp/map_marscity1.cs
 
 pause

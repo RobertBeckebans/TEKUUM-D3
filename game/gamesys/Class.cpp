@@ -502,7 +502,14 @@ void idClass::ExportScriptEvents_f( const idCmdArgs& args )
 				
 				if( exportLang == EXPORTLANG_DOOMSHARP )
 				{
-					file->Printf( "\tpublic " );
+					if( c->IsType( idThread::Type ) )
+					{
+						file->Printf( "\tpublic static " );
+					}
+					else
+					{
+						file->Printf( "\tpublic " );
+					}
 				}
 				else
 				{
