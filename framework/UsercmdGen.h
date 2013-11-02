@@ -1,25 +1,25 @@
 /*
 ===========================================================================
 
-Doom 3 GPL Source Code
-Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Doom 3 BFG Edition GPL Source Code
+Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
 
-This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
+This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
-Doom 3 Source Code is free software: you can redistribute it and/or modify
+Doom 3 BFG Edition Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Doom 3 Source Code is distributed in the hope that it will be useful,
+Doom 3 BFG Edition Source Code is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Doom 3 Source Code.  If not, see <http://www.gnu.org/licenses/>.
+along with Doom 3 BFG Edition Source Code.  If not, see <http://www.gnu.org/licenses/>.
 
-In addition, the Doom 3 Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 Source Code.  If not, please request a copy in writing from id Software at the address below.
+In addition, the Doom 3 BFG Edition Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 BFG Edition Source Code.  If not, please request a copy in writing from id Software at the address below.
 
 If you have questions concerning this license or the applicable additional terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 
@@ -45,10 +45,10 @@ const int BUTTON_ATTACK			= BIT( 0 );
 const int BUTTON_RUN			= BIT( 1 );
 const int BUTTON_ZOOM			= BIT( 2 );
 const int BUTTON_SCORES			= BIT( 3 );
-const int BUTTON_MLOOK			= BIT( 4 );
-const int BUTTON_5				= BIT( 5 );
-const int BUTTON_6				= BIT( 6 );
-const int BUTTON_7				= BIT( 7 );
+const int BUTTON_USE			= BIT( 4 );
+const int BUTTON_JUMP			= BIT( 5 );
+const int BUTTON_CROUCH			= BIT( 6 );
+const int BUTTON_CHATTING		= BIT( 7 );
 
 // usercmd_t->impulse commands
 const int IMPULSE_0				= 0;			// weap 0
@@ -83,8 +83,7 @@ const int IMPULSE_28			= 28;			// vote yes
 const int IMPULSE_29			= 29;			// vote no
 const int IMPULSE_40			= 40;			// use vehicle
 
-// usercmd_t->flags
-const int UCF_IMPULSE_SEQUENCE	= 0x0001;		// toggled every time an impulse command is sent
+
 
 class usercmd_t
 {
@@ -99,8 +98,10 @@ public:
 	short		angles[3];						// view angles
 	short		mx;								// mouse delta x
 	short		my;								// mouse delta y
-	signed char impulse;						// impulse command
-	byte		flags;							// additional flags
+	// RB: from BFG
+	byte		impulse;						// impulse command
+	byte		impulseSequence;				// incremented every time there's a new impulse
+	// RB end
 	int			sequence;						// just for debugging
 	
 public:
@@ -113,6 +114,95 @@ typedef enum
 	INHIBIT_SESSION = 0,
 	INHIBIT_ASYNC
 } inhibit_t;
+
+typedef enum
+{
+	UB_NONE,
+	
+	UB_MOVEUP,
+	UB_MOVEDOWN,
+	UB_LOOKLEFT,
+	UB_LOOKRIGHT,
+	UB_MOVEFORWARD,
+	UB_MOVEBACK,
+	UB_LOOKUP,
+	UB_LOOKDOWN,
+	UB_MOVELEFT,
+	UB_MOVERIGHT,
+	
+	UB_ATTACK,
+	UB_SPEED,
+	UB_ZOOM,
+	UB_SHOWSCORES,
+	UB_USE,
+	
+	UB_IMPULSE0,
+	UB_IMPULSE1,
+	UB_IMPULSE2,
+	UB_IMPULSE3,
+	UB_IMPULSE4,
+	UB_IMPULSE5,
+	UB_IMPULSE6,
+	UB_IMPULSE7,
+	UB_IMPULSE8,
+	UB_IMPULSE9,
+	UB_IMPULSE10,
+	UB_IMPULSE11,
+	UB_IMPULSE12,
+	UB_IMPULSE13,
+	UB_IMPULSE14,
+	UB_IMPULSE15,
+	UB_IMPULSE16,
+	UB_IMPULSE17,
+	UB_IMPULSE18,
+	UB_IMPULSE19,
+	UB_IMPULSE20,
+	UB_IMPULSE21,
+	UB_IMPULSE22,
+	UB_IMPULSE23,
+	UB_IMPULSE24,
+	UB_IMPULSE25,
+	UB_IMPULSE26,
+	UB_IMPULSE27,
+	UB_IMPULSE28,
+	UB_IMPULSE29,
+	UB_IMPULSE30,
+	UB_IMPULSE31,
+	UB_IMPULSE32,
+	UB_IMPULSE33,
+	UB_IMPULSE34,
+	UB_IMPULSE35,
+	UB_IMPULSE36,
+	UB_IMPULSE37,
+	UB_IMPULSE38,
+	UB_IMPULSE39,
+	UB_IMPULSE40,
+	UB_IMPULSE41,
+	UB_IMPULSE42,
+	UB_IMPULSE43,
+	UB_IMPULSE44,
+	UB_IMPULSE45,
+	UB_IMPULSE46,
+	UB_IMPULSE47,
+	UB_IMPULSE48,
+	UB_IMPULSE49,
+	UB_IMPULSE50,
+	UB_IMPULSE51,
+	UB_IMPULSE52,
+	UB_IMPULSE53,
+	UB_IMPULSE54,
+	UB_IMPULSE55,
+	UB_IMPULSE56,
+	UB_IMPULSE57,
+	UB_IMPULSE58,
+	UB_IMPULSE59,
+	UB_IMPULSE60,
+	UB_IMPULSE61,
+	UB_IMPULSE62,
+	UB_IMPULSE63,
+	
+	UB_MAX_BUTTONS
+} usercmdButton_t;
 
 const int MAX_BUFFERED_USERCMD = 64;
 
@@ -149,12 +239,6 @@ public:
 	// Set a value that can safely be referenced by UsercmdInterrupt() for each key binding.
 	virtual	int			CommandStringUsercmdData( const char* cmdString ) = 0;
 	
-	// Returns the number of user commands.
-	virtual int			GetNumUserCommands() = 0;
-	
-	// Returns the name of a user command via index.
-	virtual const char* GetUserCommandName( int index ) = 0;
-	
 	// Continuously modified, never reset. For full screen guis.
 	virtual void		MouseState( int* x, int* y, int* button, bool* down ) = 0;
 	
@@ -164,10 +248,201 @@ public:
 	// Directly sample a keystate.
 	virtual int			KeyState( int key ) = 0;
 	
-	// Directly sample a usercmd.
-	virtual usercmd_t	GetDirectUsercmd() = 0;
+	// called at vsync time
+	virtual void		BuildCurrentUsercmd() = 0;
+	
+	// return the current usercmd
+	virtual usercmd_t	GetCurrentUsercmd() = 0;
 };
 
 extern idUsercmdGen*	usercmdGen;
+
+/*
+================================================
+idUserCmdMgr
+================================================
+*/
+#if 0
+class idUserCmdMgr
+{
+public:
+	idUserCmdMgr()
+	{
+		SetDefaults();
+	}
+	
+	void SetDefaults()
+	{
+		for( int i = 0; i < cmdBuffer.Num(); ++i )
+		{
+			cmdBuffer[i].Zero();
+		}
+		writeFrame.Zero();
+		readFrame.Memset( -1 );
+	}
+	
+	// Set to 128 for now
+	// Temp fix for usercmds overflowing  Correct fix is to process usercmds as they come in (like q3), rather then buffer them up.
+	static const int USERCMD_BUFFER_SIZE = 128;
+	
+	//usercmd_t	cmdBuffer[ USERCMD_BUFFER_SIZE ][ MAX_ASYNC_CLIENTS ];
+	id2DArray< usercmd_t, USERCMD_BUFFER_SIZE, MAX_ASYNC_CLIENTS >::type	cmdBuffer;
+	idArray< int, MAX_ASYNC_CLIENTS >			writeFrame;	//"where we write to next"
+	idArray< int, MAX_ASYNC_CLIENTS >			readFrame;	//"the last frame we read"
+	
+	void PutUserCmdForPlayer( int playerIndex, const usercmd_t& cmd )
+	{
+		cmdBuffer[ writeFrame[ playerIndex ] % USERCMD_BUFFER_SIZE ][ playerIndex ] = cmd;
+		if( writeFrame[ playerIndex ] - readFrame[ playerIndex ] + 1 > USERCMD_BUFFER_SIZE )
+		{
+			readFrame[ playerIndex ] = writeFrame[ playerIndex ] - USERCMD_BUFFER_SIZE / 2;		// Set to middle of buffer as a temp fix until we can catch the client up correctly
+			idLib::Printf( "PutUserCmdForPlayer: buffer overflow.\n" );
+		}
+		writeFrame[ playerIndex ]++;
+	}
+	
+	void ResetPlayer( int playerIndex )
+	{
+		for( int i = 0; i < USERCMD_BUFFER_SIZE; i++ )
+		{
+			memset( &cmdBuffer[i][playerIndex], 0, sizeof( usercmd_t ) );
+		}
+		writeFrame[ playerIndex ] = 0;
+		readFrame[ playerIndex ] = -1;
+	}
+	
+	bool HasUserCmdForPlayer( int playerIndex, int buffer = 0 ) const
+	{
+		// return true if the last frame we read from (+ buffer) is < the last frame we wrote to
+		// (remember writeFrame is where we write to *next*. readFrame is where we last read from last)
+		bool hasCmd = ( readFrame[ playerIndex ] + buffer < writeFrame[playerIndex] - 1 );
+		return hasCmd;
+	}
+	
+	bool HasUserCmdForClientTimeBuffer( int playerIndex, int millisecondBuffer )
+	{
+		// return true if there is at least one command in addition to enough
+		// commands to cover the buffer.
+		if( millisecondBuffer == 0 )
+		{
+			return HasUserCmdForPlayer( playerIndex );
+		}
+		
+		if( GetNumUnreadFrames( playerIndex ) < 2 )
+		{
+			return false;
+		}
+		
+		const int index = readFrame[ playerIndex ] + 1;
+		const usercmd_t& firstCmd = cmdBuffer[ index % USERCMD_BUFFER_SIZE ][ playerIndex ];
+		const usercmd_t& lastCmd = NewestUserCmdForPlayer( playerIndex );
+		
+		const int timeDelta = lastCmd.clientGameMilliseconds - firstCmd.clientGameMilliseconds;
+		
+		const bool isTimeGreaterThanBuffer = timeDelta > millisecondBuffer;
+		
+		return isTimeGreaterThanBuffer;
+	}
+	
+	const usercmd_t& NewestUserCmdForPlayer( int playerIndex )
+	{
+		int index = Max( writeFrame[ playerIndex ] - 1, 0 );
+		return cmdBuffer[ index % USERCMD_BUFFER_SIZE ][ playerIndex ];
+	}
+	
+	const usercmd_t& GetUserCmdForPlayer( int playerIndex )
+	{
+		//Get the next cmd we should process (not necessarily the newest)
+		//Note we may have multiple reads for every write .
+		//We want to:
+		// A) never skip over a cmd (unless we call MakeReadPtrCurrentForPlayer() ).
+		// B) never get ahead of the writeFrame
+		
+		//try to increment before reading (without this we may read the same input twice
+		//and be a frame behind our writes in the case of)
+		if( readFrame[ playerIndex ] < writeFrame[ playerIndex ] - 1 )
+		{
+			readFrame[ playerIndex ]++;
+		}
+		
+		//grab the next command in the readFrame buffer
+		int index = readFrame[ playerIndex ];
+		usercmd_t& result = cmdBuffer[ index % USERCMD_BUFFER_SIZE ][ playerIndex ];
+		return result;
+	}
+	
+	int GetNextUserCmdClientTime( int playerIndex ) const
+	{
+		if( !HasUserCmdForPlayer( playerIndex ) )
+		{
+			return 0;
+		}
+		
+		const int index = readFrame[ playerIndex ] + 1;
+		const usercmd_t& cmd = cmdBuffer[ index % USERCMD_BUFFER_SIZE ][ playerIndex ];
+		return cmd.clientGameMilliseconds;
+	}
+	
+	// Hack to let the player inject his position into the correct usercmd.
+	usercmd_t& GetWritableUserCmdForPlayer( int playerIndex )
+	{
+		//Get the next cmd we should process (not necessarily the newest)
+		//Note we may have multiple reads for every write .
+		//We want to:
+		// A) never skip over a cmd (unless we call MakeReadPtrCurrentForPlayer() ).
+		// B) never get ahead of the writeFrame
+		
+		//try to increment before reading (without this we may read the same input twice
+		//and be a frame behind our writes in the case of)
+		if( readFrame[ playerIndex ] < writeFrame[ playerIndex ] - 1 )
+		{
+			readFrame[ playerIndex ]++;
+		}
+		
+		//grab the next command in the readFrame buffer
+		int index = readFrame[ playerIndex ];
+		usercmd_t& result = cmdBuffer[ index % USERCMD_BUFFER_SIZE ][ playerIndex ];
+		return result;
+	}
+	
+	void MakeReadPtrCurrentForPlayer( int playerIndex )
+	{
+		//forces us to the head of our read buffer. As if we have processed every cmd available to us and now HasUserCmdForPlayer() returns FALSE
+		//Note we do -1 to point us to the last written cmd.
+		//If a read before the next write, you will get the last write. (not garbage)
+		//If a write is made before the next read, you *will* get the new write ( b/c GetUserCmdForPlayer pre increments)
+		
+		//After calling this, HasUserCmdForPlayer() will return FALSE;
+		readFrame[ playerIndex ] = writeFrame[ playerIndex ] - 1;
+	}
+	
+	void SkipBufferedCmdsForPlayer( int playerIndex )
+	{
+		// Similar to MakeReadPtrCurrentForPlayer, except:
+		// -After calling this, HasUserCmdForPlayer() will return TRUE iff there was >= 1 fresh cmd in the buffer
+		// Also, If there are no fresh frames, we wont roll the readFrame back
+		readFrame[ playerIndex ] = Max( readFrame[ playerIndex ], writeFrame[ playerIndex ] - 2 );
+	}
+	
+	int GetNumUnreadFrames( int playerIndex )
+	{
+		return ( writeFrame[ playerIndex ] - 1 ) - readFrame[ playerIndex ];
+	}
+	
+	int GetPlayerCmds( int user, usercmd_t** buffer, const int bufferSize )
+	{
+		// Fallback to getting cmds from the userCmdMgr
+		int start = Max( writeFrame[user] - Min( bufferSize, USERCMD_BUFFER_SIZE ), 0 );
+		int numCmds = writeFrame[user] - start;
+		
+		for( int i = 0; i < numCmds; i++ )
+		{
+			int index = ( start + i ) % USERCMD_BUFFER_SIZE;
+			buffer[i] = &cmdBuffer[ index ][ user ];
+		}
+		return numCmds;
+	}
+};
+#endif
 
 #endif /* !__USERCMDGEN_H__ */
