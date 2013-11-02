@@ -1,0 +1,13 @@
+obj*
+
+*.suo
+*.vcproj*
+*.vcxproj*
+*.sln
+*.sdf
+*.idb
+*.pdb
+
+UpgradeLog.XML
+UpgradeLog.htm
+
