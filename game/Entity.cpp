@@ -536,8 +536,8 @@ void idEntity::Spawn()
 #endif
 // RB end
 
-	// go dormant within 5 frames so that when the map starts most monsters are dormant
-	dormantStart = gameLocal.time - DELAY_DORMANT_TIME + gameLocal.msec * 5;
+	// go dormant within 100ms so that when the map starts most monsters are dormant
+	dormantStart = gameLocal.time - DELAY_DORMANT_TIME + 100;
 	
 	origin = renderEntity.origin;
 	axis = renderEntity.axis;

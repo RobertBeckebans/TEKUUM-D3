@@ -37,6 +37,32 @@ If you have questions concerning this license or the applicable additional terms
 ===============================================================================
 */
 
+extern idCVar com_engineHz;
+extern float com_engineHz_latched;
+extern int64 com_engineHz_numerator;
+extern int64 com_engineHz_denominator;
+
+// Returns the msec the frame starts on
+ID_INLINE int FRAME_TO_MSEC( int64 frame )
+{
+	return ( int )( ( frame * com_engineHz_numerator ) / com_engineHz_denominator );
+}
+// Rounds DOWN to the nearest frame
+ID_INLINE int MSEC_TO_FRAME_FLOOR( int msec )
+{
+	return ( int )( ( ( ( int64 )msec * com_engineHz_denominator ) + ( com_engineHz_denominator - 1 ) ) / com_engineHz_numerator );
+}
+// Rounds UP to the nearest frame
+ID_INLINE int MSEC_TO_FRAME_CEIL( int msec )
+{
+	return ( int )( ( ( ( int64 )msec * com_engineHz_denominator ) + ( com_engineHz_numerator - 1 ) ) / com_engineHz_numerator );
+}
+// Aligns msec so it starts on a frame bondary
+ID_INLINE int MSEC_ALIGN_TO_FRAME( int msec )
+{
+	return FRAME_TO_MSEC( MSEC_TO_FRAME_CEIL( msec ) );
+}
+
 const int USERCMD_HZ			= 60;			// 60 frames per second
 const int USERCMD_MSEC			= 1000 / USERCMD_HZ;
 

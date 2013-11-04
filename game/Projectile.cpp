@@ -568,7 +568,7 @@ void idProjectile::Think()
 		renderLight.axis = GetPhysics()->GetAxis();
 		if( ( lightDefHandle != -1 ) )
 		{
-			if( lightEndTime > 0 && gameLocal.time <= lightEndTime + gameLocal.GetMSec() )
+			if( lightEndTime > 0 && gameLocal.time <= lightEndTime + gameLocal.GetFrameTime() )
 			{
 				idVec3 color( 0, 0, 0 );
 				if( gameLocal.time < lightEndTime )
@@ -1819,7 +1819,7 @@ void idGuidedProjectile::Launch( const idVec3& start, const idVec3& dir, const i
 	angles = vel.ToAngles();
 	speed = vel.Length();
 	rndScale = spawnArgs.GetAngles( "random", "15 15 0" );
-	turn_max = spawnArgs.GetFloat( "turn_max", "180" ) / ( float )USERCMD_HZ;
+	turn_max = spawnArgs.GetFloat( "turn_max", "180" ) / com_engineHz_latched;
 	clamp_dist = spawnArgs.GetFloat( "clamp_dist", "256" );
 	burstMode = spawnArgs.GetBool( "burstMode" );
 	unGuided = false;

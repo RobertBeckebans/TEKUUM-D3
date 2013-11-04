@@ -33,6 +33,11 @@ If you have questions concerning this license or the applicable additional terms
 #include "../ui/Rectangle.h"
 #include "../renderer/tr_local.h"
 
+idCVar com_engineHz( "com_engineHz", "60", CVAR_FLOAT | CVAR_ARCHIVE, "Frames per second the engine runs at", 10.0f, 1024.0f );
+float com_engineHz_latched = 60.0f; // Latched version of cvar, updated between map loads
+int64 com_engineHz_numerator = 100LL * 1000LL;
+int64 com_engineHz_denominator = 100LL * 60LL;
+
 idCVar joy_mergedThreshold( "joy_mergedThreshold", "1", CVAR_BOOL | CVAR_ARCHIVE, "If the thresholds aren't merged, you drift more off center" );
 idCVar joy_newCode( "joy_newCode", "1", CVAR_BOOL | CVAR_ARCHIVE, "Use the new codepath" );
 idCVar joy_triggerThreshold( "joy_triggerThreshold", "0.05", CVAR_FLOAT | CVAR_ARCHIVE, "how far the joystick triggers have to be pressed before they register as down" );

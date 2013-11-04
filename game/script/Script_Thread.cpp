@@ -755,7 +755,7 @@ bool idThread::Execute()
 		}
 		else if( interpreter.MultiFrameEventInProgress() )
 		{
-			PostEventMS( &EV_Thread_Execute, gameLocal.msec );
+			PostEventMS( &EV_Thread_Execute, 1 );
 		}
 	}
 	
@@ -1022,7 +1022,7 @@ void idThread::WaitFrame()
 	// that frame if necessary.
 	if( !manualControl )
 	{
-		waitingUntil = gameLocal.time + gameLocal.msec;
+		waitingUntil = gameLocal.time + 1;
 	}
 }
 
@@ -2059,7 +2059,7 @@ idThread::Event_GetFrameTime
 */
 void idThread::Event_GetFrameTime()
 {
-	idThread::ReturnFloat( MS2SEC( gameLocal.msec ) );
+	idThread::ReturnFloat( MS2SEC( gameLocal.time - gameLocal.previousTime ) );
 }
 
 /*
@@ -2069,7 +2069,7 @@ idThread::Event_GetTicsPerSecond
 */
 void idThread::Event_GetTicsPerSecond()
 {
-	idThread::ReturnFloat( USERCMD_HZ );
+	idThread::ReturnFloat( com_engineHz_latched );
 }
 
 /*
