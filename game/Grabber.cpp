@@ -1,25 +1,25 @@
 /*
 ===========================================================================
 
-Doom 3 GPL Source Code
-Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Doom 3 BFG Edition GPL Source Code
+Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
 
-This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
+This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
-Doom 3 Source Code is free software: you can redistribute it and/or modify
+Doom 3 BFG Edition Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Doom 3 Source Code is distributed in the hope that it will be useful,
+Doom 3 BFG Edition Source Code is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Doom 3 Source Code.  If not, see <http://www.gnu.org/licenses/>.
+along with Doom 3 BFG Edition Source Code.  If not, see <http://www.gnu.org/licenses/>.
 
-In addition, the Doom 3 Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 Source Code.  If not, please request a copy in writing from id Software at the address below.
+In addition, the Doom 3 BFG Edition Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 BFG Edition Source Code.  If not, please request a copy in writing from id Software at the address below.
 
 If you have questions concerning this license or the applicable additional terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 
@@ -59,13 +59,13 @@ END_CLASS
 idGrabber::idGrabber
 ==============
 */
-idGrabber::idGrabber( void )
+idGrabber::idGrabber()
 {
 	dragEnt = NULL;
 	owner = NULL;
 	beam = NULL;
 	beamTarget = NULL;
-	oldUcmdFlags = 0;
+	oldImpulseSequence = 0;
 	shakeForceFlip = false;
 	holdingAF = false;
 	endTime = 0;
@@ -81,7 +81,7 @@ idGrabber::idGrabber( void )
 idGrabber::~idGrabber
 ==============
 */
-idGrabber::~idGrabber( void )
+idGrabber::~idGrabber()
 {
 	StopDrag( true );
 	if( beam )
@@ -177,7 +177,7 @@ void idGrabber::Restore( idRestoreGame* savefile )
 idGrabber::Initialize
 ==============
 */
-void idGrabber::Initialize( void )
+void idGrabber::Initialize()
 {
 	// TODO
 #if 0
@@ -242,7 +242,7 @@ void idGrabber::StartDrag( idEntity* grabEnt, int id )
 	dragFailTime = gameLocal.slow.time;
 	startDragTime = gameLocal.slow.time;
 	
-	oldUcmdFlags = thePlayer->usercmd.flags;
+	oldImpulseSequence = thePlayer->usercmd.impulseSequence;
 	
 	// set grabbed state for networking
 	grabEnt->SetGrabbedState( true );
@@ -308,7 +308,9 @@ void idGrabber::StartDrag( idEntity* grabEnt, int id )
 	}
 	else if( grabEnt->IsType( idMoveableItem::Type ) )
 	{
+		// RB: 64 bit fixes, changed NULL to 0
 		grabEnt->PostEventMS( &EV_Touch, 250, thePlayer, 0 );
+		// RB end
 	}
 	
 	// Get the current physics object to manipulate
@@ -503,12 +505,12 @@ int idGrabber::Update( idPlayer* player, bool hide )
 				abort = true;
 			}
 		}
-		if( !abort && dragEnt.GetEntity()->IsHidden() )
+		if( !abort && dragEnt.GetEntity() && dragEnt.GetEntity()->IsHidden() )
 		{
 			abort = true;
 		}
 		// Not in multiplayer :: Pressing "reload" lets you carefully drop an item
-		if( !gameLocal.isMultiplayer && !abort && ( ( player->usercmd.flags & UCF_IMPULSE_SEQUENCE ) != ( oldUcmdFlags & UCF_IMPULSE_SEQUENCE ) ) && ( player->usercmd.impulse == IMPULSE_13 ) )
+		if( !gameLocal.isMultiplayer && !abort && ( player->usercmd.impulseSequence != oldImpulseSequence ) && ( player->usercmd.impulse == IMPULSE_13 ) )
 		{
 			abort = true;
 		}
@@ -734,7 +736,7 @@ int idGrabber::Update( idPlayer* player, bool hide )
 idGrabber::UpdateBeams
 ======================
 */
-void idGrabber::UpdateBeams( void )
+void idGrabber::UpdateBeams()
 {
 	jointHandle_t	muzzle_joint;
 	idVec3	muzzle_origin;
@@ -779,7 +781,7 @@ void idGrabber::UpdateBeams( void )
 idGrabber::ApplyShake
 ==============
 */
-void idGrabber::ApplyShake( void )
+void idGrabber::ApplyShake()
 {
 	float u = 1 - ( float )( endTime - gameLocal.time ) / ( g_grabberHoldSeconds.GetFloat() * 1000 );
 	

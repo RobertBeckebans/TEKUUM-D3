@@ -74,7 +74,11 @@ typedef struct mtrParsingData_s
 idCVar r_forceSoundOpAmplitude( "r_forceSoundOpAmplitude", "0", CVAR_FLOAT, "Don't call into the sound system for amplitudes" );
 
 // RB begin
-idCVar binaryLoadMaterials( "binaryLoadMaterials", "1", 0, "enable binary load/write of material decls" );
+#if defined(__ANDROID__)
+idCVar binaryLoadMaterials( "binaryLoadMaterials", "0", 0, "enable binary load/write of material decls" );
+#else
+idCVar binaryLoadMaterials( "binaryLoadMaterials", "0", 0, "enable binary load/write of material decls" );
+#endif
 
 static const byte BMTR_VERSION = 101;
 static const unsigned int BMTR_MAGIC = ( 'B' << 24 ) | ( 'M' << 16 ) | ( 'R' << 8 ) | BMTR_VERSION;
@@ -2637,7 +2641,7 @@ bool idMaterial::Parse( const char* text, const int textLength, bool allowBinary
 	unsigned int loadedChecksum = 0;
 	idStrStatic< MAX_OSPATH > generatedFileName;
 	bool loadedFromBinary = false;
-	if( allowBinaryVersion )
+	if( allowBinaryVersion && binaryLoadMaterials.GetBool() )
 	{
 		// Try to load the generated version of it
 		// If successful,
@@ -2655,9 +2659,12 @@ bool idMaterial::Parse( const char* text, const int textLength, bool allowBinary
 			file->ReadBig( magic );
 			file->ReadBig( loadedChecksum );
 			
-			bsrc.LoadFromFile( file );
-			
-			loadedFromBinary = true;
+			if( ( magic == BMTR_MAGIC ) && ( sourceChecksum == loadedChecksum ) )
+			{
+				bsrc.LoadFromFile( file );
+				
+				loadedFromBinary = true;
+			}
 		}
 	}
 	// RB end
