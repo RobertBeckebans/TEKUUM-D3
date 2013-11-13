@@ -580,7 +580,7 @@ void idGameLocal::SaveGame( idFile* f )
 	
 // RB begin
 #if defined(STANDALONE)
-	savegame.WriteInt( msec );
+	//savegame.WriteInt( msec );
 #endif
 // RB end
 
@@ -607,7 +607,7 @@ void idGameLocal::SaveGame( idFile* f )
 	slow.Save( &savegame );
 	
 	savegame.WriteInt( slowmoState );
-	savegame.WriteFloat( slowmoMsec );
+	savegame.WriteFloat( slowmoScale );
 	savegame.WriteBool( quickSlowmoReset );
 #endif
 // RB end
@@ -1549,7 +1549,7 @@ bool idGameLocal::InitFromSaveGame( const char* mapName, idRenderWorld* renderWo
 	
 // RB begin
 #if defined(STANDALONE)
-	savegame.ReadInt( msec );
+	//savegame.ReadInt( msec );
 #endif
 // RB end
 
@@ -1579,7 +1579,7 @@ bool idGameLocal::InitFromSaveGame( const char* mapName, idRenderWorld* renderWo
 	savegame.ReadInt( blah );
 	slowmoState = ( slowmoState_t )blah;
 	
-	savegame.ReadFloat( slowmoMsec );
+	savegame.ReadFloat( slowmoScale );
 	savegame.ReadBool( quickSlowmoReset );
 	
 	if( slowmoState == SLOWMO_STATE_OFF )
@@ -1598,7 +1598,7 @@ bool idGameLocal::InitFromSaveGame( const char* mapName, idRenderWorld* renderWo
 	}
 	if( gameSoundWorld )
 	{
-		gameSoundWorld->SetSlowmoSpeed( slowmoMsec / ( float )USERCMD_MSEC );
+		gameSoundWorld->SetSlowmoSpeed( slowmoScale );
 	}
 #endif
 // RB end
@@ -2612,8 +2612,7 @@ void idGameLocal::RunTimeGroup2()
 	idEntity* ent;
 	int num = 0;
 	
-	fast.Increment();
-	fast.Get( time, previousTime, msec, framenum, realClientTime );
+	SelectTimeGroup( true );
 	
 	for( ent = activeEntities.Next(); ent != NULL; ent = ent->activeNode.Next() )
 	{
@@ -2626,7 +2625,7 @@ void idGameLocal::RunTimeGroup2()
 		num++;
 	}
 	
-	slow.Get( time, previousTime, msec, framenum, realClientTime );
+	SelectTimeGroup( false );
 }
 #endif
 // RB end
@@ -2655,15 +2654,6 @@ gameReturn_t idGameLocal::RunFrame( const usercmd_t* clientCmds )
 	
 	player = GetLocalPlayer();
 	
-// RB begin
-#if defined(STANDALONE)
-	ComputeSlowMsec();
-	
-	slow.Get( time, previousTime, msec, framenum, realClientTime );
-	msec = slowmoMsec;
-#endif
-// RB end
-
 	if( !isMultiplayer && g_stopTime.GetBool() )
 	{
 		// clear any debug lines from a previous frame
@@ -2677,17 +2667,30 @@ gameReturn_t idGameLocal::RunFrame( const usercmd_t* clientCmds )
 			player->Think();
 		}
 	}
-	else do
+	else
+	{
+		do
 		{
 			// update the game time
 			framenum++;
-			previousTime = FRAME_TO_MSEC( framenum - 1 );
-			time = FRAME_TO_MSEC( framenum );
-			realClientTime = time;
 			
 // RB begin
 #if defined(STANDALONE)
-			slow.Set( time, previousTime, msec, framenum, realClientTime );
+			fast.previousTime = FRAME_TO_MSEC( framenum - 1 );
+			fast.time = FRAME_TO_MSEC( framenum );
+			fast.realClientTime = time;
+			
+			ComputeSlowScale();
+			
+			slow.previousTime = slow.time;
+			slow.time += idMath::Ftoi( ( fast.time - fast.previousTime ) * slowmoScale );
+			slow.realClientTime = slow.time;
+			
+			SelectTimeGroup( false );
+#else
+			previousTime = FRAME_TO_MSEC( framenum - 1 );
+			time = FRAME_TO_MSEC( framenum );
+			realClientTime = time;
 #endif
 // RB end
 
@@ -2832,9 +2835,9 @@ gameReturn_t idGameLocal::RunFrame( const usercmd_t* clientCmds )
 // RB begin
 #if defined(STANDALONE)
 			// service pending fast events
-			fast.Get( time, previousTime, msec, framenum, realClientTime );
+			SelectTimeGroup( true );
 			idEvent::ServiceFastEvents();
-			slow.Get( time, previousTime, msec, framenum, realClientTime );
+			SelectTimeGroup( false );
 #endif
 // RB end
 
@@ -2895,7 +2898,8 @@ gameReturn_t idGameLocal::RunFrame( const usercmd_t* clientCmds )
 			}
 		}
 		while( ( inCinematic || ( time < cinematicStopTime ) ) && skipCinematic );
-		
+	}
+	
 	ret.syncNextGameFrame = skipCinematic;
 	if( skipCinematic )
 	{
@@ -5208,15 +5212,13 @@ void idGameLocal::SelectTimeGroup( int timeGroup )
 {
 // RB begin
 #if defined(STANDALONE)
-	int i = 0;
-	
 	if( timeGroup )
 	{
-		fast.Get( time, previousTime, msec, framenum, realClientTime );
+		fast.Get( time, previousTime, realClientTime );
 	}
 	else
 	{
-		slow.Get( time, previousTime, msec, framenum, realClientTime );
+		slow.Get( time, previousTime, realClientTime );
 	}
 #endif
 // RB end
@@ -5263,7 +5265,7 @@ void idGameLocal::GetBestGameType( const char* map, const char* gametype, char b
 idGameLocal::ComputeSlowMsec
 ============
 */
-void idGameLocal::ComputeSlowMsec()
+void idGameLocal::ComputeSlowScale()
 {
 	// check if we need to do a quick reset
 	if( quickSlowmoReset )
@@ -5303,7 +5305,7 @@ void idGameLocal::ComputeSlowMsec()
 		if( gameSoundWorld )
 		{
 			gameSoundWorld->SetSlowmo( true );
-			gameSoundWorld->SetSlowmoSpeed( slowmoMsec / ( float )USERCMD_MSEC );
+			gameSoundWorld->SetSlowmoSpeed( slowmoScale );
 		}
 	}
 	else if( !powerupOn && slowmoState == SLOWMO_STATE_ON )

@@ -1761,8 +1761,8 @@ gameReturn_t idGameLocal::ClientPrediction( int clientNum, const usercmd_t* clie
 	
 // RB begin
 #if defined(STANDALONE)
-	slow.Set( time, previousTime, msec, framenum, realClientTime );
-	fast.Set( time, previousTime, msec, framenum, realClientTime );
+	slow.Set( time, previousTime, realClientTime );
+	fast.Set( time, previousTime, realClientTime );
 #endif
 // RB end
 
