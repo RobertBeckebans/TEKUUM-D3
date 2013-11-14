@@ -234,7 +234,6 @@ size_t idWindow::Allocated()
 // RB: default constructor for Lua
 idWindow::idWindow()
 {
-	dc = NULL;
 	gui = NULL;
 	CommonInit();
 }

@@ -393,6 +393,7 @@ public:
 	bool				UpdateFromDictionary( idDict& dict );
 	
 	// RB begin
+	static int			Lua_new( lua_State* L );
 	static int			Lua_gc( lua_State* L );
 	static int			Lua_index( lua_State* L );
 	static int			Lua_newindex( lua_State* L );

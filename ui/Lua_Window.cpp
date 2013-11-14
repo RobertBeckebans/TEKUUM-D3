@@ -36,10 +36,30 @@ If you have questions concerning this license or the applicable additional terms
 #include "Window.h"
 
 
+int idWindow::Lua_new( lua_State* L )
+{
+	int args = lua_gettop( L );
+	
+	idWindow* window = new idWindow(); //LuaWrapper<idWindow>::allocator(L);
+	
+	if( args == 1 && lua_isstring( L, 1 ) )
+	{
+		char		buf[MAX_STRING_CHARS];
+		
+		const char* name = luaL_checkstring( L, 1 );
+		window->SetInitialState( name );
+	}
+	
+	luaW_push<idWindow>( L, window );
+	luaW_hold<idWindow>( L, window );
+	//luaW_postconstructor<idWindow>(L, args);
+	
+	return 1;
+}
 
 int idWindow::Lua_gc( lua_State* L )
 {
-	idLib::Printf( "Lua says bye to entity = %p\n", luaW_check<idWindow>( L, 1 ) );
+	idLib::Printf( "Lua says bye to windows = %p\n", luaW_check<idWindow>( L, 1 ) );
 	
 	return 0;
 }
@@ -56,7 +76,13 @@ int idWindow::Lua_index( lua_State* L )
 			const char* field = luaL_checkstring( L, 2 );
 			
 			// TODO more fields
-			if( idStr::Cmp( field, "text" ) == 0 )
+			if( idStr::Cmp( field, "name" ) == 0 )
+			{
+				sprintf( buf, "%s", window->name.c_str() );
+				lua_pushstring( L, buf );
+				return 1;
+			}
+			else if( idStr::Cmp( field, "text" ) == 0 )
 			{
 				sprintf( buf, "%s", window->text.c_str() );
 				lua_pushstring( L, buf );
@@ -85,6 +111,13 @@ int idWindow::Lua_newindex( lua_State* L )
 				
 				return 0;
 			}
+			else if( idStr::Cmp( field, "background" ) == 0 )
+			{
+				const char* text = luaL_checkstring( L, 3 );
+				window->backGroundName = text;
+				
+				return 0;
+			}
 		}
 	}
 	
@@ -98,7 +131,7 @@ int idWindow::Lua_tostring( lua_State* L )
 	idWindow* window = luaW_check<idWindow>( L, 1 );
 	if( window )
 	{
-		sprintf( buf, "Window: name='%s', text='%s' \n", window->name.c_str(), window->text.c_str() );
+		sprintf( buf, "Window: name='%s' ", window->name.c_str() );
 		lua_pushstring( L, buf );
 	}
 	
@@ -156,14 +189,22 @@ int idWindow::Lua_text( lua_State* L )
 	return 0;
 }
 
-static const luaL_Reg Window_meta[] =
+static const luaL_Reg windowDef_default[] =
 {
-//	{ "__gc",			idWindow::Lua_GC},
+	{ "new",			idWindow::Lua_new},
+	{NULL, NULL}
+};
+
+static const luaL_Reg windowDef_meta[] =
+{
+	{ "__new",			idWindow::Lua_new},
+	{ "__gc",			idWindow::Lua_gc},
 	{ "__index",		idWindow::Lua_index },
 	{ "__newindex",		idWindow::Lua_newindex },
 	{ "__tostring",		idWindow::Lua_tostring },
 	{ "GetText",		idWindow::Lua_GetText },
 	{ "SetText",		idWindow::Lua_SetText },
+	
 //	{ "text",			idWindow::Lua_text },
 
 	{NULL, NULL}
@@ -174,7 +215,7 @@ extern "C"
 
 	int luaopen_Window( lua_State* L )
 	{
-		luaW_register< idWindow >( L, "windowDef", NULL, Window_meta );
+		luaW_register< idWindow >( L, "windowDef", windowDef_default, windowDef_meta );
 		
 		return 0;
 	}
