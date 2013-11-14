@@ -3126,7 +3126,10 @@ void idSessionLocal::Frame()
 		if( !com_asyncInput.GetBool() )
 		{
 			// early exit, won't do RunGameTic .. but still need to update mouse position for GUIs
-			usercmdGen->GetDirectUsercmd();
+			
+			// RB begin
+			usercmdGen->BuildCurrentUsercmd();
+			// RB end
 		}
 	}
 	
@@ -3277,7 +3280,10 @@ void idSessionLocal::RunGameTic()
 		}
 		else
 		{
-			cmd = usercmdGen->GetDirectUsercmd();
+			// RB begin
+			usercmdGen->BuildCurrentUsercmd();
+			cmd = usercmdGen->GetCurrentUsercmd();
+			// RB end
 		}
 		lastGameTic++;
 	}

@@ -241,7 +241,9 @@ public:
 	
 	int						buttonMask;
 	int						oldButtons;
-	int						oldFlags;
+	// RB: BFG usercmd_t
+	int						oldImpulseSequence;
+	// RB end
 	
 	int						lastHitTime;			// last time projectile fired by player hit target
 	int						lastSndHitTime;			// MP hit sound - != lastHitTime because we throttle

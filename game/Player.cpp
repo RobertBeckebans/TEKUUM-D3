@@ -1087,7 +1087,9 @@ idPlayer::idPlayer()
 	
 	oldButtons				= 0;
 	buttonMask				= 0;
-	oldFlags				= 0;
+	// RB: BFG usercmd_t
+	oldImpulseSequence		= 0;
+	// RB end
 	
 	lastHitTime				= 0;
 	lastSndHitTime			= 0;
@@ -1340,7 +1342,9 @@ void idPlayer::Init()
 	nodamage				= false;
 	
 	oldButtons				= 0;
-	oldFlags				= 0;
+	// RB: BFG usercmd_t
+	oldImpulseSequence		= 0;
+	// RB end
 	
 	currentWeapon			= -1;
 	idealWeapon				= -1;
@@ -1825,7 +1829,9 @@ void idPlayer::Save( idSaveGame* savefile ) const
 	
 	savefile->WriteInt( buttonMask );
 	savefile->WriteInt( oldButtons );
-	savefile->WriteInt( oldFlags );
+	// RB: BFG usercmd_t
+	savefile->WriteInt( oldImpulseSequence );
+	// RB end
 	
 	savefile->WriteInt( lastHitTime );
 	savefile->WriteInt( lastSndHitTime );
@@ -2052,10 +2058,12 @@ void idPlayer::Restore( idRestoreGame* savefile )
 	
 	savefile->ReadInt( buttonMask );
 	savefile->ReadInt( oldButtons );
-	savefile->ReadInt( oldFlags );
+	// RB: BFG usercmd_t
+	savefile->ReadInt( oldImpulseSequence );
 	
-	usercmd.flags = 0;
-	oldFlags = 0;
+	usercmd.impulseSequence = 0;
+	oldImpulseSequence = 0;
+	// RB end
 	
 	savefile->ReadInt( lastHitTime );
 	savefile->ReadInt( lastSndHitTime );
@@ -6650,14 +6658,16 @@ void idPlayer::EvaluateControls()
 		gameLocal.sessionCommand = "died";
 	}
 	
-	if( ( usercmd.flags & UCF_IMPULSE_SEQUENCE ) != ( oldFlags & UCF_IMPULSE_SEQUENCE ) )
+	// RB: BFG usercmd_t
+	if( usercmd.impulseSequence != oldImpulseSequence )
 	{
 		PerformImpulse( usercmd.impulse );
 	}
 	
-	scoreBoardOpen = ( ( usercmd.buttons & BUTTON_SCORES ) != 0 || forceScoreBoard );
+	oldImpulseSequence = usercmd.impulseSequence;
+	// RB end
 	
-	oldFlags = usercmd.flags;
+	scoreBoardOpen = ( ( usercmd.buttons & BUTTON_SCORES ) != 0 || forceScoreBoard );
 	
 	AdjustSpeed();
 	
@@ -7342,7 +7352,7 @@ void idPlayer::Think()
 	{
 		spawnAnglesSet = true;
 		SetViewAngles( spawnAngles );
-		oldFlags = usercmd.flags;
+		oldImpulseSequence = usercmd.impulseSequence;
 	}
 	
 // RB begin
@@ -7384,12 +7394,6 @@ void idPlayer::Think()
 		acc->time = gameLocal.time;
 		acc->dir[1] = usercmd.rightmove - oldCmd.rightmove;
 		acc->dir[0] = acc->dir[2] = 0;
-	}
-	
-	// freelook centering
-	if( ( usercmd.buttons ^ oldCmd.buttons ) & BUTTON_MLOOK )
-	{
-		centerView.Init( gameLocal.time, 200, viewAngles.pitch, 0 );
 	}
 	
 	// zooming
@@ -9236,7 +9240,7 @@ void idPlayer::ClientPredictionThink()
 {
 	renderEntity_t* headRenderEnt;
 	
-	oldFlags = usercmd.flags;
+	oldImpulseSequence = usercmd.impulseSequence;
 	oldButtons = usercmd.buttons;
 	
 	usercmd = gameLocal.usercmds[ entityNumber ];
@@ -9273,7 +9277,7 @@ void idPlayer::ClientPredictionThink()
 	
 	if( gameLocal.isNewFrame )
 	{
-		if( ( usercmd.flags & UCF_IMPULSE_SEQUENCE ) != ( oldFlags & UCF_IMPULSE_SEQUENCE ) )
+		if( usercmd.impulseSequence != oldImpulseSequence )
 		{
 			PerformImpulse( usercmd.impulse );
 		}

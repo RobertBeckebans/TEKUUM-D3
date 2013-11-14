@@ -752,8 +752,10 @@ void idSaveGame::WriteUsercmd( const usercmd_t& usercmd )
 	WriteShort( usercmd.angles[2] );
 	WriteShort( usercmd.mx );
 	WriteShort( usercmd.my );
-	WriteSignedChar( usercmd.impulse );
-	WriteByte( usercmd.flags );
+	// RB begin
+	WriteByte( usercmd.impulse );
+	WriteByte( usercmd.impulseSequence );
+	// RB end
 	WriteInt( usercmd.sequence );
 }
 
@@ -1633,8 +1635,10 @@ void idRestoreGame::ReadUsercmd( usercmd_t& usercmd )
 	ReadShort( usercmd.angles[2] );
 	ReadShort( usercmd.mx );
 	ReadShort( usercmd.my );
-	ReadSignedChar( usercmd.impulse );
-	ReadByte( usercmd.flags );
+	// RB begin
+	ReadByte( usercmd.impulse );
+	ReadByte( usercmd.impulseSequence );
+	// RB end
 	ReadInt( usercmd.sequence );
 }
 
