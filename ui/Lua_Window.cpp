@@ -31,6 +31,7 @@ If you have questions concerning this license or the applicable additional terms
 
 #include <lua.hpp>
 #include <luawrapper.hpp>
+#include <luawrapperutil.hpp>
 
 #include "Lua_local.h"
 #include "Window.h"
@@ -191,13 +192,16 @@ int idWindow::Lua_text( lua_State* L )
 
 static const luaL_Reg windowDef_default[] =
 {
-	{ "new",			idWindow::Lua_new},
+//	{ "new",			idWindow::Lua_new },
+//	{ "__postctor",		luaU_build<idWindow> },
+	{ "text",			idWindow::Lua_text },
 	{NULL, NULL}
 };
 
 static const luaL_Reg windowDef_meta[] =
 {
-	{ "__new",			idWindow::Lua_new},
+//	{ "__new",			idWindow::Lua_new},
+	{ "__postctor",		luaU_build<idWindow> },
 	{ "__gc",			idWindow::Lua_gc},
 	{ "__index",		idWindow::Lua_index },
 	{ "__newindex",		idWindow::Lua_newindex },
@@ -205,8 +209,8 @@ static const luaL_Reg windowDef_meta[] =
 	{ "GetText",		idWindow::Lua_GetText },
 	{ "SetText",		idWindow::Lua_SetText },
 	
-//	{ "text",			idWindow::Lua_text },
-
+	{ "text",			idWindow::Lua_text },
+	
 	{NULL, NULL}
 };
 
