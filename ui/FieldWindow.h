@@ -40,7 +40,7 @@ public:
 	virtual void Draw( int time, float x, float y );
 	
 private:
-	virtual bool ParseInternalVar( const char* name, idParser* src );
+	virtual bool ParseInternalVar( const char* name, idTokenParser* src );
 	void CommonInit();
 	void CalcPaintOffset( int len );
 	int cursorPos;

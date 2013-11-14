@@ -1161,6 +1161,11 @@ unsigned char Sys_MapCharForKey( int key )
 #if !defined(USE_XINPUT)
 //#if _MSC_VER > 1000
 
+bool Sys_IsXbox360ControllerAvailable()
+{
+	return false;
+}
+
 int Sys_PollXbox360ControllerInputEvents()
 {
 	return 0;

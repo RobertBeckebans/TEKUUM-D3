@@ -36,7 +36,7 @@ If you have questions concerning this license or the applicable additional terms
 #include "EditWindow.h"
 
 
-bool idEditWindow::ParseInternalVar( const char* _name, idParser* src )
+bool idEditWindow::ParseInternalVar( const char* _name, idTokenParser* src )
 {
 	if( idStr::Icmp( _name, "maxchars" ) == 0 )
 	{

@@ -53,7 +53,7 @@ public:
 	idGuiScript();
 	~idGuiScript();
 	
-	bool Parse( idParser* src );
+	bool Parse( idTokenParser* src );
 	void Execute( idWindow* win )
 	{
 		if( handler )

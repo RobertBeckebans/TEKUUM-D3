@@ -59,7 +59,7 @@ public:
 	
 	
 private:
-	virtual bool ParseInternalVar( const char* name, idParser* src );
+	virtual bool ParseInternalVar( const char* name, idTokenParser* src );
 	void CommonInit();
 	void Line( int x1, int y1, int x2, int y2, dword* out, dword color );
 	void Point( int x, int y, dword* out, dword color );

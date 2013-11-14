@@ -901,8 +901,61 @@ void idCompiler::NextToken()
 	switch( token.type )
 	{
 		case TT_STRING:
-			// handle quoted strings as a unit
-			immediateType = &type_string;
+			// RB: added support for "vector( x y z )" instead of 'x y z' so the C# compiler does not bail about a multi character literal
+#if defined(USE_DOOMSHARP)
+			if( token.CmpPrefix( "vector" ) == 0 )
+			{
+				// handle quoted vectors as a unit
+				immediateType = &type_vector;
+				idLexer lex( token, token.Length(), parserPtr->GetFileName(), LEXFL_NOERRORS );
+				idToken token2;
+				
+				if( !lex.ExpectTokenString( "vector" ) )
+				{
+					Error( "vector '%s' is not in the form of vector( x y z ).  expected vector", token.c_str() );
+				}
+				
+				if( !lex.ExpectTokenString( "(" ) )
+				{
+					Error( "vector '%s' is not in the form of vector( x y z ).  expected ( after vector", token.c_str() );
+				}
+				
+				for( i = 0; i < 3; i++ )
+				{
+					if( !lex.ReadToken( &token2 ) )
+					{
+						Error( "Couldn't read vector. '%s' is not in the form of vector( x y z )", token.c_str() );
+					}
+					if( token2.type == TT_PUNCTUATION && token2 == "-" )
+					{
+						if( !lex.CheckTokenType( TT_NUMBER, 0, &token2 ) )
+						{
+							Error( "expected a number following '-' but found '%s' in vector '%s'", token2.c_str(), token.c_str() );
+						}
+						immediate.vector[ i ] = -token2.GetFloatValue();
+					}
+					else if( token2.type == TT_NUMBER )
+					{
+						immediate.vector[ i ] = token2.GetFloatValue();
+					}
+					else
+					{
+						Error( "vector '%s' is not in the form of vector( x y z ).  expected float value, found '%s'", token.c_str(), token2.c_str() );
+					}
+				}
+				
+				if( !lex.ExpectTokenString( ")" ) )
+				{
+					Error( "vector '%s' is not in the form of vector( x y z ).  expected final )", token.c_str() );
+				}
+			}
+			else
+#endif
+			{
+				// handle quoted strings as a unit
+				immediateType = &type_string;
+			}
+			// RB end
 			return;
 			
 		case TT_LITERAL:
@@ -1104,6 +1157,17 @@ idTypeDef* idCompiler::CheckType()
 	{
 		type = &type_void;
 	}
+	// RB begin
+#if defined(USE_DOOMSHARP)
+	else if( token == "class" )
+	{
+		type = &type_object;
+	}
+	else if( token == "bool" )
+	{
+		type = &type_boolean;
+	}
+#else
 	else if( token == "object" )
 	{
 		type = &type_object;
@@ -1112,6 +1176,8 @@ idTypeDef* idCompiler::CheckType()
 	{
 		type = &type_boolean;
 	}
+#endif
+	// RB end
 	else if( token == "namespace" )
 	{
 		type = &type_namespace;
@@ -3189,6 +3255,13 @@ void idCompiler::CompileFile( const char* text, const char* filename, bool toCon
 	
 	parser.SetFlags( LEXFL_ALLOWMULTICHARLITERALS );
 	parser.LoadMemory( text, strlen( text ), filename );
+	
+	// RB begin
+#if defined(USE_DOOMSHARP)
+	parser.AddDefine( "CSHARP 0" );
+#endif
+	// RB end
+	
 	parserPtr = &parser;
 	
 	// unread tokens to include script defines

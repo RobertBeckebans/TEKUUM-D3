@@ -32,7 +32,7 @@ If you have questions concerning this license or the applicable additional terms
 #include "Model_local.h"
 #include "tr_local.h"	// just for R_FreeWorldInteractions and R_CreateWorldInteractions
 
-idCVar r_binaryLoadRenderModels( "r_binaryLoadRenderModels", "1", 0, "enable binary load/write of render models" );
+idCVar binaryLoadRenderModels( "binaryLoadRenderModels", "1", 0, "enable binary load/write of render models" );
 idCVar preload_MapModels( "preload_MapModels", "1", CVAR_SYSTEM | CVAR_BOOL, "preload models during begin or end levelload" );
 
 class idRenderModelManagerLocal : public idRenderModelManager
@@ -304,7 +304,7 @@ idRenderModel* idRenderModelManagerLocal::GetModel( const char* _modelName, bool
 				idStr generatedFileName = "generated/rendermodels/";
 				generatedFileName.AppendPath( canonical );
 				generatedFileName.SetFileExtension( va( "b%s", extension.c_str() ) );
-				if( model->SupportsBinaryModel() && r_binaryLoadRenderModels.GetBool() )
+				if( model->SupportsBinaryModel() && binaryLoadRenderModels.GetBool() )
 				{
 					idFileLocal file( fileSystem->OpenFileReadMemory( generatedFileName ) );
 					model->PurgeModel();
@@ -373,7 +373,7 @@ idRenderModel* idRenderModelManagerLocal::GetModel( const char* _modelName, bool
 		
 		idFileLocal file( fileSystem->OpenFileReadMemory( generatedFileName ) );
 		
-		if( !model->SupportsBinaryModel() || !r_binaryLoadRenderModels.GetBool() )
+		if( !model->SupportsBinaryModel() || !binaryLoadRenderModels.GetBool() )
 		{
 			model->InitFromFile( canonical );
 		}

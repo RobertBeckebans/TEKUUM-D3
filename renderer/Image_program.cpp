@@ -403,7 +403,7 @@ static void AppendToken( idToken& token )
 MatchAndAppendToken
 ===================
 */
-static void MatchAndAppendToken( idLexer& src, const char* match )
+static void MatchAndAppendToken( idTokenParser& src, const char* match )
 {
 	if( !src.ExpectTokenString( match ) )
 	{
@@ -422,7 +422,7 @@ If both pic and timestamps are NULL, it will just advance past it, which can be
 used to parse an image program from a text stream.
 ===================
 */
-static bool R_ParseImageProgram_r( idLexer& src, byte** pic, int* width, int* height,
+static bool R_ParseImageProgram_r( idTokenParser& src, byte** pic, int* width, int* height,
 								   ID_TIME_T* timestamps, textureUsage_t* usage )
 {
 	idToken		token;
@@ -723,13 +723,19 @@ void R_LoadImageProgram( const char* name, byte** pic, int* width, int* height, 
 	src.LoadMemory( name, strlen( name ), name );
 	src.SetFlags( LEXFL_NOFATALERRORS | LEXFL_NOSTRINGCONCAT | LEXFL_NOSTRINGESCAPECHARS | LEXFL_ALLOWPATHNAMES );
 	
+	// RB begin
+	idTokenParser src2;
+	src2.LoadFromLexer( src, "temp" );
+	src2.StartParsing( "temp" );
+	
 	parseBuffer[0] = 0;
 	if( timestamps )
 	{
 		*timestamps = 0;
 	}
 	
-	R_ParseImageProgram_r( src, pic, width, height, timestamps, usage );
+	R_ParseImageProgram_r( src2, pic, width, height, timestamps, usage );
+	// RB end
 	
 	src.FreeSource();
 }
@@ -739,7 +745,7 @@ void R_LoadImageProgram( const char* name, byte** pic, int* width, int* height, 
 R_ParsePastImageProgram
 ===================
 */
-const char* R_ParsePastImageProgram( idLexer& src )
+const char* R_ParsePastImageProgram( idTokenParser& src )
 {
 	parseBuffer[0] = 0;
 	R_ParseImageProgram_r( src, NULL, NULL, NULL, NULL, NULL );

@@ -277,7 +277,7 @@ void idRegisterList::AddReg( const char* name, int type, idVec4 data, idWindow* 
 idRegisterList::AddReg
 ====================
 */
-void idRegisterList::AddReg( const char* name, int type, idParser* src, idWindow* win, idWinVar* var )
+void idRegisterList::AddReg( const char* name, int type, idTokenParser* src, idWindow* win, idWinVar* var )
 {
 	idRegister* reg;
 	

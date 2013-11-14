@@ -29,6 +29,7 @@ If you have questions concerning this license or the applicable additional terms
 #ifndef __REGEXP_H__
 #define __REGEXP_H__
 
+class idTokenParser;
 class idWindow;
 class idWinVar;
 
@@ -90,7 +91,7 @@ public:
 	idRegisterList();
 	~idRegisterList();
 	
-	void				AddReg( const char* name, int type, idParser* src, idWindow* win, idWinVar* var );
+	void				AddReg( const char* name, int type, idTokenParser* src, idWindow* win, idWinVar* var );
 	void				AddReg( const char* name, int type, idVec4 data, idWindow* win, idWinVar* var );
 	
 	idRegister* 		FindReg( const char* name );

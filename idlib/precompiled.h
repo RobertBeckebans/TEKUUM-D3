@@ -70,6 +70,7 @@ If you have questions concerning this license or the applicable additional terms
 #include "../framework/UsercmdGen.h"
 
 // decls
+#include "../framework/TokenParser.h"
 #include "../framework/DeclManager.h"
 #include "../framework/DeclTable.h"
 #include "../framework/DeclSkin.h"

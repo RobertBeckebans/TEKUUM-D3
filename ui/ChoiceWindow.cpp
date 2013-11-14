@@ -298,7 +298,7 @@ void idChoiceWindow::UpdateChoice()
 	}
 }
 
-bool idChoiceWindow::ParseInternalVar( const char* _name, idParser* src )
+bool idChoiceWindow::ParseInternalVar( const char* _name, idTokenParser* src )
 {
 	if( idStr::Icmp( _name, "choicetype" ) == 0 )
 	{

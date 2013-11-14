@@ -55,7 +55,7 @@ idFieldWindow::~idFieldWindow()
 
 }
 
-bool idFieldWindow::ParseInternalVar( const char* _name, idParser* src )
+bool idFieldWindow::ParseInternalVar( const char* _name, idTokenParser* src )
 {
 	if( idStr::Icmp( _name, "cursorvar" ) == 0 )
 	{

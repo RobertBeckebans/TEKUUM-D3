@@ -2092,7 +2092,7 @@ idWindow* idWindow::SetFocus( idWindow* w, bool scripts )
 idWindow::ParseScript
 ================
 */
-bool idWindow::ParseScript( idParser* src, idGuiScriptList& list, int* timeParm, bool elseBlock )
+bool idWindow::ParseScript( idTokenParser* src, idGuiScriptList& list, int* timeParm, bool elseBlock )
 {
 
 	bool	ifElseBlock = false;
@@ -2223,7 +2223,7 @@ void idWindow::RestoreExpressionParseState()
 idWindow::ParseScriptEntry
 ================
 */
-bool idWindow::ParseScriptEntry( const char* name, idParser* src )
+bool idWindow::ParseScriptEntry( const char* name, idTokenParser* src )
 {
 	for( int i = 0; i < SCRIPT_COUNT; i++ )
 	{
@@ -2506,7 +2506,7 @@ idWinVar* idWindow::GetWinVarByName( const char* _name, bool fixup, drawWin_t** 
 idWindow::ParseString
 ================
 */
-void idWindow::ParseString( idParser* src, idStr& out )
+void idWindow::ParseString( idTokenParser* src, idStr& out )
 {
 	idToken tok;
 	if( src->ReadToken( &tok ) )
@@ -2520,7 +2520,7 @@ void idWindow::ParseString( idParser* src, idStr& out )
 idWindow::ParseVec4
 ================
 */
-void idWindow::ParseVec4( idParser* src, idVec4& out )
+void idWindow::ParseVec4( idTokenParser* src, idVec4& out )
 {
 	idToken tok;
 	src->ReadToken( &tok );
@@ -2541,7 +2541,7 @@ void idWindow::ParseVec4( idParser* src, idVec4& out )
 idWindow::ParseInternalVar
 ================
 */
-bool idWindow::ParseInternalVar( const char* _name, idParser* src )
+bool idWindow::ParseInternalVar( const char* _name, idTokenParser* src )
 {
 
 	if( idStr::Icmp( _name, "showtime" ) == 0 )
@@ -2718,7 +2718,7 @@ bool idWindow::ParseInternalVar( const char* _name, idParser* src )
 idWindow::ParseRegEntry
 ================
 */
-bool idWindow::ParseRegEntry( const char* name, idParser* src )
+bool idWindow::ParseRegEntry( const char* name, idTokenParser* src )
 {
 	idStr work;
 	work = name;
@@ -2811,7 +2811,7 @@ void idWindow::SetInitialState( const char* _name )
 idWindow::Parse
 ================
 */
-bool idWindow::Parse( idParser* src, bool rebuild )
+bool idWindow::Parse( idTokenParser* src, bool rebuild )
 {
 	idToken token, token2, token3, token4, token5, token6, token7;
 	idStr work;
@@ -3579,7 +3579,7 @@ idWindow::ParseEmitOp
 ================
 */
 // DG: a, b and the return value are really pointers, so use intptr_t
-intptr_t idWindow::ParseEmitOp( idParser* src, intptr_t a, wexpOpType_t opType, int priority, wexpOp_t** opp )
+intptr_t idWindow::ParseEmitOp( idTokenParser* src, intptr_t a, wexpOpType_t opType, int priority, wexpOp_t** opp )
 {
 	intptr_t b = ParseExpressionPriority( src, priority );
 // DG end
@@ -3595,7 +3595,7 @@ Returns a register index
 =================
 */
 // DG: component and the return value are really pointers, so use intptr_t
-intptr_t idWindow::ParseTerm( idParser* src,	idWinVar* var, intptr_t component )
+intptr_t idWindow::ParseTerm( idTokenParser* src,	idWinVar* var, intptr_t component )
 {
 	// DG end
 	idToken token;
@@ -3720,7 +3720,7 @@ Returns a register index
 */
 #define	TOP_PRIORITY 4
 // DG: a, component and the return value are really pointers, so use intptr_t
-intptr_t idWindow::ParseExpressionPriority( idParser* src, int priority, idWinVar* var, intptr_t component )
+intptr_t idWindow::ParseExpressionPriority( idTokenParser* src, int priority, idWinVar* var, intptr_t component )
 {
 	idToken token;
 	intptr_t a;
@@ -3824,7 +3824,7 @@ Returns a register index
 ================
 */
 // DG: component and the return value are really pointers, so use intptr_t
-intptr_t idWindow::ParseExpression( idParser* src, idWinVar* var, intptr_t component )
+intptr_t idWindow::ParseExpression( idTokenParser* src, idWinVar* var, intptr_t component )
 // DG end
 {
 	return ParseExpressionPriority( src, TOP_PRIORITY, var );
@@ -3835,7 +3835,7 @@ intptr_t idWindow::ParseExpression( idParser* src, idWinVar* var, intptr_t compo
 idWindow::ParseBracedExpression
 ================
 */
-void idWindow::ParseBracedExpression( idParser* src )
+void idWindow::ParseBracedExpression( idTokenParser* src )
 {
 	src->ExpectTokenString( "{" );
 	ParseExpression( src );
@@ -5269,10 +5269,13 @@ bool idWindow::UpdateFromDictionary( idDict& dict )
 		
 		idParser src( kv->GetValue().c_str(), kv->GetValue().Length(), "",
 					  LEXFL_NOFATALERRORS | LEXFL_NOSTRINGCONCAT | LEXFL_ALLOWMULTICHARLITERALS | LEXFL_ALLOWBACKSLASHSTRINGCONCAT );
-		if( !ParseInternalVar( kv->GetKey(), &src ) )
+		idTokenParser src2;
+		src2.LoadFromParser( src, "temp" );
+		src2.StartParsing( "temp" );
+		if( !ParseInternalVar( kv->GetKey(), &src2 ) )
 		{
 			// Kill the old register since the parse reg entry will add a new one
-			if( !ParseRegEntry( kv->GetKey(), &src ) )
+			if( !ParseRegEntry( kv->GetKey(), &src2 ) )
 			{
 				continue;
 			}

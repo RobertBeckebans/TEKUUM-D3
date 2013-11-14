@@ -2836,7 +2836,7 @@ static int RB_DrawShaderPasses( const drawSurf_t* const* const drawSurfs, const 
 				// bind texture units
 				for( int j = 0; j < newStage->numFragmentProgramImages; j++ )
 				{
-					idImage* image = newStage->fragmentProgramImages[j].image;
+					idImage* image = newStage->fragmentProgramImages[j];
 					if( image != NULL )
 					{
 						GL_SelectTexture( j );
@@ -2850,7 +2850,7 @@ static int RB_DrawShaderPasses( const drawSurf_t* const* const drawSurfs, const 
 				// unbind texture units
 				for( int j = 0; j < newStage->numFragmentProgramImages; j++ )
 				{
-					idImage* image = newStage->fragmentProgramImages[j].image;
+					idImage* image = newStage->fragmentProgramImages[j];
 					if( image != NULL )
 					{
 						GL_SelectTexture( j );

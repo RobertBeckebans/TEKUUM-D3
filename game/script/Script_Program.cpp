@@ -47,10 +47,18 @@ idTypeDef	type_field( ev_field, &def_field, "field", sizeof( intptr_t ), NULL );
 idTypeDef	type_function( ev_function, &def_function, "function", sizeof( intptr_t ), &type_void );
 idTypeDef	type_virtualfunction( ev_virtualfunction, &def_virtualfunction, "virtual function", sizeof( intptr_t ), NULL );
 idTypeDef	type_pointer( ev_pointer, &def_pointer, "pointer", sizeof( intptr_t ), NULL );
+#if defined(USE_DOOMSHARP)
+idTypeDef	type_object( ev_object, &def_object, "class", sizeof( intptr_t ), NULL );					// stored as entity number pointer
+#else
 idTypeDef	type_object( ev_object, &def_object, "object", sizeof( intptr_t ), NULL );					// stored as entity number pointer
+#endif
 idTypeDef	type_jumpoffset( ev_jumpoffset, &def_jumpoffset, "<jump>", sizeof( intptr_t ), NULL );		// only used for jump opcodes
 idTypeDef	type_argsize( ev_argsize, &def_argsize, "<argsize>", sizeof( intptr_t ), NULL );				// only used for function call and thread opcodes
+#if defined(USE_DOOMSHARP)
+idTypeDef	type_boolean( ev_boolean, &def_boolean, "bool", sizeof( intptr_t ), NULL );
+#else
 idTypeDef	type_boolean( ev_boolean, &def_boolean, "boolean", sizeof( intptr_t ), NULL );
+#endif
 // RB end
 
 idVarDef	def_void( &type_void );
