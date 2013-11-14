@@ -198,6 +198,8 @@ public:
 		// RB begin
 		ON_FOCUSGAIN,
 		ON_FOCUSLOSE,
+		ON_OPEN,
+		ON_CLOSE,
 		// RB end
 		SCRIPT_COUNT
 	};
@@ -294,6 +296,10 @@ public:
 	virtual void		LoseFocus( bool scripts );
 	virtual void		GainCapture();
 	virtual void		LoseCapture();
+	// RB: called by new "open" and "close" commands
+	virtual void		Open();
+	virtual void		Close();
+	// RB end
 	virtual void		Sized();
 	virtual void		Moved();
 	virtual void		Draw( int time, float x, float y );

@@ -107,6 +107,8 @@ const char* idWindow::ScriptNames[] =
 	// RB begin
 	"onFocusGain",
 	"onFocusLose",
+	"onOpen",
+	"onClose",
 	// RB end
 };
 
@@ -1974,6 +1976,40 @@ void idWindow::LoseCapture()
 {
 	flags &= ~WIN_CAPTURE;
 }
+
+// RB begin
+/*
+================
+idWindow::Open
+================
+*/
+void idWindow::Open()
+{
+	visible = true;
+	
+	UpdateWinVars();
+	
+	RunScript( ON_OPEN );
+	
+	StateChanged( true );
+}
+
+/*
+================
+idWindow::Close
+================
+*/
+void idWindow::Close()
+{
+	visible = false;
+	
+	UpdateWinVars();
+	
+	RunScript( ON_CLOSE );
+	
+	StateChanged( true );
+}
+// RB end
 
 /*
 ================
