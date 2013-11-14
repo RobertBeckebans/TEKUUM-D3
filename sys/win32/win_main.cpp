@@ -388,9 +388,24 @@ Sys_Quit
 void Sys_Quit() {
 	timeEndPeriod( 1 );
 	Sys_ShutdownInput();
+
+	// RB begin
 #if !defined(USE_QT_WINDOWING)
 	Sys_DestroyConsole();
 #endif
+
+	
+#if defined(USE_MFC_TOOLS)
+	if ( com_editors )
+	{
+		if ( com_editors & EDITOR_RADIANT ) 
+		{
+			// Level Editor
+			RadiantShutdown();
+		}
+	}
+#endif
+	// RB end
 	ExitProcess( 0 );
 }
 

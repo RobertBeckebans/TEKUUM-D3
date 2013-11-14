@@ -37,10 +37,8 @@ If you have questions concerning this license or the applicable additional terms
 ===============================================================================
 */
 
-extern idCVar com_engineHz;
-extern float com_engineHz_latched;
-extern int64 com_engineHz_numerator;
-extern int64 com_engineHz_denominator;
+const int64 com_engineHz_numerator = 100LL * 1000LL;
+const int64 com_engineHz_denominator = 100LL * 60LL;
 
 // Returns the msec the frame starts on
 ID_INLINE int FRAME_TO_MSEC( int64 frame )
