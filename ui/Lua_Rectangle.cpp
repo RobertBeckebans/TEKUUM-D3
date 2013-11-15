@@ -37,28 +37,28 @@ If you have questions concerning this license or the applicable additional terms
 #include "Rectangle.h"
 
 
-/*
+
 int idRectangle::Lua_new( lua_State* L )
 {
 	int args = lua_gettop( L );
-
-	idWindow* window = new idWindow(); //LuaWrapper<idWindow>::allocator(L);
-
-	if( args == 1 && lua_isstring( L, 1 ) )
+	
+	idRectangle* rect = new idRectangle(); //LuaWrapper<idWindow>::allocator(L);
+	
+	if( args == 4 )
 	{
-		char		buf[MAX_STRING_CHARS];
-
-		const char* name = luaL_checkstring( L, 1 );
-		window->SetInitialState( name );
+		rect->x = luaL_checknumber( L, 1 );
+		rect->y = luaL_checknumber( L, 2 );
+		rect->w = luaL_checknumber( L, 3 );
+		rect->h = luaL_checknumber( L, 4 );
 	}
-
-	luaW_push<idWindow>( L, window );
-	luaW_hold<idWindow>( L, window );
+	
+	luaW_push<idRectangle>( L, rect );
+	//luaW_hold<idWindow>( L, window );
 	//luaW_postconstructor<idWindow>(L, args);
-
+	
 	return 1;
 }
-*/
+
 
 int idRectangle::Lua_gc( lua_State* L )
 {
@@ -153,14 +153,13 @@ int idRectangle::Lua_tostring( lua_State* L )
 
 static const luaL_Reg Rectangle_default[] =
 {
-//	{ "new",			idWindow::Lua_new },
+	{ "new",			idRectangle::Lua_new },
 //	{ "__postctor",		luaU_build<idWindow> },
 	{NULL, NULL}
 };
 
 static const luaL_Reg Rectangle_meta[] =
 {
-//	{ "__new",			idWindow::Lua_new},
 //	{ "__postctor",		luaU_build<idRectangle> },
 	{ "__gc",			idRectangle::Lua_gc},
 	{ "__index",		idRectangle::Lua_index },
@@ -175,7 +174,7 @@ extern "C"
 
 	int luaopen_Rectangle( lua_State* L )
 	{
-		luaW_register< idRectangle >( L, "Rectangle", NULL, Rectangle_meta );
+		luaW_register< idRectangle >( L, "Rectangle", Rectangle_default, Rectangle_meta );
 		
 		return 0;
 	}
