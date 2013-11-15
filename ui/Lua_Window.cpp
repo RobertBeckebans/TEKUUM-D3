@@ -119,6 +119,16 @@ int idWindow::Lua_newindex( lua_State* L )
 				
 				return 0;
 			}
+			else if( idStr::Cmp( field, "rect" ) == 0 )
+			{
+				idRectangle* rect = luaW_check<idRectangle>( L, 3 );
+				if( rect )
+				{
+					window->rect = *rect;
+				}
+				
+				return 0;
+			}
 		}
 	}
 	
@@ -190,7 +200,50 @@ int idWindow::Lua_text( lua_State* L )
 	return 0;
 }
 
-static const luaL_Reg windowDef_default[] =
+int idWindow::Lua_AddChild( lua_State* L )
+{
+	char		buf[MAX_STRING_CHARS];
+	
+	idWindow* window = luaW_check<idWindow>( L, 1 );
+	if( window )
+	{
+		idWindow* child = luaW_check<idWindow>( L, 2 );
+		if( child )
+		{
+			drawWin_t dwt;
+			
+			child->SetParent( window );
+			
+			dwt.simp = NULL;
+			dwt.win = NULL;
+			
+			/*
+			RB: TODO handle simple window case
+			
+			if( win->IsSimple() )
+			{
+				idSimpleWindow* simple = new idSimpleWindow( win );
+				dwt.simp = simple;
+				drawWindows.Append( dwt );
+				delete win;
+			}
+			else
+			*/
+			{
+				window->AddChild( child );
+				
+				window->SetFocus( child, false );
+				
+				dwt.win = child;
+				window->drawWindows.Append( dwt );
+			}
+		}
+	}
+	
+	return 0;
+}
+
+static const luaL_Reg Window_default[] =
 {
 //	{ "new",			idWindow::Lua_new },
 //	{ "__postctor",		luaU_build<idWindow> },
@@ -198,18 +251,18 @@ static const luaL_Reg windowDef_default[] =
 	{NULL, NULL}
 };
 
-static const luaL_Reg windowDef_meta[] =
+static const luaL_Reg Window_meta[] =
 {
 //	{ "__new",			idWindow::Lua_new},
-	{ "__postctor",		luaU_build<idWindow> },
+//	{ "__postctor",		luaU_build<idWindow> },
 	{ "__gc",			idWindow::Lua_gc},
 	{ "__index",		idWindow::Lua_index },
 	{ "__newindex",		idWindow::Lua_newindex },
 	{ "__tostring",		idWindow::Lua_tostring },
 	{ "GetText",		idWindow::Lua_GetText },
 	{ "SetText",		idWindow::Lua_SetText },
-	
-	{ "text",			idWindow::Lua_text },
+//	{ "text",			idWindow::Lua_text },
+	{ "AddChild",		idWindow::Lua_AddChild },
 	
 	{NULL, NULL}
 };
@@ -219,7 +272,7 @@ extern "C"
 
 	int luaopen_Window( lua_State* L )
 	{
-		luaW_register< idWindow >( L, "windowDef", windowDef_default, windowDef_meta );
+		luaW_register< idWindow >( L, "Window", Window_default, Window_meta );
 		
 		return 0;
 	}

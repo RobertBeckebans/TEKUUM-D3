@@ -42,15 +42,8 @@ extern "C"
 {
 	int			luaopen_sys( lua_State* L );
 	
-	/*
-	struct lua_Window
-	{
-		idWindow* win;
-	};
-	*/
 	int			luaopen_Window( lua_State* L );
-	//void		luapush_Window( lua_State* L, idWindow* window );
-	//lua_Window*	luaget_Window( lua_State* L, int argNum );
+	int			luaopen_Rectangle( lua_State* L );
 }
 
 

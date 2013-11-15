@@ -2009,6 +2009,13 @@ idWindow::SetParent
 void idWindow::SetParent( idWindow* w )
 {
 	parent = w;
+	
+	// RB begin
+	if( gui == NULL )
+	{
+		gui = w->gui;
+	}
+	// RB end
 }
 
 /*

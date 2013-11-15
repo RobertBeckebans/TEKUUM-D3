@@ -31,6 +31,9 @@ If you have questions concerning this license or the applicable additional terms
 // simple rectangle
 //
 extern void RotateVector( idVec3& v, idVec3 origin, float a, float c, float s );
+
+#include <lua.hpp>
+
 class idRectangle
 {
 public:
@@ -144,6 +147,13 @@ public:
 	char* String() const;
 	const idVec4& ToVec4() const;
 	
+	// RB begin
+	static int			Lua_new( lua_State* L );
+	static int			Lua_gc( lua_State* L );
+	static int			Lua_index( lua_State* L );
+	static int			Lua_newindex( lua_State* L );
+	static int			Lua_tostring( lua_State* L );
+	// RB end
 };
 
 ID_INLINE const idVec4& idRectangle::ToVec4() const
