@@ -89,6 +89,12 @@ int idWindow::Lua_index( lua_State* L )
 				lua_pushstring( L, buf );
 				return 1;
 			}
+			else if( idStr::Cmp( field, "rect" ) == 0 )
+			{
+				sprintf( buf, "%s", window->rect.c_str() );
+				lua_pushstring( L, buf );
+				return 1;
+			}
 		}
 	}
 	
