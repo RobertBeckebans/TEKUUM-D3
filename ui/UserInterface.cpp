@@ -34,6 +34,8 @@ If you have questions concerning this license or the applicable additional terms
 #include "Window.h"
 #include "UserInterfaceLocal.h"
 #include "Lua_local.h"
+#include "luawrapper.hpp"
+#include "luawrapperutil.hpp"
 
 extern idCVar r_skipGuiShaders;		// 1 = don't render any gui elements on surfaces
 
@@ -391,7 +393,6 @@ bool idUserInterfaceLocal::IsInteractive() const
 
 bool idUserInterfaceLocal::InitFromFile( const char* qpath, bool rebuild, bool cache )
 {
-
 	if( !( qpath && *qpath ) )
 	{
 		// FIXME: Memory leak!!
@@ -431,9 +432,6 @@ bool idUserInterfaceLocal::InitFromFile( const char* qpath, bool rebuild, bool c
 	luaopen_Window( luaState );
 	luaopen_Rectangle( luaState );
 	
-	//idParser src( LEXFL_NOFATALERRORS | LEXFL_NOSTRINGCONCAT | LEXFL_ALLOWMULTICHARLITERALS | LEXFL_ALLOWBACKSLASHSTRINGCONCAT );
-	//src.LoadFile( qpath );
-	
 	char* src;
 	
 	//Load the timestamp so reload guis will work correctly
@@ -457,29 +455,8 @@ bool idUserInterfaceLocal::InitFromFile( const char* qpath, bool rebuild, bool c
 		}
 	}
 	
+	PrintLuaStack();
 	
-	
-	/*
-	if( src.IsLoaded() )
-	{
-		idToken token;
-		while( src.ReadToken( &token ) )
-		{
-			if( idStr::Icmp( token, "windowDef" ) == 0 )
-			{
-				if( desktop->Parse( &src, rebuild ) )
-				{
-					desktop->SetFlag( WIN_DESKTOP );
-					desktop->FixupParms();
-				}
-				continue;
-			}
-		}
-	
-		state.Set( "name", qpath );
-	}
-	else
-	*/
 	if( RunLuaFunction( "main", "w", desktop ) )
 	{
 		desktop->SetFlag( WIN_DESKTOP );
@@ -492,6 +469,42 @@ bool idUserInterfaceLocal::InitFromFile( const char* qpath, bool rebuild, bool c
 		desktop->foreColor = idVec4( 1.0f, 1.0f, 1.0f, 1.0f );
 		desktop->backColor = idVec4( 0.0f, 0.0f, 0.5f, 1.0f );
 		desktop->SetupFromState();
+		
+		PrintLuaStack();
+		
+#if 1
+		lua_getglobal( luaState, "MainTitle" );	// ... userdata
+		
+		if( lua_isuserdata( luaState, -1 ) )
+		{
+			idWindow* mainTitle = luaW_check<idWindow>( luaState, -1 );
+			
+			lua_getfield( luaState, -1, "TestFunc" ); // ... userdata function
+			
+			if( lua_isfunction( luaState, -1 ) )
+			{
+				luaW_push<idWindow>( luaState, mainTitle );	// ... userdata function userdata
+				
+				PrintLuaStack();
+				
+				if( lua_pcall( luaState, 1, 0, NULL ) != 0 ) // ... userdata
+				{
+					idLib::Warning( "idUserInterfaceLocal::InitFromFile( %s ): error running function MainTitle.OnTest(): %s\n", source.c_str(), lua_tostring( luaState, -1 ) );
+				}
+				
+				lua_pop( luaState, 1 ); // ...
+				
+				PrintLuaStack();
+			}
+		}
+		else
+		{
+			// ... nil
+			lua_pop( luaState, 1 ); // ...
+		}
+#endif
+		
+		PrintLuaStack();
 	}
 	else
 	{
@@ -986,7 +999,7 @@ endwhile:
 
 	// do the call
 	numResults = strlen( fmt );
-	if( lua_pcall( L, numArgs, numResults, 0 ) != 0 )
+	if( lua_pcall( L, numArgs, numResults, NULL ) != 0 )
 	{
 		idLib::Warning( "idUserInterfaceLocal::RunLuaFunction( %s ): error running function `%s': %s\n", source.c_str(), func, lua_tostring( L, -1 ) );
 	}
@@ -1043,6 +1056,41 @@ endwhile:
 	va_end( argptr );
 	
 	return result;
+}
+
+void idUserInterfaceLocal::PrintLuaStack()
+{
+	lua_State* L = luaState;
+	
+	int top = lua_gettop( L );
+	
+	for( int i = 1; i <= top; i++ )
+	{
+		int t = lua_type( L, i );
+		
+		switch( t )
+		{
+			case LUA_TNUMBER:
+				idLib::Printf( "'%g'", lua_tonumber( L, i ) );
+				break;
+				
+			case LUA_TBOOLEAN:
+				idLib::Printf( "'%s'", lua_toboolean( L, i ) ? "true" : "false" );
+				break;
+				
+			case LUA_TSTRING:
+				idLib::Printf( "'%s'", lua_tostring( L, i ) );
+				break;
+				
+			default:
+				idLib::Printf( "%s", lua_typename( L, t ) );
+				break;
+		}
+		
+		idLib::Printf( " " );
+	}
+	
+	idLib::Printf( "\n" );
 }
 
 // RB end

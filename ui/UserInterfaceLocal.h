@@ -154,6 +154,7 @@ private:
 	static int					LuaPanic( lua_State* L );
 	
 	bool						RunLuaFunction( const char* func, const char* fmt, ... );
+	void						PrintLuaStack();
 	
 	lua_State*					luaState;
 	// RB end
