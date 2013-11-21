@@ -58,8 +58,8 @@ int idWindow::Lua_new( lua_State* L )
 	
 	luaW_push<idWindow>( L, window );
 	luaW_hold<idWindow>( L, window );
-	//luaW_postconstructor<idWindow>(L, args);
-	
+//	luaW_postconstructor<idWindow>(L, args);
+
 	return 1;
 }
 
@@ -120,6 +120,26 @@ int idWindow::Lua_newindex( lua_State* L )
 			{
 				const char* text = luaL_checkstring( L, 3 );
 				window->text = text;
+				
+				return 0;
+			}
+			else if( idStr::Cmp( field, "forecolor" ) == 0 )
+			{
+				idVec4* v = luaW_check<idVec4>( L, 3 );
+				if( v )
+				{
+					window->foreColor = *v;
+				}
+				
+				return 0;
+			}
+			else if( idStr::Cmp( field, "backcolor" ) == 0 )
+			{
+				idVec4* v = luaW_check<idVec4>( L, 3 );
+				if( v )
+				{
+					window->backColor = *v;
+				}
 				
 				return 0;
 			}
@@ -290,6 +310,53 @@ int idWindow::Lua_AddChild( lua_State* L )
 	return 0;
 }
 
+int idWindow::Lua_AddChildren( lua_State* L )
+{
+	idWindow* window = luaW_check<idWindow>( L, 1 );
+	if( window )
+	{
+		int args = lua_gettop( L );
+		
+		// self, child, child, ...
+		for( int i = 2; i <= args; i++ )
+		{
+			idWindow* child = luaW_check<idWindow>( L, i );
+			if( child )
+			{
+				drawWin_t dwt;
+				
+				child->SetParent( window );
+				
+				dwt.simp = NULL;
+				dwt.win = NULL;
+				
+				/*
+				RB: TODO handle simple window case
+				
+				if( win->IsSimple() )
+				{
+					idSimpleWindow* simple = new idSimpleWindow( win );
+					dwt.simp = simple;
+					drawWindows.Append( dwt );
+					delete win;
+				}
+				else
+				*/
+				{
+					window->AddChild( child );
+					
+					window->SetFocus( child, false );
+					
+					dwt.win = child;
+					window->drawWindows.Append( dwt );
+				}
+			}
+		}
+	}
+	
+	return 0;
+}
+
 static const luaL_Reg Window_default[] =
 {
 	{ "new",			idWindow::Lua_new },
@@ -301,7 +368,7 @@ static const luaL_Reg Window_default[] =
 static const luaL_Reg Window_meta[] =
 {
 //	{ "__new",			idWindow::Lua_new},
-//	{ "__postctor",		luaU_build<idWindow> },
+	{ "__postctor",		luaU_build<idWindow> },
 	{ "clone",			luaU_clone<idWindow> },
 	{ "__gc",			idWindow::Lua_gc},
 	{ "__index",		idWindow::Lua_index },
@@ -311,6 +378,7 @@ static const luaL_Reg Window_meta[] =
 	{ "SetText",		idWindow::Lua_SetText },
 //	{ "text",			idWindow::Lua_text },
 	{ "AddChild",		idWindow::Lua_AddChild },
+	{ "AddChildren",	idWindow::Lua_AddChildren },
 	
 	{NULL, NULL}
 };

@@ -433,6 +433,7 @@ bool idUserInterfaceLocal::InitFromFile( const char* qpath, bool rebuild, bool c
 	
 	luaopen_Window( luaState );
 	luaopen_Rectangle( luaState );
+	luaopen_Vec4( luaState );
 	
 	char* src;
 	

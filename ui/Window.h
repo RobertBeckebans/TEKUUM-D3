@@ -402,6 +402,7 @@ public:
 	static int			Lua_SetText( lua_State* L );
 	static int			Lua_text( lua_State* L );
 	static int			Lua_AddChild( lua_State* L );
+	static int			Lua_AddChildren( lua_State* L );
 	// RB end
 	
 protected:

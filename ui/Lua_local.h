@@ -46,6 +46,8 @@ extern "C"
 	
 	int			luaopen_Window( lua_State* L );
 	int			luaopen_Rectangle( lua_State* L );
+	int			luaopen_Vec3( lua_State* L );
+	int			luaopen_Vec4( lua_State* L );
 }
 
 
