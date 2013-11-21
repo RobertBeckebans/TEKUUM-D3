@@ -37,6 +37,8 @@ extern "C"
 }
 
 class idWindow;
+class idUserInterface;
+
 
 extern "C"
 {

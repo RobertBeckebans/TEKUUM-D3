@@ -419,6 +419,8 @@ bool idUserInterfaceLocal::InitFromFile( const char* qpath, bool rebuild, bool c
 	source = filename;
 	state.Set( "text", "Test Text!" );
 	
+	uiManagerLocal.SetLoadingGUI( this );
+	
 	//luaState = luaL_newstate();
 	luaState = lua_newstate( LuaAlloc, NULL );
 	if( luaState )
@@ -546,12 +548,16 @@ bool idUserInterfaceLocal::InitFromFile( const char* qpath, bool rebuild, bool c
 		desktop->SetupFromState();
 		common->Warning( "Couldn't load gui: '%s'", filename.c_str() );
 	}
+	
 	interactive = desktop->Interactive();
 	if( uiManagerLocal.guis.Find( this ) == NULL )
 	{
 		uiManagerLocal.guis.Append( this );
 	}
 	loading = false;
+	
+	uiManagerLocal.SetLoadingGUI( NULL );
+	
 	return true;
 }
 

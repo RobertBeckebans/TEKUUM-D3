@@ -160,6 +160,10 @@ public:
 	// Allocates a new GUI list handler
 	virtual	idListGUI* 			AllocListGUI() const = 0;
 	
+	// RB begin
+	virtual idUserInterface*	LoadingGUI() const = 0;
+	// RB end
+	
 	// De-allocates a list gui
 	virtual void				FreeListGUI( idListGUI* listgui ) = 0;
 };

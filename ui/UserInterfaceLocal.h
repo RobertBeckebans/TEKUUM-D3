@@ -98,7 +98,7 @@ public:
 	{
 		return source;
 	}
-	ID_TIME_T						GetTimeStamp() const
+	ID_TIME_T					GetTimeStamp() const
 	{
 		return timeStamp;
 	}
@@ -172,7 +172,7 @@ private:
 	idStr						activateStr;
 	idStr						pendingCmd;
 	idStr						returnCmd;
-	ID_TIME_T						timeStamp;
+	ID_TIME_T					timeStamp;
 	
 	float						cursorX;
 	float						cursorY;
@@ -211,6 +211,19 @@ public:
 	{
 		return mapParser;
 	}
+	
+	// RB begin
+	virtual idUserInterface*	LoadingGUI() const
+	{
+		return loadingGUI;
+	}
+	
+	void						SetLoadingGUI( idUserInterface* gui )
+	{
+		loadingGUI = gui;
+	}
+	// RB end
+	
 private:
 	idRectangle					screenRect;
 	idDeviceContext				dcOld;
@@ -220,6 +233,10 @@ private:
 	idList<idUserInterfaceLocal*> demoGuis;
 	
 	idTokenParser				mapParser;
+	
+	// RB: GUI currently being processed by LUA
+	idUserInterface*			loadingGUI;
+	// RB end
 };
 
 // These used to be in every window, but they all pointed at the same one in idUserInterfaceManagerLocal.

@@ -35,20 +35,25 @@ If you have questions concerning this license or the applicable additional terms
 
 #include "Lua_local.h"
 #include "Window.h"
+#include "UserInterfaceLocal.h"
 
 
 int idWindow::Lua_new( lua_State* L )
 {
 	int args = lua_gettop( L );
 	
-	idWindow* window = new idWindow(); //LuaWrapper<idWindow>::allocator(L);
+	idWindow* window = new idWindow( ( idUserInterfaceLocal* ) uiManager->LoadingGUI() ); //LuaWrapper<idWindow>::allocator(L);
 	
 	if( args == 1 && lua_isstring( L, 1 ) )
 	{
-		char		buf[MAX_STRING_CHARS];
+		//char		buf[MAX_STRING_CHARS];
 		
 		const char* name = luaL_checkstring( L, 1 );
 		window->SetInitialState( name );
+	}
+	else
+	{
+		window->SetInitialState( "<unknown>" );
 	}
 	
 	luaW_push<idWindow>( L, window );
@@ -135,6 +140,44 @@ int idWindow::Lua_newindex( lua_State* L )
 				
 				return 0;
 			}
+			else if( idStr::Cmp( field, "font" ) == 0 )
+			{
+				const char* fontName = luaL_checkstring( L, 3 );
+				
+#if defined(USE_IDFONT)
+				font = renderSystem->RegisterFont( fontName );
+#else
+				window->fontNum = dc->FindFont( fontName );
+#endif
+			}
+			else if( idStr::Cmp( field, "textalign" ) == 0 )
+			{
+				float num = luaL_checknumber( L, 3 );
+				window->textAlign = num;
+				
+				return 0;
+			}
+			else if( idStr::Cmp( field, "textalignx" ) == 0 )
+			{
+				float num = luaL_checknumber( L, 3 );
+				window->textAlignx = num;
+				
+				return 0;
+			}
+			else if( idStr::Cmp( field, "textaligny" ) == 0 )
+			{
+				float num = luaL_checknumber( L, 3 );
+				window->textAligny = num;
+				
+				return 0;
+			}
+			else if( idStr::Cmp( field, "textscale" ) == 0 )
+			{
+				float num = luaL_checknumber( L, 3 );
+				window->textScale = num;
+				
+				return 0;
+			}
 		}
 	}
 	
@@ -208,8 +251,6 @@ int idWindow::Lua_text( lua_State* L )
 
 int idWindow::Lua_AddChild( lua_State* L )
 {
-	char		buf[MAX_STRING_CHARS];
-	
 	idWindow* window = luaW_check<idWindow>( L, 1 );
 	if( window )
 	{
@@ -251,9 +292,9 @@ int idWindow::Lua_AddChild( lua_State* L )
 
 static const luaL_Reg Window_default[] =
 {
-//	{ "new",			idWindow::Lua_new },
+	{ "new",			idWindow::Lua_new },
 //	{ "__postctor",		luaU_build<idWindow> },
-	{ "text",			idWindow::Lua_text },
+//	{ "text",			idWindow::Lua_text },
 	{NULL, NULL}
 };
 
@@ -261,6 +302,7 @@ static const luaL_Reg Window_meta[] =
 {
 //	{ "__new",			idWindow::Lua_new},
 //	{ "__postctor",		luaU_build<idWindow> },
+	{ "clone",			luaU_clone<idWindow> },
 	{ "__gc",			idWindow::Lua_gc},
 	{ "__index",		idWindow::Lua_index },
 	{ "__newindex",		idWindow::Lua_newindex },
