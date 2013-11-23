@@ -107,6 +107,14 @@ public:
 	{
 		return desktop;
 	}
+	
+	// RB begin
+	lua_State*					GetLuaState() const
+	{
+		return luaState;
+	}
+	// RB end
+	
 	void						SetBindHandler( idWindow* win )
 	{
 		bindHandler = win;
@@ -153,9 +161,11 @@ private:
 	static void*				LuaAlloc( void* ud, void* ptr, size_t osize, size_t nsize );
 	static int					LuaPanic( lua_State* L );
 	
+public:
 	bool						RunLuaFunction( const char* func, const char* fmt, ... );
 	void						PrintLuaStack();
 	
+private:
 	lua_State*					luaState;
 	// RB end
 	

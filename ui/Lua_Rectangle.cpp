@@ -53,7 +53,7 @@ int idRectangle::Lua_new( lua_State* L )
 	}
 	
 	luaW_push<idRectangle>( L, rect );
-	//luaW_hold<idWindow>( L, window );
+	luaW_hold<idRectangle>( L, rect );
 	//luaW_postconstructor<idWindow>(L, args);
 	
 	return 1;
@@ -63,7 +63,7 @@ int idRectangle::Lua_new( lua_State* L )
 int idRectangle::Lua_gc( lua_State* L )
 {
 	idRectangle* rect = luaW_check<idRectangle>( L, 1 );
-	idLib::Printf( "Lua says bye to rectangle = %p\n", rect );
+	//idLib::Printf( "Lua says bye to rectangle = %p\n", rect );
 	
 	delete rect;
 	
@@ -164,7 +164,7 @@ static const luaL_Reg Rectangle_default[] =
 static const luaL_Reg Rectangle_meta[] =
 {
 //	{ "__postctor",		luaU_build<idRectangle> },
-	{ "__gc",			idRectangle::Lua_gc},
+//	{ "__gc",			idRectangle::Lua_gc},
 	{ "__index",		idRectangle::Lua_index },
 	{ "__newindex",		idRectangle::Lua_newindex },
 	{ "__tostring",		idRectangle::Lua_tostring },

@@ -485,9 +485,9 @@ bool idUserInterfaceLocal::InitFromFile( const char* qpath, bool rebuild, bool c
 		desktop->backColor = idVec4( 0.0f, 0.0f, 0.5f, 1.0f );
 		desktop->SetupFromState();
 		
+#if 0
 		PrintLuaStack();
 		
-#if 1
 		luaW_push<idWindow>( luaState, desktop );	// ... userdata
 		lua_getfield( luaState, -1, "TestFunc" ); // ... userdata ( function | nil )
 		
@@ -513,40 +513,8 @@ bool idUserInterfaceLocal::InitFromFile( const char* qpath, bool rebuild, bool c
 			lua_pop( luaState, 1 ); // ...
 		}
 		
-		
-#else
-		lua_getglobal( luaState, "MainTitle" );	// ... userdata
-		
-		if( lua_isuserdata( luaState, -1 ) )
-		{
-			idWindow* mainTitle = luaW_check<idWindow>( luaState, -1 );
-		
-			lua_getfield( luaState, -1, "TestFunc" ); // ... userdata function
-		
-			if( lua_isfunction( luaState, -1 ) )
-			{
-				luaW_push<idWindow>( luaState, mainTitle );	// ... userdata function userdata
-		
-				PrintLuaStack();
-		
-				if( lua_pcall( luaState, 1, 0, NULL ) != 0 ) // ... userdata
-				{
-					idLib::Warning( "idUserInterfaceLocal::InitFromFile( %s ): error running function MainTitle.OnTest(): %s\n", source.c_str(), lua_tostring( luaState, -1 ) );
-				}
-		
-				lua_pop( luaState, 1 ); // ...
-		
-				PrintLuaStack();
-			}
-		}
-		else
-		{
-			// ... nil
-			lua_pop( luaState, 1 ); // ...
-		}
-#endif
-		
 		PrintLuaStack();
+#endif
 	}
 	else
 	{

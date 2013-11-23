@@ -41,7 +41,7 @@ static int Vec4_new( lua_State* L )
 {
 	int args = lua_gettop( L );
 	
-	idVec4* v = new idVec4();
+	idVec4* v = LuaWrapper<idVec4>::allocator( L );//new idVec4();
 	
 	if( args == 4 )
 	{
@@ -56,7 +56,7 @@ static int Vec4_new( lua_State* L )
 	}
 	
 	luaW_push<idVec4>( L, v );
-	//luaW_hold<idWindow>( L, window );
+	luaW_hold<idVec4>( L, v );
 	//luaW_postconstructor<idWindow>(L, args);
 	
 	return 1;
@@ -65,7 +65,7 @@ static int Vec4_new( lua_State* L )
 static int Vec4_gc( lua_State* L )
 {
 	idVec4* v = luaW_check<idVec4>( L, 1 );
-	idLib::Printf( "Lua says bye to Vec4 = %p\n", v );
+	//idLib::Printf( "Lua says bye to Vec4 = %p\n", v );
 	
 	delete v;
 	
@@ -172,7 +172,7 @@ static const luaL_Reg Vec4_default[] =
 static const luaL_Reg Vec4_meta[] =
 {
 //	{ "__postctor",		luaU_build<idRectangle> },
-	{ "__gc",			Vec4_gc },
+//	{ "__gc",			Vec4_gc },
 	{ "__index",		Vec4_index },
 	{ "__newindex",		Vec4_newindex },
 	{ "__tostring",		Vec4_tostring },

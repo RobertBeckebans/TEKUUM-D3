@@ -104,6 +104,13 @@ int idWindow::Lua_index( lua_State* L )
 				lua_pushstring( L, buf );
 				return 1;
 			}
+			/*
+			else if( idStr::Cmp( field, "backcolor" ) == 0 )
+			{
+				luaW_push<idVec4>( L, &backColor );
+				return 1;
+			}
+			*/
 		}
 	}
 	
@@ -143,6 +150,17 @@ int idWindow::Lua_newindex( lua_State* L )
 				if( v )
 				{
 					window->backColor = *v;
+					//luaW_release<idVec4>( L, v );
+					
+					//window->gui->PrintLuaStack();
+					
+					//LuaWrapper<idVec4>::identifier( L, v ); // obj key value storage id
+					//luaW_wrapperfield<idVec4>( L, LUAW_HOLDS_KEY ); // obj id counts count holds
+					//float holds = lua_tonumber( L, -1 );
+					
+					//holds = 0;
+					
+					//window->gui->PrintLuaStack();
 				}
 				
 				return 0;
@@ -432,6 +450,21 @@ int idWindow::Lua_AddChildren( lua_State* L )
 	return 0;
 }
 
+int idWindow::Lua_AddCommand( lua_State* L )
+{
+	idWindow* window = luaW_check<idWindow>( L, 1 );
+	if( window )
+	{
+		const char* cmd = luaL_checkstring( L, 2 );
+		if( cmd != NULL && cmd[0] != '\0' )
+		{
+			window->AddCommand( cmd );
+		}
+	}
+	
+	return 0;
+}
+
 static const luaL_Reg Window_default[] =
 {
 	{ "new",			idWindow::Lua_new },
@@ -454,6 +487,7 @@ static const luaL_Reg Window_meta[] =
 //	{ "text",			idWindow::Lua_text },
 	{ "AddChild",		idWindow::Lua_AddChild },
 	{ "AddChildren",	idWindow::Lua_AddChildren },
+	{ "AddCommand",		idWindow::Lua_AddCommand },
 	
 	{NULL, NULL}
 };

@@ -42,7 +42,9 @@ If you have questions concerning this license or the applicable additional terms
 #include "FieldWindow.h"
 #include "MarkerWindow.h"
 
-
+#include <lua.hpp>
+#include <luawrapper.hpp>
+#include <luawrapperutil.hpp>
 
 bool idWindow::registerIsTemporary[MAX_EXPRESSION_REGISTERS];		// statics to assist during parsing
 //float idWindow::shaderRegisters[MAX_EXPRESSION_REGISTERS];
@@ -88,7 +90,7 @@ const idRegEntry idWindow::RegisterVars[] =
 
 const int idWindow::NumRegisterVars = sizeof( RegisterVars ) / sizeof( idRegEntry );
 
-const char* idWindow::ScriptNames[] =
+const char* idWindow::ScriptNames[SCRIPT_COUNT] =
 {
 	"onMouseEnter",
 	"onMouseExit",
@@ -104,6 +106,25 @@ const char* idWindow::ScriptNames[] =
 	// RB begin
 	"onFocusGain",
 	"onFocusLose",
+	// RB end
+};
+
+const char* idWindow::LuaScriptNames[SCRIPT_COUNT] =
+{
+	"OnMouseEnter",
+	"OnMouseExit",
+	"OnAction",
+	"OnActivate",
+	"OnDeactivate",
+	"OnESC",
+	"OnFrame",
+	"OnTrigger",
+	"OnActionRelease",
+	"OnEnter",
+	"OnEnterRelease",
+	// RB begin
+	"OnFocusGain",
+	"OnFocusLose",
 	// RB end
 };
 
@@ -3446,10 +3467,46 @@ idWindow::RunScript
 */
 bool idWindow::RunScript( int n )
 {
-	if( n >= ON_MOUSEENTER && n < SCRIPT_COUNT )
+	// RB begin
+	lua_State* L = gui->GetLuaState();
+	
+	if( L != NULL && n >= ON_MOUSEENTER && n < SCRIPT_COUNT )
+	{
+		luaW_push<idWindow>( L, this );	// ... userdata
+		lua_getfield( L, -1, LuaScriptNames[n] ); // ... userdata ( function | nil )
+		
+		if( lua_isfunction( L, -1 ) )
+		{
+			// push self reference
+			luaW_push<idWindow>( L, this );	// ... userdata function userdata
+			
+			//gui->PrintLuaStack();
+			
+			if( lua_pcall( L, 1, 0, NULL ) != 0 ) // ... userdata
+			{
+				idLib::Warning( "idWindow::Runscript(): error running function `%s(): %s\n", LuaScriptNames[n], lua_tostring( L, -1 ) );
+			}
+			
+			lua_pop( L, 1 ); // ...
+			
+			//gui->PrintLuaStack();
+			
+			return true;
+		}
+		else
+		{
+			// ... nil
+			lua_pop( L, 1 ); // ...
+			
+			return false;
+		}
+	}
+	else if( n >= ON_MOUSEENTER && n < SCRIPT_COUNT )
 	{
 		return RunScriptList( scripts[n] );
 	}
+	// RB end
+	
 	return false;
 }
 
