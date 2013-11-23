@@ -65,8 +65,12 @@ int idWindow::Lua_new( lua_State* L )
 
 int idWindow::Lua_gc( lua_State* L )
 {
-	idLib::Printf( "Lua says bye to windows = %p\n", luaW_check<idWindow>( L, 1 ) );
+	idWindow* window = luaW_check<idWindow>( L, 1 );
+	idLib::Printf( "Lua says bye to window = %p\n", window );
 	
+	// RB: already freed by delete desktop
+//	delete window;
+
 	return 0;
 }
 
@@ -245,6 +249,25 @@ int idWindow::Lua_newindex( lua_State* L )
 					b = luaL_checknumber( L, 3 );
 				}
 				window->noEvents = ( b != 0 );
+				
+				return 0;
+			}
+			else if( idStr::Cmp( field, "menugui" ) == 0 )
+			{
+				int b;
+				if( lua_isboolean( L, 3 ) )
+				{
+					b = lua_toboolean( L, 3 );
+				}
+				else
+				{
+					b = luaL_checknumber( L, 3 );
+				}
+				
+				if( b != 0 )
+				{
+					window->flags |= WIN_MENUGUI;
+				}
 				
 				return 0;
 			}

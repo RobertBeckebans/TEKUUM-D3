@@ -360,6 +360,8 @@ idUserInterfaceLocal::idUserInterfaceLocal()
 	//so the reg eval in gui parsing doesn't get bogus values
 	time = 0;
 	refs = 1;
+	
+	luaState = NULL;
 }
 
 idUserInterfaceLocal::~idUserInterfaceLocal()
@@ -369,6 +371,7 @@ idUserInterfaceLocal::~idUserInterfaceLocal()
 	
 	// RB begin
 	lua_close( luaState );
+	luaState = NULL;
 	// RB end
 }
 
@@ -405,8 +408,17 @@ bool idUserInterfaceLocal::InitFromFile( const char* qpath, bool rebuild, bool c
 	
 	if( rebuild )
 	{
-		delete desktop;
+		if( desktop != NULL )
+		{
+			delete desktop;
+		}
 		desktop = new idWindow( this );
+		
+		if( luaState != NULL )
+		{
+			lua_close( luaState );
+			luaState = NULL;
+		}
 	}
 	else if( desktop == NULL )
 	{

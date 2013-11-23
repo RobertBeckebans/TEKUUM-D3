@@ -62,7 +62,10 @@ int idRectangle::Lua_new( lua_State* L )
 
 int idRectangle::Lua_gc( lua_State* L )
 {
-	idLib::Printf( "Lua says bye to rectangle = %p\n", luaW_check<idRectangle>( L, 1 ) );
+	idRectangle* rect = luaW_check<idRectangle>( L, 1 );
+	idLib::Printf( "Lua says bye to rectangle = %p\n", rect );
+	
+	delete rect;
 	
 	return 0;
 }

@@ -64,7 +64,10 @@ static int Vec4_new( lua_State* L )
 
 static int Vec4_gc( lua_State* L )
 {
-	idLib::Printf( "Lua says bye to Vec4 = %p\n", luaW_check<idVec4>( L, 1 ) );
+	idVec4* v = luaW_check<idVec4>( L, 1 );
+	idLib::Printf( "Lua says bye to Vec4 = %p\n", v );
+	
+	delete v;
 	
 	return 0;
 }
