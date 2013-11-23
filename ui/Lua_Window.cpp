@@ -143,6 +143,26 @@ int idWindow::Lua_newindex( lua_State* L )
 				
 				return 0;
 			}
+			else if( idStr::Cmp( field, "matcolor" ) == 0 )
+			{
+				idVec4* v = luaW_check<idVec4>( L, 3 );
+				if( v )
+				{
+					window->matColor = *v;
+				}
+				
+				return 0;
+			}
+			else if( idStr::Cmp( field, "hovercolor" ) == 0 )
+			{
+				idVec4* v = luaW_check<idVec4>( L, 3 );
+				if( v )
+				{
+					window->hoverColor = *v;
+				}
+				
+				return 0;
+			}
 			else if( idStr::Cmp( field, "background" ) == 0 )
 			{
 				const char* text = luaL_checkstring( L, 3 );
@@ -195,6 +215,36 @@ int idWindow::Lua_newindex( lua_State* L )
 			{
 				float num = luaL_checknumber( L, 3 );
 				window->textScale = num;
+				
+				return 0;
+			}
+			else if( idStr::Cmp( field, "visible" ) == 0 )
+			{
+				int b;
+				if( lua_isboolean( L, 3 ) )
+				{
+					b = lua_toboolean( L, 3 );
+				}
+				else
+				{
+					b = luaL_checknumber( L, 3 );
+				}
+				window->visible = ( b != 0 );
+				
+				return 0;
+			}
+			else if( idStr::Cmp( field, "noevents" ) == 0 )
+			{
+				int b;
+				if( lua_isboolean( L, 3 ) )
+				{
+					b = lua_toboolean( L, 3 );
+				}
+				else
+				{
+					b = luaL_checknumber( L, 3 );
+				}
+				window->noEvents = ( b != 0 );
 				
 				return 0;
 			}
@@ -279,6 +329,7 @@ int idWindow::Lua_AddChild( lua_State* L )
 		{
 			drawWin_t dwt;
 			
+			child->SetupFromState();
 			child->SetParent( window );
 			
 			dwt.simp = NULL;
@@ -325,6 +376,7 @@ int idWindow::Lua_AddChildren( lua_State* L )
 			{
 				drawWin_t dwt;
 				
+				child->SetupFromState();
 				child->SetParent( window );
 				
 				dwt.simp = NULL;

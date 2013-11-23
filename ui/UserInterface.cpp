@@ -881,6 +881,12 @@ bool idUserInterfaceLocal::ReadFromSaveGame( idFile* savefile )
 size_t idUserInterfaceLocal::Size()
 {
 	size_t sz = sizeof( *this ) + state.Size() + source.Allocated();
+	
+	if( luaState )
+	{
+		sz += lua_gc( luaState, LUA_GCCOUNT, 0 );
+	}
+	
 	if( desktop )
 	{
 		sz += desktop->Size();
