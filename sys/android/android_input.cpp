@@ -307,6 +307,14 @@ int JE_IsConsoleActive()
 	return 0;
 }
 
+int JE_IsMenuActive()
+{
+	if( session && session->IsMenuActive() )
+		return 1;
+		
+	return 0;
+}
+
 void Sys_InitInput()
 {
 	motion_polls.SetGranularity( 64 );
@@ -408,11 +416,11 @@ static float		s_joystickAxis[MAX_JOYSTICK_AXIS];	// set by joystick events
 
 void JE_QueueJoystickEvent( int axis, float value )
 {
-#if 1
+#if 0
 	if( !common || !common->IsInitialized() )
 		return;
 		
-	//common->Printf( "JE_QueueJoystickEvent( axis = %i, value = %f )\n", axis, value );
+	common->Printf( "JE_QueueJoystickEvent( axis = %i, value = %f )\n", axis, value );
 #endif
 	
 	if( axis < 0 || axis >= MAX_JOYSTICK_AXIS )
@@ -479,7 +487,7 @@ static void IN_XBox360Axis( int action, float thumbAxis, float scale )
 
 bool Sys_IsXbox360ControllerAvailable()
 {
-	return false;
+	return true;
 }
 
 int Sys_PollXbox360ControllerInputEvents()
@@ -501,8 +509,8 @@ int Sys_PollXbox360ControllerInputEvents()
 		IN_XBox360Axis( GP_AXIS_FORWARD, s_joystickAxis[AXIS_FORWARD], 127 );
 		
 		// use right analog stick for viewing
-		IN_XBox360Axis( GP_AXIS_YAW, s_joystickAxis[AXIS_YAW], -63 );
-		IN_XBox360Axis( GP_AXIS_PITCH, s_joystickAxis[AXIS_PITCH], -63 );
+		//IN_XBox360Axis( GP_AXIS_YAW, s_joystickAxis[AXIS_YAW], -63 );
+		//IN_XBox360Axis( GP_AXIS_PITCH, s_joystickAxis[AXIS_PITCH], -63 );
 		
 		/*
 		if(state.dwPacketNumber == win32.g_Controller.dwPacketNumber) {
@@ -535,7 +543,10 @@ int	Sys_ReturnXbox360ControllerInputEvent( const int n, int& action, int& value,
 	return 1;
 }
 
-void Sys_EndXbox360ControllerInputEvents() { }
+void Sys_EndXbox360ControllerInputEvents()
+{
+	s_pollGamepadEventsCount = 0;
+}
 
 
 void Sys_GrabMouseCursor( bool grabIt ) {}

@@ -731,8 +731,10 @@ void idUsercmdGenLocal::MakeCurrent()
 		}
 		
 // RB begin
+#if !defined(__ANDROID__)
 		// get basic movement from xbox 360 controller
 		Xbox360ControllerMove();
+#endif
 // RB end
 		// keyboard angle adjustment
 		AdjustAngles();
@@ -743,6 +745,13 @@ void idUsercmdGenLocal::MakeCurrent()
 		// get basic movement from keyboard
 		KeyMove();
 		
+		// RB begin
+#if defined(__ANDROID__)
+		// get basic movement from xbox 360 controller
+		Xbox360ControllerMove();
+#endif
+// RB end
+
 		// aim assist
 		// TODO AimAssist();
 		
@@ -846,8 +855,8 @@ void idUsercmdGenLocal::Clear()
 	// clears all key states
 	memset( buttonState, 0, sizeof( buttonState ) );
 	memset( keyState, false, sizeof( keyState ) );
-	memset( joystickAxis, 0, sizeof( joystickAxis ) );
-	
+//	memset( joystickAxis, 0, sizeof( joystickAxis ) );
+
 	inhibitCommands = false;
 	
 	mouseDx = mouseDy = 0;
@@ -1038,6 +1047,10 @@ void idUsercmdGenLocal::Xbox360Controller()
 	
 	if( numEvents )
 	{
+#if 0 //defined(__ANDROID__)
+		common->Printf( "idUsercmdGenLocal::Xbox360Controller() numEvents = %i\n", numEvents );
+#endif
+		
 		for( int i = 0; i < numEvents; i++ )
 		{
 			int action, value, value2;
@@ -1051,6 +1064,10 @@ void idUsercmdGenLocal::Xbox360Controller()
 					Key( mouseButton, mouseDown );
 				}
 				*/
+				
+#if 0 //defined(__ANDROID__)
+				common->Printf( "event = %i, action = %i, value = %i, value2 = %i\n", i, action, value, value2 );
+#endif
 				
 				// convert xbox 360 controller axis to generic joystick axis
 				switch( action )
@@ -1095,7 +1112,7 @@ void idUsercmdGenLocal::TouchScreen()
 {
 	int numEvents = Sys_PollTouchScreenInputEvents();
 	
-	if( numEvents )
+	if( numEvents && ( session != NULL && !session->IsMenuActive() ) )
 	{
 		int sysWidth = glConfig.nativeScreenWidth;
 		int sysHeight = glConfig.nativeScreenHeight;
