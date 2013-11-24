@@ -103,6 +103,7 @@ void JE_QueueConsoleEvent( const char* cmd );
 void JE_RequestAudioData();
 
 int JE_IsConsoleActive();
+int JE_IsMenuActive();
 
 
 #endif

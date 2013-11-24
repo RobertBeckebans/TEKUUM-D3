@@ -395,15 +395,15 @@ idSessionLocal::idSessionLocal
 idSessionLocal::idSessionLocal()
 {
 #if defined(STANDALONE)
-	guiInGame = guiMainMenu = guiIntro \
-							  = guiRestartMenu = guiLoading = guiActive \
-									  = guiTest = guiMsg = guiMsgRestore = guiTakeNotes = NULL;
+	guiMainMenu = guiIntro \
+				  = guiRestartMenu = guiLoading = guiActive \
+									 = guiTest = guiMsg = guiMsgRestore = guiTakeNotes = NULL;
 #else
-	guiInGame = guiMainMenu = guiIntro \
-							  = guiRestartMenu = guiLoading = guiGameOver = guiActive \
-									  = guiTest = guiMsg = guiMsgRestore = guiTakeNotes = NULL;
+	guiMainMenu = guiIntro \
+				  = guiRestartMenu = guiLoading = guiGameOver = guiActive \
+									 = guiTest = guiMsg = guiMsgRestore = guiTakeNotes = NULL;
 #endif
-									  
+									 
 	menuSoundWorld = NULL;
 	
 	Clear();
@@ -3453,7 +3453,6 @@ void idSessionLocal::Init()
 	
 	whiteMaterial = declManager->FindMaterial( "_white" );
 	
-	guiInGame = NULL;
 	guiTest = NULL;
 	
 	guiActive = NULL;

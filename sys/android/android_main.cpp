@@ -866,6 +866,7 @@ extern "C"
 		je.SetResolution = JE_SetResolution;
 		
 		je.IsConsoleActive = JE_IsConsoleActive;
+		je.IsMenuActive = JE_IsMenuActive;
 		
 		return &je;
 	}

@@ -36,6 +36,13 @@ idCVar	idSessionLocal::gui_configServerRate( "gui_configServerRate", "0", CVAR_G
 
 // implements the setup for, and commands from, the main menu
 
+// RB begin
+bool idSessionLocal::IsMenuActive()
+{
+	return ( guiActive != NULL ); //&& ( guiActive == guiMainMenu ) );
+}
+// RB end
+
 /*
 ==============
 idSessionLocal::GetActiveMenu
