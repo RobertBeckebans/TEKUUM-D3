@@ -854,7 +854,10 @@ void idAsyncServer::LocalClientInput()
 	}
 	
 	index = gameFrame & ( MAX_USERCMD_BACKUP - 1 );
-	userCmds[index][localClientNum] = usercmdGen->GetDirectUsercmd();
+	// RB begin
+	usercmdGen->BuildCurrentUsercmd();
+	userCmds[index][localClientNum] = usercmdGen->GetCurrentUsercmd();
+	// RB end
 	userCmds[index][localClientNum].gameFrame = gameFrame;
 	userCmds[index][localClientNum].gameTime = gameTime;
 	if( idAsyncNetwork::UsercmdInputChanged( userCmds[( gameFrame - 1 ) & ( MAX_USERCMD_BACKUP - 1 )][localClientNum], userCmds[index][localClientNum] ) )

@@ -115,6 +115,8 @@ idCVar com_productionMode( "com_productionMode", "0", CVAR_SYSTEM | CVAR_BOOL, "
 
 idCVar com_product_lang_ext( "com_product_lang_ext", "1", CVAR_INTEGER | CVAR_SYSTEM | CVAR_ARCHIVE, "Extension to use when creating language files." );
 
+
+
 // com_speeds times
 int				com_frameMsec;
 
@@ -2061,8 +2063,6 @@ void idCommonLocal::InitLanguageDict()
 	}
 	
 	fileSystem->FreeFileList( langFiles );
-	
-	Sys_InitScanTable();
 }
 
 /*

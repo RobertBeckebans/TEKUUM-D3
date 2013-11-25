@@ -257,49 +257,32 @@ struct timeState_t
 {
 	int					time;
 	int					previousTime;
-	int					msec;
-	int					framenum;
 	int					realClientTime;
 	
-	void				Set( int t, int pt, int ms, int f, int rct )
+	void				Set( int t, int pt, int rct )
 	{
 		time = t;
 		previousTime = pt;
-		msec = ms;
-		framenum = f;
 		realClientTime = rct;
 	};
-	void				Get( int& t, int& pt, int& ms, int& f, int& rct )
+	void				Get( int& t, int& pt, int& rct )
 	{
 		t = time;
 		pt = previousTime;
-		ms = msec;
-		f = framenum;
 		rct = realClientTime;
 	};
 	void				Save( idSaveGame* savefile ) const
 	{
 		savefile->WriteInt( time );
 		savefile->WriteInt( previousTime );
-		savefile->WriteInt( msec );
-		savefile->WriteInt( framenum );
 		savefile->WriteInt( realClientTime );
 	}
 	void				Restore( idRestoreGame* savefile )
 	{
 		savefile->ReadInt( time );
 		savefile->ReadInt( previousTime );
-		savefile->ReadInt( msec );
-		savefile->ReadInt( framenum );
 		savefile->ReadInt( realClientTime );
 	}
-	void				Increment()
-	{
-		framenum++;
-		previousTime = time;
-		time += msec;
-		realClientTime = time;
-	};
 };
 
 enum slowmoState_t
@@ -365,17 +348,9 @@ public:
 	
 	// are kept up to date with changes to serverInfo
 	int						framenum;
-	int						previousTime;			// time in msec of last frame
 	int						time;					// in msec
+	int						previousTime;			// time in msec of last frame
 	
-// RB begin
-#if defined(STANDALONE)
-	int						msec;					// time since last update in milliseconds
-#else
-	static const int		msec = USERCMD_MSEC;	// time since last update in milliseconds
-#endif
-// RB end
-
 	int						vacuumAreaNum;			// -1 if level doesn't have any outside areas
 	
 	gameType_t				gameType;
@@ -406,13 +381,14 @@ public:
 	
 	timeState_t				fast;
 	timeState_t				slow;
+	int						selectedGroup;
 	
 	slowmoState_t			slowmoState;
-	float					slowmoMsec;
+	float					slowmoScale;
 	
 	bool					quickSlowmoReset;
 	
-	void					ComputeSlowMsec();
+	void					ComputeSlowScale();
 	void					RunTimeGroup2();
 	
 	void					ResetSlowTimeVars();
@@ -568,15 +544,17 @@ public:
 	int						GetFrameNum() const
 	{
 		return framenum;
-	};
+	}
+	
 	int						GetTime() const
 	{
 		return time;
-	};
-	int						GetMSec() const
+	}
+	
+	int						GetFrameTime() const
 	{
-		return msec;
-	};
+		return ( time - previousTime );
+	}
 	
 	int						GetNextClientNum( int current ) const;
 	idPlayer* 				GetClientByNum( int current ) const;
@@ -677,6 +655,7 @@ private:
 	void					RunDebugInfo();
 	
 	void					InitScriptForMap();
+	void					SetScriptFPS( const float com_engineHz );
 	
 	void					InitConsoleCommands();
 	void					ShutdownConsoleCommands();

@@ -1,25 +1,25 @@
 /*
 ===========================================================================
 
-Doom 3 GPL Source Code
-Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Doom 3 BFG Edition GPL Source Code
+Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
 
-This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
+This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
-Doom 3 Source Code is free software: you can redistribute it and/or modify
+Doom 3 BFG Edition Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Doom 3 Source Code is distributed in the hope that it will be useful,
+Doom 3 BFG Edition Source Code is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Doom 3 Source Code.  If not, see <http://www.gnu.org/licenses/>.
+along with Doom 3 BFG Edition Source Code.  If not, see <http://www.gnu.org/licenses/>.
 
-In addition, the Doom 3 Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 Source Code.  If not, please request a copy in writing from id Software at the address below.
+In addition, the Doom 3 BFG Edition Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 BFG Edition Source Code.  If not, please request a copy in writing from id Software at the address below.
 
 If you have questions concerning this license or the applicable additional terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 
@@ -33,7 +33,7 @@ If you have questions concerning this license or the applicable additional terms
 #pragma hdrstop
 
 #include <windows.h>
-#include <XInput.h>
+#include "win_input.h"
 // RB begin
 #if defined(USE_ANGLE)
 #include <EGL/egl.h>
@@ -49,9 +49,7 @@ If you have questions concerning this license or the applicable additional terms
 
 #define	WINDOW_STYLE	(WS_OVERLAPPED|WS_BORDER|WS_CAPTION|WS_VISIBLE | WS_THICKFRAME)
 
-const int MAX_XBOX360_GAMEPADS = 4;
-
-void	Sys_QueEvent( int time, sysEventType_t type, int value, int value2, int ptrLength, void* ptr );
+void	Sys_QueEvent( sysEventType_t type, int value, int value2, int ptrLength, void* ptr, int inputDeviceNum );
 
 #if !defined(USE_QT_WINDOWING)
 void	Sys_CreateConsole();
@@ -66,9 +64,6 @@ void	Win_SetErrorText( const char* text );
 
 cpuid_t	Sys_GetCPUId();
 
-int		MapKey( int key );
-
-
 // Input subsystem
 
 void	IN_Init();
@@ -80,8 +75,6 @@ void	IN_DeactivateMouse();
 void	IN_ActivateMouse();
 
 void	IN_Frame();
-
-int		IN_DIMapKey( int key );
 
 void	DisableTaskKeys( BOOL bDisable, BOOL bBeep, BOOL bTaskMgr );
 
@@ -132,9 +125,7 @@ typedef struct
 	int				desktopBitsPixel;
 	int				desktopWidth, desktopHeight;
 	
-	bool			cdsFullscreen;
-	
-	FILE*			log_fp;
+	int				cdsFullscreen;	// 0 = not fullscreen, otherwise monitor number
 	
 	unsigned short	oldHardwareGamma[3][256];
 	// desktop gamma is saved here for restoration at exit
@@ -142,11 +133,6 @@ typedef struct
 	static idCVar	sys_arch;
 	static idCVar	sys_cpustring;
 	static idCVar	in_mouse;
-	// RB begin
-	static idCVar	in_xbox360Controller;
-	static idCVar	in_xbox360ControllerDebug;
-	static idCVar	in_xbox360ControllerThreshold;
-	// RB end
 	static idCVar	win_allowAltTab;
 	static idCVar	win_notaskkeys;
 	static idCVar	win_username;
@@ -164,21 +150,7 @@ typedef struct
 	LPDIRECTINPUT8			g_pdi;
 	LPDIRECTINPUTDEVICE8	g_pMouse;
 	LPDIRECTINPUTDEVICE8	g_pKeyboard;
-// RB begin
-	bool					g_ControllerAvailable;
-	XINPUT_STATE			g_Controller; //[MAX_XBOX360_GAMEPADS];
-// RB end
-
-
-	HANDLE			renderCommandsEvent;
-	HANDLE			renderCompletedEvent;
-	HANDLE			renderActiveEvent;
-	HANDLE			renderThreadHandle;
-	unsigned long	renderThreadId;
-	void	( *glimpRenderThread )();
-	void*			smpData;
-	int				wglErrors;
-	// SMP acceleration vars
+	idJoystickWin32			g_Joystick;
 	
 } Win32Vars_t;
 

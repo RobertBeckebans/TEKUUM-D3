@@ -37,6 +37,7 @@ If you have questions concerning this license or the applicable additional terms
 ==============================================================
 */
 
+
 ID_INLINE void BeginProfileNamedEventColor( uint32 color, VERIFY_FORMAT_STRING const char* szName )
 {
 }

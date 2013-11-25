@@ -1,33 +1,33 @@
 /*
 ===========================================================================
 
-Doom 3 GPL Source Code
-Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Doom 3 BFG Edition GPL Source Code
+Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
 
-This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
+This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
-Doom 3 Source Code is free software: you can redistribute it and/or modify
+Doom 3 BFG Edition Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Doom 3 Source Code is distributed in the hope that it will be useful,
+Doom 3 BFG Edition Source Code is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Doom 3 Source Code.  If not, see <http://www.gnu.org/licenses/>.
+along with Doom 3 BFG Edition Source Code.  If not, see <http://www.gnu.org/licenses/>.
 
-In addition, the Doom 3 Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 Source Code.  If not, please request a copy in writing from id Software at the address below.
+In addition, the Doom 3 BFG Edition Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 BFG Edition Source Code.  If not, please request a copy in writing from id Software at the address below.
 
 If you have questions concerning this license or the applicable additional terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 
 ===========================================================================
 */
 
-#include "precompiled.h"
 #pragma hdrstop
+#include "precompiled.h"
 
 #include "../Game_local.h"
 
@@ -82,7 +82,7 @@ idPhysics_RigidBody::Integrate
   Calculate next state from the current state using an integrator.
 ================
 */
-void idPhysics_RigidBody::Integrate( float deltaTime, rigidBodyPState_t& next )
+void idPhysics_RigidBody::Integrate( float deltaTime, rigidBodyPState_t& next_ )
 {
 	idVec3 position;
 	
@@ -91,19 +91,19 @@ void idPhysics_RigidBody::Integrate( float deltaTime, rigidBodyPState_t& next )
 	
 	current.i.orientation.TransposeSelf();
 	
-	integrator->Evaluate( ( float* ) &current.i, ( float* ) &next.i, 0, deltaTime );
-	next.i.orientation.OrthoNormalizeSelf();
+	integrator->Evaluate( ( float* ) &current.i, ( float* ) &next_.i, 0, deltaTime );
+	next_.i.orientation.OrthoNormalizeSelf();
 	
 	// apply gravity
-	next.i.linearMomentum += deltaTime * gravityVector * mass;
+	next_.i.linearMomentum += deltaTime * gravityVector * mass;
 	
 	current.i.orientation.TransposeSelf();
-	next.i.orientation.TransposeSelf();
+	next_.i.orientation.TransposeSelf();
 	
 	current.i.position = position;
-	next.i.position -= centerOfMass * next.i.orientation;
+	next_.i.position -= centerOfMass * next_.i.orientation;
 	
-	next.atRest = current.atRest;
+	next_.atRest = current.atRest;
 }
 
 /*
@@ -177,7 +177,7 @@ idPhysics_RigidBody::CheckForCollisions
   If there is a collision the next state is set to the state at the moment of impact.
 ================
 */
-bool idPhysics_RigidBody::CheckForCollisions( const float deltaTime, rigidBodyPState_t& next, trace_t& collision )
+bool idPhysics_RigidBody::CheckForCollisions( const float deltaTime, rigidBodyPState_t& next_, trace_t& collision )
 {
 //#define TEST_COLLISION_DETECTION
 	idMat3 axis;
@@ -192,23 +192,23 @@ bool idPhysics_RigidBody::CheckForCollisions( const float deltaTime, rigidBodyPS
 	}
 #endif
 	
-	TransposeMultiply( current.i.orientation, next.i.orientation, axis );
+	TransposeMultiply( current.i.orientation, next_.i.orientation, axis );
 	rotation = axis.ToRotation();
 	rotation.SetOrigin( current.i.position );
 	
 	// if there was a collision
-	if( gameLocal.clip.Motion( collision, current.i.position, next.i.position, rotation, clipModel, current.i.orientation, clipMask, self ) )
+	if( gameLocal.clip.Motion( collision, current.i.position, next_.i.position, rotation, clipModel, current.i.orientation, clipMask, self ) )
 	{
 		// set the next state to the state at the moment of impact
-		next.i.position = collision.endpos;
-		next.i.orientation = collision.endAxis;
-		next.i.linearMomentum = current.i.linearMomentum;
-		next.i.angularMomentum = current.i.angularMomentum;
+		next_.i.position = collision.endpos;
+		next_.i.orientation = collision.endAxis;
+		next_.i.linearMomentum = current.i.linearMomentum;
+		next_.i.angularMomentum = current.i.angularMomentum;
 		collided = true;
 	}
 	
 #ifdef TEST_COLLISION_DETECTION
-	if( gameLocal.clip.Contents( next.i.position, clipModel, next.i.orientation, clipMask, self ) )
+	if( gameLocal.clip.Contents( next.i.position, clipModel, next_.i.orientation, clipMask, self ) )
 	{
 		if( !startsolid )
 		{
@@ -483,7 +483,7 @@ idPhysics_RigidBody::idPhysics_RigidBody()
 	memset( &current, 0, sizeof( current ) );
 	
 	current.atRest = -1;
-	current.lastTimeStep = USERCMD_MSEC;
+	current.lastTimeStep = 0.0f;
 	
 	current.i.position.Zero();
 	current.i.orientation.Identity();
@@ -900,7 +900,7 @@ idPhysics_RigidBody::Evaluate
 */
 bool idPhysics_RigidBody::Evaluate( int timeStepMSec, int endTimeMSec )
 {
-	rigidBodyPState_t next;
+	rigidBodyPState_t next_step;
 	idAngles angles;
 	trace_t collision;
 	idVec3 impulse;
@@ -962,24 +962,24 @@ bool idPhysics_RigidBody::Evaluate( int timeStepMSec, int endTimeMSec )
 
 	clipModel->Unlink();
 	
-	next = current;
+	next_step = current;
 	
 	// calculate next position and orientation
-	Integrate( timeStep, next );
+	Integrate( timeStep, next_step );
 	
 #ifdef RB_TIMINGS
 	timer_collision.Start();
 #endif
 	
 	// check for collisions from the current to the next state
-	collided = CheckForCollisions( timeStep, next, collision );
+	collided = CheckForCollisions( timeStep, next_step, collision );
 	
 #ifdef RB_TIMINGS
 	timer_collision.Stop();
 #endif
 	
 	// set the new state
-	current = next;
+	current = next_step;
 	
 	if( collided )
 	{
@@ -1085,6 +1085,52 @@ bool idPhysics_RigidBody::Evaluate( int timeStepMSec, int endTimeMSec )
 	
 	return true;
 }
+
+/*
+================
+idPhysics_RigidBody::Interpolate
+
+  Simply interpolate between snapshots of the state of the rigid body
+  for MP clients.
+================
+*/
+/*
+bool idPhysics_RigidBody::Interpolate( const float fraction )
+{
+	if( !self )
+	{
+		return false;
+	}
+
+	if( self->GetInterpolationBehavior() == idEntity::USE_LATEST_SNAP_ONLY )
+	{
+		current = next;
+		return true;
+	}
+	else if( self->GetInterpolationBehavior() == idEntity::USE_INTERPOLATION )
+	{
+		current.i.position = Lerp( previous.i.position, next.i.position, fraction );
+		current.i.orientation = idQuat().Slerp( previous.i.orientation.ToQuat(), next.i.orientation.ToQuat(), fraction ).ToMat3();
+		current.i.linearMomentum = Lerp( previous.i.linearMomentum, next.i.linearMomentum, fraction );
+		return true;
+	}
+
+	return false;
+}
+*/
+
+/*
+================
+idPhysics_RigidBody::ResetInterpolationState
+================
+*/
+/*
+void idPhysics_RigidBody::ResetInterpolationState( const idVec3& origin, const idMat3& axis )
+{
+	previous = current;
+	next = current;
+}
+*/
 
 /*
 ================

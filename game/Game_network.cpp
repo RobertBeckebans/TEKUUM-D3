@@ -1147,7 +1147,7 @@ void idGameLocal::ClientReadSnapshot( int clientNum, int sequence, const int gam
 	// update the game time
 	framenum = gameFrame;
 	time = gameTime;
-	previousTime = time - msec;
+	previousTime = FRAME_TO_MSEC( framenum - 1 );
 	
 	// so that StartSound/StopSound doesn't risk skipping
 	isNewFrame = true;
@@ -1745,8 +1745,8 @@ gameReturn_t idGameLocal::ClientPrediction( int clientNum, const usercmd_t* clie
 	
 	// update the game time
 	framenum++;
-	previousTime = time;
-	time += msec;
+	previousTime = FRAME_TO_MSEC( framenum - 1 );
+	time = FRAME_TO_MSEC( framenum );
 	
 	// update the real client time and the new frame flag
 	if( time > realClientTime )
@@ -1761,8 +1761,8 @@ gameReturn_t idGameLocal::ClientPrediction( int clientNum, const usercmd_t* clie
 	
 // RB begin
 #if defined(STANDALONE)
-	slow.Set( time, previousTime, msec, framenum, realClientTime );
-	fast.Set( time, previousTime, msec, framenum, realClientTime );
+	slow.Set( time, previousTime, realClientTime );
+	fast.Set( time, previousTime, realClientTime );
 #endif
 // RB end
 

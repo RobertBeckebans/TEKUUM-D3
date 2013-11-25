@@ -3,6 +3,7 @@
 
 Doom 3 GPL Source Code
 Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2013 Robert Beckebans
 
 This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
 
@@ -113,6 +114,11 @@ public:
 	virtual bool		ProcessEvent( const sysEvent_t* event );
 	
 	virtual void		StartMenu( bool playIntro = false );
+	
+	// RB begin
+	virtual bool		IsMenuActive();
+	// RB end
+	
 	virtual void		ExitMenu();
 	virtual void		GuiFrameEvents();
 	virtual void		SetGUI( idUserInterface* gui, HandleGuiCommand_t handle );
@@ -280,7 +286,6 @@ public:
 	idUserInterface* 	guiActive;
 	HandleGuiCommand_t	guiHandle;
 	
-	idUserInterface* 	guiInGame;
 	idUserInterface* 	guiMainMenu;
 	idListGUI* 			guiMainMenu_MapList;		// easy map list handling
 	idUserInterface* 	guiRestartMenu;

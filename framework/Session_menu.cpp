@@ -34,6 +34,17 @@ If you have questions concerning this license or the applicable additional terms
 
 idCVar	idSessionLocal::gui_configServerRate( "gui_configServerRate", "0", CVAR_GUI | CVAR_ARCHIVE | CVAR_ROM | CVAR_INTEGER, "" );
 
+
+// RB begin
+extern idCVar in_useJoystick;
+
+bool idSessionLocal::IsMenuActive()
+{
+	return ( guiActive != NULL ); //&& ( guiActive == guiMainMenu ) );
+}
+// RB end
+
+
 // implements the setup for, and commands from, the main menu
 
 /*
@@ -386,7 +397,8 @@ void idSessionLocal::SetMainMenuGuiVars()
 	SetPbMenuGuiVars();
 	
 	// RB begin
-	guiMainMenu->SetStateString( "gamepad", Sys_IsXbox360ControllerAvailable() ? "1" : "0" );
+	
+	//guiMainMenu->SetStateString( "gamepad", Sys_IsXbox360ControllerAvailable() ? "1" : "0" );
 	// RB end
 }
 

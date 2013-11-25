@@ -776,7 +776,10 @@ void idAsyncClient::SendUsercmdsToServer()
 	
 	// generate user command for this client
 	index = gameFrame & ( MAX_USERCMD_BACKUP - 1 );
-	userCmds[index][clientNum] = usercmdGen->GetDirectUsercmd();
+	// RB begin
+	usercmdGen->BuildCurrentUsercmd();
+	userCmds[index][clientNum] = usercmdGen->GetCurrentUsercmd();
+	// RB end
 	userCmds[index][clientNum].gameFrame = gameFrame;
 	userCmds[index][clientNum].gameTime = gameTime;
 	
@@ -2013,7 +2016,10 @@ idAsyncClient::Idle
 void idAsyncClient::Idle()
 {
 	// also need to read mouse for the connecting guis
-	usercmdGen->GetDirectUsercmd();
+	
+	// RB begin
+	usercmdGen->BuildCurrentUsercmd();
+	// RB end
 	
 	SendEmptyToServer();
 }
@@ -2090,7 +2096,9 @@ void idAsyncClient::RunFrame()
 	
 	if( clientState == CS_DISCONNECTED )
 	{
-		usercmdGen->GetDirectUsercmd();
+		// RB begin
+		usercmdGen->BuildCurrentUsercmd();
+		// RB end
 		gameTimeResidual = USERCMD_MSEC - 1;
 		clientPredictTime = 0;
 		return;
@@ -2109,7 +2117,9 @@ void idAsyncClient::RunFrame()
 	if( clientState < CS_CONNECTED )
 	{
 		// also need to read mouse for the connecting guis
-		usercmdGen->GetDirectUsercmd();
+		// RB begin
+		usercmdGen->BuildCurrentUsercmd();
+		// RB end
 		SetupConnection();
 		gameTimeResidual = USERCMD_MSEC - 1;
 		clientPredictTime = 0;

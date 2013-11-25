@@ -50,15 +50,6 @@ static idStr	savepath;
 
 jniImport_t		ji;
 
-/*
-===========
-Sys_InitScanTable
-===========
-*/
-void Sys_InitScanTable()
-{
-	common->DPrintf( "TODO: Sys_InitScanTable\n" );
-}
 
 /*
 =================
@@ -866,6 +857,7 @@ extern "C"
 		je.SetResolution = JE_SetResolution;
 		
 		je.IsConsoleActive = JE_IsConsoleActive;
+		je.IsMenuActive = JE_IsMenuActive;
 		
 		return &je;
 	}

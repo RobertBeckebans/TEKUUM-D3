@@ -395,15 +395,15 @@ idSessionLocal::idSessionLocal
 idSessionLocal::idSessionLocal()
 {
 #if defined(STANDALONE)
-	guiInGame = guiMainMenu = guiIntro \
-							  = guiRestartMenu = guiLoading = guiActive \
-									  = guiTest = guiMsg = guiMsgRestore = guiTakeNotes = NULL;
+	guiMainMenu = guiIntro \
+				  = guiRestartMenu = guiLoading = guiActive \
+									 = guiTest = guiMsg = guiMsgRestore = guiTakeNotes = NULL;
 #else
-	guiInGame = guiMainMenu = guiIntro \
-							  = guiRestartMenu = guiLoading = guiGameOver = guiActive \
-									  = guiTest = guiMsg = guiMsgRestore = guiTakeNotes = NULL;
+	guiMainMenu = guiIntro \
+				  = guiRestartMenu = guiLoading = guiGameOver = guiActive \
+									 = guiTest = guiMsg = guiMsgRestore = guiTakeNotes = NULL;
 #endif
-									  
+									 
 	menuSoundWorld = NULL;
 	
 	Clear();
@@ -2482,7 +2482,7 @@ bool idSessionLocal::ProcessEvent( const sysEvent_t* event )
 {
 	// hitting escape anywhere brings up the menu
 // RB begin - Xbox 360 controller support
-	if( !guiActive && event->evType == SE_KEY && event->evValue2 == 1 && ( event->evValue == K_ESCAPE || event->evValue == K_XINPUT_GAMEPAD_START ) )
+	if( !guiActive && event->evType == SE_KEY && event->evValue2 == 1 && ( event->evValue == K_ESCAPE || event->evValue == K_JOY9 ) )
 	{
 // RB end
 		console->Close();
@@ -2515,7 +2515,9 @@ bool idSessionLocal::ProcessEvent( const sysEvent_t* event )
 	if( guiTest )
 	{
 		// hitting escape exits the testgui
-		if( event->evType == SE_KEY && event->evValue2 == 1 && event->evValue == K_ESCAPE )
+		
+		// RB: added joystick start button
+		if( event->evType == SE_KEY && event->evValue2 == 1 && ( event->evValue == K_ESCAPE || event->evValue == K_JOY9 ) )
 		{
 			guiTest = NULL;
 			return true;
@@ -3126,7 +3128,10 @@ void idSessionLocal::Frame()
 		if( !com_asyncInput.GetBool() )
 		{
 			// early exit, won't do RunGameTic .. but still need to update mouse position for GUIs
-			usercmdGen->GetDirectUsercmd();
+			
+			// RB begin
+			usercmdGen->BuildCurrentUsercmd();
+			// RB end
 		}
 	}
 	
@@ -3277,7 +3282,10 @@ void idSessionLocal::RunGameTic()
 		}
 		else
 		{
-			cmd = usercmdGen->GetDirectUsercmd();
+			// RB begin
+			usercmdGen->BuildCurrentUsercmd();
+			cmd = usercmdGen->GetCurrentUsercmd();
+			// RB end
 		}
 		lastGameTic++;
 	}
@@ -3447,7 +3455,6 @@ void idSessionLocal::Init()
 	
 	whiteMaterial = declManager->FindMaterial( "_white" );
 	
-	guiInGame = NULL;
 	guiTest = NULL;
 	
 	guiActive = NULL;

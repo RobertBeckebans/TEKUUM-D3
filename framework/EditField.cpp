@@ -426,7 +426,7 @@ void idEditField::KeyDownEvent( int key )
 	int		len;
 	
 	// shift-insert is paste
-	if( ( ( key == K_INS ) || ( key == K_KP_INS ) ) && idKeyInput::IsDown( K_SHIFT ) )
+	if( ( ( key == K_INS ) || ( key == K_KP_0 ) ) && ( idKeyInput::IsDown( K_LSHIFT ) || idKeyInput::IsDown( K_RSHIFT ) ) )
 	{
 		ClearAutoComplete();
 		Paste();
@@ -450,7 +450,7 @@ void idEditField::KeyDownEvent( int key )
 	
 	if( key == K_RIGHTARROW )
 	{
-		if( idKeyInput::IsDown( K_CTRL ) )
+		if( idKeyInput::IsDown( K_LCTRL ) || idKeyInput::IsDown( K_RCTRL ) )
 		{
 			// skip to next word
 			while( ( cursor < len ) && ( buffer[ cursor ] != ' ' ) )
@@ -487,7 +487,7 @@ void idEditField::KeyDownEvent( int key )
 	
 	if( key == K_LEFTARROW )
 	{
-		if( idKeyInput::IsDown( K_CTRL ) )
+		if( idKeyInput::IsDown( K_LCTRL ) || idKeyInput::IsDown( K_RCTRL ) )
 		{
 			// skip to previous word
 			while( ( cursor > 0 ) && ( buffer[ cursor - 1 ] == ' ' ) )
@@ -521,7 +521,7 @@ void idEditField::KeyDownEvent( int key )
 		return;
 	}
 	
-	if( key == K_HOME || ( tolower( key ) == 'a' && idKeyInput::IsDown( K_CTRL ) ) )
+	if( key == K_HOME || ( key == K_A && ( idKeyInput::IsDown( K_LCTRL ) || idKeyInput::IsDown( K_RCTRL ) ) ) )
 	{
 		cursor = 0;
 		scroll = 0;
@@ -533,7 +533,7 @@ void idEditField::KeyDownEvent( int key )
 		return;
 	}
 	
-	if( key == K_END || ( tolower( key ) == 'e' && idKeyInput::IsDown( K_CTRL ) ) )
+	if( key == K_END || ( key == K_E && ( idKeyInput::IsDown( K_LCTRL ) || idKeyInput::IsDown( K_RCTRL ) ) ) )
 	{
 		cursor = len;
 		if( cursor >= scroll + widthInChars )
@@ -555,7 +555,7 @@ void idEditField::KeyDownEvent( int key )
 	}
 	
 	// clear autocompletion buffer on normal key input
-	if( key != K_CAPSLOCK && key != K_ALT && key != K_CTRL && key != K_SHIFT )
+	if( key != K_CAPSLOCK && key != K_LALT && key != K_LCTRL && key != K_LSHIFT && key != K_RALT && key != K_RCTRL && key != K_RSHIFT )
 	{
 		ClearAutoComplete();
 	}

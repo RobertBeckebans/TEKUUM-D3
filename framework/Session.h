@@ -3,6 +3,7 @@
 
 Doom 3 GPL Source Code
 Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2013 Robert Beckebans
 
 This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
 
@@ -103,6 +104,10 @@ public:
 	
 	// Activates the main menu
 	virtual void	StartMenu( bool playIntro = false ) = 0;
+	
+	// RB: Give touchscreen devices the information if to process the touchscreen ingame buttons
+	virtual bool	IsMenuActive() = 0;
+	// RB end
 	
 	virtual void	SetGUI( idUserInterface* gui, HandleGuiCommand_t handle ) = 0;
 	
