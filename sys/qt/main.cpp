@@ -231,8 +231,6 @@ unsigned char Sys_GetConsoleKey( bool shifted )
 	return Qt::Key_AsciiCircum;
 }
 
-void Sys_InitScanTable() {}
-
 unsigned char Sys_MapCharForKey( int key )
 {
 	return ( unsigned char )key;

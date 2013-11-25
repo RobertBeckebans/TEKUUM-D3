@@ -52,15 +52,7 @@ static int cmdargc = 0;
 static idStr	basepath;
 static idStr	savepath;
 
-/*
-===========
-Sys_InitScanTable
-===========
-*/
-void Sys_InitScanTable()
-{
-	common->DPrintf( "TODO: Sys_InitScanTable\n" );
-}
+
 
 /*
 =================
