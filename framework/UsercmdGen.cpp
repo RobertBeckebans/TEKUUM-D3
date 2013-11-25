@@ -50,7 +50,12 @@ idCVar joy_deltaPerMSLook( "joy_deltaPerMSLook", "0.003", CVAR_FLOAT | CVAR_ARCH
 idCVar in_mouseSpeed( "in_mouseSpeed", "1",	CVAR_ARCHIVE | CVAR_FLOAT, "speed at which the mouse moves", 0.25f, 4.0f );
 idCVar in_alwaysRun( "in_alwaysRun", "1", CVAR_SYSTEM | CVAR_ARCHIVE | CVAR_BOOL, "always run (reverse _speed button) - only in MP" );
 
+#if defined(__ANDROID__)
+idCVar in_useJoystick( "in_useJoystick", "1", CVAR_BOOL, "enables/disables the gamepad for PC use" );
+#else
 idCVar in_useJoystick( "in_useJoystick", "0", CVAR_ARCHIVE | CVAR_BOOL, "enables/disables the gamepad for PC use" );
+#endif
+
 idCVar in_joystickRumble( "in_joystickRumble", "1", CVAR_SYSTEM | CVAR_ARCHIVE | CVAR_BOOL, "enable joystick rumble" );
 idCVar in_invertLook( "in_invertLook", "0", CVAR_ARCHIVE | CVAR_BOOL, "inverts the look controls so the forward looks up (flight controls) - the proper way to play games!" );
 idCVar in_mouseInvertLook( "in_mouseInvertLook", "0", CVAR_ARCHIVE | CVAR_BOOL, "inverts the look controls so the forward looks up (flight controls) - the proper way to play games!" );
@@ -1491,6 +1496,10 @@ void idUsercmdGenLocal::Joystick( int deviceNum )
 {
 	int numEvents = Sys_PollJoystickInputEvents( deviceNum );
 	
+#if 0 //defined(__ANDROID__)
+	common->Printf( "idUsercmdGenLocal::Joystick: events = %i\n", numEvents );
+#endif
+	
 	// Study each of the buffer elements and process them.
 	for( int i = 0; i < numEvents; i++ )
 	{
@@ -1498,6 +1507,10 @@ void idUsercmdGenLocal::Joystick( int deviceNum )
 		int value;
 		if( Sys_ReturnJoystickInputEvent( i, action, value ) )
 		{
+#if 0 //defined(__ANDROID__)
+			common->Printf( " action = %i, value = %i\n", action, value );
+#endif
+			
 			if( action >= J_ACTION1 && action <= J_ACTION_MAX )
 			{
 				int joyButton = K_JOY1 + ( action - J_ACTION1 );
@@ -1698,7 +1711,9 @@ void idUsercmdGenLocal::UsercmdInterrupt( int deviceNum )
 	Keyboard();
 	
 	// process the system joystick events
+#if !defined(__ANDROID__)
 	if( deviceNum >= 0 && in_useJoystick.GetBool() )
+#endif
 	{
 		Joystick( deviceNum );
 	}
@@ -1753,7 +1768,9 @@ void idUsercmdGenLocal::BuildCurrentUsercmd( int deviceNum )
 	Keyboard();
 	
 	// process the system joystick events
+#if !defined(__ANDROID__)
 	if( deviceNum >= 0 && in_useJoystick.GetBool() )
+#endif
 	{
 		Joystick( deviceNum );
 	}
