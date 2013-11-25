@@ -807,7 +807,7 @@ sysEvent_t Sys_GetEvent()
 				glConfig.nativeScreenWidth = w;
 				glConfig.nativeScreenHeight = h;
 				// for some reason this needs a vid_restart in SDL1 but not SDL2 so GLimp_SetScreenParms() is called
-				//PushConsoleEvent( "vid_restart" );
+				PushConsoleEvent( "vid_restart" );
 				return res_none;
 			}
 			// DG end
