@@ -1613,7 +1613,7 @@ void idUsercmdGenLocal::TouchScreen()
 					{
 						//common->Printf( "idUsercmdGenLocal::TouchScreen() ( %i , %i ) inside touchCrouch %s\n", ( int ) x, ( int ) y, touchCrouch.String() );
 						
-						Key( 'c' , action == TOUCH_MOTION_DOWN );
+						Key( K_C , action == TOUCH_MOTION_DOWN );
 					}
 					else if( touchNextWeapon.Contains( x, y ) )
 					{
@@ -1631,7 +1631,7 @@ void idUsercmdGenLocal::TouchScreen()
 					{
 						//common->Printf( "idUsercmdGenLocal::TouchScreen() ( %i , %i ) inside touchFlashLight %s\n", ( int ) x, ( int ) y, touchFlashLight.String() );
 						
-						Key( 'f' , action == TOUCH_MOTION_DOWN );
+						Key( K_F , action == TOUCH_MOTION_DOWN );
 					}
 					else if( action == TOUCH_MOTION_UP )
 					{
@@ -1641,10 +1641,10 @@ void idUsercmdGenLocal::TouchScreen()
 						Key( mouseButton, mouseDown );
 						
 						Key( K_SPACE , false );
-						Key( 'c' , false );
+						Key( K_C , false );
 						Key( K_MWHEELDOWN , false );
 						Key( K_MWHEELUP , false );
-						Key( 'f' , false );
+						Key( K_F , false );
 					}
 				}
 				else if( action == TOUCH_MOTION_DELTA_XY )
