@@ -1,25 +1,25 @@
 /*
 ===========================================================================
 
-Doom 3 GPL Source Code
-Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Doom 3 BFG Edition GPL Source Code
+Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
 
-This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
+This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
-Doom 3 Source Code is free software: you can redistribute it and/or modify
+Doom 3 BFG Edition Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Doom 3 Source Code is distributed in the hope that it will be useful,
+Doom 3 BFG Edition Source Code is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Doom 3 Source Code.  If not, see <http://www.gnu.org/licenses/>.
+along with Doom 3 BFG Edition Source Code.  If not, see <http://www.gnu.org/licenses/>.
 
-In addition, the Doom 3 Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 Source Code.  If not, please request a copy in writing from id Software at the address below.
+In addition, the Doom 3 BFG Edition Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 BFG Edition Source Code.  If not, please request a copy in writing from id Software at the address below.
 
 If you have questions concerning this license or the applicable additional terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 
@@ -580,7 +580,7 @@ void idGameLocal::SaveGame( idFile* f )
 	
 // RB begin
 #if defined(STANDALONE)
-	savegame.WriteInt( msec );
+	//savegame.WriteInt( msec );
 #endif
 // RB end
 
@@ -607,7 +607,7 @@ void idGameLocal::SaveGame( idFile* f )
 	slow.Save( &savegame );
 	
 	savegame.WriteInt( slowmoState );
-	savegame.WriteFloat( slowmoMsec );
+	savegame.WriteFloat( slowmoScale );
 	savegame.WriteBool( quickSlowmoReset );
 #endif
 // RB end
@@ -1549,7 +1549,7 @@ bool idGameLocal::InitFromSaveGame( const char* mapName, idRenderWorld* renderWo
 	
 // RB begin
 #if defined(STANDALONE)
-	savegame.ReadInt( msec );
+	//savegame.ReadInt( msec );
 #endif
 // RB end
 
@@ -1579,7 +1579,7 @@ bool idGameLocal::InitFromSaveGame( const char* mapName, idRenderWorld* renderWo
 	savegame.ReadInt( blah );
 	slowmoState = ( slowmoState_t )blah;
 	
-	savegame.ReadFloat( slowmoMsec );
+	savegame.ReadFloat( slowmoScale );
 	savegame.ReadBool( quickSlowmoReset );
 	
 	if( slowmoState == SLOWMO_STATE_OFF )
@@ -1598,7 +1598,7 @@ bool idGameLocal::InitFromSaveGame( const char* mapName, idRenderWorld* renderWo
 	}
 	if( gameSoundWorld )
 	{
-		gameSoundWorld->SetSlowmoSpeed( slowmoMsec / ( float )USERCMD_MSEC );
+		gameSoundWorld->SetSlowmoSpeed( slowmoScale );
 	}
 #endif
 // RB end
@@ -2612,8 +2612,7 @@ void idGameLocal::RunTimeGroup2()
 	idEntity* ent;
 	int num = 0;
 	
-	fast.Increment();
-	fast.Get( time, previousTime, msec, framenum, realClientTime );
+	SelectTimeGroup( true );
 	
 	for( ent = activeEntities.Next(); ent != NULL; ent = ent->activeNode.Next() )
 	{
@@ -2626,7 +2625,7 @@ void idGameLocal::RunTimeGroup2()
 		num++;
 	}
 	
-	slow.Get( time, previousTime, msec, framenum, realClientTime );
+	SelectTimeGroup( false );
 }
 #endif
 // RB end
@@ -2655,15 +2654,6 @@ gameReturn_t idGameLocal::RunFrame( const usercmd_t* clientCmds )
 	
 	player = GetLocalPlayer();
 	
-// RB begin
-#if defined(STANDALONE)
-	ComputeSlowMsec();
-	
-	slow.Get( time, previousTime, msec, framenum, realClientTime );
-	msec = slowmoMsec;
-#endif
-// RB end
-
 	if( !isMultiplayer && g_stopTime.GetBool() )
 	{
 		// clear any debug lines from a previous frame
@@ -2677,17 +2667,30 @@ gameReturn_t idGameLocal::RunFrame( const usercmd_t* clientCmds )
 			player->Think();
 		}
 	}
-	else do
+	else
+	{
+		do
 		{
 			// update the game time
 			framenum++;
-			previousTime = time;
-			time += msec;
-			realClientTime = time;
 			
 // RB begin
 #if defined(STANDALONE)
-			slow.Set( time, previousTime, msec, framenum, realClientTime );
+			fast.previousTime = FRAME_TO_MSEC( framenum - 1 );
+			fast.time = FRAME_TO_MSEC( framenum );
+			fast.realClientTime = time;
+			
+			ComputeSlowScale();
+			
+			slow.previousTime = slow.time;
+			slow.time += idMath::Ftoi( ( fast.time - fast.previousTime ) * slowmoScale );
+			slow.realClientTime = slow.time;
+			
+			SelectTimeGroup( false );
+#else
+			previousTime = FRAME_TO_MSEC( framenum - 1 );
+			time = FRAME_TO_MSEC( framenum );
+			realClientTime = time;
 #endif
 // RB end
 
@@ -2832,9 +2835,9 @@ gameReturn_t idGameLocal::RunFrame( const usercmd_t* clientCmds )
 // RB begin
 #if defined(STANDALONE)
 			// service pending fast events
-			fast.Get( time, previousTime, msec, framenum, realClientTime );
+			SelectTimeGroup( true );
 			idEvent::ServiceFastEvents();
-			slow.Get( time, previousTime, msec, framenum, realClientTime );
+			SelectTimeGroup( false );
 #endif
 // RB end
 
@@ -2895,7 +2898,8 @@ gameReturn_t idGameLocal::RunFrame( const usercmd_t* clientCmds )
 			}
 		}
 		while( ( inCinematic || ( time < cinematicStopTime ) ) && skipCinematic );
-		
+	}
+	
 	ret.syncNextGameFrame = skipCinematic;
 	if( skipCinematic )
 	{
@@ -4264,7 +4268,7 @@ void idGameLocal::AlertAI( idEntity* ent )
 	if( ent && ent->IsType( idActor::Type ) )
 	{
 		// alert them for the next frame
-		lastAIAlertTime = time + msec;
+		lastAIAlertTime = time + 1;
 		lastAIAlertEntity = static_cast<idActor*>( ent );
 	}
 }
@@ -4758,7 +4762,7 @@ void idGameLocal::SetCamera( idCamera* cam )
 	else
 	{
 		inCinematic = false;
-		cinematicStopTime = time + msec;
+		cinematicStopTime = time + 1;
 		
 		// restore r_znear
 		cvarSystem->SetCVarFloat( "r_znear", 3.0f );
@@ -5208,15 +5212,13 @@ void idGameLocal::SelectTimeGroup( int timeGroup )
 {
 // RB begin
 #if defined(STANDALONE)
-	int i = 0;
-	
 	if( timeGroup )
 	{
-		fast.Get( time, previousTime, msec, framenum, realClientTime );
+		fast.Get( time, previousTime, realClientTime );
 	}
 	else
 	{
-		slow.Get( time, previousTime, msec, framenum, realClientTime );
+		slow.Get( time, previousTime, realClientTime );
 	}
 #endif
 // RB end
@@ -5263,12 +5265,8 @@ void idGameLocal::GetBestGameType( const char* map, const char* gametype, char b
 idGameLocal::ComputeSlowMsec
 ============
 */
-void idGameLocal::ComputeSlowMsec()
+void idGameLocal::ComputeSlowScale()
 {
-	idPlayer* player;
-	bool powerupOn;
-	float delta;
-	
 	// check if we need to do a quick reset
 	if( quickSlowmoReset )
 	{
@@ -5283,14 +5281,14 @@ void idGameLocal::ComputeSlowMsec()
 		
 		// stop the state
 		slowmoState = SLOWMO_STATE_OFF;
-		slowmoMsec = USERCMD_MSEC;
+		slowmoScale = 1.0f;
 	}
 	
 	// check the player state
-	player = GetLocalPlayer();
-	powerupOn = false;
+	idPlayer* player = GetLocalPlayer();
+	bool powerupOn = false;
 	
-	if( player && player->PowerUpActive( HELLTIME ) )
+	if( player != NULL && player->PowerUpActive( HELLTIME ) )
 	{
 		powerupOn = true;
 	}
@@ -5304,11 +5302,10 @@ void idGameLocal::ComputeSlowMsec()
 	{
 		slowmoState = SLOWMO_STATE_RAMPUP;
 		
-		slowmoMsec = msec;
 		if( gameSoundWorld )
 		{
 			gameSoundWorld->SetSlowmo( true );
-			gameSoundWorld->SetSlowmoSpeed( slowmoMsec / ( float )USERCMD_MSEC );
+			gameSoundWorld->SetSlowmoSpeed( slowmoScale );
 		}
 	}
 	else if( !powerupOn && slowmoState == SLOWMO_STATE_ON )
@@ -5316,7 +5313,7 @@ void idGameLocal::ComputeSlowMsec()
 		slowmoState = SLOWMO_STATE_RAMPDOWN;
 		
 		// play the stop sound
-		if( player )
+		if( player != NULL )
 		{
 			//player->PlayHelltimeStopSound();
 		}
@@ -5325,30 +5322,30 @@ void idGameLocal::ComputeSlowMsec()
 	// do any necessary ramping
 	if( slowmoState == SLOWMO_STATE_RAMPUP )
 	{
-		delta = 4 - slowmoMsec;
+		float delta = ( 0.25f - slowmoScale );
 		
 		if( fabs( delta ) < g_slowmoStepRate.GetFloat() )
 		{
-			slowmoMsec = 4;
+			slowmoScale = 0.25f;
 			slowmoState = SLOWMO_STATE_ON;
 		}
 		else
 		{
-			slowmoMsec += delta * g_slowmoStepRate.GetFloat();
+			slowmoScale += delta * g_slowmoStepRate.GetFloat();
 		}
 		
-		if( gameSoundWorld )
+		if( gameSoundWorld != NULL )
 		{
-			gameSoundWorld->SetSlowmoSpeed( slowmoMsec / ( float )USERCMD_MSEC );
+			gameSoundWorld->SetSlowmoSpeed( slowmoScale );
 		}
 	}
 	else if( slowmoState == SLOWMO_STATE_RAMPDOWN )
 	{
-		delta = 16 - slowmoMsec;
+		float delta = ( 1.0f - slowmoScale );
 		
 		if( fabs( delta ) < g_slowmoStepRate.GetFloat() )
 		{
-			slowmoMsec = 16;
+			slowmoScale = 1.0f;
 			slowmoState = SLOWMO_STATE_OFF;
 			if( gameSoundWorld )
 			{
@@ -5357,12 +5354,12 @@ void idGameLocal::ComputeSlowMsec()
 		}
 		else
 		{
-			slowmoMsec += delta * g_slowmoStepRate.GetFloat();
+			slowmoScale += delta * g_slowmoStepRate.GetFloat();
 		}
 		
-		if( gameSoundWorld )
+		if( gameSoundWorld != NULL )
 		{
-			gameSoundWorld->SetSlowmoSpeed( slowmoMsec / ( float )USERCMD_MSEC );
+			gameSoundWorld->SetSlowmoSpeed( slowmoScale );
 		}
 	}
 }
@@ -5374,19 +5371,14 @@ idGameLocal::ResetSlowTimeVars
 */
 void idGameLocal::ResetSlowTimeVars()
 {
-	msec				= USERCMD_MSEC;
-	slowmoMsec			= USERCMD_MSEC;
+	slowmoScale			= 1.0f;
 	slowmoState			= SLOWMO_STATE_OFF;
 	
-	fast.framenum		= 0;
 	fast.previousTime	= 0;
 	fast.time			= 0;
-	fast.msec			= USERCMD_MSEC;
 	
-	slow.framenum		= 0;
 	slow.previousTime	= 0;
 	slow.time			= 0;
-	slow.msec			= USERCMD_MSEC;
 }
 
 /*

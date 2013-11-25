@@ -33,44 +33,7 @@ If you have questions concerning this license or the applicable additional terms
 #include "android_local.h"
 
 
-static const unsigned char s_scantokey[256] =
-{
-//  0            1       2          3          4       5            6         7
-//  8            9       A          B          C       D            E         F
-	0,           27,    '1',       '2',        '3',    '4',         '5',      '6',
-	'7',        '8',    '9',       '0',        '-',    '=',          K_BACKSPACE, 9, // 0
-	'q',        'w',    'e',       'r',        't',    'y',         'u',      'i',
-	'o',        'p',    '[',       ']',        K_ENTER, K_CTRL,      'a',      's',  // 1
-	'd',        'f',    'g',       'h',        'j',    'k',         'l',      ';',
-	'\'',       '`',    K_SHIFT,   '\\',       'z',    'x',         'c',      'v',   // 2
-	'b',        'n',    'm',       ',',        '.',    '/',         K_SHIFT,  K_KP_STAR,
-	K_ALT,      ' ',    K_CAPSLOCK, K_F1,       K_F2,   K_F3,        K_F4,     K_F5, // 3
-	K_F6,       K_F7,   K_F8,      K_F9,       K_F10,  K_PAUSE,     K_SCROLL, K_HOME,
-	K_UPARROW,  K_PGUP, K_KP_MINUS, K_LEFTARROW, K_KP_5, K_RIGHTARROW, K_KP_PLUS, K_END, // 4
-	K_DOWNARROW, K_PGDN, K_INS,     K_DEL,      0,      0,           0,        K_F11,
-	K_F12,      0,      0,         K_LWIN,     K_RWIN, K_MENU,      0,        0,     // 5
-	0,          0,      0,         0,          0,      0,           0,        0,
-	0,          0,      0,         0,          0,      0,           0,        0,     // 6
-	0,          0,      0,         0,          0,      0,           0,        0,
-	0,          0,      0,         0,          0,      0,           0,        0,      // 7
-// shifted
-	0,           27,    '!',       '@',        '#',    '$',         '%',      '^',
-	'&',        '*',    '(',       ')',        '_',    '+',          K_BACKSPACE, 9, // 0
-	'q',        'w',    'e',       'r',        't',    'y',         'u',      'i',
-	'o',        'p',    '[',       ']',        K_ENTER, K_CTRL,      'a',      's',  // 1
-	'd',        'f',    'g',       'h',        'j',    'k',         'l',      ';',
-	'\'',       '~',    K_SHIFT,   '\\',       'z',    'x',         'c',      'v',   // 2
-	'b',        'n',    'm',       ',',        '.',    '/',         K_SHIFT,  K_KP_STAR,
-	K_ALT,      ' ',    K_CAPSLOCK, K_F1,       K_F2,   K_F3,        K_F4,     K_F5, // 3
-	K_F6,       K_F7,   K_F8,      K_F9,       K_F10,  K_PAUSE,     K_SCROLL, K_HOME,
-	K_UPARROW,  K_PGUP, K_KP_MINUS, K_LEFTARROW, K_KP_5, K_RIGHTARROW, K_KP_PLUS, K_END, // 4
-	K_DOWNARROW, K_PGDN, K_INS,     K_DEL,      0,      0,           0,        K_F11,
-	K_F12,      0,      0,         K_LWIN,     K_RWIN, K_MENU,      0,        0,     // 5
-	0,          0,      0,         0,          0,      0,           0,        0,
-	0,          0,      0,         0,          0,      0,           0,        0,     // 6
-	0,          0,      0,         0,          0,      0,           0,        0,
-	0,          0,      0,         0,          0,      0,           0,        0      // 7
-};
+
 
 
 // toggled by grab calls - decides if we ignore MotionNotify events
@@ -307,6 +270,14 @@ int JE_IsConsoleActive()
 	return 0;
 }
 
+int JE_IsMenuActive()
+{
+	if( session && session->IsMenuActive() )
+		return 1;
+		
+	return 0;
+}
+
 void Sys_InitInput()
 {
 	motion_polls.SetGranularity( 64 );
@@ -337,7 +308,7 @@ int				Sys_ReturnKeyboardInputEvent( const int n, int& ch, bool& state )
 void			Sys_EndKeyboardInputEvents() {}
 
 // mouse input polling
-int				Sys_PollMouseInputEvents()
+int				Sys_PollMouseInputEvents( int mouseEvents[MAX_MOUSE_EVENTS][2] )
 {
 #if 0
 	if( mouse_polls.Num() > 0 )
@@ -346,25 +317,11 @@ int				Sys_PollMouseInputEvents()
 	}
 #endif
 	
-	return mouse_polls.Num();
-}
-
-int				Sys_ReturnMouseInputEvent( const int n, int& action, int& value )
-{
-	if( n >= mouse_polls.Num() )
-	{
-		return 0;
-	}
+	int numEvents =  mouse_polls.Num();
 	
-	action = mouse_polls[ n ].action;
-	value = mouse_polls[ n ].value;
-	
-	return 1;
-}
-
-void			Sys_EndMouseInputEvents()
-{
 	mouse_polls.SetNum( 0 );
+	
+	return numEvents;
 }
 
 
@@ -403,16 +360,59 @@ void			Sys_EndTouchScreenInputEvents()
 }
 
 //=====================================================================================
+//	Joystick Input Handling
+//=====================================================================================
+
+/*
+class idJoystickWin32 : idJoystick
+{
+public:
+	idJoystickWin32();
+
+	virtual bool	Init();
+	virtual void	SetRumble( int deviceNum, int rumbleLow, int rumbleHigh );
+	virtual int		PollInputEvents( int inputDeviceNum );
+	virtual int		ReturnInputEvent( const int n, int& action, int& value );
+	virtual void	EndInputEvents() {}
+
+protected:
+	friend void		JoystickSamplingThread( void* data );
+
+	void 			PushButton( int inputDeviceNum, int key, bool value );
+	void 			PostInputEvent( int inputDeviceNum, int event, int value, int range = 16384 );
+
+	idSysMutex				mutexXis;		// lock this before using currentXis or stickIntegrations
+	HANDLE					timer;			// fire every 4 msec
+
+	int						numEvents;
+
+	struct
+	{
+		int event;
+		int value;
+	}						events[ MAX_JOY_EVENT ];
+
+	controllerState_t		controllers[ MAX_JOYSTICKS ];
+
+	// should these be per-controller?
+	bool					buttonStates[MAX_INPUT_DEVICES][K_LAST_KEY];	// For keeping track of button up/down events
+	int						joyAxis[MAX_INPUT_DEVICES][MAX_JOYSTICK_AXIS];	// For keeping track of joystick axises
+};
+*/
+
+
+
+
 
 static float		s_joystickAxis[MAX_JOYSTICK_AXIS];	// set by joystick events
 
 void JE_QueueJoystickEvent( int axis, float value )
 {
-#if 1
+#if 0
 	if( !common || !common->IsInitialized() )
 		return;
 		
-	//common->Printf( "JE_QueueJoystickEvent( axis = %i, value = %f )\n", axis, value );
+	common->Printf( "JE_QueueJoystickEvent( axis = %i, value = %f )\n", axis, value );
 #endif
 	
 	if( axis < 0 || axis >= MAX_JOYSTICK_AXIS )
@@ -454,75 +454,51 @@ static bool IN_AddGamepadPollEvent( int action, int value, int value2 )
 	return true;
 }
 
-static void IN_XBox360Axis( int action, float thumbAxis, float scale )
+/*
+static void IN_TouchScreenJoystickAxis( int event, float value, float range )
 {
-#if 1
-	//float           f = ((float)thumbAxis) / 32767.0f;
-	float f = thumbAxis;
+	int axis = event - J_AXIS_MIN;
+	int percent = ( value * 16 ) / range;
+	if( joyAxis[inputDeviceNum][axis] != percent )
+	{
+		joyAxis[inputDeviceNum][axis] = percent;
+
+		IN_AddGamepadPollEvent( J_AXIS_LEFT_X, s_joystickAxis[AXIS_SIDE] * f * scale, 0 );
+		//Sys_QueEvent( SE_JOYSTICK, axis, percent, 0, NULL, inputDeviceNum );
+	}
+}
+*/
+
+void Sys_SetRumble( int device, int low, int hi )
+{
+	// TODO
 	
-	float threshold = 0.15f; //win32.in_xbox360ControllerThreshold.GetFloat();
-	if( f > -threshold && f < threshold )
-	{
-		IN_AddGamepadPollEvent( action, 0, 0 );
-	}
-	else
-	{
-		//if(in_xbox360ControllerDebug.GetBool())
-		//{
-		//	common->Printf("xbox axis %i = %f\n", action, f);
-		//}
-		
-		IN_AddGamepadPollEvent( action, f * scale, 0 );
-	}
-#endif
+	//win32.g_Joystick.SetRumble( device, low, hi );
 }
 
-bool Sys_IsXbox360ControllerAvailable()
+int Sys_PollJoystickInputEvents( int deviceNum )
 {
-	return false;
-}
-
-int Sys_PollXbox360ControllerInputEvents()
-{
-#if 1
+	//return win32.g_Joystick.PollInputEvents( deviceNum );
+	
 	s_pollGamepadEventsCount = 0;
 	
-	//XINPUT_STATE state;
-	//DWORD dwResult = XInputGetState(0, &state);
-	
-	//if(dwResult == ERROR_SUCCESS)
-	{
-		//win32.g_ControllerAvailable = true;
-		
-		// always send the axis
-		
-		// use left analog stick for strafing
-		IN_XBox360Axis( GP_AXIS_SIDE, s_joystickAxis[AXIS_SIDE], 127 );
-		IN_XBox360Axis( GP_AXIS_FORWARD, s_joystickAxis[AXIS_FORWARD], 127 );
-		
-		// use right analog stick for viewing
-		IN_XBox360Axis( GP_AXIS_YAW, s_joystickAxis[AXIS_YAW], -63 );
-		IN_XBox360Axis( GP_AXIS_PITCH, s_joystickAxis[AXIS_PITCH], -63 );
-		
-		/*
-		if(state.dwPacketNumber == win32.g_Controller.dwPacketNumber) {
-			// no changes since last frame so skip the buttons
-			return s_pollGamepadEventsCount;
-		} else {
-			win32.g_Controller = state;
-		}
-		*/
-		
-		// TODO buttons
-		
-		return s_pollGamepadEventsCount;
-	}
+	// use left analog stick for strafing
+#if 1
+	IN_AddGamepadPollEvent( J_AXIS_LEFT_X, ( s_joystickAxis[AXIS_LEFT_X] * 32767 ), 0 );
+	IN_AddGamepadPollEvent( J_AXIS_LEFT_Y, ( s_joystickAxis[AXIS_LEFT_Y] * -32767 ), 0 );
+#else
+	IN_AddGamepadPollEvent( J_AXIS_LEFT_X, ( s_joystickAxis[AXIS_LEFT_X] * 0.5 + 0.5 ) * 32767, 0 );
+	IN_AddGamepadPollEvent( J_AXIS_LEFT_Y, ( s_joystickAxis[AXIS_LEFT_Y] * 0.5 + 0.5 ) * 32767, 0 );
 #endif
-	return 0;
+	
+	return s_pollGamepadEventsCount;
 }
 
-int	Sys_ReturnXbox360ControllerInputEvent( const int n, int& action, int& value, int& value2 )
+
+int Sys_ReturnJoystickInputEvent( const int n, int& action, int& value )
 {
+	// return win32.g_Joystick.ReturnInputEvent( n, action, value );
+	
 	if( n >= s_pollGamepadEventsCount )
 	{
 		return 0;
@@ -530,12 +506,14 @@ int	Sys_ReturnXbox360ControllerInputEvent( const int n, int& action, int& value,
 	
 	action = s_pollGamepadEvents[ n ].action;
 	value = s_pollGamepadEvents[ n ].value;
-	value2 = s_pollGamepadEvents[ n ].value2;
 	
 	return 1;
 }
 
-void Sys_EndXbox360ControllerInputEvents() { }
 
+void Sys_EndJoystickInputEvents()
+{
+	s_pollGamepadEventsCount = 0;
+}
 
 void Sys_GrabMouseCursor( bool grabIt ) {}

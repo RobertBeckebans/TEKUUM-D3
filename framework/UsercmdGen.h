@@ -37,6 +37,30 @@ If you have questions concerning this license or the applicable additional terms
 ===============================================================================
 */
 
+const int64 com_engineHz_numerator = 100LL * 1000LL;
+const int64 com_engineHz_denominator = 100LL * 60LL;
+
+// Returns the msec the frame starts on
+ID_INLINE int FRAME_TO_MSEC( int64 frame )
+{
+	return ( int )( ( frame * com_engineHz_numerator ) / com_engineHz_denominator );
+}
+// Rounds DOWN to the nearest frame
+ID_INLINE int MSEC_TO_FRAME_FLOOR( int msec )
+{
+	return ( int )( ( ( ( int64 )msec * com_engineHz_denominator ) + ( com_engineHz_denominator - 1 ) ) / com_engineHz_numerator );
+}
+// Rounds UP to the nearest frame
+ID_INLINE int MSEC_TO_FRAME_CEIL( int msec )
+{
+	return ( int )( ( ( ( int64 )msec * com_engineHz_denominator ) + ( com_engineHz_numerator - 1 ) ) / com_engineHz_numerator );
+}
+// Aligns msec so it starts on a frame bondary
+ID_INLINE int MSEC_ALIGN_TO_FRAME( int msec )
+{
+	return FRAME_TO_MSEC( MSEC_TO_FRAME_CEIL( msec ) );
+}
+
 const int USERCMD_HZ			= 60;			// 60 frames per second
 const int USERCMD_MSEC			= 1000 / USERCMD_HZ;
 
@@ -234,7 +258,7 @@ public:
 	virtual usercmd_t	TicCmd( int ticNumber ) = 0;
 	
 	// Called async at regular intervals.
-	virtual	void		UsercmdInterrupt() = 0;
+	virtual	void		UsercmdInterrupt( int deviceNum = 0 ) = 0;
 	
 	// Set a value that can safely be referenced by UsercmdInterrupt() for each key binding.
 	virtual	int			CommandStringUsercmdData( const char* cmdString ) = 0;
@@ -249,7 +273,7 @@ public:
 	virtual int			KeyState( int key ) = 0;
 	
 	// called at vsync time
-	virtual void		BuildCurrentUsercmd() = 0;
+	virtual void		BuildCurrentUsercmd( int deviceNum = 0 ) = 0;
 	
 	// return the current usercmd
 	virtual usercmd_t	GetCurrentUsercmd() = 0;

@@ -7477,7 +7477,7 @@ idPhysics_AF::idPhysics_AF()
 	
 	memset( &current, 0, sizeof( current ) );
 	current.atRest = -1;
-	current.lastTimeStep = USERCMD_MSEC;
+	current.lastTimeStep = 0.0f;
 	saved = current;
 	
 	linearFriction = 0.005f;

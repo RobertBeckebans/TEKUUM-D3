@@ -424,11 +424,12 @@ if not _OPTIONS["android"] then
 	include "idlib"
 end
 
-
-if _OPTIONS["standalone"] then
-	include "../assets/scriptsharp"
-else
-  include "../base/scriptsharp"
+if os.is("windows") then
+	if _OPTIONS["standalone"] then
+		include "../assets/scriptsharp"
+	else
+		include "../base/scriptsharp"
+	end
 end
 
 

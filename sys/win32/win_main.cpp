@@ -1,33 +1,34 @@
 /*
 ===========================================================================
 
-Doom 3 GPL Source Code
-Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company. 
+Doom 3 BFG Edition GPL Source Code
+Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company. 
+Copyright (C) 2012 Robert Beckebans
 
-This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).  
+This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").  
 
-Doom 3 Source Code is free software: you can redistribute it and/or modify
+Doom 3 BFG Edition Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Doom 3 Source Code is distributed in the hope that it will be useful,
+Doom 3 BFG Edition Source Code is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Doom 3 Source Code.  If not, see <http://www.gnu.org/licenses/>.
+along with Doom 3 BFG Edition Source Code.  If not, see <http://www.gnu.org/licenses/>.
 
-In addition, the Doom 3 Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 Source Code.  If not, please request a copy in writing from id Software at the address below.
+In addition, the Doom 3 BFG Edition Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 BFG Edition Source Code.  If not, please request a copy in writing from id Software at the address below.
 
 If you have questions concerning this license or the applicable additional terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 
 ===========================================================================
 */
 
-#include "precompiled.h"
 #pragma hdrstop
+#include "precompiled.h"
 
 #include <errno.h>
 #include <float.h>
@@ -51,9 +52,6 @@ If you have questions concerning this license or the applicable additional terms
 idCVar Win32Vars_t::sys_arch( "sys_arch", "", CVAR_SYSTEM | CVAR_INIT, "" );
 idCVar Win32Vars_t::sys_cpustring( "sys_cpustring", "detect", CVAR_SYSTEM | CVAR_INIT, "" );
 idCVar Win32Vars_t::in_mouse( "in_mouse", "1", CVAR_SYSTEM | CVAR_BOOL, "enable mouse input" );
-idCVar Win32Vars_t::in_xbox360Controller( "in_xbox360Controller", "1", CVAR_SYSTEM | CVAR_BOOL, "enable Xbox 360 controller" );
-idCVar Win32Vars_t::in_xbox360ControllerDebug( "in_xbox360ControllerDebug", "0", CVAR_SYSTEM | CVAR_BOOL, "enable Xbox 360 controller debugging" );
-idCVar Win32Vars_t::in_xbox360ControllerThreshold( "in_xbox360ControllerThreshold", "0.15", CVAR_SYSTEM | CVAR_FLOAT, "enable Xbox 360 controller debugging" );
 idCVar Win32Vars_t::win_allowAltTab( "win_allowAltTab", "0", CVAR_SYSTEM | CVAR_BOOL, "allow Alt-Tab when fullscreen" );
 idCVar Win32Vars_t::win_notaskkeys( "win_notaskkeys", "0", CVAR_SYSTEM | CVAR_INTEGER, "disable windows task keys" );
 idCVar Win32Vars_t::win_username( "win_username", "", CVAR_SYSTEM | CVAR_INIT, "windows user name" );
@@ -388,9 +386,24 @@ Sys_Quit
 void Sys_Quit() {
 	timeEndPeriod( 1 );
 	Sys_ShutdownInput();
+
+	// RB begin
 #if !defined(USE_QT_WINDOWING)
 	Sys_DestroyConsole();
 #endif
+
+	
+#if defined(USE_MFC_TOOLS)
+	if ( com_editors )
+	{
+		if ( com_editors & EDITOR_RADIANT ) 
+		{
+			// Level Editor
+			RadiantShutdown();
+		}
+	}
+#endif
+	// RB end
 	ExitProcess( 0 );
 }
 
@@ -770,10 +783,8 @@ Ptr should either be null, or point to a block of data that can
 be freed by the game later.
 ================
 */
-void Sys_QueEvent( int time, sysEventType_t type, int value, int value2, int ptrLength, void *ptr ) {
-	sysEvent_t	*ev;
-
-	ev = &eventQue[ eventHead & MASK_QUED_EVENTS ];
+void Sys_QueEvent( sysEventType_t type, int value, int value2, int ptrLength, void *ptr, int inputDeviceNum ) {
+	sysEvent_t * ev = &eventQue[ eventHead & MASK_QUED_EVENTS ];
 
 	if ( eventHead - eventTail >= MAX_QUED_EVENTS ) {
 		common->Printf("Sys_QueEvent: overflow\n");
@@ -791,6 +802,7 @@ void Sys_QueEvent( int time, sysEventType_t type, int value, int value2, int ptr
 	ev->evValue2 = value2;
 	ev->evPtrLength = ptrLength;
 	ev->evPtr = ptr;
+	ev->inputDevice = inputDeviceNum;
 }
 
 /*
@@ -859,7 +871,7 @@ void Sys_GenerateEvents() {
 		len = strlen( s ) + 1;
 		b = (char *)Mem_Alloc( len );
 		strcpy( b, s );
-		Sys_QueEvent( 0, SE_CONSOLE, 0, 0, len, b );
+		Sys_QueEvent( SE_CONSOLE, 0, 0, len, b, 0 );
 	}
 
 	entered = false;
@@ -1163,6 +1175,12 @@ void Sys_Init() {
 
 	common->Printf( "%s\n", win32.sys_cpustring.GetString() );
 	common->Printf( "%d MB System Memory\n", Sys_GetSystemRam() );
+	common->Printf( "%d MB Video Memory\n", Sys_GetVideoRam() );
+	if ( ( win32.cpuid & CPUID_SSE2 ) == 0 ) {
+		common->Error( "SSE2 not supported!" );
+	}
+
+	win32.g_Joystick.Init();
 }
 
 /*
@@ -1279,8 +1297,6 @@ EmailCrashReport
 ====================
 */
 void EmailCrashReport( LPSTR messageText ) {
-	LPMAPISENDMAIL	MAPISendMail;
-	MapiMessage		message;
 	static int lastEmailTime = 0;
 
 	if ( Sys_Milliseconds() < lastEmailTime + 10000 ) {
@@ -1291,7 +1307,7 @@ void EmailCrashReport( LPSTR messageText ) {
 
 	HINSTANCE mapi = LoadLibrary( "MAPI32.DLL" ); 
 	if( mapi ) {
-		MAPISendMail = ( LPMAPISENDMAIL )GetProcAddress( mapi, "MAPISendMail" );
+		LPMAPISENDMAIL	MAPISendMail = ( LPMAPISENDMAIL )GetProcAddress( mapi, "MAPISendMail" );
 		if( MAPISendMail ) {
 			MapiRecipDesc toProgrammers =
 			{
@@ -1303,7 +1319,7 @@ void EmailCrashReport( LPSTR messageText ) {
 					0									// lpEntry
 			};
 
-			memset( &message, 0, sizeof( message ) );
+			MapiMessage		message = {};
 			message.lpszSubject = "DOOM 3 Fatal Error";
 			message.lpszNoteText = messageText;
 			message.nRecipCount = 1;
@@ -1320,6 +1336,9 @@ void EmailCrashReport( LPSTR messageText ) {
 		FreeLibrary( mapi );
 	}
 }
+
+// RB: disabled unused FPU exception debugging
+#if !defined(__MINGW32__) && !defined(_WIN64)
 
 int Sys_FPU_PrintStateFlags( char *ptr, int ctrl, int stat, int tags, int inof, int inse, int opof, int opse );
 
@@ -1351,7 +1370,7 @@ EXCEPTION_DISPOSITION __cdecl _except_handler( struct _EXCEPTION_RECORD *Excepti
 			"\n"
 			"%s\n"
 			"\n"
-			"0x%x at address 0x%08x\n"
+			"0x%x at address 0x%08p\n"
 			"\n"
 			"%s\n"
 			"\n"
@@ -1393,6 +1412,8 @@ EXCEPTION_DISPOSITION __cdecl _except_handler( struct _EXCEPTION_RECORD *Excepti
     // Tell the OS to restart the faulting instruction
     return ExceptionContinueExecution;
 }
+#endif
+// RB end
 
 #define TEST_FPU_EXCEPTIONS	/*	FPU_EXCEPTION_INVALID_OPERATION |		*/	\
 							/*	FPU_EXCEPTION_DENORMALIZED_OPERAND |	*/	\
@@ -1438,6 +1459,9 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 // RB begin
 	Sys_InitCriticalSections();
 // RB end
+	// make sure the timer is high precision, otherwise
+	// NT gets 18ms resolution
+	timeBeginPeriod( 1 );
 
 	// get the initial time base
 	Sys_Milliseconds();

@@ -5524,7 +5524,7 @@ void idPlayer::BobCycle( const idVec3& pushVelocity )
 		
 		// check for footstep / splash sounds
 		old = bobCycle;
-		bobCycle = ( int )( old + bobmove * gameLocal.msec ) & 255;
+		bobCycle = ( int )( old + bobmove * ( gameLocal.time - gameLocal.previousTime ) ) & 255;
 		bobFoot = ( bobCycle & 128 ) >> 7;
 		bobfracsin = idMath::Fabs( sin( ( bobCycle & 127 ) / 127.0 * idMath::PI ) );
 	}
@@ -6699,7 +6699,7 @@ void idPlayer::AdjustSpeed()
 	{
 		if( !gameLocal.isMultiplayer && !physicsObj.IsCrouching() && !PowerUpActive( ADRENALINE ) )
 		{
-			stamina -= MS2SEC( gameLocal.msec );
+			stamina -= MS2SEC( gameLocal.time - gameLocal.previousTime );
 		}
 		if( stamina < 0 )
 		{
@@ -6729,7 +6729,7 @@ void idPlayer::AdjustSpeed()
 			rate *= 1.25f;
 		}
 		
-		stamina += rate * MS2SEC( gameLocal.msec );
+		stamina += rate * MS2SEC( gameLocal.time - gameLocal.previousTime );
 		if( stamina > pm_stamina.GetFloat() )
 		{
 			stamina = pm_stamina.GetFloat();
