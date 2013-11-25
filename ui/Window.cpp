@@ -1069,7 +1069,7 @@ const char* idWindow::HandleEvent( const sysEvent_t* event, bool* updateVisuals 
 					}
 				}
 			}
-			else if( ( event->evValue == K_TAB || event->evValue == K_XINPUT_GAMEPAD_DPAD_DOWN || event->evValue == K_XINPUT_GAMEPAD_DPAD_UP ) && event->evValue2 )
+			else if( ( event->evValue == K_TAB ) && event->evValue2 )
 			{
 				if( GetFocusedChild() )
 				{
@@ -1083,7 +1083,7 @@ const char* idWindow::HandleEvent( const sysEvent_t* event, bool* updateVisuals 
 					// or the previous window if shift is held down
 					
 					int direction = 1;
-					if( idKeyInput::IsDown( K_SHIFT ) || event->evValue == K_XINPUT_GAMEPAD_DPAD_UP )
+					if( idKeyInput::IsDown( K_LSHIFT ) || idKeyInput::IsDown( K_RSHIFT ) )
 					{
 						direction = -1;
 					}
@@ -1161,7 +1161,7 @@ const char* idWindow::HandleEvent( const sysEvent_t* event, bool* updateVisuals 
 					}
 				}
 			}
-			else if( ( event->evValue == K_ESCAPE || event->evValue == K_XINPUT_GAMEPAD_B ) && event->evValue2 )
+			else if( ( event->evValue == K_ESCAPE || event->evValue == K_JOY9 ) && event->evValue2 )
 			{
 				if( GetFocusedChild() )
 				{
@@ -1173,7 +1173,7 @@ const char* idWindow::HandleEvent( const sysEvent_t* event, bool* updateVisuals 
 				}
 				RunScript( ON_ESC );
 			}
-			else if( event->evValue == K_ENTER || event->evValue == K_XINPUT_GAMEPAD_A )
+			else if( event->evValue == K_ENTER )
 			{
 				if( GetFocusedChild() )
 				{

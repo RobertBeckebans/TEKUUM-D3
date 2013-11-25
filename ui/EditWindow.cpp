@@ -238,7 +238,7 @@ const char* idEditWindow::HandleEvent( const sysEvent_t* event, bool* updateVisu
 	
 	if( event->evType == SE_CHAR )
 	{
-		if( event->evValue == Sys_GetConsoleKey( false ) || event->evValue == Sys_GetConsoleKey( true ) )
+		if( event->evValue == K_GRAVE )
 		{
 			return "";
 		}
@@ -396,7 +396,7 @@ const char* idEditWindow::HandleEvent( const sysEvent_t* event, bool* updateVisu
 		{
 			if( cursorPos < len )
 			{
-				if( idKeyInput::IsDown( K_CTRL ) )
+				if( ( idKeyInput::IsDown( K_LCTRL ) || idKeyInput::IsDown( K_RCTRL ) ) )
 				{
 					// skip to next word
 					while( ( cursorPos < len ) && ( buffer[ cursorPos ] != ' ' ) )
@@ -425,7 +425,7 @@ const char* idEditWindow::HandleEvent( const sysEvent_t* event, bool* updateVisu
 		
 		if( key == K_LEFTARROW )
 		{
-			if( idKeyInput::IsDown( K_CTRL ) )
+			if( ( idKeyInput::IsDown( K_LCTRL ) || idKeyInput::IsDown( K_RCTRL ) ) )
 			{
 				// skip to previous word
 				while( ( cursorPos > 0 ) && ( buffer[ cursorPos - 1 ] == ' ' ) )
@@ -453,7 +453,7 @@ const char* idEditWindow::HandleEvent( const sysEvent_t* event, bool* updateVisu
 		
 		if( key == K_HOME )
 		{
-			if( idKeyInput::IsDown( K_CTRL ) || cursorLine <= 0 || ( cursorLine >= breaks.Num() ) )
+			if( ( idKeyInput::IsDown( K_LCTRL ) || idKeyInput::IsDown( K_RCTRL ) ) || cursorLine <= 0 || ( cursorLine >= breaks.Num() ) )
 			{
 				cursorPos = 0;
 			}
@@ -467,7 +467,7 @@ const char* idEditWindow::HandleEvent( const sysEvent_t* event, bool* updateVisu
 		
 		if( key == K_END )
 		{
-			if( idKeyInput::IsDown( K_CTRL ) || ( cursorLine < -1 ) || ( cursorLine >= breaks.Num() - 1 ) )
+			if( ( idKeyInput::IsDown( K_LCTRL ) || idKeyInput::IsDown( K_RCTRL ) ) || ( cursorLine < -1 ) || ( cursorLine >= breaks.Num() - 1 ) )
 			{
 				cursorPos = len;
 			}
@@ -490,7 +490,7 @@ const char* idEditWindow::HandleEvent( const sysEvent_t* event, bool* updateVisu
 		
 		if( key == K_DOWNARROW )
 		{
-			if( idKeyInput::IsDown( K_CTRL ) )
+			if( ( idKeyInput::IsDown( K_LCTRL ) || idKeyInput::IsDown( K_RCTRL ) ) )
 			{
 				scroller->SetValue( scroller->GetValue() + 1.0f );
 			}
@@ -507,7 +507,7 @@ const char* idEditWindow::HandleEvent( const sysEvent_t* event, bool* updateVisu
 		
 		if( key == K_UPARROW )
 		{
-			if( idKeyInput::IsDown( K_CTRL ) )
+			if( ( idKeyInput::IsDown( K_LCTRL ) || idKeyInput::IsDown( K_RCTRL ) ) )
 			{
 				scroller->SetValue( scroller->GetValue() - 1.0f );
 			}

@@ -142,7 +142,7 @@ const char* idListWindow::HandleEvent( const sysEvent_t* event, bool* updateVisu
 				int cur = ( int )( ( gui->CursorY() - actualY - pixelOffset ) / vert ) + top;
 				if( cur >= 0 && cur < listItems.Num() )
 				{
-					if( multipleSel && idKeyInput::IsDown( K_CTRL ) )
+					if( multipleSel && ( idKeyInput::IsDown( K_LCTRL ) || idKeyInput::IsDown( K_RCTRL ) ) )
 					{
 						if( IsSelected( cur ) )
 						{
@@ -186,7 +186,7 @@ const char* idListWindow::HandleEvent( const sysEvent_t* event, bool* updateVisu
 				numLines = -numLines;
 			}
 			
-			if( idKeyInput::IsDown( K_CTRL ) )
+			if( idKeyInput::IsDown( K_LCTRL ) || idKeyInput::IsDown( K_RCTRL ) )
 			{
 				top += numLines;
 			}
@@ -241,7 +241,7 @@ const char* idListWindow::HandleEvent( const sysEvent_t* event, bool* updateVisu
 	
 	if( scroller->GetHigh() > 0.0f )
 	{
-		if( !idKeyInput::IsDown( K_CTRL ) )
+		if( !idKeyInput::IsDown( K_LCTRL ) && !idKeyInput::IsDown( K_RCTRL ) )
 		{
 			if( top > GetCurrentSel() - 1 )
 			{

@@ -708,7 +708,7 @@ void idConsoleLocal::KeyDownEvent( int key )
 	}
 	
 	// ctrl-L clears screen
-	if( key == 'l' && idKeyInput::IsDown( K_CTRL ) )
+	if( key == K_L && ( idKeyInput::IsDown( K_LCTRL ) || idKeyInput::IsDown( K_RCTRL ) ) )
 	{
 		Clear();
 		return;
@@ -750,7 +750,7 @@ void idConsoleLocal::KeyDownEvent( int key )
 	// command history (ctrl-p ctrl-n for unix style)
 	
 	if( ( key == K_UPARROW ) ||
-			( ( tolower( key ) == 'p' ) && idKeyInput::IsDown( K_CTRL ) ) )
+			( key == K_P && ( idKeyInput::IsDown( K_LCTRL ) || idKeyInput::IsDown( K_RCTRL ) ) ) )
 	{
 		idStr hist = consoleHistory.RetrieveFromHistory( true );
 		if( !hist.IsEmpty() )
@@ -761,7 +761,7 @@ void idConsoleLocal::KeyDownEvent( int key )
 	}
 	
 	if( ( key == K_DOWNARROW ) ||
-			( ( tolower( key ) == 'n' ) && idKeyInput::IsDown( K_CTRL ) ) )
+			( key == K_N && ( idKeyInput::IsDown( K_LCTRL ) || idKeyInput::IsDown( K_RCTRL ) ) ) )
 	{
 		idStr hist = consoleHistory.RetrieveFromHistory( false );
 		if( !hist.IsEmpty() )
@@ -806,14 +806,14 @@ void idConsoleLocal::KeyDownEvent( int key )
 	}
 	
 	// ctrl-home = top of console
-	if( key == K_HOME && idKeyInput::IsDown( K_CTRL ) )
+	if( key == K_HOME && ( idKeyInput::IsDown( K_LCTRL ) || idKeyInput::IsDown( K_RCTRL ) ) )
 	{
 		Top();
 		return;
 	}
 	
 	// ctrl-end = bottom of console
-	if( key == K_END && idKeyInput::IsDown( K_CTRL ) )
+	if( key == K_END && ( idKeyInput::IsDown( K_LCTRL ) || idKeyInput::IsDown( K_RCTRL ) ) )
 	{
 		Bottom();
 		return;
@@ -908,28 +908,7 @@ ProcessEvent
 */
 bool	idConsoleLocal::ProcessEvent( const sysEvent_t* event, bool forceAccept )
 {
-	bool consoleKey;
-	consoleKey = event->evType == SE_KEY && ( event->evValue == Sys_GetConsoleKey( false ) || event->evValue == Sys_GetConsoleKey( true ) );
-	
-// RB begin
-	/*
-	if ( !consoleKey && (idKeyInput::IsDown( K_SHIFT ) && event->evValue == K_ESCAPE && event->evValue2 != 0) )
-	{
-		consoleKey = true;
-	}
-	*/
-// RB end
-
-#if ID_CONSOLE_LOCK
-	// If the console's not already down, and we have it turned off, check for ctrl+alt
-	if( !keyCatching && !com_allowConsole.GetBool() )
-	{
-		if( !idKeyInput::IsDown( K_CTRL ) || !idKeyInput::IsDown( K_ALT ) )
-		{
-			consoleKey = false;
-		}
-	}
-#endif
+	const bool consoleKey = event->evType == SE_KEY && event->evValue == K_GRAVE && com_allowConsole.GetBool();
 	
 	// we always catch the console key event
 	if( !forceAccept && consoleKey )
@@ -953,7 +932,7 @@ bool	idConsoleLocal::ProcessEvent( const sysEvent_t* event, bool forceAccept )
 		{
 			consoleField.Clear();
 			keyCatching = true;
-			if( idKeyInput::IsDown( K_SHIFT ) )
+			if( idKeyInput::IsDown( K_LSHIFT ) || idKeyInput::IsDown( K_RSHIFT ) )
 			{
 				// if the shift key is down, don't open the console as much
 				SetDisplayFraction( 0.2f );
@@ -977,7 +956,7 @@ bool	idConsoleLocal::ProcessEvent( const sysEvent_t* event, bool forceAccept )
 	if( event->evType == SE_CHAR )
 	{
 		// never send the console key as a character
-		if( event->evValue != Sys_GetConsoleKey( false ) && event->evValue != Sys_GetConsoleKey( true ) )
+		if( event->evValue != K_GRAVE )
 		{
 			consoleField.CharEvent( event->evValue );
 		}

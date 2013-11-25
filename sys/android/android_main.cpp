@@ -50,15 +50,6 @@ static idStr	savepath;
 
 jniImport_t		ji;
 
-/*
-===========
-Sys_InitScanTable
-===========
-*/
-void Sys_InitScanTable()
-{
-	common->DPrintf( "TODO: Sys_InitScanTable\n" );
-}
 
 /*
 =================

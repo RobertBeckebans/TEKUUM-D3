@@ -258,7 +258,7 @@ public:
 	virtual usercmd_t	TicCmd( int ticNumber ) = 0;
 	
 	// Called async at regular intervals.
-	virtual	void		UsercmdInterrupt() = 0;
+	virtual	void		UsercmdInterrupt( int deviceNum = 0 ) = 0;
 	
 	// Set a value that can safely be referenced by UsercmdInterrupt() for each key binding.
 	virtual	int			CommandStringUsercmdData( const char* cmdString ) = 0;
@@ -273,7 +273,7 @@ public:
 	virtual int			KeyState( int key ) = 0;
 	
 	// called at vsync time
-	virtual void		BuildCurrentUsercmd() = 0;
+	virtual void		BuildCurrentUsercmd( int deviceNum = 0 ) = 0;
 	
 	// return the current usercmd
 	virtual usercmd_t	GetCurrentUsercmd() = 0;
