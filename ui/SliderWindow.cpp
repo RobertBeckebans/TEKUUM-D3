@@ -150,17 +150,15 @@ const char* idSliderWindow::HandleEvent( const sysEvent_t* event, bool* updateVi
 		return "";
 	}
 	
-	// RB: added gamepad controls
-	if( key == K_RIGHTARROW || key == K_KP_RIGHTARROW || key == K_XINPUT_GAMEPAD_DPAD_RIGHT || ( key == K_MOUSE2 && gui->CursorY() > thumbRect.y ) )
+	if( key == K_RIGHTARROW || key == K_KP_6 || key == K_JOY_DPAD_RIGHT || ( key == K_MOUSE2 && gui->CursorY() > thumbRect.y ) )
 	{
 		value = value + stepSize;
 	}
 	
-	if( key == K_LEFTARROW || key == K_KP_LEFTARROW || key == K_XINPUT_GAMEPAD_DPAD_LEFT || ( key == K_MOUSE2 && gui->CursorY() < thumbRect.y ) )
+	if( key == K_LEFTARROW || key == K_KP_4 || key == K_JOY_DPAD_LEFT || ( key == K_MOUSE2 && gui->CursorY() < thumbRect.y ) )
 	{
 		value = value - stepSize;
 	}
-	// RB end
 	
 	if( buddyWin )
 	{

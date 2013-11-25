@@ -2062,7 +2062,7 @@ void idCommonLocal::InitLanguageDict()
 	
 	fileSystem->FreeFileList( langFiles );
 	
-	Sys_InitScanTable();
+//	Sys_InitScanTable();
 }
 
 /*
