@@ -160,6 +160,7 @@ private:
 	// RB begin
 	static void*				LuaAlloc( void* ud, void* ptr, size_t osize, size_t nsize );
 	static int					LuaPanic( lua_State* L );
+	void						RegisterLuaGlobals( lua_State* L );
 	
 public:
 	bool						RunLuaFunction( const char* func, const char* fmt, ... );

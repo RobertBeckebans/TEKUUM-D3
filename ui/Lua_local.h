@@ -2,7 +2,7 @@
 ===========================================================================
 
 Doom 3 GPL Source Code
-Copyright (C) 2012 Robert Beckebans
+Copyright (C) 2012-2013 Robert Beckebans
 
 This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
 
@@ -40,9 +40,22 @@ class idWindow;
 class idUserInterface;
 
 
+#define lua_regconstint( L, name )	\
+	lua_pushstring( L, #name ); \
+	lua_pushinteger( L, name ); \
+	lua_settable( L, -3 )
+
+#define lua_regglobalconstint( L, name )	\
+	lua_getglobal( L, "_G" ); \
+	lua_pushinteger( L, name ); \
+	lua_setfield( L, -2, #name ); \
+	lua_pop( L, 1 );
+
 extern "C"
 {
-	int			luaopen_sys( lua_State* L );
+//	int			luaopen_sys( lua_State* L );
+
+	int			luareg_globals( lua_State* L );
 	
 	int			luaopen_Window( lua_State* L );
 	int			luaopen_Rectangle( lua_State* L );

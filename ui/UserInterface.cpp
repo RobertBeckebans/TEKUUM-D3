@@ -394,6 +394,188 @@ bool idUserInterfaceLocal::IsInteractive() const
 	return interactive;
 }
 
+void idUserInterfaceLocal::RegisterLuaGlobals( lua_State* L )
+{
+	lua_regglobalconstint( L, K_ESCAPE );
+	lua_regglobalconstint( L, K_1 );
+	lua_regglobalconstint( L, K_2 );
+	lua_regglobalconstint( L, K_3 );
+	lua_regglobalconstint( L, K_4 );
+	lua_regglobalconstint( L, K_5 );
+	lua_regglobalconstint( L, K_6 );
+	lua_regglobalconstint( L, K_7 );
+	lua_regglobalconstint( L, K_8 );
+	lua_regglobalconstint( L, K_9 );
+	lua_regglobalconstint( L, K_0 );
+	lua_regglobalconstint( L, K_MINUS );
+	lua_regglobalconstint( L, K_EQUALS );
+	lua_regglobalconstint( L, K_BACKSPACE );
+	lua_regglobalconstint( L, K_TAB );
+	lua_regglobalconstint( L, K_Q );
+	lua_regglobalconstint( L, K_W );
+	lua_regglobalconstint( L, K_E );
+	lua_regglobalconstint( L, K_R );
+	lua_regglobalconstint( L, K_T );
+	lua_regglobalconstint( L, K_Y );
+	lua_regglobalconstint( L, K_U );
+	lua_regglobalconstint( L, K_I );
+	lua_regglobalconstint( L, K_O );
+	lua_regglobalconstint( L, K_P );
+	lua_regglobalconstint( L, K_LBRACKET );
+	lua_regglobalconstint( L, K_RBRACKET );
+	lua_regglobalconstint( L, K_ENTER );
+	lua_regglobalconstint( L, K_LCTRL );
+	lua_regglobalconstint( L, K_A );
+	lua_regglobalconstint( L, K_S );
+	lua_regglobalconstint( L, K_D );
+	lua_regglobalconstint( L, K_F );
+	lua_regglobalconstint( L, K_G );
+	lua_regglobalconstint( L, K_H );
+	lua_regglobalconstint( L, K_J );
+	lua_regglobalconstint( L, K_K );
+	lua_regglobalconstint( L, K_L );
+	lua_regglobalconstint( L, K_SEMICOLON );
+	lua_regglobalconstint( L, K_APOSTROPHE );
+	lua_regglobalconstint( L, K_GRAVE );
+	lua_regglobalconstint( L, K_LSHIFT );
+	lua_regglobalconstint( L, K_BACKSLASH );
+	lua_regglobalconstint( L, K_Z );
+	lua_regglobalconstint( L, K_X );
+	lua_regglobalconstint( L, K_C );
+	lua_regglobalconstint( L, K_V );
+	lua_regglobalconstint( L, K_B );
+	lua_regglobalconstint( L, K_N );
+	lua_regglobalconstint( L, K_M );
+	lua_regglobalconstint( L, K_COMMA );
+	lua_regglobalconstint( L, K_PERIOD );
+	lua_regglobalconstint( L, K_SLASH );
+	lua_regglobalconstint( L, K_RSHIFT );
+	lua_regglobalconstint( L, K_KP_STAR );
+	lua_regglobalconstint( L, K_LALT );
+	lua_regglobalconstint( L, K_SPACE );
+	lua_regglobalconstint( L, K_CAPSLOCK );
+	lua_regglobalconstint( L, K_F1 );
+	lua_regglobalconstint( L, K_F2 );
+	lua_regglobalconstint( L, K_F3 );
+	lua_regglobalconstint( L, K_F4 );
+	lua_regglobalconstint( L, K_F5 );
+	lua_regglobalconstint( L, K_F6 );
+	lua_regglobalconstint( L, K_F7 );
+	lua_regglobalconstint( L, K_F8 );
+	lua_regglobalconstint( L, K_F9 );
+	lua_regglobalconstint( L, K_F10 );
+	lua_regglobalconstint( L, K_NUMLOCK );
+	lua_regglobalconstint( L, K_SCROLL );
+	lua_regglobalconstint( L, K_KP_7 );
+	lua_regglobalconstint( L, K_KP_8 );
+	lua_regglobalconstint( L, K_KP_9 );
+	lua_regglobalconstint( L, K_KP_MINUS );
+	lua_regglobalconstint( L, K_KP_4 );
+	lua_regglobalconstint( L, K_KP_5 );
+	lua_regglobalconstint( L, K_KP_6 );
+	lua_regglobalconstint( L, K_KP_PLUS );
+	lua_regglobalconstint( L, K_KP_1 );
+	lua_regglobalconstint( L, K_KP_2 );
+	lua_regglobalconstint( L, K_KP_3 );
+	lua_regglobalconstint( L, K_KP_0 );
+	lua_regglobalconstint( L, K_KP_DOT );
+	lua_regglobalconstint( L, K_F11 );
+	lua_regglobalconstint( L, K_F12 );
+	lua_regglobalconstint( L, K_F13 );
+	lua_regglobalconstint( L, K_F14 );
+	lua_regglobalconstint( L, K_F15 );
+	lua_regglobalconstint( L, K_KANA );
+	lua_regglobalconstint( L, K_CONVERT );
+	lua_regglobalconstint( L, K_NOCONVERT );
+	lua_regglobalconstint( L, K_YEN );
+	lua_regglobalconstint( L, K_KP_EQUALS );
+	lua_regglobalconstint( L, K_CIRCUMFLEX );
+	lua_regglobalconstint( L, K_AT );
+	lua_regglobalconstint( L, K_COLON );
+	lua_regglobalconstint( L, K_UNDERLINE );
+	lua_regglobalconstint( L, K_KANJI );
+	lua_regglobalconstint( L, K_STOP );
+	lua_regglobalconstint( L, K_AX );
+	lua_regglobalconstint( L, K_UNLABELED );
+	lua_regglobalconstint( L, K_KP_ENTER );
+	lua_regglobalconstint( L, K_RCTRL );
+	lua_regglobalconstint( L, K_KP_COMMA );
+	lua_regglobalconstint( L, K_KP_SLASH );
+	lua_regglobalconstint( L, K_PRINTSCREEN );
+	lua_regglobalconstint( L, K_RALT );
+	lua_regglobalconstint( L, K_PAUSE );
+	lua_regglobalconstint( L, K_HOME );
+	lua_regglobalconstint( L, K_UPARROW );
+	lua_regglobalconstint( L, K_PGUP );
+	lua_regglobalconstint( L, K_LEFTARROW );
+	lua_regglobalconstint( L, K_RIGHTARROW );
+	lua_regglobalconstint( L, K_END );
+	lua_regglobalconstint( L, K_DOWNARROW );
+	lua_regglobalconstint( L, K_PGDN );
+	lua_regglobalconstint( L, K_INS );
+	lua_regglobalconstint( L, K_DEL );
+	lua_regglobalconstint( L, K_LWIN );
+	lua_regglobalconstint( L, K_RWIN );
+	lua_regglobalconstint( L, K_APPS );
+	lua_regglobalconstint( L, K_POWER );
+	lua_regglobalconstint( L, K_SLEEP );
+	
+	//------------------------
+	// lua_regglobalconstint( L, K_JOY codes must be contiguous, too
+	//------------------------
+	
+	lua_regglobalconstint( L, K_JOY1 );
+	lua_regglobalconstint( L, K_JOY2 );
+	lua_regglobalconstint( L, K_JOY3 );
+	lua_regglobalconstint( L, K_JOY4 );
+	lua_regglobalconstint( L, K_JOY5 );
+	lua_regglobalconstint( L, K_JOY6 );
+	lua_regglobalconstint( L, K_JOY7 );
+	lua_regglobalconstint( L, K_JOY8 );
+	lua_regglobalconstint( L, K_JOY9 );
+	lua_regglobalconstint( L, K_JOY10 );
+	lua_regglobalconstint( L, K_JOY11 );
+	lua_regglobalconstint( L, K_JOY12 );
+	lua_regglobalconstint( L, K_JOY13 );
+	lua_regglobalconstint( L, K_JOY14 );
+	lua_regglobalconstint( L, K_JOY15 );
+	lua_regglobalconstint( L, K_JOY16 );
+	
+	lua_regglobalconstint( L, K_JOY_STICK1_UP );
+	lua_regglobalconstint( L, K_JOY_STICK1_DOWN );
+	lua_regglobalconstint( L, K_JOY_STICK1_LEFT );
+	lua_regglobalconstint( L, K_JOY_STICK1_RIGHT );
+	
+	lua_regglobalconstint( L, K_JOY_STICK2_UP );
+	lua_regglobalconstint( L, K_JOY_STICK2_DOWN );
+	lua_regglobalconstint( L, K_JOY_STICK2_LEFT );
+	lua_regglobalconstint( L, K_JOY_STICK2_RIGHT );
+	
+	lua_regglobalconstint( L, K_JOY_TRIGGER1 );
+	lua_regglobalconstint( L, K_JOY_TRIGGER2 );
+	
+	lua_regglobalconstint( L, K_JOY_DPAD_UP );
+	lua_regglobalconstint( L, K_JOY_DPAD_DOWN );
+	lua_regglobalconstint( L, K_JOY_DPAD_LEFT );
+	lua_regglobalconstint( L, K_JOY_DPAD_RIGHT );
+	
+	//------------------------
+	// lua_regglobalconstint( L, K_MOUSE enums must be contiguous (no char codes in the middle)
+	//------------------------
+	
+	lua_regglobalconstint( L, K_MOUSE1 );
+	lua_regglobalconstint( L, K_MOUSE2 );
+	lua_regglobalconstint( L, K_MOUSE3 );
+	lua_regglobalconstint( L, K_MOUSE4 );
+	lua_regglobalconstint( L, K_MOUSE5 );
+	lua_regglobalconstint( L, K_MOUSE6 );
+	lua_regglobalconstint( L, K_MOUSE7 );
+	lua_regglobalconstint( L, K_MOUSE8 );
+	
+	lua_regglobalconstint( L, K_MWHEELDOWN );
+	lua_regglobalconstint( L, K_MWHEELUP );
+}
+
 bool idUserInterfaceLocal::InitFromFile( const char* qpath, bool rebuild, bool cache )
 {
 	if( !( qpath && *qpath ) )
@@ -434,18 +616,31 @@ bool idUserInterfaceLocal::InitFromFile( const char* qpath, bool rebuild, bool c
 	uiManagerLocal.SetLoadingGUI( this );
 	
 	//luaState = luaL_newstate();
-	luaState = lua_newstate( LuaAlloc, NULL );
-	if( luaState )
+	lua_State* L = luaState = lua_newstate( LuaAlloc, NULL );
+	if( L )
 	{
-		lua_atpanic( luaState, &LuaPanic );
+		lua_atpanic( L, &LuaPanic );
 	}
 	
-	luaL_openlibs( luaState );
-	luaopen_socket_core( luaState );
+	luaL_openlibs( L );
 	
-	luaopen_Window( luaState );
-	luaopen_Rectangle( luaState );
-	luaopen_Vec4( luaState );
+//	PrintLuaStack();
+
+#if 0
+	lua_newtable( L );
+	lua_regconstint( L, K_ESCAPE );
+	lua_setglobal( L, "keys" );
+#endif
+	
+	RegisterLuaGlobals( L );
+	
+//	PrintLuaStack();
+
+	luaopen_socket_core( L );
+	
+	luaopen_Window( L );
+	luaopen_Rectangle( L );
+	luaopen_Vec4( L );
 	
 	char* src;
 	
@@ -454,19 +649,19 @@ bool idUserInterfaceLocal::InitFromFile( const char* qpath, bool rebuild, bool c
 	
 	if( src != NULL )
 	{
-		int result = luaL_loadbuffer( luaState, src, strlen( src ), filename );
+		int result = luaL_loadbuffer( L, src, strlen( src ), filename );
 		if( result == LUA_ERRSYNTAX )
 		{
-			idLib::Error( "Compile of file %s failed: %s ", filename.c_str(), lua_tostring( luaState, -1 ) );
-			lua_pop( luaState, 1 );
+			idLib::Error( "Compile of file %s failed: %s ", filename.c_str(), lua_tostring( L, -1 ) );
+			lua_pop( L, 1 );
 		}
 		
 		fileSystem->FreeFile( src );
 		
-		if( lua_pcall( luaState, 0, 0, 0 ) )
+		if( lua_pcall( L, 0, 0, 0 ) )
 		{
-			idLib::Error( "Cannot pcall: %s", lua_tostring( luaState, -1 ) );
-			lua_pop( luaState, 1 );
+			idLib::Error( "Cannot pcall: %s", lua_tostring( L, -1 ) );
+			lua_pop( L, 1 );
 		}
 	}
 	

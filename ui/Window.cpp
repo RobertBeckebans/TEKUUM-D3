@@ -108,6 +108,7 @@ const char* idWindow::ScriptNames[SCRIPT_COUNT] =
 	"onFocusLose",
 	"onOpen",
 	"onClose",
+	"onKey",
 	// RB end
 };
 
@@ -127,6 +128,9 @@ const char* idWindow::LuaScriptNames[SCRIPT_COUNT] =
 	// RB begin
 	"OnFocusGain",
 	"OnFocusLose",
+	"OnOpen",
+	"OnClose",
+	"OnKey",
 	// RB end
 };
 
@@ -3501,40 +3505,68 @@ bool idWindow::RunScriptList( idGuiScriptList* src )
 idWindow::RunScript
 ================
 */
-bool idWindow::RunScript( int n )
+bool idWindow::RunScript( int n, int key )
 {
 	// RB begin
 	lua_State* L = gui->GetLuaState();
 	
 	if( L != NULL && n >= ON_MOUSEENTER && n < SCRIPT_COUNT )
 	{
-		luaW_push<idWindow>( L, this );	// ... userdata
-		lua_getfield( L, -1, LuaScriptNames[n] ); // ... userdata ( function | nil )
-		
-		if( lua_isfunction( L, -1 ) )
+		switch( n )
 		{
-			// push self reference
-			luaW_push<idWindow>( L, this );	// ... userdata function userdata
-			
-			//gui->PrintLuaStack();
-			
-			if( lua_pcall( L, 1, 0, NULL ) != 0 ) // ... userdata
+			case ON_MOUSEEXIT:
+			case ON_ACTION:
+			case ON_ACTIVATE:
+			case ON_DEACTIVATE:
+			case ON_ESC:
+			case ON_FRAME:
+			case ON_TRIGGER:
+			case ON_ACTIONRELEASE:
+			case ON_ENTER:
+			case ON_ENTERRELEASE:
+			case ON_FOCUSGAIN:
+			case ON_FOCUSLOSE:
+			case ON_OPEN:
+			case ON_CLOSE:
+			case ON_KEY:
 			{
-				idLib::Warning( "idWindow::Runscript(): error running function `%s(): %s\n", LuaScriptNames[n], lua_tostring( L, -1 ) );
+				luaW_push<idWindow>( L, this );	// ... userdata
+				lua_getfield( L, -1, LuaScriptNames[n] ); // ... userdata ( function | nil )
+				
+				if( lua_isfunction( L, -1 ) )
+				{
+					// push self reference
+					luaW_push<idWindow>( L, this );	// ... userdata function userdata
+					
+					if( n == ON_KEY )
+					{
+						lua_pushnumber( L, key );
+					}
+					
+					//gui->PrintLuaStack();
+					
+					if( lua_pcall( L, 1, 0, NULL ) != 0 ) // ... userdata
+					{
+						idLib::Warning( "idWindow::Runscript(): error running function `%s(): %s\n", LuaScriptNames[n], lua_tostring( L, -1 ) );
+					}
+					
+					lua_pop( L, 1 ); // ...
+					
+					//gui->PrintLuaStack();
+					
+					return true;
+				}
+				else
+				{
+					// ... nil
+					lua_pop( L, 1 ); // ...
+					
+					return false;
+				}
 			}
 			
-			lua_pop( L, 1 ); // ...
-			
-			//gui->PrintLuaStack();
-			
-			return true;
-		}
-		else
-		{
-			// ... nil
-			lua_pop( L, 1 ); // ...
-			
-			return false;
+			default:
+				return false;
 		}
 	}
 	else if( n >= ON_MOUSEENTER && n < SCRIPT_COUNT )

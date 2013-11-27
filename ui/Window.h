@@ -205,6 +205,7 @@ public:
 		ON_FOCUSLOSE,
 		ON_OPEN,
 		ON_CLOSE,
+		ON_KEY,
 		// RB end
 		SCRIPT_COUNT
 	};
@@ -349,7 +350,7 @@ public:
 	int					NumTransitions();
 	
 	bool				ParseScript( idTokenParser* src, idGuiScriptList& list, int* timeParm = NULL, bool allowIf = false );
-	bool				RunScript( int n );
+	bool				RunScript( int n, int key = K_NONE );
 	bool				RunScriptList( idGuiScriptList* src );
 	void				SetRegs( const char* key, const char* val );
 	
