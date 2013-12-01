@@ -478,7 +478,9 @@ bool idBinaryImage::LoadFromGeneratedFile( idFile* bFile, ID_TIME_T sourceFileTi
 	{
 		return false;
 	}
-	if( fileData.sourceFileTime != sourceFileTime && ( sourceFileTime != FILE_NOT_FOUND_TIMESTAMP ) /*&& !fileSystem->InProductionMode()*/ )
+	
+	// RB: source might be from pk4, so we ignore the time stamp and assume a release build
+	if( ( sourceFileTime != FILE_NOT_FOUND_TIMESTAMP ) && ( sourceFileTime != 0 ) && ( fileData.sourceFileTime != sourceFileTime ) /*&& !fileSystem->InProductionMode()*/ )
 	{
 		return false;
 	}

@@ -770,7 +770,7 @@ bool idCollisionModelManagerLocal::LoadCollisionModelFile( const char* name, uns
 		delete src;
 		if( outputFile != NULL )
 		{
-			outputFile->Seek( 0, FS_SEEK_SET );
+			outputFile->Seek( sizeof( BCM_MAGIC ), FS_SEEK_SET );
 			outputFile->WriteBig( numEntries );
 		}
 	}

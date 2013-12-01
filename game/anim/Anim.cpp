@@ -429,7 +429,10 @@ bool idMD5Anim::LoadBinary( idFile* file, ID_TIME_T sourceTimeStamp )
 	
 	ID_TIME_T loadedTimeStamp;
 	file->ReadBig( loadedTimeStamp );
-	if( /*!fileSystem->InProductionMode() &&*/ sourceTimeStamp != loadedTimeStamp )
+	
+	
+	// RB: source might be from pk4, so we ignore the time stamp and assume a release build
+	if( ( sourceTimeStamp != FILE_NOT_FOUND_TIMESTAMP ) && ( sourceTimeStamp != 0 ) && ( sourceTimeStamp != loadedTimeStamp ) /* && !fileSystem->InProductionMode()*/ )
 	{
 		return false;
 	}

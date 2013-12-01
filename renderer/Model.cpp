@@ -374,7 +374,8 @@ bool idRenderModelStatic::LoadBinaryModel( idFile* file, const ID_TIME_T sourceT
 	
 	file->ReadBig( timeStamp );
 	
-	if( /*!fileSystem->InProductionMode() &&*/ sourceTimeStamp != timeStamp )
+	// RB: source might be from pk4, so we ignore the time stamp and assume a release build
+	if( ( sourceTimeStamp != FILE_NOT_FOUND_TIMESTAMP ) && ( sourceTimeStamp != 0 ) && ( sourceTimeStamp != timeStamp ) /* && !fileSystem->InProductionMode()*/ )
 	{
 		return false;
 	}
