@@ -350,7 +350,12 @@ public:
 	int					NumTransitions();
 	
 	bool				ParseScript( idTokenParser* src, idGuiScriptList& list, int* timeParm = NULL, bool allowIf = false );
+	
+	// RB: added keys for Lua
 	bool				RunScript( int n, int key = K_NONE );
+	bool				HasScript( int n );
+	// RB end
+	
 	bool				RunScriptList( idGuiScriptList* src );
 	void				SetRegs( const char* key, const char* val );
 	
@@ -412,6 +417,9 @@ public:
 	static int			Lua_AddChild( lua_State* L );
 	static int			Lua_AddChildren( lua_State* L );
 	static int			Lua_AddCommand( lua_State* L );
+	static int			Lua_Open( lua_State* L );
+	static int			Lua_Close( lua_State* L );
+	static int			Lua_SetFocus( lua_State* L );
 	// RB end
 	
 protected:

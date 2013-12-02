@@ -438,7 +438,7 @@ int idWindow::Lua_AddChildren( lua_State* L )
 				{
 					window->AddChild( child );
 					
-					window->SetFocus( child, false );
+					//window->SetFocus( child, false );
 					
 					dwt.win = child;
 					window->drawWindows.Append( dwt );
@@ -460,6 +460,39 @@ int idWindow::Lua_AddCommand( lua_State* L )
 		{
 			window->AddCommand( cmd );
 		}
+	}
+	
+	return 0;
+}
+
+int idWindow::Lua_Open( lua_State* L )
+{
+	idWindow* window = luaW_check<idWindow>( L, 1 );
+	if( window )
+	{
+		window->Open();
+	}
+	
+	return 0;
+}
+
+int idWindow::Lua_Close( lua_State* L )
+{
+	idWindow* window = luaW_check<idWindow>( L, 1 );
+	if( window )
+	{
+		window->Close();
+	}
+	
+	return 0;
+}
+
+int idWindow::Lua_SetFocus( lua_State* L )
+{
+	idWindow* window = luaW_check<idWindow>( L, 1 );
+	if( window )
+	{
+		window->SetFocus( window );
 	}
 	
 	return 0;
@@ -488,6 +521,9 @@ static const luaL_Reg Window_meta[] =
 	{ "AddChild",		idWindow::Lua_AddChild },
 	{ "AddChildren",	idWindow::Lua_AddChildren },
 	{ "AddCommand",		idWindow::Lua_AddCommand },
+	{ "Open",			idWindow::Lua_Open },
+	{ "Close",			idWindow::Lua_Close },
+	{ "SetFocus",		idWindow::Lua_SetFocus },
 	
 	{NULL, NULL}
 };

@@ -1927,7 +1927,7 @@ void idWindow::SetupFromState()
 	
 	CalcClientRect( 0, 0 );
 	
-	if( scripts[ ON_ACTION ] )
+	if( HasScript( ON_ACTION ) )
 	{
 		cursor = idDeviceContext::CURSOR_HAND;
 		flags |= WIN_CANFOCUS;
@@ -2141,6 +2141,7 @@ idWindow* idWindow::SetFocus( idWindow* w, bool scripts )
 			// calling this broke all sorts of guis
 			// lastFocus->RunScript(ON_MOUSEEXIT);
 		}
+		
 		//  call on gain focus
 		if( scripts && w )
 		{
@@ -3558,8 +3559,8 @@ bool idWindow::RunScript( int n, int key )
 				}
 				else
 				{
-					// ... nil
-					lua_pop( L, 1 ); // ...
+					// ... userdata nil
+					lua_pop( L, 2 ); // ...
 					
 					return false;
 				}
@@ -3572,6 +3573,68 @@ bool idWindow::RunScript( int n, int key )
 	else if( n >= ON_MOUSEENTER && n < SCRIPT_COUNT )
 	{
 		return RunScriptList( scripts[n] );
+	}
+	// RB end
+	
+	return false;
+}
+
+bool idWindow::HasScript( int n )
+{
+	// RB begin
+	lua_State* L = gui->GetLuaState();
+	
+	if( L != NULL && n >= ON_MOUSEENTER && n < SCRIPT_COUNT )
+	{
+		//gui->PrintLuaStack();
+		
+		switch( n )
+		{
+			case ON_MOUSEEXIT:
+			case ON_ACTION:
+			case ON_ACTIVATE:
+			case ON_DEACTIVATE:
+			case ON_ESC:
+			case ON_FRAME:
+			case ON_TRIGGER:
+			case ON_ACTIONRELEASE:
+			case ON_ENTER:
+			case ON_ENTERRELEASE:
+			case ON_FOCUSGAIN:
+			case ON_FOCUSLOSE:
+			case ON_OPEN:
+			case ON_CLOSE:
+			case ON_KEY:
+			{
+				luaW_push<idWindow>( L, this );	// ... userdata
+				lua_getfield( L, -1, LuaScriptNames[n] ); // ... userdata ( function | nil )
+				
+				if( lua_isfunction( L, -1 ) )
+				{
+					lua_pop( L, 2 ); // ...
+					
+					//gui->PrintLuaStack();
+					
+					return true;
+				}
+				else
+				{
+					// ... nil
+					lua_pop( L, 2 ); // ...
+					
+					//gui->PrintLuaStack();
+					
+					return false;
+				}
+			}
+			
+			default:
+				return false;
+		}
+	}
+	else if( n >= ON_MOUSEENTER && n < SCRIPT_COUNT )
+	{
+		return ( scripts[n] != NULL );
 	}
 	// RB end
 	
@@ -5098,7 +5161,7 @@ idWindow::Interactive
 */
 bool idWindow::Interactive()
 {
-	if( scripts[ ON_ACTION ] )
+	if( HasScript( ON_ACTION ) )
 	{
 		return true;
 	}
