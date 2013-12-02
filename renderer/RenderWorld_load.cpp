@@ -1130,6 +1130,12 @@ bool idRenderWorldLocal::InitFromMap( const char* name )
 		file->ReadBig( magic );
 		file->ReadBig( mapTimeStamp );
 		
+		if( sourceTimeStamp == 0 )
+		{
+			// RB: source is from pk4, so we ignore the time stamp and assume a release build
+			sourceTimeStamp = mapTimeStamp;
+		}
+		
 		// RB: added extra time stamp check
 		if( magic == BPROC_MAGIC && sourceTimeStamp == mapTimeStamp )
 		{

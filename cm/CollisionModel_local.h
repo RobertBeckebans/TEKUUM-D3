@@ -59,7 +59,7 @@ If you have questions concerning this license or the applicable additional terms
 #define VERTEX_EPSILON						0.1f
 #define CHOP_EPSILON						0.1f
 
-static const byte BCM_VERSION = 102;
+static const byte BCM_VERSION = 103;
 static const unsigned int BCM_MAGIC = ( 'B' << 24 ) | ( 'C' << 16 ) | ( 'M' << 16 ) | BCM_VERSION;
 
 
