@@ -138,7 +138,10 @@ bool MA_ReadVec3( idParser& parser, idVec3& vec )
 	idToken token;
 	if( !parser.SkipUntilString( "double3" ) )
 	{
+#if defined(USE_EXCEPTIONS)
 		throw idException( va( "Maya Loader '%s': Invalid Vec3", parser.GetFileName() ) );
+#endif
+		return false;
 	}
 	
 	
@@ -458,7 +461,10 @@ bool MA_ParseFace( idParser& parser, maAttribHeader_t* header )
 			int count = parser.ParseInt();
 			if( count != 3 )
 			{
+#if defined(USE_EXCEPTIONS)
 				throw idException( va( "Maya Loader '%s': Face is not a triangle.", parser.GetFileName() ) );
+#endif
+				return false;
 			}
 			//Increment the face number because a new face always starts with an "f" token
 			currentFace++;
@@ -480,7 +486,10 @@ bool MA_ParseFace( idParser& parser, maAttribHeader_t* header )
 			int count = parser.ParseInt();
 			if( count != 3 )
 			{
+#if defined(USE_EXCEPTIONS)
 				throw idException( va( "Maya Loader '%s': Invalid texture coordinates.", parser.GetFileName() ) );
+#endif
+				return false;
 			}
 			pMesh->faces[currentFace].tVertexNum[0] = parser.ParseInt();
 			pMesh->faces[currentFace].tVertexNum[1] = parser.ParseInt();
@@ -492,7 +501,10 @@ bool MA_ParseFace( idParser& parser, maAttribHeader_t* header )
 			int count = parser.ParseInt();
 			if( count != 3 )
 			{
+#if defined(USE_EXCEPTIONS)
 				throw idException( va( "Maya Loader '%s': Invalid texture coordinates.", parser.GetFileName() ) );
+#endif
+				return false;
 			}
 			pMesh->faces[currentFace].tVertexNum[0] = parser.ParseInt();
 			pMesh->faces[currentFace].tVertexNum[1] = parser.ParseInt();
@@ -505,7 +517,10 @@ bool MA_ParseFace( idParser& parser, maAttribHeader_t* header )
 			int count = parser.ParseInt();
 			if( count != 3 )
 			{
+#if defined(USE_EXCEPTIONS)
 				throw idException( va( "Maya Loader '%s': Invalid vertex color.", parser.GetFileName() ) );
+#endif
+				return false;
 			}
 			pMesh->faces[currentFace].vertexColors[0] = parser.ParseInt();
 			pMesh->faces[currentFace].vertexColors[1] = parser.ParseInt();
@@ -803,7 +818,9 @@ void MA_ParseMesh( idParser& parser )
 					if( pMesh->nextNormal >= pMesh->numNormals )
 					{
 						//We are using more normals than exist
+#if defined(USE_EXCEPTIONS)
 						throw idException( va( "Maya Loader '%s': Invalid Normals Index.", parser.GetFileName() ) );
+#endif
 					}
 					pMesh->faces[i].vertexNormals[j] = pMesh->normals[pMesh->nextNormal];
 					pMesh->nextNormal++;
@@ -980,7 +997,10 @@ bool MA_ParseConnectAttr( idParser& parser )
 	int dot = temp.Find( "." );
 	if( dot == -1 )
 	{
+#if defined(USE_EXCEPTIONS)
 		throw idException( va( "Maya Loader '%s': Invalid Connect Attribute.", parser.GetFileName() ) );
+#endif
+		return false;
 	}
 	srcName = temp.Left( dot );
 	srcType = temp.Right( temp.Length() - dot - 1 );
@@ -990,7 +1010,10 @@ bool MA_ParseConnectAttr( idParser& parser )
 	dot = temp.Find( "." );
 	if( dot == -1 )
 	{
+#if defined(USE_EXCEPTIONS)
 		throw idException( va( "Maya Loader '%s': Invalid Connect Attribute.", parser.GetFileName() ) );
+#endif
+		return false;
 	}
 	destName = temp.Left( dot );
 	destType = temp.Right( temp.Length() - dot - 1 );
@@ -1204,11 +1227,16 @@ maModel_t* MA_Load( const char* fileName )
 		return NULL;
 	}
 	
+// RB begin
+#if defined(USE_EXCEPTIONS)
 	try
+#endif
 	{
 		ma = MA_Parse( buf, fileName, false );
 		ma->timeStamp = timeStamp;
 	}
+	
+#if defined(USE_EXCEPTIONS)
 	catch( idException& e )
 	{
 		common->Warning( "%s", e.GetError() );
@@ -1218,6 +1246,7 @@ maModel_t* MA_Load( const char* fileName )
 		}
 		ma = NULL;
 	}
+#endif
 	
 	fileSystem->FreeFile( buf );
 	

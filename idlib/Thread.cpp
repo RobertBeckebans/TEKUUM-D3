@@ -3,6 +3,7 @@
 
 Doom 3 BFG Edition GPL Source Code
 Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2013 Robert Beckebans
 
 This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
@@ -211,7 +212,9 @@ int idSysThread::ThreadProc( idSysThread* thread )
 {
 	int retVal = 0;
 	
+#if defined(USE_EXCEPTIONS)
 	try
+#endif
 	{
 		if( thread->isWorker )
 		{
@@ -246,6 +249,7 @@ int idSysThread::ThreadProc( idSysThread* thread )
 			retVal = thread->Run();
 		}
 	}
+#if defined(USE_EXCEPTIONS)
 	catch( idException& ex )
 	{
 		idLib::Warning( "Fatal error in thread %s: %s", thread->GetName(), ex.GetError() );
@@ -253,6 +257,7 @@ int idSysThread::ThreadProc( idSysThread* thread )
 		// We don't handle threads terminating unexpectedly very well, so just terminate the whole process
 		exit( 0 );
 	}
+#endif
 	
 	thread->isRunning = false;
 	
