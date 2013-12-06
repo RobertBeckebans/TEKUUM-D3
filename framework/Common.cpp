@@ -3103,7 +3103,7 @@ void idCommonLocal::Frame()
 				session->GuiFrameEvents();
 				
 				// RB begin
-#if defined(__ANDROID__)
+#if defined(__ANDROID__) && !defined(USE_NATIVE_ACTIVITY)
 				session->UpdateScreen( true, false, false );
 #else
 				session->UpdateScreen( true, false, true );
@@ -3118,7 +3118,7 @@ void idCommonLocal::Frame()
 			// normal, in-sequence screen update
 			
 			// RB begin
-#if defined(__ANDROID__)
+#if defined(__ANDROID__) && !defined(USE_NATIVE_ACTIVITY)
 			session->UpdateScreen( true, false, false );
 #else
 			session->UpdateScreen( true, false, true );

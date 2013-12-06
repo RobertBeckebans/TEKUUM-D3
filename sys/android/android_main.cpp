@@ -45,6 +45,9 @@ If you have questions concerning this license or the applicable additional terms
 #include <jni.h>
 #include <android_native_app_glue.h>
 #include <android/sensor.h>
+
+AndroidGlobals android;
+
 #else
 jniImport_t		ji;
 #endif
@@ -786,22 +789,82 @@ void abrt_func( mcheck_status status )
 #endif
 
 
-struct Engine
-{
-	struct android_app*	app;
-	
-	ASensorManager*		sensorManager;
-	const ASensor*		accelerometerSensor;
-	ASensorEventQueue*	sensorEventQueue;
-};
 
 static void Sys_HandleAndroidCommand( struct android_app* app, int32_t cmd )
 {
-
+	//struct engine* engine = (struct engine*)app->userData;
+	switch( cmd )
+	{
+		case APP_CMD_SAVE_STATE:
+			__android_log_print( ANDROID_LOG_DEBUG, "Tekuum", "Android command: Save state" );
+			// The system has asked us to save our current state.  Do so.
+			//engine->app->savedState = malloc(sizeof(struct saved_state));
+			//*((struct saved_state*)engine->app->savedState) = engine->state;
+			//engine->app->savedStateSize = sizeof(struct saved_state);
+			break;
+			
+		case APP_CMD_INIT_WINDOW:
+			__android_log_print( ANDROID_LOG_DEBUG, "Tekuum", "Android command: Init window" );
+			
+			if( android.app->window != NULL )
+			{
+				Posix_EarlyInit( );
+				common->Init( 0, NULL, NULL );
+				Posix_LateInit();
+				
+				common->Frame();
+			}
+			break;
+			
+		case APP_CMD_TERM_WINDOW:
+			__android_log_print( ANDROID_LOG_DEBUG, "Tekuum", "Android command: Terminate window" );
+			common->Shutdown();
+			android.isTerminating = true;
+			break;
+			
+		case APP_CMD_RESUME:
+			__android_log_print( ANDROID_LOG_DEBUG, "Tekuum", "Android command: Resume" );
+			android.isRunning = true;
+			break;
+			
+		case APP_CMD_PAUSE:
+			__android_log_print( ANDROID_LOG_DEBUG, "Tekuum", "Android command: Pause" );
+			android.isRunning = false;
+			break;
+			
+		case APP_CMD_GAINED_FOCUS:
+			__android_log_print( ANDROID_LOG_DEBUG, "Tekuum", "Android command: Gained focus" );
+			// When our app gains focus, we start monitoring the accelerometer.
+			//if (engine->accelerometerSensor != NULL)
+			//{
+			//	ASensorEventQueue_enableSensor(engine->sensorEventQueue,
+			//			engine->accelerometerSensor);
+			// We'd like to get 60 events per second (in us).
+			//	ASensorEventQueue_setEventRate(engine->sensorEventQueue,
+			//			engine->accelerometerSensor, (1000L/60)*1000);
+			//}
+			break;
+			
+		case APP_CMD_LOST_FOCUS:
+			__android_log_print( ANDROID_LOG_DEBUG, "Tekuum", "Android command: Lost focus" );
+			// When our app loses focus, we stop monitoring the accelerometer.
+			// This is to avoid consuming battery while not being used.
+			//if (engine->accelerometerSensor != NULL)
+			//{
+			//	ASensorEventQueue_disableSensor(engine->sensorEventQueue,
+			//			engine->accelerometerSensor);
+			//}
+			// Also stop animating.
+			//engine->animating = 0;
+			//engine_draw_frame(engine);
+			break;
+	}
 }
 
 static int32 Sys_HandleAndroidInputEvent( struct android_app* app, AInputEvent* event )
 {
+	__android_log_print( ANDROID_LOG_DEBUG, "Tekuum", "Sys_HandleAndroidInputEvent" );
+	
 	return 0;
 }
 
@@ -815,35 +878,75 @@ main
 //{
 void android_main( struct android_app* state )
 {
-	Engine engine;
-	
-	// Make sure glue isn't stripped.
 	app_dummy();
 	
-	memset( &engine, 0, sizeof( engine ) );
+	memset( &android, 0, sizeof( android ) );
 	
 	__android_log_print( ANDROID_LOG_DEBUG, "Tekuum", "Inside Tekuum source!" );
 	
+	state->userData = &android;
 	state->onAppCmd = Sys_HandleAndroidCommand;
 	state->onInputEvent = Sys_HandleAndroidInputEvent;
 	
-	engine.app = state;
+	android.app = state;
 	
-	engine.sensorManager = ASensorManager_getInstance();
-	engine.accelerometerSensor = ASensorManager_getDefaultSensor( engine.sensorManager, ASENSOR_TYPE_ACCELEROMETER );
-	engine.sensorEventQueue = ASensorManager_createEventQueue( engine.sensorManager, state->looper, LOOPER_ID_USER, NULL, NULL );
+	android.sensorManager = ASensorManager_getInstance();
+	android.accelerometerSensor = ASensorManager_getDefaultSensor( android.sensorManager, ASENSOR_TYPE_ACCELEROMETER );
+	android.sensorEventQueue = ASensorManager_createEventQueue( android.sensorManager, state->looper, LOOPER_ID_USER, NULL, NULL );
 	
-	Posix_EarlyInit();
-	common->Init( 0, NULL, NULL );
-	
-	Posix_LateInit();
-	
-#if 0 //defined(USE_NATIVE_ACTIVITY)
-	while( 1 )
+	if( state->savedState != NULL )
 	{
+		//android.state = *(struct saved_state*)state->savedState;
+	}
+	
+	
+	while( !android.isTerminating )
+		//while( common != NULL && common->IsInitialized() )
+	{
+		// Read all pending events.
+		int ident;
+		int events;
+		struct android_poll_source* source;
+		
+		// If not animating, we will block forever waiting for events.
+		// If animating, we loop until all events are read, then continue
+		// to draw the next frame of animation.
+		while( ( ident = ALooper_pollAll( ( android.isRunning && common != NULL && common->IsInitialized() ) ? 0 : -1, NULL, &events, ( void** )&source ) ) >= 0 )
+		{
+			// Process this event.
+			if( source != NULL )
+			{
+				source->process( state, source );
+			}
+			
+			// If a sensor has data, process it now.
+			/*
+			if( ident == LOOPER_ID_USER )
+			{
+				if( engine.accelerometerSensor != NULL )
+				{
+					ASensorEvent event;
+					while (ASensorEventQueue_getEvents(engine.sensorEventQueue, &event, 1) > 0)
+					{
+						LOGI("accelerometer: x=%f y=%f z=%f",
+								event.acceleration.x, event.acceleration.y,
+								event.acceleration.z);
+					}
+				}
+			}
+			*/
+			
+			// Check if we are exiting.
+			if( state->destroyRequested != 0 )
+			{
+				__android_log_print( ANDROID_LOG_DEBUG, "Tekuum", "Android state: destroy requested" );
+				common->Shutdown();
+				return;
+			}
+		}
+		
 		common->Frame();
 	}
-#endif
 	
 }
 //}
