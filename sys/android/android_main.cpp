@@ -789,7 +789,7 @@ void abrt_func( mcheck_status status )
 #endif
 
 
-
+#if defined(USE_NATIVE_ACTIVITY)
 static void Sys_HandleAndroidCommand( struct android_app* app, int32_t cmd )
 {
 	//struct engine* engine = (struct engine*)app->userData;
@@ -868,12 +868,6 @@ static int32 Sys_HandleAndroidInputEvent( struct android_app* app, AInputEvent* 
 	return 0;
 }
 
-/*
-===============
-main
-===============
-*/
-#if 1 //defined(USE_NATIVE_ACTIVITY)
 //extern "C"
 //{
 void android_main( struct android_app* state )
