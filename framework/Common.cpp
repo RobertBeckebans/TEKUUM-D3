@@ -2999,7 +2999,7 @@ void idCommonLocal::PrintLoadingMessage( const char* msg )
 	}
 	
 	// RB begin
-#if defined(__ANDROID__)
+#if defined(__ANDROID__) && !defined(USE_NATIVE_ACTIVITY)
 	ji.ShowProgressDialog( msg );
 #else
 	//renderSystem->BeginFrame( renderSystem->GetWidth(), renderSystem->GetHeight() );
@@ -3865,7 +3865,7 @@ void idCommonLocal::InitGame()
 	// init the session
 	session->Init();
 	
-#if defined(__ANDROID__)
+#if defined(__ANDROID__) && !defined(USE_NATIVE_ACTIVITY)
 	ji.HideProgressDialog();
 #endif
 	

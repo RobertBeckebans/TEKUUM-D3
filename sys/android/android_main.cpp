@@ -41,6 +41,14 @@ If you have questions concerning this license or the applicable additional terms
 
 #include <android/log.h>
 
+#if defined(USE_NATIVE_ACTIVITY)
+#include <jni.h>
+#include <android_native_app_glue.h>
+#include <android/sensor.h>
+#else
+jniImport_t		ji;
+#endif
+
 #ifdef ID_MCHECK
 #include <mcheck.h>
 #endif
@@ -48,7 +56,7 @@ If you have questions concerning this license or the applicable additional terms
 static idStr	basepath;
 static idStr	savepath;
 
-jniImport_t		ji;
+
 
 
 /*
@@ -59,72 +67,7 @@ Sys_AsyncThread
 void Sys_AsyncThread()
 {
 // RB: disabled multi tick compensate because it feels very laggy on Linux 3.x kernels
-#if 1
-	int now;
-	int ticked;
-	int to_ticked;
-	int start;
-	int elapsed;
-	
-	now = Sys_Milliseconds();
-	ticked = now >> 4;
-	while( 1 )
-	{
-		start = Sys_Milliseconds();
-		
-		now = Sys_Milliseconds();
-		to_ticked = now >> 4;
-		while( ticked < to_ticked )
-		{
-			common->Async();
-			ticked++;
-			Sys_TriggerEvent( TRIGGER_EVENT_ONE );
-		}
-		
-		// thread exit
-		//pthread_testcancel();
-		
-		elapsed = Sys_Milliseconds() - start;
-		if( elapsed < 0x10 )
-		{
-			// usleep wants microseconds
-			usleep( ( 0x10 - elapsed ) * 1000 );
-		}
-	}
-#elif 1
-	int now;
-	int next;
-	int want_sleep;
-	int ticked;
-	
-	now = Sys_Milliseconds();
-	next = now + USERCMD_MSEC;
-	ticked = 0;
-	while( 1 )
-	{
-		now = Sys_Milliseconds();
-	
-		// sleep 1ms less than true target
-		want_sleep = ( next - now - 1 ) * 1000;
-	
-		if( want_sleep > 0 )
-		{
-			usleep( want_sleep );
-		}
-	
-		now = Sys_Milliseconds();
-		next = now + USERCMD_MSEC;
-	
-		common->Async();
-		ticked++;
-	
-		Sys_TriggerEvent( TRIGGER_EVENT_ONE );
-	
-		// thread exit
-		pthread_testcancel();
-	}
-	
-#else
+#if 0
 	int now;
 	int next;
 	int	want_sleep;
@@ -132,22 +75,22 @@ void Sys_AsyncThread()
 	// multi tick compensate for poor schedulers (Linux 2.4)
 	int ticked, to_ticked;
 	now = Sys_Milliseconds();
-	ticked = now >> 4;
+	ticked = now / USERCMD_MSEC;
 	while( 1 )
 	{
 		// sleep
 		now = Sys_Milliseconds();
-		next = ( now & 0xFFFFFFF0 ) + 0x10;
+		next = now + USERCMD_MSEC;
 		want_sleep = ( next - now - 1 ) * 1000;
 		if( want_sleep > 0 )
 		{
 			usleep( want_sleep ); // sleep 1ms less than true target
 		}
-	
+		
 		// compensate if we slept too long
 		now = Sys_Milliseconds();
-		to_ticked = now >> 4;
-	
+		to_ticked = now / USERCMD_MSEC;
+		
 		// show ticking statistics - every 100 ticks, print a summary
 #if 0
 #define STAT_BUF 100
@@ -171,13 +114,77 @@ void Sys_AsyncThread()
 			counter = 0;
 		}
 #endif
-	
+		
 		while( ticked < to_ticked )
 		{
 			common->Async();
 			ticked++;
 			Sys_TriggerEvent( TRIGGER_EVENT_ONE );
 		}
+		
+		// thread exit
+		//pthread_testcancel();
+	}
+#elif 0
+	int ticked;
+	int to_ticked;
+	int start;
+	int elapsed;
+	
+	start = Sys_Milliseconds();
+	ticked = start / USERCMD_MSEC;
+	while( 1 )
+	{
+		start = Sys_Milliseconds();
+	
+		to_ticked = start / USERCMD_MSEC;
+		while( ticked < to_ticked )
+		{
+			common->Async();
+			ticked++;
+			Sys_TriggerEvent( TRIGGER_EVENT_ONE );
+		}
+	
+		// thread exit
+		pthread_testcancel();
+	
+		elapsed = Sys_Milliseconds() - start;
+	
+		//Sys_DebugPrintf( "elapsed = %d\n", elapsed );
+	
+		if( elapsed < USERCMD_MSEC )
+		{
+			usleep( ( USERCMD_MSEC - elapsed ) * 1000 );
+		}
+	}
+#else
+	int now;
+	int next;
+	int want_sleep;
+	int ticked;
+	
+	now = Sys_Milliseconds();
+	ticked = 0;
+	while( 1 )
+	{
+		now = Sys_Milliseconds();
+		next = ( now & 0xFFFFFFF0 ) + USERCMD_MSEC;
+	
+		// sleep 1ms less than true target
+		want_sleep = ( next - now - 1 ) * 1000;
+	
+		if( want_sleep > 0 )
+		{
+			usleep( want_sleep );
+		}
+	
+		common->Async();
+		ticked++;
+	
+		Sys_TriggerEvent( TRIGGER_EVENT_ONE );
+	
+		// thread exit
+		//pthread_testcancel();
 	}
 #endif
 // RB end
@@ -778,29 +785,86 @@ void abrt_func( mcheck_status status )
 
 #endif
 
+
+struct Engine
+{
+	struct android_app*	app;
+	
+	ASensorManager*		sensorManager;
+	const ASensor*		accelerometerSensor;
+	ASensorEventQueue*	sensorEventQueue;
+};
+
+static void Sys_HandleAndroidCommand( struct android_app* app, int32_t cmd )
+{
+
+}
+
+static int32 Sys_HandleAndroidInputEvent( struct android_app* app, AInputEvent* event )
+{
+	return 0;
+}
+
 /*
 ===============
 main
 ===============
 */
-int JE_Main( int argc, char** argv )
+#if 1 //defined(USE_NATIVE_ACTIVITY)
+//extern "C"
+//{
+void android_main( struct android_app* state )
 {
-
+	Engine engine;
+	
+	// Make sure glue isn't stripped.
+	app_dummy();
+	
+	memset( &engine, 0, sizeof( engine ) );
+	
 	__android_log_print( ANDROID_LOG_DEBUG, "Tekuum", "Inside Tekuum source!" );
 	
+	state->onAppCmd = Sys_HandleAndroidCommand;
+	state->onInputEvent = Sys_HandleAndroidInputEvent;
+	
+	engine.app = state;
+	
+	engine.sensorManager = ASensorManager_getInstance();
+	engine.accelerometerSensor = ASensorManager_getDefaultSensor( engine.sensorManager, ASENSOR_TYPE_ACCELEROMETER );
+	engine.sensorEventQueue = ASensorManager_createEventQueue( engine.sensorManager, state->looper, LOOPER_ID_USER, NULL, NULL );
+	
+	Posix_EarlyInit();
+	common->Init( 0, NULL, NULL );
+	
+	Posix_LateInit();
+	
+#if 0 //defined(USE_NATIVE_ACTIVITY)
+	while( 1 )
+	{
+		common->Frame();
+	}
+#endif
+	
+}
+//}
+#else
+int JE_Main( int argc, char** argv )
+{
+	__android_log_print( ANDROID_LOG_DEBUG, "Tekuum", "Inside Tekuum source!" );
+
 	for( int i = 0; i < argc; i++ )
 	{
 		__android_log_print( ANDROID_LOG_DEBUG, "Tekuum", "main(argc=%d, %s)", i, argv[i] );
 	}
-	
+
 #ifdef ID_MCHECK
 	// must have -lmcheck linkage
 	mcheck( abrt_func );
 	Sys_Printf( "memory consistency checking enabled\n" );
 #endif
-	
+
 	Posix_EarlyInit( );
-	
+
 	if( argc > 0 )
 	{
 		common->Init( argc, ( const char** )&argv[0], NULL );
@@ -809,15 +873,22 @@ int JE_Main( int argc, char** argv )
 	{
 		common->Init( 0, NULL, NULL );
 	}
-	
+
 	Posix_LateInit( );
-	
-	//while (1) {
-	//	common->Frame();
-	//}
-	
+
+#if 0 //defined(USE_NATIVE_ACTIVITY)
+	while( 1 )
+	{
+		common->Frame();
+	}
+#endif
+
 	return 0;
 }
+#endif
+
+
+#if !defined(USE_NATIVE_ACTIVITY)
 
 void JE_DrawFrame()
 {
@@ -863,3 +934,6 @@ extern "C"
 	}
 	
 } // extern C
+
+#endif // #if !defined(USE_NATIVE_ACTIVITY)
+
