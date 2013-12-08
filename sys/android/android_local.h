@@ -31,65 +31,33 @@ If you have questions concerning this license or the applicable additional terms
 
 extern glconfig_t glConfig;
 
-#if defined(USE_AUDIOTARGET)
-class tyAudioHardwareAudioTarget : public idAudioHardware
-{
-private:
-	unsigned int				numChannels;
-	void*						mixBuffer;
-	int							mixBufferSize;
-	
-public:
+#if defined(USE_NATIVE_ACTIVITY)
 
-	// how many chunks we have left to write in cases where we need to split
-	int							writeChunks;
+#include <EGL/egl.h>
+
+#include <jni.h>
+#include <android_native_app_glue.h>
+#include <android/sensor.h>
+
+struct AndroidGlobals
+{
+	struct android_app*	app;
+//	struct saved_state	state;
+
+	EGLDisplay			eglDisplay;
+	EGLContext			eglContext;
+	EGLSurface			eglSurface;
 	
-	// how many chunks we can write to the audio device without blocking
-	//int						freeWriteChunks;
+	ASensorManager*		sensorManager;
+	const ASensor*		accelerometerSensor;
+	ASensorEventQueue*	sensorEventQueue;
 	
-	tyAudioHardwareAudioTarget()
-	{
-		numChannels = 0;
-		mixBuffer = NULL;
-		mixBufferSize = 0;
-		//remainingFrames	= 0;
-		writeChunks = 0;
-	}
-	virtual				~tyAudioHardwareAudioTarget();
-	
-	bool				Initialize();
-	
-	
-	// Linux driver doesn't support memory map API
-	bool				Lock( void** pDSLockedBuffer, ulong* dwDSLockedBufferSize )
-	{
-		return false;
-	}
-	bool				Unlock( void* pDSLockedBuffer, dword dwDSLockedBufferSize )
-	{
-		return false;
-	}
-	bool				GetCurrentPosition( ulong* pdwCurrentWriteCursor )
-	{
-		return false;
-	}
-	
-	bool				Flush();
-	void				Write( bool flushing );
-	
-	int					GetNumberOfSpeakers()
-	{
-		return numChannels;
-	}
-	int					GetMixBufferSize();
-	short*				GetMixBuffer();
-	
-private:
-	void				Release();
-	void				InitFailed();
+	bool				isRunning;
+	bool				isTerminating;
 };
 
-extern tyAudioHardwareAudioTarget* g_audioHardwareAudioTarget;
+extern AndroidGlobals android;
+
 #endif
 
 void JE_SetResolution( int width, int height );

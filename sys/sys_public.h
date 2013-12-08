@@ -846,7 +846,7 @@ bool Sys_LoadOpenAL();
 void Sys_FreeOpenAL();
 
 // RB begin
-#if defined(__ANDROID__)
+#if defined(__ANDROID__) && !defined(USE_NATIVE_ACTIVITY)
 #include "../../android/jni/tekuumjni_public.h"
 
 extern jniImport_t			ji;

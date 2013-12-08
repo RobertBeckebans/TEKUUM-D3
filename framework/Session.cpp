@@ -3220,15 +3220,16 @@ void idSessionLocal::Frame()
 	}
 	
 	int	gameTicsToRun = latchedTicNumber - lastGameTic;
-	int i;
-	for( i = 0 ; i < gameTicsToRun ; i++ )
+	for( int i = 0; i < gameTicsToRun; i++ )
 	{
 		RunGameTic();
+		
 		if( !mapSpawned )
 		{
 			// exited game play
 			break;
 		}
+		
 		if( syncNextGameFrame )
 		{
 			// long game frame, so break out and continue executing as if there was no hitch
@@ -3292,7 +3293,7 @@ void idSessionLocal::RunGameTic()
 	
 	// run the game logic every player move
 	int	start = Sys_Milliseconds();
-	gameReturn_t	ret = game->RunFrame( &cmd );
+	gameReturn_t ret = game->RunFrame( &cmd );
 	
 	int end = Sys_Milliseconds();
 	time_gameFrame += end - start;	// note time used for com_speeds

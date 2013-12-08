@@ -34,7 +34,7 @@ Contains the RenderLog declaration.
 ================================================================================================
 */
 
-#if defined(ID_RETAIL) && !defined(ID_RETAIL_INTERNAL)
+#if defined(__ANDROID__) //defined(ID_RETAIL) && !defined(ID_RETAIL_INTERNAL)
 #define STUB_RENDER_LOG
 #endif
 

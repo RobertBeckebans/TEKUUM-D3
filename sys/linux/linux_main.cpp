@@ -62,71 +62,7 @@ Sys_AsyncThread
 void Sys_AsyncThread()
 {
 // RB: disabled multi tick compensate because it feels very laggy on Linux 3.x kernels
-#if 1
-	int now;
-	int ticked;
-	int to_ticked;
-	int start;
-	int elapsed;
-	
-	now = Sys_Milliseconds();
-	ticked = now >> 4;
-	while( 1 )
-	{
-		start = Sys_Milliseconds();
-		
-		now = Sys_Milliseconds();
-		to_ticked = now >> 4;
-		while( ticked < to_ticked )
-		{
-			common->Async();
-			ticked++;
-			Sys_TriggerEvent( TRIGGER_EVENT_ONE );
-		}
-		
-		// thread exit
-		pthread_testcancel();
-		
-		elapsed = Sys_Milliseconds() - start;
-		if( elapsed < 0x10 )
-		{
-			usleep( ( 0x10 - elapsed ) * 1000 );
-		}
-	}
-#elif 1
-	int now;
-	int next;
-	int want_sleep;
-	int ticked;
-	
-	now = Sys_Milliseconds();
-	next = now + USERCMD_MSEC;
-	ticked = 0;
-	while( 1 )
-	{
-		now = Sys_Milliseconds();
-	
-		// sleep 1ms less than true target
-		want_sleep = ( next - now - 1 ) * 1000;
-	
-		if( want_sleep > 0 )
-		{
-			usleep( want_sleep );
-		}
-	
-		now = Sys_Milliseconds();
-		next = now + USERCMD_MSEC;
-	
-		common->Async();
-		ticked++;
-	
-		Sys_TriggerEvent( TRIGGER_EVENT_ONE );
-	
-		// thread exit
-		pthread_testcancel();
-	}
-	
-#else
+#if 0
 	int now;
 	int next;
 	int	want_sleep;
@@ -134,24 +70,24 @@ void Sys_AsyncThread()
 	// multi tick compensate for poor schedulers (Linux 2.4)
 	int ticked, to_ticked;
 	now = Sys_Milliseconds();
-	ticked = now >> 4;
+	ticked = now / USERCMD_MSEC;
 	while( 1 )
 	{
 		// sleep
 		now = Sys_Milliseconds();
-		next = ( now & 0xFFFFFFF0 ) + 0x10;
+		next = now + USERCMD_MSEC;
 		want_sleep = ( next - now - 1 ) * 1000;
 		if( want_sleep > 0 )
 		{
 			usleep( want_sleep ); // sleep 1ms less than true target
 		}
-	
+		
 		// compensate if we slept too long
 		now = Sys_Milliseconds();
-		to_ticked = now >> 4;
-	
+		to_ticked = now / USERCMD_MSEC;
+		
 		// show ticking statistics - every 100 ticks, print a summary
-#if 0
+#if 1
 #define STAT_BUF 100
 		static int stats[STAT_BUF];
 		static int counter = 0;
@@ -173,13 +109,74 @@ void Sys_AsyncThread()
 			counter = 0;
 		}
 #endif
-	
+		
 		while( ticked < to_ticked )
 		{
 			common->Async();
 			ticked++;
 			Sys_TriggerEvent( TRIGGER_EVENT_ONE );
 		}
+		// thread exit
+		pthread_testcancel();
+	}
+#elif 0
+	int ticked;
+	int to_ticked;
+	int start;
+	int elapsed;
+	
+	start = Sys_Milliseconds();
+	ticked = start / USERCMD_MSEC;
+	while( 1 )
+	{
+		start = Sys_Milliseconds();
+	
+		to_ticked = start / USERCMD_MSEC;
+		while( ticked < to_ticked )
+		{
+			common->Async();
+			ticked++;
+			Sys_TriggerEvent( TRIGGER_EVENT_ONE );
+		}
+	
+		// thread exit
+		pthread_testcancel();
+	
+		elapsed = Sys_Milliseconds() - start;
+	
+		Sys_DebugPrintf( "elapsed = %d\n", elapsed );
+	
+		if( elapsed < USERCMD_MSEC )
+		{
+			usleep( ( USERCMD_MSEC - elapsed ) * 1000 );
+		}
+	}
+#else
+	int now;
+	int next;
+	int want_sleep;
+	int ticked;
+	
+	now = Sys_Milliseconds();
+	ticked = 0;
+	while( 1 )
+	{
+		now = Sys_Milliseconds();
+		next = ( now & 0xFFFFFFF0 ) + USERCMD_MSEC;
+	
+		// sleep 1ms less than true target
+		want_sleep = ( next - now - 1 ) * 1000;
+	
+		if( want_sleep > 0 )
+		{
+			usleep( want_sleep );
+		}
+	
+		common->Async();
+		ticked++;
+	
+		Sys_TriggerEvent( TRIGGER_EVENT_ONE );
+	
 		// thread exit
 		pthread_testcancel();
 	}
