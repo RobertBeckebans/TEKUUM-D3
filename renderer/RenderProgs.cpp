@@ -85,85 +85,85 @@ void idRenderProgManager::Init()
 		const char* name;
 	} builtins[] =
 	{
-		{ BUILTIN_GUI, "gui.vfp" },
-		{ BUILTIN_COLOR, "color.vfp" },
+		{ BUILTIN_GUI, "builtin/gui.vfp" },
+		{ BUILTIN_COLOR, "builtin/color.vfp" },
 		// RB begin
 #if defined(USE_GPU_SKINNING)
-		{ BUILTIN_COLOR_SKINNED, "color_skinned.vfp" },
+		{ BUILTIN_COLOR_SKINNED, "builtin/color_skinned.vfp" },
 #endif
-		{ BUILTIN_VERTEX_COLOR, "vertex_color.vfp" },
-		{ BUILTIN_VERTEX_LIGHTING, "vertex_lighting.vfp" },
-		{ BUILTIN_GRID_LIGHTING, "grid_lighting.vfp" },
+		{ BUILTIN_VERTEX_COLOR, "builtin/vertex_color.vfp" },
+		{ BUILTIN_VERTEX_LIGHTING, "builtin/vertex_lighting.vfp" },
+		{ BUILTIN_GRID_LIGHTING, "builtin/grid_lighting.vfp" },
 #if defined(USE_GPU_SKINNING)
-		{ BUILTIN_GRID_LIGHTING_SKINNED, "grid_lighting_skinned.vfp" },
+		{ BUILTIN_GRID_LIGHTING_SKINNED, "builtin/grid_lighting_skinned.vfp" },
 #endif
 		// RB end
 #if !defined(USE_GLES2) && !defined(USE_GLES3)
-		{ BUILTIN_SIMPLESHADE, "simpleshade.vfp" },
+		{ BUILTIN_SIMPLESHADE, "builtin/simpleshade.vfp" },
 #endif
-		{ BUILTIN_TEXTURED, "texture.vfp" },
-		{ BUILTIN_TEXTURE_VERTEXCOLOR, "texture_color.vfp" },
+		{ BUILTIN_TEXTURED, "builtin/texture.vfp" },
+		{ BUILTIN_TEXTURE_VERTEXCOLOR, "builtin/texture_color.vfp" },
 #if defined(USE_GPU_SKINNING)
-		{ BUILTIN_TEXTURE_VERTEXCOLOR_SKINNED, "texture_color_skinned.vfp" },
+		{ BUILTIN_TEXTURE_VERTEXCOLOR_SKINNED, "builtin/texture_color_skinned.vfp" },
 #endif
-		{ BUILTIN_TEXTURE_TEXGEN_VERTEXCOLOR, "texture_color_texgen.vfp" },
+		{ BUILTIN_TEXTURE_TEXGEN_VERTEXCOLOR, "builtin/texture_color_texgen.vfp" },
 		// RB begin
-		{ BUILTIN_TEXTURE_YCOCG, "texture_ycocg.vfp" },
+		{ BUILTIN_TEXTURE_YCOCG, "builtin/texture_ycocg.vfp" },
 		// RB end
-		{ BUILTIN_INTERACTION, "interaction.vfp" },
+		{ BUILTIN_INTERACTION, "builtin/interaction.vfp" },
 #if defined(USE_GPU_SKINNING)
-		{ BUILTIN_INTERACTION_SKINNED, "interaction_skinned.vfp" },
+		{ BUILTIN_INTERACTION_SKINNED, "builtin/interaction_skinned.vfp" },
 #endif
-		{ BUILTIN_INTERACTION_AMBIENT, "interactionAmbient.vfp" },
+		{ BUILTIN_INTERACTION_AMBIENT, "builtin/interactionAmbient.vfp" },
 #if defined(USE_GPU_SKINNING)
-		{ BUILTIN_INTERACTION_AMBIENT_SKINNED, "interactionAmbient_skinned.vfp" },
+		{ BUILTIN_INTERACTION_AMBIENT_SKINNED, "builtin/interactionAmbient_skinned.vfp" },
 #endif
-		{ BUILTIN_ENVIRONMENT, "environment.vfp" },
+		{ BUILTIN_ENVIRONMENT, "builtin/environment.vfp" },
 #if defined(USE_GPU_SKINNING)
-		{ BUILTIN_ENVIRONMENT_SKINNED, "environment_skinned.vfp" },
+		{ BUILTIN_ENVIRONMENT_SKINNED, "builtin/environment_skinned.vfp" },
 #endif
-		{ BUILTIN_BUMPY_ENVIRONMENT, "bumpyEnvironment.vfp" },
+		{ BUILTIN_BUMPY_ENVIRONMENT, "builtin/bumpyEnvironment.vfp" },
 #if defined(USE_GPU_SKINNING)
-		{ BUILTIN_BUMPY_ENVIRONMENT_SKINNED, "bumpyEnvironment_skinned.vfp" },
+		{ BUILTIN_BUMPY_ENVIRONMENT_SKINNED, "builtin/bumpyEnvironment_skinned.vfp" },
 #endif
 		
-		{ BUILTIN_DEPTH, "depth.vfp" },
+		{ BUILTIN_DEPTH, "builtin/depth.vfp" },
 #if defined(USE_GPU_SKINNING)
-		{ BUILTIN_DEPTH_SKINNED, "depth_skinned.vfp" },
+		{ BUILTIN_DEPTH_SKINNED, "builtin/depth_skinned.vfp" },
 #endif
-		{ BUILTIN_SHADOW_DEBUG, "shadowDebug.vfp" },
+		{ BUILTIN_SHADOW_DEBUG, "builtin/shadowDebug.vfp" },
 #if defined(USE_GPU_SKINNING)
-		{ BUILTIN_SHADOW_DEBUG_SKINNED, "shadowDebug_skinned.vfp" },
+		{ BUILTIN_SHADOW_DEBUG_SKINNED, "builtin/shadowDebug_skinned.vfp" },
 #endif
 		
 		// RB begin
-		{ BUILTIN_BLENDLIGHT, "blendLight.vfp" },
+		{ BUILTIN_BLENDLIGHT, "builtin/blendLight.vfp" },
 #if defined(USE_GPU_SKINNING)
-		{ BUILTIN_BLENDLIGHT_SKINNED, "blendLight_skinned.vfp" },
+		{ BUILTIN_BLENDLIGHT_SKINNED, "builtin/blendLight_skinned.vfp" },
 #endif
 		// RB end
-		{ BUILTIN_FOG, "fog.vfp" },
+		{ BUILTIN_FOG, "builtin/fog.vfp" },
 #if defined(USE_GPU_SKINNING)
-		{ BUILTIN_FOG_SKINNED, "fog_skinned.vfp" },
+		{ BUILTIN_FOG_SKINNED, "builtin/fog_skinned.vfp" },
 #endif
-		{ BUILTIN_SKYBOX, "skybox.vfp" },
-		{ BUILTIN_WOBBLESKY, "wobblesky.vfp" },
-		{ BUILTIN_POSTPROCESS, "postprocess.vfp" },
-		{ BUILTIN_STEREO_DEGHOST, "stereoDeGhost.vfp" },
-		{ BUILTIN_STEREO_WARP, "stereoWarp.vfp" },
+		{ BUILTIN_SKYBOX, "builtin/skybox.vfp" },
+		{ BUILTIN_WOBBLESKY, "builtin/wobblesky.vfp" },
+		{ BUILTIN_POSTPROCESS, "builtin/postprocess.vfp" },
+		{ BUILTIN_STEREO_DEGHOST, "builtin/stereoDeGhost.vfp" },
+		{ BUILTIN_STEREO_WARP, "builtin/stereoWarp.vfp" },
 //		{ BUILTIN_ZCULL_RECONSTRUCT, "zcullReconstruct.vfp" },
-		{ BUILTIN_BINK, "bink.vfp" },
-		{ BUILTIN_BINK_GUI, "bink_gui.vfp" },
+		{ BUILTIN_BINK, "builtin/bink.vfp" },
+		{ BUILTIN_BINK_GUI, "builtin/bink_gui.vfp" },
 		// RB begin
-		{ BUILTIN_ROQ, "roq.vfp" },
+		{ BUILTIN_ROQ, "builtin/roq.vfp" },
 		// RB end
-		{ BUILTIN_STEREO_INTERLACE, "stereoInterlace.vfp" },
+		{ BUILTIN_STEREO_INTERLACE, "builtin/stereoInterlace.vfp" },
 #if 1//defined(USE_GLES2) && !defined(USE_GLES3)
-		{ BUILTIN_SHADOW, "shadow.vfp" },
+		{ BUILTIN_SHADOW, "builtin/shadow.vfp" },
 #endif
 		
 #if !defined(USE_GLES2) && !defined(USE_GLES3)
-		{ BUILTIN_MOTION_BLUR, "motionBlur.vfp" },
+		{ BUILTIN_MOTION_BLUR, "builtin/motionBlur.vfp" },
 #endif
 	};
 	int numBuiltins = sizeof( builtins ) / sizeof( builtins[0] );
@@ -183,11 +183,11 @@ void idRenderProgManager::Init()
 	
 	// Special case handling for fastZ shaders
 #if defined(USE_GPU_SKINNING)
-	builtinShaders[BUILTIN_SHADOW] = FindVertexShader( "shadow.vp" );
-	builtinShaders[BUILTIN_SHADOW_SKINNED] = FindVertexShader( "shadow_skinned.vp" );
+	builtinShaders[BUILTIN_SHADOW] = FindVertexShader( "builtin/shadow.vp" );
+	builtinShaders[BUILTIN_SHADOW_SKINNED] = FindVertexShader( "builtin/shadow_skinned.vp" );
 	
-	FindGLSLProgram( "shadow.vp", builtinShaders[BUILTIN_SHADOW], -1 );
-	FindGLSLProgram( "shadow_skinned.vp", builtinShaders[BUILTIN_SHADOW_SKINNED], -1 );
+	FindGLSLProgram( "builtin/shadow.vp", builtinShaders[BUILTIN_SHADOW], -1 );
+	FindGLSLProgram( "builtin/shadow_skinned.vp", builtinShaders[BUILTIN_SHADOW_SKINNED], -1 );
 #endif
 	
 	glslUniforms.SetNum( RENDERPARM_USER + MAX_GLSL_USER_PARMS, vec4_zero );
