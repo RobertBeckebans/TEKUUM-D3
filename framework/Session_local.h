@@ -266,6 +266,13 @@ public:
 	int					latchedTicNumber;	// set to com_ticNumber each frame
 	int					lastGameTic;		// while latchedTicNumber > lastGameTic, run game frames
 	int					lastDemoTic;
+	
+	// RB begin
+	int					gameFrame;					// local game frame
+	int					gameTime;					// local game time
+	double				gameTimeResidual;			// left over time from previous frame
+	// RB end
+	
 	bool				syncNextGameFrame;
 	
 	

@@ -9,4 +9,7 @@ astyle.exe -v -Q --options=astyle-options.ini ../base/scriptsharp/weapon_base.cs
 astyle.exe -v -Q --options=astyle-options.ini ../base/scriptsharp/weapon_bfg.cs
 astyle.exe -v -Q --options=astyle-options.ini ../base/scriptsharp/map_marscity1.cs
 
+REM astyle.exe -v -Q --options=astyle-options.ini ../assets/renderprogs/custom/raymarch_road_to_hell.pixel
+REM astyle.exe -v -Q --options=astyle-options.ini ../assets/renderprogs/custom/voronoi_digital.pixel
+
 pause
