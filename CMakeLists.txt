@@ -323,6 +323,9 @@ file(GLOB SYS_SOURCES sys/*.cpp)
 file(GLOB UI_INCLUDES ui/*.h)
 file(GLOB UI_SOURCES ui/*.cpp)
 
+file(GLOB UI_LUA_INCLUDES ui-lua/*.h)
+file(GLOB UI_LUA_SOURCES ui-lua/*.cpp)
+
 set(LUA_INCLUDES
 	libs/lua/src/lapi.h
 	libs/lua/src/lauxlib.h
@@ -874,6 +877,9 @@ source_group("libs\\oggvorbis" FILES ${OGGVORBIS_SOURCES})
 source_group("ui" FILES ${UI_INCLUDES})
 source_group("ui" FILES ${UI_SOURCES})
 
+source_group("ui-lua" FILES ${UI_LUA_INCLUDES})
+source_group("ui-lua" FILES ${UI_LUA_SOURCES})
+
 source_group("libs\\lua" FILES ${LUA_INCLUDES})
 source_group("libs\\lua" FILES ${LUA_SOURCES})
 
@@ -1037,7 +1043,6 @@ set(TEKUUM_SOURCES
 			${FREETYPE_SOURCES}
 			${SOUND_SOURCES}
 			${OGGVORBIS_SOURCES}
-			${UI_SOURCES}
 			)
 		
 
@@ -1116,8 +1121,6 @@ include_directories(
 			#libs/openal/include
 			libs/glew/include
 			libs/freetype/include
-			libs/lua/src
-			libs/luawrapper
 			libs/zlib)
 			
 link_directories(
@@ -1260,7 +1263,7 @@ if(MSVC)
 	set(TEKUUM_PRECOMPILED_SOURCES ${TEKUUM_SOURCES})
 	list(REMOVE_ITEM TEKUUM_PRECOMPILED_SOURCES ${JPEG_SOURCES} ${PNG_SOURCES} ${ETC1_SOURCES} ${ZLIB_SOURCES} ${GLEW_SOURCES} ${FREETYPE_SOURCES} ${OGGVORBIS_SOURCES} ${LUA_SOURCES} ${LUASOCKET_SOURCES})
 	list(REMOVE_ITEM TEKUUM_PRECOMPILED_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/game/gamesys/TypeInfo.cpp)
-	list(REMOVE_ITEM TEKUUM_PRECOMPILED_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/ui/Lua_init.cpp)
+	list(REMOVE_ITEM TEKUUM_PRECOMPILED_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/ui-lua/Lua_init.cpp)
 	list(REMOVE_ITEM TEKUUM_PRECOMPILED_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/renderer/DXT/DXTDecoder.cpp)
 	list(REMOVE_ITEM TEKUUM_PRECOMPILED_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/renderer/DXT/DXTEncoder.cpp)
 	list(REMOVE_ITEM TEKUUM_PRECOMPILED_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/renderer/DXT/DXTEncoder_SSE2.cpp)

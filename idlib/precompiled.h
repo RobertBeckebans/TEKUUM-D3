@@ -220,8 +220,13 @@ const int MAX_EXPRESSION_REGISTERS = 4096;
 #include "../framework/async/NetworkSystem.h"
 
 // user interfaces
+#if defined(STANDALONE)
+#include "../ui-lua/ListGUI.h"
+#include "../ui-lua/UserInterface.h"
+#else
 #include "../ui/ListGUI.h"
 #include "../ui/UserInterface.h"
+#endif
 
 // collision detection system
 #include "../cm/CollisionModel.h"
