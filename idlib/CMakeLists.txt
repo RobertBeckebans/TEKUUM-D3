@@ -105,6 +105,11 @@ if(MSVC)
         PROPERTIES
         COMPILE_FLAGS "/Ycprecompiled.h"
         )
+
+elseif(UNIX)
+
+    include_directories(.)
+
 endif()
 	
 add_library(idlib ${ID_SOURCES_ALL} ${ID_INCLUDES_ALL})

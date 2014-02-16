@@ -41,9 +41,30 @@ option(DEBUG_MEMORY
 
 if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
 	add_definitions(-pipe)
-	#add_definitions(-Wall)
+    add_definitions(-mmmx -msse -msse2)
 	
-	#set(CMAKE_C_FLAGS_DEBUG "-D_DEBUG")
+    # the warnings are used for every profile anyway, so put them in a variable
+    set(my_warn_flags "-Wno-pragmas -Wno-unused-variable -Wno-unused-but-set-variable -Wno-switch -Wno-unused-value -Winvalid-pch")
+
+    if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
+        # append clang-specific settings for warnings (the second one make sure clang doesn't complain
+        # about unknown -W flags, like -Wno-unused-but-set-variable)
+        set(my_warn_flags "${my_warn_flags} -Wno-local-type-template-args -Wno-unknown-warning-option")
+    endif()
+
+    set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -D_DEBUG -O0 -ggdb -fno-strict-aliasing ${my_warn_flags}")
+    #set(CMAKE_C_FLAGS_DEBUGALL "${CMAKE_C_FLAGS_DEBUGALL} -g -ggdb -D_DEBUG -fno-strict-aliasing ${my_warn_flags}")
+    #set(CMAKE_C_FLAGS_PROFILE "${CMAKE_C_FLAGS_PROFILE} -g -ggdb -D_DEBUG -O1 -fno-omit-frame-pointer -fno-strict-aliasing ${my_warn_flags}")
+    set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O3 -ffast-math -fno-unsafe-math-optimizations -fomit-frame-pointer -fno-strict-aliasing ${my_warn_flags}")
+    set(CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELWITHDEBINFO} -g -O3 -ffast-math -fno-unsafe-math-optimizations -fomit-frame-pointer -fno-strict-aliasing ${my_warn_flags}")
+    set(CMAKE_C_FLAGS_MINSIZEREL "${CMAKE_C_FLAGS_MINSIZEREL} -Os -ffast-math -fno-unsafe-math-optimizations -fomit-frame-pointer -fno-strict-aliasing ${my_warn_flags}")
+
+    set(CMAKE_CXX_FLAGS_DEBUG ${CMAKE_C_FLAGS_DEBUG})
+    #set(CMAKE_CXX_FLAGS_DEBUGALL ${CMAKE_C_FLAGS_DEBUGALL})
+    #set(CMAKE_CXX_FLAGS_PROFILE ${CMAKE_C_FLAGS_PROFILE})
+    set(CMAKE_CXX_FLAGS_RELEASE ${CMAKE_C_FLAGS_RELEASE})
+    set(CMAKE_CXX_FLAGS_RELWITHDEBINFO ${CMAKE_C_FLAGS_RELWITHDEBINFO})
+    set(CMAKE_CXX_FLAGS_MINSIZEREL ${CMAKE_C_FLAGS_MINSIZEREL})
 
 elseif(MSVC)
 	
@@ -732,6 +753,38 @@ else()
 endif()
 
 
+set(POSIX_INCLUDES
+    sys/posix/posix_public.h
+    )
+
+set(POSIX_SOURCES
+    sys/posix/posix_net.cpp
+    sys/posix/posix_main.cpp
+    sys/posix/posix_signal.cpp
+    sys/posix/posix_threads.cpp
+    )
+
+set(LINUX_INCLUDES
+    sys/linux/sound.h
+    )
+
+set(LINUX_SOURCES
+    sys/linux/linux_main.cpp
+    sys/linux/sound.cpp
+    sys/linux/sound_pulse.cpp
+    sys/linux/stack.cpp
+    )
+
+set(SDL_INCLUDES
+    sys/sdl/sdl_local.h
+    )
+
+set(SDL_SOURCES
+    sys/sdl/sdl_events.cpp
+    sys/sdl/sdl_glimp.cpp
+    )
+
+
 if(USE_QT_TOOLS)
 
 	set(QT_USE_QTOPENGL TRUE)
@@ -1334,7 +1387,6 @@ if(MSVC)
 		add_dependencies(Tekuum idlib)
 			target_link_libraries(Tekuum
 			idlib
-	
 			${DirectX_LIBRARIES}
 			${QT_LIBRARIES}
 			#libcurl 
@@ -1347,4 +1399,50 @@ if(MSVC)
 			winmm
 			ws2_32.lib)
 	endif()
+
+elseif(UNIX)
+
+    if(SDL2)
+        find_package(SDL2 REQUIRED)
+        include_directories(${SDL2_INCLUDE_DIR})
+        set(SDLx_LIBRARY ${SDL2_LIBRARY})
+    else()
+        find_package(SDL REQUIRED)
+        include_directories(${SDL_INCLUDE_DIR})
+        set(SDLx_LIBRARY ${SDL_LIBRARY})
+    endif()
+
+    add_definitions(-DUSE_SDL)
+    add_definitions(-DUSE_SDL_ASYNC)
+    add_definitions(-DUSE_SOUND_PULSE)
+
+    #find_package(PulseAudio REQUIRED)
+
+    list(REMOVE_DUPLICATES TEKUUM_SOURCES)
+
+    list(APPEND TEKUUM_INCLUDES
+        ${SYS_INCLUDES}
+        ${POSIX_INCLUDES}
+        ${SDL_INCLUDES}
+        ${LINUX_INCLUDES})
+
+    list(APPEND TEKUUM_SOURCES
+        ${SYS_SOURCES}
+        ${POSIX_SOURCES}
+        ${SDL_SOURCES}
+        ${LINUX_SOURCES})
+
+    add_executable(Tekuum ${TEKUUM_INCLUDES} ${TEKUUM_SOURCES})
+
+    target_link_libraries(Tekuum
+        idlib
+        GL
+        pthread
+        dl
+        rt
+        pulse
+        pulse-simple
+        ${SDLx_LIBRARY}
+        )
+
 endif()
