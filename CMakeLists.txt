@@ -1415,6 +1415,10 @@ elseif(UNIX)
     add_definitions(-DUSE_SDL)
     add_definitions(-DUSE_SDL_ASYNC)
     add_definitions(-DUSE_SOUND_PULSE)
+	add_definitions(-DUSE_EXCEPTIONS)
+
+	#add_definitions(-DUSE_GLES3)
+	#add_definitions(-DUSE_MESA)
 
     #find_package(PulseAudio REQUIRED)
 
@@ -1432,9 +1436,9 @@ elseif(UNIX)
         ${SDL_SOURCES}
         ${LINUX_SOURCES})
 
-    add_executable(Tekuum ${TEKUUM_INCLUDES} ${TEKUUM_SOURCES})
+	add_executable(tekuum ${TEKUUM_INCLUDES} ${TEKUUM_SOURCES})
 
-    target_link_libraries(Tekuum
+	target_link_libraries(tekuum
         idlib
         GL
         pthread
