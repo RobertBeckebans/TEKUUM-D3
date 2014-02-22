@@ -79,6 +79,11 @@ if(STANDALONE)
 	add_definitions(-DSTANDALONE)
 endif()
 
+if(MESA)
+	add_definitions(-DUSE_GLES3)
+	add_definitions(-DUSE_MESA)
+endif()
+
 if(DEBUG_MEMORY)
 	add_definitions(-DID_DEBUG_MEMORY)
 	add_definitions(-DID_REDIRECT_NEWDELETE)

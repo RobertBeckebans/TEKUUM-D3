@@ -26,6 +26,9 @@ option(GLES2
 		
 option(ANGLE
 		"Only use OpenGL ES 2.0 functions through ANGLE" OFF)
+
+option(MESA
+		"Only use OpenGL ES 3.0 functions and turn off GPU skeletal animation" OFF)
 		
 option(DEBUG_MEMORY
 		"Enables memory logging to file" OFF)
@@ -1417,8 +1420,10 @@ elseif(UNIX)
     add_definitions(-DUSE_SOUND_PULSE)
 	add_definitions(-DUSE_EXCEPTIONS)
 
-	#add_definitions(-DUSE_GLES3)
-	#add_definitions(-DUSE_MESA)
+	if(MESA)
+		add_definitions(-DUSE_GLES3)
+		add_definitions(-DUSE_MESA)
+	endif()
 
     #find_package(PulseAudio REQUIRED)
 
