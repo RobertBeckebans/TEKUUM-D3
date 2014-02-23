@@ -644,7 +644,7 @@ static bool R_ParseImageProgram_r( idTokenParser& src, byte** pic, int* width, i
 		if( pic )
 		{
 			int		c;
-			c = *width * *height * 4;
+			c = *width** height * 4;
 			for( i = 0 ; i < c ; i += 4 )
 			{
 				( *pic )[i + 1] =
@@ -669,7 +669,7 @@ static bool R_ParseImageProgram_r( idTokenParser& src, byte** pic, int* width, i
 		if( pic )
 		{
 			int		c;
-			c = *width * *height * 4;
+			c = *width** height * 4;
 			for( i = 0 ; i < c ; i += 4 )
 			{
 				( *pic )[i + 3] = ( ( *pic )[i + 0] + ( *pic )[i + 1] + ( *pic )[i + 2] ) / 3;

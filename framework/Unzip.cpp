@@ -2586,7 +2586,7 @@ struct inflate_blocks_state
 		struct
 		{
 			inflate_codes_statef
-			*codes;
+			* codes;
 		} decode;           /* if CODES, current state */
 	} sub;                /* submode */
 	uInt last;            /* true if this block is the last block */
@@ -3424,7 +3424,7 @@ static int huft_build( uInt* b, uInt n, uInt s, const uInt* d, const uInt* e, in
 }
 
 
-int inflate_trees_bits( uInt* c, uInt* bb, inflate_huft * *tb, inflate_huft* hp, z_streamp z )
+int inflate_trees_bits( uInt* c, uInt* bb, inflate_huft** tb, inflate_huft* hp, z_streamp z )
 //uInt *c;               /* 19 code lengths */
 //uInt *bb;              /* bits tree desired/actual depth */
 //inflate_huft * *tb; /* bits tree result */
@@ -3451,7 +3451,7 @@ int inflate_trees_bits( uInt* c, uInt* bb, inflate_huft * *tb, inflate_huft* hp,
 }
 
 
-int inflate_trees_dynamic( uInt nl, uInt nd, uInt* c, uInt* bl, uInt* bd, inflate_huft * *tl, inflate_huft * *td, inflate_huft* hp, z_streamp z )
+int inflate_trees_dynamic( uInt nl, uInt nd, uInt* c, uInt* bl, uInt* bd, inflate_huft** tl, inflate_huft** td, inflate_huft* hp, z_streamp z )
 //uInt nl;                /* number of literal/length codes */
 //uInt nd;                /* number of distance codes */
 //uInt *c;               /* that many (total) code lengths */
@@ -3669,7 +3669,7 @@ static inflate_huft fixed_td[] =
 	{{{82, 5}}, 13}, {{{90, 5}}, 3073}, {{{86, 5}}, 193}, {{{192, 5}}, 24577}
 };
 
-int inflate_trees_fixed( uInt* bl, uInt* bd, inflate_huft * *tl, inflate_huft * *td, z_streamp z )
+int inflate_trees_fixed( uInt* bl, uInt* bd, inflate_huft** tl, inflate_huft** td, z_streamp z )
 //uInt *bl;               /* literal desired/actual bit depth */
 //uInt *bd;               /* distance desired/actual bit depth */
 //inflate_huft * *tl;  /* literal/length tree result */
@@ -4229,7 +4229,7 @@ struct internal_state
 	int  nowrap;          /* flag for no wrapper */
 	uInt wbits;           /* log2(window size)  (8..15, defaults to 15) */
 	inflate_blocks_statef
-	*blocks;            /* current inflate_blocks state */
+	* blocks;           /* current inflate_blocks state */
 	
 };
 
