@@ -1191,7 +1191,7 @@ bool idRenderModelStatic::ConvertDAEToModelSurfaces( const ColladaParser* dae )
 	Collada::Node**		object;
 	Collada::Mesh**		mesh;
 	Collada::MeshInstance* meshInstance;
-	Collada::Material**	material;
+//	Collada::Material**	material;
 	const idMaterial*	im1, *im2;
 	srfTriangles_t*		tri;
 	int					objectNum;
@@ -2286,7 +2286,7 @@ bool idRenderModelStatic::ConvertLWOToModelSurfaces( const struct st_lwObject* l
 		{
 			lwPolygon* poly = &layer->polygon.pol[j];
 			
-			if( poly->surf != lwoSurf )
+			if( poly->surf.ptr != lwoSurf )
 			{
 				continue;
 			}
@@ -2557,7 +2557,7 @@ struct aseModel_s* idRenderModelStatic::ConvertLWOToASE( const struct st_lwObjec
 		{
 			lwPolygon* poly = &layer->polygon.pol[j];
 			
-			if( poly->surf != surf )
+			if( poly->surf.ptr != surf )
 			{
 				continue;
 			}
