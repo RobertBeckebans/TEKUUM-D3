@@ -605,7 +605,18 @@ void luaW_setfuncs(lua_State* L, const char* classname, const luaL_Reg* table, c
     
     // Open table
     lua_newtable(L); // ... T
-    luaW_registerfuncs(L, allocator ? defaulttable : nullptr, table); // ... T
+
+    // RB begin
+    //luaW_registerfuncs(L, ( allocator != nullptr ) ? defaulttable : nullptr, table); // ... T
+    if( allocator )
+    {
+        luaW_registerfuncs(L, defaulttable, table); // ... T
+    }
+    else
+    {
+        luaW_registerfuncs(L, nullptr, table); // ... T
+    }
+    // RB end
 
     // Open metatable, set up extends table
     luaL_newmetatable(L, classname); // ... T mt
