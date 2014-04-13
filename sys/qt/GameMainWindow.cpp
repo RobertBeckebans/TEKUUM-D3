@@ -84,7 +84,7 @@ void GameMainWindow::keyPressEvent( QKeyEvent* event )
 	
 	if( event->key() == Qt::Key_AsciiCircum )
 	{
-		ch = Qt::Key_AsciiCircum;
+		ch = K_GRAVE;
 		Sys_QueEvent( SE_KEY, ch, 1, 0, NULL, 0 );
 	}
 	else

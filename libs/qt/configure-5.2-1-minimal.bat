@@ -1,0 +1,2 @@
+configure -debug-and-release -opensource -platform win32-msvc2013 -mp -opengl desktop -no-angle -qt-zlib -qt-pcre -qt-libpng -qt-libjpeg -no-audio-backend -skip webkit -skip multimedia -skip qtconnectivity -skip qtsensors -skip qtserialport -skip qtquick1 -nomake examples
+PAUSE

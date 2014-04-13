@@ -93,6 +93,9 @@ void Radiant3DWidget::paintGL()
 #if 1
 	//makeCurrent();
 	
+	
+	rotx += 1.0f;
+	
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 	glLoadIdentity();
 	

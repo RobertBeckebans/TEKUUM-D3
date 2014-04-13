@@ -798,7 +798,8 @@ if(USE_QT_TOOLS)
 	#set(CMAKE_AUTOMOC ON)
 	
 	if(MSVC)
-		set(CMAKE_PREFIX_PATH "C:\\Qt\\Qt5.2.1\\5.2.1\\msvc2010_opengl")
+		#set(CMAKE_PREFIX_PATH "C:\\Qt\\Qt5.2.1-src\\5.2.1\\msvc2010_opengl")
+		set(CMAKE_PREFIX_PATH "C:\\Qt\\Qt5.2.1-src\\qtbase")
 		
 		if(CMAKE_CL_64)
 			set(CMAKE_LIBRARY_PATH "C:\\Program Files (x86)\\Windows Kits\\8.0\\Lib\\win8\\um\\x64")
