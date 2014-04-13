@@ -1377,6 +1377,15 @@ bool idRenderModelStatic::ConvertDAEToModelSurfaces( const ColladaParser* dae )
 		// transform vertex positions and normals
 		idMat4 nodeTransform = dae->CalculateResultTransform( ( *object )->mTransforms );
 		
+		// reset origin to zero for root node
+		if( objectNum == 0 )
+		{
+			nodeTransform[0][3] = 0;
+			nodeTransform[1][3] = 0;
+			nodeTransform[2][3] = 0;
+		}
+		
+		
 		for( j = 0; j < ( *mesh )->mPositions.Num(); j++ )
 		{
 			const idVec3& p = ( *mesh )->mPositions[j];
