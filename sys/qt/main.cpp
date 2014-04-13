@@ -140,6 +140,8 @@ bool GLimp_SpawnRenderThread( void ( *a )() )
 	return false;
 };
 
+void GLimp_PreInit() {}
+
 bool GLimp_Init( glimpParms_t a )
 {
 	return true;
@@ -151,6 +153,56 @@ void* GLimp_BackEndSleep()
 {
 	return 0;
 };
+
+class idSort_VidMode : public idSort_Quick< vidMode_t, idSort_VidMode >
+{
+public:
+	int Compare( const vidMode_t& a, const vidMode_t& b ) const
+	{
+		int wd = a.width - b.width;
+		int hd = a.height - b.height;
+		int fd = a.displayHz - b.displayHz;
+		return ( hd != 0 ) ? hd : ( wd != 0 ) ? wd : fd;
+	}
+};
+
+static void FillStaticVidModes( idList<vidMode_t>& modeList )
+{
+	modeList.AddUnique( vidMode_t( 320,   240, 60 ) );
+	modeList.AddUnique( vidMode_t( 400,   300, 60 ) );
+	modeList.AddUnique( vidMode_t( 512,   384, 60 ) );
+	modeList.AddUnique( vidMode_t( 640,   480, 60 ) );
+	modeList.AddUnique( vidMode_t( 800,   600, 60 ) );
+	modeList.AddUnique( vidMode_t( 960,   720, 60 ) );
+	modeList.AddUnique( vidMode_t( 1024,  768, 60 ) );
+	modeList.AddUnique( vidMode_t( 1152,  864, 60 ) );
+	modeList.AddUnique( vidMode_t( 1280,  720, 60 ) );
+	modeList.AddUnique( vidMode_t( 1280,  768, 60 ) );
+	modeList.AddUnique( vidMode_t( 1280,  800, 60 ) );
+	modeList.AddUnique( vidMode_t( 1280, 1024, 60 ) );
+	modeList.AddUnique( vidMode_t( 1360,  768, 60 ) );
+	modeList.AddUnique( vidMode_t( 1440,  900, 60 ) );
+	modeList.AddUnique( vidMode_t( 1680, 1050, 60 ) );
+	modeList.AddUnique( vidMode_t( 1600, 1200, 60 ) );
+	modeList.AddUnique( vidMode_t( 1920, 1080, 60 ) );
+	modeList.AddUnique( vidMode_t( 1920, 1200, 60 ) );
+	modeList.AddUnique( vidMode_t( 2048, 1536, 60 ) );
+	modeList.AddUnique( vidMode_t( 2560, 1600, 60 ) );
+	
+	modeList.SortWithTemplate( idSort_VidMode() );
+}
+
+bool R_GetModeListForDisplay( const int requestedDisplayNum, idList<vidMode_t>& modeList )
+{
+	assert( requestedDisplayNum >= 0 );
+	
+	modeList.Clear();
+	
+	// TODO
+	
+	FillStaticVidModes( modeList );
+	return true;
+}
 
 void			Sys_ShowConsole( int visLevel, bool quitOnClose )
 {
@@ -183,7 +235,7 @@ Ptr should either be null, or point to a block of data that can
 be freed by the game later.
 ================
 */
-void Sys_QueEvent( int time, sysEventType_t type, int value, int value2, int ptrLength, void* ptr )
+void Sys_QueEvent( sysEventType_t type, int value, int value2, int ptrLength, void* ptr, int inputDeviceNum )
 {
 	sysEvent_t*	ev;
 	
@@ -248,7 +300,7 @@ int				Sys_ReturnKeyboardInputEvent( const int n, int& ch, bool& state )
 void			Sys_EndKeyboardInputEvents() {}
 
 // mouse input polling
-int				Sys_PollMouseInputEvents()
+int				Sys_PollMouseInputEvents( int mouseEvents[MAX_MOUSE_EVENTS][2] )
 {
 	return 0;
 }
@@ -263,367 +315,27 @@ void Sys_GrabMouseCursor( bool grabIt ) {}
 
 //=====================================================================================
 
-#if defined(USE_XINPUT)
-
-static idCVar in_xbox360Controller( "in_xbox360Controller", "1", CVAR_SYSTEM | CVAR_BOOL, "enable Xbox 360 controller" );
-static idCVar in_xbox360ControllerDebug( "in_xbox360ControllerDebug", "0", CVAR_SYSTEM | CVAR_BOOL, "enable Xbox 360 controller debugging" );
-static idCVar in_xbox360ControllerThreshold( "in_xbox360ControllerThreshold", "0.15", CVAR_SYSTEM | CVAR_FLOAT, "enable Xbox 360 controller debugging" );
-
-static bool					g_ControllerAvailable;
-static XINPUT_STATE			g_Controller;
-
-// RB begin
-typedef struct
-{
-	int action;
-	int value;
-	int value2;
-} pollGamepadEvent_t;
-
-#define MAX_POLL_EVENTS 50
-#define POLL_EVENTS_HEADROOM 2
-static pollGamepadEvent_t s_pollGamepadEvents[MAX_POLL_EVENTS + POLL_EVENTS_HEADROOM];
-static int s_pollGamepadEventsCount;
-
-static bool IN_AddGamepadPollEvent( int action, int value, int value2 )
-{
-	if( s_pollGamepadEventsCount >= MAX_POLL_EVENTS + POLL_EVENTS_HEADROOM )
-		common->FatalError( "pollGamepadEventsCount exceeded MAX_POLL_EVENT + POLL_EVENTS_HEADROOM\n" );
-		
-	s_pollGamepadEvents[s_pollGamepadEventsCount].action = action;
-	s_pollGamepadEvents[s_pollGamepadEventsCount].value = value;
-	s_pollGamepadEvents[s_pollGamepadEventsCount].value2 = value2;
-	s_pollGamepadEventsCount++;
-	
-	if( s_pollGamepadEventsCount >= MAX_POLL_EVENTS )
-	{
-		common->DPrintf( "WARNING: reached MAX_POLL_EVENT pollGamepadEventsCount\n" );
-		return false;
-	}
-	
-	return true;
-}
-
-static void IN_XBox360Axis( int action, short thumbAxis, float scale )
-{
-	float           f = ( ( float )thumbAxis ) / 32767.0f;
-	
-	float threshold = in_xbox360ControllerThreshold.GetFloat();
-	if( f > -threshold && f < threshold )
-	{
-		IN_AddGamepadPollEvent( action, 0, 0 );
-	}
-	else
-	{
-		if( in_xbox360ControllerDebug.GetBool() )
-		{
-			common->Printf( "xbox axis %i = %f\n", action, f );
-		}
-		
-		IN_AddGamepadPollEvent( action, f * scale, 0 );
-	}
-}
-
-static void IN_XBox360TriggerToButton( byte triggerAxis, byte oldTriggerAxis, int key, float expectedStartValue, float threshold )
-{
-	float           f = ( ( float )triggerAxis ) / 255.0f;
-	float           fOld = ( ( float )triggerAxis ) / 255.0f;
-	
-	if( f > ( expectedStartValue + threshold + in_xbox360ControllerThreshold.GetFloat() ) )
-	{
-		IN_AddGamepadPollEvent( GP_BUTTON, key, 1 );
-		Sys_QueEvent( GetTickCount(), SE_KEY, key, 1, 0, NULL );
-		
-		if( in_xbox360ControllerDebug.GetBool() )
-		{
-			common->Printf( "xbox trigger to key press = Q:0x%02x(%s), value = %f\n", key, idKeyInput::KeyNumToString( key, false ), f );
-		}
-	}
-	else
-	{
-		IN_AddGamepadPollEvent( GP_BUTTON, key, 0 );
-		Sys_QueEvent( GetTickCount(), SE_KEY, key, 0, 0, NULL );
-		
-		if( in_xbox360ControllerDebug.GetBool() )
-		{
-			common->Printf( "xbox trigger to key release = Q:0x%02x(%s), value = %f\n", key, idKeyInput::KeyNumToString( key, false ), f );
-		}
-	}
-}
-
-int Sys_PollXbox360ControllerInputEvents()
-{
-	if( !in_xbox360Controller.GetBool() )
-		return 0;
-		
-	s_pollGamepadEventsCount = 0;
-	
-	XINPUT_STATE state;
-	DWORD dwResult = XInputGetState( 0, &state );
-	
-	if( dwResult == ERROR_SUCCESS )
-	{
-		g_ControllerAvailable = true;
-		
-		// always send the axis
-		
-		// use left analog stick for strafing
-		IN_XBox360Axis( GP_AXIS_SIDE, state.Gamepad.sThumbLX, 127 );
-		IN_XBox360Axis( GP_AXIS_FORWARD, state.Gamepad.sThumbLY, 127 );
-		
-		// use right analog stick for viewing
-		IN_XBox360Axis( GP_AXIS_YAW, state.Gamepad.sThumbRX, -127 );
-		IN_XBox360Axis( GP_AXIS_PITCH, state.Gamepad.sThumbRY, -127 );
-		
-		if( state.dwPacketNumber == g_Controller.dwPacketNumber )
-		{
-			// no changes since last frame so skip the buttons
-			return s_pollGamepadEventsCount;
-		}
-		
-		if( state.Gamepad.bLeftTrigger != g_Controller.Gamepad.bLeftTrigger )
-		{
-			IN_XBox360TriggerToButton( state.Gamepad.bLeftTrigger, g_Controller.Gamepad.bLeftTrigger, K_XINPUT_GAMEPAD_LT, 0, 0 );
-		}
-		
-		if( state.Gamepad.bRightTrigger != g_Controller.Gamepad.bRightTrigger )
-		{
-			IN_XBox360TriggerToButton( state.Gamepad.bRightTrigger, g_Controller.Gamepad.bRightTrigger, K_XINPUT_GAMEPAD_RT, 0, 0 );
-		}
-		
-		WORD diff = state.Gamepad.wButtons ^ g_Controller.Gamepad.wButtons;
-		if( diff )
-		{
-			if( diff & XINPUT_GAMEPAD_DPAD_UP )
-			{
-				if( state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_UP )
-				{
-					IN_AddGamepadPollEvent( GP_BUTTON, K_XINPUT_GAMEPAD_DPAD_UP, 1 );
-					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_DPAD_UP, 1, 0, NULL );
-				}
-				else
-				{
-					IN_AddGamepadPollEvent( GP_BUTTON, K_XINPUT_GAMEPAD_DPAD_UP, 0 );
-					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_DPAD_UP, 0, 0, NULL );
-				}
-			}
-			
-			if( diff & XINPUT_GAMEPAD_DPAD_DOWN )
-			{
-				if( state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_DOWN )
-				{
-					IN_AddGamepadPollEvent( GP_BUTTON, K_XINPUT_GAMEPAD_DPAD_DOWN, 1 );
-					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_DPAD_DOWN, 1, 0, NULL );
-				}
-				else
-				{
-					IN_AddGamepadPollEvent( GP_BUTTON, K_XINPUT_GAMEPAD_DPAD_DOWN, 0 );
-					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_DPAD_DOWN, 0, 0, NULL );
-				}
-			}
-			
-			if( diff & XINPUT_GAMEPAD_DPAD_LEFT )
-			{
-				if( state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_LEFT )
-				{
-					IN_AddGamepadPollEvent( GP_BUTTON, K_XINPUT_GAMEPAD_DPAD_LEFT, 1 );
-					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_DPAD_LEFT, 1, 0, NULL );
-				}
-				else
-				{
-					IN_AddGamepadPollEvent( GP_BUTTON, K_XINPUT_GAMEPAD_DPAD_LEFT, 0 );
-					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_DPAD_LEFT, 0, 0, NULL );
-				}
-			}
-			
-			if( diff & XINPUT_GAMEPAD_DPAD_RIGHT )
-			{
-				if( state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_RIGHT )
-				{
-					IN_AddGamepadPollEvent( GP_BUTTON, K_XINPUT_GAMEPAD_DPAD_RIGHT, 1 );
-					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_DPAD_RIGHT, 1, 0, NULL );
-				}
-				else
-				{
-					IN_AddGamepadPollEvent( GP_BUTTON, K_XINPUT_GAMEPAD_DPAD_RIGHT, 0 );
-					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_DPAD_RIGHT, 0, 0, NULL );
-				}
-			}
-			
-			if( diff & XINPUT_GAMEPAD_START )
-			{
-				if( state.Gamepad.wButtons & XINPUT_GAMEPAD_START )
-				{
-					IN_AddGamepadPollEvent( GP_BUTTON, K_XINPUT_GAMEPAD_START, 1 );
-					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_START, 1, 0, NULL );
-				}
-				else
-				{
-					IN_AddGamepadPollEvent( GP_BUTTON, K_XINPUT_GAMEPAD_START, 0 );
-					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_START, 0, 0, NULL );
-				}
-			}
-			
-			if( diff & XINPUT_GAMEPAD_BACK )
-			{
-				if( state.Gamepad.wButtons & XINPUT_GAMEPAD_BACK )
-				{
-					IN_AddGamepadPollEvent( GP_BUTTON, K_XINPUT_GAMEPAD_BACK, 1 );
-					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_BACK, 1, 0, NULL );
-				}
-				else
-				{
-					IN_AddGamepadPollEvent( GP_BUTTON, K_XINPUT_GAMEPAD_BACK, 0 );
-					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_BACK, 0, 0, NULL );
-				}
-			}
-			
-			if( diff & XINPUT_GAMEPAD_LEFT_THUMB )
-			{
-				if( state.Gamepad.wButtons & XINPUT_GAMEPAD_LEFT_THUMB )
-				{
-					IN_AddGamepadPollEvent( GP_BUTTON, K_XINPUT_GAMEPAD_LS, 1 );
-					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_LS, 1, 0, NULL );
-				}
-				else
-				{
-					IN_AddGamepadPollEvent( GP_BUTTON, K_XINPUT_GAMEPAD_LS, 0 );
-					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_LS, 0, 0, NULL );
-				}
-			}
-			
-			if( diff & XINPUT_GAMEPAD_RIGHT_THUMB )
-			{
-				if( state.Gamepad.wButtons & XINPUT_GAMEPAD_RIGHT_THUMB )
-				{
-					IN_AddGamepadPollEvent( GP_BUTTON, K_XINPUT_GAMEPAD_RS, 1 );
-					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_RS, 1, 0, NULL );
-				}
-				else
-				{
-					IN_AddGamepadPollEvent( GP_BUTTON, K_XINPUT_GAMEPAD_RS, 0 );
-					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_RS, 0, 0, NULL );
-				}
-			}
-			
-			if( diff & XINPUT_GAMEPAD_LEFT_SHOULDER )
-			{
-				if( state.Gamepad.wButtons & XINPUT_GAMEPAD_LEFT_SHOULDER )
-				{
-					IN_AddGamepadPollEvent( GP_BUTTON, K_XINPUT_GAMEPAD_LB, 1 );
-					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_LB, 1, 0, NULL );
-				}
-				else
-				{
-					IN_AddGamepadPollEvent( GP_BUTTON, K_XINPUT_GAMEPAD_LB, 0 );
-					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_LB, 0, 0, NULL );
-				}
-			}
-			
-			if( diff & XINPUT_GAMEPAD_RIGHT_SHOULDER )
-			{
-				if( state.Gamepad.wButtons & XINPUT_GAMEPAD_RIGHT_SHOULDER )
-				{
-					IN_AddGamepadPollEvent( GP_BUTTON, K_XINPUT_GAMEPAD_RB, 1 );
-					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_RB, 1, 0, NULL );
-				}
-				else
-				{
-					IN_AddGamepadPollEvent( GP_BUTTON, K_XINPUT_GAMEPAD_RB, 0 );
-					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_RB, 0, 0, NULL );
-				}
-			}
-			
-			if( diff & XINPUT_GAMEPAD_A )
-			{
-				if( state.Gamepad.wButtons & XINPUT_GAMEPAD_A )
-				{
-					IN_AddGamepadPollEvent( GP_BUTTON, K_XINPUT_GAMEPAD_A, 1 );
-					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_A, 1, 0, NULL );
-				}
-				else
-				{
-					IN_AddGamepadPollEvent( GP_BUTTON, K_XINPUT_GAMEPAD_A, 0 );
-					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_A, 0, 0, NULL );
-				}
-			}
-			
-			if( diff & XINPUT_GAMEPAD_B )
-			{
-				if( state.Gamepad.wButtons & XINPUT_GAMEPAD_B )
-				{
-					IN_AddGamepadPollEvent( GP_BUTTON, K_XINPUT_GAMEPAD_B, 1 );
-					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_B, 1, 0, NULL );
-				}
-				else
-				{
-					IN_AddGamepadPollEvent( GP_BUTTON, K_XINPUT_GAMEPAD_B, 0 );
-					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_B, 0, 0, NULL );
-				}
-			}
-			
-			if( diff & XINPUT_GAMEPAD_X )
-			{
-				if( state.Gamepad.wButtons & XINPUT_GAMEPAD_X )
-				{
-					IN_AddGamepadPollEvent( GP_BUTTON, K_XINPUT_GAMEPAD_X, 1 );
-					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_X, 1, 0, NULL );
-				}
-				else
-				{
-					IN_AddGamepadPollEvent( GP_BUTTON, K_XINPUT_GAMEPAD_X, 0 );
-					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_X, 0, 0, NULL );
-				}
-			}
-			
-			if( diff & XINPUT_GAMEPAD_Y )
-			{
-				if( state.Gamepad.wButtons & XINPUT_GAMEPAD_Y )
-				{
-					IN_AddGamepadPollEvent( GP_BUTTON, K_XINPUT_GAMEPAD_Y, 1 );
-					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_Y, 1, 0, NULL );
-				}
-				else
-				{
-					IN_AddGamepadPollEvent( GP_BUTTON, K_XINPUT_GAMEPAD_Y, 0 );
-					Sys_QueEvent( GetTickCount(), SE_KEY, K_XINPUT_GAMEPAD_Y, 0, 0, NULL );
-				}
-			}
-		}
-		
-		g_Controller = state;
-		return s_pollGamepadEventsCount;
-	}
-	
-	return 0;
-}
-
-int	Sys_ReturnXbox360ControllerInputEvent( const int n, int& action, int& value, int& value2 )
-{
-	if( n >= s_pollGamepadEventsCount )
-	{
-		return 0;
-	}
-	
-	action = s_pollGamepadEvents[ n ].action;
-	value = s_pollGamepadEvents[ n ].value;
-	value2 = s_pollGamepadEvents[ n ].value2;
-	
-	return 1;
-}
-
-void Sys_EndXbox360ControllerInputEvents() { }
-
-#else
-
-int Sys_PollXbox360ControllerInputEvents()
+int Sys_PollJoystickInputEvents( int deviceNum )
 {
 	return 0;
 }
-int	Sys_ReturnXbox360ControllerInputEvent( const int n, int& action, int& value, int& value2 )
+
+int	Sys_ReturnJoystickInputEvent( const int n, int& action, int& value )
 {
 	return 0;
 }
-void Sys_EndXbox360ControllerInputEvents() { }
 
-#endif // #if defined(_WIN32)
+void Sys_EndJoystickInputEvents() {}
+
+//=====================================================================================
+
+int	Sys_PollTouchScreenInputEvents()
+{
+	return 0;
+}
+
+int Sys_ReturnTouchScreenInputEvent( const int n, int& action, int& value, int& value2, int& value3, int& value4 )
+{
+	return 0;
+}
+void Sys_EndTouchScreenInputEvents() {}

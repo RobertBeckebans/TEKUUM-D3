@@ -1,7 +1,7 @@
 #ifndef ENTITIESDIALOG_H
 #define ENTITIESDIALOG_H
 
-#include <QDialog>
+#include <QtWidgets/qdialog.h>
 
 namespace Ui
 {

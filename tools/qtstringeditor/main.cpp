@@ -1,9 +1,9 @@
 #include "QtStringEditor.h"
 
-#include <QtGui/QApplication>
+#include <QtWidgets/QApplication>
 #include <qlabel.h>
 
-#include "../../idlib/precompiled.h"
+#include "precompiled.h"
 #pragma hdrstop
 
 #include "../../game/game.h"

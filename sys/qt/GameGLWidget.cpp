@@ -109,8 +109,8 @@ void GameGLWidget::paintGL()
 
 void GameGLWidget::resizeGL( int width, int height )
 {
-	glConfig.vidWidth = width;
-	glConfig.vidHeight = height;
+	glConfig.nativeScreenWidth = width;
+	glConfig.nativeScreenHeight = height;
 }
 
 void GameGLWidget::onTimer()

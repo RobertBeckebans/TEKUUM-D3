@@ -1,4 +1,4 @@
-#include <QtGui/QApplication>
+#include <QtWidgets/QApplication>
 #include <QLocale>
 #include <QTranslator>
 #include <QTextCodec>
@@ -8,7 +8,7 @@
 
 #include "MainWindow.h"
 
-#include "../../idlib/precompiled.h"
+#include "precompiled.h"
 #pragma hdrstop
 
 #include "../../game/game.h"
@@ -177,7 +177,7 @@ void	QtRadiantInit()
 
 		QTranslator translator;
 		translator.load( QString( ":/translations/" ) + locale );
-		QTextCodec::setCodecForTr( QTextCodec::codecForName( "utf8" ) );
+		QTextCodec::setCodecForLocale( QTextCodec::codecForName( "utf8" ) );
 		s_qtMain->installTranslator( &translator );
 		didTranslator = true;
 	}

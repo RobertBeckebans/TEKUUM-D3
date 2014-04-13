@@ -1,7 +1,7 @@
 #ifndef FINDREPLACEDIALOG_H
 #define FINDREPLACEDIALOG_H
 
-#include <QDialog>
+#include <QtWidgets>
 
 namespace Ui
 {

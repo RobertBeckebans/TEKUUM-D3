@@ -1,7 +1,7 @@
 #ifndef QTSTRINGEDITOR_H
 #define QTSTRINGEDITOR_H
 
-#include <QtGui/QMainWindow>
+#include <QtWidgets/QMainWindow>
 #include "ui_QtStringEditor.h"
 
 class QtStringEditor : public QMainWindow

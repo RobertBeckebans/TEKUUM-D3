@@ -34,10 +34,10 @@ If you have questions concerning this license or the applicable additional terms
 
 #include "GameMainWindow.h"
 
-#include "../../idlib/precompiled.h"
+#include "precompiled.h"
 #include "../../renderer/tr_local.h"
 #include "../win32/win_local.h"
-#pragma hdrstop
+//#pragma hdrstop
 
 //GameMainWindow::GameMainWindow( int argc, const char** argv )
 //:QGLWidget(QGLFormat(QGL::SampleBuffers))
@@ -85,7 +85,7 @@ void GameMainWindow::keyPressEvent( QKeyEvent* event )
 	if( event->key() == Qt::Key_AsciiCircum )
 	{
 		ch = Qt::Key_AsciiCircum;
-		Sys_QueEvent( Sys_Milliseconds(), SE_KEY, ch, 1, 0, NULL );
+		Sys_QueEvent( SE_KEY, ch, 1, 0, NULL, 0 );
 	}
 	else
 	{
@@ -93,7 +93,7 @@ void GameMainWindow::keyPressEvent( QKeyEvent* event )
 		
 		if( ch != -1 )
 		{
-			Sys_QueEvent( Sys_Milliseconds(), SE_KEY, ch, 1, 0, NULL );
+			Sys_QueEvent( SE_KEY, ch, 1, 0, NULL, 0 );
 		}
 		else
 		{
@@ -103,16 +103,16 @@ void GameMainWindow::keyPressEvent( QKeyEvent* event )
 				{
 					qch = qch.toLower();
 				}
-				ch = qch.toAscii();
-				Sys_QueEvent( Sys_Milliseconds(), SE_CHAR, ch, 1, 0, NULL );
+				ch = qch.toLatin1();
+				Sys_QueEvent( SE_CHAR, ch, 1, 0, NULL, 0 );
 			}
 			else if( qch.isSpace() )
 			{
 				if( !( event->modifiers() & Qt::ShiftModifier ) )
 				{
 					//qch = qch.toLower();
-					ch = qch.toAscii();
-					Sys_QueEvent( Sys_Milliseconds(), SE_CHAR, ch, 1, 0, NULL );
+					ch = qch.toLatin1();
+					Sys_QueEvent( SE_CHAR, ch, 1, 0, NULL, 0 );
 				}
 			}
 			else if( qch.isPunct() )
@@ -121,8 +121,8 @@ void GameMainWindow::keyPressEvent( QKeyEvent* event )
 				{
 					qch = qch.toLower();
 				}
-				ch = qch.toAscii();
-				Sys_QueEvent( Sys_Milliseconds(), SE_CHAR, ch, 1, 0, NULL );
+				ch = qch.toLatin1();
+				Sys_QueEvent( SE_CHAR, ch, 1, 0, NULL, 0 );
 			}
 		}
 	}
@@ -138,7 +138,7 @@ void GameMainWindow::keyReleaseEvent( QKeyEvent* event )
 	if( event->key() == Qt::Key_AsciiCircum )
 	{
 		ch = Qt::Key_AsciiCircum;
-		Sys_QueEvent( Sys_Milliseconds(), SE_KEY, ch, 0, 0, NULL );
+		Sys_QueEvent( SE_KEY, ch, 0, 0, NULL, 0 );
 	}
 	else
 	{
@@ -146,7 +146,7 @@ void GameMainWindow::keyReleaseEvent( QKeyEvent* event )
 		
 		if( ch != -1 )
 		{
-			Sys_QueEvent( Sys_Milliseconds(), SE_KEY, ch, 0, 0, NULL );
+			Sys_QueEvent( SE_KEY, ch, 0, 0, NULL, 0 );
 		}
 	}
 	/*
@@ -210,10 +210,12 @@ int  GameMainWindow::QKeyToDKey( QKeyEvent* event )
 		// The 3 windows keys
 		{K_LWIN, Qt::Key_Meta},
 		{K_RWIN, Qt::Key_Meta},
-		{K_MENU, Qt::Key_Menu},
+		//{K_MENU, Qt::Key_Menu},
 		
-		{K_ALT, Qt::Key_Alt},
-		{K_CTRL, Qt::Key_Control},
+		{K_LALT, Qt::Key_Alt},
+		{K_RALT, Qt::Key_Alt},
+		{K_LCTRL, Qt::Key_Control},
+		{K_RCTRL, Qt::Key_Control},
 		//{K_SHIFT, Qt::Key_Shift},
 		{K_INS, Qt::Key_Insert},
 		{K_DEL, Qt::Key_Delete},

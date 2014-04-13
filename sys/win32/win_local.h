@@ -150,7 +150,9 @@ typedef struct
 	LPDIRECTINPUT8			g_pdi;
 	LPDIRECTINPUTDEVICE8	g_pMouse;
 	LPDIRECTINPUTDEVICE8	g_pKeyboard;
+#if !defined(USE_QT_WINDOWING)
 	idJoystickWin32			g_Joystick;
+#endif
 	
 } Win32Vars_t;
 

@@ -508,7 +508,8 @@ public:
 	ID_INLINE	bool			Synchronize( unsigned int threadNum, int timeout = WAIT_INFINITE );
 	
 private:
-	idList< idSysSignal* >		signals;
+	// RB: renamed to avoid conflicts with Qt5
+	idList< idSysSignal* >		_signals;
 	idSysInterlockedInteger		busyCount;
 };
 
@@ -519,14 +520,14 @@ idSysThreadSynchronizer::SetNumThreads
 */
 ID_INLINE void idSysThreadSynchronizer::SetNumThreads( unsigned int num )
 {
-	assert( busyCount.GetValue() == signals.Num() );
-	if( ( int )num != signals.Num() )
+	assert( busyCount.GetValue() == _signals.Num() );
+	if( ( int )num != _signals.Num() )
 	{
-		signals.DeleteContents();
-		signals.SetNum( ( int )num );
+		_signals.DeleteContents();
+		_signals.SetNum( ( int )num );
 		for( unsigned int i = 0; i < num; i++ )
 		{
-			signals[i] = new idSysSignal();
+			_signals[i] = new idSysSignal();
 		}
 		busyCount.SetValue( num );
 		SYS_MEMORYBARRIER;
@@ -542,11 +543,11 @@ ID_INLINE void idSysThreadSynchronizer::Signal( unsigned int threadNum )
 {
 	if( busyCount.Decrement() == 0 )
 	{
-		busyCount.SetValue( ( unsigned int ) signals.Num() );
+		busyCount.SetValue( ( unsigned int ) _signals.Num() );
 		SYS_MEMORYBARRIER;
-		for( int i = 0; i < signals.Num(); i++ )
+		for( int i = 0; i < _signals.Num(); i++ )
 		{
-			signals[i]->Raise();
+			_signals[i]->Raise();
 		}
 	}
 }
@@ -558,7 +559,7 @@ idSysThreadSynchronizer::Synchronize
 */
 ID_INLINE bool idSysThreadSynchronizer::Synchronize( unsigned int threadNum, int timeout )
 {
-	return signals[threadNum]->Wait( timeout );
+	return _signals[threadNum]->Wait( timeout );
 }
 
 #endif // !__THREAD_H__

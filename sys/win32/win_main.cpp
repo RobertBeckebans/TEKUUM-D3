@@ -1180,7 +1180,9 @@ void Sys_Init() {
 		common->Error( "SSE2 not supported!" );
 	}
 
+#if !defined(USE_QT_WINDOWING)
 	win32.g_Joystick.Init();
+#endif
 }
 
 /*

@@ -1,7 +1,7 @@
 #ifndef CAMERAWINDOW_H
 #define CAMERAWINDOW_H
 
-#include <QWidget>
+#include <QtWidgets/QWidget>
 #include "Radiant3DWidget.h"
 
 namespace Ui

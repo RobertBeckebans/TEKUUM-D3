@@ -1,7 +1,7 @@
 #ifndef INSPECTORENTITYDOCK_H
 #define INSPECTORENTITYDOCK_H
 
-#include <QWidget>
+#include <QtWidgets/QWidget>
 
 namespace Ui
 {
