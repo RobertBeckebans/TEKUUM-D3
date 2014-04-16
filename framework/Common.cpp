@@ -1454,6 +1454,16 @@ static void Com_QtStringEditor_f( const idCmdArgs& args )
 #endif // defined(USE_QT_TOOLS)
 
 
+CONSOLE_COMMAND( testFormattingSizes, "test printf format security", 0 )
+{
+#ifdef _MSC_VER
+	common->Printf( " sizeof( int32 ): %Iu bytes\n", sizeof( int32 ) );
+	common->Printf( " sizeof( int64 ): %Iu bytes\n", sizeof( int64 ) );
+#else
+	common->Printf( " sizeof( int32 ): %zu bytes\n", sizeof( int32 ) );
+	common->Printf( " sizeof( int64 ): %zu bytes\n", sizeof( int64 ) );
+#endif
+}
 
 // RB end
 
@@ -1473,6 +1483,8 @@ static void PrintMemInfo_f( const idCmdArgs& args )
 	
 	renderSystem->PrintMemInfo( &mi );			// textures and models
 	soundSystem->PrintMemInfo( &mi );			// sounds
+
+	
 	
 	common->Printf( " Used image memory: %s bytes\n", idStr::FormatNumber( mi.imageAssetsTotal ).c_str() );
 	mi.assetTotals += mi.imageAssetsTotal;
