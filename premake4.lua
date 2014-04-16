@@ -972,6 +972,7 @@ end
 			"iphlpapi",
 			"winmm",
 			"ws2_32",
+			"Xinput9_1_0"
 		}
 		--prebuildcommands
 		--{
