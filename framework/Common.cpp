@@ -1483,7 +1483,7 @@ static void PrintMemInfo_f( const idCmdArgs& args )
 	
 	renderSystem->PrintMemInfo( &mi );			// textures and models
 	soundSystem->PrintMemInfo( &mi );			// sounds
-
+	
 	
 	
 	common->Printf( " Used image memory: %s bytes\n", idStr::FormatNumber( mi.imageAssetsTotal ).c_str() );

@@ -149,10 +149,10 @@ void LightingAtSample( const idVec3& origin, const idVec3& normal, idVec3& color
 		
 		idVec3 lightOrigin = light->def.globalLightOrigin;
 		
-		// MrE: if the light is behind the surface
-		if( DotProduct( lightOrigin, normal ) - DotProduct( normal, origin ) < 0 )
-			continue;
-			
+		
+		
+		
+		
 		// testing exact PTPFF
 #if 0
 		if( exactPointToPolygon && light->type == emit_area )
@@ -223,8 +223,20 @@ void LightingAtSample( const idVec3& origin, const idVec3& normal, idVec3& color
 #endif
 		
 		// calculate the amount of light at this sample
-		//if( light->type == emit_point )
+		if( light->def.lightShader->IsAmbientLight() )
 		{
+			add = 255;
+		}
+		else if( light->def.parms.parallel )
+		{
+			// TODO
+		}
+		else if( light->def.parms.pointLight )
+		{
+			// MrE: if the light is behind the surface
+			if( DotProduct( lightOrigin, normal ) - DotProduct( normal, origin ) < 0 )
+				continue;
+				
 			dir = lightOrigin - origin;
 			dist = dir.Normalize();
 			
@@ -255,6 +267,11 @@ void LightingAtSample( const idVec3& origin, const idVec3& normal, idVec3& color
 			}
 #endif
 		}
+		else
+		{
+			// TODO spot light
+		}
+		
 		/*
 		else if(light->type == emit_spotlight)
 		{
@@ -564,7 +581,15 @@ bool LightContributionToPoint( const mapLight_t* light, const idVec3& origin, id
 	*/
 	
 	// calculate the amount of light at this sample
-	//if(light->def.parms.pointLight)//|| light->def.parms.)
+	if( light->def.lightShader->IsAmbientLight() )
+	{
+		add = 255;
+	}
+	else if( light->def.parms.parallel )
+	{
+		// TODO
+	}
+	else if( light->def.parms.pointLight )
 	{
 		idVec3 dir = light->def.globalLightOrigin - origin;
 		float dist = dir.Normalize();

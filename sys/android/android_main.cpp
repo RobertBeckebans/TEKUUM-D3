@@ -275,7 +275,7 @@ const char* Sys_DefaultBasePath()
 	common->Printf( "WARNING: using hardcoded default base path\n" );
 	//return LINUX_DEFAULT_PATH;
 	
-	return "/sdcard/tekuum";
+	return "/sdcard/rbdoom3";
 }
 
 /*
