@@ -229,7 +229,17 @@ void LightingAtSample( const idVec3& origin, const idVec3& normal, idVec3& color
 		}
 		else if( light->def.parms.parallel )
 		{
-			// TODO
+			dir = lightOrigin - origin;
+			dist = dir.Normalize();
+			
+			// clamp the distance to prevent super hot spots
+			if( dist < 16 )
+			{
+				dist = 16;
+			}
+			angle = DotProduct( normal, dir );
+			
+			add = 255 * angle;
 		}
 		else if( light->def.parms.pointLight )
 		{
@@ -587,7 +597,7 @@ bool LightContributionToPoint( const mapLight_t* light, const idVec3& origin, id
 	}
 	else if( light->def.parms.parallel )
 	{
-		// TODO
+		add = 255;
 	}
 	else if( light->def.parms.pointLight )
 	{
