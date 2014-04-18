@@ -275,6 +275,10 @@ void RB_DrawElementsWithCounters( const drawSurf_t* surf )
 							  vertOffset / sizeof( idDrawVert ) );
 #endif
 					
+	// RB: added stats
+	backEnd.pc.c_drawElements++;
+	backEnd.pc.c_drawIndexes += surf->numIndexes;
+	// RB end
 }
 
 /*
@@ -2336,6 +2340,11 @@ static void RB_StencilShadowPass( const drawSurf_t* drawSurfs, const viewLight_t
 #endif
 		}
 		
+		// RB: added stats
+		backEnd.pc.c_shadowElements++;
+		backEnd.pc.c_shadowIndexes += drawSurf->numIndexes;
+		// RB end
+		
 		if( !renderZPass && r_useStencilShadowPreload.GetBool() )
 		{
 			// render again with Z-pass
@@ -2358,6 +2367,11 @@ static void RB_StencilShadowPass( const drawSurf_t* drawSurfs, const viewLight_t
 				glDrawElementsBaseVertex( GL_TRIANGLES, r_singleTriangle.GetBool() ? 3 : drawSurf->numIndexes, GL_INDEX_TYPE, ( triIndex_t* )indexOffset, vertOffset / sizeof( idShadowVert ) );
 #endif
 			}
+			
+			// RB: added stats
+			backEnd.pc.c_shadowElements++;
+			backEnd.pc.c_shadowIndexes += drawSurf->numIndexes;
+			// RB end
 		}
 	}
 	
