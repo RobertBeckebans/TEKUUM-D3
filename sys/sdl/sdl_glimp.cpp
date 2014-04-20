@@ -187,6 +187,8 @@ bool GLimp_Init( glimpParms_t parms )
 		// RB begin
 		if( r_useOpenGL32.GetInteger() > 0 )
 		{
+			glConfig.driverType = GLDRV_OPENGL32_COMPATIBILITY_PROFILE;
+			
 			SDL_GL_SetAttribute( SDL_GL_CONTEXT_MAJOR_VERSION, 3 );
 			SDL_GL_SetAttribute( SDL_GL_CONTEXT_MINOR_VERSION, 2 );
 			
@@ -198,6 +200,8 @@ bool GLimp_Init( glimpParms_t parms )
 		
 		if( r_useOpenGL32.GetInteger() > 1 )
 		{
+			glConfig.driverType = GLDRV_OPENGL32_CORE_PROFILE;
+			
 			SDL_GL_SetAttribute( SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE );
 		}
 		// RB end
@@ -250,6 +254,7 @@ bool GLimp_Init( glimpParms_t parms )
 #else
 		// no SDL 2 -> no OpenGL 3 context
 		r_useOpenGL32.SetInteger( 0 );
+		glConfig.driverType = GLDRV_OPENGL3X;
 		
 		SDL_WM_SetCaption( GAME_NAME, GAME_NAME );
 		
