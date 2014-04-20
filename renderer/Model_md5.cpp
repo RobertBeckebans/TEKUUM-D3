@@ -3,7 +3,7 @@
 
 Doom 3 BFG Edition GPL Source Code
 Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
-Copyright (C) 2013 Robert Beckebans
+Copyright (C) 2013-2014 Robert Beckebans
 
 This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
@@ -43,11 +43,7 @@ static const char* MD5_SnapshotName = "_MD5_Snapshot_";
 static const byte MD5B_VERSION = 106;
 static const unsigned int MD5B_MAGIC = ( '5' << 24 ) | ( 'D' << 16 ) | ( 'M' << 8 ) | MD5B_VERSION;
 
-#if defined(USE_GPU_SKINNING)
 idCVar r_useGPUSkinning( "r_useGPUSkinning", "1", CVAR_INTEGER, "animate normals and tangents instead of deriving" );
-#else
-idCVar r_useGPUSkinning( "r_useGPUSkinning", "0", CVAR_INTEGER, "animate normals and tangents instead of deriving" );
-#endif
 
 /***********************************************************************
 
@@ -531,7 +527,9 @@ void idMD5Mesh::UpdateSurface( const struct renderEntity_s* ent, const idJointMa
 	tri->indexCache = deformInfo->staticIndexCache;
 	
 	tri->numVerts = deformInfo->numOutputVerts;
-	if( r_useGPUSkinning.GetBool() )
+	
+	// RB: added check wether GPU skinning is available at all
+	if( r_useGPUSkinning.GetBool() && glConfig.gpuSkinningAvailable )
 	{
 		if( tri->verts != NULL && tri->verts != deformInfo->verts )
 		{

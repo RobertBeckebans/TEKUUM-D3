@@ -212,7 +212,7 @@ is limited to GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT, which is 256 on current nvidia
 so joint offsets, which are multiples of 48 bytes, must be in multiples of 16 = 768 bytes.
 ================================================
 */
-#if defined(USE_GPU_SKINNING)
+#if !defined(USE_GLES2)
 class idJointBuffer
 {
 public:

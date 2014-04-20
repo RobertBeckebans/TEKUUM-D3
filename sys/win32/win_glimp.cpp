@@ -301,12 +301,7 @@ CreateOpenGLContextOnDC
 */
 static HGLRC CreateOpenGLContextOnDC( const HDC hdc, const bool debugContext )
 {
-	// RB begin
-#if defined(USE_GLES2)
-	int useOpenGL32 = 0;
-#else
 	int useOpenGL32 = r_useOpenGL32.GetInteger();
-#endif
 	HGLRC m_hrc = NULL;
 	
 	for( int i = 0; i < 2; i++ )
@@ -315,14 +310,7 @@ static HGLRC CreateOpenGLContextOnDC( const HDC hdc, const bool debugContext )
 		const int glMinorVersion = ( useOpenGL32 != 0 ) ? 2 : 0;
 		const int glDebugFlag = debugContext ? WGL_CONTEXT_DEBUG_BIT_ARB : 0;
 		const int glProfileMask = ( useOpenGL32 != 0 ) ? WGL_CONTEXT_PROFILE_MASK_ARB : 0;
-		int glProfile = ( useOpenGL32 == 1 ) ? WGL_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB : ( ( useOpenGL32 == 2 ) ? WGL_CONTEXT_CORE_PROFILE_BIT_ARB : 0 );
-		
-#if defined(USE_GLES2)
-		if( WGLEW_EXT_create_context_es2_profile != 0 )
-		{
-			glProfile |= WGL_CONTEXT_ES2_PROFILE_BIT_EXT;
-		}
-#endif
+		const int glProfile = ( useOpenGL32 == 1 ) ? WGL_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB : ( ( useOpenGL32 == 2 ) ? WGL_CONTEXT_CORE_PROFILE_BIT_ARB : 0 );
 		const int attribs[] =
 		{
 			WGL_CONTEXT_MAJOR_VERSION_ARB,	glMajorVersion,
@@ -331,12 +319,25 @@ static HGLRC CreateOpenGLContextOnDC( const HDC hdc, const bool debugContext )
 			glProfileMask,					glProfile,
 			0
 		};
-		// RB end
 		
 		m_hrc = wglCreateContextAttribsARB( hdc, 0, attribs );
 		if( m_hrc != NULL )
 		{
 			idLib::Printf( "created OpenGL %d.%d context\n", glMajorVersion, glMinorVersion );
+			
+			if( useOpenGL32 == 2 )
+			{
+				glConfig.driverType = GLDRV_OPENGL32_CORE_PROFILE;
+			}
+			else if( useOpenGL32 == 1 )
+			{
+				glConfig.driverType = GLDRV_OPENGL32_COMPATIBILITY_PROFILE;
+			}
+			else
+			{
+				glConfig.driverType = GLDRV_OPENGL3X;
+			}
+			
 			break;
 		}
 		
@@ -449,7 +450,7 @@ static bool GLW_InitDriver( glimpParms_t parms )
 	}
 	
 	// the multisample path uses the wgl
-	if( WGLEW_ARB_pixel_format )// && parms.multiSamples > 1 )
+	if( wglChoosePixelFormatARB )
 	{
 		win32.pixelformat = GLW_ChoosePixelFormat( win32.hDC, parms.multiSamples, parms.stereo );
 	}

@@ -60,6 +60,8 @@ bool GLimp_Init( glimpParms_t parms )
 	
 	//const char *glstring;
 	
+	glConfig.driverType = GLDRV_OPENGL_ES3;
+	
 	glConfig.isFullscreen = true;
 	
 	//s_eglDisplay = eglGetCurrentDisplay();

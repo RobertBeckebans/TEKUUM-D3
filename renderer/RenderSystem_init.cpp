@@ -3,7 +3,7 @@
 
 Doom 3 BFG Edition GPL Source Code
 Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
-Copyright (C) 2012-2013 Robert Beckebans
+Copyright (C) 2012-2014 Robert Beckebans
 
 This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
@@ -348,6 +348,13 @@ static void R_CheckPortableExtensions()
 		glConfig.vendor = VENDOR_INTEL;
 	}
 	
+	// RB: Mesa support
+	if( idStr::Icmpn( glConfig.renderer_string, "Mesa", 4 ) == 0 || idStr::Icmpn( glConfig.renderer_string, "X.org", 4 ) == 0 )
+	{
+		glConfig.driverType = GLDRV_OPENGL_MESA;
+	}
+	// RB end
+	
 	// GL_ARB_multitexture
 #if defined(USE_GLES2) || defined(USE_GLES3)
 	glConfig.multitextureAvailable = true;
@@ -506,6 +513,9 @@ static void R_CheckPortableExtensions()
 		}
 	}
 #endif
+	
+	// RB: make GPU skinning optional for weak OpenGL drivers
+	glConfig.gpuSkinningAvailable = glConfig.uniformBufferAvailable && ( glConfig.driverType == GLDRV_OPENGL3X || glConfig.driverType == GLDRV_OPENGL32_CORE_PROFILE || glConfig.driverType == GLDRV_OPENGL32_COMPATIBILITY_PROFILE );
 	
 	// ATI_separate_stencil / OpenGL 2.0 separate stencil
 #if defined(USE_GLES2) || defined(USE_GLES3)
@@ -746,7 +756,7 @@ void R_SetNewMode( const bool fullInit )
 			}
 			else
 			{
-				if( r_vidMode.GetInteger() > modeList.Num() )
+				if( r_vidMode.GetInteger() >= modeList.Num() )
 				{
 					idLib::Printf( "r_vidMode reset from %i to 0.\n", r_vidMode.GetInteger() );
 					r_vidMode.SetInteger( 0 );
@@ -999,10 +1009,7 @@ bool GL_CheckErrors_( const char* filename, int line )
 				break;
 		}
 		
-		//if( !r_ignoreGLErrors.GetBool() )
-		//{
 		common->Printf( "caught OpenGL error: %s in file %s line %i\n", s, filename, line );
-		//}
 	}
 	
 	return error;
@@ -2059,6 +2066,15 @@ void GfxInfo_f( const idCmdArgs& args )
 		common->Printf( "screen size manually forced to %5.1f cm width (%4.1f\" diagonal)\n",
 						renderSystem->GetPhysicalScreenWidthInCentimeters(), renderSystem->GetPhysicalScreenWidthInCentimeters() / 2.54f
 						* sqrt( ( float )( 16 * 16 + 9 * 9 ) ) / 16.0f );
+	}
+	
+	if( glConfig.gpuSkinningAvailable )
+	{
+		common->Printf( S_COLOR_GREEN "GPU skeletal animation available\n" );
+	}
+	else
+	{
+		common->Printf( S_COLOR_GREEN "GPU skeletal animation not available (slower CPU path active)\n" );
 	}
 }
 

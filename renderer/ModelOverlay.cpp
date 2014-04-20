@@ -418,7 +418,8 @@ void idRenderModelOverlay::CreateOverlay( const idRenderModel* model, const idPl
 			continue;
 		}
 		
-		if( tri->staticModelWithJoints != NULL && r_useGPUSkinning.GetBool() )
+		// RB: added check wether GPU skinning is available at all
+		if( tri->staticModelWithJoints != NULL && r_useGPUSkinning.GetBool() && glConfig.gpuSkinningAvailable )
 		{
 			R_OverlayPointCullSkinned( cullBits.Ptr(), texCoordS.Ptr(), texCoordT.Ptr(), localTextureAxis, tri->verts, tri->numVerts, tri->staticModelWithJoints->jointsInverted );
 		}
@@ -426,6 +427,7 @@ void idRenderModelOverlay::CreateOverlay( const idRenderModel* model, const idPl
 		{
 			R_OverlayPointCullStatic( cullBits.Ptr(), texCoordS.Ptr(), texCoordT.Ptr(), localTextureAxis, tri->verts, tri->numVerts );
 		}
+		// RB end
 		
 		// start streaming the indexes
 		idODSStreamedArray< triIndex_t, 256, SBT_QUAD, 3 > indexesODS( tri->indexes, tri->numIndexes );

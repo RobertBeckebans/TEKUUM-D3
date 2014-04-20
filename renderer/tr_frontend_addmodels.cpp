@@ -3,7 +3,7 @@
 
 Doom 3 BFG Edition GPL Source Code
 Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
-Copyright (C) 2013 Robert Beckebans
+Copyright (C) 2013-2014 Robert Beckebans
 
 This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
@@ -35,7 +35,7 @@ If you have questions concerning this license or the applicable additional terms
 
 #if defined(USE_GLES2) || defined(USE_GLES3)
 idCVar r_skipStaticShadows( "r_skipStaticShadows", "0", CVAR_RENDERER | CVAR_BOOL, "skip static shadows" );
-idCVar r_skipDynamicShadows( "r_skipDynamicShadows", "", CVAR_RENDERER | CVAR_BOOL, "skip dynamic shadows" );
+idCVar r_skipDynamicShadows( "r_skipDynamicShadows", "0", CVAR_RENDERER | CVAR_BOOL, "skip dynamic shadows" );
 idCVar r_useParallelAddModels( "r_useParallelAddModels", "1", CVAR_RENDERER | CVAR_BOOL, "add all models in parallel with jobs" );
 idCVar r_useParallelAddShadows( "r_useParallelAddShadows", "1", CVAR_RENDERER | CVAR_INTEGER, "0 = off, 1 = threaded", 0, 1 );
 idCVar r_cullDynamicLightTriangles( "r_cullDynamicLightTriangles", "0", CVAR_RENDERER | CVAR_BOOL, "cull surface triangles that are outside the light frustum so they do not get rendered for interactions" );
@@ -355,11 +355,13 @@ R_SetupDrawSurfJoints
 */
 void R_SetupDrawSurfJoints( drawSurf_t* drawSurf, const srfTriangles_t* tri, const idMaterial* shader )
 {
-	if( tri->staticModelWithJoints == NULL || !r_useGPUSkinning.GetBool() )
+	// RB: added check wether GPU skinning is available at all
+	if( tri->staticModelWithJoints == NULL || !r_useGPUSkinning.GetBool() || !glConfig.gpuSkinningAvailable )
 	{
 		drawSurf->jointCache = 0;
 		return;
 	}
+	// RB end
 	
 	idRenderModelStatic* model = tri->staticModelWithJoints;
 	assert( model->jointsInverted != NULL );
@@ -702,7 +704,10 @@ void R_AddSingleModel( viewEntity_t* vEntity )
 		// If the entire model wasn't visible, there is no need to check the
 		// individual surfaces.
 		const bool surfaceDirectlyVisible = modelIsVisible && !idRenderMatrix::CullBoundsToMVP( vEntity->mvp, tri->bounds );
-		const bool gpuSkinned = ( tri->staticModelWithJoints != NULL && r_useGPUSkinning.GetBool() );
+		
+		// RB: added check wether GPU skinning is available at all
+		const bool gpuSkinned = ( tri->staticModelWithJoints != NULL && r_useGPUSkinning.GetBool() && glConfig.gpuSkinningAvailable );
+		// RB end
 		
 		//--------------------------
 		// base drawing surface

@@ -3,7 +3,7 @@
 
 Doom 3 BFG Edition GPL Source Code
 Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
-Copyright (C) 2013 Robert Beckebans
+Copyright (C) 2013-2014 Robert Beckebans
 
 This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
@@ -33,11 +33,8 @@ If you have questions concerning this license or the applicable additional terms
 #include "tr_local.h"
 
 idCVar r_skipStripDeadCode( "r_skipStripDeadCode", "0", CVAR_BOOL, "Skip stripping dead code" );
-#if defined(USE_GLES2) || defined(USE_GLES3)
 idCVar r_useUniformArrays( "r_useUniformArrays", "1", CVAR_BOOL, "" );
-#else
-idCVar r_useUniformArrays( "r_useUniformArrays", "1", CVAR_BOOL, "" );
-#endif
+
 // DG: the AMD drivers output a lot of useless warnings which are fscking annoying, added this CVar to suppress them
 idCVar r_displayGLSLCompilerMessages( "r_displayGLSLCompilerMessages", "1", CVAR_BOOL | CVAR_ARCHIVE, "Show info messages the GPU driver outputs when compiling the shaders" );
 // DG end
@@ -119,11 +116,7 @@ attribInfo_t attribsPC[] =
 	{ "float4",		"color2",		"COLOR1",		"in_Color2",			PC_ATTRIB_INDEX_COLOR2,			AT_VS_IN,		VERTEX_MASK_COLOR2 },
 	
 	// pre-defined vertex program output
-#if defined(USE_GLES2) || defined(USE_GLES3)
 	{ "float4",		"position",		"POSITION",		"gl_Position",			0,	AT_VS_OUT | AT_VS_OUT_RESERVED,		0 },
-#else
-	{ "float4",		"position",		"POSITION",		"gl_Position",			0,	AT_VS_OUT,		0 },
-#endif
 	{ "float",		"clip0",		"CLP0",			"gl_ClipDistance[0]",	0,	AT_VS_OUT,		0 },
 	{ "float",		"clip1",		"CLP1",			"gl_ClipDistance[1]",	0,	AT_VS_OUT,		0 },
 	{ "float",		"clip2",		"CLP2",			"gl_ClipDistance[2]",	0,	AT_VS_OUT,		0 },
@@ -132,18 +125,11 @@ attribInfo_t attribsPC[] =
 	{ "float",		"clip5",		"CLP5",			"gl_ClipDistance[5]",	0,	AT_VS_OUT,		0 },
 	
 	// pre-defined fragment program input
-#if defined(USE_GLES2) || defined(USE_GLES3)
 	{ "float4",		"position",		"WPOS",			"gl_FragCoord",			0,	AT_PS_IN | AT_PS_IN_RESERVED,		0 },
 	{ "half4",		"hposition",	"WPOS",			"gl_FragCoord",			0,	AT_PS_IN | AT_PS_IN_RESERVED,		0 },
 	{ "float",		"facing",		"FACE",			"gl_FrontFacing",		0,	AT_PS_IN | AT_PS_IN_RESERVED,		0 },
-#else
-	{ "float4",		"position",		"WPOS",			"gl_FragCoord",			0,	AT_PS_IN,		0 },
-	{ "half4",		"hposition",	"WPOS",			"gl_FragCoord",			0,	AT_PS_IN,		0 },
-	{ "float",		"facing",		"FACE",			"gl_FrontFacing",		0,	AT_PS_IN,		0 },
-#endif
 	
 	// fragment program output
-#if defined(USE_GLES2) || defined(USE_GLES3)
 	{ "float4",		"color",		"COLOR",		"gl_FragColor",		0,	AT_PS_OUT | AT_PS_OUT_RESERVED,		0 }, // GLSL version 1.2 doesn't allow for custom color name mappings
 	{ "half4",		"hcolor",		"COLOR",		"gl_FragColor",		0,	AT_PS_OUT | AT_PS_OUT_RESERVED,		0 },
 	{ "float4",		"color0",		"COLOR0",		"gl_FragColor",		0,	AT_PS_OUT | AT_PS_OUT_RESERVED,		0 },
@@ -151,15 +137,6 @@ attribInfo_t attribsPC[] =
 	{ "float4",		"color2",		"COLOR2",		"gl_FragColor",		2,	AT_PS_OUT | AT_PS_OUT_RESERVED,		0 },
 	{ "float4",		"color3",		"COLOR3",		"gl_FragColor",		3,	AT_PS_OUT | AT_PS_OUT_RESERVED,		0 },
 	{ "float",		"depth",		"DEPTH",		"gl_FragDepth",		4,	AT_PS_OUT | AT_PS_OUT_RESERVED,		0 },
-#else
-	{ "float4",		"color",		"COLOR",		"gl_FragColor",		0,	AT_PS_OUT,		0 }, // GLSL version 1.2 doesn't allow for custom color name mappings
-	{ "half4",		"hcolor",		"COLOR",		"gl_FragColor",		0,	AT_PS_OUT,		0 },
-	{ "float4",		"color0",		"COLOR0",		"gl_FragColor",		0,	AT_PS_OUT,		0 },
-	{ "float4",		"color1",		"COLOR1",		"gl_FragColor",		1,	AT_PS_OUT,		0 },
-	{ "float4",		"color2",		"COLOR2",		"gl_FragColor",		2,	AT_PS_OUT,		0 },
-	{ "float4",		"color3",		"COLOR3",		"gl_FragColor",		3,	AT_PS_OUT,		0 },
-	{ "float",		"depth",		"DEPTH",		"gl_FragDepth",		4,	AT_PS_OUT,		0 },
-#endif
 	
 	// vertex to fragment program pass through
 #if 0 //defined(USE_GLES2)
@@ -359,13 +336,18 @@ idStr StripDeadCode( const idStr& in, const char* name )
 	src.LoadMemory( in.c_str(), in.Length(), name );
 	src.AddDefine( "PC" );
 	
-#if ( defined(USE_GLES2) || defined(USE_GLES3) ) && !defined(USE_MESA)
-	src.AddDefine( "GLES2" );
-#endif
+	switch( glConfig.driverType )
+	{
+		case GLDRV_OPENGL_ES2:
+		case GLDRV_OPENGL_ES3:
+			src.AddDefine( "GLES2" );
+			break;
+	}
 	
-#if defined(USE_GPU_SKINNING)
-	src.AddDefine( "USE_GPU_SKINNING" );
-#endif
+	if( glConfig.gpuSkinningAvailable )
+	{
+		src.AddDefine( "USE_GPU_SKINNING" );
+	}
 	
 	idList< idCGBlock > blocks;
 	
@@ -608,7 +590,7 @@ struct typeConversion_t
 
 // RB begin
 #if defined(USE_GLES2)
-const char* vertexInsert =
+const char* vertexInsert_GLSL_ES_1_0 =
 {
 	"#version 100\n"
 	"#define GLES2\n"
@@ -622,8 +604,8 @@ const char* vertexInsert =
 	//"vec4 tex2Dlod( sampler2D sampler, vec4 texcoord ) { return textureLod( sampler, texcoord.xy, texcoord.w ); }\n"
 	"\n"
 };
-#elif defined(USE_GLES3)
-const char* vertexInsert =
+#else
+const char* vertexInsert_GLSL_ES_1_0 =
 {
 	"#version 100\n"
 
@@ -650,8 +632,9 @@ const char* vertexInsert =
 	//"vec4 tex2Dlod( sampler2D sampler, vec4 texcoord ) { return textureLod( sampler, texcoord.xy, texcoord.w ); }\n"
 	"\n"
 };
-#else
-const char* vertexInsert =
+#endif // #if defined(USE_GLES2)
+
+const char* vertexInsert_GLSL_1_50 =
 {
 	"#version 150\n"
 	"#define PC\n"
@@ -663,11 +646,10 @@ const char* vertexInsert =
 	"vec4 tex2Dlod( sampler2D sampler, vec4 texcoord ) { return textureLod( sampler, texcoord.xy, texcoord.w ); }\n"
 	"\n"
 };
-#endif // #if defined(USE_GLES3)
 
 
 #if defined(USE_GLES2)
-const char* fragmentInsert =
+const char* fragmentInsert_GLSL_ES_1_0 =
 {
 	"#version 100\n"
 	"#define GLES2\n"
@@ -709,8 +691,8 @@ const char* fragmentInsert =
 	//"vec4 texCUBElod( samplerCube sampler, vec4 texcoord ) { return textureLod( sampler, texcoord.xyz, texcoord.w ); }\n"
 	//"\n"
 };
-#elif defined(USE_GLES3)
-const char* fragmentInsert =
+#else
+const char* fragmentInsert_GLSL_ES_1_0 =
 {
 	"#version 100\n"
 
@@ -761,8 +743,10 @@ const char* fragmentInsert =
 	//"vec4 texCUBElod( samplerCube sampler, vec4 texcoord ) { return textureLod( sampler, texcoord.xyz, texcoord.w ); }\n"
 	//"\n"
 };
-#else
-const char* fragmentInsert =
+#endif // #if defined(USE_GLES2)
+
+
+const char* fragmentInsert_GLSL_1_50 =
 {
 	"#version 150\n"
 	"#define PC\n"
@@ -801,7 +785,6 @@ const char* fragmentInsert =
 	"vec4 texCUBElod( samplerCube sampler, vec4 texcoord ) { return textureLod( sampler, texcoord.xyz, texcoord.w ); }\n"
 	"\n"
 };
-#endif // #if defined(USE_GLES2)
 // RB end
 
 struct builtinConversion_t
@@ -891,15 +874,26 @@ void ParseInOutStruct( idLexer& src, int attribType, int attribIgnoreType, idLis
 		}
 		
 		// RB: ignore reserved builtin gl_ uniforms
-		for( int i = 0; attribsPC[i].semantic != NULL; i++ )
+		switch( glConfig.driverType )
 		{
-			if( var.nameGLSL.Cmp( attribsPC[i].glsl ) == 0 )
+			case GLDRV_OPENGL32_CORE_PROFILE:
+			case GLDRV_OPENGL_ES2:
+			case GLDRV_OPENGL_ES3:
+			case GLDRV_OPENGL_MESA:
 			{
-				if( ( attribsPC[i].flags & attribIgnoreType ) != 0 )
+				for( int i = 0; attribsPC[i].semantic != NULL; i++ )
 				{
-					var.declareInOut = false;
-					break;
+					if( var.nameGLSL.Cmp( attribsPC[i].glsl ) == 0 )
+					{
+						if( ( attribsPC[i].flags & attribIgnoreType ) != 0 )
+						{
+							var.declareInOut = false;
+							break;
+						}
+					}
 				}
+				
+				break;
 			}
 		}
 		// RB end
@@ -964,13 +958,24 @@ idStr ConvertCG2GLSL( const idStr& in, const char* name, bool isVertexProgram, i
 				{
 					if( varsIn[i].declareInOut )
 					{
-// RB begin
-#if defined(USE_GLES2) || defined(USE_GLES3)
-						program += "attribute " + varsIn[i].type + " " + varsIn[i].nameGLSL + ";\n";
-#else
-						program += "in " + varsIn[i].type + " " + varsIn[i].nameGLSL + ";\n";
-#endif
-// RB end
+						// RB begin
+						switch( glConfig.driverType )
+						{
+							case GLDRV_OPENGL_ES2:
+							case GLDRV_OPENGL_ES3:
+							case GLDRV_OPENGL_MESA:
+							{
+								program += "attribute " + varsIn[i].type + " " + varsIn[i].nameGLSL + ";\n";
+								break;
+							}
+							
+							default:
+							{
+								program += "in " + varsIn[i].type + " " + varsIn[i].nameGLSL + ";\n";
+								break;
+							}
+						}
+						// RB end
 					}
 				}
 				continue;
@@ -980,18 +985,30 @@ idStr ConvertCG2GLSL( const idStr& in, const char* name, bool isVertexProgram, i
 				// RB begin
 				ParseInOutStruct( src, AT_VS_OUT, AT_VS_OUT_RESERVED, varsOut );
 				// RB end
+				
 				program += "\n";
 				for( int i = 0; i < varsOut.Num(); i++ )
 				{
 					if( varsOut[i].declareInOut )
 					{
-// RB begin
-#if defined(USE_GLES2) || defined(USE_GLES3)
-						program += "varying " + varsOut[i].type + " " + varsOut[i].nameGLSL + ";\n";
-#else
-						program += "out " + varsOut[i].type + " " + varsOut[i].nameGLSL + ";\n";
-#endif
-// RB end
+						// RB begin
+						switch( glConfig.driverType )
+						{
+							case GLDRV_OPENGL_ES2:
+							case GLDRV_OPENGL_ES3:
+							case GLDRV_OPENGL_MESA:
+							{
+								program += "varying " + varsOut[i].type + " " + varsOut[i].nameGLSL + ";\n";
+								break;
+							}
+							
+							default:
+							{
+								program += "out " + varsOut[i].type + " " + varsOut[i].nameGLSL + ";\n";
+								break;
+							}
+						}
+						// RB end
 					}
 				}
 				continue;
@@ -1004,13 +1021,22 @@ idStr ConvertCG2GLSL( const idStr& in, const char* name, bool isVertexProgram, i
 				{
 					if( varsIn[i].declareInOut )
 					{
-// RB begin
-#if defined(USE_GLES2) || defined(USE_GLES3)
-						program += "varying " + varsIn[i].type + " " + varsIn[i].nameGLSL + ";\n";
-#else
-						program += "in " + varsIn[i].type + " " + varsIn[i].nameGLSL + ";\n";
-#endif
-// RB end
+						// RB begin
+						switch( glConfig.driverType )
+						{
+							case GLDRV_OPENGL_ES2:
+							case GLDRV_OPENGL_ES3:
+							case GLDRV_OPENGL_MESA:
+							{
+								program += "varying " + varsIn[i].type + " " + varsIn[i].nameGLSL + ";\n";
+								break;
+							}
+							
+							default:
+								program += "in " + varsIn[i].type + " " + varsIn[i].nameGLSL + ";\n";
+								break;
+						}
+						// RB end
 					}
 				}
 				inOutVariable_t var;
@@ -1025,6 +1051,7 @@ idStr ConvertCG2GLSL( const idStr& in, const char* name, bool isVertexProgram, i
 				// RB begin
 				ParseInOutStruct( src, AT_PS_OUT, AT_PS_OUT_RESERVED, varsOut );
 				// RB end
+				
 				program += "\n";
 				for( int i = 0; i < varsOut.Num(); i++ )
 				{
@@ -1226,16 +1253,52 @@ idStr ConvertCG2GLSL( const idStr& in, const char* name, bool isVertexProgram, i
 	
 	idStr out;
 	
+	// RB: changed to allow multiple versions of GLSL
 	if( isVertexProgram )
 	{
-		out.ReAllocate( idStr::Length( vertexInsert ) + in.Length() * 2, false );
-		out += vertexInsert;
+		switch( glConfig.driverType )
+		{
+			case GLDRV_OPENGL_ES2:
+			case GLDRV_OPENGL_ES3:
+			case GLDRV_OPENGL_MESA:
+			{
+				out.ReAllocate( idStr::Length( vertexInsert_GLSL_ES_1_0 ) + in.Length() * 2, false );
+				out += vertexInsert_GLSL_ES_1_0;
+				break;
+			}
+			
+			default:
+			{
+				out.ReAllocate( idStr::Length( vertexInsert_GLSL_1_50 ) + in.Length() * 2, false );
+				out += vertexInsert_GLSL_1_50;
+				break;
+			}
+		}
+		
+		
 	}
 	else
 	{
-		out.ReAllocate( idStr::Length( fragmentInsert ) + in.Length() * 2, false );
-		out += fragmentInsert;
+		switch( glConfig.driverType )
+		{
+			case GLDRV_OPENGL_ES2:
+			case GLDRV_OPENGL_ES3:
+			case GLDRV_OPENGL_MESA:
+			{
+				out.ReAllocate( idStr::Length( fragmentInsert_GLSL_ES_1_0 ) + in.Length() * 2, false );
+				out += fragmentInsert_GLSL_ES_1_0;
+				break;
+			}
+			
+			default:
+			{
+				out.ReAllocate( idStr::Length( fragmentInsert_GLSL_1_50 ) + in.Length() * 2, false );
+				out += fragmentInsert_GLSL_1_50;
+				break;
+			}
+		}
 	}
+	// RB end
 	
 	if( uniformList.Num() > 0 )
 	{
@@ -1286,13 +1349,24 @@ GLuint idRenderProgManager::LoadGLSLShader( GLenum target, const char* name, idL
 	outFileHLSL.Format( "renderprogs/hlsl/%s", name );
 	outFileHLSL.StripFileExtension();
 	
-#if defined(USE_GLES2) || defined(USE_GLES3)
-	outFileGLSL.Format( "renderprogs/glsles-1.0/%s", name );
-	outFileUniforms.Format( "renderprogs/glsles-1.0/%s", name );
-#else
-	outFileGLSL.Format( "renderprogs/glsl-1.50/%s", name );
-	outFileUniforms.Format( "renderprogs/glsl-1.50/%s", name );
-#endif
+	switch( glConfig.driverType )
+	{
+		case GLDRV_OPENGL_ES2:
+		case GLDRV_OPENGL_ES3:
+		case GLDRV_OPENGL_MESA:
+		{
+			outFileGLSL.Format( "renderprogs/glsles-1.0/%s", name );
+			outFileUniforms.Format( "renderprogs/glsles-1.0/%s", name );
+			break;
+		}
+		
+		default:
+		{
+			outFileGLSL.Format( "renderprogs/glsl-1.50/%s", name );
+			outFileUniforms.Format( "renderprogs/glsl-1.50/%s", name );
+		}
+	}
+	
 	outFileGLSL.StripFileExtension();
 	outFileUniforms.StripFileExtension();
 	// RB end
@@ -1704,14 +1778,17 @@ void idRenderProgManager::LoadGLSLProgram( const int programIndex, const int ver
 		prog.uniformLocations.SortWithTemplate( idSort_QuickUniforms() );
 	}
 	
-#if defined(USE_GPU_SKINNING)
-	// get the uniform buffer binding for skinning joint matrices
-	GLint blockIndex = glGetUniformBlockIndex( program, "matrices_ubo" );
-	if( blockIndex != -1 )
+	// RB: only load joint uniform buffers if available
+	if( glConfig.gpuSkinningAvailable )
 	{
-		glUniformBlockBinding( program, blockIndex, 0 );
+		// get the uniform buffer binding for skinning joint matrices
+		GLint blockIndex = glGetUniformBlockIndex( program, "matrices_ubo" );
+		if( blockIndex != -1 )
+		{
+			glUniformBlockBinding( program, blockIndex, 0 );
+		}
 	}
-#endif
+	// RB end
 	
 	// set the texture unit locations once for the render program. We only need to do this once since we only link the program once
 	glUseProgram( program );

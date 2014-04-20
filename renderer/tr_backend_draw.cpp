@@ -197,7 +197,8 @@ void RB_DrawElementsWithCounters( const drawSurf_t* surf )
 		}
 	}
 	
-#if defined(USE_GPU_SKINNING)
+	
+#if !defined(USE_GLES2)
 	if( surf->jointCache )
 	{
 		idJointBuffer jointBuffer;
@@ -480,13 +481,11 @@ static void RB_PrepareStageTexturing( const shaderStage_t* pStage,  const drawSu
 			GL_SelectTexture( 0 );
 			
 			RENDERLOG_PRINTF( "TexGen: TG_REFLECT_CUBE: Bumpy Environment\n" );
-#if defined(USE_GPU_SKINNING)
 			if( surf->jointCache )
 			{
 				renderProgManager.BindShader_BumpyEnvironmentSkinned();
 			}
 			else
-#endif
 			{
 				renderProgManager.BindShader_BumpyEnvironment();
 			}
@@ -494,13 +493,11 @@ static void RB_PrepareStageTexturing( const shaderStage_t* pStage,  const drawSu
 		else
 		{
 			RENDERLOG_PRINTF( "TexGen: TG_REFLECT_CUBE: Environment\n" );
-#if defined(USE_GPU_SKINNING)
 			if( surf->jointCache )
 			{
 				renderProgManager.BindShader_EnvironmentSkinned();
 			}
 			else
-#endif
 			{
 				renderProgManager.BindShader_Environment();
 			}
@@ -808,13 +805,11 @@ static void RB_FillDepthBufferGeneric( const drawSurf_t* const* drawSurfs, int n
 				GL_State( stageGLState | GLS_ALPHATEST_FUNC_GREATER | GLS_ALPHATEST_MAKE_REF( idMath::Ftob( 255.0f * regs[ pStage->alphaTestRegister ] ) ) );
 #endif
 				
-#if defined(USE_GPU_SKINNING)
 				if( drawSurf->jointCache )
 				{
 					renderProgManager.BindShader_TextureVertexColorSkinned();
 				}
 				else
-#endif
 				{
 					renderProgManager.BindShader_TextureVertexColor();
 				}
@@ -861,13 +856,11 @@ static void RB_FillDepthBufferGeneric( const drawSurf_t* const* drawSurfs, int n
 			}
 			else
 			{
-#if defined(USE_GPU_SKINNING)
 				if( drawSurf->jointCache )
 				{
 					renderProgManager.BindShader_DepthSkinned();
 				}
 				else
-#endif
 				{
 					renderProgManager.BindShader_Depth();
 				}
@@ -986,13 +979,11 @@ static void RB_FillDepthBufferFast( drawSurf_t** drawSurfs, int numDrawSurfs )
 		
 		renderLog.OpenBlock( shader->GetName() );
 		
-#if defined(USE_GPU_SKINNING)
 		if( surf->jointCache )
 		{
 			renderProgManager.BindShader_DepthSkinned();
 		}
 		else
-#endif
 		{
 			renderProgManager.BindShader_Depth();
 		}
@@ -1018,7 +1009,6 @@ static void RB_FillDepthBufferFast( drawSurf_t** drawSurfs, int numDrawSurfs )
 	renderLog.CloseBlock();
 	renderLog.CloseMainBlock();
 }
-
 
 /*
 =========================================================================================
@@ -1334,26 +1324,22 @@ static void RB_RenderInteractions( const drawSurf_t* surfList, const viewLight_t
 			// select the render prog
 			if( lightShader->IsAmbientLight() )
 			{
-#if defined(USE_GPU_SKINNING)
 				if( surf->jointCache )
 				{
 					renderProgManager.BindShader_InteractionAmbientSkinned();
 				}
 				else
-#endif
 				{
 					renderProgManager.BindShader_InteractionAmbient();
 				}
 			}
 			else
 			{
-#if defined(USE_GPU_SKINNING)
 				if( surf->jointCache )
 				{
 					renderProgManager.BindShader_InteractionSkinned();
 				}
 				else
-#endif
 				{
 					renderProgManager.BindShader_Interaction();
 				}
@@ -1647,13 +1633,11 @@ static void RB_AmbientPass( const drawSurf_t* const* drawSurfs, int numDrawSurfs
 		else
 		{
 			// take lighting from grid
-#if defined(USE_GPU_SKINNING)
 			if( drawSurf->jointCache )
 			{
 				renderProgManager.BindShader_GridLightingSkinned();
 			}
 			else
-#endif
 			{
 				renderProgManager.BindShader_GridLighting();
 			}
@@ -1856,13 +1840,12 @@ static void RB_AmbientPass( const drawSurf_t* const* drawSurfs, int numDrawSurfs
 					GL_State( stageGLState | GLS_ALPHATEST_FUNC_GREATER | GLS_ALPHATEST_MAKE_REF( idMath::Ftob( 255.0f * regs[ pStage->alphaTestRegister ] ) ) );
 #endif
 											  
-#if defined(USE_GPU_SKINNING)
+											  
 					if( drawSurf->jointCache )
 					{
 						renderProgManager.BindShader_TextureVertexColorSkinned();
 					}
 					else
-#endif
 					{
 						renderProgManager.BindShader_TextureVertexColor();
 					}
@@ -1977,13 +1960,11 @@ static void RB_AmbientPass( const drawSurf_t* const* drawSurfs, int numDrawSurfs
 			}
 			else
 			{
-		#if defined(USE_GPU_SKINNING)
 				if( drawSurf->jointCache )
 				{
 					renderProgManager.BindShader_TextureVertexColorSkinned();
 				}
 				else
-		#endif
 				{
 					renderProgManager.BindShader_TextureVertexColor();
 				}
@@ -2141,26 +2122,22 @@ static void RB_StencilShadowPass( const drawSurf_t* drawSurfs, const viewLight_t
 		
 		if( r_showShadows.GetInteger() == 0 )
 		{
-#if defined(USE_GPU_SKINNING)
 			if( drawSurf->jointCache )
 			{
 				renderProgManager.BindShader_ShadowSkinned();
 			}
 			else
-#endif
 			{
 				renderProgManager.BindShader_Shadow();
 			}
 		}
 		else
 		{
-#if defined(USE_GPU_SKINNING)
 			if( drawSurf->jointCache )
 			{
 				renderProgManager.BindShader_ShadowDebugSkinned();
 			}
 			else
-#endif
 			{
 				renderProgManager.BindShader_ShadowDebug();
 			}
@@ -2253,7 +2230,6 @@ static void RB_StencilShadowPass( const drawSurf_t* drawSurfs, const viewLight_t
 			backEnd.glState.currentIndexBuffer = ( GLintptr )indexBuffer->GetAPIObject();
 		}
 		
-#if defined(USE_GPU_SKINNING)
 		if( drawSurf->jointCache )
 		{
 			assert( renderProgManager.ShaderUsesJoints() );
@@ -2296,7 +2272,6 @@ static void RB_StencilShadowPass( const drawSurf_t* drawSurfs, const viewLight_t
 			
 		}
 		else
-#endif
 		{
 			if( ( backEnd.glState.vertexLayout != LAYOUT_DRAW_SHADOW_VERT ) || ( backEnd.glState.currentVertexBuffer != ( GLintptr )vertexBuffer->GetAPIObject() ) || !r_useStateCaching.GetBool() )
 			{
@@ -2952,13 +2927,11 @@ static int RB_DrawShaderPasses( const drawSurf_t* const* const drawSurfs, const 
 					}
 					else
 					{
-#if defined(USE_GPU_SKINNING)
 						if( surf->jointCache )
 						{
 							renderProgManager.BindShader_TextureVertexColorSkinned();
 						}
 						else
-#endif
 						{
 							renderProgManager.BindShader_TextureVertexColor();
 						}
@@ -2976,13 +2949,11 @@ static int RB_DrawShaderPasses( const drawSurf_t* const* const drawSurfs, const 
 			}
 			else
 			{
-#if defined(USE_GPU_SKINNING)
 				if( surf->jointCache )
 				{
 					renderProgManager.BindShader_TextureVertexColorSkinned();
 				}
 				else
-#endif
 				{
 					renderProgManager.BindShader_TextureVertexColor();
 				}
@@ -3084,13 +3055,11 @@ static void RB_T_BlendLight( const drawSurf_t* drawSurfs, const viewLight_t* vLi
 		}
 		
 		// RB begin
-#if defined(USE_GPU_SKINNING)
 		if( drawSurf->jointCache )
 		{
 			renderProgManager.BindShader_BlendLightSkinned();
 		}
 		else
-#endif
 		{
 			renderProgManager.BindShader_BlendLight();
 		}
@@ -3235,13 +3204,11 @@ static void RB_T_BasicFog( const drawSurf_t* drawSurfs, const idPlane fogPlanes[
 			backEnd.currentSpace = ( inverseBaseLightProject == NULL ) ? drawSurf->space : NULL;
 		}
 		
-#if defined(USE_GPU_SKINNING)
 		if( drawSurf->jointCache )
 		{
 			renderProgManager.BindShader_FogSkinned();
 		}
 		else
-#endif
 		{
 			renderProgManager.BindShader_Fog();
 		}
@@ -3656,13 +3623,11 @@ void RB_MotionBlur()
 		}
 		
 		// this could just be a color, but we don't have a skinned color-only prog
-#if defined(USE_GPU_SKINNING)
 		if( surf->jointCache )
 		{
 			renderProgManager.BindShader_TextureVertexColorSkinned();
 		}
 		else
-#endif
 		{
 			renderProgManager.BindShader_TextureVertexColor();
 		}

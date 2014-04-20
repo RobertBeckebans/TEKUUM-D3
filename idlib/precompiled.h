@@ -87,11 +87,7 @@ const int MAX_EXPRESSION_REGISTERS = 4096;
 
 // renderer
 
-// RB begin
-#if !defined(USE_GLES2) && !defined(USE_GLES3)
-#define USE_GPU_SKINNING			1
-#endif
-// RB end
+
 
 // RB begin
 #if defined(USE_ANGLE)

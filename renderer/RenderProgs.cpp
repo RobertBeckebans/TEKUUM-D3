@@ -3,7 +3,7 @@
 
 Doom 3 BFG Edition GPL Source Code
 Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
-Copyright (C) 2013 Robert Beckebans
+Copyright (C) 2013-2014 Robert Beckebans
 
 This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
@@ -79,92 +79,68 @@ void idRenderProgManager::Init()
 	{
 		builtinShaders[i] = -1;
 	}
+	
+	// RB: added checks for GPU skinning
 	struct builtinShaders_t
 	{
 		int index;
 		const char* name;
+		bool requireGPUSkinningSupport;
 	} builtins[] =
 	{
-		{ BUILTIN_GUI, "builtin/gui.vfp" },
-		{ BUILTIN_COLOR, "builtin/color.vfp" },
-		// RB begin
-#if defined(USE_GPU_SKINNING)
-		{ BUILTIN_COLOR_SKINNED, "builtin/color_skinned.vfp" },
-#endif
-		{ BUILTIN_VERTEX_COLOR, "builtin/vertex_color.vfp" },
-		{ BUILTIN_VERTEX_LIGHTING, "builtin/vertex_lighting.vfp" },
-		{ BUILTIN_GRID_LIGHTING, "builtin/grid_lighting.vfp" },
-#if defined(USE_GPU_SKINNING)
-		{ BUILTIN_GRID_LIGHTING_SKINNED, "builtin/grid_lighting_skinned.vfp" },
-#endif
-		// RB end
+		{ BUILTIN_GUI, "builtin/gui.vfp", false },
+		{ BUILTIN_COLOR, "builtin/color.vfp", false },
+		{ BUILTIN_COLOR_SKINNED, "builtin/color_skinned.vfp", true },
+		{ BUILTIN_VERTEX_COLOR, "builtin/vertex_color.vfp", false },
+		{ BUILTIN_VERTEX_LIGHTING, "builtin/vertex_lighting.vfp", false },
+		{ BUILTIN_GRID_LIGHTING, "builtin/grid_lighting.vfp", false },
+		{ BUILTIN_GRID_LIGHTING_SKINNED, "builtin/grid_lighting_skinned.vfp", true },
 #if !defined(USE_GLES2) && !defined(USE_GLES3)
-		{ BUILTIN_SIMPLESHADE, "builtin/simpleshade.vfp" },
+		{ BUILTIN_SIMPLESHADE, "builtin/simpleshade.vfp", false },
 #endif
-		{ BUILTIN_TEXTURED, "builtin/texture.vfp" },
-		{ BUILTIN_TEXTURE_VERTEXCOLOR, "builtin/texture_color.vfp" },
-#if defined(USE_GPU_SKINNING)
-		{ BUILTIN_TEXTURE_VERTEXCOLOR_SKINNED, "builtin/texture_color_skinned.vfp" },
-#endif
-		{ BUILTIN_TEXTURE_TEXGEN_VERTEXCOLOR, "builtin/texture_color_texgen.vfp" },
+		{ BUILTIN_TEXTURED, "builtin/texture.vfp", false },
+		{ BUILTIN_TEXTURE_VERTEXCOLOR, "builtin/texture_color.vfp", false },
+		{ BUILTIN_TEXTURE_VERTEXCOLOR_SKINNED, "builtin/texture_color_skinned.vfp", true },
+		{ BUILTIN_TEXTURE_TEXGEN_VERTEXCOLOR, "builtin/texture_color_texgen.vfp", false },
 		// RB begin
-		{ BUILTIN_TEXTURE_YCOCG, "builtin/texture_ycocg.vfp" },
+		{ BUILTIN_TEXTURE_YCOCG, "builtin/texture_ycocg.vfp", false },
 		// RB end
-		{ BUILTIN_INTERACTION, "builtin/interaction.vfp" },
-#if defined(USE_GPU_SKINNING)
-		{ BUILTIN_INTERACTION_SKINNED, "builtin/interaction_skinned.vfp" },
-#endif
-		{ BUILTIN_INTERACTION_AMBIENT, "builtin/interactionAmbient.vfp" },
-#if defined(USE_GPU_SKINNING)
-		{ BUILTIN_INTERACTION_AMBIENT_SKINNED, "builtin/interactionAmbient_skinned.vfp" },
-#endif
-		{ BUILTIN_ENVIRONMENT, "builtin/environment.vfp" },
-#if defined(USE_GPU_SKINNING)
-		{ BUILTIN_ENVIRONMENT_SKINNED, "builtin/environment_skinned.vfp" },
-#endif
-		{ BUILTIN_BUMPY_ENVIRONMENT, "builtin/bumpyEnvironment.vfp" },
-#if defined(USE_GPU_SKINNING)
-		{ BUILTIN_BUMPY_ENVIRONMENT_SKINNED, "builtin/bumpyEnvironment_skinned.vfp" },
-#endif
-		
-		{ BUILTIN_DEPTH, "builtin/depth.vfp" },
-#if defined(USE_GPU_SKINNING)
-		{ BUILTIN_DEPTH_SKINNED, "builtin/depth_skinned.vfp" },
-#endif
-		{ BUILTIN_SHADOW_DEBUG, "builtin/shadowDebug.vfp" },
-#if defined(USE_GPU_SKINNING)
-		{ BUILTIN_SHADOW_DEBUG_SKINNED, "builtin/shadowDebug_skinned.vfp" },
-#endif
+		{ BUILTIN_INTERACTION, "builtin/interaction.vfp", false },
+		{ BUILTIN_INTERACTION_SKINNED, "builtin/interaction_skinned.vfp", true },
+		{ BUILTIN_INTERACTION_AMBIENT, "builtin/interactionAmbient.vfp", false },
+		{ BUILTIN_INTERACTION_AMBIENT_SKINNED, "builtin/interactionAmbient_skinned.vfp", true },
+		{ BUILTIN_ENVIRONMENT, "builtin/environment.vfp", false },
+		{ BUILTIN_ENVIRONMENT_SKINNED, "builtin/environment_skinned.vfp", true },
+		{ BUILTIN_BUMPY_ENVIRONMENT, "builtin/bumpyEnvironment.vfp", false },
+		{ BUILTIN_BUMPY_ENVIRONMENT_SKINNED, "builtin/bumpyEnvironment_skinned.vfp", true },
+		{ BUILTIN_DEPTH, "builtin/depth.vfp", false },
+		{ BUILTIN_DEPTH_SKINNED, "builtin/depth_skinned.vfp", true },
+		{ BUILTIN_SHADOW_DEBUG, "builtin/shadowDebug.vfp", false },
+		{ BUILTIN_SHADOW_DEBUG_SKINNED, "builtin/shadowDebug_skinned.vfp", true },
 		
 		// RB begin
-		{ BUILTIN_BLENDLIGHT, "builtin/blendLight.vfp" },
-#if defined(USE_GPU_SKINNING)
-		{ BUILTIN_BLENDLIGHT_SKINNED, "builtin/blendLight_skinned.vfp" },
-#endif
+		{ BUILTIN_BLENDLIGHT, "builtin/blendLight.vfp", false },
+		{ BUILTIN_BLENDLIGHT_SKINNED, "builtin/blendLight_skinned.vfp", true },
 		// RB end
-		{ BUILTIN_FOG, "builtin/fog.vfp" },
-#if defined(USE_GPU_SKINNING)
-		{ BUILTIN_FOG_SKINNED, "builtin/fog_skinned.vfp" },
-#endif
-		{ BUILTIN_SKYBOX, "builtin/skybox.vfp" },
-		{ BUILTIN_WOBBLESKY, "builtin/wobblesky.vfp" },
-		{ BUILTIN_POSTPROCESS, "builtin/postprocess.vfp" },
-		{ BUILTIN_STEREO_DEGHOST, "builtin/stereoDeGhost.vfp" },
-		{ BUILTIN_STEREO_WARP, "builtin/stereoWarp.vfp" },
-//		{ BUILTIN_ZCULL_RECONSTRUCT, "zcullReconstruct.vfp" },
-		{ BUILTIN_BINK, "builtin/bink.vfp" },
-		{ BUILTIN_BINK_GUI, "builtin/bink_gui.vfp" },
+		{ BUILTIN_FOG, "builtin/fog.vfp", false },
+		{ BUILTIN_FOG_SKINNED, "builtin/fog_skinned.vfp", true },
+		{ BUILTIN_SKYBOX, "builtin/skybox.vfp", false },
+		{ BUILTIN_WOBBLESKY, "builtin/wobblesky.vfp", false },
+		{ BUILTIN_POSTPROCESS, "builtin/postprocess.vfp", false },
+		{ BUILTIN_STEREO_DEGHOST, "builtin/stereoDeGhost.vfp", false },
+		{ BUILTIN_STEREO_WARP, "builtin/stereoWarp.vfp", false },
+//		{ BUILTIN_ZCULL_RECONSTRUCT, "zcullReconstruct.vfp", false },
+		{ BUILTIN_BINK, "builtin/bink.vfp", false },
+		{ BUILTIN_BINK_GUI, "builtin/bink_gui.vfp", false },
 		// RB begin
-		{ BUILTIN_ROQ, "builtin/roq.vfp" },
+		{ BUILTIN_ROQ, "builtin/roq.vfp", false },
 		// RB end
-		{ BUILTIN_STEREO_INTERLACE, "builtin/stereoInterlace.vfp" },
-#if 1//defined(USE_GLES2) && !defined(USE_GLES3)
-		{ BUILTIN_SHADOW, "builtin/shadow.vfp" },
-#endif
-		
+		{ BUILTIN_STEREO_INTERLACE, "builtin/stereoInterlace.vfp", false },
 #if !defined(USE_GLES2) && !defined(USE_GLES3)
-		{ BUILTIN_MOTION_BLUR, "builtin/motionBlur.vfp" },
+		{ BUILTIN_MOTION_BLUR, "builtin/motionBlur.vfp", false },
 #endif
+		{ BUILTIN_SHADOW, "builtin/shadow.vfp", false },
+		{ BUILTIN_SHADOW_SKINNED, "builtin/shadow_skinned.vfp", true },
 	};
 	int numBuiltins = sizeof( builtins ) / sizeof( builtins[0] );
 	vertexShaders.SetNum( numBuiltins );
@@ -176,38 +152,74 @@ void idRenderProgManager::Init()
 		vertexShaders[i].name = builtins[i].name;
 		fragmentShaders[i].name = builtins[i].name;
 		builtinShaders[builtins[i].index] = i;
+		
+		if( builtins[i].requireGPUSkinningSupport && !glConfig.gpuSkinningAvailable )
+		{
+			// RB: don't try to load shaders that would break the GLSL compiler in the OpenGL driver
+			continue;
+		}
+		
 		LoadVertexShader( i );
 		LoadFragmentShader( i );
 		LoadGLSLProgram( i, i, i );
 	}
 	
-	// Special case handling for fastZ shaders
-#if defined(USE_GPU_SKINNING)
-	builtinShaders[BUILTIN_SHADOW] = FindVertexShader( "builtin/shadow.vp" );
-	builtinShaders[BUILTIN_SHADOW_SKINNED] = FindVertexShader( "builtin/shadow_skinned.vp" );
+	// special case handling for fastZ shaders
+	/*
+	switch( glConfig.driverType )
+	{
+		case GLDRV_OPENGL32_CORE_PROFILE:
+		case GLDRV_OPENGL_ES2:
+		case GLDRV_OPENGL_ES3:
+		case GLDRV_OPENGL_MESA:
+		{
+			builtinShaders[BUILTIN_SHADOW] = FindVertexShader( "shadow.vp" );
+			int shadowFragmentShaderIndex = FindFragmentShader( "shadow.fp" );
+			FindGLSLProgram( "shadow.vp", builtinShaders[BUILTIN_SHADOW], shadowFragmentShaderIndex );
 	
-	FindGLSLProgram( "builtin/shadow.vp", builtinShaders[BUILTIN_SHADOW], -1 );
-	FindGLSLProgram( "builtin/shadow_skinned.vp", builtinShaders[BUILTIN_SHADOW_SKINNED], -1 );
-#endif
+			if( glConfig.gpuSkinningAvailable )
+			{
+				builtinShaders[BUILTIN_SHADOW_SKINNED] = FindVertexShader( "shadow_skinned.vp" );
+				int shadowFragmentShaderIndex = FindFragmentShader( "shadow_skinned.fp" );
+				FindGLSLProgram( "shadow_skinned.vp", builtinShaders[BUILTIN_SHADOW_SKINNED], shadowFragmentShaderIndex );
+				break;
+			}
+		}
+	
+		default:
+		{
+			// fast path on PC
+			builtinShaders[BUILTIN_SHADOW] = FindVertexShader( "shadow.vp" );
+			FindGLSLProgram( "shadow.vp", builtinShaders[BUILTIN_SHADOW], -1 );
+	
+			if( glConfig.gpuSkinningAvailable )
+			{
+				builtinShaders[BUILTIN_SHADOW_SKINNED] = FindVertexShader( "shadow_skinned.vp" );
+				FindGLSLProgram( "shadow_skinned.vp", builtinShaders[BUILTIN_SHADOW_SKINNED], -1 );
+			}
+		}
+	}
+	*/
 	
 	glslUniforms.SetNum( RENDERPARM_USER + MAX_GLSL_USER_PARMS, vec4_zero );
 	
-#if defined(USE_GPU_SKINNING)
-	vertexShaders[builtinShaders[BUILTIN_TEXTURE_VERTEXCOLOR_SKINNED]].usesJoints = true;
-	vertexShaders[builtinShaders[BUILTIN_INTERACTION_SKINNED]].usesJoints = true;
-	vertexShaders[builtinShaders[BUILTIN_INTERACTION_AMBIENT_SKINNED]].usesJoints = true;
-	vertexShaders[builtinShaders[BUILTIN_ENVIRONMENT_SKINNED]].usesJoints = true;
-	vertexShaders[builtinShaders[BUILTIN_BUMPY_ENVIRONMENT_SKINNED]].usesJoints = true;
-	vertexShaders[builtinShaders[BUILTIN_DEPTH_SKINNED]].usesJoints = true;
-	vertexShaders[builtinShaders[BUILTIN_SHADOW_SKINNED]].usesJoints = true;
-	vertexShaders[builtinShaders[BUILTIN_SHADOW_DEBUG_SKINNED]].usesJoints = true;
-	vertexShaders[builtinShaders[BUILTIN_FOG_SKINNED]].usesJoints = true;
-	// RB begin
-	vertexShaders[builtinShaders[BUILTIN_COLOR_SKINNED]].usesJoints = true;
-	vertexShaders[builtinShaders[BUILTIN_GRID_LIGHTING_SKINNED]].usesJoints = true;
-	vertexShaders[builtinShaders[BUILTIN_BLENDLIGHT_SKINNED]].usesJoints = true;
-	// RB end
-#endif
+	if( glConfig.gpuSkinningAvailable )
+	{
+		vertexShaders[builtinShaders[BUILTIN_TEXTURE_VERTEXCOLOR_SKINNED]].usesJoints = true;
+		vertexShaders[builtinShaders[BUILTIN_INTERACTION_SKINNED]].usesJoints = true;
+		vertexShaders[builtinShaders[BUILTIN_INTERACTION_AMBIENT_SKINNED]].usesJoints = true;
+		vertexShaders[builtinShaders[BUILTIN_ENVIRONMENT_SKINNED]].usesJoints = true;
+		vertexShaders[builtinShaders[BUILTIN_BUMPY_ENVIRONMENT_SKINNED]].usesJoints = true;
+		vertexShaders[builtinShaders[BUILTIN_DEPTH_SKINNED]].usesJoints = true;
+		vertexShaders[builtinShaders[BUILTIN_SHADOW_SKINNED]].usesJoints = true;
+		vertexShaders[builtinShaders[BUILTIN_SHADOW_DEBUG_SKINNED]].usesJoints = true;
+		vertexShaders[builtinShaders[BUILTIN_FOG_SKINNED]].usesJoints = true;
+		// RB begin
+		vertexShaders[builtinShaders[BUILTIN_COLOR_SKINNED]].usesJoints = true;
+		vertexShaders[builtinShaders[BUILTIN_GRID_LIGHTING_SKINNED]].usesJoints = true;
+		vertexShaders[builtinShaders[BUILTIN_BLENDLIGHT_SKINNED]].usesJoints = true;
+		// RB end
+	}
 	
 	cmdSystem->AddCommand( "reloadShaders", R_ReloadShaders, CMD_FL_RENDERER, "reloads shaders" );
 }

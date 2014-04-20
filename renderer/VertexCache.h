@@ -65,7 +65,7 @@ struct geoBufferSet_t
 {
 	idIndexBuffer			indexBuffer;
 	idVertexBuffer			vertexBuffer;
-#if defined(USE_GPU_SKINNING)
+#if !defined(USE_GLES2)
 	idJointBuffer			jointBuffer;
 #endif
 	byte* 					mappedVertexBase;
@@ -163,7 +163,7 @@ public:
 	// vb/ib is a temporary reference -- don't store it
 	bool			GetVertexBuffer( vertCacheHandle_t handle, idVertexBuffer* vb );
 	bool			GetIndexBuffer( vertCacheHandle_t handle, idIndexBuffer* ib );
-#if defined(USE_GPU_SKINNING)
+#if !defined(USE_GLES2)
 	bool			GetJointBuffer( vertCacheHandle_t handle, idJointBuffer* jb );
 #endif
 	

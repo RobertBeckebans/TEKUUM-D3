@@ -3,7 +3,7 @@
 
 Doom 3 BFG Edition GPL Source Code
 Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
-Copyright (C) 2013 Robert Beckebans
+Copyright (C) 2013-2014 Robert Beckebans
 
 This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
@@ -167,12 +167,10 @@ public:
 	}
 	
 	// RB begin
-#if defined(USE_GPU_SKINNING)
 	void	BindShader_ColorSkinned( )
 	{
 		BindShader_Builtin( BUILTIN_COLOR_SKINNED );
 	}
-#endif
 	
 	void	BindShader_VertexColor( )
 	{
@@ -189,12 +187,10 @@ public:
 		BindShader_Builtin( BUILTIN_GRID_LIGHTING );
 	}
 	
-#if defined(USE_GPU_SKINNING)
 	void	BindShader_GridLightingSkinned()
 	{
 		BindShader_Builtin( BUILTIN_GRID_LIGHTING_SKINNED );
 	}
-#endif
 	// RB end
 	
 	void	BindShader_Texture( )
@@ -207,12 +203,10 @@ public:
 		BindShader_Builtin( BUILTIN_TEXTURE_VERTEXCOLOR );
 	};
 	
-#if defined(USE_GPU_SKINNING)
 	void	BindShader_TextureVertexColorSkinned()
 	{
 		BindShader_Builtin( BUILTIN_TEXTURE_VERTEXCOLOR_SKINNED );
 	};
-#endif
 	
 	void	BindShader_TextureTexGenVertexColor()
 	{
@@ -231,24 +225,20 @@ public:
 		BindShader_Builtin( BUILTIN_INTERACTION );
 	}
 	
-#if defined(USE_GPU_SKINNING)
 	void	BindShader_InteractionSkinned()
 	{
 		BindShader_Builtin( BUILTIN_INTERACTION_SKINNED );
 	}
-#endif
 	
 	void	BindShader_InteractionAmbient()
 	{
 		BindShader_Builtin( BUILTIN_INTERACTION_AMBIENT );
 	}
 	
-#if defined(USE_GPU_SKINNING)
 	void	BindShader_InteractionAmbientSkinned()
 	{
 		BindShader_Builtin( BUILTIN_INTERACTION_AMBIENT_SKINNED );
 	}
-#endif
 	
 #if !defined(USE_GLES2) && !defined(USE_GLES3)
 	void	BindShader_SimpleShade()
@@ -262,36 +252,30 @@ public:
 		BindShader_Builtin( BUILTIN_ENVIRONMENT );
 	}
 	
-#if defined(USE_GPU_SKINNING)
 	void	BindShader_EnvironmentSkinned()
 	{
 		BindShader_Builtin( BUILTIN_ENVIRONMENT_SKINNED );
 	}
-#endif
 	
 	void	BindShader_BumpyEnvironment()
 	{
 		BindShader_Builtin( BUILTIN_BUMPY_ENVIRONMENT );
 	}
 	
-#if defined(USE_GPU_SKINNING)
 	void	BindShader_BumpyEnvironmentSkinned()
 	{
 		BindShader_Builtin( BUILTIN_BUMPY_ENVIRONMENT_SKINNED );
 	}
-#endif
 	
 	void	BindShader_Depth()
 	{
 		BindShader_Builtin( BUILTIN_DEPTH );
 	}
 	
-#if defined(USE_GPU_SKINNING)
 	void	BindShader_DepthSkinned()
 	{
 		BindShader_Builtin( BUILTIN_DEPTH_SKINNED );
 	}
-#endif
 	
 	void	BindShader_Shadow()
 	{
@@ -300,26 +284,22 @@ public:
 		// RB end
 	}
 	
-#if defined(USE_GPU_SKINNING)
 	void	BindShader_ShadowSkinned()
 	{
 		// RB begin
 		BindShader( -1, builtinShaders[BUILTIN_SHADOW_SKINNED], -1, true );
 		// RB end
 	}
-#endif
 	
 	void	BindShader_ShadowDebug()
 	{
 		BindShader_Builtin( BUILTIN_SHADOW_DEBUG );
 	}
 	
-#if defined(USE_GPU_SKINNING)
 	void	BindShader_ShadowDebugSkinned()
 	{
 		BindShader_Builtin( BUILTIN_SHADOW_DEBUG_SKINNED );
 	}
-#endif
 	
 	void	BindShader_BlendLight()
 	{
@@ -327,12 +307,10 @@ public:
 	}
 	
 	// RB begin
-#if defined(USE_GPU_SKINNING)
 	void	BindShader_BlendLightSkinned()
 	{
 		BindShader_Builtin( BUILTIN_BLENDLIGHT_SKINNED );
 	}
-#endif
 	// RB end
 	
 	void	BindShader_Fog()
@@ -340,12 +318,10 @@ public:
 		BindShader_Builtin( BUILTIN_FOG );
 	}
 	
-#if defined(USE_GPU_SKINNING)
 	void	BindShader_FogSkinned()
 	{
 		BindShader_Builtin( BUILTIN_FOG_SKINNED );
 	}
-#endif
 	
 	void	BindShader_SkyBox()
 	{
@@ -450,71 +426,43 @@ protected:
 		BUILTIN_GUI,
 		BUILTIN_COLOR,
 		// RB begin
-#if defined(USE_GPU_SKINNING)
 		BUILTIN_COLOR_SKINNED,
-#endif
 		BUILTIN_VERTEX_COLOR,
 		BUILTIN_VERTEX_LIGHTING,
 		BUILTIN_GRID_LIGHTING,
-#if defined(USE_GPU_SKINNING)
 		BUILTIN_GRID_LIGHTING_SKINNED,
-#endif
-		//BUILTIN_GRID_LIGHTING,
-//#if defined(USE_GPU_SKINNING)
-//		BUILTIN_GRID_LIGHTING_SKINNED,
-//#endif
-		// RB end
 #if !defined(USE_GLES2) && !defined(USE_GLES3)
 		BUILTIN_SIMPLESHADE,
 #endif
 		BUILTIN_TEXTURED,
 		BUILTIN_TEXTURE_VERTEXCOLOR,
-#if defined(USE_GPU_SKINNING)
 		BUILTIN_TEXTURE_VERTEXCOLOR_SKINNED,
-#endif
 		BUILTIN_TEXTURE_TEXGEN_VERTEXCOLOR,
 		// RB begin
 		BUILTIN_TEXTURE_YCOCG,
 		// RB end
 		BUILTIN_INTERACTION,
-#if defined(USE_GPU_SKINNING)
 		BUILTIN_INTERACTION_SKINNED,
-#endif
 		BUILTIN_INTERACTION_AMBIENT,
-#if defined(USE_GPU_SKINNING)
 		BUILTIN_INTERACTION_AMBIENT_SKINNED,
-#endif
 		BUILTIN_ENVIRONMENT,
-#if defined(USE_GPU_SKINNING)
 		BUILTIN_ENVIRONMENT_SKINNED,
-#endif
 		BUILTIN_BUMPY_ENVIRONMENT,
-#if defined(USE_GPU_SKINNING)
 		BUILTIN_BUMPY_ENVIRONMENT_SKINNED,
-#endif
+		
 		BUILTIN_DEPTH,
-#if defined(USE_GPU_SKINNING)
 		BUILTIN_DEPTH_SKINNED,
-#endif
 		BUILTIN_SHADOW,
-#if defined(USE_GPU_SKINNING)
 		BUILTIN_SHADOW_SKINNED,
-#endif
 		BUILTIN_SHADOW_DEBUG,
-#if defined(USE_GPU_SKINNING)
 		BUILTIN_SHADOW_DEBUG_SKINNED,
-#endif
 		
 		BUILTIN_BLENDLIGHT,
 		// RB begin
-#if defined(USE_GPU_SKINNING)
 		BUILTIN_BLENDLIGHT_SKINNED,
-#endif
 		// RB end
 		BUILTIN_FOG,
-#if defined(USE_GPU_SKINNING)
 		BUILTIN_FOG_SKINNED,
-#endif
 		BUILTIN_SKYBOX,
 		BUILTIN_WOBBLESKY,
 		BUILTIN_POSTPROCESS,

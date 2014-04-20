@@ -744,13 +744,11 @@ static void RB_RenderDrawSurfListWithFunction( drawSurf_t** drawSurfs, int numDr
 		}
 #endif
 		
-#if defined(USE_GPU_SKINNING)
 		if( drawSurf->jointCache )
 		{
 			renderProgManager.BindShader_ColorSkinned();
 		}
 		else
-#endif
 		{
 			renderProgManager.BindShader_Color();
 		}

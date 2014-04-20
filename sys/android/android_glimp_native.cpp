@@ -137,6 +137,8 @@ static bool CreateEGLContextOnWindow()
 		return false;
 	}
 	
+	glConfig.driverType = GLDRV_OPENGL_ES3;
+	
 	return true;
 }
 
