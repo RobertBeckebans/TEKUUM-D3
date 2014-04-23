@@ -31,6 +31,7 @@ If you have questions concerning this license or the applicable additional terms
 #include "precompiled.h"
 
 #include "tr_local.h"
+#include "RenderProgs_embedded.h"
 
 idCVar r_skipStripDeadCode( "r_skipStripDeadCode", "0", CVAR_BOOL, "Skip stripping dead code" );
 idCVar r_useUniformArrays( "r_useUniformArrays", "1", CVAR_BOOL, "" );
@@ -1369,7 +1370,6 @@ GLuint idRenderProgManager::LoadGLSLShader( GLenum target, const char* name, idL
 	
 	outFileGLSL.StripFileExtension();
 	outFileUniforms.StripFileExtension();
-	// RB end
 	
 	if( target == GL_FRAGMENT_SHADER )
 	{
@@ -1384,6 +1384,18 @@ GLuint idRenderProgManager::LoadGLSLShader( GLenum target, const char* name, idL
 		outFileHLSL += "_vertex.hlsl";
 		outFileGLSL += "_vertex.glsl";
 		outFileUniforms += "_vertex.uniforms";
+	}
+
+	// RB: use embedded Cg sources if necessary
+	ID_TIME_T embeddedTimeStamp = 0;
+	const char* embeddedSource = NULL;
+	for( int i = 0 ; cg_renderprogs[i].name ; i++ )
+	{
+		if( !idStr::Icmp( cg_renderprogs[i].name, inFile ) )
+		{
+			embeddedSource = cg_renderprogs[i].shaderText;
+			break;
+		}
 	}
 	
 	// first check whether we already have a valid GLSL file and compare it to the hlsl timestamp;
@@ -1405,7 +1417,19 @@ GLuint idRenderProgManager::LoadGLSLShader( GLenum target, const char* name, idL
 		}
 		
 		void* hlslFileBuffer = NULL;
-		int len = fileSystem->ReadFile( inFile.c_str(), &hlslFileBuffer );
+
+		int len = 0; 
+		
+		if( embeddedSource )
+		{
+			len = strlen( embeddedSource );
+			hlslFileBuffer = ( void* ) embeddedSource;
+		}
+		else
+		{
+			len = fileSystem->ReadFile( inFile.c_str(), &hlslFileBuffer );
+		}
+
 		if( len <= 0 )
 		{
 			return false;
