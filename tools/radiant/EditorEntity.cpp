@@ -788,8 +788,8 @@ entity_t* Entity_PostParse( entity_t* ent, brush_t* pList )
 			
 			float		yaw = 0;
 			bool		convertAngles = GetFloatForKey( ent, "angle", &yaw );
-			extern void Brush_Rotate( brush_t * b, idMat3 matrix, idVec3 origin, bool bBuild );
-			extern void Brush_Rotate( brush_t * b, idVec3 rot, idVec3 origin, bool bBuild );
+			extern void Brush_Rotate( brush_t* b, idMat3 matrix, idVec3 origin, bool bBuild );
+			extern void Brush_Rotate( brush_t* b, idVec3 rot, idVec3 origin, bool bBuild );
 			
 			if( convertAngles )
 			{

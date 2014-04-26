@@ -130,22 +130,22 @@ static int SDL_KeyToDoom3Key( SDL_Keycode key, bool& isChar )
 		case SDLK_SPACE:
 			return K_SPACE;
 			
-			//case SDLK_EXCLAIM:
-			/*
-			SDLK_QUOTEDBL:
-			SDLK_HASH:
-			SDLK_DOLLAR:
-			SDLK_AMPERSAND:
-			SDLK_QUOTE		= 39,
-			SDLK_LEFTPAREN		= 40,
-			SDLK_RIGHTPAREN		= 41,
-			SDLK_ASTERISK		= 42,
-			SDLK_PLUS		= 43,
-			SDLK_COMMA		= 44,
-			SDLK_MINUS		= 45,
-			SDLK_PERIOD		= 46,
-			SDLK_SLASH		= 47,
-			*/
+		//case SDLK_EXCLAIM:
+		/*
+		SDLK_QUOTEDBL:
+		SDLK_HASH:
+		SDLK_DOLLAR:
+		SDLK_AMPERSAND:
+		SDLK_QUOTE		= 39,
+		SDLK_LEFTPAREN		= 40,
+		SDLK_RIGHTPAREN		= 41,
+		SDLK_ASTERISK		= 42,
+		SDLK_PLUS		= 43,
+		SDLK_COMMA		= 44,
+		SDLK_MINUS		= 45,
+		SDLK_PERIOD		= 46,
+		SDLK_SLASH		= 47,
+		*/
 		case SDLK_0:
 			return K_0;
 			
@@ -176,7 +176,7 @@ static int SDL_KeyToDoom3Key( SDL_Keycode key, bool& isChar )
 		case SDLK_9:
 			return K_9;
 			
-			// DG: add some missing keys..
+		// DG: add some missing keys..
 		case SDLK_UNDERSCORE:
 			return K_UNDERLINE;
 			
@@ -200,29 +200,29 @@ static int SDL_KeyToDoom3Key( SDL_Keycode key, bool& isChar )
 			
 		case SDLK_EQUALS:
 			return K_EQUALS;
-			// DG end
-			
-			/*
-			SDLK_COLON		= 58,
-			SDLK_SEMICOLON		= 59,
-			SDLK_LESS		= 60,
-			SDLK_EQUALS		= 61,
-			SDLK_GREATER		= 62,
-			SDLK_QUESTION		= 63,
-			SDLK_AT			= 64,
-			*/
-			/*
-			   Skip uppercase letters
-			 */
-			/*
-			SDLK_LEFTBRACKET	= 91,
-			SDLK_BACKSLASH		= 92,
-			SDLK_RIGHTBRACKET	= 93,
-			SDLK_CARET		= 94,
-			SDLK_UNDERSCORE		= 95,
-			SDLK_BACKQUOTE		= 96,
-			*/
-			
+		// DG end
+		
+		/*
+		SDLK_COLON		= 58,
+		SDLK_SEMICOLON		= 59,
+		SDLK_LESS		= 60,
+		SDLK_EQUALS		= 61,
+		SDLK_GREATER		= 62,
+		SDLK_QUESTION		= 63,
+		SDLK_AT			= 64,
+		*/
+		/*
+		   Skip uppercase letters
+		 */
+		/*
+		SDLK_LEFTBRACKET	= 91,
+		SDLK_BACKSLASH		= 92,
+		SDLK_RIGHTBRACKET	= 93,
+		SDLK_CARET		= 94,
+		SDLK_UNDERSCORE		= 95,
+		SDLK_BACKQUOTE		= 96,
+		*/
+		
 		case SDLK_a:
 			return K_A;
 			
@@ -310,13 +310,13 @@ static int SDL_KeyToDoom3Key( SDL_Keycode key, bool& isChar )
 		case SDLK_PAUSE:
 			return K_PAUSE;
 			
-			// DG: add tab key support
+		// DG: add tab key support
 		case SDLK_TAB:
 			return K_TAB;
-			// DG end
-			
-			//case SDLK_APPLICATION:
-			//	return K_COMMAND;
+		// DG end
+		
+		//case SDLK_APPLICATION:
+		//	return K_COMMAND;
 		case SDLK_CAPSLOCK:
 			return K_CAPSLOCK;
 			
@@ -343,9 +343,9 @@ static int SDL_KeyToDoom3Key( SDL_Keycode key, bool& isChar )
 			
 		case SDLK_RGUI:
 			return K_RWIN;
-			//case SDLK_MENU:
-			//	return K_MENU;
-			
+		//case SDLK_MENU:
+		//	return K_MENU;
+		
 		case SDLK_LALT:
 			return K_LALT;
 			
@@ -417,8 +417,8 @@ static int SDL_KeyToDoom3Key( SDL_Keycode key, bool& isChar )
 			
 		case SDLK_F12:
 			return K_F12;
-			// K_INVERTED_EXCLAMATION;
-			
+		// K_INVERTED_EXCLAMATION;
+		
 		case SDLK_F13:
 			return K_F13;
 			
@@ -466,12 +466,12 @@ static int SDL_KeyToDoom3Key( SDL_Keycode key, bool& isChar )
 			
 		case SDLK_KP_DIVIDE:
 			return K_KP_SLASH;
-			// K_SUPERSCRIPT_TWO;
-			
+		// K_SUPERSCRIPT_TWO;
+		
 		case SDLK_KP_MINUS:
 			return K_KP_MINUS;
-			// K_ACUTE_ACCENT;
-			
+		// K_ACUTE_ACCENT;
+		
 		case SDLK_KP_PLUS:
 			return K_KP_PLUS;
 			
@@ -484,31 +484,31 @@ static int SDL_KeyToDoom3Key( SDL_Keycode key, bool& isChar )
 		case SDLK_KP_EQUALS:
 			return K_KP_EQUALS;
 			
-			// K_MASCULINE_ORDINATOR;
-			// K_GRAVE_A;
-			// K_AUX1;
-			// K_CEDILLA_C;
-			// K_GRAVE_E;
-			// K_AUX2;
-			// K_AUX3;
-			// K_AUX4;
-			// K_GRAVE_I;
-			// K_AUX5;
-			// K_AUX6;
-			// K_AUX7;
-			// K_AUX8;
-			// K_TILDE_N;
-			// K_GRAVE_O;
-			// K_AUX9;
-			// K_AUX10;
-			// K_AUX11;
-			// K_AUX12;
-			// K_AUX13;
-			// K_AUX14;
-			// K_GRAVE_U;
-			// K_AUX15;
-			// K_AUX16;
-			
+		// K_MASCULINE_ORDINATOR;
+		// K_GRAVE_A;
+		// K_AUX1;
+		// K_CEDILLA_C;
+		// K_GRAVE_E;
+		// K_AUX2;
+		// K_AUX3;
+		// K_AUX4;
+		// K_GRAVE_I;
+		// K_AUX5;
+		// K_AUX6;
+		// K_AUX7;
+		// K_AUX8;
+		// K_TILDE_N;
+		// K_GRAVE_O;
+		// K_AUX9;
+		// K_AUX10;
+		// K_AUX11;
+		// K_AUX12;
+		// K_AUX13;
+		// K_AUX14;
+		// K_GRAVE_U;
+		// K_AUX15;
+		// K_AUX16;
+		
 		case SDLK_PRINTSCREEN:
 			return K_PRINTSCREEN;
 			
@@ -765,7 +765,7 @@ sysEvent_t Sys_GetEvent()
 						r_windowY.SetInteger( y );
 						break;
 					}
-					// DG end
+						// DG end
 				}
 				
 				return res_none;
@@ -796,7 +796,7 @@ sysEvent_t Sys_GetEvent()
 			case SDL_VIDEOEXPOSE:
 				return res_none;
 				
-				// DG: handle resizing and moving of window
+			// DG: handle resizing and moving of window
 			case SDL_VIDEORESIZE:
 			{
 				int w = ev.resize.w;
@@ -810,7 +810,7 @@ sysEvent_t Sys_GetEvent()
 				PushConsoleEvent( "vid_restart" );
 				return res_none;
 			}
-			// DG end
+				// DG end
 #endif
 			
 			case SDL_KEYDOWN:
@@ -850,7 +850,7 @@ sysEvent_t Sys_GetEvent()
 				// DG end
 #endif
 				
-				// fall through
+			// fall through
 			case SDL_KEYUP:
 			{
 				bool isChar;

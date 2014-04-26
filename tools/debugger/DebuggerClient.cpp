@@ -158,12 +158,12 @@ bool rvDebuggerClient::ProcessMessages()
 				HandleBreak( msg );
 				break;
 				
-				// Callstack being send to the client
+			// Callstack being send to the client
 			case DBMSG_INSPECTCALLSTACK:
 				HandleInspectCallstack( msg );
 				break;
 				
-				// Thread list is being sent to the client
+			// Thread list is being sent to the client
 			case DBMSG_INSPECTTHREADS:
 				HandleInspectThreads( msg );
 				break;

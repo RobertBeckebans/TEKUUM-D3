@@ -408,8 +408,8 @@ void CPropTreeList::OnLButtonDblClk( UINT, CPoint point )
 				if( !pItem->IsRootLevel() )
 					break;
 					
-				// pass thru to default
-				
+			// pass thru to default
+			
 			default:
 				pOldFocus = m_pProp->GetFocusedItem();
 				m_pProp->SelectItems( NULL, FALSE );
@@ -419,8 +419,8 @@ void CPropTreeList::OnLButtonDblClk( UINT, CPoint point )
 				if( pItem != pOldFocus )
 					m_pProp->SendNotify( PTN_SELCHANGE, pItem );
 					
-				// pass thru to HTEXPAND
-				
+			// pass thru to HTEXPAND
+			
 			case HTEXPAND:
 				if( !m_pProp->SendNotify( PTN_ITEMEXPANDING, pItem ) )
 				{
@@ -523,7 +523,7 @@ void CPropTreeList::OnKeyDown( UINT nChar, UINT, UINT )
 			}
 			else
 				break;
-			// pass thru to next case VK_UP
+		// pass thru to next case VK_UP
 		case VK_UP:
 			if( m_pProp->FocusPrev() )
 				Invalidate();
@@ -547,7 +547,7 @@ void CPropTreeList::OnKeyDown( UINT nChar, UINT, UINT )
 			}
 			else
 				break;
-			// pass thru to next case VK_DOWN
+		// pass thru to next case VK_DOWN
 		case VK_DOWN:
 			if( m_pProp->FocusNext() )
 				Invalidate();

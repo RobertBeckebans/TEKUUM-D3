@@ -1126,7 +1126,7 @@ void CEntityDlg::CreateEntity()
 	if( ( GetAsyncKeyState( VK_CONTROL ) & 0x8000 ) )
 	{
 		// MAJOR hack for xian
-		extern void Brush_CopyList( brush_t * pFrom, brush_t * pTo );
+		extern void Brush_CopyList( brush_t* pFrom, brush_t* pTo );
 		brush_t temp_brushes;
 		temp_brushes.next = &temp_brushes;
 		Brush_CopyList( &selected_brushes, &temp_brushes );

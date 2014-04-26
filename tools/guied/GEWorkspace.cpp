@@ -456,27 +456,27 @@ int rvGEWorkspace::HandleScroll( int scrollbar, WPARAM wParam, LPARAM lParam )
 	
 	switch( LOWORD( wParam ) )
 	{
-			// user clicked left or up arrow
+		// user clicked left or up arrow
 		case SB_LINELEFT:
 			si.nPos -= 1000;
 			break;
 			
-			// user clicked right or down arrow
+		// user clicked right or down arrow
 		case SB_LINERIGHT:
 			si.nPos += 1000;
 			break;
 			
-			// user clicked shaft left of the scroll box
+		// user clicked shaft left of the scroll box
 		case SB_PAGELEFT:
 			si.nPos -= si.nPage;
 			break;
 			
-			// user clicked shaft right of the scroll box
+		// user clicked shaft right of the scroll box
 		case SB_PAGERIGHT:
 			si.nPos += si.nPage;
 			break;
 			
-			// user dragged the scroll box
+		// user dragged the scroll box
 		case SB_THUMBTRACK:
 			si.nPos = si.nTrackPos;
 			break;

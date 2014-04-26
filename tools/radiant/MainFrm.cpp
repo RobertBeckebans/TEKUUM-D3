@@ -1745,7 +1745,7 @@ void CMainFrame::OnKeyUp( UINT nChar, UINT nRepCnt, UINT nFlags )
 			bool	bGo = true;
 			if( g_Commands[i].m_nModifiers & RAD_PRESS )
 			{
-				int nModifiers = g_Commands[i].m_nModifiers &~RAD_PRESS;
+				int nModifiers = g_Commands[i].m_nModifiers & ~RAD_PRESS;
 				if( nModifiers )  				// are there modifiers present?
 				{
 					if( nModifiers & RAD_ALT )

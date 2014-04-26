@@ -475,8 +475,8 @@ LRESULT CALLBACK rvPropertyGrid::WndProc( HWND hWnd, UINT msg, WPARAM wParam, LP
 		case WM_LBUTTONDBLCLK:
 			grid->mSelectedItem = SendMessage( hWnd, LB_ITEMFROMPOINT, 0, lParam );
 			
-			// fall through
-			
+		// fall through
+		
 		case WM_LBUTTONDOWN:
 		{
 			int					item;

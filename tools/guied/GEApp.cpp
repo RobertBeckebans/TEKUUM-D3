@@ -996,8 +996,8 @@ int rvGEApp::HandleInitMenu( WPARAM wParam, LPARAM lParam )
 		
 		switch( id )
 		{
-				// Undo is greyed out when there is noting to undo and the text is
-				// modified to include the name of the modifier that will be undone
+			// Undo is greyed out when there is noting to undo and the text is
+			// modified to include the name of the modifier that will be undone
 			case ID_GUIED_EDIT_UNDO:
 			{
 				MENUITEMINFO info;
@@ -1068,7 +1068,7 @@ int rvGEApp::HandleInitMenu( WPARAM wParam, LPARAM lParam )
 				CheckMenuItem( hmenu, id, flags );
 				break;
 				
-				// All menu items that are greyed out when there is no workspace
+			// All menu items that are greyed out when there is no workspace
 			case ID_GUIED_WINDOW_TILE:
 			case ID_GUIED_WINDOW_CASCADE:
 			case ID_GUIED_ITEM_NEWWINDOWDEF:
@@ -1082,7 +1082,7 @@ int rvGEApp::HandleInitMenu( WPARAM wParam, LPARAM lParam )
 				EnableMenuItem( hmenu, nPos, MF_ENABLED | MF_BYPOSITION );
 				break;
 				
-				// All menu items that are greyed out unless an item is selected
+			// All menu items that are greyed out unless an item is selected
 			case ID_GUIED_VIEW_HIDESELECTED:
 			case ID_GUIED_VIEW_UNHIDESELECTED:
 			case ID_GUIED_EDIT_DELETE:
@@ -1090,12 +1090,12 @@ int rvGEApp::HandleInitMenu( WPARAM wParam, LPARAM lParam )
 				EnableMenuItem( hmenu, nPos, MF_BYPOSITION | ( workspace->GetSelectionMgr().Num() > 0 ? MF_ENABLED : MF_GRAYED ) );
 				break;
 				
-				// Enable paste if the clipboard has something in it
+			// Enable paste if the clipboard has something in it
 			case ID_GUIED_EDIT_PASTE:
 				EnableMenuItem( hmenu, nPos, MF_BYPOSITION | ( workspace->GetClipboard().Num() > 0 ? MF_ENABLED : MF_GRAYED ) );
 				break;
 				
-				// All menu items that are greyed out unless a single item is selected
+			// All menu items that are greyed out unless a single item is selected
 			case ID_GUIED_ITEM_ARRANGEBRINGTOFRONT:
 			case ID_GUIED_ITEM_ARRANGEBRINGFORWARD:
 			case ID_GUIED_ITEM_ARRANGESENDTOBACK:
@@ -1105,7 +1105,7 @@ int rvGEApp::HandleInitMenu( WPARAM wParam, LPARAM lParam )
 				EnableMenuItem( hmenu, nPos, MF_BYPOSITION | ( workspace->GetSelectionMgr().Num() == 1 ? MF_ENABLED : MF_GRAYED ) );
 				break;
 				
-				// All menu items that are greyed out unless multiple itmes are selected
+			// All menu items that are greyed out unless multiple itmes are selected
 			case ID_GUIED_ITEM_ALIGNLEFTS:
 			case ID_GUIED_ITEM_ALIGNCENTERS:
 			case ID_GUIED_ITEM_ALIGNRIGHTS:

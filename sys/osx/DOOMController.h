@@ -3,7 +3,7 @@
 #import <AppKit/AppKit.h>
 
 @interface DOOMController :
-NSObject
+	NSObject
 {
 	//    IBOutlet NSPanel *bannerPanel;
 }

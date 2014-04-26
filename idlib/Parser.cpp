@@ -2554,6 +2554,7 @@ int idParser::ReadDirective()
 		idParser::Error( "found '#' without name" );
 		return false;
 	}
+	
 	//directive name must be on the same line
 	if( token.linesCrossed > 0 )
 	{
@@ -2561,6 +2562,7 @@ int idParser::ReadDirective()
 		idParser::Error( "found '#' at end of line" );
 		return false;
 	}
+	
 	//if if is a name
 	if( token.type == TT_NAME )
 	{
@@ -2600,7 +2602,9 @@ int idParser::ReadDirective()
 		{
 			if( token == "include" )
 			{
-				return idParser::Directive_include();
+				// RB lets override for embedded shaders
+				return Directive_include();
+				// RB end
 			}
 			else if( token == "define" )
 			{

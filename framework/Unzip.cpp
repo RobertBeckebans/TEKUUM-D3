@@ -3943,7 +3943,7 @@ int inflate_codes( inflate_blocks_statef* s, z_streamp z, int r )
 	/* process input and output based on current state */
 	while( 1 ) switch( c->mode )
 		{
-				/* waiting for "i:"=input, "o:"=output, "x:"=nothing */
+			/* waiting for "i:"=input, "o:"=output, "x:"=nothing */
 			case START:         /* x: set up for LEN */
 #ifndef SLOW
 				if( m >= 258 && n >= 10 )
@@ -4273,10 +4273,10 @@ int inflateInit2_( z_streamp z, int w, const char* version, int stream_size )
 	z->msg = Z_NULL;
 	if( z->zalloc == Z_NULL )
 	{
-		z->zalloc = ( void * (* )( void*, unsigned, unsigned ) )zcalloc;
+		z->zalloc = ( void* ( * )( void*, unsigned, unsigned ) )zcalloc;
 		z->opaque = ( voidp )0;
 	}
-	if( z->zfree == Z_NULL ) z->zfree = ( void (* )( void*, void* ) )zcfree;
+	if( z->zfree == Z_NULL ) z->zfree = ( void ( * )( void*, void* ) )zcfree;
 	if( ( z->state = ( struct internal_state* )
 					 ZALLOC( z, 1, sizeof( struct internal_state ) ) ) == Z_NULL )
 		return Z_MEM_ERROR;

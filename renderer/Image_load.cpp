@@ -66,10 +66,10 @@ int BitsForFormat( textureFormat_t format )
 			return 4;
 		case FMT_DXT5:
 			return 8;
-			// RB: added ETC compression
+		// RB: added ETC compression
 		case FMT_ETC1_RGB8_OES:
 			return 4;
-			// RB end
+		// RB end
 		case FMT_DEPTH:
 			return 32;
 		case FMT_X16:
@@ -103,11 +103,11 @@ ID_INLINE void idImage::DeriveOpts()
 				opts.format = FMT_ETC1_RGB8_OES;
 				opts.colorFormat = CFM_GREEN_ALPHA;
 			}
-			//else
-			//{
-			//	opts.format = FMT_RGBA8;
-			//	opts.colorFormat = CFM_GREEN_ALPHA;
-			//}
+				//else
+				//{
+				//	opts.format = FMT_RGBA8;
+				//	opts.colorFormat = CFM_GREEN_ALPHA;
+				//}
 			
 #elif ( defined(USE_GLES2) || defined(USE_GLES3) ) && !defined(USE_MESA)
 			opts.format = FMT_RGBA8;
@@ -142,11 +142,11 @@ ID_INLINE void idImage::DeriveOpts()
 				opts.gammaMips = true;
 				opts.format = FMT_ETC1_RGB8_OES;
 			}
-			//else
-			//{
-			//	opts.format = FMT_RGBA8;
-			//	opts.gammaMips = true;
-			//}
+				//else
+				//{
+				//	opts.format = FMT_RGBA8;
+				//	opts.gammaMips = true;
+				//}
 			
 #elif ( defined(USE_GLES2) || defined(USE_GLES3) ) && !defined(USE_MESA)
 			opts.gammaMips = true;
@@ -173,10 +173,10 @@ ID_INLINE void idImage::DeriveOpts()
 			{
 				opts.format = FMT_ETC1_RGB8_OES;
 			}
-			//else
-			//{
-			//	opts.format = FMT_RGBA8;
-			//}
+				//else
+				//{
+				//	opts.format = FMT_RGBA8;
+				//}
 			
 #elif ( defined(USE_GLES2) || defined(USE_GLES3) ) && !defined(USE_MESA)
 			opts.format = FMT_RGBA8;

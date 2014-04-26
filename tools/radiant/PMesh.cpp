@@ -2839,7 +2839,7 @@ void DrawPatchMesh( patchMesh_t* pm, bool bPoints, int* list, bool bShade = fals
 				glBegin( GL_POINTS );
 				for( i = 0; i < pm->width; i++ )
 				{
-					glVertex3fv( reinterpret_cast< float(* )>( &pm->ctrl( i, g_nPatchAxisIndex ).xyz ) );
+					glVertex3fv( reinterpret_cast< float( * )>( &pm->ctrl( i, g_nPatchAxisIndex ).xyz ) );
 				}
 				glEnd();
 				
@@ -2850,8 +2850,8 @@ void DrawPatchMesh( patchMesh_t* pm, bool bPoints, int* list, bool bShade = fals
 					glBegin( GL_POINTS );
 					for( i = 0; i < pm->width; i++ )
 					{
-						glVertex3fv( reinterpret_cast< float(* )>( &pm->ctrl( i, g_nPatchAxisIndex ).xyz ) );
-						glVertex3fv( reinterpret_cast< float(* )>( &pm->ctrl( i, g_nPatchAxisIndex + 1 ).xyz ) );
+						glVertex3fv( reinterpret_cast< float( * )>( &pm->ctrl( i, g_nPatchAxisIndex ).xyz ) );
+						glVertex3fv( reinterpret_cast< float( * )>( &pm->ctrl( i, g_nPatchAxisIndex + 1 ).xyz ) );
 					}
 					glEnd();
 				}
@@ -2873,14 +2873,14 @@ void DrawPatchMesh( patchMesh_t* pm, bool bPoints, int* list, bool bShade = fals
 								{
 									for( j = 0; j < g_nPatchAxisIndex; j++ )
 									{
-										glVertex3fv( reinterpret_cast< float(* )>( &pm->ctrl( i, j ).xyz ) );
+										glVertex3fv( reinterpret_cast< float( * )>( &pm->ctrl( i, j ).xyz ) );
 									}
 								}
 								else
 								{
 									for( j = pm->height - 1; j > g_nPatchAxisIndex; j-- )
 									{
-										glVertex3fv( reinterpret_cast< float(* )>( &pm->ctrl( i, j ).xyz ) );
+										glVertex3fv( reinterpret_cast< float( * )>( &pm->ctrl( i, j ).xyz ) );
 									}
 								}
 							}
@@ -2895,7 +2895,7 @@ void DrawPatchMesh( patchMesh_t* pm, bool bPoints, int* list, bool bShade = fals
 				glBegin( GL_POINTS );
 				for( i = 0; i < pm->height; i++ )
 				{
-					glVertex3fv( reinterpret_cast< float(* )>( &pm->ctrl( g_nPatchAxisIndex, i ).xyz ) );
+					glVertex3fv( reinterpret_cast< float( * )>( &pm->ctrl( g_nPatchAxisIndex, i ).xyz ) );
 				}
 				glEnd();
 				
@@ -2906,8 +2906,8 @@ void DrawPatchMesh( patchMesh_t* pm, bool bPoints, int* list, bool bShade = fals
 					glBegin( GL_POINTS );
 					for( i = 0; i < pm->height; i++ )
 					{
-						glVertex3fv( reinterpret_cast< float(* )>( &pm->ctrl( g_nPatchAxisIndex, i ).xyz ) );
-						glVertex3fv( reinterpret_cast< float(* )>( &pm->ctrl( g_nPatchAxisIndex + 1, i ).xyz ) );
+						glVertex3fv( reinterpret_cast< float( * )>( &pm->ctrl( g_nPatchAxisIndex, i ).xyz ) );
+						glVertex3fv( reinterpret_cast< float( * )>( &pm->ctrl( g_nPatchAxisIndex + 1, i ).xyz ) );
 					}
 					glEnd();
 				}
@@ -2921,7 +2921,7 @@ void DrawPatchMesh( patchMesh_t* pm, bool bPoints, int* list, bool bShade = fals
 						{
 							if( g_nPatchBendState == BEND_SELECT_ORIGIN )
 							{
-								glVertex3fv( reinterpret_cast< float(* )>( &pm->ctrl( g_nBendOriginIndex, i ).xyz ) );
+								glVertex3fv( reinterpret_cast< float( * )>( &pm->ctrl( g_nBendOriginIndex, i ).xyz ) );
 							}
 							else
 							{
@@ -2929,14 +2929,14 @@ void DrawPatchMesh( patchMesh_t* pm, bool bPoints, int* list, bool bShade = fals
 								{
 									for( j = 0; j < g_nPatchAxisIndex; j++ )
 									{
-										glVertex3fv( reinterpret_cast< float(* )>( &pm->ctrl( j, i ).xyz ) );
+										glVertex3fv( reinterpret_cast< float( * )>( &pm->ctrl( j, i ).xyz ) );
 									}
 								}
 								else
 								{
 									for( j = pm->width - 1; j > g_nPatchAxisIndex; j-- )
 									{
-										glVertex3fv( reinterpret_cast< float(* )>( &pm->ctrl( j, i ).xyz ) );
+										glVertex3fv( reinterpret_cast< float( * )>( &pm->ctrl( j, i ).xyz ) );
 									}
 								}
 							}

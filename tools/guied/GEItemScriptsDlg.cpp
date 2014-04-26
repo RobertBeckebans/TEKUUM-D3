@@ -311,8 +311,8 @@ INT_PTR CALLBACK GEItescriptsDlg_WndProc( HWND hwnd, UINT msg, WPARAM wParam, LP
 			
 			gApp.GetOptions().GetWindowPlacement( "scripts", hwnd );
 			
-			// Let it fall through so the scripts window gets resized.
-			
+		// Let it fall through so the scripts window gets resized.
+		
 		case WM_SIZE:
 		{
 			RECT rClient;

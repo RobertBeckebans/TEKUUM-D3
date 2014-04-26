@@ -281,7 +281,7 @@ void idSoundWorldLocal::ProcessDemoCommand( idDemoFile* readDemo )
 	
 	switch( ( soundDemoCommand_t ) dc )
 	{
-			// RB end
+		// RB end
 		case SCMD_STATE:
 			// we need to protect this from the async thread
 			// other instances of calling idSoundWorldLocal::ReadFromSaveGame do this while the sound code is muted
