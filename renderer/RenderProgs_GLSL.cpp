@@ -326,13 +326,13 @@ static const char* FindEmbeddedSourceShader( const char* name )
 	const char* embeddedSource = NULL;
 	for( int i = 0 ; cg_renderprogs[i].name ; i++ )
 	{
-		if( !idStr::Cmp( cg_renderprogs[i].name, name ) )
+		if( !idStr::Icmp( cg_renderprogs[i].name, name ) )
 		{
 			embeddedSource = cg_renderprogs[i].shaderText;
 			break;
 		}
 	}
-
+	
 	return embeddedSource;
 }
 
@@ -342,14 +342,14 @@ public:
 	idParser_EmbeddedGLSL( int flags ) : idParser( flags )
 	{
 	}
-
+	
 private:
 	int		Directive_include()
 	{
 		idLexer* script;
 		idToken token;
 		idStr path;
-	
+		
 		if( !idParser::ReadSourceToken( &token ) )
 		{
 			idParser::Error( "#include without file name" );
@@ -386,8 +386,8 @@ private:
 					embeddedSource = FindEmbeddedSourceShader( path );
 				}
 			}
-
-			if( embeddedSource == NULL || !script->LoadMemory( embeddedSource, strlen( embeddedSource), path ) )
+			
+			if( embeddedSource == NULL || !script->LoadMemory( embeddedSource, strlen( embeddedSource ), path ) )
 			{
 				delete script;
 				script = NULL;
@@ -423,10 +423,10 @@ private:
 				return true;
 			}
 			script = new idLexer;
-
+			
 			const char* embeddedSource = FindEmbeddedSourceShader( includepath + path );
-
-			if( embeddedSource == NULL || !script->LoadMemory( embeddedSource, strlen( embeddedSource), path ) )
+			
+			if( embeddedSource == NULL || !script->LoadMemory( embeddedSource, strlen( embeddedSource ), path ) )
 			{
 				delete script;
 				script = NULL;
@@ -1543,7 +1543,7 @@ GLuint idRenderProgManager::LoadGLSLShader( GLenum target, const char* name, idL
 	{
 		const char* hlslFileBuffer = NULL;
 		int len = 0;
-
+		
 		if( hlslFileLength <= 0 )
 		{
 			// hlsl file doesn't even exist bail out

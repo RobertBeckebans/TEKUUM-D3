@@ -204,7 +204,7 @@ protected:
 	const char*		marker_p;
 	
 	static define_t* globaldefines;				// list with global defines added to every source loaded
-
+	
 	void			PushIndent( int type, int skip );
 	void			PopIndent( int* type, int* skip );
 	void			PushScript( idLexer* script );
