@@ -1517,18 +1517,6 @@ GLuint idRenderProgManager::LoadGLSLShader( GLenum target, const char* name, idL
 		outFileUniforms += "_vertex.uniforms";
 	}
 	
-	// RB: use embedded Cg sources if necessary
-	ID_TIME_T embeddedTimeStamp = 0;
-	const char* embeddedSource = NULL;
-	for( int i = 0 ; cg_renderprogs[i].name ; i++ )
-	{
-		if( !idStr::Icmp( cg_renderprogs[i].name, inFile ) )
-		{
-			embeddedSource = cg_renderprogs[i].shaderText;
-			break;
-		}
-	}
-	
 	// first check whether we already have a valid GLSL file and compare it to the hlsl timestamp;
 	ID_TIME_T hlslTimeStamp;
 	int hlslFileLength = fileSystem->ReadFile( inFile.c_str(), NULL, &hlslTimeStamp );

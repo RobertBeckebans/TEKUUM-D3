@@ -3727,7 +3727,7 @@ const char* idParser::GetPunctuationFromId( int id )
 			return idParser::punctuations[i].p;
 		}
 	}
-	return "unkown punctuation";
+	return "unknown punctuation";
 }
 
 /*
