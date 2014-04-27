@@ -38,14 +38,11 @@ globalFramebuffers_t globalFramebuffers;
 
 static void R_ListFramebuffers_f( const idCmdArgs& args )
 {
-
 	if( !glConfig.framebufferObjectAvailable )
 	{
 		common->Printf( "GL_EXT_framebuffer_object is not available.\n" );
 		return;
 	}
-	
-	
 }
 
 Framebuffer::Framebuffer( const char* name, int w, int h )
@@ -76,6 +73,18 @@ void Framebuffer::Init()
 	cmdSystem->AddCommand( "listFramebuffers", R_ListFramebuffers_f, CMD_FL_RENDERER, "lists framebuffers" );
 	
 	backEnd.glState.currentFramebuffer = NULL;
+	
+	int width, height;
+	width = height = r_shadowMapImageSize.GetInteger();
+	
+	globalFramebuffers.shadowFBO = new Framebuffer( "_shadowMap" , width, height );
+	globalFramebuffers.shadowFBO->Bind();
+	glDrawBuffers( 0, NULL );
+//	globalFramebuffers.shadowFBO->AddColorBuffer( GL_RGBA8, 0 );
+//	globalFramebuffers.shadowFBO->AddDepthBuffer( GL_DEPTH_COMPONENT24 );
+//	globalFramebuffers.shadowFBO->Check();
+
+	BindNull();
 }
 
 void Framebuffer::Shutdown()
@@ -179,6 +188,10 @@ void Framebuffer::AttachImageDepth( const idImage* image )
 	glFramebufferTexture2D( GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, image->texnum, 0 );
 }
 
+void Framebuffer::AttachImageDepthLayer( const idImage* image, int layer )
+{
+	glFramebufferTextureLayer( GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, image->texnum, 0, layer );
+}
 
 void Framebuffer::Check()
 {

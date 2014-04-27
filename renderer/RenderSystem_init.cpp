@@ -244,6 +244,12 @@ idCVar stereoRender_enable( "stereoRender_enable", "0", CVAR_INTEGER | CVAR_ARCH
 idCVar stereoRender_swapEyes( "stereoRender_swapEyes", "0", CVAR_BOOL | CVAR_ARCHIVE, "reverse eye adjustments" );
 idCVar stereoRender_deGhost( "stereoRender_deGhost", "0.05", CVAR_FLOAT | CVAR_ARCHIVE, "subtract from opposite eye to reduce ghosting" );
 
+// RB: shadow mapping parameters
+idCVar r_shadowMapFrustumFOV( "r_shadowMapFrustumFOV", "92", CVAR_RENDERER | CVAR_FLOAT, "oversize FOV for point light side matching" );
+idCVar r_shadowMapSingleSide( "r_shadowMapSingleSide", "-1", CVAR_RENDERER | CVAR_INTEGER, "only draw a single side (0-5) of point lights" );
+idCVar r_shadowMapImageSize( "r_shadowMapImageSize", "1024", CVAR_RENDERER | CVAR_INTEGER, "", 128, 2048 );
+// RB end
+
 
 /*
 ========================
@@ -2611,8 +2617,11 @@ void idRenderSystemLocal::Init()
 	guiModel = new idGuiModel;
 	guiModel->Clear();
 	tr_guiModel = guiModel;	// for DeviceContext fast path
-	// RB: added direct freetype support
+	
+	// RB begin
 	R_InitFreeType();
+	
+	Framebuffer::Init();
 	// RB end
 	
 	globalImages->Init();
@@ -2678,9 +2687,11 @@ void idRenderSystemLocal::Shutdown()
 	
 	renderModelManager->Shutdown();
 	
-	idCinematic::ShutdownCinematic( );
+	idCinematic::ShutdownCinematic();
 	
 	globalImages->Shutdown();
+	
+	Framebuffer::Shutdown();
 	
 	// free frame memory
 	R_ShutdownFrameData();

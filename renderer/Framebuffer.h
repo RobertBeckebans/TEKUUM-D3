@@ -50,6 +50,7 @@ public:
 	void					AttachImage2D( int target, const idImage* image, int index );
 	void					AttachImage3D( const idImage* image );
 	void					AttachImageDepth( const idImage* image );
+	void					AttachImageDepthLayer( const idImage* image, int layer );
 	
 	// check for OpenGL errors
 	void					Check();
@@ -79,11 +80,10 @@ private:
 	static idList<Framebuffer*>	framebuffers;
 };
 
-typedef struct
+struct globalFramebuffers_t
 {
-	Framebuffer*				gbuffer;
-	Framebuffer*				hdrRender;
-} globalFramebuffers_t;
+	Framebuffer*				shadowFBO;
+};
 extern globalFramebuffers_t globalFramebuffers;
 
 

@@ -449,6 +449,42 @@ void R_QuadraticImage( idImage* image )
 	image->GenerateImage( ( byte* )data, QUADRATIC_WIDTH, QUADRATIC_HEIGHT, TF_DEFAULT, TR_CLAMP, TD_LOOKUP_TABLE_RGB1 );
 }
 
+// RB begin
+static void R_CreateShadowMapImage( idImage* image )
+{
+	int size = r_shadowMapImageSize.GetInteger();
+	image->GenerateShadowArray( size, size, TF_LINEAR, TR_CLAMP, TD_SHADOW_ARRAY );
+	
+	/*
+	byte*	data = ( byte* )Mem_Alloc( lightBufferSize * lightBufferSize );
+	
+	memset( data, 0, lightBufferSize * lightBufferSize );
+	
+	image->GenerateImage( ( byte* )data, 4, 4,
+		TF_LINEAR, false, TR_CLAMP_TO_ZERO, TD_HIGH_QUALITY );
+	
+	// now reset it to a shadow depth image
+	GL_CheckErrors();
+	image->uploadWidth = image->uploadHeight = lightBufferSize;
+	glTexImage2D( GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24_ARB, lightBufferSize, lightBufferSize,
+				   0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, data );
+	
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE_ARB, GL_COMPARE_R_TO_TEXTURE );
+	//	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE_ARB, GL_NONE );
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC_ARB, GL_LEQUAL );
+	
+	// explicit zero depth border
+	float	color[4];
+	color[0] = color[1] = color[2] = color[3] = 0;
+	glTexParameterfv( GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, color );
+	
+	GL_CheckErrors();
+	
+	Mem_Free( data );
+	*/
+}
+// RB end
+
 /*
 ================
 idImageManager::CreateIntrinsicImages
@@ -470,6 +506,8 @@ void idImageManager::CreateIntrinsicImages()
 	// RB begin
 	// cinematicImage is used for cinematic drawing
 	cinematicImage = ImageFromFunction( "_cinematic", R_RGBA8Image );
+	
+	shadowImage = ImageFromFunction( va( "_shadowMap%i_0", r_shadowMapImageSize.GetInteger() ), R_CreateShadowMapImage );
 	// RB end
 	
 	// scratchImage is used for screen wipes/doublevision etc..

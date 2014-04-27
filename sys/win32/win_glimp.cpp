@@ -304,6 +304,11 @@ static HGLRC CreateOpenGLContextOnDC( const HDC hdc, const bool debugContext )
 	int useOpenGL32 = r_useOpenGL32.GetInteger();
 	HGLRC m_hrc = NULL;
 	
+	if( !WGLEW_ARB_create_context || useOpenGL32 == 0 )
+	{
+		return wglCreateContext( hdc );
+	}
+	
 	for( int i = 0; i < 2; i++ )
 	{
 		const int glMajorVersion = ( useOpenGL32 != 0 ) ? 3 : 2;
@@ -450,7 +455,7 @@ static bool GLW_InitDriver( glimpParms_t parms )
 	}
 	
 	// the multisample path uses the wgl
-	if( wglChoosePixelFormatARB )
+	if( WGLEW_ARB_pixel_format )
 	{
 		win32.pixelformat = GLW_ChoosePixelFormat( win32.hDC, parms.multiSamples, parms.stereo );
 	}
@@ -503,6 +508,7 @@ static bool GLW_InitDriver( glimpParms_t parms )
 	// startup the OpenGL subsystem by creating a context and making it current
 	//
 	common->Printf( "...creating GL context: " );
+	
 	win32.hGLRC = CreateOpenGLContextOnDC( win32.hDC, r_debugContext.GetBool() );
 	if( win32.hGLRC == 0 )
 	{

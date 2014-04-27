@@ -69,6 +69,8 @@ int BitsForFormat( textureFormat_t format )
 		// RB: added ETC compression
 		case FMT_ETC1_RGB8_OES:
 			return 4;
+		case FMT_SHADOW_ARRAY:
+			return ( 32 * 6 );
 		// RB end
 		case FMT_DEPTH:
 			return 32;
@@ -120,6 +122,10 @@ ID_INLINE void idImage::DeriveOpts()
 			
 			case TD_DEPTH:
 				opts.format = FMT_DEPTH;
+				break;
+				
+			case TD_SHADOW_ARRAY:
+				opts.format = FMT_SHADOW_ARRAY;
 				break;
 				
 			case TD_DIFFUSE:
@@ -357,6 +363,47 @@ void idImage::GenerateCubeImage( const byte* pic[6], int size, textureFilter_t f
 	}
 }
 
+// RB begin
+void idImage::GenerateShadowArray( int width, int height, textureFilter_t filterParm, textureRepeat_t repeatParm, textureUsage_t usageParm )
+{
+	PurgeImage();
+	
+	filter = filterParm;
+	repeat = repeatParm;
+	usage = usageParm;
+	cubeFiles = CF_2D_ARRAY;
+	
+	opts.textureType = TT_2D_ARRAY;
+	opts.width = width;
+	opts.height = height;
+	opts.numLevels = 0;
+	DeriveOpts();
+	
+	// if we don't have a rendering context, just return after we
+	// have filled in the parms.  We must have the values set, or
+	// an image match from a shader before the render starts would miss
+	// the generated texture
+	if( !R_IsInitialized() )
+	{
+		return;
+	}
+	
+	//idBinaryImage im( GetName() );
+	//im.Load2DFromMemory( width, height, pic, opts.numLevels, opts.format, opts.colorFormat, opts.gammaMips );
+	
+	AllocImage();
+	
+	/*
+	for( int i = 0; i < im.NumImages(); i++ )
+	{
+		const bimageImage_t& img = im.GetImageHeader( i );
+		const byte* data = im.GetImageData( i );
+		SubImageUpload( img.level, 0, 0, img.destZ, img.width, img.height, data );
+	}
+	*/
+}
+// RB end
+
 /*
 ===============
 GetGeneratedName
@@ -414,7 +461,13 @@ void idImage::ActuallyLoadImage( bool fromBackEnd )
 	}
 	else
 	{
-		if( cubeFiles != CF_2D )
+		// RB begin
+		if( cubeFiles == CF_2D_ARRAY )
+		{
+			opts.textureType = TT_2D_ARRAY;
+		}
+		// RB end
+		else if( cubeFiles != CF_2D )
 		{
 			opts.textureType = TT_CUBIC;
 			repeat = TR_CLAMP;

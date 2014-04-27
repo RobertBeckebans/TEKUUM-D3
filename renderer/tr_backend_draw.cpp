@@ -31,6 +31,7 @@ If you have questions concerning this license or the applicable additional terms
 #include "precompiled.h"
 
 #include "tr_local.h"
+#include "Framebuffer.h"
 
 idCVar r_drawEyeColor( "r_drawEyeColor", "0", CVAR_RENDERER | CVAR_BOOL, "Draw a colored box, red = left eye, blue = right eye, grey = non-stereo" );
 idCVar r_motionBlur( "r_motionBlur", "0", CVAR_RENDERER | CVAR_INTEGER | CVAR_ARCHIVE, "1 - 5, log2 of the number of motion blur samples" );
@@ -660,6 +661,24 @@ static void RB_FinishStageTexturing( const shaderStage_t* pStage, const drawSurf
 		renderProgManager.Unbind();
 	}
 }
+
+// RB: moved this up because we need to call this several times for shadow mapping
+static void RB_ResetViewportAndScissorToDefaultCamera( const viewDef_t* viewDef )
+{
+	// set the window clipping
+	GL_Viewport( viewDef->viewport.x1,
+				 viewDef->viewport.y1,
+				 viewDef->viewport.x2 + 1 - viewDef->viewport.x1,
+				 viewDef->viewport.y2 + 1 - viewDef->viewport.y1 );
+				 
+	// the scissor may be smaller than the viewport for subviews
+	GL_Scissor( backEnd.viewDef->viewport.x1 + viewDef->scissor.x1,
+				backEnd.viewDef->viewport.y1 + viewDef->scissor.y1,
+				viewDef->scissor.x2 + 1 - viewDef->scissor.x1,
+				viewDef->scissor.y2 + 1 - viewDef->scissor.y1 );
+	backEnd.currentScissor = viewDef->scissor;
+}
+// RB end
 
 /*
 =========================================================================================
@@ -2432,20 +2451,19 @@ static void RB_StencilSelectLight( const viewLight_t* vLight )
 /*
 ==============================================================================================
 
-SHADOW BUFFER RENDERING
+SHADOW MAPS RENDERING
 
 ==============================================================================================
 */
 
-idCVar r_sb_frustomFOV( "r_sb_frustomFOV", "92", CVAR_RENDERER | CVAR_FLOAT, "oversize FOV for point light side matching" );
-idCVar r_sb_singleSide( "r_sb_singleSide", "-1", CVAR_RENDERER | CVAR_INTEGER, "only draw a single side (0-5) of point lights" );
+
 
 /*
 =====================
 RB_ShadowMapPass
 =====================
 */
-static void RB_ShadowBufferPass( const drawSurf_t* drawSurfs, const viewLight_t* vLight, int side )
+static void RB_ShadowMapPass( const drawSurf_t* drawSurfs, const viewLight_t* vLight, int side )
 {
 	if( r_skipShadows.GetBool() )
 	{
@@ -2457,9 +2475,9 @@ static void RB_ShadowBufferPass( const drawSurf_t* drawSurfs, const viewLight_t*
 		return;
 	}
 	
-	RENDERLOG_PRINTF( "---------- RB_ShadowBufferPass ----------\n" );
+	RENDERLOG_PRINTF( "---------- RB_ShadowMapPass ----------\n" );
 	
-	renderProgManager.BindShader_Shadow();
+	renderProgManager.BindShader_Depth();
 	
 	GL_SelectTexture( 0 );
 	globalImages->BindNull();
@@ -2482,7 +2500,7 @@ static void RB_ShadowBufferPass( const drawSurf_t* drawSurfs, const viewLight_t*
 	// set up 90 degree projection matrix
 	//
 	const float zNear = 4;
-	const float	fov = r_sb_frustomFOV.GetFloat();
+	const float	fov = r_shadowMapFrustumFOV.GetFloat();
 	
 	float ymax = zNear * tan( fov * idMath::PI / 360.0f );
 	float ymin = -ymax;
@@ -2618,14 +2636,24 @@ static void RB_ShadowBufferPass( const drawSurf_t* drawSurfs, const viewLight_t*
 	memcpy( unflippedLightViewMatrix, viewMatrix, sizeof( unflippedLightViewMatrix ) );
 	R_MatrixMultiply( viewMatrix, s_flipMatrix, lightViewMatrix );
 	
-#if 0
-	TODO
 	
-	shadowFBO->Bind();
-	//shadowFBO->AttachImage2D( GL_TEXTURE_2D, shadowImage[0], 0 );
-	shadowFBO->AttachImageDepth( shadowImage[0] );
-	shadowFBO->Check();
-#endif
+	
+	globalFramebuffers.shadowFBO->Bind();
+	
+	if( side == - 1 )
+	{
+		globalFramebuffers.shadowFBO->AttachImageDepthLayer( globalImages->shadowImage, 0 );
+	}
+	else
+	{
+		globalFramebuffers.shadowFBO->AttachImageDepthLayer( globalImages->shadowImage, side );
+	}
+	
+	globalFramebuffers.shadowFBO->Check();
+	
+	GL_ViewportAndScissor( 0, 0, r_shadowMapImageSize.GetInteger(), r_shadowMapImageSize.GetInteger() );
+	
+	glClear( GL_DEPTH_BUFFER_BIT );
 	
 	// process the chain of shadows with the current rendering state
 	backEnd.currentSpace = NULL;
@@ -2660,6 +2688,7 @@ static void RB_ShadowBufferPass( const drawSurf_t* drawSurfs, const viewLight_t*
 			continue;	// a job may have created an empty shadow volume
 		}
 		
+		/*
 		if( !backEnd.currentScissor.Equals( drawSurf->scissorRect ) && r_useScissor.GetBool() )
 		{
 			// change the scissor
@@ -2669,6 +2698,7 @@ static void RB_ShadowBufferPass( const drawSurf_t* drawSurfs, const viewLight_t*
 						drawSurf->scissorRect.y2 + 1 - drawSurf->scissorRect.y1 );
 			backEnd.currentScissor = drawSurf->scissorRect;
 		}
+		*/
 		
 		if( drawSurf->space != backEnd.currentSpace )
 		{
@@ -2691,245 +2721,26 @@ static void RB_ShadowBufferPass( const drawSurf_t* drawSurfs, const viewLight_t*
 			backEnd.currentSpace = drawSurf->space;
 		}
 		
-		if( r_showShadows.GetInteger() == 0 )
+		if( drawSurf->jointCache )
 		{
-			if( drawSurf->jointCache )
-			{
-				renderProgManager.BindShader_ShadowSkinned();
-			}
-			else
-			{
-				renderProgManager.BindShader_Shadow();
-			}
+			renderProgManager.BindShader_DepthSkinned();
 		}
 		else
 		{
-			if( drawSurf->jointCache )
-			{
-				renderProgManager.BindShader_ShadowDebugSkinned();
-			}
-			else
-			{
-				renderProgManager.BindShader_ShadowDebug();
-			}
-		}
-		
-		// set depth bounds per shadow
-		if( r_useShadowDepthBounds.GetBool() )
-		{
-			GL_DepthBoundsTest( drawSurf->scissorRect.zmin, drawSurf->scissorRect.zmax );
+			renderProgManager.BindShader_Depth();
 		}
 		
 		RB_DrawElementsWithCounters( drawSurf );
-		
-#if 0
-		// Determine whether or not the shadow volume needs to be rendered with Z-pass or
-		// Z-fail. It is worthwhile to spend significant resources to reduce the number of
-		// cases where shadow volumes need to be rendered with Z-fail because Z-fail
-		// rendering can be significantly slower even on today's hardware. For instance,
-		// on NVIDIA hardware Z-fail rendering causes the Z-Cull to be used in reverse:
-		// Z-near becomes Z-far (trivial accept becomes trivial reject). Using the Z-Cull
-		// in reverse is far less efficient because the Z-Cull only stores Z-near per 16x16
-		// pixels while the Z-far is stored per 4x2 pixels. (The Z-near coallesce buffer
-		// which has 4x4 granularity is only used when updating the depth which is not the
-		// case for shadow volumes.) Note that it is also important to NOT use a Z-Cull
-		// reconstruct because that would clear the Z-near of the Z-Cull which results in
-		// no trivial rejection for Z-fail stencil shadow rendering.
-		
-		const bool renderZPass = ( drawSurf->renderZFail == 0 ) || r_forceZPassStencilShadows.GetBool();
-		
-		
-		if( renderZPass )
-		{
-			// Z-pass
-			glStencilOpSeparate( GL_FRONT, GL_KEEP, GL_KEEP, GL_INCR );
-			glStencilOpSeparate( GL_BACK, GL_KEEP, GL_KEEP, GL_DECR );
-		}
-		else if( r_useStencilShadowPreload.GetBool() )
-		{
-			// preload + Z-pass
-			glStencilOpSeparate( GL_FRONT, GL_KEEP, GL_DECR, GL_DECR );
-			glStencilOpSeparate( GL_BACK, GL_KEEP, GL_INCR, GL_INCR );
-		}
-		else
-		{
-			// Z-fail
-		}
-		
-		
-		// get vertex buffer
-		const vertCacheHandle_t vbHandle = drawSurf->shadowCache;
-		idVertexBuffer* vertexBuffer;
-		if( vertexCache.CacheIsStatic( vbHandle ) )
-		{
-			vertexBuffer = &vertexCache.staticData.vertexBuffer;
-		}
-		else
-		{
-			const uint64 frameNum = ( int )( vbHandle >> VERTCACHE_FRAME_SHIFT ) & VERTCACHE_FRAME_MASK;
-			if( frameNum != ( ( vertexCache.currentFrame - 1 ) & VERTCACHE_FRAME_MASK ) )
-			{
-				idLib::Warning( "RB_DrawElementsWithCounters, vertexBuffer == NULL" );
-				continue;
-			}
-			vertexBuffer = &vertexCache.frameData[vertexCache.drawListNum].vertexBuffer;
-		}
-		const int vertOffset = ( int )( vbHandle >> VERTCACHE_OFFSET_SHIFT ) & VERTCACHE_OFFSET_MASK;
-		
-		// get index buffer
-		const vertCacheHandle_t ibHandle = drawSurf->indexCache;
-		idIndexBuffer* indexBuffer;
-		if( vertexCache.CacheIsStatic( ibHandle ) )
-		{
-			indexBuffer = &vertexCache.staticData.indexBuffer;
-		}
-		else
-		{
-			const uint64 frameNum = ( int )( ibHandle >> VERTCACHE_FRAME_SHIFT ) & VERTCACHE_FRAME_MASK;
-			if( frameNum != ( ( vertexCache.currentFrame - 1 ) & VERTCACHE_FRAME_MASK ) )
-			{
-				idLib::Warning( "RB_DrawElementsWithCounters, indexBuffer == NULL" );
-				continue;
-			}
-			indexBuffer = &vertexCache.frameData[vertexCache.drawListNum].indexBuffer;
-		}
-		const uint64 indexOffset = ( int )( ibHandle >> VERTCACHE_OFFSET_SHIFT ) & VERTCACHE_OFFSET_MASK;
-		
-		RENDERLOG_PRINTF( "Binding Buffers: %p %p\n", vertexBuffer, indexBuffer );
-		
-		// RB: 64 bit fixes, changed GLuint to GLintptrARB
-		if( backEnd.glState.currentIndexBuffer != ( GLintptr )indexBuffer->GetAPIObject() || !r_useStateCaching.GetBool() )
-		{
-			glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, ( GLintptr )indexBuffer->GetAPIObject() );
-			backEnd.glState.currentIndexBuffer = ( GLintptr )indexBuffer->GetAPIObject();
-		}
-		
-		if( drawSurf->jointCache )
-		{
-			assert( renderProgManager.ShaderUsesJoints() );
-			
-			idJointBuffer jointBuffer;
-			if( !vertexCache.GetJointBuffer( drawSurf->jointCache, &jointBuffer ) )
-			{
-				idLib::Warning( "RB_DrawElementsWithCounters, jointBuffer == NULL" );
-				continue;
-			}
-			assert( ( jointBuffer.GetOffset() & ( glConfig.uniformBufferOffsetAlignment - 1 ) ) == 0 );
-			
-			const GLintptr ubo = reinterpret_cast< GLintptr >( jointBuffer.GetAPIObject() );
-			glBindBufferRange( GL_UNIFORM_BUFFER, 0, ubo, jointBuffer.GetOffset(), jointBuffer.GetNumJoints() * sizeof( idJointMat ) );
-			
-			if( ( backEnd.glState.vertexLayout != LAYOUT_DRAW_SHADOW_VERT_SKINNED ) || ( backEnd.glState.currentVertexBuffer != ( GLintptr )vertexBuffer->GetAPIObject() ) || !r_useStateCaching.GetBool() )
-			{
-				glBindBuffer( GL_ARRAY_BUFFER, ( GLintptr )vertexBuffer->GetAPIObject() );
-				backEnd.glState.currentVertexBuffer = ( GLintptr )vertexBuffer->GetAPIObject();
-				
-				glEnableVertexAttribArray( PC_ATTRIB_INDEX_VERTEX );
-				glDisableVertexAttribArray( PC_ATTRIB_INDEX_NORMAL );
-				glEnableVertexAttribArray( PC_ATTRIB_INDEX_COLOR );
-				glEnableVertexAttribArray( PC_ATTRIB_INDEX_COLOR2 );
-				glDisableVertexAttribArray( PC_ATTRIB_INDEX_ST );
-				glDisableVertexAttribArray( PC_ATTRIB_INDEX_TANGENT );
-				
-#if defined(USE_GLES2) || defined(USE_GLES3)
-				glVertexAttribPointer( PC_ATTRIB_INDEX_VERTEX, 4, GL_FLOAT, GL_FALSE, sizeof( idShadowVertSkinned ), ( void* )( vertOffset + SHADOWVERTSKINNED_XYZW_OFFSET ) );
-				glVertexAttribPointer( PC_ATTRIB_INDEX_COLOR, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof( idShadowVertSkinned ), ( void* )( vertOffset + SHADOWVERTSKINNED_COLOR_OFFSET ) );
-				glVertexAttribPointer( PC_ATTRIB_INDEX_COLOR2, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof( idShadowVertSkinned ), ( void* )( vertOffset + SHADOWVERTSKINNED_COLOR2_OFFSET ) );
-#else
-				glVertexAttribPointer( PC_ATTRIB_INDEX_VERTEX, 4, GL_FLOAT, GL_FALSE, sizeof( idShadowVertSkinned ), ( void* )( SHADOWVERTSKINNED_XYZW_OFFSET ) );
-				glVertexAttribPointer( PC_ATTRIB_INDEX_COLOR, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof( idShadowVertSkinned ), ( void* )( SHADOWVERTSKINNED_COLOR_OFFSET ) );
-				glVertexAttribPointer( PC_ATTRIB_INDEX_COLOR2, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof( idShadowVertSkinned ), ( void* )( SHADOWVERTSKINNED_COLOR2_OFFSET ) );
-#endif
-				
-				backEnd.glState.vertexLayout = LAYOUT_DRAW_SHADOW_VERT_SKINNED;
-			}
-			
-		}
-		else
-		{
-			if( ( backEnd.glState.vertexLayout != LAYOUT_DRAW_SHADOW_VERT ) || ( backEnd.glState.currentVertexBuffer != ( GLintptr )vertexBuffer->GetAPIObject() ) || !r_useStateCaching.GetBool() )
-			{
-				glBindBuffer( GL_ARRAY_BUFFER, ( GLintptr )vertexBuffer->GetAPIObject() );
-				backEnd.glState.currentVertexBuffer = ( GLintptr )vertexBuffer->GetAPIObject();
-				
-				glEnableVertexAttribArray( PC_ATTRIB_INDEX_VERTEX );
-				glDisableVertexAttribArray( PC_ATTRIB_INDEX_NORMAL );
-				glDisableVertexAttribArray( PC_ATTRIB_INDEX_COLOR );
-				glDisableVertexAttribArray( PC_ATTRIB_INDEX_COLOR2 );
-				glDisableVertexAttribArray( PC_ATTRIB_INDEX_ST );
-				glDisableVertexAttribArray( PC_ATTRIB_INDEX_TANGENT );
-				
-#if defined(USE_GLES2) || defined(USE_GLES3)
-				glVertexAttribPointer( PC_ATTRIB_INDEX_VERTEX, 4, GL_FLOAT, GL_FALSE, sizeof( idShadowVert ), ( void* )( vertOffset + SHADOWVERT_XYZW_OFFSET ) );
-#else
-				glVertexAttribPointer( PC_ATTRIB_INDEX_VERTEX, 4, GL_FLOAT, GL_FALSE, sizeof( idShadowVert ), ( void* )( SHADOWVERT_XYZW_OFFSET ) );
-#endif
-				
-				backEnd.glState.vertexLayout = LAYOUT_DRAW_SHADOW_VERT;
-			}
-		}
-		// RB end
-		
-		renderProgManager.CommitUniforms();
-		
-		if( drawSurf->jointCache )
-		{
-#if defined(USE_GLES3) //defined(USE_GLES2)
-			glDrawElements( GL_TRIANGLES, r_singleTriangle.GetBool() ? 3 : drawSurf->numIndexes, GL_INDEX_TYPE, ( triIndex_t* )indexOffset );
-#else
-			glDrawElementsBaseVertex( GL_TRIANGLES, r_singleTriangle.GetBool() ? 3 : drawSurf->numIndexes, GL_INDEX_TYPE, ( triIndex_t* )indexOffset, vertOffset / sizeof( idShadowVertSkinned ) );
-#endif
-		}
-		else
-		{
-#if defined(USE_GLES3)
-			glDrawElements( GL_TRIANGLES, r_singleTriangle.GetBool() ? 3 : drawSurf->numIndexes, GL_INDEX_TYPE, ( triIndex_t* )indexOffset );
-#else
-			glDrawElementsBaseVertex( GL_TRIANGLES, r_singleTriangle.GetBool() ? 3 : drawSurf->numIndexes, GL_INDEX_TYPE, ( triIndex_t* )indexOffset, vertOffset / sizeof( idShadowVert ) );
-#endif
-		}
-		
-		// RB: added stats
-		backEnd.pc.c_shadowElements++;
-		backEnd.pc.c_shadowIndexes += drawSurf->numIndexes;
-		// RB end
-		
-		if( !renderZPass && r_useStencilShadowPreload.GetBool() )
-		{
-			// render again with Z-pass
-			glStencilOpSeparate( GL_FRONT, GL_KEEP, GL_KEEP, GL_INCR );
-			glStencilOpSeparate( GL_BACK, GL_KEEP, GL_KEEP, GL_DECR );
-			
-			if( drawSurf->jointCache )
-			{
-#if defined(USE_GLES3)
-				glDrawElements( GL_TRIANGLES, r_singleTriangle.GetBool() ? 3 : drawSurf->numIndexes, GL_INDEX_TYPE, ( triIndex_t* )indexOffset );
-#else
-				glDrawElementsBaseVertex( GL_TRIANGLES, r_singleTriangle.GetBool() ? 3 : drawSurf->numIndexes, GL_INDEX_TYPE, ( triIndex_t* )indexOffset, vertOffset / sizeof( idShadowVertSkinned ) );
-#endif
-			}
-			else
-			{
-#if defined(USE_GLES3)
-				glDrawElements( GL_TRIANGLES, r_singleTriangle.GetBool() ? 3 : drawSurf->numIndexes, GL_INDEX_TYPE, ( triIndex_t* )indexOffset );
-#else
-				glDrawElementsBaseVertex( GL_TRIANGLES, r_singleTriangle.GetBool() ? 3 : drawSurf->numIndexes, GL_INDEX_TYPE, ( triIndex_t* )indexOffset, vertOffset / sizeof( idShadowVert ) );
-#endif
-			}
-			
-			// RB: added stats
-			backEnd.pc.c_shadowElements++;
-			backEnd.pc.c_shadowIndexes += drawSurf->numIndexes;
-			// RB end
-		}
-#endif
 	}
 	
 	// cleanup the shadow specific rendering state
 	
+	Framebuffer::BindNull();
+	
 	GL_Cull( CT_FRONT_SIDED );
 	
 	// reset depth bounds
+	/*
 	if( r_useShadowDepthBounds.GetBool() )
 	{
 		if( r_useLightDepthBounds.GetBool() )
@@ -2941,6 +2752,7 @@ static void RB_ShadowBufferPass( const drawSurf_t* drawSurfs, const viewLight_t*
 			GL_DepthBoundsTest( 0.0f, 0.0f );
 		}
 	}
+	*/
 }
 
 /*
@@ -2955,7 +2767,7 @@ DRAW INTERACTIONS
 RB_DrawInteractions
 ==================
 */
-static void RB_DrawInteractions()
+static void RB_DrawInteractions( const viewDef_t* viewDef )
 {
 	if( r_skipInteractions.GetBool() )
 	{
@@ -2968,7 +2780,7 @@ static void RB_DrawInteractions()
 	GL_SelectTexture( 0 );
 	
 	
-	const bool useLightDepthBounds = r_useLightDepthBounds.GetBool();
+	const bool useLightDepthBounds = r_useLightDepthBounds.GetBool() && !r_useShadowMapping.GetBool();
 	
 	//
 	// for each light, perform shadowing and adding
@@ -3005,9 +2817,9 @@ static void RB_DrawInteractions()
 			
 			if( vLight->lightDef->parms.pointLight )
 			{
-				if( r_sb_singleSide.GetInteger() != -1 )
+				if( r_shadowMapSingleSide.GetInteger() != -1 )
 				{
-					side = r_sb_singleSide.GetInteger();
+					side = r_shadowMapSingleSide.GetInteger();
 					sideStop = side + 1;
 				}
 				else
@@ -3024,18 +2836,17 @@ static void RB_DrawInteractions()
 			
 			for( ; side < sideStop ; side++ )
 			{
-				RB_ShadowBufferPass( vLight->globalInteractions, vLight, side );
-				
-				if( vLight->globalInteractions != NULL )
-				{
-					renderLog.OpenBlock( "Global Light Shadowmaps" );
-					RB_StencilShadowPass( vLight->globalShadows, vLight );
-					renderLog.CloseBlock();
-					
-					renderLog.OpenBlock( "Global Light Interactions" );
-					RB_RenderInteractions( vLight->globalInteractions, vLight, GLS_DEPTHFUNC_EQUAL, false, useLightDepthBounds );
-					renderLog.CloseBlock();
-				}
+				RB_ShadowMapPass( vLight->globalInteractions, vLight, side );
+			}
+			
+			// go back light view to default camera view
+			RB_ResetViewportAndScissorToDefaultCamera( viewDef );
+			
+			if( vLight->globalInteractions != NULL )
+			{
+				renderLog.OpenBlock( "Global Light Interactions" );
+				RB_RenderInteractions( vLight->globalInteractions, vLight, GLS_DEPTHFUNC_EQUAL, false, useLightDepthBounds );
+				renderLog.CloseBlock();
 			}
 		}
 		else
@@ -3951,19 +3762,7 @@ void RB_DrawViewInternal( const viewDef_t* viewDef, const int stereoEye )
 	//
 	// clear the z buffer, set the projection matrix, etc
 	//-------------------------------------------------
-	
-	// set the window clipping
-	GL_Viewport( viewDef->viewport.x1,
-				 viewDef->viewport.y1,
-				 viewDef->viewport.x2 + 1 - viewDef->viewport.x1,
-				 viewDef->viewport.y2 + 1 - viewDef->viewport.y1 );
-				 
-	// the scissor may be smaller than the viewport for subviews
-	GL_Scissor( backEnd.viewDef->viewport.x1 + viewDef->scissor.x1,
-				backEnd.viewDef->viewport.y1 + viewDef->scissor.y1,
-				viewDef->scissor.x2 + 1 - viewDef->scissor.x1,
-				viewDef->scissor.y2 + 1 - viewDef->scissor.y1 );
-	backEnd.currentScissor = viewDef->scissor;
+	RB_ResetViewportAndScissorToDefaultCamera( viewDef );
 	
 	backEnd.glState.faceCulling = -1;		// force face culling to set next time
 	
@@ -4028,7 +3827,7 @@ void RB_DrawViewInternal( const viewDef_t* viewDef, const int stereoEye )
 	//-------------------------------------------------
 	// main light renderer
 	//-------------------------------------------------
-	RB_DrawInteractions();
+	RB_DrawInteractions( viewDef );
 	
 	//-------------------------------------------------
 	// now draw any non-light dependent shading passes

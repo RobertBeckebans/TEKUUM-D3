@@ -180,6 +180,11 @@ void idImage::SetTexParameters()
 		case TT_CUBIC:
 			target = GL_TEXTURE_CUBE_MAP;
 			break;
+		// RB begin
+		case TT_2D_ARRAY:
+			target = GL_TEXTURE_2D_ARRAY;
+			break;
+		// RB end
 		default:
 			idLib::FatalError( "%s: bad texture type %d", GetName(), opts.textureType );
 			return;
@@ -355,6 +360,15 @@ void idImage::SetTexParameters()
 		default:
 			common->FatalError( "%s: bad texture repeat %d", GetName(), repeat );
 	}
+	
+	// RB: added shadow compare parameters for shadow map textures
+	if( opts.format == FMT_SHADOW_ARRAY )
+	{
+		glTexParameteri( target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
+		glTexParameteri( target, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_R_TO_TEXTURE );
+		glTexParameteri( target, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL );
+		glTexParameteri( target, GL_DEPTH_TEXTURE_MODE, GL_INTENSITY );
+	}
 }
 
 /*
@@ -462,11 +476,19 @@ void idImage::AllocImage()
 			dataFormat = GL_RGBA;
 			dataType = GL_UNSIGNED_BYTE;
 			break;
+			
 		case FMT_DEPTH:
 			internalFormat = GL_DEPTH_COMPONENT;
 			dataFormat = GL_DEPTH_COMPONENT;
 			dataType = GL_UNSIGNED_BYTE;
 			break;
+			
+		case FMT_SHADOW_ARRAY:
+			internalFormat = GL_DEPTH_COMPONENT32;
+			dataFormat = GL_DEPTH_COMPONENT;
+			dataType = GL_UNSIGNED_BYTE;
+			break;
+			
 #if defined(USE_MESA) || ( !defined(USE_GLES2) && !defined(USE_GLES3) )
 		case FMT_X16:
 			internalFormat = GL_INTENSITY16;
@@ -514,6 +536,14 @@ void idImage::AllocImage()
 		uploadTarget = GL_TEXTURE_CUBE_MAP_POSITIVE_X;
 		numSides = 6;
 	}
+	// RB begin
+	else if( opts.textureType == TT_2D_ARRAY )
+	{
+		target = GL_TEXTURE_2D_ARRAY;
+		uploadTarget = GL_TEXTURE_2D_ARRAY;
+		numSides = 6;
+	}
+	// RB end
 	else
 	{
 		assert( !"opts.textureType" );
@@ -523,66 +553,73 @@ void idImage::AllocImage()
 	
 	glBindTexture( target, texnum );
 	
-	for( int side = 0; side < numSides; side++ )
+	if( opts.textureType == TT_2D_ARRAY )
 	{
-		int w = opts.width;
-		int h = opts.height;
-		if( opts.textureType == TT_CUBIC )
-		{
-			h = w;
-		}
-		for( int level = 0; level < opts.numLevels; level++ )
-		{
-		
-			// clear out any previous error
-			GL_CheckErrors();
-			
-			if( IsCompressed() )
-			{
-				int compressedSize = ( ( ( w + 3 ) / 4 ) * ( ( h + 3 ) / 4 ) * int64( 16 ) * BitsForFormat( opts.format ) ) / 8;
-				
-				// Even though the OpenGL specification allows the 'data' pointer to be NULL, for some
-				// drivers we actually need to upload data to get it to allocate the texture.
-				// However, on 32-bit systems we may fail to allocate a large block of memory for large
-				// textures. We handle this case by using HeapAlloc directly and allowing the allocation
-				// to fail in which case we simply pass down NULL to glCompressedTexImage2D and hope for the best.
-				// As of 2011-10-6 using NVIDIA hardware and drivers we have to allocate the memory with HeapAlloc
-				// with the exact size otherwise large image allocation (for instance for physical page textures)
-				// may fail on Vista 32-bit.
-				
-				// RB begin
-#if defined(_WIN32)
-				void* data = HeapAlloc( GetProcessHeap(), 0, compressedSize );
-				glCompressedTexImage2D( uploadTarget + side, level, internalFormat, w, h, 0, compressedSize, data );
-				if( data != NULL )
-				{
-					HeapFree( GetProcessHeap(), 0, data );
-				}
-#else
-				byte* data = ( byte* )Mem_Alloc( compressedSize, TAG_TEMP );
-				glCompressedTexImage2D( uploadTarget + side, level, internalFormat, w, h, 0, compressedSize, data );
-				if( data != NULL )
-				{
-					Mem_Free( data );
-				}
-#endif
-				// RB end
-			}
-			else
-			{
-				glTexImage2D( uploadTarget + side, level, internalFormat, w, h, 0, dataFormat, dataType, NULL );
-			}
-			
-			GL_CheckErrors();
-			
-			w = Max( 1, w >> 1 );
-			h = Max( 1, h >> 1 );
-		}
+		glTexImage3D( uploadTarget, 0, internalFormat, opts.width, opts.height, numSides, 0, dataFormat, GL_UNSIGNED_BYTE, NULL );
 	}
-	
-#if !defined(USE_GLES2)
-	glTexParameteri( target, GL_TEXTURE_MAX_LEVEL, opts.numLevels - 1 );
+	else
+	{
+		for( int side = 0; side < numSides; side++ )
+		{
+			int w = opts.width;
+			int h = opts.height;
+			if( opts.textureType == TT_CUBIC )
+			{
+				h = w;
+			}
+			for( int level = 0; level < opts.numLevels; level++ )
+			{
+			
+				// clear out any previous error
+				GL_CheckErrors();
+				
+				if( IsCompressed() )
+				{
+					int compressedSize = ( ( ( w + 3 ) / 4 ) * ( ( h + 3 ) / 4 ) * int64( 16 ) * BitsForFormat( opts.format ) ) / 8;
+					
+					// Even though the OpenGL specification allows the 'data' pointer to be NULL, for some
+					// drivers we actually need to upload data to get it to allocate the texture.
+					// However, on 32-bit systems we may fail to allocate a large block of memory for large
+					// textures. We handle this case by using HeapAlloc directly and allowing the allocation
+					// to fail in which case we simply pass down NULL to glCompressedTexImage2D and hope for the best.
+					// As of 2011-10-6 using NVIDIA hardware and drivers we have to allocate the memory with HeapAlloc
+					// with the exact size otherwise large image allocation (for instance for physical page textures)
+					// may fail on Vista 32-bit.
+					
+					// RB begin
+#if defined(_WIN32)
+					void* data = HeapAlloc( GetProcessHeap(), 0, compressedSize );
+					glCompressedTexImage2D( uploadTarget + side, level, internalFormat, w, h, 0, compressedSize, data );
+					if( data != NULL )
+					{
+						HeapFree( GetProcessHeap(), 0, data );
+					}
+#else
+					byte* data = ( byte* )Mem_Alloc( compressedSize, TAG_TEMP );
+					glCompressedTexImage2D( uploadTarget + side, level, internalFormat, w, h, 0, compressedSize, data );
+					if( data != NULL )
+					{
+						Mem_Free( data );
+					}
 #endif
+					// RB end
+				}
+				else
+				{
+					glTexImage2D( uploadTarget + side, level, internalFormat, w, h, 0, dataFormat, dataType, NULL );
+				}
+				
+				GL_CheckErrors();
+				
+				w = Max( 1, w >> 1 );
+				h = Max( 1, h >> 1 );
+			}
+		}
+		
+#if !defined(USE_GLES2)
+		glTexParameteri( target, GL_TEXTURE_MAX_LEVEL, opts.numLevels - 1 );
+#endif
+	}
 	
 	// see if we messed anything up
 	GL_CheckErrors();

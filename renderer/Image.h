@@ -3,7 +3,7 @@
 
 Doom 3 BFG Edition GPL Source Code
 Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
-Copyright (C) 2013 Robert Beckebans
+Copyright (C) 2013-2014 Robert Beckebans
 
 This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
@@ -56,13 +56,17 @@ typedef enum
 	TD_LOOKUP_TABLE_RGBA,	// RGBA lookup table
 	TD_COVERAGE,			// coverage map for fill depth pass when YCoCG is used
 	TD_DEPTH,				// depth buffer copy for motion blur
+	// RB begin
+	TD_SHADOW_ARRAY,		// 2D depth buffer array for shadow mapping
+	// RB end
 } textureUsage_t;
 
 typedef enum
 {
 	CF_2D,			// not a cube map
 	CF_NATIVE,		// _px, _nx, _py, etc, directly sent to GL
-	CF_CAMERA		// _forward, _back, etc, rotated and flipped as needed before sending to GL
+	CF_CAMERA,		// _forward, _back, etc, rotated and flipped as needed before sending to GL
+	CF_2D_ARRAY		// not a cube map but not a single 2d texture either
 } cubeFiles_t;
 
 #include "ImageOpts.h"
@@ -99,6 +103,10 @@ public:
 	void		GenerateCubeImage( const byte* pic[6], int size,
 								   textureFilter_t filter, textureUsage_t usage );
 								   
+	// RB begin
+	void		GenerateShadowArray( int width, int height, textureFilter_t filter, textureRepeat_t repeat, textureUsage_t usage );
+	// RB end
+	
 	void		CopyFramebuffer( int x, int y, int width, int height );
 	void		CopyDepthbuffer( int x, int y, int width, int height );
 	
@@ -332,6 +340,7 @@ public:
 	idImage* 			fogEnterImage;				// adjust fogImage alpha based on terminator plane
 	// RB begin
 	idImage* 			cinematicImage;
+	idImage*			shadowImage;
 	// RB end
 	idImage* 			scratchImage;
 	idImage* 			scratchImage2;

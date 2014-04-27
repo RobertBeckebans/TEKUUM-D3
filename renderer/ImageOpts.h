@@ -34,7 +34,10 @@ enum textureType_t
 {
 	TT_DISABLED,
 	TT_2D,
-	TT_CUBIC
+	TT_CUBIC,
+	// RB begin
+	TT_2D_ARRAY
+	// RB end
 };
 
 /*
@@ -93,6 +96,7 @@ enum textureFormat_t
 	
 	// RB: don't change above for legacy .bimage compatibility
 	FMT_ETC1_RGB8_OES,	// 4 bpp
+	FMT_SHADOW_ARRAY,	// 24 bpp * 6
 	// RB end
 };
 

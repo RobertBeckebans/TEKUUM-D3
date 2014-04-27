@@ -1052,6 +1052,12 @@ extern idCVar stereoRender_deGhost;			// subtract from opposite eye to reduce gh
 
 extern idCVar r_useGPUSkinning;
 
+// RB begin
+extern idCVar r_shadowMapFrustumFOV;
+extern idCVar r_shadowMapSingleSide;
+extern idCVar r_shadowMapImageSize;
+// RB end
+
 /*
 ====================================================================
 
