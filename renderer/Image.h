@@ -72,6 +72,8 @@ typedef enum
 
 class idImage
 {
+	friend class Framebuffer;
+	
 public:
 	idImage( const char* name );
 	

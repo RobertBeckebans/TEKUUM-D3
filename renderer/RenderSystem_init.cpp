@@ -188,6 +188,7 @@ idCVar r_usePrecomputedLight( "r_usePrecomputedLight", "1", CVAR_RENDERER | CVAR
 #else
 idCVar r_usePrecomputedLight( "r_usePrecomputedLight", "0", CVAR_RENDERER | CVAR_BOOL, "enable Q3A style precomputed lighting (vertex lighting/lightgrid)" );
 #endif
+idCVar r_useShadowMapping( "r_useShadowMapping", "1", CVAR_RENDERER | CVAR_BOOL, "use shadow mapping instead of stencil shadows" );
 // RB end
 
 // visual debugging info
@@ -576,12 +577,45 @@ static void R_CheckPortableExtensions()
 #endif
 	if( glConfig.gremedyStringMarkerAvailable )
 	{
-		common->Printf( "...using %s\n", "GLEW_GREMEDY_string_marker" );
+		common->Printf( "...using %s\n", "GL_GREMEDY_string_marker" );
 	}
 	else
 	{
-		common->Printf( "X..%s not found\n", "GLEW_GREMEDY_string_marker" );
+		common->Printf( "X..%s not found\n", "GL_GREMEDY_string_marker" );
 	}
+	
+	// GL_EXT_framebuffer_object
+#if defined(USE_GLES2)
+	glConfig.framebufferObjectAvailable = false;
+#else
+	glConfig.framebufferObjectAvailable = GLEW_EXT_framebuffer_object != 0;
+	if( glConfig.framebufferObjectAvailable )
+	{
+		glGetIntegerv( GL_MAX_RENDERBUFFER_SIZE, &glConfig.maxRenderbufferSize );
+		glGetIntegerv( GL_MAX_COLOR_ATTACHMENTS, &glConfig.maxColorAttachments );
+	
+		common->Printf( "...using %s\n", "GL_EXT_framebuffer_object" );
+	}
+	else
+	{
+		common->Printf( "X..%s not found\n", "GL_EXT_framebuffer_object" );
+	}
+#endif
+	
+	// GL_EXT_framebuffer_blit
+#if defined(USE_GLES2)
+	glConfig.framebufferBlitAvailable = false;
+#else
+	glConfig.framebufferBlitAvailable = GLEW_EXT_framebuffer_blit != 0;
+	if( glConfig.framebufferBlitAvailable )
+	{
+		common->Printf( "...using %s\n", "GL_EXT_framebuffer_blit" );
+	}
+	else
+	{
+		common->Printf( "X..%s not found\n", "GL_EXT_framebuffer_object" );
+	}
+#endif
 	
 	// GL_ARB_debug_output
 #if defined(USE_GLES2) || defined(USE_GLES3)

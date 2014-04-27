@@ -296,6 +296,10 @@ void GL_SetDefaultState()
 	memset( &backEnd.glState, 0, sizeof( backEnd.glState ) );
 	GL_State( 0, true );
 	
+	// RB begin
+	Framebuffer::BindNull();
+	// RB end
+	
 	// These are changed by GL_Cull
 	glCullFace( GL_FRONT_AND_BACK );
 	glEnable( GL_CULL_FACE );

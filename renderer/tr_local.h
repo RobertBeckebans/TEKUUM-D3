@@ -38,6 +38,7 @@ If you have questions concerning this license or the applicable additional terms
 #include "Image.h"
 //#include "RenderTexture.h"
 #include "Font.h"
+#include "Framebuffer.h"
 
 // everything that is needed by the backend needs
 // to be double buffered to allow it to run in
@@ -664,6 +665,8 @@ struct glstate_t
 	// RB: 64 bit fixes, changed unsigned int to uintptr_t
 	uintptr_t			currentVertexBuffer;
 	uintptr_t			currentIndexBuffer;
+	
+	Framebuffer*		currentFramebuffer;
 	// RB end
 	
 	float				polyOfsScale;
@@ -950,6 +953,7 @@ extern idCVar r_useLightDepthBounds;		// use depth bounds test on lights to redu
 extern idCVar r_useShadowDepthBounds;		// use depth bounds test on individual shadows to reduce shadow fill
 // RB begin
 extern idCVar r_usePrecomputedLight;		// enable Q3A style precomputed lighting (vertex lighting/lightgrid)
+extern idCVar r_useShadowMapping;			// use shadow mapping instead of stencil shadows
 // RB end
 
 extern idCVar r_skipStaticInteractions;		// skip interactions created at level load
