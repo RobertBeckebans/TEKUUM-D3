@@ -1042,6 +1042,7 @@ const int INTERACTION_TEXUNIT_FALLOFF		= 1;
 const int INTERACTION_TEXUNIT_PROJECTION	= 2;
 const int INTERACTION_TEXUNIT_DIFFUSE		= 3;
 const int INTERACTION_TEXUNIT_SPECULAR		= 4;
+const int INTERACTION_TEXUNIT_SHADOWMAPS	= 5;
 
 /*
 ==================
@@ -1322,6 +1323,13 @@ static void RB_RenderInteractions( const drawSurf_t* surfList, const viewLight_t
 		GL_SelectTexture( INTERACTION_TEXUNIT_PROJECTION );
 		lightStage->texture.image->Bind();
 		
+		if( r_useShadowMapping.GetBool() )
+		{
+			// texture 5 will be the shadow maps array
+			GL_SelectTexture( INTERACTION_TEXUNIT_SHADOWMAPS );
+			globalImages->shadowImage->Bind();
+		}
+		
 		// force the light textures to not use anisotropic filtering, which is wasted on them
 		// all of the texture sampler parms should be constant for all interactions, only
 		// the actual texture image bindings will change
@@ -1354,13 +1362,21 @@ static void RB_RenderInteractions( const drawSurf_t* surfList, const viewLight_t
 			}
 			else
 			{
-				if( surf->jointCache )
+				if( r_useShadowMapping.GetBool() )
 				{
-					renderProgManager.BindShader_InteractionSkinned();
+					// TODO skinned version
+					renderProgManager.BindShader_Interaction_ShadowMapping();
 				}
 				else
 				{
-					renderProgManager.BindShader_Interaction();
+					if( surf->jointCache )
+					{
+						renderProgManager.BindShader_InteractionSkinned();
+					}
+					else
+					{
+						renderProgManager.BindShader_Interaction();
+					}
 				}
 			}
 			
@@ -1426,6 +1442,30 @@ static void RB_RenderInteractions( const drawSurf_t* surfList, const viewLight_t
 				SetVertexParm( RENDERPARM_LIGHTPROJECTION_T, lightProjection[1].ToFloatPtr() );
 				SetVertexParm( RENDERPARM_LIGHTPROJECTION_Q, lightProjection[2].ToFloatPtr() );
 				SetVertexParm( RENDERPARM_LIGHTFALLOFF_S, lightProjection[3].ToFloatPtr() );
+				
+				// RB begin
+				if( r_useShadowMapping.GetBool() )
+				{
+					// OPTIMIZE less loops for cheaper light types
+					
+					for( int i = 0; i < 6; i++ )
+					{
+						idRenderMatrix modelMatrix;
+						idRenderMatrix::Transpose( *( idRenderMatrix* )surf->space->modelMatrix, modelMatrix );
+						
+						idRenderMatrix modelViewMatrix;
+						idRenderMatrix::Multiply( backEnd.shadowV[i], modelMatrix, modelViewMatrix );
+						
+						idRenderMatrix shadowMVP;
+						idRenderMatrix::Multiply( backEnd.shadowP[i], modelViewMatrix, shadowMVP );
+						
+						// TODO bias matrix
+						
+						SetVertexParms( ( renderParm_t )( RENDERPARM_SHADOW_MATRIX_0_X + i * 4 ), shadowMVP[0], 4 );
+					}
+					
+					
+				}
 			}
 			
 			// check for the fast path
@@ -2637,10 +2677,22 @@ static void RB_ShadowMapPass( const drawSurf_t* drawSurfs, const viewLight_t* vL
 	R_MatrixMultiply( viewMatrix, s_flipMatrix, lightViewMatrix );
 	
 	
+	if( side < 0 )
+	{
+		idRenderMatrix::Transpose( *( idRenderMatrix* )lightViewMatrix, backEnd.shadowV[0] );
+		backEnd.shadowP[0] = lightProjectionRenderMatrix;
+	}
+	else
+	{
+		assert( side >= 0 && side < 6 );
+		
+		idRenderMatrix::Transpose( *( idRenderMatrix* )lightViewMatrix, backEnd.shadowV[side] );
+		backEnd.shadowP[side] = lightProjectionRenderMatrix;
+	}
 	
 	globalFramebuffers.shadowFBO->Bind();
 	
-	if( side == - 1 )
+	if( side < 0 )
 	{
 		globalFramebuffers.shadowFBO->AttachImageDepthLayer( globalImages->shadowImage, 0 );
 	}
@@ -2841,6 +2893,13 @@ static void RB_DrawInteractions( const viewDef_t* viewDef )
 			
 			// go back light view to default camera view
 			RB_ResetViewportAndScissorToDefaultCamera( viewDef );
+			
+			if( vLight->localInteractions != NULL )
+			{
+				renderLog.OpenBlock( "Local Light Interactions" );
+				RB_RenderInteractions( vLight->localInteractions, vLight, GLS_DEPTHFUNC_EQUAL, false, useLightDepthBounds );
+				renderLog.CloseBlock();
+			}
 			
 			if( vLight->globalInteractions != NULL )
 			{

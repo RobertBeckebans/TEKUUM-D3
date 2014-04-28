@@ -645,6 +645,7 @@ void idImage::PurgeImage()
 	for( int i = 0 ; i < MAX_MULTITEXTURE_UNITS ; i++ )
 	{
 		backEnd.glState.tmu[i].current2DMap = TEXTURE_NOT_LOADED;
+		backEnd.glState.tmu[i].current2DArray = TEXTURE_NOT_LOADED;
 		backEnd.glState.tmu[i].currentCubeMap = TEXTURE_NOT_LOADED;
 	}
 }

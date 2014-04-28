@@ -810,6 +810,27 @@ void idImage::Bind()
 			// RB end
 		}
 	}
+	else if( opts.textureType == TT_2D_ARRAY )
+	{
+		if( tmu->current2DArray != texnum )
+		{
+			tmu->current2DArray = texnum;
+			
+			// RB begin
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
+			if( glConfig.directStateAccess )
+			{
+				glBindMultiTextureEXT( GL_TEXTURE0 + texUnit, GL_TEXTURE_2D_ARRAY, texnum );
+			}
+			else
+#endif
+			{
+				glActiveTexture( GL_TEXTURE0 + texUnit );
+				glBindTexture( GL_TEXTURE_2D_ARRAY, texnum );
+			}
+			// RB end
+		}
+	}
 	
 }
 

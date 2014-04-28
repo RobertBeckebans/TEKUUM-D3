@@ -109,6 +109,9 @@ void idRenderProgManager::Init()
 		{ BUILTIN_INTERACTION_SKINNED, "builtin/interaction_skinned.vfp", true },
 		{ BUILTIN_INTERACTION_AMBIENT, "builtin/interactionAmbient.vfp", false },
 		{ BUILTIN_INTERACTION_AMBIENT_SKINNED, "builtin/interactionAmbient_skinned.vfp", true },
+		// RB begin
+		{ BUILTIN_INTERACTION_SHADOW_MAPPING, "builtin/interactionSM.vfp", false },
+		// RB end
 		{ BUILTIN_ENVIRONMENT, "builtin/environment.vfp", false },
 		{ BUILTIN_ENVIRONMENT_SKINNED, "builtin/environment_skinned.vfp", true },
 		{ BUILTIN_BUMPY_ENVIRONMENT, "builtin/bumpyEnvironment.vfp", false },

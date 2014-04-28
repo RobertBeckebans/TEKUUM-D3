@@ -936,7 +936,8 @@ void R_AddSingleModel( viewEntity_t* vEntity )
 					{
 						lightDrawSurf->linkChain = &vLight->translucentInteractions;
 					}
-					else if( !lightDef->parms.noShadows && shader->TestMaterialFlag( MF_NOSELFSHADOW ) )
+					// RB: no support for non-self shadowing geometry with shadow mapping
+					else if( !lightDef->parms.noShadows && shader->TestMaterialFlag( MF_NOSELFSHADOW ) && !r_useShadowMapping.GetBool() )
 					{
 						lightDrawSurf->linkChain = &vLight->localInteractions;
 					}

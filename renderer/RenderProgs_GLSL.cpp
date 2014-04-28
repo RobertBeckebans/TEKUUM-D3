@@ -34,7 +34,7 @@ If you have questions concerning this license or the applicable additional terms
 #include "RenderProgs_embedded.h"
 
 idCVar r_skipStripDeadCode( "r_skipStripDeadCode", "0", CVAR_BOOL, "Skip stripping dead code" );
-idCVar r_useUniformArrays( "r_useUniformArrays", "1", CVAR_BOOL, "" );
+idCVar r_useUniformArrays( "r_useUniformArrays", "0", CVAR_BOOL, "" );
 
 // DG: the AMD drivers output a lot of useless warnings which are fscking annoying, added this CVar to suppress them
 idCVar r_displayGLSLCompilerMessages( "r_displayGLSLCompilerMessages", "1", CVAR_BOOL | CVAR_ARCHIVE, "Show info messages the GPU driver outputs when compiling the shaders" );
@@ -235,6 +235,7 @@ const char* prefixes[] =
 	
 	"sampler1DShadow",		// GLSL
 	"sampler2DShadow",		// GLSL
+	"sampler2DArrayShadow",	// GLSL
 	"sampler3DShadow",		// GLSL
 	"samplerCubeShadow",	// GLSL
 	
@@ -317,6 +318,7 @@ static const char* GLSLParmNames[] =
 	
 	// RB begin
 	"rpAmbientColor",
+	"rpShadowMatrices",
 	// RB end
 };
 
@@ -881,6 +883,7 @@ const char* fragmentInsert_GLSL_ES_1_0 =
 const char* fragmentInsert_GLSL_1_50 =
 {
 	"#version 150\n"
+	"#extension GL_EXT_texture_array : enable\n"
 	"#define PC\n"
 	"\n"
 	"void clip( float v ) { if ( v < 0.0 ) { discard; } }\n"
@@ -1060,12 +1063,13 @@ idStr ConvertCG2GLSL( const idStr& in, const char* name, bool isVertexProgram, i
 	idToken token;
 	while( src.ReadToken( &token ) )
 	{
-	
 		// check for uniforms
-		while( token == "uniform" && src.CheckTokenString( "float4" ) )
+		
+		// RB: added special case for matrix arrays
+		while( token == "uniform" && ( src.CheckTokenString( "float4" ) || src.CheckTokenString( "float4x4" ) ) )
 		{
 			src.ReadToken( &token );
-			uniformList.Append( token );
+			idStr uniform = token;
 			
 			// strip ': register()' from uniforms
 			if( src.CheckTokenString( ":" ) )
@@ -1076,8 +1080,25 @@ idStr ConvertCG2GLSL( const idStr& in, const char* name, bool isVertexProgram, i
 				}
 			}
 			
-			src.ReadToken( & token );
+			
+			if( src.PeekTokenString( "[" ) )
+			{
+				while( src.ReadToken( &token ) )
+				{
+					uniform += token;
+					
+					if( token == "]" )
+					{
+						break;
+					}
+				}
+			}
+			
+			uniformList.Append( uniform );
+			
+			src.ReadToken( &token );
 		}
+		// RB end
 		
 		// convert the in/out structs
 		if( token == "struct" )
@@ -1780,7 +1801,17 @@ void idRenderProgManager::CommitUniforms()
 		for( int i = 0; i < prog.uniformLocations.Num(); i++ )
 		{
 			const glslUniformLocation_t& uniformLocation = prog.uniformLocations[i];
-			glUniform4fv( uniformLocation.uniformIndex, 1, glslUniforms[uniformLocation.parmIndex].ToFloatPtr() );
+			
+			// RB: HACK rpShadowMatrices[6 * 4]
+			if( uniformLocation.parmIndex == RENDERPARM_SHADOW_MATRIX_0_X )
+			{
+				glUniform4fv( uniformLocation.uniformIndex, 6 * 4, glslUniforms[uniformLocation.parmIndex].ToFloatPtr() );
+			}
+			else
+			{
+				glUniform4fv( uniformLocation.uniformIndex, 1, glslUniforms[uniformLocation.parmIndex].ToFloatPtr() );
+			}
+			// RB end
 		}
 	}
 	

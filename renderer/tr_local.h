@@ -638,6 +638,7 @@ struct performanceCounters_t
 struct tmu_t
 {
 	unsigned int	current2DMap;
+	unsigned int	current2DArray;
 	unsigned int	currentCubeMap;
 };
 
@@ -708,6 +709,11 @@ struct backEndState_t
 	bool				currentRenderCopied;	// true if any material has already referenced _currentRender
 	
 	idRenderMatrix		prevMVP[2];				// world MVP from previous frame for motion blur, per-eye
+	
+	// RB begin
+	idRenderMatrix		shadowV[6];				// shadow depth view matrix
+	idRenderMatrix		shadowP[6];				// shadow depth projection matrix
+	// RB end
 	
 	// surfaces used for code-based drawing
 	drawSurf_t			unitSquareSurface;
