@@ -221,6 +221,10 @@ static void R_AddSingleLight( viewLight_t* vLight )
 	// copy the matrix for deforming the 'zeroOneCubeModel' to exactly cover the light volume in world space
 	vLight->inverseBaseLightProject = light->inverseBaseLightProject;
 	
+	// RB begin
+	vLight->baseLightProject = light->baseLightProject;
+	// RB end
+	
 	vLight->falloffImage = light->falloffImage;
 	vLight->lightShader = light->lightShader;
 	vLight->shaderRegisters = lightRegs;

@@ -453,35 +453,7 @@ void R_QuadraticImage( idImage* image )
 static void R_CreateShadowMapImage( idImage* image )
 {
 	int size = r_shadowMapImageSize.GetInteger();
-	image->GenerateShadowArray( size, size, TF_LINEAR, TR_CLAMP, TD_SHADOW_ARRAY );
-	
-	/*
-	byte*	data = ( byte* )Mem_Alloc( lightBufferSize * lightBufferSize );
-	
-	memset( data, 0, lightBufferSize * lightBufferSize );
-	
-	image->GenerateImage( ( byte* )data, 4, 4,
-		TF_LINEAR, false, TR_CLAMP_TO_ZERO, TD_HIGH_QUALITY );
-	
-	// now reset it to a shadow depth image
-	GL_CheckErrors();
-	image->uploadWidth = image->uploadHeight = lightBufferSize;
-	glTexImage2D( GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24_ARB, lightBufferSize, lightBufferSize,
-				   0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, data );
-	
-	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE_ARB, GL_COMPARE_R_TO_TEXTURE );
-	//	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE_ARB, GL_NONE );
-	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC_ARB, GL_LEQUAL );
-	
-	// explicit zero depth border
-	float	color[4];
-	color[0] = color[1] = color[2] = color[3] = 0;
-	glTexParameterfv( GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, color );
-	
-	GL_CheckErrors();
-	
-	Mem_Free( data );
-	*/
+	image->GenerateShadowArray( size, size, TF_LINEAR, TR_CLAMP_TO_ZERO_ALPHA, TD_SHADOW_ARRAY );
 }
 // RB end
 

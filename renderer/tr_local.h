@@ -327,6 +327,9 @@ struct viewLight_t
 	idVec3					globalLightOrigin;			// global light origin used by backend
 	idPlane					lightProject[4];			// light project used by backend
 	idPlane					fogPlane;					// fog plane for backend fog volume rendering
+	// RB: added for shadow mapping
+	idRenderMatrix			baseLightProject;			// global xyz1 to projected light strq
+	// RB end
 	idRenderMatrix			inverseBaseLightProject;	// the matrix for deforming the 'zeroOneCubeModel' to exactly cover the light volume in world space
 	const idMaterial* 		lightShader;				// light shader used by backend
 	const float*				shaderRegisters;			// shader registers used by backend

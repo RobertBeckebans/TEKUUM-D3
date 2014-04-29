@@ -96,7 +96,7 @@ enum textureFormat_t
 	
 	// RB: don't change above for legacy .bimage compatibility
 	FMT_ETC1_RGB8_OES,	// 4 bpp
-	FMT_SHADOW_ARRAY,	// 24 bpp * 6
+	FMT_SHADOW_ARRAY,	// 32 bpp * 6
 	// RB end
 };
 

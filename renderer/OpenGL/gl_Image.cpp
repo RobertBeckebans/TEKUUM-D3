@@ -364,7 +364,7 @@ void idImage::SetTexParameters()
 	// RB: added shadow compare parameters for shadow map textures
 	if( opts.format == FMT_SHADOW_ARRAY )
 	{
-		glTexParameteri( target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
+		//glTexParameteri( target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
 		glTexParameteri( target, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_R_TO_TEXTURE );
 		glTexParameteri( target, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL );
 		glTexParameteri( target, GL_DEPTH_TEXTURE_MODE, GL_INTENSITY );
@@ -484,7 +484,7 @@ void idImage::AllocImage()
 			break;
 			
 		case FMT_SHADOW_ARRAY:
-			internalFormat = GL_DEPTH_COMPONENT32;
+			internalFormat = GL_DEPTH_COMPONENT;
 			dataFormat = GL_DEPTH_COMPONENT;
 			dataType = GL_UNSIGNED_BYTE;
 			break;

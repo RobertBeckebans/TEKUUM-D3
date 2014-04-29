@@ -1448,6 +1448,14 @@ static void RB_RenderInteractions( const drawSurf_t* surfList, const viewLight_t
 				{
 					// OPTIMIZE less loops for cheaper light types
 					
+					
+					ALIGNTYPE16 const idRenderMatrix clipSpaceToWindowSpaceMatrix(
+						0.5f, 0.0f, 0.0f, 0.5f,
+						0.0f, 0.5f, 0.0f, 0.5f,
+						0.0f, 0.0f, 0.5, 0.5f,
+						0.0f, 0.0f, 0.0f, 1.0f
+					);
+					
 					for( int i = 0; i < 6; i++ )
 					{
 						idRenderMatrix modelMatrix;
@@ -1460,9 +1468,9 @@ static void RB_RenderInteractions( const drawSurf_t* surfList, const viewLight_t
 						idRenderMatrix::Multiply( backEnd.shadowP[i], modelToShadowMatrix, shadowClipMVP );
 						
 						idRenderMatrix shadowWindowMVP;
-						idRenderMatrix::Multiply( renderMatrix_clipSpaceToWindowSpace, shadowClipMVP, shadowWindowMVP );
+						idRenderMatrix::Multiply( clipSpaceToWindowSpaceMatrix, shadowClipMVP, shadowWindowMVP );
 						
-						SetVertexParms( ( renderParm_t )( RENDERPARM_SHADOW_MATRIX_0_X + i * 4 ), shadowWindowMVP[0], 4 );
+						SetVertexParms( ( renderParm_t )( RENDERPARM_SHADOW_MATRIX_0_X + i * 4 ), shadowClipMVP[0], 4 );
 					}
 					
 					
@@ -2706,8 +2714,11 @@ static void RB_ShadowMapPass( const drawSurf_t* drawSurfs, const viewLight_t* vL
 	{
 		//lightViewRenderMatrix.Identity();
 		
+		lightViewRenderMatrix.Identity();
+		lightProjectionRenderMatrix = vLight->baseLightProject;
+		
 		backEnd.shadowV[0] = lightViewRenderMatrix;
-		backEnd.shadowP[0] = lightProjectionRenderMatrix; //vLight->inverseBaseLightProject;
+		backEnd.shadowP[0] = lightProjectionRenderMatrix;
 	}
 	else
 	{
@@ -2781,39 +2792,21 @@ static void RB_ShadowMapPass( const drawSurf_t* drawSurfs, const viewLight_t* vL
 		
 		if( drawSurf->space != backEnd.currentSpace )
 		{
-			// change the matrix
-#if 1
-			//float	modelViewMatrix[16];
-			
-			//R_MatrixMultiply( lightViewMatrix, drawSurf->space->modelMatrix, modelViewMatrix );
+		
 			idRenderMatrix modelRenderMatrix;
 			idRenderMatrix::Transpose( *( idRenderMatrix* )drawSurf->space->modelMatrix, modelRenderMatrix );
 			
 			idRenderMatrix modelToLightRenderMatrix;
 			idRenderMatrix::Multiply( lightViewRenderMatrix, modelRenderMatrix, modelToLightRenderMatrix );
-			//idRenderMatrix::Transpose( *( idRenderMatrix* )modelViewMatrix, viewMat );
 			
 			idRenderMatrix clipMVP;
 			idRenderMatrix::Multiply( lightProjectionRenderMatrix, modelToLightRenderMatrix, clipMVP );
 			
-			ALIGNTYPE16 const idRenderMatrix biasMatrix(
-				0.5f, 0.0f, 0.0f, 0.0f,
-				0.0f, 0.5f, 0.0f, 0.0f,
-				0.0f, 0.0f, 0.5f, 0.0f,
-				0.5f, 0.5f, 0.5f, 1.0f
-			);
-			
-			
+			// from OpenGL view space to OpenGL NDC ( -1 : 1 in XYZ )
 			idRenderMatrix MVP;
-			idRenderMatrix::Multiply( renderMatrix_clipSpaceToWindowSpace, clipMVP, MVP );
+			idRenderMatrix::Multiply( renderMatrix_windowSpaceToClipSpace, clipMVP, MVP );
 			
-#else
-			idRenderMatrix mvp;
-			idRenderMatrix::Multiply( vLight->baseLightProject, drawSurf->space->mvp, mvp );
-#endif
-			
-			
-			RB_SetMVP( clipMVP );
+			RB_SetMVP( MVP );
 			
 			// set the local light position to allow the vertex program to project the shadow volume end cap to infinity
 			idVec4 localLight( 0.0f );
