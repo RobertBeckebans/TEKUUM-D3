@@ -167,6 +167,9 @@ private:
 extern const idRenderMatrix renderMatrix_identity;
 extern const idRenderMatrix renderMatrix_flipToOpenGL;
 extern const idRenderMatrix renderMatrix_windowSpaceToClipSpace;
+// RB begin
+extern const idRenderMatrix renderMatrix_clipSpaceToWindowSpace;
+// RB end
 
 /*
 ========================
