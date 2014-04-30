@@ -244,7 +244,7 @@ const char* prefixes[] =
 static const int numPrefixes = sizeof( prefixes ) / sizeof( prefixes[0] );
 
 // For GLSL we need to have the names for the renderparms so we can look up their run time indices within the renderprograms
-static const char* GLSLParmNames[] =
+static const char* GLSLParmNames[RENDERPARM_TOTAL] =
 {
 	"rpScreenCorrectionFactor",
 	"rpWindowCoord",
@@ -319,36 +319,39 @@ static const char* GLSLParmNames[] =
 	// RB begin
 	"rpAmbientColor",
 	"rpShadowMatrices",
-	"rpProjectionMatrix0Y",
-	"rpProjectionMatrix0Z",
-	"rpProjectionMatrix0W",
+	"rpShadowMatrix0Y",
+	"rpShadowMatrix0Z",
+	"rpShadowMatrix0W",
 	
-	"rpProjectionMatrix1X",
-	"rpProjectionMatrix1Y",
-	"rpProjectionMatrix1Z",
-	"rpProjectionMatrix1W",
-
-	"rpProjectionMatrix2X",
-	"rpProjectionMatrix2Y",
-	"rpProjectionMatrix2Z",
-	"rpProjectionMatrix2W",
-
-	"rpProjectionMatrix3X",
-	"rpProjectionMatrix3Y",
-	"rpProjectionMatrix3Z",
-	"rpProjectionMatrix3W",
-
-	"rpProjectionMatrix4X",
-	"rpProjectionMatrix4Y",
-	"rpProjectionMatrix4Z",
-	"rpProjectionMatrix4W",
-
-	"rpProjectionMatrix5X",
-	"rpProjectionMatrix5Y",
-	"rpProjectionMatrix5Z",
-	"rpProjectionMatrix5W",
+	"rpShadowMatrix1X",
+	"rpShadowMatrix1Y",
+	"rpShadowMatrix1Z",
+	"rpShadowMatrix1W",
+	
+	"rpShadowMatrix2X",
+	"rpShadowMatrix2Y",
+	"rpShadowMatrix2Z",
+	"rpShadowMatrix2W",
+	
+	"rpShadowMatrix3X",
+	"rpShadowMatrix3Y",
+	"rpShadowMatrix3Z",
+	"rpShadowMatrix3W",
+	
+	"rpShadowMatrix4X",
+	"rpShadowMatrix4Y",
+	"rpShadowMatrix4Z",
+	"rpShadowMatrix4W",
+	
+	"rpShadowMatrix5X",
+	"rpShadowMatrix5Y",
+	"rpShadowMatrix5Z",
+	"rpShadowMatrix5W",
 	// RB end
 };
+
+
+
 
 // RB: added embedded Cg shader resources
 static const char* FindEmbeddedSourceShader( const char* name )
@@ -1838,6 +1841,14 @@ void idRenderProgManager::CommitUniforms()
 			else
 			{
 				glUniform4fv( uniformLocation.uniformIndex, 1, glslUniforms[uniformLocation.parmIndex].ToFloatPtr() );
+				
+				if( GL_CheckErrors() )
+				{
+					const char* parmName = GetGLSLParmName( uniformLocation.parmIndex );
+					const char* value = glslUniforms[uniformLocation.parmIndex].ToString();
+					
+					idLib::Printf( "glUniform4fv( %i = %s, value = %s ) failed for %s\n", uniformLocation.parmIndex, parmName, value, prog.name.c_str() );
+				}
 			}
 			// RB end
 		}
@@ -1922,8 +1933,6 @@ void idRenderProgManager::LoadGLSLProgram( const int programIndex, const int ver
 			free( infoLog );
 		}
 	}
-
-	
 	
 	int linked = GL_FALSE;
 	glGetProgramiv( program, GL_LINK_STATUS, &linked );
@@ -1947,8 +1956,6 @@ void idRenderProgManager::LoadGLSLProgram( const int programIndex, const int ver
 	}
 	else
 	{
-		idLib::Printf( "idRenderProgManager::LoadGLSLProgram() %i\n", programIndex );
-
 		// store the uniform locations after we have linked the GLSL program
 		prog.uniformLocations.Clear();
 		for( int i = 0; i < RENDERPARM_TOTAL; i++ )
@@ -1996,12 +2003,36 @@ void idRenderProgManager::LoadGLSLProgram( const int programIndex, const int ver
 	
 	// set the texture unit locations once for the render program. We only need to do this once since we only link the program once
 	glUseProgram( program );
+	int numSamplerUniforms = 0;
 	for( int i = 0; i < MAX_PROG_TEXTURE_PARMS; ++i )
 	{
 		GLint loc = glGetUniformLocation( program, va( "samp%d", i ) );
 		if( loc != -1 )
 		{
 			glUniform1i( loc, i );
+			numSamplerUniforms++;
+		}
+	}
+	
+	// RB: make sure that we collected all uniforms we are interested in
+	if( !r_useUniformArrays.GetBool() )
+	{
+		int numActiveUniforms;
+		glGetProgramiv( program, GL_ACTIVE_UNIFORMS, &numActiveUniforms );
+		GL_CheckErrors();
+		
+		if( ( numActiveUniforms - numSamplerUniforms ) != prog.uniformLocations.Num() )
+		{
+			int				size;
+			GLenum			type;
+			char            uniformName[1000];
+			
+			for( int i = 0; i < numActiveUniforms; i++ )
+			{
+				glGetActiveUniform( program, i, sizeof( uniformName ), NULL, &size, &type, uniformName );
+				
+				idLib::Printf( "active uniform: '%s'\n", uniformName );
+			}
 		}
 	}
 	
