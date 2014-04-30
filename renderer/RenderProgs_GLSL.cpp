@@ -319,6 +319,34 @@ static const char* GLSLParmNames[] =
 	// RB begin
 	"rpAmbientColor",
 	"rpShadowMatrices",
+	"rpProjectionMatrix0Y",
+	"rpProjectionMatrix0Z",
+	"rpProjectionMatrix0W",
+	
+	"rpProjectionMatrix1X",
+	"rpProjectionMatrix1Y",
+	"rpProjectionMatrix1Z",
+	"rpProjectionMatrix1W",
+
+	"rpProjectionMatrix2X",
+	"rpProjectionMatrix2Y",
+	"rpProjectionMatrix2Z",
+	"rpProjectionMatrix2W",
+
+	"rpProjectionMatrix3X",
+	"rpProjectionMatrix3Y",
+	"rpProjectionMatrix3Z",
+	"rpProjectionMatrix3W",
+
+	"rpProjectionMatrix4X",
+	"rpProjectionMatrix4Y",
+	"rpProjectionMatrix4Z",
+	"rpProjectionMatrix4W",
+
+	"rpProjectionMatrix5X",
+	"rpProjectionMatrix5Y",
+	"rpProjectionMatrix5Z",
+	"rpProjectionMatrix5W",
 	// RB end
 };
 
@@ -1894,6 +1922,8 @@ void idRenderProgManager::LoadGLSLProgram( const int programIndex, const int ver
 			free( infoLog );
 		}
 	}
+
+	
 	
 	int linked = GL_FALSE;
 	glGetProgramiv( program, GL_LINK_STATUS, &linked );
@@ -1917,6 +1947,8 @@ void idRenderProgManager::LoadGLSLProgram( const int programIndex, const int ver
 	}
 	else
 	{
+		idLib::Printf( "idRenderProgManager::LoadGLSLProgram() %i\n", programIndex );
+
 		// store the uniform locations after we have linked the GLSL program
 		prog.uniformLocations.Clear();
 		for( int i = 0; i < RENDERPARM_TOTAL; i++ )
