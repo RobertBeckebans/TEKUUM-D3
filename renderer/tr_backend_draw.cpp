@@ -1362,8 +1362,10 @@ static void RB_RenderInteractions( const drawSurf_t* surfList, const viewLight_t
 			}
 			else
 			{
-				if( r_useShadowMapping.GetBool() )
+				if( r_useShadowMapping.GetBool() && vLight->globalShadows )
 				{
+					// RB: we have shadow mapping enabled and shadow maps so do a shadow compare
+
 					// TODO skinned version
 					renderProgManager.BindShader_Interaction_ShadowMapping();
 				}
