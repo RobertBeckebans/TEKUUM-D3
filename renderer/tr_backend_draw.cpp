@@ -1414,6 +1414,16 @@ static void RB_RenderInteractions( const drawSurf_t* surfList, const viewLight_t
 				// model-view-projection
 				RB_SetMVP( surf->space->mvp );
 				
+				// RB begin
+				idRenderMatrix modelMatrix;
+				idRenderMatrix::Transpose( *( idRenderMatrix* )surf->space->modelMatrix, modelMatrix );
+				
+				SetVertexParms( RENDERPARM_MODELMATRIX_X, modelMatrix[0], 4 );
+				
+				idVec4 globalLightOrigin( vLight->globalLightOrigin.x, vLight->globalLightOrigin.y, vLight->globalLightOrigin.z, 1.0f );
+				SetVertexParm( RENDERPARM_GLOBALLIGHTORIGIN, globalLightOrigin.ToFloatPtr() );
+				// RB end
+				
 				// tranform the light/view origin into model local space
 				idVec4 localLightOrigin( 0.0f );
 				idVec4 localViewOrigin( 1.0f );
@@ -1446,23 +1456,10 @@ static void RB_RenderInteractions( const drawSurf_t* surfList, const viewLight_t
 				// RB begin
 				if( r_useShadowMapping.GetBool() )
 				{
-					// OPTIMIZE less loops for cheaper light types
-					
-					
-					ALIGNTYPE16 const idRenderMatrix clipSpaceToWindowSpaceMatrix(
-						0.5f, 0.0f, 0.0f, 0.5f,
-						0.0f, 0.5f, 0.0f, 0.5f,
-						0.0f, 0.0f, 0.5, 0.5f,
-						0.0f, 0.0f, 0.0f, 1.0f
-					);
-					
 					if( vLight->lightDef->parms.pointLight )
 					{
 						for( int i = 0; i < 6; i++ )
 						{
-							idRenderMatrix modelMatrix;
-							idRenderMatrix::Transpose( *( idRenderMatrix* )surf->space->modelMatrix, modelMatrix );
-							
 							idRenderMatrix modelToShadowMatrix;
 							idRenderMatrix::Multiply( backEnd.shadowV[i], modelMatrix, modelToShadowMatrix );
 							
@@ -1470,7 +1467,7 @@ static void RB_RenderInteractions( const drawSurf_t* surfList, const viewLight_t
 							idRenderMatrix::Multiply( backEnd.shadowP[i], modelToShadowMatrix, shadowClipMVP );
 							
 							idRenderMatrix shadowWindowMVP;
-							idRenderMatrix::Multiply( clipSpaceToWindowSpaceMatrix, shadowClipMVP, shadowWindowMVP );
+							idRenderMatrix::Multiply( renderMatrix_clipSpaceToWindowSpace, shadowClipMVP, shadowWindowMVP );
 							
 							SetVertexParms( ( renderParm_t )( RENDERPARM_SHADOW_MATRIX_0_X + i * 4 ), shadowWindowMVP[0], 4 );
 						}
@@ -1479,9 +1476,6 @@ static void RB_RenderInteractions( const drawSurf_t* surfList, const viewLight_t
 					else
 					{
 						// spot light
-						
-						idRenderMatrix modelMatrix;
-						idRenderMatrix::Transpose( *( idRenderMatrix* )surf->space->modelMatrix, modelMatrix );
 						
 						idRenderMatrix modelToShadowMatrix;
 						idRenderMatrix::Multiply( backEnd.shadowV[0], modelMatrix, modelToShadowMatrix );

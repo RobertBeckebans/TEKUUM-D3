@@ -318,6 +318,9 @@ static const char* GLSLParmNames[RENDERPARM_TOTAL] =
 	
 	// RB begin
 	"rpAmbientColor",
+	
+	"rpGlobalLightOrigin",
+	
 	"rpShadowMatrices",
 	"rpShadowMatrix0Y",
 	"rpShadowMatrix0Z",
@@ -379,6 +382,12 @@ public:
 private:
 	int		Directive_include()
 	{
+		if( idParser::Directive_include() )
+		{
+			// RB: try local shaders in base/renderprogs/ first
+			return true;
+		}
+		
 		idLexer* script;
 		idToken token;
 		idStr path;
