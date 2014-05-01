@@ -245,6 +245,12 @@ void idRenderProgManager::LoadAllShaders()
 	
 	for( int i = 0; i < glslPrograms.Num(); ++i )
 	{
+		if( glslPrograms[i].vertexShaderIndex == -1 || glslPrograms[i].fragmentShaderIndex == -1 )
+		{
+			// RB: skip reloading because we didn't load it initially
+			continue;
+		}
+		
 		LoadGLSLProgram( i, glslPrograms[i].vertexShaderIndex, glslPrograms[i].fragmentShaderIndex );
 	}
 }

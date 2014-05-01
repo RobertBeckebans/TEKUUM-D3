@@ -1456,21 +1456,41 @@ static void RB_RenderInteractions( const drawSurf_t* surfList, const viewLight_t
 						0.0f, 0.0f, 0.0f, 1.0f
 					);
 					
-					for( int i = 0; i < 6; i++ )
+					if( vLight->lightDef->parms.pointLight )
 					{
+						for( int i = 0; i < 6; i++ )
+						{
+							idRenderMatrix modelMatrix;
+							idRenderMatrix::Transpose( *( idRenderMatrix* )surf->space->modelMatrix, modelMatrix );
+							
+							idRenderMatrix modelToShadowMatrix;
+							idRenderMatrix::Multiply( backEnd.shadowV[i], modelMatrix, modelToShadowMatrix );
+							
+							idRenderMatrix shadowClipMVP;
+							idRenderMatrix::Multiply( backEnd.shadowP[i], modelToShadowMatrix, shadowClipMVP );
+							
+							idRenderMatrix shadowWindowMVP;
+							idRenderMatrix::Multiply( clipSpaceToWindowSpaceMatrix, shadowClipMVP, shadowWindowMVP );
+							
+							SetVertexParms( ( renderParm_t )( RENDERPARM_SHADOW_MATRIX_0_X + i * 4 ), shadowWindowMVP[0], 4 );
+						}
+					}
+					// TODO parallel light
+					else
+					{
+						// spot light
+						
 						idRenderMatrix modelMatrix;
 						idRenderMatrix::Transpose( *( idRenderMatrix* )surf->space->modelMatrix, modelMatrix );
 						
 						idRenderMatrix modelToShadowMatrix;
-						idRenderMatrix::Multiply( backEnd.shadowV[i], modelMatrix, modelToShadowMatrix );
+						idRenderMatrix::Multiply( backEnd.shadowV[0], modelMatrix, modelToShadowMatrix );
 						
 						idRenderMatrix shadowClipMVP;
-						idRenderMatrix::Multiply( backEnd.shadowP[i], modelToShadowMatrix, shadowClipMVP );
+						idRenderMatrix::Multiply( backEnd.shadowP[0], modelToShadowMatrix, shadowClipMVP );
 						
-						idRenderMatrix shadowWindowMVP;
-						idRenderMatrix::Multiply( clipSpaceToWindowSpaceMatrix, shadowClipMVP, shadowWindowMVP );
+						SetVertexParms( ( renderParm_t )( RENDERPARM_SHADOW_MATRIX_0_X ), shadowClipMVP[0], 4 );
 						
-						SetVertexParms( ( renderParm_t )( RENDERPARM_SHADOW_MATRIX_0_X + i * 4 ), shadowClipMVP[0], 4 );
 					}
 					
 					
@@ -2524,7 +2544,7 @@ static void RB_ShadowMapPass( const drawSurf_t* drawSurfs, const viewLight_t* vL
 		return;
 	}
 	
-	RENDERLOG_PRINTF( "---------- RB_ShadowMapPass ----------\n" );
+	RENDERLOG_PRINTF( "---------- RB_ShadowMapPass( side = %i ) ----------\n", side );
 	
 	renderProgManager.BindShader_Depth();
 	
@@ -2556,46 +2576,7 @@ static void RB_ShadowMapPass( const drawSurf_t* drawSurfs, const viewLight_t* vL
 	idVec3	vec;
 	idVec3	origin = vLight->lightDef->globalLightOrigin;
 	
-	if( side == -1 )
-	{
-#if 1
-		// RB: worldToLight is already in the projection matrix
-		//R_MatrixFullInverse( vLight->lightDef->modelMatrix, viewMatrix );
-		
-		//vLight->lightDef->baseLightProject;
-		
-		
-		idRenderMatrix lightMatrix;
-		idRenderMatrix::CreateFromOriginAxis( vLight->lightDef->parms.origin, vLight->lightDef->parms.axis, lightMatrix );
-		
-		idRenderMatrix inverseLightMatrix;
-		if( !idRenderMatrix::Inverse( lightMatrix, lightViewRenderMatrix ) )
-		{
-			idLib::Warning( "lightMatrix invert failed" );
-		}
-		
-#else
-		// projected light
-		vec = vLight->lightDef->parms.target;
-		vec.Normalize();
-		viewMatrix[0] = vec[0];
-		viewMatrix[4] = vec[1];
-		viewMatrix[8] = vec[2];
-		
-		vec = vLight->lightDef->parms.right;
-		vec.Normalize();
-		viewMatrix[1] = -vec[0];
-		viewMatrix[5] = -vec[1];
-		viewMatrix[9] = -vec[2];
-		
-		vec = vLight->lightDef->parms.up;
-		vec.Normalize();
-		viewMatrix[2] = vec[0];
-		viewMatrix[6] = vec[1];
-		viewMatrix[10] = vec[2];
-#endif
-	}
-	else
+	if( side >= 0 )
 	{
 		// FIXME OPTIMIZE no memset
 		
@@ -2643,71 +2624,72 @@ static void RB_ShadowMapPass( const drawSurf_t* drawSurfs, const viewLight_t* vL
 		viewMatrix[7] = 0;
 		viewMatrix[11] = 0;
 		viewMatrix[15] = 1;
+		
+		// from world space to light origin, looking down the X axis
+		float	unflippedLightViewMatrix[16];
+		
+		// from world space to OpenGL view space, looking down the negative Z axis
+		float	lightViewMatrix[16];
+		
+		static float	s_flipMatrix[16] =
+		{
+			// convert from our coordinate system (looking down X)
+			// to OpenGL's coordinate system (looking down -Z)
+			0, 0, -1, 0,
+			-1, 0, 0, 0,
+			0, 1, 0, 0,
+			0, 0, 0, 1
+		};
+		
+		memcpy( unflippedLightViewMatrix, viewMatrix, sizeof( unflippedLightViewMatrix ) );
+		R_MatrixMultiply( viewMatrix, s_flipMatrix, lightViewMatrix );
+		
+		idRenderMatrix::Transpose( *( idRenderMatrix* )lightViewMatrix, lightViewRenderMatrix );
+		
+		
+		
+		
+		// set up 90 degree projection matrix
+		const float zNear = 4;
+		const float	fov = r_shadowMapFrustumFOV.GetFloat();
+		
+		float ymax = zNear * tan( fov * idMath::PI / 360.0f );
+		float ymin = -ymax;
+		
+		float xmax = zNear * tan( fov * idMath::PI / 360.0f );
+		float xmin = -xmax;
+		
+		const float width = xmax - xmin;
+		const float height = ymax - ymin;
+		
+		// from OpenGL view space to OpenGL NDC ( -1 : 1 in XYZ )
+		float lightProjectionMatrix[16];
+		
+		lightProjectionMatrix[0 * 4 + 0] = 2.0f * zNear / width;
+		lightProjectionMatrix[1 * 4 + 0] = 0.0f;
+		lightProjectionMatrix[2 * 4 + 0] = ( xmax + xmin ) / width;	// normally 0
+		lightProjectionMatrix[3 * 4 + 0] = 0.0f;
+		
+		lightProjectionMatrix[0 * 4 + 1] = 0.0f;
+		lightProjectionMatrix[1 * 4 + 1] = 2.0f * zNear / height;
+		lightProjectionMatrix[2 * 4 + 1] = ( ymax + ymin ) / height;	// normally 0
+		lightProjectionMatrix[3 * 4 + 1] = 0.0f;
+		
+		// this is the far-plane-at-infinity formulation, and
+		// crunches the Z range slightly so w=0 vertexes do not
+		// rasterize right at the wraparound point
+		lightProjectionMatrix[0 * 4 + 2] = 0.0f;
+		lightProjectionMatrix[1 * 4 + 2] = 0.0f;
+		lightProjectionMatrix[2 * 4 + 2] = -0.999f; // adjust value to prevent imprecision issues
+		lightProjectionMatrix[3 * 4 + 2] = -2.0f * zNear;
+		
+		lightProjectionMatrix[0 * 4 + 3] = 0.0f;
+		lightProjectionMatrix[1 * 4 + 3] = 0.0f;
+		lightProjectionMatrix[2 * 4 + 3] = -1.0f;
+		lightProjectionMatrix[3 * 4 + 3] = 0.0f;
+		
+		idRenderMatrix::Transpose( *( idRenderMatrix* )lightProjectionMatrix, lightProjectionRenderMatrix );
 	}
-	
-	// set up 90 degree projection matrix
-	const float zNear = 4;
-	const float	fov = r_shadowMapFrustumFOV.GetFloat();
-	
-	float ymax = zNear * tan( fov * idMath::PI / 360.0f );
-	float ymin = -ymax;
-	
-	float xmax = zNear * tan( fov * idMath::PI / 360.0f );
-	float xmin = -xmax;
-	
-	const float width = xmax - xmin;
-	const float height = ymax - ymin;
-	
-	// from OpenGL view space to OpenGL NDC ( -1 : 1 in XYZ )
-	float lightProjectionMatrix[16];
-	
-	lightProjectionMatrix[0 * 4 + 0] = 2.0f * zNear / width;
-	lightProjectionMatrix[1 * 4 + 0] = 0.0f;
-	lightProjectionMatrix[2 * 4 + 0] = ( xmax + xmin ) / width;	// normally 0
-	lightProjectionMatrix[3 * 4 + 0] = 0.0f;
-	
-	lightProjectionMatrix[0 * 4 + 1] = 0.0f;
-	lightProjectionMatrix[1 * 4 + 1] = 2.0f * zNear / height;
-	lightProjectionMatrix[2 * 4 + 1] = ( ymax + ymin ) / height;	// normally 0
-	lightProjectionMatrix[3 * 4 + 1] = 0.0f;
-	
-	// this is the far-plane-at-infinity formulation, and
-	// crunches the Z range slightly so w=0 vertexes do not
-	// rasterize right at the wraparound point
-	lightProjectionMatrix[0 * 4 + 2] = 0.0f;
-	lightProjectionMatrix[1 * 4 + 2] = 0.0f;
-	lightProjectionMatrix[2 * 4 + 2] = -0.999f; // adjust value to prevent imprecision issues
-	lightProjectionMatrix[3 * 4 + 2] = -2.0f * zNear;
-	
-	lightProjectionMatrix[0 * 4 + 3] = 0.0f;
-	lightProjectionMatrix[1 * 4 + 3] = 0.0f;
-	lightProjectionMatrix[2 * 4 + 3] = -1.0f;
-	lightProjectionMatrix[3 * 4 + 3] = 0.0f;
-	
-	idRenderMatrix::Transpose( *( idRenderMatrix* )lightProjectionMatrix, lightProjectionRenderMatrix );
-	
-#if 0
-	// from world space to light origin, looking down the X axis
-	float	unflippedLightViewMatrix[16];
-	
-	// from world space to OpenGL view space, looking down the negative Z axis
-	float	lightViewMatrix[16];
-	
-	static float	s_flipMatrix[16] =
-	{
-		// convert from our coordinate system (looking down X)
-		// to OpenGL's coordinate system (looking down -Z)
-		0, 0, -1, 0,
-		-1, 0, 0, 0,
-		0, 1, 0, 0,
-		0, 0, 0, 1
-	};
-	
-	memcpy( unflippedLightViewMatrix, viewMatrix, sizeof( unflippedLightViewMatrix ) );
-	R_MatrixMultiply( viewMatrix, s_flipMatrix, lightViewMatrix );
-	
-	idRenderMatrix::Transpose( *( idRenderMatrix* )lightViewMatrix, lightViewRenderMatrix );
-#endif
 	
 	
 	if( side < 0 )
@@ -2802,11 +2784,18 @@ static void RB_ShadowMapPass( const drawSurf_t* drawSurfs, const viewLight_t* vL
 			idRenderMatrix clipMVP;
 			idRenderMatrix::Multiply( lightProjectionRenderMatrix, modelToLightRenderMatrix, clipMVP );
 			
-			// from OpenGL view space to OpenGL NDC ( -1 : 1 in XYZ )
-			idRenderMatrix MVP;
-			idRenderMatrix::Multiply( renderMatrix_windowSpaceToClipSpace, clipMVP, MVP );
-			
-			RB_SetMVP( MVP );
+			if( side < 0 )
+			{
+				// from OpenGL view space to OpenGL NDC ( -1 : 1 in XYZ )
+				idRenderMatrix MVP;
+				idRenderMatrix::Multiply( renderMatrix_windowSpaceToClipSpace, clipMVP, MVP );
+				
+				RB_SetMVP( MVP );
+			}
+			else
+			{
+				RB_SetMVP( clipMVP );
+			}
 			
 			// set the local light position to allow the vertex program to project the shadow volume end cap to infinity
 			idVec4 localLight( 0.0f );

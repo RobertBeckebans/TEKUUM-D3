@@ -316,15 +316,19 @@ public:
 	
 	void	BindShader_Shadow()
 	{
-		// RB begin
-		BindShader( -1, builtinShaders[BUILTIN_SHADOW], -1, true );
+		// RB: no FFP fragment rendering anymore
+		//BindShader( -1, builtinShaders[BUILTIN_SHADOW], -1, true );
+		
+		BindShader_Builtin( BUILTIN_SHADOW );
 		// RB end
 	}
 	
 	void	BindShader_ShadowSkinned()
 	{
-		// RB begin
-		BindShader( -1, builtinShaders[BUILTIN_SHADOW_SKINNED], -1, true );
+		// RB: no FFP fragment rendering anymore
+		//BindShader( -1, builtinShaders[BUILTIN_SHADOW_SKINNED], -1, true );
+		
+		BindShader_Builtin( BUILTIN_SHADOW_SKINNED );
 		// RB end
 	}
 	
