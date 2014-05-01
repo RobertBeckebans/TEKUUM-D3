@@ -2732,7 +2732,7 @@ static void RB_ShadowMapPass( const drawSurf_t* drawSurfs, const viewLight_t* vL
 			// temporarily jump over the scissor and draw so the gl error callback doesn't get hit
 		}
 		
-#if 0
+#if 1
 		// make sure the shadow volume is done
 		if( drawSurf->shadowVolumeState != SHADOWVOLUME_DONE )
 		{
@@ -2914,7 +2914,7 @@ static void RB_DrawInteractions( const viewDef_t* viewDef )
 			
 			for( ; side < sideStop ; side++ )
 			{
-				RB_ShadowMapPass( vLight->globalInteractions, vLight, side );
+				RB_ShadowMapPass( vLight->globalShadows, vLight, side );
 			}
 			
 			// go back light view to default camera view

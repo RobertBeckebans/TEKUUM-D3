@@ -438,7 +438,7 @@ static void R_AddSingleLight( viewLight_t* vLight )
 	//--------------------------------------------
 	// add the prelight shadows for the static world geometry
 	//--------------------------------------------
-	if( light->parms.prelightModel != NULL )
+	if( light->parms.prelightModel != NULL && !r_useShadowMapping.GetBool() )
 	{
 		srfTriangles_t* tri = light->parms.prelightModel->Surface( 0 )->geometry;
 		
