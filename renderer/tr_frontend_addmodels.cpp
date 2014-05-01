@@ -713,7 +713,7 @@ void R_AddSingleModel( viewEntity_t* vEntity )
 		// base drawing surface
 		//--------------------------
 		drawSurf_t* baseDrawSurf = NULL;
-		if( surfaceDirectlyVisible || r_useShadowMapping.GetBool() )
+		if( surfaceDirectlyVisible )
 		{
 			// make sure we have an ambient cache and all necessary normals / tangents
 			if( !vertexCache.CacheIsCurrent( tri->indexCache ) )
@@ -1005,10 +1005,32 @@ void R_AddSingleModel( viewEntity_t* vEntity )
 						}
 						else
 						{
+							// make sure we have an ambient cache and all necessary normals / tangents
+							if( !vertexCache.CacheIsCurrent( tri->indexCache ) )
+							{
+								tri->indexCache = vertexCache.AllocIndex( tri->indexes, ALIGN( tri->numIndexes * sizeof( triIndex_t ), INDEX_CACHE_ALIGN ) );
+							}
+							
 							// throw the entire source surface at it without any per-triangle culling
 							shadowDrawSurf->numIndexes = tri->numIndexes;
 							shadowDrawSurf->indexCache = tri->indexCache;
 						}
+						
+						if( !vertexCache.CacheIsCurrent( tri->ambientCache ) )
+						{
+							// we are going to use it for drawing, so make sure we have the tangents and normals
+							if( shader->ReceivesLighting() && !tri->tangentsCalculated )
+							{
+								assert( tri->staticModelWithJoints == NULL );
+								R_DeriveTangents( tri );
+								
+								// RB: this was hit by parametric particle models ..
+								//assert( false );	// this should no longer be hit
+								// RB end
+							}
+							tri->ambientCache = vertexCache.AllocVertex( tri->verts, ALIGN( tri->numVerts * sizeof( idDrawVert ), VERTEX_CACHE_ALIGN ) );
+						}
+						
 						shadowDrawSurf->ambientCache = tri->ambientCache;
 						shadowDrawSurf->shadowCache = 0;
 						shadowDrawSurf->frontEndGeo = tri;
@@ -1018,7 +1040,7 @@ void R_AddSingleModel( viewEntity_t* vEntity )
 						shadowDrawSurf->scissorRect = vLight->scissorRect; // interactionScissor;
 						shadowDrawSurf->sort = 0.0f;
 						shadowDrawSurf->renderZFail = 0;
-						shadowDrawSurf->shaderRegisters = baseDrawSurf->shaderRegisters;
+						//shadowDrawSurf->shaderRegisters = baseDrawSurf->shaderRegisters;
 						
 						R_SetupDrawSurfJoints( shadowDrawSurf, tri, shader );
 						
