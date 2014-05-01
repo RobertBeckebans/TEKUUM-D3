@@ -116,8 +116,13 @@ void idRenderProgManager::Init()
 		{ BUILTIN_ENVIRONMENT_SKINNED, "builtin/environment_skinned.vfp", true },
 		{ BUILTIN_BUMPY_ENVIRONMENT, "builtin/bumpyEnvironment.vfp", false },
 		{ BUILTIN_BUMPY_ENVIRONMENT_SKINNED, "builtin/bumpyEnvironment_skinned.vfp", true },
+		
 		{ BUILTIN_DEPTH, "builtin/depth.vfp", false },
 		{ BUILTIN_DEPTH_SKINNED, "builtin/depth_skinned.vfp", true },
+		
+		{ BUILTIN_SHADOW, "builtin/shadow.vfp", false },
+		{ BUILTIN_SHADOW_SKINNED, "builtin/shadow_skinned.vfp", true },
+		
 		{ BUILTIN_SHADOW_DEBUG, "builtin/shadowDebug.vfp", false },
 		{ BUILTIN_SHADOW_DEBUG_SKINNED, "builtin/shadowDebug_skinned.vfp", true },
 		
@@ -142,8 +147,7 @@ void idRenderProgManager::Init()
 #if !defined(USE_GLES2) && !defined(USE_GLES3)
 		{ BUILTIN_MOTION_BLUR, "builtin/motionBlur.vfp", false },
 #endif
-		{ BUILTIN_SHADOW, "builtin/shadow.vfp", false },
-		{ BUILTIN_SHADOW_SKINNED, "builtin/shadow_skinned.vfp", true },
+		
 	};
 	int numBuiltins = sizeof( builtins ) / sizeof( builtins[0] );
 	vertexShaders.SetNum( numBuiltins );
