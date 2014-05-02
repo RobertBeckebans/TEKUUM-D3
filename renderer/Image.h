@@ -341,6 +341,10 @@ public:
 	// RB begin
 	idImage* 			cinematicImage;
 	idImage*			shadowImage;
+	idImage*			jitterImage1;				// shadow jitter
+	idImage*			jitterImage4;
+	idImage*			jitterImage16;
+	idImage*			randomImage256;
 	// RB end
 	idImage* 			scratchImage;
 	idImage* 			scratchImage2;

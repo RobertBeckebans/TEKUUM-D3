@@ -238,6 +238,8 @@ void idRenderProgManager::Init()
 		vertexShaders[builtinShaders[BUILTIN_COLOR_SKINNED]].usesJoints = true;
 		vertexShaders[builtinShaders[BUILTIN_GRID_LIGHTING_SKINNED]].usesJoints = true;
 		vertexShaders[builtinShaders[BUILTIN_BLENDLIGHT_SKINNED]].usesJoints = true;
+		vertexShaders[builtinShaders[BUILTIN_INTERACTION_SHADOW_MAPPING_SPOT_SKINNED]].usesJoints = true;
+		vertexShaders[builtinShaders[BUILTIN_INTERACTION_SHADOW_MAPPING_POINT_SKINNED]].usesJoints = true;
 		// RB end
 	}
 	

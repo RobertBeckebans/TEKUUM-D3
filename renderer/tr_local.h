@@ -1065,6 +1065,9 @@ extern idCVar r_useGPUSkinning;
 extern idCVar r_shadowMapFrustumFOV;
 extern idCVar r_shadowMapSingleSide;
 extern idCVar r_shadowMapImageSize;
+extern idCVar r_shadowMapJitterScale;
+extern idCVar r_shadowMapBiasScale;
+extern idCVar r_shadowMapSamples;
 // RB end
 
 /*

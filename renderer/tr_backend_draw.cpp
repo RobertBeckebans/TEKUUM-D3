@@ -1043,6 +1043,7 @@ const int INTERACTION_TEXUNIT_PROJECTION	= 2;
 const int INTERACTION_TEXUNIT_DIFFUSE		= 3;
 const int INTERACTION_TEXUNIT_SPECULAR		= 4;
 const int INTERACTION_TEXUNIT_SHADOWMAPS	= 5;
+const int INTERACTION_TEXUNIT_JITTER		= 6;
 
 /*
 ==================
@@ -1289,6 +1290,36 @@ static void RB_RenderInteractions( const drawSurf_t* surfList, const viewLight_t
 	
 	bool lightDepthBoundsDisabled = false;
 	
+	// RB begin
+	if( r_useShadowMapping.GetBool() )
+	{
+		const static int JITTER_SIZE = 128;
+		
+		// screen power of two correction factor
+		float screenCorrectionParm[4];
+		screenCorrectionParm[0] = 1.0f / ( JITTER_SIZE * r_shadowMapSamples.GetInteger() ) ;
+		screenCorrectionParm[1] = 1.0f / JITTER_SIZE;
+		screenCorrectionParm[2] = 0.0f;
+		screenCorrectionParm[3] = 1.0f;
+		SetFragmentParm( RENDERPARM_SCREENCORRECTIONFACTOR, screenCorrectionParm ); // rpScreenCorrectionFactor
+		
+		float jitterTexScale[4];
+		jitterTexScale[0] = r_shadowMapJitterScale.GetFloat() * 1.0f;	// TODO shadow buffer size fraction shadowMapSize / maxShadowMapSize
+		jitterTexScale[1] = r_shadowMapJitterScale.GetFloat() * 1.0f;
+		jitterTexScale[2] = -r_shadowMapBiasScale.GetFloat();
+		jitterTexScale[3] = 0.0f;
+		SetFragmentParm( RENDERPARM_JITTERTEXSCALE, jitterTexScale ); // rpJitterTexScale
+		
+		float jitterTexOffset[4];
+		jitterTexOffset[0] = ( rand() & 255 ) / 255.0;
+		jitterTexOffset[1] = ( rand() & 255 ) / 255.0;
+		jitterTexOffset[2] = 0.0f;
+		jitterTexOffset[3] = 0.0f;
+		SetFragmentParm( RENDERPARM_JITTERTEXOFFSET, jitterTexOffset ); // rpJitterTexOffset
+		
+	}
+	// RB end
+	
 	for( int lightStageNum = 0; lightStageNum < lightShader->GetNumStages(); lightStageNum++ )
 	{
 		const shaderStage_t*	lightStage = lightShader->GetStage( lightStageNum );
@@ -1328,6 +1359,21 @@ static void RB_RenderInteractions( const drawSurf_t* surfList, const viewLight_t
 			// texture 5 will be the shadow maps array
 			GL_SelectTexture( INTERACTION_TEXUNIT_SHADOWMAPS );
 			globalImages->shadowImage->Bind();
+			
+			// texture 6 will be the jitter texture for soft shadowing
+			GL_SelectTexture( INTERACTION_TEXUNIT_JITTER );
+			if( r_shadowMapSamples.GetInteger() == 16 )
+			{
+				globalImages->jitterImage16->Bind();
+			}
+			else if( r_shadowMapSamples.GetInteger() == 4 )
+			{
+				globalImages->jitterImage4->Bind();
+			}
+			else
+			{
+				globalImages->jitterImage1->Bind();
+			}
 		}
 		
 		// force the light textures to not use anisotropic filtering, which is wasted on them
