@@ -1366,14 +1366,27 @@ static void RB_RenderInteractions( const drawSurf_t* surfList, const viewLight_t
 				{
 					// RB: we have shadow mapping enabled and shadow maps so do a shadow compare
 					
-					// TODO skinned version
 					if( vLight->lightDef->parms.pointLight )
 					{
-						renderProgManager.BindShader_Interaction_ShadowMapping_Point();
+						if( surf->jointCache )
+						{
+							renderProgManager.BindShader_Interaction_ShadowMapping_Point_Skinned();
+						}
+						else
+						{
+							renderProgManager.BindShader_Interaction_ShadowMapping_Point();
+						}
 					}
 					else
 					{
-						renderProgManager.BindShader_Interaction_ShadowMapping_Spot();
+						if( surf->jointCache )
+						{
+							renderProgManager.BindShader_Interaction_ShadowMapping_Spot_Skinned();
+						}
+						else
+						{
+							renderProgManager.BindShader_Interaction_ShadowMapping_Spot();
+						}
 					}
 				}
 				else

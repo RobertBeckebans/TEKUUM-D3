@@ -279,9 +279,19 @@ public:
 		BindShader_Builtin( BUILTIN_INTERACTION_SHADOW_MAPPING_SPOT );
 	}
 	
+	void	BindShader_Interaction_ShadowMapping_Spot_Skinned()
+	{
+		BindShader_Builtin( BUILTIN_INTERACTION_SHADOW_MAPPING_SPOT_SKINNED );
+	}
+	
 	void	BindShader_Interaction_ShadowMapping_Point()
 	{
 		BindShader_Builtin( BUILTIN_INTERACTION_SHADOW_MAPPING_POINT );
+	}
+	
+	void	BindShader_Interaction_ShadowMapping_Point_Skinned()
+	{
+		BindShader_Builtin( BUILTIN_INTERACTION_SHADOW_MAPPING_POINT_SKINNED );
 	}
 	// RB end
 	
@@ -496,7 +506,9 @@ protected:
 		BUILTIN_INTERACTION_AMBIENT_SKINNED,
 		// RB begin
 		BUILTIN_INTERACTION_SHADOW_MAPPING_SPOT,
+		BUILTIN_INTERACTION_SHADOW_MAPPING_SPOT_SKINNED,
 		BUILTIN_INTERACTION_SHADOW_MAPPING_POINT,
+		BUILTIN_INTERACTION_SHADOW_MAPPING_POINT_SKINNED,
 		// RB end
 		BUILTIN_ENVIRONMENT,
 		BUILTIN_ENVIRONMENT_SKINNED,
@@ -554,29 +566,31 @@ protected:
 	const char*	GetGLSLMacroName( shaderFeature_t sf ) const;
 	
 	bool	CompileGLSL( GLenum target, const char* name );
-	GLuint	LoadGLSLShader( GLenum target, const char* name, const char* nameSuffix, uint32 shaderFeatures, idList<int>& uniforms );
+	GLuint	LoadGLSLShader( GLenum target, const char* name, const char* nameOutSuffix, uint32 shaderFeatures, bool builtin, idList<int>& uniforms );
 	void	LoadGLSLProgram( const int programIndex, const int vertexShaderIndex, const int fragmentShaderIndex );
 	
 	static const GLuint INVALID_PROGID = 0xFFFFFFFF;
 	
 	struct vertexShader_t
 	{
-		vertexShader_t() : progId( INVALID_PROGID ), usesJoints( false ), optionalSkinning( false ), shaderFeatures( 0 ) {}
+		vertexShader_t() : progId( INVALID_PROGID ), usesJoints( false ), optionalSkinning( false ), shaderFeatures( 0 ), builtin( false ) {}
 		idStr		name;
-		idStr		nameSuffix;
+		idStr		nameOutSuffix;
 		GLuint		progId;
 		bool		usesJoints;
 		bool		optionalSkinning;
 		uint32		shaderFeatures;		// RB: Cg compile macros
+		bool		builtin;			// RB: part of the core shaders built into the executable
 		idList<int>	uniforms;
 	};
 	struct fragmentShader_t
 	{
-		fragmentShader_t() : progId( INVALID_PROGID ), shaderFeatures( 0 ) {}
+		fragmentShader_t() : progId( INVALID_PROGID ), shaderFeatures( 0 ), builtin( false ) {}
 		idStr		name;
-		idStr		nameSuffix;
+		idStr		nameOutSuffix;
 		GLuint		progId;
 		uint32		shaderFeatures;
+		bool		builtin;
 		idList<int>	uniforms;
 	};
 	

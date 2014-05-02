@@ -85,7 +85,7 @@ void idRenderProgManager::Init()
 	{
 		int			index;
 		const char* name;
-		const char* nameSuffix;
+		const char* nameOutSuffix;
 		uint32		shaderFeatures;
 		bool		requireGPUSkinningSupport;
 	} builtins[] =
@@ -108,12 +108,14 @@ void idRenderProgManager::Init()
 		{ BUILTIN_TEXTURE_YCOCG, "builtin/texture_ycocg.vfp", "", 0, false },
 		// RB end
 		{ BUILTIN_INTERACTION, "builtin/interaction.vfp", "", 0, false },
-		{ BUILTIN_INTERACTION_SKINNED, "builtin/interaction_skinned.vfp", "", 0, true },
+		{ BUILTIN_INTERACTION_SKINNED, "builtin/interaction", "_skinned", BIT( USE_GPU_SKINNING ), true },
 		{ BUILTIN_INTERACTION_AMBIENT, "builtin/interactionAmbient.vfp", "", 0, false },
 		{ BUILTIN_INTERACTION_AMBIENT_SKINNED, "builtin/interactionAmbient_skinned.vfp", "", 0, true },
 		// RB begin
 		{ BUILTIN_INTERACTION_SHADOW_MAPPING_SPOT, "builtin/interactionSM", "_spot", 0, false },
+		{ BUILTIN_INTERACTION_SHADOW_MAPPING_SPOT_SKINNED, "builtin/interactionSM", "_spot_skinned", BIT( USE_GPU_SKINNING ), true },
 		{ BUILTIN_INTERACTION_SHADOW_MAPPING_POINT, "builtin/interactionSM", "_point", BIT( LIGHT_POINT ), false },
+		{ BUILTIN_INTERACTION_SHADOW_MAPPING_POINT_SKINNED, "builtin/interactionSM", "_point_skinned", BIT( USE_GPU_SKINNING ) | BIT( LIGHT_POINT ), true },
 		// RB end
 		{ BUILTIN_ENVIRONMENT, "builtin/environment.vfp", "", 0, false },
 		{ BUILTIN_ENVIRONMENT_SKINNED, "builtin/environment_skinned.vfp", "", 0, true },
@@ -160,12 +162,14 @@ void idRenderProgManager::Init()
 	for( int i = 0; i < numBuiltins; i++ )
 	{
 		vertexShaders[i].name = builtins[i].name;
-		vertexShaders[i].nameSuffix = builtins[i].nameSuffix;
+		vertexShaders[i].nameOutSuffix = builtins[i].nameOutSuffix;
 		vertexShaders[i].shaderFeatures = builtins[i].shaderFeatures;
+		vertexShaders[i].builtin = true;
 		
 		fragmentShaders[i].name = builtins[i].name;
-		fragmentShaders[i].nameSuffix = builtins[i].nameSuffix;
+		fragmentShaders[i].nameOutSuffix = builtins[i].nameOutSuffix;
 		fragmentShaders[i].shaderFeatures = builtins[i].shaderFeatures;
+		fragmentShaders[i].builtin = true;
 		
 		builtinShaders[builtins[i].index] = i;
 		
@@ -385,7 +389,9 @@ void idRenderProgManager::LoadVertexShader( int index )
 	{
 		return; // Already loaded
 	}
-	vertexShaders[index].progId = ( GLuint ) LoadGLSLShader( GL_VERTEX_SHADER, vertexShaders[index].name, vertexShaders[index].nameSuffix, vertexShaders[index].shaderFeatures, vertexShaders[index].uniforms );
+	
+	vertexShader_t& vs = vertexShaders[index];
+	vertexShaders[index].progId = ( GLuint ) LoadGLSLShader( GL_VERTEX_SHADER, vs.name, vs.nameOutSuffix, vs.shaderFeatures, vs.builtin, vs.uniforms );
 }
 
 /*
@@ -399,7 +405,9 @@ void idRenderProgManager::LoadFragmentShader( int index )
 	{
 		return; // Already loaded
 	}
-	fragmentShaders[index].progId = ( GLuint ) LoadGLSLShader( GL_FRAGMENT_SHADER, fragmentShaders[index].name, fragmentShaders[index].nameSuffix, fragmentShaders[index].shaderFeatures, fragmentShaders[index].uniforms );
+	
+	fragmentShader_t& fs = fragmentShaders[index];
+	fragmentShaders[index].progId = ( GLuint ) LoadGLSLShader( GL_FRAGMENT_SHADER, fs.name, fs.nameOutSuffix, fs.shaderFeatures, fs.builtin, fs.uniforms );
 }
 
 /*

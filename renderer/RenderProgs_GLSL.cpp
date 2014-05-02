@@ -505,7 +505,7 @@ private:
 StripDeadCode
 ========================
 */
-idStr StripDeadCode( const idStr& in, const char* name, const idStrList& compileMacros )
+idStr StripDeadCode( const idStr& in, const char* name, const idStrList& compileMacros, bool builtin )
 {
 	if( r_skipStripDeadCode.GetBool() )
 	{
@@ -530,7 +530,7 @@ idStr StripDeadCode( const idStr& in, const char* name, const idStrList& compile
 			break;
 	}
 	
-	if( glConfig.gpuSkinningAvailable )
+	if( !builtin && glConfig.gpuSkinningAvailable )
 	{
 		src.AddDefine( "USE_GPU_SKINNING" );
 	}
@@ -1585,7 +1585,7 @@ idStr ConvertCG2GLSL( const idStr& in, const char* name, bool isVertexProgram, i
 idRenderProgManager::LoadGLSLShader
 ================================================================================================
 */
-GLuint idRenderProgManager::LoadGLSLShader( GLenum target, const char* name, const char* nameSuffix, uint32 shaderFeatures, idList<int>& uniforms )
+GLuint idRenderProgManager::LoadGLSLShader( GLenum target, const char* name, const char* nameOutSuffix, uint32 shaderFeatures, bool builtin, idList<int>& uniforms )
 {
 
 	idStr inFile;
@@ -1596,7 +1596,7 @@ GLuint idRenderProgManager::LoadGLSLShader( GLenum target, const char* name, con
 	// RB: replaced backslashes
 	inFile.Format( "renderprogs/%s", name );
 	inFile.StripFileExtension();
-	outFileHLSL.Format( "renderprogs/hlsl/%s%s", name, nameSuffix );
+	outFileHLSL.Format( "renderprogs/hlsl/%s%s", name, nameOutSuffix );
 	outFileHLSL.StripFileExtension();
 	
 	switch( glConfig.driverType )
@@ -1605,15 +1605,15 @@ GLuint idRenderProgManager::LoadGLSLShader( GLenum target, const char* name, con
 		case GLDRV_OPENGL_ES3:
 		case GLDRV_OPENGL_MESA:
 		{
-			outFileGLSL.Format( "renderprogs/glsles-1_0/%s%s", name, nameSuffix );
-			outFileUniforms.Format( "renderprogs/glsles-1_0/%s%s", name, nameSuffix );
+			outFileGLSL.Format( "renderprogs/glsles-1_0/%s%s", name, nameOutSuffix );
+			outFileUniforms.Format( "renderprogs/glsles-1_0/%s%s", name, nameOutSuffix );
 			break;
 		}
 		
 		default:
 		{
-			outFileGLSL.Format( "renderprogs/glsl-1_50/%s%s", name, nameSuffix );
-			outFileUniforms.Format( "renderprogs/glsl-1_50/%s%s", name, nameSuffix );
+			outFileGLSL.Format( "renderprogs/glsl-1_50/%s%s", name, nameOutSuffix );
+			outFileUniforms.Format( "renderprogs/glsl-1_50/%s%s", name, nameOutSuffix );
 		}
 	}
 	
@@ -1681,7 +1681,7 @@ GLuint idRenderProgManager::LoadGLSLShader( GLenum target, const char* name, con
 		}
 		
 		idStr hlslCode( hlslFileBuffer );
-		idStr programHLSL = StripDeadCode( hlslCode, inFile, compileMacros );
+		idStr programHLSL = StripDeadCode( hlslCode, inFile, compileMacros, builtin );
 		programGLSL = ConvertCG2GLSL( programHLSL, inFile, target == GL_VERTEX_SHADER, programUniforms );
 		
 		fileSystem->WriteFile( outFileHLSL, programHLSL.c_str(), programHLSL.Length(), "fs_basepath" );
