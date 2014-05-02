@@ -274,9 +274,14 @@ public:
 	}
 	
 	// RB begin
-	void	BindShader_Interaction_ShadowMapping()
+	void	BindShader_Interaction_ShadowMapping_Spot()
 	{
-		BindShader_Builtin( BUILTIN_INTERACTION_SHADOW_MAPPING );
+		BindShader_Builtin( BUILTIN_INTERACTION_SHADOW_MAPPING_SPOT );
+	}
+	
+	void	BindShader_Interaction_ShadowMapping_Point()
+	{
+		BindShader_Builtin( BUILTIN_INTERACTION_SHADOW_MAPPING_POINT );
 	}
 	// RB end
 	
@@ -429,26 +434,26 @@ public:
 #endif
 	
 	// the joints buffer should only be bound for vertex programs that use joints
-	bool	ShaderUsesJoints() const
+	bool		ShaderUsesJoints() const
 	{
 		return vertexShaders[currentVertexShader].usesJoints;
 	}
 	// the rpEnableSkinning render parm should only be set for vertex programs that use it
-	bool	ShaderHasOptionalSkinning() const
+	bool		ShaderHasOptionalSkinning() const
 	{
 		return vertexShaders[currentVertexShader].optionalSkinning;
 	}
 	
 	// unbind the currently bound render program
-	void	Unbind();
+	void		Unbind();
 	
 	// RB begin
-	bool	IsShaderBound() const;
+	bool		IsShaderBound() const;
 	// RB end
 	
 	// this should only be called via the reload shader console command
-	void	LoadAllShaders();
-	void	KillAllShaders();
+	void		LoadAllShaders();
+	void		KillAllShaders();
 	
 	static const int	MAX_GLSL_USER_PARMS = 8;
 	const char*	GetGLSLParmName( int rp ) const;
@@ -462,8 +467,8 @@ public:
 	void		ZeroUniforms();
 	
 protected:
-	void	LoadVertexShader( int index );
-	void	LoadFragmentShader( int index );
+	void		LoadVertexShader( int index );
+	void		LoadFragmentShader( int index );
 	
 	enum
 	{
@@ -490,7 +495,8 @@ protected:
 		BUILTIN_INTERACTION_AMBIENT,
 		BUILTIN_INTERACTION_AMBIENT_SKINNED,
 		// RB begin
-		BUILTIN_INTERACTION_SHADOW_MAPPING,
+		BUILTIN_INTERACTION_SHADOW_MAPPING_SPOT,
+		BUILTIN_INTERACTION_SHADOW_MAPPING_POINT,
 		// RB end
 		BUILTIN_ENVIRONMENT,
 		BUILTIN_ENVIRONMENT_SKINNED,
@@ -535,26 +541,42 @@ protected:
 		BindShader( -1, builtinShaders[i], builtinShaders[i], true );
 	}
 	
+	enum shaderFeature_t
+	{
+		USE_GPU_SKINNING,
+		LIGHT_POINT,
+		LIGHT_PARALLEL,
+		
+		MAX_SHADER_MACRO_NAMES,
+	};
+	
+	static const char* GLSLMacroNames[MAX_SHADER_MACRO_NAMES];
+	const char*	GetGLSLMacroName( shaderFeature_t sf ) const;
+	
 	bool	CompileGLSL( GLenum target, const char* name );
-	GLuint	LoadGLSLShader( GLenum target, const char* name, idList<int>& uniforms );
+	GLuint	LoadGLSLShader( GLenum target, const char* name, const char* nameSuffix, uint32 shaderFeatures, idList<int>& uniforms );
 	void	LoadGLSLProgram( const int programIndex, const int vertexShaderIndex, const int fragmentShaderIndex );
 	
 	static const GLuint INVALID_PROGID = 0xFFFFFFFF;
 	
 	struct vertexShader_t
 	{
-		vertexShader_t() : progId( INVALID_PROGID ), usesJoints( false ), optionalSkinning( false ) {}
+		vertexShader_t() : progId( INVALID_PROGID ), usesJoints( false ), optionalSkinning( false ), shaderFeatures( 0 ) {}
 		idStr		name;
+		idStr		nameSuffix;
 		GLuint		progId;
 		bool		usesJoints;
 		bool		optionalSkinning;
+		uint32		shaderFeatures;		// RB: Cg compile macros
 		idList<int>	uniforms;
 	};
 	struct fragmentShader_t
 	{
-		fragmentShader_t() : progId( INVALID_PROGID ) {}
+		fragmentShader_t() : progId( INVALID_PROGID ), shaderFeatures( 0 ) {}
 		idStr		name;
+		idStr		nameSuffix;
 		GLuint		progId;
+		uint32		shaderFeatures;
 		idList<int>	uniforms;
 	};
 	

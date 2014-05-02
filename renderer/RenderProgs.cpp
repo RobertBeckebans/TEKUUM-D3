@@ -83,69 +83,72 @@ void idRenderProgManager::Init()
 	// RB: added checks for GPU skinning
 	struct builtinShaders_t
 	{
-		int index;
+		int			index;
 		const char* name;
-		bool requireGPUSkinningSupport;
+		const char* nameSuffix;
+		uint32		shaderFeatures;
+		bool		requireGPUSkinningSupport;
 	} builtins[] =
 	{
-		{ BUILTIN_GUI, "builtin/gui.vfp", false },
-		{ BUILTIN_COLOR, "builtin/color.vfp", false },
-		{ BUILTIN_COLOR_SKINNED, "builtin/color_skinned.vfp", true },
-		{ BUILTIN_VERTEX_COLOR, "builtin/vertex_color.vfp", false },
-		{ BUILTIN_VERTEX_LIGHTING, "builtin/vertex_lighting.vfp", false },
-		{ BUILTIN_GRID_LIGHTING, "builtin/grid_lighting.vfp", false },
-		{ BUILTIN_GRID_LIGHTING_SKINNED, "builtin/grid_lighting_skinned.vfp", true },
+		{ BUILTIN_GUI, "builtin/gui.vfp", "", 0, false },
+		{ BUILTIN_COLOR, "builtin/color.vfp", "", 0, false },
+		{ BUILTIN_COLOR_SKINNED, "builtin/color_skinned.vfp", "", 0, true },
+		{ BUILTIN_VERTEX_COLOR, "builtin/vertex_color.vfp", "", 0, false },
+		{ BUILTIN_VERTEX_LIGHTING, "builtin/vertex_lighting.vfp", "", 0, false },
+		{ BUILTIN_GRID_LIGHTING, "builtin/grid_lighting.vfp", "", 0, false },
+		{ BUILTIN_GRID_LIGHTING_SKINNED, "builtin/grid_lighting_skinned.vfp", "", 0, true },
 #if !defined(USE_GLES2) && !defined(USE_GLES3)
-		{ BUILTIN_SIMPLESHADE, "builtin/simpleshade.vfp", false },
+		{ BUILTIN_SIMPLESHADE, "builtin/simpleshade.vfp", "", 0, false },
 #endif
-		{ BUILTIN_TEXTURED, "builtin/texture.vfp", false },
-		{ BUILTIN_TEXTURE_VERTEXCOLOR, "builtin/texture_color.vfp", false },
-		{ BUILTIN_TEXTURE_VERTEXCOLOR_SKINNED, "builtin/texture_color_skinned.vfp", true },
-		{ BUILTIN_TEXTURE_TEXGEN_VERTEXCOLOR, "builtin/texture_color_texgen.vfp", false },
+		{ BUILTIN_TEXTURED, "builtin/texture.vfp", "", 0, false },
+		{ BUILTIN_TEXTURE_VERTEXCOLOR, "builtin/texture_color.vfp", "", 0, false },
+		{ BUILTIN_TEXTURE_VERTEXCOLOR_SKINNED, "builtin/texture_color_skinned.vfp", "", 0, true },
+		{ BUILTIN_TEXTURE_TEXGEN_VERTEXCOLOR, "builtin/texture_color_texgen.vfp", "", 0, false },
 		// RB begin
-		{ BUILTIN_TEXTURE_YCOCG, "builtin/texture_ycocg.vfp", false },
+		{ BUILTIN_TEXTURE_YCOCG, "builtin/texture_ycocg.vfp", "", 0, false },
 		// RB end
-		{ BUILTIN_INTERACTION, "builtin/interaction.vfp", false },
-		{ BUILTIN_INTERACTION_SKINNED, "builtin/interaction_skinned.vfp", true },
-		{ BUILTIN_INTERACTION_AMBIENT, "builtin/interactionAmbient.vfp", false },
-		{ BUILTIN_INTERACTION_AMBIENT_SKINNED, "builtin/interactionAmbient_skinned.vfp", true },
+		{ BUILTIN_INTERACTION, "builtin/interaction.vfp", "", 0, false },
+		{ BUILTIN_INTERACTION_SKINNED, "builtin/interaction_skinned.vfp", "", 0, true },
+		{ BUILTIN_INTERACTION_AMBIENT, "builtin/interactionAmbient.vfp", "", 0, false },
+		{ BUILTIN_INTERACTION_AMBIENT_SKINNED, "builtin/interactionAmbient_skinned.vfp", "", 0, true },
 		// RB begin
-		{ BUILTIN_INTERACTION_SHADOW_MAPPING, "builtin/interactionSM.vfp", false },
+		{ BUILTIN_INTERACTION_SHADOW_MAPPING_SPOT, "builtin/interactionSM", "_spot", 0, false },
+		{ BUILTIN_INTERACTION_SHADOW_MAPPING_POINT, "builtin/interactionSM", "_point", BIT( LIGHT_POINT ), false },
 		// RB end
-		{ BUILTIN_ENVIRONMENT, "builtin/environment.vfp", false },
-		{ BUILTIN_ENVIRONMENT_SKINNED, "builtin/environment_skinned.vfp", true },
-		{ BUILTIN_BUMPY_ENVIRONMENT, "builtin/bumpyEnvironment.vfp", false },
-		{ BUILTIN_BUMPY_ENVIRONMENT_SKINNED, "builtin/bumpyEnvironment_skinned.vfp", true },
+		{ BUILTIN_ENVIRONMENT, "builtin/environment.vfp", "", 0, false },
+		{ BUILTIN_ENVIRONMENT_SKINNED, "builtin/environment_skinned.vfp", "", 0, true },
+		{ BUILTIN_BUMPY_ENVIRONMENT, "builtin/bumpyEnvironment.vfp", "", 0, false },
+		{ BUILTIN_BUMPY_ENVIRONMENT_SKINNED, "builtin/bumpyEnvironment_skinned.vfp", "", 0, true },
 		
-		{ BUILTIN_DEPTH, "builtin/depth.vfp", false },
-		{ BUILTIN_DEPTH_SKINNED, "builtin/depth_skinned.vfp", true },
+		{ BUILTIN_DEPTH, "builtin/depth.vfp", "", 0, false },
+		{ BUILTIN_DEPTH_SKINNED, "builtin/depth_skinned.vfp", "", 0, true },
 		
-		{ BUILTIN_SHADOW, "builtin/shadow.vfp", false },
-		{ BUILTIN_SHADOW_SKINNED, "builtin/shadow_skinned.vfp", true },
+		{ BUILTIN_SHADOW, "builtin/shadow.vfp", "", 0, false },
+		{ BUILTIN_SHADOW_SKINNED, "builtin/shadow_skinned.vfp", "", 0, true },
 		
-		{ BUILTIN_SHADOW_DEBUG, "builtin/shadowDebug.vfp", false },
-		{ BUILTIN_SHADOW_DEBUG_SKINNED, "builtin/shadowDebug_skinned.vfp", true },
+		{ BUILTIN_SHADOW_DEBUG, "builtin/shadowDebug.vfp", "", 0, false },
+		{ BUILTIN_SHADOW_DEBUG_SKINNED, "builtin/shadowDebug_skinned.vfp", "", 0, true },
 		
 		// RB begin
-		{ BUILTIN_BLENDLIGHT, "builtin/blendLight.vfp", false },
-		{ BUILTIN_BLENDLIGHT_SKINNED, "builtin/blendLight_skinned.vfp", true },
+		{ BUILTIN_BLENDLIGHT, "builtin/blendLight.vfp", "", 0, false },
+		{ BUILTIN_BLENDLIGHT_SKINNED, "builtin/blendLight_skinned.vfp", "", 0, true },
 		// RB end
-		{ BUILTIN_FOG, "builtin/fog.vfp", false },
-		{ BUILTIN_FOG_SKINNED, "builtin/fog_skinned.vfp", true },
-		{ BUILTIN_SKYBOX, "builtin/skybox.vfp", false },
-		{ BUILTIN_WOBBLESKY, "builtin/wobblesky.vfp", false },
-		{ BUILTIN_POSTPROCESS, "builtin/postprocess.vfp", false },
-		{ BUILTIN_STEREO_DEGHOST, "builtin/stereoDeGhost.vfp", false },
-		{ BUILTIN_STEREO_WARP, "builtin/stereoWarp.vfp", false },
+		{ BUILTIN_FOG, "builtin/fog.vfp", "", 0, false },
+		{ BUILTIN_FOG_SKINNED, "builtin/fog_skinned.vfp", "", 0, true },
+		{ BUILTIN_SKYBOX, "builtin/skybox.vfp", "", 0, false },
+		{ BUILTIN_WOBBLESKY, "builtin/wobblesky.vfp", "", 0, false },
+		{ BUILTIN_POSTPROCESS, "builtin/postprocess.vfp", "", 0, false },
+		{ BUILTIN_STEREO_DEGHOST, "builtin/stereoDeGhost.vfp", "", 0, false },
+		{ BUILTIN_STEREO_WARP, "builtin/stereoWarp.vfp", "", 0, false },
 //		{ BUILTIN_ZCULL_RECONSTRUCT, "zcullReconstruct.vfp", false },
-		{ BUILTIN_BINK, "builtin/bink.vfp", false },
-		{ BUILTIN_BINK_GUI, "builtin/bink_gui.vfp", false },
+		{ BUILTIN_BINK, "builtin/bink.vfp", "", 0, false },
+		{ BUILTIN_BINK_GUI, "builtin/bink_gui.vfp", "", 0, false },
 		// RB begin
-		{ BUILTIN_ROQ, "builtin/roq.vfp", false },
+		{ BUILTIN_ROQ, "builtin/roq.vfp", "", 0, false },
 		// RB end
-		{ BUILTIN_STEREO_INTERLACE, "builtin/stereoInterlace.vfp", false },
+		{ BUILTIN_STEREO_INTERLACE, "builtin/stereoInterlace.vfp", "", 0, false },
 #if !defined(USE_GLES2) && !defined(USE_GLES3)
-		{ BUILTIN_MOTION_BLUR, "builtin/motionBlur.vfp", false },
+		{ BUILTIN_MOTION_BLUR, "builtin/motionBlur.vfp", "", 0, false },
 #endif
 		
 	};
@@ -157,7 +160,13 @@ void idRenderProgManager::Init()
 	for( int i = 0; i < numBuiltins; i++ )
 	{
 		vertexShaders[i].name = builtins[i].name;
+		vertexShaders[i].nameSuffix = builtins[i].nameSuffix;
+		vertexShaders[i].shaderFeatures = builtins[i].shaderFeatures;
+		
 		fragmentShaders[i].name = builtins[i].name;
+		fragmentShaders[i].nameSuffix = builtins[i].nameSuffix;
+		fragmentShaders[i].shaderFeatures = builtins[i].shaderFeatures;
+		
 		builtinShaders[builtins[i].index] = i;
 		
 		if( builtins[i].requireGPUSkinningSupport && !glConfig.gpuSkinningAvailable )
@@ -376,7 +385,7 @@ void idRenderProgManager::LoadVertexShader( int index )
 	{
 		return; // Already loaded
 	}
-	vertexShaders[index].progId = ( GLuint ) LoadGLSLShader( GL_VERTEX_SHADER, vertexShaders[index].name, vertexShaders[index].uniforms );
+	vertexShaders[index].progId = ( GLuint ) LoadGLSLShader( GL_VERTEX_SHADER, vertexShaders[index].name, vertexShaders[index].nameSuffix, vertexShaders[index].shaderFeatures, vertexShaders[index].uniforms );
 }
 
 /*
@@ -390,7 +399,7 @@ void idRenderProgManager::LoadFragmentShader( int index )
 	{
 		return; // Already loaded
 	}
-	fragmentShaders[index].progId = ( GLuint ) LoadGLSLShader( GL_FRAGMENT_SHADER, fragmentShaders[index].name, fragmentShaders[index].uniforms );
+	fragmentShaders[index].progId = ( GLuint ) LoadGLSLShader( GL_FRAGMENT_SHADER, fragmentShaders[index].name, fragmentShaders[index].nameSuffix, fragmentShaders[index].shaderFeatures, fragmentShaders[index].uniforms );
 }
 
 /*
