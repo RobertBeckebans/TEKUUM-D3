@@ -73,9 +73,22 @@ void R_CalcInteractionFacing( const idRenderEntityLocal* ent, const srfTriangles
 		const idDrawVert& v2 = tri->verts[tri->indexes[i + 2]];
 		
 		const idPlane plane( v0.xyz, v1.xyz, v2.xyz );
-		const float d = plane.Distance( localLightOrigin );
 		
-		cullInfo.facing[face] = ( d >= 0.0f );
+		// RB: support Half-Lambert lighting
+		//const float d = plane.Distance( localLightOrigin );
+		//cullInfo.facing[face] = ( d >= 0.0f );
+		
+		idVec3 L = localLightOrigin - v0.xyz;
+		L += ( localLightOrigin - v1.xyz );
+		L += ( localLightOrigin - v2.xyz );
+		L.Normalize();
+		
+		const idVec3& normal = plane.Normal();
+		float halfLdotN = ( normal * L ) * 0.5 + 0.5;
+		halfLdotN *= halfLdotN;
+		
+		cullInfo.facing[face] = ( halfLdotN >= 0.0f );
+		// RB end
 	}
 	cullInfo.facing[numFaces] = 1;	// for dangling edges to reference
 }
