@@ -188,7 +188,6 @@ idCVar r_usePrecomputedLight( "r_usePrecomputedLight", "1", CVAR_RENDERER | CVAR
 #else
 idCVar r_usePrecomputedLight( "r_usePrecomputedLight", "0", CVAR_RENDERER | CVAR_BOOL, "enable Q3A style precomputed lighting (vertex lighting/lightgrid)" );
 #endif
-idCVar r_useShadowMapping( "r_useShadowMapping", "1", CVAR_RENDERER | CVAR_BOOL, "use shadow mapping instead of stencil shadows" );
 // RB end
 
 // visual debugging info
@@ -245,6 +244,7 @@ idCVar stereoRender_swapEyes( "stereoRender_swapEyes", "0", CVAR_BOOL | CVAR_ARC
 idCVar stereoRender_deGhost( "stereoRender_deGhost", "0.05", CVAR_FLOAT | CVAR_ARCHIVE, "subtract from opposite eye to reduce ghosting" );
 
 // RB: shadow mapping parameters
+idCVar r_useShadowMapping( "r_useShadowMapping", "1", CVAR_RENDERER | CVAR_BOOL, "use shadow mapping instead of stencil shadows" );
 idCVar r_shadowMapFrustumFOV( "r_shadowMapFrustumFOV", "92", CVAR_RENDERER | CVAR_FLOAT, "oversize FOV for point light side matching" );
 idCVar r_shadowMapSingleSide( "r_shadowMapSingleSide", "-1", CVAR_RENDERER | CVAR_INTEGER, "only draw a single side (0-5) of point lights" );
 idCVar r_shadowMapImageSize( "r_shadowMapImageSize", "1024", CVAR_RENDERER | CVAR_INTEGER, "", 128, 2048 );
@@ -1557,8 +1557,14 @@ void R_ScreenshotFilename( int& lastNumber, const char* base, idStr& fileName )
 		time( &aclock );
 		struct tm* t = localtime( &aclock );
 		
+#if defined(STANDALONE)
+		sprintf( fileName, "%s%s-%04d%02d%02d-%02d%02d%02d-%03d.png", base, GAME_NAME_LOWER,
+				 1900 + t->tm_year, 1 + t->tm_mon, t->tm_mday, t->tm_hour, t->tm_min, t->tm_sec, lastNumber );
+#else
 		sprintf( fileName, "%s%s-%04d%02d%02d-%02d%02d%02d-%03d.png", base, "shot",
 				 1900 + t->tm_year, 1 + t->tm_mon, t->tm_mday, t->tm_hour, t->tm_min, t->tm_sec, lastNumber );
+#endif
+		
 #endif
 		// RB end
 		if( lastNumber == 99999 )

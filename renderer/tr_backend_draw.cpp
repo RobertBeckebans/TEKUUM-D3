@@ -1412,7 +1412,18 @@ static void RB_RenderInteractions( const drawSurf_t* surfList, const viewLight_t
 				{
 					// RB: we have shadow mapping enabled and shadow maps so do a shadow compare
 					
-					if( vLight->lightDef->parms.pointLight )
+					if( vLight->lightDef->parms.parallel )
+					{
+						if( surf->jointCache )
+						{
+							renderProgManager.BindShader_Interaction_ShadowMapping_Spot_Skinned();
+						}
+						else
+						{
+							renderProgManager.BindShader_Interaction_ShadowMapping_Spot();
+						}
+					}
+					else if( vLight->lightDef->parms.pointLight )
 					{
 						if( surf->jointCache )
 						{
@@ -1524,7 +1535,20 @@ static void RB_RenderInteractions( const drawSurf_t* surfList, const viewLight_t
 				// RB begin
 				if( r_useShadowMapping.GetBool() )
 				{
-					if( vLight->lightDef->parms.pointLight )
+					if( vLight->lightDef->parms.parallel )
+					{
+						idRenderMatrix modelToShadowMatrix;
+						idRenderMatrix::Multiply( backEnd.shadowV[0], modelMatrix, modelToShadowMatrix );
+						
+						idRenderMatrix shadowClipMVP;
+						idRenderMatrix::Multiply( backEnd.shadowP[0], modelToShadowMatrix, shadowClipMVP );
+						
+						idRenderMatrix shadowWindowMVP;
+						idRenderMatrix::Multiply( renderMatrix_clipSpaceToWindowSpace, shadowClipMVP, shadowWindowMVP );
+						
+						SetVertexParms( ( renderParm_t )( RENDERPARM_SHADOW_MATRIX_0_X ), shadowWindowMVP[0], 4 );
+					}
+					else if( vLight->lightDef->parms.pointLight )
 					{
 						for( int i = 0; i < 6; i++ )
 						{
@@ -1540,7 +1564,6 @@ static void RB_RenderInteractions( const drawSurf_t* surfList, const viewLight_t
 							SetVertexParms( ( renderParm_t )( RENDERPARM_SHADOW_MATRIX_0_X + i * 4 ), shadowWindowMVP[0], 4 );
 						}
 					}
-					// TODO parallel light
 					else
 					{
 						// spot light
@@ -2587,7 +2610,30 @@ SHADOW MAPS RENDERING
 ==============================================================================================
 */
 
+/*
+same as D3DXMatrixOrthoOffCenterRH
 
+http://msdn.microsoft.com/en-us/library/bb205348(VS.85).aspx
+*/
+static void MatrixOrthogonalProjectionRH( float m[16], float left, float right, float bottom, float top, float zNear, float zFar )
+{
+	m[0] = 2 / ( right - left );
+	m[4] = 0;
+	m[8] = 0;
+	m[12] = ( left + right ) / ( left - right );
+	m[1] = 0;
+	m[5] = 2 / ( top - bottom );
+	m[9] = 0;
+	m[13] = ( top + bottom ) / ( bottom - top );
+	m[2] = 0;
+	m[6] = 0;
+	m[10] = 1 / ( zNear - zFar );
+	m[14] = zNear / ( zNear - zFar );
+	m[3] = 0;
+	m[7] = 0;
+	m[11] = 0;
+	m[15] = 1;
+}
 
 /*
 =====================
@@ -2633,14 +2679,63 @@ static void RB_ShadowMapPass( const drawSurf_t* drawSurfs, const viewLight_t* vL
 	idRenderMatrix lightViewRenderMatrix;
 	
 	
-	float	viewMatrix[16];
 	
-	idVec3	vec;
-	idVec3	origin = vLight->lightDef->globalLightOrigin;
-	
-	if( side >= 0 )
+	if( vLight->lightDef->parms.parallel )
 	{
+		// original light direction is from surface to light origin
+		idVec3 lightDirection = -vLight->lightDef->parms.lightCenter;
+		if( lightDirection.Normalize() == 0.0f )
+		{
+			lightDirection[2] = -1.0f;
+		}
+		
+		idMat3 rotation = lightDirection.ToMat3();
+		//idAngles angles = lightDirection.ToAngles();
+		//idMat3 rotation = angles.ToMat3();
+		
+		idRenderMatrix::CreateViewMatrix( backEnd.viewDef->renderView.vieworg, rotation, lightViewRenderMatrix );
+		//idRenderMatrix::CreateFromOriginAxis( backEnd.viewDef->renderView.vieworg, rotation, lightViewRenderMatrix );
+		
+		idBounds cropBounds;
+		cropBounds.Clear();
+		
+		ALIGNTYPE16 frustumCorners_t corners;
+		idRenderMatrix::GetFrustumCorners( corners, vLight->inverseBaseLightProject, bounds_zeroOneCube );
+		
+		idVec4 point, transf;
+		for( int j = 0; j < 8; j++ )
+		{
+			point[0] = corners.x[j];
+			point[1] = corners.y[j];
+			point[2] = corners.z[j];
+			point[3] = 1;
+			
+			lightViewRenderMatrix.TransformPoint( point, transf );
+			transf[0] /= transf[3];
+			transf[1] /= transf[3];
+			transf[2] /= transf[3];
+			
+			cropBounds.AddPoint( transf.ToVec3() );
+		}
+		
+		float lightProjectionMatrix[16];
+		MatrixOrthogonalProjectionRH( lightProjectionMatrix, cropBounds[0][0], cropBounds[1][0], cropBounds[0][1], cropBounds[1][1], -cropBounds[1][2], -cropBounds[0][2] );
+		
+		idRenderMatrix::Transpose( *( idRenderMatrix* )lightProjectionMatrix, lightProjectionRenderMatrix );
+		
+		backEnd.shadowV[0] = lightViewRenderMatrix;
+		backEnd.shadowP[0] = lightProjectionRenderMatrix;
+	}
+	else if( vLight->lightDef->parms.pointLight && side >= 0 )
+	{
+		assert( side >= 0 && side < 6 );
+		
 		// FIXME OPTIMIZE no memset
+		
+		float	viewMatrix[16];
+		
+		idVec3	vec;
+		idVec3	origin = vLight->globalLightOrigin;
 		
 		// side of a point light
 		memset( viewMatrix, 0, sizeof( viewMatrix ) );
@@ -2751,26 +2846,20 @@ static void RB_ShadowMapPass( const drawSurf_t* drawSurfs, const viewLight_t* vL
 		lightProjectionMatrix[3 * 4 + 3] = 0.0f;
 		
 		idRenderMatrix::Transpose( *( idRenderMatrix* )lightProjectionMatrix, lightProjectionRenderMatrix );
-	}
-	
-	
-	if( side < 0 )
-	{
-		//lightViewRenderMatrix.Identity();
 		
+		backEnd.shadowV[side] = lightViewRenderMatrix;
+		backEnd.shadowP[side] = lightProjectionRenderMatrix;
+	}
+	else
+	{
 		lightViewRenderMatrix.Identity();
 		lightProjectionRenderMatrix = vLight->baseLightProject;
 		
 		backEnd.shadowV[0] = lightViewRenderMatrix;
 		backEnd.shadowP[0] = lightProjectionRenderMatrix;
 	}
-	else
-	{
-		assert( side >= 0 && side < 6 );
-		
-		backEnd.shadowV[side] = lightViewRenderMatrix;
-		backEnd.shadowP[side] = lightProjectionRenderMatrix;
-	}
+	
+	
 	
 	globalFramebuffers.shadowFBO->Bind();
 	
@@ -2846,7 +2935,7 @@ static void RB_ShadowMapPass( const drawSurf_t* drawSurfs, const viewLight_t* vL
 			idRenderMatrix clipMVP;
 			idRenderMatrix::Multiply( lightProjectionRenderMatrix, modelToLightRenderMatrix, clipMVP );
 			
-			if( side < 0 )
+			if( side < 0 && !vLight->lightDef->parms.parallel )
 			{
 				// from OpenGL view space to OpenGL NDC ( -1 : 1 in XYZ )
 				idRenderMatrix MVP;
@@ -2860,9 +2949,11 @@ static void RB_ShadowMapPass( const drawSurf_t* drawSurfs, const viewLight_t* vL
 			}
 			
 			// set the local light position to allow the vertex program to project the shadow volume end cap to infinity
+			/*
 			idVec4 localLight( 0.0f );
 			R_GlobalPointToLocal( drawSurf->space->modelMatrix, vLight->globalLightOrigin, localLight.ToVec3() );
 			SetVertexParm( RENDERPARM_LOCALLIGHTORIGIN, localLight.ToFloatPtr() );
+			*/
 			
 			backEnd.currentSpace = drawSurf->space;
 		}
@@ -2961,7 +3052,13 @@ static void RB_DrawInteractions( const viewDef_t* viewDef )
 		{
 			int	side, sideStop;
 			
-			if( vLight->lightDef->parms.pointLight )
+			if( vLight->lightDef->parms.parallel )
+			{
+				// TODO number of cascaded shadow frustums
+				side = -1;
+				sideStop = 0;
+			}
+			else if( vLight->lightDef->parms.pointLight )
 			{
 				if( r_shadowMapSingleSide.GetInteger() != -1 )
 				{

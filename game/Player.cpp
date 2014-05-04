@@ -5495,7 +5495,8 @@ void idPlayer::BobCycle( const idVec3& pushVelocity )
 		return;
 	}
 	
-	if( !physicsObj.HasGroundContacts() || influenceActive == INFLUENCE_LEVEL2 || ( gameLocal.isMultiplayer && spectating ) )
+	// RB: don't bob when flying rapidly with noclip
+	if( !physicsObj.HasGroundContacts() || influenceActive == INFLUENCE_LEVEL2 || ( gameLocal.isMultiplayer && spectating ) || noclip )
 	{
 		// airborne
 		bobCycle = 0;
