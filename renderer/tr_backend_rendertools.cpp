@@ -1856,7 +1856,22 @@ static void RB_ShowLights()
 		if( r_showLights.GetInteger() >= 2 )
 		{
 			GL_State( GLS_DEPTHFUNC_ALWAYS | GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA | GLS_DEPTHMASK );
-			GL_Color( 0.0f, 0.0f, 1.0f, 0.25f );
+			
+			// RB: show different light types
+			if( vLight->lightDef->parms.parallel )
+			{
+				GL_Color( 1.0f, 0.0f, 0.0f, 0.25f );
+			}
+			else if( vLight->lightDef->parms.pointLight )
+			{
+				GL_Color( 0.0f, 0.0f, 1.0f, 0.25f );
+			}
+			else
+			{
+				GL_Color( 0.0f, 1.0f, 0.0f, 0.25f );
+			}
+			// RB end
+			
 			idRenderMatrix invProjectMVPMatrix;
 			idRenderMatrix::Multiply( backEnd.viewDef->worldSpace.mvp, vLight->inverseBaseLightProject, invProjectMVPMatrix );
 			RB_SetMVP( invProjectMVPMatrix );
