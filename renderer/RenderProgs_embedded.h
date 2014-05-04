@@ -3437,7 +3437,7 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"\n"
 		"	half3 diffuseColor = diffuseMap * rpDiffuseModifier.xyz;\n"
 		"	half3 specularColor = specMap.xyz * specularContribution * rpSpecularModifier.xyz;\n"
-		"	half3 lightColor = dot3( lightVector, localNormal ) * lightProj.xyz * lightFalloff.xyz;\n"
+		"	half3 lightColor = /*dot3( lightVector, localNormal ) * */ lightProj.xyz * lightFalloff.xyz;\n"
 		"\n"
 		"	result.color.xyz = ( diffuseColor + specularColor ) * lightColor * fragment.color.xyz;\n"
 		"	result.color.w = 1.0;\n"
