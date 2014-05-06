@@ -435,7 +435,6 @@ public:
 	{
 		BindShader_Builtin( BUILTIN_ROQ );
 	}
-	// RB end
 	
 #if !defined(USE_GLES2) && !defined(USE_GLES3)
 	void	BindShader_MotionBlur()
@@ -443,6 +442,12 @@ public:
 		BindShader_Builtin( BUILTIN_MOTION_BLUR );
 	}
 #endif
+	
+	void	BindShader_DebugShadowMap()
+	{
+		BindShader_Builtin( BUILTIN_DEBUG_SHADOWMAP );
+	}
+	// RB end
 	
 	// the joints buffer should only be bound for vertex programs that use joints
 	bool		ShaderUsesJoints() const
@@ -545,6 +550,8 @@ protected:
 #if !defined(USE_GLES2) && !defined(USE_GLES3)
 		BUILTIN_MOTION_BLUR,
 #endif
+		
+		BUILTIN_DEBUG_SHADOWMAP,
 		
 		MAX_BUILTINS
 	};

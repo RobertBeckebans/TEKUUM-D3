@@ -1031,6 +1031,7 @@ extern idCVar r_showSkel;					// draw the skeleton when model animates
 extern idCVar r_showOverDraw;				// show overdraw
 // RB begin
 extern idCVar r_showLightGrid;				// show Q3A style light grid points
+extern idCVar r_showShadowMaps;
 // RB end
 extern idCVar r_jointNameScale;				// size of joint names when r_showskel is set to 1
 extern idCVar r_jointNameOffset;			// offset of joint names when r_showskel is set to 1

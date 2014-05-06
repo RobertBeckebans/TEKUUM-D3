@@ -239,6 +239,8 @@ const char* prefixes[] =
 	"sampler3DShadow",		// GLSL
 	"samplerCubeShadow",	// GLSL
 	
+	"sampler2DArray",		// GLSL"
+	
 	"sampler2DMS",			// GLSL
 };
 static const int numPrefixes = sizeof( prefixes ) / sizeof( prefixes[0] );

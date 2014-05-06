@@ -2923,6 +2923,95 @@ void RB_TestImage()
 	RB_DrawElementsWithCounters( &backEnd.testImageSurface );
 }
 
+// RB begin
+void RB_ShowShadowMaps()
+{
+	idImage*	image = NULL;
+	int		max;
+	float	w, h;
+	
+	if( !r_showShadowMaps.GetBool() )
+		return;
+		
+	image = globalImages->shadowImage;
+	if( !image )
+	{
+		return;
+	}
+	
+	// Set State
+	GL_State( GLS_DEPTHFUNC_ALWAYS | GLS_SRCBLEND_ONE | GLS_DSTBLEND_ZERO );
+	
+	// Set Parms
+	float texS[4] = { 1.0f, 0.0f, 0.0f, 0.0f };
+	float texT[4] = { 0.0f, 1.0f, 0.0f, 0.0f };
+	renderProgManager.SetRenderParm( RENDERPARM_TEXTUREMATRIX_S, texS );
+	renderProgManager.SetRenderParm( RENDERPARM_TEXTUREMATRIX_T, texT );
+	
+	float texGenEnabled[4] = { 0, 0, 0, 0 };
+	renderProgManager.SetRenderParm( RENDERPARM_TEXGEN_0_ENABLED, texGenEnabled );
+	
+	for( int i = 0; i < 1; i++ )
+	{
+		max = image->GetUploadWidth() > image->GetUploadHeight() ? image->GetUploadWidth() : image->GetUploadHeight();
+		
+		w = 0.25 * image->GetUploadWidth() / max;
+		h = 0.25 * image->GetUploadHeight() / max;
+		
+		w *= ( float )renderSystem->GetHeight() / renderSystem->GetWidth();
+		
+		// not really necessary but just for clarity
+		const float screenWidth = 1.0f;
+		const float screenHeight = 1.0f;
+		const float halfScreenWidth = screenWidth * 0.5f;
+		const float halfScreenHeight = screenHeight * 0.5f;
+		
+		float scale[16] = { 0 };
+		scale[0] = w; // scale
+		scale[5] = h; // scale
+		scale[12] = halfScreenWidth - ( halfScreenWidth * w ); // translate
+		scale[13] = halfScreenHeight - ( halfScreenHeight * h ); // translate
+		scale[10] = 1.0f;
+		scale[15] = 1.0f;
+		
+		float ortho[16] = { 0 };
+		ortho[0] = 2.0f / screenWidth;
+		ortho[5] = -2.0f / screenHeight;
+		ortho[10] = -2.0f;
+		ortho[12] = -1.0f;
+		ortho[13] = 1.0f;
+		ortho[14] = -1.0f;
+		ortho[15] = 1.0f;
+		
+		float finalOrtho[16];
+		R_MatrixMultiply( scale, ortho, finalOrtho );
+		
+		float projMatrixTranspose[16];
+		R_MatrixTranspose( finalOrtho, projMatrixTranspose );
+		renderProgManager.SetRenderParms( RENDERPARM_MVPMATRIX_X, projMatrixTranspose, 4 );
+		
+		//	glMatrixMode( GL_PROJECTION );
+		//	glLoadMatrixf( finalOrtho );
+		//	glMatrixMode( GL_MODELVIEW );
+		//	glLoadIdentity();
+		
+		// Set Color
+		GL_Color( 1, 1, 1, 1 );
+		
+		GL_SelectTexture( 0 );
+		image->Bind();
+		glTexParameteri( GL_TEXTURE_2D_ARRAY, GL_TEXTURE_COMPARE_MODE, GL_NONE );
+		
+		
+		renderProgManager.BindShader_DebugShadowMap();
+		
+		RB_DrawElementsWithCounters( &backEnd.testImageSurface );
+	}
+	
+	glTexParameteri( GL_TEXTURE_2D_ARRAY, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_R_TO_TEXTURE );
+}
+// RB end
+
 /*
 =================
 RB_DrawExpandedTriangles
@@ -3127,6 +3216,7 @@ void RB_RenderDebugTools( drawSurf_t** drawSurfs, int numDrawSurfs )
 	RB_ShowLights();
 	// RB begin
 	RB_ShowLightGrid();
+	RB_ShowShadowMaps();
 	// RB end
 	
 	RB_ShowTextureVectors( drawSurfs, numDrawSurfs );

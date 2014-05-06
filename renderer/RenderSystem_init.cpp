@@ -222,6 +222,7 @@ idCVar r_showTextureVectors( "r_showTextureVectors", "0", CVAR_RENDERER | CVAR_F
 idCVar r_showOverDraw( "r_showOverDraw", "0", CVAR_RENDERER | CVAR_INTEGER, "1 = geometry overdraw, 2 = light interaction overdraw, 3 = geometry and light interaction overdraw", 0, 3, idCmdSystem::ArgCompletion_Integer<0, 3> );
 // RB begin
 idCVar r_showLightGrid( "r_showLightGrid", "0", CVAR_RENDERER | CVAR_FLOAT, "show Q3A style light grid points" );
+idCVar r_showShadowMaps( "r_showShadowMaps", "0", CVAR_RENDERER | CVAR_BOOL, "" );
 // RB end
 
 idCVar r_useEntityCallbacks( "r_useEntityCallbacks", "1", CVAR_RENDERER | CVAR_BOOL, "if 0, issue the callback immediately at update time, rather than defering" );

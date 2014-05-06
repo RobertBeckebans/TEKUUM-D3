@@ -147,11 +147,12 @@ void idRenderProgManager::Init()
 		{ BUILTIN_BINK_GUI, "builtin/bink_gui.vfp", "", 0, false },
 		// RB begin
 		{ BUILTIN_ROQ, "builtin/roq.vfp", "", 0, false },
-		// RB end
 		{ BUILTIN_STEREO_INTERLACE, "builtin/stereoInterlace.vfp", "", 0, false },
 #if !defined(USE_GLES2) && !defined(USE_GLES3)
 		{ BUILTIN_MOTION_BLUR, "builtin/motionBlur.vfp", "", 0, false },
 #endif
+		{ BUILTIN_DEBUG_SHADOWMAP, "builtin/debug_shadowmap.vfp", "", 0, false },
+		// RB end
 		
 	};
 	int numBuiltins = sizeof( builtins ) / sizeof( builtins[0] );
