@@ -395,6 +395,33 @@ struct viewEntity_t
 
 const int	MAX_CLIP_PLANES	= 1;				// we may expand this to six for some subview issues
 
+// RB: added multiple subfrustums for cascaded shadow mapping
+enum frustumPlanes_t
+{
+	FRUSTUM_PLANE_LEFT,
+	FRUSTUM_PLANE_RIGHT,
+	FRUSTUM_PLANE_BOTTOM,
+	FRUSTUM_PLANE_TOP,
+	FRUSTUM_PLANE_NEAR,
+	FRUSTUM_PLANE_FAR,
+	FRUSTUM_PLANES = 6,
+	FRUSTUM_CLIPALL = 1 | 2 | 4 | 8 | 16 | 32
+};
+
+enum
+{
+	FRUSTUM_PRIMARY,
+	FRUSTUM_CASCADE1,
+	FRUSTUM_CASCADE2,
+	FRUSTUM_CASCADE3,
+	FRUSTUM_CASCADE4,
+	FRUSTUM_CASCADE5,
+	MAX_FRUSTUMS,
+};
+
+typedef idPlane frustum_t[FRUSTUM_PLANES];
+// RB end
+
 // viewDefs are allocated on the frame temporary stack memory
 struct viewDef_t
 {
@@ -450,7 +477,11 @@ struct viewDef_t
 	// of 2D rendering, which we can optimize in certain ways.  A 2D view will
 	// not have any viewEntities
 	
-	idPlane				frustum[6];				// positive sides face outward, [4] is the front clip plane
+	// RB begin
+	frustum_t			frustums[MAX_FRUSTUMS];					// positive sides face outward, [4] is the front clip plane
+	float				frustumSplitDistances[MAX_FRUSTUMS];
+	idRenderMatrix		frustumMVPs[MAX_FRUSTUMS];
+	// RB end
 	
 	int					areaNum;				// -1 = not in a valid area
 	
@@ -1069,6 +1100,8 @@ extern idCVar r_shadowMapImageSize;
 extern idCVar r_shadowMapJitterScale;
 extern idCVar r_shadowMapBiasScale;
 extern idCVar r_shadowMapSamples;
+extern idCVar r_shadowMapSplits;
+extern idCVar r_shadowMapSplitWeight;
 // RB end
 
 /*

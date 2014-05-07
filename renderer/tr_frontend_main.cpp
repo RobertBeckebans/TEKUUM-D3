@@ -384,6 +384,85 @@ static void R_SortDrawSurfs( drawSurf_t** drawSurfs, const int numDrawSurfs )
 #endif
 }
 
+static void R_SetupSplitFrustums( viewDef_t* viewDef )
+{
+	idVec3			planeOrigin;
+	
+	float zNear = ( viewDef->renderView.cramZNear ) ? ( r_znear.GetFloat() * 0.25f ) : r_znear.GetFloat();
+	float zFarTotal = 10000;
+	float zFar = zFarTotal;
+	
+	float lambda = r_shadowMapSplitWeight.GetFloat();
+	float ratio = zFarTotal / zNear;
+	
+	for( int i = 1; i <= ( r_shadowMapSplits.GetInteger() + 1 ) && i < MAX_FRUSTUMS; i++ )
+	{
+		float si = i / ( float )( r_shadowMapSplits.GetInteger() + 1 );
+		
+		if( i > FRUSTUM_CASCADE1 )
+		{
+			zNear = zFar - ( zFar * 0.005f );
+		}
+		
+		float zFar = 1.005f * lambda * ( zNear * powf( ratio, si ) ) + ( 1 - lambda ) * ( zNear + ( zFarTotal - zNear ) * si );
+		
+		if( i <= r_shadowMapSplits.GetInteger() )
+		{
+			tr.viewDef->frustumSplitDistances[i - 1] = zFar;
+		}
+		
+		float projectionMatrix[16];
+		R_SetupProjectionMatrix2( tr.viewDef, zNear, zFar, projectionMatrix );
+		
+		// setup render matrices for faster culling
+		idRenderMatrix projectionRenderMatrix;
+		idRenderMatrix::Transpose( *( idRenderMatrix* )projectionMatrix, projectionRenderMatrix );
+		idRenderMatrix viewRenderMatrix;
+		idRenderMatrix::Transpose( *( idRenderMatrix* )tr.viewDef->worldSpace.modelViewMatrix, viewRenderMatrix );
+		idRenderMatrix::Multiply( projectionRenderMatrix, viewRenderMatrix, tr.viewDef->frustumMVPs[i] );
+		
+		// the planes of the view frustum are needed for portal visibility culling
+		idRenderMatrix::GetFrustumPlanes( tr.viewDef->frustums[i], tr.viewDef->frustumMVPs[i], false, true );
+		
+		// the DOOM 3 frustum planes point outside the frustum
+		for( int j = 0; j < 6; j++ )
+		{
+			tr.viewDef->frustums[i][j] = - tr.viewDef->frustums[i][j];
+		}
+		
+		// remove the Z-near to avoid portals from being near clipped
+		if( i == FRUSTUM_CASCADE1 )
+		{
+			tr.viewDef->frustums[i][4][3] -= r_znear.GetFloat();
+		}
+		
+		/*
+		tr.viewParms.frustums[i][FRUSTUM_FAR].type = PLANE_NON_AXIAL;
+		VectorNegate(tr.viewParms.orientation.axis[0], tr.viewParms.frustums[i][FRUSTUM_FAR].normal);
+		
+		VectorMA(tr.viewParms.orientation.origin, zFar, tr.viewParms.orientation.axis[0], planeOrigin);
+		tr.viewParms.frustums[i][FRUSTUM_FAR].dist = DotProduct(planeOrigin, tr.viewParms.frustums[i][FRUSTUM_FAR].normal);
+		SetPlaneSignbits(&tr.viewParms.frustums[i][FRUSTUM_FAR]);
+		
+		if(i <= (r_parallelShadowSplits->integer))
+		{
+			zNear = zFar - (zFar * 0.005f);
+			tr.viewParms.frustums[i + 1][FRUSTUM_NEAR].type = PLANE_NON_AXIAL;
+			VectorCopy(tr.viewParms.orientation.axis[0], tr.viewParms.frustums[i + 1][FRUSTUM_NEAR].normal);
+		
+			VectorMA(tr.viewParms.orientation.origin, zNear, tr.viewParms.orientation.axis[0], planeOrigin);
+			tr.viewParms.frustums[i + 1][FRUSTUM_NEAR].dist = DotProduct(planeOrigin, tr.viewParms.frustums[i + 1][FRUSTUM_NEAR].normal);
+			SetPlaneSignbits(&tr.viewParms.frustums[i + 1][FRUSTUM_NEAR]);
+		}
+		
+		for(j = 0; j < 4; j++)
+		{
+			CopyPlane(&tr.viewParms.frustums[0][j], &tr.viewParms.frustums[i][j]);
+		}
+		*/
+	}
+}
+
 /*
 ================
 R_RenderView
@@ -415,15 +494,19 @@ void R_RenderView( viewDef_t* parms )
 	idRenderMatrix::Multiply( tr.viewDef->projectionRenderMatrix, viewRenderMatrix, tr.viewDef->worldSpace.mvp );
 	
 	// the planes of the view frustum are needed for portal visibility culling
-	idRenderMatrix::GetFrustumPlanes( tr.viewDef->frustum, tr.viewDef->worldSpace.mvp, false, true );
+	idRenderMatrix::GetFrustumPlanes( tr.viewDef->frustums[FRUSTUM_PRIMARY], tr.viewDef->worldSpace.mvp, false, true );
 	
 	// the DOOM 3 frustum planes point outside the frustum
 	for( int i = 0; i < 6; i++ )
 	{
-		tr.viewDef->frustum[i] = - tr.viewDef->frustum[i];
+		tr.viewDef->frustums[FRUSTUM_PRIMARY][i] = - tr.viewDef->frustums[FRUSTUM_PRIMARY][i];
 	}
 	// remove the Z-near to avoid portals from being near clipped
-	tr.viewDef->frustum[4][3] -= r_znear.GetFloat();
+	tr.viewDef->frustums[FRUSTUM_PRIMARY][4][3] -= r_znear.GetFloat();
+	
+	// RB begin
+	R_SetupSplitFrustums( tr.viewDef );
+	// RB end
 	
 	// identify all the visible portal areas, and create view lights and view entities
 	// for all the the entityDefs and lightDefs that are in the visible portal areas

@@ -2635,6 +2635,71 @@ static void MatrixOrthogonalProjectionRH( float m[16], float left, float right, 
 	m[15] = 1;
 }
 
+void MatrixCrop( float m[16], const idVec3 mins, const idVec3 maxs )
+{
+	float			scaleX, scaleY, scaleZ;
+	float			offsetX, offsetY, offsetZ;
+	
+	scaleX = 2.0f / ( maxs[0] - mins[0] );
+	scaleY = 2.0f / ( maxs[1] - mins[1] );
+	
+	offsetX = -0.5f * ( maxs[0] + mins[0] ) * scaleX;
+	offsetY = -0.5f * ( maxs[1] + mins[1] ) * scaleY;
+	
+	scaleZ = 1.0f / ( maxs[2] - mins[2] );
+	offsetZ = -mins[2] * scaleZ;
+	
+	m[ 0] = scaleX;
+	m[ 4] = 0;
+	m[ 8] = 0;
+	m[12] = offsetX;
+	m[ 1] = 0;
+	m[ 5] = scaleY;
+	m[ 9] = 0;
+	m[13] = offsetY;
+	m[ 2] = 0;
+	m[ 6] = 0;
+	m[10] = scaleZ;
+	m[14] = offsetZ;
+	m[ 3] = 0;
+	m[ 7] = 0;
+	m[11] = 0;
+	m[15] = 1;
+}
+
+void MatrixLookAtRH( float m[16], const idVec3& eye, const idVec3& dir, const idVec3& up )
+{
+	idVec3 dirN;
+	idVec3 upN;
+	idVec3 sideN;
+	
+	sideN = dir.Cross( up );
+	sideN.Normalize();
+	
+	upN = sideN.Cross( dir );
+	upN.Normalize();
+	
+	dirN = dir;
+	dirN.Normalize();
+	
+	m[ 0] = sideN[0];
+	m[ 4] = sideN[1];
+	m[ 8] = sideN[2];
+	m[12] = -DotProduct( sideN, eye );
+	m[ 1] = upN[0];
+	m[ 5] = upN[1];
+	m[ 9] = upN[2];
+	m[13] = -DotProduct( upN, eye );
+	m[ 2] = -dirN[0];
+	m[ 6] = -dirN[1];
+	m[10] = -dirN[2];
+	m[14] = DotProduct( dirN, eye );
+	m[ 3] = 0;
+	m[ 7] = 0;
+	m[11] = 0;
+	m[15] = 1;
+}
+
 /*
 =====================
 RB_ShadowMapPass
@@ -2682,22 +2747,43 @@ static void RB_ShadowMapPass( const drawSurf_t* drawSurfs, const viewLight_t* vL
 	
 	if( vLight->lightDef->parms.parallel )
 	{
-		// original light direction is from surface to light origin
-		idVec3 lightDirection = -vLight->lightDef->parms.lightCenter;
-		if( lightDirection.Normalize() == 0.0f )
+		// 	'frustumMVP' goes from global space -> camera local space -> camera projective space
+		// invert the MVP projection so we can deform zero-to-one cubes into the frustum pyramid shape and calculate global bounds
+		
+		idRenderMatrix splitFrustumInverse;
+		if( !idRenderMatrix::Inverse( backEnd.viewDef->frustumMVPs[FRUSTUM_CASCADE1], splitFrustumInverse ) )
 		{
-			lightDirection[2] = -1.0f;
+			idLib::Warning( "splitFrustumMVP invert failed" );
 		}
 		
-		idMat3 rotation = lightDirection.ToMat3();
-		//idAngles angles = lightDirection.ToAngles();
+		// splitFrustumCorners in global space
+		ALIGNTYPE16 frustumCorners_t splitFrustumCorners;
+		idRenderMatrix::GetFrustumCorners( splitFrustumCorners, splitFrustumInverse, bounds_zeroOneCube );
+		
+		// original light direction is from surface to light origin
+		idVec3 lightDir = -vLight->lightDef->parms.lightCenter;
+		if( lightDir.Normalize() == 0.0f )
+		{
+			lightDir[2] = -1.0f;
+		}
+		
+		idMat3 rotation = lightDir.ToMat3();
+		//idAngles angles = lightDir.ToAngles();
 		//idMat3 rotation = angles.ToMat3();
 		
-		idRenderMatrix::CreateViewMatrix( backEnd.viewDef->renderView.vieworg, rotation, lightViewRenderMatrix );
-		//idRenderMatrix::CreateFromOriginAxis( backEnd.viewDef->renderView.vieworg, rotation, lightViewRenderMatrix );
+		const idVec3 viewDir = backEnd.viewDef->renderView.viewaxis[0];
+		const idVec3 viewPos = backEnd.viewDef->renderView.vieworg;
 		
-		idBounds cropBounds;
-		cropBounds.Clear();
+#if 0
+		idRenderMatrix::CreateViewMatrix( backEnd.viewDef->renderView.vieworg, rotation, lightViewRenderMatrix );
+#else
+		float lightViewMatrix[16];
+		MatrixLookAtRH( lightViewMatrix, viewPos, lightDir, viewDir );
+		idRenderMatrix::Transpose( *( idRenderMatrix* )lightViewMatrix, lightViewRenderMatrix );
+#endif
+		
+		idBounds lightBounds;
+		lightBounds.Clear();
 		
 		ALIGNTYPE16 frustumCorners_t corners;
 		idRenderMatrix::GetFrustumCorners( corners, vLight->inverseBaseLightProject, bounds_zeroOneCube );
@@ -2715,13 +2801,50 @@ static void RB_ShadowMapPass( const drawSurf_t* drawSurfs, const viewLight_t* vL
 			transf[1] /= transf[3];
 			transf[2] /= transf[3];
 			
-			cropBounds.AddPoint( transf.ToVec3() );
+			lightBounds.AddPoint( transf.ToVec3() );
 		}
 		
 		float lightProjectionMatrix[16];
-		MatrixOrthogonalProjectionRH( lightProjectionMatrix, cropBounds[0][0], cropBounds[1][0], cropBounds[0][1], cropBounds[1][1], -cropBounds[1][2], -cropBounds[0][2] );
-		
+		MatrixOrthogonalProjectionRH( lightProjectionMatrix, lightBounds[0][0], lightBounds[1][0], lightBounds[0][1], lightBounds[1][1], -lightBounds[1][2], -lightBounds[0][2] );
 		idRenderMatrix::Transpose( *( idRenderMatrix* )lightProjectionMatrix, lightProjectionRenderMatrix );
+		
+#if 1
+		idRenderMatrix lightViewProjectionRenderMatrix;
+		idRenderMatrix::Multiply( lightProjectionRenderMatrix, lightViewRenderMatrix, lightViewProjectionRenderMatrix );
+		
+		// find the bounding box of the current split in the light's clip space
+		idBounds cropBounds;
+		cropBounds.Clear();
+		for( int j = 0; j < 8; j++ )
+		{
+			point[0] = splitFrustumCorners.x[j];
+			point[1] = splitFrustumCorners.y[j];
+			point[2] = splitFrustumCorners.z[j];
+			point[3] = 1;
+			
+			lightViewRenderMatrix.TransformPoint( point, transf );
+			transf[0] /= transf[3];
+			transf[1] /= transf[3];
+			transf[2] /= transf[3];
+			
+			cropBounds.AddPoint( transf.ToVec3() );
+		}
+		
+		cropBounds[0][2] = lightBounds[0][2];
+		cropBounds[1][2] = lightBounds[1][2];
+		
+		//float cropMatrix[16];
+		//MatrixCrop(cropMatrix, cropBounds[0], cropBounds[1]);
+		
+		//idRenderMatrix cropRenderMatrix;
+		//idRenderMatrix::Transpose( *( idRenderMatrix* )cropMatrix, cropRenderMatrix );
+		
+		//idRenderMatrix tmp = lightProjectionRenderMatrix;
+		//idRenderMatrix::Multiply( cropRenderMatrix, tmp, lightProjectionRenderMatrix );
+		
+		MatrixOrthogonalProjectionRH( lightProjectionMatrix, cropBounds[0][0], cropBounds[1][0], cropBounds[0][1], cropBounds[1][1], -cropBounds[1][2], -cropBounds[0][2] );
+		idRenderMatrix::Transpose( *( idRenderMatrix* )lightProjectionMatrix, lightProjectionRenderMatrix );
+#endif
 		
 		backEnd.shadowV[0] = lightViewRenderMatrix;
 		backEnd.shadowP[0] = lightProjectionRenderMatrix;
@@ -2935,7 +3058,14 @@ static void RB_ShadowMapPass( const drawSurf_t* drawSurfs, const viewLight_t* vL
 			idRenderMatrix clipMVP;
 			idRenderMatrix::Multiply( lightProjectionRenderMatrix, modelToLightRenderMatrix, clipMVP );
 			
-			if( side < 0 && !vLight->lightDef->parms.parallel )
+			if( vLight->lightDef->parms.parallel )
+			{
+				idRenderMatrix MVP;
+				idRenderMatrix::Multiply( renderMatrix_clipSpaceToWindowSpace, clipMVP, MVP );
+				
+				RB_SetMVP( clipMVP );
+			}
+			else if( side < 0 )
 			{
 				// from OpenGL view space to OpenGL NDC ( -1 : 1 in XYZ )
 				idRenderMatrix MVP;

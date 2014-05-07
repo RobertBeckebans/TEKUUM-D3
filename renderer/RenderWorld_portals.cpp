@@ -799,7 +799,7 @@ void idRenderWorldLocal::FindViewLightsAndEntities()
 			portalStack_t ps;
 			for( int i = 0; i < 5; i++ )
 			{
-				ps.portalPlanes[i] = tr.viewDef->frustum[i];
+				ps.portalPlanes[i] = tr.viewDef->frustums[FRUSTUM_PRIMARY][i];
 			}
 			ps.numPortalPlanes = 5;
 			ps.rect = tr.viewDef->scissor;
@@ -812,7 +812,7 @@ void idRenderWorldLocal::FindViewLightsAndEntities()
 		// note that the center of projection for flowing through portals may
 		// be a different point than initialViewAreaOrigin for subviews that
 		// may have the viewOrigin in a solid/invalid area
-		FlowViewThroughPortals( tr.viewDef->renderView.vieworg, 5, tr.viewDef->frustum );
+		FlowViewThroughPortals( tr.viewDef->renderView.vieworg, 5, tr.viewDef->frustums[FRUSTUM_PRIMARY] );
 	}
 }
 
