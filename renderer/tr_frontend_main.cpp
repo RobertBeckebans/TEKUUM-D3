@@ -388,12 +388,14 @@ static void R_SetupSplitFrustums( viewDef_t* viewDef )
 {
 	idVec3			planeOrigin;
 	
-	float zNear = ( viewDef->renderView.cramZNear ) ? ( r_znear.GetFloat() * 0.25f ) : r_znear.GetFloat();
-	float zFarTotal = 10000;
-	float zFar = zFarTotal;
+	const float zNearStart = ( viewDef->renderView.cramZNear ) ? ( r_znear.GetFloat() * 0.25f ) : r_znear.GetFloat();
+	float zFarEnd = 10000;
+	
+	float zNear = zNearStart;
+	float zFar = zFarEnd;
 	
 	float lambda = r_shadowMapSplitWeight.GetFloat();
-	float ratio = zFarTotal / zNear;
+	float ratio = zFarEnd / zNearStart;
 	
 	for( int i = 1; i <= ( r_shadowMapSplits.GetInteger() + 1 ) && i < MAX_FRUSTUMS; i++ )
 	{
@@ -404,7 +406,7 @@ static void R_SetupSplitFrustums( viewDef_t* viewDef )
 			zNear = zFar - ( zFar * 0.005f );
 		}
 		
-		float zFar = 1.005f * lambda * ( zNear * powf( ratio, si ) ) + ( 1 - lambda ) * ( zNear + ( zFarTotal - zNear ) * si );
+		zFar = 1.005f * lambda * ( zNearStart * powf( ratio, si ) ) + ( 1 - lambda ) * ( zNearStart + ( zFarEnd - zNearStart ) * si );
 		
 		if( i <= r_shadowMapSplits.GetInteger() )
 		{

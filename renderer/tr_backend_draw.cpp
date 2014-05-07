@@ -2747,19 +2747,6 @@ static void RB_ShadowMapPass( const drawSurf_t* drawSurfs, const viewLight_t* vL
 	
 	if( vLight->lightDef->parms.parallel )
 	{
-		// 	'frustumMVP' goes from global space -> camera local space -> camera projective space
-		// invert the MVP projection so we can deform zero-to-one cubes into the frustum pyramid shape and calculate global bounds
-		
-		idRenderMatrix splitFrustumInverse;
-		if( !idRenderMatrix::Inverse( backEnd.viewDef->frustumMVPs[FRUSTUM_CASCADE1], splitFrustumInverse ) )
-		{
-			idLib::Warning( "splitFrustumMVP invert failed" );
-		}
-		
-		// splitFrustumCorners in global space
-		ALIGNTYPE16 frustumCorners_t splitFrustumCorners;
-		idRenderMatrix::GetFrustumCorners( splitFrustumCorners, splitFrustumInverse, bounds_zeroOneCube );
-		
 		// original light direction is from surface to light origin
 		idVec3 lightDir = -vLight->lightDef->parms.lightCenter;
 		if( lightDir.Normalize() == 0.0f )
@@ -2774,7 +2761,7 @@ static void RB_ShadowMapPass( const drawSurf_t* drawSurfs, const viewLight_t* vL
 		const idVec3 viewDir = backEnd.viewDef->renderView.viewaxis[0];
 		const idVec3 viewPos = backEnd.viewDef->renderView.vieworg;
 		
-#if 0
+#if 1
 		idRenderMatrix::CreateViewMatrix( backEnd.viewDef->renderView.vieworg, rotation, lightViewRenderMatrix );
 #else
 		float lightViewMatrix[16];
@@ -2807,6 +2794,51 @@ static void RB_ShadowMapPass( const drawSurf_t* drawSurfs, const viewLight_t* vL
 		float lightProjectionMatrix[16];
 		MatrixOrthogonalProjectionRH( lightProjectionMatrix, lightBounds[0][0], lightBounds[1][0], lightBounds[0][1], lightBounds[1][1], -lightBounds[1][2], -lightBounds[0][2] );
 		idRenderMatrix::Transpose( *( idRenderMatrix* )lightProjectionMatrix, lightProjectionRenderMatrix );
+
+
+		// 	'frustumMVP' goes from global space -> camera local space -> camera projective space
+		// invert the MVP projection so we can deform zero-to-one cubes into the frustum pyramid shape and calculate global bounds
+		
+		idRenderMatrix splitFrustumInverse;
+		if( !idRenderMatrix::Inverse( backEnd.viewDef->frustumMVPs[FRUSTUM_CASCADE1], splitFrustumInverse ) )
+		{
+			idLib::Warning( "splitFrustumMVP invert failed" );
+		}
+		
+		// splitFrustumCorners in global space
+		ALIGNTYPE16 frustumCorners_t splitFrustumCorners;
+		idRenderMatrix::GetFrustumCorners( splitFrustumCorners, splitFrustumInverse, bounds_unitCube );
+
+#if 0
+		idBounds splitFrustumBounds;
+		splitFrustumBounds.Clear();
+		for( int j = 0; j < 8; j++ )
+		{
+			point[0] = splitFrustumCorners.x[j];
+			point[1] = splitFrustumCorners.y[j];
+			point[2] = splitFrustumCorners.z[j];
+
+			splitFrustumBounds.AddPoint( point.ToVec3() );
+		}
+
+		idVec3 center = splitFrustumBounds.GetCenter();
+		float radius = splitFrustumBounds.GetRadius( center );
+
+		//ALIGNTYPE16 frustumCorners_t splitFrustumCorners;
+		splitFrustumBounds[0] = idVec3( -radius, -radius, -radius );
+		splitFrustumBounds[1] = idVec3( radius, radius, radius );
+		splitFrustumBounds.TranslateSelf( viewPos );
+		idVec3 splitFrustumCorners2[8];
+		splitFrustumBounds.ToPoints(splitFrustumCorners2 );
+
+		for( int j = 0; j < 8; j++ )
+		{
+			splitFrustumCorners.x[j] = splitFrustumCorners2[j].x;
+			splitFrustumCorners.y[j] = splitFrustumCorners2[j].y;
+			splitFrustumCorners.z[j] = splitFrustumCorners2[j].z;
+		}
+#endif
+
 		
 #if 1
 		idRenderMatrix lightViewProjectionRenderMatrix;
