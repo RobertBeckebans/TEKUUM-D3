@@ -1317,6 +1317,16 @@ static void RB_RenderInteractions( const drawSurf_t* surfList, const viewLight_t
 		jitterTexOffset[3] = 0.0f;
 		SetFragmentParm( RENDERPARM_JITTERTEXOFFSET, jitterTexOffset ); // rpJitterTexOffset
 		
+		if( vLight->lightDef->parms.parallel )
+		{
+			float cascadeDistances[4];
+			cascadeDistances[0] = backEnd.viewDef->frustumSplitDistances[0];
+			cascadeDistances[1] = backEnd.viewDef->frustumSplitDistances[1];
+			cascadeDistances[2] = backEnd.viewDef->frustumSplitDistances[2];
+			cascadeDistances[3] = backEnd.viewDef->frustumSplitDistances[3];
+			SetFragmentParm( RENDERPARM_CASCADEDISTANCES, cascadeDistances ); // rpCascadeDistances
+		}
+		
 	}
 	// RB end
 	
@@ -1416,11 +1426,11 @@ static void RB_RenderInteractions( const drawSurf_t* surfList, const viewLight_t
 					{
 						if( surf->jointCache )
 						{
-							renderProgManager.BindShader_Interaction_ShadowMapping_Spot_Skinned();
+							renderProgManager.BindShader_Interaction_ShadowMapping_Parallel_Skinned();
 						}
 						else
 						{
-							renderProgManager.BindShader_Interaction_ShadowMapping_Spot();
+							renderProgManager.BindShader_Interaction_ShadowMapping_Parallel();
 						}
 					}
 					else if( vLight->lightDef->parms.pointLight )
@@ -1499,6 +1509,11 @@ static void RB_RenderInteractions( const drawSurf_t* surfList, const viewLight_t
 				
 				SetVertexParms( RENDERPARM_MODELMATRIX_X, modelMatrix[0], 4 );
 				
+				// for determining the shadow mapping cascades
+				idRenderMatrix modelViewMatrix, tmp;
+				idRenderMatrix::Transpose( *( idRenderMatrix* )surf->space->modelViewMatrix, modelViewMatrix );
+				SetVertexParms( RENDERPARM_MODELVIEWMATRIX_X, modelViewMatrix[0], 4 );
+				
 				idVec4 globalLightOrigin( vLight->globalLightOrigin.x, vLight->globalLightOrigin.y, vLight->globalLightOrigin.z, 1.0f );
 				SetVertexParm( RENDERPARM_GLOBALLIGHTORIGIN, globalLightOrigin.ToFloatPtr() );
 				// RB end
@@ -1537,16 +1552,19 @@ static void RB_RenderInteractions( const drawSurf_t* surfList, const viewLight_t
 				{
 					if( vLight->lightDef->parms.parallel )
 					{
-						idRenderMatrix modelToShadowMatrix;
-						idRenderMatrix::Multiply( backEnd.shadowV[0], modelMatrix, modelToShadowMatrix );
-						
-						idRenderMatrix shadowClipMVP;
-						idRenderMatrix::Multiply( backEnd.shadowP[0], modelToShadowMatrix, shadowClipMVP );
-						
-						idRenderMatrix shadowWindowMVP;
-						idRenderMatrix::Multiply( renderMatrix_clipSpaceToWindowSpace, shadowClipMVP, shadowWindowMVP );
-						
-						SetVertexParms( ( renderParm_t )( RENDERPARM_SHADOW_MATRIX_0_X ), shadowWindowMVP[0], 4 );
+						for( int i = 0; i < ( r_shadowMapSplits.GetInteger() + 1 ); i++ )
+						{
+							idRenderMatrix modelToShadowMatrix;
+							idRenderMatrix::Multiply( backEnd.shadowV[i], modelMatrix, modelToShadowMatrix );
+							
+							idRenderMatrix shadowClipMVP;
+							idRenderMatrix::Multiply( backEnd.shadowP[i], modelToShadowMatrix, shadowClipMVP );
+							
+							idRenderMatrix shadowWindowMVP;
+							idRenderMatrix::Multiply( renderMatrix_clipSpaceToWindowSpace, shadowClipMVP, shadowWindowMVP );
+							
+							SetVertexParms( ( renderParm_t )( RENDERPARM_SHADOW_MATRIX_0_X + i * 4 ), shadowWindowMVP[0], 4 );
+						}
 					}
 					else if( vLight->lightDef->parms.pointLight )
 					{
@@ -2745,8 +2763,10 @@ static void RB_ShadowMapPass( const drawSurf_t* drawSurfs, const viewLight_t* vL
 	
 	
 	
-	if( vLight->lightDef->parms.parallel )
+	if( vLight->lightDef->parms.parallel && side >= 0 )
 	{
+		assert( side >= 0 && side < 6 );
+		
 		// original light direction is from surface to light origin
 		idVec3 lightDir = -vLight->lightDef->parms.lightCenter;
 		if( lightDir.Normalize() == 0.0f )
@@ -2794,13 +2814,13 @@ static void RB_ShadowMapPass( const drawSurf_t* drawSurfs, const viewLight_t* vL
 		float lightProjectionMatrix[16];
 		MatrixOrthogonalProjectionRH( lightProjectionMatrix, lightBounds[0][0], lightBounds[1][0], lightBounds[0][1], lightBounds[1][1], -lightBounds[1][2], -lightBounds[0][2] );
 		idRenderMatrix::Transpose( *( idRenderMatrix* )lightProjectionMatrix, lightProjectionRenderMatrix );
-
-
+		
+		
 		// 	'frustumMVP' goes from global space -> camera local space -> camera projective space
 		// invert the MVP projection so we can deform zero-to-one cubes into the frustum pyramid shape and calculate global bounds
 		
 		idRenderMatrix splitFrustumInverse;
-		if( !idRenderMatrix::Inverse( backEnd.viewDef->frustumMVPs[FRUSTUM_CASCADE1], splitFrustumInverse ) )
+		if( !idRenderMatrix::Inverse( backEnd.viewDef->frustumMVPs[FRUSTUM_CASCADE1 + side], splitFrustumInverse ) )
 		{
 			idLib::Warning( "splitFrustumMVP invert failed" );
 		}
@@ -2808,7 +2828,7 @@ static void RB_ShadowMapPass( const drawSurf_t* drawSurfs, const viewLight_t* vL
 		// splitFrustumCorners in global space
 		ALIGNTYPE16 frustumCorners_t splitFrustumCorners;
 		idRenderMatrix::GetFrustumCorners( splitFrustumCorners, splitFrustumInverse, bounds_unitCube );
-
+		
 #if 0
 		idBounds splitFrustumBounds;
 		splitFrustumBounds.Clear();
@@ -2817,20 +2837,20 @@ static void RB_ShadowMapPass( const drawSurf_t* drawSurfs, const viewLight_t* vL
 			point[0] = splitFrustumCorners.x[j];
 			point[1] = splitFrustumCorners.y[j];
 			point[2] = splitFrustumCorners.z[j];
-
+			
 			splitFrustumBounds.AddPoint( point.ToVec3() );
 		}
-
+		
 		idVec3 center = splitFrustumBounds.GetCenter();
 		float radius = splitFrustumBounds.GetRadius( center );
-
+		
 		//ALIGNTYPE16 frustumCorners_t splitFrustumCorners;
 		splitFrustumBounds[0] = idVec3( -radius, -radius, -radius );
 		splitFrustumBounds[1] = idVec3( radius, radius, radius );
 		splitFrustumBounds.TranslateSelf( viewPos );
 		idVec3 splitFrustumCorners2[8];
-		splitFrustumBounds.ToPoints(splitFrustumCorners2 );
-
+		splitFrustumBounds.ToPoints( splitFrustumCorners2 );
+		
 		for( int j = 0; j < 8; j++ )
 		{
 			splitFrustumCorners.x[j] = splitFrustumCorners2[j].x;
@@ -2838,7 +2858,7 @@ static void RB_ShadowMapPass( const drawSurf_t* drawSurfs, const viewLight_t* vL
 			splitFrustumCorners.z[j] = splitFrustumCorners2[j].z;
 		}
 #endif
-
+		
 		
 #if 1
 		idRenderMatrix lightViewProjectionRenderMatrix;
@@ -2878,8 +2898,8 @@ static void RB_ShadowMapPass( const drawSurf_t* drawSurfs, const viewLight_t* vL
 		idRenderMatrix::Transpose( *( idRenderMatrix* )lightProjectionMatrix, lightProjectionRenderMatrix );
 #endif
 		
-		backEnd.shadowV[0] = lightViewRenderMatrix;
-		backEnd.shadowP[0] = lightProjectionRenderMatrix;
+		backEnd.shadowV[side] = lightViewRenderMatrix;
+		backEnd.shadowP[side] = lightProjectionRenderMatrix;
 	}
 	else if( vLight->lightDef->parms.pointLight && side >= 0 )
 	{
@@ -3216,9 +3236,8 @@ static void RB_DrawInteractions( const viewDef_t* viewDef )
 			
 			if( vLight->lightDef->parms.parallel )
 			{
-				// TODO number of cascaded shadow frustums
-				side = -1;
-				sideStop = 0;
+				side = 0;
+				sideStop = r_shadowMapSplits.GetInteger() + 1;
 			}
 			else if( vLight->lightDef->parms.pointLight )
 			{

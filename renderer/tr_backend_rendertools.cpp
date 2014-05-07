@@ -2951,7 +2951,7 @@ void RB_ShowShadowMaps()
 	float texGenEnabled[4] = { 0, 0, 0, 0 };
 	renderProgManager.SetRenderParm( RENDERPARM_TEXGEN_0_ENABLED, texGenEnabled );
 	
-	for( int i = 0; i < 1; i++ )
+	for( int i = 0; i < ( r_shadowMapSplits.GetInteger() + 1 ); i++ )
 	{
 		max = image->GetUploadWidth() > image->GetUploadHeight() ? image->GetUploadWidth() : image->GetUploadHeight();
 		
@@ -2969,8 +2969,8 @@ void RB_ShowShadowMaps()
 		float scale[16] = { 0 };
 		scale[0] = w; // scale
 		scale[5] = h; // scale
-		scale[12] = halfScreenWidth - ( halfScreenWidth * w ); // translate
-		scale[13] = halfScreenHeight - ( halfScreenHeight * h ); // translate
+		scale[12] = ( halfScreenWidth * w * 2.1f * i ); // translate
+		scale[13] = halfScreenHeight + ( halfScreenHeight * h ); // translate
 		scale[10] = 1.0f;
 		scale[15] = 1.0f;
 		
@@ -2989,6 +2989,13 @@ void RB_ShowShadowMaps()
 		float projMatrixTranspose[16];
 		R_MatrixTranspose( finalOrtho, projMatrixTranspose );
 		renderProgManager.SetRenderParms( RENDERPARM_MVPMATRIX_X, projMatrixTranspose, 4 );
+		
+		float screenCorrectionParm[4];
+		screenCorrectionParm[0] = i;
+		screenCorrectionParm[1] = 0.0f;
+		screenCorrectionParm[2] = 0.0f;
+		screenCorrectionParm[3] = 1.0f;
+		renderProgManager.SetRenderParm( RENDERPARM_SCREENCORRECTIONFACTOR, screenCorrectionParm ); // rpScreenCorrectionFactor
 		
 		//	glMatrixMode( GL_PROJECTION );
 		//	glLoadMatrixf( finalOrtho );

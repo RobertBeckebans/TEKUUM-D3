@@ -397,6 +397,11 @@ static void R_SetupSplitFrustums( viewDef_t* viewDef )
 	float lambda = r_shadowMapSplitWeight.GetFloat();
 	float ratio = zFarEnd / zNearStart;
 	
+	for( int i = 0; i < 6; i++ )
+	{
+		tr.viewDef->frustumSplitDistances[i] = idMath::INFINITY;
+	}
+	
 	for( int i = 1; i <= ( r_shadowMapSplits.GetInteger() + 1 ) && i < MAX_FRUSTUMS; i++ )
 	{
 		float si = i / ( float )( r_shadowMapSplits.GetInteger() + 1 );
@@ -437,31 +442,6 @@ static void R_SetupSplitFrustums( viewDef_t* viewDef )
 		{
 			tr.viewDef->frustums[i][4][3] -= r_znear.GetFloat();
 		}
-		
-		/*
-		tr.viewParms.frustums[i][FRUSTUM_FAR].type = PLANE_NON_AXIAL;
-		VectorNegate(tr.viewParms.orientation.axis[0], tr.viewParms.frustums[i][FRUSTUM_FAR].normal);
-		
-		VectorMA(tr.viewParms.orientation.origin, zFar, tr.viewParms.orientation.axis[0], planeOrigin);
-		tr.viewParms.frustums[i][FRUSTUM_FAR].dist = DotProduct(planeOrigin, tr.viewParms.frustums[i][FRUSTUM_FAR].normal);
-		SetPlaneSignbits(&tr.viewParms.frustums[i][FRUSTUM_FAR]);
-		
-		if(i <= (r_parallelShadowSplits->integer))
-		{
-			zNear = zFar - (zFar * 0.005f);
-			tr.viewParms.frustums[i + 1][FRUSTUM_NEAR].type = PLANE_NON_AXIAL;
-			VectorCopy(tr.viewParms.orientation.axis[0], tr.viewParms.frustums[i + 1][FRUSTUM_NEAR].normal);
-		
-			VectorMA(tr.viewParms.orientation.origin, zNear, tr.viewParms.orientation.axis[0], planeOrigin);
-			tr.viewParms.frustums[i + 1][FRUSTUM_NEAR].dist = DotProduct(planeOrigin, tr.viewParms.frustums[i + 1][FRUSTUM_NEAR].normal);
-			SetPlaneSignbits(&tr.viewParms.frustums[i + 1][FRUSTUM_NEAR]);
-		}
-		
-		for(j = 0; j < 4; j++)
-		{
-			CopyPlane(&tr.viewParms.frustums[0][j], &tr.viewParms.frustums[i][j]);
-		}
-		*/
 	}
 }
 

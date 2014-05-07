@@ -324,6 +324,7 @@ static const char* GLSLParmNames[RENDERPARM_TOTAL] =
 	"rpGlobalLightOrigin",
 	"rpJitterTexScale",
 	"rpJitterTexOffset",
+	"rpCascadeDistances",
 	
 	"rpShadowMatrices",
 	"rpShadowMatrix0Y",
