@@ -2882,6 +2882,27 @@ static void RB_ShadowMapPass( const drawSurf_t* drawSurfs, const viewLight_t* vL
 			cropBounds.AddPoint( transf.ToVec3() );
 		}
 		
+		// don't let the frustum AABB be bigger than the light AABB
+		if( cropBounds[0][0] < lightBounds[0][0] )
+		{
+			cropBounds[0][0] = lightBounds[0][0];
+		}
+		
+		if( cropBounds[0][1] < lightBounds[0][1] )
+		{
+			cropBounds[0][1] = lightBounds[0][1];
+		}
+		
+		if( cropBounds[1][0] > lightBounds[1][0] )
+		{
+			cropBounds[1][0] = lightBounds[1][0];
+		}
+		
+		if( cropBounds[1][1] > lightBounds[1][1] )
+		{
+			cropBounds[1][1] = lightBounds[1][1];
+		}
+		
 		cropBounds[0][2] = lightBounds[0][2];
 		cropBounds[1][2] = lightBounds[1][2];
 		
