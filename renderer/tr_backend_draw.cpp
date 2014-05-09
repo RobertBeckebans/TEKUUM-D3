@@ -1317,7 +1317,7 @@ static void RB_RenderInteractions( const drawSurf_t* surfList, const viewLight_t
 		jitterTexOffset[3] = 0.0f;
 		SetFragmentParm( RENDERPARM_JITTERTEXOFFSET, jitterTexOffset ); // rpJitterTexOffset
 		
-		if( vLight->lightDef->parms.parallel )
+		if( vLight->parallel )
 		{
 			float cascadeDistances[4];
 			cascadeDistances[0] = backEnd.viewDef->frustumSplitDistances[0];
@@ -1422,7 +1422,7 @@ static void RB_RenderInteractions( const drawSurf_t* surfList, const viewLight_t
 				{
 					// RB: we have shadow mapping enabled and shadow maps so do a shadow compare
 					
-					if( vLight->lightDef->parms.parallel )
+					if( vLight->parallel )
 					{
 						if( surf->jointCache )
 						{
@@ -1433,7 +1433,7 @@ static void RB_RenderInteractions( const drawSurf_t* surfList, const viewLight_t
 							renderProgManager.BindShader_Interaction_ShadowMapping_Parallel();
 						}
 					}
-					else if( vLight->lightDef->parms.pointLight )
+					else if( vLight->pointLight )
 					{
 						if( surf->jointCache )
 						{
@@ -1550,7 +1550,7 @@ static void RB_RenderInteractions( const drawSurf_t* surfList, const viewLight_t
 				// RB begin
 				if( r_useShadowMapping.GetBool() )
 				{
-					if( vLight->lightDef->parms.parallel )
+					if( vLight->parallel )
 					{
 						for( int i = 0; i < ( r_shadowMapSplits.GetInteger() + 1 ); i++ )
 						{
@@ -1566,7 +1566,7 @@ static void RB_RenderInteractions( const drawSurf_t* surfList, const viewLight_t
 							SetVertexParms( ( renderParm_t )( RENDERPARM_SHADOW_MATRIX_0_X + i * 4 ), shadowWindowMVP[0], 4 );
 						}
 					}
-					else if( vLight->lightDef->parms.pointLight )
+					else if( vLight->pointLight )
 					{
 						for( int i = 0; i < 6; i++ )
 						{
@@ -2755,20 +2755,16 @@ static void RB_ShadowMapPass( const drawSurf_t* drawSurfs, const viewLight_t* vL
 	// Two Sided Stencil reduces two draw calls to one for slightly faster shadows
 	GL_Cull( CT_TWO_SIDED );
 	
-	
-	
-	
 	idRenderMatrix lightProjectionRenderMatrix;
 	idRenderMatrix lightViewRenderMatrix;
 	
 	
-	
-	if( vLight->lightDef->parms.parallel && side >= 0 )
+	if( vLight->parallel && side >= 0 )
 	{
 		assert( side >= 0 && side < 6 );
 		
 		// original light direction is from surface to light origin
-		idVec3 lightDir = -vLight->lightDef->parms.lightCenter;
+		idVec3 lightDir = -vLight->lightCenter;
 		if( lightDir.Normalize() == 0.0f )
 		{
 			lightDir[2] = -1.0f;
@@ -2922,7 +2918,7 @@ static void RB_ShadowMapPass( const drawSurf_t* drawSurfs, const viewLight_t* vL
 		backEnd.shadowV[side] = lightViewRenderMatrix;
 		backEnd.shadowP[side] = lightProjectionRenderMatrix;
 	}
-	else if( vLight->lightDef->parms.pointLight && side >= 0 )
+	else if( vLight->pointLight && side >= 0 )
 	{
 		assert( side >= 0 && side < 6 );
 		
@@ -3079,14 +3075,9 @@ static void RB_ShadowMapPass( const drawSurf_t* drawSurfs, const viewLight_t* vL
 	
 	for( const drawSurf_t* drawSurf = drawSurfs; drawSurf != NULL; drawSurf = drawSurf->nextOnLight )
 	{
-		if( drawSurf->scissorRect.IsEmpty() )
-		{
-			continue;	// !@# FIXME: find out why this is sometimes being hit!
-			// temporarily jump over the scissor and draw so the gl error callback doesn't get hit
-		}
-		
+	
 #if 1
-		// make sure the shadow volume is done
+		// make sure the shadow occluder geometry is done
 		if( drawSurf->shadowVolumeState != SHADOWVOLUME_DONE )
 		{
 			assert( drawSurf->shadowVolumeState == SHADOWVOLUME_UNFINISHED || drawSurf->shadowVolumeState == SHADOWVOLUME_DONE );
@@ -3104,20 +3095,8 @@ static void RB_ShadowMapPass( const drawSurf_t* drawSurfs, const viewLight_t* vL
 		
 		if( drawSurf->numIndexes == 0 )
 		{
-			continue;	// a job may have created an empty shadow volume
+			continue;	// a job may have created an empty shadow geometry
 		}
-		
-		/*
-		if( !backEnd.currentScissor.Equals( drawSurf->scissorRect ) && r_useScissor.GetBool() )
-		{
-			// change the scissor
-			GL_Scissor( backEnd.viewDef->viewport.x1 + drawSurf->scissorRect.x1,
-						backEnd.viewDef->viewport.y1 + drawSurf->scissorRect.y1,
-						drawSurf->scissorRect.x2 + 1 - drawSurf->scissorRect.x1,
-						drawSurf->scissorRect.y2 + 1 - drawSurf->scissorRect.y1 );
-			backEnd.currentScissor = drawSurf->scissorRect;
-		}
-		*/
 		
 		if( drawSurf->space != backEnd.currentSpace )
 		{
@@ -3131,7 +3110,7 @@ static void RB_ShadowMapPass( const drawSurf_t* drawSurfs, const viewLight_t* vL
 			idRenderMatrix clipMVP;
 			idRenderMatrix::Multiply( lightProjectionRenderMatrix, modelToLightRenderMatrix, clipMVP );
 			
-			if( vLight->lightDef->parms.parallel )
+			if( vLight->parallel )
 			{
 				idRenderMatrix MVP;
 				idRenderMatrix::Multiply( renderMatrix_clipSpaceToWindowSpace, clipMVP, MVP );
@@ -3178,21 +3157,6 @@ static void RB_ShadowMapPass( const drawSurf_t* drawSurfs, const viewLight_t* vL
 	Framebuffer::BindNull();
 	
 	GL_Cull( CT_FRONT_SIDED );
-	
-	// reset depth bounds
-	/*
-	if( r_useShadowDepthBounds.GetBool() )
-	{
-		if( r_useLightDepthBounds.GetBool() )
-		{
-			GL_DepthBoundsTest( vLight->scissorRect.zmin, vLight->scissorRect.zmax );
-		}
-		else
-		{
-			GL_DepthBoundsTest( 0.0f, 0.0f );
-		}
-	}
-	*/
 }
 
 /*
@@ -3251,16 +3215,17 @@ static void RB_DrawInteractions( const viewDef_t* viewDef )
 			GL_DepthBoundsTest( vLight->scissorRect.zmin, vLight->scissorRect.zmax );
 		}
 		
+		// RB: shadow mapping
 		if( r_useShadowMapping.GetBool() )
 		{
 			int	side, sideStop;
 			
-			if( vLight->lightDef->parms.parallel )
+			if( vLight->parallel )
 			{
 				side = 0;
 				sideStop = r_shadowMapSplits.GetInteger() + 1;
 			}
-			else if( vLight->lightDef->parms.pointLight )
+			else if( vLight->pointLight )
 			{
 				if( r_shadowMapSingleSide.GetInteger() != -1 )
 				{
@@ -3284,7 +3249,7 @@ static void RB_DrawInteractions( const viewDef_t* viewDef )
 				RB_ShadowMapPass( vLight->globalShadows, vLight, side );
 			}
 			
-			// go back light view to default camera view
+			// go back from light view to default camera view
 			RB_ResetViewportAndScissorToDefaultCamera( viewDef );
 			
 			if( vLight->localInteractions != NULL )
@@ -3367,7 +3332,7 @@ static void RB_DrawInteractions( const viewDef_t* viewDef )
 				renderLog.CloseBlock();
 			}
 		}
-		
+		// RB end
 		
 		if( vLight->translucentInteractions != NULL && !r_skipTranslucent.GetBool() )
 		{

@@ -1858,11 +1858,11 @@ static void RB_ShowLights()
 			GL_State( GLS_DEPTHFUNC_ALWAYS | GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA | GLS_DEPTHMASK );
 			
 			// RB: show different light types
-			if( vLight->lightDef->parms.parallel )
+			if( vLight->parallel )
 			{
 				GL_Color( 1.0f, 0.0f, 0.0f, 0.25f );
 			}
-			else if( vLight->lightDef->parms.pointLight )
+			else if( vLight->pointLight )
 			{
 				GL_Color( 0.0f, 0.0f, 1.0f, 0.25f );
 			}

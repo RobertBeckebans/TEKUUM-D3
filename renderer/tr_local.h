@@ -329,6 +329,9 @@ struct viewLight_t
 	idPlane					fogPlane;					// fog plane for backend fog volume rendering
 	// RB: added for shadow mapping
 	idRenderMatrix			baseLightProject;			// global xyz1 to projected light strq
+	bool					pointLight;					// otherwise a projection light (should probably invert the sense of this, because points are way more common)
+	bool					parallel;					// lightCenter gives the direction to the light at infinity
+	idVec3					lightCenter;				// offset the lighting direction for shading and
 	// RB end
 	idRenderMatrix			inverseBaseLightProject;	// the matrix for deforming the 'zeroOneCubeModel' to exactly cover the light volume in world space
 	const idMaterial* 		lightShader;				// light shader used by backend

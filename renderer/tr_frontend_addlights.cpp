@@ -223,6 +223,9 @@ static void R_AddSingleLight( viewLight_t* vLight )
 	
 	// RB begin
 	vLight->baseLightProject = light->baseLightProject;
+	vLight->pointLight = light->parms.pointLight;
+	vLight->parallel = light->parms.parallel;
+	vLight->lightCenter = light->parms.lightCenter;
 	// RB end
 	
 	vLight->falloffImage = light->falloffImage;
