@@ -1368,7 +1368,7 @@ static void RB_RenderInteractions( const drawSurf_t* surfList, const viewLight_t
 		{
 			// texture 5 will be the shadow maps array
 			GL_SelectTexture( INTERACTION_TEXUNIT_SHADOWMAPS );
-			globalImages->shadowImage->Bind();
+			globalImages->shadowImage[vLight->shadowLOD]->Bind();
 			
 			// texture 6 will be the jitter texture for soft shadowing
 			GL_SelectTexture( INTERACTION_TEXUNIT_JITTER );
@@ -2702,15 +2702,15 @@ void MatrixLookAtRH( float m[16], const idVec3& eye, const idVec3& dir, const id
 	m[ 0] = sideN[0];
 	m[ 4] = sideN[1];
 	m[ 8] = sideN[2];
-	m[12] = -DotProduct( sideN, eye );
+	m[12] = -( sideN * eye );
 	m[ 1] = upN[0];
 	m[ 5] = upN[1];
 	m[ 9] = upN[2];
-	m[13] = -DotProduct( upN, eye );
+	m[13] = -( upN * eye );
 	m[ 2] = -dirN[0];
 	m[ 6] = -dirN[1];
 	m[10] = -dirN[2];
-	m[14] = DotProduct( dirN, eye );
+	m[14] = ( dirN * eye );
 	m[ 3] = 0;
 	m[ 7] = 0;
 	m[11] = 0;
@@ -2743,16 +2743,28 @@ static void RB_ShadowMapPass( const drawSurf_t* drawSurfs, const viewLight_t* vL
 	
 	uint64 glState = 0;
 	
-	GL_PolygonOffset( r_shadowPolygonFactor.GetFloat(), -r_shadowPolygonOffset.GetFloat() );
-	
-	
 	// the actual stencil func will be set in the draw code, but we need to make sure it isn't
 	// disabled here, and that the value will get reset for the interactions without looking
 	// like a no-change-required
 	GL_State( glState | GLS_POLYGON_OFFSET );
 	
-	// Two Sided Stencil reduces two draw calls to one for slightly faster shadows
-	GL_Cull( CT_TWO_SIDED );
+	switch( r_shadowMapOccluderFacing.GetInteger() )
+	{
+		case 0:
+			GL_Cull( CT_FRONT_SIDED );
+			GL_PolygonOffset( r_shadowMapPolygonFactor.GetFloat(), r_shadowMapPolygonOffset.GetFloat() );
+			break;
+			
+		case 1:
+			GL_Cull( CT_BACK_SIDED );
+			GL_PolygonOffset( -r_shadowMapPolygonFactor.GetFloat(), -r_shadowMapPolygonOffset.GetFloat() );
+			break;
+			
+		default:
+			GL_Cull( CT_TWO_SIDED );
+			GL_PolygonOffset( r_shadowMapPolygonFactor.GetFloat(), r_shadowMapPolygonOffset.GetFloat() );
+			break;
+	}
 	
 	idRenderMatrix lightProjectionRenderMatrix;
 	idRenderMatrix lightViewRenderMatrix;
@@ -2855,7 +2867,6 @@ static void RB_ShadowMapPass( const drawSurf_t* drawSurfs, const viewLight_t* vL
 #endif
 		
 		
-#if 1
 		idRenderMatrix lightViewProjectionRenderMatrix;
 		idRenderMatrix::Multiply( lightProjectionRenderMatrix, lightViewRenderMatrix, lightViewProjectionRenderMatrix );
 		
@@ -2912,7 +2923,6 @@ static void RB_ShadowMapPass( const drawSurf_t* drawSurfs, const viewLight_t* vL
 		
 		MatrixOrthogonalProjectionRH( lightProjectionMatrix, cropBounds[0][0], cropBounds[1][0], cropBounds[0][1], cropBounds[1][1], -cropBounds[1][2], -cropBounds[0][2] );
 		idRenderMatrix::Transpose( *( idRenderMatrix* )lightProjectionMatrix, lightProjectionRenderMatrix );
-#endif
 		
 		backEnd.shadowV[side] = lightViewRenderMatrix;
 		backEnd.shadowP[side] = lightProjectionRenderMatrix;
@@ -3052,20 +3062,20 @@ static void RB_ShadowMapPass( const drawSurf_t* drawSurfs, const viewLight_t* vL
 	
 	
 	
-	globalFramebuffers.shadowFBO->Bind();
+	globalFramebuffers.shadowFBO[vLight->shadowLOD]->Bind();
 	
 	if( side < 0 )
 	{
-		globalFramebuffers.shadowFBO->AttachImageDepthLayer( globalImages->shadowImage, 0 );
+		globalFramebuffers.shadowFBO[vLight->shadowLOD]->AttachImageDepthLayer( globalImages->shadowImage[vLight->shadowLOD], 0 );
 	}
 	else
 	{
-		globalFramebuffers.shadowFBO->AttachImageDepthLayer( globalImages->shadowImage, side );
+		globalFramebuffers.shadowFBO[vLight->shadowLOD]->AttachImageDepthLayer( globalImages->shadowImage[vLight->shadowLOD], side );
 	}
 	
-	globalFramebuffers.shadowFBO->Check();
+	globalFramebuffers.shadowFBO[vLight->shadowLOD]->Check();
 	
-	GL_ViewportAndScissor( 0, 0, r_shadowMapImageSize.GetInteger(), r_shadowMapImageSize.GetInteger() );
+	GL_ViewportAndScissor( 0, 0, shadowMapResolutions[vLight->shadowLOD], shadowMapResolutions[vLight->shadowLOD] );
 	
 	glClear( GL_DEPTH_BUFFER_BIT );
 	
@@ -3099,7 +3109,6 @@ static void RB_ShadowMapPass( const drawSurf_t* drawSurfs, const viewLight_t* vL
 		
 		if( drawSurf->space != backEnd.currentSpace )
 		{
-		
 			idRenderMatrix modelRenderMatrix;
 			idRenderMatrix::Transpose( *( idRenderMatrix* )drawSurf->space->modelMatrix, modelRenderMatrix );
 			
@@ -3139,23 +3148,136 @@ static void RB_ShadowMapPass( const drawSurf_t* drawSurfs, const viewLight_t* vL
 			backEnd.currentSpace = drawSurf->space;
 		}
 		
-		if( drawSurf->jointCache )
+		bool didDraw = false;
+		
+		const idMaterial* shader = drawSurf->material;
+		
+		// get the expressions for conditionals / color / texcoords
+		const float* regs = drawSurf->shaderRegisters;
+		idVec4 color( 0, 0, 0, 1 );
+		
+		uint64 surfGLState = 0;
+		
+		// set polygon offset if necessary
+		if( shader->TestMaterialFlag( MF_POLYGONOFFSET ) )
 		{
-			renderProgManager.BindShader_DepthSkinned();
-		}
-		else
-		{
-			renderProgManager.BindShader_Depth();
+			surfGLState |= GLS_POLYGON_OFFSET;
+			GL_PolygonOffset( r_offsetFactor.GetFloat(), r_offsetUnits.GetFloat() * shader->GetPolygonOffset() );
 		}
 		
-		RB_DrawElementsWithCounters( drawSurf );
+#if 1
+		if( shader->Coverage() == MC_PERFORATED )
+		{
+			// perforated surfaces may have multiple alpha tested stages
+			for( int stage = 0; stage < shader->GetNumStages(); stage++ )
+			{
+				const shaderStage_t* pStage = shader->GetStage( stage );
+				
+				if( !pStage->hasAlphaTest )
+				{
+					continue;
+				}
+				
+				// check the stage enable condition
+				if( regs[ pStage->conditionRegister ] == 0 )
+				{
+					continue;
+				}
+				
+				// if we at least tried to draw an alpha tested stage,
+				// we won't draw the opaque surface
+				didDraw = true;
+				
+				// set the alpha modulate
+				color[3] = regs[ pStage->color.registers[3] ];
+				
+				// skip the entire stage if alpha would be black
+				if( color[3] <= 0.0f )
+				{
+					continue;
+				}
+				
+				uint64 stageGLState = surfGLState;
+				
+				// set privatePolygonOffset if necessary
+				if( pStage->privatePolygonOffset )
+				{
+					GL_PolygonOffset( r_offsetFactor.GetFloat(), r_offsetUnits.GetFloat() * pStage->privatePolygonOffset );
+					stageGLState |= GLS_POLYGON_OFFSET;
+				}
+				
+				GL_Color( color );
+				
+#ifdef USE_CORE_PROFILE
+				GL_State( stageGLState );
+				idVec4 alphaTestValue( regs[ pStage->alphaTestRegister ] );
+				SetFragmentParm( RENDERPARM_ALPHA_TEST, alphaTestValue.ToFloatPtr() );
+#else
+				GL_State( stageGLState | GLS_ALPHATEST_FUNC_GREATER | GLS_ALPHATEST_MAKE_REF( idMath::Ftob( 255.0f * regs[ pStage->alphaTestRegister ] ) ) );
+#endif
+				
+				if( drawSurf->jointCache )
+				{
+					renderProgManager.BindShader_TextureVertexColorSkinned();
+				}
+				else
+				{
+					renderProgManager.BindShader_TextureVertexColor();
+				}
+				
+				RB_SetVertexColorParms( SVC_IGNORE );
+				
+				// bind the texture
+				GL_SelectTexture( 0 );
+				pStage->texture.image->Bind();
+				
+				// set texture matrix and texGens
+				RB_PrepareStageTexturing( pStage, drawSurf );
+				
+				// must render with less-equal for Z-Cull to work properly
+				assert( ( GL_GetCurrentState() & GLS_DEPTHFUNC_BITS ) == GLS_DEPTHFUNC_LESS );
+				
+				// draw it
+				RB_DrawElementsWithCounters( drawSurf );
+				
+				// clean up
+				RB_FinishStageTexturing( pStage, drawSurf );
+				
+				// unset privatePolygonOffset if necessary
+				if( pStage->privatePolygonOffset )
+				{
+					GL_PolygonOffset( r_offsetFactor.GetFloat(), r_offsetUnits.GetFloat() * shader->GetPolygonOffset() );
+				}
+			}
+		}
+#endif
+		
+		if( !didDraw )
+		{
+			if( drawSurf->jointCache )
+			{
+				renderProgManager.BindShader_DepthSkinned();
+			}
+			else
+			{
+				renderProgManager.BindShader_Depth();
+			}
+			
+			RB_DrawElementsWithCounters( drawSurf );
+		}
 	}
 	
 	// cleanup the shadow specific rendering state
 	
 	Framebuffer::BindNull();
+	renderProgManager.Unbind();
 	
+	GL_State( GLS_DEFAULT );
 	GL_Cull( CT_FRONT_SIDED );
+	
+#ifdef USE_CORE_PROFILE
+	SetFragmentParm( RENDERPARM_ALPHA_TEST, vec4_zero.ToFloatPtr() );
+#endif
 }
 
 /*

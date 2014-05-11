@@ -331,6 +331,7 @@ struct viewLight_t
 	bool					pointLight;					// otherwise a projection light (should probably invert the sense of this, because points are way more common)
 	bool					parallel;					// lightCenter gives the direction to the light at infinity
 	idVec3					lightCenter;				// offset the lighting direction for shading and
+	int						shadowLOD;					// level of detail for shadowmap selection
 	// RB end
 	idRenderMatrix			inverseBaseLightProject;	// the matrix for deforming the 'zeroOneCubeModel' to exactly cover the light volume in world space
 	const idMaterial* 		lightShader;				// light shader used by backend
@@ -1065,6 +1066,7 @@ extern idCVar r_showOverDraw;				// show overdraw
 // RB begin
 extern idCVar r_showLightGrid;				// show Q3A style light grid points
 extern idCVar r_showShadowMaps;
+extern idCVar r_showShadowMapLODs;
 // RB end
 extern idCVar r_jointNameScale;				// size of joint names when r_showskel is set to 1
 extern idCVar r_jointNameOffset;			// offset of joint names when r_showskel is set to 1
@@ -1104,6 +1106,11 @@ extern idCVar r_shadowMapBiasScale;
 extern idCVar r_shadowMapSamples;
 extern idCVar r_shadowMapSplits;
 extern idCVar r_shadowMapSplitWeight;
+extern idCVar r_shadowMapLodScale;
+extern idCVar r_shadowMapLodBias;
+extern idCVar r_shadowMapPolygonFactor;
+extern idCVar r_shadowMapPolygonOffset;
+extern idCVar r_shadowMapOccluderFacing;
 // RB end
 
 /*

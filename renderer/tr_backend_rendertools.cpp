@@ -1898,12 +1898,95 @@ static void RB_ShowLights()
 	}
 	
 	common->Printf( " = %i total\n", count );
+}
+
+// RB begin
+static void RB_ShowShadowMapLODs()
+{
+	if( !r_showShadowMapLODs.GetInteger() )
+	{
+		return;
+	}
 	
-	// set back the default projection matrix
-//	glMatrixMode( GL_PROJECTION );
-//	glLoadMatrixf( backEnd.viewDef->projectionMatrix );
-//	glMatrixMode( GL_MODELVIEW );
-//	glLoadIdentity();
+	GL_State( GLS_DEFAULT );
+	
+	globalImages->BindNull();
+	
+	renderProgManager.BindShader_Color();
+	
+	GL_Cull( CT_TWO_SIDED );
+	
+	common->Printf( "volumes: " );	// FIXME: not in back end!
+	
+	int count = 0;
+	for( viewLight_t* vLight = backEnd.viewDef->viewLights; vLight != NULL; vLight = vLight->next )
+	{
+		if( !vLight->lightDef->LightCastsShadows() )
+		{
+			continue;
+		}
+		
+		count++;
+		
+		// depth buffered planes
+		if( r_showShadowMapLODs.GetInteger() >= 1 )
+		{
+			GL_State( GLS_DEPTHFUNC_ALWAYS | GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA | GLS_DEPTHMASK );
+			
+			idVec4 c;
+			if( vLight->shadowLOD == 0 )
+			{
+				c = colorRed;
+			}
+			else if( vLight->shadowLOD == 1 )
+			{
+				c = colorGreen;
+			}
+			else if( vLight->shadowLOD == 2 )
+			{
+				c = colorBlue;
+			}
+			else if( vLight->shadowLOD == 3 )
+			{
+				c = colorYellow;
+			}
+			else if( vLight->shadowLOD == 4 )
+			{
+				c = colorMagenta;
+			}
+			else if( vLight->shadowLOD == 5 )
+			{
+				c = colorCyan;
+			}
+			else
+			{
+				c = colorMdGrey;
+			}
+			
+			c[3] = 0.25f;
+			GL_Color( c );
+			
+			idRenderMatrix invProjectMVPMatrix;
+			idRenderMatrix::Multiply( backEnd.viewDef->worldSpace.mvp, vLight->inverseBaseLightProject, invProjectMVPMatrix );
+			RB_SetMVP( invProjectMVPMatrix );
+			RB_DrawElementsWithCounters( &backEnd.zeroOneCubeSurface );
+		}
+		
+		// non-hidden lines
+		if( r_showShadowMapLODs.GetInteger() >= 2 )
+		{
+			GL_State( GLS_DEPTHFUNC_ALWAYS | GLS_POLYMODE_LINE | GLS_DEPTHMASK );
+			GL_Color( 1.0f, 1.0f, 1.0f );
+			idRenderMatrix invProjectMVPMatrix;
+			idRenderMatrix::Multiply( backEnd.viewDef->worldSpace.mvp, vLight->inverseBaseLightProject, invProjectMVPMatrix );
+			RB_SetMVP( invProjectMVPMatrix );
+			RB_DrawElementsWithCounters( &backEnd.zeroOneCubeSurface );
+		}
+		
+		common->Printf( "%i ", vLight->lightDef->index );
+	}
+	
+	common->Printf( " = %i total\n", count );
 }
 
 void RB_ShowLightGrid()
@@ -2938,7 +3021,7 @@ void RB_ShowShadowMaps()
 	if( !r_showShadowMaps.GetBool() )
 		return;
 		
-	image = globalImages->shadowImage;
+	image = globalImages->shadowImage[0];
 	if( !image )
 	{
 		return;
@@ -3228,6 +3311,7 @@ void RB_RenderDebugTools( drawSurf_t** drawSurfs, int numDrawSurfs )
 	RB_ShowLights();
 	// RB begin
 	RB_ShowLightGrid();
+	RB_ShowShadowMapLODs();
 	RB_ShowShadowMaps();
 	// RB end
 	
