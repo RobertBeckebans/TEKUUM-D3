@@ -3,6 +3,7 @@
 
 Doom 3 BFG Edition GPL Source Code
 Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2014 Robert Beckebans
 
 This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
@@ -384,6 +385,7 @@ static void R_SortDrawSurfs( drawSurf_t** drawSurfs, const int numDrawSurfs )
 #endif
 }
 
+// RB begin
 static void R_SetupSplitFrustums( viewDef_t* viewDef )
 {
 	idVec3			planeOrigin;
@@ -444,6 +446,7 @@ static void R_SetupSplitFrustums( viewDef_t* viewDef )
 		}
 	}
 }
+// RB end
 
 /*
 ================

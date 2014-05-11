@@ -3,7 +3,7 @@
 
 Doom 3 BFG Edition GPL Source Code
 Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
-Copyright (C) 2012-2013 Robert Beckebans
+Copyright (C) 2012-2014 Robert Beckebans
 
 This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
@@ -36,7 +36,6 @@ If you have questions concerning this license or the applicable additional terms
 #include "ScreenRect.h"
 #include "ImageOpts.h"
 #include "Image.h"
-//#include "RenderTexture.h"
 #include "Font.h"
 #include "Framebuffer.h"
 
@@ -1516,8 +1515,6 @@ void R_DoneFreeType();
 
 #include "ResolutionScale.h"
 #include "RenderLog.h"
-//#include "AutoRender.h"
-//#include "AutoRenderBink.h"
 #include "jobs/ShadowShared.h"
 #include "jobs/prelightshadowvolume/PreLightShadowVolume.h"
 #include "jobs/staticshadowvolume/StaticShadowVolume.h"

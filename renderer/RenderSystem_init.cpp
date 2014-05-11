@@ -163,12 +163,7 @@ idCVar r_testGammaBias( "r_testGammaBias", "0", CVAR_RENDERER | CVAR_FLOAT, "if 
 idCVar r_lightScale( "r_lightScale", "3", CVAR_ARCHIVE | CVAR_RENDERER | CVAR_FLOAT, "all light intensities are multiplied by this" );
 idCVar r_flareSize( "r_flareSize", "1", CVAR_RENDERER | CVAR_FLOAT, "scale the flare deforms from the material def" );
 
-#if defined(USE_GLES2) || defined(USE_GLES3)
 idCVar r_skipPrelightShadows( "r_skipPrelightShadows", "0", CVAR_RENDERER | CVAR_BOOL, "skip the dmap generated static shadow volumes" );
-#else
-idCVar r_skipPrelightShadows( "r_skipPrelightShadows", "0", CVAR_RENDERER | CVAR_BOOL, "skip the dmap generated static shadow volumes" );
-#endif
-
 idCVar r_useScissor( "r_useScissor", "1", CVAR_RENDERER | CVAR_BOOL, "scissor clip as portals and lights are processed" );
 idCVar r_useLightDepthBounds( "r_useLightDepthBounds", "1", CVAR_RENDERER | CVAR_BOOL, "use depth bounds test on lights to reduce both shadow and interaction fill" );
 idCVar r_useShadowDepthBounds( "r_useShadowDepthBounds", "1", CVAR_RENDERER | CVAR_BOOL, "use depth bounds test on individual shadow volumes to reduce shadow fill" );
@@ -299,12 +294,13 @@ DebugCallback
 For ARB_debug_output
 ========================
 */
+// RB: added const to userParam
 static void CALLBACK DebugCallback( unsigned int source, unsigned int type,
-									unsigned int id, unsigned int severity, int length, const char* message, void* userParam )
+									unsigned int id, unsigned int severity, int length, const char* message, const void* userParam )
 {
 	// it probably isn't safe to do an idLib::Printf at this point
 	
-	// RB begin
+	// RB: printf should be thread safe on Linux
 #if defined(_WIN32)
 	OutputDebugString( message );
 	OutputDebugString( "\n" );
@@ -570,7 +566,7 @@ static void R_CheckPortableExtensions()
 	glConfig.timerQueryAvailable = false;
 #else
 	// RB: added intel check
-	glConfig.timerQueryAvailable = ( GLEW_ARB_timer_query != 0 || GLEW_EXT_timer_query != 0 ) && ( glConfig.vendor != VENDOR_INTEL || r_skipIntelWorkarounds.GetBool() );
+	glConfig.timerQueryAvailable = ( GLEW_ARB_timer_query != 0 || GLEW_EXT_timer_query != 0 ) && ( glConfig.vendor != VENDOR_INTEL || r_skipIntelWorkarounds.GetBool() ) && glConfig.driverType != GLDRV_OPENGL_MESA;
 	// RB end
 #endif
 	
@@ -638,7 +634,7 @@ static void R_CheckPortableExtensions()
 	{
 		if( r_debugContext.GetInteger() >= 1 )
 		{
-			glDebugMessageCallbackARB( DebugCallback, NULL );
+			glDebugMessageCallbackARB( ( GLDEBUGPROCARB ) DebugCallback, NULL );
 		}
 		if( r_debugContext.GetInteger() >= 2 )
 		{
@@ -2703,7 +2699,9 @@ void idRenderSystemLocal::Shutdown()
 	
 	globalImages->Shutdown();
 	
+	// RB begin
 	Framebuffer::Shutdown();
+	// RB end
 	
 	// free frame memory
 	R_ShutdownFrameData();

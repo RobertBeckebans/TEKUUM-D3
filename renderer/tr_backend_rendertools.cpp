@@ -3,7 +3,7 @@
 
 Doom 3 BFG Edition GPL Source Code
 Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
-Copyright (C) 2013 Robert Beckebans
+Copyright (C) 2013-2014 Robert Beckebans
 
 This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
@@ -1198,6 +1198,7 @@ static void RB_ShowUnsmoothedTangents( drawSurf_t** drawSurfs, int numDrawSurfs 
 			continue;
 		}
 		
+		glBegin( GL_TRIANGLES );
 		for( j = 0; j < tri->numIndexes; j += 3 )
 		{
 			idDrawVert*	a, *b, *c;
@@ -1254,6 +1255,7 @@ static void RB_ShowTangentSpace( drawSurf_t** drawSurfs, int numDrawSurfs )
 			continue;
 		}
 		
+		glBegin( GL_TRIANGLES );
 		for( j = 0; j < tri->numIndexes; j++ )
 		{
 			const idDrawVert* v;
@@ -1326,6 +1328,7 @@ static void RB_ShowVertexColor( drawSurf_t** drawSurfs, int numDrawSurfs )
 		
 		renderProgManager.CommitUniforms();
 		
+		glBegin( GL_TRIANGLES );
 		for( j = 0; j < tri->numIndexes; j++ )
 		{
 			const idDrawVert* v;
@@ -1403,6 +1406,7 @@ static void RB_ShowNormals( drawSurf_t** drawSurfs, int numDrawSurfs )
 		// RB begin
 		renderProgManager.BindShader_VertexColor();
 		
+		glBegin( GL_LINES );
 		for( j = 0; j < tri->numVerts; j++ )
 		{
 			const idVec3 normal = tri->verts[j].GetNormal();
@@ -1410,16 +1414,17 @@ static void RB_ShowNormals( drawSurf_t** drawSurfs, int numDrawSurfs )
 			const idVec3 bitangent = tri->verts[j].GetBiTangent();
 			
 			glColor3f( 0, 0, 1 );
+			glVertex3fv( tri->verts[j].xyz.ToFloatPtr() );
 			VectorMA( tri->verts[j].xyz, size, normal, end );
 			glVertex3fv( end.ToFloatPtr() );
 			
-			//GL_Color( 1, 0, 0 );
 			glColor3f( 1, 0, 0 );
+			glVertex3fv( tri->verts[j].xyz.ToFloatPtr() );
 			VectorMA( tri->verts[j].xyz, size, tangent, end );
 			glVertex3fv( end.ToFloatPtr() );
 			
-			//GL_Color( 0, 1, 0 );
 			glColor3f( 0, 1, 0 );
+			glVertex3fv( tri->verts[j].xyz.ToFloatPtr() );
 			VectorMA( tri->verts[j].xyz, size, bitangent, end );
 			glVertex3fv( end.ToFloatPtr() );
 		}

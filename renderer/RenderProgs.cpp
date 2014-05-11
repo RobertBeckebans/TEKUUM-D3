@@ -91,8 +91,8 @@ void idRenderProgManager::Init()
 	} builtins[] =
 	{
 		{ BUILTIN_GUI, "builtin/gui.vfp", "", 0, false },
-		{ BUILTIN_COLOR, "builtin/color.vfp", "", 0, false },
-		{ BUILTIN_COLOR_SKINNED, "builtin/color_skinned.vfp", "", 0, true },
+		{ BUILTIN_COLOR, "builtin/color", "", 0, false },
+		{ BUILTIN_COLOR_SKINNED, "builtin/color", "_skinned", BIT( USE_GPU_SKINNING ), true },
 		{ BUILTIN_VERTEX_COLOR, "builtin/vertex_color.vfp", "", 0, false },
 		{ BUILTIN_VERTEX_LIGHTING, "builtin/vertex_lighting.vfp", "", 0, false },
 		{ BUILTIN_GRID_LIGHTING, "builtin/grid_lighting.vfp", "", 0, false },

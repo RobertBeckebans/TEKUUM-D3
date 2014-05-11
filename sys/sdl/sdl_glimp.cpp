@@ -47,6 +47,8 @@ idCVar sys_videoRam( "sys_videoRam", "0", CVAR_SYSTEM | CVAR_ARCHIVE | CVAR_INTE
 
 
 idCVar in_nograb( "in_nograb", "0", CVAR_SYSTEM | CVAR_NOCHEAT, "prevents input grabbing" );
+
+// RB: FIXME this shit. We need the OpenGL alpha channel for advanced rendering effects
 idCVar r_waylandcompat( "r_waylandcompat", "0", CVAR_SYSTEM | CVAR_NOCHEAT | CVAR_ARCHIVE, "wayland compatible framebuffer" );
 
 static bool grabbed = false;
@@ -333,7 +335,7 @@ bool GLimp_Init( glimpParms_t parms )
 */
 
 #if SDL_VERSION_ATLEAST(2, 0, 0)
-// SDL1 doesn't support multiple displays, so the source is much shorter and doesn't need seperate functions
+// SDL1 doesn't support multiple displays, so the source is much shorter and doesn't need separate functions
 // makes sure the window will be full-screened on the right display and returns the SDL display index
 static int ScreenParmsHandleDisplayIndex( glimpParms_t parms )
 {

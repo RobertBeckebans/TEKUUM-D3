@@ -3,7 +3,7 @@
 
 Doom 3 BFG Edition GPL Source Code
 Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
-Copyright (C) 2013 Robert Beckebans
+Copyright (C) 2013-2014 Robert Beckebans
 
 This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
@@ -304,10 +304,12 @@ static HGLRC CreateOpenGLContextOnDC( const HDC hdc, const bool debugContext )
 	int useOpenGL32 = r_useOpenGL32.GetInteger();
 	HGLRC m_hrc = NULL;
 	
+	// RB: for GLintercept 1.2.0 or otherwise we can't diff the framebuffers using the XML log
 	if( !WGLEW_ARB_create_context || useOpenGL32 == 0 )
 	{
 		return wglCreateContext( hdc );
 	}
+	// RB end
 	
 	for( int i = 0; i < 2; i++ )
 	{
@@ -1229,7 +1231,6 @@ parameters and try again.
 */
 bool GLimp_Init( glimpParms_t parms )
 {
-	const char*	driverName;
 	HDC		hDC;
 	
 	//cmdSystem->AddCommand( "testSwapBuffers", GLimp_TestSwapBuffers, CMD_FL_SYSTEM, "Times swapbuffer options" );
@@ -1309,12 +1310,7 @@ bool GLimp_Init( glimpParms_t parms )
 		glConfig.physicalScreenWidthInCentimeters = 0.1f * mmWide;
 	}
 	
-	// RB: use glewExperimental to avoid issues with OpenGL 3.x core profiles
-	/*
-	if( r_useOpenGL32.GetInteger() > 1 )
-	{
-		glewExperimental = GL_TRUE;
-	}
+	// RB: we probably have a new OpenGL 3.2 core context so reinitialize GLEW
 	GLenum glewResult = glewInit();
 	if( GLEW_OK != glewResult )
 	{
@@ -1325,7 +1321,7 @@ bool GLimp_Init( glimpParms_t parms )
 	{
 		common->Printf( "Using GLEW %s\n", glewGetString( GLEW_VERSION ) );
 	}
-	*/
+	// RB end
 	
 	// wglSwapinterval, etc
 	//GLW_CheckWGLExtensions( win32.hDC );

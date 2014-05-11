@@ -3,6 +3,7 @@
 
 Doom 3 BFG Edition GPL Source Code
 Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2012-2014 Robert Beckebans
 
 This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
@@ -608,7 +609,7 @@ static void LoadJPG( const char* filename, unsigned char** pic, int* width, int*
 	/* And we're done! */
 }
 
-
+// RB begin
 /*
 =========================================================
 
@@ -846,7 +847,7 @@ void R_WritePNG( const char* filename, const byte* data, int bytesPerPixel, int 
 	
 	Mem_Free( buffer );
 }
-
+// RB end
 
 //===================================================================
 
