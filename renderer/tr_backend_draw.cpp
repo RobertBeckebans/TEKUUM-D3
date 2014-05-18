@@ -1762,7 +1762,7 @@ RB_AmbientPass
 */
 static void RB_AmbientPass( const drawSurf_t* const* drawSurfs, int numDrawSurfs )
 {
-	if( !r_usePrecomputedLight.GetBool() )
+	if( !r_usePrecomputedLight.GetBool() || r_skipAmbient.GetBool() )
 	{
 		return;
 	}
