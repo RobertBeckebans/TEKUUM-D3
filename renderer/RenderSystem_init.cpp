@@ -531,7 +531,11 @@ static void R_CheckPortableExtensions()
 #endif
 	
 	// RB: make GPU skinning optional for weak OpenGL drivers
+#if defined(USE_GLES3)
+	glConfig.gpuSkinningAvailable = ( glConfig.driverType == GLDRV_OPENGL_ES3 );
+#else
 	glConfig.gpuSkinningAvailable = glConfig.uniformBufferAvailable && ( glConfig.driverType == GLDRV_OPENGL3X || glConfig.driverType == GLDRV_OPENGL32_CORE_PROFILE || glConfig.driverType == GLDRV_OPENGL32_COMPATIBILITY_PROFILE );
+#endif
 	
 	// ATI_separate_stencil / OpenGL 2.0 separate stencil
 #if defined(USE_GLES2) || defined(USE_GLES3)
