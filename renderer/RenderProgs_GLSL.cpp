@@ -131,12 +131,21 @@ attribInfo_t attribsPC[] =
 	{ "float",		"facing",		"FACE",			"gl_FrontFacing",		0,	AT_PS_IN | AT_PS_IN_RESERVED,		0 },
 	
 	// fragment program output
+#if defined(USE_GLES3)
+	{ "float4",		"color",		"COLOR",		"gl_FragColor",		0,	AT_PS_OUT | AT_PS_OUT_RESERVED,		0 }, // GLSL version 1.2 doesn't allow for custom color name mappings
+	{ "half4",		"hcolor",		"COLOR",		"gl_FragColor",		0,	AT_PS_OUT | AT_PS_OUT_RESERVED,		0 },
+	{ "float4",		"color0",		"COLOR0",		"gl_FragColor",		0,	AT_PS_OUT | AT_PS_OUT_RESERVED,		0 },
+	{ "float4",		"color1",		"COLOR1",		"gl_FragColor",		1,	AT_PS_OUT | AT_PS_OUT_RESERVED,		0 },
+	{ "float4",		"color2",		"COLOR2",		"gl_FragColor",		2,	AT_PS_OUT | AT_PS_OUT_RESERVED,		0 },
+	{ "float4",		"color3",		"COLOR3",		"gl_FragColor",		3,	AT_PS_OUT | AT_PS_OUT_RESERVED,		0 },
+#else
 	{ "float4",		"color",		"COLOR",		"fo_FragColor",		0,	AT_PS_OUT /*| AT_PS_OUT_RESERVED*/,		0 }, // GLSL version 1.2 doesn't allow for custom color name mappings
 	{ "half4",		"hcolor",		"COLOR",		"fo_FragColor",		0,	AT_PS_OUT /*| AT_PS_OUT_RESERVED*/,		0 },
 	{ "float4",		"color0",		"COLOR0",		"fo_FragColor",		0,	AT_PS_OUT /*| AT_PS_OUT_RESERVED*/,		0 },
 	{ "float4",		"color1",		"COLOR1",		"fo_FragColor",		1,	AT_PS_OUT /*| AT_PS_OUT_RESERVED*/,		0 },
 	{ "float4",		"color2",		"COLOR2",		"fo_FragColor",		2,	AT_PS_OUT /*| AT_PS_OUT_RESERVED*/,		0 },
 	{ "float4",		"color3",		"COLOR3",		"fo_FragColor",		3,	AT_PS_OUT /*| AT_PS_OUT_RESERVED*/,		0 },
+#endif
 	{ "float",		"depth",		"DEPTH",		"gl_FragDepth",		4,	AT_PS_OUT | AT_PS_OUT_RESERVED,		0 },
 	
 	// vertex to fragment program pass through
@@ -530,6 +539,7 @@ idStr StripDeadCode( const idStr& in, const char* name, const idStrList& compile
 		src.AddDefine( compileMacros[i] );
 	}
 	
+	/*
 	switch( glConfig.driverType )
 	{
 		case GLDRV_OPENGL_ES2:
@@ -537,6 +547,7 @@ idStr StripDeadCode( const idStr& in, const char* name, const idStrList& compile
 			//src.AddDefine( "GLES2" );
 			break;
 	}
+	*/
 	
 #if defined(USE_GLES2) || defined(USE_GLES3)
 	src.AddDefine( "USE_NORMAL_FMT_RGB8" );
@@ -1160,6 +1171,9 @@ void ParseInOutStruct( idLexer& src, int attribType, int attribIgnoreType, idLis
 				
 				break;
 			}
+			
+			default:
+				break;
 		}
 		// RB end
 		
@@ -1245,7 +1259,7 @@ idStr ConvertCG2GLSL( const idStr& in, const char* name, bool isVertexProgram, i
 						switch( glConfig.driverType )
 						{
 							case GLDRV_OPENGL_ES2:
-							case GLDRV_OPENGL_ES3:
+								//case GLDRV_OPENGL_ES3:
 								//case GLDRV_OPENGL_MESA:
 							{
 								program += "attribute " + varsIn[i].type + " " + varsIn[i].nameGLSL + ";\n";
@@ -1278,7 +1292,7 @@ idStr ConvertCG2GLSL( const idStr& in, const char* name, bool isVertexProgram, i
 						switch( glConfig.driverType )
 						{
 							case GLDRV_OPENGL_ES2:
-							case GLDRV_OPENGL_ES3:
+								//case GLDRV_OPENGL_ES3:
 								//case GLDRV_OPENGL_MESA:
 							{
 								program += "varying " + varsOut[i].type + " " + varsOut[i].nameGLSL + ";\n";
@@ -1308,7 +1322,7 @@ idStr ConvertCG2GLSL( const idStr& in, const char* name, bool isVertexProgram, i
 						switch( glConfig.driverType )
 						{
 							case GLDRV_OPENGL_ES2:
-							case GLDRV_OPENGL_ES3:
+								//case GLDRV_OPENGL_ES3:
 								//case GLDRV_OPENGL_MESA:
 							{
 								program += "varying " + varsIn[i].type + " " + varsIn[i].nameGLSL + ";\n";
@@ -1573,13 +1587,13 @@ idStr ConvertCG2GLSL( const idStr& in, const char* name, bool isVertexProgram, i
 		switch( glConfig.driverType )
 		{
 			case GLDRV_OPENGL_ES2:
-			case GLDRV_OPENGL_ES3:
 			{
 				out.ReAllocate( idStr::Length( vertexInsert_GLSL_ES_1_0 ) + in.Length() * 2, false );
 				out += vertexInsert_GLSL_ES_1_0;
 				break;
 			}
 			
+			case GLDRV_OPENGL_ES3:
 			case GLDRV_OPENGL_MESA:
 			{
 				out.ReAllocate( idStr::Length( vertexInsert_GLSL_ES_3_00 ) + in.Length() * 2, false );
@@ -1602,13 +1616,13 @@ idStr ConvertCG2GLSL( const idStr& in, const char* name, bool isVertexProgram, i
 		switch( glConfig.driverType )
 		{
 			case GLDRV_OPENGL_ES2:
-			case GLDRV_OPENGL_ES3:
 			{
 				out.ReAllocate( idStr::Length( fragmentInsert_GLSL_ES_1_0 ) + in.Length() * 2, false );
 				out += fragmentInsert_GLSL_ES_1_0;
 				break;
 			}
 			
+			case GLDRV_OPENGL_ES3:
 			case GLDRV_OPENGL_MESA:
 			{
 				out.ReAllocate( idStr::Length( fragmentInsert_GLSL_ES_3_00 ) + in.Length() * 2, false );
@@ -1687,13 +1701,13 @@ GLuint idRenderProgManager::LoadGLSLShader( GLenum target, const char* name, con
 	switch( glConfig.driverType )
 	{
 		case GLDRV_OPENGL_ES2:
-		case GLDRV_OPENGL_ES3:
 		{
 			outFileGLSL.Format( "renderprogs/glsles-1_0/%s%s", name, nameOutSuffix );
 			outFileUniforms.Format( "renderprogs/glsles-1_0/%s%s", name, nameOutSuffix );
 			break;
 		}
 		
+		case GLDRV_OPENGL_ES3:
 		case GLDRV_OPENGL_MESA:
 		{
 			outFileGLSL.Format( "renderprogs/glsles-3_00/%s%s", name, nameOutSuffix );
@@ -2051,7 +2065,7 @@ void idRenderProgManager::CommitUniforms()
 			{
 				glUniform4fv( uniformLocation.uniformIndex, 1, glslUniforms[uniformLocation.parmIndex].ToFloatPtr() );
 				
-#if 1
+#if 0
 				if( GL_CheckErrors() )
 				{
 					const char* parmName = GetGLSLParmName( uniformLocation.parmIndex );
@@ -2101,11 +2115,21 @@ void idRenderProgManager::LoadGLSLProgram( const int programIndex, const int ver
 		if( vertexProgID != INVALID_PROGID )
 		{
 			glAttachShader( program, vertexProgID );
+			
+			//if( GL_CheckErrors() )
+			//{
+			//	idLib::Printf( "glAttachShader( program = %i, vertexProgID = %i ) failed for %s\n", program, vertexProgID, prog.name.c_str() );
+			//}
 		}
 		
 		if( fragmentProgID != INVALID_PROGID )
 		{
 			glAttachShader( program, fragmentProgID );
+			
+			//if( GL_CheckErrors() )
+			//{
+			//	idLib::Printf( "glAttachShader( program = %i, fragmentProgID = %i ) failed for %s\n", program, fragmentProgID, prog.name.c_str() );
+			//}
 		}
 		
 		// bind vertex attribute locations

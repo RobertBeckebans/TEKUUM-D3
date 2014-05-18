@@ -3,6 +3,7 @@
 
 Doom 3 BFG Edition GPL Source Code
 Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2013-2014 Robert Beckebans
 
 This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
@@ -28,6 +29,12 @@ If you have questions concerning this license or the applicable additional terms
 
 #ifndef __HEAP_H__
 #define __HEAP_H__
+
+// RB: need this for std::bad_alloc
+#if defined(__ANDROID__)
+#include <new>
+#endif
+// RB end
 
 #undef new
 
@@ -69,9 +76,9 @@ void* 		Mem_ClearedAlloc( const size_t size, const memTag_t tag = TAG_CRAP );
 char* 		Mem_CopyString( const char* in );
 // RB end
 
-ID_INLINE void* operator new( size_t s )// throw( std::bad_alloc )
-#if !defined(_MSC_VER) //&& !defined(__ANDROID__)
-//throw( std::bad_alloc ) // DG: standard signature seems to include throw(..)
+ID_INLINE void* operator new( size_t s )
+#if !defined(_MSC_VER)
+throw( std::bad_alloc ) // DG: standard signature seems to include throw(..)
 #endif
 {
 	return Mem_Alloc( s, TAG_NEW );
@@ -85,7 +92,7 @@ throw() // DG: delete musn't throw
 	Mem_Free( p );
 }
 ID_INLINE void* operator new[]( size_t s )
-#if !defined(_MSC_VER) && !defined(__ANDROID__)
+#if !defined(_MSC_VER) //&& !defined(__ANDROID__)
 throw( std::bad_alloc ) // DG: standard signature seems to include throw(..)
 #endif
 {

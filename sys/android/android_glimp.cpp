@@ -60,7 +60,8 @@ bool GLimp_Init( glimpParms_t parms )
 	
 	//const char *glstring;
 	
-	glConfig.driverType = GLDRV_OPENGL_ES3;
+	// RB: use GLSL ES 1.00 instead of GLSL ES 3.00
+	glConfig.driverType = GLDRV_OPENGL_ES2;
 	
 	glConfig.isFullscreen = true;
 	

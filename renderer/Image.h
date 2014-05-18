@@ -340,11 +340,13 @@ public:
 	idImage* 			fogEnterImage;				// adjust fogImage alpha based on terminator plane
 	// RB begin
 	idImage* 			cinematicImage;
+#if !defined(USE_GLES3)
 	idImage*			shadowImage[5];
 	idImage*			jitterImage1;				// shadow jitter
 	idImage*			jitterImage4;
 	idImage*			jitterImage16;
 	idImage*			randomImage256;
+#endif
 	// RB end
 	idImage* 			scratchImage;
 	idImage* 			scratchImage2;

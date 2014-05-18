@@ -451,6 +451,7 @@ void R_QuadraticImage( idImage* image )
 }
 
 // RB begin
+#if !defined(USE_GLES3)
 static void R_CreateShadowMapImage_Res0( idImage* image )
 {
 	int size = shadowMapResolutions[0];
@@ -565,6 +566,7 @@ static void R_CreateRandom256Image( idImage* image )
 	
 	image->GenerateImage( ( byte* )data, 256, 256, TF_NEAREST, TR_REPEAT, TD_LOOKUP_TABLE_RGBA );
 }
+#endif // #if !defined(USE_GLES3)
 // RB end
 
 /*
@@ -589,6 +591,7 @@ void idImageManager::CreateIntrinsicImages()
 	// cinematicImage is used for cinematic drawing
 	cinematicImage = ImageFromFunction( "_cinematic", R_RGBA8Image );
 	
+#if !defined(USE_GLES3)
 	shadowImage[0] = ImageFromFunction( va( "_shadowMapArray0_%i", shadowMapResolutions[0] ), R_CreateShadowMapImage_Res0 );
 	shadowImage[1] = ImageFromFunction( va( "_shadowMapArray1_%i", shadowMapResolutions[1] ), R_CreateShadowMapImage_Res1 );
 	shadowImage[2] = ImageFromFunction( va( "_shadowMapArray2_%i", shadowMapResolutions[2] ), R_CreateShadowMapImage_Res2 );
@@ -600,6 +603,7 @@ void idImageManager::CreateIntrinsicImages()
 	jitterImage16 = globalImages->ImageFromFunction( "_jitter16", R_CreateJitterImage16 );
 	
 	randomImage256 = globalImages->ImageFromFunction( "_random256", R_CreateRandom256Image );
+#endif
 	// RB end
 	
 	// scratchImage is used for screen wipes/doublevision etc..

@@ -1376,6 +1376,7 @@ static void RB_RenderInteractions( const drawSurf_t* surfList, const viewLight_t
 		GL_SelectTexture( INTERACTION_TEXUNIT_PROJECTION );
 		lightStage->texture.image->Bind();
 		
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 		if( r_useShadowMapping.GetBool() )
 		{
 			// texture 5 will be the shadow maps array
@@ -1397,6 +1398,7 @@ static void RB_RenderInteractions( const drawSurf_t* surfList, const viewLight_t
 				globalImages->jitterImage1->Bind();
 			}
 		}
+#endif
 		
 		// force the light textures to not use anisotropic filtering, which is wasted on them
 		// all of the texture sampler parms should be constant for all interactions, only
@@ -1430,6 +1432,7 @@ static void RB_RenderInteractions( const drawSurf_t* surfList, const viewLight_t
 			}
 			else
 			{
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 				if( r_useShadowMapping.GetBool() && vLight->globalShadows )
 				{
 					// RB: we have shadow mapping enabled and shadow maps so do a shadow compare
@@ -1469,6 +1472,7 @@ static void RB_RenderInteractions( const drawSurf_t* surfList, const viewLight_t
 					}
 				}
 				else
+#endif // #if !defined(USE_GLES2) && !defined(USE_GLES3)
 				{
 					if( surf->jointCache )
 					{
@@ -1560,6 +1564,7 @@ static void RB_RenderInteractions( const drawSurf_t* surfList, const viewLight_t
 				SetVertexParm( RENDERPARM_LIGHTFALLOFF_S, lightProjection[3].ToFloatPtr() );
 				
 				// RB begin
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 				if( r_useShadowMapping.GetBool() )
 				{
 					if( vLight->parallel )
@@ -1608,6 +1613,7 @@ static void RB_RenderInteractions( const drawSurf_t* surfList, const viewLight_t
 						
 					}
 				}
+#endif
 				// RB end
 			}
 			
@@ -2734,6 +2740,7 @@ void MatrixLookAtRH( float m[16], const idVec3& eye, const idVec3& dir, const id
 RB_ShadowMapPass
 =====================
 */
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 static void RB_ShadowMapPass( const drawSurf_t* drawSurfs, const viewLight_t* vLight, int side )
 {
 	if( r_skipShadows.GetBool() )
@@ -3291,6 +3298,7 @@ static void RB_ShadowMapPass( const drawSurf_t* drawSurfs, const viewLight_t* vL
 	SetFragmentParm( RENDERPARM_ALPHA_TEST, vec4_zero.ToFloatPtr() );
 #endif
 }
+#endif // #if !defined(USE_GLES2) && !defined(USE_GLES3)
 
 /*
 ==============================================================================================
@@ -3316,8 +3324,11 @@ static void RB_DrawInteractions( const viewDef_t* viewDef )
 	
 	GL_SelectTexture( 0 );
 	
-	
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 	const bool useLightDepthBounds = r_useLightDepthBounds.GetBool() && !r_useShadowMapping.GetBool();
+#else
+	const bool useLightDepthBounds = r_useLightDepthBounds.GetBool();
+#endif
 	
 	//
 	// for each light, perform shadowing and adding
@@ -3349,6 +3360,7 @@ static void RB_DrawInteractions( const viewDef_t* viewDef )
 		}
 		
 		// RB: shadow mapping
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 		if( r_useShadowMapping.GetBool() )
 		{
 			int	side, sideStop;
@@ -3400,9 +3412,14 @@ static void RB_DrawInteractions( const viewDef_t* viewDef )
 			}
 		}
 		else
+#endif // #if !defined(USE_GLES2) && !defined(USE_GLES3)
 		{
 			// only need to clear the stencil buffer and perform stencil testing if there are shadows
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 			const bool performStencilTest = ( vLight->globalShadows != NULL || vLight->localShadows != NULL ) && !r_useShadowMapping.GetBool();
+#else
+			const bool performStencilTest = ( vLight->globalShadows != NULL || vLight->localShadows != NULL );
+#endif
 			
 			// mirror flips the sense of the stencil select, and I don't want to risk accidentally breaking it
 			// in the normal case, so simply disable the stencil select in the mirror case

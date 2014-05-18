@@ -366,12 +366,14 @@ void idImage::SetTexParameters()
 	}
 	
 	// RB: added shadow compare parameters for shadow map textures
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 	if( opts.format == FMT_SHADOW_ARRAY )
 	{
 		//glTexParameteri( target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
 		glTexParameteri( target, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_R_TO_TEXTURE );
 		glTexParameteri( target, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL );
 	}
+#endif
 }
 
 /*

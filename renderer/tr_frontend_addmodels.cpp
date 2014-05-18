@@ -948,10 +948,18 @@ void R_AddSingleModel( viewEntity_t* vEntity )
 			// surface shadows
 			//--------------------------
 			
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 			if( !shader->SurfaceCastsShadow() && !( r_useShadowMapping.GetBool() && r_forceShadowMapsOnAlphaTestedSurfaces.GetBool() && shader->Coverage() == MC_PERFORATED ) )
 			{
 				continue;
 			}
+#else
+			if( !shader->SurfaceCastsShadow() )
+			{
+				continue;
+			}
+#endif
+			
 			if( !lightDef->LightCastsShadows() )
 			{
 				continue;
@@ -962,10 +970,17 @@ void R_AddSingleModel( viewEntity_t* vEntity )
 			}
 			
 			// if the static shadow does not have any shadows
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 			if( surfInter != NULL && surfInter->numShadowIndexes == 0 && !r_useShadowMapping.GetBool() )
 			{
 				continue;
 			}
+#else
+			if( surfInter != NULL && surfInter->numShadowIndexes == 0 )
+			{
+				continue;
+			}
+#endif
 			
 			// some entities, like view weapons, don't cast any shadows
 			if( entityDef->parms.noShadow )
@@ -980,6 +995,7 @@ void R_AddSingleModel( viewEntity_t* vEntity )
 			}
 			
 			// RB begin
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 			if( r_useShadowMapping.GetBool() )
 			{
 				//if( addInteractions && surfaceDirectlyVisible && shader->ReceivesLighting() )
@@ -1055,9 +1071,9 @@ void R_AddSingleModel( viewEntity_t* vEntity )
 					}
 				}
 				
-				
 				continue;
 			}
+#endif // #if !defined(USE_GLES2) && !defined(USE_GLES3)
 			// RB end
 			
 			if( lightDef->parms.prelightModel && lightDef->lightHasMoved == false &&

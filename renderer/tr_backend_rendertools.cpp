@@ -3014,6 +3014,7 @@ void RB_TestImage()
 // RB begin
 void RB_ShowShadowMaps()
 {
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 	idImage*	image = NULL;
 	int		max;
 	float	w, h;
@@ -3104,6 +3105,7 @@ void RB_ShowShadowMaps()
 	}
 	
 	glTexParameteri( GL_TEXTURE_2D_ARRAY, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_R_TO_TEXTURE );
+#endif
 }
 // RB end
 

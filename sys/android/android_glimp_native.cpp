@@ -152,6 +152,8 @@ bool GLimp_Init( glimpParms_t parms )
 	
 	glConfig.isFullscreen = true;
 	
+	glConfig.driverType = GLDRV_OPENGL_ES3;
+	
 	glConfig.displayFrequency = 60;
 	glConfig.isStereoPixelFormat = false;
 	glConfig.multisamples = false;

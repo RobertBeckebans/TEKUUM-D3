@@ -112,12 +112,14 @@ void idRenderProgManager::Init()
 		{ BUILTIN_INTERACTION_AMBIENT, "builtin/interactionAmbient.vfp", "", 0, false },
 		{ BUILTIN_INTERACTION_AMBIENT_SKINNED, "builtin/interactionAmbient_skinned.vfp", "", 0, true },
 		// RB begin
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 		{ BUILTIN_INTERACTION_SHADOW_MAPPING_SPOT, "builtin/interactionSM", "_spot", 0, false },
 		{ BUILTIN_INTERACTION_SHADOW_MAPPING_SPOT_SKINNED, "builtin/interactionSM", "_spot_skinned", BIT( USE_GPU_SKINNING ), true },
 		{ BUILTIN_INTERACTION_SHADOW_MAPPING_POINT, "builtin/interactionSM", "_point", BIT( LIGHT_POINT ), false },
 		{ BUILTIN_INTERACTION_SHADOW_MAPPING_POINT_SKINNED, "builtin/interactionSM", "_point_skinned", BIT( USE_GPU_SKINNING ) | BIT( LIGHT_POINT ), true },
 		{ BUILTIN_INTERACTION_SHADOW_MAPPING_PARALLEL, "builtin/interactionSM", "_parallel", BIT( LIGHT_PARALLEL ), false },
 		{ BUILTIN_INTERACTION_SHADOW_MAPPING_PARALLEL_SKINNED, "builtin/interactionSM", "_parallel_skinned", BIT( USE_GPU_SKINNING ) | BIT( LIGHT_PARALLEL ), true },
+#endif
 		// RB end
 		{ BUILTIN_ENVIRONMENT, "builtin/environment.vfp", "", 0, false },
 		{ BUILTIN_ENVIRONMENT_SKINNED, "builtin/environment_skinned.vfp", "", 0, true },
@@ -152,8 +154,8 @@ void idRenderProgManager::Init()
 		{ BUILTIN_STEREO_INTERLACE, "builtin/stereoInterlace.vfp", "", 0, false },
 #if !defined(USE_GLES2) && !defined(USE_GLES3)
 		{ BUILTIN_MOTION_BLUR, "builtin/motionBlur.vfp", "", 0, false },
-#endif
 		{ BUILTIN_DEBUG_SHADOWMAP, "builtin/debug_shadowmap.vfp", "", 0, false },
+#endif
 		// RB end
 		
 	};
@@ -241,9 +243,11 @@ void idRenderProgManager::Init()
 		vertexShaders[builtinShaders[BUILTIN_COLOR_SKINNED]].usesJoints = true;
 		vertexShaders[builtinShaders[BUILTIN_GRID_LIGHTING_SKINNED]].usesJoints = true;
 		vertexShaders[builtinShaders[BUILTIN_BLENDLIGHT_SKINNED]].usesJoints = true;
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 		vertexShaders[builtinShaders[BUILTIN_INTERACTION_SHADOW_MAPPING_SPOT_SKINNED]].usesJoints = true;
 		vertexShaders[builtinShaders[BUILTIN_INTERACTION_SHADOW_MAPPING_POINT_SKINNED]].usesJoints = true;
 		vertexShaders[builtinShaders[BUILTIN_INTERACTION_SHADOW_MAPPING_PARALLEL_SKINNED]].usesJoints = true;
+#endif
 		// RB end
 	}
 	

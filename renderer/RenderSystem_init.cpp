@@ -600,8 +600,8 @@ static void R_CheckPortableExtensions()
 	}
 	
 	// GL_EXT_framebuffer_object
-#if defined(USE_GLES2)
-	glConfig.framebufferObjectAvailable = false;
+#if defined(USE_GLES2) || defined(USE_GLES3)
+	glConfig.framebufferObjectAvailable = true;
 #else
 	glConfig.framebufferObjectAvailable = GLEW_EXT_framebuffer_object != 0;
 	if( glConfig.framebufferObjectAvailable )
@@ -618,8 +618,8 @@ static void R_CheckPortableExtensions()
 #endif
 	
 	// GL_EXT_framebuffer_blit
-#if defined(USE_GLES2)
-	glConfig.framebufferBlitAvailable = false;
+#if defined(USE_GLES2) || defined(USE_GLES3)
+	glConfig.framebufferBlitAvailable = true;
 #else
 	glConfig.framebufferBlitAvailable = GLEW_EXT_framebuffer_blit != 0;
 	if( glConfig.framebufferBlitAvailable )
@@ -2636,7 +2636,9 @@ void idRenderSystemLocal::Init()
 	// RB begin
 	R_InitFreeType();
 	
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 	Framebuffer::Init();
+#endif
 	// RB end
 	
 	globalImages->Init();
@@ -2707,7 +2709,9 @@ void idRenderSystemLocal::Shutdown()
 	globalImages->Shutdown();
 	
 	// RB begin
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 	Framebuffer::Shutdown();
+#endif
 	// RB end
 	
 	// free frame memory

@@ -276,6 +276,7 @@ public:
 	}
 	
 	// RB begin
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 	void	BindShader_Interaction_ShadowMapping_Spot()
 	{
 		BindShader_Builtin( BUILTIN_INTERACTION_SHADOW_MAPPING_SPOT );
@@ -305,6 +306,7 @@ public:
 	{
 		BindShader_Builtin( BUILTIN_INTERACTION_SHADOW_MAPPING_PARALLEL_SKINNED );
 	}
+#endif
 	// RB end
 	
 #if !defined(USE_GLES2) && !defined(USE_GLES3)
@@ -452,12 +454,12 @@ public:
 	{
 		BindShader_Builtin( BUILTIN_MOTION_BLUR );
 	}
-#endif
 	
 	void	BindShader_DebugShadowMap()
 	{
 		BindShader_Builtin( BUILTIN_DEBUG_SHADOWMAP );
 	}
+#endif
 	// RB end
 	
 	// the joints buffer should only be bound for vertex programs that use joints
@@ -522,12 +524,14 @@ protected:
 		BUILTIN_INTERACTION_AMBIENT,
 		BUILTIN_INTERACTION_AMBIENT_SKINNED,
 		// RB begin
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 		BUILTIN_INTERACTION_SHADOW_MAPPING_SPOT,
 		BUILTIN_INTERACTION_SHADOW_MAPPING_SPOT_SKINNED,
 		BUILTIN_INTERACTION_SHADOW_MAPPING_POINT,
 		BUILTIN_INTERACTION_SHADOW_MAPPING_POINT_SKINNED,
 		BUILTIN_INTERACTION_SHADOW_MAPPING_PARALLEL,
 		BUILTIN_INTERACTION_SHADOW_MAPPING_PARALLEL_SKINNED,
+#endif
 		// RB end
 		BUILTIN_ENVIRONMENT,
 		BUILTIN_ENVIRONMENT_SKINNED,
@@ -562,9 +566,8 @@ protected:
 		BUILTIN_STEREO_INTERLACE,
 #if !defined(USE_GLES2) && !defined(USE_GLES3)
 		BUILTIN_MOTION_BLUR,
-#endif
-		
 		BUILTIN_DEBUG_SHADOWMAP,
+#endif
 		
 		MAX_BUILTINS
 	};

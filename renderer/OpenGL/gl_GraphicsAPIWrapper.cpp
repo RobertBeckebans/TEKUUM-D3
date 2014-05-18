@@ -297,7 +297,9 @@ void GL_SetDefaultState()
 	GL_State( 0, true );
 	
 	// RB begin
+#if !defined(USE_GLES2) && !defined(USE_GLES3)
 	Framebuffer::BindNull();
+#endif
 	// RB end
 	
 	// These are changed by GL_Cull
