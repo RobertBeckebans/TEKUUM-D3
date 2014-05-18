@@ -314,11 +314,15 @@ void idImage::SetTexParameters()
 #endif
 	
 #if defined(USE_MESA) || ( !defined(USE_GLES2) && !defined(USE_GLES3) )
+	// RB: disabled use of unreliable extension that can make the game look worse
+	/*
 	if( glConfig.textureLODBiasAvailable && ( usage != TD_FONT ) )
 	{
 		// use a blurring LOD bias in combination with high anisotropy to fix our aliasing grate textures...
-		glTexParameterf( target, GL_TEXTURE_LOD_BIAS, r_lodBias.GetFloat() );
+		glTexParameterf( target, GL_TEXTURE_LOD_BIAS_EXT, 0.5 ); //r_lodBias.GetFloat() );
 	}
+	*/
+	// RB end
 #endif
 	
 #if defined(DEBUG) || defined(__ANDROID__)
@@ -367,7 +371,6 @@ void idImage::SetTexParameters()
 		//glTexParameteri( target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
 		glTexParameteri( target, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_R_TO_TEXTURE );
 		glTexParameteri( target, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL );
-		glTexParameteri( target, GL_DEPTH_TEXTURE_MODE, GL_INTENSITY );
 	}
 }
 

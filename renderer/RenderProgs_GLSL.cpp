@@ -392,9 +392,9 @@ public:
 	}
 	
 private:
-	int		Directive_include( idToken* token )
+	int		Directive_include( idToken* token, bool supressWarning )
 	{
-		if( idParser::Directive_include( token ) )
+		if( idParser::Directive_include( token, true ) )
 		{
 			// RB: try local shaders in base/renderprogs/ first
 			return true;
@@ -534,9 +534,13 @@ idStr StripDeadCode( const idStr& in, const char* name, const idStrList& compile
 	{
 		case GLDRV_OPENGL_ES2:
 		case GLDRV_OPENGL_ES3:
-			src.AddDefine( "GLES2" );
+			//src.AddDefine( "GLES2" );
 			break;
 	}
+	
+#if defined(USE_GLES2) || defined(USE_GLES3)
+	src.AddDefine( "USE_NORMAL_FMT_RGB8" );
+#endif
 	
 	if( !builtin && glConfig.gpuSkinningAvailable )
 	{
@@ -546,6 +550,11 @@ idStr StripDeadCode( const idStr& in, const char* name, const idStrList& compile
 	if( r_useUniformArrays.GetBool() )
 	{
 		src.AddDefine( "USE_UNIFORM_ARRAYS" );
+	}
+	
+	if( r_useHalfLambertLighting.GetBool() )
+	{
+		src.AddDefine( "USE_HALF_LAMBERT" );
 	}
 	
 	idList< idCGBlock > blocks;

@@ -997,6 +997,7 @@ extern idCVar r_useShadowDepthBounds;		// use depth bounds test on individual sh
 // RB begin
 extern idCVar r_usePrecomputedLight;		// enable Q3A style precomputed lighting (vertex lighting/lightgrid)
 extern idCVar r_useShadowMapping;			// use shadow mapping instead of stencil shadows
+extern idCVar r_useHalfLambertLighting;		// use Half-Lambert lighting instead of classic Lambert
 // RB end
 
 extern idCVar r_skipStaticInteractions;		// skip interactions created at level load
@@ -1103,6 +1104,7 @@ extern idCVar r_shadowMapSingleSide;
 extern idCVar r_shadowMapImageSize;
 extern idCVar r_shadowMapJitterScale;
 extern idCVar r_shadowMapBiasScale;
+extern idCVar r_shadowMapRandomizeJitter;
 extern idCVar r_shadowMapSamples;
 extern idCVar r_shadowMapSplits;
 extern idCVar r_shadowMapSplitWeight;
