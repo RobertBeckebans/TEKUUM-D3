@@ -339,6 +339,10 @@ void GL_SetDefaultState()
 	{
 		glScissor( 0, 0, renderSystem->GetWidth(), renderSystem->GetHeight() );
 	}
+
+	// RB: don't keep renderprogs that were enabled during level load
+	renderProgManager.Unbind();
+	// RB end
 }
 
 /*

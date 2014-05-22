@@ -280,6 +280,8 @@ void idRenderProgManager::LoadAllShaders()
 		
 		LoadGLSLProgram( i, glslPrograms[i].vertexShaderIndex, glslPrograms[i].fragmentShaderIndex );
 	}
+
+	Unbind();
 }
 
 /*

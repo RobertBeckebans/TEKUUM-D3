@@ -2019,6 +2019,21 @@ void idRenderProgManager::CommitUniforms()
 					}
 				}
 				glUniform4fv( prog.vertexUniformArray, totalUniforms, localVectors->ToFloatPtr() );
+
+				// RB: verbose debugging with GLintercept
+#if 0
+				if( renderLog.activeLevel )
+				{
+					for( int i = 0; i < vertexUniforms.Num(); i++ )
+					{
+						const char* parmName = GetGLSLParmName( vertexUniforms[i] );
+						const char* value = localVectors[i].ToString();
+
+						renderLog.Printf( " CommitUniform: _va_[ %i = %s ] = %s\n", i, parmName, value );
+					}
+				}
+#endif
+				// RB end
 			}
 		}
 		
@@ -2047,6 +2062,21 @@ void idRenderProgManager::CommitUniforms()
 					}
 				}
 				glUniform4fv( prog.fragmentUniformArray, totalUniforms, localVectors->ToFloatPtr() );
+
+				// RB: verbose debugging with GLintercept
+#if 0
+				if( renderLog.activeLevel )
+				{
+					for( int i = 0; i < fragmentUniforms.Num(); i++ )
+					{
+						const char* parmName = GetGLSLParmName( fragmentUniforms[i] );
+						const char* value = localVectors[i].ToString();
+
+						renderLog.Printf( " CommitUniform: _fa_[ %i = %s ] = %s\n", i, parmName, value );
+					}
+				}
+#endif
+				// RB end
 			}
 		}
 	}
