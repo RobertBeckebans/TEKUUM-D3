@@ -256,6 +256,14 @@ idCVar r_shadowMapLodBias( "r_shadowMapLodBias", "0", CVAR_RENDERER | CVAR_INTEG
 idCVar r_shadowMapPolygonFactor( "r_shadowMapPolygonFactor", "2", CVAR_RENDERER | CVAR_FLOAT, "polygonOffset factor for drawing shadow buffer" );
 idCVar r_shadowMapPolygonOffset( "r_shadowMapPolygonOffset", "3000", CVAR_RENDERER | CVAR_FLOAT, "polygonOffset units for drawing shadow buffer" );
 idCVar r_shadowMapOccluderFacing( "r_shadowMapOccluderFacing", "2", CVAR_RENDERER | CVAR_INTEGER, "0 = front faces, 1 = back faces, 2 = twosided" );
+
+// RB: HDR parameters
+idCVar r_useHDR( "r_useHDR", "1", CVAR_RENDERER | CVAR_ARCHIVE | CVAR_BOOL, "use high dynamic range rendering" );
+idCVar r_hdrMinLuminance( "r_hdrMinLuminance", "0.18", CVAR_RENDERER | CVAR_FLOAT, "" );
+idCVar r_hdrMaxLuminance( "r_hdrMaxLuminance", "3000", CVAR_RENDERER | CVAR_FLOAT, "" );
+idCVar r_hdrKey( "r_hdrKey", "0.28", CVAR_RENDERER | CVAR_FLOAT, "" );
+idCVar r_hdrContrastThreshold( "r_hdrContrastThreshold", "1.3", CVAR_RENDERER | CVAR_FLOAT, "" );
+idCVar r_hdrContrastOffset( "r_hdrContrastOffset", "3", CVAR_RENDERER | CVAR_FLOAT, "" );
 // RB end
 
 
@@ -2640,14 +2648,14 @@ void idRenderSystemLocal::Init()
 	// RB begin
 	R_InitFreeType();
 	
+	globalImages->Init();
+	
 #if !defined(USE_GLES2) && !defined(USE_GLES3)
 	Framebuffer::Init();
 #endif
 	// RB end
 	
-	globalImages->Init();
-	
-	idCinematic::InitCinematic( );
+	idCinematic::InitCinematic();
 	
 	// build brightness translation tables
 	R_SetColorMappings();

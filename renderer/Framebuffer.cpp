@@ -68,6 +68,11 @@ Framebuffer::Framebuffer( const char* name, int w, int h )
 	framebuffers.Append( this );
 }
 
+Framebuffer::~Framebuffer()
+{
+	glDeleteFramebuffers( 1, &frameBuffer );
+}
+
 void Framebuffer::Init()
 {
 	cmdSystem->AddCommand( "listFramebuffers", R_ListFramebuffers_f, CMD_FL_RENDERER, "lists framebuffers" );
@@ -89,12 +94,32 @@ void Framebuffer::Init()
 //	globalFramebuffers.shadowFBO->AddDepthBuffer( GL_DEPTH_COMPONENT24 );
 //	globalFramebuffers.shadowFBO->Check();
 
-	BindNull();
+	globalFramebuffers.hdrFBO = new Framebuffer( "_hdr", glConfig.nativeScreenWidth, glConfig.nativeScreenHeight );
+	globalFramebuffers.hdrFBO->Bind();
+	globalFramebuffers.hdrFBO->AddColorBuffer( GL_RGBA16F, 0 );
+	globalFramebuffers.hdrFBO->AddDepthBuffer( GL_DEPTH_COMPONENT );
+	globalFramebuffers.hdrFBO->AttachImage2D( GL_TEXTURE_2D, globalImages->currentRenderHDRImage, 0 );
+	globalFramebuffers.hdrFBO->AttachImageDepth( globalImages->currentDepthImage );
+	globalFramebuffers.hdrFBO->Check();
+	
+	globalFramebuffers.hdrQuarterFBO = new Framebuffer( "_hdrQuarter", glConfig.nativeScreenWidth, glConfig.nativeScreenHeight );
+	globalFramebuffers.hdrQuarterFBO->Bind();
+	globalFramebuffers.hdrQuarterFBO->AddColorBuffer( GL_RGBA16F, 0 );
+	globalFramebuffers.hdrQuarterFBO->AttachImage2D( GL_TEXTURE_2D, globalImages->currentRenderHDRImageQuarter, 0 );
+	globalFramebuffers.hdrQuarterFBO->Check();
+	
+	globalFramebuffers.hdr64FBO = new Framebuffer( "_hdr64", glConfig.nativeScreenWidth, glConfig.nativeScreenHeight );
+	globalFramebuffers.hdr64FBO->Bind();
+	globalFramebuffers.hdr64FBO->AddColorBuffer( GL_RGBA16F, 0 );
+	globalFramebuffers.hdr64FBO->AttachImage2D( GL_TEXTURE_2D, globalImages->currentRenderHDRImage64, 0 );
+	globalFramebuffers.hdr64FBO->Check();
+	
+	Unbind();
 }
 
 void Framebuffer::Shutdown()
 {
-	// TODO
+	framebuffers.DeleteContents( true );
 }
 
 void Framebuffer::Bind()
@@ -113,7 +138,7 @@ void Framebuffer::Bind()
 	}
 }
 
-void Framebuffer::BindNull()
+void Framebuffer::Unbind()
 {
 	//if(backEnd.glState.framebuffer != NULL)
 	{

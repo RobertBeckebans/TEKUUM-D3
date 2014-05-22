@@ -494,6 +494,12 @@ void idImage::AllocImage()
 			dataType = GL_UNSIGNED_BYTE;
 			break;
 			
+		case FMT_RGBA16F:
+			internalFormat = GL_RGBA16F;
+			dataFormat = GL_RGBA;
+			dataType = GL_UNSIGNED_BYTE;
+			break;
+			
 #if defined(USE_MESA) || ( !defined(USE_GLES2) && !defined(USE_GLES3) )
 		case FMT_X16:
 			internalFormat = GL_INTENSITY16;

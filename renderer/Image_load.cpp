@@ -128,6 +128,10 @@ ID_INLINE void idImage::DeriveOpts()
 				opts.format = FMT_SHADOW_ARRAY;
 				break;
 				
+			case TD_RGBA16F:
+				opts.format = FMT_RGBA16F;
+				break;
+				
 			case TD_DIFFUSE:
 #if ( defined(USE_GLES2) || defined(USE_GLES3) ) && !defined(USE_MESA)
 				// TD_DIFFUSE gets only set to when its a diffuse texture for an interaction
@@ -306,17 +310,26 @@ void idImage::GenerateImage( const byte* pic, int width, int height, textureFilt
 		return;
 	}
 	
-	idBinaryImage im( GetName() );
-	im.Load2DFromMemory( width, height, pic, opts.numLevels, opts.format, opts.colorFormat, opts.gammaMips );
-	
-	AllocImage();
-	
-	for( int i = 0; i < im.NumImages(); i++ )
+	// RB: allow pic == NULL for internal framebuffer images
+	if( pic == NULL )
 	{
-		const bimageImage_t& img = im.GetImageHeader( i );
-		const byte* data = im.GetImageData( i );
-		SubImageUpload( img.level, 0, 0, img.destZ, img.width, img.height, data );
+		AllocImage();
 	}
+	else
+	{
+		idBinaryImage im( GetName() );
+		im.Load2DFromMemory( width, height, pic, opts.numLevels, opts.format, opts.colorFormat, opts.gammaMips );
+		
+		AllocImage();
+		
+		for( int i = 0; i < im.NumImages(); i++ )
+		{
+			const bimageImage_t& img = im.GetImageHeader( i );
+			const byte* data = im.GetImageData( i );
+			SubImageUpload( img.level, 0, 0, img.destZ, img.width, img.height, data );
+		}
+	}
+	// RB end
 }
 
 /*

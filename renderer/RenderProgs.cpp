@@ -144,6 +144,9 @@ void idRenderProgManager::Init()
 		{ BUILTIN_SKYBOX, "builtin/skybox.vfp", "", 0, false },
 		{ BUILTIN_WOBBLESKY, "builtin/wobblesky.vfp", "", 0, false },
 		{ BUILTIN_POSTPROCESS, "builtin/postprocess.vfp", "", 0, false },
+		// RB begin
+		{ BUILTIN_TONEMAP, "builtin/tonemap.vfp", "", 0, false },
+		// RB end
 		{ BUILTIN_STEREO_DEGHOST, "builtin/stereoDeGhost.vfp", "", 0, false },
 		{ BUILTIN_STEREO_WARP, "builtin/stereoWarp.vfp", "", 0, false },
 //		{ BUILTIN_ZCULL_RECONSTRUCT, "zcullReconstruct.vfp", false },
@@ -280,7 +283,7 @@ void idRenderProgManager::LoadAllShaders()
 		
 		LoadGLSLProgram( i, glslPrograms[i].vertexShaderIndex, glslPrograms[i].fragmentShaderIndex );
 	}
-
+	
 	Unbind();
 }
 

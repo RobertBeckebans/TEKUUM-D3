@@ -426,6 +426,11 @@ public:
 		BindShader_Builtin( BUILTIN_POSTPROCESS );
 	}
 	
+	void	BindShader_Tonemap()
+	{
+		BindShader_Builtin( BUILTIN_TONEMAP );
+	}
+	
 #if 0
 	void	BindShader_ZCullReconstruct()
 	{
@@ -554,6 +559,9 @@ protected:
 		BUILTIN_SKYBOX,
 		BUILTIN_WOBBLESKY,
 		BUILTIN_POSTPROCESS,
+		// RB begin
+		BUILTIN_TONEMAP,
+		// RB end
 		BUILTIN_STEREO_DEGHOST,
 		BUILTIN_STEREO_WARP,
 		// RB: not used

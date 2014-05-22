@@ -272,6 +272,16 @@ void GL_Clear( bool color, bool depth, bool stencil, byte stencilValue, float r,
 		clearFlags |= GL_STENCIL_BUFFER_BIT;
 	}
 	glClear( clearFlags );
+	
+	// RB begin
+	if( r_useHDR.GetBool() )
+	{
+		globalFramebuffers.hdrFBO->Bind();
+		glClear( clearFlags );
+		
+		Framebuffer::Unbind();
+	}
+	// RB end
 }
 
 /*
@@ -298,7 +308,7 @@ void GL_SetDefaultState()
 	
 	// RB begin
 #if !defined(USE_GLES2) && !defined(USE_GLES3)
-	Framebuffer::BindNull();
+	Framebuffer::Unbind();
 #endif
 	// RB end
 	
@@ -339,7 +349,7 @@ void GL_SetDefaultState()
 	{
 		glScissor( 0, 0, renderSystem->GetWidth(), renderSystem->GetHeight() );
 	}
-
+	
 	// RB: don't keep renderprogs that were enabled during level load
 	renderProgManager.Unbind();
 	// RB end

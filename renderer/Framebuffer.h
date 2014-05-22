@@ -41,6 +41,7 @@ class Framebuffer
 public:
 
 	Framebuffer( const char* name, int width, int height );
+	virtual ~Framebuffer();
 	
 	static void				Init();
 	static void				Shutdown();
@@ -49,7 +50,7 @@ public:
 	void					PurgeFramebuffer();
 	
 	void					Bind();
-	static void				BindNull();
+	static void				Unbind();
 	
 	void					AddColorBuffer( int format, int index );
 	void					AddDepthBuffer( int format );
@@ -90,6 +91,9 @@ private:
 struct globalFramebuffers_t
 {
 	Framebuffer*				shadowFBO[MAX_SHADOWMAP_RESOLUTIONS];
+	Framebuffer*				hdrFBO;
+	Framebuffer*				hdrQuarterFBO;
+	Framebuffer*				hdr64FBO;
 };
 extern globalFramebuffers_t globalFramebuffers;
 

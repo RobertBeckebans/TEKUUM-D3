@@ -58,6 +58,7 @@ typedef enum
 	TD_DEPTH,				// depth buffer copy for motion blur
 	// RB begin
 	TD_SHADOW_ARRAY,		// 2D depth buffer array for shadow mapping
+	TD_RGBA16F,
 	// RB end
 } textureUsage_t;
 
@@ -346,6 +347,9 @@ public:
 	idImage*			jitterImage4;
 	idImage*			jitterImage16;
 	idImage*			randomImage256;
+	idImage*			currentRenderHDRImage;
+	idImage*			currentRenderHDRImageQuarter;
+	idImage*			currentRenderHDRImage64;
 #endif
 	// RB end
 	idImage* 			scratchImage;
