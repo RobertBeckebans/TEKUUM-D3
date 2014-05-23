@@ -212,7 +212,7 @@ ID_INLINE void idImage::DeriveOpts()
 				opts.format = FMT_RGBA8;
 				opts.gammaMips = true;
 #else
-				opts.format = FMT_RGB565;
+				opts.format = FMT_RGBA8;
 				opts.gammaMips = true;
 #endif
 				break;

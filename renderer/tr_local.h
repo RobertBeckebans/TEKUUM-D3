@@ -1125,6 +1125,7 @@ extern idCVar r_hdrMaxLuminance;
 extern idCVar r_hdrKey;
 extern idCVar r_hdrContrastThreshold;
 extern idCVar r_hdrContrastOffset;
+extern idCVar r_hdrDebug;
 // RB end
 
 /*

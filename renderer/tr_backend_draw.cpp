@@ -3287,7 +3287,7 @@ static void RB_ShadowMapPass( const drawSurf_t* drawSurfs, const viewLight_t* vL
 	}
 	
 	// cleanup the shadow specific rendering state
-	if( r_useHDR.GetBool() )
+	if( r_useHDR.GetBool() && !backEnd.viewDef->is2Dgui )
 	{
 		globalFramebuffers.hdrFBO->Bind();
 	}
@@ -4320,18 +4320,24 @@ static void RB_CalculateAdaptation()
 	
 	sum = 0.0f;
 	maxLuminance = 0.0f;
-	for( i = 0; i < ( 64 * 64 * 4 ); i += 4 )
+	for( i = 0; i < ( 64 * 64 ); i += 4 )
 	{
-		color[0] = image[i + 0];
-		color[1] = image[i + 1];
-		color[2] = image[i + 2];
-		color[3] = image[i + 3];
+		color[0] = image[i * 4 + 0];
+		color[1] = image[i * 4 + 1];
+		color[2] = image[i * 4 + 2];
+		color[3] = image[i * 4 + 3];
 		
 		luminance = DotProduct( color, LUMINANCE_VECTOR ) + 0.0001f;
 		if( luminance > maxLuminance )
+		{
 			maxLuminance = luminance;
-			
-		sum += log( luminance );
+		}
+		
+		float logLuminance = log( luminance + 1 );
+		//if( logLuminance > 0 )
+		{
+			sum += logLuminance;
+		}
 	}
 	sum /= ( 64.0f * 64.0f );
 	avgLuminance = exp( sum );
@@ -4383,7 +4389,7 @@ static void RB_CalculateAdaptation()
 		backEnd.hdrKey = r_hdrKey.GetFloat();
 	}
 	
-	//if(r_hdrDebug->integer)
+	if( r_hdrDebug.GetBool() )
 	{
 		idLib::Printf( "HDR luminance avg = %f, max = %f, key = %f\n", backEnd.hdrAverageLuminance, backEnd.hdrMaxLuminance, backEnd.hdrKey );
 	}
@@ -4478,7 +4484,7 @@ void RB_DrawViewInternal( const viewDef_t* viewDef, const int stereoEye )
 	GL_Clear( false, true, true, STENCIL_SHADOW_TEST_VALUE, 0.0f, 0.0f, 0.0f, 0.0f );
 	
 	// RB begin
-	if( r_useHDR.GetBool() )
+	if( r_useHDR.GetBool() && !backEnd.viewDef->is2Dgui )
 	{
 		globalFramebuffers.hdrFBO->Bind();
 	}
@@ -4568,10 +4574,22 @@ void RB_DrawViewInternal( const viewDef_t* viewDef, const int stereoEye )
 	RB_FogAllLights();
 	
 	// RB begin
-	if( r_useHDR.GetBool() )
+	if( r_useHDR.GetBool() && !backEnd.viewDef->is2Dgui )
 	{
 		if( glConfig.framebufferBlitAvailable )
 		{
+			/*
+			int x = backEnd.viewDef->viewport.x1;
+			int y = backEnd.viewDef->viewport.y1;
+			int	w = backEnd.viewDef->viewport.x2 - backEnd.viewDef->viewport.x1 + 1;
+			int	h = backEnd.viewDef->viewport.y2 - backEnd.viewDef->viewport.y1 + 1;
+			
+			GL_Viewport( viewDef->viewport.x1,
+				 viewDef->viewport.y1,
+				 viewDef->viewport.x2 + 1 - viewDef->viewport.x1,
+				 viewDef->viewport.y2 + 1 - viewDef->viewport.y1 );
+			*/
+			
 			glBindFramebuffer( GL_READ_FRAMEBUFFER, globalFramebuffers.hdrFBO->GetFramebuffer() );
 			glBindFramebuffer( GL_DRAW_FRAMEBUFFER, globalFramebuffers.hdrQuarterFBO->GetFramebuffer() );
 			glBlitFramebuffer( 0, 0, glConfig.nativeScreenWidth, glConfig.nativeScreenHeight,
