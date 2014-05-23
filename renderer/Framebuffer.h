@@ -30,6 +30,8 @@ If you have questions concerning this license or the applicable additional terms
 #define __FRAMEBUFFER_H__
 
 static const int MAX_SHADOWMAP_RESOLUTIONS = 5;
+static const int MAX_BLOOM_BUFFERS = 2;
+
 #if 1
 static	int shadowMapResolutions[MAX_SHADOWMAP_RESOLUTIONS] = { 2048, 1024, 512, 512, 256 };
 #else
@@ -94,6 +96,7 @@ struct globalFramebuffers_t
 	Framebuffer*				hdrFBO;
 	Framebuffer*				hdrQuarterFBO;
 	Framebuffer*				hdr64FBO;
+	Framebuffer*				bloomRenderFBO[MAX_BLOOM_BUFFERS];
 };
 extern globalFramebuffers_t globalFramebuffers;
 

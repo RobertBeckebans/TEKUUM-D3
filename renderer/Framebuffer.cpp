@@ -86,7 +86,7 @@ void Framebuffer::Init()
 	{
 		width = height = shadowMapResolutions[i];
 		
-		globalFramebuffers.shadowFBO[i] = new Framebuffer( "_shadowMap" , width, height );
+		globalFramebuffers.shadowFBO[i] = new Framebuffer( va( "_shadowMap%i", i ) , width, height );
 		globalFramebuffers.shadowFBO[i]->Bind();
 		glDrawBuffers( 0, NULL );
 	}
@@ -113,6 +113,15 @@ void Framebuffer::Init()
 	globalFramebuffers.hdr64FBO->AddColorBuffer( GL_RGBA16F, 0 );
 	globalFramebuffers.hdr64FBO->AttachImage2D( GL_TEXTURE_2D, globalImages->currentRenderHDRImage64, 0 );
 	globalFramebuffers.hdr64FBO->Check();
+	
+	for( int i = 0; i < 2; i++ )
+	{
+		globalFramebuffers.bloomRenderFBO[i] = new Framebuffer( va( "_bloomRender", i ), glConfig.nativeScreenWidth, glConfig.nativeScreenHeight );
+		globalFramebuffers.bloomRenderFBO[i]->Bind();
+		globalFramebuffers.bloomRenderFBO[i]->AddColorBuffer( GL_RGBA8, 0 );
+		globalFramebuffers.bloomRenderFBO[i]->AttachImage2D( GL_TEXTURE_2D, globalImages->bloomRender[i], 0 );
+		globalFramebuffers.bloomRenderFBO[i]->Check();
+	}
 	
 	Unbind();
 }

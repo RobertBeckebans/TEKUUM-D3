@@ -4397,6 +4397,7 @@ static void RB_CalculateAdaptation()
 	GL_CheckErrors();
 }
 
+
 static void RB_Tonemap()
 {
 	RENDERLOG_PRINTF( "---------- RB_Tonemap( avg = %f, max = %f, key = %f ) ----------\n", backEnd.hdrAverageLuminance, backEnd.hdrMaxLuminance, backEnd.hdrKey );
@@ -4430,6 +4431,88 @@ static void RB_Tonemap()
 	
 	// Draw
 	RB_DrawElementsWithCounters( &backEnd.unitSquareSurface );
+}
+
+
+static void RB_Bloom( const viewDef_t* viewDef )
+{
+	RENDERLOG_PRINTF( "---------- RB_Bloom( avg = %f, max = %f, key = %f ) ----------\n", backEnd.hdrAverageLuminance, backEnd.hdrMaxLuminance, backEnd.hdrKey );
+	
+	// BRIGHTPASS
+	
+	GL_CheckErrors();
+	
+	//Framebuffer::Unbind();
+	//globalFramebuffers.hdrQuarterFBO->Bind();
+	globalFramebuffers.bloomRenderFBO[ 0 ]->Bind();
+	
+	glClearColor( 0, 0, 0, 1 );
+//	glClear( GL_COLOR_BUFFER_BIT );
+
+	GL_State( /*GLS_SRCBLEND_ONE | GLS_DSTBLEND_ZERO |*/ GLS_DEPTHMASK | GLS_DEPTHFUNC_ALWAYS );
+	GL_Cull( CT_TWO_SIDED );
+	
+	int screenWidth = renderSystem->GetWidth();
+	int screenHeight = renderSystem->GetHeight();
+	
+	// set the window clipping
+	GL_Viewport( 0, 0, screenWidth / 4, screenHeight / 4 );
+	GL_Scissor( 0, 0, screenWidth / 4, screenHeight / 4 );
+	
+	GL_SelectTexture( 0 );
+	globalImages->currentRenderHDRImage->Bind();
+	renderProgManager.BindShader_Brightpass();
+	
+	float screenCorrectionParm[4];
+	screenCorrectionParm[0] = backEnd.hdrKey;
+	screenCorrectionParm[1] = backEnd.hdrAverageLuminance;
+	screenCorrectionParm[2] = backEnd.hdrMaxLuminance;
+	screenCorrectionParm[3] = 1.0f;
+	SetFragmentParm( RENDERPARM_SCREENCORRECTIONFACTOR, screenCorrectionParm ); // rpScreenCorrectionFactor
+	
+	float overbright[4];
+	overbright[0] = r_hdrContrastThreshold.GetFloat();
+	overbright[1] = r_hdrContrastOffset.GetFloat();
+	overbright[2] = 0;
+	overbright[3] = 0;
+	SetFragmentParm( RENDERPARM_OVERBRIGHT, overbright ); // rpOverbright
+	
+	// Draw
+	RB_DrawElementsWithCounters( &backEnd.unitSquareSurface );
+	
+	
+	// BLOOM PING PONG
+	
+	
+	renderProgManager.BindShader_HDRGlareChromatic();
+	
+	//for( int i = 0; i < 2; i++ )
+	{
+		for( int j = 0; j < 3; j++ )
+		{
+			if( j == 2 )
+			{
+				Framebuffer::Unbind();
+				
+				RB_ResetViewportAndScissorToDefaultCamera( viewDef );
+				
+				// last step: add filtered glare back to main context
+				GL_State( GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE | GLS_DEPTHMASK | GLS_DEPTHFUNC_ALWAYS );
+				
+				renderProgManager.BindShader_Screen();
+			}
+			else
+			{
+				globalFramebuffers.bloomRenderFBO[( j + 1 ) % 2 ]->Bind();
+				glClear( GL_COLOR_BUFFER_BIT );
+			}
+			
+			GL_SelectTexture( 0 );
+			globalImages->bloomRender[j % 2]->Bind();
+			
+			RB_DrawElementsWithCounters( &backEnd.unitSquareSurface );
+		}
+	}
 }
 // RB end
 
@@ -4615,6 +4698,8 @@ void RB_DrawViewInternal( const viewDef_t* viewDef, const int stereoEye )
 		RB_CalculateAdaptation();
 		
 		RB_Tonemap();
+		
+		RB_Bloom( viewDef );
 	}
 	// RB end
 	
