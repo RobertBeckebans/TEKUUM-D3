@@ -223,7 +223,7 @@ idRenderLog
 
 idRenderLog	renderLog;
 
-#if !defined( STUB_RENDER_LOG ) && !defined(__ANDROID__)
+#if !defined( STUB_RENDER_LOG ) //&& !defined(__ANDROID__)
 
 /*
 ========================

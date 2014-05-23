@@ -560,6 +560,38 @@ static void R_CreateJitterImage1( idImage* image )
 	image->GenerateImage( ( byte* )data, JITTER_SIZE, JITTER_SIZE, TF_NEAREST, TR_REPEAT, TD_LOOKUP_TABLE_RGBA );
 }
 
+static void R_CreateGrainImage1( idImage* image )
+{
+	const static int GRAIN_SIZE = 128;
+	
+	static byte	data[GRAIN_SIZE][GRAIN_SIZE][4];
+	
+	idRandom2 random( Sys_Milliseconds() );
+	
+	for( int i = 0 ; i < GRAIN_SIZE ; i++ )
+	{
+		for( int j = 0 ; j < GRAIN_SIZE ; j++ )
+		{
+#if 0
+			//int value = 127 - 8 + ( rand() & 15 ); //random.RandomInt( 127 );
+			int value = 127 - 8 + random.RandomInt( 15 );
+			
+			data[i][j][0] = value;
+			data[i][j][1] = value;
+			data[i][j][2] = value;
+			data[i][j][3] = 0;
+#else
+			data[i][j][0] = 127 - 8 + random.RandomInt( 15 );
+			data[i][j][1] = 127 - 8 + random.RandomInt( 15 );
+			data[i][j][2] = 127 - 8 + random.RandomInt( 15 );
+			data[i][j][3] = 0;
+#endif
+		}
+	}
+	
+	image->GenerateImage( ( byte* )data, GRAIN_SIZE, GRAIN_SIZE, TF_NEAREST, TR_REPEAT, TD_LOOKUP_TABLE_RGBA );
+}
+
 static void R_CreateRandom256Image( idImage* image )
 {
 	byte	data[256][256][4];
@@ -612,6 +644,9 @@ void idImageManager::CreateIntrinsicImages()
 	jitterImage1 = globalImages->ImageFromFunction( "_jitter1", R_CreateJitterImage1 );
 	jitterImage4 = globalImages->ImageFromFunction( "_jitter4", R_CreateJitterImage4 );
 	jitterImage16 = globalImages->ImageFromFunction( "_jitter16", R_CreateJitterImage16 );
+	
+	grainImage1 = globalImages->ImageFromFunction( "_grain1", R_CreateGrainImage1 );
+	//grainImage1 = ImageFromFile( "textures/postprocess/filmgrain1", TF_NEAREST, TR_REPEAT, TD_LOOKUP_TABLE_RGBA, CF_2D );
 	
 	randomImage256 = globalImages->ImageFromFunction( "_random256", R_CreateRandom256Image );
 	

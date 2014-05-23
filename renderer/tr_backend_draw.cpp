@@ -4399,6 +4399,8 @@ static void RB_CalculateAdaptation()
 
 static void RB_Tonemap()
 {
+	RENDERLOG_PRINTF( "---------- RB_Tonemap( avg = %f, max = %f, key = %f ) ----------\n", backEnd.hdrAverageLuminance, backEnd.hdrMaxLuminance, backEnd.hdrKey );
+	
 	//postProcessCommand_t* cmd = ( postProcessCommand_t* )data;
 	//const idScreenRect& viewport = cmd->viewDef->viewport;
 	//globalImages->currentRenderImage->CopyFramebuffer( viewport.x1, viewport.y1, viewport.GetWidth(), viewport.GetHeight() );
@@ -4910,10 +4912,14 @@ void RB_PostProcess( const void* data )
 {
 	// only do the post process step if resolution scaling is enabled. Prevents the unnecessary copying of the framebuffer and
 	// corresponding full screen quad pass.
+#if 0
 	if( rs_enable.GetInteger() == 0 )
 	{
 		return;
 	}
+#endif
+	
+	RENDERLOG_PRINTF( "---------- RB_PostProcess() ----------\n" );
 	
 	// resolve the scaled rendering to a temporary texture
 	postProcessCommand_t* cmd = ( postProcessCommand_t* )data;
@@ -4932,7 +4938,36 @@ void RB_PostProcess( const void* data )
 	
 	GL_SelectTexture( 0 );
 	globalImages->currentRenderImage->Bind();
+	
+	GL_SelectTexture( 1 );
+	globalImages->grainImage1->Bind();
+	
 	renderProgManager.BindShader_PostProcess();
+	
+	const static int GRAIN_SIZE = 128;
+	
+	// screen power of two correction factor
+	float screenCorrectionParm[4];
+	screenCorrectionParm[0] = 1.0f / GRAIN_SIZE;
+	screenCorrectionParm[1] = 1.0f / GRAIN_SIZE;
+	screenCorrectionParm[2] = 1.0f;
+	screenCorrectionParm[3] = 1.0f;
+	SetFragmentParm( RENDERPARM_SCREENCORRECTIONFACTOR, screenCorrectionParm ); // rpScreenCorrectionFactor
+	
+	float jitterTexOffset[4];
+	if( r_shadowMapRandomizeJitter.GetBool() )
+	{
+		jitterTexOffset[0] = ( rand() & 255 ) / 255.0;
+		jitterTexOffset[1] = ( rand() & 255 ) / 255.0;
+	}
+	else
+	{
+		jitterTexOffset[0] = 0;
+		jitterTexOffset[1] = 0;
+	}
+	jitterTexOffset[2] = 0.0f;
+	jitterTexOffset[3] = 0.0f;
+	SetFragmentParm( RENDERPARM_JITTERTEXOFFSET, jitterTexOffset ); // rpJitterTexOffset
 	
 	// Draw
 	RB_DrawElementsWithCounters( &backEnd.unitSquareSurface );
