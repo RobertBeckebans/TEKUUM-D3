@@ -4486,32 +4486,29 @@ static void RB_Bloom( const viewDef_t* viewDef )
 	
 	renderProgManager.BindShader_HDRGlareChromatic();
 	
-	//for( int i = 0; i < 2; i++ )
+	for( int j = 0; j < r_hdrGlarePasses.GetInteger(); j++ )
 	{
-		for( int j = 0; j < 3; j++ )
+		if( j == ( r_hdrGlarePasses.GetInteger() - 1 ) )
 		{
-			if( j == 2 )
-			{
-				Framebuffer::Unbind();
-				
-				RB_ResetViewportAndScissorToDefaultCamera( viewDef );
-				
-				// last step: add filtered glare back to main context
-				GL_State( GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE | GLS_DEPTHMASK | GLS_DEPTHFUNC_ALWAYS );
-				
-				renderProgManager.BindShader_Screen();
-			}
-			else
-			{
-				globalFramebuffers.bloomRenderFBO[( j + 1 ) % 2 ]->Bind();
-				glClear( GL_COLOR_BUFFER_BIT );
-			}
+			Framebuffer::Unbind();
 			
-			GL_SelectTexture( 0 );
-			globalImages->bloomRender[j % 2]->Bind();
+			RB_ResetViewportAndScissorToDefaultCamera( viewDef );
 			
-			RB_DrawElementsWithCounters( &backEnd.unitSquareSurface );
+			// last step: add filtered glare back to main context
+			GL_State( GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE | GLS_DEPTHMASK | GLS_DEPTHFUNC_ALWAYS );
+			
+			renderProgManager.BindShader_Screen();
 		}
+		else
+		{
+			globalFramebuffers.bloomRenderFBO[( j + 1 ) % 2 ]->Bind();
+			glClear( GL_COLOR_BUFFER_BIT );
+		}
+		
+		GL_SelectTexture( 0 );
+		globalImages->bloomRender[j % 2]->Bind();
+		
+		RB_DrawElementsWithCounters( &backEnd.unitSquareSurface );
 	}
 }
 // RB end
