@@ -4867,7 +4867,7 @@ static const cgShaderDef_t cg_renderprogs[] =
 		"	\n"
 		"	float exposureFactor = 1.0;\n"
 		"	exposureFactor = sqrt( exposureFactor );\n"
-		"	const float noiseIntensity = 1.3; //rpScreenCorrectionFactor.z;\n"
+		"	const float noiseIntensity = 1.7; //rpScreenCorrectionFactor.z;\n"
 		"	\n"
 		"	float t = lerp( 3.5 * noiseIntensity, 1.13 * noiseIntensity, exposureFactor );\n"
 		"	color.rgb = overlay( color.rgb, lerp( float3( 0.5 ), noiseColor.rgb, t ) );\n"
