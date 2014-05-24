@@ -4467,7 +4467,6 @@ static void RB_Bloom( const viewDef_t* viewDef )
 	
 	//Framebuffer::Unbind();
 	//globalFramebuffers.hdrQuarterFBO->Bind();
-	globalFramebuffers.bloomRenderFBO[ 0 ]->Bind();
 	
 	glClearColor( 0, 0, 0, 1 );
 //	glClear( GL_COLOR_BUFFER_BIT );
@@ -4482,9 +4481,30 @@ static void RB_Bloom( const viewDef_t* viewDef )
 	GL_Viewport( 0, 0, screenWidth / 4, screenHeight / 4 );
 	GL_Scissor( 0, 0, screenWidth / 4, screenHeight / 4 );
 	
+	globalFramebuffers.bloomRenderFBO[ 0 ]->Bind();
+	
 	GL_SelectTexture( 0 );
-	globalImages->currentRenderHDRImage->Bind();
-	renderProgManager.BindShader_Brightpass();
+	
+	if( r_useHDR.GetBool() )
+	{
+		globalImages->currentRenderHDRImage->Bind();
+		
+		renderProgManager.BindShader_Brightpass();
+	}
+	else
+	{
+		int x = backEnd.viewDef->viewport.x1;
+		int y = backEnd.viewDef->viewport.y1;
+		int	w = backEnd.viewDef->viewport.x2 - backEnd.viewDef->viewport.x1 + 1;
+		int	h = backEnd.viewDef->viewport.y2 - backEnd.viewDef->viewport.y1 + 1;
+		
+		RENDERLOG_PRINTF( "Resolve to %i x %i buffer\n", w, h );
+		
+		// resolve the screen
+		globalImages->currentRenderImage->CopyFramebuffer( x, y, w, h );
+		
+		renderProgManager.BindShader_Brightpass();
+	}
 	
 	float screenCorrectionParm[4];
 	screenCorrectionParm[0] = backEnd.hdrKey;
@@ -4494,10 +4514,20 @@ static void RB_Bloom( const viewDef_t* viewDef )
 	SetFragmentParm( RENDERPARM_SCREENCORRECTIONFACTOR, screenCorrectionParm ); // rpScreenCorrectionFactor
 	
 	float overbright[4];
-	overbright[0] = r_hdrContrastThreshold.GetFloat();
-	overbright[1] = r_hdrContrastOffset.GetFloat();
-	overbright[2] = 0;
-	overbright[3] = 0;
+	if( r_useHDR.GetBool() )
+	{
+		overbright[0] = r_hdrContrastThreshold.GetFloat();
+		overbright[1] = r_hdrContrastOffset.GetFloat();
+		overbright[2] = 0;
+		overbright[3] = 0;
+	}
+	else
+	{
+		overbright[0] = r_ldrContrastThreshold.GetFloat();
+		overbright[1] = r_ldrContrastOffset.GetFloat();
+		overbright[2] = 0;
+		overbright[3] = 0;
+	}
 	SetFragmentParm( RENDERPARM_OVERBRIGHT, overbright ); // rpOverbright
 	
 	// Draw
@@ -4781,9 +4811,9 @@ void RB_DrawViewInternal( const viewDef_t* viewDef, const int stereoEye )
 		RB_CalculateAdaptation();
 		
 		RB_Tonemap( viewDef );
-		
-		RB_Bloom( viewDef );
 	}
+	
+	RB_Bloom( viewDef );
 	// RB end
 	
 	renderLog.CloseBlock();

@@ -54,7 +54,7 @@ idCVar r_useOpenGLES( "r_useOpenGLES", "0", CVAR_INTEGER, "0 = Desktop OpenGL, 1
 idCVar r_debugContext( "r_debugContext", "0", CVAR_RENDERER, "Enable various levels of context debug." );
 idCVar r_glDriver( "r_glDriver", "", CVAR_RENDERER, "\"opengl32\", etc." );
 idCVar r_skipIntelWorkarounds( "r_skipIntelWorkarounds", "0", CVAR_RENDERER | CVAR_BOOL, "skip workarounds for Intel driver bugs" );
-idCVar r_multiSamples( "r_multiSamples", "0", CVAR_RENDERER | CVAR_ARCHIVE | CVAR_INTEGER, "number of antialiasing samples" );
+idCVar r_multiSamples( "r_multiSamples", "0", CVAR_RENDERER | CVAR_ARCHIVE | CVAR_INTEGER, "number of antialiasing samples", 0, 8 );
 idCVar r_vidMode( "r_vidMode", "0", CVAR_ARCHIVE | CVAR_RENDERER | CVAR_INTEGER, "fullscreen video mode number" );
 idCVar r_displayRefresh( "r_displayRefresh", "0", CVAR_RENDERER | CVAR_INTEGER | CVAR_NOCHEAT, "optional display refresh rate option for vid mode", 0.0f, 240.0f );
 #ifdef WIN32
@@ -266,6 +266,9 @@ idCVar r_hdrContrastThreshold( "r_hdrContrastThreshold", "2", CVAR_RENDERER | CV
 idCVar r_hdrContrastOffset( "r_hdrContrastOffset", "3", CVAR_RENDERER | CVAR_FLOAT, "" );
 idCVar r_hdrGlarePasses( "r_hdrGlarePasses", "4", CVAR_RENDERER | CVAR_INTEGER, "" );
 idCVar r_hdrDebug( "r_hdrDebug", "0", CVAR_RENDERER | CVAR_FLOAT, "" );
+
+idCVar r_ldrContrastThreshold( "r_ldrContrastThreshold", "1.1", CVAR_RENDERER | CVAR_FLOAT, "" );
+idCVar r_ldrContrastOffset( "r_ldrContrastOffset", "3", CVAR_RENDERER | CVAR_FLOAT, "" );
 // RB end
 
 

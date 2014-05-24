@@ -1127,6 +1127,9 @@ extern idCVar r_hdrContrastThreshold;
 extern idCVar r_hdrContrastOffset;
 extern idCVar r_hdrGlarePasses;
 extern idCVar r_hdrDebug;
+
+extern idCVar r_ldrContrastThreshold;
+extern idCVar r_ldrContrastOffset;
 // RB end
 
 /*

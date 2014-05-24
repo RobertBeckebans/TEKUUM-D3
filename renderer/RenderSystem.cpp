@@ -236,7 +236,6 @@ See if some cvars that we watch have changed
 */
 static void R_CheckCvars()
 {
-
 	// gamma stuff
 	if( r_gamma.IsModified() || r_brightness.IsModified() )
 	{
@@ -305,7 +304,7 @@ static void R_CheckCvars()
 		}
 		else
 		{
-			glDisable( GL_MULTISAMPLE_ARB );
+			glDisable( GL_MULTISAMPLE );
 		}
 	}
 #endif // #if !defined(USE_GLES2)
@@ -862,6 +861,10 @@ void idRenderSystemLocal::SwapCommandBuffers_FinishRendering(
 	
 	// check for dynamic changes that require some initialization
 	R_CheckCvars();
+	
+	// RB begin
+	Framebuffer::CheckFramebuffers();
+	// RB end
 	
 	// check for errors
 	GL_CheckErrors();

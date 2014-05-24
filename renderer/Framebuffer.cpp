@@ -90,32 +90,40 @@ void Framebuffer::Init()
 		globalFramebuffers.shadowFBO[i]->Bind();
 		glDrawBuffers( 0, NULL );
 	}
-//	globalFramebuffers.shadowFBO->AddColorBuffer( GL_RGBA8, 0 );
-//	globalFramebuffers.shadowFBO->AddDepthBuffer( GL_DEPTH_COMPONENT24 );
-//	globalFramebuffers.shadowFBO->Check();
-
+	
 	globalFramebuffers.hdrFBO = new Framebuffer( "_hdr", glConfig.nativeScreenWidth, glConfig.nativeScreenHeight );
 	globalFramebuffers.hdrFBO->Bind();
-	globalFramebuffers.hdrFBO->AddColorBuffer( GL_RGBA16F, 0 );
-	globalFramebuffers.hdrFBO->AddDepthBuffer( GL_DEPTH24_STENCIL8 );
+	
+	if( r_multiSamples.GetBool() )
+	{
+		globalFramebuffers.hdrFBO->AddColorBuffer( GL_RGBA16F, 0, r_multiSamples.GetInteger() );
+		globalFramebuffers.hdrFBO->AddDepthBuffer( GL_DEPTH24_STENCIL8, r_multiSamples.GetInteger() );
+	}
+	else
+	{
+		globalFramebuffers.hdrFBO->AddColorBuffer( GL_RGBA16F, 0 );
+		globalFramebuffers.hdrFBO->AddDepthBuffer( GL_DEPTH24_STENCIL8 );
+	}
+	
 	globalFramebuffers.hdrFBO->AttachImage2D( GL_TEXTURE_2D, globalImages->currentRenderHDRImage, 0 );
 	globalFramebuffers.hdrFBO->AttachImageDepth( globalImages->currentDepthImage );
 	globalFramebuffers.hdrFBO->Check();
 	
-	
+	/*
 	globalFramebuffers.hdrCopyFBO = new Framebuffer( "_hdrCopy", glConfig.nativeScreenWidth, glConfig.nativeScreenHeight );
 	globalFramebuffers.hdrCopyFBO->Bind();
 	globalFramebuffers.hdrCopyFBO->AddColorBuffer( GL_RGBA16F, 0 );
 	globalFramebuffers.hdrCopyFBO->AttachImage2D( GL_TEXTURE_2D, globalImages->currentRenderImage, 0 );
 	globalFramebuffers.hdrCopyFBO->Check();
+	*/
 	
-	globalFramebuffers.hdrQuarterFBO = new Framebuffer( "_hdrQuarter", glConfig.nativeScreenWidth, glConfig.nativeScreenHeight );
+	globalFramebuffers.hdrQuarterFBO = new Framebuffer( "_hdrQuarter", glConfig.nativeScreenWidth / 4, glConfig.nativeScreenHeight / 4 );
 	globalFramebuffers.hdrQuarterFBO->Bind();
 	globalFramebuffers.hdrQuarterFBO->AddColorBuffer( GL_RGBA16F, 0 );
 	globalFramebuffers.hdrQuarterFBO->AttachImage2D( GL_TEXTURE_2D, globalImages->currentRenderHDRImageQuarter, 0 );
 	globalFramebuffers.hdrQuarterFBO->Check();
 	
-	globalFramebuffers.hdr64FBO = new Framebuffer( "_hdr64", glConfig.nativeScreenWidth, glConfig.nativeScreenHeight );
+	globalFramebuffers.hdr64FBO = new Framebuffer( "_hdr64", 64, 64 );
 	globalFramebuffers.hdr64FBO->Bind();
 	globalFramebuffers.hdr64FBO->AddColorBuffer( GL_RGBA16F, 0 );
 	globalFramebuffers.hdr64FBO->AttachImage2D( GL_TEXTURE_2D, globalImages->currentRenderHDRImage64, 0 );
@@ -131,6 +139,42 @@ void Framebuffer::Init()
 	}
 	
 	Unbind();
+}
+
+void Framebuffer::CheckFramebuffers()
+{
+	if( globalFramebuffers.hdrFBO->GetWidth() != glConfig.nativeScreenWidth || globalFramebuffers.hdrFBO->GetHeight() != glConfig.nativeScreenHeight )
+	{
+		Unbind();
+		
+		// HDR
+		globalImages->currentRenderHDRImage->Resize( glConfig.nativeScreenWidth, glConfig.nativeScreenHeight );
+		globalImages->currentDepthImage->Resize( glConfig.nativeScreenWidth, glConfig.nativeScreenHeight );
+		
+		globalFramebuffers.hdrFBO->Bind();
+		globalFramebuffers.hdrFBO->AttachImage2D( GL_TEXTURE_2D, globalImages->currentRenderHDRImage, 0 );
+		globalFramebuffers.hdrFBO->AttachImageDepth( globalImages->currentDepthImage );
+		globalFramebuffers.hdrFBO->Check();
+		
+		// HDR quarter
+		globalImages->currentRenderHDRImageQuarter->Resize( glConfig.nativeScreenWidth / 4, glConfig.nativeScreenHeight / 4 );
+		
+		globalFramebuffers.hdrQuarterFBO->Bind();
+		globalFramebuffers.hdrQuarterFBO->AttachImage2D( GL_TEXTURE_2D, globalImages->currentRenderHDRImageQuarter, 0 );
+		globalFramebuffers.hdrQuarterFBO->Check();
+		
+		// BLOOOM
+		for( int i = 0; i < 2; i++ )
+		{
+			globalImages->bloomRender[i]->Resize( glConfig.nativeScreenWidth / 4, glConfig.nativeScreenHeight / 4 );
+			
+			globalFramebuffers.bloomRenderFBO[i]->Bind();
+			globalFramebuffers.bloomRenderFBO[i]->AttachImage2D( GL_TEXTURE_2D, globalImages->bloomRender[i], 0 );
+			globalFramebuffers.bloomRenderFBO[i]->Check();
+		}
+		
+		Unbind();
+	}
 }
 
 void Framebuffer::Shutdown()
@@ -174,7 +218,7 @@ bool Framebuffer::IsDefaultFramebufferActive()
 	return ( backEnd.glState.currentFramebuffer == NULL );
 }
 
-void Framebuffer::AddColorBuffer( int format, int index )
+void Framebuffer::AddColorBuffer( int format, int index, int multiSamples )
 {
 	if( index < 0 || index >= glConfig.maxColorAttachments )
 	{
@@ -191,7 +235,15 @@ void Framebuffer::AddColorBuffer( int format, int index )
 	}
 	
 	glBindRenderbuffer( GL_RENDERBUFFER, colorBuffers[index] );
-	glRenderbufferStorage( GL_RENDERBUFFER, format, width, height );
+	
+	if( multiSamples > 0 )
+	{
+		glRenderbufferStorageMultisample( GL_RENDERBUFFER, multiSamples, format, width, height );
+	}
+	else
+	{
+		glRenderbufferStorage( GL_RENDERBUFFER, format, width, height );
+	}
 	
 	if( notCreatedYet )
 	{
@@ -201,7 +253,7 @@ void Framebuffer::AddColorBuffer( int format, int index )
 	GL_CheckErrors();
 }
 
-void Framebuffer::AddDepthBuffer( int format )
+void Framebuffer::AddDepthBuffer( int format, int multiSamples )
 {
 	depthFormat = format;
 	
@@ -212,7 +264,15 @@ void Framebuffer::AddDepthBuffer( int format )
 	}
 	
 	glBindRenderbuffer( GL_RENDERBUFFER, depthBuffer );
-	glRenderbufferStorage( GL_RENDERBUFFER, format, width, height );
+	
+	if( multiSamples > 0 )
+	{
+		glRenderbufferStorageMultisample( GL_RENDERBUFFER, multiSamples, format, width, height );
+	}
+	else
+	{
+		glRenderbufferStorage( GL_RENDERBUFFER, format, width, height );
+	}
 	
 	if( notCreatedYet )
 	{

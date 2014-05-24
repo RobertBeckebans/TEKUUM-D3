@@ -48,6 +48,8 @@ public:
 	static void				Init();
 	static void				Shutdown();
 	
+	static void				CheckFramebuffers();
+	
 	// deletes OpenGL object but leaves structure intact for reloading
 	void					PurgeFramebuffer();
 	
@@ -56,8 +58,8 @@ public:
 	static void				Unbind();
 	static bool				IsDefaultFramebufferActive();
 	
-	void					AddColorBuffer( int format, int index );
-	void					AddDepthBuffer( int format );
+	void					AddColorBuffer( int format, int index, int multiSamples = 0 );
+	void					AddDepthBuffer( int format, int multiSamples = 0 );
 	
 	void					AttachImage2D( int target, const idImage* image, int index );
 	void					AttachImage3D( const idImage* image );
@@ -69,6 +71,22 @@ public:
 	uint32_t				GetFramebuffer() const
 	{
 		return frameBuffer;
+	}
+	
+	int						GetWidth() const
+	{
+		return width;
+	}
+	
+	int						GetHeight() const
+	{
+		return height;
+	}
+	
+	void					Resize( int width_, int height_ )
+	{
+		width = width_;
+		height = height_;
 	}
 	
 private:
@@ -96,7 +114,7 @@ struct globalFramebuffers_t
 {
 	Framebuffer*				shadowFBO[MAX_SHADOWMAP_RESOLUTIONS];
 	Framebuffer*				hdrFBO;
-	Framebuffer*				hdrCopyFBO;
+//	Framebuffer*				hdrCopyFBO;
 	Framebuffer*				hdrQuarterFBO;
 	Framebuffer*				hdr64FBO;
 	Framebuffer*				bloomRenderFBO[MAX_BLOOM_BUFFERS];
