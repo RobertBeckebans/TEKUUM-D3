@@ -39,11 +39,7 @@ IMPLEMENT_DYNCREATE( ToggleListView, CListView )
 BEGIN_MESSAGE_MAP( ToggleListView, CListView )
 	ON_WM_CREATE()
 	ON_WM_SIZE()
-// RB begin
-#if _MFC_VER >= 0x0A00
 	ON_WM_MEASUREITEM_REFLECT()
-#endif
-// RB end
 	ON_NOTIFY_REFLECT( NM_CLICK, OnNMClick )
 END_MESSAGE_MAP()
 

@@ -113,8 +113,7 @@ extern void SetActiveDrag( CDragPoint* p );
 Draw_Setup
 ================
 */
-static void Drag_Setup( int x, int y, int buttons,
-						const idVec3& xaxis, const idVec3& yaxis, const idVec3& origin, const idVec3& dir )
+static void Drag_Setup( int x, int y, int buttons, const idVec3& xaxis, const idVec3& yaxis, const idVec3& origin, const idVec3& dir )
 {
 	qertrace_t	t;
 	face_t*		f;
@@ -182,10 +181,8 @@ static void Drag_Setup( int x, int y, int buttons,
 	
 	if( selected_brushes.next == &selected_brushes )
 	{
-		//
 		// in this case a new brush is created when the dragging takes place in the XYWnd,
-		// An useless undo is created when the dragging takes place in the CamWnd
-		//
+		// A useless undo is created when the dragging takes place in the CamWnd
 		Undo_Start( "create brush" );
 		
 		Sys_Status( "No selection to drag\n", 0 );
@@ -329,8 +326,7 @@ extern void Face_GetScale_BrushPrimit( face_t* face, float* s, float* t, float* 
 Drag_Begin
 ================
 */
-void Drag_Begin( int x, int y, int buttons,
-				 const idVec3& xaxis, const idVec3& yaxis, const idVec3& origin, const idVec3& dir )
+void Drag_Begin( int x, int y, int buttons, const idVec3& xaxis, const idVec3& yaxis, const idVec3& origin, const idVec3& dir )
 {
 	qertrace_t	t;
 	
@@ -610,14 +606,11 @@ static void MoveSelection( const idVec3& orgMove )
 		}
 		
 		g_pParentWnd->ActiveXY()->Rotation()[g_qeglobals.rotateAxis] += fAdj;
-		strStatus.Format
-		(
-			"%s x:: %.1f  y:: %.1f  z:: %.1f",
-			( g_bPatchBendMode ) ? "Bend angle" : "Rotation",
-			g_pParentWnd->ActiveXY()->Rotation()[0],
-			g_pParentWnd->ActiveXY()->Rotation()[1],
-			g_pParentWnd->ActiveXY()->Rotation()[2]
-		);
+		strStatus.Format( "%s x:: %.1f  y:: %.1f  z:: %.1f",
+						  g_bPatchBendMode ? "Bend angle" : "Rotation",
+						  g_pParentWnd->ActiveXY()->Rotation()[0],
+						  g_pParentWnd->ActiveXY()->Rotation()[1],
+						  g_pParentWnd->ActiveXY()->Rotation()[2] );
 		g_pParentWnd->SetStatusText( 2, strStatus );
 		
 		if( g_bPatchBendMode )

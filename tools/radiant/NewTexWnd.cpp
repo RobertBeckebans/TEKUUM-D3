@@ -372,7 +372,9 @@ void CNewTexWnd::OnPaint()
 				renderProgManager.CommitUniforms();
 				// RB end
 				
+				GL_SelectTexture( 0 );
 				mat->GetEditorImage()->Bind();
+				
 				QE_CheckOpenGLForErrors();
 				glColor3f( 1, 1, 1 );
 				glBegin( GL_QUADS );

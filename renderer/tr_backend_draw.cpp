@@ -3521,7 +3521,7 @@ static void RB_DrawInteractions( const viewDef_t* viewDef )
 	GL_State( GLS_DEFAULT );
 	
 	// unbind texture units
-	for( int i = 0; i < 5; i++ )
+	for( int i = 0; i < 7; i++ )
 	{
 		GL_SelectTexture( i );
 		globalImages->BindNull();

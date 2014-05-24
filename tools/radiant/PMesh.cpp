@@ -3081,6 +3081,7 @@ void Patch_DrawCam( patchMesh_t* pm, bool selected )
 			}
 			// RB end
 			
+			GL_SelectTexture( 0 );
 			pm->d_texture->GetEditorImage()->Bind();
 		}
 		

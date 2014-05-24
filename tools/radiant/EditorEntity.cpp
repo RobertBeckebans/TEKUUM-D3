@@ -1388,7 +1388,6 @@ entity_t* Entity_Create( eclass_t* c, bool forceFixed )
 			Brush_SetTexture( b, &td, &bp, false );
 		}
 		
-		
 		// delete the current selection
 		Select_Delete();
 		
@@ -1457,7 +1456,6 @@ void Entity_LinkBrush( entity_t* e, brush_t* b )
 	Brush_MakeDirty( b );
 	
 	b->owner = e;
-	
 	b->onext = e->brushes.onext;
 	b->oprev = &e->brushes;
 	e->brushes.onext->oprev = b;

@@ -5256,6 +5256,7 @@ void Brush_DrawCam( brush_t* b, bool bSelected )
 				// set the texture for this face
 				prev = face->d_texture;
 				
+				GL_SelectTexture( 0 );
 				face->d_texture->GetEditorImage()->Bind();
 			}
 			
@@ -5337,15 +5338,13 @@ Face_Draw
 */
 void Face_Draw( face_t* f )
 {
-	int i;
-	
 	if( f->face_winding == NULL )
 	{
 		return;
 	}
 	
 	glBegin( GL_POLYGON );
-	for( i = 0; i < f->face_winding->GetNumPoints(); i++ )
+	for( int i = 0; i < f->face_winding->GetNumPoints(); i++ )
 	{
 		glVertex3fv( ( *f->face_winding )[i].ToFloatPtr() );
 	}
@@ -5630,8 +5629,96 @@ void Brush_DrawXY( brush_t* b, int nViewType, bool bSelected, bool ignoreViewTyp
 		return;
 	}
 	
+// --->	sikk - Added - Filter brush faces
+	bool hasFilteredFace = false;
+	for( face = b->brush_faces; face; face = face->next )
+	{
+		if( g_qeglobals.d_savedinfo.exclude & EXCLUDE_NODRAW )
+		{
+			if( strstr( face->texdef.name, "nodraw" ) )
+			{
+				hasFilteredFace = true;
+				break;
+			}
+		}
+		if( g_qeglobals.d_savedinfo.exclude & EXCLUDE_CAULK )
+		{
+			if( strstr( face->texdef.name, "caulk" ) )
+			{
+				hasFilteredFace = true;
+				break;
+			}
+		}
+		if( g_qeglobals.d_savedinfo.exclude & EXCLUDE_VISPORTALS )
+		{
+			if( strstr( face->texdef.name, "visportal" ) )
+			{
+				hasFilteredFace = true;
+				break;
+			}
+		}
+	}
+// <---	sikk - Added - Filter brush faces
+
 	for( face = b->brush_faces, order = 0; face; face = face->next, order++ )
 	{
+// --->	sikk - Added - Filter brush faces
+		bool stipple = false;
+		if( hasFilteredFace )
+		{
+			if( ( g_qeglobals.d_savedinfo.exclude & EXCLUDE_NODRAW ) && strstr( face->texdef.name, "nodraw" ) )
+			{
+				if( bSelected )
+				{
+					stipple = true;
+				}
+				else
+				{
+					continue;
+				}
+			}
+			else if( ( g_qeglobals.d_savedinfo.exclude & EXCLUDE_CAULK ) && strstr( face->texdef.name, "caulk" ) )
+			{
+				if( bSelected )
+				{
+					stipple = true;
+				}
+				else
+				{
+					continue;
+				}
+			}
+			else if( ( g_qeglobals.d_savedinfo.exclude & EXCLUDE_VISPORTALS ) &&  strstr( face->texdef.name, "visportal" ) )
+			{
+				if( bSelected )
+				{
+					stipple = true;
+				}
+				else
+				{
+					continue;
+				}
+			}
+			else
+			{
+				stipple = false;
+			}
+			
+			// We're stippling selected ignored faces
+			if( stipple )
+			{
+				glEnable( GL_LINE_STIPPLE );
+				glLineStipple( 3, 0xaaaa );
+				ignoreViewType = false;
+			}
+			else
+			{
+				glDisable( GL_LINE_STIPPLE );
+				ignoreViewType = true;
+			}
+		}
+// <---	sikk - Added - Filter brush faces
+
 		// only draw polygons facing in a direction we care about
 		if( !ignoreViewType )
 		{
@@ -5667,10 +5754,8 @@ void Brush_DrawXY( brush_t* b, int nViewType, bool bSelected, bool ignoreViewTyp
 			continue;
 		}
 		
-		//
 		// if (b->alphaBrush && !(face->texdef.flags & SURF_ALPHA)) continue;
 		// draw the polygon
-		//
 		glBegin( GL_LINE_LOOP );
 		for( i = 0; i < w->GetNumPoints(); i++ )
 		{
@@ -5683,7 +5768,13 @@ void Brush_DrawXY( brush_t* b, int nViewType, bool bSelected, bool ignoreViewTyp
 				}
 		*/
 	}
-	
+// --->	sikk - Added - We're stippling selected ignored faces
+	if( hasFilteredFace )
+	{
+		glDisable( GL_LINE_STIPPLE );
+	}
+// <---	sikk - Added - We're stippling selected ignored faces
+
 	DrawBrushEntityName( b );
 }
 
