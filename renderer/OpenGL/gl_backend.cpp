@@ -108,19 +108,19 @@ static void	RB_SetBuffer( const void* data )
 		float c[3];
 		if( sscanf( r_clear.GetString(), "%f %f %f", &c[0], &c[1], &c[2] ) == 3 )
 		{
-			GL_Clear( true, false, false, 0, c[0], c[1], c[2], 1.0f );
+			GL_Clear( true, false, false, 0, c[0], c[1], c[2], 1.0f, true );
 		}
 		else if( r_clear.GetInteger() == 2 )
 		{
-			GL_Clear( true, false, false, 0, 0.0f, 0.0f,  0.0f, 1.0f );
+			GL_Clear( true, false, false, 0, 0.0f, 0.0f,  0.0f, 1.0f, true );
 		}
 		else if( r_showOverDraw.GetBool() )
 		{
-			GL_Clear( true, false, false, 0, 1.0f, 1.0f, 1.0f, 1.0f );
+			GL_Clear( true, false, false, 0, 1.0f, 1.0f, 1.0f, 1.0f, true );
 		}
 		else
 		{
-			GL_Clear( true, false, false, 0, 0.4f, 0.0f, 0.25f, 1.0f );
+			GL_Clear( true, false, false, 0, 0.4f, 0.0f, 0.25f, 1.0f, true );
 		}
 	}
 }

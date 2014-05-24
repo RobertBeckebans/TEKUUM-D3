@@ -97,10 +97,17 @@ void Framebuffer::Init()
 	globalFramebuffers.hdrFBO = new Framebuffer( "_hdr", glConfig.nativeScreenWidth, glConfig.nativeScreenHeight );
 	globalFramebuffers.hdrFBO->Bind();
 	globalFramebuffers.hdrFBO->AddColorBuffer( GL_RGBA16F, 0 );
-	globalFramebuffers.hdrFBO->AddDepthBuffer( GL_DEPTH_COMPONENT );
+	globalFramebuffers.hdrFBO->AddDepthBuffer( GL_DEPTH24_STENCIL8 );
 	globalFramebuffers.hdrFBO->AttachImage2D( GL_TEXTURE_2D, globalImages->currentRenderHDRImage, 0 );
 	globalFramebuffers.hdrFBO->AttachImageDepth( globalImages->currentDepthImage );
 	globalFramebuffers.hdrFBO->Check();
+	
+	
+	globalFramebuffers.hdrCopyFBO = new Framebuffer( "_hdrCopy", glConfig.nativeScreenWidth, glConfig.nativeScreenHeight );
+	globalFramebuffers.hdrCopyFBO->Bind();
+	globalFramebuffers.hdrCopyFBO->AddColorBuffer( GL_RGBA16F, 0 );
+	globalFramebuffers.hdrCopyFBO->AttachImage2D( GL_TEXTURE_2D, globalImages->currentRenderImage, 0 );
+	globalFramebuffers.hdrCopyFBO->Check();
 	
 	globalFramebuffers.hdrQuarterFBO = new Framebuffer( "_hdrQuarter", glConfig.nativeScreenWidth, glConfig.nativeScreenHeight );
 	globalFramebuffers.hdrQuarterFBO->Bind();
@@ -147,6 +154,11 @@ void Framebuffer::Bind()
 	}
 }
 
+bool Framebuffer::IsBound()
+{
+	return ( backEnd.glState.currentFramebuffer == this );
+}
+
 void Framebuffer::Unbind()
 {
 	//if(backEnd.glState.framebuffer != NULL)
@@ -155,6 +167,11 @@ void Framebuffer::Unbind()
 		glBindRenderbuffer( GL_RENDERBUFFER, 0 );
 		backEnd.glState.currentFramebuffer = NULL;
 	}
+}
+
+bool Framebuffer::IsDefaultFramebufferActive()
+{
+	return ( backEnd.glState.currentFramebuffer == NULL );
 }
 
 void Framebuffer::AddColorBuffer( int format, int index )

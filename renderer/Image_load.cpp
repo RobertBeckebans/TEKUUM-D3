@@ -871,7 +871,10 @@ void idImage::CopyFramebuffer( int x, int y, int imageWidth, int imageHeight )
 	glBindTexture( ( opts.textureType == TT_CUBIC ) ? GL_TEXTURE_CUBE_MAP : GL_TEXTURE_2D, texnum );
 	
 #if !defined(USE_GLES2)
-	glReadBuffer( GL_BACK );
+	if( Framebuffer::IsDefaultFramebufferActive() )
+	{
+		glReadBuffer( GL_BACK );
+	}
 #endif
 	
 	opts.width = imageWidth;
@@ -880,7 +883,34 @@ void idImage::CopyFramebuffer( int x, int y, int imageWidth, int imageHeight )
 #if defined(USE_GLES2)
 	glCopyTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, x, y, imageWidth, imageHeight, 0 );
 #else
-	glCopyTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA8, x, y, imageWidth, imageHeight, 0 );
+	if( r_useHDR.GetBool() && globalFramebuffers.hdrFBO->IsBound() )
+	{
+	
+#if 0
+		if( opts.format == FMT_RGBA16F && opts.textureType == TT_2D )
+		{
+			globalFramebuffers.hdrCopyFBO->AttachImage2D( GL_TEXTURE_2D, this, 0 );
+			globalFramebuffers.hdrCopyFBO->Check();
+	
+			GL_CheckErrors();
+	
+			glBindFramebuffer( GL_READ_FRAMEBUFFER, globalFramebuffers.hdrFBO->GetFramebuffer() );
+			glBindFramebuffer( GL_DRAW_FRAMEBUFFER, globalFramebuffers.hdrCopyFBO->GetFramebuffer() );
+			glBlitFramebuffer( 0, 0, glConfig.nativeScreenWidth, glConfig.nativeScreenHeight,
+							   0, 0, glConfig.nativeScreenWidth, glConfig.nativeScreenHeight,
+							   GL_COLOR_BUFFER_BIT,
+							   GL_LINEAR );
+	
+			GL_CheckErrors();
+		}
+#else
+		glCopyTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA16F, x, y, imageWidth, imageHeight, 0 );
+#endif
+	}
+	else
+	{
+		glCopyTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA8, x, y, imageWidth, imageHeight, 0 );
+	}
 #endif
 	
 	// these shouldn't be necessary if the image was initialized properly

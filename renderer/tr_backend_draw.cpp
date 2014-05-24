@@ -2602,7 +2602,7 @@ static void RB_StencilSelectLight( const viewLight_t* vLight )
 	// clear stencil buffer to 0 (not drawable)
 	uint64 glStateMinusStencil = GL_GetCurrentStateMinusStencil();
 	GL_State( glStateMinusStencil | GLS_STENCIL_FUNC_ALWAYS | GLS_STENCIL_MAKE_REF( STENCIL_SHADOW_TEST_VALUE ) | GLS_STENCIL_MAKE_MASK( STENCIL_SHADOW_MASK_VALUE ) );	// make sure stencil mask passes for the clear
-	GL_Clear( false, false, true, 0, 0.0f, 0.0f, 0.0f, 0.0f );	// clear to 0 for stencil select
+	GL_Clear( false, false, true, 0, 0.0f, 0.0f, 0.0f, 0.0f, false );	// clear to 0 for stencil select
 	
 	// set the depthbounds
 	GL_DepthBoundsTest( vLight->scissorRect.zmin, vLight->scissorRect.zmax );
@@ -3287,7 +3287,7 @@ static void RB_ShadowMapPass( const drawSurf_t* drawSurfs, const viewLight_t* vL
 	}
 	
 	// cleanup the shadow specific rendering state
-	if( r_useHDR.GetBool() && !backEnd.viewDef->is2Dgui )
+	if( r_useHDR.GetBool() ) //&& !backEnd.viewDef->is2Dgui )
 	{
 		globalFramebuffers.hdrFBO->Bind();
 	}
@@ -3456,7 +3456,7 @@ static void RB_DrawInteractions( const viewDef_t* viewDef )
 						backEnd.currentScissor = rect;
 					}
 					GL_State( GLS_DEFAULT );	// make sure stencil mask passes for the clear
-					GL_Clear( false, false, true, STENCIL_SHADOW_TEST_VALUE, 0.0f, 0.0f, 0.0f, 0.0f );
+					GL_Clear( false, false, true, STENCIL_SHADOW_TEST_VALUE, 0.0f, 0.0f, 0.0f, 0.0f, false );
 				}
 			}
 			
@@ -4398,9 +4398,9 @@ static void RB_CalculateAdaptation()
 }
 
 
-static void RB_Tonemap()
+static void RB_Tonemap( const viewDef_t* viewDef )
 {
-	RENDERLOG_PRINTF( "---------- RB_Tonemap( avg = %f, max = %f, key = %f ) ----------\n", backEnd.hdrAverageLuminance, backEnd.hdrMaxLuminance, backEnd.hdrKey );
+	RENDERLOG_PRINTF( "---------- RB_Tonemap( avg = %f, max = %f, key = %f, is2Dgui = %i ) ----------\n", backEnd.hdrAverageLuminance, backEnd.hdrMaxLuminance, backEnd.hdrKey, ( int )viewDef->is2Dgui );
 	
 	//postProcessCommand_t* cmd = ( postProcessCommand_t* )data;
 	//const idScreenRect& viewport = cmd->viewDef->viewport;
@@ -4423,19 +4423,42 @@ static void RB_Tonemap()
 	renderProgManager.BindShader_Tonemap();
 	
 	float screenCorrectionParm[4];
-	screenCorrectionParm[0] = backEnd.hdrKey;
-	screenCorrectionParm[1] = backEnd.hdrAverageLuminance;
-	screenCorrectionParm[2] = backEnd.hdrMaxLuminance;
-	screenCorrectionParm[3] = 1.0f;
+	if( viewDef->is2Dgui )
+	{
+		screenCorrectionParm[0] = 1.0f;
+		screenCorrectionParm[1] = 1.0f;
+		screenCorrectionParm[2] = 1.0f;
+		screenCorrectionParm[3] = 1.0f;
+	}
+	else
+	{
+		screenCorrectionParm[0] = backEnd.hdrKey;
+		screenCorrectionParm[1] = backEnd.hdrAverageLuminance;
+		screenCorrectionParm[2] = backEnd.hdrMaxLuminance;
+		screenCorrectionParm[3] = 1.0f;
+	}
 	SetFragmentParm( RENDERPARM_SCREENCORRECTIONFACTOR, screenCorrectionParm ); // rpScreenCorrectionFactor
 	
 	// Draw
 	RB_DrawElementsWithCounters( &backEnd.unitSquareSurface );
+	
+	GL_SelectTexture( 0 );
+	globalImages->BindNull();
+	
+	renderProgManager.Unbind();
+	
+	GL_State( GLS_DEFAULT );
+	GL_Cull( CT_FRONT_SIDED );
 }
 
 
 static void RB_Bloom( const viewDef_t* viewDef )
 {
+	if( viewDef->is2Dgui )
+	{
+		return;
+	}
+	
 	RENDERLOG_PRINTF( "---------- RB_Bloom( avg = %f, max = %f, key = %f ) ----------\n", backEnd.hdrAverageLuminance, backEnd.hdrMaxLuminance, backEnd.hdrKey );
 	
 	// BRIGHTPASS
@@ -4481,35 +4504,40 @@ static void RB_Bloom( const viewDef_t* viewDef )
 	RB_DrawElementsWithCounters( &backEnd.unitSquareSurface );
 	
 	
-	// BLOOM PING PONG
-	
-	
+	// BLOOM PING PONG rendering
 	renderProgManager.BindShader_HDRGlareChromatic();
 	
-	for( int j = 0; j < r_hdrGlarePasses.GetInteger(); j++ )
+	int j;
+	for( j = 0; j < r_hdrGlarePasses.GetInteger(); j++ )
 	{
-		if( j == ( r_hdrGlarePasses.GetInteger() - 1 ) )
-		{
-			Framebuffer::Unbind();
-			
-			RB_ResetViewportAndScissorToDefaultCamera( viewDef );
-			
-			// last step: add filtered glare back to main context
-			GL_State( GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE | GLS_DEPTHMASK | GLS_DEPTHFUNC_ALWAYS );
-			
-			renderProgManager.BindShader_Screen();
-		}
-		else
-		{
-			globalFramebuffers.bloomRenderFBO[( j + 1 ) % 2 ]->Bind();
-			glClear( GL_COLOR_BUFFER_BIT );
-		}
+		globalFramebuffers.bloomRenderFBO[( j + 1 ) % 2 ]->Bind();
+		glClear( GL_COLOR_BUFFER_BIT );
 		
-		GL_SelectTexture( 0 );
 		globalImages->bloomRender[j % 2]->Bind();
 		
 		RB_DrawElementsWithCounters( &backEnd.unitSquareSurface );
 	}
+	
+	// add filtered glare back to main context
+	Framebuffer::Unbind();
+	
+	RB_ResetViewportAndScissorToDefaultCamera( viewDef );
+	
+	GL_State( GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE | GLS_DEPTHMASK | GLS_DEPTHFUNC_ALWAYS );
+	
+	renderProgManager.BindShader_Screen();
+	
+	globalImages->bloomRender[( j + 1 ) % 2]->Bind();
+	
+	RB_DrawElementsWithCounters( &backEnd.unitSquareSurface );
+	
+	globalImages->BindNull();
+	
+	Framebuffer::Unbind();
+	renderProgManager.Unbind();
+	
+	GL_State( GLS_DEFAULT );
+	GL_Cull( CT_FRONT_SIDED );
 }
 // RB end
 
@@ -4562,15 +4590,23 @@ void RB_DrawViewInternal( const viewDef_t* viewDef, const int stereoEye )
 	// ensures that depth writes are enabled for the depth clear
 	GL_State( GLS_DEFAULT );
 	
+	GL_CheckErrors();
+	
 	// Clear the depth buffer and clear the stencil to 128 for stencil shadows as well as gui masking
-	GL_Clear( false, true, true, STENCIL_SHADOW_TEST_VALUE, 0.0f, 0.0f, 0.0f, 0.0f );
+	GL_Clear( false, true, true, STENCIL_SHADOW_TEST_VALUE, 0.0f, 0.0f, 0.0f, 0.0f, true );
 	
 	// RB begin
-	if( r_useHDR.GetBool() && !backEnd.viewDef->is2Dgui )
+	if( r_useHDR.GetBool() && !viewDef->is2Dgui )
 	{
 		globalFramebuffers.hdrFBO->Bind();
 	}
+	else
+	{
+		Framebuffer::Unbind();
+	}
 	// RB end
+	
+	GL_CheckErrors();
 	
 	// normal face culling
 	GL_Cull( CT_FRONT_SIDED );
@@ -4655,51 +4691,6 @@ void RB_DrawViewInternal( const viewDef_t* viewDef, const int stereoEye )
 	//-------------------------------------------------
 	RB_FogAllLights();
 	
-	// RB begin
-	if( r_useHDR.GetBool() && !backEnd.viewDef->is2Dgui )
-	{
-		if( glConfig.framebufferBlitAvailable )
-		{
-			/*
-			int x = backEnd.viewDef->viewport.x1;
-			int y = backEnd.viewDef->viewport.y1;
-			int	w = backEnd.viewDef->viewport.x2 - backEnd.viewDef->viewport.x1 + 1;
-			int	h = backEnd.viewDef->viewport.y2 - backEnd.viewDef->viewport.y1 + 1;
-			
-			GL_Viewport( viewDef->viewport.x1,
-				 viewDef->viewport.y1,
-				 viewDef->viewport.x2 + 1 - viewDef->viewport.x1,
-				 viewDef->viewport.y2 + 1 - viewDef->viewport.y1 );
-			*/
-			
-			glBindFramebuffer( GL_READ_FRAMEBUFFER, globalFramebuffers.hdrFBO->GetFramebuffer() );
-			glBindFramebuffer( GL_DRAW_FRAMEBUFFER, globalFramebuffers.hdrQuarterFBO->GetFramebuffer() );
-			glBlitFramebuffer( 0, 0, glConfig.nativeScreenWidth, glConfig.nativeScreenHeight,
-							   0, 0, glConfig.nativeScreenWidth * 0.25f, glConfig.nativeScreenHeight * 0.25f,
-							   GL_COLOR_BUFFER_BIT,
-							   GL_LINEAR );
-							   
-			// TODO resolve to 1x1
-			glBindFramebuffer( GL_READ_FRAMEBUFFER_EXT, globalFramebuffers.hdrFBO->GetFramebuffer() );
-			glBindFramebuffer( GL_DRAW_FRAMEBUFFER_EXT, globalFramebuffers.hdr64FBO->GetFramebuffer() );
-			glBlitFramebuffer( 0, 0, glConfig.nativeScreenWidth, glConfig.nativeScreenHeight,
-							   0, 0, 64, 64,
-							   GL_COLOR_BUFFER_BIT,
-							   GL_LINEAR );
-		}
-		else
-		{
-			// FIXME add non EXT_framebuffer_blit code
-		}
-		
-		RB_CalculateAdaptation();
-		
-		RB_Tonemap();
-		
-		RB_Bloom( viewDef );
-	}
-	// RB end
-	
 	//-------------------------------------------------
 	// capture the depth for the motion blur before rendering any post process surfaces that may contribute to the depth
 	//-------------------------------------------------
@@ -4756,6 +4747,44 @@ void RB_DrawViewInternal( const viewDef_t* viewDef, const int stereoEye )
 	// render debug tools
 	//-------------------------------------------------
 	RB_RenderDebugTools( drawSurfs, numDrawSurfs );
+	
+	// RB: convert back from HDR to LDR range
+	if( r_useHDR.GetBool() && !viewDef->is2Dgui )
+	{
+		/*
+		int x = backEnd.viewDef->viewport.x1;
+		int y = backEnd.viewDef->viewport.y1;
+		int	w = backEnd.viewDef->viewport.x2 - backEnd.viewDef->viewport.x1 + 1;
+		int	h = backEnd.viewDef->viewport.y2 - backEnd.viewDef->viewport.y1 + 1;
+		
+		GL_Viewport( viewDef->viewport.x1,
+				viewDef->viewport.y1,
+				viewDef->viewport.x2 + 1 - viewDef->viewport.x1,
+				viewDef->viewport.y2 + 1 - viewDef->viewport.y1 );
+		*/
+		
+		glBindFramebuffer( GL_READ_FRAMEBUFFER, globalFramebuffers.hdrFBO->GetFramebuffer() );
+		glBindFramebuffer( GL_DRAW_FRAMEBUFFER, globalFramebuffers.hdrQuarterFBO->GetFramebuffer() );
+		glBlitFramebuffer( 0, 0, glConfig.nativeScreenWidth, glConfig.nativeScreenHeight,
+						   0, 0, glConfig.nativeScreenWidth * 0.25f, glConfig.nativeScreenHeight * 0.25f,
+						   GL_COLOR_BUFFER_BIT,
+						   GL_LINEAR );
+						   
+		// TODO resolve to 1x1
+		glBindFramebuffer( GL_READ_FRAMEBUFFER_EXT, globalFramebuffers.hdrFBO->GetFramebuffer() );
+		glBindFramebuffer( GL_DRAW_FRAMEBUFFER_EXT, globalFramebuffers.hdr64FBO->GetFramebuffer() );
+		glBlitFramebuffer( 0, 0, glConfig.nativeScreenWidth, glConfig.nativeScreenHeight,
+						   0, 0, 64, 64,
+						   GL_COLOR_BUFFER_BIT,
+						   GL_LINEAR );
+						   
+		RB_CalculateAdaptation();
+		
+		RB_Tonemap( viewDef );
+		
+		RB_Bloom( viewDef );
+	}
+	// RB end
 	
 	renderLog.CloseBlock();
 }

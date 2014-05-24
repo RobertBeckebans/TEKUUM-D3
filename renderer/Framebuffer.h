@@ -52,7 +52,9 @@ public:
 	void					PurgeFramebuffer();
 	
 	void					Bind();
+	bool					IsBound();
 	static void				Unbind();
+	static bool				IsDefaultFramebufferActive();
 	
 	void					AddColorBuffer( int format, int index );
 	void					AddDepthBuffer( int format );
@@ -94,6 +96,7 @@ struct globalFramebuffers_t
 {
 	Framebuffer*				shadowFBO[MAX_SHADOWMAP_RESOLUTIONS];
 	Framebuffer*				hdrFBO;
+	Framebuffer*				hdrCopyFBO;
 	Framebuffer*				hdrQuarterFBO;
 	Framebuffer*				hdr64FBO;
 	Framebuffer*				bloomRenderFBO[MAX_BLOOM_BUFFERS];
