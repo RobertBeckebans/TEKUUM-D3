@@ -92,7 +92,7 @@ BOOL CMapInfo::OnInitDialog()
 	CMapStringToPtr mapEntity;
 	
 	int nValue = 0;
-	for( entity_t* pEntity = entities.next ; pEntity != &entities ; pEntity = pEntity->next )
+	for( entity_t* pEntity = entities.next; pEntity != &entities; pEntity = pEntity->next )
 	{
 		m_nTotalEntities++;
 		nValue = 0;

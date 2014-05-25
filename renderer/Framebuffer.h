@@ -63,7 +63,7 @@ public:
 	
 	void					AttachImage2D( int target, const idImage* image, int index );
 	void					AttachImage3D( const idImage* image );
-	void					AttachImageDepth( const idImage* image );
+	void					AttachImageDepth( int target, const idImage* image );
 	void					AttachImageDepthLayer( const idImage* image, int layer );
 	
 	// check for OpenGL errors
@@ -114,8 +114,8 @@ struct globalFramebuffers_t
 {
 	Framebuffer*				shadowFBO[MAX_SHADOWMAP_RESOLUTIONS];
 	Framebuffer*				hdrFBO;
-//	Framebuffer*				hdrCopyFBO;
-	Framebuffer*				hdrQuarterFBO;
+	Framebuffer*				hdrNonMSAAFBO;
+//	Framebuffer*				hdrQuarterFBO;
 	Framebuffer*				hdr64FBO;
 	Framebuffer*				bloomRenderFBO[MAX_BLOOM_BUFFERS];
 };

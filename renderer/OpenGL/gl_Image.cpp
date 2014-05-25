@@ -184,6 +184,11 @@ void idImage::SetTexParameters()
 		case TT_2D_ARRAY:
 			target = GL_TEXTURE_2D_ARRAY;
 			break;
+		case TT_2D_MULTISAMPLE:
+			//target = GL_TEXTURE_2D_MULTISAMPLE;
+			//break;
+			// no texture parameters for MSAA FBO textures
+			return;
 		// RB end
 		default:
 			idLib::FatalError( "%s: bad texture type %d", GetName(), opts.textureType );
@@ -554,6 +559,12 @@ void idImage::AllocImage()
 		uploadTarget = GL_TEXTURE_2D_ARRAY;
 		numSides = 6;
 	}
+	else if( opts.textureType == TT_2D_MULTISAMPLE )
+	{
+		target = GL_TEXTURE_2D_MULTISAMPLE;
+		uploadTarget = GL_TEXTURE_2D_MULTISAMPLE;
+		numSides = 1;
+	}
 	// RB end
 	else
 	{
@@ -567,6 +578,10 @@ void idImage::AllocImage()
 	if( opts.textureType == TT_2D_ARRAY )
 	{
 		glTexImage3D( uploadTarget, 0, internalFormat, opts.width, opts.height, numSides, 0, dataFormat, GL_UNSIGNED_BYTE, NULL );
+	}
+	else if( opts.textureType == TT_2D_MULTISAMPLE )
+	{
+		glTexImage2DMultisample( uploadTarget, opts.msaaSamples, internalFormat, opts.width, opts.height, GL_FALSE );
 	}
 	else
 	{

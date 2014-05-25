@@ -4793,21 +4793,42 @@ void RB_DrawViewInternal( const viewDef_t* viewDef, const int stereoEye )
 				viewDef->viewport.y2 + 1 - viewDef->viewport.y1 );
 		*/
 		
+		/*
 		glBindFramebuffer( GL_READ_FRAMEBUFFER, globalFramebuffers.hdrFBO->GetFramebuffer() );
 		glBindFramebuffer( GL_DRAW_FRAMEBUFFER, globalFramebuffers.hdrQuarterFBO->GetFramebuffer() );
 		glBlitFramebuffer( 0, 0, glConfig.nativeScreenWidth, glConfig.nativeScreenHeight,
 						   0, 0, glConfig.nativeScreenWidth * 0.25f, glConfig.nativeScreenHeight * 0.25f,
 						   GL_COLOR_BUFFER_BIT,
 						   GL_LINEAR );
-						   
-		// TODO resolve to 1x1
-		glBindFramebuffer( GL_READ_FRAMEBUFFER_EXT, globalFramebuffers.hdrFBO->GetFramebuffer() );
-		glBindFramebuffer( GL_DRAW_FRAMEBUFFER_EXT, globalFramebuffers.hdr64FBO->GetFramebuffer() );
-		glBlitFramebuffer( 0, 0, glConfig.nativeScreenWidth, glConfig.nativeScreenHeight,
-						   0, 0, 64, 64,
-						   GL_COLOR_BUFFER_BIT,
-						   GL_LINEAR );
-						   
+		*/
+		
+		if( r_multiSamples.GetInteger() > 0 )
+		{
+			glBindFramebuffer( GL_READ_FRAMEBUFFER, globalFramebuffers.hdrFBO->GetFramebuffer() );
+			glBindFramebuffer( GL_DRAW_FRAMEBUFFER, globalFramebuffers.hdrNonMSAAFBO->GetFramebuffer() );
+			glBlitFramebuffer( 0, 0, glConfig.nativeScreenWidth, glConfig.nativeScreenHeight,
+							   0, 0, glConfig.nativeScreenWidth, glConfig.nativeScreenHeight,
+							   GL_COLOR_BUFFER_BIT,
+							   GL_LINEAR );
+							   
+			// TODO resolve to 1x1
+			glBindFramebuffer( GL_READ_FRAMEBUFFER_EXT, globalFramebuffers.hdrNonMSAAFBO->GetFramebuffer() );
+			glBindFramebuffer( GL_DRAW_FRAMEBUFFER_EXT, globalFramebuffers.hdr64FBO->GetFramebuffer() );
+			glBlitFramebuffer( 0, 0, glConfig.nativeScreenWidth, glConfig.nativeScreenHeight,
+							   0, 0, 64, 64,
+							   GL_COLOR_BUFFER_BIT,
+							   GL_LINEAR );
+		}
+		else
+		{
+			glBindFramebuffer( GL_READ_FRAMEBUFFER_EXT, globalFramebuffers.hdrFBO->GetFramebuffer() );
+			glBindFramebuffer( GL_DRAW_FRAMEBUFFER_EXT, globalFramebuffers.hdr64FBO->GetFramebuffer() );
+			glBlitFramebuffer( 0, 0, glConfig.nativeScreenWidth, glConfig.nativeScreenHeight,
+							   0, 0, 64, 64,
+							   GL_COLOR_BUFFER_BIT,
+							   GL_LINEAR );
+		}
+		
 		RB_CalculateAdaptation();
 		
 		RB_Tonemap( viewDef );

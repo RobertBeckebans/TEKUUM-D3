@@ -147,13 +147,20 @@ static void R_RGBA8Image( idImage* image )
 
 static void R_DepthImage( idImage* image )
 {
-	// RB: NULL data
-	image->GenerateImage( NULL, glConfig.nativeScreenWidth, glConfig.nativeScreenHeight, TF_NEAREST, TR_CLAMP, TD_DEPTH );
+	// RB: NULL data and MSAA support
+	int msaaSamples = r_multiSamples.GetInteger();
+	image->GenerateImage( NULL, glConfig.nativeScreenWidth, glConfig.nativeScreenHeight, TF_NEAREST, TR_CLAMP, TD_DEPTH, msaaSamples );
 	// RB end
 }
 
 // RB begin
 static void R_HDR_RGBA16FImage_ResNative( idImage* image )
+{
+	int msaaSamples = r_multiSamples.GetInteger();
+	image->GenerateImage( NULL, glConfig.nativeScreenWidth, glConfig.nativeScreenHeight, TF_NEAREST, TR_CLAMP, TD_RGBA16F, msaaSamples );
+}
+
+static void R_HDR_RGBA16FImage_ResNative_NoMSAA( idImage* image )
 {
 	image->GenerateImage( NULL, glConfig.nativeScreenWidth, glConfig.nativeScreenHeight, TF_NEAREST, TR_CLAMP, TD_RGBA16F );
 }
@@ -639,6 +646,8 @@ void idImageManager::CreateIntrinsicImages()
 	// cinematicImage is used for cinematic drawing
 	cinematicImage = ImageFromFunction( "_cinematic", R_RGBA8Image );
 	
+	grainImage1 = globalImages->ImageFromFunction( "_grain1", R_CreateGrainImage1 );
+	
 #if !defined(USE_GLES3)
 	shadowImage[0] = ImageFromFunction( va( "_shadowMapArray0_%i", shadowMapResolutions[0] ), R_CreateShadowMapImage_Res0 );
 	shadowImage[1] = ImageFromFunction( va( "_shadowMapArray1_%i", shadowMapResolutions[1] ), R_CreateShadowMapImage_Res1 );
@@ -650,12 +659,10 @@ void idImageManager::CreateIntrinsicImages()
 	jitterImage4 = globalImages->ImageFromFunction( "_jitter4", R_CreateJitterImage4 );
 	jitterImage16 = globalImages->ImageFromFunction( "_jitter16", R_CreateJitterImage16 );
 	
-	grainImage1 = globalImages->ImageFromFunction( "_grain1", R_CreateGrainImage1 );
-	//grainImage1 = ImageFromFile( "textures/postprocess/filmgrain1", TF_NEAREST, TR_REPEAT, TD_LOOKUP_TABLE_RGBA, CF_2D );
-	
 	randomImage256 = globalImages->ImageFromFunction( "_random256", R_CreateRandom256Image );
 	
 	currentRenderHDRImage = globalImages->ImageFromFunction( "_currentRenderHDR", R_HDR_RGBA16FImage_ResNative );
+	currentRenderHDRImageNoMSAA = globalImages->ImageFromFunction( "_currentRenderHDRNoMSAA", R_HDR_RGBA16FImage_ResNative_NoMSAA );
 	currentRenderHDRImageQuarter = globalImages->ImageFromFunction( "_currentRenderHDRQuarter", R_HDR_RGBA16FImage_ResQuarter );
 	currentRenderHDRImage64 = globalImages->ImageFromFunction( "_currentRenderHDR64", R_HDR_RGBA16FImage_Res64 );
 	
