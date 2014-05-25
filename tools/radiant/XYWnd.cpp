@@ -606,6 +606,10 @@ BEGIN_MESSAGE_MAP( CXYWnd, CWnd )
 	ON_WM_PAINT()
 	ON_WM_KEYDOWN()
 	ON_WM_SIZE()
+// ---> sikk - Window Snapping
+	ON_WM_SIZING()
+	ON_WM_MOVING()
+// <--- sikk - Window Snapping
 	ON_WM_DESTROY()
 	ON_COMMAND( ID_SELECT_MOUSEROTATE, OnSelectMouserotate )
 	ON_WM_TIMER()
@@ -651,6 +655,7 @@ BOOL CXYWnd::PreCreateWindow( CREATESTRUCT& cs )
 	{
 		cs.style = QE3_SPLITTER_STYLE;
 	}
+	cs.dwExStyle = WS_EX_TOOLWINDOW;	// sikk - Added - Tool window uses smaller tital bar (more screen space for editing)
 	
 	return CWnd::PreCreateWindow( cs );
 }
@@ -926,7 +931,7 @@ void CXYWnd::DropClipPoint( UINT nFlags, CPoint point )
 		}
 	}
 	
-	Sys_UpdateWindows( XY | W_CAMERA_IFON );
+	Sys_UpdateWindows( XY | W_CAMERA_ICON );
 }
 
 /*
@@ -961,7 +966,7 @@ void CXYWnd::DropPathPoint( UINT nFlags, CPoint point )
 		}
 	}
 	
-	Sys_UpdateWindows( XY | W_CAMERA_IFON );
+	Sys_UpdateWindows( XY | W_CAMERA_ICON );
 }
 
 /*
@@ -976,7 +981,7 @@ void CXYWnd::AddPointPoint( UINT nFlags, idVec3* pVec )
 	g_PointPoints[g_nPointCount].m_ptClip = *pVec;
 	g_PointPoints[g_nPointCount].SetPointPtr( pVec );
 	g_nPointCount++;
-	Sys_UpdateWindows( XY | W_CAMERA_IFON );
+	Sys_UpdateWindows( XY | W_CAMERA_ICON );
 }
 
 /*
@@ -1252,7 +1257,6 @@ void CXYWnd::OnRButtonDown( UINT nFlags, CPoint point )
  */
 void CXYWnd::OnLButtonUp( UINT nFlags, CPoint point )
 {
-
 	if( ClipMode() )
 	{
 		if( g_pMovingClip )
@@ -1427,7 +1431,7 @@ void CXYWnd::OnMouseMove( UINT nFlags, CPoint point )
 				bCrossHair = true;
 				SnapToPoint( point.x, m_nHeight - 1 - point.y, g_pMovingPoint->m_ptClip );
 				g_pMovingPoint->UpdatePointPtr();
-				Sys_UpdateWindows( XY | W_CAMERA_IFON );
+				Sys_UpdateWindows( XY | W_CAMERA_ICON );
 			}
 			else
 			{
@@ -1455,7 +1459,7 @@ void CXYWnd::OnMouseMove( UINT nFlags, CPoint point )
 			{
 				bCrossHair = true;
 				SnapToPoint( point.x, m_nHeight - 1 - point.y, g_pMovingClip->m_ptClip );
-				Sys_UpdateWindows( XY | W_CAMERA_IFON );
+				Sys_UpdateWindows( XY | W_CAMERA_ICON );
 			}
 			else
 			{
@@ -1514,7 +1518,7 @@ void CXYWnd::OnMouseMove( UINT nFlags, CPoint point )
 			{
 				bCrossHair = true;
 				SnapToPoint( point.x, m_nHeight - 1 - point.y, g_pMovingPath->m_ptClip );
-				Sys_UpdateWindows( XY | W_CAMERA_IFON );
+				Sys_UpdateWindows( XY | W_CAMERA_ICON );
 			}
 			else
 			{
@@ -1611,7 +1615,7 @@ void CXYWnd::SetClipMode( bool bMode )
 		CleanList( &g_brBackSplits );
 		g_brFrontSplits.next = &g_brFrontSplits;
 		g_brBackSplits.next = &g_brBackSplits;
-		Sys_UpdateWindows( XY | W_CAMERA_IFON );
+		Sys_UpdateWindows( XY | W_CAMERA_ICON );
 	}
 }
 
@@ -1934,8 +1938,8 @@ void CreateEntityFromName( char* pName, brush_t* pBrush, bool forceFixed, idVec3
 	Select_Deselect();
 	
 	//
-	// entity_t* pEntity = world_entity; if (selected_brushes.next !=
-	// &selected_brushes) pEntity = selected_brushes.next->owner;
+	// entity_t* pEntity = world_entity; if ( selected_brushes.next !=
+	// &selected_brushes ) pEntity = selected_brushes.next->owner;
 	//
 	Select_Brush( petNew->brushes.onext );
 	Brush_Build( petNew->brushes.onext );
@@ -2004,7 +2008,7 @@ void CreateRightClickEntity( CXYWnd* pWnd, int x, int y, char* pName )
 	Select_GetBounds( min, max );
 	Select_GetMid( org );
 	
-	CRect	rctZ;
+	CRect rctZ;
 	pWnd->GetClientRect( rctZ );
 	
 	brush_t* pBrush;
@@ -2184,11 +2188,9 @@ void CXYWnd::KillPathMode()
 	Sys_UpdateWindows( W_ALL );
 }
 
-//
 // =======================================================================================================================
 //    gets called for drop down menu messages TIP: it's not always about EntityCreate
 // =======================================================================================================================
-//
 void CXYWnd::OnEntityCreate( unsigned int nID )
 {
 	if( m_mnuDrop.GetSafeHmenu() )
@@ -2214,13 +2216,10 @@ void CXYWnd::OnEntityCreate( unsigned int nID )
 		}
 		
 		// ++timo FIXME: remove when all hooks are in
-		if
-		(
-			strItem.CompareNoCase( "Add to..." ) == 0 ||
-			strItem.CompareNoCase( "Remove" ) == 0 ||
-			strItem.CompareNoCase( "Name..." ) == 0 ||
-			strItem.CompareNoCase( "New group..." ) == 0
-		)
+		if( strItem.CompareNoCase( "Add to..." ) == 0 ||
+				strItem.CompareNoCase( "Remove" ) == 0 ||
+				strItem.CompareNoCase( "Name..." ) == 0 ||
+				strItem.CompareNoCase( "New group..." ) == 0 )
 		{
 			common->Printf( "TODO: hook drop down group menu\n" );
 			return;
@@ -2398,10 +2397,12 @@ bool MergeMenu( CMenu* pMenuDestination, const CMenu* pMenuAdd, bool bTopLevel /
  */
 void CXYWnd::HandleDrop()
 {
+	/*
 	if( g_PrefsDlg.m_bRightClick == false )
 	{
 		return;
 	}
+	*/
 	
 	if( !m_mnuDrop.GetSafeHmenu() )  		// first time, load it up
 	{
@@ -2412,9 +2413,9 @@ void CXYWnd::HandleDrop()
 		
 		MergeMenu( &m_mnuDrop, drop, false );
 		
-		int		nID = ID_ENTITY_START;
+		int nID = ID_ENTITY_START;
 		
-		CMenu*	pMakeEntityPop = &m_mnuDrop;
+		CMenu* pMakeEntityPop = &m_mnuDrop;
 		
 		// Todo: Make this a config option maybe?
 		const int entitiesOnSubMenu = false;
@@ -2440,7 +2441,7 @@ void CXYWnd::HandleDrop()
 			{
 				CString strLeft = strName.Left( n_ );
 				CString strRight = strName.Right( strName.GetLength() - n_ - 1 );
-				if( strLeft == strActive )  // this is a child
+				if( strLeft == strActive )    // this is a child
 				{
 					ASSERT( pChild );
 					pChild->AppendMenu( MF_STRING, nID++, strName );
@@ -2449,11 +2450,9 @@ void CXYWnd::HandleDrop()
 				{
 					if( pChild )
 					{
-						pMakeEntityPop->AppendMenu(
-							MF_POPUP,
-							reinterpret_cast < unsigned int >( pChild->GetSafeHmenu() ),
-							strActive
-						);
+						pMakeEntityPop->AppendMenu( MF_POPUP,
+													reinterpret_cast<unsigned int>( pChild->GetSafeHmenu() ),
+													strActive );
 						g_ptrMenus.Add( pChild );
 						
 						// pChild->DestroyMenu(); delete pChild;
@@ -2470,11 +2469,9 @@ void CXYWnd::HandleDrop()
 			{
 				if( pChild )
 				{
-					pMakeEntityPop->AppendMenu(
-						MF_POPUP,
-						reinterpret_cast < unsigned int >( pChild->GetSafeHmenu() ),
-						strActive
-					);
+					pMakeEntityPop->AppendMenu( MF_POPUP,
+												reinterpret_cast<unsigned int>( pChild->GetSafeHmenu() ),
+												strActive );
 					g_ptrMenus.Add( pChild );
 					
 					// pChild->DestroyMenu(); delete pChild;
@@ -2487,15 +2484,13 @@ void CXYWnd::HandleDrop()
 		}
 		if( pMakeEntityPop != &m_mnuDrop )
 		{
-			m_mnuDrop.AppendMenu(
-				MF_POPUP,
-				reinterpret_cast < unsigned int >( pMakeEntityPop->GetSafeHmenu() ),
-				"Make Entity"
-			);
+			m_mnuDrop.AppendMenu( MF_POPUP,
+								  reinterpret_cast<unsigned int>( pMakeEntityPop->GetSafeHmenu() ),
+								  "Create Entity" );
 		}
 	}
 	
-	CPoint	ptMouse;
+	CPoint ptMouse;
 	GetCursorPos( &ptMouse );
 	m_mnuDrop.TrackPopupMenu( TPM_LEFTALIGN | TPM_LEFTBUTTON | TPM_RIGHTBUTTON, ptMouse.x, ptMouse.y, this );
 }
@@ -2740,7 +2735,7 @@ void CXYWnd::XY_MouseDown( int x, int y, int buttons )
 		if( point[n1] || point[n2] )
 		{
 			g_pParentWnd->GetCamera()->Camera().angles[nAngle] = RAD2DEG( atan2( point[n1], point[n2] ) );
-			Sys_UpdateWindows( W_CAMERA_IFON | W_XY_OVERLAY );
+			Sys_UpdateWindows( W_CAMERA_ICON | W_XY_OVERLAY );
 		}
 	}
 	
@@ -2934,22 +2929,23 @@ bool CXYWnd::XY_MouseMoved( int x, int y, int buttons )
 		return false;
 	}
 	
-	//
 	// lbutton without selection = drag new brush if (m_nButtonstate == MK_LBUTTON &&
 	// !m_bPress_selection && g_qeglobals.d_select_mode != sel_curvepoint &&
 	// g_qeglobals.d_select_mode != sel_splineedit)
 	//
+	/*
 	if( m_nButtonstate == MK_LBUTTON && !m_bPress_selection && g_qeglobals.d_select_mode == sel_brush )
 	{
 		NewBrushDrag( x, y );
 		return false;
 	}
+	*/
 	
 	// lbutton (possibly with control and or shift) with selection = drag selection
 	if( m_nButtonstate & MK_LBUTTON )
 	{
 		Drag_MouseMoved( x, y, buttons );
-		Sys_UpdateWindows( W_XY_OVERLAY | W_CAMERA_IFON | W_Z );
+		Sys_UpdateWindows( W_XY_OVERLAY | W_CAMERA_ICON | W_Z );
 		return false;
 	}
 	
@@ -3019,7 +3015,7 @@ bool CXYWnd::XY_MouseMoved( int x, int y, int buttons )
 		if( point[n1] || point[n2] )
 		{
 			g_pParentWnd->GetCamera()->Camera().angles[nAngle] = RAD2DEG( atan2( point[n1], point[n2] ) );
-			Sys_UpdateWindows( W_CAMERA_IFON | W_XY_OVERLAY );
+			Sys_UpdateWindows( W_CAMERA_ICON | W_XY_OVERLAY );
 		}
 		
 		return false;
@@ -3241,7 +3237,7 @@ void CXYWnd::XY_DrawGrid()
 	// draw ZClip boundaries (if applicable)...
 	if( m_nViewType == XZ || m_nViewType == YZ )
 	{
-		if( g_pParentWnd->GetZWnd()->m_pZClip )	// should always be the case at this point I think, but this is safer
+		if( g_pParentWnd->GetZWnd()->m_pZClip )  	// should always be the case at this point I think, but this is safer
 		{
 			if( g_pParentWnd->GetZWnd()->m_pZClip->IsEnabled() )
 			{
@@ -3260,9 +3256,6 @@ void CXYWnd::XY_DrawGrid()
 			}
 		}
 	}
-	
-	
-	
 	
 	// draw coordinate text if needed
 	if( g_qeglobals.d_savedinfo.show_coordinates )
@@ -3420,10 +3413,9 @@ void GLColoredBoxWithLabel( float x, float y, float size, idVec4 color, const ch
 	glCallLists( strlen( text ), GL_UNSIGNED_BYTE, text );
 }
 
-/*
- =======================================================================================================================
- =======================================================================================================================
- */
+//========================
+// DrawRotateIcon
+//========================
 void CXYWnd::DrawRotateIcon()
 {
 	float	x, y;
@@ -3489,10 +3481,9 @@ void CXYWnd::DrawRotateIcon()
 	glCallLists( str.Length(), GL_UNSIGNED_BYTE, str.c_str() );
 }
 
-/*
- =======================================================================================================================
- =======================================================================================================================
- */
+//========================
+// DrawCameraIcon
+//========================
 void CXYWnd::DrawCameraIcon()
 {
 	float	x, y, a;
@@ -3543,10 +3534,9 @@ void CXYWnd::DrawCameraIcon()
 #endif
 }
 
-/*
- =======================================================================================================================
- =======================================================================================================================
- */
+//========================
+// DrawZIcon
+//========================
 void CXYWnd::DrawZIcon()
 {
 	if( m_nViewType == XY )
@@ -4010,15 +4000,13 @@ void CXYWnd::PaintSizeInfo( int nDim1, int nDim2, idVec3 vMinBounds, idVec3 vMax
 	}
 }
 
-/* XY_Draw */
 long		g_lCount = 0;
 long		g_lTotal = 0;
 extern void DrawBrushEntityName( brush_t* b );
 
-/*
- =======================================================================================================================
- =======================================================================================================================
- */
+//========================
+// XY_Draw
+//========================
 void CXYWnd::XY_Draw()
 {
 	brush_t*		brush;
@@ -4401,6 +4389,23 @@ void CXYWnd::OnSize( UINT nType, int cx, int cy )
 	InvalidateRect( NULL, false );
 }
 
+// ---> sikk - Window Snapping
+void CXYWnd::OnSizing( UINT nSide, LPRECT lpRect )
+{
+	if( TryDocking( GetSafeHwnd(), nSide, lpRect, 0 ) )
+	{
+		return;
+	}
+}
+void CXYWnd::OnMoving( UINT nSide, LPRECT lpRect )
+{
+	if( TryDocking( GetSafeHwnd(), nSide, lpRect, 0 ) )
+	{
+		return;
+	}
+}
+// <--- sikk - Window Snapping
+
 brush_t hold_brushes;
 
 /*
@@ -4490,7 +4495,7 @@ void CXYWnd::SplitClip()
 void CXYWnd::FlipClip()
 {
 	g_bSwitch = !g_bSwitch;
-	Sys_UpdateWindows( XY | W_CAMERA_IFON );
+	Sys_UpdateWindows( XY | W_CAMERA_ICON );
 }
 
 //

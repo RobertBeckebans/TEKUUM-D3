@@ -52,20 +52,18 @@ public:
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CRadiantApp)
 public:
-	virtual BOOL InitInstance();
-	virtual int ExitInstance();
-	virtual BOOL OnIdle( LONG lCount );
-	virtual int Run();
+	virtual BOOL	InitInstance();
+	virtual int		ExitInstance();
+	virtual BOOL	OnIdle( LONG lCount );
+	virtual int		Run();
 	//}}AFX_VIRTUAL
 	
 // Implementation
-
 	//{{AFX_MSG(CRadiantApp)
-	afx_msg void OnHelp();
+	afx_msg void	OnHelp();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };
-
 
 /////////////////////////////////////////////////////////////////////////////
 

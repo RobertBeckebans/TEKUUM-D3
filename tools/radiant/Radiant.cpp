@@ -62,10 +62,13 @@ END_MESSAGE_MAP()
 /////////////////////////////////////////////////////////////////////////////
 // CRadiantApp construction
 
+/*
+================
+CRadiantApp::CRadiantApp
+================
+*/
 CRadiantApp::CRadiantApp()
 {
-	// TODO: add construction code here,
-	// Place all significant initialization in InitInstance
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -75,6 +78,11 @@ CRadiantApp theApp;
 HINSTANCE g_DoomInstance = NULL;
 bool g_editorAlive = false;
 
+/*
+================
+RadiantPrint
+================
+*/
 void RadiantPrint( const char* text )
 {
 	if( g_editorAlive && g_Inspectors )
@@ -86,6 +94,11 @@ void RadiantPrint( const char* text )
 	}
 }
 
+/*
+================
+RadiantShutdown
+================
+*/
 void RadiantShutdown()
 {
 	theApp.ExitInstance();
@@ -100,7 +113,6 @@ This is also called when you 'quit' in doom
 */
 void RadiantInit()
 {
-
 	// make sure the renderer is initialized
 	if( !renderSystem->IsOpenGLRunning() )
 	{
@@ -150,7 +162,7 @@ void RadiantInit()
 		pThread->InitInstance();
 		
 		glFinish();
-		//qwglMakeCurrent(0, 0);
+		//wglMakeCurrent(0, 0);
 		wglMakeCurrent( win32.hDC, win32.hGLRC );
 		
 		// hide the doom window by default
@@ -158,9 +170,13 @@ void RadiantInit()
 	}
 }
 
-
 extern void Map_VerifyCurrentMap( const char* map );
 
+/*
+================
+RadiantSync
+================
+*/
 void RadiantSync( const char* mapName, const idVec3& viewOrg, const idAngles& viewAngles )
 {
 	if( g_DoomInstance == NULL )
@@ -182,6 +198,11 @@ void RadiantSync( const char* mapName, const idVec3& viewOrg, const idAngles& vi
 	}
 }
 
+/*
+================
+RadiantRun
+================
+*/
 void RadiantRun()
 {
 	static bool exceptionErr = false;
@@ -195,7 +216,7 @@ void RadiantRun()
 			glDepthMask( true );
 			theApp.Run();
 			//glPopAttrib();
-			//qwglMakeCurrent(0, 0);
+			//wglMakeCurrent(0, 0);
 			wglMakeCurrent( win32.hDC, win32.hGLRC );
 		}
 	}
@@ -213,6 +234,11 @@ HINSTANCE g_hOpenGL32 = NULL;
 HINSTANCE g_hOpenGL = NULL;
 bool g_bBuildList = false;
 
+/*
+================
+CRadiantApp::InitInstance
+================
+*/
 BOOL CRadiantApp::InitInstance()
 {
 	//g_hOpenGL32 = ::LoadLibrary("opengl32.dll");
@@ -327,7 +353,7 @@ BOOL CRadiantApp::InitInstance()
 	}
 	
 	CMainFrame* pMainFrame = new CMainFrame;
-	if( !pMainFrame->LoadFrame( IDR_MENU_QUAKE3 ) )
+	if( !pMainFrame->LoadFrame( IDR_MAINFRAME ) )  	// sikk - Changed from "IDR_MENU_QUAKE3"
 	{
 		return FALSE;
 	}
@@ -351,6 +377,11 @@ BOOL CRadiantApp::InitInstance()
 /////////////////////////////////////////////////////////////////////////////
 // CRadiantApp commands
 
+/*
+================
+CRadiantApp::ExitInstance
+================
+*/
 int CRadiantApp::ExitInstance()
 {
 	common->Shutdown();
@@ -360,7 +391,11 @@ int CRadiantApp::ExitInstance()
 	return ret;
 }
 
-
+/*
+================
+CRadiantApp::OnIdle
+================
+*/
 BOOL CRadiantApp::OnIdle( LONG lCount )
 {
 	if( g_pParentWnd )
@@ -371,16 +406,25 @@ BOOL CRadiantApp::OnIdle( LONG lCount )
 	//return CWinApp::OnIdle(lCount);
 }
 
+/*
+================
+CRadiantApp::OnHelp
+================
+*/
 void CRadiantApp::OnHelp()
 {
 	ShellExecute( m_pMainWnd->GetSafeHwnd(), "open", "http://www.idDevNet.com", NULL, NULL, SW_SHOW );
 }
 
+/*
+================
+CRadiantApp::Run
+================
+*/
 int CRadiantApp::Run()
 {
 	BOOL bIdle = TRUE;
 	LONG lIdleCount = 0;
-	
 	
 #if _MSC_VER >= 1300
 	MSG* msg = AfxGetCurrentMessage();			// TODO Robert fix me!!
@@ -389,7 +433,7 @@ int CRadiantApp::Run()
 #endif
 	
 	// phase1: check to see if we can do idle work
-	while( bIdle &&	!::PeekMessage( msg, NULL, NULL, NULL, PM_NOREMOVE ) )
+	while( bIdle && !::PeekMessage( msg, NULL, NULL, NULL, PM_NOREMOVE ) )
 	{
 		// call OnIdle while in bIdle state
 		if( !OnIdle( lIdleCount++ ) )
@@ -429,6 +473,11 @@ REGISTRY INFO
 =============================================================
 */
 
+/*
+================
+SaveRegistryInfo
+================
+*/
 bool SaveRegistryInfo( const char* pszName, void* pvBuf, long lSize )
 {
 	SetCvarBinary( pszName, pvBuf, lSize );
@@ -436,11 +485,21 @@ bool SaveRegistryInfo( const char* pszName, void* pvBuf, long lSize )
 	return true;
 }
 
+/*
+================
+LoadRegistryInfo
+================
+*/
 bool LoadRegistryInfo( const char* pszName, void* pvBuf, long* plSize )
 {
 	return GetCvarBinary( pszName, pvBuf, *plSize );
 }
 
+/*
+================
+SaveWindowState
+================
+*/
 bool SaveWindowState( HWND hWnd, const char* pszName )
 {
 	RECT rc;
@@ -456,7 +515,11 @@ bool SaveWindowState( HWND hWnd, const char* pszName )
 	return SaveRegistryInfo( pszName, &rc, sizeof( rc ) );
 }
 
-
+/*
+================
+LoadWindowState
+================
+*/
 bool LoadWindowState( HWND hWnd, const char* pszName )
 {
 	RECT rc;
@@ -465,14 +528,22 @@ bool LoadWindowState( HWND hWnd, const char* pszName )
 	if( LoadRegistryInfo( pszName, &rc, &lSize ) )
 	{
 		if( rc.left < 0 )
+		{
 			rc.left = 0;
+		}
 		if( rc.top < 0 )
+		{
 			rc.top = 0;
+		}
 		if( rc.right < rc.left + 16 )
+		{
 			rc.right = rc.left + 16;
+		}
 		if( rc.bottom < rc.top + 16 )
+		{
 			rc.bottom = rc.top + 16;
-			
+		}
+		
 		MoveWindow( hWnd, rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, FALSE );
 		return true;
 	}
@@ -488,9 +559,14 @@ bool LoadWindowState( HWND hWnd, const char* pszName )
 ===============================================================
 */
 
+/*
+================
+Sys_UpdateStatusBar
+================
+*/
 void Sys_UpdateStatusBar()
 {
-	extern int   g_numbrushes, g_numentities;
+	extern int g_numbrushes, g_numentities;
 	
 	char numbrushbuffer[100] = "";
 	
@@ -498,6 +574,11 @@ void Sys_UpdateStatusBar()
 	Sys_Status( numbrushbuffer, 2 );
 }
 
+/*
+================
+Sys_Status
+================
+*/
 void Sys_Status( const char* psz, int part )
 {
 	if( part < 0 )

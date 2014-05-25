@@ -50,10 +50,11 @@ typedef struct
 	
 	camera_draw_mode	draw_mode;
 	
-	idVec3		color;			// background
+	idVec3		color;				// background
 	
 	idVec3		forward, right, up;	// move matrix
 	idVec3		vup, vpn, vright;	// view matrix
+	float		viewDist;			// sikk - Added - Rotate Around Selection
 } camera_t;
 
 
@@ -67,6 +68,7 @@ class CCamWnd : public CWnd
 // Construction
 public:
 	CCamWnd();
+	virtual		~CCamWnd();
 	
 // Attributes
 public:
@@ -78,131 +80,154 @@ public:
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CCamWnd)
 protected:
-	virtual BOOL PreCreateWindow( CREATESTRUCT& cs );
+	virtual BOOL	PreCreateWindow( CREATESTRUCT& cs );
 	//}}AFX_VIRTUAL
 	
 // Implementation
 public:
-	void ShiftTexture_BrushPrimit( face_t* f, int x, int y );
-	CXYWnd* m_pXYFriend;
-	void SetXYFriend( CXYWnd* pWnd );
-	virtual ~CCamWnd();
-	camera_t& Camera()
+	void			ShiftTexture_BrushPrimit( face_t* f, int x, int y );
+	void			SetXYFriend( CXYWnd* pWnd );
+	camera_t&		Camera()
 	{
 		return m_Camera;
 	};
-	void Cam_MouseControl( float dtime );
-	void Cam_ChangeFloor( bool up );
-	void BuildRendererState();
-	void ToggleRenderMode();
-	void ToggleRebuildMode();
-	void ToggleEntityMode();
-	void ToggleSelectMode();
-	void ToggleAnimationMode();
-	void ToggleSoundMode();
-	void SetProjectionMatrix();
-	void UpdateCameraView();
+	void			Cam_MouseControl();
+	void			Cam_KeyControl( float dtime );	// sikk - Added for wasd movement
+	void 			Cam_ChangeFloor( bool up );
+	void 			BuildRendererState();
+	void 			ToggleRenderMode();
+	void 			ToggleRebuildMode();
+	void 			ToggleEntityMode();
+	void 			ToggleSelectMode();
+	void 			ToggleAnimationMode();
+	void 			ToggleSoundMode();
+	void 			SetProjectionMatrix();
+	void 			UpdateCameraView();
 	
-	void BuildEntityRenderState( entity_t* ent, bool update );
-	bool GetRenderMode()
+	void 			BuildEntityRenderState( entity_t* ent, bool update );
+	bool 			GetRenderMode()
 	{
 		return renderMode;
 	}
-	bool GetRebuildMode()
+	bool 			GetRebuildMode()
 	{
 		return rebuildMode;
 	}
-	bool GetEntityMode()
+	bool 			GetEntityMode()
 	{
 		return entityMode;
 	}
-	bool GetAnimationMode()
+	bool 			GetAnimationMode()
 	{
 		return animationMode;
 	}
-	bool GetSelectMode()
+	bool 			GetSelectMode()
 	{
 		return selectMode;
 	}
-	bool GetSoundMode()
+	bool 			GetSoundMode()
 	{
 		return soundMode;
 	}
 	
+	bool 			UpdateRenderEntities();
+	void 			MarkWorldDirty();
 	
-	bool UpdateRenderEntities();
-	void MarkWorldDirty();
-	
-	void SetView( const idVec3& origin, const idAngles& angles )
+	void 			SetView( const idVec3& origin, const idAngles& angles )
 	{
 		m_Camera.origin = origin;
 		m_Camera.angles = angles;
 	}
+	void 			Cam_BuildMatrix();	// sikk - temp move until I write public wasd move functions
+	
+	void			PositionView();	// sikk - Added - Center on Selection
+	
+	brush_t*		CreateDropBrush();	// sikk - Added - New Brush creation in Cam window
+	
+	CXYWnd*			m_pXYFriend;
 	
 protected:
-	void Cam_Init();
-	void Cam_BuildMatrix();
-	void Cam_PositionDrag();
-	void Cam_MouseLook();
-	void Cam_MouseDown( int x, int y, int buttons );
-	void Cam_MouseUp( int x, int y, int buttons );
-	void Cam_MouseMoved( int x, int y, int buttons );
-	void InitCull();
-	bool CullBrush( brush_t* b, bool cubicOnly );
-	void Cam_Draw();
-	void Cam_Render();
-	
+	void 			Cam_Init();
+	void 			Cam_PositionDrag();
+	void 			Cam_PositionRotate();	// sikk - Added - Rotate Around Selection
+	void 			Cam_Rotate( int x, int y, idVec3 org ); // sikk - Added - Rotate Around Selection
+	void 			Cam_MouseLook();
+	void 			Cam_MouseDown( int x, int y, int buttons );
+	void 			Cam_MouseUp( int x, int y, int buttons );
+	void 			Cam_MouseMoved( int x, int y, int buttons );
+	void			NewBrushDrag( int x, int y );	// sikk - Added - New Brush creation in Cam window
+	void 			InitCull();
+	bool 			CullBrush( brush_t* b, bool cubicOnly );
+	void 			Cam_Draw();
+	void 			Cam_Render();
+// ---> sikk - Various Draw Functions
+	void 			Cam_DrawMapBounds();
+	void 			Cam_DrawWorldAxis();
+	void 			Cam_DrawCameraAxis();
+	void 			Cam_DrawClipPoints();
+// <--- sikk - Various Draw Functions
+
 	// game renderer interaction
-	qhandle_t	worldModelDef;
+	void			FreeRendererState();
+	void			UpdateCaption();
+	bool			BuildBrushRenderData( brush_t* brush );
+	void			DrawEntityData();
+	
+	qhandle_t		worldModelDef;
 	idRenderModel*	worldModel;		// createRawModel of the brush and patch geometry
-	bool	worldDirty;
-	bool	renderMode;
-	bool	rebuildMode;
-	bool	entityMode;
-	bool	selectMode;
-	bool	animationMode;
-	bool	soundMode;
-	void	FreeRendererState();
-	void	UpdateCaption();
-	bool	BuildBrushRenderData( brush_t* brush );
-	void	DrawEntityData();
+	bool			worldDirty;
+	bool			renderMode;
+	bool			rebuildMode;
+	bool			entityMode;
+	bool			selectMode;
+	bool			animationMode;
+	bool			soundMode;
 	
+	camera_t		m_Camera;
+	int				m_nCambuttonstate;
+	CPoint 			m_ptButton;
+	CPoint 			m_ptCursor;
+	CPoint 			m_ptLastCursor;
+	CPoint  		m_ptDown;	// sikk - Added for context menu
+	CPoint  		m_ptLBDown;	// sikk - Clip Point Manipulation
+	face_t* 		m_pSide_select;
+	idVec3 			m_vCull1;
+	idVec3 			m_vCull2;
+	int 			m_nCullv1[3];
+	int 			m_nCullv2[3];
+	bool 			m_bClipMode;
+	idVec3 			saveOrg;
+	idAngles 		saveAng;
+	bool 			saveValid;
 	
-	camera_t m_Camera;
-	int	m_nCambuttonstate;
-	CPoint m_ptButton;
-	CPoint m_ptCursor;
-	CPoint m_ptLastCursor;
-	face_t* m_pSide_select;
-	idVec3 m_vCull1;
-	idVec3 m_vCull2;
-	int m_nCullv1[3];
-	int m_nCullv2[3];
-	bool m_bClipMode;
-	idVec3 saveOrg;
-	idAngles saveAng;
-	bool saveValid;
+	bool 			m_bCanCreateBrush;	// sikk - Added - New Brush creation in Cam window
 	
+	idVec3			m_vPressdelta;	// sikk - Added - Clip Point Manipulation
 	// Generated message map functions
 protected:
-	void OriginalMouseDown( UINT nFlags, CPoint point );
-	void OriginalMouseUp( UINT nFlags, CPoint point );
+	void 			OriginalMouseDown( UINT nFlags, CPoint point );
+	void 			OriginalMouseUp( UINT nFlags, CPoint point );
 	//{{AFX_MSG(CCamWnd)
-	afx_msg void OnKeyDown( UINT nChar, UINT nRepCnt, UINT nFlags );
-	afx_msg void OnPaint();
-	afx_msg void OnDestroy();
-	afx_msg void OnClose();
-	afx_msg void OnMouseMove( UINT nFlags, CPoint point );
-	afx_msg void OnLButtonDown( UINT nFlags, CPoint point );
-	afx_msg void OnLButtonUp( UINT nFlags, CPoint point );
-	afx_msg void OnMButtonDown( UINT nFlags, CPoint point );
-	afx_msg void OnMButtonUp( UINT nFlags, CPoint point );
-	afx_msg void OnRButtonDown( UINT nFlags, CPoint point );
-	afx_msg void OnRButtonUp( UINT nFlags, CPoint point );
-	afx_msg int OnCreate( LPCREATESTRUCT lpCreateStruct );
-	afx_msg void OnSize( UINT nType, int cx, int cy );
-	afx_msg void OnKeyUp( UINT nChar, UINT nRepCnt, UINT nFlags );
-	afx_msg void OnTimer( UINT nIDEvent );
+	afx_msg void	OnKeyDown( UINT nChar, UINT nRepCnt, UINT nFlags );
+	afx_msg void	OnPaint();
+	afx_msg void	OnDestroy();
+	afx_msg void	OnClose();
+	afx_msg void	OnMouseMove( UINT nFlags, CPoint point );
+	afx_msg void	OnLButtonDown( UINT nFlags, CPoint point );
+	afx_msg void	OnLButtonUp( UINT nFlags, CPoint point );
+	afx_msg void	OnMButtonDown( UINT nFlags, CPoint point );
+	afx_msg void	OnMButtonUp( UINT nFlags, CPoint point );
+	afx_msg void	OnRButtonDown( UINT nFlags, CPoint point );
+	afx_msg void	OnRButtonUp( UINT nFlags, CPoint point );
+	afx_msg int		OnCreate( LPCREATESTRUCT lpCreateStruct );
+	afx_msg void	OnSize( UINT nType, int cx, int cy );
+// ---> sikk - Window Snapping
+	afx_msg void	OnSizing( UINT nSide, LPRECT lpRect );
+	afx_msg void	OnMoving( UINT nSide, LPRECT lpRect );
+// <--- sikk - Window Snapping
+	afx_msg void	OnKeyUp( UINT nChar, UINT nRepCnt, UINT nFlags );
+	afx_msg void	OnTimer( UINT nIDEvent );
+	afx_msg BOOL	OnMouseWheel( UINT nFlags, short zDelta, CPoint pt );	// sikk - Mousewheel Support for cam window
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

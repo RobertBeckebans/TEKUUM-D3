@@ -536,13 +536,18 @@ void CEntityDlg::DelProp()
 
 BOOL CEntityDlg::PreTranslateMessage( MSG* pMsg )
 {
+// ---> sikk - Added
+	//if ( pMsg->message == WM_LBUTTONDOWN || pMsg->message == WM_RBUTTONDOWN || pMsg->message == WM_MBUTTONDOWN ) {
+	//	g_Inspectors->BringWindowToTop();
+	//}
+// <--- sikk - Added
 
 	if( pMsg->hwnd == editVal.GetSafeHwnd() )
 	{
 		if( pMsg->message == WM_LBUTTONDOWN )
 		{
 			editVal.SetFocus();
-			return TRUE;
+//			return TRUE;	// sikk - Don't return so we can do default message handling
 		}
 	}
 	
@@ -551,7 +556,7 @@ BOOL CEntityDlg::PreTranslateMessage( MSG* pMsg )
 		if( pMsg->message == WM_LBUTTONDOWN )
 		{
 			editKey.SetFocus();
-			return TRUE;
+//			return TRUE;	// sikk - Don't return so we can do default message handling
 		}
 	}
 	

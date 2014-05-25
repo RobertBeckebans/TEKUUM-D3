@@ -37,41 +37,43 @@ If you have questions concerning this license or the applicable additional terms
 
 class CInspectorDialog : public CTabsDlg
 {
-	//DECLARE_DYNAMIC(CInspectorDialog)w
+	//DECLARE_DYNAMIC(CInspectorDialog)
 	
 public:
-	CInspectorDialog( CWnd* pParent = NULL ); // standard constructor
-	virtual ~CInspectorDialog();
+	CInspectorDialog( CWnd* pParent = NULL );   // standard constructor
+	virtual			~CInspectorDialog();
 	
 // Dialog Data
 	enum { IDD = IDD_DIALOG_INSPECTORS };
 	
 protected:
-	bool initialized;
-	unsigned int dockedTabs;
+	bool			initialized;
+	unsigned int	dockedTabs;
 	
 	DECLARE_MESSAGE_MAP()
 public:
-	virtual BOOL OnInitDialog();
-	void AssignModel();
-	CTabCtrl tabInspector;
-	//idGLConsoleWidget consoleWnd;
-	CConsoleDlg consoleWnd;
-	CNewTexWnd texWnd;
+	virtual BOOL	OnInitDialog();
+	void			AssignModel();
+	void			SetMode( int mode, bool updateTabs = true );
+	void			UpdateEntitySel( eclass_t* ent );
+	void			UpdateSelectedEntity();
+	void			FillClassList();
+	bool			GetSelectAllCriteria( idStr& key, idStr& val );
+	void			SetDockedTabs( bool docked, int ID );
+	
+	afx_msg void	OnSize( UINT nType, int cx, int cy );
+	afx_msg void	OnDestroy();
+	afx_msg void	OnClose();
+	virtual BOOL	PreTranslateMessage( MSG* pMsg );
+	
+	CTabCtrl		tabInspector;
+	//idGLConsoleWidget	consoleWnd;
+	CConsoleDlg		consoleWnd;
+	CNewTexWnd		texWnd;
 	CDialogTextures mediaDlg;
-	CEntityDlg entityDlg;
-	void SetMode( int mode, bool updateTabs = true );
-	void UpdateEntitySel( eclass_t* ent );
-	void UpdateSelectedEntity();
-	void FillClassList();
-	bool GetSelectAllCriteria( idStr& key, idStr& val );
+	CEntityDlg		entityDlg;
 	
-	afx_msg void OnSize( UINT nType, int cx, int cy );
-	afx_msg void OnDestroy();
-	afx_msg void OnClose();
-	virtual BOOL PreTranslateMessage( MSG* pMsg );
-	
-	void SetDockedTabs( bool docked , int ID );
+	int prevMode;	// sikk - Added
 };
 
 extern CInspectorDialog* g_Inspectors;

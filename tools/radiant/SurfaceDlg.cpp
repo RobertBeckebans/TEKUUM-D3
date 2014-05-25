@@ -151,7 +151,7 @@ END_MESSAGE_MAP()
 texdef_t	g_old_texdef;
 texdef_t	g_patch_texdef;
 HWND		g_surfwin = NULL;
-bool	g_changed_surface;
+bool		g_changed_surface;
 
 /*
 ==============
@@ -182,7 +182,7 @@ void CSurfaceDlg::SetTexMods()
 	face_t* selFace = NULL;
 	if( faceCount )
 	{
-		selFace = reinterpret_cast < face_t* >( g_ptrSelectedFaces.GetAt( 0 ) );
+		selFace = reinterpret_cast<face_t*>( g_ptrSelectedFaces.GetAt( 0 ) );
 	}
 	else
 	{
@@ -210,18 +210,14 @@ void CSurfaceDlg::SetTexMods()
 	UpdateData( FALSE );
 }
 
-
-bool g_bNewFace = false;
 bool g_bNewApplyHandling = false;
 bool g_bGatewayhack = false;
-
 
 /*
 =================
 UpdateSpinners
 =================
 */
-
 void CSurfaceDlg::UpdateSpinners( bool up, int nID )
 {
 	UpdateData( TRUE );
@@ -256,8 +252,8 @@ void CSurfaceDlg::UpdateSpinners( bool up, int nID )
 
 void CSurfaceDlg::UpdateSpinners( int nScrollCode, int nPos, CScrollBar* pBar )
 {
-
 	return;
+	
 	UpdateData( TRUE );
 	if( ( nScrollCode != SB_LINEUP ) && ( nScrollCode != SB_LINEDOWN ) )
 	{
@@ -310,8 +306,6 @@ bool ByeByeSurfaceDialog();
 
 void DoSurface()
 {
-
-	g_bNewFace = ( g_PrefsDlg.m_bFace != FALSE );
 	g_bNewApplyHandling = ( g_PrefsDlg.m_bNewApplyHandling != FALSE );
 	g_bGatewayhack = ( g_PrefsDlg.m_bGatewayHack != FALSE );
 	// save current state for cancel
@@ -418,7 +412,6 @@ void CSurfaceDlg::OnHScroll( UINT nSBCode, UINT nPos, CScrollBar* pScrollBar )
 
 void CSurfaceDlg::OnKeyDown( UINT nChar, UINT nRepCnt, UINT nFlags )
 {
-
 	CDialog::OnKeyDown( nChar, nRepCnt, nFlags );
 }
 
@@ -427,7 +420,6 @@ void CSurfaceDlg::OnVScroll( UINT nSBCode, UINT nPos, CScrollBar* pScrollBar )
 	//UpdateSpinners(nSBCode, nPos, pScrollBar);
 	//Sys_UpdateWindows(W_CAMERA);
 }
-
 
 void CSurfaceDlg::OnOK()
 {
@@ -504,18 +496,18 @@ HBRUSH CSurfaceDlg::OnCtlColor( CDC* pDC, CWnd* pWnd, UINT nCtlColor )
 int CSurfaceDlg::OnCreate( LPCREATESTRUCT lpCreateStruct )
 {
 	if( CDialog::OnCreate( lpCreateStruct ) == -1 )
+	{
 		return -1;
-		
+	}
+	
 	return 0;
 }
 
 BOOL CSurfaceDlg::PreCreateWindow( CREATESTRUCT& cs )
 {
 	// TODO: Add your specialized code here and/or call the base class
-	
 	return CDialog::PreCreateWindow( cs );
 }
-
 
 void CSurfaceDlg::OnDeltaPosSpin( NMHDR* pNMHDR, LRESULT* pResult )
 {
@@ -556,7 +548,6 @@ void CSurfaceDlg::OnBtnAxial()
 void CSurfaceDlg::OnBtnBrushfit()
 {
 	// TODO: Add your control notification handler code here
-	
 }
 
 void CSurfaceDlg::OnBtnFacefit()
@@ -580,7 +571,6 @@ void CSurfaceDlg::OnBtnFacefit()
 	Sys_UpdateWindows( W_ALL );
 }
 
-
 void CSurfaceDlg::OnCheckSubdivide()
 {
 	UpdateData( TRUE );
@@ -602,7 +592,6 @@ void CSurfaceDlg::OnChangeEditHorz()
 	// turn any patches in explicit subdivides
 	Patch_SubdivideSelected( ( m_subdivide != FALSE ), m_nHorz, m_nVert );
 	Sys_UpdateWindows( W_CAMERA | W_XY );
-	
 }
 
 void CSurfaceDlg::OnChangeEditVert()
@@ -617,7 +606,6 @@ void CSurfaceDlg::OnChangeEditVert()
 	// turn any patches in explicit subdivides
 	Patch_SubdivideSelected( ( m_subdivide != FALSE ), m_nHorz, m_nVert );
 	Sys_UpdateWindows( W_CAMERA | W_XY );
-	
 }
 
 BOOL CSurfaceDlg::PreTranslateMessage( MSG* pMsg )

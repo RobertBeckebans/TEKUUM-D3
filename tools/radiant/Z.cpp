@@ -203,7 +203,7 @@ void Z_MouseMoved( int x, int y, int buttons )
 	if( buttons == MK_LBUTTON )
 	{
 		Drag_MouseMoved( x, y, buttons );
-		Sys_UpdateWindows( W_Z | W_CAMERA_IFON | W_XY );
+		Sys_UpdateWindows( W_Z | W_CAMERA_ICON | W_XY );
 		return;
 	}
 	

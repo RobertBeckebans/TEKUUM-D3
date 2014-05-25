@@ -34,32 +34,31 @@ If you have questions concerning this license or the applicable additional terms
 #endif // _MSC_VER >= 1000
 
 #include "XYWnd.h"
-#include "NewTexWnd.h"
 #include "ZWnd.h"
 #include "CamWnd.h"
+#include "NewTexWnd.h"
 #include "TextureBar.h"
+//#include "InspectorDialog.h"	// sikk - Window Snapping
 
 
-const int RAD_SHIFT =   0x01;
-const int RAD_ALT =     0x02;
-const int RAD_CONTROL = 0x04;
-const int RAD_PRESS   = 0x08;
+const int RAD_SHIFT		= 0x01;
+const int RAD_ALT		= 0x02;
+const int RAD_CONTROL	= 0x04;
+const int RAD_PRESS		= 0x08;
 
 struct SCommandInfo
 {
-	char* m_strCommand;
-	unsigned int   m_nKey;
-	unsigned int   m_nModifiers;
-	unsigned int m_nCommand;
+	char*			m_strCommand;
+	unsigned int	m_nKey;
+	unsigned int	m_nModifiers;
+	unsigned int	m_nCommand;
 };
 
 struct SKeyInfo
 {
-	char* m_strName;
-	unsigned int m_nVKKey;
+	char*			m_strName;
+	unsigned int	m_nVKKey;
 };
-
-
 
 
 class CMainFrame : public CFrameWnd
@@ -67,12 +66,17 @@ class CMainFrame : public CFrameWnd
 	DECLARE_DYNAMIC( CMainFrame )
 public:
 	CMainFrame();
-	void HandleKey( UINT nChar, UINT nRepCnt, UINT nFlags, bool bDown = true )
+	virtual				~CMainFrame();
+	void				HandleKey( UINT nChar, UINT nRepCnt, UINT nFlags, bool bDown = true )
 	{
 		if( bDown )
+		{
 			OnKeyDown( nChar, nRepCnt, nFlags );
+		}
 		else
+		{
 			OnKeyUp( nChar, nRepCnt, nFlags );
+		}
 	};
 	
 	// Attributes
@@ -85,30 +89,30 @@ public:
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CMainFrame)
 public:
-	virtual BOOL PreCreateWindow( CREATESTRUCT& cs );
-	virtual BOOL PreTranslateMessage( MSG* pMsg );
+	virtual BOOL		PreCreateWindow( CREATESTRUCT& cs );
+	virtual BOOL		PreTranslateMessage( MSG* pMsg );
 protected:
-	virtual BOOL OnCommand( WPARAM wParam, LPARAM lParam );
-	virtual LRESULT DefWindowProc( UINT message, WPARAM wParam, LPARAM lParam );
-	virtual LRESULT WindowProc( UINT message, WPARAM wParam, LPARAM lParam );
-	virtual BOOL OnCreateClient( LPCREATESTRUCT lpcs, CCreateContext* pContext );
+	virtual BOOL		OnCommand( WPARAM wParam, LPARAM lParam );
+	virtual LRESULT		DefWindowProc( UINT message, WPARAM wParam, LPARAM lParam );
+	virtual LRESULT		WindowProc( UINT message, WPARAM wParam, LPARAM lParam );
+	virtual BOOL		OnCreateClient( LPCREATESTRUCT lpcs, CCreateContext* pContext );
 	//}}AFX_VIRTUAL
 	
 	// Implementation
 public:
-	void UpdatePatchToolbarButtons();
-	void NudgeSelection( int nDirection, float fAmount );
-	void UpdateTextureBar();
-	void SetButtonMenuStates();
-	void SetTexValStatus();
-	void SetGridStatus();
-	void RoutineProcessing();
-	CXYWnd* ActiveXY();
-	void UpdateWindows( int nBits );
-	void SetStatusText( int nPane, const char* pText );
-	void UpdateStatusText();
-	void SetWindowStyle( int nStyle );
-	bool GetNurbMode()
+	void 				UpdatePatchToolbarButtons();
+	void 				NudgeSelection( int nDirection, float fAmount );
+	void 				UpdateTextureBar();
+	void 				SetButtonMenuStates();
+	void 				SetTexValStatus();
+	void 				SetGridStatus();
+	void 				RoutineProcessing();
+	CXYWnd* 			ActiveXY();
+	void 				UpdateWindows( int nBits );
+	void 				SetStatusText( int nPane, const char* pText );
+	void 				UpdateStatusText();
+	void 				SetWindowStyle( int nStyle );
+	bool 				GetNurbMode()
 	{
 		return nurbMode;
 	}
@@ -116,39 +120,53 @@ public:
 	{
 		return &nurb;
 	}
-	void OnPrecisionCursorCycle();
+	void 				OnPrecisionCursorCycle();
 	
-	virtual ~CMainFrame();
-	CXYWnd* GetXYWnd()
+	CXYWnd*				GetXYWnd()
 	{
 		return m_pXYWnd;
 	};
-	CXYWnd* GetXZWnd()
+	CXYWnd*				GetXZWnd()
 	{
 		return m_pXZWnd;
 	};
-	CXYWnd* GetYZWnd()
+	CXYWnd*				GetYZWnd()
 	{
 		return m_pYZWnd;
 	};
-	CCamWnd* GetCamera()
+	CCamWnd*			GetCamera()
 	{
 		return m_pCamWnd;
 	};
-	CZWnd* GetZWnd()
+	CZWnd*				GetZWnd()
 	{
 		return m_pZWnd;
 	};
 	
+// ---> sikk - Window Snapping
+//	CInspectorDialog*	GetInspectorsWnd() { return m_wndInspectors; };
+	CStatusBar*			GetStatusbarWnd()
+	{
+		return &m_wndStatusBar;
+	};
+	CToolBar*			GetToolbarWnd()
+	{
+		return &m_wndToolBar;
+	};
+// <--- sikk - Window Snapping
+
 	void SetActiveXY( CXYWnd* p )
 	{
 		if( m_pActiveXY )
+		{
 			m_pActiveXY->SetActive( false );
+		}
 		m_pActiveXY = p;
 		
 		if( m_pActiveXY )
+		{
 			m_pActiveXY->SetActive( true );
-			
+		}
 	};
 	
 #ifdef _DEBUG
@@ -157,6 +175,7 @@ public:
 #endif
 	
 protected:  // control bar embedded members
+//	CInspectorDialog* m_wndInspectors;
 	CStatusBar  m_wndStatusBar;
 	CToolBar m_wndToolBar;
 	CTextureBar m_wndTextureBar;
@@ -255,10 +274,6 @@ public:
 	afx_msg void OnMiscFindOrReplaceEntity();
 	afx_msg void OnMiscFindNextEntity();
 	afx_msg void OnMiscSetViewPos();
-	afx_msg void OnTexturebk();
-	afx_msg void OnColorsMajor();
-	afx_msg void OnColorsMinor();
-	afx_msg void OnColorsXybk();
 	afx_msg void OnBrush3sided();
 	afx_msg void OnBrush4sided();
 	afx_msg void OnBrush5sided();
@@ -347,11 +362,16 @@ public:
 	afx_msg void OnSplitSelected();
 	afx_msg void OnToggleviewXz();
 	afx_msg void OnToggleviewYz();
-	afx_msg void OnColorsBrush();
-	afx_msg void OnColorsClipper();
+	afx_msg void OnColorsXybk();
+	afx_msg void OnColorsCameraBk();	// sikk - Added - Cam Background Color Selection
+	afx_msg void OnTexturebk();
+	afx_msg void OnColorsMajor();
+	afx_msg void OnColorsMinor();
 	afx_msg void OnColorsGridtext();
-	afx_msg void OnColorsSelectedbrush();
 	afx_msg void OnColorsGridblock();
+	afx_msg void OnColorsBrush();
+	afx_msg void OnColorsSelectedbrush();
+	afx_msg void OnColorsClipper();
 	afx_msg void OnColorsViewname();
 	afx_msg void OnColorSetoriginal();
 	afx_msg void OnColorSetqer();

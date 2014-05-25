@@ -31,12 +31,21 @@ If you have questions concerning this license or the applicable additional terms
 
 #include "qe3.h"
 
-BOOL CALLBACK EditCommandDlgProc(
-	HWND hwndDlg,	// handle to dialog box
-	UINT uMsg,	// message
-	WPARAM wParam,	// first message parameter
-	LPARAM lParam 	// second message parameter
-)
+
+/*
+===================================================
+
+ PROJECT SETTINGS DIALOG
+
+===================================================
+*/
+
+/*
+=================
+EditCommandDlgProc
+=================
+*/
+BOOL CALLBACK EditCommandDlgProc( HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam )
 {
 	char	key[1024];
 	char	value[1024];
@@ -52,7 +61,7 @@ BOOL CALLBACK EditCommandDlgProc(
 			index = SendDlgItemMessage( hOwner, IDC_CMD_LIST, LB_GETCURSEL, 0, 0 );
 			if( index >= 0 )
 			{
-				SendDlgItemMessage( hOwner, IDC_CMD_LIST, LB_GETTEXT, index, ( LPARAM )( LPCTSTR ) key );
+				SendDlgItemMessage( hOwner, IDC_CMD_LIST, LB_GETTEXT, index, ( LPARAM )( LPCTSTR )key );
 				temp = ValueForKey( g_qeglobals.d_project_entity, key );
 				strcpy( value, temp );
 				SetDlgItemText( hwndDlg, IDC_CMDMENUTEXT, key );
@@ -70,7 +79,6 @@ BOOL CALLBACK EditCommandDlgProc(
 						common->Printf( "Command not added\n" );
 						return FALSE;
 					}
-					
 					if( !GetDlgItemText( hwndDlg, IDC_CMDCOMMAND, value, 64 ) )
 					{
 						common->Printf( "Command not added\n" );
@@ -81,9 +89,9 @@ BOOL CALLBACK EditCommandDlgProc(
 					//{
 					SetKeyValue( g_qeglobals.d_project_entity, key, value );
 					FillBSPMenu();
+					//} else {
+					//	common->Printf( "BSP commands must be preceded by \"bsp\"" );
 					//}
-					//else
-					//	common->Printf ("BSP commands must be preceded by \"bsp\"");
 					
 					EndDialog( hwndDlg, 1 );
 					return TRUE;
@@ -96,12 +104,12 @@ BOOL CALLBACK EditCommandDlgProc(
 	return FALSE;
 }
 
-BOOL CALLBACK AddCommandDlgProc(
-	HWND hwndDlg,	// handle to dialog box
-	UINT uMsg,	// message
-	WPARAM wParam,	// first message parameter
-	LPARAM lParam 	// second message parameter
-)
+/*
+=================
+AddCommandDlgProc
+=================
+*/
+BOOL CALLBACK AddCommandDlgProc( HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam )
 {
 	char	key[64];
 	char	value[128];
@@ -130,8 +138,10 @@ BOOL CALLBACK AddCommandDlgProc(
 						FillBSPMenu();
 					}
 					else
+					{
 						common->Printf( "BSP commands must be preceded by \"bsp\"" );
-						
+					}
+					
 					EndDialog( hwndDlg, 1 );
 					return TRUE;
 					
@@ -143,36 +153,39 @@ BOOL CALLBACK AddCommandDlgProc(
 	return FALSE;
 }
 
+/*
+=================
+UpdateBSPCommandList
+=================
+*/
 void UpdateBSPCommandList( HWND hwndDlg )
 {
-	int			i;
-	
 	SendDlgItemMessage( hwndDlg, IDC_CMD_LIST, LB_RESETCONTENT, 0 , 0 );
 	
-	i = 0;
+	int i = 0;
 	int count = g_qeglobals.d_project_entity->epairs.GetNumKeyVals();
 	for( int j = 0; j < count; j++ )
 	{
-		if( g_qeglobals.d_project_entity->epairs.GetKeyVal( j )->GetKey()[0] == 'b' && g_qeglobals.d_project_entity->epairs.GetKeyVal( j )->GetKey()[1] == 's' && g_qeglobals.d_project_entity->epairs.GetKeyVal( j )->GetKey()[2] == 'p' )
+		if( g_qeglobals.d_project_entity->epairs.GetKeyVal( j )->GetKey()[0] == 'b' &&
+				g_qeglobals.d_project_entity->epairs.GetKeyVal( j )->GetKey()[1] == 's' &&
+				g_qeglobals.d_project_entity->epairs.GetKeyVal( j )->GetKey()[2] == 'p' )
 		{
-			SendDlgItemMessage( hwndDlg, IDC_CMD_LIST, LB_ADDSTRING, i , ( LPARAM ) g_qeglobals.d_project_entity->epairs.GetKeyVal( j )->GetKey().c_str() );
+			SendDlgItemMessage( hwndDlg, IDC_CMD_LIST, LB_ADDSTRING, i, ( LPARAM )g_qeglobals.d_project_entity->epairs.GetKeyVal( j )->GetKey().c_str() );
 			i++;
 		}
 	}
 }
 
-
-// FIXME: turn this into an MFC dialog
-BOOL CALLBACK ProjectDlgProc(
-	HWND hwndDlg,	// handle to dialog box
-	UINT uMsg,	// message
-	WPARAM wParam,	// first message parameter
-	LPARAM lParam 	// second message parameter
-)
+/*
+=================
+ProjectDlgProc
+=================
+*/
+BOOL CALLBACK ProjectDlgProc( HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam )
 {
-	char		key[1024];
-	char		value[1024];
-	int			index;
+	char	key[1024];
+	char	value[1024];
+	int		index;
 	
 	switch( uMsg )
 	{
@@ -250,19 +263,31 @@ BOOL CALLBACK ProjectDlgProc(
 	return FALSE;
 }
 
+/*
+=================
+DoProjectSettings
+=================
+*/
 void DoProjectSettings()
 {
 	DialogBox( g_qeglobals.d_hInstance, ( char* )IDD_PROJECT, g_pParentWnd->GetSafeHwnd(), ProjectDlgProc );
 }
 
 
+/*
+===================================================
 
-BOOL CALLBACK GammaDlgProc(
-	HWND hwndDlg,	// handle to dialog box
-	UINT uMsg,	// message
-	WPARAM wParam,	// first message parameter
-	LPARAM lParam 	// second message parameter
-)
+  GAMMA DIALOG
+
+===================================================
+*/
+
+/*
+=================
+GammaDlgProc
+=================
+*/
+BOOL CALLBACK GammaDlgProc( HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam )
 {
 	char sz[256];
 	
@@ -275,7 +300,6 @@ BOOL CALLBACK GammaDlgProc(
 		case WM_COMMAND:
 			switch( LOWORD( wParam ) )
 			{
-			
 				case IDOK:
 					GetWindowText( GetDlgItem( hwndDlg, IDC_G_EDIT ), sz, 255 );
 					g_qeglobals.d_savedinfo.fGamma = atof( sz );
@@ -290,18 +314,30 @@ BOOL CALLBACK GammaDlgProc(
 	return FALSE;
 }
 
-
-
+/*
+=================
+DoGamma
+=================
+*/
 void DoGamma()
 {
-	if( DialogBox( g_qeglobals.d_hInstance, ( char* )IDD_GAMMA, g_pParentWnd->GetSafeHwnd(), GammaDlgProc ) )
-	{
-	}
+	DialogBox( g_qeglobals.d_hInstance, ( char* )IDD_GAMMA, g_pParentWnd->GetSafeHwnd(), GammaDlgProc );
 }
 
-//================================================
 
+/*
+===================================================
 
+  FIND BRUSH/ENTITY DIALOG
+
+===================================================
+*/
+
+/*
+===================
+SelectBrush
+===================
+*/
 void SelectBrush( int entitynum, int brushnum )
 {
 	entity_t*	e;
@@ -309,7 +345,9 @@ void SelectBrush( int entitynum, int brushnum )
 	int			i;
 	
 	if( entitynum == 0 )
+	{
 		e = world_entity;
+	}
 	else
 	{
 		e = entities.next;
@@ -343,18 +381,21 @@ void SelectBrush( int entitynum, int brushnum )
 	Brush_RemoveFromList( b );
 	Brush_AddToList( b, &selected_brushes );
 	
-	
 	Sys_UpdateWindows( W_ALL );
-	for( i = 0 ; i < 3 ; i++ )
+	for( i = 0; i < 3; i++ )
 	{
 		if( g_pParentWnd->GetXYWnd() )
+		{
 			g_pParentWnd->GetXYWnd()->GetOrigin()[i] = ( b->mins[i] + b->maxs[i] ) / 2;
-			
+		}
 		if( g_pParentWnd->GetXZWnd() )
+		{
 			g_pParentWnd->GetXZWnd()->GetOrigin()[i] = ( b->mins[i] + b->maxs[i] ) / 2;
-			
+		}
 		if( g_pParentWnd->GetYZWnd() )
+		{
 			g_pParentWnd->GetYZWnd()->GetOrigin()[i] = ( b->mins[i] + b->maxs[i] ) / 2;
+		}
 	}
 	
 	Sys_Status( "Selected.", 0 );
@@ -374,35 +415,34 @@ void GetSelectionIndex( int* ent, int* brush )
 	
 	b = selected_brushes.next;
 	if( b == &selected_brushes )
+	{
 		return;
-		
+	}
+	
 	// find entity
 	if( b->owner != world_entity )
 	{
 		( *ent )++;
-		for( entity = entities.next ; entity != &entities
-				; entity = entity->next, ( *ent )++ )
+		for( entity = entities.next; entity != &entities; entity = entity->next, ( *ent )++ )
 			;
 	}
 	
 	// find brush
-	for( b2 = b->owner->brushes.onext
-			  ; b2 != b && b2 != &b->owner->brushes
-			; b2 = b2->onext, ( *brush )++ )
+	for( b2 = b->owner->brushes.onext; b2 != b && b2 != &b->owner->brushes; b2 = b2->onext, ( *brush )++ )
 		;
 }
 
-BOOL CALLBACK FindBrushDlgProc(
-	HWND hwndDlg,	// handle to dialog box
-	UINT uMsg,	// message
-	WPARAM wParam,	// first message parameter
-	LPARAM lParam 	// second message parameter
-)
+/*
+===================
+FindBrushDlgProc
+===================
+*/
+BOOL CALLBACK FindBrushDlgProc( HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam )
 {
 	char entstr[256];
 	char brushstr[256];
-	HWND	h;
-	int		ent, brush;
+	HWND h;
+	int	 ent, brush;
 	
 	switch( uMsg )
 	{
@@ -425,6 +465,7 @@ BOOL CALLBACK FindBrushDlgProc(
 					GetWindowText( GetDlgItem( hwndDlg, IDC_FIND_ENTITY ), entstr, 255 );
 					GetWindowText( GetDlgItem( hwndDlg, IDC_FIND_BRUSH ), brushstr, 255 );
 					SelectBrush( atoi( entstr ), atoi( brushstr ) );
+					g_pParentWnd->OnViewCenter();	// sikk - Selection Centers views on entity
 					EndDialog( hwndDlg, 1 );
 					return TRUE;
 					
@@ -519,15 +560,16 @@ void DoRotate()
 
 bool g_bDoCone = false;
 bool g_bDoSphere = false;
-BOOL CALLBACK SidesDlgProc(
-	HWND hwndDlg,	// handle to dialog box
-	UINT uMsg,	// message
-	WPARAM wParam,	// first message parameter
-	LPARAM lParam 	// second message parameter
-)
+
+/*
+===================
+SidesDlgProc
+===================
+*/
+BOOL CALLBACK SidesDlgProc( HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam )
 {
 	char str[256];
-	HWND	h;
+	HWND h;
 	
 	switch( uMsg )
 	{
@@ -539,16 +581,21 @@ BOOL CALLBACK SidesDlgProc(
 		case WM_COMMAND:
 			switch( LOWORD( wParam ) )
 			{
-			
 				case IDOK:
 					GetWindowText( GetDlgItem( hwndDlg, IDC_SIDES ), str, 255 );
 					if( g_bDoCone )
+					{
 						Brush_MakeSidedCone( atoi( str ) );
+					}
 					else if( g_bDoSphere )
+					{
 						Brush_MakeSidedSphere( atoi( str ) );
+					}
 					else
+					{
 						Brush_MakeSided( atoi( str ) );
-						
+					}
+					
 					EndDialog( hwndDlg, 1 );
 					break;
 					
@@ -561,7 +608,11 @@ BOOL CALLBACK SidesDlgProc(
 	}
 }
 
-
+/*
+===================
+DoSides
+===================
+*/
 void DoSides( bool bCone, bool bSphere, bool bTorus )
 {
 	g_bDoCone = bCone;
@@ -571,17 +622,20 @@ void DoSides( bool bCone, bool bSphere, bool bTorus )
 }
 
 
-//======================================================================
+/*
+===================================================
+
+  ABOUT DIALOG
+
+===================================================
+*/
 
 /*
 ===================
-DoAbout
+AboutDlgProc
 ===================
 */
-BOOL CALLBACK AboutDlgProc( HWND hwndDlg,
-							UINT uMsg,
-							WPARAM wParam,
-							LPARAM lParam )
+BOOL CALLBACK AboutDlgProc( HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam )
 {
 	switch( uMsg )
 	{
@@ -590,13 +644,10 @@ BOOL CALLBACK AboutDlgProc( HWND hwndDlg,
 			char buffer[1024];
 			idStr::snPrintf( buffer, 1024, "DOOM Radiant Build %d\nCopyright ©1999-2004 Id Software, Inc.\n", BUILD_NUMBER );
 //			SetDlgItemText( hwndDlg, IDC_ABOUT_INFO, buffer);
-
 			idStr::snPrintf( buffer, 1024, "Renderer:\t%s", glGetString( GL_RENDERER ) );
 			SetDlgItemText( hwndDlg, IDC_ABOUT_GLRENDERER, buffer );
-			
 			idStr::snPrintf( buffer, 1024, "Version:\t\t%s", glGetString( GL_VERSION ) );
 			SetDlgItemText( hwndDlg, IDC_ABOUT_GLVERSION, buffer );
-			
 			idStr::snPrintf( buffer, 1024, "Vendor:\t\t%s", glGetString( GL_VENDOR ) );
 			SetDlgItemText( hwndDlg, IDC_ABOUT_GLVENDOR, buffer );
 			
@@ -618,7 +669,6 @@ BOOL CALLBACK AboutDlgProc( HWND hwndDlg,
 			}
 			while( end );
 		}
-		
 		return TRUE;
 		
 		case WM_CLOSE:
@@ -627,15 +677,22 @@ BOOL CALLBACK AboutDlgProc( HWND hwndDlg,
 			
 		case WM_COMMAND:
 			if( LOWORD( wParam ) == IDOK )
+			{
 				EndDialog( hwndDlg, 1 );
+			}
 			return TRUE;
 	}
 	return FALSE;
 }
 
+/*
+===================
+DoAbout
+===================
+*/
 void DoAbout()
 {
-	DialogBox( g_qeglobals.d_hInstance, ( char* ) IDD_ABOUT, g_pParentWnd->GetSafeHwnd(), AboutDlgProc );
+	DialogBox( g_qeglobals.d_hInstance, ( char* )IDD_ABOUT, g_pParentWnd->GetSafeHwnd(), AboutDlgProc );
 }
 
 

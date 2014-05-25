@@ -120,14 +120,14 @@ CPrefsDlg::CPrefsDlg( CWnd* pParent /*=NULL*/ )
 {
 	//{{AFX_DATA_INIT(CPrefsDlg)
 	m_bLoadLast = FALSE;
-	m_bFace = FALSE;
-	m_bRightClick = FALSE;
+	//m_bFace = FALSE;	// sikk - Removed
+	//m_bRightClick = FALSE;	// sikk - Removed
 	m_bVertex = FALSE;
 	m_bAutoSave = TRUE;
 	m_bNewApplyHandling = FALSE;
 	m_strAutoSave = _T( "5" );
 	m_bLoadLastMap = FALSE;
-	m_bTextureWindow = FALSE;
+	//m_bTextureWindow = FALSE;	// sikk - Removed
 	m_bSnapShots = FALSE;
 	m_fTinySize = 0.5;
 	m_bCleanTiny = FALSE;
@@ -147,8 +147,8 @@ CPrefsDlg::CPrefsDlg( CWnd* pParent /*=NULL*/ )
 	m_bHiColorTextures = TRUE;
 	m_bChaseMouse = FALSE;
 	m_bTextureScrollbar = TRUE;
-	m_bDisplayLists = TRUE;
-	m_bNoStipple = FALSE;
+	//m_bDisplayLists = TRUE;	// sikk - Removed
+	m_bNoStipple = TRUE;
 	m_strMaps = _T( "" );
 	m_strModels = _T( "" );
 	m_bNewMapFormat = TRUE;
@@ -161,7 +161,7 @@ CPrefsDlg::CPrefsDlg( CWnd* pParent /*=NULL*/ )
 	m_nTextureScale = 2;
 	m_bSwitchClip = FALSE;
 	m_bSelectWholeEntities = TRUE;
-	m_nTextureQuality = 3;
+	//m_nTextureQuality = 3; // sikk - Removed
 	m_bGLLighting = FALSE;
 	m_nUndoLevels = 63;
 }
@@ -172,16 +172,16 @@ void CPrefsDlg::DoDataExchange( CDataExchange* pDX )
 	//{{AFX_DATA_MAP(CPrefsDlg)
 	DDX_Control( pDX, IDC_SPIN_UNDO, m_wndUndoSpin );
 	DDX_Control( pDX, IDC_SPIN_POINTSIZE, m_wndFontSpin );
-	DDX_Control( pDX, IDC_SLIDER_TEXTUREQUALITY, m_wndTexturequality );
+	//DDX_Control( pDX, IDC_SLIDER_TEXTUREQUALITY, m_wndTexturequality ); // sikk - Removed
 	DDX_Control( pDX, IDC_SLIDER_CAMSPEED, m_wndCamSpeed );
 	DDX_Control( pDX, IDC_SPIN_AUTOSAVE, m_wndSpin );
 	DDX_Check( pDX, IDC_CHECK_LOADLAST, m_bLoadLast );
-	DDX_Check( pDX, IDC_CHECK_FACE, m_bFace );
-	DDX_Check( pDX, IDC_CHECK_RIGHTCLICK, m_bRightClick );
+	//DDX_Check( pDX, IDC_CHECK_FACE, m_bFace );	// sikk - Removed
+	//DDX_Check( pDX, IDC_CHECK_RIGHTCLICK, m_bRightClick );	// sikk - Removed
 	DDX_Check( pDX, IDC_CHECK_AUTOSAVE, m_bAutoSave );
 	DDX_Text( pDX, IDC_EDIT_AUTOSAVE, m_strAutoSave );
 	DDX_Check( pDX, IDC_CHECK_LOADLASTMAP, m_bLoadLastMap );
-	DDX_Check( pDX, IDC_CHECK_TEXTUREWINDOW, m_bTextureWindow );
+	//DDX_Check( pDX, IDC_CHECK_TEXTUREWINDOW, m_bTextureWindow );	// sikk - Removed
 	DDX_Check( pDX, IDC_CHECK_SNAPSHOTS, m_bSnapShots );
 	DDX_Text( pDX, IDC_EDIT_STATUSPOINTSIZE, m_nStatusSize );
 	DDV_MinMaxInt( pDX, m_nStatusSize, 2, 14 );
@@ -197,7 +197,7 @@ void CPrefsDlg::DoDataExchange( CDataExchange* pDX )
 	DDX_Check( pDX, IDC_CHECK_HICOLOR, m_bHiColorTextures );
 	DDX_Check( pDX, IDC_CHECK_MOUSECHASE, m_bChaseMouse );
 	DDX_Check( pDX, IDC_CHECK_TEXTURESCROLLBAR, m_bTextureScrollbar );
-	DDX_Check( pDX, IDC_CHECK_DISPLAYLISTS, m_bDisplayLists );
+	//DDX_Check( pDX, IDC_CHECK_DISPLAYLISTS, m_bDisplayLists );	// sikk - Removed
 	DDX_Check( pDX, IDC_CHECK_NOSTIPPLE, m_bNoStipple );
 	DDX_Text( pDX, IDC_EDIT_UNDOLEVELS, m_nUndoLevels );
 	DDV_MinMaxInt( pDX, m_nUndoLevels, 1, 64 );
@@ -222,8 +222,8 @@ BOOL CPrefsDlg::OnInitDialog()
 	m_wndCamSpeed.SetRange( 10, 5000 );
 	m_wndCamSpeed.SetPos( m_nMoveSpeed );
 	
-	this->m_wndTexturequality.SetRange( 0, 3 );
-	this->m_wndTexturequality.SetPos( m_nTextureQuality );
+	//this->m_wndTexturequality.SetRange( 0, 3 ); // sikk - Removed
+	//this->m_wndTexturequality.SetPos( m_nTextureQuality ); // sikk - Removed
 	
 	m_wndFontSpin.SetRange( 4, 24 );
 	m_wndUndoSpin.SetRange( 1, 64 );
@@ -241,7 +241,7 @@ void CPrefsDlg::OnOK()
 {
 	m_nMoveSpeed = m_wndCamSpeed.GetPos();
 	m_nAngleSpeed = ( float )m_nMoveSpeed * 0.50;
-	this->m_nTextureQuality = m_wndTexturequality.GetPos();
+	//this->m_nTextureQuality = m_wndTexturequality.GetPos(); // sikk - Removed
 	SavePrefs();
 	
 	if( g_pParentWnd )
@@ -358,14 +358,14 @@ void CPrefsDlg::LoadPrefs()
 	m_strLastMap = GetCvarString( LASTMAP_KEY, "" );
 	m_bLoadLast = GetCvarInt( LOADLAST_KEY, LOADLAST_DEF );
 	m_bRunBefore = GetCvarInt( RUN_KEY, RUN_DEF );
-	m_bFace = GetCvarInt( FACE_KEY, 1 );
-	m_bRightClick = GetCvarInt( RCLICK_KEY, 1 );
+	//m_bFace = GetCvarInt( FACE_KEY, 1 );	// sikk - Removed
+	//m_bRightClick = GetCvarInt( RCLICK_KEY, 1 );	// sikk - Removed
 	m_bVertex = GetCvarInt( VERTEX_KEY, 1 );
 	m_bAutoSave = GetCvarInt( AUTOSAVE_KEY, 1 );
 	m_bNewApplyHandling = GetCvarInt( NEWAPPLY_KEY, 0 );
 	m_bLoadLastMap = GetCvarInt( LOADLASTMAP_KEY, 0 );
 	m_bGatewayHack = GetCvarInt( HACK_KEY, 0 );
-	m_bTextureWindow = GetCvarInt( TEXTURE_KEY, 0 );
+	//m_bTextureWindow = GetCvarInt( TEXTURE_KEY, 0 );	// sikk - Removed
 	m_bCleanTiny = GetCvarInt( TINYBRUSH_KEY, 0 );
 	strBuff = GetCvarString( TINYSIZE_KEY, "0.5" );
 	m_fTinySize = atof( strBuff );
@@ -398,16 +398,16 @@ void CPrefsDlg::LoadPrefs()
 	m_nEntityShowState = GetCvarInt( ENTITYSHOW_KEY, 0 );
 	m_nTextureScale = GetCvarInt( TEXTURESCALE_KEY, 50 );
 	m_bTextureScrollbar = GetCvarInt( TEXTURESCROLLBAR_KEY, TRUE );
-	m_bDisplayLists = GetCvarInt( DISPLAYLISTS_KEY, TRUE );
+	//m_bDisplayLists = GetCvarInt( DISPLAYLISTS_KEY, TRUE );	// sikk - Removed
 	m_bSwitchClip = GetCvarInt( SWITCHCLIP_KEY, TRUE );
 	m_bSelectWholeEntities = GetCvarInt( SELWHOLEENTS_KEY, TRUE );
-	m_nTextureQuality = GetCvarInt( TEXTUREQUALITY_KEY, 6 );
+	//m_nTextureQuality = GetCvarInt( TEXTUREQUALITY_KEY, 6 ); // sikk - Removed
 	m_bGLLighting = GetCvarInt( GLLIGHTING_KEY, FALSE );
-	m_bNoStipple = GetCvarInt( NOSTIPPLE_KEY, 0 );
+	m_bNoStipple = GetCvarInt( NOSTIPPLE_KEY, 1 );
 	m_nUndoLevels = GetCvarInt( UNDOLEVELS_KEY, 63 );
 	m_strMaps = GetCvarString( MAPS_KEY, "" );
 	m_strModels = GetCvarString( MODELS_KEY, "" );
-	m_bNoStipple = GetCvarInt( NEWMAPFORMAT_KEY, 1 );
+	m_bNewMapFormat = GetCvarInt( NEWMAPFORMAT_KEY, 1 );
 	
 	if( m_bRunBefore == FALSE )
 	{
@@ -430,12 +430,12 @@ void CPrefsDlg::SavePrefs()
 	SetCvarString( LASTPROJ_KEY, m_strLastProject );
 	SetCvarString( LASTMAP_KEY, m_strLastMap );
 	SetCvarInt( RUN_KEY, m_bRunBefore );
-	SetCvarInt( FACE_KEY, m_bFace );
-	SetCvarInt( RCLICK_KEY, m_bRightClick );
+	//SetCvarInt( FACE_KEY, m_bFace );	// sikk - Removed
+	//SetCvarInt( RCLICK_KEY, m_bRightClick );	// sikk - Removed
 	SetCvarInt( VERTEX_KEY, m_bVertex );
 	SetCvarInt( AUTOSAVE_KEY, m_bAutoSave );
 	SetCvarInt( LOADLASTMAP_KEY, m_bLoadLastMap );
-	SetCvarInt( TEXTURE_KEY, m_bTextureWindow );
+	//SetCvarInt( TEXTURE_KEY, m_bTextureWindow );	// sikk - Removed
 	m_nAutoSave = atoi( m_strAutoSave );
 	SetCvarInt( AUTOSAVETIME_KEY, m_nAutoSave );
 	SetCvarInt( SNAPSHOT_KEY, m_bSnapShots );
@@ -461,10 +461,10 @@ void CPrefsDlg::SavePrefs()
 	SetCvarInt( ENTITYSHOW_KEY, m_nEntityShowState );
 	SetCvarInt( TEXTURESCALE_KEY, m_nTextureScale );
 	SetCvarInt( TEXTURESCROLLBAR_KEY, m_bTextureScrollbar );
-	SetCvarInt( DISPLAYLISTS_KEY, m_bDisplayLists );
+	//SetCvarInt( DISPLAYLISTS_KEY, m_bDisplayLists );	// sikk - Removed
 	SetCvarInt( SWITCHCLIP_KEY, m_bSwitchClip );
 	SetCvarInt( SELWHOLEENTS_KEY, m_bSelectWholeEntities );
-	SetCvarInt( TEXTUREQUALITY_KEY, m_nTextureQuality );
+	//SetCvarInt( TEXTUREQUALITY_KEY, m_nTextureQuality ); // sikk - Removed
 	SetCvarInt( GLLIGHTING_KEY, m_bGLLighting );
 	SetCvarInt( NOSTIPPLE_KEY, m_bNoStipple );
 	SetCvarInt( UNDOLEVELS_KEY, m_nUndoLevels );

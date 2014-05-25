@@ -42,7 +42,7 @@ class CPrefsDlg : public CDialog
 {
 // Construction
 public:
-	CPrefsDlg( CWnd* pParent = NULL ); // standard constructor
+	CPrefsDlg( CWnd* pParent = NULL );   // standard constructor
 	
 	void				LoadPrefs();
 	void				SavePrefs();
@@ -54,7 +54,7 @@ public:
 	
 	CSpinButtonCtrl		m_wndUndoSpin;
 	CSpinButtonCtrl		m_wndFontSpin;
-	CSliderCtrl			m_wndTexturequality;
+	//CSliderCtrl			m_wndTexturequality; // sikk - Removed
 	CSliderCtrl			m_wndCamSpeed;
 	CSpinButtonCtrl		m_wndSpin;
 	BOOL				m_bTextureLock;
@@ -62,15 +62,15 @@ public:
 	BOOL				m_bRunBefore;
 	CString				m_strLastProject;
 	CString				m_strLastMap;
-	BOOL				m_bFace;
-	BOOL				m_bRightClick;
+	//BOOL				m_bFace;	// sikk - Removed
+	//BOOL				m_bRightClick;	// sikk - Removed
 	BOOL				m_bVertex;
 	BOOL				m_bAutoSave;
 	BOOL				m_bNewApplyHandling;
 	CString				m_strAutoSave;
 	BOOL				m_bLoadLastMap;
 	BOOL				m_bGatewayHack;
-	BOOL				m_bTextureWindow;
+	//BOOL				m_bTextureWindow;	// sikk - Removed
 	BOOL				m_bSnapShots;
 	float				m_fTinySize;
 	BOOL				m_bCleanTiny;
@@ -91,7 +91,7 @@ public:
 	BOOL				m_bHiColorTextures;
 	BOOL				m_bChaseMouse;
 	BOOL				m_bTextureScrollbar;
-	BOOL				m_bDisplayLists;
+//	BOOL				m_bDisplayLists;	// sikk - Removed
 	BOOL				m_bNoStipple;
 	int					m_nUndoLevels;
 	CString				m_strMaps;
@@ -112,13 +112,13 @@ public:
 	BOOL				m_bNormalizeColors;
 	BOOL				m_bSwitchClip;
 	BOOL				m_bSelectWholeEntities;
-	int					m_nTextureQuality;
+	//int					m_nTextureQuality; // sikk - Removed
 	BOOL				m_bGLLighting;
 	
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CPrefsDlg)
 protected:
-	virtual void		DoDataExchange( CDataExchange* pDX );  // DDX/DDV support
+	virtual void		DoDataExchange( CDataExchange* pDX );    // DDX/DDV support
 	//}}AFX_VIRTUAL
 	
 protected:

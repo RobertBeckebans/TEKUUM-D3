@@ -81,7 +81,7 @@ public:
 		return *this;
 	}
 	//char	name[128];
-	char* 	name;
+	char*	name;
 	float	shift[2];
 	float	rotate;
 	float	scale[2];
@@ -124,9 +124,9 @@ public:
 	int			originy;
 	// add brushprimit_texdef_t for brush primitive coordinates storage
 	brushprimit_texdef_t	brushprimit_texdef;
-	int m_nTotalHeight;
+	int			m_nTotalHeight;
 	// surface plugin, must be casted to a IPluginTexdef*
-	void* pTexdef;
+	void*		pTexdef;
 	texdef_t	texdef;
 };
 
@@ -144,21 +144,21 @@ typedef struct qtexture_s
 	int		texture_number;	// gl bind number
 	
 	// name of the .shader file
-	char  shadername[1024]; // old shader stuff
-	bool bFromShader;   // created from a shader
-	float fTrans;           // amount of transparency
-	int   nShaderFlags;     // qer_ shader flags
+	char	shadername[1024]; // old shader stuff
+	bool	bFromShader;   // created from a shader
+	float	fTrans;           // amount of transparency
+	int		nShaderFlags;     // qer_ shader flags
 	idVec3	color;			    // for flat shade mode
 	bool	inuse;		    // true = is present on the level
 	
 	// cast this one to an IPluginQTexture if you are using it
 	// NOTE: casting can be done with a GETPLUGINQTEXTURE defined in isurfaceplugin.h
 	// TODO: if the __ISURFACEPLUGIN_H_ header is used, use a union { void *pData; IPluginQTexture *pPluginQTexture } kind of thing ?
-	void*					pData;
+	void*	pData;
 	
 	//++timo FIXME: this is the actual filename of the texture
 	// this will be removed after shader code cleanup
-	char filename[64];
+	char	filename[64];
 	
 } qtexture_t;
 
@@ -214,26 +214,26 @@ typedef struct
 // endcaps directly follow this patch in the list
 
 // types
-#define PATCH_GENERIC     0x00000000    // generic flat patch
-#define PATCH_CYLINDER    0x00000001    // cylinder
-#define PATCH_BEVEL       0x00000002    // bevel
-#define PATCH_ENDCAP      0x00000004    // endcap
-#define PATCH_HEMISPHERE  0x00000008    // hemisphere
-#define PATCH_CONE        0x00000010    // cone
-#define PATCH_TRIANGLE    0x00000020    // simple tri, assumes 3x3 patch
+#define PATCH_GENERIC		0x00000000    // generic flat patch
+#define PATCH_CYLINDER		0x00000001    // cylinder
+#define PATCH_BEVEL			0x00000002    // bevel
+#define PATCH_ENDCAP		0x00000004    // endcap
+#define PATCH_HEMISPHERE	0x00000008    // hemisphere
+#define PATCH_CONE			0x00000010    // cone
+#define PATCH_TRIANGLE		0x00000020    // simple tri, assumes 3x3 patch
 
 // behaviour styles
-#define PATCH_CAP         0x00001000    // flat patch applied as a cap
-#define PATCH_SEAM        0x00002000    // flat patch applied as a seam
-#define PATCH_THICK       0x00004000    // patch applied as a thick portion
+#define PATCH_CAP			0x00001000    // flat patch applied as a cap
+#define PATCH_SEAM			0x00002000    // flat patch applied as a seam
+#define PATCH_THICK			0x00004000    // patch applied as a thick portion
 
 // styles
-#define PATCH_BEZIER      0x00000000    // default bezier
-#define PATCH_BSPLINE     0x10000000    // bspline
+#define PATCH_BEZIER		0x00000000    // default bezier
+#define PATCH_BSPLINE		0x10000000    // bspline
 
-#define PATCH_TYPEMASK     0x00000fff    // 
-#define PATCH_BTYPEMASK    0x0000f000    // 
-#define PATCH_STYLEMASK    0xffff0000    // 
+#define PATCH_TYPEMASK		0x00000fff    // 
+#define PATCH_BTYPEMASK		0x0000f000    // 
+#define PATCH_STYLEMASK		0xffff0000    // 
 
 
 struct brush_s;
@@ -247,7 +247,7 @@ typedef struct
 	bool		explicitSubdivisions;
 	int			contents, flags, value, type;
 	const idMaterial* d_texture;
-	idDrawVert* verts;
+	idDrawVert*	verts;
 	//idDrawVert *ctrl;
 	brush_t* 	pSymbiot;
 	bool		bSelected;
@@ -261,6 +261,7 @@ typedef struct
 	// NOTE: casting can be done with a GETPLUGINTEXDEF defined in isurfaceplugin.h
 	// TODO: if the __ISURFACEPLUGIN_H_ header is used, use a union { void *pData; IPluginTexdef *pPluginTexdef } kind of thing ?
 	void* 		pData;
+	
 	ID_INLINE idDrawVert& ctrl( int col, int row )
 	{
 		if( col < 0 || col >= width || row < 0 || row >= height )
@@ -289,14 +290,13 @@ enum
 	LIGHT_CENTER
 };
 
-
 typedef struct brush_s
 {
 	struct brush_s*	prev, *next;	// links in active/selected
 	struct brush_s*	oprev, *onext;	// links in entity
-	brush_t*    list;				//keep a handy link to the list its in
+	brush_t*			list;				//keep a handy link to the list its in
 	struct entity_s*	owner;
-	idVec3 mins, maxs;
+	idVec3	mins, maxs;
 	
 	idVec3	lightCenter;			// for moving the shading center of point lights
 	idVec3	lightRight;
@@ -316,25 +316,25 @@ typedef struct brush_s
 	
 	face_t*  brush_faces;
 	
-	bool bModelFailed;
-	//
+	bool	bModelFailed;
+	
 	// curve brush extensions
 	// all are derived from brush_faces
 	bool	hiddenBrush;
 	bool	forceWireFrame;
 	bool	forceVisibile;
 	
-	patchMesh_t* pPatch;
+	patchMesh_t*		pPatch;
 	struct entity_s* pUndoOwner;
 	
-	int undoId;						//undo ID
-	int redoId;						//redo ID
-	int ownerId;					//entityId of the owner entity for undo
+	int		undoId;						//undo ID
+	int		redoId;						//redo ID
+	int		ownerId;					//entityId of the owner entity for undo
 	
 	// TTimo: HTREEITEM is MFC, some plugins really don't like it
 #ifdef QERTYPES_USE_MFC
-	int numberId;         // brush number
-	HTREEITEM itemOwner;  // owner for grouping
+	int			numberId;	// brush number
+	HTREEITEM	itemOwner;  // owner for grouping
 #else
 	int numberId;
 	DWORD itemOwner;
@@ -343,13 +343,12 @@ typedef struct brush_s
 	idRenderModel*	modelHandle;
 	
 	// brush primitive only
-	idDict	epairs;
+	idDict		epairs;
 	
 } brush_t;
 
 
 #define	MAX_FLAGS	8
-
 
 typedef struct trimodel_t
 {
@@ -359,22 +358,21 @@ typedef struct trimodel_t
 
 
 // eclass show flags
-
-#define		ECLASS_LIGHT			0x00000001
-#define		ECLASS_ANGLE			0x00000002
-#define		ECLASS_PATH				0x00000004
-#define		ECLASS_MISCMODEL		0x00000008
-#define		ECLASS_PLUGINENTITY		0x00000010
-#define		ECLASS_PROJECTEDLIGHT	0x00000020
-#define		ECLASS_WORLDSPAWN		0x00000040
-#define		ECLASS_SPEAKER			0x00000080
-#define		ECLASS_PARTICLE			0x00000100
-#define		ECLASS_ROTATABLE		0x00000200
-#define		ECLASS_CAMERAVIEW		0x00000400
-#define		ECLASS_MOVER			0x00000800
-#define		ECLASS_ENV				0x00001000
-#define		ECLASS_COMBATNODE		0x00002000
-#define		ECLASS_LIQUID			0x00004000
+#define ECLASS_LIGHT			0x00000001
+#define ECLASS_ANGLE			0x00000002
+#define ECLASS_PATH				0x00000004
+#define ECLASS_MISCMODEL		0x00000008
+#define ECLASS_PLUGINENTITY		0x00000010
+#define ECLASS_PROJECTEDLIGHT	0x00000020
+#define ECLASS_WORLDSPAWN		0x00000040
+#define ECLASS_SPEAKER			0x00000080
+#define ECLASS_PARTICLE			0x00000100
+#define ECLASS_ROTATABLE		0x00000200
+#define ECLASS_CAMERAVIEW		0x00000400
+#define ECLASS_MOVER			0x00000800
+#define ECLASS_ENV				0x00001000
+#define ECLASS_COMBATNODE		0x00002000
+#define ECLASS_LIQUID			0x00004000
 
 enum EVAR_TYPES
 {
@@ -398,30 +396,30 @@ typedef struct evar_s
 
 typedef struct eclass_s
 {
-	struct eclass_s* next;
-	idStr	name;
-	bool	fixedsize;
-	bool	unknown;		// wasn't found in source
-	idVec3	mins, maxs;
-	idVec3	color;
-	texdef_t texdef;
-	idStr	comments;
-	idStr	desc;
+	struct eclass_s*	next;
+	idStr			name;
+	bool			fixedsize;
+	bool			unknown;		// wasn't found in source
+	idVec3			mins, maxs;
+	idVec3			color;
+	texdef_t		texdef;
+	idStr			comments;
+	idStr			desc;
 	
-	idRenderModel* modelHandle;
-	idRenderModel* entityModel;
+	idRenderModel*	modelHandle;
+	idRenderModel*	entityModel;
 	
-	int   nFrame;
-	unsigned int nShowFlags;
-	idStr	defMaterial;
-	idDict	args;
-	idDict	defArgs;
-	idList<evar_t> vars;
+	int				nFrame;
+	unsigned int	nShowFlags;
+	idStr			defMaterial;
+	idDict			args;
+	idDict			defArgs;
+	idList<evar_t>	vars;
 	
-	HMODULE	hPlug;
+	HMODULE			hPlug;
 } eclass_t;
 
-extern	eclass_t*	eclass;
+extern eclass_t* eclass;
 
 /*
 ** window bits
@@ -434,7 +432,7 @@ extern	eclass_t*	eclass;
 #define	W_Z_OVERLAY		0x0020
 #define W_CONSOLE		0x0040
 #define W_ENTITY		0x0080
-#define W_CAMERA_IFON	0x0100
+#define W_CAMERA_ICON	0x0100
 #define W_XZ			0x0200  //--| only used for patch vertex manip stuff
 #define W_YZ			0x0400  //--|
 #define W_MEDIA			0x1000
@@ -442,6 +440,6 @@ extern	eclass_t*	eclass;
 #define	W_ALL			0xFFFFFFFF
 
 // used in some Drawing routines
-enum VIEWTYPE {YZ, XZ, XY};
+enum VIEWTYPE { YZ, XZ, XY };
 
 #endif

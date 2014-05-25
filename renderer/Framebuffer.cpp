@@ -119,7 +119,7 @@ void Framebuffer::Init()
 	
 	// HDR no MSAA
 	
-	globalFramebuffers.hdrNonMSAAFBO = new Framebuffer( "_hdr", glConfig.nativeScreenWidth, glConfig.nativeScreenHeight );
+	globalFramebuffers.hdrNonMSAAFBO = new Framebuffer( "_hdrNoMSAA", glConfig.nativeScreenWidth, glConfig.nativeScreenHeight );
 	globalFramebuffers.hdrNonMSAAFBO->Bind();
 	
 	globalFramebuffers.hdrNonMSAAFBO->AddColorBuffer( GL_RGBA16F, 0 );

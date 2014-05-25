@@ -5159,7 +5159,6 @@ void Brush_DrawCam( brush_t* b, bool bSelected )
 	
 	if( b->owner->eclass->fixedsize )
 	{
-	
 		DrawSpeaker( b, bSelected, false );
 		
 		if( g_PrefsDlg.m_bNewLightDraw && ( b->owner->eclass->nShowFlags & ECLASS_LIGHT ) && !( b->modelHandle || b->entityModel ) )
@@ -5177,7 +5176,6 @@ void Brush_DrawCam( brush_t* b, bool bSelected )
 		{
 			Brush_DrawCombatNode( b, true, bSelected );
 		}
-		
 	}
 	
 	
@@ -5616,7 +5614,6 @@ void Brush_DrawXY( brush_t* b, int nViewType, bool bSelected, bool ignoreViewTyp
 			glColor4fv( colorSave.ToFloatPtr() );
 			return;
 		}
-		
 	}
 	
 	glColor4fv( colorSave.ToFloatPtr() );

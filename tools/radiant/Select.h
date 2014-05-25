@@ -80,12 +80,12 @@ typedef struct
 } qertrace_t;
 
 
-#define	SF_SELECTED_ONLY	 0x01
-#define	SF_ENTITIES_FIRST	 0x02
-#define	SF_SINGLEFACE		   0x04
-#define SF_IGNORECURVES    0x08
-#define SF_IGNOREGROUPS    0x10
-#define SF_CYCLE           0x20
+#define	SF_SELECTED_ONLY	0x01
+#define	SF_ENTITIES_FIRST	0x02
+#define	SF_SINGLEFACE		0x04
+#define SF_IGNORECURVES		0x08
+#define SF_IGNOREGROUPS		0x10
+#define SF_CYCLE			0x20
 
 
 qertrace_t Test_Ray( const idVec3& origin, const idVec3& dir, int flags );

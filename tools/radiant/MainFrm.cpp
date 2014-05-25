@@ -72,7 +72,7 @@ static char		THIS_FILE[] = __FILE__;
 CString			g_strAppPath;						// holds the full path of the executable
 CMainFrame*		g_pParentWnd = NULL;				// used to precast to CMainFrame
 CPrefsDlg		g_Preferences;						// global prefs instance
-CPrefsDlg&		g_PrefsDlg = g_Preferences;		// reference used throughout
+CPrefsDlg&		g_PrefsDlg = g_Preferences;			// reference used throughout
 int				g_nUpdateBits = 0;					// window update flags
 bool			g_bScreenUpdates = true;			// whether window painting is active, used in a few places
 
@@ -1474,11 +1474,13 @@ void CMainFrame::RoutineProcessing()
 		}
 		
 		// run time dependant behavior
+// ---> sikk - Modified Camera Control
 		if( m_pCamWnd )
 		{
-			m_pCamWnd->Cam_MouseControl( delta );
+			m_pCamWnd->Cam_KeyControl( delta );	// sikk - Modified camera control
 		}
-		
+// <--- sikk - Modified Camera Control
+
 		if( g_PrefsDlg.m_bQE4Painting && g_nUpdateBits )
 		{
 			int nBits = g_nUpdateBits;	// this is done to keep this routine from being
@@ -1881,7 +1883,6 @@ void CMainFrame::OnKeyDown( UINT nChar, UINT nRepCnt, UINT nFlags )
  */
 BOOL CMainFrame::OnCreateClient( LPCREATESTRUCT lpcs, CCreateContext* pContext )
 {
-
 	g_Inspectors = new CInspectorDialog( this );
 	g_Inspectors->Create( IDD_DIALOG_INSPECTORS, this );
 	
@@ -1896,7 +1897,6 @@ BOOL CMainFrame::OnCreateClient( LPCREATESTRUCT lpcs, CCreateContext* pContext )
 	g_Inspectors->MoveWindow( r );
 	r.InflateRect( 0, 0, 0, 1 );
 	g_Inspectors->MoveWindow( r );
-	
 	
 	if( !LoadWindowPlacement( GetSafeHwnd(), "radiant_MainWindowPlace" ) )
 	{
@@ -2355,7 +2355,11 @@ void RunBsp( const char* command )
 	char*	in;
 	
 	// bring the console window forward for feedback
-	g_Inspectors->SetMode( W_CONSOLE );
+// sikk - Added so BSP doesn't hide the console
+	if( !g_Inspectors->IsWindowVisible() || g_Inspectors->prevMode != W_CONSOLE )
+	{
+		g_Inspectors->SetMode( W_CONSOLE );
+	}
 	
 	// decide if we are doing a .map or a .reg
 	strcpy( name, currentmap );
@@ -2890,7 +2894,7 @@ void CMainFrame::OnGrid1( unsigned int nID )
 	
 	SetGridStatus();
 	SetGridChecks( nID );
-	Sys_UpdateWindows( W_XY | W_Z );
+	Sys_UpdateWindows( W_XY | W_Z | W_CAMERA );	// sikk - Added W_CAMERA
 }
 
 /*
@@ -3409,6 +3413,18 @@ void CMainFrame::OnColorsXybk()
 	DoColor( COLOR_GRIDBACK );
 	Sys_UpdateWindows( W_ALL );
 }
+
+// ---> sikk - Added - Cam Background Color Selection
+/*
+ =======================================================================================================================
+ =======================================================================================================================
+ */
+void CMainFrame::OnColorsCameraBk()
+{
+	DoColor( COLOR_CAMERABACK );
+	Sys_UpdateWindows( W_CAMERA );
+}
+// <--- sikk - Added - Cam Background Color Selection
 
 /*
  =======================================================================================================================
@@ -4496,7 +4512,7 @@ void CMainFrame::UpdateWindows( int nBits )
 		}
 	}
 	
-	if( nBits & W_CAMERA || ( ( nBits & W_CAMERA_IFON ) && m_bCamPreview ) )
+	if( nBits & W_CAMERA || ( ( nBits & W_CAMERA_ICON ) && m_bCamPreview ) )
 	{
 		if( m_pCamWnd )
 		{
@@ -5339,7 +5355,7 @@ void CMainFrame::OnGridNext()
 // RB end
 
 	SetGridStatus();
-	Sys_UpdateWindows( W_XY | W_Z );
+	Sys_UpdateWindows( W_XY | W_Z | W_CAMERA );	// sikk - Added W_CAMERA
 }
 
 /*
@@ -5415,7 +5431,7 @@ void CMainFrame::OnGridPrev()
 // RB end
 
 	SetGridStatus();
-	Sys_UpdateWindows( W_XY | W_Z );
+	Sys_UpdateWindows( W_XY | W_Z | W_CAMERA );	// sikk - Added W_CAMERA
 }
 
 /*
