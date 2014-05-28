@@ -80,6 +80,10 @@ protected:
 	afx_msg void OnGetMinMaxInfo( MINMAXINFO FAR* lpMMI );
 	afx_msg void OnMouseMove( UINT nFlags, CPoint point );
 	afx_msg void OnSize( UINT nType, int cx, int cy );
+// ---> sikk - Window Snapping
+	afx_msg void OnSizing( UINT nSide, LPRECT lpRect );
+	afx_msg void OnMoving( UINT nSide, LPRECT lpRect );
+// <--- sikk - Window Snapping
 	afx_msg void OnNcCalcSize( BOOL bCalcValidRects, NCCALCSIZE_PARAMS FAR* lpncsp );
 	afx_msg void OnKillFocus( CWnd* pNewWnd );
 	afx_msg void OnSetFocus( CWnd* pOldWnd );
@@ -87,6 +91,7 @@ protected:
 	afx_msg void OnLButtonUp( UINT nFlags, CPoint point );
 	afx_msg void OnMButtonUp( UINT nFlags, CPoint point );
 	afx_msg void OnRButtonUp( UINT nFlags, CPoint point );
+	afx_msg BOOL OnMouseWheel( UINT nFlags, short zDelta, CPoint pt );
 	afx_msg void OnKeyUp( UINT nChar, UINT nRepCnt, UINT nFlags );
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()

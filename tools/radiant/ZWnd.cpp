@@ -66,6 +66,10 @@ BEGIN_MESSAGE_MAP( CZWnd, CWnd )
 	ON_WM_GETMINMAXINFO()
 	ON_WM_MOUSEMOVE()
 	ON_WM_SIZE()
+// ---> sikk - Window Snapping
+	ON_WM_SIZING()
+	ON_WM_MOVING()
+// <--- sikk - Window Snapping
 	ON_WM_NCCALCSIZE()
 	ON_WM_KILLFOCUS()
 	ON_WM_SETFOCUS()
@@ -73,10 +77,10 @@ BEGIN_MESSAGE_MAP( CZWnd, CWnd )
 	ON_WM_LBUTTONUP()
 	ON_WM_MBUTTONUP()
 	ON_WM_RBUTTONUP()
+	ON_WM_MOUSEWHEEL()
 	ON_WM_KEYUP()
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
-
 
 /////////////////////////////////////////////////////////////////////////////
 // CZWnd message handlers
@@ -84,8 +88,10 @@ END_MESSAGE_MAP()
 int CZWnd::OnCreate( LPCREATESTRUCT lpCreateStruct )
 {
 	if( CWnd::OnCreate( lpCreateStruct ) == -1 )
+	{
 		return -1;
-		
+	}
+	
 	m_dcZ = ::GetDC( GetSafeHwnd() );
 	QEW_SetupPixelFormat( m_dcZ, false );
 	
@@ -110,13 +116,24 @@ void CZWnd::OnKeyDown( UINT nChar, UINT nRepCnt, UINT nFlags )
 	g_pParentWnd->HandleKey( nChar, nRepCnt, nFlags );
 }
 
+void CZWnd::OnKeyUp( UINT nChar, UINT nRepCnt, UINT nFlags )
+{
+	g_pParentWnd->HandleKey( nChar, nRepCnt, nFlags, false );
+}
+
 void CZWnd::OnLButtonDown( UINT nFlags, CPoint point )
 {
 	SetFocus();
 	SetCapture();
 	CRect rctZ;
 	GetClientRect( rctZ );
-	Z_MouseDown( point.x, rctZ.Height() - 1 - point.y , nFlags );
+// ---> sikk - Bring window to front
+	if( g_pParentWnd->GetTopWindow() != this )
+	{
+		BringWindowToTop();
+	}
+// <--- sikk - Bring window to front
+	Z_MouseDown( point.x, rctZ.Height() - 1 - point.y, nFlags );
 }
 
 void CZWnd::OnMButtonDown( UINT nFlags, CPoint point )
@@ -125,7 +142,13 @@ void CZWnd::OnMButtonDown( UINT nFlags, CPoint point )
 	SetCapture();
 	CRect rctZ;
 	GetClientRect( rctZ );
-	Z_MouseDown( point.x, rctZ.Height() - 1 - point.y , nFlags );
+// ---> sikk - Bring window to front
+	if( g_pParentWnd->GetTopWindow() != this )
+	{
+		BringWindowToTop();
+	}
+// <--- sikk - Bring window to front
+	Z_MouseDown( point.x, rctZ.Height() - 1 - point.y, nFlags );
 }
 
 void CZWnd::OnRButtonDown( UINT nFlags, CPoint point )
@@ -134,7 +157,13 @@ void CZWnd::OnRButtonDown( UINT nFlags, CPoint point )
 	SetCapture();
 	CRect rctZ;
 	GetClientRect( rctZ );
-	Z_MouseDown( point.x, rctZ.Height() - 1 - point.y , nFlags );
+// ---> sikk - Bring window to front
+	if( g_pParentWnd->GetTopWindow() != this )
+	{
+		BringWindowToTop();
+	}
+// <--- sikk - Bring window to front
+	Z_MouseDown( point.x, rctZ.Height() - 1 - point.y, nFlags );
 }
 
 void CZWnd::OnPaint()
@@ -187,11 +216,32 @@ void CZWnd::OnSize( UINT nType, int cx, int cy )
 	z.width = rctZ.right;
 	z.height = rctZ.bottom;
 	if( z.width < 10 )
+	{
 		z.width = 10;
+	}
 	if( z.height < 10 )
+	{
 		z.height = 10;
+	}
 	Invalidate();
 }
+
+// ---> sikk - Window Snapping
+void CZWnd::OnSizing( UINT nSide, LPRECT lpRect )
+{
+	if( TryDocking( GetSafeHwnd(), nSide, lpRect, 0 ) )
+	{
+		return;
+	}
+}
+void CZWnd::OnMoving( UINT nSide, LPRECT lpRect )
+{
+	if( TryDocking( GetSafeHwnd(), nSide, lpRect, 0 ) )
+	{
+		return;
+	}
+}
+// <--- sikk - Window Snapping
 
 void CZWnd::OnNcCalcSize( BOOL bCalcValidRects, NCCALCSIZE_PARAMS FAR* lpncsp )
 {
@@ -221,7 +271,9 @@ void CZWnd::OnLButtonUp( UINT nFlags, CPoint point )
 	GetClientRect( rctZ );
 	Z_MouseUp( point.x, rctZ.bottom - 1 - point.y, nFlags );
 	if( !( nFlags & ( MK_LBUTTON | MK_RBUTTON | MK_MBUTTON ) ) )
+	{
 		ReleaseCapture();
+	}
 }
 
 void CZWnd::OnMButtonUp( UINT nFlags, CPoint point )
@@ -230,7 +282,9 @@ void CZWnd::OnMButtonUp( UINT nFlags, CPoint point )
 	GetClientRect( rctZ );
 	Z_MouseUp( point.x, rctZ.bottom - 1 - point.y, nFlags );
 	if( !( nFlags & ( MK_LBUTTON | MK_RBUTTON | MK_MBUTTON ) ) )
+	{
 		ReleaseCapture();
+	}
 }
 
 void CZWnd::OnRButtonUp( UINT nFlags, CPoint point )
@@ -239,9 +293,23 @@ void CZWnd::OnRButtonUp( UINT nFlags, CPoint point )
 	GetClientRect( rctZ );
 	Z_MouseUp( point.x, rctZ.bottom - 1 - point.y, nFlags );
 	if( !( nFlags & ( MK_LBUTTON | MK_RBUTTON | MK_MBUTTON ) ) )
+	{
 		ReleaseCapture();
+	}
 }
 
+BOOL CZWnd::OnMouseWheel( UINT nFlags, short zDelta, CPoint pt )
+{
+	if( zDelta > 0 )
+	{
+		g_pParentWnd->OnViewZzoomin();
+	}
+	else
+	{
+		g_pParentWnd->OnViewZzoomout();
+	}
+	return TRUE;
+}
 
 BOOL CZWnd::PreCreateWindow( CREATESTRUCT& cs )
 {
@@ -254,21 +322,22 @@ BOOL CZWnd::PreCreateWindow( CREATESTRUCT& cs )
 		wc.style         = CS_NOCLOSE;// | CS_OWNDC;
 		wc.lpszClassName = Z_WINDOW_CLASS;
 		wc.hCursor       = LoadCursor( NULL, IDC_ARROW );
-		wc.lpfnWndProc = ::DefWindowProc;
+		wc.lpfnWndProc	 = ::DefWindowProc;
 		if( AfxRegisterClass( &wc ) == FALSE )
+		{
 			Error( "CZWnd RegisterClass: failed" );
+		}
 	}
 	
 	cs.lpszClass = Z_WINDOW_CLASS;
 	cs.lpszName = "Z";
 	if( cs.style != QE3_CHILDSTYLE )
+	{
 		cs.style = QE3_SPLITTER_STYLE;
-		
+	}
+	cs.dwExStyle = WS_EX_TOOLWINDOW;	// sikk - Added - Tool window uses smaller tital bar (more screen space for editing)
+	
 	return CWnd::PreCreateWindow( cs );
 }
 
 
-void CZWnd::OnKeyUp( UINT nChar, UINT nRepCnt, UINT nFlags )
-{
-	g_pParentWnd->HandleKey( nChar, nRepCnt, nFlags, false );
-}
