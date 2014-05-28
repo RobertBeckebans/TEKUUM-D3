@@ -2933,13 +2933,11 @@ bool CXYWnd::XY_MouseMoved( int x, int y, int buttons )
 	// !m_bPress_selection && g_qeglobals.d_select_mode != sel_curvepoint &&
 	// g_qeglobals.d_select_mode != sel_splineedit)
 	//
-	/*
 	if( m_nButtonstate == MK_LBUTTON && !m_bPress_selection && g_qeglobals.d_select_mode == sel_brush )
 	{
 		NewBrushDrag( x, y );
 		return false;
 	}
-	*/
 	
 	// lbutton (possibly with control and or shift) with selection = drag selection
 	if( m_nButtonstate & MK_LBUTTON )
