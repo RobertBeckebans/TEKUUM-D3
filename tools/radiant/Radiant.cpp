@@ -353,7 +353,7 @@ BOOL CRadiantApp::InitInstance()
 	}
 	
 	CMainFrame* pMainFrame = new CMainFrame;
-	if( !pMainFrame->LoadFrame( IDR_MAINFRAME ) )  	// sikk - Changed from "IDR_MENU_QUAKE3"
+	if( !pMainFrame->LoadFrame( IDR_MENU_QUAKE3 ) )
 	{
 		return FALSE;
 	}
