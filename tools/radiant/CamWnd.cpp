@@ -2771,6 +2771,11 @@ void CCamWnd::FreeRendererState()
 		renderModelManager->FreeModel( worldModel );
 		worldModel = NULL;
 	}
+	
+	// RB begin
+	renderModelManager->FreeModelVertexCaches();
+	vertexCache.FreeStaticData();
+	// RB end
 }
 
 /*
