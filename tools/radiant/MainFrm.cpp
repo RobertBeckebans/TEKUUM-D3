@@ -299,7 +299,7 @@ SCommandInfo	g_Commands[] =
 	{ "Find_Textures",						'F',			RAD_SHIFT,							ID_TEXTURE_REPLACEALL },
 	{ "Find_Entity",						VK_F3,			RAD_CONTROL,						ID_MISC_FINDORREPLACEENTITY},
 	{ "Find_NextEntity",					VK_F3,			RAD_SHIFT,							ID_MISC_FINDNEXTENT},
-													
+	
 	{ "_ShowDOOM",							VK_F2,			0,									ID_SHOW_DOOM },
 	
 	{ "Rotate_MouseRotate",					'R',			0,									ID_SELECT_MOUSEROTATE },

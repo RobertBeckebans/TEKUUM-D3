@@ -339,6 +339,7 @@ void CDialogTextures::OnLoad()
 	dlg.AllowCancel( true );
 	dlg.SetWindowText( "Loading textures..." );
 	Texture_HideAll();
+	g_Inspectors->BringWindowToTop();	// sikk - Added
 	HTREEITEM item = m_treeTextures.GetSelectedItem();
 	idStr name = buildItemName( item, TypeNames[TEXTURES] );
 	if( !name.Cmpn( TypeNames[MATERIALS], strlen( TypeNames[MATERIALS] ) ) )

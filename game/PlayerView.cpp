@@ -462,7 +462,6 @@ idPlayerView::SingleView
 */
 void idPlayerView::SingleView( idUserInterface* hud, const renderView_t* view )
 {
-
 	// normal rendering
 	if( !view )
 	{
@@ -609,6 +608,24 @@ void idPlayerView::SingleView( idUserInterface* hud, const renderView_t* view )
 	}
 }
 
+// RB begin
+void idPlayerView::SingleViewOrStereo( idUserInterface* hud, const renderView_t* view )
+{
+	if( renderSystem->GetStereo3DMode() != STEREO3D_OFF )
+	{
+		// render both eye views each frame on the PC
+		for( int eye = 1 ; eye >= -1 ; eye -= 2 )
+		{
+			EmitStereoEyeView( eye, hud );
+		}
+	}
+	else
+	{
+		SingleView( hud, view );
+	}
+}
+// RB end
+
 /*
 ===================
 idPlayerView::DoubleVision
@@ -616,7 +633,6 @@ idPlayerView::DoubleVision
 */
 void idPlayerView::DoubleVision( idUserInterface* hud, const renderView_t* view, int offset )
 {
-
 	if( !g_doubleVision.GetBool() )
 	{
 		SingleView( hud, view );
@@ -632,10 +648,10 @@ void idPlayerView::DoubleVision( idUserInterface* hud, const renderView_t* view,
 	shift = fabs( shift );
 	
 	// if double vision, render to a texture
-	renderSystem->CropRenderSize( 512, 256, true );
-	SingleView( hud, view );
+	//renderSystem->CropRenderSize( 512, 256, true );
+	SingleViewOrStereo( hud, view );
 	renderSystem->CaptureRenderToImage( "_scratch" );
-	renderSystem->UnCrop();
+	//renderSystem->UnCrop();
 	
 	// carry red tint if in berserk mode
 	idVec4 color( 1, 1, 1, 1 );
@@ -658,10 +674,10 @@ idPlayerView::BerserkVision
 */
 void idPlayerView::BerserkVision( idUserInterface* hud, const renderView_t* view )
 {
-	renderSystem->CropRenderSize( 512, 256, true );
-	SingleView( hud, view );
+	//renderSystem->CropRenderSize( 512, 256, true );
+	SingleViewOrStereo( hud, view );
 	renderSystem->CaptureRenderToImage( "_scratch" );
-	renderSystem->UnCrop();
+	//renderSystem->UnCrop();
 	renderSystem->SetColor4( 1.0f, 1.0f, 1.0f, 1.0f );
 	renderSystem->DrawStretchPic( 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, 0, 1, 1, 0, dvMaterial );
 }
@@ -792,14 +808,14 @@ void idPlayerView::InfluenceVision( idUserInterface* hud, const renderView_t* vi
 	}
 	if( player->GetInfluenceMaterial() )
 	{
-		SingleView( hud, view );
+		SingleViewOrStereo( hud, view );
 		renderSystem->CaptureRenderToImage( "_currentRender" );
 		renderSystem->SetColor4( 1.0f, 1.0f, 1.0f, pct );
 		renderSystem->DrawStretchPic( 0.0f, 0.0f, SCREEN_WIDTH, SCREEN_WIDTH, 0.0f, 0.0f, 1.0f, 1.0f, player->GetInfluenceMaterial() );
 	}
 	else if( player->GetInfluenceEntity() == NULL )
 	{
-		SingleView( hud, view );
+		SingleViewOrStereo( hud, view );
 		return;
 	}
 	else
@@ -951,18 +967,7 @@ void idPlayerView::RenderPlayerView( idUserInterface* hud )
 	
 	if( g_skipViewEffects.GetBool() )
 	{
-		if( renderSystem->GetStereo3DMode() != STEREO3D_OFF )
-		{
-			// render both eye views each frame on the PC
-			for( int eye = 1 ; eye >= -1 ; eye -= 2 )
-			{
-				EmitStereoEyeView( eye, hud );
-			}
-		}
-		else
-		{
-			SingleView( hud, view );
-		}
+		SingleViewOrStereo( hud, view );
 	}
 	else
 	{
@@ -980,8 +985,9 @@ void idPlayerView::RenderPlayerView( idUserInterface* hud )
 		}
 		else
 		{
-			SingleView( hud, view );
+			SingleViewOrStereo( hud, view );
 		}
+		
 		ScreenFade();
 	}
 	

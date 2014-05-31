@@ -93,6 +93,10 @@ public:
 	
 private:
 	void				SingleView( idUserInterface* hud, const renderView_t* view );
+	// RB begin
+	void				SingleViewOrStereo( idUserInterface* hud, const renderView_t* view );
+	// RB end
+	
 	void				DoubleVision( idUserInterface* hud, const renderView_t* view, int offset );
 	void				BerserkVision( idUserInterface* hud, const renderView_t* view );
 	void				InfluenceVision( idUserInterface* hud, const renderView_t* view );

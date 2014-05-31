@@ -41,30 +41,29 @@ class CCapDialog : public CDialog
 {
 // Construction
 public:
-	static enum {BEVEL = 0, ENDCAP, IBEVEL, IENDCAP};
-	CCapDialog( CWnd* pParent = NULL ); // standard constructor
+	CCapDialog( CWnd* pParent = NULL );   // standard constructor
 	
-	int getCapType()
+	int				getCapType()
 	{
 		return m_nCap;
 	};
+	
 // Dialog Data
 	//{{AFX_DATA(CCapDialog)
+	static enum { BEVEL = 0, ENDCAP, IBEVEL, IENDCAP };
 	enum { IDD = IDD_DIALOG_CAP };
 	int		m_nCap;
 	//}}AFX_DATA
-	
 	
 // Overrides
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CCapDialog)
 protected:
-	virtual void DoDataExchange( CDataExchange* pDX );  // DDX/DDV support
+	virtual void	DoDataExchange( CDataExchange* pDX );    // DDX/DDV support
 	//}}AFX_VIRTUAL
 	
 // Implementation
 protected:
-
 	// Generated message map functions
 	//{{AFX_MSG(CCapDialog)
 	// NOTE: the ClassWizard will add member functions here
