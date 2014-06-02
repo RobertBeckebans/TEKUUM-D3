@@ -63,6 +63,8 @@ Framebuffer::Framebuffer( const char* name, int w, int h )
 	width = w;
 	height = h;
 	
+	msaaSamples = false;
+	
 	glGenFramebuffers( 1, &frameBuffer );
 	
 	framebuffers.Append( this );
@@ -261,6 +263,8 @@ void Framebuffer::AddColorBuffer( int format, int index, int multiSamples )
 	if( multiSamples > 0 )
 	{
 		glRenderbufferStorageMultisample( GL_RENDERBUFFER, multiSamples, format, width, height );
+		
+		msaaSamples = true;
 	}
 	else
 	{
@@ -290,6 +294,8 @@ void Framebuffer::AddDepthBuffer( int format, int multiSamples )
 	if( multiSamples > 0 )
 	{
 		glRenderbufferStorageMultisample( GL_RENDERBUFFER, multiSamples, format, width, height );
+		
+		msaaSamples = true;
 	}
 	else
 	{

@@ -1044,6 +1044,7 @@ const int INTERACTION_TEXUNIT_DIFFUSE		= 3;
 const int INTERACTION_TEXUNIT_SPECULAR		= 4;
 const int INTERACTION_TEXUNIT_SHADOWMAPS	= 5;
 const int INTERACTION_TEXUNIT_JITTER		= 6;
+const int INTERACTION_TEXUNIT_REFLECTIONS	= 7;
 
 /*
 ==================
@@ -1397,6 +1398,13 @@ static void RB_RenderInteractions( const drawSurf_t* surfList, const viewLight_t
 			{
 				globalImages->jitterImage1->Bind();
 			}
+		}
+		
+		if( r_useSSLR.GetBool() )
+		{
+			// texture 7 will be the reflections buffer built of screen space local reflections and environment probes
+			GL_SelectTexture( INTERACTION_TEXUNIT_REFLECTIONS );
+			globalImages->previousRenderImage;
 		}
 #endif
 		
@@ -4419,7 +4427,15 @@ static void RB_Tonemap( const viewDef_t* viewDef )
 	GL_Scissor( 0, 0, screenWidth, screenHeight );
 	
 	GL_SelectTexture( 0 );
-	globalImages->currentRenderHDRImage->Bind();
+	
+	if( r_multiSamples.GetInteger() > 0 )
+	{
+		globalImages->currentRenderHDRImageNoMSAA->Bind();
+	}
+	else
+	{
+		globalImages->currentRenderHDRImage->Bind();
+	}
 	renderProgManager.BindShader_Tonemap();
 	
 	float screenCorrectionParm[4];

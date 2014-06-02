@@ -295,7 +295,7 @@ void idImage::GenerateImage( const byte* pic, int width, int height, textureFilt
 	usage = usageParm;
 	cubeFiles = CF_2D;
 	
-	opts.textureType = ( msaaSamples > 1 ) ? TT_2D_MULTISAMPLE : TT_2D;
+	opts.textureType = ( msaaSamples > 0 ) ? TT_2D_MULTISAMPLE : TT_2D;
 	opts.width = width;
 	opts.height = height;
 	opts.numLevels = 0;
@@ -921,26 +921,27 @@ void idImage::CopyFramebuffer( int x, int y, int imageWidth, int imageHeight )
 	if( r_useHDR.GetBool() && globalFramebuffers.hdrFBO->IsBound() )
 	{
 	
-#if 0
-		if( opts.format == FMT_RGBA16F && opts.textureType == TT_2D )
+		//if( backEnd.glState.currentFramebuffer != NULL && backEnd.glState.currentFramebuffer->IsMultiSampled() )
+	
+		if( globalFramebuffers.hdrFBO->IsMultiSampled() )
 		{
-			globalFramebuffers.hdrCopyFBO->AttachImage2D( GL_TEXTURE_2D, this, 0 );
-			globalFramebuffers.hdrCopyFBO->Check();
-	
-			GL_CheckErrors();
-	
 			glBindFramebuffer( GL_READ_FRAMEBUFFER, globalFramebuffers.hdrFBO->GetFramebuffer() );
-			glBindFramebuffer( GL_DRAW_FRAMEBUFFER, globalFramebuffers.hdrCopyFBO->GetFramebuffer() );
+			glBindFramebuffer( GL_DRAW_FRAMEBUFFER, globalFramebuffers.hdrNonMSAAFBO->GetFramebuffer() );
 			glBlitFramebuffer( 0, 0, glConfig.nativeScreenWidth, glConfig.nativeScreenHeight,
 							   0, 0, glConfig.nativeScreenWidth, glConfig.nativeScreenHeight,
 							   GL_COLOR_BUFFER_BIT,
 							   GL_LINEAR );
 	
-			GL_CheckErrors();
+			globalFramebuffers.hdrNonMSAAFBO->Bind();
+	
+			glCopyTexImage2D( target, 0, GL_RGBA16F, x, y, imageWidth, imageHeight, 0 );
+	
+			globalFramebuffers.hdrFBO->Bind();
 		}
-#else
-		glCopyTexImage2D( target, 0, GL_RGBA16F, x, y, imageWidth, imageHeight, 0 );
-#endif
+		else
+		{
+			glCopyTexImage2D( target, 0, GL_RGBA16F, x, y, imageWidth, imageHeight, 0 );
+		}
 	}
 	else
 	{

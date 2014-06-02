@@ -83,6 +83,11 @@ public:
 		return height;
 	}
 	
+	bool					IsMultiSampled() const
+	{
+		return ( msaaSamples > 0 );
+	}
+	
 	void					Resize( int width_, int height_ )
 	{
 		width = width_;
@@ -106,6 +111,8 @@ private:
 	
 	int						width;
 	int						height;
+	
+	bool					msaaSamples;
 	
 	static idList<Framebuffer*>	framebuffers;
 };

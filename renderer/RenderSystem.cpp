@@ -1119,6 +1119,7 @@ void idRenderSystemLocal::CaptureRenderToImage( const char* imageName, bool clea
 			common->Printf( "write DC_CAPTURE_RENDER: %s\n", imageName );
 		}
 	}
+	
 	idImage*	 image = globalImages->GetImage( imageName );
 	if( image == NULL )
 	{

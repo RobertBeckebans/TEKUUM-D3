@@ -1404,79 +1404,6 @@ If ref == NULL, common->UpdateScreen will be used
 // RB: changed .tga to .png
 void idRenderSystemLocal::TakeScreenshot( int width, int height, const char* fileName, int blends, renderView_t* ref )
 {
-#if 0
-	byte*		buffer;
-	int			i, j, c, temp;
-	
-	takingScreenshot = true;
-	
-	const int pix = width * height;
-	const int bufferSize = pix * 3 + 18;
-	
-	buffer = ( byte* )R_StaticAlloc( bufferSize );
-	memset( buffer, 0, bufferSize );
-	
-	if( blends <= 1 )
-	{
-		R_ReadTiledPixels( width, height, buffer + 18, ref );
-	}
-	else
-	{
-		unsigned short* shortBuffer = ( unsigned short* )R_StaticAlloc( pix * 2 * 3 );
-		memset( shortBuffer, 0, pix * 2 * 3 );
-		
-		// enable anti-aliasing jitter
-		r_jitter.SetBool( true );
-		
-		for( i = 0 ; i < blends ; i++ )
-		{
-			R_ReadTiledPixels( width, height, buffer + 18, ref );
-			
-			for( j = 0 ; j < pix * 3 ; j++ )
-			{
-				shortBuffer[j] += buffer[18 + j];
-			}
-		}
-		
-		// divide back to bytes
-		for( i = 0 ; i < pix * 3 ; i++ )
-		{
-			buffer[18 + i] = shortBuffer[i] / blends;
-		}
-		
-		R_StaticFree( shortBuffer );
-		r_jitter.SetBool( false );
-	}
-	
-	// fill in the header (this is vertically flipped, which glReadPixels emits)
-	buffer[2] = 2;		// uncompressed type
-	buffer[12] = width & 255;
-	buffer[13] = width >> 8;
-	buffer[14] = height & 255;
-	buffer[15] = height >> 8;
-	buffer[16] = 24;	// pixel size
-	
-	// swap rgb to bgr
-	c = 18 + width * height * 3;
-	for( i = 18 ; i < c ; i += 3 )
-	{
-		temp = buffer[i];
-		buffer[i] = buffer[i + 2];
-		buffer[i + 2] = temp;
-	}
-	
-	// _D3XP adds viewnote screenie save to cdpath
-	if( strstr( fileName, "viewnote" ) )
-	{
-		fileSystem->WriteFile( fileName, buffer, c, "fs_cdpath" );
-	}
-	else
-	{
-		fileSystem->WriteFile( fileName, buffer, c );
-	}
-	
-	R_StaticFree( buffer );
-#else
 	byte*		buffer;
 	int			i, j;
 	
@@ -1494,26 +1421,26 @@ void idRenderSystemLocal::TakeScreenshot( int width, int height, const char* fil
 	{
 		unsigned short* shortBuffer = ( unsigned short* )R_StaticAlloc( pix * 2 * 3 );
 		memset( shortBuffer, 0, pix * 2 * 3 );
-	
+		
 		// enable anti-aliasing jitter
 		r_jitter.SetBool( true );
-	
+		
 		for( i = 0 ; i < blends ; i++ )
 		{
 			R_ReadTiledPixels( width, height, buffer, ref );
-	
+			
 			for( j = 0 ; j < pix * 3 ; j++ )
 			{
 				shortBuffer[j] += buffer[j];
 			}
 		}
-	
+		
 		// divide back to bytes
 		for( i = 0 ; i < pix * 3 ; i++ )
 		{
 			buffer[i] = shortBuffer[i] / blends;
 		}
-	
+		
 		R_StaticFree( shortBuffer );
 		r_jitter.SetBool( false );
 	}
@@ -1529,7 +1456,6 @@ void idRenderSystemLocal::TakeScreenshot( int width, int height, const char* fil
 	}
 	
 	R_StaticFree( buffer );
-#endif
 	
 	takingScreenshot = false;
 }
@@ -1714,6 +1640,122 @@ void R_StencilShot()
 #endif
 }
 
+/*
+==================
+R_EnvShot_f
+
+envshot <basename>
+
+Saves out env/<basename>_ft.tga, etc
+==================
+*/
+void R_EnvShot_f( const idCmdArgs& args )
+{
+	idStr		fullname;
+	const char*	baseName;
+	int			i;
+	idMat3		axis[6];
+	renderView_t	ref;
+	viewDef_t	primary;
+	int			blends;
+	char*	extensions[6] =  { "_px.tga", "_nx.tga", "_py.tga", "_ny.tga", "_pz.tga", "_nz.tga" };
+	int			size;
+	
+	if( args.Argc() != 2 && args.Argc() != 3 && args.Argc() != 4 )
+	{
+		common->Printf( "USAGE: envshot <basename> [size] [blends]\n" );
+		return;
+	}
+	baseName = args.Argv( 1 );
+	
+	blends = 1;
+	if( args.Argc() == 4 )
+	{
+		size = atoi( args.Argv( 2 ) );
+		blends = atoi( args.Argv( 3 ) );
+	}
+	else if( args.Argc() == 3 )
+	{
+		size = atoi( args.Argv( 2 ) );
+		blends = 1;
+	}
+	else
+	{
+		size = 256;
+		blends = 1;
+	}
+	
+	if( !tr.primaryView || !tr.primaryWorld )
+	{
+		common->Printf( "No primary view.\n" );
+		return;
+	}
+	
+	primary = *tr.primaryView;
+	
+	memset( &axis, 0, sizeof( axis ) );
+	axis[0][0][0] = 1;
+	axis[0][1][2] = 1;
+	axis[0][2][1] = 1;
+	
+	axis[1][0][0] = -1;
+	axis[1][1][2] = -1;
+	axis[1][2][1] = 1;
+	
+	axis[2][0][1] = 1;
+	axis[2][1][0] = -1;
+	axis[2][2][2] = -1;
+	
+	axis[3][0][1] = -1;
+	axis[3][1][0] = -1;
+	axis[3][2][2] = 1;
+	
+	axis[4][0][2] = 1;
+	axis[4][1][0] = -1;
+	axis[4][2][1] = 1;
+	
+	axis[5][0][2] = -1;
+	axis[5][1][0] = 1;
+	axis[5][2][1] = 1;
+	
+	//renderSystem->CropRenderSize( 256, 256, true );
+	
+	for( i = 0 ; i < 6 ; i++ )
+	{
+		renderView_t ref = primary.renderView;
+		
+		//fullView.width = SCREEN_WIDTH;
+		//fullView.height = SCREEN_HEIGHT;
+		
+		//ref = ;
+		//ref.x = ref.y = 0;
+		//ref.fov_x = ref.fov_y = 90;
+		//ref.width = glConfig.vidWidth;
+		//ref.height = glConfig.vidHeight;
+		ref.viewaxis = axis[i];
+		
+		// discard anything currently on the list
+		tr.SwapCommandBuffers( NULL, NULL, NULL, NULL, true );
+		
+		// build commands to render the scene
+		tr.primaryWorld->RenderScene( &ref );
+		
+		// finish off these commands
+		const emptyCommand_t* cmd = tr.SwapCommandBuffers( NULL, NULL, NULL, NULL, true );
+		
+		// issue the commands to the GPU
+		tr.RenderCommandBuffers( cmd );
+		
+		sprintf( fullname, "env/%s%s", baseName, extensions[i] );
+		//tr.TakeScreenshot( size, size, fullname, blends, &ref );
+		
+		renderSystem->CaptureRenderToFile( fullname.c_str() );
+	}
+	
+	//renderSystem->UnCrop();
+	
+	common->Printf( "Wrote %s, etc\n", fullname.c_str() );
+}
 
 //============================================================================
 
@@ -2357,6 +2399,7 @@ void R_InitCommands()
 	cmdSystem->AddCommand( "listGuis", R_ListGuis_f, CMD_FL_RENDERER, "lists guis" );
 	cmdSystem->AddCommand( "touchGui", R_TouchGui_f, CMD_FL_RENDERER, "touches a gui" );
 	cmdSystem->AddCommand( "screenshot", R_ScreenShot_f, CMD_FL_RENDERER, "takes a screenshot" );
+	cmdSystem->AddCommand( "envshot", R_EnvShot_f, CMD_FL_RENDERER, "takes an environment shot" );
 	cmdSystem->AddCommand( "makeAmbientMap", R_MakeAmbientMap_f, CMD_FL_RENDERER | CMD_FL_CHEAT, "makes an ambient map" );
 	cmdSystem->AddCommand( "gfxInfo", GfxInfo_f, CMD_FL_RENDERER, "show graphics info" );
 	cmdSystem->AddCommand( "modulateLights", R_ModulateLights_f, CMD_FL_RENDERER | CMD_FL_CHEAT, "modifies shader parms on all lights" );
