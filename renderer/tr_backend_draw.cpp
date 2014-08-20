@@ -1399,13 +1399,6 @@ static void RB_RenderInteractions( const drawSurf_t* surfList, const viewLight_t
 				globalImages->jitterImage1->Bind();
 			}
 		}
-		
-		if( r_useSSLR.GetBool() )
-		{
-			// texture 7 will be the reflections buffer built of screen space local reflections and environment probes
-			GL_SelectTexture( INTERACTION_TEXUNIT_REFLECTIONS );
-			globalImages->previousRenderImage;
-		}
 #endif
 		
 		// force the light textures to not use anisotropic filtering, which is wasted on them

@@ -85,7 +85,7 @@ public:
 	
 	bool					IsMultiSampled() const
 	{
-		return ( msaaSamples > 0 );
+		return msaaSamples;
 	}
 	
 	void					Resize( int width_, int height_ )
