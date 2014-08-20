@@ -171,15 +171,15 @@ public:
 	virtual void				BeginRedirect( char* buffer, int buffersize, void ( *flush )( const char* ) );
 	virtual void				EndRedirect();
 	virtual void				SetRefreshOnPrint( bool set );
-	virtual void				Printf( const char* fmt, ... ) id_attribute( ( format( printf, 2, 3 ) ) );
+	virtual void                Printf( VERIFY_FORMAT_STRING const char* fmt, ... ) ID_INSTANCE_ATTRIBUTE_PRINTF( 1, 2 );
 	virtual void				VPrintf( const char* fmt, va_list arg );
-	virtual void				DPrintf( const char* fmt, ... ) id_attribute( ( format( printf, 2, 3 ) ) );
-	virtual void				Warning( const char* fmt, ... ) id_attribute( ( format( printf, 2, 3 ) ) );
-	virtual void				DWarning( const char* fmt, ... ) id_attribute( ( format( printf, 2, 3 ) ) );
+	virtual void                DPrintf( VERIFY_FORMAT_STRING const char* fmt, ... ) ID_INSTANCE_ATTRIBUTE_PRINTF( 1, 2 );
+	virtual void                Warning( VERIFY_FORMAT_STRING const char* fmt, ... ) ID_INSTANCE_ATTRIBUTE_PRINTF( 1, 2 );
+	virtual void                DWarning( VERIFY_FORMAT_STRING const char* fmt, ... ) ID_INSTANCE_ATTRIBUTE_PRINTF( 1, 2 );
 	virtual void				PrintWarnings();
 	virtual void				ClearWarnings( const char* reason );
-	virtual void				Error( const char* fmt, ... ) id_attribute( ( format( printf, 2, 3 ) ) );
-	virtual void				FatalError( const char* fmt, ... ) id_attribute( ( format( printf, 2, 3 ) ) );
+	virtual void                Error( VERIFY_FORMAT_STRING const char* fmt, ... ) ID_INSTANCE_ATTRIBUTE_PRINTF( 1, 2 );
+	virtual void                FatalError( VERIFY_FORMAT_STRING const char* fmt, ... ) ID_INSTANCE_ATTRIBUTE_PRINTF( 1, 2 );
 	virtual const idLangDict* 	GetLanguageDict();
 	
 	virtual const char* 		KeysFromBinding( const char* bind );

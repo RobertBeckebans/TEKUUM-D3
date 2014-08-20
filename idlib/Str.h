@@ -310,7 +310,7 @@ public:
 	static int			IcmpnPath( const char* s1, const char* s2, int n );	// compares paths and makes sure folders come first
 	static void			Append( char* dest, int size, const char* src );
 	static void			Copynz( char* dest, const char* src, int destsize );
-	static int			snPrintf( char* dest, int size, const char* fmt, ... ) id_attribute( ( format( printf, 3, 4 ) ) );
+	static int			snPrintf( char* dest, int size, VERIFY_FORMAT_STRING const char* fmt, ... );
 	static int			vsnPrintf( char* dest, int size, const char* fmt, va_list argptr );
 	static int			FindChar( const char* str, const char c, int start = 0, int end = -1 );
 	static int			FindText( const char* str, const char* text, bool casesensitive = true, int start = 0, int end = -1 );
@@ -402,7 +402,7 @@ public:
 	static const int	INVALID_POSITION = -1;
 };
 
-char* 					va( const char* fmt, ... ) id_attribute( ( format( printf, 1, 2 ) ) );
+char* 					va( VERIFY_FORMAT_STRING const char* fmt, ... ) ID_STATIC_ATTRIBUTE_PRINTF( 1, 2 );
 
 /*
 ================================================================================================
@@ -412,7 +412,6 @@ char* 					va( const char* fmt, ... ) id_attribute( ( format( printf, 1, 2 ) ) )
 ================================================================================================
 */
 
-#if 1
 class idSort_Str : public idSort_Quick< idStr, idSort_Str >
 {
 public:
@@ -430,7 +429,6 @@ public:
 		return a.IcmpPath( b );
 	}
 };
-#endif
 
 /*
 ========================

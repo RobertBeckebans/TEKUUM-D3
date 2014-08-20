@@ -225,20 +225,20 @@ public:
 	virtual void				SetRefreshOnPrint( bool set ) = 0;
 	
 	// Prints message to the console, which may cause a screen update if com_refreshOnPrint is set.
-	virtual void				Printf( const char* fmt, ... )id_attribute( ( format( printf, 2, 3 ) ) ) = 0;
+	virtual void				Printf( VERIFY_FORMAT_STRING const char* fmt, ... ) = 0;
 	
 	// Same as Printf, with a more usable API - Printf pipes to this.
 	virtual void				VPrintf( const char* fmt, va_list arg ) = 0;
 	
 	// Prints message that only shows up if the "developer" cvar is set,
 	// and NEVER forces a screen update, which could cause reentrancy problems.
-	virtual void				DPrintf( const char* fmt, ... ) id_attribute( ( format( printf, 2, 3 ) ) ) = 0;
+	virtual void				DPrintf( VERIFY_FORMAT_STRING const char* fmt, ... ) = 0;
 	
 	// Prints WARNING %s message and adds the warning message to a queue for printing later on.
-	virtual void				Warning( const char* fmt, ... ) id_attribute( ( format( printf, 2, 3 ) ) ) = 0;
+	virtual void				Warning( VERIFY_FORMAT_STRING const char* fmt, ... ) = 0;
 	
 	// Prints WARNING %s message in yellow that only shows up if the "developer" cvar is set.
-	virtual void				DWarning( const char* fmt, ... ) id_attribute( ( format( printf, 2, 3 ) ) ) = 0;
+	virtual void				DWarning( VERIFY_FORMAT_STRING const char* fmt, ... ) = 0;
 	
 	// Prints all queued warnings.
 	virtual void				PrintWarnings() = 0;
@@ -248,11 +248,11 @@ public:
 	
 	// Issues a C++ throw. Normal errors just abort to the game loop,
 	// which is appropriate for media or dynamic logic errors.
-	virtual void				Error( const char* fmt, ... ) id_attribute( ( format( printf, 2, 3 ) ) ) = 0;
+	virtual void				Error( VERIFY_FORMAT_STRING const char* fmt, ... ) ID_INSTANCE_ATTRIBUTE_PRINTF( 1, 2 ) = 0;
 	
 	// Fatal errors quit all the way to a system dialog box, which is appropriate for
 	// static internal errors or cases where the system may be corrupted.
-	virtual void				FatalError( const char* fmt, ... ) id_attribute( ( format( printf, 2, 3 ) ) ) = 0;
+	virtual void                FatalError( VERIFY_FORMAT_STRING const char* fmt, ... ) ID_INSTANCE_ATTRIBUTE_PRINTF( 1, 2 ) = 0;
 	
 	// Returns a pointer to the dictionary with language specific strings.
 	virtual const idLangDict* 	GetLanguageDict() = 0;
