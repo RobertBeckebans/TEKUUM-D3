@@ -224,9 +224,9 @@ void DrawTri( const mapTri_t* tri )
 	idWinding w;
 	
 	w.SetNumPoints( 3 );
-	VectorCopy( tri->v[0].xyz, w[0] );
-	VectorCopy( tri->v[1].xyz, w[1] );
-	VectorCopy( tri->v[2].xyz, w[2] );
+	w[0] = tri->v[0].xyz;
+	w[1] = tri->v[1].xyz;
+	w[2] = tri->v[2].xyz;
 	DrawWinding( &w );
 }
 
@@ -273,10 +273,9 @@ idWinding* WindingForTri( const mapTri_t* tri )
 	
 	w = new idWinding( 3 );
 	w->SetNumPoints( 3 );
-	VectorCopy( tri->v[0].xyz, ( *w )[0] );
-	VectorCopy( tri->v[1].xyz, ( *w )[1] );
-	VectorCopy( tri->v[2].xyz, ( *w )[2] );
-	
+	( *w )[0] = tri->v[0].xyz;
+	( *w )[1] = tri->v[1].xyz;
+	( *w )[2] = tri->v[2].xyz;
 	return w;
 }
 
@@ -379,8 +378,7 @@ mapTri_t* WindingToTriList( const idWinding* w, const mapTri_t* originalTri )
 			{
 				vec = &( ( *w )[i] ).ToVec3();
 			}
-			
-			VectorCopy( *vec, tri->v[j].xyz );
+			tri->v[j].xyz = *vec;
 		}
 		if( originalTri )
 		{

@@ -229,23 +229,22 @@ mapTri_t* TriListForSide( const side_t* s, const idWinding* w )
 					dv->xyz[k] = SNAP_INT_TO_FLOAT * floor( vec[k] * SNAP_FLOAT_TO_INT + 0.5 );
 				}
 #else
-				VectorCopy( *vec, dv->xyz );
+				dv->xyz = *vec;
 #endif
-				// RB begin
 				
 				// calculate texture s/t from brush primitive texture matrix
-				dv->SetTexCoord(	DotProduct( dv->xyz, s->texVec.v[0] ) + s->texVec.v[0][3],
-									DotProduct( dv->xyz, s->texVec.v[1] ) + s->texVec.v[1][3] );
-									
+				idVec2 st;
+				st.x = ( dv->xyz * s->texVec.v[0].ToVec3() ) + s->texVec.v[0][3];
+				st.y = ( dv->xyz * s->texVec.v[1].ToVec3() ) + s->texVec.v[1][3];
+				
+				dv->SetTexCoord( st );
+				
 				// copy normal
-				
-				
 				dv->SetNormal( dmapGlobals.mapPlanes[s->planenum].Normal() );
 				if( dv->GetNormal().Length() < 0.9 || dv->GetNormal().Length() > 1.1 )
 				{
 					common->Error( "Bad normal in TriListForSide" );
 				}
-				// RB end
 			}
 		}
 	}
@@ -280,22 +279,19 @@ mapTri_t* TriListForSide( const side_t* s, const idWinding* w )
 				}
 				
 				dv = tri->v + j;
+				dv->xyz = *vec;
 				
-				VectorCopy( *vec, dv->xyz );
+				idVec2 st;
+				st.x = ( dv->xyz * s->texVec.v[0].ToVec3() ) + s->texVec.v[0][3];
+				st.y = ( dv->xyz * s->texVec.v[1].ToVec3() ) + s->texVec.v[1][3];
+				dv->SetTexCoord( st );
 				
-				// RB begin
-				
-				// calculate texture s/t from brush primitive texture matrix
-				dv->SetTexCoord(	DotProduct( dv->xyz, s->texVec.v[0] ) + s->texVec.v[0][3],
-									DotProduct( dv->xyz, s->texVec.v[1] ) + s->texVec.v[1][3]	);
-									
 				// copy normal
 				dv->SetNormal( dmapGlobals.mapPlanes[s->planenum].Normal() );
 				if( dv->GetNormal().Length() < 0.9f || dv->GetNormal().Length() > 1.1f )
 				{
 					common->Error( "Bad normal in TriListForSide" );
 				}
-				// RB end
 			}
 		}
 	}
@@ -790,10 +786,8 @@ void PutPrimitivesInAreas( uEntity_t* e )
 						
 						mapTri.v[k].xyz = v * axis + origin;
 						
-						// RB begin
 						mapTri.v[k].SetNormal( tri->verts[tri->indexes[j + k]].GetNormal() * axis );
 						mapTri.v[k].SetTexCoord( tri->verts[tri->indexes[j + k]].GetTexCoord() );
-						// RB end
 					}
 					AddMapTriToAreas( &mapTri, e );
 				}
@@ -1072,6 +1066,7 @@ static void CarveGroupsByLight( uEntity_t* e, mapLight_t* light )
 		for( group = area->groups ; group ; group = nextGroup )
 		{
 			nextGroup = group->nextGroup;
+			
 			// if the surface doesn't get lit, don't carve it up
 			if( ( light->def.lightShader->IsFogLight() && !group->material->ReceivesFog() )
 					|| ( !light->def.lightShader->IsFogLight() && !group->material->ReceivesLighting() )

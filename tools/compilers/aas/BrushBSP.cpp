@@ -1269,7 +1269,7 @@ void idBrushBSP::MakeNodePortal( idBrushBSPNode* node )
 {
 	idBrushBSPPortal* newPortal, *p;
 	idWinding* w;
-	int side;
+	int side = 0;
 	
 	w = BaseWindingForNode( node );
 	
@@ -1320,7 +1320,7 @@ idBrushBSP::SplitNodePortals
 
 void idBrushBSP::SplitNodePortals( idBrushBSPNode* node )
 {
-	int side;
+	int side = 0;
 	idBrushBSPPortal* p, *nextPortal, *newPortal;
 	idBrushBSPNode* f, *b, *otherNode;
 	idPlane* plane;
@@ -1554,8 +1554,8 @@ void idBrushBSP::LeakFile( const idStr& fileName )
 	int count, next, s;
 	idVec3 mid;
 	idFile* lineFile;
-	idBrushBSPNode* node, *nextNode;
-	idBrushBSPPortal* p, *nextPortal;
+	idBrushBSPNode* node, *nextNode = NULL;
+	idBrushBSPPortal* p, *nextPortal = NULL;
 	idStr qpath, name;
 	
 	if( !outside->occupied )

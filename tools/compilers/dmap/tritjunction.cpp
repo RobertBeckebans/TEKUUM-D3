@@ -153,7 +153,7 @@ struct hashVert_s*	GetHashVert( idVec3& v )
 		}
 		if( i == 3 )
 		{
-			VectorCopy( hv->v, v );
+			v = hv->v;
 			return hv;
 		}
 #endif
@@ -173,7 +173,7 @@ struct hashVert_s*	GetHashVert( idVec3& v )
 	hv->v[1] = ( float )iv[1] / SNAP_FRACTIONS;
 	hv->v[2] = ( float )iv[2] / SNAP_FRACTIONS;
 	
-	VectorCopy( hv->v, v );
+	v = hv->v;
 	
 	numHashVerts++;
 	
@@ -360,12 +360,13 @@ static mapTri_t* FixTriangleAgainstHashVert( const mapTri_t* a, const hashVert_t
 		v1 = &a->v[i];
 		v2 = &a->v[( i + 1 ) % 3];
 		v3 = &a->v[( i + 2 ) % 3];
-		VectorSubtract( v2->xyz, v1->xyz, dir );
+		dir = v2->xyz - v1->xyz;
+		
 		len = dir.Normalize();
 		
 		// if it is close to one of the edge vertexes, skip it
-		VectorSubtract( *v, v1->xyz, temp );
-		d = DotProduct( temp, dir );
+		temp = *v - v1->xyz;
+		d = temp * dir;
 		if( d <= 0 || d >= len )
 		{
 			continue;
@@ -373,7 +374,7 @@ static mapTri_t* FixTriangleAgainstHashVert( const mapTri_t* a, const hashVert_t
 		
 		// make sure it is on the line
 		VectorMA( v1->xyz, d, dir, temp );
-		VectorSubtract( temp, *v, temp );
+		temp = *v - temp;
 		off = temp.Length();
 		if( off <= -COLINEAR_EPSILON || off >= COLINEAR_EPSILON )
 		{
@@ -382,7 +383,7 @@ static mapTri_t* FixTriangleAgainstHashVert( const mapTri_t* a, const hashVert_t
 		
 		// take the x/y/z from the splitter,
 		// but interpolate everything else from the original tri
-		VectorCopy( *v, split.xyz );
+		split.xyz = *v;
 		frac = d / len;
 		
 		// RB begin

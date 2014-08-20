@@ -340,7 +340,7 @@ float BrushVolume( uBrush_t* brush )
 	{
 		return 0;
 	}
-	VectorCopy( ( *w )[0], corner );
+	corner = ( *w )[0].ToVec3();
 	
 	// make tetrahedrons to all other faces
 	

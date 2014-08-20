@@ -360,7 +360,7 @@ static void R_CheckPortableExtensions()
 #if !defined(USE_GLES2) && !defined(USE_GLES3)
 	if( glConfig.glVersion < 2.0f )
 	{
-		idLib::FatalError( badVideoCard );
+		idLib::FatalError( "%s", badVideoCard );
 	}
 #endif
 	

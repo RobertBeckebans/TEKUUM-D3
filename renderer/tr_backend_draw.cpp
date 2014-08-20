@@ -210,7 +210,7 @@ void RB_DrawElementsWithCounters( const drawSurf_t* surf )
 		}
 		assert( ( jointBuffer.GetOffset() & ( glConfig.uniformBufferOffsetAlignment - 1 ) ) == 0 );
 		
-		// RB: 64 bit fixes, changed GLuint to GLintptrARB
+		// RB: 64 bit fixes, changed GLuint to GLintptr
 		const GLintptr ubo = reinterpret_cast< GLintptr >( jointBuffer.GetAPIObject() );
 		// RB end
 		
@@ -220,7 +220,7 @@ void RB_DrawElementsWithCounters( const drawSurf_t* surf )
 	
 	renderProgManager.CommitUniforms();
 	
-	// RB: 64 bit fixes, changed GLuint to GLintptrARB
+	// RB: 64 bit fixes, changed GLuint to GLintptr
 	if( backEnd.glState.currentIndexBuffer != ( GLintptr )indexBuffer->GetAPIObject() || !r_useStateCaching.GetBool() )
 	{
 		glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, ( GLintptr )indexBuffer->GetAPIObject() );
@@ -2432,7 +2432,7 @@ static void RB_StencilShadowPass( const drawSurf_t* drawSurfs, const viewLight_t
 		
 		RENDERLOG_PRINTF( "Binding Buffers: %p %p\n", vertexBuffer, indexBuffer );
 		
-		// RB: 64 bit fixes, changed GLuint to GLintptrARB
+		// RB: 64 bit fixes, changed GLuint to GLintptr
 		if( backEnd.glState.currentIndexBuffer != ( GLintptr )indexBuffer->GetAPIObject() || !r_useStateCaching.GetBool() )
 		{
 			glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, ( GLintptr )indexBuffer->GetAPIObject() );
