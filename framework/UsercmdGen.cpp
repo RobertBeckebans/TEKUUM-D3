@@ -916,9 +916,9 @@ Draws axis and threshold / range rings into an RGBA image
 void	DrawJoypadTexture(
 	const int	size,
 	byte	image[],
-
+	
 	const idVec2 raw,
-
+	
 	const float threshold,
 	const float range,
 	const transferFunction_t shape,

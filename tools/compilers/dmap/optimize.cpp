@@ -227,11 +227,11 @@ static optVertex_t* FindOptVertex( idDrawVert* v, optimizeGroup_t* opt )
 	int		i;
 	float	x, y;
 	optVertex_t*	vert;
-
+	
 	// deal with everything strictly as 2D
 	x = v->xyz * opt->axis[0];
 	y = v->xyz * opt->axis[1];
-
+	
 	// should we match based on the t-junction fixing hash verts?
 	for( i = 0 ; i < numOptVerts ; i++ )
 	{
@@ -240,24 +240,24 @@ static optVertex_t* FindOptVertex( idDrawVert* v, optimizeGroup_t* opt )
 			return &optVerts[i];
 		}
 	}
-
+	
 	if( numOptVerts >= MAX_OPT_VERTEXES )
 	{
 		common->Error( "MAX_OPT_VERTEXES" );
 		return NULL;
 	}
-
+	
 	numOptVerts++;
-
+	
 	vert = &optVerts[i];
 	memset( vert, 0, sizeof( *vert ) );
 	vert->v = *v;
 	vert->pv[0] = x;
 	vert->pv[1] = y;
 	vert->pv[2] = 0;
-
+	
 	optBounds.AddPoint( vert->pv );
-
+	
 	return vert;
 }
 

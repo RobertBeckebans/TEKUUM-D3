@@ -948,20 +948,20 @@ void android_main( struct android_app* state )
 int JE_Main( int argc, char** argv )
 {
 	__android_log_print( ANDROID_LOG_DEBUG, "Tekuum", "Inside Tekuum source!" );
-
+	
 	for( int i = 0; i < argc; i++ )
 	{
 		__android_log_print( ANDROID_LOG_DEBUG, "Tekuum", "main(argc=%d, %s)", i, argv[i] );
 	}
-
+	
 #ifdef ID_MCHECK
 	// must have -lmcheck linkage
 	mcheck( abrt_func );
 	Sys_Printf( "memory consistency checking enabled\n" );
 #endif
-
+	
 	Posix_EarlyInit( );
-
+	
 	if( argc > 0 )
 	{
 		common->Init( argc, ( const char** )&argv[0], NULL );
@@ -970,16 +970,16 @@ int JE_Main( int argc, char** argv )
 	{
 		common->Init( 0, NULL, NULL );
 	}
-
+	
 	Posix_LateInit( );
-
+	
 #if 0 //defined(USE_NATIVE_ACTIVITY)
 	while( 1 )
 	{
 		common->Frame();
 	}
 #endif
-
+	
 	return 0;
 }
 #endif

@@ -73,7 +73,7 @@ DialogAFView::DialogAFView
 */
 DialogAFView::DialogAFView( CWnd* pParent /*=NULL*/ )
 	: CDialog( DialogAFView::IDD, pParent )
-
+	  
 {
 	m_showBodies = cvarSystem->GetCVarBool( "af_showBodies" );
 	m_showBodyNames = cvarSystem->GetCVarBool( "af_showBodyNames" );
