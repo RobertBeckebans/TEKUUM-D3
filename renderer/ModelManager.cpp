@@ -35,6 +35,10 @@ If you have questions concerning this license or the applicable additional terms
 idCVar binaryLoadRenderModels( "binaryLoadRenderModels", "1", 0, "enable binary load/write of render models" );
 idCVar preload_MapModels( "preload_MapModels", "1", CVAR_SYSTEM | CVAR_BOOL, "preload models during begin or end levelload" );
 
+// RB begin
+idCVar postLoadExportModels( "postLoadExportModels", "1", CVAR_BOOL | CVAR_RENDERER, "export models after loading to OBJ model format" );
+// RB end
+
 class idRenderModelManagerLocal : public idRenderModelManager
 {
 public:
@@ -71,6 +75,10 @@ private:
 	bool					insideLevelLoad;		// don't actually load now
 	
 	idRenderModel* 			GetModel( const char* modelName, bool createIfNotFound );
+
+	// RB: export model to OBJ format
+	void					ExportModel( idRenderModel* model );
+	// RB end
 	
 	static void				PrintModel_f( const idCmdArgs& args );
 	static void				ListModels_f( const idCmdArgs& args );
@@ -439,6 +447,13 @@ idRenderModel* idRenderModelManagerLocal::GetModel( const char* _modelName, bool
 	}
 	*/
 	
+	// RB begin
+	if( postLoadExportModels.GetBool() )
+	{
+		ExportModel( model );
+	}
+	// RB end
+
 	AddModel( model );
 	
 	return model;
@@ -490,6 +505,36 @@ void idRenderModelManagerLocal::FreeModel( idRenderModel* model )
 	
 	delete model;
 }
+
+// RB begin
+void idRenderModelManagerLocal::ExportModel( idRenderModel* model )
+{
+	if( !model )
+	{
+		return;
+	}
+
+	if( !dynamic_cast<idRenderModelStatic*>( model ) )
+	{
+		return;
+	}
+	
+	if( model == defaultModel )
+	{
+		return;
+	}
+	if( model == beamModel )
+	{
+		return;
+	}
+	if( model == spriteModel )
+	{
+		return;
+	}
+
+	// TODO
+}
+// RB end
 
 /*
 =================
