@@ -389,7 +389,7 @@ float CM_TranslationPlaneFraction( const idPlane& plane, const idVec3& start, co
 float CM_TranslationPlaneFraction( idPlane& plane, idVec3& start, idVec3& end )
 {
 	float d1, d2, d2eps;
-
+	
 	d2 = plane.Distance( end );
 	// if the end point is closer to the plane than an epsilon we still take it for a collision
 	// if ( d2 >= CM_CLIP_EPSILON ) {
@@ -399,7 +399,7 @@ float CM_TranslationPlaneFraction( idPlane& plane, idVec3& start, idVec3& end )
 		return 1.0f;
 	}
 	d1 = plane.Distance( start );
-
+	
 	// if completely behind the polygon
 	if( IEEE_FLT_SIGNBITSET( d1 ) )
 	{

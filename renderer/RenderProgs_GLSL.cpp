@@ -828,19 +828,19 @@ const char* vertexInsert_GLSL_ES_1_0 =
 const char* vertexInsert_GLSL_ES_1_0 =
 {
 	"#version 100\n"
-
+	
 #if !defined(USE_MESA)
 	"#define GLES2\n"
 #endif
-
+	
 	"#define PC\n"
-
+	
 #if 1 //defined(__ANDROID__)
 	"precision mediump float;\n"
 #else
 	"precision highp float;\n"
 #endif
-
+	
 #if defined(USE_GPU_SKINNING) && !defined(__ANDROID__)
 	"#extension GL_ARB_gpu_shader5 : enable\n"
 #endif
@@ -931,13 +931,13 @@ const char* fragmentInsert_GLSL_ES_1_0 =
 const char* fragmentInsert_GLSL_ES_1_0 =
 {
 	"#version 100\n"
-
+	
 #if !defined(USE_MESA)
 	"#define GLES2\n"
 #endif
-
+	
 	"#define PC\n"
-
+	
 #if 1 //defined(__ANDROID__)
 	"precision mediump float;\n"
 	//"#extension GL_OES_standard_derivatives : enable\n"

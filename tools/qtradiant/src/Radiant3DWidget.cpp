@@ -12,7 +12,7 @@ explicit QGLWidget(QGLContext *context, QWidget* parent=0,
 Radiant3DWidget::Radiant3DWidget( QWidget* parent, const QGLWidget* shareWidget ) :
 	QGLWidget( QGLFormat( QGL::SampleBuffers ), parent, shareWidget )
 #else
-Radiant3DWidget::Radiant3DWidget( QWidget* parent ) :
+Radiant3DWidget::Radiant3DWidget( QWidget * parent ) :
 	QGLWidget( QGLFormat( QGL::SampleBuffers ), parent )
 	//QGLWidget(new EngineQGLContext(), parent)
 #endif

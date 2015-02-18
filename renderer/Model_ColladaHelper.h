@@ -448,8 +448,8 @@ struct Sampler
 		,	mWrapV( true )
 		,	mMirrorU()
 		,	mMirrorV()
-		//,	mOp( aiTextureOp_Multiply )
-		//,	mUVId( UINT_MAX )
+		  //,	mOp( aiTextureOp_Multiply )
+		  //,	mUVId( UINT_MAX )
 		,	mWeighting( 1.f )
 		,	mMixWithPrevious( 1.f )
 	{}

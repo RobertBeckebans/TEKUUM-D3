@@ -484,7 +484,7 @@ idDrawVert* idGuiModel::AllocTris( int vertCount, const triIndex_t* tempIndexes,
 		}
 		return NULL;
 	}
-
+	
 	// break the current surface if we are changing to a new material or we can't
 	// fit the data into our allocated block
 	if( material != surf->material || glState != surf->glState || stereoType != surf->stereoType )
@@ -497,15 +497,15 @@ idDrawVert* idGuiModel::AllocTris( int vertCount, const triIndex_t* tempIndexes,
 		surf->glState = glState;
 		surf->stereoType = stereoType;
 	}
-
+	
 	int startVert = numVerts;
 	int startIndex = numIndexes;
-
+	
 	numVerts += vertCount;
 	numIndexes += indexCount;
-
+	
 	surf->numIndexes += indexCount;
-
+	
 	if( ( startIndex & 1 ) || ( indexCount & 1 ) )
 	{
 		// slow for write combined memory!
@@ -522,7 +522,7 @@ idDrawVert* idGuiModel::AllocTris( int vertCount, const triIndex_t* tempIndexes,
 			WriteIndexPair( indexPointer + startIndex + i, startVert + tempIndexes[i], startVert + tempIndexes[i + 1] );
 		}
 	}
-
+	
 	return vertexPointer + startVert;
 }
 #endif // #if defined(USE_GLES2)

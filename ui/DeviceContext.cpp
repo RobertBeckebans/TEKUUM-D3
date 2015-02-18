@@ -749,12 +749,12 @@ void idDeviceContext::PaintChar( float x, float y, float width, float height, fl
 	float	w, h;
 	w = width * scale;
 	h = height * scale;
-
+	
 	if( ClippedCoords( &x, &y, &w, &h, &s, &t, &s2, &t2 ) )
 	{
 		return;
 	}
-
+	
 	// RB: FIXME
 	// AdjustCoords( &x, &y, &w, &h );
 	DrawStretchPic( x, y, w, h, s, t, s2, t2, hShader );
