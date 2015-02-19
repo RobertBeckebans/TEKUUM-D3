@@ -75,10 +75,6 @@ private:
 	bool					insideLevelLoad;		// don't actually load now
 	
 	idRenderModel* 			GetModel( const char* modelName, bool createIfNotFound );
-
-	// RB: export model to OBJ format
-	void					ExportModel( idRenderModel* model );
-	// RB end
 	
 	static void				PrintModel_f( const idCmdArgs& args );
 	static void				ListModels_f( const idCmdArgs& args );
@@ -448,12 +444,29 @@ idRenderModel* idRenderModelManagerLocal::GetModel( const char* _modelName, bool
 	*/
 	
 	// RB begin
-	if( postLoadExportModels.GetBool() )
+	if( postLoadExportModels.GetBool() && ( model != defaultModel && model != beamModel && model != spriteModel ) )
 	{
-		ExportModel( model );
+		idStrStatic< MAX_OSPATH > exportedFileName;
+		
+		exportedFileName = "exported/rendermodels/";
+		exportedFileName.AppendPath( canonical );
+		exportedFileName.SetFileExtension( ".obj" );
+		
+		ID_TIME_T sourceTimeStamp = fileSystem->GetTimestamp( canonical );
+		ID_TIME_T timeStamp = fileSystem->GetTimestamp( exportedFileName );
+		
+		// TODO only update if generated has changed
+		
+		//if( timeStamp == FILE_NOT_FOUND_TIMESTAMP )
+		{
+			idFileLocal outputFile( fileSystem->OpenFileWrite( exportedFileName, "fs_basepath" ) );
+			idLib::Printf( "Writing %s\n", exportedFileName.c_str() );
+			
+			model->ExportOBJ( outputFile );
+		}
 	}
 	// RB end
-
+	
 	AddModel( model );
 	
 	return model;
@@ -505,36 +518,6 @@ void idRenderModelManagerLocal::FreeModel( idRenderModel* model )
 	
 	delete model;
 }
-
-// RB begin
-void idRenderModelManagerLocal::ExportModel( idRenderModel* model )
-{
-	if( !model )
-	{
-		return;
-	}
-
-	if( !dynamic_cast<idRenderModelStatic*>( model ) )
-	{
-		return;
-	}
-	
-	if( model == defaultModel )
-	{
-		return;
-	}
-	if( model == beamModel )
-	{
-		return;
-	}
-	if( model == spriteModel )
-	{
-		return;
-	}
-
-	// TODO
-}
-// RB end
 
 /*
 =================

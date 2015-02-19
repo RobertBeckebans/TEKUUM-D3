@@ -60,6 +60,10 @@ public:
 		return true;
 	}
 	
+	// RB begin
+	virtual void				ExportOBJ( idFile* file, ID_TIME_T* _timeStamp = NULL ) const;
+	// RB end
+	
 	virtual void				PartialInitFromFile( const char* fileName );
 	virtual void				PurgeModel();
 	virtual void				Reset() {};
