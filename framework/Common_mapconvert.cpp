@@ -33,7 +33,7 @@ If you have questions concerning this license or the applicable additional terms
 static int totalVerts = 0;
 static int totalIndexes = 0;
 
-static void ConvertBrush( idFile* file, const idMapBrush* mapBrush, int primitiveNum )
+static void ConvertBrush( idFile* file, const idMapBrush* mapBrush, int entityNum, int primitiveNum )
 {
 	file->Printf( "o Primitive.%i\n", primitiveNum );
 	
@@ -68,6 +68,7 @@ static void ConvertBrush( idFile* file, const idMapBrush* mapBrush, int primitiv
 		
 		if( !w.GetNumPoints() )
 		{
+			common->Printf( "Entity %i, Brush %i: base winding has no points\n", entityNum, primitiveNum );
 			badBrush = true;
 		}
 		
@@ -82,8 +83,9 @@ static void ConvertBrush( idFile* file, const idMapBrush* mapBrush, int primitiv
 			if( !w.ClipInPlace( -planes[j], 0 ) )
 			{
 				// no intersection
-				badBrush = true;
-				break;
+				//badBrush = true;
+				common->Printf( "Entity %i, Brush %i: no intersection with other brush plane\n", entityNum, primitiveNum );
+				//break;
 			}
 		}
 		
@@ -112,7 +114,7 @@ static void ConvertBrush( idFile* file, const idMapBrush* mapBrush, int primitiv
 	tri.verts = ( idDrawVert* )Mem_Alloc16( numVerts * sizeof( idDrawVert ) );
 	tri.indexes = ( triIndex_t* )Mem_Alloc16( numIndexes * sizeof( triIndex_t ) );
 	
-	// copy the data from the windings
+	// copy the data from the windings and build polygons
 	for( int i = 0; i < mapBrush->GetNumSides(); i++ )
 	{
 		idMapBrushSide* mapSide = mapBrush->GetSide( i );
@@ -125,10 +127,29 @@ static void ConvertBrush( idFile* file, const idMapBrush* mapBrush, int primitiv
 		
 		for( int j = 0 ; j < w.GetNumPoints() ; j++ )
 		{
-			const idVec3& v = w[j].ToVec3();
+			const idVec3& xyz = w[j].ToVec3();
 			
 			tri.verts[tri.numVerts + j ].Clear();
-			tri.verts[tri.numVerts + j ].xyz = v;
+			
+			tri.verts[tri.numVerts + j ].xyz = xyz;
+			
+			// calculate texture s/t from brush primitive texture matrix
+			idVec4 texVec[2];
+			mapSide->GetTextureVectors( texVec );
+			
+			idVec2 st;
+			st.x = ( xyz * texVec[0].ToVec3() ) + texVec[0][3];
+			st.y = ( xyz * texVec[1].ToVec3() ) + texVec[1][3];
+			
+			tri.verts[tri.numVerts + j ].SetTexCoord( st );
+			
+			// copy normal
+			tri.verts[tri.numVerts + j ].SetNormal( mapSide->GetPlane().Normal() );
+			
+			//if( dv->GetNormal().Length() < 0.9 || dv->GetNormal().Length() > 1.1 )
+			//{
+			//	common->Error( "Bad normal in TriListForSide" );
+			//}
 		}
 		
 		for( int j = 1 ; j < w.GetNumPoints() - 1 ; j++ )
@@ -143,6 +164,7 @@ static void ConvertBrush( idFile* file, const idMapBrush* mapBrush, int primitiv
 		tri.numVerts += w.GetNumPoints();
 	}
 	
+	// output polygons
 	for( int j = 0; j < tri.numVerts; j++ )
 	{
 		const idVec3& v = tri.verts[j].xyz;
@@ -150,23 +172,34 @@ static void ConvertBrush( idFile* file, const idMapBrush* mapBrush, int primitiv
 		file->Printf( "v %1.6f %1.6f %1.6f\n", v.x, v.y, v.z );
 	}
 	
-	if( tri.numIndexes > 0 )
+	for( int j = 0; j < tri.numVerts; j++ )
 	{
-		for( int j = 0; j < tri.numIndexes; j += 3 )
-		{
-			file->Printf( "f %i/%i/%i %i/%i/%i %i/%i/%i\n",
-						  tri.indexes[j + 2] + 1 + totalVerts,
-						  tri.indexes[j + 2] + 1 + totalVerts,
-						  tri.indexes[j + 2] + 1 + totalVerts,
-						  
-						  tri.indexes[j + 1] + 1 + totalVerts,
-						  tri.indexes[j + 1] + 1 + totalVerts,
-						  tri.indexes[j + 1] + 1 + totalVerts,
-						  
-						  tri.indexes[j + 0] + 1 + totalVerts,
-						  tri.indexes[j + 0] + 1 + totalVerts,
-						  tri.indexes[j + 0] + 1 + totalVerts );
-		}
+		const idVec2 vST =  tri.verts[j].GetTexCoord();
+		
+		file->Printf( "vt %1.6f %1.6f\n", vST.x, vST.y );
+	}
+	
+	for( int j = 0; j < tri.numVerts; j++ )
+	{
+		const idVec3 n = tri.verts[j].GetNormal();
+		
+		file->Printf( "vn %1.6f %1.6f %1.6f\n", n.x, n.y, n.z );
+	}
+	
+	for( int j = 0; j < tri.numIndexes; j += 3 )
+	{
+		file->Printf( "f %i/%i/%i %i/%i/%i %i/%i/%i\n",
+					  tri.indexes[j + 2] + 1 + totalVerts,
+					  tri.indexes[j + 2] + 1 + totalVerts,
+					  tri.indexes[j + 2] + 1 + totalVerts,
+					  
+					  tri.indexes[j + 1] + 1 + totalVerts,
+					  tri.indexes[j + 1] + 1 + totalVerts,
+					  tri.indexes[j + 1] + 1 + totalVerts,
+					  
+					  tri.indexes[j + 0] + 1 + totalVerts,
+					  tri.indexes[j + 0] + 1 + totalVerts,
+					  tri.indexes[j + 0] + 1 + totalVerts );
 	}
 	
 	totalVerts += tri.numVerts;
@@ -232,7 +265,7 @@ CONSOLE_COMMAND( exportMapToOBJ, "Convert .map file to .obj/.mtl ", idCmdSystem:
 						mapPrim = ent->GetPrimitive( i );
 						if( mapPrim->GetType() == idMapPrimitive::TYPE_BRUSH )
 						{
-							ConvertBrush( outputFile, static_cast<idMapBrush*>( mapPrim ), i );
+							ConvertBrush( outputFile, static_cast<idMapBrush*>( mapPrim ), j, i );
 							continue;
 						}
 					}

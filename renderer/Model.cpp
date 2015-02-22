@@ -788,23 +788,20 @@ void idRenderModelStatic::ExportOBJ( idFile* file, ID_TIME_T* _timeStamp ) const
 			
 			file->Printf( "s 1\n" );
 			
-			if( tri.numIndexes > 0 )
+			for( int j = 0; j < tri.numIndexes; j += 3 )
 			{
-				for( int j = 0; j < tri.numIndexes; j += 3 )
-				{
-					file->Printf( "f %i/%i/%i %i/%i/%i %i/%i/%i\n",
-								  tri.indexes[j + 2] + 1 + numVerts,
-								  tri.indexes[j + 2] + 1 + numVerts,
-								  tri.indexes[j + 2] + 1 + numVerts,
-								  
-								  tri.indexes[j + 1] + 1 + numVerts,
-								  tri.indexes[j + 1] + 1 + numVerts,
-								  tri.indexes[j + 1] + 1 + numVerts,
-								  
-								  tri.indexes[j + 0] + 1 + numVerts,
-								  tri.indexes[j + 0] + 1 + numVerts,
-								  tri.indexes[j + 0] + 1 + numVerts );
-				}
+				file->Printf( "f %i/%i/%i %i/%i/%i %i/%i/%i\n",
+							  tri.indexes[j + 2] + 1 + numVerts,
+							  tri.indexes[j + 2] + 1 + numVerts,
+							  tri.indexes[j + 2] + 1 + numVerts,
+							  
+							  tri.indexes[j + 1] + 1 + numVerts,
+							  tri.indexes[j + 1] + 1 + numVerts,
+							  tri.indexes[j + 1] + 1 + numVerts,
+							  
+							  tri.indexes[j + 0] + 1 + numVerts,
+							  tri.indexes[j + 0] + 1 + numVerts,
+							  tri.indexes[j + 0] + 1 + numVerts );
 			}
 			
 			file->Printf( "\n" );
