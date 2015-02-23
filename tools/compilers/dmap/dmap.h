@@ -398,7 +398,7 @@ void FreePortal( uPortal_t* p );
 // glfile.cpp -- write a debug file to be viewd with glview.exe
 
 void OutputWinding( idWinding* w, idFile* glview );
-void WriteGLView( tree_t* tree, char* source );
+void WriteGLView( tree_t* tree, const char* source );
 
 //=============================================================================
 

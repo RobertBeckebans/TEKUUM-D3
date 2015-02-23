@@ -54,6 +54,13 @@ bool ProcessModel( uEntity_t* e, bool floodFill )
 	// classify the leafs as opaque or areaportal
 	FilterBrushesIntoTree( e );
 	
+	// RB: dump BSP for debugging
+	if( dmapGlobals.glview )
+	{
+		WriteGLView( e->tree, "structure" );
+	}
+	// RB end
+	
 	// see if the bsp is completely enclosed
 	if( floodFill && !dmapGlobals.noFlood )
 	{
@@ -79,6 +86,13 @@ bool ProcessModel( uEntity_t* e, bool floodFill )
 	// this must be done before creating area portals,
 	// because the visible hull is used as the portal
 	ClipSidesByTree( e );
+	
+	// RB: dump BSP for debugging
+	if( dmapGlobals.glview )
+	{
+		WriteGLView( e->tree, "clipped" );
+	}
+	// RB end
 	
 	// determine areas before clipping tris into the
 	// tree, so tris will never cross area boundaries

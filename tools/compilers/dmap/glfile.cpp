@@ -3,6 +3,7 @@
 
 Doom 3 GPL Source Code
 Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2015 Robert Beckebans
 
 This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
 
@@ -31,7 +32,19 @@ If you have questions concerning this license or the applicable additional terms
 
 #include "dmap.h"
 
-int		c_glfaces;
+
+struct OBJFace
+{
+	OBJFace()
+	{
+		material = nullptr;
+	}
+	
+	const idMaterial*			material;
+	idList<idDrawVert>			verts;
+	idList<triIndex_t>			indexes;
+};
+
 
 int PortalVisibleSides( uPortal_t* p )
 {
@@ -51,29 +64,47 @@ int PortalVisibleSides( uPortal_t* p )
 		return 1;
 	if( !bcon )
 		return 2;
+		
 	return 0;
 }
 
-void OutputWinding( idWinding* w, idFile* glview )
+void OutputWinding( idWinding* w, idList<OBJFace>& faces )
 {
 	static	int	level = 128;
 	float		light;
 	int			i;
 	
-	glview->WriteFloatString( "%i\n", w->GetNumPoints() );
+	//glview->WriteFloatString( "%i\n", w->GetNumPoints() );
 	level += 28;
 	light = ( level & 255 ) / 255.0;
-	for( i = 0; i < w->GetNumPoints(); i++ )
+	
+	OBJFace& face = faces.Alloc();
+	
+	//for( i = 0; i < w->GetNumPoints(); i++ )
+	
+	for( i = w->GetNumPoints() - 1; i >= 0; i-- )
 	{
+		idDrawVert& dv = face.verts.Alloc();
+		
+		dv.xyz.x = ( *w )[i][0];
+		dv.xyz.y = ( *w )[i][1];
+		dv.xyz.z = ( *w )[i][2];
+		
+		dv.SetColor( level & 255 );
+		
+		//dv.SetNormal( w->GetPlane() )
+		
+		/*
 		glview->WriteFloatString( "%6.3f %6.3f %6.3f %6.3f %6.3f %6.3f\n",
 								  ( *w )[i][0],
 								  ( *w )[i][1],
 								  ( *w )[i][2],
 								  light,
 								  light,
-								  light );
+								  light );*/
 	}
-	glview->WriteFloatString( "\n" );
+	
+	//glview->WriteFloatString( "\n" );
 }
 
 /*
@@ -81,7 +112,7 @@ void OutputWinding( idWinding* w, idFile* glview )
 OutputPortal
 =============
 */
-void OutputPortal( uPortal_t* p, idFile* glview )
+void OutputPortal( uPortal_t* p, idList<OBJFace>& faces )
 {
 	idWinding*	w;
 	int		sides;
@@ -92,7 +123,7 @@ void OutputPortal( uPortal_t* p, idFile* glview )
 		return;
 	}
 	
-	c_glfaces++;
+	//c_glfaces++;
 	
 	w = p->winding;
 	
@@ -101,7 +132,7 @@ void OutputPortal( uPortal_t* p, idFile* glview )
 		w = w->Reverse();
 	}
 	
-	OutputWinding( w, glview );
+	OutputWinding( w, faces );
 	
 	if( sides == 2 )
 	{
@@ -114,23 +145,26 @@ void OutputPortal( uPortal_t* p, idFile* glview )
 WriteGLView_r
 =============
 */
-void WriteGLView_r( node_t* node, idFile* glview )
+void WriteGLView_r( node_t* node, idList<OBJFace>& faces )
 {
 	uPortal_t*	p, *nextp;
 	
 	if( node->planenum != PLANENUM_LEAF )
 	{
-		WriteGLView_r( node->children[0], glview );
-		WriteGLView_r( node->children[1], glview );
+		WriteGLView_r( node->children[0], faces );
+		WriteGLView_r( node->children[1], faces );
 		return;
 	}
+	
+	// write brush list
+	
 	
 	// write all the portals
 	for( p = node->portals; p; p = nextp )
 	{
 		if( p->nodes[0] == node )
 		{
-			OutputPortal( p, glview );
+			OutputPortal( p, faces );
 			nextp = p->next[0];
 		}
 		else
@@ -145,21 +179,70 @@ void WriteGLView_r( node_t* node, idFile* glview )
 WriteGLView
 =============
 */
-void WriteGLView( tree_t* tree, char* source )
+void WriteGLView( tree_t* tree, const char* source )
 {
-	idFile* glview;
+	//c_glfaces = 0;
+	//common->Printf( "Writing %s\n", source );
 	
-	c_glfaces = 0;
-	common->Printf( "Writing %s\n", source );
-	
-	glview = fileSystem->OpenExplicitFileWrite( source );
-	if( !glview )
+	if( dmapGlobals.entityNum != 0 )
 	{
-		common->Error( "Couldn't open %s", source );
+		return;
 	}
-	WriteGLView_r( tree->headnode, glview );
-	fileSystem->CloseFile( glview );
 	
-	common->Printf( "%5i c_glfaces\n", c_glfaces );
+	idStrStatic< MAX_OSPATH > path;
+	path.Format( "generated/%s_BSP_%s_%i.obj", dmapGlobals.mapFileBase, source, dmapGlobals.entityNum );
+	idFileLocal objFile( fileSystem->OpenFileWrite( path, "fs_basepath" ) );
+	
+	path.SetFileExtension( ".mtl" );
+	idFileLocal mtlFile( fileSystem->OpenFileWrite( path, "fs_basepath" ) );
+	
+	idList<OBJFace> faces;
+	WriteGLView_r( tree->headnode, faces );
+	
+	common->Printf( "%5i c_glfaces\n", faces.Num() );
+	
+	int numVerts = 0;
+	
+	for( int i = 0; i < faces.Num(); i++ )
+	{
+		OBJFace& face = faces[i];
+		
+		for( int j = 0; j < face.verts.Num(); j++ )
+		{
+			const idVec3& v = face.verts[j].xyz;
+			
+			objFile->Printf( "v %1.6f %1.6f %1.6f\n", v.x, v.y, v.z );
+		}
+		
+		/*
+		for( int j = 0; j < face.verts.Num(); j++ )
+		{
+			const idVec2& vST = face.verts[j].GetTexCoord();
+		
+			objFile->Printf( "vt %1.6f %1.6f\n", vST.x, vST.y );
+		}
+		
+		for( int j = 0; j < face.verts.Num(); j++ )
+		{
+			const idVec3& n = face.verts[j].GetNormal();
+		
+			objFile->Printf( "vn %1.6f %1.6f %1.6f\n", n.x, n.y, n.z );
+		}
+		
+		objFile->Printf( "usemtl %s\n", face.material->GetName() );
+		*/
+		
+		//for( int j = 0; j < face.indexes.Num(); j += 3 )
+		
+		objFile->Printf( "f " );
+		for( int j = 0; j < face.verts.Num(); j++ )
+		{
+			objFile->Printf( "%i// ", numVerts + 1 + j );
+		}
+		
+		numVerts += face.verts.Num();
+		
+		objFile->Printf( "\n\n" );
+	}
 }
 
