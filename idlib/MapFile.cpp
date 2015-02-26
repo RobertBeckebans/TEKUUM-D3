@@ -3,6 +3,7 @@
 
 Doom 3 BFG Edition GPL Source Code
 Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2015 Robert Beckebans
 
 This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
@@ -778,6 +779,11 @@ bool idMapEntity::Write( idFile* fp, int entityNum ) const
 			case idMapPrimitive::TYPE_PATCH:
 				static_cast<idMapPatch*>( mapPrim )->Write( fp, i, origin );
 				break;
+			// RB begin
+			case idMapPrimitive::TYPE_MESH:
+				static_cast<rbMapPolygonMesh*>( mapPrim )->Write( fp, i, origin );
+				break;
+				// RB end
 		}
 	}
 	
@@ -1122,3 +1128,213 @@ bool idMapFile::NeedsReload()
 	}
 	return true;
 }
+
+
+// RB begin
+void rbMapPolygonMesh::ConvertFromBrush( const idMapBrush* mapBrush, int entityNum, int primitiveNum )
+{
+	// fix degenerate planes
+	idPlane* planes = ( idPlane* ) _alloca16( mapBrush->GetNumSides() * sizeof( planes[0] ) );
+	for( int i = 0; i < mapBrush->GetNumSides(); i++ )
+	{
+		planes[i] = mapBrush->GetSide( i )->GetPlane();
+		planes[i].FixDegeneracies( DEGENERATE_DIST_EPSILON );
+	}
+	
+	idList<idFixedWinding> planeWindings;
+	idBounds bounds;
+	bounds.Clear();
+	
+	int numVerts = 0;
+	int numIndexes = 0;
+	
+	bool badBrush = false;
+	
+	for( int i = 0; i < mapBrush->GetNumSides(); i++ )
+	{
+		idMapBrushSide* mapSide = mapBrush->GetSide( i );
+		
+		const idMaterial* material = declManager->FindMaterial( mapSide->GetMaterial() );
+		//contents |= ( material->GetContentFlags() & CONTENTS_REMOVE_UTIL );
+		//materials.AddUnique( material );
+		
+		// chop base plane by other brush sides
+		idFixedWinding& w = planeWindings.Alloc();
+		w.BaseForPlane( -planes[i] );
+		
+		if( !w.GetNumPoints() )
+		{
+			common->Printf( "Entity %i, Brush %i: base winding has no points\n", entityNum, primitiveNum );
+			badBrush = true;
+			break;
+		}
+		
+		for( int j = 0; j < mapBrush->GetNumSides() && w.GetNumPoints(); j++ )
+		{
+			if( i == j )
+			{
+				continue;
+			}
+			
+			if( !w.ClipInPlace( -planes[j], 0 ) )
+			{
+				// no intersection
+				//badBrush = true;
+				common->Printf( "Entity %i, Brush %i: no intersection with other brush plane\n", entityNum, primitiveNum );
+				//break;
+			}
+		}
+		
+		if( w.GetNumPoints() <= 2 )
+		{
+			continue;
+		}
+		
+		// only used for debugging
+		for( int j = 0; j < w.GetNumPoints(); j++ )
+		{
+			const idVec3& v = w[j].ToVec3();
+			bounds.AddPoint( v );
+		}
+	}
+	
+	if( badBrush )
+	{
+		//common->Error( "" )
+		return;
+	}
+	
+	// copy the data from the windings and build polygons
+	for( int i = 0; i < mapBrush->GetNumSides(); i++ )
+	{
+		idMapBrushSide* mapSide = mapBrush->GetSide( i );
+		
+		idFixedWinding& w = planeWindings[i];
+		if( !w.GetNumPoints() )
+		{
+			continue;
+		}
+		
+		rbMapPolygon* polygon = new rbMapPolygon();
+		polygon->SetMaterial( mapSide->GetMaterial() );
+		
+		// reverse order
+		for( int j = w.GetNumPoints() - 1; j >= 0; j-- )
+		{
+			polygon->AddIndex( verts.Num() + j );
+		}
+		
+		polygons.Append( polygon );
+		
+		for( int j = 0 ; j < w.GetNumPoints() ; j++ )
+		{
+			idDrawVert& dv = verts.Alloc();
+			
+			const idVec3& xyz = w[j].ToVec3();
+			
+			dv.xyz = xyz;
+			
+			// calculate texture s/t from brush primitive texture matrix
+			idVec4 texVec[2];
+			mapSide->GetTextureVectors( texVec );
+			
+			idVec2 st;
+			st.x = ( xyz * texVec[0].ToVec3() ) + texVec[0][3];
+			st.y = ( xyz * texVec[1].ToVec3() ) + texVec[1][3];
+			
+			// flip y
+			st.y = 1.0f - st.y;
+			
+			dv.SetTexCoord( st );
+			
+			// copy normal
+			dv.SetNormal( mapSide->GetPlane().Normal() );
+			
+			//if( dv->GetNormal().Length() < 0.9 || dv->GetNormal().Length() > 1.1 )
+			//{
+			//	common->Error( "Bad normal in TriListForSide" );
+			//}
+		}
+	}
+}
+
+bool rbMapPolygonMesh::Write( idFile* fp, int primitiveNum, const idVec3& origin ) const
+{
+	fp->WriteFloatString( "// primitive %d\n{\n meshDef\n {\n", primitiveNum );
+	//fp->WriteFloatString( "  \"%s\"\n  ( %d %d 0 0 0 )\n", GetMaterial(), GetWidth(), GetHeight() );
+	
+	fp->WriteFloatString( "  ( %d %d 0 0 0 )\n", verts.Num(), polygons.Num() );
+	
+	fp->WriteFloatString( "  (\n" );
+	idVec2 st;
+	idVec3 n;
+	for( int i = 0; i < verts.Num(); i++ )
+	{
+		const idDrawVert* v = &verts[ i ];
+		st = v->GetTexCoord();
+		n = v->GetNormal();
+		
+		fp->WriteFloatString( "   ( %f %f %f %f %f %f %f %f )\n", v->xyz[0] + origin[0], v->xyz[1] + origin[1], v->xyz[2] + origin[2], st[0], st[1], n[0], n[1], n[2] );
+	}
+	fp->WriteFloatString( "  )\n" );
+	
+	fp->WriteFloatString( "  (\n" );
+	for( int i = 0; i < polygons.Num(); i++ )
+	{
+		rbMapPolygon* poly = polygons[ i ];
+		
+		fp->WriteFloatString( "   \"%s\" %d = ", poly->GetMaterial(), poly->indexes.Num() );
+		
+		for( int j = 0; j < poly->indexes.Num(); j++ )
+		{
+			fp->WriteFloatString( "%d ", poly->indexes[j] );
+		}
+		fp->WriteFloatString( "\n" );
+	}
+	fp->WriteFloatString( "  )\n" );
+	
+	fp->WriteFloatString( " }\n}\n" );
+	
+	return true;
+}
+
+bool idMapFile::ConvertToPolygonMeshFormat()
+{
+	//totalVerts = totalIndexes = 0;
+	
+	int count = GetNumEntities();
+	for( int j = 0; j < count; j++ )
+	{
+		idMapEntity* ent = GetEntity( j );
+		if( ent )
+		{
+			idStr classname = ent->epairs.GetString( "classname" );
+			
+			if( classname == "worldspawn" )
+			{
+				for( int i = 0; i < ent->GetNumPrimitives(); i++ )
+				{
+					idMapPrimitive*	mapPrim;
+					
+					mapPrim = ent->GetPrimitive( i );
+					if( mapPrim->GetType() == idMapPrimitive::TYPE_BRUSH )
+					{
+						rbMapPolygonMesh* meshPrim = new rbMapPolygonMesh();
+						meshPrim->epairs.Copy( mapPrim->epairs );
+						
+						meshPrim->ConvertFromBrush( static_cast<idMapBrush*>( mapPrim ), j, i );
+						ent->primitives[ i ] = meshPrim;
+						
+						delete mapPrim;
+						
+						continue;
+					}
+				}
+			}
+		}
+	}
+	
+	return true;
+}
+
+// RB end
