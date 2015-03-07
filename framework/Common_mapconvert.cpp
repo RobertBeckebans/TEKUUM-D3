@@ -43,33 +43,51 @@ public:
 		idList<triIndex_t>			indexes;
 	};
 	
-	struct OBJGeometry
+	struct OBJObject
 	{
 		idStr						name;
 		idList<OBJFace>				faces;
 	};
 	
-	idList<OBJGeometry>				geometries;
+	struct OBJGroup
+	{
+		idStr						name;
+		idList<OBJObject>			objects;
+	};
+	
+	idList<OBJGroup>				groups;
 	idList< const idMaterial* >		materials;
 	
+	void	ConvertBrushToOBJ( OBJGroup& group, const idMapBrush* mapBrush, int entityNum, int primitiveNum );
+	void	ConvertPatchToOBJ( OBJGroup& group, const idMapPatch* patch, int entityNum, int primitiveNum );
 	
-	void	Write( const char* relativePath, const char* basePath = "fs_basepath" )
+	void	Write( const char* relativePath, const char* basePath = "fs_basepath" );
+};
+
+void OBJExporter::Write( const char* relativePath, const char* basePath )
+{
+	idStrStatic< MAX_OSPATH > convertedFileName = relativePath;
+	
+	convertedFileName.SetFileExtension( ".obj" );
+	idFileLocal objFile( fileSystem->OpenFileWrite( convertedFileName, basePath ) );
+	
+	convertedFileName.SetFileExtension( ".mtl" );
+	idFileLocal mtlFile( fileSystem->OpenFileWrite( convertedFileName, basePath ) );
+	
+	int totalVerts = 0;
+	
+	for( int g = 0; g < groups.Num(); g++ )
 	{
-		idStrStatic< MAX_OSPATH > convertedFileName = relativePath;
+		const OBJGroup& group = groups[g];
 		
-		convertedFileName.SetFileExtension( ".obj" );
-		idFileLocal objFile( fileSystem->OpenFileWrite( convertedFileName, basePath ) );
+		objFile->Printf( "g %s\n", group.name.c_str() );
 		
-		convertedFileName.SetFileExtension( ".mtl" );
-		idFileLocal mtlFile( fileSystem->OpenFileWrite( convertedFileName, basePath ) );
-		
-		int totalVerts = 0;
-		
-		for( int g = 0; g < geometries.Num(); g++ )
+		for( int o = 0; o < group.objects.Num(); o++ )
 		{
-			const OBJGeometry& geometry = geometries[g];
+			const OBJObject& geometry = group.objects[o];
 			
-			objFile->Printf( "o %s\n", geometry.name.c_str() );
+			//objFile->Printf( "g %s\n", group.name.c_str() );
+			//objFile->Printf( "o %s\n", geometry.name.c_str() );
 			
 			for( int i = 0; i < geometry.faces.Num(); i++ )
 			{
@@ -96,6 +114,8 @@ public:
 					objFile->Printf( "vn %1.6f %1.6f %1.6f\n", n.x, n.y, n.z );
 				}
 				
+				//objFile->Printf( "g %s\n", group.name.c_str() );
+				//objFile->Printf( "o %s\n", geometry.name.c_str() );
 				objFile->Printf( "usemtl %s\n", face.material->GetName() );
 				
 				for( int j = 0; j < face.indexes.Num(); j += 3 )
@@ -123,41 +143,40 @@ public:
 				totalVerts += face.verts.Num();
 			}
 		}
-		
-		for( int i = 0; i < materials.Num(); i++ )
-		{
-			const idMaterial* material = materials[i];
-			
-			mtlFile->Printf( "newmtl %s\n", material->GetName() );
-			
-			if( material->GetFastPathDiffuseImage() )
-			{
-				idStr path = material->GetFastPathDiffuseImage()->GetName();
-				path.SlashesToBackSlashes();
-				path.DefaultFileExtension( ".tga" );
-				
-				mtlFile->Printf( "\tmap_Kd //..\\..\\..\\%s\n", path.c_str() );
-			}
-			else if( material->GetEditorImage() )
-			{
-				idStr path = material->GetEditorImage()->GetName();
-				path.SlashesToBackSlashes();
-				path.DefaultFileExtension( ".tga" );
-				
-				mtlFile->Printf( "\tmap_Kd //..\\..\\..\\%s\n", path.c_str() );
-			}
-			
-			
-			mtlFile->Printf( "\n" );
-		}
 	}
-};
+	
+	for( int i = 0; i < materials.Num(); i++ )
+	{
+		const idMaterial* material = materials[i];
+		
+		mtlFile->Printf( "newmtl %s\n", material->GetName() );
+		
+		if( material->GetFastPathDiffuseImage() )
+		{
+			idStr path = material->GetFastPathDiffuseImage()->GetName();
+			path.SlashesToBackSlashes();
+			path.DefaultFileExtension( ".tga" );
+			
+			mtlFile->Printf( "\tmap_Kd //..\\..\\..\\%s\n", path.c_str() );
+		}
+		else if( material->GetEditorImage() )
+		{
+			idStr path = material->GetEditorImage()->GetName();
+			path.SlashesToBackSlashes();
+			path.DefaultFileExtension( ".tga" );
+			
+			mtlFile->Printf( "\tmap_Kd //..\\..\\..\\%s\n", path.c_str() );
+		}
+		
+		
+		mtlFile->Printf( "\n" );
+	}
+}
 
 
-
-static void ConvertBrushToOBJ( OBJExporter& exporter, const idMapBrush* mapBrush, int entityNum, int primitiveNum )
+void OBJExporter::ConvertBrushToOBJ( OBJGroup& group, const idMapBrush* mapBrush, int entityNum, int primitiveNum )
 {
-	OBJExporter::OBJGeometry& geometry = exporter.geometries.Alloc();
+	OBJExporter::OBJObject& geometry = group.objects.Alloc();
 	
 	geometry.name.Format( "Primitive.%i", primitiveNum );
 	
@@ -187,7 +206,7 @@ static void ConvertBrushToOBJ( OBJExporter& exporter, const idMapBrush* mapBrush
 		
 		const idMaterial* material = declManager->FindMaterial( mapSide->GetMaterial() );
 		//contents |= ( material->GetContentFlags() & CONTENTS_REMOVE_UTIL );
-		exporter.materials.AddUnique( material );
+		materials.AddUnique( material );
 		
 		// chop base plane by other brush sides
 		idFixedWinding& w = planeWindings.Alloc();
@@ -287,9 +306,9 @@ static void ConvertBrushToOBJ( OBJExporter& exporter, const idMapBrush* mapBrush
 }
 
 
-static void ConvertPatchToOBJ( OBJExporter& exporter, const idMapPatch* patch, int entityNum, int primitiveNum )
+void OBJExporter::ConvertPatchToOBJ( OBJGroup& group, const idMapPatch* patch, int entityNum, int primitiveNum )
 {
-	OBJExporter::OBJGeometry& geometry = exporter.geometries.Alloc();
+	OBJExporter::OBJObject& geometry = group.objects.Alloc();
 	
 	geometry.name.Format( "Primitive.%i", primitiveNum );
 	
@@ -304,10 +323,13 @@ static void ConvertPatchToOBJ( OBJExporter& exporter, const idMapPatch* patch, i
 		cp->Subdivide( DEFAULT_CURVE_MAX_ERROR, DEFAULT_CURVE_MAX_ERROR, DEFAULT_CURVE_MAX_LENGTH, true );
 	}
 	
+	const idMaterial* material = declManager->FindMaterial( patch->GetMaterial() );
+	materials.AddUnique( material );
+	
 	for( int i = 0; i < cp->GetNumIndexes(); i += 3 )
 	{
 		OBJExporter::OBJFace& face = geometry.faces.Alloc();
-		face.material = declManager->FindMaterial( patch->GetMaterial() );
+		face.material = material;
 		
 		MapPolygon* polygon = new MapPolygon();
 		polygon->SetMaterial( patch->GetMaterial() );
@@ -366,8 +388,19 @@ CONSOLE_COMMAND( exportMapToOBJ, "Convert .map file to .obj/.mtl ", idCmdSystem:
 			{
 				idStr classname = ent->epairs.GetString( "classname" );
 				
-				if( classname == "worldspawn" )
+				if( ent->GetNumPrimitives() )
 				{
+					OBJExporter::OBJGroup& group = exporter.groups.Alloc();
+					
+					if( classname == "worldspawn" )
+					{
+						group.name = "BSP";
+					}
+					else
+					{
+						group.name = ent->epairs.GetString( "name" );
+					}
+					
 					for( int i = 0; i < ent->GetNumPrimitives(); i++ )
 					{
 						idMapPrimitive*	mapPrim;
@@ -375,13 +408,13 @@ CONSOLE_COMMAND( exportMapToOBJ, "Convert .map file to .obj/.mtl ", idCmdSystem:
 						mapPrim = ent->GetPrimitive( i );
 						if( mapPrim->GetType() == idMapPrimitive::TYPE_BRUSH )
 						{
-							//ConvertBrushToOBJ( exporter, static_cast<idMapBrush*>( mapPrim ), j, i );
+							exporter.ConvertBrushToOBJ( group, static_cast<idMapBrush*>( mapPrim ), j, i );
 							continue;
 						}
 						
 						if( mapPrim->GetType() == idMapPrimitive::TYPE_PATCH )
 						{
-							ConvertPatchToOBJ( exporter, static_cast<idMapPatch*>( mapPrim ), j, i );
+							exporter.ConvertPatchToOBJ( group, static_cast<idMapPatch*>( mapPrim ), j, i );
 							continue;
 						}
 					}
