@@ -31,14 +31,135 @@ If you have questions concerning this license or the applicable additional terms
 #pragma hdrstop
 #include "../renderer/Image.h"
 
-static int totalVerts = 0;
-static int totalIndexes = 0;
 
-static idList< const idMaterial* > materials;
 
-static void ConvertBrushToOBJ( idFile* objFile, idFile* mtlFile, const idMapBrush* mapBrush, int entityNum, int primitiveNum )
+class OBJExporter
 {
-	objFile->Printf( "o Primitive.%i\n", primitiveNum );
+public:
+	struct OBJFace
+	{
+		const idMaterial*			material;
+		idList<idDrawVert>			verts;
+		idList<triIndex_t>			indexes;
+	};
+	
+	struct OBJGeometry
+	{
+		idStr						name;
+		idList<OBJFace>				faces;
+	};
+	
+	idList<OBJGeometry>				geometries;
+	idList< const idMaterial* >		materials;
+	
+	
+	void	Write( const char* relativePath, const char* basePath = "fs_basepath" )
+	{
+		idStrStatic< MAX_OSPATH > convertedFileName = relativePath;
+		
+		convertedFileName.SetFileExtension( ".obj" );
+		idFileLocal objFile( fileSystem->OpenFileWrite( convertedFileName, basePath ) );
+		
+		convertedFileName.SetFileExtension( ".mtl" );
+		idFileLocal mtlFile( fileSystem->OpenFileWrite( convertedFileName, basePath ) );
+		
+		int totalVerts = 0;
+		
+		for( int g = 0; g < geometries.Num(); g++ )
+		{
+			const OBJGeometry& geometry = geometries[g];
+			
+			objFile->Printf( "o %s\n", geometry.name.c_str() );
+			
+			for( int i = 0; i < geometry.faces.Num(); i++ )
+			{
+				const OBJFace& face = geometry.faces[i];
+				
+				for( int j = 0; j < face.verts.Num(); j++ )
+				{
+					const idVec3& v = face.verts[j].xyz;
+					
+					objFile->Printf( "v %1.6f %1.6f %1.6f\n", v.x, v.y, v.z );
+				}
+				
+				for( int j = 0; j < face.verts.Num(); j++ )
+				{
+					const idVec2& vST = face.verts[j].GetTexCoord();
+					
+					objFile->Printf( "vt %1.6f %1.6f\n", vST.x, vST.y );
+				}
+				
+				for( int j = 0; j < face.verts.Num(); j++ )
+				{
+					const idVec3& n = face.verts[j].GetNormal();
+					
+					objFile->Printf( "vn %1.6f %1.6f %1.6f\n", n.x, n.y, n.z );
+				}
+				
+				objFile->Printf( "usemtl %s\n", face.material->GetName() );
+				
+				for( int j = 0; j < face.indexes.Num(); j += 3 )
+				{
+					objFile->Printf( "f %i/%i/%i %i/%i/%i %i/%i/%i\n",
+									 face.indexes[j + 0] + 1 + totalVerts,
+									 face.indexes[j + 0] + 1 + totalVerts,
+									 face.indexes[j + 0] + 1 + totalVerts,
+									 
+									 face.indexes[j + 1] + 1 + totalVerts,
+									 face.indexes[j + 1] + 1 + totalVerts,
+									 face.indexes[j + 1] + 1 + totalVerts,
+									 
+									 face.indexes[j + 2] + 1 + totalVerts,
+									 face.indexes[j + 2] + 1 + totalVerts,
+									 face.indexes[j + 2] + 1 + totalVerts );
+				}
+				
+				objFile->Printf( "\n" );
+			}
+			
+			for( int i = 0; i < geometry.faces.Num(); i++ )
+			{
+				const OBJFace& face = geometry.faces[i];
+				totalVerts += face.verts.Num();
+			}
+		}
+		
+		for( int i = 0; i < materials.Num(); i++ )
+		{
+			const idMaterial* material = materials[i];
+			
+			mtlFile->Printf( "newmtl %s\n", material->GetName() );
+			
+			if( material->GetFastPathDiffuseImage() )
+			{
+				idStr path = material->GetFastPathDiffuseImage()->GetName();
+				path.SlashesToBackSlashes();
+				path.DefaultFileExtension( ".tga" );
+				
+				mtlFile->Printf( "\tmap_Kd //..\\..\\..\\%s\n", path.c_str() );
+			}
+			else if( material->GetEditorImage() )
+			{
+				idStr path = material->GetEditorImage()->GetName();
+				path.SlashesToBackSlashes();
+				path.DefaultFileExtension( ".tga" );
+				
+				mtlFile->Printf( "\tmap_Kd //..\\..\\..\\%s\n", path.c_str() );
+			}
+			
+			
+			mtlFile->Printf( "\n" );
+		}
+	}
+};
+
+
+
+static void ConvertBrushToOBJ( OBJExporter& exporter, const idMapBrush* mapBrush, int entityNum, int primitiveNum )
+{
+	OBJExporter::OBJGeometry& geometry = exporter.geometries.Alloc();
+	
+	geometry.name.Format( "Primitive.%i", primitiveNum );
 	
 	// fix degenerate planes
 	idPlane* planes = ( idPlane* ) _alloca16( mapBrush->GetNumSides() * sizeof( planes[0] ) );
@@ -66,7 +187,7 @@ static void ConvertBrushToOBJ( idFile* objFile, idFile* mtlFile, const idMapBrus
 		
 		const idMaterial* material = declManager->FindMaterial( mapSide->GetMaterial() );
 		//contents |= ( material->GetContentFlags() & CONTENTS_REMOVE_UTIL );
-		materials.AddUnique( material );
+		exporter.materials.AddUnique( material );
 		
 		// chop base plane by other brush sides
 		idFixedWinding& w = planeWindings.Alloc();
@@ -108,14 +229,6 @@ static void ConvertBrushToOBJ( idFile* objFile, idFile* mtlFile, const idMapBrus
 	}
 	
 	// allocate the surface
-	struct OBJFace
-	{
-		const idMaterial*			material;
-		idList<idDrawVert>			verts;
-		idList<triIndex_t>			indexes;
-	};
-	
-	idList<OBJFace> faces;
 	
 	// copy the data from the windings and build polygons
 	for( int i = 0; i < mapBrush->GetNumSides(); i++ )
@@ -128,7 +241,7 @@ static void ConvertBrushToOBJ( idFile* objFile, idFile* mtlFile, const idMapBrus
 			continue;
 		}
 		
-		OBJFace& face = faces.Alloc();
+		OBJExporter::OBJFace& face = geometry.faces.Alloc();
 		
 		face.material = declManager->FindMaterial( mapSide->GetMaterial() );
 		
@@ -164,67 +277,61 @@ static void ConvertBrushToOBJ( idFile* objFile, idFile* mtlFile, const idMapBrus
 		
 		for( int j = 1 ; j < w.GetNumPoints() - 1 ; j++ )
 		{
-			face.indexes.Append( numVerts );
-			face.indexes.Append( numVerts + j );
 			face.indexes.Append( numVerts + j + 1 );
+			face.indexes.Append( numVerts + j );
+			face.indexes.Append( numVerts );
 		}
 		
 		numVerts += w.GetNumPoints();
 	}
-	
-	// output polygons
-	for( int i = 0; i < faces.Num(); i++ )
-	{
-		OBJFace& face = faces[i];
-		
-		for( int j = 0; j < face.verts.Num(); j++ )
-		{
-			const idVec3& v = face.verts[j].xyz;
-			
-			objFile->Printf( "v %1.6f %1.6f %1.6f\n", v.x, v.y, v.z );
-		}
-		
-		for( int j = 0; j < face.verts.Num(); j++ )
-		{
-			const idVec2& vST = face.verts[j].GetTexCoord();
-			
-			objFile->Printf( "vt %1.6f %1.6f\n", vST.x, vST.y );
-		}
-		
-		for( int j = 0; j < face.verts.Num(); j++ )
-		{
-			const idVec3& n = face.verts[j].GetNormal();
-			
-			objFile->Printf( "vn %1.6f %1.6f %1.6f\n", n.x, n.y, n.z );
-		}
-		
-		objFile->Printf( "usemtl %s\n", face.material->GetName() );
-		
-		for( int j = 0; j < face.indexes.Num(); j += 3 )
-		{
-			objFile->Printf( "f %i/%i/%i %i/%i/%i %i/%i/%i\n",
-							 face.indexes[j + 2] + 1 + totalVerts,
-							 face.indexes[j + 2] + 1 + totalVerts,
-							 face.indexes[j + 2] + 1 + totalVerts,
-							 
-							 face.indexes[j + 1] + 1 + totalVerts,
-							 face.indexes[j + 1] + 1 + totalVerts,
-							 face.indexes[j + 1] + 1 + totalVerts,
-							 
-							 face.indexes[j + 0] + 1 + totalVerts,
-							 face.indexes[j + 0] + 1 + totalVerts,
-							 face.indexes[j + 0] + 1 + totalVerts );
-		}
-		
-		objFile->Printf( "\n" );
-	}
-	
-	for( int i = 0; i < faces.Num(); i++ )
-	{
-		OBJFace& face = faces[i];
-		totalVerts += face.verts.Num();
-	}
 }
+
+
+static void ConvertPatchToOBJ( OBJExporter& exporter, const idMapPatch* patch, int entityNum, int primitiveNum )
+{
+	OBJExporter::OBJGeometry& geometry = exporter.geometries.Alloc();
+	
+	geometry.name.Format( "Primitive.%i", primitiveNum );
+	
+	idSurface_Patch* cp = new idSurface_Patch( *patch );
+	
+	if( patch->GetExplicitlySubdivided() )
+	{
+		cp->SubdivideExplicit( patch->GetHorzSubdivisions(), patch->GetVertSubdivisions(), true );
+	}
+	else
+	{
+		cp->Subdivide( DEFAULT_CURVE_MAX_ERROR, DEFAULT_CURVE_MAX_ERROR, DEFAULT_CURVE_MAX_LENGTH, true );
+	}
+	
+	for( int i = 0; i < cp->GetNumIndexes(); i += 3 )
+	{
+		OBJExporter::OBJFace& face = geometry.faces.Alloc();
+		face.material = declManager->FindMaterial( patch->GetMaterial() );
+		
+		MapPolygon* polygon = new MapPolygon();
+		polygon->SetMaterial( patch->GetMaterial() );
+		
+		idDrawVert& dv0 = face.verts.Alloc();
+		idDrawVert& dv1 = face.verts.Alloc();
+		idDrawVert& dv2 = face.verts.Alloc();
+		
+		dv0 = ( *cp )[cp->GetIndexes()[i + 1]];
+		dv1 = ( *cp )[cp->GetIndexes()[i + 2]];
+		dv2 = ( *cp )[cp->GetIndexes()[i + 0]];
+		
+		//face.indexes.Append( cp->GetIndexes()[i + 0] );
+		//face.indexes.Append( cp->GetIndexes()[i + 1] );
+		//face.indexes.Append( cp->GetIndexes()[i + 2] );
+		
+		face.indexes.Append( i + 2 );
+		face.indexes.Append( i + 1 );
+		face.indexes.Append( i + 0 );
+	}
+	
+	delete cp;
+}
+
 
 CONSOLE_COMMAND( exportMapToOBJ, "Convert .map file to .obj/.mtl ", idCmdSystem::ArgCompletion_MapName )
 {
@@ -249,25 +356,7 @@ CONSOLE_COMMAND( exportMapToOBJ, "Convert .map file to .obj/.mtl ", idCmdSystem:
 	idMapFile map;
 	if( map.Parse( mapName, false, false ) )
 	{
-		idStrStatic< MAX_OSPATH > canonical = mapName;
-		canonical.ToLower();
-		
-		idStrStatic< MAX_OSPATH > extension;
-		canonical.ExtractFileExtension( extension );
-		
-		idStrStatic< MAX_OSPATH > convertedFileName;
-		
-		convertedFileName = "converted/";
-		convertedFileName.AppendPath( canonical );
-		convertedFileName.AppendPath( "_converted" );
-		convertedFileName.SetFileExtension( ".obj" );
-		
-		idFileLocal objFile( fileSystem->OpenFileWrite( convertedFileName, "fs_basepath" ) );
-		
-		convertedFileName.SetFileExtension( ".mtl" );
-		idFileLocal mtlFile( fileSystem->OpenFileWrite( convertedFileName, "fs_basepath" ) );
-		
-		totalVerts = totalIndexes = 0;
+		OBJExporter exporter;
 		
 		int count = map.GetNumEntities();
 		for( int j = 0; j < count; j++ )
@@ -286,7 +375,13 @@ CONSOLE_COMMAND( exportMapToOBJ, "Convert .map file to .obj/.mtl ", idCmdSystem:
 						mapPrim = ent->GetPrimitive( i );
 						if( mapPrim->GetType() == idMapPrimitive::TYPE_BRUSH )
 						{
-							ConvertBrushToOBJ( objFile, mtlFile, static_cast<idMapBrush*>( mapPrim ), j, i );
+							//ConvertBrushToOBJ( exporter, static_cast<idMapBrush*>( mapPrim ), j, i );
+							continue;
+						}
+						
+						if( mapPrim->GetType() == idMapPrimitive::TYPE_PATCH )
+						{
+							ConvertPatchToOBJ( exporter, static_cast<idMapPatch*>( mapPrim ), j, i );
 							continue;
 						}
 					}
@@ -326,34 +421,18 @@ CONSOLE_COMMAND( exportMapToOBJ, "Convert .map file to .obj/.mtl ", idCmdSystem:
 			}
 		}
 		
-		for( int i = 0; i < materials.Num(); i++ )
-		{
-			const idMaterial* material = materials[i];
-			
-			mtlFile->Printf( "newmtl %s\n", material->GetName() );
-			
-			if( material->GetFastPathDiffuseImage() )
-			{
-				idStr path = material->GetFastPathDiffuseImage()->GetName();
-				path.SlashesToBackSlashes();
-				path.DefaultFileExtension( ".tga" );
-				
-				mtlFile->Printf( "\tmap_Kd //..\\..\\..\\%s\n", path.c_str() );
-			}
-			else if( material->GetEditorImage() )
-			{
-				idStr path = material->GetEditorImage()->GetName();
-				path.SlashesToBackSlashes();
-				path.DefaultFileExtension( ".tga" );
-				
-				mtlFile->Printf( "\tmap_Kd //..\\..\\..\\%s\n", path.c_str() );
-			}
-			
-			
-			mtlFile->Printf( "\n" );
-		}
+		idStrStatic< MAX_OSPATH > canonical = mapName;
+		canonical.ToLower();
 		
-		materials.Clear();
+		idStrStatic< MAX_OSPATH > extension;
+		canonical.ExtractFileExtension( extension );
+		
+		idStrStatic< MAX_OSPATH > convertedFileName;
+		
+		convertedFileName = "converted/";
+		convertedFileName += canonical;
+		
+		exporter.Write( convertedFileName );
 	}
 	
 	common->SetRefreshOnPrint( false );
@@ -409,11 +488,8 @@ CONSOLE_COMMAND( convertMap, "Convert .map file to new map format with polygons 
 		
 		idStrStatic< MAX_OSPATH > convertedFileName;
 		
-		//convertedFileName = "converted/";
-		//convertedFileName.AppendPath( canonical );
 		convertedFileName = canonical;
 		convertedFileName += "_converted";
-		//convertedFileName.SetFileExtension( ".map" );
 		
 		map.Write( convertedFileName, ".map" );
 	}
