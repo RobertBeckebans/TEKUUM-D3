@@ -781,7 +781,7 @@ bool idMapEntity::Write( idFile* fp, int entityNum ) const
 				break;
 			// RB begin
 			case idMapPrimitive::TYPE_MESH:
-				static_cast<rbMapPolygonMesh*>( mapPrim )->Write( fp, i, origin );
+				static_cast<MapPolygonMesh*>( mapPrim )->Write( fp, i, origin );
 				break;
 				// RB end
 		}
@@ -1131,7 +1131,7 @@ bool idMapFile::NeedsReload()
 
 
 // RB begin
-void rbMapPolygonMesh::ConvertFromBrush( const idMapBrush* mapBrush, int entityNum, int primitiveNum )
+void MapPolygonMesh::ConvertFromBrush( const idMapBrush* mapBrush, int entityNum, int primitiveNum )
 {
 	// fix degenerate planes
 	idPlane* planes = ( idPlane* ) _alloca16( mapBrush->GetNumSides() * sizeof( planes[0] ) );
@@ -1215,7 +1215,7 @@ void rbMapPolygonMesh::ConvertFromBrush( const idMapBrush* mapBrush, int entityN
 			continue;
 		}
 		
-		rbMapPolygon* polygon = new rbMapPolygon();
+		MapPolygon* polygon = new MapPolygon();
 		polygon->SetMaterial( mapSide->GetMaterial() );
 		
 		// reverse order
@@ -1258,7 +1258,37 @@ void rbMapPolygonMesh::ConvertFromBrush( const idMapBrush* mapBrush, int entityN
 	}
 }
 
-bool rbMapPolygonMesh::Write( idFile* fp, int primitiveNum, const idVec3& origin ) const
+void MapPolygonMesh::ConvertFromPatch( const idMapPatch* patch, int entityNum, int primitiveNum )
+{
+	idSurface_Patch* cp = new idSurface_Patch( *patch );
+	
+	if( patch->GetExplicitlySubdivided() )
+	{
+		cp->SubdivideExplicit( patch->GetHorzSubdivisions(), patch->GetVertSubdivisions(), true );
+	}
+	else
+	{
+		cp->Subdivide( DEFAULT_CURVE_MAX_ERROR, DEFAULT_CURVE_MAX_ERROR, DEFAULT_CURVE_MAX_LENGTH, true );
+	}
+	
+	for( int i = 0; i < cp->GetNumIndexes(); i += 3 )
+	{
+		MapPolygon* polygon = new MapPolygon();
+		polygon->SetMaterial( patch->GetMaterial() );
+		
+		idDrawVert& dv0 = verts.Alloc();
+		idDrawVert& dv1 = verts.Alloc();
+		idDrawVert& dv2 = verts.Alloc();
+		
+		dv0 = ( *cp )[cp->GetIndexes()[i + 1]];
+		dv1 = ( *cp )[cp->GetIndexes()[i + 2]];
+		dv2 = ( *cp )[cp->GetIndexes()[i + 0]];
+	}
+	
+	delete cp;
+}
+
+bool MapPolygonMesh::Write( idFile* fp, int primitiveNum, const idVec3& origin ) const
 {
 	fp->WriteFloatString( "// primitive %d\n{\n meshDef\n {\n", primitiveNum );
 	//fp->WriteFloatString( "  \"%s\"\n  ( %d %d 0 0 0 )\n", GetMaterial(), GetWidth(), GetHeight() );
@@ -1272,7 +1302,7 @@ bool rbMapPolygonMesh::Write( idFile* fp, int primitiveNum, const idVec3& origin
 	{
 		const idDrawVert* v = &verts[ i ];
 		st = v->GetTexCoord();
-		n = v->GetNormal();
+		n = v->GetNormalRaw();
 		
 		fp->WriteFloatString( "   ( %f %f %f %f %f %f %f %f )\n", v->xyz[0] + origin[0], v->xyz[1] + origin[1], v->xyz[2] + origin[2], st[0], st[1], n[0], n[1], n[2] );
 	}
@@ -1281,7 +1311,7 @@ bool rbMapPolygonMesh::Write( idFile* fp, int primitiveNum, const idVec3& origin
 	fp->WriteFloatString( "  (\n" );
 	for( int i = 0; i < polygons.Num(); i++ )
 	{
-		rbMapPolygon* poly = polygons[ i ];
+		MapPolygon* poly = polygons[ i ];
 		
 		fp->WriteFloatString( "   \"%s\" %d = ", poly->GetMaterial(), poly->indexes.Num() );
 		
@@ -1300,8 +1330,6 @@ bool rbMapPolygonMesh::Write( idFile* fp, int primitiveNum, const idVec3& origin
 
 bool idMapFile::ConvertToPolygonMeshFormat()
 {
-	//totalVerts = totalIndexes = 0;
-	
 	int count = GetNumEntities();
 	for( int j = 0; j < count; j++ )
 	{
@@ -1310,7 +1338,7 @@ bool idMapFile::ConvertToPolygonMeshFormat()
 		{
 			idStr classname = ent->epairs.GetString( "classname" );
 			
-			if( classname == "worldspawn" )
+			//if( classname == "worldspawn" )
 			{
 				for( int i = 0; i < ent->GetNumPrimitives(); i++ )
 				{
@@ -1319,10 +1347,22 @@ bool idMapFile::ConvertToPolygonMeshFormat()
 					mapPrim = ent->GetPrimitive( i );
 					if( mapPrim->GetType() == idMapPrimitive::TYPE_BRUSH )
 					{
-						rbMapPolygonMesh* meshPrim = new rbMapPolygonMesh();
+						MapPolygonMesh* meshPrim = new MapPolygonMesh();
 						meshPrim->epairs.Copy( mapPrim->epairs );
 						
 						meshPrim->ConvertFromBrush( static_cast<idMapBrush*>( mapPrim ), j, i );
+						ent->primitives[ i ] = meshPrim;
+						
+						delete mapPrim;
+						
+						continue;
+					}
+					else if( mapPrim->GetType() == idMapPrimitive::TYPE_PATCH )
+					{
+						MapPolygonMesh* meshPrim = new MapPolygonMesh();
+						meshPrim->epairs.Copy( mapPrim->epairs );
+						
+						meshPrim->ConvertFromPatch( static_cast<idMapPatch*>( mapPrim ), j, i );
 						ent->primitives[ i ] = meshPrim;
 						
 						delete mapPrim;

@@ -239,13 +239,13 @@ ID_INLINE idMapPatch::idMapPatch( int maxPatchWidth, int maxPatchHeight )
 
 
 // RB begin
-class rbMapPolygon
+class MapPolygon
 {
-	friend class rbMapPolygonMesh;
+	friend class MapPolygonMesh;
 	
 public:
-	rbMapPolygon();
-	~rbMapPolygon() { }
+	MapPolygon();
+	~MapPolygon() { }
 	
 	const char* 			GetMaterial() const
 	{
@@ -277,20 +277,20 @@ protected:
 	//idWinding				winding;
 };
 
-ID_INLINE rbMapPolygon::rbMapPolygon()
+ID_INLINE MapPolygon::MapPolygon()
 {
 }
 
 
-class rbMapPolygonMesh : public idMapPrimitive
+class MapPolygonMesh : public idMapPrimitive
 {
 public:
-	rbMapPolygonMesh()
+	MapPolygonMesh()
 	{
 		type = TYPE_MESH;
 		polygons.Resize( 8, 4 );
 	}
-	~rbMapPolygonMesh()
+	~MapPolygonMesh()
 	{
 		//verts.DeleteContents();
 		polygons.DeleteContents( true );
@@ -299,7 +299,7 @@ public:
 	void					ConvertFromBrush( const idMapBrush* brush, int entityNum, int primitiveNum );
 	void					ConvertFromPatch( const idMapPatch* patch, int entityNum, int primitiveNum );
 	
-	static rbMapPolygonMesh* Parse( idLexer& src, const idVec3& origin, bool newFormat = true, float version = CURRENT_MAP_VERSION );
+	static MapPolygonMesh*	Parse( idLexer& src, const idVec3& origin, bool newFormat = true, float version = CURRENT_MAP_VERSION );
 	bool					Write( idFile* fp, int primitiveNum, const idVec3& origin ) const;
 	
 	
@@ -320,12 +320,12 @@ public:
 		return polygons.Num();
 	}
 	
-	int						AddPolygon( rbMapPolygon* face )
+	int						AddPolygon( MapPolygon* face )
 	{
 		return polygons.Append( face );
 	}
 	
-	rbMapPolygon* 		GetFace( int i ) const
+	MapPolygon* 			GetFace( int i ) const
 	{
 		return polygons[i];
 	}
@@ -335,7 +335,7 @@ public:
 protected:
 
 	idList<idDrawVert>		verts;			// vertices can be shared between polygons
-	idList<rbMapPolygon*>	polygons;
+	idList<MapPolygon*>		polygons;
 };
 // RB end
 
