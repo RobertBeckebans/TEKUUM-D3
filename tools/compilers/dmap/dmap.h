@@ -36,6 +36,8 @@ typedef struct primitive_s
 	// only one of these will be non-NULL
 	struct bspbrush_s* 	brush;
 	struct mapTri_s* 	tris;
+	struct mapTri_s*	bsptris;
+	//struct mapMesh_s*	polygons;
 } primitive_t;
 
 
@@ -73,6 +75,21 @@ typedef struct mapTri_s
 	struct optVertex_s* optVert[3];
 } mapTri_t;
 
+// RB begin
+typedef struct mapPoly_s
+{
+	struct mapPoly_s* 	next;
+	
+	const idMaterial* 	material;
+	void* 				mergeGroup;		// we want to avoid merging triangles
+	
+	// from different fixed groups, like guiSurfs and mirrors
+	int					planeNum;			// not set universally, just in some areas
+	
+	int					numVerts;
+	idDrawVert*			v;
+} mapPoly_t;
+// RB end
 
 typedef struct
 {
@@ -398,7 +415,9 @@ void FreePortal( uPortal_t* p );
 // glfile.cpp -- write a debug file to be viewd with glview.exe
 
 void OutputWinding( idWinding* w, idFile* glview );
+
 void WriteGLView( tree_t* tree, const char* source );
+void WriteGLView( bspface_t* list, const char* source );
 
 //=============================================================================
 
@@ -419,7 +438,7 @@ void FreeTreePortals_r( node_t* node );
 
 
 bspface_t*	MakeStructuralBspFaceList( primitive_t* list );
-bspface_t*	MakeVisibleBspFaceList( primitive_t* list );
+//bspface_t*	MakeVisibleBspFaceList( primitive_t* list );
 tree_t*		FaceBSP( bspface_t* list );
 
 node_t*		NodeForPoint( node_t* node, const idVec3& origin );

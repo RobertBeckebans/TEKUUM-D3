@@ -45,6 +45,14 @@ bool ProcessModel( uEntity_t* e, bool floodFill )
 	// build a bsp tree using all of the sides
 	// of all of the structural brushes
 	faces = MakeStructuralBspFaceList( e->primitives );
+	
+	// RB: dump BSP for debugging
+	if( dmapGlobals.glview )
+	{
+		WriteGLView( faces, "facelist" );
+	}
+	// RB end
+	
 	e->tree = FaceBSP( faces );
 	
 	// create portals at every leaf intersection
@@ -57,7 +65,7 @@ bool ProcessModel( uEntity_t* e, bool floodFill )
 	// RB: dump BSP for debugging
 	if( dmapGlobals.glview )
 	{
-		WriteGLView( e->tree, "structure" );
+		WriteGLView( e->tree, "portals" );
 	}
 	// RB end
 	
@@ -90,7 +98,7 @@ bool ProcessModel( uEntity_t* e, bool floodFill )
 	// RB: dump BSP for debugging
 	if( dmapGlobals.glview )
 	{
-		WriteGLView( e->tree, "clipped" );
+		WriteGLView( e->tree, "portals_clipped" );
 	}
 	// RB end
 	

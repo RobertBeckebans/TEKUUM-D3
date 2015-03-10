@@ -190,11 +190,11 @@ void WriteGLView( tree_t* tree, const char* source )
 	}
 	
 	idStrStatic< MAX_OSPATH > path;
-	path.Format( "generated/%s_BSP_%s_%i.obj", dmapGlobals.mapFileBase, source, dmapGlobals.entityNum );
+	path.Format( "%s_BSP_%s_%i.obj", dmapGlobals.mapFileBase, source, dmapGlobals.entityNum );
 	idFileLocal objFile( fileSystem->OpenFileWrite( path, "fs_basepath" ) );
 	
-	path.SetFileExtension( ".mtl" );
-	idFileLocal mtlFile( fileSystem->OpenFileWrite( path, "fs_basepath" ) );
+	//path.SetFileExtension( ".mtl" );
+	//idFileLocal mtlFile( fileSystem->OpenFileWrite( path, "fs_basepath" ) );
 	
 	idList<OBJFace> faces;
 	WriteGLView_r( tree->headnode, faces );
@@ -246,3 +246,63 @@ void WriteGLView( tree_t* tree, const char* source )
 	}
 }
 
+
+void WriteGLView( bspface_t* list, const char* source )
+{
+	if( dmapGlobals.entityNum != 0 )
+	{
+		return;
+	}
+	
+	idStrStatic< MAX_OSPATH > path;
+	path.Format( "%s_BSP_%s_%i.obj", dmapGlobals.mapFileBase, source, dmapGlobals.entityNum );
+	idFileLocal objFile( fileSystem->OpenFileWrite( path, "fs_basepath" ) );
+	
+	//path.SetFileExtension( ".mtl" );
+	//idFileLocal mtlFile( fileSystem->OpenFileWrite( path, "fs_basepath" ) );
+	
+	idList<OBJFace> faces;
+	
+	for( bspface_t*	face = list ; face ; face = face->next )
+	{
+		OBJFace& objFace = faces.Alloc();
+		
+		//for( int i = 0; i < face->w->GetNumPoints(); i++ )
+		for( int i = face->w->GetNumPoints() - 1; i >= 0; i-- )
+		{
+			idDrawVert& dv = objFace.verts.Alloc();
+			
+			dv.xyz.x = ( *face->w )[i][0];
+			dv.xyz.y = ( *face->w )[i][1];
+			dv.xyz.z = ( *face->w )[i][2];
+			
+			//dv.SetColor( level & 255 );
+		}
+	}
+	
+	//common->Printf( "%5i c_glfaces\n", faces.Num() );
+	
+	int numVerts = 0;
+	
+	for( int i = 0; i < faces.Num(); i++ )
+	{
+		OBJFace& face = faces[i];
+		
+		for( int j = 0; j < face.verts.Num(); j++ )
+		{
+			const idVec3& v = face.verts[j].xyz;
+			
+			objFile->Printf( "v %1.6f %1.6f %1.6f\n", v.x, v.y, v.z );
+		}
+		
+		objFile->Printf( "f " );
+		for( int j = 0; j < face.verts.Num(); j++ )
+		{
+			objFile->Printf( "%i// ", numVerts + 1 + j );
+		}
+		
+		numVerts += face.verts.Num();
+		
+		objFile->Printf( "\n\n" );
+	}
+}

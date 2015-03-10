@@ -473,19 +473,56 @@ bspface_t*	MakeStructuralBspFaceList( primitive_t* list )
 	side_t*		s;
 	idWinding*	w;
 	bspface_t*	f, *flist;
+	mapTri_t*	tri;
 	
 	flist = NULL;
 	for( ; list ; list = list->next )
 	{
+		// RB: support polygons instead of brushes
+		tri = list->bsptris;
+		if( tri )
+		{
+			for( ; tri ; tri = tri->next )
+			{
+				f = AllocBspFace();
+				if( tri->material->GetContentFlags() & CONTENTS_AREAPORTAL )
+				{
+					f->portal = true;
+				}
+				
+				w = new idWinding();
+				w->SetNumPoints( 3 );
+				( *w )[2] = idVec5( tri->v[0].xyz, tri->v[0].GetTexCoord() );
+				( *w )[1] = idVec5( tri->v[1].xyz, tri->v[1].GetTexCoord() );
+				( *w )[0] = idVec5( tri->v[2].xyz, tri->v[2].GetTexCoord() );
+				
+				f->w = w;
+				
+				idPlane plane;
+				w->GetPlane( plane );
+				
+				int planenum = FindFloatPlane( plane );
+				
+				f->planenum = planenum & ~1;
+				f->next = flist;
+				flist = f;
+			}
+			
+			continue;
+		}
+		// RB end
+		
 		b = list->brush;
 		if( !b )
 		{
 			continue;
 		}
+		
 		if( !b->opaque && !( b->contents & CONTENTS_AREAPORTAL ) )
 		{
 			continue;
 		}
+		
 		for( i = 0 ; i < b->numsides ; i++ )
 		{
 			s = &b->sides[i];
@@ -518,6 +555,7 @@ bspface_t*	MakeStructuralBspFaceList( primitive_t* list )
 MakeVisibleBspFaceList
 =================
 */
+/*
 bspface_t*	MakeVisibleBspFaceList( primitive_t* list )
 {
 	uBrush_t*	b;
@@ -525,7 +563,7 @@ bspface_t*	MakeVisibleBspFaceList( primitive_t* list )
 	side_t*		s;
 	idWinding*	w;
 	bspface_t*	f, *flist;
-	
+
 	flist = NULL;
 	for( ; list ; list = list->next )
 	{
@@ -557,7 +595,8 @@ bspface_t*	MakeVisibleBspFaceList( primitive_t* list )
 			flist = f;
 		}
 	}
-	
+
 	return flist;
 }
+*/
 

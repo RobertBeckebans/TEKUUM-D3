@@ -706,6 +706,13 @@ void PutPrimitivesInAreas( uEntity_t* e )
 			{
 				AddMapTriToAreas( tri, e );
 			}
+			
+			// RB: add new polygon mesh
+			for( tri = prim->tris ; tri ; tri = tri->next )
+			{
+				//AddMapTriToAreas( tri, e );
+			}
+			// RB end
 			continue;
 		}
 		

@@ -272,6 +272,11 @@ public:
 		}
 	}
 	
+	const idList<int>&		GetIndexes() const
+	{
+		return indexes;
+	}
+	
 	/*
 	const idPlane& 			GetPlane() const
 	{
@@ -341,6 +346,11 @@ public:
 	}
 	
 	unsigned int			GetGeometryCRC() const;
+	
+	const idList<idDrawVert>&	GetDrawVerts() const
+	{
+		return verts;
+	}
 	
 protected:
 
