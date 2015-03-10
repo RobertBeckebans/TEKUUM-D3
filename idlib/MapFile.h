@@ -262,6 +262,16 @@ public:
 		indexes.Append( index );
 	}
 	
+	void					SetIndexes( const idTempArray<int>& _indexes )
+	{
+		indexes.Resize( _indexes.Num() );
+		
+		for( int i = 0; i < _indexes.Num(); i++ )
+		{
+			indexes[i] = _indexes[i];
+		}
+	}
+	
 	/*
 	const idPlane& 			GetPlane() const
 	{
@@ -299,7 +309,7 @@ public:
 	void					ConvertFromBrush( const idMapBrush* brush, int entityNum, int primitiveNum );
 	void					ConvertFromPatch( const idMapPatch* patch, int entityNum, int primitiveNum );
 	
-	static MapPolygonMesh*	Parse( idLexer& src, const idVec3& origin, bool newFormat = true, float version = CURRENT_MAP_VERSION );
+	static MapPolygonMesh*	Parse( idLexer& src, const idVec3& origin, float version = CURRENT_MAP_VERSION );
 	bool					Write( idFile* fp, int primitiveNum, const idVec3& origin ) const;
 	
 	

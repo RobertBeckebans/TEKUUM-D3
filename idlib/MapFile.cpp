@@ -627,6 +627,9 @@ idMapEntity* idMapEntity::Parse( idLexer& src, bool worldSpawn, float version )
 	idMapEntity* mapEnt;
 	idMapPatch* mapPatch;
 	idMapBrush* mapBrush;
+	// RB begin
+	MapPolygonMesh* mapMesh;
+	// RB end
 	bool worldent;
 	idVec3 origin;
 	double v1, v2, v3;
@@ -697,6 +700,17 @@ idMapEntity* idMapEntity::Parse( idLexer& src, bool worldSpawn, float version )
 				}
 				mapEnt->AddPrimitive( mapPatch );
 			}
+			// RB: new mesh primitive with ngons
+			else if( token.Icmpn( "mesh", 4 ) == 0 )
+			{
+				mapMesh = MapPolygonMesh::Parse( src, origin, version );
+				if( !mapMesh )
+				{
+					return NULL;
+				}
+				mapEnt->AddPrimitive( mapMesh );
+			}
+			// RB end
 			// assume it's a brush in Q3 or older style
 			else
 			{
@@ -1326,6 +1340,143 @@ bool MapPolygonMesh::Write( idFile* fp, int primitiveNum, const idVec3& origin )
 	fp->WriteFloatString( " }\n}\n" );
 	
 	return true;
+}
+
+MapPolygonMesh* MapPolygonMesh::Parse( idLexer& src, const idVec3& origin, float version )
+{
+	float		info[7];
+	idDrawVert* vert;
+	idToken		token;
+	int			i, j;
+	
+	if( !src.ExpectTokenString( "{" ) )
+	{
+		return NULL;
+	}
+	
+	// Parse it
+	if( !src.Parse1DMatrix( 5, info ) )
+	{
+		src.Error( "MapPolygonMesh::Parse: unable to parse meshDef info" );
+		return NULL;
+	}
+	
+	const int numVertices = ( int ) info[0];
+	const int numPolygons = ( int ) info[1];
+	
+	MapPolygonMesh* mesh = new MapPolygonMesh();
+	
+	// parse vertices
+	if( !src.ExpectTokenString( "(" ) )
+	{
+		src.Error( "MapPolygonMesh::Parse: bad mesh vertex data" );
+		delete mesh;
+		return NULL;
+	}
+	
+	for( i = 0; i < numVertices; i++ )
+	{
+		float v[8];
+		
+		if( !src.Parse1DMatrix( 8, v ) )
+		{
+			src.Error( "MapPolygonMesh::Parse: bad vertex column data" );
+			delete mesh;
+			return NULL;
+		}
+		
+		// TODO optimize: preallocate vertices
+		//vert = &( ( *patch )[i * patch->GetWidth() + j] );
+		
+		idDrawVert vert;
+		
+		vert.xyz[0] = v[0] - origin[0];
+		vert.xyz[1] = v[1] - origin[1];
+		vert.xyz[2] = v[2] - origin[2];
+		vert.SetTexCoord( v[3], v[4] );
+		
+		idVec3 n( v[5], v[6], v[7] );
+		vert.SetNormal( n );
+		
+		mesh->AddVertex( vert );
+	}
+	
+	if( !src.ExpectTokenString( ")" ) )
+	{
+		delete mesh;
+		src.Error( "MapPolygonMesh::Parse: unable to parse vertices" );
+		return NULL;
+	}
+	
+	// parse polygons
+	if( !src.ExpectTokenString( "(" ) )
+	{
+		src.Error( "MapPolygonMesh::Parse: bad mesh polygon data" );
+		delete mesh;
+		return NULL;
+	}
+	
+	for( i = 0; i < numPolygons; i++ )
+	{
+		// get material name
+		MapPolygon* polygon = new MapPolygon();
+		mesh->AddPolygon( polygon );
+		
+		src.ReadToken( &token );
+		if( token.type == TT_STRING )
+		{
+			polygon->SetMaterial( token );;
+		}
+		else
+		{
+			src.Error( "MapPolygonMesh::Parse: bad mesh polygon data" );
+			delete mesh;
+			return NULL;
+		}
+		
+		int numIndexes = src.ParseInt();
+		
+		if( !src.ExpectTokenString( "=" ) )
+		{
+			src.Error( "MapPolygonMesh::Parse: bad mesh polygon data" );
+			delete mesh;
+			return NULL;
+		}
+		
+		//idTempArray<int> indexes( numIndexes );
+		for( j = 0; j < numIndexes; j++ )
+		{
+			//indexes[j] = src.ParseInt();
+			
+			int index = src.ParseInt();
+			polygon->AddIndex( index );
+		}
+		
+		//polygon->SetIndexes( indexes );
+	}
+	
+	if( !src.ExpectTokenString( ")" ) )
+	{
+		delete mesh;
+		src.Error( "MapPolygonMesh::Parse: unable to parse polygons" );
+		return NULL;
+	}
+	
+	if( !src.ExpectTokenString( "}" ) )
+	{
+		delete mesh;
+		src.Error( "MapPolygonMesh::Parse: unable to parse mesh primitive end" );
+		return NULL;
+	}
+	
+	if( !src.ExpectTokenString( "}" ) )
+	{
+		delete mesh;
+		src.Error( "MapPolygonMesh::Parse: unable to parse mesh primitive end" );
+		return NULL;
+	}
+	
+	return mesh;
 }
 
 bool idMapFile::ConvertToPolygonMeshFormat()
