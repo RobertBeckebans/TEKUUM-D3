@@ -484,6 +484,16 @@ bspface_t*	MakeStructuralBspFaceList( primitive_t* list )
 		{
 			for( ; tri ; tri = tri->next )
 			{
+				// HACK
+				MapPolygonMesh* mapMesh = ( MapPolygonMesh* ) tri->originalMapMesh;
+				
+				// don't create BSP faces for the nodraw helpers touching the area portals
+				if( mapMesh->IsAreaportal() && !( tri->material->GetContentFlags() & CONTENTS_AREAPORTAL ) )
+				{
+					continue;
+				}
+				
+				// FIXME: triangles as portals, should be merged back to quad
 				f = AllocBspFace();
 				if( tri->material->GetContentFlags() & CONTENTS_AREAPORTAL )
 				{

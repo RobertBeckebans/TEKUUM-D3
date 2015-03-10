@@ -396,6 +396,7 @@ void ClipSidesByTree( uEntity_t* e )
 			// FIXME: other primitives!
 			continue;
 		}
+		
 		for( i = 0 ; i < b->numsides ; i++ )
 		{
 			side = &b->sides[i];
@@ -403,9 +404,11 @@ void ClipSidesByTree( uEntity_t* e )
 			{
 				continue;
 			}
+			
 			w = side->winding->Copy();
 			side->visibleHull = NULL;
 			ClipSideByTree_r( w, side, e->tree->headnode );
+			
 			// for debugging, we can choose to use the entire original side
 			// but we skip this if the side was completely clipped away
 			if( side->visibleHull && dmapGlobals.noClipSides )
@@ -710,7 +713,7 @@ void PutPrimitivesInAreas( uEntity_t* e )
 			// RB: add new polygon mesh
 			for( tri = prim->tris ; tri ; tri = tri->next )
 			{
-				//AddMapTriToAreas( tri, e );
+				AddMapTriToAreas( tri, e );
 			}
 			// RB end
 			continue;
@@ -802,6 +805,73 @@ void PutPrimitivesInAreas( uEntity_t* e )
 		}
 	}
 }
+
+//============================================================================
+
+
+// RB begin
+int ClassifyLeavesByBspPolygon_r( idWinding* w, mapTri_t* originalTri, node_t* node )
+{
+	idWinding*		front, *back;
+	int				c;
+	
+	if( !w )
+	{
+		return 0;
+	}
+	
+	if( node->planenum == PLANENUM_LEAF )
+	{
+		// HACK
+		MapPolygonMesh* mapMesh = ( MapPolygonMesh* ) originalTri->originalMapMesh;
+		
+		// classify the leaf by the structural brush
+		if( mapMesh->IsOpaque() )
+		{
+			node->opaque = true;
+		}
+		
+		delete w;
+		return 1;
+	}
+	
+	// split it by the node plane
+	w->Split( dmapGlobals.mapPlanes[ node->planenum ], ON_EPSILON, &front, &back );
+	delete w;
+	
+	c = 0;
+	c += ClassifyLeavesByBspPolygon_r( front, originalTri, node->children[0] );
+	c += ClassifyLeavesByBspPolygon_r( back, originalTri, node->children[1] );
+	
+	return c;
+}
+
+void ClassifyLeavesByBspPolygons( uEntity_t* e )
+{
+	uBrush_t*		b;
+	primitive_t*		prim;
+	mapTri_t*		tri;
+	
+	common->Printf( "----- ClassifyLeavesByBspPolygons -----\n" );
+	
+	for( prim = e->primitives ; prim ; prim = prim->next )
+	{
+		b = prim->brush;
+		
+		if( !b )
+		{
+			// add BSP triangles
+			for( tri = prim->bsptris ; tri ; tri = tri->next )
+			{
+				idWinding* w = WindingForTri( tri );
+				
+				ClassifyLeavesByBspPolygon_r( w, tri, e->tree->headnode );
+			}
+			continue;
+		}
+	}
+}
+// RB end
 
 //============================================================================
 

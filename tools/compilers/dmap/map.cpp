@@ -481,6 +481,8 @@ static void ParsePolygonMesh( const MapPolygonMesh* mesh, int primitiveNum )
 			tri->next = prim->bsptris;
 			prim->bsptris = tri;
 			
+			tri->originalMapMesh = mesh;
+			
 			// set merge groups if needed, to prevent multiple sides from being
 			// merged into a single surface in the case of gui shaders, mirrors, and autosprites
 			if( mat->IsDiscrete() )

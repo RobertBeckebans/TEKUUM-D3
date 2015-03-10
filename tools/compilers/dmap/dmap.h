@@ -67,6 +67,11 @@ typedef struct mapTri_s
 	
 	const idMaterial* 	material;
 	void* 				mergeGroup;		// we want to avoid merging triangles
+	
+	// RB begin
+	const MapPolygonMesh*	originalMapMesh;
+	// RB end
+	
 	// from different fixed groups, like guiSurfs and mirrors
 	int					planeNum;			// not set universally, just in some areas
 	
@@ -452,6 +457,10 @@ void	ClipSidesByTree( uEntity_t* e );
 void	SplitTrisToSurfaces( mapTri_t* triList, tree_t* tree );
 void	PutPrimitivesInAreas( uEntity_t* e );
 void	Prelight( uEntity_t* e );
+
+// RB begin
+void	ClassifyLeavesByBspPolygons( uEntity_t* e );
+// RB end
 
 //=============================================================================
 

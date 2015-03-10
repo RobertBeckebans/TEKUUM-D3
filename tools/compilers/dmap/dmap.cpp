@@ -62,6 +62,9 @@ bool ProcessModel( uEntity_t* e, bool floodFill )
 	// classify the leafs as opaque or areaportal
 	FilterBrushesIntoTree( e );
 	
+	// RB: use mapTri_t by MapPolygonMesh primitives in case we don't use brushes
+	ClassifyLeavesByBspPolygons( e );
+	
 	// RB: dump BSP for debugging
 	if( dmapGlobals.glview )
 	{

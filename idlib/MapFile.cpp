@@ -840,6 +840,12 @@ unsigned int idMapEntity::GetGeometryCRC() const
 			case idMapPrimitive::TYPE_PATCH:
 				crc ^= static_cast<idMapPatch*>( mapPrim )->GetGeometryCRC();
 				break;
+				
+			// RB begin
+			case idMapPrimitive::TYPE_MESH:
+				crc ^= static_cast<MapPolygonMesh*>( mapPrim )->GetGeometryCRC();
+				break;
+				// RB end
 		}
 	}
 	
@@ -1270,6 +1276,8 @@ void MapPolygonMesh::ConvertFromBrush( const idMapBrush* mapBrush, int entityNum
 			//}
 		}
 	}
+	
+	SetContents();
 }
 
 void MapPolygonMesh::ConvertFromPatch( const idMapPatch* patch, int entityNum, int primitiveNum )
@@ -1300,6 +1308,8 @@ void MapPolygonMesh::ConvertFromPatch( const idMapPatch* patch, int entityNum, i
 	}
 	
 	delete cp;
+	
+	SetContents();
 }
 
 bool MapPolygonMesh::Write( idFile* fp, int primitiveNum, const idVec3& origin ) const
@@ -1476,7 +1486,79 @@ MapPolygonMesh* MapPolygonMesh::Parse( idLexer& src, const idVec3& origin, float
 		return NULL;
 	}
 	
+	mesh->SetContents();
+	
 	return mesh;
+}
+
+void MapPolygonMesh::SetContents()
+{
+	if( polygons.Num() < 1 )
+	{
+		contents = CONTENTS_SOLID;
+		opaque = true;
+	}
+	
+	int			c2;
+	
+	MapPolygon* poly = polygons[0];
+	
+	const idMaterial* mat = declManager->FindMaterial( poly->GetMaterial() );
+	contents = mat->GetContentFlags();
+	
+	//b->contentShader = s->material;
+	bool mixed = false;
+	
+	// a brush is only opaque if all sides are opaque
+	opaque = true;
+	
+	for( int i = 1 ; i < polygons.Num() ; i++ )
+	{
+		poly = polygons[i];
+		
+		const idMaterial* mat2 = declManager->FindMaterial( poly->GetMaterial() );
+		
+		c2 = mat2->GetContentFlags();
+		if( c2 != contents )
+		{
+			mixed = true;
+			contents |= c2;
+		}
+		
+		if( mat2->Coverage() != MC_OPAQUE )
+		{
+			opaque = false;
+		}
+	}
+}
+
+unsigned int MapPolygonMesh::GetGeometryCRC() const
+{
+	int i, j;
+	MapPolygon* poly;
+	unsigned int crc;
+	
+	crc = 0;
+	for( i = 0; i < verts.Num(); i++ )
+	{
+		crc ^= FloatCRC( verts[i].xyz.x );
+		crc ^= FloatCRC( verts[i].xyz.y );
+		crc ^= FloatCRC( verts[i].xyz.z );
+	}
+	
+	for( i = 0; i < polygons.Num(); i++ )
+	{
+		poly = polygons[i];
+		
+		crc ^= StringCRC( poly->GetMaterial() );
+	}
+	
+	return crc;
+}
+
+bool MapPolygonMesh::IsAreaportal() const
+{
+	return ( contents & CONTENTS_AREAPORTAL );
 }
 
 bool idMapFile::ConvertToPolygonMeshFormat()

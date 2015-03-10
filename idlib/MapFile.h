@@ -277,19 +277,10 @@ public:
 		return indexes;
 	}
 	
-	/*
-	const idPlane& 			GetPlane() const
-	{
-		return plane;
-	}
-	*/
-	
 	
 protected:
 	idStr					material;
 	idList<int>				indexes;		// [3..n] references to vertices for each face
-	
-	//idWinding				winding;
 };
 
 ID_INLINE MapPolygon::MapPolygon()
@@ -352,10 +343,26 @@ public:
 		return verts;
 	}
 	
+	bool					IsOpaque() const
+	{
+		return opaque;
+	}
+	
+	bool					IsAreaportal() const;
+	
+private:
+	void					SetContents();
+	
 protected:
 
 	idList<idDrawVert>		verts;			// vertices can be shared between polygons
 	idList<MapPolygon*>		polygons;
+	
+	// derived data after parsing
+	
+	// material surface flags
+	int						contents;
+	bool					opaque;
 };
 // RB end
 
