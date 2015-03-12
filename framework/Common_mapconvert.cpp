@@ -331,9 +331,6 @@ void OBJExporter::ConvertPatchToOBJ( OBJGroup& group, const idMapPatch* patch, i
 		OBJExporter::OBJFace& face = geometry.faces.Alloc();
 		face.material = material;
 		
-		MapPolygon* polygon = new MapPolygon();
-		polygon->SetMaterial( patch->GetMaterial() );
-		
 		idDrawVert& dv0 = face.verts.Alloc();
 		idDrawVert& dv1 = face.verts.Alloc();
 		idDrawVert& dv2 = face.verts.Alloc();

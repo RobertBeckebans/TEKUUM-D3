@@ -711,7 +711,7 @@ void PutPrimitivesInAreas( uEntity_t* e )
 			}
 			
 			// RB: add new polygon mesh
-			for( tri = prim->tris ; tri ; tri = tri->next )
+			for( tri = prim->bsptris ; tri ; tri = tri->next )
 			{
 				AddMapTriToAreas( tri, e );
 			}
@@ -849,11 +849,15 @@ int ClassifyLeavesByBspPolygon_r( idWinding* w, mapTri_t* originalTri, node_t* n
 void ClassifyLeavesByBspPolygons( uEntity_t* e )
 {
 	uBrush_t*		b;
-	primitive_t*		prim;
+	primitive_t*	prim;
 	mapTri_t*		tri;
+	int				r;
+	int				c_unique, c_clusters;
 	
 	common->Printf( "----- ClassifyLeavesByBspPolygons -----\n" );
 	
+	c_unique = 0;
+	c_clusters = 0;
 	for( prim = e->primitives ; prim ; prim = prim->next )
 	{
 		b = prim->brush;
@@ -865,11 +869,16 @@ void ClassifyLeavesByBspPolygons( uEntity_t* e )
 			{
 				idWinding* w = WindingForTri( tri );
 				
-				ClassifyLeavesByBspPolygon_r( w, tri, e->tree->headnode );
+				c_unique++;
+				r = ClassifyLeavesByBspPolygon_r( w, tri, e->tree->headnode );
+				c_clusters += r;
 			}
 			continue;
 		}
 	}
+	
+	common->Printf( "%5i total BSP triangles\n", c_unique );
+	common->Printf( "%5i cluster references\n", c_clusters );
 }
 // RB end
 

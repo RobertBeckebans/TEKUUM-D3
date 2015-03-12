@@ -461,6 +461,7 @@ static void ParsePolygonMesh( const MapPolygonMesh* mesh, int primitiveNum )
 		const idList<int>& indexes = poly->GetIndexes();
 		//for( int j = 0; j < indexes.Num(); j += 3 )
 		
+		// FIXME: avoid triangulization and use polygons
 		for( int j = 1 ; j < indexes.Num() - 1 ; j++ )
 		{
 			mapTri_t* tri = AllocTri();

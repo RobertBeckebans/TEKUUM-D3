@@ -3,6 +3,7 @@
 
 Doom 3 GPL Source Code
 Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2015 Robert Beckebans
 
 This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
 
@@ -500,11 +501,14 @@ bspface_t*	MakeStructuralBspFaceList( primitive_t* list )
 					f->portal = true;
 				}
 				
-				w = new idWinding();
+				
+				w = new idWinding( 3 );
 				w->SetNumPoints( 3 );
-				( *w )[2] = idVec5( tri->v[0].xyz, tri->v[0].GetTexCoord() );
+				( *w )[0] = idVec5( tri->v[0].xyz, tri->v[0].GetTexCoord() );
 				( *w )[1] = idVec5( tri->v[1].xyz, tri->v[1].GetTexCoord() );
-				( *w )[0] = idVec5( tri->v[2].xyz, tri->v[2].GetTexCoord() );
+				( *w )[2] = idVec5( tri->v[2].xyz, tri->v[2].GetTexCoord() );
+				
+				//w = WindingForTri( tri );
 				
 				f->w = w;
 				

@@ -464,7 +464,7 @@ to materials
 */
 void FilterBrushesIntoTree( uEntity_t* e )
 {
-	primitive_t*			prim;
+	primitive_t*		prim;
 	uBrush_t*			b, *newb;
 	int					r;
 	int					c_unique, c_clusters;

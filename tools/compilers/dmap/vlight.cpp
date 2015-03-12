@@ -685,7 +685,7 @@ void TraceGrid( int num )
 	int             numCon;
 	int             i;
 	traceWork_t     tw;
-	float           addSize;
+//	float           addSize;
 	lightGridPoint_t* gridPoint;
 	
 	gridPoint = &dmapGlobals.lightGridPoints[ num ];

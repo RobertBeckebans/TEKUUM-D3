@@ -1295,7 +1295,7 @@ void MapPolygonMesh::ConvertFromPatch( const idMapPatch* patch, int entityNum, i
 	
 	for( int i = 0; i < cp->GetNumIndexes(); i += 3 )
 	{
-		MapPolygon* polygon = new MapPolygon();
+		MapPolygon* polygon = new MapPolygon;
 		polygon->SetMaterial( patch->GetMaterial() );
 		
 		idDrawVert& dv0 = verts.Alloc();
@@ -1305,6 +1305,12 @@ void MapPolygonMesh::ConvertFromPatch( const idMapPatch* patch, int entityNum, i
 		dv0 = ( *cp )[cp->GetIndexes()[i + 1]];
 		dv1 = ( *cp )[cp->GetIndexes()[i + 2]];
 		dv2 = ( *cp )[cp->GetIndexes()[i + 0]];
+		
+		polygon->AddIndex( i + 0 );
+		polygon->AddIndex( i + 1 );
+		polygon->AddIndex( i + 2 );
+		
+		polygons.Append( polygon );
 	}
 	
 	delete cp;
@@ -1328,7 +1334,8 @@ bool MapPolygonMesh::Write( idFile* fp, int primitiveNum, const idVec3& origin )
 		st = v->GetTexCoord();
 		n = v->GetNormalRaw();
 		
-		fp->WriteFloatString( "   ( %f %f %f %f %f %f %f %f )\n", v->xyz[0] + origin[0], v->xyz[1] + origin[1], v->xyz[2] + origin[2], st[0], st[1], n[0], n[1], n[2] );
+		//fp->WriteFloatString( "   ( %f %f %f %f %f %f %f %f )\n", v->xyz[0] + origin[0], v->xyz[1] + origin[1], v->xyz[2] + origin[2], st[0], st[1], n[0], n[1], n[2] );
+		fp->WriteFloatString( "   ( %f %f %f %f %f %f %f %f )\n", v->xyz[0], v->xyz[1], v->xyz[2], st[0], st[1], n[0], n[1], n[2] );
 	}
 	fp->WriteFloatString( "  )\n" );
 	
@@ -1400,9 +1407,9 @@ MapPolygonMesh* MapPolygonMesh::Parse( idLexer& src, const idVec3& origin, float
 		
 		idDrawVert vert;
 		
-		vert.xyz[0] = v[0] - origin[0];
-		vert.xyz[1] = v[1] - origin[1];
-		vert.xyz[2] = v[2] - origin[2];
+		vert.xyz[0] = v[0];// - origin[0];
+		vert.xyz[1] = v[1];// - origin[1];
+		vert.xyz[2] = v[2];// - origin[2];
 		vert.SetTexCoord( v[3], v[4] );
 		
 		idVec3 n( v[5], v[6], v[7] );
@@ -1590,6 +1597,7 @@ bool idMapFile::ConvertToPolygonMeshFormat()
 						
 						continue;
 					}
+#if 0
 					else if( mapPrim->GetType() == idMapPrimitive::TYPE_PATCH )
 					{
 						MapPolygonMesh* meshPrim = new MapPolygonMesh();
@@ -1602,6 +1610,7 @@ bool idMapFile::ConvertToPolygonMeshFormat()
 						
 						continue;
 					}
+#endif
 				}
 			}
 		}

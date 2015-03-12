@@ -245,6 +245,7 @@ class MapPolygon
 	
 public:
 	MapPolygon();
+	MapPolygon( int numIndexes );
 	~MapPolygon() { }
 	
 	const char* 			GetMaterial() const
@@ -285,6 +286,11 @@ protected:
 
 ID_INLINE MapPolygon::MapPolygon()
 {
+}
+
+ID_INLINE MapPolygon::MapPolygon( int numIndexes )
+{
+	indexes.AssureSize( 3 );
 }
 
 

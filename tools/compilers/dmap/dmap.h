@@ -176,7 +176,7 @@ typedef struct node_s
 	idBounds			bounds;		// valid after portalization
 	
 	// nodes only
-	side_t* 			side;		// the side that created the node
+//	side_t* 			side;		// the side that created the node
 	struct node_s* 		children[2];
 	int					nodeNumber;	// set after pruning
 	
