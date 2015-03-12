@@ -1151,6 +1151,15 @@ bool idMapFile::NeedsReload()
 
 
 // RB begin
+MapPolygonMesh::MapPolygonMesh()
+{
+	type = TYPE_MESH;
+	polygons.Resize( 8, 4 );
+	
+	contents = CONTENTS_SOLID;
+	opaque = true;
+}
+
 void MapPolygonMesh::ConvertFromBrush( const idMapBrush* mapBrush, int entityNum, int primitiveNum )
 {
 	// fix degenerate planes

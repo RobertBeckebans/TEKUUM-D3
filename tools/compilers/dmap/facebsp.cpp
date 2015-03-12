@@ -41,13 +41,12 @@ void RemovePortalFromNode( uPortal_t* portal, node_t* l );
 
 node_t* NodeForPoint( node_t* node, const idVec3& origin )
 {
-	float	d;
-	
 	while( node->planenum != PLANENUM_LEAF )
 	{
 		idPlane& plane = dmapGlobals.mapPlanes[node->planenum];
-		d = plane.Distance( origin );
-		if( d >= 0 )
+		
+		int side = plane.Side( origin, 0.1F );
+		if( side == SIDE_FRONT || side == SIDE_ON )
 		{
 			node = node->children[0];
 		}
@@ -502,22 +501,16 @@ bspface_t*	MakeStructuralBspFaceList( primitive_t* list )
 				}
 				
 				
-				w = new idWinding( 3 );
-				w->SetNumPoints( 3 );
-				( *w )[0] = idVec5( tri->v[0].xyz, tri->v[0].GetTexCoord() );
-				( *w )[1] = idVec5( tri->v[1].xyz, tri->v[1].GetTexCoord() );
-				( *w )[2] = idVec5( tri->v[2].xyz, tri->v[2].GetTexCoord() );
+				//w = new idWinding( 3 );
+				//w->SetNumPoints( 3 );
+				//( *w )[0] = idVec5( tri->v[0].xyz, tri->v[0].GetTexCoord() );
+				//( *w )[1] = idVec5( tri->v[1].xyz, tri->v[1].GetTexCoord() );
+				//( *w )[2] = idVec5( tri->v[2].xyz, tri->v[2].GetTexCoord() );
 				
-				//w = WindingForTri( tri );
-				
+				w = WindingForTri( tri );
 				f->w = w;
 				
-				idPlane plane;
-				w->GetPlane( plane );
-				
-				int planenum = FindFloatPlane( plane );
-				
-				f->planenum = planenum & ~1;
+				f->planenum = tri->planeNum & ~1;
 				f->next = flist;
 				flist = f;
 			}

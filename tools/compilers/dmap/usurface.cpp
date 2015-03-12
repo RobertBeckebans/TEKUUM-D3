@@ -366,6 +366,55 @@ static void ClipSideByTree_r( idWinding* w, side_t* side, node_t* node )
 	return;
 }
 
+// RB begin
+static void ClipTriByTree_r( idWinding* w, mapTri_t* originalTri, node_t* node )
+{
+	idWinding*		front, *back;
+	
+	if( !w )
+	{
+		return;
+	}
+	
+	if( node->planenum != PLANENUM_LEAF )
+	{
+		if( originalTri->planeNum == node->planenum )
+		{
+			ClipTriByTree_r( w, originalTri, node->children[0] );
+			return;
+		}
+		if( originalTri->planeNum == ( node->planenum ^ 1 ) )
+		{
+			ClipTriByTree_r( w, originalTri, node->children[1] );
+			return;
+		}
+		
+		w->Split( dmapGlobals.mapPlanes[ node->planenum ], ON_EPSILON, &front, &back );
+		delete w;
+		
+		ClipTriByTree_r( front, originalTri, node->children[0] );
+		ClipTriByTree_r( back, originalTri, node->children[1] );
+		
+		return;
+	}
+	
+	// if opaque leaf, don't add
+	if( !node->opaque )
+	{
+		if( !originalTri->visibleHull )
+		{
+			originalTri->visibleHull = w->Copy();
+		}
+		else
+		{
+			originalTri->visibleHull->AddToConvexHull( w, dmapGlobals.mapPlanes[ originalTri->planeNum ].Normal() );
+		}
+	}
+	
+	delete w;
+	return;
+}
+// RB end
 
 /*
 =====================
@@ -384,9 +433,12 @@ void ClipSidesByTree( uEntity_t* e )
 	int				i;
 	idWinding*		w;
 	side_t*			side;
-	primitive_t*		prim;
+	primitive_t*	prim;
+	mapTri_t*		tri;
 	
 	common->Printf( "----- ClipSidesByTree -----\n" );
+	
+	int c_tris = 0;
 	
 	for( prim = e->primitives ; prim ; prim = prim->next )
 	{
@@ -394,6 +446,47 @@ void ClipSidesByTree( uEntity_t* e )
 		if( !b )
 		{
 			// FIXME: other primitives!
+			
+			// RB: add new polygon mesh
+			for( tri = prim->bsptris ; tri ; tri = tri->next, c_tris++ )
+			{
+#if 0
+				for( int i = 0; i < 3; i++ )
+				{
+					const idVec3& testPos = tri->v[i].xyz;
+					
+					node_t* node = NodeForPoint( e->tree->headnode, testPos );
+					
+					if( node->opaque )
+					{
+						common->Printf( "ClipSidesByTree: triangle %i vertex %i in the void at %s\n", c_tris, i, testPos.ToString() );
+					}
+					else
+					{
+						common->Printf( "ClipSidesByTree: triangle %i vertex %i valid at %s\n", c_tris, i, testPos.ToString() );
+					}
+				}
+#endif
+				
+				idWinding* w = WindingForTri( tri );
+				
+				// evil HACK
+				w->BaseForPlane( dmapGlobals.mapPlanes[ tri->planeNum] );
+				//w->ReverseSelf();
+				
+				tri->visibleHull = NULL;
+				ClipTriByTree_r( w, tri, e->tree->headnode );
+				
+				// for debugging, we can choose to use the entire original side
+				// but we skip this if the side was completely clipped away
+				if( tri->visibleHull && dmapGlobals.noClipSides )
+				{
+					delete tri->visibleHull;
+					tri->visibleHull = WindingForTri( tri );
+				}
+			}
+			// RB end
+			
 			continue;
 		}
 		
@@ -408,6 +501,29 @@ void ClipSidesByTree( uEntity_t* e )
 			w = side->winding->Copy();
 			side->visibleHull = NULL;
 			ClipSideByTree_r( w, side, e->tree->headnode );
+			
+			
+#if 0
+			if( side->visibleHull )
+			{
+				for( int j = 0; j < side->winding->GetNumPoints(); j++ )
+				{
+					idWinding* w = side->winding;
+					const idVec5& testPos = ( *w )[j];
+					
+					node_t* node = NodeForPoint( e->tree->headnode, testPos.ToVec3() );
+					
+					if( node->opaque )
+					{
+						common->Printf( "ClipSidesByTree: winding %i vertex %i in the void at %s\n", i, j, testPos.ToString() );
+					}
+					else
+					{
+						common->Printf( "ClipSidesByTree: winding %i vertex %i valid at %s\n", i, j, testPos.ToString() );
+					}
+				}
+			}
+#endif
 			
 			// for debugging, we can choose to use the entire original side
 			// but we skip this if the side was completely clipped away
@@ -473,6 +589,8 @@ void ClipTriIntoTree_r( idWinding* w, mapTri_t* originalTri, uEntity_t* e, node_
 	delete w;
 	return;
 }
+
+
 
 
 
@@ -607,6 +725,8 @@ static void PutWindingIntoAreas_r( uEntity_t* e, const idWinding* w, side_t* sid
 		return;
 	}
 	
+	//common->Printf( "PutWindingIntoAreas_r: leaf area = %i, opaque = %i\n", node->area, (int) node->opaque );
+	
 	// if opaque leaf, don't add
 	if( node->area >= 0 && !node->opaque )
 	{
@@ -616,6 +736,97 @@ static void PutWindingIntoAreas_r( uEntity_t* e, const idWinding* w, side_t* sid
 		AddTriListToArea( e, tri, side->planenum, node->area, &side->texVec );
 	}
 }
+
+// RB begin
+static void PutTriIntoAreas_r( uEntity_t* e, const idWinding* w, mapTri_t* originalTri, node_t* node )
+{
+	idWinding*		front, *back;
+	int				area;
+	
+	if( !w )
+	{
+		return;
+	}
+	
+	if( node->planenum != PLANENUM_LEAF )
+	{
+		if( originalTri->planeNum == node->planenum )
+		{
+			PutTriIntoAreas_r( e, w, originalTri, node->children[0] );
+			return;
+		}
+		
+		if( originalTri->planeNum == ( node->planenum ^ 1 ) )
+		{
+			PutTriIntoAreas_r( e, w, originalTri, node->children[1] );
+			return;
+		}
+		
+		// see if we need to split it
+		// adding the "noFragment" flag to big surfaces like sky boxes
+		// will avoid potentially dicing them up into tons of triangles
+		// that take forever to optimize back together
+		if( !dmapGlobals.fullCarve || originalTri->material->NoFragment() )
+		{
+			area = CheckWindingInAreas_r( w, node );
+			if( area >= 0 )
+			{
+				mapTri_t*	list;
+				int			planeNum;
+				idPlane		plane;
+				textureVectors_t	texVec;
+				
+				list = WindingToTriList( w, originalTri );
+				
+				PlaneForTri( originalTri, plane );
+				planeNum = FindFloatPlane( plane );
+				
+				TexVecForTri( &texVec, originalTri );
+				
+				// put in single area
+				AddTriListToArea( e, list, planeNum, area, &texVec );
+				return;
+			}
+		}
+		
+		w->Split( dmapGlobals.mapPlanes[ node->planenum ], ON_EPSILON, &front, &back );
+		
+		PutTriIntoAreas_r( e, front, originalTri, node->children[0] );
+		if( front )
+		{
+			delete front;
+		}
+		
+		PutTriIntoAreas_r( e, back, originalTri, node->children[1] );
+		if( back )
+		{
+			delete back;
+		}
+		
+		return;
+	}
+	
+	//common->Printf( "PutTriIntoAreas_r: leaf area = %i, opaque = %i\n", node->area, (int) node->opaque );
+	
+	// if opaque leaf, don't add
+	if( node->area >= 0 && !node->opaque )
+	{
+		mapTri_t*	list;
+		int			planeNum;
+		idPlane		plane;
+		textureVectors_t	texVec;
+		
+		list = WindingToTriList( w, originalTri );
+		
+		PlaneForTri( originalTri, plane );
+		planeNum = FindFloatPlane( plane );
+		
+		TexVecForTri( &texVec, originalTri );
+		
+		AddTriListToArea( e, list, planeNum, node->area, &texVec );
+	}
+}
+// RB end
 
 /*
 ==================
@@ -713,7 +924,13 @@ void PutPrimitivesInAreas( uEntity_t* e )
 			// RB: add new polygon mesh
 			for( tri = prim->bsptris ; tri ; tri = tri->next )
 			{
-				AddMapTriToAreas( tri, e );
+				if( !tri->visibleHull )
+				{
+					continue;
+				}
+				
+				//AddMapTriToAreas( tri, e );
+				PutTriIntoAreas_r( e,  tri->visibleHull, tri, e->tree->headnode );
 			}
 			// RB end
 			continue;

@@ -627,7 +627,7 @@ static void WriteNode_r( node_t* node )
 	}
 }
 
-static int NumberNodes_r( node_t* node, int nextNumber )
+int NumberNodes_r( node_t* node, int nextNumber )
 {
 	if( node->planenum == PLANENUM_LEAF )
 	{

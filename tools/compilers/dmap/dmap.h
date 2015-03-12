@@ -70,6 +70,7 @@ typedef struct mapTri_s
 	
 	// RB begin
 	const MapPolygonMesh*	originalMapMesh;
+	idWinding* 			visibleHull;	// also clipped to the solid parts of the world
 	// RB end
 	
 	// from different fixed groups, like guiSurfs and mirrors
@@ -81,19 +82,21 @@ typedef struct mapTri_s
 } mapTri_t;
 
 // RB begin
+/*
 typedef struct mapPoly_s
 {
 	struct mapPoly_s* 	next;
-	
+
 	const idMaterial* 	material;
 	void* 				mergeGroup;		// we want to avoid merging triangles
-	
+
 	// from different fixed groups, like guiSurfs and mirrors
 	int					planeNum;			// not set universally, just in some areas
-	
+
 	int					numVerts;
 	idDrawVert*			v;
 } mapPoly_t;
+*/
 // RB end
 
 typedef struct
@@ -421,7 +424,7 @@ void FreePortal( uPortal_t* p );
 
 void OutputWinding( idWinding* w, idFile* glview );
 
-void WriteGLView( tree_t* tree, const char* source );
+void WriteGLView( tree_t* tree, const char* source, int entityNum, bool force = false );
 void WriteGLView( bspface_t* list, const char* source );
 
 //=============================================================================
@@ -548,6 +551,8 @@ void		ClipTriList( const mapTri_t* list, const idPlane& plane, float epsilon, ma
 //=============================================================================
 
 // output.cpp
+
+int			NumberNodes_r( node_t* node, int nextNumber );
 
 srfTriangles_t*	ShareMapTriVerts( const mapTri_t* tris );
 void WriteOutputFile();

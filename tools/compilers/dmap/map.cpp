@@ -462,7 +462,7 @@ static void ParsePolygonMesh( const MapPolygonMesh* mesh, int primitiveNum )
 		//for( int j = 0; j < indexes.Num(); j += 3 )
 		
 		// FIXME: avoid triangulization and use polygons
-		for( int j = 1 ; j < indexes.Num() - 1 ; j++ )
+		for( int j = 1; j < indexes.Num() - 1; j++ )
 		{
 			mapTri_t* tri = AllocTri();
 			
@@ -477,6 +477,12 @@ static void ParsePolygonMesh( const MapPolygonMesh* mesh, int primitiveNum )
 			//tri->v[2] = verts[indexes[j + 0]];
 			//tri->v[1] = verts[indexes[j + 2]];
 			//tri->v[0] = verts[indexes[j + 1]];
+			
+			idPlane plane;
+			plane.FromPoints( tri->v[0].xyz, tri->v[1].xyz, tri->v[2].xyz );
+			
+			bool fixedDegeneracies = false;
+			tri->planeNum = FindFloatPlane( plane, &fixedDegeneracies );
 			
 			tri->material = mat;
 			tri->next = prim->bsptris;

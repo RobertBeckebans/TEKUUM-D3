@@ -60,6 +60,7 @@ public:
 	
 	void	ConvertBrushToOBJ( OBJGroup& group, const idMapBrush* mapBrush, int entityNum, int primitiveNum );
 	void	ConvertPatchToOBJ( OBJGroup& group, const idMapPatch* patch, int entityNum, int primitiveNum );
+	void	ConvertMeshToOBJ( OBJGroup& group, const MapPolygonMesh* mesh, int entityNum, int primitiveNum );
 	
 	void	Write( const char* relativePath, const char* basePath = "fs_basepath" );
 };
@@ -351,6 +352,50 @@ void OBJExporter::ConvertPatchToOBJ( OBJGroup& group, const idMapPatch* patch, i
 	delete cp;
 }
 
+void OBJExporter::ConvertMeshToOBJ( OBJGroup& group, const MapPolygonMesh* mesh, int entityNum, int primitiveNum )
+{
+	OBJExporter::OBJObject& geometry = group.objects.Alloc();
+	
+	geometry.name.Format( "Primitive.%i", primitiveNum );
+	
+	const idList<idDrawVert>& verts = mesh->GetDrawVerts();
+	
+	int numVerts = 0;
+	
+	for( int i = 1; i < mesh->GetNumPolygons(); i++ )
+	{
+		MapPolygon* poly = mesh->GetFace( i );
+		
+		const idMaterial* material = declManager->FindMaterial( poly->GetMaterial() );
+		materials.AddUnique( material );
+		
+		OBJExporter::OBJFace& face = geometry.faces.Alloc();
+		face.material = material;
+		
+		const idList<int>& indexes = poly->GetIndexes();
+		
+		for( int j = 0; j < verts.Num(); j++ )
+		{
+			idDrawVert& dv = face.verts.Alloc();
+			dv = verts[j];
+		}
+		
+		//for( int j = 0; j < indexes.Num(); j++ )
+		for( int j = 1; j < indexes.Num() - 1; j++ )
+		{
+			int index = indexes[j];
+			
+			//face.indexes.Append( j );
+			
+			face.indexes.Append( numVerts + j + 1 );
+			face.indexes.Append( numVerts + j );
+			face.indexes.Append( numVerts );
+		}
+		
+		numVerts += indexes.Num();
+	}
+}
+
 
 CONSOLE_COMMAND( exportMapToOBJ, "Convert .map file to .obj/.mtl ", idCmdSystem::ArgCompletion_MapName )
 {
@@ -412,6 +457,12 @@ CONSOLE_COMMAND( exportMapToOBJ, "Convert .map file to .obj/.mtl ", idCmdSystem:
 						if( mapPrim->GetType() == idMapPrimitive::TYPE_PATCH )
 						{
 							exporter.ConvertPatchToOBJ( group, static_cast<idMapPatch*>( mapPrim ), j, i );
+							continue;
+						}
+						
+						if( mapPrim->GetType() == idMapPrimitive::TYPE_MESH )
+						{
+							exporter.ConvertMeshToOBJ( group, static_cast<MapPolygonMesh*>( mapPrim ), j, i );
 							continue;
 						}
 					}

@@ -45,6 +45,12 @@ struct OBJFace
 	idList<triIndex_t>			indexes;
 };
 
+struct OBJGroup
+{
+	idStr						name;
+	//idList<OBJObject>			objects;
+	idList<OBJFace>				faces;
+};
 
 int PortalVisibleSides( uPortal_t* p )
 {
@@ -68,7 +74,7 @@ int PortalVisibleSides( uPortal_t* p )
 	return 0;
 }
 
-void OutputWinding( idWinding* w, idList<OBJFace>& faces )
+void OutputWinding( idWinding* w, OBJGroup& group )
 {
 	static	int	level = 128;
 	float		light;
@@ -78,7 +84,7 @@ void OutputWinding( idWinding* w, idList<OBJFace>& faces )
 	level += 28;
 	light = ( level & 255 ) / 255.0;
 	
-	OBJFace& face = faces.Alloc();
+	OBJFace& face = group.faces.Alloc();
 	
 	//for( i = 0; i < w->GetNumPoints(); i++ )
 	
@@ -112,7 +118,7 @@ void OutputWinding( idWinding* w, idList<OBJFace>& faces )
 OutputPortal
 =============
 */
-void OutputPortal( uPortal_t* p, idList<OBJFace>& faces )
+void OutputPortal( uPortal_t* p, OBJGroup& group )
 {
 	idWinding*	w;
 	int		sides;
@@ -132,7 +138,7 @@ void OutputPortal( uPortal_t* p, idList<OBJFace>& faces )
 		w = w->Reverse();
 	}
 	
-	OutputWinding( w, faces );
+	OutputWinding( w, group );
 	
 	if( sides == 2 )
 	{
@@ -140,31 +146,25 @@ void OutputPortal( uPortal_t* p, idList<OBJFace>& faces )
 	}
 }
 
-/*
-=============
-WriteGLView_r
-=============
-*/
-void WriteGLView_r( node_t* node, idList<OBJFace>& faces )
+
+
+void CollectPortals_r( node_t* node, OBJGroup& group )
 {
 	uPortal_t*	p, *nextp;
 	
 	if( node->planenum != PLANENUM_LEAF )
 	{
-		WriteGLView_r( node->children[0], faces );
-		WriteGLView_r( node->children[1], faces );
+		CollectPortals_r( node->children[0], group );
+		CollectPortals_r( node->children[1], group );
 		return;
 	}
-	
-	// write brush list
-	
 	
 	// write all the portals
 	for( p = node->portals; p; p = nextp )
 	{
 		if( p->nodes[0] == node )
 		{
-			OutputPortal( p, faces );
+			OutputPortal( p, group );
 			nextp = p->next[0];
 		}
 		else
@@ -174,75 +174,230 @@ void WriteGLView_r( node_t* node, idList<OBJFace>& faces )
 	}
 }
 
+
+void OutputQuad( const idVec3 verts[4], OBJGroup* group, bool reverse )
+{
+	OBJFace& face = group->faces.Alloc();
+	
+	
+	idDrawVert& dv0 = face.verts.Alloc();
+	idDrawVert& dv1 = face.verts.Alloc();
+	idDrawVert& dv2 = face.verts.Alloc();
+	idDrawVert& dv3 = face.verts.Alloc();
+	
+	if( reverse )
+	{
+		dv0.xyz = verts[3];
+		dv1.xyz = verts[2];
+		dv2.xyz = verts[1];
+		dv3.xyz = verts[0];
+	}
+	else
+	{
+		dv0.xyz = verts[0];
+		dv1.xyz = verts[1];
+		dv2.xyz = verts[2];
+		dv3.xyz = verts[3];
+	}
+}
+
+void OutputNode( const node_t* node, idList<OBJGroup>& groups )
+{
+	const idBounds& bounds = node->bounds;
+	
+	if( bounds.IsCleared() )
+	{
+		return;
+	}
+	
+	OBJGroup* group = NULL;
+	bool reverse = false;
+	
+	if( node->planenum == PLANENUM_LEAF )
+	{
+		if( node->occupied )
+		{
+			group = &groups.Alloc();
+			group->name.Format( "leaf_inside_area%i.%i", node->area, node->nodeNumber ) ;
+		}
+		else if( node->opaque )
+		{
+			//group = &groups.Alloc();
+			//group->name.Format( "leaf_opaque.%i", node->nodeNumber ) ;
+			
+			reverse = true;
+		}
+		else
+		{
+			group = &groups.Alloc();
+			group->name.Format( "leaf.%i", node->nodeNumber ) ;
+		}
+	}
+	else
+	{
+		//group = &groups.Alloc();
+		//group->name.Format( "node.%i", node->nodeNumber ) ;
+	}
+	
+	if( group )
+	{
+		idVec3 verts[4];
+		
+		verts[0].Set( bounds[0][0], bounds[0][1], bounds[0][2] );
+		verts[1].Set( bounds[0][0], bounds[1][1], bounds[0][2] );
+		verts[2].Set( bounds[0][0], bounds[1][1], bounds[1][2] );
+		verts[3].Set( bounds[0][0], bounds[0][1], bounds[1][2] );
+		OutputQuad( verts, group, reverse );
+		
+		verts[0].Set( bounds[1][0], bounds[0][1], bounds[1][2] );
+		verts[1].Set( bounds[1][0], bounds[1][1], bounds[1][2] );
+		verts[2].Set( bounds[1][0], bounds[1][1], bounds[0][2] );
+		verts[3].Set( bounds[1][0], bounds[0][1], bounds[0][2] );
+		OutputQuad( verts, group, reverse );
+		
+		verts[0].Set( bounds[0][0], bounds[0][1], bounds[1][2] );
+		verts[1].Set( bounds[0][0], bounds[1][1], bounds[1][2] );
+		verts[2].Set( bounds[1][0], bounds[1][1], bounds[1][2] );
+		verts[3].Set( bounds[1][0], bounds[0][1], bounds[1][2] );
+		OutputQuad( verts, group, reverse );
+		
+		verts[0].Set( bounds[1][0], bounds[0][1], bounds[0][2] );
+		verts[1].Set( bounds[1][0], bounds[1][1], bounds[0][2] );
+		verts[2].Set( bounds[0][0], bounds[1][1], bounds[0][2] );
+		verts[3].Set( bounds[0][0], bounds[0][1], bounds[0][2] );
+		OutputQuad( verts, group, reverse );
+		
+		verts[0].Set( bounds[0][0], bounds[0][1], bounds[0][2] );
+		verts[1].Set( bounds[0][0], bounds[0][1], bounds[1][2] );
+		verts[2].Set( bounds[1][0], bounds[0][1], bounds[1][2] );
+		verts[3].Set( bounds[1][0], bounds[0][1], bounds[0][2] );
+		OutputQuad( verts, group, reverse );
+		
+		verts[0].Set( bounds[1][0], bounds[1][1], bounds[0][2] );
+		verts[1].Set( bounds[1][0], bounds[1][1], bounds[1][2] );
+		verts[2].Set( bounds[0][0], bounds[1][1], bounds[1][2] );
+		verts[3].Set( bounds[0][0], bounds[1][1], bounds[0][2] );
+		OutputQuad( verts, group, reverse );
+	}
+}
+
+void CollectNodes_r( node_t* node, idList<OBJGroup>& groups )
+{
+	uPortal_t*	p, *nextp;
+	
+	OutputNode( node, groups );
+	
+	if( node->planenum != PLANENUM_LEAF )
+	{
+		CollectNodes_r( node->children[0], groups );
+		CollectNodes_r( node->children[1], groups );
+		return;
+	}
+}
+
+
+static int NumberNodes_r( node_t* node, int nextNode, int& nextLeaf )
+{
+	if( node->planenum == PLANENUM_LEAF )
+	{
+		node->nodeNumber = nextLeaf++;
+		return nextNode;
+	}
+	
+	node->nodeNumber = nextNode;
+	nextNode++;
+	nextNode = NumberNodes_r( node->children[0], nextNode, nextLeaf );
+	nextNode = NumberNodes_r( node->children[1], nextNode, nextLeaf );
+	
+	return nextNode;
+}
+
 /*
 =============
 WriteGLView
 =============
 */
-void WriteGLView( tree_t* tree, const char* source )
+void WriteGLView( tree_t* tree, const char* source, int entityNum, bool force )
 {
 	//c_glfaces = 0;
 	//common->Printf( "Writing %s\n", source );
 	
-	if( dmapGlobals.entityNum != 0 )
+	if( entityNum != 0 && !force )
 	{
 		return;
 	}
 	
 	idStrStatic< MAX_OSPATH > path;
-	path.Format( "%s_BSP_%s_%i.obj", dmapGlobals.mapFileBase, source, dmapGlobals.entityNum );
+	path.Format( "%s_BSP_%s_%i.obj", dmapGlobals.mapFileBase, source, entityNum );
 	idFileLocal objFile( fileSystem->OpenFileWrite( path, "fs_basepath" ) );
 	
 	//path.SetFileExtension( ".mtl" );
 	//idFileLocal mtlFile( fileSystem->OpenFileWrite( path, "fs_basepath" ) );
 	
-	idList<OBJFace> faces;
-	WriteGLView_r( tree->headnode, faces );
+	idList<OBJGroup> groups;
 	
-	common->Printf( "%5i c_glfaces\n", faces.Num() );
+	OBJGroup& portals = groups.Alloc();
+	portals.name = "portals";
+	
+	CollectPortals_r( tree->headnode, portals );
+	
+	common->Printf( "%5i c_glfaces\n", portals.faces.Num() );
+	
+	int numLeafs = 0;
+	int numNodes = NumberNodes_r( tree->headnode, 0, numLeafs );
+	
+	CollectNodes_r( tree->headnode, groups );
+	
 	
 	int numVerts = 0;
 	
-	for( int i = 0; i < faces.Num(); i++ )
+	for( int g = 0; g < groups.Num(); g++ )
 	{
-		OBJFace& face = faces[i];
+		const OBJGroup& group = groups[g];
 		
-		for( int j = 0; j < face.verts.Num(); j++ )
+		objFile->Printf( "g %s\n", group.name.c_str() );
+		
+		for( int i = 0; i < group.faces.Num(); i++ )
 		{
-			const idVec3& v = face.verts[j].xyz;
+			const OBJFace& face = group.faces[i];
 			
-			objFile->Printf( "v %1.6f %1.6f %1.6f\n", v.x, v.y, v.z );
+			for( int j = 0; j < face.verts.Num(); j++ )
+			{
+				const idVec3& v = face.verts[j].xyz;
+				
+				objFile->Printf( "v %1.6f %1.6f %1.6f\n", v.x, v.y, v.z );
+			}
+			
+			/*
+			for( int j = 0; j < face.verts.Num(); j++ )
+			{
+				const idVec2& vST = face.verts[j].GetTexCoord();
+			
+				objFile->Printf( "vt %1.6f %1.6f\n", vST.x, vST.y );
+			}
+			
+			for( int j = 0; j < face.verts.Num(); j++ )
+			{
+				const idVec3& n = face.verts[j].GetNormal();
+			
+				objFile->Printf( "vn %1.6f %1.6f %1.6f\n", n.x, n.y, n.z );
+			}
+			
+			objFile->Printf( "usemtl %s\n", face.material->GetName() );
+			*/
+			
+			//for( int j = 0; j < face.indexes.Num(); j += 3 )
+			
+			objFile->Printf( "f " );
+			for( int j = 0; j < face.verts.Num(); j++ )
+			{
+				objFile->Printf( "%i// ", numVerts + 1 + j );
+			}
+			
+			numVerts += face.verts.Num();
+			
+			objFile->Printf( "\n\n" );
 		}
-		
-		/*
-		for( int j = 0; j < face.verts.Num(); j++ )
-		{
-			const idVec2& vST = face.verts[j].GetTexCoord();
-		
-			objFile->Printf( "vt %1.6f %1.6f\n", vST.x, vST.y );
-		}
-		
-		for( int j = 0; j < face.verts.Num(); j++ )
-		{
-			const idVec3& n = face.verts[j].GetNormal();
-		
-			objFile->Printf( "vn %1.6f %1.6f %1.6f\n", n.x, n.y, n.z );
-		}
-		
-		objFile->Printf( "usemtl %s\n", face.material->GetName() );
-		*/
-		
-		//for( int j = 0; j < face.indexes.Num(); j += 3 )
-		
-		objFile->Printf( "f " );
-		for( int j = 0; j < face.verts.Num(); j++ )
-		{
-			objFile->Printf( "%i// ", numVerts + 1 + j );
-		}
-		
-		numVerts += face.verts.Num();
-		
-		objFile->Printf( "\n\n" );
 	}
 }
 

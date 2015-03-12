@@ -297,11 +297,7 @@ ID_INLINE MapPolygon::MapPolygon( int numIndexes )
 class MapPolygonMesh : public idMapPrimitive
 {
 public:
-	MapPolygonMesh()
-	{
-		type = TYPE_MESH;
-		polygons.Resize( 8, 4 );
-	}
+	MapPolygonMesh();
 	~MapPolygonMesh()
 	{
 		//verts.DeleteContents();

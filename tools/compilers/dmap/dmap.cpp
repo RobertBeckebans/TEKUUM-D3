@@ -69,7 +69,7 @@ bool ProcessModel( uEntity_t* e, bool floodFill )
 	// RB: dump BSP for debugging
 	if( dmapGlobals.glview )
 	{
-		WriteGLView( e->tree, "portals" );
+		WriteGLView( e->tree, "unclipped", dmapGlobals.entityNum );
 	}
 	// RB end
 	
@@ -99,16 +99,16 @@ bool ProcessModel( uEntity_t* e, bool floodFill )
 	// because the visible hull is used as the portal
 	ClipSidesByTree( e );
 	
-	// RB: dump BSP for debugging
-	if( dmapGlobals.glview )
-	{
-		WriteGLView( e->tree, "portals_clipped" );
-	}
-	// RB end
-	
 	// determine areas before clipping tris into the
 	// tree, so tris will never cross area boundaries
 	FloodAreas( e );
+	
+	// RB: dump BSP for debugging
+	if( dmapGlobals.glview )
+	{
+		WriteGLView( e->tree, "areas", dmapGlobals.entityNum );
+	}
+	// RB end
 	
 	// we now have a BSP tree with solid and non-solid leafs marked with areas
 	// all primitives will now be clipped into this, throwing away
@@ -430,6 +430,15 @@ void Dmap( const idCmdArgs& args )
 		// RB end
 		
 		WriteOutputFile();
+		
+		// RB: dump BSP after nodes being pruned and optimized
+		if( dmapGlobals.glview )
+		{
+			uEntity_t* world = &dmapGlobals.uEntities[0];
+			
+			WriteGLView( world->tree, "pruned", 0, true );
+		}
+		// RB end
 	}
 	else
 	{
