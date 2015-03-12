@@ -597,7 +597,9 @@ Sys_ListFiles
 int Sys_ListFiles( const char *directory, const char *extension, idStrList &list ) {
 	idStr		search;
 	struct _finddata_t findinfo;
-	int			findhandle;
+	// RB: 64 bit fixes, changed int to intptr_t
+	intptr_t	findhandle;
+	// RB end
 	int			flag;
 
 	if ( !extension) {
@@ -710,7 +712,9 @@ DLL Loading
 Sys_DLL_Load
 =====================
 */
-int Sys_DLL_Load( const char *dllName ) {
+// RB: 64 bit fixes, changed int to intptr_t
+intptr_t Sys_DLL_Load( const char *dllName )
+{
 	HINSTANCE	libHandle;
 	libHandle = LoadLibrary( dllName );
 	if ( libHandle ) {
@@ -731,8 +735,10 @@ int Sys_DLL_Load( const char *dllName ) {
 Sys_DLL_GetProcAddress
 =====================
 */
-void *Sys_DLL_GetProcAddress( int dllHandle, const char *procName ) {
-	return GetProcAddress( (HINSTANCE)dllHandle, procName ); 
+void *Sys_DLL_GetProcAddress( intptr_t dllHandle, const char *procName )
+{
+	// RB: added missing cast
+	return ( void* ) GetProcAddress( (HINSTANCE)dllHandle, procName );
 }
 
 /*
@@ -740,11 +746,15 @@ void *Sys_DLL_GetProcAddress( int dllHandle, const char *procName ) {
 Sys_DLL_Unload
 =====================
 */
-void Sys_DLL_Unload( int dllHandle ) {
-	if ( !dllHandle ) {
+void Sys_DLL_Unload( intptr_t dllHandle )
+{
+	if( !dllHandle )
+	{
 		return;
 	}
-	if ( FreeLibrary( (HINSTANCE)dllHandle ) == 0 ) {
+	
+	if( FreeLibrary( (HINSTANCE)dllHandle ) == 0 )
+	{
 		int lastError = GetLastError();
 		LPVOID lpMsgBuf;
 		FormatMessage(
@@ -756,9 +766,11 @@ void Sys_DLL_Unload( int dllHandle ) {
 			0,
 			NULL 
 		);
+
 		Sys_Error( "Sys_DLL_Unload: FreeLibrary failed - %s (%d)", lpMsgBuf, lastError );
 	}
 }
+// RB end
 
 /*
 ========================================================================
@@ -1000,7 +1012,7 @@ returns true if there is a copy of D3 running already
 bool Sys_AlreadyRunning() {
 #ifndef DEBUG
 	if ( !win32.win_allowMultipleInstances.GetBool() ) {
-		HANDLE hMutexOneInstance = ::CreateMutex( NULL, FALSE, "TECHYON" );
+		HANDLE hMutexOneInstance = ::CreateMutex( NULL, FALSE, "TEKUUM" );
 		if ( ::GetLastError() == ERROR_ALREADY_EXISTS || ::GetLastError() == ERROR_ACCESS_DENIED ) {
 			return true;
 		}
@@ -1065,8 +1077,14 @@ void Sys_Init() {
 			win32.sys_arch.SetString( "Win2K (NT)" );
 		} else if( win32.osversion.dwMajorVersion == 5 && win32.osversion.dwMinorVersion == 1 ) {
 			win32.sys_arch.SetString( "WinXP (NT)" );
-		} else if ( win32.osversion.dwMajorVersion == 6 ) {
+		} else if( win32.osversion.dwMajorVersion == 6 ) {
 			win32.sys_arch.SetString( "Vista" );
+		} else if( win32.osversion.dwMajorVersion == 6 && win32.osversion.dwMinorVersion == 1 ) {
+			win32.sys_arch.SetString( "Win7" );
+		} else if( win32.osversion.dwMajorVersion == 6 && win32.osversion.dwMinorVersion == 2 ) {
+			win32.sys_arch.SetString( "Win8" );
+		} else if( win32.osversion.dwMajorVersion == 6 && win32.osversion.dwMinorVersion == 3 ) {
+			win32.sys_arch.SetString( "Win8.1" );
 		} else {
 			win32.sys_arch.SetString( "Unknown NT variant" );
 		}
@@ -1230,34 +1248,6 @@ void Win_Frame() {
 		}
 		win32.win_viewlog.ClearModified();
 	}
-}
-
-extern "C" { void _chkstk( int size ); };
-void clrstk();
-
-/*
-====================
-TestChkStk
-====================
-*/
-void TestChkStk() {
-	int		buffer[0x1000];
-
-	buffer[0] = 1;
-}
-
-/*
-====================
-HackChkStk
-====================
-*/
-void HackChkStk() {
-	DWORD	old;
-	VirtualProtect( _chkstk, 6, PAGE_EXECUTE_READWRITE, &old );
-	*(byte *)_chkstk = 0xe9;
-	*(int *)((int)_chkstk+1) = (int)clrstk - (int)_chkstk - 5;
-
-	TestChkStk();
 }
 
 /*
@@ -1624,41 +1614,7 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 }
 #endif // #if !defined(USE_QT_WINDOWING)
 
-/*
-====================
-clrstk
 
-I tried to get the run time to call this at every function entry, but
-====================
-*/
-static int	parmBytes;
-__declspec( naked ) void clrstk() {
-	// eax = bytes to add to stack
-	__asm {
-		mov		[parmBytes],eax
-        neg     eax                     ; compute new stack pointer in eax
-        add     eax,esp
-        add     eax,4
-        xchg    eax,esp
-        mov     eax,dword ptr [eax]		; copy the return address
-        push    eax
-        
-        ; clear to zero
-        push	edi
-        push	ecx
-        mov		edi,esp
-        add		edi,12
-        mov		ecx,[parmBytes]
-		shr		ecx,2
-        xor		eax,eax
-		cld
-        rep	stosd
-        pop		ecx
-        pop		edi
-        
-        ret
-	}
-}
 
 /*
 ==================
