@@ -798,14 +798,22 @@ void FreeDMapFile()
 		for( prim = ent->primitives ; prim ; prim = nextPrim )
 		{
 			nextPrim = prim->next;
+			
 			if( prim->brush )
 			{
 				FreeBrush( prim->brush );
 			}
+			
 			if( prim->tris )
 			{
 				FreeTriList( prim->tris );
 			}
+			
+			if( prim->bsptris )
+			{
+				FreeTriList( prim->bsptris );
+			}
+			
 			Mem_Free( prim );
 		}
 		

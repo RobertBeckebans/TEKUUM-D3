@@ -471,7 +471,7 @@ void ClipSidesByTree( uEntity_t* e )
 				idWinding* w = WindingForTri( tri );
 				
 				// evil HACK
-				w->BaseForPlane( dmapGlobals.mapPlanes[ tri->planeNum] );
+				//w->BaseForPlane( dmapGlobals.mapPlanes[ tri->planeNum] );
 				//w->ReverseSelf();
 				
 				tri->visibleHull = NULL;
@@ -924,13 +924,20 @@ void PutPrimitivesInAreas( uEntity_t* e )
 			// RB: add new polygon mesh
 			for( tri = prim->bsptris ; tri ; tri = tri->next )
 			{
+#if 1
+				AddMapTriToAreas( tri, e );
+#else
 				if( !tri->visibleHull )
 				{
 					continue;
 				}
 				
-				//AddMapTriToAreas( tri, e );
+				//
 				PutTriIntoAreas_r( e,  tri->visibleHull, tri, e->tree->headnode );
+				
+				delete tri->visibleHull;
+				tri->visibleHull = NULL;
+#endif
 			}
 			// RB end
 			continue;

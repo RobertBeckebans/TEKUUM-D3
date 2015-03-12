@@ -58,9 +58,9 @@ public:
 	idList<OBJGroup>				groups;
 	idList< const idMaterial* >		materials;
 	
-	void	ConvertBrushToOBJ( OBJGroup& group, const idMapBrush* mapBrush, int entityNum, int primitiveNum );
-	void	ConvertPatchToOBJ( OBJGroup& group, const idMapPatch* patch, int entityNum, int primitiveNum );
-	void	ConvertMeshToOBJ( OBJGroup& group, const MapPolygonMesh* mesh, int entityNum, int primitiveNum );
+	void	ConvertBrushToOBJ( OBJGroup& group, const idMapBrush* mapBrush, int entityNum, int primitiveNum, const idMat4& transform );
+	void	ConvertPatchToOBJ( OBJGroup& group, const idMapPatch* patch, int entityNum, int primitiveNum, const idMat4& transform );
+	void	ConvertMeshToOBJ( OBJGroup& group, const MapPolygonMesh* mesh, int entityNum, int primitiveNum, const idMat4& transform );
 	
 	void	Write( const char* relativePath, const char* basePath = "fs_basepath" );
 };
@@ -175,7 +175,7 @@ void OBJExporter::Write( const char* relativePath, const char* basePath )
 }
 
 
-void OBJExporter::ConvertBrushToOBJ( OBJGroup& group, const idMapBrush* mapBrush, int entityNum, int primitiveNum )
+void OBJExporter::ConvertBrushToOBJ( OBJGroup& group, const idMapBrush* mapBrush, int entityNum, int primitiveNum, const idMat4& transform )
 {
 	OBJExporter::OBJObject& geometry = group.objects.Alloc();
 	
@@ -271,7 +271,7 @@ void OBJExporter::ConvertBrushToOBJ( OBJGroup& group, const idMapBrush* mapBrush
 			
 			const idVec3& xyz = w[j].ToVec3();
 			
-			dv.xyz = xyz;
+			dv.xyz = ( transform * idVec4( xyz.x, xyz.y, xyz.z, 1 ) ).ToVec3();
 			
 			// calculate texture s/t from brush primitive texture matrix
 			idVec4 texVec[2];
@@ -287,7 +287,7 @@ void OBJExporter::ConvertBrushToOBJ( OBJGroup& group, const idMapBrush* mapBrush
 			dv.SetTexCoord( st );
 			
 			// copy normal
-			dv.SetNormal( mapSide->GetPlane().Normal() );
+			dv.SetNormal( transform * mapSide->GetPlane().Normal() );
 			
 			//if( dv->GetNormal().Length() < 0.9 || dv->GetNormal().Length() > 1.1 )
 			//{
@@ -297,9 +297,9 @@ void OBJExporter::ConvertBrushToOBJ( OBJGroup& group, const idMapBrush* mapBrush
 		
 		for( int j = 1 ; j < w.GetNumPoints() - 1 ; j++ )
 		{
-			face.indexes.Append( numVerts + j + 1 );
-			face.indexes.Append( numVerts + j );
 			face.indexes.Append( numVerts );
+			face.indexes.Append( numVerts + j );
+			face.indexes.Append( numVerts + j + 1 );
 		}
 		
 		numVerts += w.GetNumPoints();
@@ -307,7 +307,7 @@ void OBJExporter::ConvertBrushToOBJ( OBJGroup& group, const idMapBrush* mapBrush
 }
 
 
-void OBJExporter::ConvertPatchToOBJ( OBJGroup& group, const idMapPatch* patch, int entityNum, int primitiveNum )
+void OBJExporter::ConvertPatchToOBJ( OBJGroup& group, const idMapPatch* patch, int entityNum, int primitiveNum, const idMat4& transform )
 {
 	OBJExporter::OBJObject& geometry = group.objects.Alloc();
 	
@@ -340,6 +340,10 @@ void OBJExporter::ConvertPatchToOBJ( OBJGroup& group, const idMapPatch* patch, i
 		dv1 = ( *cp )[cp->GetIndexes()[i + 2]];
 		dv2 = ( *cp )[cp->GetIndexes()[i + 0]];
 		
+		dv0.xyz = ( transform * idVec4( dv0.xyz.x, dv0.xyz.y, dv0.xyz.z, 1 ) ).ToVec3();
+		dv1.xyz = ( transform * idVec4( dv1.xyz.x, dv1.xyz.y, dv1.xyz.z, 1 ) ).ToVec3();
+		dv2.xyz = ( transform * idVec4( dv2.xyz.x, dv2.xyz.y, dv2.xyz.z, 1 ) ).ToVec3();
+		
 		//face.indexes.Append( cp->GetIndexes()[i + 0] );
 		//face.indexes.Append( cp->GetIndexes()[i + 1] );
 		//face.indexes.Append( cp->GetIndexes()[i + 2] );
@@ -352,7 +356,7 @@ void OBJExporter::ConvertPatchToOBJ( OBJGroup& group, const idMapPatch* patch, i
 	delete cp;
 }
 
-void OBJExporter::ConvertMeshToOBJ( OBJGroup& group, const MapPolygonMesh* mesh, int entityNum, int primitiveNum )
+void OBJExporter::ConvertMeshToOBJ( OBJGroup& group, const MapPolygonMesh* mesh, int entityNum, int primitiveNum, const idMat4& transform )
 {
 	OBJExporter::OBJObject& geometry = group.objects.Alloc();
 	
@@ -377,7 +381,10 @@ void OBJExporter::ConvertMeshToOBJ( OBJGroup& group, const MapPolygonMesh* mesh,
 		for( int j = 0; j < verts.Num(); j++ )
 		{
 			idDrawVert& dv = face.verts.Alloc();
+			
 			dv = verts[j];
+			
+			dv.xyz = ( transform * idVec4( dv.xyz.x, dv.xyz.y, dv.xyz.z, 1 ) ).ToVec3();
 		}
 		
 		//for( int j = 0; j < indexes.Num(); j++ )
@@ -430,6 +437,12 @@ CONSOLE_COMMAND( exportMapToOBJ, "Convert .map file to .obj/.mtl ", idCmdSystem:
 			{
 				idStr classname = ent->epairs.GetString( "classname" );
 				
+				idVec3 origin;
+				origin.Zero();
+				
+				idMat3 rot;
+				rot.Identity();
+				
 				if( ent->GetNumPrimitives() )
 				{
 					OBJExporter::OBJGroup& group = exporter.groups.Alloc();
@@ -441,7 +454,24 @@ CONSOLE_COMMAND( exportMapToOBJ, "Convert .map file to .obj/.mtl ", idCmdSystem:
 					else
 					{
 						group.name = ent->epairs.GetString( "name" );
+						
+						origin = ent->epairs.GetVector( "origin", "0 0 0" );
+						
+						if( !ent->epairs.GetMatrix( "rotation", "1 0 0 0 1 0 0 0 1", rot ) )
+						{
+							float angle = ent->epairs.GetFloat( "angle" );
+							if( angle != 0.0f )
+							{
+								rot = idAngles( 0.0f, angle, 0.0f ).ToMat3();
+							}
+							else
+							{
+								rot.Identity();
+							}
+						}
 					}
+					
+					idMat4 transform( rot, origin );
 					
 					for( int i = 0; i < ent->GetNumPrimitives(); i++ )
 					{
@@ -450,19 +480,19 @@ CONSOLE_COMMAND( exportMapToOBJ, "Convert .map file to .obj/.mtl ", idCmdSystem:
 						mapPrim = ent->GetPrimitive( i );
 						if( mapPrim->GetType() == idMapPrimitive::TYPE_BRUSH )
 						{
-							exporter.ConvertBrushToOBJ( group, static_cast<idMapBrush*>( mapPrim ), j, i );
+							exporter.ConvertBrushToOBJ( group, static_cast<idMapBrush*>( mapPrim ), j, i, transform );
 							continue;
 						}
 						
 						if( mapPrim->GetType() == idMapPrimitive::TYPE_PATCH )
 						{
-							exporter.ConvertPatchToOBJ( group, static_cast<idMapPatch*>( mapPrim ), j, i );
+							exporter.ConvertPatchToOBJ( group, static_cast<idMapPatch*>( mapPrim ), j, i, transform );
 							continue;
 						}
 						
 						if( mapPrim->GetType() == idMapPrimitive::TYPE_MESH )
 						{
-							exporter.ConvertMeshToOBJ( group, static_cast<MapPolygonMesh*>( mapPrim ), j, i );
+							exporter.ConvertMeshToOBJ( group, static_cast<MapPolygonMesh*>( mapPrim ), j, i, transform );
 							continue;
 						}
 					}

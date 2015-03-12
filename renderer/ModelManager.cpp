@@ -36,7 +36,7 @@ idCVar binaryLoadRenderModels( "binaryLoadRenderModels", "1", 0, "enable binary 
 idCVar preload_MapModels( "preload_MapModels", "1", CVAR_SYSTEM | CVAR_BOOL, "preload models during begin or end levelload" );
 
 // RB begin
-idCVar postLoadExportModels( "postLoadExportModels", "1", CVAR_BOOL | CVAR_RENDERER, "export models after loading to OBJ model format" );
+idCVar postLoadExportModels( "postLoadExportModels", "0", CVAR_BOOL | CVAR_RENDERER, "export models after loading to OBJ model format" );
 // RB end
 
 class idRenderModelManagerLocal : public idRenderModelManager

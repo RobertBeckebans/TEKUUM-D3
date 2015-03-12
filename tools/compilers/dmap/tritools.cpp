@@ -58,6 +58,11 @@ FreeTri
 */
 void		FreeTri( mapTri_t* tri )
 {
+	if( tri->visibleHull )
+	{
+		//delete tri->visibleHull;
+	}
+	
 	Mem_Free( tri );
 }
 
