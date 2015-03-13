@@ -120,7 +120,10 @@ void OBJExporter::Write( const char* relativePath, const char* basePath )
 				objFile->Printf( "usemtl %s\n", face.material->GetName() );
 				
 				objFile->Printf( "f " );
-				for( int j = 0; j < face.indexes.Num(); j++ )
+				//for( int j = 0; j < face.indexes.Num(); j++ )
+				
+				// flip order for OBJ
+				for( int j = face.indexes.Num() - 1; j >= 0; j-- )
 				{
 					objFile->Printf( "%i/%i/%i ",
 									 face.indexes[j] + 1 + totalVerts,
@@ -298,7 +301,11 @@ void OBJExporter::ConvertBrushToOBJ( OBJGroup& group, const idMapBrush* mapBrush
 		}
 #else
 		// export n-gon
-		for( int j = 0; j < w.GetNumPoints(); j++ )
+		
+		//for( int j = 0; j < w.GetNumPoints(); j++ )
+		
+		// reverse order, so normal does not point inwards
+		for( int j = w.GetNumPoints() - 1; j >= 0; j-- )
 		{
 			face.indexes.Append( numVerts + j );
 		}
@@ -350,9 +357,9 @@ void OBJExporter::ConvertPatchToOBJ( OBJGroup& group, const idMapPatch* patch, i
 		//face.indexes.Append( cp->GetIndexes()[i + 1] );
 		//face.indexes.Append( cp->GetIndexes()[i + 2] );
 		
-		face.indexes.Append( i + 2 );
-		face.indexes.Append( i + 1 );
 		face.indexes.Append( i + 0 );
+		face.indexes.Append( i + 1 );
+		face.indexes.Append( i + 2 );
 	}
 	
 	delete cp;

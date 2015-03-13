@@ -930,19 +930,22 @@ void PutPrimitivesInAreas( uEntity_t* e )
 			{
 			
 #if 1
-				// reverse vertex order
+				// FIXME reverse vertex order for drawing
 				idDrawVert tmp = tri->v[0];
 				tri->v[0] = tri->v[2];
 				tri->v[2] = tmp;
 #endif
 				
-#if 1
+#if 0
 				// move tri inwards along face normal
-				idPlane& plane = dmapGlobals.mapPlanes[ tri->planeNum ];
+				//idPlane& plane = dmapGlobals.mapPlanes[ tri->planeNum ];
+				
+				idPlane plane;
+				plane.FromPoints( tri->v[0].xyz, tri->v[1].xyz, tri->v[2].xyz );
 				
 				for( i = 0; i < 3; i++ )
 				{
-					tri->v[i].xyz += ( plane.Normal() * -1 );
+					tri->v[i].xyz += ( plane.Normal() * 1 );
 				}
 #endif
 				

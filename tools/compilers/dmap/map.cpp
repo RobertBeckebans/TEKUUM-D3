@@ -388,9 +388,11 @@ static void ParseSurface( const idMapPatch* patch, const idSurface* surface, con
 	for( i = 0; i < surface->GetNumIndexes(); i += 3 )
 	{
 		tri = AllocTri();
-		tri->v[2] = ( *surface )[surface->GetIndexes()[i + 0]];
-		tri->v[1] = ( *surface )[surface->GetIndexes()[i + 2]];
+		
 		tri->v[0] = ( *surface )[surface->GetIndexes()[i + 1]];
+		tri->v[1] = ( *surface )[surface->GetIndexes()[i + 2]];
+		tri->v[2] = ( *surface )[surface->GetIndexes()[i + 0]];
+		
 		tri->material = material;
 		tri->next = prim->tris;
 		prim->tris = tri;
@@ -459,18 +461,23 @@ static void ParsePolygonMesh( const MapPolygonMesh* mesh, int primitiveNum )
 		const idMaterial* mat = declManager->FindMaterial( poly->GetMaterial() );
 		
 		const idList<int>& indexes = poly->GetIndexes();
-		//for( int j = 0; j < indexes.Num(); j += 3 )
+		
+		//idList<int> unique;
+		//for( int j = 0; j < indexes.Num(); j++ )
+		//{
+		//	unique.AddUnique( indexes[j] );
+		//}
 		
 		// FIXME: avoid triangulization and use polygons
+		
+		// TODO use WindingToTriList instead ?
+		
 		for( int j = 1; j < indexes.Num() - 1; j++ )
+			//for( int j = indexes.Num() -2; j >= 1; j-- )
 		{
 			mapTri_t* tri = AllocTri();
 			
-			//tri->v[0] = verts[ j + 1 ];
-			//tri->v[1] = verts[ j ];
-			//tri->v[2] = verts[ 0 ];
-			
-#if 0
+#if 1
 			tri->v[0] = verts[ indexes[ j + 1] ];
 			tri->v[1] = verts[ indexes[ j + 0] ];
 			tri->v[2] = verts[ indexes[ 0 ] ];

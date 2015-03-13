@@ -1247,10 +1247,11 @@ void MapPolygonMesh::ConvertFromBrush( const idMapBrush* mapBrush, int entityNum
 		MapPolygon* polygon = new MapPolygon();
 		polygon->SetMaterial( mapSide->GetMaterial() );
 		
-		// reverse order
-		//for( int j = w.GetNumPoints() - 1; j >= 0; j-- )
 		
-		for( int j = 0; j < w.GetNumPoints(); j++ )
+		//for( int j = 0; j < w.GetNumPoints(); j++ )
+		
+		// reverse order, so normal does not point inwards
+		for( int j = w.GetNumPoints() - 1; j >= 0; j-- )
 		{
 			polygon->AddIndex( verts.Num() + j );
 		}
@@ -1274,7 +1275,7 @@ void MapPolygonMesh::ConvertFromBrush( const idMapBrush* mapBrush, int entityNum
 			st.y = ( xyz * texVec[1].ToVec3() ) + texVec[1][3];
 			
 			// flip y
-			st.y = 1.0f - st.y;
+			//st.y = 1.0f - st.y;
 			
 			dv.SetTexCoord( st );
 			
@@ -1514,6 +1515,8 @@ void MapPolygonMesh::SetContents()
 	{
 		contents = CONTENTS_SOLID;
 		opaque = true;
+		
+		return;
 	}
 	
 	int			c2;
