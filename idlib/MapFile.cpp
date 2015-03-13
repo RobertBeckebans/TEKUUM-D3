@@ -1248,14 +1248,16 @@ void MapPolygonMesh::ConvertFromBrush( const idMapBrush* mapBrush, int entityNum
 		polygon->SetMaterial( mapSide->GetMaterial() );
 		
 		// reverse order
-		for( int j = w.GetNumPoints() - 1; j >= 0; j-- )
+		//for( int j = w.GetNumPoints() - 1; j >= 0; j-- )
+		
+		for( int j = 0; j < w.GetNumPoints(); j++ )
 		{
 			polygon->AddIndex( verts.Num() + j );
 		}
 		
 		polygons.Append( polygon );
 		
-		for( int j = 0 ; j < w.GetNumPoints() ; j++ )
+		for( int j = 0; j < w.GetNumPoints(); j++ )
 		{
 			idDrawVert& dv = verts.Alloc();
 			
@@ -1371,9 +1373,8 @@ bool MapPolygonMesh::Write( idFile* fp, int primitiveNum, const idVec3& origin )
 MapPolygonMesh* MapPolygonMesh::Parse( idLexer& src, const idVec3& origin, float version )
 {
 	float		info[7];
-	idDrawVert* vert;
 	idToken		token;
-	int			i, j;
+	int			i;
 	
 	if( !src.ExpectTokenString( "{" ) )
 	{
@@ -1470,7 +1471,7 @@ MapPolygonMesh* MapPolygonMesh::Parse( idLexer& src, const idVec3& origin, float
 		}
 		
 		//idTempArray<int> indexes( numIndexes );
-		for( j = 0; j < numIndexes; j++ )
+		for( int j = 0; j < numIndexes; j++ )
 		{
 			//indexes[j] = src.ParseInt();
 			
@@ -1550,7 +1551,7 @@ void MapPolygonMesh::SetContents()
 
 unsigned int MapPolygonMesh::GetGeometryCRC() const
 {
-	int i, j;
+	int i;
 	MapPolygon* poly;
 	unsigned int crc;
 	
@@ -1574,7 +1575,7 @@ unsigned int MapPolygonMesh::GetGeometryCRC() const
 
 bool MapPolygonMesh::IsAreaportal() const
 {
-	return ( contents & CONTENTS_AREAPORTAL );
+	return ( ( contents & CONTENTS_AREAPORTAL ) != 0 );
 }
 
 bool idMapFile::ConvertToPolygonMeshFormat()

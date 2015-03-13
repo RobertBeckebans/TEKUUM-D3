@@ -80,7 +80,6 @@ void OutputWinding( idWinding* w, OBJGroup& group )
 	float		light;
 	int			i;
 	
-	//glview->WriteFloatString( "%i\n", w->GetNumPoints() );
 	level += 28;
 	light = ( level & 255 ) / 255.0;
 	
@@ -99,19 +98,37 @@ void OutputWinding( idWinding* w, OBJGroup& group )
 		dv.SetColor( level & 255 );
 		
 		//dv.SetNormal( w->GetPlane() )
-		
-		/*
-		glview->WriteFloatString( "%6.3f %6.3f %6.3f %6.3f %6.3f %6.3f\n",
-								  ( *w )[i][0],
-								  ( *w )[i][1],
-								  ( *w )[i][2],
-								  light,
-								  light,
-								  light );*/
 	}
-	
-	//glview->WriteFloatString( "\n" );
 }
+
+/*
+void OutputWinding( const idFixedWinding& w, OBJGroup& group )
+{
+	static	int	level = 128;
+	float		light;
+	int			i;
+
+	level += 28;
+	light = ( level & 255 ) / 255.0;
+
+	OBJFace& face = group.faces.Alloc();
+
+	//for( i = 0; i < w->GetNumPoints(); i++ )
+
+	for( i = w.GetNumPoints() - 1; i >= 0; i-- )
+	{
+		idDrawVert& dv = face.verts.Alloc();
+
+		dv.xyz.x = ( w )[i][0];
+		dv.xyz.y = ( w )[i][1];
+		dv.xyz.z = ( w )[i][2];
+
+		dv.SetColor( level & 255 );
+
+		//dv.SetNormal( w->GetPlane() )
+	}
+}
+*/
 
 /*
 =============
@@ -218,19 +235,35 @@ void OutputNode( const node_t* node, idList<OBJGroup>& groups )
 		if( node->occupied )
 		{
 			group = &groups.Alloc();
-			group->name.Format( "leaf_inside_area%i.%i", node->area, node->nodeNumber ) ;
+			group->name.Format( "area%i_leaf_occupied.%i", node->area, node->nodeNumber );
 		}
 		else if( node->opaque )
 		{
-			//group = &groups.Alloc();
-			//group->name.Format( "leaf_opaque.%i", node->nodeNumber ) ;
+			group = &groups.Alloc();
+			
+			if( node->area != -1 )
+			{
+				group->name.Format( "area%i_leaf_opaque.%i", node->area, node->nodeNumber );
+			}
+			else
+			{
+				group->name.Format( "void_leaf_opaque.%i", node->nodeNumber );
+			}
 			
 			reverse = true;
 		}
 		else
 		{
 			group = &groups.Alloc();
-			group->name.Format( "leaf.%i", node->nodeNumber ) ;
+			
+			if( node->area != -1 )
+			{
+				group->name.Format( "area%i_leaf.%i", node->area, node->nodeNumber );
+			}
+			else
+			{
+				group->name.Format( "void_leaf.%i", node->nodeNumber );
+			}
 		}
 	}
 	else
@@ -281,11 +314,52 @@ void OutputNode( const node_t* node, idList<OBJGroup>& groups )
 	}
 }
 
+void OutputSplitPlane( const node_t* node, idList<OBJGroup>& groups )
+{
+	const idBounds& bounds = node->bounds;
+	
+	if( bounds.IsCleared() )
+	{
+		return;
+	}
+	
+	OBJGroup* group = NULL;
+	bool reverse = false;
+	
+	if( node->planenum != PLANENUM_LEAF )
+	{
+		idPlane		plane;
+		
+		idFixedWinding w;
+		
+		w.BaseForPlane( dmapGlobals.mapPlanes[node->planenum] );
+		
+		group = &groups.Alloc();
+		group->name.Format( "splitplane.%i", node->nodeNumber ) ;
+		
+		// cut down to AABB size
+		for( int i = 0 ; i < 3 ; i++ )
+		{
+			plane[0] = plane[1] = plane[2] = 0;
+			plane[i] = 1;
+			plane[3] = -bounds[1][i];
+			
+			w.ClipInPlace( -plane );
+			
+			plane[i] = -1;
+			plane[3] = bounds[0][i];
+			
+			w.ClipInPlace( -plane );
+		}
+		
+		OutputWinding( &w, *group );
+	}
+}
+
 void CollectNodes_r( node_t* node, idList<OBJGroup>& groups )
 {
-	uPortal_t*	p, *nextp;
-	
 	OutputNode( node, groups );
+	OutputSplitPlane( node, groups );
 	
 	if( node->planenum != PLANENUM_LEAF )
 	{
@@ -296,7 +370,7 @@ void CollectNodes_r( node_t* node, idList<OBJGroup>& groups )
 }
 
 
-static int NumberNodes_r( node_t* node, int nextNode, int& nextLeaf )
+int NumberNodes_r( node_t* node, int nextNode, int& nextLeaf )
 {
 	if( node->planenum == PLANENUM_LEAF )
 	{
@@ -422,8 +496,8 @@ void WriteGLView( bspface_t* list, const char* source )
 	{
 		OBJFace& objFace = faces.Alloc();
 		
-		//for( int i = 0; i < face->w->GetNumPoints(); i++ )
-		for( int i = face->w->GetNumPoints() - 1; i >= 0; i-- )
+		for( int i = 0; i < face->w->GetNumPoints(); i++ )
+			//for( int i = face->w->GetNumPoints() - 1; i >= 0; i-- )
 		{
 			idDrawVert& dv = objFace.verts.Alloc();
 			

@@ -60,6 +60,9 @@ bool ProcessModel( uEntity_t* e, bool floodFill )
 	// to allow flood filling
 	MakeTreePortals( e->tree );
 	
+	// RB: calculate node numbers for split plane analysis
+	NumberNodes_r( e->tree->headnode, 0 );
+	
 	// classify the leafs as opaque or areaportal
 	FilterBrushesIntoTree( e );
 	
@@ -69,7 +72,7 @@ bool ProcessModel( uEntity_t* e, bool floodFill )
 	// RB: dump BSP for debugging
 	if( dmapGlobals.glview )
 	{
-		WriteGLView( e->tree, "unclipped", dmapGlobals.entityNum );
+		//WriteGLView( e->tree, "unclipped", dmapGlobals.entityNum );
 	}
 	// RB end
 	

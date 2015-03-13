@@ -119,23 +119,16 @@ void OBJExporter::Write( const char* relativePath, const char* basePath )
 				//objFile->Printf( "o %s\n", geometry.name.c_str() );
 				objFile->Printf( "usemtl %s\n", face.material->GetName() );
 				
-				for( int j = 0; j < face.indexes.Num(); j += 3 )
+				objFile->Printf( "f " );
+				for( int j = 0; j < face.indexes.Num(); j++ )
 				{
-					objFile->Printf( "f %i/%i/%i %i/%i/%i %i/%i/%i\n",
-									 face.indexes[j + 0] + 1 + totalVerts,
-									 face.indexes[j + 0] + 1 + totalVerts,
-									 face.indexes[j + 0] + 1 + totalVerts,
-									 
-									 face.indexes[j + 1] + 1 + totalVerts,
-									 face.indexes[j + 1] + 1 + totalVerts,
-									 face.indexes[j + 1] + 1 + totalVerts,
-									 
-									 face.indexes[j + 2] + 1 + totalVerts,
-									 face.indexes[j + 2] + 1 + totalVerts,
-									 face.indexes[j + 2] + 1 + totalVerts );
+					objFile->Printf( "%i/%i/%i ",
+									 face.indexes[j] + 1 + totalVerts,
+									 face.indexes[j] + 1 + totalVerts,
+									 face.indexes[j] + 1 + totalVerts );
 				}
 				
-				objFile->Printf( "\n" );
+				objFile->Printf( "\n\n" );
 			}
 			
 			for( int i = 0; i < geometry.faces.Num(); i++ )
@@ -265,7 +258,7 @@ void OBJExporter::ConvertBrushToOBJ( OBJGroup& group, const idMapBrush* mapBrush
 		
 		face.material = declManager->FindMaterial( mapSide->GetMaterial() );
 		
-		for( int j = 0 ; j < w.GetNumPoints() ; j++ )
+		for( int j = 0; j < w.GetNumPoints(); j++ )
 		{
 			idDrawVert& dv = face.verts.Alloc();
 			
@@ -295,12 +288,21 @@ void OBJExporter::ConvertBrushToOBJ( OBJGroup& group, const idMapBrush* mapBrush
 			//}
 		}
 		
-		for( int j = 1 ; j < w.GetNumPoints() - 1 ; j++ )
+#if 0
+		// triangulate
+		for( int j = 1; j < w.GetNumPoints() - 1; j++ )
 		{
 			face.indexes.Append( numVerts );
 			face.indexes.Append( numVerts + j );
 			face.indexes.Append( numVerts + j + 1 );
 		}
+#else
+		// export n-gon
+		for( int j = 0; j < w.GetNumPoints(); j++ )
+		{
+			face.indexes.Append( numVerts + j );
+		}
+#endif
 		
 		numVerts += w.GetNumPoints();
 	}
@@ -366,7 +368,7 @@ void OBJExporter::ConvertMeshToOBJ( OBJGroup& group, const MapPolygonMesh* mesh,
 	
 	int numVerts = 0;
 	
-	for( int i = 1; i < mesh->GetNumPolygons(); i++ )
+	for( int i = 0; i < mesh->GetNumPolygons(); i++ )
 	{
 		MapPolygon* poly = mesh->GetFace( i );
 		
@@ -387,6 +389,7 @@ void OBJExporter::ConvertMeshToOBJ( OBJGroup& group, const MapPolygonMesh* mesh,
 			dv.xyz = ( transform * idVec4( dv.xyz.x, dv.xyz.y, dv.xyz.z, 1 ) ).ToVec3();
 		}
 		
+#if 0
 		//for( int j = 0; j < indexes.Num(); j++ )
 		for( int j = 1; j < indexes.Num() - 1; j++ )
 		{
@@ -398,8 +401,16 @@ void OBJExporter::ConvertMeshToOBJ( OBJGroup& group, const MapPolygonMesh* mesh,
 			face.indexes.Append( numVerts + j );
 			face.indexes.Append( numVerts );
 		}
+#else
+		for( int j = 0; j < indexes.Num(); j++ )
+		{
+			int index = indexes[j];
 		
-		numVerts += indexes.Num();
+			face.indexes.Append( numVerts + index );
+		}
+#endif
+		
+		numVerts += verts.Num();
 	}
 }
 
@@ -540,8 +551,8 @@ CONSOLE_COMMAND( exportMapToOBJ, "Convert .map file to .obj/.mtl ", idCmdSystem:
 		
 		idStrStatic< MAX_OSPATH > convertedFileName;
 		
-		convertedFileName = "converted/";
-		convertedFileName += canonical;
+		//convertedFileName = "converted/";
+		convertedFileName = canonical;
 		
 		exporter.Write( convertedFileName );
 	}

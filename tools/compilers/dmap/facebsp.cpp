@@ -500,7 +500,6 @@ bspface_t*	MakeStructuralBspFaceList( primitive_t* list )
 					f->portal = true;
 				}
 				
-				
 				//w = new idWinding( 3 );
 				//w->SetNumPoints( 3 );
 				//( *w )[0] = idVec5( tri->v[0].xyz, tri->v[0].GetTexCoord() );
@@ -508,9 +507,11 @@ bspface_t*	MakeStructuralBspFaceList( primitive_t* list )
 				//( *w )[2] = idVec5( tri->v[2].xyz, tri->v[2].GetTexCoord() );
 				
 				w = WindingForTri( tri );
+				//w->ReverseSelf();
 				f->w = w;
 				
 				f->planenum = tri->planeNum & ~1;
+				//f->planenum = ( tri->planeNum ^ 1 ) & ~1;
 				f->next = flist;
 				flist = f;
 			}

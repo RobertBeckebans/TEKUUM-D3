@@ -470,13 +470,15 @@ static void ParsePolygonMesh( const MapPolygonMesh* mesh, int primitiveNum )
 			//tri->v[1] = verts[ j ];
 			//tri->v[2] = verts[ 0 ];
 			
+#if 0
 			tri->v[0] = verts[ indexes[ j + 1] ];
 			tri->v[1] = verts[ indexes[ j + 0] ];
 			tri->v[2] = verts[ indexes[ 0 ] ];
-			
-			//tri->v[2] = verts[indexes[j + 0]];
-			//tri->v[1] = verts[indexes[j + 2]];
-			//tri->v[0] = verts[indexes[j + 1]];
+#else
+			tri->v[2] = verts[ indexes[ j + 1] ];
+			tri->v[1] = verts[ indexes[ j + 0] ];
+			tri->v[0] = verts[ indexes[ 0 ] ];
+#endif
 			
 			idPlane plane;
 			plane.FromPoints( tri->v[0].xyz, tri->v[1].xyz, tri->v[2].xyz );

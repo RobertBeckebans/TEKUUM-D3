@@ -559,6 +559,8 @@ void ClipTriIntoTree_r( idWinding* w, mapTri_t* originalTri, uEntity_t* e, node_
 	
 	if( node->planenum != PLANENUM_LEAF )
 	{
+		//common->Printf( "ClipTriIntoTree_r: splitting triangle with splitplane %i\n", node->nodeNumber );
+		
 		w->Split( dmapGlobals.mapPlanes[ node->planenum ], ON_EPSILON, &front, &back );
 		delete w;
 		
@@ -567,6 +569,8 @@ void ClipTriIntoTree_r( idWinding* w, mapTri_t* originalTri, uEntity_t* e, node_
 		
 		return;
 	}
+	
+	//common->Printf( "ClipTriIntoTree_r: leaf area = %i, opaque = %i, occupied = %i\n", node->area, node->occupied );
 	
 	// if opaque leaf, don't add
 	if( !node->opaque && node->area >= 0 )
@@ -806,7 +810,7 @@ static void PutTriIntoAreas_r( uEntity_t* e, const idWinding* w, mapTri_t* origi
 		return;
 	}
 	
-	//common->Printf( "PutTriIntoAreas_r: leaf area = %i, opaque = %i\n", node->area, (int) node->opaque );
+	common->Printf( "PutTriIntoAreas_r: leaf area = %i, opaque = %i\n", node->area, ( int ) node->opaque );
 	
 	// if opaque leaf, don't add
 	if( node->area >= 0 && !node->opaque )
@@ -924,8 +928,32 @@ void PutPrimitivesInAreas( uEntity_t* e )
 			// RB: add new polygon mesh
 			for( tri = prim->bsptris ; tri ; tri = tri->next )
 			{
+			
+#if 1
+				// reverse vertex order
+				idDrawVert tmp = tri->v[0];
+				tri->v[0] = tri->v[2];
+				tri->v[2] = tmp;
+#endif
+				
+#if 1
+				// move tri inwards along face normal
+				idPlane& plane = dmapGlobals.mapPlanes[ tri->planeNum ];
+				
+				for( i = 0; i < 3; i++ )
+				{
+					tri->v[i].xyz += ( plane.Normal() * -1 );
+				}
+#endif
+				
 #if 1
 				AddMapTriToAreas( tri, e );
+#elif 0
+				idWinding* w = WindingForTri( tri );
+				
+				PutTriIntoAreas_r( e,  w, tri, e->tree->headnode );
+				
+				delete w;
 #else
 				if( !tri->visibleHull )
 				{
