@@ -367,15 +367,16 @@ static void ClipSideByTree_r( idWinding* w, side_t* side, node_t* node )
 }
 
 // RB begin
+/*
 static void ClipTriByTree_r( idWinding* w, mapTri_t* originalTri, node_t* node )
 {
 	idWinding*		front, *back;
-	
+
 	if( !w )
 	{
 		return;
 	}
-	
+
 	if( node->planenum != PLANENUM_LEAF )
 	{
 		if( originalTri->planeNum == node->planenum )
@@ -388,16 +389,16 @@ static void ClipTriByTree_r( idWinding* w, mapTri_t* originalTri, node_t* node )
 			ClipTriByTree_r( w, originalTri, node->children[1] );
 			return;
 		}
-		
+
 		w->Split( dmapGlobals.mapPlanes[ node->planenum ], ON_EPSILON, &front, &back );
 		delete w;
-		
+
 		ClipTriByTree_r( front, originalTri, node->children[0] );
 		ClipTriByTree_r( back, originalTri, node->children[1] );
-		
+
 		return;
 	}
-	
+
 	// if opaque leaf, don't add
 	if( !node->opaque )
 	{
@@ -410,10 +411,11 @@ static void ClipTriByTree_r( idWinding* w, mapTri_t* originalTri, node_t* node )
 			originalTri->visibleHull->AddToConvexHull( w, dmapGlobals.mapPlanes[ originalTri->planeNum ].Normal() );
 		}
 	}
-	
+
 	delete w;
 	return;
 }
+*/
 // RB end
 
 /*
@@ -434,8 +436,8 @@ void ClipSidesByTree( uEntity_t* e )
 	idWinding*		w;
 	side_t*			side;
 	primitive_t*	prim;
-	mapTri_t*		tri;
-	
+//	mapTri_t*		tri;
+
 	common->Printf( "----- ClipSidesByTree -----\n" );
 	
 	int c_tris = 0;
@@ -448,6 +450,7 @@ void ClipSidesByTree( uEntity_t* e )
 			// FIXME: other primitives!
 			
 			// RB: add new polygon mesh
+#if 0
 			for( tri = prim->bsptris ; tri ; tri = tri->next, c_tris++ )
 			{
 #if 0
@@ -485,6 +488,7 @@ void ClipSidesByTree( uEntity_t* e )
 					tri->visibleHull = WindingForTri( tri );
 				}
 			}
+#endif
 			// RB end
 			
 			continue;

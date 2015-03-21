@@ -70,7 +70,7 @@ typedef struct mapTri_s
 	
 	// RB begin
 	const MapPolygonMesh*	originalMapMesh;
-	idWinding* 			visibleHull;	// also clipped to the solid parts of the world
+//	idWinding* 			visibleHull;	// also clipped to the solid parts of the world
 	// RB end
 	
 	// from different fixed groups, like guiSurfs and mirrors
