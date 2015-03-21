@@ -261,7 +261,7 @@ idCollisionModelManagerLocal::WriteCollisionModelsToFile
 void idCollisionModelManagerLocal::WriteCollisionModelsToFile( const char* filename, int firstModel, int lastModel, unsigned int mapFileCRC )
 {
 	// RB: added generated/collision
-	idStrStatic< MAX_OSPATH > name = "generated/";
+	idStrStatic< MAX_OSPATH > name = "generated/collision";
 	name.AppendPath( filename );
 	// RB end
 	name.SetFileExtension( CM_FILE_EXT );

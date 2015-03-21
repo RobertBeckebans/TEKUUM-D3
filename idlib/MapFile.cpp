@@ -1581,6 +1581,62 @@ bool MapPolygonMesh::IsAreaportal() const
 	return ( ( contents & CONTENTS_AREAPORTAL ) != 0 );
 }
 
+void MapPolygonMesh::GetBounds( idBounds& bounds ) const
+{
+#if 0
+	idBounds bounds;
+	bounds.Clear();
+	
+	for( int i = 0; i < verts.Num(); i++ )
+	{
+		bounds.AddPoint( verts[i].xyz );
+	}
+	
+	return bounds;
+#else
+	int i;
+	
+	//idBounds bounds;
+	if( !verts.Num() )
+	{
+		bounds.Clear();
+		return;
+	}
+	
+	
+	bounds[0] = bounds[1] = verts[0].xyz;
+	for( int i = 1; i < verts.Num(); i++ )
+	{
+		const idVec3& p = verts[i].xyz;
+	
+		if( p.x < bounds[0].x )
+		{
+			bounds[0].x = p.x;
+		}
+		else if( p.x > bounds[1].x )
+		{
+			bounds[1].x = p.x;
+		}
+		if( p.y < bounds[0].y )
+		{
+			bounds[0].y = p.y;
+		}
+		else if( p.y > bounds[1].y )
+		{
+			bounds[1].y = p.y;
+		}
+		if( p.z < bounds[0].z )
+		{
+			bounds[0].z = p.z;
+		}
+		else if( p.z > bounds[1].z )
+		{
+			bounds[1].z = p.z;
+		}
+	}
+#endif
+}
+
 bool idMapFile::ConvertToPolygonMeshFormat()
 {
 	int count = GetNumEntities();

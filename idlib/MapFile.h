@@ -352,6 +352,8 @@ public:
 	
 	bool					IsAreaportal() const;
 	
+	void					GetBounds( idBounds& bounds ) const;
+	
 private:
 	void					SetContents();
 	
