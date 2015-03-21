@@ -356,10 +356,39 @@ void OutputSplitPlane( const node_t* node, idList<OBJGroup>& groups )
 	}
 }
 
+void OutputAreaPortalTriangles( const node_t* node, idList<OBJGroup>& groups )
+{
+	const idBounds& bounds = node->bounds;
+	
+	if( bounds.IsCleared() )
+	{
+		return;
+	}
+	
+	if( node->planenum == PLANENUM_LEAF && node->areaPortalTris )
+	{
+		OBJGroup& group = groups.Alloc();
+		group.name.Format( "areaPortalTris.%i", node->nodeNumber ) ;
+		
+		for( mapTri_t* tri = node->areaPortalTris; tri; tri = tri->next )
+		{
+			OBJFace& face = group.faces.Alloc();
+			
+			for( int i = 0; i < 3; i++ )
+			{
+				idDrawVert& dv = face.verts.Alloc();
+				
+				dv = tri->v[i];
+			}
+		}
+	}
+}
+
 void CollectNodes_r( node_t* node, idList<OBJGroup>& groups )
 {
 	OutputNode( node, groups );
 	OutputSplitPlane( node, groups );
+	OutputAreaPortalTriangles( node, groups );
 	
 	if( node->planenum != PLANENUM_LEAF )
 	{
@@ -384,6 +413,31 @@ int NumberNodes_r( node_t* node, int nextNode, int& nextLeaf )
 	nextNode = NumberNodes_r( node->children[1], nextNode, nextLeaf );
 	
 	return nextNode;
+}
+
+void OutputAreaPortals( idList<OBJGroup>& groups )
+{
+	int			i;
+	interAreaPortal_t*	iap;
+	idWinding*			w;
+	
+	for( i = 0; i < interAreaPortals.Num(); i++ )
+	{
+		iap = &interAreaPortals[i];
+		
+		if( iap->side )
+		{
+			w = iap->side->winding;
+		}
+		else
+		{
+			w = & iap->w;
+		}
+		
+		OBJGroup& group = groups.Alloc();
+		group.name.Format( "interAreaPortal.%i", i );
+		OutputWinding( w, group );
+	}
 }
 
 /*
@@ -422,6 +476,10 @@ void WriteGLView( tree_t* tree, const char* source, int entityNum, bool force )
 	
 	CollectNodes_r( tree->headnode, groups );
 	
+	if( entityNum == 0 )
+	{
+		OutputAreaPortals( groups );
+	}
 	
 	int numVerts = 0;
 	

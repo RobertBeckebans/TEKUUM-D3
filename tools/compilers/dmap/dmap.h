@@ -3,6 +3,7 @@
 
 Doom 3 GPL Source Code
 Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2013-2015 Robert Beckebans
 
 This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
 
@@ -69,8 +70,11 @@ typedef struct mapTri_s
 	void* 				mergeGroup;		// we want to avoid merging triangles
 	
 	// RB begin
+	int					polygonId;		// n-gon number from original face used for area portal construction
+	
 	const MapPolygonMesh*	originalMapMesh;
 //	idWinding* 			visibleHull;	// also clipped to the solid parts of the world
+
 	// RB end
 	
 	// from different fixed groups, like guiSurfs and mirrors
@@ -186,8 +190,10 @@ typedef struct node_s
 	// leafs only
 	bool				opaque;		// view can never be inside
 	
-	uBrush_t* 			brushlist;	// fragments of all brushes in this leaf
 	// needed for FindSideForPortal
+	uBrush_t* 			brushlist;	// fragments of all brushes in this leaf
+	mapTri_t*			areaPortalTris;
+	// --
 	
 	int					area;		// determined by flood filling up to areaportals
 	int					occupied;	// 1 or greater can reach entity
@@ -403,14 +409,18 @@ void GLS_EndScene();
 
 #define	MAX_INTER_AREA_PORTALS	1024
 
-typedef struct
+struct interAreaPortal_t
 {
-	int		area0, area1;
-	side_t*	side;
-} interAreaPortal_t;
+	int				area0, area1;
+	side_t*			side = NULL;
+	
+	// RB begin
+	int				polygonId;
+	idFixedWinding	w;
+	// RB end
+};
 
-extern	interAreaPortal_t interAreaPortals[MAX_INTER_AREA_PORTALS];
-extern	int					numInterAreaPortals;
+extern idList<interAreaPortal_t> interAreaPortals;
 
 bool FloodEntities( tree_t* tree );
 void FillOutside( uEntity_t* e );
@@ -462,7 +472,7 @@ void	PutPrimitivesInAreas( uEntity_t* e );
 void	Prelight( uEntity_t* e );
 
 // RB begin
-void	ClassifyLeavesByBspPolygons( uEntity_t* e );
+void	FilterMeshesIntoTree( uEntity_t* e );
 // RB end
 
 //=============================================================================

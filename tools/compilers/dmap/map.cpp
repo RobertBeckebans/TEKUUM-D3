@@ -3,6 +3,7 @@
 
 Doom 3 GPL Source Code
 Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2013-2015 Robert Beckebans
 
 This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
 
@@ -445,7 +446,7 @@ static void ParsePatch( const idMapPatch* patch, int primitiveNum )
 
 
 // RB begin
-static void ParsePolygonMesh( const MapPolygonMesh* mesh, int primitiveNum )
+static int ParsePolygonMesh( const MapPolygonMesh* mesh, int primitiveNum, int numPolygons )
 {
 	primitive_t* prim = ( primitive_t* )Mem_Alloc( sizeof( *prim ) );
 	memset( prim, 0, sizeof( *prim ) );
@@ -493,6 +494,8 @@ static void ParsePolygonMesh( const MapPolygonMesh* mesh, int primitiveNum )
 			bool fixedDegeneracies = false;
 			tri->planeNum = FindFloatPlane( plane, &fixedDegeneracies );
 			
+			tri->polygonId = numPolygons + i;
+			
 			tri->material = mat;
 			tri->next = prim->bsptris;
 			prim->bsptris = tri;
@@ -510,6 +513,8 @@ static void ParsePolygonMesh( const MapPolygonMesh* mesh, int primitiveNum )
 			}
 		}
 	}
+	
+	return mesh->GetNumPolygons();
 }
 // RB end
 
@@ -527,6 +532,8 @@ static bool	ProcessMapEntity( idMapEntity* mapEnt )
 	uEntity->mapEntity = mapEnt;
 	dmapGlobals.num_entities++;
 	
+	int numPolygons = 0;
+	
 	for( entityPrimitive = 0; entityPrimitive < mapEnt->GetNumPrimitives(); entityPrimitive++ )
 	{
 		prim = mapEnt->GetPrimitive( entityPrimitive );
@@ -542,7 +549,7 @@ static bool	ProcessMapEntity( idMapEntity* mapEnt )
 		// RB begin
 		else if( prim->GetType() == idMapPrimitive::TYPE_MESH )
 		{
-			ParsePolygonMesh( static_cast<MapPolygonMesh*>( prim ), entityPrimitive );
+			numPolygons += ParsePolygonMesh( static_cast<MapPolygonMesh*>( prim ), entityPrimitive, numPolygons );
 		}
 		// RB end
 	}

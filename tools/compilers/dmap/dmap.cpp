@@ -67,13 +67,13 @@ bool ProcessModel( uEntity_t* e, bool floodFill )
 	FilterBrushesIntoTree( e );
 	
 	// RB: use mapTri_t by MapPolygonMesh primitives in case we don't use brushes
-	ClassifyLeavesByBspPolygons( e );
+	FilterMeshesIntoTree( e );
 	
 	// RB: dump BSP for debugging
-	if( dmapGlobals.glview )
-	{
-		//WriteGLView( e->tree, "unclipped", dmapGlobals.entityNum );
-	}
+	//if( dmapGlobals.glview )
+	//{
+	//WriteGLView( e->tree, "unclipped", dmapGlobals.entityNum );
+	//}
 	// RB end
 	
 	// see if the bsp is completely enclosed

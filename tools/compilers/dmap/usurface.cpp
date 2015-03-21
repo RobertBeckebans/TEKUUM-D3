@@ -898,7 +898,6 @@ void AddMapTriToAreas( mapTri_t* tri, uEntity_t* e )
 /*
 =====================
 PutPrimitivesInAreas
-
 =====================
 */
 void PutPrimitivesInAreas( uEntity_t* e )
@@ -1069,7 +1068,7 @@ void PutPrimitivesInAreas( uEntity_t* e )
 
 
 // RB begin
-int ClassifyLeavesByBspPolygon_r( idWinding* w, mapTri_t* originalTri, node_t* node )
+int FilterMeshesIntoTree_r( idWinding* w, mapTri_t* originalTri, node_t* node )
 {
 	idWinding*		front, *back;
 	int				c;
@@ -1081,8 +1080,21 @@ int ClassifyLeavesByBspPolygon_r( idWinding* w, mapTri_t* originalTri, node_t* n
 	
 	if( node->planenum == PLANENUM_LEAF )
 	{
-		// HACK
-		MapPolygonMesh* mapMesh = ( MapPolygonMesh* ) originalTri->originalMapMesh;
+		// add it to the leaf list
+		if( originalTri->material->GetContentFlags() & CONTENTS_AREAPORTAL )
+		{
+			mapTri_t* list = CopyMapTri( originalTri );
+			list->next = NULL;
+			
+			//for( mapTri_t* tri = list; tri; tri = tri->next )
+			//{
+			//	tri->polygonId = originalTri->polygonId;
+			//}
+			
+			node->areaPortalTris = MergeTriLists( node->areaPortalTris, list );
+		}
+		
+		const MapPolygonMesh* mapMesh = originalTri->originalMapMesh;
 		
 		// classify the leaf by the structural brush
 		if( mapMesh->IsOpaque() )
@@ -1099,13 +1111,23 @@ int ClassifyLeavesByBspPolygon_r( idWinding* w, mapTri_t* originalTri, node_t* n
 	delete w;
 	
 	c = 0;
-	c += ClassifyLeavesByBspPolygon_r( front, originalTri, node->children[0] );
-	c += ClassifyLeavesByBspPolygon_r( back, originalTri, node->children[1] );
+	c += FilterMeshesIntoTree_r( front, originalTri, node->children[0] );
+	c += FilterMeshesIntoTree_r( back, originalTri, node->children[1] );
 	
 	return c;
 }
 
-void ClassifyLeavesByBspPolygons( uEntity_t* e )
+
+/*
+=====================
+FilterMeshesIntoTree
+
+Mark the leafs as opaque and areaportals and put mesh
+fragments in each leaf so portal surfaces can be matched
+to materials
+=====================
+*/
+void FilterMeshesIntoTree( uEntity_t* e )
 {
 	uBrush_t*		b;
 	primitive_t*	prim;
@@ -1113,7 +1135,7 @@ void ClassifyLeavesByBspPolygons( uEntity_t* e )
 	int				r;
 	int				c_unique, c_clusters;
 	
-	common->Printf( "----- ClassifyLeavesByBspPolygons -----\n" );
+	common->Printf( "----- FilterMeshesIntoTree -----\n" );
 	
 	c_unique = 0;
 	c_clusters = 0;
@@ -1129,7 +1151,7 @@ void ClassifyLeavesByBspPolygons( uEntity_t* e )
 				idWinding* w = WindingForTri( tri );
 				
 				c_unique++;
-				r = ClassifyLeavesByBspPolygon_r( w, tri, e->tree->headnode );
+				r = FilterMeshesIntoTree_r( w, tri, e->tree->headnode );
 				c_clusters += r;
 			}
 			continue;
