@@ -3150,7 +3150,7 @@ void idCommonLocal::Frame()
 			
 			if( com_speeds.GetBool() )
 			{
-				Printf( "frame:%i all:%3i gfr:%3i rf:%3i bk:%3i\n", com_frameNumber, com_frameMsec, time_gameFrame, time_frontend, time_backend );
+				Printf( "frame:%i all:%3i gfr:%3i rf:%3" PRIuSIZE " bk:%3" PRIuSIZE "\n", com_frameNumber, com_frameMsec, time_gameFrame, time_frontend, time_backend );
 			}
 			
 			time_lastGameFrame = time_gameFrame;
@@ -3169,7 +3169,7 @@ void idCommonLocal::Frame()
 		// the FPU stack better be empty at this point or some bad code or compiler bug left values on the stack
 		if( !Sys_FPU_StackIsEmpty() )
 		{
-			Printf( Sys_FPU_GetState() );
+			Printf( "%s", Sys_FPU_GetState() );
 			FatalError( "idCommon::Frame: the FPU stack is not empty at the end of the frame\n" );
 		}
 	}

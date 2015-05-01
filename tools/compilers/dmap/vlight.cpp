@@ -913,7 +913,7 @@ static void SetupLightGrid()
 		}
 	}
 	
-	idLib::Printf( "grid size (%i %i %i)\n", ( int )dmapGlobals.lightGridSize[0], ( int )dmapGlobals.lightGridSize[1], dmapGlobals.lightGridSize[2] );
+	idLib::Printf( "grid size (%i %i %i)\n", ( int )dmapGlobals.lightGridSize[0], ( int )dmapGlobals.lightGridSize[1], ( int )dmapGlobals.lightGridSize[2] );
 	idLib::Printf( "grid bounds (%i %i %i)\n", ( int )dmapGlobals.lightGridBounds[0], ( int )dmapGlobals.lightGridBounds[1], ( int )dmapGlobals.lightGridBounds[2] );
 	
 	
@@ -921,7 +921,7 @@ static void SetupLightGrid()
 	
 	dmapGlobals.lightGridPoints.SetNum( numGridPoints );
 	
-	idLib::Printf( "%9u x %u B = lightGridSize = (%.2fMB)\n", numGridPoints, sizeof( lightGridPoint_t ), ( float )( dmapGlobals.lightGridPoints.MemoryUsed() ) / ( 1024.0f * 1024.0f ) );
+	idLib::Printf( "%9u x %" PRIuSIZE " = lightGridSize = (%.2fMB)\n", numGridPoints, sizeof( lightGridPoint_t ), ( float )( dmapGlobals.lightGridPoints.MemoryUsed() ) / ( 1024.0f * 1024.0f ) );
 }
 
 /*

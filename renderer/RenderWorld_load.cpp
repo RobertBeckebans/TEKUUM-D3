@@ -712,7 +712,7 @@ void idRenderWorldLocal::ParseLightGridPoints( idLexer* src, idFile* fileOut )
 	
 	idLib::Printf( "light grid size (%i %i %i)\n", ( int )lightGridSize[0], ( int )lightGridSize[1], ( int )lightGridSize[2] );
 	idLib::Printf( "light grid bounds (%i %i %i)\n", ( int )lightGridBounds[0], ( int )lightGridBounds[1], ( int )lightGridBounds[2] );
-	idLib::Printf( "%9u x %u B = lightGridSize = (%.2fMB)\n", numLightGridPoints, sizeof( lightGridPoint_t ), ( float )( lightGridPoints.MemoryUsed() ) / ( 1024.0f * 1024.0f ) );
+	idLib::Printf( "%9u x %" PRIuSIZE " = lightGridSize = (%.2fMB)\n", numLightGridPoints, sizeof( lightGridPoint_t ), ( float )( lightGridPoints.MemoryUsed() ) / ( 1024.0f * 1024.0f ) );
 	
 	if( fileOut != NULL )
 	{
@@ -828,7 +828,7 @@ void idRenderWorldLocal::ReadBinaryLightGridPoints( idFile* file )
 	
 	idLib::Printf( "light grid size (%i %i %i)\n", ( int )lightGridSize[0], ( int )lightGridSize[1], ( int )lightGridSize[2] );
 	idLib::Printf( "light grid bounds (%i %i %i)\n", ( int )lightGridBounds[0], ( int )lightGridBounds[1], ( int )lightGridBounds[2] );
-	idLib::Printf( "%9u x %u B = lightGridSize = (%.2fMB)\n", numLightGridPoints, sizeof( lightGridPoint_t ), ( float )( lightGridPoints.MemoryUsed() ) / ( 1024.0f * 1024.0f ) );
+	idLib::Printf( "%9u x %" PRIuSIZE " = lightGridSize = (%.2fMB)\n", numLightGridPoints, sizeof( lightGridPoint_t ), ( float )( lightGridPoints.MemoryUsed() ) / ( 1024.0f * 1024.0f ) );
 	
 	for( int i = 0; i < numLightGridPoints; i++ )
 	{

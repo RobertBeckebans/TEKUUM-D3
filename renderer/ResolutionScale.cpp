@@ -186,7 +186,7 @@ void idResolutionScale::SetCurrentGPUFrameTime( int milliseconds )
 	
 	if( rs_showResolutionChanges.GetInteger() > 1 || ( rs_showResolutionChanges.GetInteger() == 1 && currentResolution != old ) )
 	{
-		idLib::Printf( "GPU msec: %4.1f resolutionScale: %4.2f\n", milliseconds, currentResolution );
+		idLib::Printf( "GPU msec: %4.1f resolutionScale: %4.2f\n", ( float )milliseconds, currentResolution );
 	}
 }
 

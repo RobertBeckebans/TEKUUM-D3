@@ -2424,7 +2424,7 @@ void ColladaParser::ExtractDataObjectFromChannel( const InputChannel& pInput, si
 		
 	const Accessor& acc = *pInput.mResolved;
 	if( pLocalIndex >= acc.mCount )
-		ThrowException( va( "Invalid data index (%d/%d) in primitive specification", pLocalIndex, acc.mCount ) );
+		ThrowException( va( "Invalid data index (%" PRIuSIZE "/%" PRIuSIZE ") in primitive specification", pLocalIndex, acc.mCount ) );
 		
 	// get a pointer to the start of the data object referred to by the accessor and the local index
 	const float* dataObject = &( acc.mData->mValues[0] ) + acc.mOffset + pLocalIndex * acc.mStride;

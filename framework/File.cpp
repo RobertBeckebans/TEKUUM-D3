@@ -32,6 +32,7 @@ If you have questions concerning this license or the applicable additional terms
 
 #include "Unzip.h"
 
+
 /*
 =================
 FS_WriteFloatString
@@ -113,7 +114,7 @@ int FS_WriteFloatString( char* buf, const char* fmt, va_list argPtr )
 						index += sprintf( buf + index, format.c_str(), str );
 						break;
 					case '%':
-						index += sprintf( buf + index, format.c_str() ); //-V618
+						index += sprintf( buf + index, "%s", format.c_str() );
 						break;
 					default:
 						common->Error( "FS_WriteFloatString: invalid format %s", format.c_str() );
@@ -795,9 +796,32 @@ int idFile_Memory::Read( void* buffer, int len )
 idFile_Memory::Write
 =================
 */
+idHashTableT< int, int > histogram;
+CONSOLE_COMMAND( outputHistogram, "", 0 )
+{
+	for( int i = 0; i < histogram.Num(); i++ )
+	{
+		int key;
+		histogram.GetIndexKey( i, key );
+		int* value = histogram.GetIndex( i );
+		
+		idLib::Printf( "%d\t%d\n", key, *value );
+	}
+}
+
+CONSOLE_COMMAND( clearHistogram, "", 0 )
+{
+	histogram.Clear();
+}
+
 int idFile_Memory::Write( const void* buffer, int len )
 {
-
+	if( len == 0 )
+	{
+		// ~4% falls into this case for some reason...
+		return 0;
+	}
+	
 	if( !( mode & ( 1 << FS_WRITE ) ) )
 	{
 		common->FatalError( "idFile_Memory::Write: %s not opened in write mode", name.c_str() );
@@ -809,7 +833,7 @@ int idFile_Memory::Write( const void* buffer, int len )
 	{
 		if( maxSize != 0 )
 		{
-			common->Error( "idFile_Memory::Write: exceeded maximum size %d", maxSize );
+			common->Error( "idFile_Memory::Write: exceeded maximum size %" PRIuSIZE "", maxSize );
 			return 0;
 		}
 		int extra = granularity * ( 1 + alloc / granularity );
@@ -826,7 +850,37 @@ int idFile_Memory::Write( const void* buffer, int len )
 		}
 		filePtr = newPtr;
 	}
+	
 	memcpy( curPtr, buffer, len );
+	//memcpy2( curPtr, buffer, len );
+	
+#if 0
+	if( memcpyImpl.GetInteger() == 0 )
+	{
+		memcpy( curPtr, buffer, len );
+	}
+	else if( memcpyImpl.GetInteger() == 1 )
+	{
+		memcpy( curPtr, buffer, len );
+	}
+	else if( memcpyImpl.GetInteger() == 2 )
+	{
+		memcpy2( curPtr, buffer, len );
+	}
+#endif
+	
+#if 0
+	int* value;
+	if( histogram.Get( len, &value ) && value != NULL )
+	{
+		( *value )++;
+	}
+	else
+	{
+		histogram.Set( len, 1 );
+	}
+#endif
+	
 	curPtr += len;
 	fileSize += len;
 	filePtr[ fileSize ] = 0; // len + 1
@@ -865,7 +919,7 @@ void idFile_Memory::PreAllocate( size_t len )
 	{
 		if( maxSize != 0 )
 		{
-			idLib::Error( "idFile_Memory::SetLength: exceeded maximum size %d", maxSize );
+			idLib::Error( "idFile_Memory::SetLength: exceeded maximum size %" PRIuSIZE "", maxSize );
 		}
 		char* newPtr = ( char* )Mem_Alloc( len );
 		if( allocated > 0 )
@@ -1051,7 +1105,7 @@ void idFile_Memory::TruncateData( size_t len )
 {
 	if( len > allocated )
 	{
-		idLib::Error( "idFile_Memory::TruncateData: len (%d) exceeded allocated size (%d)", len, allocated );
+		idLib::Error( "idFile_Memory::TruncateData: len (%" PRIuSIZE ") exceeded allocated size (%" PRIuSIZE ")", len, allocated );
 	}
 	else
 	{
@@ -1234,7 +1288,13 @@ idFile_Permanent::~idFile_Permanent()
 {
 	if( o )
 	{
+		// RB begin
+#if defined(_WIN32)
+		CloseHandle( o );
+#else
 		fclose( o );
+#endif
+		// RB end
 	}
 }
 
@@ -1270,7 +1330,20 @@ int idFile_Permanent::Read( void* buffer, int len )
 	while( remaining )
 	{
 		block = remaining;
+		
+		// RB begin
+#if defined(_WIN32)
+		DWORD bytesRead;
+		if( !ReadFile( o, buf, block, &bytesRead, NULL ) )
+		{
+			idLib::Warning( "idFile_Permanent::Read failed with %d from %s", GetLastError(), name.c_str() );
+		}
+		read = bytesRead;
+#else
 		read = fread( buf, 1, block, o );
+#endif
+		// RB end
+		
 		if( read == 0 )
 		{
 			// we might have been trying to read from a CD, which
@@ -1330,7 +1403,17 @@ int idFile_Permanent::Write( const void* buffer, int len )
 	while( remaining )
 	{
 		block = remaining;
+		
+		// RB begin
+#if defined(_WIN32)
+		DWORD bytesWritten;
+		WriteFile( o, buf, block, &bytesWritten, NULL );
+		written = bytesWritten;
+#else
 		written = fwrite( buf, 1, block, o );
+#endif
+		// RB end
+		
 		if( written == 0 )
 		{
 			if( !tries )
@@ -1356,7 +1439,7 @@ int idFile_Permanent::Write( const void* buffer, int len )
 	}
 	if( handleSync )
 	{
-		fflush( o );
+		Flush();
 	}
 	return len;
 }
@@ -1368,7 +1451,13 @@ idFile_Permanent::ForceFlush
 */
 void idFile_Permanent::ForceFlush()
 {
+	// RB begin
+#if defined(_WIN32)
+	FlushFileBuffers( o );
+#else
 	setvbuf( o, NULL, _IONBF, 0 );
+#endif
+	// RB end
 }
 
 /*
@@ -1378,7 +1467,13 @@ idFile_Permanent::Flush
 */
 void idFile_Permanent::Flush()
 {
+	// RB begin
+#if defined(_WIN32)
+	FlushFileBuffers( o );
+#else
 	fflush( o );
+#endif
+	// RB end
 }
 
 /*
@@ -1388,7 +1483,13 @@ idFile_Permanent::Tell
 */
 int idFile_Permanent::Tell() const
 {
+	// RB begin
+#if defined(_WIN32)
+	return SetFilePointer( o, 0, NULL, FILE_CURRENT );
+#else
 	return ftell( o );
+#endif
+	// RB end
 }
 
 /*
@@ -1421,6 +1522,23 @@ idFile_Permanent::Seek
 */
 int idFile_Permanent::Seek( long offset, fsOrigin_t origin )
 {
+	// RB begin
+#if defined(_WIN32)
+	int retVal = INVALID_SET_FILE_POINTER;
+	switch( origin )
+	{
+		case FS_SEEK_CUR:
+			retVal = SetFilePointer( o, offset, NULL, FILE_CURRENT );
+			break;
+		case FS_SEEK_END:
+			retVal = SetFilePointer( o, offset, NULL, FILE_END );
+			break;
+		case FS_SEEK_SET:
+			retVal = SetFilePointer( o, offset, NULL, FILE_BEGIN );
+			break;
+	}
+	return ( retVal == INVALID_SET_FILE_POINTER ) ? -1 : 0;
+#else
 	int _origin;
 	
 	switch( origin )
@@ -1449,6 +1567,8 @@ int idFile_Permanent::Seek( long offset, fsOrigin_t origin )
 	}
 	
 	return fseek( o, offset, _origin );
+#endif
+	// RB end
 }
 
 
@@ -1579,6 +1699,7 @@ int idFile_InZip::Seek( long offset, fsOrigin_t origin )
 		{
 			offset = fileSize - offset;
 		}
+		// FALLTHROUGH
 		case FS_SEEK_SET:
 		{
 			// set the file position in the zip file (also sets the current file info)
@@ -1589,6 +1710,7 @@ int idFile_InZip::Seek( long offset, fsOrigin_t origin )
 				return 0;
 			}
 		}
+		// FALLTHROUGH
 		case FS_SEEK_CUR:
 		{
 			buf = ( char* ) _alloca16( ZIP_SEEK_BUF_SIZE );
@@ -1636,3 +1758,96 @@ idFileLocal::~idFileLocal()
 	}
 }
 
+static const char* testEndianNessFilename = "temp.bin";
+struct testEndianNess_t
+{
+	testEndianNess_t()
+	{
+		a = 0x12345678;
+		b = 0x12345678;
+		c = 3.0f;
+		d = -4.0f;
+		e = "test";
+		f = idVec3( 1.0f, 2.0f, -3.0f );
+		g = false;
+		h = true;
+		for( int index = 0; index < sizeof( i ); index++ )
+		{
+			i[index] = 0x37;
+		}
+	}
+	bool operator==( testEndianNess_t& test ) const
+	{
+		return a == test.a &&
+			   b == test.b &&
+			   c == test.c &&
+			   d == test.d &&
+			   e == test.e &&
+			   f == test.f &&
+			   g == test.g &&
+			   h == test.h &&
+			   ( memcmp( i, test.i, sizeof( i ) ) == 0 );
+	}
+	int				a;
+	unsigned int	b;
+	float			c;
+	float			d;
+	idStr			e;
+	idVec3			f;
+	bool			g;
+	bool			h;
+	byte			i[10];
+};
+CONSOLE_COMMAND( testEndianNessWrite, "Tests the read/write compatibility between platforms", 0 )
+{
+	idFileLocal file( fileSystem->OpenFileWrite( testEndianNessFilename ) );
+	if( file == NULL )
+	{
+		idLib::Printf( "Couldn't open the %s testfile.\n", testEndianNessFilename );
+		return;
+	}
+	
+	testEndianNess_t testData;
+	
+	file->WriteBig( testData.a );
+	file->WriteBig( testData.b );
+	file->WriteFloat( testData.c );
+	file->WriteFloat( testData.d );
+	file->WriteString( testData.e );
+	file->WriteVec3( testData.f );
+	file->WriteBig( testData.g );
+	file->WriteBig( testData.h );
+	file->Write( testData.i, sizeof( testData.i ) / sizeof( testData.i[0] ) );
+}
+
+CONSOLE_COMMAND( testEndianNessRead, "Tests the read/write compatibility between platforms", 0 )
+{
+	idFileLocal file( fileSystem->OpenFileRead( testEndianNessFilename ) );
+	if( file == NULL )
+	{
+		idLib::Printf( "Couldn't find the %s testfile.\n", testEndianNessFilename );
+		return;
+	}
+	
+	testEndianNess_t srcData;
+	testEndianNess_t testData;
+	
+	memset( &testData, 0, sizeof( testData ) );
+	
+	file->ReadBig( testData.a );
+	file->ReadBig( testData.b );
+	file->ReadFloat( testData.c );
+	file->ReadFloat( testData.d );
+	file->ReadString( testData.e );
+	file->ReadVec3( testData.f );
+	file->ReadBig( testData.g );
+	file->ReadBig( testData.h );
+	file->Read( testData.i, sizeof( testData.i ) / sizeof( testData.i[0] ) );
+	
+	assert( srcData == testData );
+}
+
+CONSOLE_COMMAND( testEndianNessReset, "Tests the read/write compatibility between platforms", 0 )
+{
+	fileSystem->RemoveFile( testEndianNessFilename );
+}

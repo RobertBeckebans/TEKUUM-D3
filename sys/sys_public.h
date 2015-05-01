@@ -458,10 +458,10 @@ void			Sys_SetClipboardData( const char* string );
 
 // will go to the various text consoles
 // NOT thread safe - never use in the async paths
-void			Sys_Printf( const char* msg, ... )id_attribute( ( format( printf, 1, 2 ) ) );
+void			Sys_Printf( VERIFY_FORMAT_STRING const char* msg, ... );
 
 // guaranteed to be thread-safe
-void			Sys_DebugPrintf( const char* fmt, ... )id_attribute( ( format( printf, 1, 2 ) ) );
+void			Sys_DebugPrintf( VERIFY_FORMAT_STRING const char* fmt, ... );
 void			Sys_DebugVPrintf( const char* fmt, va_list arg );
 
 // a decent minimum sleep time to avoid going below the process scheduler speeds
@@ -577,9 +577,19 @@ void			Sys_ShowWindow( bool show );
 bool			Sys_IsWindowVisible();
 void			Sys_ShowConsole( int visLevel, bool quitOnClose );
 
+// This really isn't the right place to have this, but since this is the 'top level' include
+// and has a function signature with 'FILE' in it, it kinda needs to be here =/
 
-void			Sys_Mkdir( const char* path );
-ID_TIME_T		Sys_FileTimeStamp( FILE* fp );
+// RB begin
+#if defined(_WIN32)
+typedef HANDLE idFileHandle;
+#else
+typedef FILE* idFileHandle;
+#endif
+// RB end
+
+
+ID_TIME_T		Sys_FileTimeStamp( idFileHandle fp );
 // NOTE: do we need to guarantee the same output on all platforms?
 const char* 	Sys_TimeStampToStr( ID_TIME_T timeStamp );
 const char* 	Sys_DefaultCDPath();
@@ -809,7 +819,7 @@ void				Sys_TriggerEvent( int index = TRIGGER_EVENT_ZERO );
 class idSys
 {
 public:
-	virtual void			DebugPrintf( const char* fmt, ... )id_attribute( ( format( printf, 2, 3 ) ) ) = 0;
+	virtual void			DebugPrintf( VERIFY_FORMAT_STRING const char* fmt, ... ) = 0;
 	virtual void			DebugVPrintf( const char* fmt, va_list arg ) = 0;
 	
 	virtual double			GetClockTicks() = 0;

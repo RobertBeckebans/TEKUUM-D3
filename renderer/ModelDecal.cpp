@@ -678,7 +678,7 @@ static void R_CopyDecalSurface( idDrawVert* verts, int numVerts, triIndex_t* ind
 	const __m128i vector_color_mask = _mm_set_epi32( 0, -1, 0, 0 );
 	
 	// copy vertices and apply depth/time based fading
-	assert_offsetof( idDrawVert, color, 6 * 4 );
+	assert_offsetof( idDrawVert, color, DRAWVERT_COLOR_OFFSET );
 	for( int i = 0; i < decal->numVerts; i++ )
 	{
 		const idDrawVert& srcVert = decal->verts[i];

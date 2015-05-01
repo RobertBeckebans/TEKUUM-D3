@@ -75,11 +75,11 @@ public:
 	// Go back to the beginning of the file.
 	virtual void			Rewind();
 	// Like fprintf.
-	virtual int				Printf( const char* fmt, ... ) id_attribute( ( format( printf, 2, 3 ) ) );
+	virtual int				Printf( VERIFY_FORMAT_STRING const char* fmt, ... );
 	// Like fprintf but with argument pointer
 	virtual int				VPrintf( const char* fmt, va_list arg );
 	// Write a string with high precision floating point numbers to the file.
-	virtual int				WriteFloatString( const char* fmt, ... ) id_attribute( ( format( printf, 2, 3 ) ) );
+	virtual int				WriteFloatString( VERIFY_FORMAT_STRING const char* fmt, ... );
 	
 	// Endian portable alternatives to Read(...)
 	virtual int				ReadInt( int& value );
@@ -113,7 +113,6 @@ public:
 	virtual int				WriteVec6( const idVec6& vec );
 	virtual int				WriteMat3( const idMat3& mat );
 	
-#if 1
 	template<class type> ID_INLINE size_t ReadBig( type& c )
 	{
 		size_t r = Read( &c, sizeof( c ) );
@@ -144,7 +143,6 @@ public:
 		}
 		return r;
 	}
-#endif
 };
 
 /*
@@ -296,7 +294,7 @@ public:
 	virtual int				Seek( long offset, fsOrigin_t origin );
 	
 	// returns file pointer
-	FILE*					GetFilePtr()
+	idFileHandle			GetFilePtr()
 	{
 		return o;
 	}
@@ -306,8 +304,29 @@ private:
 	idStr					fullPath;		// full file path - OS path
 	int						mode;			// open mode
 	int						fileSize;		// size of the file
-	FILE* 					o;				// file handle
+	idFileHandle			o;				// file handle
 	bool					handleSync;		// true if written data is immediately flushed
+};
+
+class idFile_Cached : public idFile_Permanent
+{
+	friend class			idFileSystemLocal;
+public:
+	idFile_Cached();
+	virtual					~idFile_Cached();
+	
+	void					CacheData( uint64 offset, uint64 length );
+	
+	virtual int				Read( void* buffer, int len );
+	
+	virtual int				Tell() const;
+	virtual int				Seek( long offset, fsOrigin_t origin );
+	
+private:
+	uint64				internalFilePos;
+	uint64				bufferedStartOffset;
+	uint64				bufferedEndOffset;
+	byte* 				buffered;
 };
 
 
