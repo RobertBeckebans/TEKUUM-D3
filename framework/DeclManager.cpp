@@ -259,6 +259,9 @@ private:
 	static void					ListDecls_f( const idCmdArgs& args );
 	static void					ReloadDecls_f( const idCmdArgs& args );
 	static void					TouchDecl_f( const idCmdArgs& args );
+    // RB begin
+    static void                 ExportDecls_f( const idCmdArgs& args );
+    // RB end
 };
 
 idCVar idDeclManagerLocal::decl_show( "decl_show", "0", CVAR_SYSTEM, "set to 1 to print parses, 2 to also print references", 0, 2, idCmdSystem::ArgCompletion_Integer<0, 2> );
@@ -953,6 +956,10 @@ void idDeclManagerLocal::Init()
 	cmdSystem->AddCommand( "listHuffmanFrequencies", ListHuffmanFrequencies_f, CMD_FL_SYSTEM, "lists decl text character frequencies" );
 	
 	cmdSystem->AddCommand( "convertPDAsToStrings", ConvertPDAsToStrings_f, CMD_FL_SYSTEM, "Converts *.pda files to text which can be plugged into *.lang files." );
+
+    // RB begin
+    cmdSystem->AddCommand( "exportDeclsToJSON", ExportDecls_f, CMD_FL_SYSTEM, "exports all entity and model defs to exported/entities.json" );
+    // RB end
 	
 	common->Printf( "------------------------------\n" );
 }
@@ -1949,6 +1956,102 @@ void idDeclManagerLocal::TouchDecl_f( const idCmdArgs& args )
 		common->Printf( "%s '%s' not found\n", declManagerLocal.declTypes[i]->typeName.c_str(), args.Argv( 2 ) );
 	}
 }
+
+// RB begin
+void idDeclManagerLocal::ExportDecls_f( const idCmdArgs& args )
+{
+    idStr jsonStringsFileName = "exported/entities.json";
+    idFileLocal file( fileSystem->OpenFileWrite( jsonStringsFileName, "fs_basepath" ) );
+
+    if( file == NULL )
+    {
+        idLib::Printf( "Failed to entity declarations data to JSON.\n" );
+    }
+
+    int totalEntitiesCount = 0;
+    int totalModelsCount = 0;
+    idStr headEnd = "\t\"#str_%s_";
+    idStr tailEnd = "\"\t\"%s\"\n";
+    idStr temp;
+
+    // avoid media cache
+    com_editors |= EDITOR_AAS;
+
+    int count = declManagerLocal.linearLists[ DECL_ENTITYDEF ].Num();
+    for( int i = 0; i < count; i++ )
+    {
+        const idDeclEntityDef* decl = static_cast< const idDeclEntityDef* >( declManagerLocal.FindType( DECL_ENTITYDEF, declManagerLocal.linearLists[ DECL_ENTITYDEF ][ i ]->GetName(), false ) );
+
+        //idStr pdaBaseStrId = va( headEnd.c_str(), decl->GetName() );
+
+        totalEntitiesCount++;
+
+        temp = va( "//////// %s Entity ////////////\n", decl->GetName() );
+        file->Write( temp, temp.Length() );
+
+#if 0
+        idStr pdaBase = pdaBaseStrId + "pda_%s" + tailEnd;
+        // Pda Name
+        temp = va( pdaBase.c_str(), "name", decl->GetPdaName() );
+        file->Write( temp, temp.Length() );
+        // Full Name
+        temp = va( pdaBase.c_str(), "fullname", decl->GetFullName() );
+        file->Write( temp, temp.Length() );
+        // ID
+        temp = va( pdaBase.c_str(), "id", decl->GetID() );
+        file->Write( temp, temp.Length() );
+        // Post
+        temp = va( pdaBase.c_str(), "post", decl->GetPost() );
+        file->Write( temp, temp.Length() );
+        // Title
+        temp = va( pdaBase.c_str(), "title", decl->GetTitle() );
+        file->Write( temp, temp.Length() );
+        // Security
+        temp = va( pdaBase.c_str(), "security", decl->GetSecurity() );
+        file->Write( temp, temp.Length() );
+
+        int emailCount = decl->GetNumEmails();
+        for( int emailIter = 0; emailIter < emailCount; emailIter++ )
+        {
+            const idDeclEmail* email = decl->GetEmailByIndex( emailIter );
+
+            idStr emailBaseStrId = va( headEnd.c_str(), email->GetName() );
+            idStr emailBase = emailBaseStrId + "email_%s" + tailEnd;
+
+            file->Write( "\t//Email\n", 9 );
+            // Date
+            temp = va( emailBase, "date", email->GetDate() );
+            file->Write( temp, temp.Length() );
+            // To
+            temp = va( emailBase, "to", email->GetTo() );
+            file->Write( temp, temp.Length() );
+            // From
+            temp = va( emailBase, "from", email->GetFrom() );
+            file->Write( temp, temp.Length() );
+            // Subject
+            temp = va( emailBase, "subject", email->GetSubject() );
+            file->Write( temp, temp.Length() );
+            // Body
+            idStr body = email->GetBody();
+            body.Replace( "\n", "\\n" );
+            temp = va( emailBase, "text", body.c_str() );
+            file->Write( temp, temp.Length() );
+
+            totalEmailCount++;
+        }
+#endif
+    }
+
+    file->Flush();
+
+    com_editors &= ~EDITOR_AAS;
+
+    idLib::Printf( "\nData written to %s\n", jsonStringsFileName.c_str() );
+    idLib::Printf( "----------------------------\n" );
+    idLib::Printf( "Wrote %d Entities.\n", totalEntitiesCount );
+    idLib::Printf( "Wrote %d Modelss.\n", totalModelsCount );
+}
+// RB  end
 
 /*
 ===================
