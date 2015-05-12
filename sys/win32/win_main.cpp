@@ -710,7 +710,7 @@ DLL Loading
 Sys_DLL_Load
 =====================
 */
-int Sys_DLL_Load( const char *dllName ) {
+intptr_t Sys_DLL_Load( const char *dllName ) {
 	HINSTANCE	libHandle;
 	libHandle = LoadLibrary( dllName );
 	if ( libHandle ) {
@@ -723,7 +723,7 @@ int Sys_DLL_Load( const char *dllName ) {
 			return 0;
 		}
 	}
-	return (int)libHandle;
+	return (intptr_t)libHandle;
 }
 
 /*
@@ -1065,8 +1065,14 @@ void Sys_Init() {
 			win32.sys_arch.SetString( "Win2K (NT)" );
 		} else if( win32.osversion.dwMajorVersion == 5 && win32.osversion.dwMinorVersion == 1 ) {
 			win32.sys_arch.SetString( "WinXP (NT)" );
-		} else if ( win32.osversion.dwMajorVersion == 6 ) {
+		} else if( win32.osversion.dwMajorVersion == 6 ) {
 			win32.sys_arch.SetString( "Vista" );
+		} else if( win32.osversion.dwMajorVersion == 6 && win32.osversion.dwMinorVersion == 1 ) {
+			win32.sys_arch.SetString( "Win7" );
+		} else if( win32.osversion.dwMajorVersion == 6 && win32.osversion.dwMinorVersion == 2 ) {
+			win32.sys_arch.SetString( "Win8" );
+		} else if( win32.osversion.dwMajorVersion == 6 && win32.osversion.dwMinorVersion == 3 ) {
+			win32.sys_arch.SetString( "Win8.1" );
 		} else {
 			win32.sys_arch.SetString( "Unknown NT variant" );
 		}
@@ -1230,34 +1236,6 @@ void Win_Frame() {
 		}
 		win32.win_viewlog.ClearModified();
 	}
-}
-
-extern "C" { void _chkstk( int size ); };
-void clrstk();
-
-/*
-====================
-TestChkStk
-====================
-*/
-void TestChkStk() {
-	int		buffer[0x1000];
-
-	buffer[0] = 1;
-}
-
-/*
-====================
-HackChkStk
-====================
-*/
-void HackChkStk() {
-	DWORD	old;
-	VirtualProtect( _chkstk, 6, PAGE_EXECUTE_READWRITE, &old );
-	*(byte *)_chkstk = 0xe9;
-	*(int *)((int)_chkstk+1) = (int)clrstk - (int)_chkstk - 5;
-
-	TestChkStk();
 }
 
 /*
@@ -1624,41 +1602,7 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 }
 #endif // #if !defined(USE_QT_WINDOWING)
 
-/*
-====================
-clrstk
 
-I tried to get the run time to call this at every function entry, but
-====================
-*/
-static int	parmBytes;
-__declspec( naked ) void clrstk() {
-	// eax = bytes to add to stack
-	__asm {
-		mov		[parmBytes],eax
-        neg     eax                     ; compute new stack pointer in eax
-        add     eax,esp
-        add     eax,4
-        xchg    eax,esp
-        mov     eax,dword ptr [eax]		; copy the return address
-        push    eax
-        
-        ; clear to zero
-        push	edi
-        push	ecx
-        mov		edi,esp
-        add		edi,12
-        mov		ecx,[parmBytes]
-		shr		ecx,2
-        xor		eax,eax
-		cld
-        rep	stosd
-        pop		ecx
-        pop		edi
-        
-        ret
-	}
-}
 
 /*
 ==================

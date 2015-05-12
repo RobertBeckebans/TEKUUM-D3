@@ -488,7 +488,7 @@ private:
 	int						ListOSFiles( const char* directory, const char* extension, idStrList& list );
 	FILE* 					OpenOSFile( const char* name, const char* mode, idStr* caseSensitiveName = NULL );
 	FILE* 					OpenOSFileCorrectName( idStr& path, const char* mode );
-	int						DirectFileLength( FILE* o );
+	int						DirectFileLength( idFileHandle o );
 	void					CopyFile( idFile* src, const char* toOSPath );
 	int						AddUnique( const char* name, idStrList& list, idHashIndex& hashIndex ) const;
 	void					GetExtensionList( const char* extension, idStrList& extensionList ) const;
@@ -725,8 +725,12 @@ FILE* idFileSystemLocal::OpenOSFileCorrectName( idStr& path, const char* mode )
 idFileSystemLocal::DirectFileLength
 ================
 */
-int idFileSystemLocal::DirectFileLength( FILE* o )
+int idFileSystemLocal::DirectFileLength( idFileHandle o )
 {
+	// RB begin
+#if defined(_WIN32)
+	return GetFileSize( o, NULL );
+#else
 	int		pos;
 	int		end;
 	
@@ -734,7 +738,10 @@ int idFileSystemLocal::DirectFileLength( FILE* o )
 	fseek( o, 0, SEEK_END );
 	end = ftell( o );
 	fseek( o, pos, SEEK_SET );
+	
 	return end;
+#endif
+	// RB end
 }
 
 /*
@@ -1065,11 +1072,25 @@ void idFileSystemLocal::RemoveFile( const char* relativePath )
 	if( fs_devpath.GetString()[0] )
 	{
 		OSPath = BuildOSPath( fs_devpath.GetString(), gameFolder, relativePath );
+		
+		// RB begin
+#if defined(_WIN32)
+		::DeleteFile( OSPath );
+#else
 		remove( OSPath );
+#endif
+		// RB end
 	}
 	
 	OSPath = BuildOSPath( fs_savepath.GetString(), gameFolder, relativePath );
+	
+	// RB begin
+#if defined(_WIN32)
+	::DeleteFile( OSPath );
+#else
 	remove( OSPath );
+#endif
+	// RB end
 	
 	ClearDirCache();
 }
@@ -4238,11 +4259,15 @@ size_t idFileSystemLocal::CurlWriteFunction( void* ptr, size_t size, size_t nmem
 	{
 		return size * nmemb;
 	}
-#ifdef _WIN32
-	return _write( static_cast<idFile_Permanent*>( bgl->f )->GetFilePtr()->_file, ptr, size * nmemb );
+	// RB begin
+#if defined(_WIN32)
+	DWORD bytesWritten;
+	::WriteFile( static_cast<idFile_Permanent*>( bgl->f )->GetFilePtr(), ptr, size * nmemb, &bytesWritten, NULL );
+	return bytesWritten;
 #else
 	return fwrite( ptr, size, nmemb, static_cast<idFile_Permanent*>( bgl->f )->GetFilePtr() );
 #endif
+	// RB end
 }
 
 /*
@@ -4291,7 +4316,10 @@ dword BackgroundDownloadThread( void* parms )
 		{
 			// use the low level read function, because fread may allocate memory
 #if defined(WIN32)
-			_read( static_cast<idFile_Permanent*>( bgl->f )->GetFilePtr()->_file, bgl->file.buffer, bgl->file.length );
+			// RB begin
+			DWORD bytesRead;
+			ReadFile( static_cast<idFile_Permanent*>( bgl->f )->GetFilePtr(), bgl->file.buffer, bgl->file.length, &bytesRead, NULL );
+			// RB end
 #else
 			fread( bgl->file.buffer, bgl->file.length, 1, static_cast<idFile_Permanent*>( bgl->f )->GetFilePtr() );
 #endif

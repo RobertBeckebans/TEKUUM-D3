@@ -224,7 +224,7 @@ public:
 	//! Direct access operator
 	const T& operator [](u32 index) const
 	{
-		_IRR_DEBUG_BREAK_IF(index>=used) // access violation
+		_IRR_DEBUG_BREAK_IF(index >= used) // access violation
 
 		return data[index];
 	}
