@@ -3,6 +3,7 @@
 
 Doom 3 GPL Source Code
 Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2015 Robert Beckebans
 
 This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
 
@@ -1086,11 +1087,6 @@ int FilterMeshesIntoTree_r( idWinding* w, mapTri_t* originalTri, node_t* node )
 			mapTri_t* list = CopyMapTri( originalTri );
 			list->next = NULL;
 			
-			//for( mapTri_t* tri = list; tri; tri = tri->next )
-			//{
-			//	tri->polygonId = originalTri->polygonId;
-			//}
-			
 			node->areaPortalTris = MergeTriLists( node->areaPortalTris, list );
 		}
 		
@@ -1282,135 +1278,6 @@ static void BoundOptimizeGroup( optimizeGroup_t* group )
 
 /*
 ====================
-BuildLightShadows
-
-Build the beam tree and shadow volume surface for a light
-====================
-*/
-static void BuildLightShadows( uEntity_t* e, mapLight_t* light )
-{
-	int			i;
-	optimizeGroup_t*	group;
-	mapTri_t*	tri;
-	mapTri_t*	shadowers;
-	optimizeGroup_t*		shadowerGroups;
-	idVec3		lightOrigin;
-	bool		hasPerforatedSurface = false;
-	
-	//
-	// build a group list of all the triangles that will contribute to
-	// the optimized shadow volume, leaving the original triangles alone
-	//
-	
-	
-	// shadowers will contain all the triangles that will contribute to the
-	// shadow volume
-	shadowerGroups = NULL;
-	lightOrigin = light->def.globalLightOrigin;
-	
-	// if the light is no-shadows, don't add any surfaces
-	// to the beam tree at all
-	if( !light->def.parms.noShadows
-			&& light->def.lightShader->LightCastsShadows() )
-	{
-		for( i = 0 ; i < e->numAreas ; i++ )
-		{
-			for( group = e->areas[i].groups ; group ; group = group->nextGroup )
-			{
-				// if the surface doesn't cast shadows, skip it
-				if( !group->material->SurfaceCastsShadow() )
-				{
-					continue;
-				}
-				
-				// if the group doesn't face away from the light, it
-				// won't contribute to the shadow volume
-				if( dmapGlobals.mapPlanes[ group->planeNum ].Distance( lightOrigin ) > 0 )
-				{
-					continue;
-				}
-				
-				// if the group bounds doesn't intersect the light bounds,
-				// skip it
-				if( !group->bounds.IntersectsBounds( light->def.globalLightBounds ) )
-				{
-					continue;
-				}
-				
-				// build up a list of the triangle fragments inside the
-				// light frustum
-				shadowers = NULL;
-				for( tri = group->triList ; tri ; tri = tri->next )
-				{
-					mapTri_t*	in, *out;
-					
-					// clip it to the light frustum
-					ClipTriByLight( light, tri, &in, &out );
-					FreeTriList( out );
-					shadowers = MergeTriLists( shadowers, in );
-				}
-				
-				// if we didn't get any out of this group, we don't
-				// need to create a new group in the shadower list
-				if( !shadowers )
-				{
-					continue;
-				}
-				
-				// find a group in shadowerGroups to add these to
-				// we will ignore everything but planenum, and we
-				// can merge across areas
-				optimizeGroup_t*	check;
-				
-				for( check = shadowerGroups ; check ; check = check->nextGroup )
-				{
-					if( check->planeNum == group->planeNum )
-					{
-						break;
-					}
-				}
-				if( !check )
-				{
-					check = ( optimizeGroup_t* )Mem_Alloc( sizeof( *check ) );
-					*check = *group;
-					check->triList = NULL;
-					check->nextGroup = shadowerGroups;
-					shadowerGroups = check;
-				}
-				
-				// if any surface is a shadow-casting perforated or translucent surface, we
-				// can't use the face removal optimizations because we can see through
-				// some of the faces
-				if( group->material->Coverage() != MC_OPAQUE )
-				{
-					hasPerforatedSurface = true;
-				}
-				
-				check->triList = MergeTriLists( check->triList, shadowers );
-			}
-		}
-	}
-	
-	
-	// RB FIXME
-	// take the shadower group list and create a beam tree and shadow volume
-	//light->shadowTris = CreateLightShadow( shadowerGroups, light );
-	light->shadowTris = NULL;
-	
-	if( light->shadowTris && hasPerforatedSurface )
-	{
-		// can't ever remove front faces, because we can see through some of them
-		light->shadowTris->numShadowIndexesNoCaps = light->shadowTris->numShadowIndexesNoFrontCaps =
-					light->shadowTris->numIndexes;
-	}
-	
-	// we don't need the original shadower triangles for anything else
-	FreeOptimizeGroupList( shadowerGroups );
-}
-
-
-/*
-====================
 CarveGroupsByLight
 
 Divide each group into an inside group and an outside group, based
@@ -1540,12 +1407,6 @@ void Prelight( uEntity_t* e )
 			{
 				BoundOptimizeGroup( group );
 			}
-		}
-		
-		for( i = 0 ; i < dmapGlobals.mapLights.Num() ; i++ )
-		{
-			light = dmapGlobals.mapLights[i];
-			BuildLightShadows( e, light );
 		}
 		
 		end = Sys_Milliseconds();

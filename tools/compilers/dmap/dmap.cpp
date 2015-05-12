@@ -415,6 +415,9 @@ void Dmap( const idCmdArgs& args )
 	sprintf( path, "%s.lin", dmapGlobals.mapFileBase );
 	fileSystem->RemoveFile( path );
 	
+	// delete any old generated binary proc files
+	idStr generated = va( "generated/%s.bproc", dmapGlobals.mapFileBase );
+	fileSystem->RemoveFile( generated.c_str() );
 	
 	//
 	// start from scratch

@@ -38,7 +38,6 @@ typedef struct primitive_s
 	struct bspbrush_s* 	brush;
 	struct mapTri_s* 	tris;
 	struct mapTri_s*	bsptris;
-	//struct mapMesh_s*	polygons;
 } primitive_t;
 
 
@@ -84,24 +83,6 @@ typedef struct mapTri_s
 	const struct hashVert_s* hashVert[3];
 	struct optVertex_s* optVert[3];
 } mapTri_t;
-
-// RB begin
-/*
-typedef struct mapPoly_s
-{
-	struct mapPoly_s* 	next;
-
-	const idMaterial* 	material;
-	void* 				mergeGroup;		// we want to avoid merging triangles
-
-	// from different fixed groups, like guiSurfs and mirrors
-	int					planeNum;			// not set universally, just in some areas
-
-	int					numVerts;
-	idDrawVert*			v;
-} mapPoly_t;
-*/
-// RB end
 
 typedef struct
 {
@@ -183,14 +164,13 @@ typedef struct node_s
 	idBounds			bounds;		// valid after portalization
 	
 	// nodes only
-//	side_t* 			side;		// the side that created the node
 	struct node_s* 		children[2];
 	int					nodeNumber;	// set after pruning
 	
 	// leafs only
 	bool				opaque;		// view can never be inside
 	
-	// needed for FindSideForPortal
+	// RB: needed for areaportal construction
 	uBrush_t* 			brushlist;	// fragments of all brushes in this leaf
 	mapTri_t*			areaPortalTris;
 	// --
@@ -566,16 +546,6 @@ int			NumberNodes_r( node_t* node, int nextNumber );
 
 srfTriangles_t*	ShareMapTriVerts( const mapTri_t* tris );
 void WriteOutputFile();
-
-//=============================================================================
-
-// shadowopt.cpp
-#if 0
-srfTriangles_t* CreateLightShadow( optimizeGroup_t* shadowerGroups, const mapLight_t* light );
-void		FreeBeamTree( struct beamTree_s* beamTree );
-
-void		CarveTriByBeamTree( const struct beamTree_s* beamTree, const mapTri_t* tri, mapTri_t** lit, mapTri_t** unLit );
-#endif
 
 //=============================================================================
 

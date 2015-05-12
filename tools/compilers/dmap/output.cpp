@@ -180,11 +180,14 @@ static bool MatchVert( const idDrawVert* a, const idDrawVert* b )
 	{
 		return false;
 	}
-	if( idMath::Fabs( a->GetTexCoordNativeS() - b->GetTexCoordNativeS() ) > ST_EPSILON )
+	
+	const idVec2& aST = a->GetTexCoord();
+	const idVec2& bST = a->GetTexCoord();
+	if( idMath::Fabs( aST[0] - bST[0] ) > ST_EPSILON )
 	{
 		return false;
 	}
-	if( idMath::Fabs( a->GetTexCoordNativeT() - b->GetTexCoordNativeT() ) > ST_EPSILON )
+	if( idMath::Fabs( aST[1] - bST[1] ) > ST_EPSILON )
 	{
 		return false;
 	}
@@ -197,7 +200,7 @@ static bool MatchVert( const idDrawVert* a, const idDrawVert* b )
 	}
 	
 	// otherwise do a dot-product cosine check
-	if( DotProduct( a->GetNormal(), b->GetNormal() ) < COSINE_EPSILON )
+	if( ( a->GetNormal() * b->GetNormal() ) < COSINE_EPSILON )
 	{
 		return false;
 	}

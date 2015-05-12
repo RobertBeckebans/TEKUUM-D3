@@ -58,11 +58,6 @@ FreeTri
 */
 void		FreeTri( mapTri_t* tri )
 {
-	//if( tri->visibleHull )
-	//{
-	//delete tri->visibleHull;
-	//}
-	
 	Mem_Free( tri );
 }
 
@@ -435,20 +430,3 @@ void	PlaneForTri( const mapTri_t* tri, idPlane& plane )
 {
 	plane.FromPoints( tri->v[0].xyz, tri->v[1].xyz, tri->v[2].xyz );
 }
-
-/*
-mapPoly_t*	AllocPoly()
-{
-	mapPoly_t*	poly;
-
-	poly = ( mapPoly_t* )Mem_Alloc( sizeof( *poly ) );
-	memset( poly, 0, sizeof( *poly ) );
-	return poly;
-}
-
-void		FreePoly( mapPoly_t* poly )
-{
-	Mem_Free( poly->v );
-	Mem_Free( poly );
-}
-*/
