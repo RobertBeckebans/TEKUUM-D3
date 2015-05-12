@@ -3,6 +3,7 @@
 
 Doom 3 GPL Source Code
 Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2015 Robert Beckebans
 
 This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
 
@@ -366,6 +367,57 @@ static void ClipSideByTree_r( idWinding* w, side_t* side, node_t* node )
 	return;
 }
 
+// RB begin
+/*
+static void ClipTriByTree_r( idWinding* w, mapTri_t* originalTri, node_t* node )
+{
+	idWinding*		front, *back;
+
+	if( !w )
+	{
+		return;
+	}
+
+	if( node->planenum != PLANENUM_LEAF )
+	{
+		if( originalTri->planeNum == node->planenum )
+		{
+			ClipTriByTree_r( w, originalTri, node->children[0] );
+			return;
+		}
+		if( originalTri->planeNum == ( node->planenum ^ 1 ) )
+		{
+			ClipTriByTree_r( w, originalTri, node->children[1] );
+			return;
+		}
+
+		w->Split( dmapGlobals.mapPlanes[ node->planenum ], ON_EPSILON, &front, &back );
+		delete w;
+
+		ClipTriByTree_r( front, originalTri, node->children[0] );
+		ClipTriByTree_r( back, originalTri, node->children[1] );
+
+		return;
+	}
+
+	// if opaque leaf, don't add
+	if( !node->opaque )
+	{
+		if( !originalTri->visibleHull )
+		{
+			originalTri->visibleHull = w->Copy();
+		}
+		else
+		{
+			originalTri->visibleHull->AddToConvexHull( w, dmapGlobals.mapPlanes[ originalTri->planeNum ].Normal() );
+		}
+	}
+
+	delete w;
+	return;
+}
+*/
+// RB end
 
 /*
 =====================
@@ -384,9 +436,12 @@ void ClipSidesByTree( uEntity_t* e )
 	int				i;
 	idWinding*		w;
 	side_t*			side;
-	primitive_t*		prim;
-	
+	primitive_t*	prim;
+//	mapTri_t*		tri;
+
 	common->Printf( "----- ClipSidesByTree -----\n" );
+	
+	int c_tris = 0;
 	
 	for( prim = e->primitives ; prim ; prim = prim->next )
 	{
@@ -394,8 +449,52 @@ void ClipSidesByTree( uEntity_t* e )
 		if( !b )
 		{
 			// FIXME: other primitives!
+			
+			// RB: add new polygon mesh
+#if 0
+			for( tri = prim->bsptris ; tri ; tri = tri->next, c_tris++ )
+			{
+#if 0
+				for( int i = 0; i < 3; i++ )
+				{
+					const idVec3& testPos = tri->v[i].xyz;
+					
+					node_t* node = NodeForPoint( e->tree->headnode, testPos );
+					
+					if( node->opaque )
+					{
+						common->Printf( "ClipSidesByTree: triangle %i vertex %i in the void at %s\n", c_tris, i, testPos.ToString() );
+					}
+					else
+					{
+						common->Printf( "ClipSidesByTree: triangle %i vertex %i valid at %s\n", c_tris, i, testPos.ToString() );
+					}
+				}
+#endif
+				
+				idWinding* w = WindingForTri( tri );
+				
+				// evil HACK
+				//w->BaseForPlane( dmapGlobals.mapPlanes[ tri->planeNum] );
+				//w->ReverseSelf();
+				
+				tri->visibleHull = NULL;
+				ClipTriByTree_r( w, tri, e->tree->headnode );
+				
+				// for debugging, we can choose to use the entire original side
+				// but we skip this if the side was completely clipped away
+				if( tri->visibleHull && dmapGlobals.noClipSides )
+				{
+					delete tri->visibleHull;
+					tri->visibleHull = WindingForTri( tri );
+				}
+			}
+#endif
+			// RB end
+			
 			continue;
 		}
+		
 		for( i = 0 ; i < b->numsides ; i++ )
 		{
 			side = &b->sides[i];
@@ -403,9 +502,34 @@ void ClipSidesByTree( uEntity_t* e )
 			{
 				continue;
 			}
+			
 			w = side->winding->Copy();
 			side->visibleHull = NULL;
 			ClipSideByTree_r( w, side, e->tree->headnode );
+			
+			
+#if 0
+			if( side->visibleHull )
+			{
+				for( int j = 0; j < side->winding->GetNumPoints(); j++ )
+				{
+					idWinding* w = side->winding;
+					const idVec5& testPos = ( *w )[j];
+					
+					node_t* node = NodeForPoint( e->tree->headnode, testPos.ToVec3() );
+					
+					if( node->opaque )
+					{
+						common->Printf( "ClipSidesByTree: winding %i vertex %i in the void at %s\n", i, j, testPos.ToString() );
+					}
+					else
+					{
+						common->Printf( "ClipSidesByTree: winding %i vertex %i valid at %s\n", i, j, testPos.ToString() );
+					}
+				}
+			}
+#endif
+			
 			// for debugging, we can choose to use the entire original side
 			// but we skip this if the side was completely clipped away
 			if( side->visibleHull && dmapGlobals.noClipSides )
@@ -440,6 +564,8 @@ void ClipTriIntoTree_r( idWinding* w, mapTri_t* originalTri, uEntity_t* e, node_
 	
 	if( node->planenum != PLANENUM_LEAF )
 	{
+		//common->Printf( "ClipTriIntoTree_r: splitting triangle with splitplane %i\n", node->nodeNumber );
+		
 		w->Split( dmapGlobals.mapPlanes[ node->planenum ], ON_EPSILON, &front, &back );
 		delete w;
 		
@@ -448,6 +574,8 @@ void ClipTriIntoTree_r( idWinding* w, mapTri_t* originalTri, uEntity_t* e, node_
 		
 		return;
 	}
+	
+	//common->Printf( "ClipTriIntoTree_r: leaf area = %i, opaque = %i, occupied = %i\n", node->area, node->occupied );
 	
 	// if opaque leaf, don't add
 	if( !node->opaque && node->area >= 0 )
@@ -470,6 +598,8 @@ void ClipTriIntoTree_r( idWinding* w, mapTri_t* originalTri, uEntity_t* e, node_
 	delete w;
 	return;
 }
+
+
 
 
 
@@ -604,6 +734,8 @@ static void PutWindingIntoAreas_r( uEntity_t* e, const idWinding* w, side_t* sid
 		return;
 	}
 	
+	//common->Printf( "PutWindingIntoAreas_r: leaf area = %i, opaque = %i\n", node->area, (int) node->opaque );
+	
 	// if opaque leaf, don't add
 	if( node->area >= 0 && !node->opaque )
 	{
@@ -613,6 +745,97 @@ static void PutWindingIntoAreas_r( uEntity_t* e, const idWinding* w, side_t* sid
 		AddTriListToArea( e, tri, side->planenum, node->area, &side->texVec );
 	}
 }
+
+// RB begin
+static void PutTriIntoAreas_r( uEntity_t* e, const idWinding* w, mapTri_t* originalTri, node_t* node )
+{
+	idWinding*		front, *back;
+	int				area;
+	
+	if( !w )
+	{
+		return;
+	}
+	
+	if( node->planenum != PLANENUM_LEAF )
+	{
+		if( originalTri->planeNum == node->planenum )
+		{
+			PutTriIntoAreas_r( e, w, originalTri, node->children[0] );
+			return;
+		}
+		
+		if( originalTri->planeNum == ( node->planenum ^ 1 ) )
+		{
+			PutTriIntoAreas_r( e, w, originalTri, node->children[1] );
+			return;
+		}
+		
+		// see if we need to split it
+		// adding the "noFragment" flag to big surfaces like sky boxes
+		// will avoid potentially dicing them up into tons of triangles
+		// that take forever to optimize back together
+		if( !dmapGlobals.fullCarve || originalTri->material->NoFragment() )
+		{
+			area = CheckWindingInAreas_r( w, node );
+			if( area >= 0 )
+			{
+				mapTri_t*	list;
+				int			planeNum;
+				idPlane		plane;
+				textureVectors_t	texVec;
+				
+				list = WindingToTriList( w, originalTri );
+				
+				PlaneForTri( originalTri, plane );
+				planeNum = FindFloatPlane( plane );
+				
+				TexVecForTri( &texVec, originalTri );
+				
+				// put in single area
+				AddTriListToArea( e, list, planeNum, area, &texVec );
+				return;
+			}
+		}
+		
+		w->Split( dmapGlobals.mapPlanes[ node->planenum ], ON_EPSILON, &front, &back );
+		
+		PutTriIntoAreas_r( e, front, originalTri, node->children[0] );
+		if( front )
+		{
+			delete front;
+		}
+		
+		PutTriIntoAreas_r( e, back, originalTri, node->children[1] );
+		if( back )
+		{
+			delete back;
+		}
+		
+		return;
+	}
+	
+	common->Printf( "PutTriIntoAreas_r: leaf area = %i, opaque = %i\n", node->area, ( int ) node->opaque );
+	
+	// if opaque leaf, don't add
+	if( node->area >= 0 && !node->opaque )
+	{
+		mapTri_t*	list;
+		int			planeNum;
+		idPlane		plane;
+		textureVectors_t	texVec;
+		
+		list = WindingToTriList( w, originalTri );
+		
+		PlaneForTri( originalTri, plane );
+		planeNum = FindFloatPlane( plane );
+		
+		TexVecForTri( &texVec, originalTri );
+		
+		AddTriListToArea( e, list, planeNum, node->area, &texVec );
+	}
+}
+// RB end
 
 /*
 ==================
@@ -676,7 +899,6 @@ void AddMapTriToAreas( mapTri_t* tri, uEntity_t* e )
 /*
 =====================
 PutPrimitivesInAreas
-
 =====================
 */
 void PutPrimitivesInAreas( uEntity_t* e )
@@ -706,6 +928,53 @@ void PutPrimitivesInAreas( uEntity_t* e )
 			{
 				AddMapTriToAreas( tri, e );
 			}
+			
+			// RB: add new polygon mesh
+			for( tri = prim->bsptris ; tri ; tri = tri->next )
+			{
+			
+#if 1
+				// FIXME reverse vertex order for drawing
+				idDrawVert tmp = tri->v[0];
+				tri->v[0] = tri->v[2];
+				tri->v[2] = tmp;
+#endif
+				
+#if 0
+				// move tri inwards along face normal
+				//idPlane& plane = dmapGlobals.mapPlanes[ tri->planeNum ];
+				
+				idPlane plane;
+				plane.FromPoints( tri->v[0].xyz, tri->v[1].xyz, tri->v[2].xyz );
+				
+				for( i = 0; i < 3; i++ )
+				{
+					tri->v[i].xyz += ( plane.Normal() * 1 );
+				}
+#endif
+				
+#if 1
+				AddMapTriToAreas( tri, e );
+#elif 0
+				idWinding* w = WindingForTri( tri );
+				
+				PutTriIntoAreas_r( e,  w, tri, e->tree->headnode );
+				
+				delete w;
+#else
+				if( !tri->visibleHull )
+				{
+					continue;
+				}
+				
+				//
+				PutTriIntoAreas_r( e,  tri->visibleHull, tri, e->tree->headnode );
+				
+				delete tri->visibleHull;
+				tri->visibleHull = NULL;
+#endif
+			}
+			// RB end
 			continue;
 		}
 		
@@ -795,6 +1064,100 @@ void PutPrimitivesInAreas( uEntity_t* e )
 		}
 	}
 }
+
+//============================================================================
+
+
+// RB begin
+int FilterMeshesIntoTree_r( idWinding* w, mapTri_t* originalTri, node_t* node )
+{
+	idWinding*		front, *back;
+	int				c;
+	
+	if( !w )
+	{
+		return 0;
+	}
+	
+	if( node->planenum == PLANENUM_LEAF )
+	{
+		// add it to the leaf list
+		if( originalTri->material->GetContentFlags() & CONTENTS_AREAPORTAL )
+		{
+			mapTri_t* list = CopyMapTri( originalTri );
+			list->next = NULL;
+			
+			node->areaPortalTris = MergeTriLists( node->areaPortalTris, list );
+		}
+		
+		const MapPolygonMesh* mapMesh = originalTri->originalMapMesh;
+		
+		// classify the leaf by the structural brush
+		if( mapMesh->IsOpaque() )
+		{
+			node->opaque = true;
+		}
+		
+		delete w;
+		return 1;
+	}
+	
+	// split it by the node plane
+	w->Split( dmapGlobals.mapPlanes[ node->planenum ], ON_EPSILON, &front, &back );
+	delete w;
+	
+	c = 0;
+	c += FilterMeshesIntoTree_r( front, originalTri, node->children[0] );
+	c += FilterMeshesIntoTree_r( back, originalTri, node->children[1] );
+	
+	return c;
+}
+
+
+/*
+=====================
+FilterMeshesIntoTree
+
+Mark the leafs as opaque and areaportals and put mesh
+fragments in each leaf so portal surfaces can be matched
+to materials
+=====================
+*/
+void FilterMeshesIntoTree( uEntity_t* e )
+{
+	uBrush_t*		b;
+	primitive_t*	prim;
+	mapTri_t*		tri;
+	int				r;
+	int				c_unique, c_clusters;
+	
+	common->Printf( "----- FilterMeshesIntoTree -----\n" );
+	
+	c_unique = 0;
+	c_clusters = 0;
+	for( prim = e->primitives ; prim ; prim = prim->next )
+	{
+		b = prim->brush;
+		
+		if( !b )
+		{
+			// add BSP triangles
+			for( tri = prim->bsptris ; tri ; tri = tri->next )
+			{
+				idWinding* w = WindingForTri( tri );
+				
+				c_unique++;
+				r = FilterMeshesIntoTree_r( w, tri, e->tree->headnode );
+				c_clusters += r;
+			}
+			continue;
+		}
+	}
+	
+	common->Printf( "%5i total BSP triangles\n", c_unique );
+	common->Printf( "%5i cluster references\n", c_clusters );
+}
+// RB end
 
 //============================================================================
 
@@ -912,135 +1275,6 @@ static void BoundOptimizeGroup( optimizeGroup_t* group )
 		group->bounds.AddPoint( tri->v[2].xyz );
 	}
 }
-
-/*
-====================
-BuildLightShadows
-
-Build the beam tree and shadow volume surface for a light
-====================
-*/
-static void BuildLightShadows( uEntity_t* e, mapLight_t* light )
-{
-	int			i;
-	optimizeGroup_t*	group;
-	mapTri_t*	tri;
-	mapTri_t*	shadowers;
-	optimizeGroup_t*		shadowerGroups;
-	idVec3		lightOrigin;
-	bool		hasPerforatedSurface = false;
-	
-	//
-	// build a group list of all the triangles that will contribute to
-	// the optimized shadow volume, leaving the original triangles alone
-	//
-	
-	
-	// shadowers will contain all the triangles that will contribute to the
-	// shadow volume
-	shadowerGroups = NULL;
-	lightOrigin = light->def.globalLightOrigin;
-	
-	// if the light is no-shadows, don't add any surfaces
-	// to the beam tree at all
-	if( !light->def.parms.noShadows
-			&& light->def.lightShader->LightCastsShadows() )
-	{
-		for( i = 0 ; i < e->numAreas ; i++ )
-		{
-			for( group = e->areas[i].groups ; group ; group = group->nextGroup )
-			{
-				// if the surface doesn't cast shadows, skip it
-				if( !group->material->SurfaceCastsShadow() )
-				{
-					continue;
-				}
-				
-				// if the group doesn't face away from the light, it
-				// won't contribute to the shadow volume
-				if( dmapGlobals.mapPlanes[ group->planeNum ].Distance( lightOrigin ) > 0 )
-				{
-					continue;
-				}
-				
-				// if the group bounds doesn't intersect the light bounds,
-				// skip it
-				if( !group->bounds.IntersectsBounds( light->def.globalLightBounds ) )
-				{
-					continue;
-				}
-				
-				// build up a list of the triangle fragments inside the
-				// light frustum
-				shadowers = NULL;
-				for( tri = group->triList ; tri ; tri = tri->next )
-				{
-					mapTri_t*	in, *out;
-					
-					// clip it to the light frustum
-					ClipTriByLight( light, tri, &in, &out );
-					FreeTriList( out );
-					shadowers = MergeTriLists( shadowers, in );
-				}
-				
-				// if we didn't get any out of this group, we don't
-				// need to create a new group in the shadower list
-				if( !shadowers )
-				{
-					continue;
-				}
-				
-				// find a group in shadowerGroups to add these to
-				// we will ignore everything but planenum, and we
-				// can merge across areas
-				optimizeGroup_t*	check;
-				
-				for( check = shadowerGroups ; check ; check = check->nextGroup )
-				{
-					if( check->planeNum == group->planeNum )
-					{
-						break;
-					}
-				}
-				if( !check )
-				{
-					check = ( optimizeGroup_t* )Mem_Alloc( sizeof( *check ) );
-					*check = *group;
-					check->triList = NULL;
-					check->nextGroup = shadowerGroups;
-					shadowerGroups = check;
-				}
-				
-				// if any surface is a shadow-casting perforated or translucent surface, we
-				// can't use the face removal optimizations because we can see through
-				// some of the faces
-				if( group->material->Coverage() != MC_OPAQUE )
-				{
-					hasPerforatedSurface = true;
-				}
-				
-				check->triList = MergeTriLists( check->triList, shadowers );
-			}
-		}
-	}
-	
-	
-	// RB FIXME
-	// take the shadower group list and create a beam tree and shadow volume
-	//light->shadowTris = CreateLightShadow( shadowerGroups, light );
-	light->shadowTris = NULL;
-	
-	if( light->shadowTris && hasPerforatedSurface )
-	{
-		// can't ever remove front faces, because we can see through some of them
-		light->shadowTris->numShadowIndexesNoCaps = light->shadowTris->numShadowIndexesNoFrontCaps =
-					light->shadowTris->numIndexes;
-	}
-	
-	// we don't need the original shadower triangles for anything else
-	FreeOptimizeGroupList( shadowerGroups );
-}
-
 
 /*
 ====================
@@ -1173,12 +1407,6 @@ void Prelight( uEntity_t* e )
 			{
 				BoundOptimizeGroup( group );
 			}
-		}
-		
-		for( i = 0 ; i < dmapGlobals.mapLights.Num() ; i++ )
-		{
-			light = dmapGlobals.mapLights[i];
-			BuildLightShadows( e, light );
 		}
 		
 		end = Sys_Milliseconds();

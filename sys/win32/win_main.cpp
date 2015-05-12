@@ -597,7 +597,9 @@ Sys_ListFiles
 int Sys_ListFiles( const char *directory, const char *extension, idStrList &list ) {
 	idStr		search;
 	struct _finddata_t findinfo;
-	int			findhandle;
+	// RB: 64 bit fixes, changed int to intptr_t
+	intptr_t	findhandle;
+	// RB end
 	int			flag;
 
 	if ( !extension) {
@@ -710,7 +712,9 @@ DLL Loading
 Sys_DLL_Load
 =====================
 */
-intptr_t Sys_DLL_Load( const char *dllName ) {
+// RB: 64 bit fixes, changed int to intptr_t
+intptr_t Sys_DLL_Load( const char *dllName )
+{
 	HINSTANCE	libHandle;
 	libHandle = LoadLibrary( dllName );
 	if ( libHandle ) {
@@ -731,8 +735,10 @@ intptr_t Sys_DLL_Load( const char *dllName ) {
 Sys_DLL_GetProcAddress
 =====================
 */
-void *Sys_DLL_GetProcAddress( int dllHandle, const char *procName ) {
-	return GetProcAddress( (HINSTANCE)dllHandle, procName ); 
+void *Sys_DLL_GetProcAddress( intptr_t dllHandle, const char *procName )
+{
+	// RB: added missing cast
+	return ( void* ) GetProcAddress( (HINSTANCE)dllHandle, procName );
 }
 
 /*
@@ -740,11 +746,15 @@ void *Sys_DLL_GetProcAddress( int dllHandle, const char *procName ) {
 Sys_DLL_Unload
 =====================
 */
-void Sys_DLL_Unload( int dllHandle ) {
-	if ( !dllHandle ) {
+void Sys_DLL_Unload( intptr_t dllHandle )
+{
+	if( !dllHandle )
+	{
 		return;
 	}
-	if ( FreeLibrary( (HINSTANCE)dllHandle ) == 0 ) {
+	
+	if( FreeLibrary( (HINSTANCE)dllHandle ) == 0 )
+	{
 		int lastError = GetLastError();
 		LPVOID lpMsgBuf;
 		FormatMessage(
@@ -756,9 +766,11 @@ void Sys_DLL_Unload( int dllHandle ) {
 			0,
 			NULL 
 		);
+
 		Sys_Error( "Sys_DLL_Unload: FreeLibrary failed - %s (%d)", lpMsgBuf, lastError );
 	}
 }
+// RB end
 
 /*
 ========================================================================
@@ -1000,7 +1012,7 @@ returns true if there is a copy of D3 running already
 bool Sys_AlreadyRunning() {
 #ifndef DEBUG
 	if ( !win32.win_allowMultipleInstances.GetBool() ) {
-		HANDLE hMutexOneInstance = ::CreateMutex( NULL, FALSE, "TECHYON" );
+		HANDLE hMutexOneInstance = ::CreateMutex( NULL, FALSE, "TEKUUM" );
 		if ( ::GetLastError() == ERROR_ALREADY_EXISTS || ::GetLastError() == ERROR_ACCESS_DENIED ) {
 			return true;
 		}
