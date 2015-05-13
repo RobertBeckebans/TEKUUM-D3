@@ -508,10 +508,38 @@ void Sys_Mkdir( const char *path ) {
 Sys_FileTimeStamp
 =================
 */
-ID_TIME_T Sys_FileTimeStamp( FILE *fp ) {
-	struct _stat st;
-	_fstat( _fileno( fp ), &st );
-	return (long) st.st_mtime;
+ID_TIME_T Sys_FileTimeStamp( idFileHandle fp ) {
+	FILETIME writeTime;
+	GetFileTime( fp, NULL, NULL, &writeTime );
+
+	/*
+		FILETIME = number of 100-nanosecond ticks since midnight 
+		1 Jan 1601 UTC. time_t = number of 1-second ticks since 
+		midnight 1 Jan 1970 UTC. To translate, we subtract a
+		FILETIME representation of midnight, 1 Jan 1970 from the
+		time in question and divide by the number of 100-ns ticks
+		in one second.
+	*/
+
+	SYSTEMTIME base_st = {
+		1970,   // wYear
+		1,      // wMonth
+		0,      // wDayOfWeek
+		1,      // wDay
+		0,      // wHour
+		0,      // wMinute
+		0,      // wSecond
+		0       // wMilliseconds
+	};
+
+	FILETIME base_ft;
+	SystemTimeToFileTime( &base_st, &base_ft );
+
+	LARGE_INTEGER itime;
+	itime.QuadPart = reinterpret_cast<LARGE_INTEGER&>( writeTime ).QuadPart;
+	itime.QuadPart -= reinterpret_cast<LARGE_INTEGER&>( base_ft ).QuadPart;
+	itime.QuadPart /= 10000000LL;
+	return itime.QuadPart;
 }
 
 /*
