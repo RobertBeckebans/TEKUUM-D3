@@ -3,6 +3,7 @@
 
 Doom 3 GPL Source Code
 Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2013-2015 Robert Beckebans
 
 This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
 
@@ -179,11 +180,14 @@ static bool MatchVert( const idDrawVert* a, const idDrawVert* b )
 	{
 		return false;
 	}
-	if( idMath::Fabs( a->GetTexCoordNativeS() - b->GetTexCoordNativeS() ) > ST_EPSILON )
+	
+	const idVec2& aST = a->GetTexCoord();
+	const idVec2& bST = a->GetTexCoord();
+	if( idMath::Fabs( aST[0] - bST[0] ) > ST_EPSILON )
 	{
 		return false;
 	}
-	if( idMath::Fabs( a->GetTexCoordNativeT() - b->GetTexCoordNativeT() ) > ST_EPSILON )
+	if( idMath::Fabs( aST[1] - bST[1] ) > ST_EPSILON )
 	{
 		return false;
 	}
@@ -196,7 +200,7 @@ static bool MatchVert( const idDrawVert* a, const idDrawVert* b )
 	}
 	
 	// otherwise do a dot-product cosine check
-	if( DotProduct( a->GetNormal(), b->GetNormal() ) < COSINE_EPSILON )
+	if( ( a->GetNormal() * b->GetNormal() ) < COSINE_EPSILON )
 	{
 		return false;
 	}
@@ -626,7 +630,7 @@ static void WriteNode_r( node_t* node )
 	}
 }
 
-static int NumberNodes_r( node_t* node, int nextNumber )
+int NumberNodes_r( node_t* node, int nextNumber )
 {
 	if( node->planenum == PLANENUM_LEAF )
 	{
@@ -676,12 +680,23 @@ static void WriteOutputPortals( uEntity_t* e )
 	idWinding*			w;
 	
 	procFile->WriteFloatString( "interAreaPortals { /* numAreas = */ %i /* numIAP = */ %i\n\n",
-								e->numAreas, numInterAreaPortals );
+								e->numAreas, interAreaPortals.Num() );
 	procFile->WriteFloatString( "/* interAreaPortal format is: numPoints positiveSideArea negativeSideArea ( point) ... */\n" );
-	for( i = 0 ; i < numInterAreaPortals ; i++ )
+	for( i = 0 ; i < interAreaPortals.Num() ; i++ )
 	{
 		iap = &interAreaPortals[i];
-		w = iap->side->winding;
+		
+		// RB: support new area portals
+		if( iap->side )
+		{
+			w = iap->side->winding;
+		}
+		else
+		{
+			w = & iap->w;
+		}
+		// RB end
+		
 		procFile->WriteFloatString( "/* iap %i */ %i %i %i ", i, w->GetNumPoints(), iap->area0, iap->area1 );
 		for( j = 0 ; j < w->GetNumPoints() ; j++ )
 		{

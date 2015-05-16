@@ -413,7 +413,6 @@ void WriteBspBrushMap( const char* name, uBrush_t* list )
 /*
 ====================
 FilterBrushIntoTree_r
-
 ====================
 */
 int FilterBrushIntoTree_r( uBrush_t* b, node_t* node )
@@ -435,10 +434,14 @@ int FilterBrushIntoTree_r( uBrush_t* b, node_t* node )
 		// classify the leaf by the structural brush
 		if( b->opaque )
 		{
-			node->opaque = true;
+			if( !node->opaque )
+			{
+				node->opaque = true;
+				return 1;
+			}
 		}
 		
-		return 1;
+		return 0;
 	}
 	
 	// split it by the node plane
@@ -464,7 +467,7 @@ to materials
 */
 void FilterBrushesIntoTree( uEntity_t* e )
 {
-	primitive_t*			prim;
+	primitive_t*		prim;
 	uBrush_t*			b, *newb;
 	int					r;
 	int					c_unique, c_clusters;

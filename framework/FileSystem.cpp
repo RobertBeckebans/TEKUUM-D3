@@ -3,6 +3,7 @@
 
 Doom 3 GPL Source Code
 Copyright (C) 1999-2011 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2012-2015 Robert Beckebans
 
 This file is part of the Doom 3 GPL Source Code (?Doom 3 Source Code?).
 
@@ -486,9 +487,12 @@ private:
 	void					ReplaceSeparators( idStr& path, char sep = PATHSEPARATOR_CHAR );
 	long					HashFileName( const char* fname ) const;
 	int						ListOSFiles( const char* directory, const char* extension, idStrList& list );
-	FILE* 					OpenOSFile( const char* name, const char* mode, idStr* caseSensitiveName = NULL );
-	FILE* 					OpenOSFileCorrectName( idStr& path, const char* mode );
-	int						DirectFileLength( FILE* o );
+	// RB: idFileHandle
+	idFileHandle 			OpenOSFile( const char* name, fsMode_t mode, idStr* caseSensitiveName = NULL );
+	idFileHandle 			OpenOSFileCorrectName( idStr& path, fsMode_t mode );
+	void					CloseOSFile( idFileHandle o );
+	// RB end
+	int						DirectFileLength( idFileHandle o );
 	void					CopyFile( idFile* src, const char* toOSPath );
 	int						AddUnique( const char* name, idStrList& list, idHashIndex& hashIndex ) const;
 	void					GetExtensionList( const char* extension, idStrList& extensionList ) const;
@@ -639,10 +643,46 @@ idFileSystemLocal::OpenOSFile
 optional caseSensitiveName is set to case sensitive file name as found on disc (fs_caseSensitiveOS only)
 ================
 */
-FILE* idFileSystemLocal::OpenOSFile( const char* fileName, const char* mode, idStr* caseSensitiveName )
+idFileHandle idFileSystemLocal::OpenOSFile( const char* fileName, fsMode_t mode, idStr* caseSensitiveName )
 {
-	int i;
-	FILE* fp;
+	idFileHandle fp;
+	
+	// RB begin
+#if defined(_WIN32)
+	DWORD dwAccess = 0;
+	DWORD dwShare = 0;
+	DWORD dwCreate = 0;
+	DWORD dwFlags = 0;
+	
+	if( mode == FS_WRITE )
+	{
+		dwAccess = GENERIC_READ | GENERIC_WRITE;
+		dwShare = FILE_SHARE_READ;
+		dwCreate = CREATE_ALWAYS;
+		dwFlags = FILE_ATTRIBUTE_NORMAL;
+	}
+	else if( mode == FS_READ )
+	{
+		dwAccess = GENERIC_READ;
+		dwShare = FILE_SHARE_READ;
+		dwCreate = OPEN_EXISTING;
+		dwFlags = FILE_ATTRIBUTE_NORMAL;
+	}
+	else if( mode == FS_APPEND )
+	{
+		dwAccess = GENERIC_READ | GENERIC_WRITE;
+		dwShare = FILE_SHARE_READ;
+		dwCreate = OPEN_ALWAYS;
+		dwFlags = FILE_ATTRIBUTE_NORMAL;
+	}
+	
+	fp = CreateFile( fileName, dwAccess, dwShare, NULL, dwCreate, dwFlags, NULL );
+	if( fp == INVALID_HANDLE_VALUE )
+	{
+		return NULL;
+	}
+#else
+	
 	idStr fpath, entry;
 	idStrList list;
 	
@@ -656,7 +696,20 @@ FILE* idFileSystemLocal::OpenOSFile( const char* fileName, const char* mode, idS
 	}
 #endif
 #endif
-	fp = fopen( fileName, mode );
+	
+	if( mode == FS_WRITE )
+	{
+		fp = fopen( fileName, "wb" );
+	}
+	else if( mode == FS_READ )
+	{
+		fp = fopen( fileName, "rb" );
+	}
+	else if( mode == FS_APPEND )
+	{
+		fp = fopen( fileName, "ab" );
+	}
+	
 	if( !fp && fs_caseSensitiveOS.GetBool() )
 	{
 		fpath = fileName;
@@ -666,8 +719,8 @@ FILE* idFileSystemLocal::OpenOSFile( const char* fileName, const char* mode, idS
 		{
 			return NULL;
 		}
-		
-		for( i = 0; i < list.Num(); i++ )
+	
+		for( int i = 0; i < list.Num(); i++ )
 		{
 			entry = fpath + PATHSEPARATOR_CHAR + list[i];
 			if( !entry.Icmp( fileName ) )
@@ -699,6 +752,10 @@ FILE* idFileSystemLocal::OpenOSFile( const char* fileName, const char* mode, idS
 		*caseSensitiveName = fileName;
 		caseSensitiveName->StripPath();
 	}
+	
+#endif
+	// RB end
+	
 	return fp;
 }
 
@@ -707,10 +764,10 @@ FILE* idFileSystemLocal::OpenOSFile( const char* fileName, const char* mode, idS
 idFileSystemLocal::OpenOSFileCorrectName
 ================
 */
-FILE* idFileSystemLocal::OpenOSFileCorrectName( idStr& path, const char* mode )
+idFileHandle idFileSystemLocal::OpenOSFileCorrectName( idStr& path, fsMode_t mode )
 {
 	idStr caseName;
-	FILE* f = OpenOSFile( path.c_str(), mode, &caseName );
+	idFileHandle f = OpenOSFile( path.c_str(), mode, &caseName );
 	if( f )
 	{
 		path.StripFilename();
@@ -722,11 +779,31 @@ FILE* idFileSystemLocal::OpenOSFileCorrectName( idStr& path, const char* mode )
 
 /*
 ================
+idFileSystemLocal::CloseOSFile
+================
+*/
+void idFileSystemLocal::CloseOSFile( idFileHandle o )
+{
+	// RB begin
+#if defined(_WIN32)
+	::CloseHandle( o );
+#else
+	fclose( o );
+#endif
+	// RB end
+}
+
+/*
+================
 idFileSystemLocal::DirectFileLength
 ================
 */
-int idFileSystemLocal::DirectFileLength( FILE* o )
+int idFileSystemLocal::DirectFileLength( idFileHandle o )
 {
+	// RB begin
+#if defined(_WIN32)
+	return GetFileSize( o, NULL );
+#else
 	int		pos;
 	int		end;
 	
@@ -734,7 +811,10 @@ int idFileSystemLocal::DirectFileLength( FILE* o )
 	fseek( o, 0, SEEK_END );
 	end = ftell( o );
 	fseek( o, pos, SEEK_SET );
+	
 	return end;
+#endif
+	// RB end
 }
 
 /*
@@ -780,41 +860,21 @@ Copy a fully specified file from one place to another
 */
 void idFileSystemLocal::CopyFile( const char* fromOSPath, const char* toOSPath )
 {
-	FILE*	f;
-	int		len;
-	byte*	buf;
-	
-	common->Printf( "copy %s to %s\n", fromOSPath, toOSPath );
-	f = OpenOSFile( fromOSPath, "rb" );
-	if( !f )
+	idFile* src = OpenExplicitFileRead( fromOSPath );
+	if( src == NULL )
 	{
+		idLib::Warning( "Could not open %s for read", fromOSPath );
 		return;
 	}
-	fseek( f, 0, SEEK_END );
-	len = ftell( f );
-	fseek( f, 0, SEEK_SET );
 	
-	buf = ( byte* )Mem_Alloc( len );
-	if( fread( buf, 1, len, f ) != ( unsigned int )len )
+	if( idStr::Icmp( fromOSPath, toOSPath ) == 0 )
 	{
-		common->FatalError( "short read in idFileSystemLocal::CopyFile()\n" );
-	}
-	fclose( f );
-	
-	CreateOSPath( toOSPath );
-	f = OpenOSFile( toOSPath, "wb" );
-	if( !f )
-	{
-		common->Printf( "could not create destination file\n" );
-		Mem_Free( buf );
+		// same file can happen during build games
 		return;
 	}
-	if( fwrite( buf, 1, len, f ) != ( unsigned int )len )
-	{
-		common->FatalError( "short write in idFileSystemLocal::CopyFile()\n" );
-	}
-	fclose( f );
-	Mem_Free( buf );
+	
+	CopyFile( src, toOSPath );
+	delete src;
 }
 
 /*
@@ -824,35 +884,36 @@ idFileSystemLocal::CopyFile
 */
 void idFileSystemLocal::CopyFile( idFile* src, const char* toOSPath )
 {
-	FILE*	f;
-	int		len;
-	byte*	buf;
-	
-	common->Printf( "copy %s to %s\n", src->GetName(), toOSPath );
-	src->Seek( 0, FS_SEEK_END );
-	len = src->Tell();
-	src->Seek( 0, FS_SEEK_SET );
-	
-	buf = ( byte* )Mem_Alloc( len );
-	if( src->Read( buf, len ) != len )
+	idFile* dst = OpenExplicitFileWrite( toOSPath );
+	if( dst == NULL )
 	{
-		common->FatalError( "Short read in idFileSystemLocal::CopyFile()\n" );
-	}
-	
-	CreateOSPath( toOSPath );
-	f = OpenOSFile( toOSPath, "wb" );
-	if( !f )
-	{
-		common->Printf( "could not create destination file\n" );
-		Mem_Free( buf );
+		idLib::Warning( "Could not open %s for write", toOSPath );
 		return;
 	}
-	if( fwrite( buf, 1, len, f ) != ( unsigned int )len )
+	
+	common->Printf( "copy %s to %s\n", src->GetName(), toOSPath );
+	
+	int len = src->Length();
+	int copied = 0;
+	while( copied < len )
 	{
-		common->FatalError( "Short write in idFileSystemLocal::CopyFile()\n" );
+		byte buffer[4096];
+		int read = src->Read( buffer, Min( 4096, len - copied ) );
+		if( read <= 0 )
+		{
+			idLib::Warning( "Copy failed during read" );
+			break;
+		}
+		int written = dst->Write( buffer, read );
+		if( written < read )
+		{
+			idLib::Warning( "Copy failed during write" );
+			break;
+		}
+		copied += written;
 	}
-	fclose( f );
-	Mem_Free( buf );
+	
+	delete dst;
 }
 
 /*
@@ -873,6 +934,40 @@ void idFileSystemLocal::ReplaceSeparators( idStr& path, char sep )
 			*s = sep;
 		}
 	}
+}
+
+/*
+========================
+IsOSPath
+========================
+*/
+static bool IsOSPath( const char* path )
+{
+	assert( path );
+	
+	if( idStr::Icmpn( path, "mtp:", 4 ) == 0 )
+	{
+		return true;
+	}
+	
+	
+	if( idStr::Length( path ) >= 2 )
+	{
+		if( path[ 1 ] == ':' )
+		{
+			if( ( path[ 0 ] > 64 && path[ 0 ] < 91 ) || ( path[ 0 ] > 96 && path[ 0 ] < 123 ) )
+			{
+				// already an OS path starting with a drive.
+				return true;
+			}
+		}
+		if( path[ 0 ] == '\\' || path[ 0 ] == '/' )
+		{
+			// a root path
+			return true;
+		}
+	}
+	return false;
 }
 
 /*
@@ -913,6 +1008,14 @@ const char* idFileSystemLocal::BuildOSPath( const char* base, const char* game, 
 			}
 		}
 	}
+	
+#if 1
+	// handle case of this already being an OS path
+	if( IsOSPath( relativePath ) )
+	{
+		return relativePath;
+	}
+#endif
 	
 	idStr strBase = base;
 	strBase.StripTrailing( '/' );
@@ -1065,11 +1168,25 @@ void idFileSystemLocal::RemoveFile( const char* relativePath )
 	if( fs_devpath.GetString()[0] )
 	{
 		OSPath = BuildOSPath( fs_devpath.GetString(), gameFolder, relativePath );
+		
+		// RB begin
+#if defined(_WIN32)
+		::DeleteFile( OSPath );
+#else
 		remove( OSPath );
+#endif
+		// RB end
 	}
 	
 	OSPath = BuildOSPath( fs_savepath.GetString(), gameFolder, relativePath );
+	
+	// RB begin
+#if defined(_WIN32)
+	::DeleteFile( OSPath );
+#else
 	remove( OSPath );
+#endif
+	// RB end
 	
 	ClearDirCache();
 }
@@ -1462,19 +1579,18 @@ pack_t* idFileSystemLocal::LoadZipFile( const char* zipfile )
 	long			hash;
 	int				fs_numHeaderLongs;
 	int* 			fs_headerLongs;
-	FILE*			f;
+	idFileHandle	f;
 	int				len;
 	int				confHash;
 	fileInPack_t*	pakFile;
 	
-	f = OpenOSFile( zipfile, "rb" );
+	f = OpenOSFile( zipfile, FS_READ );
 	if( !f )
 	{
 		return NULL;
 	}
-	fseek( f, 0, SEEK_END );
-	len = ftell( f );
-	fclose( f );
+	len = DirectFileLength( f );
+	CloseOSFile( f );
 	
 	fs_numHeaderLongs = 0;
 	
@@ -1995,24 +2111,29 @@ idModList* idFileSystemLocal::ListMods()
 	// read the descriptions for each mod - search all paths
 	for( i = 0; i < list->mods.Num(); i++ )
 	{
-	
 		for( isearch = 0; isearch < 4; isearch++ )
 		{
-		
 			idStr descfile = BuildOSPath( search[ isearch ], list->mods[ i ], "description.txt" );
-			FILE* f = OpenOSFile( descfile, "r" );
+			idFileHandle f = OpenOSFile( descfile, FS_READ );
 			if( f )
 			{
-				if( fgets( desc, MAX_DESCRIPTION, f ) )
+				//if( fgets( desc, MAX_DESCRIPTION, f ) )
+				
+#if defined(_WIN32)
+				DWORD bytesRead;
+				if( ::ReadFile( f, desc, MAX_DESCRIPTION, &bytesRead, NULL ) )
+#else
+				if( fread( desc, 1, MAX_DESCRIPTION, f );
+#endif
 				{
 					list->descriptions.Append( desc );
-					fclose( f );
+					CloseOSFile( f );
 					break;
 				}
 				else
 				{
 					common->DWarning( "Error reading %s", descfile.c_str() );
-					fclose( f );
+					CloseOSFile( f );
 					continue;
 				}
 			}
@@ -3654,7 +3775,7 @@ idFile* idFileSystemLocal::OpenFileReadFlags( const char* relativePath, int sear
 	fileInPack_t* 	pakFile;
 	directory_t* 	dir;
 	long			hash;
-	FILE* 			fp;
+	idFileHandle	fp;
 	
 	if( !searchPaths )
 	{
@@ -3731,7 +3852,7 @@ idFile* idFileSystemLocal::OpenFileReadFlags( const char* relativePath, int sear
 			}
 			
 			netpath = BuildOSPath( dir->path, dir->gamedir, relativePath );
-			fp = OpenOSFileCorrectName( netpath, "rb" );
+			fp = OpenOSFile( netpath, FS_READ );
 			if( !fp )
 			{
 				continue;
@@ -3793,16 +3914,16 @@ idFile* idFileSystemLocal::OpenFileReadFlags( const char* relativePath, int sear
 						{
 							idStr sourcepath;
 							sourcepath = BuildOSPath( fs_cdpath.GetString(), dir->gamedir, relativePath );
-							FILE* f1 = OpenOSFile( sourcepath, "r" );
+							idFileHandle f1 = OpenOSFile( sourcepath, FS_READ );
 							if( f1 )
 							{
 								ID_TIME_T t1 = Sys_FileTimeStamp( f1 );
-								fclose( f1 );
-								FILE* f2 = OpenOSFile( copypath, "r" );
+								CloseOSFile( f1 );
+								idFileHandle f2 = OpenOSFile( copypath, FS_READ );
 								if( f2 )
 								{
 									ID_TIME_T t2 = Sys_FileTimeStamp( f2 );
-									fclose( f2 );
+									CloseOSFile( f2 );
 									if( t1 > t2 )
 									{
 										CopyFile( sourcepath, copypath );
@@ -4044,7 +4165,7 @@ idFile* idFileSystemLocal::OpenFileWrite( const char* relativePath, const char* 
 	CreateOSPath( OSpath );
 	
 	f = new idFile_Permanent();
-	f->o = OpenOSFile( OSpath, "wb" );
+	f->o = OpenOSFile( OSpath, FS_WRITE );
 	if( !f->o )
 	{
 		delete f;
@@ -4081,7 +4202,7 @@ idFile* idFileSystemLocal::OpenExplicitFileRead( const char* OSPath )
 	common->DPrintf( "idFileSystem::OpenExplicitFileRead - reading from: %s\n", OSPath );
 	
 	f = new idFile_Permanent();
-	f->o = OpenOSFile( OSPath, "rb" );
+	f->o = OpenOSFile( OSPath, FS_READ );
 	if( !f->o )
 	{
 		delete f;
@@ -4119,7 +4240,7 @@ idFile* idFileSystemLocal::OpenExplicitFileWrite( const char* OSPath )
 	CreateOSPath( OSPath );
 	
 	f = new idFile_Permanent();
-	f->o = OpenOSFile( OSPath, "wb" );
+	f->o = OpenOSFile( OSPath, FS_WRITE );
 	if( !f->o )
 	{
 		delete f;
@@ -4165,7 +4286,7 @@ idFile* idFileSystemLocal::OpenFileAppend( const char* relativePath, bool sync, 
 	}
 	
 	f = new idFile_Permanent();
-	f->o = OpenOSFile( OSpath, "ab" );
+	f->o = OpenOSFile( OSpath, FS_APPEND );
 	if( !f->o )
 	{
 		delete f;
@@ -4238,11 +4359,15 @@ size_t idFileSystemLocal::CurlWriteFunction( void* ptr, size_t size, size_t nmem
 	{
 		return size * nmemb;
 	}
-#ifdef _WIN32
-	return _write( static_cast<idFile_Permanent*>( bgl->f )->GetFilePtr()->_file, ptr, size * nmemb );
+	// RB begin
+#if defined(_WIN32)
+	DWORD bytesWritten;
+	::WriteFile( static_cast<idFile_Permanent*>( bgl->f )->GetFilePtr(), ptr, size * nmemb, &bytesWritten, NULL );
+	return bytesWritten;
 #else
 	return fwrite( ptr, size, nmemb, static_cast<idFile_Permanent*>( bgl->f )->GetFilePtr() );
 #endif
+	// RB end
 }
 
 /*
@@ -4291,7 +4416,10 @@ dword BackgroundDownloadThread( void* parms )
 		{
 			// use the low level read function, because fread may allocate memory
 #if defined(WIN32)
-			_read( static_cast<idFile_Permanent*>( bgl->f )->GetFilePtr()->_file, bgl->file.buffer, bgl->file.length );
+			// RB begin
+			DWORD bytesRead;
+			ReadFile( static_cast<idFile_Permanent*>( bgl->f )->GetFilePtr(), bgl->file.buffer, bgl->file.length, &bytesRead, NULL );
+			// RB end
 #else
 			fread( bgl->file.buffer, bgl->file.length, 1, static_cast<idFile_Permanent*>( bgl->f )->GetFilePtr() );
 #endif
