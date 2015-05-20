@@ -725,7 +725,19 @@ idFileHandle idFileSystemLocal::OpenOSFile( const char* fileName, fsMode_t mode,
 			entry = fpath + PATHSEPARATOR_CHAR + list[i];
 			if( !entry.Icmp( fileName ) )
 			{
-				fp = fopen( entry, mode );
+				if( mode == FS_WRITE )
+				{
+					fp = fopen( entry, "wb" );
+				}
+				else if( mode == FS_READ )
+				{
+					fp = fopen( entry, "rb" );
+				}
+				else if( mode == FS_APPEND )
+				{
+					fp = fopen( entry, "ab" );
+				}
+	
 				if( fp )
 				{
 					if( caseSensitiveName )
@@ -2123,7 +2135,7 @@ idModList* idFileSystemLocal::ListMods()
 				DWORD bytesRead;
 				if( ::ReadFile( f, desc, MAX_DESCRIPTION, &bytesRead, NULL ) )
 #else
-				if( fread( desc, 1, MAX_DESCRIPTION, f );
+				if( fread( desc, 1, MAX_DESCRIPTION, f ) )
 #endif
 				{
 					list->descriptions.Append( desc );

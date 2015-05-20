@@ -724,15 +724,23 @@ void idDict::ExportToJSON( idFile* f, const char* prefix ) const
 {
 	//f->Printf( "%s[\n", prefix );
 	
-	f->Printf( "%s\"dict\": {\n", prefix );
+	//f->Printf( "%s\"dict\": {\n", prefix );
+	
+	idStr key;
 	
 	for( int i = 0; i < args.Num(); i++ )  	// don't loop on the swapped count use the original
 	{
 		//f->Printf( "%s{\"key\": \"%s\", \"value\": \"%s\"},\n", prefix, args[i].GetKey().c_str(), args[i].GetValue().c_str() );
-		f->Printf( "%s\t\"%s\": \"%s\"%s\n", prefix, args[i].GetKey().c_str(), args[i].GetValue().c_str(), ( i == ( args.Num() - 1 ) ) ? "" : "," );
+		
+		key = args[i].GetKey();
+		
+		//for( int j = 0; j < key.Length(); j++ )
+		key.ReplaceChar( '\t', ' ' );
+		
+		f->Printf( "%s\t\"%s\": \"%s\"%s\n", prefix, key.c_str(), args[i].GetValue().c_str(), ( i == ( args.Num() - 1 ) ) ? "" : "," );
 	}
 	
-	f->Printf( "%s}\n", prefix );
+	//f->Printf( "%s}\n", prefix );
 }
 // RB end
 

@@ -143,7 +143,7 @@ void Framebuffer::Init()
 	
 	for( int i = 0; i < 2; i++ )
 	{
-		globalFramebuffers.bloomRenderFBO[i] = new Framebuffer( va( "_bloomRender", i ), glConfig.nativeScreenWidth, glConfig.nativeScreenHeight );
+		globalFramebuffers.bloomRenderFBO[i] = new Framebuffer( va( "_bloomRender%i", i ), glConfig.nativeScreenWidth, glConfig.nativeScreenHeight );
 		globalFramebuffers.bloomRenderFBO[i]->Bind();
 		globalFramebuffers.bloomRenderFBO[i]->AddColorBuffer( GL_RGBA8, 0 );
 		globalFramebuffers.bloomRenderFBO[i]->AttachImage2D( GL_TEXTURE_2D, globalImages->bloomRender[i], 0 );

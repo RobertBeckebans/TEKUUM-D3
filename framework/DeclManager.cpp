@@ -1975,7 +1975,7 @@ void idDeclManagerLocal::ExportDecls_f( const idCmdArgs& args )
 	// avoid media cache
 	com_editors |= EDITOR_AAS;
 	
-	file->Printf( "{\n" );
+	file->Printf( "{\n\t\"entities\": {" );
 	
 	int count = declManagerLocal.linearLists[ DECL_ENTITYDEF ].Num();
 	for( int i = 0; i < count; i++ )
@@ -1984,12 +1984,20 @@ void idDeclManagerLocal::ExportDecls_f( const idCmdArgs& args )
 		
 		totalEntitiesCount++;
 		
-		file->Printf( "\n\t\"entityDef\": {\n\t\t\"name\": \"%s\",\n", decl->GetName() );
+		file->Printf( "\n\t\t\"%s\": {\n", decl->GetName() );
 		decl->dict.ExportToJSON( file, "\t\t" );
 		
-		file->Printf( "\t},\n" );
+		if( i == ( count - 1 ) )
+		{
+			file->Printf( "\t\t}\n" );
+		}
+		else
+		{
+			file->Printf( "\t\t},\n" );
+		}
 	}
 	
+	file->Printf( "\t}\n" );
 	file->Printf( "}\n" );
 	
 	file->Flush();
