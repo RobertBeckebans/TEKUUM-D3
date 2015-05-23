@@ -393,7 +393,7 @@ public:
 	static idMapEntity* 	Parse( idLexer& src, bool worldSpawn = false, float version = CURRENT_MAP_VERSION );
 	bool					Write( idFile* fp, int entityNum ) const;
 	// RB begin
-	bool					WriteJSON( idFile* fp, int entityNum ) const;
+    bool					WriteJSON( idFile* fp, int entityNum, int numEntities ) const;
 	// RB end
 	int						GetNumPrimitives() const
 	{

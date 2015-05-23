@@ -807,11 +807,11 @@ bool idMapEntity::Write( idFile* fp, int entityNum ) const
 }
 
 // RB begin
-bool idMapEntity::WriteJSON( idFile* fp, int entityNum ) const
+bool idMapEntity::WriteJSON( idFile* fp, int entityNum, int numEntities ) const
 {
 	idVec3 origin;
 	
-	fp->WriteFloatString( "\t\t{\n\t\t\t\"entity\": \"%d\"\n", entityNum );
+    fp->WriteFloatString( "\t\t{\n\t\t\t\"entity\": \"%d\",\n", entityNum );
 	
 	idStr key;
 	
@@ -868,7 +868,7 @@ bool idMapEntity::WriteJSON( idFile* fp, int entityNum ) const
 		fp->WriteFloatString( "\t\t\t]\n" );
 	}
 	
-	fp->WriteFloatString( "\t\t}\n" );
+    fp->WriteFloatString( "\t\t}%s\n", ( entityNum == ( numEntities - 1 ) ) ? "" : "," );
 	
 	return true;
 }
@@ -1131,7 +1131,7 @@ bool idMapFile::WriteJSON( const char* fileName, const char* ext, bool fromBaseP
 	
 	for( i = 0; i < entities.Num(); i++ )
 	{
-		entities[i]->WriteJSON( fp, i );
+        entities[i]->WriteJSON( fp, i, entities.Num() );
 	}
 	
 	fp->Printf( "\t]\n" );
@@ -1486,7 +1486,7 @@ bool MapPolygonMesh::Write( idFile* fp, int primitiveNum, const idVec3& origin )
 
 bool MapPolygonMesh::WriteJSON( idFile* fp, int primitiveNum, const idVec3& origin ) const
 {
-	fp->WriteFloatString( "\t\t\t\t{\n\t\t\t\t\t\"primitive\": \"%d\"\n", primitiveNum );
+    fp->WriteFloatString( "\t\t\t\t{\n\t\t\t\t\t\"primitive\": \"%d\",\n", primitiveNum );
 	
 	fp->WriteFloatString( "\t\t\t\t\t\"verts\":\n\t\t\t\t\t[\n" );
 	idVec2 st;
@@ -1499,7 +1499,7 @@ bool MapPolygonMesh::WriteJSON( idFile* fp, int primitiveNum, const idVec3& orig
 		
 		//fp->WriteFloatString( "   ( %f %f %f %f %f %f %f %f )\n", v->xyz[0] + origin[0], v->xyz[1] + origin[1], v->xyz[2] + origin[2], st[0], st[1], n[0], n[1], n[2] );
 		
-		fp->WriteFloatString( "\t\t\t\t\t\t{ \"xyz\": [%f, %f, %f], \"st\": [%f, %f], \"normal\": [%f, %f, %f] }\n", v->xyz[0], v->xyz[1], v->xyz[2], st[0], st[1], n[0], n[1], n[2] );
+        fp->WriteFloatString( "\t\t\t\t\t\t{ \"xyz\": [%f, %f, %f], \"st\": [%f, %f], \"normal\": [%f, %f, %f] }%s\n", v->xyz[0], v->xyz[1], v->xyz[2], st[0], st[1], n[0], n[1], n[2], ( i == ( verts.Num() - 1 ) ) ? "" : "," );
 	}
 	fp->WriteFloatString( "\t\t\t\t\t],\n" );
 	
@@ -1514,7 +1514,7 @@ bool MapPolygonMesh::WriteJSON( idFile* fp, int primitiveNum, const idVec3& orig
 		{
 			fp->WriteFloatString( "%d%s", poly->indexes[j], ( j == poly->indexes.Num() - 1 ) ? "" : ", " );
 		}
-		fp->WriteFloatString( "] }\n" );
+        fp->WriteFloatString( "] }%s\n", ( i == ( polygons.Num() - 1 ) ) ? "" : "," );
 	}
 	fp->WriteFloatString( "\t\t\t\t\t]\n" );
 	
