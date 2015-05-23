@@ -1985,7 +1985,7 @@ void idDeclManagerLocal::ExportDecls_f( const idCmdArgs& args )
 		totalEntitiesCount++;
 		
 		file->Printf( "\n\t\t\"%s\": {\n", decl->GetName() );
-		decl->dict.ExportToJSON( file, "\t\t" );
+		decl->dict.WriteJSON( file, "\t\t" );
 		
 		if( i == ( count - 1 ) )
 		{

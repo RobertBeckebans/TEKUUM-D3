@@ -806,6 +806,74 @@ bool idMapEntity::Write( idFile* fp, int entityNum ) const
 	return true;
 }
 
+// RB begin
+bool idMapEntity::WriteJSON( idFile* fp, int entityNum ) const
+{
+	idVec3 origin;
+	
+	fp->WriteFloatString( "\t\t{\n\t\t\t\"entity\": \"%d\"\n", entityNum );
+	
+	idStr key;
+	
+	for( int i = 0; i < epairs.GetNumKeyVals(); i++ )
+	{
+		key = epairs.GetKeyVal( i )->GetKey();
+		
+		//for( int j = 0; j < key.Length(); j++ )
+		key.ReplaceChar( '\t', ' ' );
+		
+		fp->WriteFloatString( "\t\t\t\"%s\": \"%s\"%s\n", key.c_str(), epairs.GetKeyVal( i )->GetValue().c_str(), ( ( i == ( epairs.GetNumKeyVals() - 1 ) ) && !GetNumPrimitives() ) ? "" : "," );
+	}
+	
+	epairs.GetVector( "origin", "0 0 0", origin );
+	
+	// write pritimives
+	if( GetNumPrimitives() )
+	{
+		fp->WriteFloatString( "\t\t\t\"primitives\":\n\t\t\t[\n" );
+	}
+	
+	int numPrimitives = GetNumPrimitives();
+	for( int i = 0; i < numPrimitives; i++ )
+	{
+		idMapPrimitive* mapPrim = GetPrimitive( i );
+		
+		switch( mapPrim->GetType() )
+		{
+#if 0
+			case idMapPrimitive::TYPE_BRUSH:
+				static_cast<idMapBrush*>( mapPrim )->Write( fp, i, origin );
+				break;
+			case idMapPrimitive::TYPE_PATCH:
+				static_cast<idMapPatch*>( mapPrim )->Write( fp, i, origin );
+				break;
+#endif
+			case idMapPrimitive::TYPE_MESH:
+				static_cast<MapPolygonMesh*>( mapPrim )->WriteJSON( fp, i, origin );
+				break;
+		}
+		
+		if( i == ( numPrimitives - 1 ) )
+		{
+			fp->WriteFloatString( "\n" );
+		}
+		else
+		{
+			fp->WriteFloatString( ",\n" );
+		}
+	}
+	
+	if( GetNumPrimitives() )
+	{
+		fp->WriteFloatString( "\t\t\t]\n" );
+	}
+	
+	fp->WriteFloatString( "\t\t}\n" );
+	
+	return true;
+}
+// RB end
+
 /*
 ===============
 idMapEntity::RemovePrimitiveData
@@ -1029,6 +1097,51 @@ bool idMapFile::Write( const char* fileName, const char* ext, bool fromBasePath 
 	
 	return true;
 }
+
+// RB begin
+bool idMapFile::WriteJSON( const char* fileName, const char* ext, bool fromBasePath )
+{
+	int i;
+	idStr qpath;
+	idFile* fp;
+	
+	qpath = fileName;
+	qpath.SetFileExtension( ext );
+	
+	idLib::common->Printf( "writing %s...\n", qpath.c_str() );
+	
+	if( fromBasePath )
+	{
+		fp = idLib::fileSystem->OpenFileWrite( qpath, "fs_basepath" );
+	}
+	else
+	{
+		fp = idLib::fileSystem->OpenExplicitFileWrite( qpath );
+	}
+	
+	if( !fp )
+	{
+		idLib::common->Warning( "Couldn't open %s\n", qpath.c_str() );
+		return false;
+	}
+	
+	fp->Printf( "{\n" );
+	fp->WriteFloatString( "\t\"version\": \"%f\",\n", ( float ) CURRENT_MAP_VERSION );
+	fp->Printf( "\t\"entities\": \n\t[\n" );
+	
+	for( i = 0; i < entities.Num(); i++ )
+	{
+		entities[i]->WriteJSON( fp, i );
+	}
+	
+	fp->Printf( "\t]\n" );
+	fp->Printf( "}\n" );
+	
+	idLib::fileSystem->CloseFile( fp );
+	
+	return true;
+}
+// RB end
 
 /*
 ===============
@@ -1371,6 +1484,45 @@ bool MapPolygonMesh::Write( idFile* fp, int primitiveNum, const idVec3& origin )
 	return true;
 }
 
+bool MapPolygonMesh::WriteJSON( idFile* fp, int primitiveNum, const idVec3& origin ) const
+{
+	fp->WriteFloatString( "\t\t\t\t{\n\t\t\t\t\t\"primitive\": \"%d\"\n", primitiveNum );
+	
+	fp->WriteFloatString( "\t\t\t\t\t\"verts\":\n\t\t\t\t\t[\n" );
+	idVec2 st;
+	idVec3 n;
+	for( int i = 0; i < verts.Num(); i++ )
+	{
+		const idDrawVert* v = &verts[ i ];
+		st = v->GetTexCoord();
+		n = v->GetNormalRaw();
+		
+		//fp->WriteFloatString( "   ( %f %f %f %f %f %f %f %f )\n", v->xyz[0] + origin[0], v->xyz[1] + origin[1], v->xyz[2] + origin[2], st[0], st[1], n[0], n[1], n[2] );
+		
+		fp->WriteFloatString( "\t\t\t\t\t\t{ \"xyz\": \"%f %f %f\", \"st\": \"%f %f\", \"normal\": \"%f %f %f\" }\n", v->xyz[0], v->xyz[1], v->xyz[2], st[0], st[1], n[0], n[1], n[2] );
+	}
+	fp->WriteFloatString( "\t\t\t\t\t],\n" );
+	
+	fp->WriteFloatString( "\t\t\t\t\t\"polygons\":\n\t\t\t\t\t[\n" );
+	for( int i = 0; i < polygons.Num(); i++ )
+	{
+		MapPolygon* poly = polygons[ i ];
+		
+		fp->WriteFloatString( "\t\t\t\t\t\t{ \"material\": \"%s\", \"indices\": \"", poly->GetMaterial() );
+		
+		for( int j = 0; j < poly->indexes.Num(); j++ )
+		{
+			fp->WriteFloatString( "%d ", poly->indexes[j] );
+		}
+		fp->WriteFloatString( "\" }\n" );
+	}
+	fp->WriteFloatString( "\t\t\t\t\t]\n" );
+	
+	fp->WriteFloatString( "\t\t\t\t}" );
+	
+	return true;
+}
+
 MapPolygonMesh* MapPolygonMesh::Parse( idLexer& src, const idVec3& origin, float version )
 {
 	float		info[7];
@@ -1594,9 +1746,7 @@ void MapPolygonMesh::GetBounds( idBounds& bounds ) const
 	
 	return bounds;
 #else
-	int i;
 	
-	//idBounds bounds;
 	if( !verts.Num() )
 	{
 		bounds.Clear();

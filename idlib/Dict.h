@@ -183,7 +183,7 @@ public:
 	void				ReadFromFileHandle( idFile* f );
 	
 	// RB begin
-	void				ExportToJSON( idFile* f, const char* prefix = "" ) const;
+	void				WriteJSON( idFile* f, const char* prefix = "" ) const;
 	// RB end
 	
 	// returns a unique checksum for this dictionary's content

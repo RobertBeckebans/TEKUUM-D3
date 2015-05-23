@@ -625,3 +625,46 @@ CONSOLE_COMMAND( convertMap, "Convert .map file to new map format with polygons 
 	
 	common->SetRefreshOnPrint( false );
 }
+
+
+CONSOLE_COMMAND( exportMapToJSON, "Convert .map file to new map format with polygons instead of brushes ", idCmdSystem::ArgCompletion_MapName )
+{
+	common->SetRefreshOnPrint( true );
+	
+	if( args.Argc() != 2 )
+	{
+		common->Printf( "Usage: convertMap <map>\n" );
+		return;
+	}
+	
+	idStr filename = args.Argv( 1 );
+	if( !filename.Length() )
+	{
+		return;
+	}
+	filename.StripFileExtension();
+	
+	idStr mapName;
+	sprintf( mapName, "maps/%s.map", filename.c_str() );
+	
+	idMapFile map;
+	if( map.Parse( mapName, false, false ) )
+	{
+		map.ConvertToPolygonMeshFormat();
+		
+		idStrStatic< MAX_OSPATH > canonical = mapName;
+		canonical.ToLower();
+		
+		idStrStatic< MAX_OSPATH > extension;
+		canonical.StripFileExtension();
+		
+		idStrStatic< MAX_OSPATH > convertedFileName;
+		
+		convertedFileName = canonical;
+		//convertedFileName += "_converted";
+		
+		map.WriteJSON( convertedFileName, ".json" );
+	}
+	
+	common->SetRefreshOnPrint( false );
+}

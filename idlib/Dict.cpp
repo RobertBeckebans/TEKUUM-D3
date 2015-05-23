@@ -720,7 +720,7 @@ void idDict::WriteToFileHandle( idFile* f ) const
 
 
 // RB begin
-void idDict::ExportToJSON( idFile* f, const char* prefix ) const
+void idDict::WriteJSON( idFile* f, const char* prefix ) const
 {
 	//f->Printf( "%s[\n", prefix );
 	
