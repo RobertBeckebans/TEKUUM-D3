@@ -1499,7 +1499,7 @@ bool MapPolygonMesh::WriteJSON( idFile* fp, int primitiveNum, const idVec3& orig
 		
 		//fp->WriteFloatString( "   ( %f %f %f %f %f %f %f %f )\n", v->xyz[0] + origin[0], v->xyz[1] + origin[1], v->xyz[2] + origin[2], st[0], st[1], n[0], n[1], n[2] );
 		
-		fp->WriteFloatString( "\t\t\t\t\t\t{ \"xyz\": \"%f %f %f\", \"st\": \"%f %f\", \"normal\": \"%f %f %f\" }\n", v->xyz[0], v->xyz[1], v->xyz[2], st[0], st[1], n[0], n[1], n[2] );
+		fp->WriteFloatString( "\t\t\t\t\t\t{ \"xyz\": [%f, %f, %f], \"st\": [%f, %f], \"normal\": [%f, %f, %f] }\n", v->xyz[0], v->xyz[1], v->xyz[2], st[0], st[1], n[0], n[1], n[2] );
 	}
 	fp->WriteFloatString( "\t\t\t\t\t],\n" );
 	
@@ -1508,13 +1508,13 @@ bool MapPolygonMesh::WriteJSON( idFile* fp, int primitiveNum, const idVec3& orig
 	{
 		MapPolygon* poly = polygons[ i ];
 		
-		fp->WriteFloatString( "\t\t\t\t\t\t{ \"material\": \"%s\", \"indices\": \"", poly->GetMaterial() );
+		fp->WriteFloatString( "\t\t\t\t\t\t{ \"material\": \"%s\", \"indices\": [", poly->GetMaterial() );
 		
 		for( int j = 0; j < poly->indexes.Num(); j++ )
 		{
-			fp->WriteFloatString( "%d ", poly->indexes[j] );
+			fp->WriteFloatString( "%d%s", poly->indexes[j], ( j == poly->indexes.Num() - 1 ) ? "" : ", " );
 		}
-		fp->WriteFloatString( "\" }\n" );
+		fp->WriteFloatString( "] }\n" );
 	}
 	fp->WriteFloatString( "\t\t\t\t\t]\n" );
 	
