@@ -301,7 +301,7 @@ public:
 	~MapPolygonMesh()
 	{
 		//verts.DeleteContents();
-		polygons.DeleteContents( true );
+        //polygons.DeleteContents( true );
 	}
 	
 	void					ConvertFromBrush( const idMapBrush* brush, int entityNum, int primitiveNum );
@@ -329,14 +329,14 @@ public:
 		return polygons.Num();
 	}
 	
-	int						AddPolygon( MapPolygon* face )
-	{
-		return polygons.Append( face );
-	}
+    //int						AddPolygon( MapPolygon* face )
+    //{
+    //	return polygons.Append( face );
+    //}
 	
-	MapPolygon* 			GetFace( int i ) const
+    const MapPolygon& 			GetFace( int i ) const
 	{
-		return polygons[i];
+        return polygons[i];
 	}
 	
 	unsigned int			GetGeometryCRC() const;
@@ -357,11 +357,13 @@ public:
 	
 private:
 	void					SetContents();
+
+    int						originalType;
 	
 protected:
 
 	idList<idDrawVert>		verts;			// vertices can be shared between polygons
-	idList<MapPolygon*>		polygons;
+    idList<MapPolygon>		polygons;
 	
 	// derived data after parsing
 	
