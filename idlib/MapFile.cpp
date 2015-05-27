@@ -811,7 +811,7 @@ bool idMapEntity::WriteJSON( idFile* fp, int entityNum, int numEntities ) const
 {
 	idVec3 origin;
 	
-    fp->WriteFloatString( "\t\t{\n\t\t\t\"entity\": \"%d\",\n", entityNum );
+	fp->WriteFloatString( "\t\t{\n\t\t\t\"entity\": \"%d\",\n", entityNum );
 	
 	idStr key;
 	idStr value;
@@ -821,7 +821,7 @@ bool idMapEntity::WriteJSON( idFile* fp, int entityNum, int numEntities ) const
 		key = epairs.GetKeyVal( i )->GetKey();
 		
 		key.ReplaceChar( '\t', ' ' );
-
+		
 		value = epairs.GetKeyVal( i )->GetValue();
 		value.BackSlashesToSlashes();
 		
@@ -854,11 +854,11 @@ bool idMapEntity::WriteJSON( idFile* fp, int entityNum, int numEntities ) const
 			case idMapPrimitive::TYPE_MESH:
 				static_cast<MapPolygonMesh*>( mapPrim )->WriteJSON( fp, i, origin );
 				break;
-
+				
 			default:
 				continue;
 		}
-
+		
 		// find next mesh primitive
 		idMapPrimitive* nextPrim = NULL;
 		for( int j = i + 1; j < numPrimitives; j++ )
@@ -869,8 +869,8 @@ bool idMapEntity::WriteJSON( idFile* fp, int entityNum, int numEntities ) const
 				break;
 			}
 		}
-
-
+		
+		
 		if( nextPrim && ( nextPrim->GetType() == idMapPrimitive::TYPE_MESH ) )
 		{
 			fp->WriteFloatString( ",\n" );
@@ -886,7 +886,7 @@ bool idMapEntity::WriteJSON( idFile* fp, int entityNum, int numEntities ) const
 		fp->WriteFloatString( "\t\t\t]\n" );
 	}
 	
-    fp->WriteFloatString( "\t\t}%s\n", ( entityNum == ( numEntities - 1 ) ) ? "" : "," );
+	fp->WriteFloatString( "\t\t}%s\n", ( entityNum == ( numEntities - 1 ) ) ? "" : "," );
 	
 	return true;
 }
@@ -1149,7 +1149,7 @@ bool idMapFile::WriteJSON( const char* fileName, const char* ext, bool fromBaseP
 	
 	for( i = 0; i < entities.Num(); i++ )
 	{
-        entities[i]->WriteJSON( fp, i, entities.Num() );
+		entities[i]->WriteJSON( fp, i, entities.Num() );
 	}
 	
 	fp->Printf( "\t]\n" );
@@ -1285,7 +1285,7 @@ bool idMapFile::NeedsReload()
 MapPolygonMesh::MapPolygonMesh()
 {
 	type = TYPE_MESH;
-    originalType = TYPE_MESH;
+	originalType = TYPE_MESH;
 	polygons.Resize( 8, 4 );
 	
 	contents = CONTENTS_SOLID;
@@ -1294,8 +1294,8 @@ MapPolygonMesh::MapPolygonMesh()
 
 void MapPolygonMesh::ConvertFromBrush( const idMapBrush* mapBrush, int entityNum, int primitiveNum )
 {
-    originalType = TYPE_BRUSH;
-
+	originalType = TYPE_BRUSH;
+	
 	// fix degenerate planes
 	idPlane* planes = ( idPlane* ) _alloca16( mapBrush->GetNumSides() * sizeof( planes[0] ) );
 	for( int i = 0; i < mapBrush->GetNumSides(); i++ )
@@ -1378,8 +1378,8 @@ void MapPolygonMesh::ConvertFromBrush( const idMapBrush* mapBrush, int entityNum
 			continue;
 		}
 		
-        MapPolygon& polygon = polygons.Alloc();
-        polygon.SetMaterial( mapSide->GetMaterial() );
+		MapPolygon& polygon = polygons.Alloc();
+		polygon.SetMaterial( mapSide->GetMaterial() );
 		
 		
 		//for( int j = 0; j < w.GetNumPoints(); j++ )
@@ -1387,7 +1387,7 @@ void MapPolygonMesh::ConvertFromBrush( const idMapBrush* mapBrush, int entityNum
 		// reverse order, so normal does not point inwards
 		for( int j = w.GetNumPoints() - 1; j >= 0; j-- )
 		{
-            polygon.AddIndex( verts.Num() + j );
+			polygon.AddIndex( verts.Num() + j );
 		}
 		
 		for( int j = 0; j < w.GetNumPoints(); j++ )
@@ -1426,8 +1426,8 @@ void MapPolygonMesh::ConvertFromBrush( const idMapBrush* mapBrush, int entityNum
 
 void MapPolygonMesh::ConvertFromPatch( const idMapPatch* patch, int entityNum, int primitiveNum )
 {
-    originalType = TYPE_PATCH;
-
+	originalType = TYPE_PATCH;
+	
 	idSurface_Patch* cp = new idSurface_Patch( *patch );
 	
 	if( patch->GetExplicitlySubdivided() )
@@ -1441,30 +1441,24 @@ void MapPolygonMesh::ConvertFromPatch( const idMapPatch* patch, int entityNum, i
 	
 	for( int i = 0; i < cp->GetNumIndexes(); i += 3 )
 	{
-        idDrawVert& dv0 = verts.Alloc();
-		idDrawVert& dv1 = verts.Alloc();
-		idDrawVert& dv2 = verts.Alloc();
-		
-		dv0 = ( *cp )[cp->GetIndexes()[i + 1]];
-		dv1 = ( *cp )[cp->GetIndexes()[i + 2]];
-		dv2 = ( *cp )[cp->GetIndexes()[i + 0]];
-
-        if( IsNAN( dv0.xyz ) || IsNAN( dv1.xyz ) || IsNAN( dv2.xyz ) )
-        {
-            //continue;
-        }
-		
-        MapPolygon& polygon = polygons.Alloc();
-        polygon.SetMaterial( patch->GetMaterial() );
-
-        polygon.AddIndex( i + 0 );
-        polygon.AddIndex( i + 1 );
-        polygon.AddIndex( i + 2 );
+		verts.Append( ( *cp )[cp->GetIndexes()[i + 1]] );
+		verts.Append( ( *cp )[cp->GetIndexes()[i + 2]] );
+		verts.Append( ( *cp )[cp->GetIndexes()[i + 0]] );
 	}
 	
-    delete cp;
+	for( int i = 0; i < cp->GetNumIndexes(); i += 3 )
+	{
+		MapPolygon& polygon = polygons.Alloc();
+		polygon.SetMaterial( patch->GetMaterial() );
+		
+		polygon.AddIndex( i + 0 );
+		polygon.AddIndex( i + 1 );
+		polygon.AddIndex( i + 2 );
+	}
 	
-    SetContents();
+	delete cp;
+	
+	SetContents();
 }
 
 bool MapPolygonMesh::Write( idFile* fp, int primitiveNum, const idVec3& origin ) const
@@ -1491,13 +1485,13 @@ bool MapPolygonMesh::Write( idFile* fp, int primitiveNum, const idVec3& origin )
 	fp->WriteFloatString( "  (\n" );
 	for( int i = 0; i < polygons.Num(); i++ )
 	{
-        const MapPolygon& poly = polygons[ i ];
+		const MapPolygon& poly = polygons[ i ];
 		
-        fp->WriteFloatString( "   \"%s\" %d = ", poly.GetMaterial(), poly.indexes.Num() );
+		fp->WriteFloatString( "   \"%s\" %d = ", poly.GetMaterial(), poly.indexes.Num() );
 		
-        for( int j = 0; j < poly.indexes.Num(); j++ )
+		for( int j = 0; j < poly.indexes.Num(); j++ )
 		{
-            fp->WriteFloatString( "%d ", poly.indexes[j] );
+			fp->WriteFloatString( "%d ", poly.indexes[j] );
 		}
 		fp->WriteFloatString( "\n" );
 	}
@@ -1510,47 +1504,47 @@ bool MapPolygonMesh::Write( idFile* fp, int primitiveNum, const idVec3& origin )
 
 bool MapPolygonMesh::WriteJSON( idFile* fp, int primitiveNum, const idVec3& origin ) const
 {
-    fp->WriteFloatString( "\t\t\t\t{\n\t\t\t\t\t\"primitive\": \"%d\",\n", primitiveNum );
+	fp->WriteFloatString( "\t\t\t\t{\n\t\t\t\t\t\"primitive\": \"%d\",\n", primitiveNum );
 	
-    if( originalType == TYPE_BRUSH )
-    {
-        fp->WriteFloatString( "\t\t\t\t\t\"original\": \"brush\",\n" );
-    }
-    else if( originalType == TYPE_PATCH )
-    {
-        fp->WriteFloatString( "\t\t\t\t\t\"original\": \"curve\",\n" );
-    }
-
+	if( originalType == TYPE_BRUSH )
+	{
+		fp->WriteFloatString( "\t\t\t\t\t\"original\": \"brush\",\n" );
+	}
+	else if( originalType == TYPE_PATCH )
+	{
+		fp->WriteFloatString( "\t\t\t\t\t\"original\": \"curve\",\n" );
+	}
+	
 	fp->WriteFloatString( "\t\t\t\t\t\"verts\":\n\t\t\t\t\t[\n" );
 	idVec2 st;
 	idVec3 n;
 	for( int i = 0; i < verts.Num(); i++ )
 	{
-        const idDrawVert& v = verts[ i ];
-        st = v.GetTexCoord();
-        n = v.GetNormalRaw();
-
-        //if( IsNAN( v.xyz ) )
-        //{
-        //   continue;
-        //}
+		const idDrawVert& v = verts[ i ];
+		st = v.GetTexCoord();
+		n = v.GetNormalRaw();
 		
-        fp->Printf( "\t\t\t\t\t\t{ \"xyz\": [%f, %f, %f], \"st\": [%f, %f], \"normal\": [%f, %f, %f] }%s\n", v.xyz[0], v.xyz[1], v.xyz[2], st[0], st[1], n[0], n[1], n[2], ( i == ( verts.Num() - 1 ) ) ? "" : "," );
+		//if( IsNAN( v.xyz ) )
+		//{
+		//   continue;
+		//}
+		
+		fp->WriteFloatString( "\t\t\t\t\t\t{ \"xyz\": [%f, %f, %f], \"st\": [%f, %f], \"normal\": [%f, %f, %f] }%s\n", v.xyz[0], v.xyz[1], v.xyz[2], st[0], st[1], n[0], n[1], n[2], ( i == ( verts.Num() - 1 ) ) ? "" : "," );
 	}
 	fp->WriteFloatString( "\t\t\t\t\t],\n" );
 	
 	fp->WriteFloatString( "\t\t\t\t\t\"polygons\":\n\t\t\t\t\t[\n" );
 	for( int i = 0; i < polygons.Num(); i++ )
 	{
-        const MapPolygon& poly = polygons[ i ];
+		const MapPolygon& poly = polygons[ i ];
 		
-        fp->WriteFloatString( "\t\t\t\t\t\t{ \"material\": \"%s\", \"indices\": [", poly.GetMaterial() );
+		fp->WriteFloatString( "\t\t\t\t\t\t{ \"material\": \"%s\", \"indices\": [", poly.GetMaterial() );
 		
-        for( int j = 0; j < poly.indexes.Num(); j++ )
+		for( int j = 0; j < poly.indexes.Num(); j++ )
 		{
-            fp->WriteFloatString( "%d%s", poly.indexes[j], ( j == poly.indexes.Num() - 1 ) ? "" : ", " );
+			fp->WriteFloatString( "%d%s", poly.indexes[j], ( j == poly.indexes.Num() - 1 ) ? "" : ", " );
 		}
-        fp->WriteFloatString( "] }%s\n", ( i == ( polygons.Num() - 1 ) ) ? "" : "," );
+		fp->WriteFloatString( "] }%s\n", ( i == ( polygons.Num() - 1 ) ) ? "" : "," );
 	}
 	fp->WriteFloatString( "\t\t\t\t\t]\n" );
 	
@@ -1635,12 +1629,12 @@ MapPolygonMesh* MapPolygonMesh::Parse( idLexer& src, const idVec3& origin, float
 	for( i = 0; i < numPolygons; i++ )
 	{
 		// get material name
-        MapPolygon& polygon = mesh->polygons.Alloc();
+		MapPolygon& polygon = mesh->polygons.Alloc();
 		
 		src.ReadToken( &token );
 		if( token.type == TT_STRING )
 		{
-            polygon.SetMaterial( token );;
+			polygon.SetMaterial( token );;
 		}
 		else
 		{
@@ -1664,7 +1658,7 @@ MapPolygonMesh* MapPolygonMesh::Parse( idLexer& src, const idVec3& origin, float
 			//indexes[j] = src.ParseInt();
 			
 			int index = src.ParseInt();
-            polygon.AddIndex( index );
+			polygon.AddIndex( index );
 		}
 		
 		//polygon->SetIndexes( indexes );
@@ -1708,7 +1702,7 @@ void MapPolygonMesh::SetContents()
 	
 	int			c2;
 	
-    MapPolygon* poly = &polygons[0];
+	MapPolygon* poly = &polygons[0];
 	
 	const idMaterial* mat = declManager->FindMaterial( poly->GetMaterial() );
 	contents = mat->GetContentFlags();
@@ -1721,7 +1715,7 @@ void MapPolygonMesh::SetContents()
 	
 	for( int i = 1 ; i < polygons.Num() ; i++ )
 	{
-        poly = &polygons[i];
+		poly = &polygons[i];
 		
 		const idMaterial* mat2 = declManager->FindMaterial( poly->GetMaterial() );
 		
@@ -1754,9 +1748,9 @@ unsigned int MapPolygonMesh::GetGeometryCRC() const
 	
 	for( i = 0; i < polygons.Num(); i++ )
 	{
-        const MapPolygon& poly = polygons[i];
+		const MapPolygon& poly = polygons[i];
 		
-        crc ^= StringCRC( poly.GetMaterial() );
+		crc ^= StringCRC( poly.GetMaterial() );
 	}
 	
 	return crc;
@@ -1850,7 +1844,6 @@ bool idMapFile::ConvertToPolygonMeshFormat()
 						
 						continue;
 					}
-#if 1
 					else if( mapPrim->GetType() == idMapPrimitive::TYPE_PATCH )
 					{
 						MapPolygonMesh* meshPrim = new MapPolygonMesh();
@@ -1863,7 +1856,6 @@ bool idMapFile::ConvertToPolygonMeshFormat()
 						
 						continue;
 					}
-#endif
 				}
 			}
 		}

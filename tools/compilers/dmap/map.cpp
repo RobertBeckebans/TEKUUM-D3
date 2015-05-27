@@ -457,11 +457,11 @@ static int ParsePolygonMesh( const MapPolygonMesh* mesh, int primitiveNum, int n
 	
 	for( int i = 0; i < mesh->GetNumPolygons(); i++ )
 	{
-        const MapPolygon& poly = mesh->GetFace( i );
+		const MapPolygon& poly = mesh->GetFace( i );
 		
-        const idMaterial* mat = declManager->FindMaterial( poly.GetMaterial() );
+		const idMaterial* mat = declManager->FindMaterial( poly.GetMaterial() );
 		
-        const idList<int>& indexes = poly.GetIndexes();
+		const idList<int>& indexes = poly.GetIndexes();
 		
 		//idList<int> unique;
 		//for( int j = 0; j < indexes.Num(); j++ )

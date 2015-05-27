@@ -278,7 +278,9 @@ public:
 		return indexes;
 	}
 	
-	
+//	MapPolygon& operator = ( const MapPolygon& poly );
+
+
 protected:
 	idStr					material;
 	idList<int>				indexes;		// [3..n] references to vertices for each face
@@ -290,8 +292,18 @@ ID_INLINE MapPolygon::MapPolygon()
 
 ID_INLINE MapPolygon::MapPolygon( int numIndexes )
 {
-	indexes.AssureSize( 3 );
+	//indexes.AssureSize( 3 );
 }
+
+/*
+ID_INLINE MapPolygon& MapPolygon::operator = ( const MapPolygon& poly )
+{
+	material = poly.material;
+	indexes = indexes;
+
+	return *this;
+}
+*/
 
 
 class MapPolygonMesh : public idMapPrimitive
@@ -301,7 +313,7 @@ public:
 	~MapPolygonMesh()
 	{
 		//verts.DeleteContents();
-        //polygons.DeleteContents( true );
+		//polygons.DeleteContents( true );
 	}
 	
 	void					ConvertFromBrush( const idMapBrush* brush, int entityNum, int primitiveNum );
@@ -329,14 +341,14 @@ public:
 		return polygons.Num();
 	}
 	
-    //int						AddPolygon( MapPolygon* face )
-    //{
-    //	return polygons.Append( face );
-    //}
+	//int						AddPolygon( MapPolygon* face )
+	//{
+	//	return polygons.Append( face );
+	//}
 	
-    const MapPolygon& 			GetFace( int i ) const
+	const MapPolygon& 			GetFace( int i ) const
 	{
-        return polygons[i];
+		return polygons[i];
 	}
 	
 	unsigned int			GetGeometryCRC() const;
@@ -357,13 +369,13 @@ public:
 	
 private:
 	void					SetContents();
-
-    int						originalType;
+	
+	int						originalType;
 	
 protected:
 
 	idList<idDrawVert>		verts;			// vertices can be shared between polygons
-    idList<MapPolygon>		polygons;
+	idList<MapPolygon>		polygons;
 	
 	// derived data after parsing
 	
@@ -395,7 +407,7 @@ public:
 	static idMapEntity* 	Parse( idLexer& src, bool worldSpawn = false, float version = CURRENT_MAP_VERSION );
 	bool					Write( idFile* fp, int entityNum ) const;
 	// RB begin
-    bool					WriteJSON( idFile* fp, int entityNum, int numEntities ) const;
+	bool					WriteJSON( idFile* fp, int entityNum, int numEntities ) const;
 	// RB end
 	int						GetNumPrimitives() const
 	{
