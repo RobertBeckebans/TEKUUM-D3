@@ -814,15 +814,18 @@ bool idMapEntity::WriteJSON( idFile* fp, int entityNum, int numEntities ) const
     fp->WriteFloatString( "\t\t{\n\t\t\t\"entity\": \"%d\",\n", entityNum );
 	
 	idStr key;
+	idStr value;
 	
 	for( int i = 0; i < epairs.GetNumKeyVals(); i++ )
 	{
 		key = epairs.GetKeyVal( i )->GetKey();
 		
-		//for( int j = 0; j < key.Length(); j++ )
 		key.ReplaceChar( '\t', ' ' );
+
+		value = epairs.GetKeyVal( i )->GetValue();
+		value.BackSlashesToSlashes();
 		
-		fp->WriteFloatString( "\t\t\t\"%s\": \"%s\"%s\n", key.c_str(), epairs.GetKeyVal( i )->GetValue().c_str(), ( ( i == ( epairs.GetNumKeyVals() - 1 ) ) && !GetNumPrimitives() ) ? "" : "," );
+		fp->WriteFloatString( "\t\t\t\"%s\": \"%s\"%s\n", key.c_str(), value.c_str(), ( ( i == ( epairs.GetNumKeyVals() - 1 ) ) && !GetNumPrimitives() ) ? "" : "," );
 	}
 	
 	epairs.GetVector( "origin", "0 0 0", origin );
@@ -851,15 +854,30 @@ bool idMapEntity::WriteJSON( idFile* fp, int entityNum, int numEntities ) const
 			case idMapPrimitive::TYPE_MESH:
 				static_cast<MapPolygonMesh*>( mapPrim )->WriteJSON( fp, i, origin );
 				break;
+
+			default:
+				continue;
 		}
-		
-		if( i == ( numPrimitives - 1 ) )
+
+		// find next mesh primitive
+		idMapPrimitive* nextPrim = NULL;
+		for( int j = i + 1; j < numPrimitives; j++ )
 		{
-			fp->WriteFloatString( "\n" );
+			nextPrim = GetPrimitive( j );
+			if( nextPrim->GetType() == idMapPrimitive::TYPE_MESH )
+			{
+				break;
+			}
+		}
+
+
+		if( nextPrim && ( nextPrim->GetType() == idMapPrimitive::TYPE_MESH ) )
+		{
+			fp->WriteFloatString( ",\n" );
 		}
 		else
 		{
-			fp->WriteFloatString( ",\n" );
+			fp->WriteFloatString( "\n" );
 		}
 	}
 	

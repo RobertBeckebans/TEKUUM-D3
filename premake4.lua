@@ -161,6 +161,12 @@ newoption
 	description = "Use SDL 2.0 instead of SDL 1.2"
 }
 
+newoption
+{
+	trigger = "doomsharp",
+	description = "Use C# script instead of Doom .script"
+}
+
 --newoption
 --{
 --	trigger = "lua",
@@ -420,18 +426,19 @@ if _OPTIONS["android"] then
 	foundAndroidNDK = FindAndroidNDK()
 end
 	
-if not _OPTIONS["android"] then
-	include "idlib"
-end
-
-if os.is("windows") then
+if _OPTIONS["doomsharp"] and os.is("windows") then
 	if _OPTIONS["standalone"] then
 		include "../assets/scriptsharp"
 	else
 		include "../base/scriptsharp"
 	end
+	
+	return
 end
 
+if not _OPTIONS["android"] then
+	include "idlib"
+end
 
 
 
