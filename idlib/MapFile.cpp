@@ -1540,10 +1540,17 @@ bool MapPolygonMesh::WriteJSON( idFile* fp, int primitiveNum, const idVec3& orig
 		
 		fp->WriteFloatString( "\t\t\t\t\t\t{ \"material\": \"%s\", \"indices\": [", poly.GetMaterial() );
 		
-		for( int j = 0; j < poly.indexes.Num(); j++ )
+#if 0
+        for( int j = 0; j < poly.indexes.Num(); j++ )
+        {
+            fp->WriteFloatString( "%d%s", poly.indexes[j], ( j == poly.indexes.Num() - 1 ) ? "" : ", " );
+        }
+#else
+        for( int j = poly.indexes.Num() -1 ; j >= 0; j-- )
 		{
-			fp->WriteFloatString( "%d%s", poly.indexes[j], ( j == poly.indexes.Num() - 1 ) ? "" : ", " );
+            fp->WriteFloatString( "%d%s", poly.indexes[j], ( j == 0 ) ? "" : ", " );
 		}
+#endif
 		fp->WriteFloatString( "] }%s\n", ( i == ( polygons.Num() - 1 ) ) ? "" : "," );
 	}
 	fp->WriteFloatString( "\t\t\t\t\t]\n" );
