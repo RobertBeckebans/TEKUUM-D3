@@ -377,15 +377,15 @@ void OBJExporter::ConvertMeshToOBJ( OBJGroup& group, const MapPolygonMesh* mesh,
 	
 	for( int i = 0; i < mesh->GetNumPolygons(); i++ )
 	{
-		MapPolygon* poly = mesh->GetFace( i );
+        const MapPolygon& poly = mesh->GetFace( i );
 		
-		const idMaterial* material = declManager->FindMaterial( poly->GetMaterial() );
+        const idMaterial* material = declManager->FindMaterial( poly.GetMaterial() );
 		materials.AddUnique( material );
 		
 		OBJExporter::OBJFace& face = geometry.faces.Alloc();
 		face.material = material;
 		
-		const idList<int>& indexes = poly->GetIndexes();
+        const idList<int>& indexes = poly.GetIndexes();
 		
 		for( int j = 0; j < verts.Num(); j++ )
 		{
