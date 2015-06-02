@@ -890,6 +890,169 @@ bool idMapEntity::WriteJSON( idFile* fp, int entityNum, int numEntities ) const
 	
 	return true;
 }
+
+idMapEntity* idMapEntity::ParseJSON( idLexer& src )
+{
+	idToken	token;
+	idMapEntity* mapEnt;
+	idMapPatch* mapPatch;
+	idMapBrush* mapBrush;
+	// RB begin
+	MapPolygonMesh* mapMesh;
+	// RB end
+	bool worldent;
+	idVec3 origin;
+	double v1, v2, v3;
+	
+	if( !src.ReadToken( &token ) )
+	{
+		return NULL;
+	}
+	
+	if( token == "]" )
+	{
+		return NULL;
+	}
+	
+	if( token == "," )
+	{
+		if( !src.ReadToken( &token ) )
+		{
+			return NULL;
+		}
+	}
+	
+	if( token != "{" )
+	{
+		src.Error( "idMapEntity::ParseJSON: { not found, found %s", token.c_str() );
+		return NULL;
+	}
+	
+	mapEnt = new idMapEntity();
+	
+	/*
+	if( worldSpawn )
+	{
+		mapEnt->primitives.Resize( 1024, 256 );
+	}
+	*/
+	
+	origin.Zero();
+	worldent = false;
+	do
+	{
+		if( !src.ReadToken( &token ) )
+		{
+			src.Error( "idMapEntity::ParseJSON: EOF without closing brace" );
+			return NULL;
+		}
+		
+		if( token == "}" )
+		{
+			break;
+		}
+		
+		if( token == "," )
+		{
+			continue;
+		}
+		
+		// RB: new mesh primitive with ngons
+		if( token == "primitives" )
+		{
+			if( !src.ExpectTokenString( ":" ) )
+			{
+				delete mapEnt;
+				src.Error( "idMapEntity::ParseJSON: expected : for primitives" );
+				return NULL;
+			}
+			
+			if( !src.ExpectTokenString( "[" ) )
+			{
+				delete mapEnt;
+				src.Error( "idMapEntity::ParseJSON: expected [ for primitives" );
+				return NULL;
+			}
+			
+			while( true )
+			{
+				if( !src.ReadToken( &token ) )
+				{
+					src.Error( "idMapEntity::ParseJSON: EOF without closing brace" );
+					return NULL;
+				}
+				
+				if( token == "]" )
+				{
+					break;
+				}
+				
+				if( token == "," )
+				{
+					continue;
+				}
+				
+				if( token == "{" )
+				{
+					mapMesh = MapPolygonMesh::ParseJSON( src );
+					if( !mapMesh )
+					{
+						break;
+					}
+					
+					mapEnt->AddPrimitive( mapMesh );
+				}
+			}
+		}
+		else
+		{
+			idStr key, value;
+			
+			// parse a key / value pair
+			key = token;
+			
+			if( !src.ReadToken( &token ) )
+			{
+				src.Error( "idMapEntity::ParseJSON: EOF without closing brace" );
+				delete mapEnt;
+				return NULL;
+			}
+			
+			if( token != ":" )
+			{
+				delete mapEnt;
+				return NULL;
+			}
+			
+			src.ReadTokenOnLine( &token );
+			value = token;
+			
+			// strip trailing spaces that sometimes get accidentally
+			// added in the editor
+			value.StripTrailingWhitespace();
+			key.StripTrailingWhitespace();
+			
+			mapEnt->epairs.Set( key, value );
+			
+			if( !idStr::Icmp( key, "origin" ) )
+			{
+				// scanf into doubles, then assign, so it is idVec size independent
+				v1 = v2 = v3 = 0;
+				sscanf( value, "%lf %lf %lf", &v1, &v2, &v3 );
+				origin.x = v1;
+				origin.y = v2;
+				origin.z = v3;
+			}
+			else if( !idStr::Icmp( key, "classname" ) && !idStr::Icmp( value, "worldspawn" ) )
+			{
+				worldent = true;
+			}
+		}
+	}
+	while( 1 );
+	
+	return mapEnt;
+}
 // RB end
 
 /*
@@ -938,6 +1101,25 @@ unsigned int idMapEntity::GetGeometryCRC() const
 	return crc;
 }
 
+class idSort_CompareMapEntity : public idSort_Quick< idMapEntity*, idSort_CompareMapEntity >
+{
+public:
+	int Compare( idMapEntity*& a, idMapEntity*& b ) const
+	{
+		if( idStr::Icmp( a->epairs.GetString( "name" ), "worldspawn" ) == 0 )
+		{
+			return -1;
+		}
+		
+		if( idStr::Icmp( b->epairs.GetString( "name" ), "worldspawn" ) == 0 )
+		{
+			return -1;
+		}
+		
+		return idStr::Icmp( a->epairs.GetString( "name" ), b->epairs.GetString( "name" ) );
+	}
+};
+
 /*
 ===============
 idMapFile::Parse
@@ -957,11 +1139,17 @@ bool idMapFile::Parse( const char* filename, bool ignoreRegion, bool osPath )
 	fullName = name;
 	hasPrimitiveData = false;
 	
+	bool isJSON = false;
 	if( !ignoreRegion )
 	{
-		// try loading a .reg file first
-		fullName.SetFileExtension( "reg" );
+		// RB: try loading a .json file first
+		fullName.SetFileExtension( "json" );
 		src.LoadFile( fullName, osPath );
+		
+		if( src.IsLoaded() )
+		{
+			isJSON = true;
+		}
 	}
 	
 	if( !src.IsLoaded() )
@@ -980,20 +1168,80 @@ bool idMapFile::Parse( const char* filename, bool ignoreRegion, bool osPath )
 	fileTime = src.GetFileTime();
 	entities.DeleteContents( true );
 	
-	if( src.CheckTokenString( "Version" ) )
+	if( !src.ReadToken( &token ) )
 	{
-		src.ReadTokenOnLine( &token );
-		version = token.GetFloatValue();
+		return false;
 	}
 	
-	while( 1 )
+	if( token == "{" )
 	{
-		mapEnt = idMapEntity::Parse( src, ( entities.Num() == 0 ), version );
-		if( !mapEnt )
+		isJSON = true;
+	}
+	
+	if( isJSON )
+	{
+		while( true )
 		{
-			break;
+			if( !src.ReadToken( &token ) )
+			{
+				break;
+			}
+			
+			if( token == "entities" )
+			{
+				if( !src.ReadToken( &token ) )
+				{
+					return false;
+				}
+				
+				if( token != ":" )
+				{
+					src.Error( "idMapFile::Parse: : not found, found %s", token.c_str() );
+					return false;
+				}
+				
+				if( !src.ReadToken( &token ) )
+				{
+					return false;
+				}
+				
+				if( token != "[" )
+				{
+					src.Error( "idMapFile::Parse: [ not found, found %s", token.c_str() );
+					return false;
+				}
+				
+				while( true )
+				{
+					mapEnt = idMapEntity::ParseJSON( src );
+					if( !mapEnt )
+					{
+						break;
+					}
+					entities.Append( mapEnt );
+				}
+			}
 		}
-		entities.Append( mapEnt );
+		
+		entities.SortWithTemplate( idSort_CompareMapEntity() );
+	}
+	else
+	{
+		if( token == "Version" )
+		{
+			src.ReadTokenOnLine( &token );
+			version = token.GetFloatValue();
+		}
+		
+		while( 1 )
+		{
+			mapEnt = idMapEntity::Parse( src, ( entities.Num() == 0 ), version );
+			if( !mapEnt )
+			{
+				break;
+			}
+			entities.Append( mapEnt );
+		}
 	}
 	
 	SetGeometryCRC();
@@ -1529,6 +1777,7 @@ bool MapPolygonMesh::WriteJSON( idFile* fp, int primitiveNum, const idVec3& orig
 		//   continue;
 		//}
 		
+		//idVec3 xyz = v.xyz - origin;
 		fp->WriteFloatString( "\t\t\t\t\t\t{ \"xyz\": [%f, %f, %f], \"st\": [%f, %f], \"normal\": [%f, %f, %f] }%s\n", v.xyz[0], v.xyz[1], v.xyz[2], st[0], st[1], n[0], n[1], n[2], ( i == ( verts.Num() - 1 ) ) ? "" : "," );
 	}
 	fp->WriteFloatString( "\t\t\t\t\t],\n" );
@@ -1541,14 +1790,14 @@ bool MapPolygonMesh::WriteJSON( idFile* fp, int primitiveNum, const idVec3& orig
 		fp->WriteFloatString( "\t\t\t\t\t\t{ \"material\": \"%s\", \"indices\": [", poly.GetMaterial() );
 		
 #if 0
-        for( int j = 0; j < poly.indexes.Num(); j++ )
-        {
-            fp->WriteFloatString( "%d%s", poly.indexes[j], ( j == poly.indexes.Num() - 1 ) ? "" : ", " );
-        }
-#else
-        for( int j = poly.indexes.Num() -1 ; j >= 0; j-- )
+		for( int j = 0; j < poly.indexes.Num(); j++ )
 		{
-            fp->WriteFloatString( "%d%s", poly.indexes[j], ( j == 0 ) ? "" : ", " );
+			fp->WriteFloatString( "%d%s", poly.indexes[j], ( j == poly.indexes.Num() - 1 ) ? "" : ", " );
+		}
+#else
+		for( int j = poly.indexes.Num() - 1 ; j >= 0; j-- )
+		{
+			fp->WriteFloatString( "%d%s", poly.indexes[j], ( j == 0 ) ? "" : ", " );
 		}
 #endif
 		fp->WriteFloatString( "] }%s\n", ( i == ( polygons.Num() - 1 ) ) ? "" : "," );
@@ -1690,6 +1939,211 @@ MapPolygonMesh* MapPolygonMesh::Parse( idLexer& src, const idVec3& origin, float
 		delete mesh;
 		src.Error( "MapPolygonMesh::Parse: unable to parse mesh primitive end" );
 		return NULL;
+	}
+	
+	mesh->SetContents();
+	
+	return mesh;
+}
+
+MapPolygonMesh* MapPolygonMesh::ParseJSON( idLexer& src )
+{
+	float		info[7];
+	idToken		token;
+	int			i;
+	
+	//if( !src.ExpectTokenString( "{" ) )
+	//{
+	//	return NULL;
+	//}
+	
+	MapPolygonMesh* mesh = new MapPolygonMesh();
+	
+	while( true )
+	{
+		if( !src.ReadToken( &token ) )
+		{
+			src.Error( "MapPolygonMesh::ParseJSON: EOF without closing brace" );
+			return NULL;
+		}
+		
+		if( token == "}" )
+		{
+			break;
+		}
+		
+		if( token == "," )
+		{
+			continue;
+		}
+		
+		if( token == "verts" )
+		{
+			idDrawVert vert;
+			float v[8];
+			
+			while( true )
+			{
+				if( !src.ReadToken( &token ) )
+				{
+					src.Error( "MapPolygonMesh::ParseJSON: EOF without closing brace" );
+					return NULL;
+				}
+				
+				if( token == "}" )
+				{
+					mesh->AddVertex( vert );
+					continue;
+				}
+				
+				if( token == "]" )
+				{
+					break;
+				}
+				
+				if( token == "," )
+				{
+					continue;
+				}
+				
+				if( token == "xyz" )
+				{
+					if( !src.ExpectTokenString( ":" ) )
+					{
+						delete mesh;
+						src.Error( "MapPolygonMesh::ParseJSON: EOF without closing brace" );
+						return NULL;
+					}
+					
+					if( !src.Parse1DMatrixJSON( 3, v ) )
+					{
+						delete mesh;
+						src.Error( "MapPolygonMesh::ParseJSON: bad vertex column data" );
+						return NULL;
+					}
+					
+					vert.xyz[0] = v[0];
+					vert.xyz[1] = v[1];
+					vert.xyz[2] = v[2];
+				}
+				else if( token == "st" )
+				{
+					if( !src.ExpectTokenString( ":" ) )
+					{
+						delete mesh;
+						src.Error( "MapPolygonMesh::ParseJSON: EOF without closing brace" );
+						return NULL;
+					}
+					
+					if( !src.Parse1DMatrixJSON( 2, v ) )
+					{
+						delete mesh;
+						src.Error( "MapPolygonMesh::ParseJSON: bad vertex column data" );
+						return NULL;
+					}
+					
+					vert.SetTexCoord( v[0], v[1] );
+				}
+				else if( token == "normal" )
+				{
+					if( !src.ExpectTokenString( ":" ) )
+					{
+						delete mesh;
+						src.Error( "MapPolygonMesh::ParseJSON: EOF without closing brace" );
+						return NULL;
+					}
+					
+					if( !src.Parse1DMatrixJSON( 3, v ) )
+					{
+						delete mesh;
+						src.Error( "MapPolygonMesh::ParseJSON: bad vertex column data" );
+						return NULL;
+					}
+					
+					idVec3 n( v[0], v[1], v[2] );
+					vert.SetNormal( n );
+				}
+			}
+		}
+		
+		
+		if( token == "polygons" )
+		{
+			MapPolygon* polygon = NULL;
+			
+			while( true )
+			{
+				if( !src.ReadToken( &token ) )
+				{
+					src.Error( "MapPolygonMesh::ParseJSON: EOF without closing brace" );
+					return NULL;
+				}
+				
+				if( token == "{" )
+				{
+					polygon = &mesh->polygons.Alloc();
+					continue;
+				}
+				
+				if( token == "]" )
+				{
+					break;
+				}
+				
+				if( token == "," )
+				{
+					continue;
+				}
+				
+				if( token == "material" )
+				{
+					if( !src.ExpectTokenString( ":" ) )
+					{
+						delete mesh;
+						src.Error( "MapPolygonMesh::ParseJSON: EOF without closing brace" );
+						return NULL;
+					}
+					
+					src.ReadToken( &token );
+					if( token.type == TT_STRING )
+					{
+						polygon->SetMaterial( token );
+					}
+				}
+				else if( token == "indices" )
+				{
+					idList<int> indices;
+					
+					while( true )
+					{
+						if( !src.ReadToken( &token ) )
+						{
+							src.Error( "MapPolygonMesh::ParseJSON: EOF without closing brace" );
+							return NULL;
+						}
+						
+						if( token == "]" )
+						{
+							// reverse order from Blender
+							for( int i = indices.Num() - 1; i >= 0; i-- )
+							{
+								polygon->AddIndex( indices[i] );
+							}
+							break;
+						}
+						else if( token.type == TT_NUMBER )
+						{
+							int index = token.GetIntValue();
+							indices.Append( index );
+						}
+						else if( token == "," )
+						{
+							continue;
+						}
+					}
+				}
+			}
+		}
 	}
 	
 	mesh->SetContents();

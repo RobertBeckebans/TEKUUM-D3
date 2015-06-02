@@ -3,6 +3,7 @@
 
 Doom 3 BFG Edition GPL Source Code
 Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company.
+Copyright (C) 2015 Robert Beckebans
 
 This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").
 
@@ -202,6 +203,9 @@ public:
 	float			ParseFloat( bool* errorFlag = NULL );
 	// parse matrices with floats
 	int				Parse1DMatrix( int x, float* m );
+	// RB begin
+	int				Parse1DMatrixJSON( int x, float* m );
+	// RB end
 	int				Parse2DMatrix( int y, int x, float* m );
 	int				Parse3DMatrix( int z, int y, int x, float* m );
 	// parse a braced section into a string

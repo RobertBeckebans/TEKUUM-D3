@@ -321,6 +321,8 @@ public:
 	
 	static MapPolygonMesh*	Parse( idLexer& src, const idVec3& origin, float version = CURRENT_MAP_VERSION );
 	bool					Write( idFile* fp, int primitiveNum, const idVec3& origin ) const;
+	
+	static MapPolygonMesh*	ParseJSON( idLexer& src );
 	bool					WriteJSON( idFile* fp, int primitiveNum, const idVec3& origin ) const;
 	
 	
@@ -407,6 +409,7 @@ public:
 	static idMapEntity* 	Parse( idLexer& src, bool worldSpawn = false, float version = CURRENT_MAP_VERSION );
 	bool					Write( idFile* fp, int entityNum ) const;
 	// RB begin
+	static idMapEntity* 	ParseJSON( idLexer& src );
 	bool					WriteJSON( idFile* fp, int entityNum, int numEntities ) const;
 	// RB end
 	int						GetNumPrimitives() const
