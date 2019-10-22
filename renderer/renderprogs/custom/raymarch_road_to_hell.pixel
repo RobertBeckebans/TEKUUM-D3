@@ -1,0 +1,161 @@
+/*
+===========================================================================
+
+Doom 3 BFG Edition GPL Source Code
+Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company. 
+Copyright (C) 2013 Robert Beckebans
+
+This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").  
+
+Doom 3 BFG Edition Source Code is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+Doom 3 BFG Edition Source Code is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with Doom 3 BFG Edition Source Code.  If not, see <http://www.gnu.org/licenses/>.
+
+In addition, the Doom 3 BFG Edition Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 BFG Edition Source Code.  If not, please request a copy in writing from id Software at the address below.
+
+If you have questions concerning this license or the applicable additional terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
+
+===========================================================================
+*/
+
+#include "renderprogs/global.inc"
+
+
+uniform sampler2D		samp0 : register(s0); // texture 0 is _currentRender
+
+// User Renderparms start at 128 as per renderprogs.h
+
+uniform float4 rpUser0 : register(c128);
+uniform float4 rpUser1 : register(c129);
+
+struct PS_IN
+{
+	float4 position		: VPOS;
+	float3 texcoord0	: TEXCOORD0_centroid;
+	//float3 texcoord1	: TEXCOORD1_centroid;
+	float4 color		: COLOR0;
+};
+
+struct PS_OUT
+{
+	float4 color : COLOR;
+};
+
+
+float2 rotate( float2 k, float t )
+{
+	return float2(cos(t)*k.x-sin(t)*k.y, sin(t)*k.x+cos(t)*k.y);
+}
+
+float3 rotate3d( float3 vec, float pitch, float yaw, float roll )
+{
+	//float mat;
+	float sr, sp, sy, cr, cp, cy;
+
+	yaw = DEG2RAD( yaw );
+	pitch = DEG2RAD( pitch );
+	roll = DEG2RAD( roll );
+	
+	sy = sin( yaw );
+	cy = cos( yaw );
+	
+	sp = sin( pitch );
+	cp = cos( pitch );
+	
+	sr = sin( roll );
+	cr = cos( roll );
+	
+	float3 mat0 = float3( cp * cy, cp * sy, -sp );
+	float3 mat1 = float3( sr * sp * cy + cr * -sy, sr * sp * sy + cr * cy, sr * cp );
+	float3 mat2 = float3( cr * sp * cy + -sr * -sy, cr * sp * sy + -sr * cy, cr * cp );
+	
+	return float3(
+			   mat0.x * vec.x + mat1.x * vec.y + mat2.x * vec.z,
+			   mat0.y * vec.x + mat1.y * vec.y + mat2.y * vec.z,
+			   mat0.z * vec.x + mat1.z * vec.y + mat2.z * vec.z );
+	
+}
+
+float drawScene( float3 p, float speed )
+{
+	float tunnel_m=0.125*cos(PI*p.z*1.0+speed*4.0-PI);
+	float tunnel1_p=2.0;
+	float tunnel1_w=tunnel1_p*0.225;
+	float tunnel1=length(mod(p.xy,tunnel1_p)-tunnel1_p*0.5)-tunnel1_w;	// tunnel1
+	float tunnel2_p=2.0;
+	float tunnel2_w=tunnel2_p*0.2125+tunnel2_p*0.0125*cos(PI*p.y*8.0)+tunnel2_p*0.0125*cos(PI*p.z*8.0);
+	float tunnel2=length(mod(p.xy,tunnel2_p)-tunnel2_p*0.5)-tunnel2_w;	// tunnel2
+	float hole1_p=1.0;
+	float hole1_w=hole1_p*0.5;
+	float hole1=length(mod(p.xz,hole1_p).xy-hole1_p*0.5)-hole1_w;	// hole1
+	float hole2_p=0.25;
+	float hole2_w=hole2_p*0.375;
+	float hole2=length(mod(p.yz,hole2_p).xy-hole2_p*0.5)-hole2_w;	// hole2
+	float hole3_p=0.5;
+	float hole3_w=hole3_p*0.25+0.125*sin(PI*p.z*2.0);
+	float hole3=length(mod(p.xy,hole3_p).xy-hole3_p*0.5)-hole3_w;	// hole3
+	float tube_m=0.075*sin(PI*p.z*1.0);
+	float tube_p=0.5+tube_m;
+	float tube_w=tube_p*0.025+0.00125*cos(PI*p.z*128.0);
+	float tube=length(mod(p.xy,tube_p)-tube_p*0.5)-tube_w;			// tube
+	float bubble_p=0.05;
+	float bubble_w=bubble_p*0.5+0.025*cos(PI*p.z*2.0);
+	float bubble=length(mod(p.yz,bubble_p)-bubble_p*0.5)-bubble_w;	// bubble
+	
+	return max(min(min(-tunnel1,mix(tunnel2,-bubble,0.375)),max(min(-hole1,hole2),-hole3)),-tube);
+}
+
+void main( PS_IN fragment, out PS_OUT result )
+{
+	float speed = rpUser0.x * 0.2975;// * 0.01;
+	float ground_x=1.0; //-0.325*sin(PI*speed*0.25);
+	float ground_y=1.0;
+	float ground_z=0.5;
+
+	float2 screenTexCoord = vposToScreenPosTexCoord( fragment.position.xy );
+	screenTexCoord = saturate( screenTexCoord );
+	
+	float2 p = -1.0 + 2.0 * screenTexCoord;
+	
+#if 0
+	float3 dir=normalize(float3(p*float2(1.77,1.0),1.0));		// screen ratio (x,y) fov (z)
+	//dir.yz=rotate(dir.yz,PI*0.5*sin(PI*speed*0.125));	// rotation x
+	dir.zx=rotate(dir.zx,-PI*speed*0.25);				// rotation y
+	dir.xy=rotate(dir.xy,-speed*0.5);					// rotation z
+#else
+	float3 dir = normalize( fragment.texcoord0 );
+	dir = rotate3d( dir, 90, 0, 0 );
+#endif
+	
+	float3 ray=float3(ground_x,ground_y,ground_z-speed*2.5);
+	float t=0.0;
+	const int ray_n=96;
+	for(int i=0;i<ray_n;i++)
+	{
+		float k=drawScene(ray+dir*t, speed);
+		t+=k*0.75;
+	}
+	float3 hit=ray+dir*t;
+	float2 h=float2(-0.0025,0.002); // light
+	float3 n=normalize(float3(drawScene( hit+h.xyx, speed ),drawScene(hit+h.yxy, speed ),drawScene(hit+h.yyx, speed)));
+	float c=(n.x+n.y+n.z)*0.35;
+	float3 color=float3(c,c,c)+t*0.0625;
+	
+	result.color = float4(float3(c-t*0.0375+p.y*0.05,c-t*0.025-p.y*0.0625,c+t*0.025-p.y*0.025)+color*color,1.0);
+
+	float amount = sin( speed ) * 0.5 + 0.5;
+	//amount = 1.0;
+	
+	//result.color = float4( screenTexCoord.x, screenTexCoord.y, 0.0, 1.0f );
+	//result.color = float4( color0.a, color0.a, color0.a, 1.0f );
+	//result.color = float4( amount, amount, amount, 1.0f );
+}

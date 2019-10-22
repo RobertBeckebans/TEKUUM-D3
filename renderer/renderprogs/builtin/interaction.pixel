@@ -1,0 +1,226 @@
+/*
+===========================================================================
+
+Doom 3 BFG Edition GPL Source Code
+Copyright (C) 1993-2012 id Software LLC, a ZeniMax Media company. 
+Copyright (C) 2013-2014 Robert Beckebans
+
+This file is part of the Doom 3 BFG Edition GPL Source Code ("Doom 3 BFG Edition Source Code").  
+
+Doom 3 BFG Edition Source Code is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+Doom 3 BFG Edition Source Code is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with Doom 3 BFG Edition Source Code.  If not, see <http://www.gnu.org/licenses/>.
+
+In addition, the Doom 3 BFG Edition Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the Doom 3 BFG Edition Source Code.  If not, please request a copy in writing from id Software at the address below.
+
+If you have questions concerning this license or the applicable additional terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
+
+===========================================================================
+*/
+
+#include "renderprogs/global.inc"
+
+uniform sampler2D	samp0 : register(s0); // texture 1 is the per-surface bump map
+uniform sampler2D	samp1 : register(s1); // texture 2 is the light falloff texture
+uniform sampler2D	samp2 : register(s2); // texture 3 is the light projection texture
+uniform sampler2D	samp3 : register(s3); // texture 4 is the per-surface diffuse map
+uniform sampler2D	samp4 : register(s4); // texture 5 is the per-surface specular map
+
+struct PS_IN
+{
+	half4 position	: VPOS;
+	half4 texcoord0	: TEXCOORD0_centroid;
+	half4 texcoord1	: TEXCOORD1_centroid;
+	half4 texcoord2	: TEXCOORD2_centroid;
+	half4 texcoord3	: TEXCOORD3_centroid;
+	half4 texcoord4	: TEXCOORD4_centroid;
+	half4 texcoord5	: TEXCOORD5_centroid;
+	half4 texcoord6	: TEXCOORD6_centroid;
+	half4 color		: COLOR0;
+};
+
+struct PS_OUT
+{
+	half4 color : COLOR;
+};
+
+
+// Normal Distribution Function ( NDF ) or D( h )
+// GGX ( Trowbridge-Reitz )
+half GGX( half hdotN, half alpha )
+{
+	float a2 = alpha * alpha;
+	float tmp = ( hdotN * hdotN ) * ( a2 - 1.0 ) + 1.0;
+	tmp *= tmp;
+	
+	return ( a2 / ( PI * tmp ) );
+}
+
+// Fresnel term F( v, h )
+// Fnone( v, h ) = F(0°) = specularColor
+half3 FresnelSchlick( half3 specularColor, half vdotH )
+{
+	return specularColor + ( 1.0 - specularColor ) * pow( 1.0 - vdotH, 5.0 );
+}
+
+// Visibility term G( l, v, h )
+float VisibilitySchlickSmith( half vdotN, half ldotN, float alpha )
+{
+#if 0
+	// Ryse style
+	//float k = pow( 0.8 + 0.5 * alpha, 2.0 ) * 0.5;
+	float k = alpha * 0.5;
+	
+	float schlickL = ( ldotN / ( ldotN * ( 1.0 - k ) + k ) );
+	float schlickV = ( vdotN / ( vdotN * ( 1.0 - k ) + k ) );
+	
+	return ( schlickL * schlickV );
+#else
+	float k = alpha * 0.5;
+	
+	float schlickL = ( ldotN * ( 1.0 - k ) + k );
+	float schlickV = ( vdotN * ( 1.0 - k ) + k );
+	
+	return ( 0.25 * ( schlickL * schlickV ) );
+	//return ( ( schlickL * schlickV ) / ( 4.0 * vdotN * ldotN ) );
+#endif
+}
+
+
+float VisibilitySmith( half vdotN, half ldotN, float alpha )
+{
+	//float k = alpha * 0.5;
+	//float a2 = alpha * alpha;
+	
+	float V1 = 1.0 / ( ldotN + sqrt( alpha * ( 1.0 - alpha ) * ldotN * ldotN ) );
+	float V2 = 1.0 / ( vdotN + sqrt( alpha * ( 1.0 - alpha ) * vdotN * vdotN ) );
+	
+	return ( V1 * V2 );
+}
+
+void main( PS_IN fragment, out PS_OUT result )
+{
+	half4 bumpMap =			tex2D( samp0, fragment.texcoord1.xy );
+	half4 lightFalloff =	idtex2Dproj( samp1, fragment.texcoord2 );
+	half4 lightProj	=		idtex2Dproj( samp2, fragment.texcoord3 );
+	half4 YCoCG =			tex2D( samp3, fragment.texcoord4.xy );
+	half4 specMap =			tex2D( samp4, fragment.texcoord5.xy );
+
+	half3 lightVector = normalize( fragment.texcoord0.xyz );
+	half3 viewVector = normalize( fragment.texcoord6.xyz );
+	half3 diffuseMap = ConvertYCoCgToRGB( YCoCG );
+
+	half3 localNormal;
+	// RB begin
+#if defined(USE_NORMAL_FMT_RGB8)
+	localNormal.xy = bumpMap.rg - 0.5;
+#else
+	localNormal.xy = bumpMap.wy - 0.5;
+#endif
+	// RB end
+	localNormal.z = sqrt( abs( dot( localNormal.xy, localNormal.xy ) - 0.25 ) );
+	localNormal = normalize( localNormal );
+	
+	// traditional very dark Lambert light model used in Doom 3
+	half ldotN = dot3( localNormal, lightVector );
+
+#if defined(USE_HALF_LAMBERT)
+	// RB: http://developer.valvesoftware.com/wiki/Half_Lambert
+	half halfLdotN = dot3( localNormal, lightVector ) * 0.5 + 0.5;
+	halfLdotN *= halfLdotN;
+
+	half lambert = halfLdotN;
+#else
+	half lambert = ldotN;
+#endif
+
+	half3 halfAngleVector = normalize( lightVector + viewVector );
+	half hDotN = saturate( dot3( halfAngleVector, localNormal ) );
+
+#if 1
+	/* 
+	Physically based shading
+	
+	Cook-Torrance microfacet specular BRDF
+	
+							D( h ) * F( v, h ) * G( l, v, h )
+	f( l, v ) = diffuse + ---------------------------------
+								4 * ( n * l ) ( n * v )
+	*/
+	
+									// gold
+	half3 baseColor = specMap.rgb; //half3( 1.0, 0.71, 0.29 );
+	
+	half vdotN = saturate( dot3( viewVector, localNormal ) );
+	half vdotH = saturate( dot3( viewVector, halfAngleVector ) );
+	
+	// the vast majority of real-world materials (anything not metal or gems) have F(0°) values in a very narrow range (~0.02 - 0.06)
+	//const half roughness = 1.0f - 0.21; //specMap.r;
+	
+	// HACK calculate roughness from D3 gloss maps
+	const half glossiness = clamp( length( specMap.rgb * rpSpecularModifier.xyz ) * 2.0, 0.0, 1.0 );
+	const half roughness = 1.0 - glossiness;
+	
+	//const half roughness = 0.21;
+	
+	//const half alpha = roughness;
+	
+	// alpha modifications by Disney - s2012_pbs_disney_brdf_notes_v2.pdf
+	const half alpha = roughness * roughness;
+	
+	// reduce rougness range from [0 .. 1] to [0.5 .. 1]
+	const half alphaG = pow( 0.5 + roughness * 0.5, 2.0 );
+	
+	//half3 d = _half3( pow( abs( hDotN ), 10.0f ) );
+	half3 d = _half3( GGX( hDotN, alphaG ) );
+	half3 vis = _half3( VisibilitySchlickSmith( ldotN, vdotN, alpha ) );
+	half3 f = FresnelSchlick( baseColor * rpSpecularModifier.xyz, vdotH );
+	
+	float3 specularColor = d * f * vis;
+	
+	specularColor = saturate( specularColor );
+	
+#if 0
+	result.color = float4( vis, 1.0 );
+	return;
+#endif
+	
+	const half metal = 0.0;
+	
+	//half3 diffuseColor = mix( diffuseMap, F0, metal ) * rpDiffuseModifier.xyz;
+	half3 diffuseColor = diffuseMap * rpDiffuseModifier.xyz;
+	half3 lightColor = lightProj.xyz * lightFalloff.xyz;
+	
+	//lambert /= PI;
+	
+	result.color.xyz = ( diffuseColor * lambert + specularColor ) * lightColor * fragment.color.rgb;// + rimColor;
+	result.color.w = 1.0;
+#else
+	const half specularPower = 10.0f;
+	
+	// RB: added abs
+	half3 specularContribution = _half3( pow( abs( hDotN ), specularPower ) );
+
+	half3 diffuseColor = diffuseMap * rpDiffuseModifier.xyz;
+	half3 specularColor = specMap.xyz * specularContribution * rpSpecularModifier.xyz;
+	half3 lightColor = lightProj.xyz * lightFalloff.xyz;
+	
+	/*
+	half rim =  1.0f - saturate( hDotN );
+	half rimPower = 16.0f;
+	half3 rimColor = diffuseColor * lightProj.xyz * lightFalloff.xyz * 1.0f * pow( rim, rimPower ) * fragment.color.rgb;// * halfLdotN;
+	*/
+
+	result.color.xyz = ( diffuseColor + specularColor ) * lambert * lightColor * fragment.color.rgb;// + rimColor;
+	result.color.w = 1.0;
+#endif
+}
