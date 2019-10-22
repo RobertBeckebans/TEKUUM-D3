@@ -1,0 +1,936 @@
+/*
+ATTEMPT to create a new main menu in OLDSCHOOL D3 script GUI
+*/
+
+
+#define MENU_BUTTON_BACK_COLOR_STR			"0, 0, 0, 0.7"
+#define MENU_BUTTON_FORE_COLOR_STR			"1, 1, 1, 0.9"
+#define MENU_BUTTON_SELECTED_COLOR_STR		"0, 0, 1, 0.7"
+	
+#define MENU_BUTTON_BACK_COLOR				0, 0, 0, 0.7
+#define MENU_BUTTON_FORE_COLOR				1, 1, 1, 0.9
+#define MENU_BUTTON_SELECTED_COLOR			0, 0, 1, 0.7
+
+#define MENU_BUTTON_FONT					"fonts/orbitron"
+
+//#define MENU_INDEX_MAIN						0
+//#define MENU_INDEX_NEWGAME					1
+//#define MENU_INDEX_OPTIONS					2
+
+windowDef Desktop
+{
+	rect		0, 0, 640, 480
+	backcolor	1, 1, 1, 1
+	forecolor	1, 1, 1, 1
+	menugui		1
+	
+	//float		menuPage
+	//float		gamepadActive 0
+	
+	onActivate
+	{
+		print "Desktop.OnActivate";
+	
+		//set "menuPage" MENU_INDEX_MAIN;
+		
+		set "MainMenu_Content::visible" 1;
+		set "OptionsMenu_Content::visible" 0;
+		
+		// FIXME
+		if( "gui::gamepad" == 0 )
+		{
+			print "Desktop.OnActivate: enable controller layout";
+			showCursor "0";
+			//setFocus "MainMenu_Content::MainMenu_StartGameButton";
+			setFocus "MainMenu_StartGameButton";
+		}
+		else
+		{
+			print "Desktop.OnActivate: enable keyboard + mouse layout";
+			//showCursor "1";
+		}
+		
+		//set "OptionsMenu_Content::noevents" 1;
+	}
+	
+	// um von ingame zurueck ins Hauptmenue zu kommen
+	onESC
+	{
+		set "cmd" "close";
+	}
+	
+	
+	
+	/*
+#if 0
+	float base_r t_swapr[time * 0.00001]
+	float base_g t_swapg[time * 0.00001]
+	float base_b t_swapb[time * 0.00001]
+#else
+	float base_r 0.145
+	float base_g 0.871
+	float base_b 0.961
+#endif
+	
+	backcolor 0.8, 0.8, 0.8, 1
+	*/
+	
+	//definevec4 "$menuButtonBackColor" 0, 0, 0, 0.7
+	//definevec4 "$menuButtonSelectedColor" 0, 0, 1, 0.7
+
+
+#if 1
+	windowDef Background
+	{
+		rect 0, 0, 640, 480
+		background "gui/mainmenu/background"
+		matcolor 	0, 1, 1, 1
+	}
+#endif
+	
+	// Titel rechts oben in der Ecke
+	windowDef MainTitle
+	{
+		rect 360, 40, 280, 60
+		backcolor 0, 0, 0, .7
+		
+		noevents 1
+		
+		windowDef MainTitleTextContainer
+		{
+			rect 0, 0, 280, 60
+		
+			windowDef MainTitleText
+			{
+				rect 10, 0, 280, 60
+				
+				text "Tekuum"
+				font MENU_BUTTON_FONT
+				forecolor 1, 1, 1, 0.9
+				textscale .9
+				textalignx 10
+				textaligny -5
+			}
+			
+			windowDef MainTitleTextBlur
+			{
+				rect 5, 0, 280, 60
+				
+				text "Tekuum"
+				font MENU_BUTTON_FONT
+				forecolor 1, 1, 1, 0.2
+				textscale .9
+				textalignx 10
+				textaligny -5
+			}
+			
+			windowDef MainTitleTextBlur2
+			{
+				rect 0, 0, 280, 60
+				
+				text "Tekuum"
+				font MENU_BUTTON_FONT
+				forecolor 1, 1, 1, 0.1
+				textscale .9
+				textalignx 10
+				textaligny -5
+			}
+		}
+	}
+	
+	
+	// INFO BOX
+	windowDef MainMenu_Tooltip
+	{
+		rect 30, 400, 580, 30
+		//rect 60, 360, 520, 30
+		
+		visible 0
+		noevents 1
+		bordersize 0
+		
+		backcolor MENU_BUTTON_BACK_COLOR
+		forecolor MENU_BUTTON_FORE_COLOR
+		
+		windowDef MainMenu_Tooltip_Icon
+		{
+			rect 5, 5, 20, 20
+			background "guis/assets/mainmenu/tooltip"
+			backcolor 1, 1, 1, 0 //MENU_BUTTON_BACK_COLOR
+		}
+		
+		windowDef MainMenu_Tooltip_Label
+		{
+			rect 30, 0, 490, 30
+			
+			//backcolor MENU_BUTTON_BACK_COLOR
+			forecolor MENU_BUTTON_FORE_COLOR
+			
+			font MENU_BUTTON_FONT 
+			text "toolbox"
+			textscale .2
+			//textalignx 5
+			//textaligny -1
+		}
+		
+	}
+	
+	//windowDef MainMenu
+	//{
+		//rect 0, 0, 640, 480
+		//noevents 1
+		
+		//float opacity 0
+		//float state -1
+		
+		
+		
+		windowDef MainMenu_Content
+		{
+			rect 60, 150, 200, 260
+			
+			//visible ( "Desktop::menuPage" == MENU_INDEX_MAIN )
+			
+			onActivate
+			{
+				print "MainMenu_Content.OnActivate";
+			}
+			
+			onDeactivate
+			{
+				print "MainMenu_Content.OnDeactivate";
+			}
+			
+			windowDef MainMenu_Title
+			{
+				rect 0, 15, 200, 30
+				
+				backcolor MENU_BUTTON_BACK_COLOR
+				forecolor MENU_BUTTON_FORE_COLOR
+				
+				font MENU_BUTTON_FONT
+				text "main_"
+				textscale .45
+				textalign 2
+			}
+			
+			windowDef MainMenu_StartGameButton
+			{
+				rect 0, 50, 200, 26
+				//noevents "MainMenu_Content::noevents"
+				//invisible ( gui::inGame != 1 )
+				
+				backcolor MENU_BUTTON_BACK_COLOR
+				forecolor MENU_BUTTON_FORE_COLOR
+				
+				font MENU_BUTTON_FONT
+				text "start game"
+				textalignx 5
+				textaligny -1
+				
+				
+				onFocusGain
+				{
+					print "MainMenu_StartGameButton.OnFocusGain";
+					set "MainMenu_StartGameButton::backcolor" MENU_BUTTON_SELECTED_COLOR_STR;
+					
+					set "MainMenu_Tooltip_Label::text" "Start a new single player campaign";
+					set "MainMenu_Tooltip::visible" "1";
+					
+					//evalRegs;
+				}
+				
+				onFocusLose
+				{
+					print "MainMenu_StartGameButton.OnFocusLose";
+					set "backcolor" MENU_BUTTON_BACK_COLOR_STR;
+					
+					set "MainMenu_Tooltip::visible" "0";
+				}
+				
+				onMouseEnter
+				{
+					print "MainMenu_StartGameButton.OnMouseEnter";
+					set "backcolor" MENU_BUTTON_SELECTED_COLOR_STR;
+				}
+				
+				onMouseExit
+				{
+					print "MainMenu_StartGameButton.OnMouseExit";
+				}
+				
+				onAction
+				{
+					print "MainMenu_StartGameButton.OnAction";
+				}
+			}
+			
+			windowDef MainMenu_OptionsButton
+			{
+				rect 0, 80, 200, 26
+				
+				backcolor MENU_BUTTON_BACK_COLOR
+				forecolor MENU_BUTTON_FORE_COLOR
+				
+				font MENU_BUTTON_FONT
+				text "options"
+				textalignx 5
+				textaligny -1
+				
+				onFocusGain
+				{
+					print "MainMenu_OptionsButton.OnFocusGain";
+					set "backcolor" MENU_BUTTON_SELECTED_COLOR_STR;
+				}
+				
+				onFocusLose
+				{
+					print "MainMenu_OptionsButton.OnFocusLose";
+					set "backcolor" MENU_BUTTON_BACK_COLOR_STR;
+				}
+				
+				onMouseEnter
+				{
+					print "MainMenu_OptionsButton.OnMouseEnter";
+				}
+				
+				onMouseExit
+				{
+					print "MainMenu_OptionsButton.OnMouseExit";
+				}
+				
+				onAction
+				{
+					//print "MainMenu_OptionsButton.OnAction";
+					//namedEvent "MainMenu_OptionsButton::Select";
+					
+					set "MainMenu_Content::visible" 0;
+					set "OptionsMenu_Content::visible" 1;
+					
+					setFocus "OptionsMenu_VideoButton";
+					
+					//set "MainMenu_Content::noevents" "1";
+					//set "OptionsMenu_Content::noevents" "0";
+					
+					//set "Desktop::menuPage" MENU_INDEX_OPTIONS;
+				}
+			}
+			
+			windowDef MainMenu_QuitButton
+			{
+				rect 0, 140, 200, 26
+				
+				backcolor MENU_BUTTON_BACK_COLOR
+				forecolor MENU_BUTTON_FORE_COLOR
+				
+				font MENU_BUTTON_FONT
+				text "quit"
+				textalignx 5
+				textaligny -1
+				
+				onFocusGain
+				{
+					print "MainMenu_QuitButton.OnFocusGain";
+					set "backcolor" MENU_BUTTON_SELECTED_COLOR_STR;
+				}
+				
+				onFocusLose
+				{
+					print "MainMenu_QuitButton.OnFocusLose";
+					set "backcolor" MENU_BUTTON_BACK_COLOR_STR;
+				}
+				
+				/*
+				onMouseEnter
+				{
+					namedEvent "MainMenu_QuitButton::Select";
+				}
+				
+				onMouseExit
+				{
+					namedEvent "MainMenu_QuitButton::Deselect";
+				}
+				*/
+				
+				onAction
+				{
+					set "cmd" "quit";
+				}
+			}
+		}
+		
+		
+		//bewege das Menü von links nach rechts
+		/*
+		onTime 0
+		{
+			transition "MainMenu::rect" "0 0 0 480" "60 0 200 480" 900; 
+		}
+		*/
+	//}
+	
+#if 0
+	windowDef SinglePlayerMenu
+	{
+		rect 60, 0 , 200, 480
+		noevents 1
+		
+		float opacity 0
+		float state -1
+		
+		windowDef SinglePlayerMenu_Back
+		{
+			rect 0, 0, 200, 480
+			backcolor 0, 0, 0, 1 * "SinglePlayerMenu::opacity"
+		}
+		
+		windowDef SinglePlayerMenu_Content
+		{
+			rect 0, 150, 200, 260
+			
+			windowDef SinglePlayerMenu_Title
+			{
+				rect 0, 15, 190, 30
+				
+				text "startgame"
+				forecolor "Desktop::base_r", "Desktop::base_g", "Desktop::base_b", 1 * "SinglePlayerMenu::opacity"
+				font MENU_BUTTON_FONT
+				textscale .45
+				textalign 2
+			}
+			
+			windowDef SinglePlayerMenu_NewGameButton
+			{
+				rect 0, 50, 200, 26
+				noevents "SinglePlayerMenu::noevents"
+				
+				float opacity .7
+				
+				backcolor "Desktop::base_r", "Desktop::base_g", "Desktop::base_b", "SinglePlayerMenu_NewGameButton::opacity" * "SinglePlayerMenu::opacity"
+				
+				windowDef SinglePlayerMenu_NewGameButtonContent
+				{
+					rect 10, 1, 190, 24
+					backcolor 0, 0, 0, 1 * "SinglePlayerMenu::opacity"
+					
+					text "new game"
+					forecolor 1, 1, 1, 1 * "SinglePlayerMenu::opacity"
+					font MENU_BUTTON_FONT
+					textalignx 5
+					textaligny -1
+				}
+				
+				onNamedEvent Select
+				{
+					namedEvent "Deselect";
+					set "SinglePlayerMenu_NewGameButton::opacity" 1;
+				}
+				
+				onNamedEvent Deselect
+				{
+					set "SinglePlayerMenu_NewGameButton::opacity" .7;
+				}
+				
+				onMouseEnter
+				{
+					namedEvent "SinglePlayerMenu_NewGameButton::Select";
+				}
+				
+				onAction
+				{
+					set	"cmd" "startgame testmaps/box";
+				}
+			}
+			
+			windowDef SinglePlayerMenu_LoadGameButton
+			{
+				rect 0, 80, 200, 26
+				noevents "SinglePlayerMenu::noevents"
+				
+				float opacity .7
+				
+				backcolor "Desktop::base_r", "Desktop::base_g", "Desktop::base_b", "SinglePlayerMenu_LoadGameButton::opacity" * "SinglePlayerMenu::opacity"
+				
+				windowDef SinglePlayerMenu_LoadGameButtonContent
+				{
+					rect 10, 1, 190, 24
+					backcolor 0, 0, 0, 1 * "SinglePlayerMenu::opacity"
+					
+					text "load game"
+					forecolor 1, 1, 1, 1 * "SinglePlayerMenu::opacity"
+					font MENU_BUTTON_FONT
+					textalignx 5
+					textaligny -1
+				}
+				
+				onNamedEvent Select
+				{
+					namedEvent "Deselect";
+					set "SinglePlayerMenu_LoadGameButton::opacity" 1;
+				}
+				
+				onNamedEvent Deselect
+				{
+					set "SinglePlayerMenu_LoadGameButton::opacity" .7;
+				}
+				
+				onMouseEnter
+				{
+					namedEvent "SinglePlayerMenu_LoadGameButton::Select";
+				}
+				
+				onAction
+				{
+					set "Desktop::menuPage" 3;
+					namedEvent "swap";
+				}
+			}
+			
+			windowDef SinglePlayerMenu_ReturnButton
+			{
+				rect 0, 140, 200, 26
+				noevents "SinglePlayerMenu::noevents"
+				
+				float opacity .7
+				
+				backcolor "Desktop::base_r", "Desktop::base_g", "Desktop::base_b", "SinglePlayerMenu_ReturnButton::opacity" * "SinglePlayerMenu::opacity"
+				
+				windowDef SinglePlayerMenu_ReturnButtonContent
+				{
+					rect 10, 1, 190, 24
+					backcolor 0, 0, 0, 1 * "SinglePlayerMenu::opacity"
+					
+					text "back"
+					forecolor 1, 1, 1, 1 * "SinglePlayerMenu::opacity"
+					font MENU_BUTTON_FONT
+					textalignx 5
+					textaligny -1
+				}
+				
+				onNamedEvent Select
+				{
+					namedEvent "Deselect";
+					set "SinglePlayerMenu_ReturnButton::opacity" 1;
+				}
+				
+				onNamedEvent Deselect
+				{
+					set "SinglePlayerMenu_ReturnButton::opacity" .7;
+				}
+				
+				onMouseEnter
+				{
+					namedEvent "SinglePlayerMenu_ReturnButton::Select";
+				}
+				
+				onAction
+				{
+					set "Desktop::menuPage" 0;
+					namedEvent "swap";
+				}
+			}
+		}
+	}
+#endif
+
+#if 1
+	//windowDef OptionsMenu
+	//{
+		//rect 60, 0 , 200, 480
+		//noevents 1
+		
+		//float opacity 0
+		//float state -1
+		
+		//windowDef OptionsMenu_Back
+		//{
+		//	rect 0, 0, 200, 480
+		//	backcolor 0, 0, 0, 1 * "OptionsMenu::opacity"
+		//}
+		
+		windowDef OptionsMenu_Content
+		{
+			rect 60, 150, 200, 260
+			
+			visible 0
+			//visible ( "Desktop::menuPage" == MENU_INDEX_OPTIONS )
+			//novents ( "Desktop::menuPage" != MENU_INDEX_OPTIONS )
+			//novents 1 //( visible == true )
+			
+			/*
+			onActivate
+			{
+				print "OptionsMenu_Content.OnActivate";
+				
+				//set "noevents" "1";
+				setFocus "OptionsMenu_VideoButton";
+			}
+			*/
+			
+			/*
+			onDeactivate
+			{
+				print "OptionsMenu_Content.OnDeactivate";
+			}
+			*/
+			
+			onNamedEvent QuitToMainMenu
+			{
+				set "OptionsMenu_Content::visible" 0;
+				set "MainMenu_Content::visible" 1; 
+				
+				setFocus "MainMenu_StartGameButton";
+			}
+			
+			windowDef OptionsMenuTitle
+			{
+				rect 0, 15, 200, 30
+				
+				backcolor MENU_BUTTON_BACK_COLOR
+				forecolor MENU_BUTTON_FORE_COLOR
+				
+				font MENU_BUTTON_FONT
+				text "options_"
+				textscale .45
+				textalign 2
+			}
+			
+			windowDef OptionsMenu_VideoButton 
+			{
+				rect 0, 50, 200, 26
+				noevents "OptionsMenu_Content::noevents"
+				
+				backcolor MENU_BUTTON_BACK_COLOR
+				forecolor MENU_BUTTON_FORE_COLOR
+				
+				font MENU_BUTTON_FONT
+				text "video"
+				textalignx 5
+				textaligny -1
+				
+				onFocusGain
+				{
+					print "OptionsMenu_VideoButton.OnFocusGain";
+					
+					set "backcolor" MENU_BUTTON_SELECTED_COLOR_STR;
+					
+					set "MainMenu_Tooltip_Label::text" "Adjust graphics settings";
+					set "MainMenu_Tooltip::visible" "1";
+				}
+				
+				onFocusLose
+				{
+					print "OptionsMenu_VideoButton.OnFocusLose";
+					
+					set "backcolor" MENU_BUTTON_BACK_COLOR_STR;
+					set "MainMenu_Tooltip::visible" "0";
+				}
+				
+				onMouseEnter
+				{
+					print "OptionsMenu_VideoButton.OnMouseEnter";
+				}
+				
+				onMouseExit
+				{
+					print "OptionsMenu_VideoButton.OnMouseExit";
+				}
+				
+				#if 1
+				onAction
+				{
+					print "OptionsMenu_VideoButton.OnAction";
+				}
+				#endif
+				
+				onEsc
+				{
+					print "OptionsMenu_VideoButton.OnEsc";
+					
+					//set "OptionsMenu_Content::visible" 0;
+					//set "MainMenu_Content::visible" 1; 
+					
+					namedEvent "OptionsMenu_Content::QuitToMainMenu";
+				}
+			}
+			
+			windowDef OptionsMenu_AudioButton
+			{
+				rect 0, 80, 200, 26
+				noevents "OptionsMenu_Content::noevents"
+				
+				backcolor MENU_BUTTON_BACK_COLOR
+				forecolor MENU_BUTTON_FORE_COLOR
+				
+				font MENU_BUTTON_FONT
+				text "audio"
+				textalignx 5
+				textaligny -1
+				
+				
+				onFocusGain
+				{
+					print "OptionsMenu_AudioButton.OnFocusGain";
+					set "backcolor" MENU_BUTTON_SELECTED_COLOR_STR;
+					
+					//set "MainMenu_Tooltip_Label::text" "Adjust graphics settings";
+					//set "MainMenu_Tooltip::visible" "1";
+				}
+				
+				onFocusLose
+				{
+					print "OptionsMenu_AudioButton.OnFocusLose";
+					set "backcolor" MENU_BUTTON_BACK_COLOR_STR;
+					
+					//set "MainMenu_Tooltip::visible" "0";
+				}
+				
+				onMouseEnter
+				{
+					print "OptionsMenu_AudioButton.OnMouseEnter";
+				}
+				
+				onMouseExit
+				{
+					print "OptionsMenu_AudioButton.OnMouseExit";
+				}
+				
+				onAction
+				{
+					print "OptionsMenu_AudioButton.OnAction";
+				}
+			}
+			
+			windowDef OptionsMenu_GameButton
+			{
+				rect 0, 110, 200, 26
+				noevents "OptionsMenu_Content::noevents"
+				
+				backcolor MENU_BUTTON_BACK_COLOR
+				forecolor MENU_BUTTON_FORE_COLOR
+				
+				font MENU_BUTTON_FONT
+				text "game"
+				textalignx 5
+				textaligny -1
+				
+				
+				onFocusGain
+				{
+					print "OptionsMenu_GameButton.OnFocusGain";
+				
+					set "backcolor" MENU_BUTTON_SELECTED_COLOR_STR;
+					
+					//set "MainMenu_Tooltip_Label::text" "Adjust graphics settings";
+					//set "MainMenu_Tooltip::visible" "1";
+				}
+				
+				onFocusLose
+				{
+					print "OptionsMenu_GameButton.OnFocusLose";
+					
+					set "backcolor" MENU_BUTTON_BACK_COLOR_STR;
+					
+					//set "MainMenu_Tooltip::visible" "0";
+				}
+				
+				onMouseEnter
+				{
+					print "OptionsMenu_GameButton.OnMouseEnter";
+				}
+				
+				onMouseExit
+				{
+					print "OptionsMenu_GameButton.OnMouseExit";
+				}
+				
+				onAction
+				{
+					print "OptionsMenu_GameButton.OnAction";
+				}
+			}
+			
+			windowDef OptionsMenu_ControlsButton
+			{
+				rect 0, 140, 200, 26
+				noevents "OptionsMenu_Content::noevents"
+				
+				backcolor MENU_BUTTON_BACK_COLOR
+				forecolor MENU_BUTTON_FORE_COLOR
+				
+				font MENU_BUTTON_FONT
+				text "controls"
+				textalignx 5
+				textaligny -1
+				
+				
+				onFocusGain
+				{
+					print "OptionsMenu_AudioButton.OnFocusGain";
+				
+					set "backcolor" MENU_BUTTON_SELECTED_COLOR_STR;
+					
+					//set "MainMenu_Tooltip_Label::text" "Adjust graphics settings";
+					//set "MainMenu_Tooltip::visible" "1";
+				}
+				
+				onFocusLose
+				{
+					print "OptionsMenu_AudioButton.OnFocusLose";
+				
+					set "backcolor" MENU_BUTTON_BACK_COLOR_STR;
+					
+					//set "MainMenu_Tooltip::visible" "0";
+				}
+				
+				onMouseEnter
+				{
+					print "OptionsMenu_ControlsButton.OnMouseEnter";
+				}
+				
+				onMouseExit
+				{
+					print "OptionsMenu_ControlsButton.OnMouseExit";
+				}
+				
+				onAction
+				{
+					print "OptionsMenu_ControlsButton.OnAction";
+				}
+			}
+			
+			windowDef OptionsMenu_ReturnButton
+			{
+				rect 0, 200, 200, 26
+				//noevents "OptionsMenu_Content::noevents"
+				
+				backcolor MENU_BUTTON_BACK_COLOR
+				forecolor MENU_BUTTON_FORE_COLOR
+				
+				font MENU_BUTTON_FONT
+				text "back"
+				textalignx 5
+				textaligny -1
+				
+				
+				onFocusGain
+				{
+					print "OptionsMenu_ReturnButton.OnFocusGain";
+					
+					set "backcolor" MENU_BUTTON_SELECTED_COLOR_STR;
+					
+					//set "MainMenu_Tooltip_Label::text" "Adjust graphics settings";
+					//set "MainMenu_Tooltip::visible" "1";
+				}
+				
+				onFocusLose
+				{
+					print "OptionsMenu_ReturnButton.OnFocusLose";
+					set "backcolor" MENU_BUTTON_BACK_COLOR_STR;
+					
+					//set "MainMenu_Tooltip::visible" "0";
+				}
+				
+				onMouseEnter
+				{
+					print "OptionsMenu_ReturnButton.OnMouseEnter";
+				}
+				
+				onMouseExit
+				{
+					print "OptionsMenu_ReturnButton.OnMouseExit";
+				}
+				
+				onAction
+				{
+					print "OptionsMenu_ReturnButton.OnAction";
+					
+					namedEvent "OptionsMenu_Content::QuitToMainMenu";
+				}
+			}
+		}
+		
+		
+	//}
+#endif
+
+#if 0
+	windowDef LoadGameMenu
+	{
+		rect 60, 0 , 200, 480
+		noevents 1
+		
+		float opacity 0
+		float state -1
+		
+		windowDef LoadGameMenuBack
+		{
+			rect 0, 0, 200, 480
+			backcolor 0, 0, 0, 1 * "LoadGameMenu::opacity"
+		}
+		
+		windowDef LoadGameMenu_Content
+		{
+			rect 0, 150, 200, 260
+			
+			windowDef LoadGameMenu_Title
+			{
+				rect 0, 15, 190, 30
+				
+				text "loadgame"
+				forecolor "Desktop::base_r", "Desktop::base_g", "Desktop::base_b", 1 * "LoadGameMenu::opacity"
+				font MENU_BUTTON_FONT
+				textscale .45
+				textalign 2
+			}
+			
+			windowDef LoadGameMenu_ReturnButton
+			{
+				rect 0, 140, 200, 26
+				noevents "LoadGameMenu::noevents"
+				
+				float opacity .7
+				
+				backcolor "Desktop::base_r", "Desktop::base_g", "Desktop::base_b", "LoadGameMenu_ReturnButton::opacity" * "LoadGameMenu::opacity"
+				
+				windowDef LoadGameMenu_ReturnButton_Content
+				{
+					rect 10, 1, 190, 24
+					backcolor 0, 0, 0, 1 * "LoadGameMenu::opacity"
+					
+					text "back"
+					forecolor 1, 1, 1, 1 * "LoadGameMenu::opacity"
+					font MENU_BUTTON_FONT
+					textalignx 5
+					textaligny -1
+				}
+				
+				onNamedEvent Select
+				{
+					namedEvent "Deselect";
+					set "LoadGameMenu_ReturnButton::opacity" 1;
+				}
+				
+				onNamedEvent Deselect
+				{
+					set "LoadGameMenu_ReturnButton::opacity" .7;
+				}
+				
+				onMouseEnter
+				{
+					namedEvent "LoadGameMenu_ReturnButton::Select";
+				}
+				
+				onAction
+				{
+					set "Desktop::menuPage" 1;
+					namedEvent "swap";
+				}
+			}
+		}
+	}
+#endif
+
+	
+	
+}
