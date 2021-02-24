@@ -37,7 +37,7 @@ rvGEStateModifier::rvGEStateModifier( const char* name, idWindow* window, idDict
 	mDict( dict )
 {
 	mDict.Copy( dict );
-	
+
 	// Make a copy of the current dictionary
 	mUndoDict.Copy( mWrapper->GetStateDict() );
 }
@@ -77,7 +77,7 @@ bool rvGEStateModifier::SetState( idDict& dict )
 {
 	const idKeyValue*	key;
 	int					i;
-	
+
 	// Delete any key thats gone in the new dict
 	for( i = 0; i < mWrapper->GetStateDict().GetNumKeyVals(); i ++ )
 	{
@@ -87,9 +87,9 @@ bool rvGEStateModifier::SetState( idDict& dict )
 			continue;
 		}
 	}
-	
+
 	mWrapper->SetState( dict );
-	
+
 	return true;
 }
 

@@ -77,13 +77,13 @@ idPhysics_Static::Save
 void idPhysics_Static::Save( idSaveGame* savefile ) const
 {
 	savefile->WriteObject( self );
-	
+
 	savefile->WriteVec3( current.origin );
 	savefile->WriteMat3( current.axis );
 	savefile->WriteVec3( current.localOrigin );
 	savefile->WriteMat3( current.localAxis );
 	savefile->WriteClipModel( clipModel );
-	
+
 	savefile->WriteBool( hasMaster );
 	savefile->WriteBool( isOrientated );
 }
@@ -96,13 +96,13 @@ idPhysics_Static::Restore
 void idPhysics_Static::Restore( idRestoreGame* savefile )
 {
 	savefile->ReadObject( reinterpret_cast<idClass*&>( self ) );
-	
+
 	savefile->ReadVec3( current.origin );
 	savefile->ReadMat3( current.axis );
 	savefile->ReadVec3( current.localOrigin );
 	savefile->ReadMat3( current.localAxis );
 	savefile->ReadClipModel( clipModel );
-	
+
 	savefile->ReadBool( hasMaster );
 	savefile->ReadBool( isOrientated );
 }
@@ -126,7 +126,7 @@ idPhysics_Static::SetClipModel
 void idPhysics_Static::SetClipModel( idClipModel* model, float density, int id, bool freeOld )
 {
 	assert( self );
-	
+
 	if( clipModel && clipModel != model && freeOld )
 	{
 		delete clipModel;
@@ -249,7 +249,7 @@ idPhysics_Static::GetAbsBounds
 const idBounds& idPhysics_Static::GetAbsBounds( int id ) const
 {
 	static idBounds absBounds;
-	
+
 	if( clipModel )
 	{
 		return clipModel->GetAbsBounds();
@@ -267,13 +267,13 @@ bool idPhysics_Static::Evaluate( int timeStepMSec, int endTimeMSec )
 {
 	idVec3 masterOrigin, oldOrigin;
 	idMat3 masterAxis, oldAxis;
-	
-	
+
+
 	if( hasMaster )
 	{
 		oldOrigin = current.origin;
 		oldAxis = current.axis;
-		
+
 		self->GetMasterPosition( masterOrigin, masterAxis );
 		current.origin = masterOrigin + current.localOrigin * masterAxis;
 		if( isOrientated )
@@ -288,7 +288,7 @@ bool idPhysics_Static::Evaluate( int timeStepMSec, int endTimeMSec )
 		{
 			clipModel->Link( gameLocal.clip, self, 0, current.origin, current.axis );
 		}
-		
+
 		return ( current.origin != oldOrigin || current.axis != oldAxis );
 	}
 	return false;
@@ -416,9 +416,9 @@ void idPhysics_Static::SetOrigin( const idVec3& newOrigin, int id )
 {
 	idVec3 masterOrigin;
 	idMat3 masterAxis;
-	
+
 	current.localOrigin = newOrigin;
-	
+
 	if( hasMaster )
 	{
 		self->GetMasterPosition( masterOrigin, masterAxis );
@@ -428,7 +428,7 @@ void idPhysics_Static::SetOrigin( const idVec3& newOrigin, int id )
 	{
 		current.origin = newOrigin;
 	}
-	
+
 	if( clipModel )
 	{
 		clipModel->Link( gameLocal.clip, self, 0, current.origin, current.axis );
@@ -444,9 +444,9 @@ void idPhysics_Static::SetAxis( const idMat3& newAxis, int id )
 {
 	idVec3 masterOrigin;
 	idMat3 masterAxis;
-	
+
 	current.localAxis = newAxis;
-	
+
 	if( hasMaster && isOrientated )
 	{
 		self->GetMasterPosition( masterOrigin, masterAxis );
@@ -456,7 +456,7 @@ void idPhysics_Static::SetAxis( const idMat3& newAxis, int id )
 	{
 		current.axis = newAxis;
 	}
-	
+
 	if( clipModel )
 	{
 		clipModel->Link( gameLocal.clip, self, 0, current.origin, current.axis );
@@ -472,7 +472,7 @@ void idPhysics_Static::Translate( const idVec3& translation, int id )
 {
 	current.localOrigin += translation;
 	current.origin += translation;
-	
+
 	if( clipModel )
 	{
 		clipModel->Link( gameLocal.clip, self, 0, current.origin, current.axis );
@@ -488,10 +488,10 @@ void idPhysics_Static::Rotate( const idRotation& rotation, int id )
 {
 	idVec3 masterOrigin;
 	idMat3 masterAxis;
-	
+
 	current.origin *= rotation;
 	current.axis *= rotation.ToMat3();
-	
+
 	if( hasMaster )
 	{
 		self->GetMasterPosition( masterOrigin, masterAxis );
@@ -503,7 +503,7 @@ void idPhysics_Static::Rotate( const idRotation& rotation, int id )
 		current.localAxis = current.axis;
 		current.localOrigin = current.origin;
 	}
-	
+
 	if( clipModel )
 	{
 		clipModel->Link( gameLocal.clip, self, 0, current.origin, current.axis );
@@ -590,7 +590,7 @@ const idVec3& idPhysics_Static::GetGravity() const
 #else
 	static idVec3 gravity( 0, 0, -g_gravity.GetFloat() );
 #endif
-	
+
 	return gravity;
 }
 
@@ -843,7 +843,7 @@ void idPhysics_Static::SetMaster( idEntity* master, const bool orientated )
 {
 	idVec3 masterOrigin;
 	idMat3 masterAxis;
-	
+
 	if( master )
 	{
 		if( !hasMaster )
@@ -920,10 +920,10 @@ idPhysics_Static::WriteToSnapshot
 void idPhysics_Static::WriteToSnapshot( idBitMsgDelta& msg ) const
 {
 	idCQuat quat, localQuat;
-	
+
 	quat = current.axis.ToCQuat();
 	localQuat = current.localAxis.ToCQuat();
-	
+
 	msg.WriteFloat( current.origin[0] );
 	msg.WriteFloat( current.origin[1] );
 	msg.WriteFloat( current.origin[2] );
@@ -946,7 +946,7 @@ idPhysics_Base::ReadFromSnapshot
 void idPhysics_Static::ReadFromSnapshot( const idBitMsgDelta& msg )
 {
 	idCQuat quat, localQuat;
-	
+
 	current.origin[0] = msg.ReadFloat();
 	current.origin[1] = msg.ReadFloat();
 	current.origin[2] = msg.ReadFloat();
@@ -959,7 +959,7 @@ void idPhysics_Static::ReadFromSnapshot( const idBitMsgDelta& msg )
 	localQuat.x = msg.ReadDeltaFloat( quat.x );
 	localQuat.y = msg.ReadDeltaFloat( quat.y );
 	localQuat.z = msg.ReadDeltaFloat( quat.z );
-	
+
 	current.axis = quat.ToMat3();
 	current.localAxis = localQuat.ToMat3();
 }

@@ -67,17 +67,17 @@ class idSession
 {
 public:
 	virtual			~idSession() {}
-	
+
 	// Called in an orderly fashion at system startup,
 	// so commands, cvars, files, etc are all available.
 	virtual	void	Init() = 0;
-	
+
 	// Shut down the session.
 	virtual	void	Shutdown() = 0;
-	
+
 	// Called on errors and game exits.
 	virtual void	Stop() = 0;
-	
+
 	// Redraws the screen, handling games, guis, console, etc
 	// during normal once-a-frame updates, outOfSequence will be false,
 	// but when the screen is updated in a modal manner, as with utility
@@ -85,87 +85,87 @@ public:
 	// RB: added swapBuffers parameter
 	virtual void	UpdateScreen( bool captureToImage, bool outOfSequence = true, bool swapBuffers = true ) = 0;
 	// RB end
-	
+
 	// Called when console prints happen, allowing the loading screen
 	// to redraw if enough time has passed.
 	virtual void	PacifierUpdate() = 0;
-	
+
 	// Called every frame, possibly spinning in place if we are
 	// above maxFps, or we haven't advanced at least one demo frame.
 	// Returns the number of milliseconds since the last frame.
 	virtual void	Frame() = 0;
-	
+
 	// Returns true if a multiplayer game is running.
 	// CVars and commands are checked differently in multiplayer mode.
 	virtual bool	IsMultiplayer() = 0;
-	
+
 	// Processes the given event.
 	virtual	bool	ProcessEvent( const sysEvent_t* event ) = 0;
-	
+
 	// Activates the main menu
 	virtual void	StartMenu( bool playIntro = false ) = 0;
-	
+
 	// RB: Give touchscreen devices the information if to process the touchscreen ingame buttons
 	virtual bool	IsMenuActive() = 0;
 	// RB end
-	
+
 	virtual void	SetGUI( idUserInterface* gui, HandleGuiCommand_t handle ) = 0;
-	
+
 	// Updates gui and dispatched events to it
 	virtual void	GuiFrameEvents() = 0;
-	
+
 	// fires up the optional GUI event, also returns them if you set wait to true
 	// if MSG_PROMPT and wait, returns the prompt string or NULL if aborted
 	// if MSG_CDKEY and want, returns the cd key or NULL if aborted
 	// network tells wether one should still run the network loop in a wait dialog
 	virtual const char* MessageBox( msgBoxType_t type, const char* message, const char* title = NULL, bool wait = false, const char* fire_yes = NULL, const char* fire_no = NULL, bool network = false ) = 0;
 	virtual void	StopBox() = 0;
-	
+
 	// monitor this download in a progress box to either abort or completion
 	virtual void	DownloadProgressBox( backgroundDownload_t* bgl, const char* title, int progress_start = 0, int progress_end = 100 ) = 0;
-	
+
 	virtual void	SetPlayingSoundWorld() = 0;
-	
+
 	// this is used by the sound system when an OnDemand sound is loaded, so the game action
 	// doesn't advance and get things out of sync
 	virtual void	TimeHitch( int msec ) = 0;
-	
+
 #if defined(USE_CDKEY)
 	// read and write the cd key data to files
 	// doesn't perform any validity checks
 	virtual void	ReadCDKey() = 0;
 	virtual void	WriteCDKey() = 0;
-	
+
 	// returns NULL for if xp is true and xp key is not valid or not present
 	virtual const char* GetCDKey( bool xp ) = 0;
-	
+
 	// check keys for validity when typed in by the user ( with checksum verification )
 	// store the new set of keys if they are found valid
 	virtual bool	CheckKey( const char* key, bool netConnect, bool offline_valid[ 2 ] ) = 0;
-	
+
 	// verify the current set of keys for validity
 	// strict -> keys in state CDKEY_CHECKING state are not ok
 	virtual bool	CDKeysAreValid( bool strict ) = 0;
 	// wipe the key on file if the network check finds it invalid
 	virtual void	ClearCDKey( bool valid[ 2 ] ) = 0;
-	
+
 	// configure gui variables for mainmenu.gui and cd key state
 	virtual void	SetCDKeyGuiVars() = 0;
-	
+
 	// got reply from master about the keys. if !valid, auth_msg given
 	virtual void	CDKeysAuthReply( bool valid, const char* auth_msg ) = 0;
 #endif
-	
+
 	virtual bool	WaitingForGameAuth() = 0;
-	
+
 	virtual const char* GetCurrentMapName() = 0;
-	
+
 	virtual int		GetSaveGameVersion() = 0;
-	
+
 	// RB begin
 	virtual idDemoFile* 		ReadDemo() = 0;
 	virtual idDemoFile* 		WriteDemo() = 0;
-	
+
 	virtual idRenderWorld* 		RW() = 0;
 	virtual idSoundWorld* 		SW() = 0;
 	// RB end

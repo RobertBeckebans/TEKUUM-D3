@@ -28,7 +28,7 @@ MainWindow::MainWindow( QWidget* parent ) :
 	//m_cameraUi   (new Ui::CameraWindow())
 {
 	ui->setupUi( this );
-	
+
 	// setup docks
 	inspectorConsoleDock  = new QDockWidget( tr( "Console" ), this );
 	//inspectorConsoleDock  = new InspectorConsoleDock(this);
@@ -39,13 +39,13 @@ MainWindow::MainWindow( QWidget* parent ) :
 #if defined(USE_QT_WINDOWING)
 	gameWindowDock = new QDockWidget( tr( "Game" ), this );
 #endif
-	
+
 	//inspectorConsoleDock->setObjectName("inspectorConsoleDock");
 	//inspectorEntityDock->setObjectName("inspectorEntityDock");
 	//inspectorMediaDock->setObjectName("inspectorMediaDock");
 	//inspectorTexturesDock->setObjectName("inspectorTexturesDock");
 	//cameraWindow->setObjectName("cameraWindow");
-	
+
 	inspectorConsoleDock->setWidget( new InspectorConsoleDock( inspectorConsoleDock ) );
 	inspectorEntityDock->setWidget( new InspectorEntityDock( inspectorEntityDock ) );
 	//inspectorMediaDock->setWidget(new QWidget(inspectorMediaDock));
@@ -54,13 +54,13 @@ MainWindow::MainWindow( QWidget* parent ) :
 #if defined(USE_QT_WINDOWING)
 	gameWindowDock->setWidget( GameMainWindow::getInstance() );
 #endif
-	
+
 	//m_inspectorUi->setupUi(inspectorConsoleDock->widget());
 	//m_entityUi->setupUi(inspectorEntityDock->widget());
 	//m_mediaUi->setupUi(inspectorMediaDock->widget());
 	//m_texturesUi->setupUi(inspectorTexturesDock->widget());
 	//m_cameraUi->setupUi(cameraWindow->widget());
-	
+
 	addDockWidget( Qt::LeftDockWidgetArea, cameraWindowDock );
 	addDockWidget( Qt::LeftDockWidgetArea, inspectorConsoleDock );
 	addDockWidget( Qt::LeftDockWidgetArea, inspectorEntityDock );
@@ -69,29 +69,29 @@ MainWindow::MainWindow( QWidget* parent ) :
 #endif
 	//addDockWidget(Qt::LeftDockWidgetArea, inspectorMediaDock);
 	//addDockWidget(Qt::LeftDockWidgetArea, inspectorTexturesDock);
-	
+
 	m_docks.append( cameraWindowDock );
 	m_docks.append( inspectorConsoleDock );
 	m_docks.append( inspectorEntityDock );
 	//m_docks.append(inspectorMediaDock);
 	//m_docks.append(inspectorTexturesDock);
-	
+
 	tabifyDockWidget( inspectorConsoleDock, inspectorEntityDock );
 	//tabifyDockWidget(inspectorEntityDock, inspectorMediaDock);
 	//tabifyDockWidget(inspectorMediaDock, inspectorTexturesDock);
-	
+
 	// setup icons from theme (on linux) or use resource icon
 	ui->actionNewMap->setIcon( QIcon::fromTheme( "document-new", QIcon( ":/icons/new" ) ) );
 	ui->actionOpen->setIcon( QIcon::fromTheme( "document-open", QIcon( ":/icons/open" ) ) );
 	ui->actionSave->setIcon( QIcon::fromTheme( "document-save", QIcon( ":/icons/save" ) ) );
 	ui->actionExit->setIcon( QIcon::fromTheme( "application-exit", QIcon( ":/icons/exit" ) ) );
-	
+
 	ui->actionCut->setIcon( QIcon::fromTheme( "edit-cut", QIcon( ":/icons/cut" ) ) );
 	ui->actionCopy->setIcon( QIcon::fromTheme( "edit-copy", QIcon( ":/icons/copy" ) ) );
 	ui->actionPaste->setIcon( QIcon::fromTheme( "edit-paste", QIcon( ":/icons/paste" ) ) );
 	ui->actionDelete->setIcon( QIcon::fromTheme( "edit-delete", QIcon( ":/icons/delete" ) ) );
 	ui->actionPreferences->setIcon( QIcon::fromTheme( "preferences-system", QIcon( ":/icons/preferences" ) ) );
-	
+
 	// setup statusbar widgets
 	statusCoords = new QLabel( "x: 0.0\ty: 0.0\tz: 0.0" );
 	ui->statusBar->addPermanentWidget( statusCoords );

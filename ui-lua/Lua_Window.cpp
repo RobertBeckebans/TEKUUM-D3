@@ -41,13 +41,13 @@ If you have questions concerning this license or the applicable additional terms
 int idWindow::Lua_new( lua_State* L )
 {
 	int args = lua_gettop( L );
-	
+
 	idWindow* window = new idWindow( ( idUserInterfaceLocal* ) uiManager->LoadingGUI() ); //LuaWrapper<idWindow>::allocator(L);
-	
+
 	if( args == 1 && lua_isstring( L, 1 ) )
 	{
 		//char		buf[MAX_STRING_CHARS];
-		
+
 		const char* name = luaL_checkstring( L, 1 );
 		window->SetInitialState( name );
 	}
@@ -55,7 +55,7 @@ int idWindow::Lua_new( lua_State* L )
 	{
 		window->SetInitialState( "<unknown>" );
 	}
-	
+
 	luaW_push<idWindow>( L, window );
 	luaW_hold<idWindow>( L, window );
 //	luaW_postconstructor<idWindow>(L, args);
@@ -67,7 +67,7 @@ int idWindow::Lua_gc( lua_State* L )
 {
 	idWindow* window = luaW_check<idWindow>( L, 1 );
 	idLib::Printf( "Lua says bye to window = %p\n", window );
-	
+
 	// RB: already freed by delete desktop
 //	delete window;
 
@@ -82,9 +82,9 @@ int idWindow::Lua_index( lua_State* L )
 		if( lua_isstring( L, 2 ) )
 		{
 			char		buf[MAX_STRING_CHARS];
-			
+
 			const char* field = luaL_checkstring( L, 2 );
-			
+
 			// TODO more fields
 			if( idStr::Cmp( field, "name" ) == 0 )
 			{
@@ -113,7 +113,7 @@ int idWindow::Lua_index( lua_State* L )
 			*/
 		}
 	}
-	
+
 	return luaW_index<idWindow>( L );
 }
 
@@ -125,13 +125,13 @@ int idWindow::Lua_newindex( lua_State* L )
 		if( lua_isstring( L, 2 ) )
 		{
 			const char* field = luaL_checkstring( L, 2 );
-			
+
 			// TODO more fields
 			if( idStr::Cmp( field, "text" ) == 0 )
 			{
 				const char* text = luaL_checkstring( L, 3 );
 				window->text = text;
-				
+
 				return 0;
 			}
 			else if( idStr::Cmp( field, "forecolor" ) == 0 )
@@ -141,7 +141,7 @@ int idWindow::Lua_newindex( lua_State* L )
 				{
 					window->foreColor = *v;
 				}
-				
+
 				return 0;
 			}
 			else if( idStr::Cmp( field, "backcolor" ) == 0 )
@@ -151,18 +151,18 @@ int idWindow::Lua_newindex( lua_State* L )
 				{
 					window->backColor = *v;
 					//luaW_release<idVec4>( L, v );
-					
+
 					//window->gui->PrintLuaStack();
-					
+
 					//LuaWrapper<idVec4>::identifier( L, v ); // obj key value storage id
 					//luaW_wrapperfield<idVec4>( L, LUAW_HOLDS_KEY ); // obj id counts count holds
 					//float holds = lua_tonumber( L, -1 );
-					
+
 					//holds = 0;
-					
+
 					//window->gui->PrintLuaStack();
 				}
-				
+
 				return 0;
 			}
 			else if( idStr::Cmp( field, "matcolor" ) == 0 )
@@ -172,7 +172,7 @@ int idWindow::Lua_newindex( lua_State* L )
 				{
 					window->matColor = *v;
 				}
-				
+
 				return 0;
 			}
 			else if( idStr::Cmp( field, "hovercolor" ) == 0 )
@@ -182,14 +182,14 @@ int idWindow::Lua_newindex( lua_State* L )
 				{
 					window->hoverColor = *v;
 				}
-				
+
 				return 0;
 			}
 			else if( idStr::Cmp( field, "background" ) == 0 )
 			{
 				const char* text = luaL_checkstring( L, 3 );
 				window->backGroundName = text;
-				
+
 				return 0;
 			}
 			else if( idStr::Cmp( field, "rect" ) == 0 )
@@ -199,13 +199,13 @@ int idWindow::Lua_newindex( lua_State* L )
 				{
 					window->rect = *rect;
 				}
-				
+
 				return 0;
 			}
 			else if( idStr::Cmp( field, "font" ) == 0 )
 			{
 				const char* fontName = luaL_checkstring( L, 3 );
-				
+
 #if defined(USE_IDFONT)
 				font = renderSystem->RegisterFont( fontName );
 #else
@@ -216,28 +216,28 @@ int idWindow::Lua_newindex( lua_State* L )
 			{
 				float num = luaL_checknumber( L, 3 );
 				window->textAlign = num;
-				
+
 				return 0;
 			}
 			else if( idStr::Cmp( field, "textalignx" ) == 0 )
 			{
 				float num = luaL_checknumber( L, 3 );
 				window->textAlignx = num;
-				
+
 				return 0;
 			}
 			else if( idStr::Cmp( field, "textaligny" ) == 0 )
 			{
 				float num = luaL_checknumber( L, 3 );
 				window->textAligny = num;
-				
+
 				return 0;
 			}
 			else if( idStr::Cmp( field, "textscale" ) == 0 )
 			{
 				float num = luaL_checknumber( L, 3 );
 				window->textScale = num;
-				
+
 				return 0;
 			}
 			else if( idStr::Cmp( field, "visible" ) == 0 )
@@ -252,7 +252,7 @@ int idWindow::Lua_newindex( lua_State* L )
 					b = luaL_checknumber( L, 3 );
 				}
 				window->visible = ( b != 0 );
-				
+
 				return 0;
 			}
 			else if( idStr::Cmp( field, "noevents" ) == 0 )
@@ -267,7 +267,7 @@ int idWindow::Lua_newindex( lua_State* L )
 					b = luaL_checknumber( L, 3 );
 				}
 				window->noEvents = ( b != 0 );
-				
+
 				return 0;
 			}
 			else if( idStr::Cmp( field, "menugui" ) == 0 )
@@ -281,38 +281,38 @@ int idWindow::Lua_newindex( lua_State* L )
 				{
 					b = luaL_checknumber( L, 3 );
 				}
-				
+
 				if( b != 0 )
 				{
 					window->flags |= WIN_MENUGUI;
 				}
-				
+
 				return 0;
 			}
 		}
 	}
-	
+
 	return luaW_newindex<idWindow>( L );
 }
 
 int idWindow::Lua_tostring( lua_State* L )
 {
 	char		buf[MAX_STRING_CHARS];
-	
+
 	idWindow* window = luaW_check<idWindow>( L, 1 );
 	if( window )
 	{
 		sprintf( buf, "Window: name='%s' ", window->name.c_str() );
 		lua_pushstring( L, buf );
 	}
-	
+
 	return 1;
 }
 
 int idWindow::Lua_GetText( lua_State* L )
 {
 	char		buf[MAX_STRING_CHARS];
-	
+
 	idWindow* window = luaW_check<idWindow>( L, 1 );
 	if( window )
 	{
@@ -320,7 +320,7 @@ int idWindow::Lua_GetText( lua_State* L )
 		lua_pushstring( L, buf );
 		return 1;
 	}
-	
+
 	return 0;
 }
 
@@ -332,14 +332,14 @@ int idWindow::Lua_SetText( lua_State* L )
 		const char* text = luaL_checkstring( L, 2 );
 		window->text = text;
 	}
-	
+
 	return 0;
 }
 
 int idWindow::Lua_text( lua_State* L )
 {
 	char		buf[MAX_STRING_CHARS];
-	
+
 	idWindow* window = luaW_check<idWindow>( L, 1 );
 	if( window )
 	{
@@ -356,7 +356,7 @@ int idWindow::Lua_text( lua_State* L )
 			return 1;
 		}
 	}
-	
+
 	return 0;
 }
 
@@ -369,16 +369,16 @@ int idWindow::Lua_AddChild( lua_State* L )
 		if( child )
 		{
 			drawWin_t dwt;
-			
+
 			child->SetupFromState();
 			child->SetParent( window );
-			
+
 			dwt.simp = NULL;
 			dwt.win = NULL;
-			
+
 			/*
 			RB: TODO handle simple window case
-			
+
 			if( win->IsSimple() )
 			{
 				idSimpleWindow* simple = new idSimpleWindow( win );
@@ -390,15 +390,15 @@ int idWindow::Lua_AddChild( lua_State* L )
 			*/
 			{
 				window->AddChild( child );
-				
+
 				window->SetFocus( child, false );
-				
+
 				dwt.win = child;
 				window->drawWindows.Append( dwt );
 			}
 		}
 	}
-	
+
 	return 0;
 }
 
@@ -408,7 +408,7 @@ int idWindow::Lua_AddChildren( lua_State* L )
 	if( window )
 	{
 		int args = lua_gettop( L );
-		
+
 		// self, child, child, ...
 		for( int i = 2; i <= args; i++ )
 		{
@@ -416,16 +416,16 @@ int idWindow::Lua_AddChildren( lua_State* L )
 			if( child )
 			{
 				drawWin_t dwt;
-				
+
 				child->SetupFromState();
 				child->SetParent( window );
-				
+
 				dwt.simp = NULL;
 				dwt.win = NULL;
-				
+
 				/*
 				RB: TODO handle simple window case
-				
+
 				if( win->IsSimple() )
 				{
 					idSimpleWindow* simple = new idSimpleWindow( win );
@@ -437,16 +437,16 @@ int idWindow::Lua_AddChildren( lua_State* L )
 				*/
 				{
 					window->AddChild( child );
-					
+
 					//window->SetFocus( child, false );
-					
+
 					dwt.win = child;
 					window->drawWindows.Append( dwt );
 				}
 			}
 		}
 	}
-	
+
 	return 0;
 }
 
@@ -461,7 +461,7 @@ int idWindow::Lua_AddCommand( lua_State* L )
 			window->AddCommand( cmd );
 		}
 	}
-	
+
 	return 0;
 }
 
@@ -472,7 +472,7 @@ int idWindow::Lua_Open( lua_State* L )
 	{
 		window->Open();
 	}
-	
+
 	return 0;
 }
 
@@ -483,7 +483,7 @@ int idWindow::Lua_Close( lua_State* L )
 	{
 		window->Close();
 	}
-	
+
 	return 0;
 }
 
@@ -494,7 +494,7 @@ int idWindow::Lua_SetFocus( lua_State* L )
 	{
 		window->SetFocus( window );
 	}
-	
+
 	return 0;
 }
 
@@ -524,7 +524,7 @@ static const luaL_Reg Window_meta[] =
 	{ "Open",			idWindow::Lua_Open },
 	{ "Close",			idWindow::Lua_Close },
 	{ "SetFocus",		idWindow::Lua_SetFocus },
-	
+
 	{NULL, NULL}
 };
 
@@ -534,7 +534,7 @@ extern "C"
 	int luaopen_Window( lua_State* L )
 	{
 		luaW_register< idWindow >( L, "Window", Window_default, Window_meta );
-		
+
 		return 0;
 	}
 }

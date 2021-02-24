@@ -155,7 +155,7 @@ void idMultiplayerGame::SetMenuSkin()
 		}
 		count++;
 	}
-	
+
 	for( int i = 0; i < count; i++ )
 	{
 		mainGui->SetStateInt( va( "skin%i", i + 1 ), 0 );
@@ -209,7 +209,7 @@ void idMultiplayerGame::SpawnPlayer( int clientNum )
 {
 
 	bool ingame = playerState[ clientNum ].ingame;
-	
+
 	memset( &playerState[ clientNum ], 0, sizeof( playerState[ clientNum ] ) );
 	if( !gameLocal.isClient )
 	{
@@ -236,7 +236,7 @@ idMultiplayerGame::Clear
 void idMultiplayerGame::Clear()
 {
 	int i;
-	
+
 	gameState = INACTIVE;
 	nextState = INACTIVE;
 	pingUpdateTime = 0;
@@ -285,7 +285,7 @@ idMultiplayerGame::ClearGuis
 void idMultiplayerGame::ClearGuis()
 {
 	int i;
-	
+
 	for( i = 0; i < MAX_CLIENTS; i++ )
 	{
 		scoreBoard->SetStateString( va( "player%i", i + 1 ), "" );
@@ -296,7 +296,7 @@ void idMultiplayerGame::ClearGuis()
 		scoreBoard->SetStateString( va( "player%i_status", i + 1 ), "" );
 		scoreBoard->SetStateInt( va( "rank%i", i + 1 ), 0 );
 		scoreBoard->SetStateInt( "rank_self", 0 );
-		
+
 		idPlayer* player = static_cast<idPlayer*>( gameLocal.entities[ i ] );
 		if( !player || !player->hud )
 		{
@@ -321,10 +321,10 @@ void idMultiplayerGame::UpdatePlayerRanks()
 	idPlayer* players[MAX_CLIENTS];
 	idEntity* ent;
 	idPlayer* player;
-	
+
 	memset( players, 0, sizeof( players ) );
 	numRankedPlayers = 0;
-	
+
 	for( i = 0; i < gameLocal.numClients; i++ )
 	{
 		ent = gameLocal.entities[ i ];
@@ -392,7 +392,7 @@ void idMultiplayerGame::UpdatePlayerRanks()
 		}
 		numRankedPlayers++;
 	}
-	
+
 	memcpy( rankedPlayers, players, sizeof( players ) );
 }
 
@@ -424,9 +424,9 @@ void idMultiplayerGame::UpdateScoreboard( idUserInterface* scoreBoard, idPlayer*
 	idEntity* ent;
 	idPlayer* p;
 	int value;
-	
+
 	scoreBoard->SetStateString( "scoretext", gameLocal.gameType == GAME_LASTMAN ? common->GetLanguageDict()->GetString( "#str_04242" ) : common->GetLanguageDict()->GetString( "#str_04243" ) );
-	
+
 	iline = 0; // the display lines
 	if( gameState != WARMUP )
 	{
@@ -463,7 +463,7 @@ void idMultiplayerGame::UpdateScoreboard( idUserInterface* scoreBoard, idPlayer*
 			}
 		}
 	}
-	
+
 	// if warmup, this draws everyone, otherwise it goes over spectators only
 	// when doing warmup we loop twice to draw ready/not ready first *then* spectators
 	// NOTE: in tourney, shows spectators according to their playing rank order?
@@ -503,7 +503,7 @@ void idMultiplayerGame::UpdateScoreboard( idUserInterface* scoreBoard, idPlayer*
 					continue;
 				}
 			}
-			
+
 			iline++;
 			if( !playerState[ i ].ingame )
 			{
@@ -559,7 +559,7 @@ void idMultiplayerGame::UpdateScoreboard( idUserInterface* scoreBoard, idPlayer*
 			}
 		}
 	}
-	
+
 	// clear remaining lines (empty slots)
 	iline++;
 	while( iline < 5 )
@@ -573,7 +573,7 @@ void idMultiplayerGame::UpdateScoreboard( idUserInterface* scoreBoard, idPlayer*
 		scoreBoard->SetStateInt( va( "rank%i", iline ), 0 );
 		iline++;
 	}
-	
+
 	gameinfo = va( "%s: %s", common->GetLanguageDict()->GetString( "#str_02376" ), gameLocal.serverInfo.GetString( "si_gameType" ) );
 	if( gameLocal.gameType == GAME_LASTMAN )
 	{
@@ -585,7 +585,7 @@ void idMultiplayerGame::UpdateScoreboard( idUserInterface* scoreBoard, idPlayer*
 		{
 			livesinfo = va( "%s: %i", common->GetLanguageDict()->GetString( "#str_04264" ), gameLocal.serverInfo.GetInt( "si_fragLimit" ) );
 		}
-		
+
 	}
 	else
 	{
@@ -602,7 +602,7 @@ void idMultiplayerGame::UpdateScoreboard( idUserInterface* scoreBoard, idPlayer*
 	scoreBoard->SetStateString( "gameinfo", gameinfo );
 	scoreBoard->SetStateString( "livesinfo", livesinfo );
 	scoreBoard->SetStateString( "timeinfo", timeinfo );
-	
+
 	scoreBoard->Redraw( gameLocal.time );
 }
 
@@ -615,7 +615,7 @@ const char* idMultiplayerGame::GameTime()
 {
 	static char buff[16];
 	int m, s, t, ms;
-	
+
 	if( gameState == COUNTDOWN )
 	{
 		ms = warmupEndTime - gameLocal.realClientTime;
@@ -644,13 +644,13 @@ const char* idMultiplayerGame::GameTime()
 		{
 			ms = 0;
 		}
-		
+
 		s = ms / 1000;
 		m = s / 60;
 		s -= m * 60;
 		t = s / 10;
 		s -= t * 10;
-		
+
 		sprintf( buff, "%i:%i%i", m, t, s );
 	}
 	return &buff[0];
@@ -665,7 +665,7 @@ int idMultiplayerGame::NumActualClients( bool countSpectators, int* teamcounts )
 {
 	idPlayer* p;
 	int c = 0;
-	
+
 	if( teamcounts )
 	{
 		teamcounts[ 0 ] = teamcounts[ 1 ] = 0;
@@ -720,12 +720,12 @@ bool idMultiplayerGame::AllPlayersReady()
 	idEntity*	ent;
 	idPlayer*	p;
 	int			team[ 2 ];
-	
+
 	if( NumActualClients( false, &team[ 0 ] ) <= 1 )
 	{
 		return false;
 	}
-	
+
 	if( gameLocal.gameType == GAME_TDM )
 	{
 		if( !team[ 0 ] || !team[ 1 ] )
@@ -733,12 +733,12 @@ bool idMultiplayerGame::AllPlayersReady()
 			return false;
 		}
 	}
-	
+
 	if( !gameLocal.serverInfo.GetBool( "si_warmup" ) )
 	{
 		return true;
 	}
-	
+
 	for( i = 0; i < gameLocal.numClients; i++ )
 	{
 		if( gameLocal.gameType == GAME_TOURNEY && i != currentTourneyPlayer[ 0 ] && i != currentTourneyPlayer[ 1 ] )
@@ -757,7 +757,7 @@ bool idMultiplayerGame::AllPlayersReady()
 		}
 		team[ p->team ]++;
 	}
-	
+
 	return true;
 }
 
@@ -773,18 +773,18 @@ idPlayer* idMultiplayerGame::FragLimitHit()
 	int i;
 	int fragLimit = gameLocal.serverInfo.GetInt( "si_fragLimit" );
 	idPlayer* leader;
-	
+
 	leader = FragLeader();
 	if( !leader )
 	{
 		return NULL;
 	}
-	
+
 	if( fragLimit <= 0 )
 	{
 		fragLimit = MP_PLAYER_MAXFRAGS;
 	}
-	
+
 	if( gameLocal.gameType == GAME_LASTMAN )
 	{
 		// we have a leader, check if any other players have frags left
@@ -826,7 +826,7 @@ idPlayer* idMultiplayerGame::FragLimitHit()
 			return leader;
 		}
 	}
-	
+
 	return NULL;
 }
 
@@ -865,7 +865,7 @@ idPlayer* idMultiplayerGame::FragLeader()
 	int high = -9999;
 	int count = 0;
 	bool teamLead[ 2 ] = { false, false };
-	
+
 	for( i = 0 ; i < gameLocal.numClients ; i++ )
 	{
 		ent = gameLocal.entities[ i ];
@@ -885,16 +885,16 @@ idPlayer* idMultiplayerGame::FragLeader()
 		{
 			continue;
 		}
-		
+
 		int fragc = ( gameLocal.gameType == GAME_TDM ) ? playerState[i].teamFragCount : playerState[i].fragCount;
 		if( fragc > high )
 		{
 			high = fragc;
 		}
-		
+
 		frags[ i ] = fragc;
 	}
-	
+
 	for( i = 0; i < gameLocal.numClients; i++ )
 	{
 		ent = gameLocal.entities[ i ];
@@ -904,7 +904,7 @@ idPlayer* idMultiplayerGame::FragLeader()
 		}
 		p = static_cast< idPlayer* >( ent );
 		p->SetLeader( false );
-		
+
 		if( !CanPlay( p ) )
 		{
 			continue;
@@ -921,7 +921,7 @@ idPlayer* idMultiplayerGame::FragLeader()
 		{
 			continue;
 		}
-		
+
 		if( frags[ i ] >= high )
 		{
 			leader = p;
@@ -933,7 +933,7 @@ idPlayer* idMultiplayerGame::FragLeader()
 			}
 		}
 	}
-	
+
 	if( gameLocal.gameType != GAME_TDM )
 	{
 		// more than one player at the highest frags
@@ -1068,7 +1068,7 @@ void idMultiplayerGame::PlayerDeath( idPlayer* dead, idPlayer* killer, bool tele
 
 	// don't do PrintMessageEvent and shit
 	assert( !gameLocal.isClient );
-	
+
 	if( killer )
 	{
 		if( gameLocal.gameType == GAME_LASTMAN )
@@ -1092,7 +1092,7 @@ void idMultiplayerGame::PlayerDeath( idPlayer* dead, idPlayer* killer, bool tele
 			playerState[ killer->entityNumber ].fragCount += ( killer == dead ) ? -1 : 1;
 		}
 	}
-	
+
 	if( killer && killer == dead )
 	{
 		PrintMessageEvent( -1, MSG_SUICIDE, dead->entityNumber );
@@ -1129,15 +1129,15 @@ void idMultiplayerGame::PlayerStats( int clientNum, char* data, const int len )
 
 	idEntity* ent;
 	int team;
-	
+
 	*data = 0;
-	
+
 	// make sure we don't exceed the client list
 	if( clientNum < 0 || clientNum > gameLocal.numClients )
 	{
 		return;
 	}
-	
+
 	// find which team this player is on
 	ent = gameLocal.entities[ clientNum ];
 	if( ent && ent->IsType( idPlayer::Type ) )
@@ -1148,11 +1148,11 @@ void idMultiplayerGame::PlayerStats( int clientNum, char* data, const int len )
 	{
 		return;
 	}
-	
+
 	idStr::snPrintf( data, len, "team=%d score=%ld tks=%ld", team, playerState[ clientNum ].fragCount, playerState[ clientNum ].teamFragCount );
-	
+
 	return;
-	
+
 }
 
 /*
@@ -1192,7 +1192,7 @@ void idMultiplayerGame::NewState( gameState_t news, idPlayer* player )
 	idBitMsg	outMsg;
 	byte		msgBuf[MAX_GAME_MESSAGE_SIZE];
 	int			i;
-	
+
 	assert( news != gameState );
 	assert( !gameLocal.isClient );
 	gameLocal.DPrintf( "%s -> %s\n", GameStateStrings[ gameState ], GameStateStrings[ news ] );
@@ -1205,7 +1205,7 @@ void idMultiplayerGame::NewState( gameState_t news, idPlayer* player )
 			outMsg.WriteByte( GAME_RELIABLE_MESSAGE_RESTART );
 			outMsg.WriteBits( 0, 1 );
 			networkSystem->ServerSendReliableMessage( -1, outMsg );
-			
+
 			PlayGlobalSound( -1, SND_FIGHT );
 			matchStartedTime = gameLocal.time;
 			fragLimitTimeout = 0;
@@ -1279,20 +1279,20 @@ void idMultiplayerGame::NewState( gameState_t news, idPlayer* player )
 		{
 			idBitMsg	outMsg;
 			byte		msgBuf[ 128 ];
-			
+
 			warmupEndTime = gameLocal.time + 1000 * cvarSystem->GetCVarInteger( "g_countDown" );
-			
+
 			outMsg.Init( msgBuf, sizeof( msgBuf ) );
 			outMsg.WriteByte( GAME_RELIABLE_MESSAGE_WARMUPTIME );
 			outMsg.WriteLong( warmupEndTime );
 			networkSystem->ServerSendReliableMessage( -1, outMsg );
-			
+
 			break;
 		}
 		default:
 			break;
 	}
-	
+
 	gameState = news;
 }
 
@@ -1307,7 +1307,7 @@ void idMultiplayerGame::FillTourneySlots( )
 	int i, j, rankmax, rankmaxindex;
 	idEntity* ent;
 	idPlayer* p;
-	
+
 	// fill up the slots based on tourney ranks
 	for( i = 0; i < 2; i++ )
 	{
@@ -1364,13 +1364,13 @@ void idMultiplayerGame::UpdateTourneyLine()
 {
 	int i, j, imax, max, globalmax = -1;
 	idPlayer* p;
-	
+
 	assert( !gameLocal.isClient );
 	if( gameLocal.gameType != GAME_TOURNEY )
 	{
 		return;
 	}
-	
+
 	for( j = 1; j <= gameLocal.numClients; j++ )
 	{
 		max = -1;
@@ -1396,14 +1396,14 @@ void idMultiplayerGame::UpdateTourneyLine()
 		{
 			break;
 		}
-		
+
 		idBitMsg outMsg;
 		byte msgBuf[1024];
 		outMsg.Init( msgBuf, sizeof( msgBuf ) );
 		outMsg.WriteByte( GAME_RELIABLE_MESSAGE_TOURNEYLINE );
 		outMsg.WriteByte( j );
 		networkSystem->ServerSendReliableMessage( imax, outMsg );
-		
+
 		globalmax = max;
 	}
 }
@@ -1418,7 +1418,7 @@ void idMultiplayerGame::CycleTourneyPlayers( )
 	int i;
 	idEntity* ent;
 	idPlayer* player;
-	
+
 	currentTourneyPlayer[ 0 ] = -1;
 	currentTourneyPlayer[ 1 ] = -1;
 	// if any, winner from last round will play again
@@ -1519,12 +1519,12 @@ idMultiplayerGame::CheckVote
 void idMultiplayerGame::CheckVote()
 {
 	int numVoters, i;
-	
+
 	if( vote == VOTE_NONE )
 	{
 		return;
 	}
-	
+
 	if( voteExecTime )
 	{
 		if( gameLocal.time > voteExecTime )
@@ -1536,7 +1536,7 @@ void idMultiplayerGame::CheckVote()
 		}
 		return;
 	}
-	
+
 	// count voting players
 	numVoters = 0;
 	for( i = 0; i < gameLocal.numClients; i++ )
@@ -1592,28 +1592,28 @@ void idMultiplayerGame::Run()
 	int i, timeLeft;
 	idPlayer* player;
 	int gameReviewPause;
-	
+
 	assert( gameLocal.isMultiplayer );
 	assert( !gameLocal.isClient );
-	
+
 	pureReady = true;
-	
+
 	if( gameState == INACTIVE )
 	{
 		lastGameType = gameLocal.gameType;
 		NewState( WARMUP );
 	}
-	
+
 	CheckVote();
-	
+
 	CheckRespawns();
-	
+
 	if( nextState != INACTIVE && gameLocal.time > nextStateSwitch )
 	{
 		NewState( nextState );
 		nextState = INACTIVE;
 	}
-	
+
 	// don't update the ping every frame to save bandwidth
 	if( gameLocal.time > pingUpdateTime )
 	{
@@ -1623,9 +1623,9 @@ void idMultiplayerGame::Run()
 		}
 		pingUpdateTime = gameLocal.time + 1000;
 	}
-	
+
 	warmupText = "";
-	
+
 	switch( gameState )
 	{
 		case GAMEREVIEW:
@@ -1831,7 +1831,7 @@ idUserInterface* idMultiplayerGame::StartMenu()
 	{
 		return NULL;
 	}
-	
+
 	int i, j;
 	if( currentMenu )
 	{
@@ -1856,11 +1856,11 @@ idUserInterface* idMultiplayerGame::StartMenu()
 	if( currentMenu == 1 )
 	{
 		UpdateMainGui();
-		
+
 		// UpdateMainGui sets most things, but it doesn't set these because
 		// it'd be pointless and/or harmful to set them every frame (for various reasons)
 		// Currenty the gui doesn't update properly if they change anyway, so we'll leave it like this.
-		
+
 		// setup callvote
 		if( vote == VOTE_NONE )
 		{
@@ -1880,7 +1880,7 @@ idUserInterface* idMultiplayerGame::StartMenu()
 		{
 			mainGui->SetStateInt( "callvote", 2 );
 		}
-		
+
 		// player kick data
 		idStr kickList;
 		j = 0;
@@ -1898,7 +1898,7 @@ idUserInterface* idMultiplayerGame::StartMenu()
 			}
 		}
 		mainGui->SetStateString( "kickChoices", kickList );
-		
+
 		mainGui->SetStateString( "chattext", "" );
 		mainGui->Activate( true, gameLocal.time );
 		return mainGui;
@@ -1964,7 +1964,7 @@ const char* idMultiplayerGame::HandleGuiCommands( const char* _menuCommand )
 	int				vote_clientNum;
 	int				icmd;
 	idCmdArgs		args;
-	
+
 	if( !_menuCommand[ 0 ] )
 	{
 		common->Printf( "idMultiplayerGame::HandleGuiCommands: empty command\n" );
@@ -1979,13 +1979,13 @@ const char* idMultiplayerGame::HandleGuiCommands( const char* _menuCommand )
 	{
 		currentGui = msgmodeGui;
 	}
-	
+
 	args.TokenizeString( _menuCommand, false );
-	
+
 	for( icmd = 0; icmd < args.Argc(); )
 	{
 		const char* cmd = args.Argv( icmd++ );
-		
+
 		if( !idStr::Icmp( cmd,	";"	) )
 		{
 			continue;
@@ -1997,9 +1997,9 @@ const char* idMultiplayerGame::HandleGuiCommands( const char* _menuCommand )
 			{
 				vcmd = args.Argv( icmd++ );
 			}
-			
+
 			int	oldSpec	= cvarSystem->GetCVarInteger( "com_machineSpec"	);
-			
+
 			if( idStr::Icmp( vcmd,	"low" )	== 0 )
 			{
 				cvarSystem->SetCVarInteger(	"com_machineSpec", 0 );
@@ -2020,19 +2020,19 @@ const char* idMultiplayerGame::HandleGuiCommands( const char* _menuCommand )
 			{
 				cmdSystem->BufferCommandText( CMD_EXEC_NOW,	"setMachineSpec\n" );
 			}
-			
+
 			if( oldSpec !=	cvarSystem->GetCVarInteger(	"com_machineSpec" )	)
 			{
 				currentGui->SetStateInt( "com_machineSpec",	cvarSystem->GetCVarInteger(	"com_machineSpec" )	);
 				currentGui->StateChanged( gameLocal.realClientTime );
 				cmdSystem->BufferCommandText( CMD_EXEC_NOW,	"execMachineSpec\n"	);
 			}
-			
+
 			if( idStr::Icmp( vcmd,	"restart" )	 ==	0 )
 			{
 				cmdSystem->BufferCommandText( CMD_EXEC_APPEND, "vid_restart\n" );
 			}
-			
+
 			continue;
 		}
 		else if(	!idStr::Icmp( cmd, "play" )	)
@@ -2187,11 +2187,11 @@ const char* idMultiplayerGame::HandleGuiCommands( const char* _menuCommand )
 			{
 				gametype = "Deathmatch";
 			}
-			
+
 			int i, num;
 			idStr si_map = gameLocal.serverInfo.GetString( "si_map" );
 			const idDict* dict;
-			
+
 			mapList->Clear();
 			mapList->SetSelection( -1 );
 			num = fileSystem->GetNumMaps();
@@ -2243,7 +2243,7 @@ const char* idMultiplayerGame::HandleGuiCommands( const char* _menuCommand )
 			return _menuCommand;
 		}
 		common->Printf(	"idMultiplayerGame::HandleGuiCommands: '%s'	unknown\n",	cmd	);
-		
+
 	}
 	return "continue";
 }
@@ -2256,7 +2256,7 @@ idMultiplayerGame::Draw
 bool idMultiplayerGame::Draw( int clientNum )
 {
 	idPlayer* player, *viewPlayer;
-	
+
 	// clear the render entities for any players that don't need
 	// icons and which might not be thinking because they weren't in
 	// the last snapshot.
@@ -2268,14 +2268,14 @@ bool idMultiplayerGame::Draw( int clientNum )
 			player->HidePlayerIcons();
 		}
 	}
-	
+
 	player = viewPlayer = static_cast<idPlayer*>( gameLocal.entities[ clientNum ] );
-	
+
 	if( player == NULL )
 	{
 		return false;
 	}
-	
+
 	if( player->spectating )
 	{
 		viewPlayer = static_cast<idPlayer*>( gameLocal.entities[ player->spectator ] );
@@ -2284,12 +2284,12 @@ bool idMultiplayerGame::Draw( int clientNum )
 			return false;
 		}
 	}
-	
+
 	UpdatePlayerRanks();
 	UpdateHud( viewPlayer, player->hud );
 	// use the hud of the local player
 	viewPlayer->playerView.RenderPlayerView( player->hud );
-	
+
 	if( currentMenu )
 	{
 #if 0
@@ -2298,12 +2298,12 @@ bool idMultiplayerGame::Draw( int clientNum )
 		{
 			idBitMsg	outMsg;
 			byte		msgBuf[ 128 ];
-			
+
 			outMsg.Init( msgBuf, sizeof( msgBuf ) );
 			outMsg.WriteByte( GAME_RELIABLE_MESSAGE_MENU );
 			outMsg.WriteBits( 1, 1 );
 			networkSystem->ClientSendReliableMessage( outMsg );
-			
+
 			bCurrentMenuMsg = true;
 		}
 #endif
@@ -2334,12 +2334,12 @@ bool idMultiplayerGame::Draw( int clientNum )
 		{
 			idBitMsg	outMsg;
 			byte		msgBuf[ 128 ];
-			
+
 			outMsg.Init( msgBuf, sizeof( msgBuf ) );
 			outMsg.WriteByte( GAME_RELIABLE_MESSAGE_MENU );
 			outMsg.WriteBits( 0, 1 );
 			networkSystem->ClientSendReliableMessage( outMsg );
-			
+
 			bCurrentMenuMsg = false;
 		}
 #endif
@@ -2401,7 +2401,7 @@ bool idMultiplayerGame::Draw( int clientNum )
 		DrawChat();
 		DrawScoreBoard( player );
 	}
-	
+
 	return true;
 }
 
@@ -2413,14 +2413,14 @@ idMultiplayerGame::UpdateHud
 void idMultiplayerGame::UpdateHud( idPlayer* player, idUserInterface* hud )
 {
 	int i;
-	
+
 	if( !hud )
 	{
 		return;
 	}
-	
+
 	hud->SetStateBool( "warmup", Warmup() );
-	
+
 	if( gameState == WARMUP )
 	{
 		if( player->IsReady() )
@@ -2432,7 +2432,7 @@ void idMultiplayerGame::UpdateHud( idPlayer* player, idUserInterface* hud )
 			hud->SetStateString( "warmuptext", common->GetLanguageDict()->GetString( "#str_07002" ) );
 		}
 	}
-	
+
 	hud->SetStateString( "timer", ( Warmup() ) ? common->GetLanguageDict()->GetString( "#str_04251" ) : ( gameState == SUDDENDEATH ) ? common->GetLanguageDict()->GetString( "#str_04252" ) : GameTime() );
 	if( vote != VOTE_NONE )
 	{
@@ -2442,7 +2442,7 @@ void idMultiplayerGame::UpdateHud( idPlayer* player, idUserInterface* hud )
 	{
 		hud->SetStateString( "vote", "" );
 	}
-	
+
 	hud->SetStateInt( "rank_self", 0 );
 	if( gameState == GAMEON )
 	{
@@ -2519,16 +2519,16 @@ void idMultiplayerGame::AddChatLine( const char* fmt, ... )
 {
 	idStr temp;
 	va_list argptr;
-	
+
 	va_start( argptr, fmt );
 	vsprintf( temp, fmt, argptr );
 	va_end( argptr );
-	
+
 	gameLocal.Printf( "%s\n", temp.c_str() );
-	
+
 	chatHistory[ chatHistoryIndex % NUM_CHAT_NOTIFY ].line = temp;
 	chatHistory[ chatHistoryIndex % NUM_CHAT_NOTIFY ].fade = 6;
-	
+
 	chatHistoryIndex++;
 	if( chatHistorySize < NUM_CHAT_NOTIFY )
 	{
@@ -2601,7 +2601,7 @@ void idMultiplayerGame::WriteToSnapshot( idBitMsgDelta& msg ) const
 {
 	int i;
 	int value;
-	
+
 	msg.WriteByte( gameState );
 	msg.WriteShort( currentTourneyPlayer[ 0 ] );
 	msg.WriteShort( currentTourneyPlayer[ 1 ] );
@@ -2629,7 +2629,7 @@ void idMultiplayerGame::ReadFromSnapshot( const idBitMsgDelta& msg )
 {
 	int i;
 	gameState_t newState;
-	
+
 	newState = ( idMultiplayerGame::gameState_t )msg.ReadByte();
 	if( newState != gameState )
 	{
@@ -2664,7 +2664,7 @@ idMultiplayerGame::PlayGlobalSound
 void idMultiplayerGame::PlayGlobalSound( int to, snd_evt_t evt, const char* shader )
 {
 	const idSoundShader* shaderDecl;
-	
+
 	if( to == -1 || to == gameLocal.localClientNum )
 	{
 		if( shader )
@@ -2676,13 +2676,13 @@ void idMultiplayerGame::PlayGlobalSound( int to, snd_evt_t evt, const char* shad
 			gameSoundWorld->PlayShaderDirectly( GlobalSoundStrings[ evt ] );
 		}
 	}
-	
+
 	if( !gameLocal.isClient )
 	{
 		idBitMsg outMsg;
 		byte msgBuf[1024];
 		outMsg.Init( msgBuf, sizeof( msgBuf ) );
-		
+
 		if( shader )
 		{
 			shaderDecl = declManager->FindSound( shader );
@@ -2698,7 +2698,7 @@ void idMultiplayerGame::PlayGlobalSound( int to, snd_evt_t evt, const char* shad
 			outMsg.WriteByte( GAME_RELIABLE_MESSAGE_SOUND_EVENT );
 			outMsg.WriteByte( evt );
 		}
-		
+
 		networkSystem->ServerSendReliableMessage( to, outMsg );
 	}
 }
@@ -2798,12 +2798,12 @@ LMN players which still have lives left need to be respawned without being marke
 void idMultiplayerGame::SuddenRespawn()
 {
 	int i;
-	
+
 	if( gameLocal.gameType != GAME_LASTMAN )
 	{
 		return;
 	}
-	
+
 	for( i = 0; i < gameLocal.numClients; i++ )
 	{
 		if( !gameLocal.entities[ i ] || !gameLocal.entities[ i ]->IsType( idPlayer::Type ) )
@@ -2927,7 +2927,7 @@ void idMultiplayerGame::CheckRespawns( idPlayer* spectator )
 								// so set the fragCount to something silly ( used in scoreboard and player ranking )
 								playerState[ i ].fragCount = LASTMAN_NOLIVES;
 								p->ServerSpectate( true );
-								
+
 								//Check for a situation where the last two player dies at the same time and don't
 								//try to respawn manually...This was causing all players to go into spectate mode
 								//and the server got stuck
@@ -3064,7 +3064,7 @@ void idMultiplayerGame::MessageMode( const idCmdArgs& args )
 {
 	const char* mode;
 	int imode;
-	
+
 	if( !gameLocal.isMultiplayer )
 	{
 		common->Printf( "clientMessageMode: only valid in multiplayer\n" );
@@ -3115,9 +3115,9 @@ idMultiplayerGame::ServerStartVote
 void idMultiplayerGame::ServerStartVote( int clientNum, vote_flags_t voteIndex, const char* value )
 {
 	int i;
-	
+
 	assert( vote == VOTE_NONE );
-	
+
 	// setup
 	yesVotes = 1;
 	noVotes = 0;
@@ -3147,7 +3147,7 @@ void idMultiplayerGame::ClientStartVote( int clientNum, const char* _voteString 
 {
 	idBitMsg	outMsg;
 	byte		msgBuf[ MAX_GAME_MESSAGE_SIZE ];
-	
+
 	if( !gameLocal.isClient )
 	{
 		outMsg.Init( msgBuf, sizeof( msgBuf ) );
@@ -3156,7 +3156,7 @@ void idMultiplayerGame::ClientStartVote( int clientNum, const char* _voteString 
 		outMsg.WriteString( _voteString );
 		networkSystem->ServerSendReliableMessage( -1, outMsg );
 	}
-	
+
 	voteString = _voteString;
 	AddChatLine( va( common->GetLanguageDict()->GetString( "#str_04279" ), gameLocal.userInfo[ clientNum ].GetString( "ui_name" ) ) );
 	gameSoundWorld->PlayShaderDirectly( GlobalSoundStrings[ SND_VOTE ] );
@@ -3186,7 +3186,7 @@ void idMultiplayerGame::ClientUpdateVote( vote_result_t status, int yesCount, in
 {
 	idBitMsg	outMsg;
 	byte		msgBuf[ MAX_GAME_MESSAGE_SIZE ];
-	
+
 	if( !gameLocal.isClient )
 	{
 		outMsg.Init( msgBuf, sizeof( msgBuf ) );
@@ -3196,13 +3196,13 @@ void idMultiplayerGame::ClientUpdateVote( vote_result_t status, int yesCount, in
 		outMsg.WriteByte( noCount );
 		networkSystem->ServerSendReliableMessage( -1, outMsg );
 	}
-	
+
 	if( vote == VOTE_NONE )
 	{
 		// clients coming in late don't get the vote start and are not allowed to vote
 		return;
 	}
-	
+
 	switch( status )
 	{
 		case VOTE_FAILED:
@@ -3249,7 +3249,7 @@ void idMultiplayerGame::ClientCallVote( vote_flags_t voteIndex, const char* vote
 {
 	idBitMsg	outMsg;
 	byte		msgBuf[ MAX_GAME_MESSAGE_SIZE ];
-	
+
 	// send
 	outMsg.Init( msgBuf, sizeof( msgBuf ) );
 	outMsg.WriteByte( GAME_RELIABLE_MESSAGE_CALLVOTE );
@@ -3267,12 +3267,12 @@ void idMultiplayerGame::CastVote( int clientNum, bool castVote )
 {
 	idBitMsg	outMsg;
 	byte		msgBuf[ 128 ];
-	
+
 	if( clientNum == gameLocal.localClientNum )
 	{
 		voted = true;
 	}
-	
+
 	if( gameLocal.isClient )
 	{
 		outMsg.Init( msgBuf, sizeof( msgBuf ) );
@@ -3281,7 +3281,7 @@ void idMultiplayerGame::CastVote( int clientNum, bool castVote )
 		networkSystem->ClientSendReliableMessage( outMsg );
 		return;
 	}
-	
+
 	// sanity
 	if( vote == VOTE_NONE )
 	{
@@ -3295,7 +3295,7 @@ void idMultiplayerGame::CastVote( int clientNum, bool castVote )
 		common->DPrintf( "client %d: cast vote - vote %d != PLAYER_VOTE_WAIT\n", clientNum, playerState[ clientNum ].vote );
 		return;
 	}
-	
+
 	if( castVote )
 	{
 		playerState[ clientNum ].vote = PLAYER_VOTE_YES;
@@ -3306,7 +3306,7 @@ void idMultiplayerGame::CastVote( int clientNum, bool castVote )
 		playerState[ clientNum ].vote = PLAYER_VOTE_NO;
 		noVotes++;
 	}
-	
+
 	ClientUpdateVote( VOTE_UPDATE, yesVotes, noVotes );
 }
 
@@ -3320,13 +3320,13 @@ void idMultiplayerGame::ServerCallVote( int clientNum, const idBitMsg& msg )
 	vote_flags_t	voteIndex;
 	int				vote_timeLimit, vote_fragLimit, vote_clientNum, vote_gameTypeIndex; //, vote_kickIndex;
 	char			value[ MAX_STRING_CHARS ];
-	
+
 	assert( clientNum != -1 );
 	assert( !gameLocal.isClient );
-	
+
 	voteIndex = ( vote_flags_t )msg.ReadByte( );
 	msg.ReadString( value, sizeof( value ) );
-	
+
 	// sanity checks - setup the vote
 	if( vote != VOTE_NONE )
 	{
@@ -3547,7 +3547,7 @@ idMultiplayerGame::MapRestart
 void idMultiplayerGame::MapRestart()
 {
 	int clientNum;
-	
+
 	assert( !gameLocal.isClient );
 	if( gameState != WARMUP )
 	{
@@ -3582,11 +3582,11 @@ void idMultiplayerGame::SwitchToTeam( int clientNum, int oldteam, int newteam )
 {
 	idEntity* ent;
 	int i;
-	
+
 	assert( gameLocal.gameType == GAME_TDM );
 	assert( oldteam != newteam );
 	assert( !gameLocal.isClient );
-	
+
 	if( !gameLocal.isClient && newteam >= 0 && IsInGame( clientNum ) )
 	{
 		PrintMessageEvent( -1, MSG_JOINTEAM, clientNum, newteam );
@@ -3639,9 +3639,9 @@ void idMultiplayerGame::ProcessChatMessage( int clientNum, bool team, const char
 	idEntity*	 ent;
 	idPlayer*	p;
 	idStr		prefixed_name;
-	
+
 	assert( !gameLocal.isClient );
-	
+
 	if( clientNum >= 0 )
 	{
 		p = static_cast< idPlayer* >( gameLocal.entities[ clientNum ] );
@@ -3649,7 +3649,7 @@ void idMultiplayerGame::ProcessChatMessage( int clientNum, bool team, const char
 		{
 			return;
 		}
-		
+
 		if( p->spectating )
 		{
 			prefix = "spectating";
@@ -3755,13 +3755,13 @@ void idMultiplayerGame::Precache()
 {
 	int			i;
 	idFile*		f;
-	
+
 	if( !gameLocal.isMultiplayer )
 	{
 		return;
 	}
 	gameLocal.FindEntityDefDict( "player_doommarine", false );;
-	
+
 	// skins
 	idStr str = cvarSystem->GetCVarString( "mod_validSkins" );
 	idStr skin;
@@ -3780,7 +3780,7 @@ void idMultiplayerGame::Precache()
 		}
 		declManager->FindSkin( skin, false );
 	}
-	
+
 	for( i = 0; ui_skinArgs[ i ]; i++ )
 	{
 		declManager->FindSkin( ui_skinArgs[ i ], false );
@@ -3809,7 +3809,7 @@ void idMultiplayerGame::ToggleSpectate()
 {
 	bool spectating;
 	assert( gameLocal.isClient || gameLocal.localClientNum == 0 );
-	
+
 	spectating = ( idStr::Icmp( cvarSystem->GetCVarString( "ui_spectate" ), "Spectate" ) == 0 );
 	if( spectating )
 	{
@@ -3839,7 +3839,7 @@ void idMultiplayerGame::ToggleReady()
 {
 	bool ready;
 	assert( gameLocal.isClient || gameLocal.localClientNum == 0 );
-	
+
 	ready = ( idStr::Icmp( cvarSystem->GetCVarString( "ui_ready" ), "Ready" ) == 0 );
 	if( ready )
 	{
@@ -3860,7 +3860,7 @@ void idMultiplayerGame::ToggleTeam()
 {
 	bool team;
 	assert( gameLocal.isClient || gameLocal.localClientNum == 0 );
-	
+
 	team = ( idStr::Icmp( cvarSystem->GetCVarString( "ui_team" ), "Red" ) == 0 );
 	if( team )
 	{
@@ -3880,9 +3880,9 @@ idMultiplayerGame::ToggleUserInfo
 void idMultiplayerGame::ThrottleUserInfo()
 {
 	int i;
-	
+
 	assert( gameLocal.localClientNum >= 0 );
-	
+
 	i = 0;
 	while( ThrottleVars[ i ] )
 	{
@@ -3921,7 +3921,7 @@ idMultiplayerGame::EnterGame
 void idMultiplayerGame::EnterGame( int clientNum )
 {
 	assert( !gameLocal.isClient );
-	
+
 	if( !playerState[ clientNum ].ingame )
 	{
 		playerState[ clientNum ].ingame = true;
@@ -3976,7 +3976,7 @@ void idMultiplayerGame::VoiceChat( const idCmdArgs& args, bool team )
 	const idDict*		spawnArgs;
 	const idKeyValue*	keyval;
 	int					index;
-	
+
 	if( !gameLocal.isMultiplayer )
 	{
 		common->Printf( "clientVoiceChat: only valid in multiplayer\n" );
@@ -3992,7 +3992,7 @@ void idMultiplayerGame::VoiceChat( const idCmdArgs& args, bool team )
 	{
 		return;
 	}
-	
+
 	voc = args.Argv( 1 );
 	spawnArgs = gameLocal.FindEntityDefDict( "player_doommarine", false );
 	keyval = spawnArgs->MatchPrefix( "snd_voc_", NULL );
@@ -4012,7 +4012,7 @@ void idMultiplayerGame::VoiceChat( const idCmdArgs& args, bool team )
 		return;
 	}
 	voiceChatThrottle = gameLocal.realClientTime + 1000;
-	
+
 	outMsg.Init( msgBuf, sizeof( msgBuf ) );
 	outMsg.WriteByte( GAME_RELIABLE_MESSAGE_VCHAT );
 	outMsg.WriteLong( index );
@@ -4033,18 +4033,18 @@ void idMultiplayerGame::ProcessVoiceChat( int clientNum, bool team, int index )
 	idStr				snd_key;
 	idStr				text_key;
 	idPlayer*			p;
-	
+
 	p = static_cast< idPlayer* >( gameLocal.entities[ clientNum ] );
 	if( !( p && p->IsType( idPlayer::Type ) ) )
 	{
 		return;
 	}
-	
+
 	if( p->spectating )
 	{
 		return;
 	}
-	
+
 	// lookup the sound def
 	spawnArgs = gameLocal.FindEntityDefDict( "player_doommarine", false );
 	keyval = spawnArgs->MatchPrefix( "snd_voc_", NULL );
@@ -4083,7 +4083,7 @@ void idMultiplayerGame::ServerWriteInitialReliableMessages( int clientNum )
 	byte		msgBuf[ MAX_GAME_MESSAGE_SIZE ];
 	int			i;
 	idEntity*	ent;
-	
+
 	outMsg.Init( msgBuf, sizeof( msgBuf ) );
 	outMsg.BeginWriting();
 	outMsg.WriteByte( GAME_RELIABLE_MESSAGE_STARTSTATE );
@@ -4104,13 +4104,13 @@ void idMultiplayerGame::ServerWriteInitialReliableMessages( int clientNum )
 	}
 	outMsg.WriteShort( MAX_CLIENTS );
 	networkSystem->ServerSendReliableMessage( clientNum, outMsg );
-	
+
 	// we send SI in connectResponse messages, but it may have been modified already
 	outMsg.BeginWriting( );
 	outMsg.WriteByte( GAME_RELIABLE_MESSAGE_SERVERINFO );
 	outMsg.WriteDeltaDict( gameLocal.serverInfo, NULL );
 	networkSystem->ServerSendReliableMessage( clientNum, outMsg );
-	
+
 	// warmup time
 	if( gameState == COUNTDOWN )
 	{
@@ -4129,7 +4129,7 @@ idMultiplayerGame::ClientReadStartState
 void idMultiplayerGame::ClientReadStartState( const idBitMsg& msg )
 {
 	int i, client, powerup;
-	
+
 	// read the state in preparation for reading snapshot updates
 	gameState = ( idMultiplayerGame::gameState_t )msg.ReadByte();
 	matchStartedTime = msg.ReadLong( );

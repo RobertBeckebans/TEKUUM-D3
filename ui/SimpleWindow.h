@@ -48,34 +48,34 @@ public:
 	virtual			~idSimpleWindow();
 	void			Redraw( float x, float y );
 	void			StateChanged( bool redraw );
-	
+
 	idStr			name;
-	
+
 	idWinVar* 		GetWinVarByName( const char* _name );
 	int				GetWinVarOffset( idWinVar* wv, drawWin_t* owner );
 	size_t			Size();
-	
+
 	idWindow*		GetParent()
 	{
 		return mParent;
 	}
-	
+
 	virtual void	WriteToSaveGame( idFile* savefile );
 	virtual void	ReadFromSaveGame( idFile* savefile );
-	
+
 protected:
 	void 			CalcClientRect( float xofs, float yofs );
 	void 			SetupTransforms( float x, float y );
 	void 			DrawBackground( const idRectangle& drawRect );
 	void 			DrawBorderAndCaption( const idRectangle& drawRect );
-	
+
 	idUserInterfaceLocal* gui;
 	int 			flags;
 	idRectangle 	drawRect;			// overall rect
 	idRectangle 	clientRect;			// client area
 	idRectangle 	textRect;
 	idVec2			origin;
-	
+
 	// RB begin
 #if defined(USE_IDFONT)
 	class idFont* 	font;
@@ -83,7 +83,7 @@ protected:
 	int 			fontNum;
 #endif
 	// RB end
-	
+
 	float 			matScalex;
 	float 			matScaley;
 	float 			borderSize;
@@ -91,7 +91,7 @@ protected:
 	float 			textAlignx;
 	float 			textAligny;
 	int				textShadow;
-	
+
 	idWinStr		text;
 	idWinBool		visible;
 	idWinRectangle	rect;				// overall rect
@@ -103,11 +103,11 @@ protected:
 	idWinFloat		rotate;
 	idWinVec2		shear;
 	idWinBackground	backGroundName;
-	
+
 	const idMaterial* background;
-	
+
 	idWindow* 		mParent;
-	
+
 	idWinBool	hideCursor;
 };
 

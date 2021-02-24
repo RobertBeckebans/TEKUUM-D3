@@ -74,7 +74,7 @@ bool GUIEditorHandleMessage( void* msg )
 	{
 		return false;
 	}
-	
+
 	return gApp.TranslateAccelerator( reinterpret_cast<LPMSG>( msg ) );
 }
 
@@ -88,7 +88,7 @@ Run a frame
 void GUIEditorRun()
 {
 	MSG			msg;
-	
+
 	// pump the message loop
 	while( PeekMessage( &msg, NULL, 0, 0, PM_NOREMOVE ) )
 	{
@@ -96,7 +96,7 @@ void GUIEditorRun()
 		{
 			common->Quit();
 		}
-		
+
 		// save the msg time, because wndprocs don't have access to the timestamp
 		if( win32.sysMsgTime && win32.sysMsgTime > ( int )msg.time )
 		{
@@ -105,18 +105,18 @@ void GUIEditorRun()
 		{
 			win32.sysMsgTime = msg.time;
 		}
-		
+
 		if( gApp.TranslateAccelerator( &msg ) )
 		{
 			continue;
 		}
-		
+
 		TranslateMessage( &msg );
 		DispatchMessage( &msg );
 	}
-	
+
 	gApp.RunFrame( );
-	
+
 	// The GUI editor runs too hot so we need to slow it down a bit.
 	Sleep( 1 );
 }
@@ -151,7 +151,7 @@ bool IsExpression( const char* s )
 				  LEXFL_NOSTRINGCONCAT				|
 				  LEXFL_ALLOWBACKSLASHSTRINGCONCAT	|
 				  LEXFL_NOFATALERRORS );
-				  
+
 	idToken token;
 	bool	needComma = false;
 	bool	needNumber = false;
@@ -163,7 +163,7 @@ bool IsExpression( const char* s )
 				needComma = true;
 				needNumber = false;
 				break;
-				
+
 			case TT_PUNCTUATION:
 				if( needNumber )
 				{
@@ -175,26 +175,26 @@ bool IsExpression( const char* s )
 					{
 						return true;
 					}
-					
+
 					needComma = false;
 					break;
 				}
-				
+
 				if( needComma )
 				{
 					return true;
 				}
-				
+
 				if( token[0] == '-' )
 				{
 					needNumber = true;
 				}
 				break;
-				
+
 			default:
 				return true;
 		}
 	}
-	
+
 	return false;
 }

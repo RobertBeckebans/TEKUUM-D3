@@ -38,9 +38,9 @@ If you have questions concerning this license or the applicable additional terms
 #include "../sys_public.h"
 
 #if defined(_WIN32)
-#include <XInput.h>
-//#include "../win32/win_local.h"
-void Sys_StartAsyncThread();
+	#include <XInput.h>
+	//#include "../win32/win_local.h"
+	void Sys_StartAsyncThread();
 
 #endif
 
@@ -49,34 +49,34 @@ void Sys_StartAsyncThread();
 int main( int argc, char** argv )
 {
 	QApplication app( argc, argv );
-	
+
 	//GameMainWindow gameMainWindow( argc, ( const char** ) argv );
 	GameMainWindow::createInstance( argc, ( const char** ) argv );
 	GameMainWindow* gameMainWindow = GameMainWindow::getInstance();
 	gameMainWindow->show();
-	
+
 	//win32.hInstance = hInstance;
 	//idStr::Copynz( sys_cmdline, lpCmdLine, sizeof( sys_cmdline ) );
-	
+
 	// done before Com/Sys_Init since we need this for error output
 	//Sys_CreateConsole();
-	
+
 	// no abort/retry/fail errors
 	//SetErrorMode( SEM_FAILCRITICALERRORS );
-	
+
 	//Sys_InitCriticalSections();
-	
+
 	// get the initial time base
 	Sys_Milliseconds();
-	
+
 #ifdef DEBUG
 	// disable the painfully slow MS heap check every 1024 allocs
 	_CrtSetDbgFlag( 0 );
 #endif
-	
+
 //	Sys_FPU_EnableExceptions( TEST_FPU_EXCEPTIONS );
 	//Sys_FPU_SetPrecision( FPU_PRECISION_DOUBLE_EXTENDED );
-	
+
 	/*
 	if ( argc > 1 ) {
 		common->Init( argc-1, (const char**) &argv[1], NULL );
@@ -84,43 +84,43 @@ int main( int argc, char** argv )
 		common->Init( 0, NULL, NULL );
 	}
 	*/
-	
+
 	//gameMainWindow.resize(glConfig.vidWidth, glConfig.vidHeight);
 	gameMainWindow->resize( 640, 480 );
-	
+
 	/*
 	#if TEST_FPU_EXCEPTIONS != 0
 	common->Printf( Sys_FPU_GetState() );
 	#endif
 	*/
-	
+
 #ifndef	ID_DEDICATED
 	//if ( win32.win_notaskkeys.GetInteger() ) {
 	//	DisableTaskKeys( TRUE, FALSE, /*( win32.win_notaskkeys.GetInteger() == 2 )*/ FALSE );
 	//}
 #endif
-	
+
 	/*
 	#if defined(_WIN32)
 	Sys_StartAsyncThread();
 	#endif
 	*/
-	
+
 	// hide or show the early console as necessary
 	//if ( win32.win_viewlog.GetInteger() || com_skipRenderer.GetBool() || idAsyncNetwork::serverDedicated.GetInteger() ) {
 	//	Sys_ShowConsole( 1, true );
 	// else {
 	//	Sys_ShowConsole( 0, false );
 	//}
-	
+
 #ifdef SET_THREAD_AFFINITY
 	// give the main thread an affinity for the first cpu
 	SetThreadAffinityMask( GetCurrentThread(), 1 );
 #endif
-	
+
 	//::SetCursor( hcurSave );
 	//::SetFocus( win32.hWnd );
-	
+
 	return app.exec();
 }
 
@@ -188,18 +188,18 @@ static void FillStaticVidModes( idList<vidMode_t>& modeList )
 	modeList.AddUnique( vidMode_t( 1920, 1200, 60 ) );
 	modeList.AddUnique( vidMode_t( 2048, 1536, 60 ) );
 	modeList.AddUnique( vidMode_t( 2560, 1600, 60 ) );
-	
+
 	modeList.SortWithTemplate( idSort_VidMode() );
 }
 
 bool R_GetModeListForDisplay( const int requestedDisplayNum, idList<vidMode_t>& modeList )
 {
 	assert( requestedDisplayNum >= 0 );
-	
+
 	modeList.Clear();
-	
+
 	// TODO
-	
+
 	FillStaticVidModes( modeList );
 	return true;
 }
@@ -238,9 +238,9 @@ be freed by the game later.
 void Sys_QueEvent( sysEventType_t type, int value, int value2, int ptrLength, void* ptr, int inputDeviceNum )
 {
 	sysEvent_t*	ev;
-	
+
 	ev = &eventQue[ eventHead & MASK_QUED_EVENTS ];
-	
+
 	if( eventHead - eventTail >= MAX_QUED_EVENTS )
 	{
 		common->Printf( "Sys_QueEvent: overflow\n" );
@@ -251,9 +251,9 @@ void Sys_QueEvent( sysEventType_t type, int value, int value2, int ptrLength, vo
 		}
 		eventTail++;
 	}
-	
+
 	eventHead++;
-	
+
 	ev->evType = type;
 	ev->evValue = value;
 	ev->evValue2 = value2;
@@ -264,17 +264,17 @@ void Sys_QueEvent( sysEventType_t type, int value, int value2, int ptrLength, vo
 sysEvent_t Sys_GetEvent()
 {
 	sysEvent_t	ev;
-	
+
 	// return if we have data
 	if( eventHead > eventTail )
 	{
 		eventTail++;
 		return eventQue[( eventTail - 1 ) & MASK_QUED_EVENTS ];
 	}
-	
+
 	// return the empty event
 	memset( &ev, 0, sizeof( ev ) );
-	
+
 	return ev;
 }
 

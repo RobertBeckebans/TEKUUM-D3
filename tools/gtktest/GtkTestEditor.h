@@ -19,7 +19,7 @@ protected:
 private:
 	Gtk::Table				_table;
 	Gtk::Button				_closeButton;
-	
+
 private:
 	void					OnCloseButtonClicked();
 };

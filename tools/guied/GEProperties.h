@@ -30,7 +30,7 @@ If you have questions concerning this license or the applicable additional terms
 #define GEPROPERTIES_H_
 
 #ifndef PROPERTYGRID_H_
-#include "../common/PropertyGrid.h"
+	#include "../common/PropertyGrid.h"
 #endif
 
 class rvGEWorkspace;
@@ -41,22 +41,22 @@ class rvGEProperties
 public:
 
 	rvGEProperties( );
-	
+
 	bool	Create( HWND parent, bool visible );
 	void	Show( bool visibile );
-	
+
 	void	SetWorkspace( rvGEWorkspace* workspace );
-	
+
 	void	Update();
-	
+
 	HWND	GetWindow();
-	
+
 protected:
 
 	bool	AddModifier( const char* name, const char* value );
-	
+
 	static LRESULT CALLBACK WndProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam );
-	
+
 	HWND				mWnd;
 	rvPropertyGrid		mGrid;
 	rvGEWindowWrapper*	mWrapper;

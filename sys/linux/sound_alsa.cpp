@@ -43,7 +43,7 @@ idAudioHardwareALSA::DLOpen
 bool idAudioHardwareALSA::DLOpen()
 {
 	const char* version;
-	
+
 	if( m_handle )
 	{
 		return true;
@@ -133,7 +133,7 @@ idAudioHardwareALSA::Initialize
 bool idAudioHardwareALSA::Initialize()
 {
 	int err;
-	
+
 	common->Printf( "------ Alsa Sound Initialization -----\n" );
 	if( !DLOpen() )
 	{
@@ -147,9 +147,9 @@ bool idAudioHardwareALSA::Initialize()
 		return false;
 	}
 	common->Printf( "opened Alsa PCM device %s for playback\n", s_alsa_pcm.GetString() );
-	
+
 	// set hardware parameters ----------------------------------------------------------------------
-	
+
 	// init hwparams with the full configuration space
 	snd_pcm_hw_params_t* hwparams;
 	// this one is a define
@@ -160,30 +160,30 @@ bool idAudioHardwareALSA::Initialize()
 		InitFailed();
 		return false;
 	}
-	
+
 	if( ( err = id_snd_pcm_hw_params_set_access( m_pcm_handle, hwparams, SND_PCM_ACCESS_RW_INTERLEAVED ) ) < 0 )
 	{
 		common->Printf( "SND_PCM_ACCESS_RW_INTERLEAVED failed: %s\n", id_snd_strerror( err ) );
 		InitFailed();
 		return false;
 	}
-	
+
 	if( ( err = id_snd_pcm_hw_params_set_format( m_pcm_handle, hwparams, SND_PCM_FORMAT_S16_LE ) ) < 0 )
 	{
 		common->Printf( "SND_PCM_FORMAT_S16_LE failed: %s\n", id_snd_strerror( err ) );
 		InitFailed();
 		return false;
 	}
-	
+
 	// channels
-	
+
 	// sanity over number of speakers
 	if( idSoundSystemLocal::s_numberOfSpeakers.GetInteger() != 6 && idSoundSystemLocal::s_numberOfSpeakers.GetInteger() != 2 )
 	{
 		common->Warning( "invalid value for s_numberOfSpeakers. Use either 2 or 6" );
 		idSoundSystemLocal::s_numberOfSpeakers.SetInteger( 2 );
 	}
-	
+
 	m_channels = idSoundSystemLocal::s_numberOfSpeakers.GetInteger();
 	if( ( err = id_snd_pcm_hw_params_set_channels( m_pcm_handle, hwparams, m_channels ) ) < 0 )
 	{
@@ -210,7 +210,7 @@ bool idAudioHardwareALSA::Initialize()
 			return false;
 		}
 	}
-	
+
 	// set sample rate (frequency)
 	if( ( err = id_snd_pcm_hw_params_set_rate( m_pcm_handle, hwparams, PRIMARYFREQ, 0 ) ) < 0 )
 	{
@@ -218,7 +218,7 @@ bool idAudioHardwareALSA::Initialize()
 		InitFailed();
 		return false;
 	}
-	
+
 	// have enough space in the input buffer for our MIXBUFFER_SAMPLE feedings and async ticks
 	snd_pcm_uframes_t frames;
 	frames = MIXBUFFER_SAMPLES + MIXBUFFER_SAMPLES / 3;
@@ -228,7 +228,7 @@ bool idAudioHardwareALSA::Initialize()
 		InitFailed();
 		return false;
 	}
-	
+
 	// apply parameters
 	if( ( err = id_snd_pcm_hw_params( m_pcm_handle, hwparams ) ) < 0 )
 	{
@@ -236,7 +236,7 @@ bool idAudioHardwareALSA::Initialize()
 		InitFailed();
 		return false;
 	}
-	
+
 	// check the buffer size
 	if( ( err = id_snd_pcm_hw_params_get_buffer_size( hwparams, &frames ) ) < 0 )
 	{
@@ -246,22 +246,22 @@ bool idAudioHardwareALSA::Initialize()
 	{
 		common->Printf( "device buffer size: %lu frames ( %lu bytes )\n", ( long unsigned int )frames, frames * m_channels * 2 );
 	}
-	
+
 	// TODO: can use swparams to setup the device so it doesn't underrun but rather loops over
 	// snd_pcm_sw_params_set_stop_threshold
 	// To get alsa to just loop on underruns. set the swparam stop_threshold to equal buffer size. The sound buffer will just loop and never throw an xrun.
-	
+
 	// allocate the final mix buffer
 	m_buffer_size = MIXBUFFER_SAMPLES * m_channels * 2;
 	m_buffer = malloc( m_buffer_size );
 	common->Printf( "allocated a mix buffer of %d bytes\n", m_buffer_size );
-	
+
 #ifdef _DEBUG
 	// verbose the state
 	snd_pcm_state_t curstate = id_snd_pcm_state( m_pcm_handle );
 	assert( curstate == SND_PCM_STATE_PREPARED );
 #endif
-	
+
 	common->Printf( "--------------------------------------\n" );
 	return true;
 }
@@ -319,7 +319,7 @@ bool idAudioHardwareALSA::Flush()
 		Sys_Printf( "preparing audio device for output\n" );
 	}
 	Write( true );
-	
+
 // RB begin
 	return true;
 // RB end
@@ -349,12 +349,12 @@ void idAudioHardwareALSA::Write( bool flushing )
 		return;
 	}
 	// write the max frames you can in one shot - we need to write it all out in Flush() calls before the next Write() happens
-	
+
 	// RB: 64 bit fixes, changed int to intptr_t
 	intptr_t pos = ( intptr_t )m_buffer + ( MIXBUFFER_SAMPLES - m_remainingFrames ) * m_channels * 2;
 	snd_pcm_sframes_t frames = id_snd_pcm_writei( m_pcm_handle, ( void* )pos, m_remainingFrames );
 	// RB end
-	
+
 	if( frames < 0 )
 	{
 		if( frames != -EAGAIN )

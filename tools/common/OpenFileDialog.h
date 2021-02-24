@@ -36,46 +36,46 @@ public:
 
 	rvOpenFileDialog();
 	~rvOpenFileDialog();
-	
+
 	bool			DoModal( HWND parent );
 	const char*		GetFilename();
-	
+
 	void			SetFilter( const char* filter );
 	void			SetTitle( const char* title );
 	void			SetOKTitle( const char* title );
 	void			SetInitialPath( const char* path );
 	void			SetFlags( int flags );
-	
+
 	const char*		GetInitialPath();
-	
+
 protected:
 
 	void			UpdateFileList();
 	void			UpdateLookIn();
-	
+
 	HWND			mWnd;
 	HWND			mWndFileList;
 	HWND			mWndLookin;
-	
+
 	HINSTANCE		mInstance;
-	
+
 	HIMAGELIST		mImageList;
 	HBITMAP			mBackBitmap;
-	
+
 	static char		mLookin[ MAX_OSPATH ];
 	idStr			mFilename;
 	idStr			mTitle;
 	idStr			mOKTitle;
 	idStrList		mFilters;
-	
+
 	int				mFlags;
-	
+
 private:
 
 	void	HandleCommandOK();
 	void	HandleLookInChange();
 	void	HandleInitDialog();
-	
+
 	static INT_PTR CALLBACK DlgProc( HWND wnd, UINT msg, WPARAM wparam, LPARAM lparam );
 };
 
@@ -100,7 +100,7 @@ ID_INLINE void rvOpenFileDialog::SetInitialPath( const char* path )
 	{
 		return;
 	}
-	
+
 	idStr::Copynz( mLookin, path, sizeof( mLookin ) );
 }
 

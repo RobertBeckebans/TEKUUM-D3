@@ -35,9 +35,9 @@ If you have questions concerning this license or the applicable additional terms
 #include "mmsystem.h"
 
 #ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
+	#define new DEBUG_NEW
+	#undef THIS_FILE
+	static char THIS_FILE[] = __FILE__;
 #endif
 
 /////////////////////////////////////////////////////////////////////////////
@@ -93,13 +93,13 @@ void CWaveOpen::OnBtnPlay()
 BOOL CWaveOpen::OnInitDialog()
 {
 	CFileDialog::OnInitDialog();
-	
+
 	CWnd* pWnd = GetDlgItem( IDC_BTN_PLAY );
 	if( pWnd != NULL )
 	{
 		pWnd->EnableWindow( FALSE );
 	}
-	
+
 	return TRUE;  // return TRUE unless you set the focus to a control
 	// EXCEPTION: OCX Property Pages should return FALSE
 }

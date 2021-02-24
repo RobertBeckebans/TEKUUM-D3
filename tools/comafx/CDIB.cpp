@@ -30,7 +30,7 @@ If you have questions concerning this license or the applicable additional terms
 #pragma hdrstop
 
 #ifdef ID_DEBUG_MEMORY
-#undef new
+	#undef new
 #endif
 
 #include "math.h"
@@ -70,9 +70,15 @@ CDIB::~CDIB()
 
 void CDIB::DestroyDIB()
 {
-	if( m_pVoid ) free( m_pVoid );
+	if( m_pVoid )
+	{
+		free( m_pVoid );
+	}
 	m_pVoid = NULL;
-	if( m_pLinePtr ) free( m_pLinePtr );
+	if( m_pLinePtr )
+	{
+		free( m_pLinePtr );
+	}
 	m_pLinePtr = NULL;
 }
 
@@ -86,7 +92,7 @@ BOOL CDIB::Create( int width, int height, int bits )
 //	ASSERT(bits == 24 || bits == 8);
 
 	BITMAPINFOHEADER bmInfo;
-	
+
 	memset( &bmInfo, 0, sizeof( BITMAPINFOHEADER ) );
 	bmInfo.biSize = sizeof( BITMAPINFOHEADER );
 	bmInfo.biWidth = width;
@@ -103,22 +109,31 @@ BOOL CDIB::Create( BITMAPINFOHEADER& bmInfo )
 	height = bmInfo.biHeight;
 	width = bmInfo.biWidth;
 //	bmInfo.biHeight *= -1;
-	while( bytes % 4 ) bytes++;
-	
+	while( bytes % 4 )
+	{
+		bytes++;
+	}
+
 	int size;
 	size = sizeof( BITMAPINFOHEADER ) + sizeof( RGBQUAD ) * GetPaletteSize( bmInfo ) + bytes * height;
 	m_pVoid = ( void* )malloc( size );
-	if( !m_pVoid ) return FALSE;
-	
+	if( !m_pVoid )
+	{
+		return FALSE;
+	}
+
 	m_pInfo = ( PBITMAPINFO )m_pVoid;
 	memcpy( ( void* )&m_pInfo->bmiHeader, ( void* )&bmInfo, sizeof( BITMAPINFOHEADER ) );
 	m_pRGB = ( RGBQUAD* )( ( unsigned char* )m_pVoid + sizeof( BITMAPINFOHEADER ) ) ;
 	m_pBits = ( unsigned char* )( m_pVoid ) + sizeof( BITMAPINFOHEADER ) + sizeof( RGBQUAD ) * GetPaletteSize();
-	
+
 	int i;
 	BYTE** ptr;
 	m_pLinePtr = ( BYTE** )malloc( sizeof( BYTE* )*height );
-	if( !m_pLinePtr ) return FALSE;
+	if( !m_pLinePtr )
+	{
+		return FALSE;
+	}
 	for( i = 0, ptr = m_pLinePtr; i < height; i++, ptr++ )
 	{
 		//*ptr = (int)(m_pBits)+(i*bytes);
@@ -133,7 +148,10 @@ void CDIB::SetPalette( unsigned char* palette )
 {
 	int i, size;
 	RGBQUAD* rgb;
-	if( !palette ) return;
+	if( !palette )
+	{
+		return;
+	}
 	size = GetPaletteSize();
 	for( i = 0, rgb = m_pRGB; i < size; i++, rgb++, palette += 3 )
 	{
@@ -156,7 +174,10 @@ void CDIB::SetPalette( unsigned char* palette )
 void CDIB::SetPalette( RGBQUAD* pRGB )
 {
 	int size;
-	if( !pRGB ) return;
+	if( !pRGB )
+	{
+		return;
+	}
 	size = GetPaletteSize();
 	memcpy( m_pRGB, pRGB, size * sizeof( RGBQUAD ) );
 }
@@ -189,7 +210,7 @@ void CDIB::SetPixel( int x, int y, COLORREF color )
 	unsigned char* ptr;
 	ASSERT( x >= 0 && y >= 0 );
 	ASSERT( x < width && y < height );
-	
+
 //	ptr = m_pBits + (y*bytes) + x * 3;
 	ptr = ( unsigned char* )m_pLinePtr[y];
 	ptr += x * 3;
@@ -203,7 +224,7 @@ void CDIB::SetPixel8( int x, int y, unsigned char color )
 	unsigned char* ptr, *aptr;
 	ASSERT( x >= 0 && y >= 0 );
 	ASSERT( x < width && y < height );
-	
+
 //	ptr = m_pBits + (y*bytes) + x ;
 //	ptr = (unsigned char *)m_pLinePtr[y] ;
 	ptr = GetLinePtr( y );
@@ -219,7 +240,7 @@ COLORREF CDIB::GetPixel( int x, int y )
 	COLORREF color;
 	ASSERT( x >= 0 && y >= 0 );
 	ASSERT( x < width && y < height );
-	
+
 //	ptr = m_pBits + (y*bytes) + x * 3;
 	ptr = GetLinePtr( y );
 	ptr += ( x * 3 );
@@ -238,8 +259,11 @@ CBitmap* CDIB::GetTempBitmap( CDC& dc )
 							  ( const void* )m_pBits,
 							  m_pInfo,
 							  DIB_RGB_COLORS );
-							  
-	if( hBitmap == NULL ) return NULL;
+
+	if( hBitmap == NULL )
+	{
+		return NULL;
+	}
 	temp = CBitmap::FromHandle( hBitmap );
 	return temp;
 }
@@ -255,8 +279,11 @@ CBitmap* CDIB::GetBitmap( CDC& dc )
 							  ( const void* )m_pBits,
 							  m_pInfo,
 							  DIB_RGB_COLORS );
-							  
-	if( hBitmap == NULL ) return NULL;
+
+	if( hBitmap == NULL )
+	{
+		return NULL;
+	}
 	temp = CBitmap::FromHandle( hBitmap );
 	if( temp )
 	{
@@ -264,7 +291,10 @@ CBitmap* CDIB::GetBitmap( CDC& dc )
 		LPVOID lpVoid;
 		temp->GetBitmap( &bmp );
 		lpVoid = malloc( bmp.bmWidthBytes * bmp.bmHeight );
-		if( !lpVoid ) return NULL;
+		if( !lpVoid )
+		{
+			return NULL;
+		}
 		temp->GetBitmapBits( bmp.bmWidthBytes * bmp.bmHeight, lpVoid );
 		CBitmap* newBmp = new CBitmap;
 		newBmp->CreateBitmapIndirect( &bmp );
@@ -272,8 +302,11 @@ CBitmap* CDIB::GetBitmap( CDC& dc )
 		free( lpVoid );
 		return newBmp;
 	}
-	else return NULL;
-	
+	else
+	{
+		return NULL;
+	}
+
 }
 
 void CDIB::CopyLine( int source, int dest )
@@ -281,7 +314,10 @@ void CDIB::CopyLine( int source, int dest )
 	unsigned char* src, *dst;
 	ASSERT( source <= height && source >= 0 );
 	ASSERT( dest <= height && dest >= 0 );
-	if( source == dest ) return;
+	if( source == dest )
+	{
+		return;
+	}
 	src = GetLinePtr( source );
 	dst = GetLinePtr( dest );
 	memcpy( dst, src, bytes );
@@ -291,7 +327,7 @@ void CDIB::InitDIB( COLORREF color )
 {
 	int i, j;
 	unsigned char* ptr;
-	
+
 	if( m_pInfo->bmiHeader.biBitCount == 24 )
 	{
 		unsigned char col[3];
@@ -331,10 +367,10 @@ void CDIB::StretchBlt( HDC hDest, int nXDest, int nYDest, int nDWidth, int nDHei
 void CDIB::ExpandBlt( int nXDest, int nYDest, int xRatio, int yRatio, CDIB& dibSrc, int xSrc, int ySrc, int  nSWidth, int nSHeight )
 {
 	SetPalette( dibSrc.m_pRGB );
-	
+
 	nSWidth = xSrc + nSWidth > dibSrc.width ? dibSrc.width - xSrc : nSWidth;
 	nSHeight = ySrc + nSHeight > dibSrc.height ? dibSrc.height - ySrc : nSHeight;
-	
+
 	Expand( nXDest, nYDest, xRatio, yRatio, dibSrc, xSrc, ySrc, nSWidth, nSHeight );
 }
 
@@ -342,24 +378,27 @@ void CDIB::Expand( int nXDest, int nYDest, int xRatio, int yRatio, CDIB& dibSrc,
 {
 	int xNum, yNum, xErr, yErr;
 	int nDWidth, nDHeight;
-	
+
 	nDWidth = nSWidth * xRatio;
 	nDHeight = nSHeight * yRatio;
-	
+
 	nDWidth = nXDest + nDWidth > width ? width - nXDest : nDWidth ;
 	nDHeight = nYDest + nDHeight > height ? height - nYDest : nDHeight;
-	
+
 	xNum = nDWidth / xRatio;
 	yNum = nDHeight / yRatio;
 	xErr = nDWidth % xRatio;
 	yErr = nDHeight % yRatio;
-	
+
 	unsigned char* buffer, *srcPtr, *destPtr, *ptr;
 	int i, j, k;
-	
+
 	buffer = ( unsigned char* )malloc( nDWidth + 20 );
-	if( !buffer ) return;
-	
+	if( !buffer )
+	{
+		return;
+	}
+
 	for( i = 0; i < yNum; i++, ySrc++ )
 	{
 		srcPtr = dibSrc.GetLinePtr( ySrc ) + xSrc;
@@ -389,25 +428,25 @@ void CDIB::StretchBlt( int nXDest, int nYDest, int nDWidth, int nDHeight, CDIB& 
 	SetPalette( dibSrc.m_pRGB );
 	nDWidth = nXDest + nDWidth > width ? width - nXDest : nDWidth ;
 	nDHeight = nYDest + nDHeight > height ? height - nYDest : nDHeight;
-	
+
 	nSWidth = xSrc + nSWidth > dibSrc.width ? dibSrc.width - xSrc : nSWidth;
 	nSHeight = ySrc + nSHeight > dibSrc.height ? dibSrc.height - ySrc : nSHeight;
-	
+
 	int xDiv, yDiv;
 	int xMod, yMod;
-	
+
 	xDiv = nDWidth / nSWidth;
 	xMod = nDWidth % nSWidth;
-	
+
 	yDiv = nDHeight / nSHeight;
 	yMod = nDHeight % nSHeight;
-	
+
 	if( !xMod && !yMod && xDiv > 0 && yDiv > 0 )
 	{
 		ExpandBlt( nXDest, nYDest, xDiv, yDiv, dibSrc, xSrc, ySrc, nSWidth, nSHeight );
 		return;
 	}
-	
+
 	unsigned char* tempPtr, *srcPix, *destPix, *q;
 	tempPtr = ( unsigned char* )malloc( nDWidth + 20 );
 	int i, j, k, l, x, y, m;
@@ -492,10 +531,10 @@ void CDIB::BitBlt( int nXDest, int nYDest, int nWidth, int nHeight, CDIB& dibSrc
 	}
 	nWidth = nXDest + nWidth > width ? width - nXDest : nWidth ;
 	nHeight = nYDest + nHeight > height ? height - nYDest : nHeight;
-	
+
 	nWidth = nSrcX + nWidth > dibSrc.width ? dibSrc.width - nSrcX : nWidth;
 	nHeight = nSrcY + nHeight > dibSrc.height ? dibSrc.height - nSrcY : nHeight;
-	
+
 	nWidth = __max( 0, nWidth );
 	nHeight = __max( 0, nHeight );
 	int i, k, l, j;
@@ -530,7 +569,10 @@ void CDIB::BitBlt( int nXDest, int nYDest, int nWidth, int nHeight, CDIB& dibSrc
 				destPtr = GetLinePtr( l ) + nSrcX;
 				for( j = 0; j < nWidth; j++, srcPtr++, destPtr++ )
 				{
-					if( colors[*srcPtr] ) *destPtr = *srcPtr;
+					if( colors[*srcPtr] )
+					{
+						*destPtr = *srcPtr;
+					}
 				}
 			}
 		}
@@ -565,7 +607,10 @@ void CDIB::ReplaceColor( unsigned char oldColor, unsigned char newColor )
 		ptr = GetLinePtr( i );
 		for( j = 0; j < width; j++ )
 		{
-			if( ptr[j] == oldColor ) ptr[j] = newColor;
+			if( ptr[j] == oldColor )
+			{
+				ptr[j] = newColor;
+			}
 		}
 	}
 }
@@ -604,7 +649,10 @@ HANDLE CDIB::DIBHandle()
 	HANDLE hMem;
 	nSize = sizeof( BITMAPINFOHEADER ) + sizeof( RGBQUAD ) * GetPaletteSize() + bytes * height;
 	hMem = GlobalAlloc( GMEM_DDESHARE | GMEM_MOVEABLE, nSize );
-	if( hMem  == NULL ) return NULL;
+	if( hMem  == NULL )
+	{
+		return NULL;
+	}
 	UCHAR* lpVoid, *pBits;
 	LPBITMAPINFOHEADER pHead;
 	RGBQUAD* pRgb;
@@ -680,8 +728,14 @@ void CDIB::GetPixel( UINT x, UINT y, int& pixel )
 {
 	ASSERT( x < ( UINT )Width() );
 	ASSERT( y < ( UINT )Height() );
-	if( x >= ( UINT )Width() ) return;
-	if( y >= ( UINT )Height() ) return;
+	if( x >= ( UINT )Width() )
+	{
+		return;
+	}
+	if( y >= ( UINT )Height() )
+	{
+		return;
+	}
 	pixel = ( GetLinePtr( y ) )[x];
 }
 
@@ -749,8 +803,14 @@ BOOL CDIB::SwitchFromOne( CDIB& dib )
 		sPtr = dib.GetLinePtr( i );
 		for( j = 0 ; j < w; j++, dPtr++ )
 		{
-			if( !( sPtr[j >> 3] & masktable[j & 7] ) ) *dPtr = cols[0];
-			else *dPtr = cols[1];
+			if( !( sPtr[j >> 3] & masktable[j & 7] ) )
+			{
+				*dPtr = cols[0];
+			}
+			else
+			{
+				*dPtr = cols[1];
+			}
 		}
 	}
 	return TRUE;
@@ -774,7 +834,10 @@ BOOL CDIB::SwitchFromFour( CDIB& dib )
 		sPtr = dib.GetLinePtr( i );
 		for( j = 0 ; j < w; j++, dPtr++ )
 		{
-			if( !( j & 1 ) ) n = ( *sPtr & 0xf0 ) >> 4;
+			if( !( j & 1 ) )
+			{
+				n = ( *sPtr & 0xf0 ) >> 4;
+			}
 			else
 			{
 				n = *sPtr & 0x0f;
@@ -863,7 +926,10 @@ BOOL CDIB::OpenDIB( CString& csFileName )
 		return FALSE;
 	}
 	file.Close();
-	if( OpenBMP( csFileName ) ) return TRUE;
+	if( OpenBMP( csFileName ) )
+	{
+		return TRUE;
+	}
 	return FALSE;
 }
 
@@ -903,7 +969,7 @@ BOOL CDIB::SaveBMP( CString& csFileName )
 	file.Write( m_pVoid, GetDIBSize() );
 	file.Close();
 	return TRUE;
-	
+
 }
 
 BOOL CDIB::OpenBMP( CString& csFileName )
@@ -932,7 +998,7 @@ BOOL CDIB::OpenBMP( CString& csFileName )
 	file.Read( m_pBits, height * bytes );
 	file.Close();
 	return TRUE;
-	
+
 }
 
 
@@ -998,7 +1064,10 @@ BOOL CDIB::SwitchFrom24( CDIB& dib )
 	w = Width();
 	h = Height();
 	index_ptr = ( BYTE* )malloc( 0x7FFF + 1 );
-	if( !index_ptr ) return FALSE;
+	if( !index_ptr )
+	{
+		return FALSE;
+	}
 	memset( CachePtr, 0, sizeof( CachePtr ) );
 	for( i = 0; i <= 0x7FFF; i++ )
 	{

@@ -152,7 +152,7 @@ class idAsyncNetwork
 {
 public:
 	idAsyncNetwork();
-	
+
 	static void				Init();
 	static void				Shutdown();
 	static bool				IsActive()
@@ -160,25 +160,25 @@ public:
 		return ( server.IsActive() || client.IsActive() );
 	}
 	static void				RunFrame();
-	
+
 	static void				WriteUserCmdDelta( idBitMsg& msg, const usercmd_t& cmd, const usercmd_t* base );
 	static void				ReadUserCmdDelta( const idBitMsg& msg, usercmd_t& cmd, const usercmd_t* base );
-	
+
 	static bool				DuplicateUsercmd( const usercmd_t& previousUserCmd, usercmd_t& currentUserCmd, int frame, int time );
 	static bool				UsercmdInputChanged( const usercmd_t& previousUserCmd, const usercmd_t& currentUserCmd );
-	
+
 	// returns true if the corresponding master is set to something (and could be resolved)
 	static bool				GetMasterAddress( int index, netadr_t& adr );
 	// get the hardcoded idnet master, equivalent to GetMasterAddress( 0, .. )
 	static netadr_t			GetMasterAddress();
-	
+
 	static void				GetNETServers( );
-	
+
 	static void				ExecuteSessionCommand( const char* sessCmd );
-	
+
 	static idAsyncServer	server;
 	static idAsyncClient	client;
-	
+
 	static idCVar			verbose;						// verbose output
 	static idCVar			allowCheats;					// allow cheats
 	static idCVar			serverDedicated;				// if set run a dedicated server
@@ -206,14 +206,14 @@ public:
 	static idCVar			serverAllowServerMod;			// let a pure server start with a different game code than what is referenced in game code
 	static idCVar			idleServer;						// serverinfo reply, indicates all clients are idle
 	static idCVar			clientDownload;					// preferred download policy
-	
+
 	// same message used for offline check and network reply
 	static void				BuildInvalidKeyMsg( idStr& msg, bool valid[ 2 ] );
-	
+
 private:
 	static int				realTime;
 	static master_t			masters[ MAX_MASTER_SERVERS];	// master1 etc.
-	
+
 	static void				SpawnServer_f( const idCmdArgs& args );
 	static void				NextMap_f( const idCmdArgs& args );
 	static void				Connect_f( const idCmdArgs& args );

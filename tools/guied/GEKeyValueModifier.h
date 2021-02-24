@@ -29,7 +29,7 @@ If you have questions concerning this license or the applicable additional terms
 #define GEKEYVALUEMODIFIER_H_
 
 #ifndef GEMODIFIER_H_
-#include "GEModifier.h"
+	#include "GEModifier.h"
 #endif
 
 class rvGEKeyValueModifier : public rvGEModifier
@@ -37,13 +37,13 @@ class rvGEKeyValueModifier : public rvGEModifier
 public:
 
 	rvGEKeyValueModifier( const char* name, idWindow* window, const char* key, const char* value );
-	
+
 	virtual bool		Apply();
 	virtual bool		Undo();
-	
+
 	virtual bool		CanMerge( rvGEModifier* merge );
 	virtual bool		Merge( rvGEModifier* merge );
-	
+
 protected:
 
 	idStr		mKey;

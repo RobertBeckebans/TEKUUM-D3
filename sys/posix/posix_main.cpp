@@ -46,7 +46,7 @@ If you have questions concerning this license or the applicable additional terms
 
 // RB begin
 #if defined(__ANDROID__)
-#include <android/log.h>
+	#include <android/log.h>
 #endif
 // RB end
 
@@ -154,7 +154,7 @@ void idSysLocal::StartProcess( const char* exeName, bool quit )
 		cmdSystem->BufferCommandText( CMD_EXEC_APPEND, "quit\n" );
 		return;
 	}
-	
+
 	common->DPrintf( "Sys_StartProcess %s\n", exeName );
 	Sys_DoStartProcess( exeName );
 }
@@ -180,10 +180,10 @@ Sys_Milliseconds
    using unsigned long data type to work right with Sys_XTimeToSysTime */
 
 #ifdef CLOCK_MONOTONIC_RAW
-// use RAW monotonic clock if available (=> not subject to NTP etc)
-#define D3_CLOCK_TO_USE CLOCK_MONOTONIC_RAW
+	// use RAW monotonic clock if available (=> not subject to NTP etc)
+	#define D3_CLOCK_TO_USE CLOCK_MONOTONIC_RAW
 #else
-#define D3_CLOCK_TO_USE CLOCK_MONOTONIC
+	#define D3_CLOCK_TO_USE CLOCK_MONOTONIC
 #endif
 
 // RB: changed long to int
@@ -200,33 +200,33 @@ int Sys_Milliseconds()
 #if 1
 	int curtime;
 	struct timespec ts;
-	
+
 	clock_gettime( D3_CLOCK_TO_USE, &ts );
-	
+
 	if( !sys_timeBase )
 	{
 		sys_timeBase = ts.tv_sec;
 		return ts.tv_nsec / 1000000;
 	}
-	
+
 	curtime = ( ts.tv_sec - sys_timeBase ) * 1000 + ts.tv_nsec / 1000000;
-	
+
 	return curtime;
 #else
 	// gettimeofday() implementation
 	int curtime;
 	struct timeval tp;
-	
+
 	gettimeofday( &tp, NULL );
-	
+
 	if( !sys_timeBase )
 	{
 		sys_timeBase = tp.tv_sec;
 		return tp.tv_usec / 1000;
 	}
-	
+
 	curtime = ( tp.tv_sec - sys_timeBase ) * 1000 + tp.tv_usec / 1000;
-	
+
 	return curtime;
 	* /
 #endif
@@ -246,37 +246,37 @@ uint64 Sys_Microseconds()
 {
 #if 0
 	static uint64 ticksPerMicrosecondTimes1024 = 0;
-	
+
 	if( ticksPerMicrosecondTimes1024 == 0 )
 	{
 		ticksPerMicrosecondTimes1024 = ( ( uint64 )Sys_ClockTicksPerSecond() << 10 ) / 1000000;
 		assert( ticksPerMicrosecondTimes1024 > 0 );
 	}
-	
+
 	return ( ( uint64 )( ( int64 )Sys_GetClockTicks() << 10 ) ) / ticksPerMicrosecondTimes1024;
 #elif 0
 	uint64 curtime;
 	struct timespec ts;
-	
+
 	clock_gettime( CLOCK_MONOTONIC, &ts );
-	
+
 	curtime = ts.tv_sec * 1000000 + ts.tv_nsec / 1000;
-	
+
 	return curtime;
 #else
 	uint64 curtime;
 	struct timespec ts;
-	
+
 	clock_gettime( D3_CLOCK_TO_USE, &ts );
-	
+
 	if( !sys_microTimeBase )
 	{
 		sys_microTimeBase = ts.tv_sec;
 		return ts.tv_nsec / 1000;
 	}
-	
+
 	curtime = ( ts.tv_sec - sys_microTimeBase ) * 1000000 + ts.tv_nsec / 1000;
-	
+
 	return curtime;
 #endif
 }
@@ -304,15 +304,15 @@ int Sys_ListFiles( const char* directory, const char* extension, idStrList& list
 	char search[MAX_OSPATH];
 	struct stat st;
 	bool debug;
-	
+
 	list.Clear();
-	
+
 	debug = cvarSystem->GetCVarBool( "fs_debug" );
 	// DG: we use fnmatch for shell-style pattern matching
 	// so the pattern should at least contain "*" to match everything,
 	// the extension will be added behind that (if !dironly)
 	idStr pattern( "*" );
-	
+
 	// passing a slash as extension will find directories
 	if( extension[0] == '/' && extension[1] == 0 )
 	{
@@ -324,7 +324,7 @@ int Sys_ListFiles( const char* directory, const char* extension, idStrList& list
 		pattern += extension;
 	}
 	// DG end
-	
+
 	// NOTE: case sensitivity of directory path can screw us up here
 	if( ( fdir = opendir( directory ) ) == NULL )
 	{
@@ -334,29 +334,33 @@ int Sys_ListFiles( const char* directory, const char* extension, idStrList& list
 		}
 		return -1;
 	}
-	
+
 	// DG: use readdir_r instead of readdir for thread safety
 	// the following lines are from the readdir_r manpage.. fscking ugly.
 	int nameMax = pathconf( directory, _PC_NAME_MAX );
 	if( nameMax == -1 )
+	{
 		nameMax = 255;
+	}
 	int direntLen = offsetof( struct dirent, d_name ) + nameMax + 1;
-	
+
 	struct dirent* entry = ( struct dirent* )Mem_Alloc( direntLen, TAG_CRAP );
-	
+
 	if( entry == NULL )
 	{
 		common->Warning( "Sys_ListFiles: Mem_Alloc for entry failed!" );
 		closedir( fdir );
 		return 0;
 	}
-	
+
 	while( readdir_r( fdir, entry, &d ) == 0 && d != NULL )
 	{
 		// DG end
 		idStr::snPrintf( search, sizeof( search ), "%s/%s", directory, d->d_name );
 		if( stat( search, &st ) == -1 )
+		{
 			continue;
+		}
 		if( !dironly )
 		{
 			// DG: the original code didn't work because d3 bfg abuses the extension
@@ -364,24 +368,28 @@ int Sys_ListFiles( const char* directory, const char* extension, idStrList& list
 			// so just use fnmatch() which supports matching shell wildcard patterns ("*.foo" etc)
 			// if we should ever need case insensitivity, use FNM_CASEFOLD as third flag
 			if( fnmatch( pattern.c_str(), d->d_name, 0 ) != 0 )
+			{
 				continue;
+			}
 			// DG end
 		}
 		if( ( dironly && !( st.st_mode & S_IFDIR ) ) ||
 				( !dironly && ( st.st_mode & S_IFDIR ) ) )
+		{
 			continue;
-			
+		}
+
 		list.Append( d->d_name );
 	}
-	
+
 	closedir( fdir );
 	Mem_Free( entry );
-	
+
 	if( debug )
 	{
 		common->Printf( "Sys_ListFiles: %d entries in %s\n", list.Num(), directory );
 	}
-	
+
 	return list.Num();
 }
 
@@ -408,7 +416,7 @@ void Posix_QueEvent( sysEventType_t type, int value, int value2,
 					 int ptrLength, void* ptr )
 {
 	sysEvent_t* ev;
-	
+
 	ev = &eventQue[eventHead & MASK_QUED_EVENTS];
 	if( eventHead - eventTail >= MAX_QUED_EVENTS )
 	{
@@ -422,15 +430,15 @@ void Posix_QueEvent( sysEventType_t type, int value, int value2,
 		}
 		eventTail++;
 	}
-	
+
 	eventHead++;
-	
+
 	ev->evType = type;
 	ev->evValue = value;
 	ev->evValue2 = value2;
 	ev->evPtrLength = ptrLength;
 	ev->evPtr = ptr;
-	
+
 #if 0
 	common->Printf( "Event %d: %d %d\n", ev->evType, ev->evValue, ev->evValue2 );
 #endif
@@ -445,7 +453,7 @@ Sys_GetEvent
 sysEvent_t Sys_GetEvent()
 {
 	static sysEvent_t ev;
-	
+
 	// return if we have data
 	if( eventHead > eventTail )
 	{
@@ -454,7 +462,7 @@ sysEvent_t Sys_GetEvent()
 	}
 	// return the empty event with the current time
 	memset( &ev, 0, sizeof( ev ) );
-	
+
 	return ev;
 }
 #endif
@@ -479,10 +487,10 @@ Posix_Cwd
 const char* Posix_Cwd()
 {
 	static char cwd[MAX_OSPATH];
-	
+
 	getcwd( cwd, sizeof( cwd ) - 1 );
 	cwd[MAX_OSPATH - 1] = 0;
-	
+
 	return cwd;
 }
 
@@ -541,7 +549,7 @@ intptr_t Sys_DLL_Load( const char* path )
 	{
 		Sys_Printf( "dlopen '%s' failed: %s\n", path, dlerror() );
 	}
-	
+
 	return ( intptr_t )handle;
 }
 // RB end
@@ -616,13 +624,15 @@ void Sys_Sleep( int msec )
 	}
 #endif // DG end
 	// use nanosleep? keep sleeping if signal interrupt?
-	
+
 	// RB begin
 #if defined(__ANDROID__)
 	usleep( msec * 1000 );
 #else
 	if( usleep( msec * 1000 ) == -1 )
+	{
 		Sys_Printf( "usleep: %s\n", strerror( errno ) );
+	}
 #endif
 }
 
@@ -744,7 +754,7 @@ void Posix_LateInit()
 #ifndef ID_DEDICATED
 	common->Printf( "%d MB Video Memory\n", Sys_GetVideoRam() );
 #endif
-	
+
 	// RB begin
 #if !defined(USE_SDL_ASYNC)
 	Posix_StartAsyncThread( );
@@ -760,7 +770,7 @@ Posix_InitConsoleInput
 void Posix_InitConsoleInput()
 {
 	struct termios tc;
-	
+
 	if( in_tty.GetBool() )
 	{
 		if( isatty( STDIN_FILENO ) != 1 )
@@ -905,13 +915,13 @@ void tty_Show()
 		if( buf[0] )
 		{
 			write( STDOUT_FILENO, buf, strlen( buf ) );
-			
+
 			// RB begin
 #if defined(__ANDROID__)
 			//__android_log_print(ANDROID_LOG_DEBUG, "Tekuum_DEBUG", "%s", buf);
 #endif
 			// RB end
-			
+
 			int back = strlen( buf ) - input_field.GetCursor();
 			while( back > 0 )
 			{
@@ -1206,7 +1216,7 @@ char* Posix_ConsoleInput()
 		int				len;
 		fd_set			fdset;
 		struct timeval	timeout;
-		
+
 		FD_ZERO( &fdset );
 		FD_SET( STDIN_FILENO, &fdset );
 		timeout.tv_sec = 0;
@@ -1215,25 +1225,25 @@ char* Posix_ConsoleInput()
 		{
 			return NULL;
 		}
-		
+
 		len = read( 0, input_ret, sizeof( input_ret ) );
 		if( len == 0 )
 		{
 			// EOF
 			return NULL;
 		}
-		
+
 		if( len < 1 )
 		{
 			Sys_Printf( "read failed: %s\n", strerror( errno ) );	// something bad happened, cancel this line and print an error
 			return NULL;
 		}
-		
+
 		if( len == sizeof( input_ret ) )
 		{
 			Sys_Printf( "read overflow\n" );	// things are likely to break, as input will be cut into pieces
 		}
-		
+
 		input_ret[ len - 1 ] = '\0';		// rip off the \n and terminate
 		return input_ret;
 #endif
@@ -1254,7 +1264,7 @@ void Sys_GenerateEvents()
 	{
 		char* b;
 		int len;
-		
+
 		len = strlen( s ) + 1;
 		b = ( char* )Mem_Alloc( len );
 		strcpy( b, s );
@@ -1274,16 +1284,16 @@ void Sys_DebugPrintf( const char* fmt, ... )
 #if defined(__ANDROID__)
 	va_list		argptr;
 	char		msg[4096];
-	
+
 	va_start( argptr, fmt );
 	idStr::vsnPrintf( msg, sizeof( msg ), fmt, argptr );
 	va_end( argptr );
 	msg[sizeof( msg ) - 1] = '\0';
-	
+
 	__android_log_print( ANDROID_LOG_DEBUG, "Tekuum_Debug", msg );
 #else
 	va_list argptr;
-	
+
 	tty_Hide();
 	va_start( argptr, fmt );
 	vprintf( fmt, argptr );
@@ -1308,16 +1318,16 @@ void Sys_Printf( const char* fmt, ... )
 #if defined(__ANDROID__)
 	va_list		argptr;
 	char		msg[4096];
-	
+
 	va_start( argptr, fmt );
 	idStr::vsnPrintf( msg, sizeof( msg ), fmt, argptr );
 	va_end( argptr );
 	msg[sizeof( msg ) - 1] = '\0';
-	
+
 	__android_log_print( ANDROID_LOG_DEBUG, "Tekuum", msg );
 #else
 	va_list argptr;
-	
+
 	tty_Hide();
 	va_start( argptr, fmt );
 	vprintf( fmt, argptr );
@@ -1345,13 +1355,13 @@ Sys_Error
 void Sys_Error( const char* error, ... )
 {
 	va_list argptr;
-	
+
 	Sys_Printf( "Sys_Error: " );
 	va_start( argptr, error );
 	Sys_DebugVPrintf( error, argptr );
 	va_end( argptr );
 	Sys_Printf( "\n" );
-	
+
 	Posix_Exit( EXIT_FAILURE );
 }
 

@@ -25,7 +25,7 @@ bool FindClosestBottom( HWND h, LPRECT rect, LPRECT parentrect )
 {
 	int		best;
 	RECT	temprect;
-	
+
 	best = parentrect->bottom;
 	if( rect->bottom > best )
 	{
@@ -97,7 +97,7 @@ bool FindClosestTop( HWND h, LPRECT rect, LPRECT parentrect )
 {
 	int		best;
 	RECT	temprect;
-	
+
 	best = parentrect->top;
 	if( rect->top < best )
 	{
@@ -169,7 +169,7 @@ bool FindClosestLeft( HWND h, LPRECT rect, LPRECT parentrect, int widthlimit )
 {
 	int		best;
 	RECT	temprect;
-	
+
 	best = parentrect->left;
 	if( rect->left < best && rect->right - best >= widthlimit )
 	{
@@ -241,7 +241,7 @@ bool FindClosestRight( HWND h, LPRECT rect, LPRECT parentrect, int widthlimit )
 {
 	int		best;
 	RECT	temprect;
-	
+
 	best = parentrect->right;
 	if( rect->right > best && best - rect->left >= widthlimit )
 	{
@@ -313,7 +313,7 @@ bool FindClosestHorizontal( HWND h, LPRECT rect, LPRECT parentrect )
 {
 	long	bestleft, bestright, width = rect->right - rect->left;
 	RECT	temprect;
-	
+
 	bestleft = parentrect->left;
 	if( rect->left < bestleft )
 	{
@@ -411,7 +411,7 @@ bool FindClosestHorizontal( HWND h, LPRECT rect, LPRECT parentrect )
 		rect->left = rect->right - width;
 		return true;
 	}
-	
+
 	return false;
 }
 
@@ -424,7 +424,7 @@ bool FindClosestVertical( HWND h, LPRECT rect, LPRECT parentrect )
 {
 	long	besttop, bestbottom, height = rect->bottom - rect->top;
 	RECT	temprect;
-	
+
 	besttop = parentrect->top;
 	if( rect->top < besttop )
 	{
@@ -523,7 +523,7 @@ bool FindClosestVertical( HWND h, LPRECT rect, LPRECT parentrect )
 		rect->top = rect->bottom - height;
 		return true;
 	}
-	
+
 	return false;
 }
 
@@ -535,13 +535,13 @@ TryDocking
 bool TryDocking( HWND h, long side, LPRECT rect, int widthlimit )
 {
 	RECT	parentrect, statusrect, toolbarrect;
-	
+
 	GetWindowRect( g_pParentWnd->GetToolbarWnd()->GetSafeHwnd(), &toolbarrect );
 	GetWindowRect( g_pParentWnd->GetStatusbarWnd()->GetSafeHwnd(), &statusrect );
 	GetClientRect( g_pParentWnd->GetSafeHwnd(), &parentrect );
 	parentrect.top = toolbarrect.bottom;
 	parentrect.bottom = statusrect.top;
-	
+
 //	Sys_Printf( "%d %d %d %d\n", parentrect.top, parentrect.bottom, parentrect.left, parentrect.right );
 //	Sys_Printf( "%d %d %d %d\n\n", rect->top, rect->bottom, rect->left, rect->right );
 

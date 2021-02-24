@@ -36,8 +36,8 @@ If you have questions concerning this license or the applicable additional terms
 #pragma hdrstop
 
 #if defined(_WIN32)
-//#include "../win32/win_local.h"
-void Sys_StartAsyncThread();
+	//#include "../win32/win_local.h"
+	void Sys_StartAsyncThread();
 
 #endif
 
@@ -49,13 +49,13 @@ GameGLWidget::GameGLWidget( int argc, const char** argv ):
 	this->argc = argc;
 	this->argv = argv;
 	initializedDoom3Engine = false;
-	
+
 	timer = new QTimer( this );
 	// every 10 milliseconds = 100 fps
 	timer->setInterval( 10 );
 	timer->setSingleShot( false );
 	timer->start();
-	
+
 	connect( timer, SIGNAL( timeout() ), this, SLOT( onTimer() ) );
 }
 
@@ -77,15 +77,15 @@ void GameGLWidget::mouseMoveEvent( QMouseEvent* event )
 void GameGLWidget::initializeGL()
 {
 	//makeCurrent();
-	
+
 	glConfig.colorBits = format().redBufferSize() + format().greenBufferSize() + format().blueBufferSize() + format().alphaBufferSize();
 	glConfig.depthBits = format().depthBufferSize();
 	glConfig.stencilBits = format().stencilBufferSize();
-	
+
 	if( !initializedDoom3Engine )
 	{
 		initializedDoom3Engine = true;
-		
+
 		initDoom3Engine( argc, argv );
 	}
 }
@@ -95,15 +95,15 @@ void GameGLWidget::paintGL()
 #ifdef DEBUG
 	Sys_MemFrame();
 #endif
-	
+
 	//makeCurrent();
-	
+
 	// run the game
 	if( common != NULL && common->IsInitialized() )
 	{
 		common->Frame();
 	}
-	
+
 	//doneCurrent();
 }
 
@@ -122,26 +122,26 @@ void GameGLWidget::initDoom3Engine( int argc, const char** argv )
 {
 	//win32.hInstance = hInstance;
 	//idStr::Copynz( sys_cmdline, lpCmdLine, sizeof( sys_cmdline ) );
-	
+
 	// done before Com/Sys_Init since we need this for error output
 	//Sys_CreateConsole();
-	
+
 	// no abort/retry/fail errors
 	//SetErrorMode( SEM_FAILCRITICALERRORS );
-	
+
 	Sys_InitCriticalSections();
-	
+
 	// get the initial time base
 	Sys_Milliseconds();
-	
+
 #ifdef DEBUG
 	// disable the painfully slow MS heap check every 1024 allocs
 	_CrtSetDbgFlag( 0 );
 #endif
-	
+
 //	Sys_FPU_EnableExceptions( TEST_FPU_EXCEPTIONS );
 	//Sys_FPU_SetPrecision( FPU_PRECISION_DOUBLE_EXTENDED );
-	
+
 	GLenum glewResult = glewInit();
 	if( GLEW_OK != glewResult )
 	{
@@ -154,7 +154,7 @@ void GameGLWidget::initDoom3Engine( int argc, const char** argv )
 		common->Printf( "Using GLEW %s\n", glewGetString( GLEW_VERSION ) );
 		printf( "Using GLEW %s\n", glewGetString( GLEW_VERSION ) );
 	}
-	
+
 	if( argc > 1 )
 	{
 		common->Init( argc - 1, ( const char** ) &argv[1], NULL );
@@ -163,28 +163,28 @@ void GameGLWidget::initDoom3Engine( int argc, const char** argv )
 	{
 		common->Init( 0, NULL, NULL );
 	}
-	
+
 #if TEST_FPU_EXCEPTIONS != 0
 	common->Printf( Sys_FPU_GetState() );
 #endif
-	
+
 #ifndef	ID_DEDICATED
 	//if ( win32.win_notaskkeys.GetInteger() ) {
 	//	DisableTaskKeys( TRUE, FALSE, /*( win32.win_notaskkeys.GetInteger() == 2 )*/ FALSE );
 	//}
 #endif
-	
+
 #if defined(_WIN32)
 	Sys_StartAsyncThread();
 #endif
-	
+
 	// hide or show the early console as necessary
 	//if ( win32.win_viewlog.GetInteger() || com_skipRenderer.GetBool() || idAsyncNetwork::serverDedicated.GetInteger() ) {
 	//	Sys_ShowConsole( 1, true );
 	// else {
 	//	Sys_ShowConsole( 0, false );
 	//}
-	
+
 #ifdef SET_THREAD_AFFINITY
 	// give the main thread an affinity for the first cpu
 	SetThreadAffinityMask( GetCurrentThread(), 1 );

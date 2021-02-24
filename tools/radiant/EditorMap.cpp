@@ -80,9 +80,9 @@ void Map_SaveBetween()
 		g_bRestoreBetween = true;
 		g_pParentWnd->ActiveXY()->Copy();
 	}
-	
+
 	return;
-	
+
 }
 
 /*
@@ -95,9 +95,9 @@ void Map_RestoreBetween()
 	{
 		g_pParentWnd->ActiveXY()->Paste();
 	}
-	
+
 	return;
-	
+
 }
 
 /*
@@ -114,12 +114,12 @@ bool CheckForTinyBrush( brush_t* b, int n, float fSize )
 			bTiny = true;
 		}
 	}
-	
+
 	if( bTiny )
 	{
 		common->Printf( "Possible problem brush (too small) #%i ", n );
 	}
-	
+
 	return bTiny;
 }
 
@@ -130,14 +130,14 @@ bool CheckForTinyBrush( brush_t* b, int n, float fSize )
 void Map_BuildBrushData()
 {
 	brush_t* b, *next;
-	
+
 	if( active_brushes.next == NULL )
 	{
 		return;
 	}
-	
+
 	Sys_BeginWait();	// this could take a while
-	
+
 	int n = 0;
 	for( b = active_brushes.next; b != NULL && b != &active_brushes; b = next )
 	{
@@ -149,7 +149,7 @@ void Map_BuildBrushData()
 			common->Printf( "Removed degenerate brush\n" );
 		}
 	}
-	
+
 	Sys_EndWait();
 }
 
@@ -160,7 +160,7 @@ void Map_BuildBrushData()
 entity_t* Map_FindClass( char* cname )
 {
 	entity_t*	ent;
-	
+
 	for( ent = entities.next; ent != &entities; ent = ent->next )
 	{
 		if( !strcmp( cname, ValueForKey( ent, "classname" ) ) )
@@ -168,7 +168,7 @@ entity_t* Map_FindClass( char* cname )
 			return ent;
 		}
 	}
-	
+
 	return NULL;
 }
 
@@ -208,7 +208,7 @@ int Map_GetUniqueEntityID( const char* prefix, const char* eclass )
 			}
 		}
 	}
-	
+
 	return id + 1;
 }
 
@@ -223,7 +223,7 @@ bool Entity_NameIsUnique( const char* name )
 	{
 		return false;
 	}
-	
+
 	for( ent = entities.next; ent != &entities; ent = ent->next )
 	{
 		const char*	testName = ValueForKey( ent, "name" );
@@ -235,7 +235,7 @@ bool Entity_NameIsUnique( const char* name )
 			}
 		}
 	}
-	
+
 	return true;
 }
 
@@ -254,23 +254,23 @@ void Map_Free()
 			Map_SaveBetween();
 		}
 	}
-	
+
 	// clear all the render and sound system data
 	g_qeglobals.rw->InitFromMap( NULL );
 	g_qeglobals.sw->ClearAllSoundEmitters();
-	
+
 	Texture_ClearInuse();
 	Pointfile_Clear();
 	strcpy( currentmap, "unnamed.map" );
 	Sys_SetTitle( currentmap );
 	g_qeglobals.d_num_entities = 0;
-	
+
 	if( !active_brushes.next )  // first map
 	{
 		active_brushes.prev = active_brushes.next = &active_brushes;
 		selected_brushes.prev = selected_brushes.next = &selected_brushes;
 		filtered_brushes.prev = filtered_brushes.next = &filtered_brushes;
-		
+
 		entities.prev = entities.next = &entities;
 	}
 	else
@@ -279,28 +279,28 @@ void Map_Free()
 		{
 			Brush_Free( active_brushes.next, false );
 		}
-		
+
 		while( selected_brushes.next != &selected_brushes )
 		{
 			Brush_Free( selected_brushes.next, false );
 		}
-		
+
 		while( filtered_brushes.next != &filtered_brushes )
 		{
 			Brush_Free( filtered_brushes.next, false );
 		}
-		
+
 		while( entities.next != &entities )
 		{
 			Entity_Free( entities.next );
 		}
 	}
-	
+
 	if( world_entity )
 	{
 		Entity_Free( world_entity );
 	}
-	
+
 	world_entity = NULL;
 }
 
@@ -315,32 +315,32 @@ entity_t* AngledEntity()
 	{
 		ent = Map_FindClass( "info_player_deathmatch" );
 	}
-	
+
 	if( !ent )
 	{
 		ent = Map_FindClass( "info_player_deathmatch" );
 	}
-	
+
 	if( !ent )
 	{
 		ent = Map_FindClass( "team_CTF_redplayer" );
 	}
-	
+
 	if( !ent )
 	{
 		ent = Map_FindClass( "team_CTF_blueplayer" );
 	}
-	
+
 	if( !ent )
 	{
 		ent = Map_FindClass( "team_CTF_redspawn" );
 	}
-	
+
 	if( !ent )
 	{
 		ent = Map_FindClass( "team_CTF_bluespawn" );
 	}
-	
+
 	return ent;
 }
 
@@ -399,17 +399,17 @@ brush_t* BrushFromMapBrush( idMapBrush* mapbrush, idVec3 origin )
 			f->plane = side->GetPlane();
 			f->originalPlane = f->plane;
 			f->dirty = false;
-			
+
 			idWinding w;
 			w.BaseForPlane( f->plane );
-			
+
 			for( int j = 0; j < 3; j++ )
 			{
 				f->planepts[j].x = w[j].x + origin.x;
 				f->planepts[j].y = w[j].y + origin.y;
 				f->planepts[j].z = w[j].z + origin.z;
 			}
-			
+
 			idVec3 mat[2];
 			side->GetTextureMatrix( mat[0], mat[1] );
 			f->brushprimit_texdef.coords[0][0] = mat[0][0];
@@ -418,7 +418,7 @@ brush_t* BrushFromMapBrush( idMapBrush* mapbrush, idVec3 origin )
 			f->brushprimit_texdef.coords[1][0] = mat[1][0];
 			f->brushprimit_texdef.coords[1][1] = mat[1][1];
 			f->brushprimit_texdef.coords[1][2] = mat[1][2];
-			
+
 			f->texdef.SetName( side->GetMaterial() );
 		}
 	}
@@ -461,7 +461,7 @@ entity_t* EntityFromMapEntity( idMapEntity* mapent, CWaitDlg* dlg )
 				{
 					return ent;
 				}
-				
+
 				brush_t* b = NULL;
 				if( prim->GetType() == idMapPrimitive::TYPE_BRUSH )
 				{
@@ -500,35 +500,35 @@ void Map_LoadFile( const char* filename )
 	CWaitDlg dlg;
 	idStr fileStr, status;
 	idMapFile mapfile;
-	
+
 	Sys_BeginWait();
 	Select_Deselect();
-	
+
 	dlg.AllowCancel( true );
 	idStr( filename ).ExtractFileName( fileStr );
 	sprintf( status, "Loading %s...", fileStr.c_str() );
 	dlg.SetWindowText( status );
 	sprintf( status, "Reading file %s...", fileStr.c_str() );
 	dlg.SetText( status );
-	
+
 	// SetInspectorMode(W_CONSOLE);
 	fileStr = filename;
 	fileStr.BackSlashesToSlashes();
-	
+
 	common->Printf( "Map_LoadFile: %s\n", fileStr.c_str() );
-	
+
 	Map_Free();
-	
+
 	g_qeglobals.d_parsed_brushes = 0;
 	strcpy( currentmap, filename );
-	
+
 	if( mapfile.Parse( filename, true, true ) )
 	{
 		g_qeglobals.bNeedConvert = false;
 		g_qeglobals.bOldBrushes = false;
 		g_qeglobals.bPrimitBrushes = false;
 		g_qeglobals.mapVersion = 1.0;
-		
+
 		long lastUpdate = 0;
 		int count = mapfile.GetNumEntities();
 		for( int i = 0; i < count; i++ )
@@ -570,38 +570,38 @@ void Map_LoadFile( const char* filename )
 			}
 		}
 	}
-	
+
 	if( !world_entity )
 	{
 		Sys_Status( "No worldspawn in map.\n" );
 		Map_New();
 		return;
 	}
-	
+
 	common->Printf( "--- LoadMapFile ---\n" );
 	common->Printf( "%s\n", fileStr.c_str() );
-	
+
 	common->Printf( "%5i brushes\n", g_qeglobals.d_parsed_brushes );
 	common->Printf( "%5i entities\n", g_qeglobals.d_num_entities );
-	
+
 	dlg.SetText( "Restoring Between" );
 	Map_RestoreBetween();
-	
+
 	dlg.SetText( "Building Brush Data" );
 	common->Printf( "Map_BuildAllDisplayLists\n" );
 	Map_BuildBrushData();
-	
+
 	//
 	// reset the "need conversion" flag conversion to the good format done in
 	// Map_BuildBrushData
 	//
 	g_qeglobals.bNeedConvert = false;
-	
+
 	// move the view to a start position
 	ent = AngledEntity();
-	
+
 	g_pParentWnd->GetCamera()->Camera().angles[PITCH] = 0;
-	
+
 	if( ent )
 	{
 		GetVectorForKey( ent, "origin", g_pParentWnd->GetCamera()->Camera().origin );
@@ -614,24 +614,24 @@ void Map_LoadFile( const char* filename )
 		VectorCopy( vec3_origin, g_pParentWnd->GetCamera()->Camera().origin );
 		VectorCopy( vec3_origin, g_pParentWnd->GetXYWnd()->GetOrigin() );
 	}
-	
+
 	Map_RegionOff();
-	
+
 	mapModified = 0;
-	
+
 	if( GetFileAttributes( filename ) & FILE_ATTRIBUTE_READONLY )
 	{
 		fileStr += " (read only) ";
 	}
 	Sys_SetTitle( fileStr );
-	
+
 	Texture_ShowInuse();
-	
+
 	if( g_pParentWnd->GetCamera()->GetRenderMode() )
 	{
 		g_pParentWnd->GetCamera()->BuildRendererState();
 	}
-	
+
 	Sys_EndWait();
 	Sys_UpdateWindows( W_ALL );
 }
@@ -680,7 +680,7 @@ idMapPrimitive* BrushToMapPrimitive( const brush_t* b, const idVec3& origin )
 		for( face_t* f = b->brush_faces; f; f = f->next )
 		{
 			idMapBrushSide* side = new idMapBrushSide;
-			
+
 			idPlane plane;
 			if( f->dirty )
 			{
@@ -769,7 +769,7 @@ bool Map_SaveFile( const char* filename, bool use_region, bool autosave )
 	int			count;
 	brush_t*		b;
 	idStr status;
-	
+
 	int len = strlen( filename );
 	WIN32_FIND_DATA FileData;
 	if( FindFirstFile( filename, &FileData ) != INVALID_HANDLE_VALUE )
@@ -781,7 +781,7 @@ bool Map_SaveFile( const char* filename, bool use_region, bool autosave )
 			return false;
 		}
 	}
-	
+
 	if( filename == NULL || len == 0 || ( filename && stricmp( filename, "unnamed.map" ) == 0 ) )
 	{
 		CFileDialog dlgSave( FALSE, "map", NULL, OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT, "Map Files (*.map)|*.map||", AfxGetMainWnd() );
@@ -795,7 +795,7 @@ bool Map_SaveFile( const char* filename, bool use_region, bool autosave )
 			return false;
 		}
 	}
-	
+
 	MEMORYSTATUSEX statex;
 	statex.dwLength = sizeof( statex );
 	GlobalMemoryStatusEx( &statex );
@@ -803,13 +803,13 @@ bool Map_SaveFile( const char* filename, bool use_region, bool autosave )
 	{
 		g_pParentWnd->MessageBox( "Physical memory is over 95% utilized. Consider saving and restarting", "Memory" );
 	}
-	
+
 	CWaitDlg dlg;
 	Pointfile_Clear();
-	
+
 	temp = filename;
 	temp.BackSlashesToSlashes();
-	
+
 	if( !use_region )
 	{
 		idStr backup;
@@ -820,15 +820,15 @@ bool Map_SaveFile( const char* filename, bool use_region, bool autosave )
 		{
 			g_pParentWnd->MessageBox( va( "Unable to delete %s: %s", backup.c_str(), strerror( errno ) ), "File Error" );
 		}
-		
+
 		if( rename( filename, backup ) != 0 )
 		{
 			g_pParentWnd->MessageBox( va( "Unable to rename %s to %s: %s", filename, backup.c_str(), strerror( errno ) ), "File Error" );
 		}
 	}
-	
+
 	common->Printf( "Map_SaveFile: %s\n", filename );
-	
+
 	idStr mapFile;
 	bool localFile = ( strstr( filename, ":" ) != NULL );
 	if( autosave || localFile )
@@ -839,18 +839,18 @@ bool Map_SaveFile( const char* filename, bool use_region, bool autosave )
 	{
 		mapFile = fileSystem->OSPathToRelativePath( filename );
 	}
-	
+
 	if( use_region )
 	{
 		AddRegionBrushes();
 	}
-	
+
 	idMapFile map;
 	world_entity->origin.Zero();
 	idMapEntity* mapentity = EntityToMapEntity( world_entity, use_region, &dlg );
 	dlg.SetText( "Saving worldspawn..." );
 	map.AddEntity( mapentity );
-	
+
 	if( use_region )
 	{
 		idStr buf;
@@ -864,7 +864,7 @@ bool Map_SaveFile( const char* filename, bool use_region, bool autosave )
 		idMapEntity* playerstart = idMapEntity::Parse( src );
 		map.AddEntity( playerstart );
 	}
-	
+
 	count = -1;
 	for( e = entities.next; e != &entities; e = next )
 	{
@@ -885,12 +885,12 @@ bool Map_SaveFile( const char* filename, bool use_region, bool autosave )
 						break;	// got one
 					}
 				}
-				
+
 				if( b == &e->brushes )
 				{
 					continue;		// nothing visible
 				}
-				
+
 			}
 			idVec3 origin;
 			if( !GetVectorForKey( e, "origin", origin ) )
@@ -900,40 +900,40 @@ bool Map_SaveFile( const char* filename, bool use_region, bool autosave )
 				sprintf( text, "%i %i %i", ( int )origin[0], ( int )origin[1], ( int )origin[2] );
 				SetKeyValue( e, "origin", text );
 			}
-			
+
 			if( use_region && !idStr::Icmp( ValueForKey( e, "classname" ), "info_player_start" ) )
 			{
 				continue;
 			}
-			
+
 			idStr classname = e->epairs.GetString( "classname" );
 			sprintf( status, "Saving entity %i (%s)...", count, classname.c_str() );
 			dlg.SetText( status );
-			
+
 			map.AddEntity( EntityToMapEntity( e, use_region, &dlg ) );
 			count++;
 		}
 	}
-	
+
 	mapFile.StripFileExtension();
 	idStr mapExt = ( use_region ) ? ".reg" : ".map";
 	sprintf( status, "Writing file %s.%s...", mapFile.c_str(), mapExt.c_str() );
 	dlg.SetText( status );
 	map.Write( mapFile, mapExt, !( autosave || localFile ) );
 	mapModified = 0;
-	
+
 	if( use_region )
 	{
 		RemoveRegionBrushes();
 	}
-	
+
 	if( !strstr( temp, "autosave" ) )
 	{
 		Sys_SetTitle( temp );
 	}
-	
+
 	Sys_Status( "Saved.\n", 0 );
-	
+
 	return true;
 }
 
@@ -946,28 +946,28 @@ void Map_New()
 {
 	common->Printf( "Map_New\n" );
 	Map_Free();
-	
+
 	Patch_Cleanup();
 	g_Inspectors->entityDlg.SetEditEntity( NULL );
-	
+
 	world_entity = Entity_New();
 	world_entity->brushes.onext = world_entity->brushes.oprev = &world_entity->brushes;
 	SetKeyValue( world_entity, "classname", "worldspawn" );
 	world_entity->eclass = Eclass_ForName( "worldspawn", true );
-	
+
 	g_pParentWnd->GetCamera()->Camera().angles[YAW] = 0;
 	g_pParentWnd->GetCamera()->Camera().angles[PITCH] = 0;
 	VectorCopy( vec3_origin, g_pParentWnd->GetCamera()->Camera().origin );
 	g_pParentWnd->GetCamera()->Camera().origin[2] = 48;
 	VectorCopy( vec3_origin, g_pParentWnd->GetXYWnd()->GetOrigin() );
-	
+
 	Map_RestoreBetween();
-	
+
 	Sys_UpdateWindows( W_ALL );
 	mapModified = 0;
-	
+
 	g_qeglobals.mapVersion = MAP_VERSION;
-	
+
 }
 
 
@@ -987,21 +987,21 @@ void AddRegionBrushes()
 	idVec3		mins, maxs;
 	int			i;
 	texdef_t	td;
-	
+
 	if( !region_active )
 	{
 		return;
 	}
-	
+
 	memset( &td, 0, sizeof( td ) );
 	td = g_qeglobals.d_texturewin.texdef;
-	
+
 	// strcpy (td.name, "REGION");
 	td.SetName( "textures/REGION" );
-	
+
 	const int REGION_WIDTH = 1024;
-	
-	
+
+
 	mins[0] = region_mins[0] - REGION_WIDTH;
 	maxs[0] = region_mins[0] + 1;
 	mins[1] = region_mins[1] - REGION_WIDTH;
@@ -1009,32 +1009,32 @@ void AddRegionBrushes()
 	mins[2] = MIN_WORLD_COORD;
 	maxs[2] = MAX_WORLD_COORD;
 	region_sides[0] = Brush_Create( mins, maxs, &td );
-	
-	
+
+
 	mins[0] = region_maxs[0] - 1;
 	maxs[0] = region_maxs[0] + REGION_WIDTH;
 	region_sides[1] = Brush_Create( mins, maxs, &td );
-	
+
 	mins[0] = region_mins[0] - REGION_WIDTH;
 	maxs[0] = region_maxs[0] + REGION_WIDTH;
 	mins[1] = region_mins[1] - REGION_WIDTH;
 	maxs[1] = region_mins[1] + 1;
 	region_sides[2] = Brush_Create( mins, maxs, &td );
-	
+
 	mins[1] = region_maxs[1] - 1;
 	maxs[1] = region_maxs[1] + REGION_WIDTH;
 	region_sides[3] = Brush_Create( mins, maxs, &td );
-	
+
 	mins = region_mins;
 	maxs = region_maxs;
 	maxs[2] = mins[2] + REGION_WIDTH;
 	region_sides[4] = Brush_Create( mins, maxs, &td );
-	
+
 	mins = region_mins;
 	maxs = region_maxs;
 	mins[2] = maxs[2] - REGION_WIDTH;
 	region_sides[5] = Brush_Create( mins, maxs, &td );
-	
+
 	for( i = 0; i < 6; i++ )
 	{
 		Brush_AddToList( region_sides[i], &selected_brushes );
@@ -1050,12 +1050,12 @@ void AddRegionBrushes()
 void RemoveRegionBrushes()
 {
 	int i;
-	
+
 	if( !region_active )
 	{
 		return;
 	}
-	
+
 	for( i = 0; i < 6; i++ )
 	{
 		Brush_Free( region_sides[i] );
@@ -1069,25 +1069,25 @@ void RemoveRegionBrushes()
 bool Map_IsBrushFiltered( brush_t* b )
 {
 	int i;
-	
+
 	if( !region_active )
 	{
 		return false;
 	}
-	
+
 	for( i = 0; i < 3; i++ )
 	{
 		if( b->mins[i] > region_maxs[i] )
 		{
 			return true;
 		}
-		
+
 		if( b->maxs[i] < region_mins[i] )
 		{
 			return true;
 		}
 	}
-	
+
 	return false;
 }
 
@@ -1100,14 +1100,14 @@ void Map_RegionOff()
 {
 	brush_t* b, *next;
 	int		i;
-	
+
 	region_active = false;
 	for( i = 0; i < 3; i++ )
 	{
 		region_maxs[i] = MAX_WORLD_COORD;	// 4096;
 		region_mins[i] = MIN_WORLD_COORD;	// -4096;
 	}
-	
+
 	for( b = filtered_brushes.next; b != &filtered_brushes; b = next )
 	{
 		next = b->next;
@@ -1115,17 +1115,17 @@ void Map_RegionOff()
 		{
 			continue;						// still filtered
 		}
-		
+
 		Brush_RemoveFromList( b );
 		if( active_brushes.next == NULL || active_brushes.prev == NULL )
 		{
 			active_brushes.next = &active_brushes;
 			active_brushes.prev = &active_brushes;
 		}
-		
+
 		Brush_AddToList( b, &active_brushes );
 	}
-	
+
 	Sys_UpdateWindows( W_ALL );
 }
 
@@ -1136,7 +1136,7 @@ void Map_RegionOff()
 void Map_ApplyRegion()
 {
 	brush_t* b, *next;
-	
+
 	region_active = true;
 	for( b = active_brushes.next; b != &active_brushes; b = next )
 	{
@@ -1145,11 +1145,11 @@ void Map_ApplyRegion()
 		{
 			continue;	// still filtered
 		}
-		
+
 		Brush_RemoveFromList( b );
 		Brush_AddToList( b, &filtered_brushes );
 	}
-	
+
 	Sys_UpdateWindows( W_ALL );
 }
 
@@ -1161,32 +1161,32 @@ void Map_ApplyRegion()
 void Map_RegionSelectedBrushes()
 {
 	Map_RegionOff();
-	
+
 	if( selected_brushes.next == &selected_brushes )  	// nothing selected
 	{
 		Sys_Status( "Tried to region with no selection...\n" );
 		return;
 	}
-	
+
 	region_active = true;
 	Select_GetBounds( region_mins, region_maxs );
-	
+
 	// move the entire active_brushes list to filtered_brushes
 	filtered_brushes.next = active_brushes.next;
 	filtered_brushes.prev = active_brushes.prev;
 	filtered_brushes.next->prev = &filtered_brushes;
 	filtered_brushes.prev->next = &filtered_brushes;
-	
+
 	Patch_Deselect();
 	// move the entire selected_brushes list to active_brushes
 	active_brushes.next = selected_brushes.next;
 	active_brushes.prev = selected_brushes.prev;
 	active_brushes.next->prev = &active_brushes;
 	active_brushes.prev->next = &active_brushes;
-	
+
 	// clear selected_brushes
 	selected_brushes.next = selected_brushes.prev = &selected_brushes;
-	
+
 	Sys_UpdateWindows( W_ALL );
 }
 
@@ -1198,7 +1198,7 @@ void Map_RegionSelectedBrushes()
 void Map_RegionXY()
 {
 	Map_RegionOff();
-	
+
 	region_mins[0] = g_pParentWnd->GetXYWnd()->GetOrigin()[0] -
 					 0.5 *
 					 g_pParentWnd->GetXYWnd()->Width() /
@@ -1228,21 +1228,21 @@ void Map_RegionXY()
 void Map_RegionTallBrush()
 {
 	brush_t* b;
-	
+
 	if( !QE_SingleBrush() )
 	{
 		return;
 	}
-	
+
 	b = selected_brushes.next;
-	
+
 	Map_RegionOff();
-	
+
 	VectorCopy( b->mins, region_mins );
 	VectorCopy( b->maxs, region_maxs );
 	region_mins[2] = MIN_WORLD_COORD;
 	region_maxs[2] = MAX_WORLD_COORD;
-	
+
 	Select_Delete();
 	Map_ApplyRegion();
 }
@@ -1255,19 +1255,19 @@ void Map_RegionTallBrush()
 void Map_RegionBrush()
 {
 	brush_t* b;
-	
+
 	if( !QE_SingleBrush() )
 	{
 		return;
 	}
-	
+
 	b = selected_brushes.next;
-	
+
 	Map_RegionOff();
-	
+
 	VectorCopy( b->mins, region_mins );
 	VectorCopy( b->maxs, region_maxs );
-	
+
 	Select_Delete();
 	Map_ApplyRegion();
 }
@@ -1304,7 +1304,7 @@ void UniqueTargetName( idStr& rStr )
 			}
 		}
 	}
-	
+
 	sprintf( rStr, "t%i", maxtarg + 1 );
 }
 
@@ -1319,18 +1319,18 @@ void Map_ImportBuffer( char* buf, bool renameEntities )
 	entity_t*	ent;
 	brush_t*		b = NULL;
 	CPtrArray	ptrs;
-	
+
 	Select_Deselect();
-	
+
 	Undo_Start( "import buffer" );
-	
+
 	g_qeglobals.d_parsed_brushes = 0;
 	if( buf )
 	{
 		CMapStringToString	mapStr;
 		StartTokenParsing( buf );
 		g_qeglobals.d_num_entities = 0;
-		
+
 		//
 		// Timo will be used in Entity_Parse to detect if a conversion between brush
 		// formats is needed
@@ -1339,7 +1339,7 @@ void Map_ImportBuffer( char* buf, bool renameEntities )
 		g_qeglobals.bOldBrushes = false;
 		g_qeglobals.bPrimitBrushes = false;
 		g_qeglobals.mapVersion = 1.0;
-		
+
 		if( GetToken( true ) )
 		{
 			if( stricmp( token, "Version" ) == 0 )
@@ -1353,9 +1353,9 @@ void Map_ImportBuffer( char* buf, bool renameEntities )
 				UngetToken();
 			}
 		}
-		
+
 		idDict RemappedNames;	// since I can't use "map <string, string>"... sigh. So much for STL...
-		
+
 		while( 1 )
 		{
 			//
@@ -1367,16 +1367,16 @@ void Map_ImportBuffer( char* buf, bool renameEntities )
 			{
 				break;
 			}
-			
+
 			// end entity for undo
 			Undo_EndEntity( ent );
-			
+
 			// end brushes for undo
 			for( b = ent->brushes.onext; b && b != &ent->brushes; b = b->onext )
 			{
 				Undo_EndBrush( b );
 			}
-			
+
 			if( !strcmp( ValueForKey( ent, "classname" ), "worldspawn" ) )
 			{
 				// world brushes need to be added to the current world entity
@@ -1407,12 +1407,12 @@ void Map_ImportBuffer( char* buf, bool renameEntities )
 							strKey = key;
 							mapStr.SetAt( str, strKey );
 						}
-						
+
 						strTarget = strKey;
 						SetKeyValue( ent, "target", strTarget.GetBuffer( 0 ) );
 					}
 				}
-				
+
 				/*
 				 * str = ValueForKey(ent, "name"); if (str.GetLength() > 0) { if
 				 * (FindEntity("name", str.GetBuffer(0))) { if (!mapStr.Lookup(str, strKey)) {
@@ -1436,14 +1436,14 @@ void Map_ImportBuffer( char* buf, bool renameEntities )
 				entities.prev->next = ent;
 				entities.prev = ent;
 				g_qeglobals.d_num_entities++;
-				
+
 				for( b = ent->brushes.onext; b != &ent->brushes; b = b->onext )
 				{
 					ptrs.Add( b );
 				}
 			}
 		}
-		
+
 		// now iterate through the remapped names, and see if there are any target-connections that need remaking...
 		//
 		// (I could probably write this in half the size with STL, but WTF, work with what we have...)
@@ -1452,13 +1452,13 @@ void Map_ImportBuffer( char* buf, bool renameEntities )
 		for( int iKeyVal = 0; iKeyVal < iNumKeyVals; iKeyVal++ )
 		{
 			const idKeyValue* pKeyVal = RemappedNames.GetKeyVal( iKeyVal );
-			
+
 			LPCSTR psOldName = pKeyVal->GetKey().c_str();
 			LPCSTR psNewName = pKeyVal->GetValue().c_str();
-			
+
 			entity_t* pEntOld = FindEntity( "name", psOldName );	// original ent we cloned from
 			entity_t* pEntNew = FindEntity( "name", psNewName );	// cloned ent
-			
+
 			if( pEntOld && pEntNew )
 			{
 				CString cstrTargetNameOld = ValueForKey( pEntOld, "target" );
@@ -1480,7 +1480,7 @@ void Map_ImportBuffer( char* buf, bool renameEntities )
 			}
 		}
 	}
-	
+
 	//
 	// ::ShowWindow(g_qeglobals.d_hwndEntity, FALSE);
 	// ::LockWindowUpdate(g_qeglobals.d_hwndEntity);
@@ -1491,23 +1491,23 @@ void Map_ImportBuffer( char* buf, bool renameEntities )
 		Brush_Build( reinterpret_cast < brush_t* >( ptrs[i] ), true, false );
 		Select_Brush( reinterpret_cast < brush_t* >( ptrs[i] ), true, false );
 	}
-	
+
 	// ::LockWindowUpdate(NULL);
 	g_bScreenUpdates = true;
-	
+
 	ptrs.RemoveAll();
-	
+
 	//
 	// reset the "need conversion" flag conversion to the good format done in
 	// Map_BuildBrushData
 	//
 	g_qeglobals.bNeedConvert = false;
-	
+
 	Sys_UpdateWindows( W_ALL );
-	
+
 	// Sys_MarkMapModified();
 	mapModified = 1;
-	
+
 	Undo_End();
 }
 
@@ -1529,7 +1529,7 @@ void Map_ImportFile( char* fileName )
 		Mem_Free( buf );
 		Map_BuildBrushData();
 	}
-	
+
 	Sys_UpdateWindows( W_ALL );
 	mapModified = 1;
 	Sys_EndWait();
@@ -1546,25 +1546,25 @@ void Map_SaveSelected( char* fileName )
 	FILE*		f;
 	idStr		temp;
 	int			count;
-	
+
 	temp = fileName;
 	temp.BackSlashesToSlashes();
 	f = fopen( temp, "w" );
-	
+
 	if( !f )
 	{
 		common->Printf( "ERROR!!!! Couldn't open %s\n", temp.c_str() );
 		return;
 	}
-	
+
 	// write version
 	g_qeglobals.mapVersion = MAP_VERSION;
 	fprintf( f, "Version %1.2f\n", MAP_VERSION );
-	
+
 	// write world entity second
 	world_entity->origin.Zero();
 	Entity_WriteSelected( world_entity, f );
-	
+
 	// then write all other ents
 	count = 1;
 	for( e = entities.next; e != &entities; e = next )
@@ -1574,7 +1574,7 @@ void Map_SaveSelected( char* fileName )
 		Entity_WriteSelected( e, f );
 		next = e->next;
 	}
-	
+
 	fclose( f );
 }
 
@@ -1588,15 +1588,15 @@ void Map_SaveSelected( CMemFile* pMemFile, CMemFile* pPatchFile )
 	entity_t*	e, *next;
 	int			count;
 	CString		strTemp;
-	
+
 	// write version
 	g_qeglobals.mapVersion = MAP_VERSION;
 	MemFile_fprintf( pMemFile, "Version %1.2f\n", MAP_VERSION );
-	
+
 	// write world entity first
 	world_entity->origin.Zero();
 	Entity_WriteSelected( world_entity, pMemFile );
-	
+
 	// then write all other ents
 	count = 1;
 	for( e = entities.next; e != &entities; e = next )
@@ -1606,7 +1606,7 @@ void Map_SaveSelected( CMemFile* pMemFile, CMemFile* pPatchFile )
 		Entity_WriteSelected( e, pMemFile );
 		next = e->next;
 	}
-	
+
 	// if (pPatchFile) Patch_WriteFile(pPatchFile);
 }
 
@@ -1628,9 +1628,9 @@ bool WriteFileString( FILE* fp, char* string, ... )
 	char* str;
 	idStr buf;
 	va_list argPtr;
-	
+
 	va_start( argPtr, string );
-	
+
 	while( *string )
 	{
 		switch( *string )
@@ -1714,9 +1714,9 @@ bool WriteFileString( FILE* fp, char* string, ... )
 				break;
 		}
 	}
-	
+
 	va_end( argPtr );
-	
+
 	return true;
 }
 
@@ -1734,11 +1734,11 @@ void MemFile_fprintf( CMemFile* pMemFile, const char* string, ... )
 	char* str;
 	idStr buf, out;
 	va_list argPtr;
-	
+
 	char* buff = Buffer;
-	
+
 	va_start( argPtr, string );
-	
+
 	while( *string )
 	{
 		switch( *string )
@@ -1821,12 +1821,12 @@ void MemFile_fprintf( CMemFile* pMemFile, const char* string, ... )
 				string++;
 				break;
 		}
-		
+
 		buff = Buffer + strlen( Buffer );
 	}
-	
+
 	va_end( argPtr );
-	
+
 	out = Buffer;
 	pMemFile->Write( out.c_str(), out.Length() );
 }

@@ -90,22 +90,22 @@ class idTypeInfoGen
 public:
 	idTypeInfoGen();
 	~idTypeInfoGen();
-	
+
 	void						AddDefine( const char* define );
 	void						CreateTypeInfo( const char* path );
 	void						WriteTypeInfo( const char* fileName ) const;
-	
+
 private:
 	idStrList					defines;
-	
+
 	idList<idConstantInfo*>	constants;
 	idList<idEnumTypeInfo*>	enums;
 	idList<idClassTypeInfo*>	classes;
-	
+
 	int							numTemplates;
 	int							maxInheritance;
 	idStr						maxInheritanceClass;
-	
+
 	int							GetInheritance( const char* typeName ) const;
 	int							EvaluateIntegerString( const idStr& string );
 	float						EvaluateFloatString( const idStr& string );

@@ -48,23 +48,23 @@ public:
 	NSBitmapImageRep( const char* filename );
 	NSBitmapImageRep( int wide, int high );
 	~NSBitmapImageRep();
-	
+
 	NSBitmapImageRep& 	operator=( const NSBitmapImageRep& a );
-	
+
 	int					samplesPerPixel();
 	int					pixelsWide();
 	int					pixelsHigh();
 	byte* 				bitmapData();
 	bool				hasAlpha();
 	bool				isPlanar();
-	
+
 private:
 
 	byte* 				bmap;
 	int					width;
 	int					height;
 	ID_TIME_T				timestamp;
-	
+
 };
 
 class roq
@@ -72,7 +72,7 @@ class roq
 public:
 	roq();
 	~roq();
-	
+
 	void				WriteLossless();
 	void				LoadAndDisplayImage( const char* filename );
 	void				CloseRoQFile( bool which );
@@ -105,19 +105,19 @@ private:
 	int					SizeFile( idFile* ftosize );
 	void				CloseRoQFile();
 	void				WriteCodeBookToStream( byte* codebook, int csize, word cflags );
-	
+
 	static	void		JPEGInitDestination( j_compress_ptr cinfo );
 	static	boolean		JPEGEmptyOutputBuffer( j_compress_ptr cinfo );
 	static	void		JPEGTermDestination( j_compress_ptr cinfo );
-	
+
 	void				JPEGStartCompress( j_compress_ptr cinfo, bool write_all_tables );
 	JDIMENSION			JPEGWriteScanlines( j_compress_ptr cinfo, JSAMPARRAY scanlines, JDIMENSION num_lines );
 	void				JPEGDest( j_compress_ptr cinfo, byte* outfile, int size );
 	void				JPEGSave( char* filename, int quality, int image_width, int image_height, unsigned char* image_buffer );
-	
+
 	codec* 				encoder;
 	roqParam* 			paramFile;
-	
+
 	idFile* 			RoQFile;
 	NSBitmapImageRep* 	image;
 	int					numQuadCels;
@@ -129,7 +129,7 @@ private:
 	int					previousSize;
 	byte 				codes[4096];
 	bool				dataStuff;
-	
+
 };
 
 extern roq* theRoQ;				// current roq

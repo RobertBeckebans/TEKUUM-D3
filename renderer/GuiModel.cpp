@@ -48,7 +48,7 @@ idGuiModel::idGuiModel()
 	{
 		shaderParms[i] = 1.0f;
 	}
-	
+
 	// RB: added alternative interface for no glMapBuffer support
 #if defined(NO_GL_MAPBUFFER)
 	verts.SetNum( MAX_VERTS );
@@ -99,12 +99,12 @@ void idGuiModel::BeginFrame()
 #if !defined(NO_GL_MAPBUFFER)
 	vertexBlock = vertexCache.AllocVertex( NULL, ALIGN( MAX_VERTS * sizeof( idDrawVert ), VERTEX_CACHE_ALIGN ) );
 	indexBlock = vertexCache.AllocIndex( NULL, ALIGN( MAX_INDEXES * sizeof( triIndex_t ), INDEX_CACHE_ALIGN ) );
-	
+
 	vertexPointer = ( idDrawVert* )vertexCache.MappedVertexBuffer( vertexBlock );
 	indexPointer = ( triIndex_t* )vertexCache.MappedIndexBuffer( indexBlock );
 #endif
 	// RB end
-	
+
 	numVerts = 0;
 	numIndexes = 0;
 	Clear();
@@ -127,7 +127,7 @@ void idGuiModel::EmitSurfaces( float modelMatrix[16], float modelViewMatrix[16],
 	memcpy( guiSpace->modelViewMatrix, modelViewMatrix, sizeof( guiSpace->modelViewMatrix ) );
 	guiSpace->weaponDepthHack = depthHack;
 	guiSpace->isGuiSurface = true;
-	
+
 	// If this is an in-game gui, we need to be able to find the matrix again for head mounted
 	// display bypass matrix fixup.
 	if( linkAsEntity )
@@ -135,7 +135,7 @@ void idGuiModel::EmitSurfaces( float modelMatrix[16], float modelViewMatrix[16],
 		guiSpace->next = tr.viewDef->viewEntitys;
 		tr.viewDef->viewEntitys = guiSpace;
 	}
-	
+
 	//---------------------------
 	// make a tech5 renderMatrix
 	//---------------------------
@@ -146,14 +146,14 @@ void idGuiModel::EmitSurfaces( float modelMatrix[16], float modelViewMatrix[16],
 	{
 		idRenderMatrix::ApplyDepthHack( guiSpace->mvp );
 	}
-	
+
 	// to allow 3D-TV effects in the menu system, we define surface flags to set
 	// depth fractions between 0=screen and 1=infinity, which directly modulate the
 	// screenSeparation parameter for an X offset.
 	// The value is stored in the drawSurf sort value, which adjusts the matrix in the
 	// backend.
 	float defaultStereoDepth = stereoRender_defaultGuiDepth.GetFloat();	// default to at-screen
-	
+
 	// add the surfaces to this view
 	for( int i = 0; i < surfaces.Num(); i++ )
 	{
@@ -162,15 +162,15 @@ void idGuiModel::EmitSurfaces( float modelMatrix[16], float modelViewMatrix[16],
 		{
 			continue;
 		}
-		
+
 		const idMaterial* shader = guiSurf.material;
 		drawSurf_t* drawSurf = ( drawSurf_t* )R_FrameAlloc( sizeof( *drawSurf ), FRAME_ALLOC_DRAW_SURFACE );
-		
+
 		//vertexBlock = ;
 		//indexBlock = vertexCache.AllocIndex( NULL, ALIGN( MAX_INDEXES * sizeof( triIndex_t ), INDEX_CACHE_ALIGN ) );
-		
+
 		drawSurf->numIndexes = guiSurf.numIndexes;
-		
+
 #if defined(NO_GL_MAPBUFFER)
 		drawSurf->ambientCache = vertexCache.AllocVertex( &verts[guiSurf.firstVert], ALIGN( guiSurf.numVerts * sizeof( idDrawVert ), VERTEX_CACHE_ALIGN ) );
 		drawSurf->indexCache = vertexCache.AllocIndex( &indexes[guiSurf.firstIndex], ALIGN( guiSurf.firstIndex * sizeof( triIndex_t ), INDEX_CACHE_ALIGN ) );
@@ -206,7 +206,7 @@ void idGuiModel::EmitSurfaces( float modelMatrix[16], float modelViewMatrix[16],
 		{
 			// override sort with the stereoDepth
 			//drawSurf->sort = stereoDepth;
-			
+
 			switch( guiSurf.stereoType )
 			{
 				case STEREO_DEPTH_TYPE_NEAR:
@@ -235,9 +235,9 @@ EmitToCurrentView
 void idGuiModel::EmitToCurrentView( float modelMatrix[16], bool depthHack )
 {
 	float	modelViewMatrix[16];
-	
+
 	R_MatrixMultiply( modelMatrix, tr.viewDef->worldSpace.modelViewMatrix, modelViewMatrix );
-	
+
 	EmitSurfaces( modelMatrix, modelViewMatrix, depthHack, false /* stereoDepthSort */, true /* link as entity */ );
 }
 
@@ -261,21 +261,21 @@ void idGuiModel::EmitFullScreen()
 	{
 		return;
 	}
-	
+
 	SCOPED_PROFILE_EVENT( "Gui::EmitFullScreen" );
-	
+
 	viewDef_t* viewDef = ( viewDef_t* )R_ClearedFrameAlloc( sizeof( *viewDef ), FRAME_ALLOC_VIEW_DEF );
 	viewDef->is2Dgui = true;
 	tr.GetCroppedViewport( &viewDef->viewport );
-	
+
 	bool stereoEnabled = ( renderSystem->GetStereo3DMode() != STEREO3D_OFF );
 	if( stereoEnabled )
 	{
 		const float screenSeparation = GetScreenSeparationForGuis();
-		
+
 		// this will be negated on the alternate eyes, both rendered each frame
 		viewDef->renderView.stereoScreenSeparation = screenSeparation;
-		
+
 		extern idCVar stereoRender_swapEyes;
 		viewDef->renderView.viewEyeBuffer = 0;	// render to both buffers
 		if( stereoRender_swapEyes.GetBool() )
@@ -283,49 +283,49 @@ void idGuiModel::EmitFullScreen()
 			viewDef->renderView.stereoScreenSeparation = -screenSeparation;
 		}
 	}
-	
+
 	viewDef->scissor.x1 = 0;
 	viewDef->scissor.y1 = 0;
 	viewDef->scissor.x2 = viewDef->viewport.x2 - viewDef->viewport.x1;
 	viewDef->scissor.y2 = viewDef->viewport.y2 - viewDef->viewport.y1;
-	
+
 	viewDef->projectionMatrix[0 * 4 + 0] = 2.0f / SCREEN_WIDTH;
 	viewDef->projectionMatrix[0 * 4 + 1] = 0.0f;
 	viewDef->projectionMatrix[0 * 4 + 2] = 0.0f;
 	viewDef->projectionMatrix[0 * 4 + 3] = 0.0f;
-	
+
 	viewDef->projectionMatrix[1 * 4 + 0] = 0.0f;
 	viewDef->projectionMatrix[1 * 4 + 1] = -2.0f / SCREEN_HEIGHT;
 	viewDef->projectionMatrix[1 * 4 + 2] = 0.0f;
 	viewDef->projectionMatrix[1 * 4 + 3] = 0.0f;
-	
+
 	viewDef->projectionMatrix[2 * 4 + 0] = 0.0f;
 	viewDef->projectionMatrix[2 * 4 + 1] = 0.0f;
 	viewDef->projectionMatrix[2 * 4 + 2] = -2.0f;
 	viewDef->projectionMatrix[2 * 4 + 3] = 0.0f;
-	
+
 	viewDef->projectionMatrix[3 * 4 + 0] = -1.0f;
 	viewDef->projectionMatrix[3 * 4 + 1] = 1.0f;
 	viewDef->projectionMatrix[3 * 4 + 2] = -1.0f;
 	viewDef->projectionMatrix[3 * 4 + 3] = 1.0f;
-	
+
 	// make a tech5 renderMatrix for faster culling
 	idRenderMatrix::Transpose( *( idRenderMatrix* )viewDef->projectionMatrix, viewDef->projectionRenderMatrix );
-	
+
 	viewDef->worldSpace.modelMatrix[0 * 4 + 0] = 1.0f;
 	viewDef->worldSpace.modelMatrix[1 * 4 + 1] = 1.0f;
 	viewDef->worldSpace.modelMatrix[2 * 4 + 2] = 1.0f;
 	viewDef->worldSpace.modelMatrix[3 * 4 + 3] = 1.0f;
-	
+
 	viewDef->worldSpace.modelViewMatrix[0 * 4 + 0] = 1.0f;
 	viewDef->worldSpace.modelViewMatrix[1 * 4 + 1] = 1.0f;
 	viewDef->worldSpace.modelViewMatrix[2 * 4 + 2] = 1.0f;
 	viewDef->worldSpace.modelViewMatrix[3 * 4 + 3] = 1.0f;
-	
+
 	viewDef->maxDrawSurfs = surfaces.Num();
 	viewDef->drawSurfs = ( drawSurf_t** )R_FrameAlloc( viewDef->maxDrawSurfs * sizeof( viewDef->drawSurfs[0] ), FRAME_ALLOC_DRAW_SURFACE_POINTER );
 	viewDef->numDrawSurfs = 0;
-	
+
 #if 1
 	// RB: give renderView the current time to calculate 2D shader effects
 	int shaderTime = tr.frameShaderTime * 1000; //Sys_Milliseconds();
@@ -333,15 +333,15 @@ void idGuiModel::EmitFullScreen()
 	viewDef->renderView.time[1] = shaderTime;
 	// RB end
 #endif
-	
+
 	viewDef_t* oldViewDef = tr.viewDef;
 	tr.viewDef = viewDef;
-	
+
 	EmitSurfaces( viewDef->worldSpace.modelMatrix, viewDef->worldSpace.modelViewMatrix,
 				  false /* depthHack */ , stereoEnabled /* stereoDepthSort */, false /* link as entity */ );
-				  
+
 	tr.viewDef = oldViewDef;
-	
+
 	// add the command to draw this view
 	R_AddDrawViewCmd( viewDef, true );
 }
@@ -354,7 +354,7 @@ AdvanceSurf
 void idGuiModel::AdvanceSurf()
 {
 	guiModelSurface_t	s;
-	
+
 	if( surfaces.Num() )
 	{
 		s.material = surf->material;
@@ -365,20 +365,20 @@ void idGuiModel::AdvanceSurf()
 		s.material = tr.defaultMaterial;
 		s.glState = 0;
 	}
-	
+
 	// advance indexes so the pointer to each surface will be 16 byte aligned
 	numIndexes = ALIGN( numIndexes, 8 );
-	
+
 	s.numIndexes = 0;
 	s.firstIndex = numIndexes;
-	
+
 	// RB: added alternative interface for no glMapBuffer support
 #if defined(NO_GL_MAPBUFFER)
 	s.numVerts = 0;
 	s.firstVert = numVerts;
 #endif
 	// RB end
-	
+
 	surfaces.Append( s );
 	surf = &surfaces[ surfaces.Num() - 1 ];
 }
@@ -416,7 +416,7 @@ void idGuiModel::AllocTris( const idDrawVert* tempVerts, int vertCount, const tr
 		}
 		return;
 	}
-	
+
 	// break the current surface if we are changing to a new material or we can't
 	// fit the data into our allocated block
 	if( material != surf->material || glState != surf->glState || stereoType != surf->stereoType )
@@ -429,15 +429,15 @@ void idGuiModel::AllocTris( const idDrawVert* tempVerts, int vertCount, const tr
 		surf->glState = glState;
 		surf->stereoType = stereoType;
 	}
-	
+
 	int startVert = numVerts;
 	int startIndex = numIndexes;
-	
+
 	numVerts += vertCount;
 	numIndexes += indexCount;
-	
+
 	surf->numIndexes += indexCount;
-	
+
 	if( ( startIndex & 1 ) || ( indexCount & 1 ) )
 	{
 		// slow for write combined memory!
@@ -454,7 +454,7 @@ void idGuiModel::AllocTris( const idDrawVert* tempVerts, int vertCount, const tr
 			WriteIndexPair( &indexes[startIndex + i], startVert + tempIndexes[i], startVert + tempIndexes[i + 1] );
 		}
 	}
-	
+
 	WriteDrawVerts16( &verts[startVert], tempVerts, vertCount );
 }
 #else
@@ -484,7 +484,7 @@ idDrawVert* idGuiModel::AllocTris( int vertCount, const triIndex_t* tempIndexes,
 		}
 		return NULL;
 	}
-	
+
 	// break the current surface if we are changing to a new material or we can't
 	// fit the data into our allocated block
 	if( material != surf->material || glState != surf->glState || stereoType != surf->stereoType )
@@ -497,15 +497,15 @@ idDrawVert* idGuiModel::AllocTris( int vertCount, const triIndex_t* tempIndexes,
 		surf->glState = glState;
 		surf->stereoType = stereoType;
 	}
-	
+
 	int startVert = numVerts;
 	int startIndex = numIndexes;
-	
+
 	numVerts += vertCount;
 	numIndexes += indexCount;
-	
+
 	surf->numIndexes += indexCount;
-	
+
 	if( ( startIndex & 1 ) || ( indexCount & 1 ) )
 	{
 		// slow for write combined memory!
@@ -522,7 +522,7 @@ idDrawVert* idGuiModel::AllocTris( int vertCount, const triIndex_t* tempIndexes,
 			WriteIndexPair( indexPointer + startIndex + i, startVert + tempIndexes[i], startVert + tempIndexes[i + 1] );
 		}
 	}
-	
+
 	return vertexPointer + startVert;
 }
 #endif // #if defined(USE_GLES2)

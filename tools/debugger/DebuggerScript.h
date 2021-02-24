@@ -37,22 +37,22 @@ public:
 
 	rvDebuggerScript();
 	~rvDebuggerScript();
-	
+
 	bool	Load( const char* filename );
 	bool	Reload();
-	
+
 	const char*		GetFilename();
 	const char*		GetContents();
-	
+
 	idProgram&		GetProgram();
-	
+
 	bool			IsLineCode( int linenumber );
 	bool			IsFileModified( bool updateTime = false );
-	
+
 protected:
 
 	void			Unload();
-	
+
 	idProgram*				mProgram;
 	idUserInterfaceLocal*	mInterface;
 	char*					mContents;

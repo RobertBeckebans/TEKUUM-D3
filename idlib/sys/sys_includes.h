@@ -43,102 +43,102 @@ If you have questions concerning this license or the applicable additional terms
 // RB: windows specific stuff should only be set on Windows
 #if defined(_WIN32)
 
-#define _ATL_CSTRING_EXPLICIT_CONSTRUCTORS	// prevent auto literal to string conversion
+	#define _ATL_CSTRING_EXPLICIT_CONSTRUCTORS	// prevent auto literal to string conversion
 
-#ifndef _D3SDK
-#ifndef GAME_DLL
+	#ifndef _D3SDK
+		#ifndef GAME_DLL
 
-#ifndef WINVER
-#define WINVER				0x501
-#endif
+			#ifndef WINVER
+				#define WINVER				0x501
+			#endif
 
-#if 0
-// Dedicated server hits unresolved when trying to link this way now. Likely because of the 2010/Win7 transition? - TTimo
+			#if 0
+				// Dedicated server hits unresolved when trying to link this way now. Likely because of the 2010/Win7 transition? - TTimo
 
-#ifdef	ID_DEDICATED
-// dedicated sets windows version here
-#define	_WIN32_WINNT WINVER
-#define	WIN32_LEAN_AND_MEAN
-#else
-// non-dedicated includes MFC and sets windows version here
-#include "../tools/comafx/StdAfx.h"			// this will go away when MFC goes away
-#endif
+				#ifdef	ID_DEDICATED
+					// dedicated sets windows version here
+					#define	_WIN32_WINNT WINVER
+					#define	WIN32_LEAN_AND_MEAN
+				#else
+					// non-dedicated includes MFC and sets windows version here
+					#include "../tools/comafx/StdAfx.h"			// this will go away when MFC goes away
+				#endif
 
-// RB begin
-#elif defined(USE_MFC_TOOLS)
-// RB end
+				// RB begin
+			#elif defined(USE_MFC_TOOLS)
+				// RB end
 
-#include "../tools/comafx/StdAfx.h"
+				#include "../tools/comafx/StdAfx.h"
 
-#endif
+			#endif
 
-// RB begin
-#if !defined(_WINSOCKAPI_)
-#include <winsock2.h>
-#endif
-// RB end
+			// RB begin
+			#if !defined(_WINSOCKAPI_)
+				#include <winsock2.h>
+			#endif
+			// RB end
 
-#include <mmsystem.h>
-#include <mmreg.h>
+			#include <mmsystem.h>
+			#include <mmreg.h>
 
-#define DIRECTINPUT_VERSION  0x0800			// was 0x0700 with the old mssdk
-#define DIRECTSOUND_VERSION  0x0800
+			#define DIRECTINPUT_VERSION  0x0800			// was 0x0700 with the old mssdk
+			#define DIRECTSOUND_VERSION  0x0800
 
-#ifdef _MSC_VER
-#include <dsound.h>
-#else
-// DG: MinGW is incompatible with the original dsound.h because it contains MSVC specific annotations
-#include <wine-dsound.h>
+			#ifdef _MSC_VER
+				#include <dsound.h>
+			#else
+				// DG: MinGW is incompatible with the original dsound.h because it contains MSVC specific annotations
+				#include <wine-dsound.h>
 
-// RB: was missing in MinGW/include/winuser.h
-#ifndef MAPVK_VSC_TO_VK_EX
-#define MAPVK_VSC_TO_VK_EX 3
-#endif
+				// RB: was missing in MinGW/include/winuser.h
+				#ifndef MAPVK_VSC_TO_VK_EX
+					#define MAPVK_VSC_TO_VK_EX 3
+				#endif
 
-// RB begin
-#if defined(__MINGW32__)
-//#include <sal.h> 	// RB: missing __analysis_assume
-// including <sal.h> breaks some STL crap ...
+				// RB begin
+				#if defined(__MINGW32__)
+					//#include <sal.h> 	// RB: missing __analysis_assume
+					// including <sal.h> breaks some STL crap ...
 
-#ifndef __analysis_assume
-#define __analysis_assume( x )
-#endif
+					#ifndef __analysis_assume
+						#define __analysis_assume( x )
+					#endif
 
-#endif
-// RB end
+				#endif
+				// RB end
 
-#endif
+			#endif
 
 
 
-#include <dinput.h>
+			#include <dinput.h>
 
-#endif /* !GAME_DLL */
-#endif /* !_D3SDK */
+		#endif /* !GAME_DLL */
+	#endif /* !_D3SDK */
 
-// DG: intrinsics for GCC
-#if 0 //defined(__GNUC__) && defined(__SSE2__)
-#include <emmintrin.h>
-// TODO: else: alternative implementations?
-#endif
-// DG end
+	// DG: intrinsics for GCC
+	#if 0 //defined(__GNUC__) && defined(__SSE2__)
+		#include <emmintrin.h>
+		// TODO: else: alternative implementations?
+	#endif
+	// DG end
 
-#ifdef _MSC_VER
-//#include <intrin.h>			// needed for intrinsics like _mm_setzero_si28
+	#ifdef _MSC_VER
+		//#include <intrin.h>			// needed for intrinsics like _mm_setzero_si28
 
-#pragma warning(disable : 4100)				// unreferenced formal parameter
-#pragma warning(disable : 4127)				// conditional expression is constant
-#pragma warning(disable : 4244)				// conversion to smaller type, possible loss of data
-#pragma warning(disable : 4714)				// function marked as __forceinline not inlined
-#pragma warning(disable : 4996)				// unsafe string operations
-#endif // _MSC_VER
+		#pragma warning(disable : 4100)				// unreferenced formal parameter
+		#pragma warning(disable : 4127)				// conditional expression is constant
+		#pragma warning(disable : 4244)				// conversion to smaller type, possible loss of data
+		#pragma warning(disable : 4714)				// function marked as __forceinline not inlined
+		#pragma warning(disable : 4996)				// unsafe string operations
+	#endif // _MSC_VER
 
-#include <windows.h>						// for qgl.h
+	#include <windows.h>						// for qgl.h
 
 #elif defined(__linux__)
 
-#include <signal.h>
-#include <pthread.h>
+	#include <signal.h>
+	#include <pthread.h>
 
 #endif // #if defined(_WIN32)
 // RB end
@@ -156,8 +156,8 @@ If you have questions concerning this license or the applicable additional terms
 */
 
 #if !defined( _DEBUG ) && !defined( NDEBUG )
-// don't generate asserts
-#define NDEBUG
+	// don't generate asserts
+	#define NDEBUG
 #endif
 
 #include <stdio.h>
@@ -172,7 +172,7 @@ If you have questions concerning this license or the applicable additional terms
 #include <math.h>
 #include <limits.h>
 #if !defined(__ANDROID__)
-#include <memory>
+	#include <memory>
 #endif
 // RB: added <stdint.h> for missing uintptr_t with MinGW
 #include <stdint.h>

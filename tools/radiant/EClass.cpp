@@ -91,7 +91,7 @@ void CleanUpEntities()
 {
 	CleanEntityList( eclass );
 	CleanEntityList( g_md3Cache );
-	
+
 	if( eclass_bad )
 	{
 		delete eclass_bad;
@@ -104,12 +104,12 @@ void ExtendBounds( idVec3 v, idVec3& vMin, idVec3& vMax )
 	for( int i = 0 ; i < 3 ; i++ )
 	{
 		float	f = v[i];
-		
+
 		if( f < vMin[i] )
 		{
 			vMin[i] = f;
 		}
-		
+
 		if( f > vMax[i] )
 		{
 			vMax[i] = f;
@@ -121,18 +121,18 @@ bool LoadModel( const char* pLocation, eclass_t* e, idVec3& vMin, idVec3& vMax, 
 {
 	vMin[0] = vMin[1] = vMin[2] = 999999;
 	vMax[0] = vMax[1] = vMax[2] = -999999;
-	
+
 	// RB: added other model formats
 	if( strstr( pLocation, ".ase" ) != NULL || strstr( pLocation, ".dae" ) != NULL )	// FIXME: not correct!
 		// RB end
 	{
 		idBounds b;
 		e->modelHandle = renderModelManager->FindModel( pLocation );
-		
+
 		// RB begin
 		e->modelHandle->CreateVertexCache();
 		// RB end
-		
+
 		b = e->modelHandle->Bounds( NULL );
 		VectorCopy( b[0], vMin );
 		VectorCopy( b[1], vMax );
@@ -169,29 +169,29 @@ eclass_t* EClass_InitFromDict( const idDict* d, const char* name )
 {
 	eclass_t*			e;
 	const idKeyValue*	kv;
-	
+
 	// only include entityDefs with "editor_" values in them
 	if( !d->MatchPrefix( "editor_" ) )
 	{
 		return NULL;
 	}
-	
+
 	e = EClass_Alloc();
 	if( !e )
 	{
 		return NULL;
 	}
-	
+
 	e->defArgs = *d;
-	
+
 	idStr str;
 	idStr text;
 	idStr varname;
 	idStr defaultStr;
-	
+
 	e->name = name;
 	d->GetVector( "editor_color", "0 0 1", e->color );
-	
+
 	d->GetString( "editor_mins", "", str );
 	if( str != "?" )
 	{
@@ -203,17 +203,17 @@ eclass_t* EClass_InitFromDict( const idDict* d, const char* name )
 	{
 		e->fixedsize = false;
 	}
-	
-	
+
+
 	d->GetString( "editor_material", "", e->defMaterial );
-	
+
 	//str = d->GetString("model");
 	//if (str.Length()) {
 	//	e->entityModel = renderModelManager->FindModel(str);
 	//}
-	
+
 	str = "";
-	
+
 	// concatenate all editor usage comments
 	text = "";
 	kv = d->MatchPrefix( "editor_usage" );
@@ -226,9 +226,9 @@ eclass_t* EClass_InitFromDict( const idDict* d, const char* name )
 		}
 		kv = d->MatchPrefix( "editor_usage", kv );
 	}
-	
+
 	e->desc = text;
-	
+
 	str += "Spawn args:\n";
 	for( int i = 0; i < NumEvarPrefixes; i++ )
 	{
@@ -243,7 +243,7 @@ eclass_t* EClass_InitFromDict( const idDict* d, const char* name )
 			kv = d->MatchPrefix( EvarPrefixes[i].prefix, kv );
 		}
 	}
-	
+
 	/*
 		while( kv != NULL ) {
 			kv->key.Right( kv->key.Length() - 11, varname );
@@ -254,11 +254,11 @@ eclass_t* EClass_InitFromDict( const idDict* d, const char* name )
 			str += "\n";
 			kv = d->MatchPrefix( "editor_var ", kv );
 		}
-	
+
 		e->comments = Mem_CopyString( str.c_str() );
 	*/
-	
-	
+
+
 	// concatenate all variable comments
 	kv = d->MatchPrefix( "editor_copy" );
 	while( kv )
@@ -270,24 +270,24 @@ eclass_t* EClass_InitFromDict( const idDict* d, const char* name )
 		}
 		kv = d->MatchPrefix( "editor_copy", kv );
 	}
-	
+
 	// setup show flags
 	e->nShowFlags = 0;
 	if( d->GetBool( "editor_rotatable" ) )
 	{
 		e->nShowFlags |= ECLASS_ROTATABLE;
 	}
-	
+
 	if( d->GetBool( "editor_showangle" ) )
 	{
 		e->nShowFlags |= ECLASS_ANGLE;
 	}
-	
+
 	if( d->GetBool( "editor_mover" ) )
 	{
 		e->nShowFlags |= ECLASS_MOVER;
 	}
-	
+
 	if( d->GetBool( "editor_env" ) || idStr::Icmpn( e->name, "env_", 4 ) == 0 )
 	{
 		e->nShowFlags |= ( ECLASS_ENV | ECLASS_ROTATABLE );
@@ -296,17 +296,17 @@ eclass_t* EClass_InitFromDict( const idDict* d, const char* name )
 			e->defArgs.Set( "model", "" );
 		}
 	}
-	
+
 	if( d->GetBool( "editor_combatnode" ) )
 	{
 		e->nShowFlags |= ECLASS_COMBATNODE;
 	}
-	
+
 	if( d->GetBool( "editor_light" ) )
 	{
 		e->nShowFlags |= ECLASS_LIGHT;
 	}
-	
+
 	if( idStr::Icmp( e->name, "light" ) == 0 )
 	{
 		e->nShowFlags |= ECLASS_LIGHT;
@@ -335,21 +335,21 @@ eclass_t* EClass_InitFromDict( const idDict* d, const char* name )
 	{
 		e->nShowFlags |= ECLASS_LIQUID;
 	}
-	
+
 	return e;
 }
 
 void EClass_InsertSortedList( eclass_t*& pList, eclass_t* e )
 {
 	eclass_t*	s;
-	
+
 	if( !pList )
 	{
 		pList = e;
 		return;
 	}
-	
-	
+
+
 	s = pList;
 	if( stricmp( e->name, s->name ) < 0 )
 	{
@@ -357,7 +357,7 @@ void EClass_InsertSortedList( eclass_t*& pList, eclass_t* e )
 		pList = e;
 		return;
 	}
-	
+
 	do
 	{
 		if( !s->next || stricmp( e->name, s->next->name ) < 0 )
@@ -382,14 +382,14 @@ void Eclass_InsertAlphabetized( eclass_t* e )
 	EClass_InsertSortedList( eclass, e );
 #else
 	eclass_t*	s;
-	
+
 	if( !eclass )
 	{
 		eclass = e;
 		return;
 	}
-	
-	
+
+
 	s = eclass;
 	if( stricmp( e->name, s->name ) < 0 )
 	{
@@ -397,7 +397,7 @@ void Eclass_InsertAlphabetized( eclass_t* e )
 		eclass = e;
 		return;
 	}
-	
+
 	do
 	{
 		if( !s->next || stricmp( e->name, s->next->name ) < 0 )
@@ -428,7 +428,7 @@ void Eclass_InitForSourceDirectory( const char* path )
 			}
 		}
 	}
-	
+
 	eclass_bad = EClass_Alloc();
 	if( !eclass_bad )
 	{
@@ -445,12 +445,12 @@ eclass_t* Eclass_ForName( const char* name, bool has_brushes )
 {
 	eclass_t*	e;
 	char buff[1024];
-	
+
 	if( !name )
 	{
 		return eclass_bad;
 	}
-	
+
 	for( e = eclass; e; e = e->next )
 	{
 		if( !strcmp( name, e->name ) )
@@ -458,7 +458,7 @@ eclass_t* Eclass_ForName( const char* name, bool has_brushes )
 			return e;
 		}
 	}
-	
+
 	e = EClass_Alloc();
 	if( !e )
 	{
@@ -474,7 +474,7 @@ eclass_t* Eclass_ForName( const char* name, bool has_brushes )
 	e->mins.x = e->mins.y = e->mins.z = -8.0f;
 	e->maxs.x = e->maxs.y = e->maxs.z = 8.0f;
 	Eclass_InsertAlphabetized( e );
-	
+
 	return e;
 }
 
@@ -486,7 +486,7 @@ eclass_t* GetCachedModel( entity_t* pEntity, const char* pName, idVec3& vMin, id
 	{
 		return NULL;
 	}
-	
+
 	for( e = g_md3Cache; e ; e = e->next )
 	{
 		if( !strcmp( pName, e->name ) )
@@ -497,7 +497,7 @@ eclass_t* GetCachedModel( entity_t* pEntity, const char* pName, idVec3& vMin, id
 			return e;
 		}
 	}
-	
+
 	e = ( eclass_t* )Mem_ClearedAlloc( sizeof( *e ) );
 	memset( e, 0, sizeof( *e ) );
 	e->name = Mem_CopyString( pName );

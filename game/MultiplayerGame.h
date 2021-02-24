@@ -102,37 +102,37 @@ class idMultiplayerGame
 public:
 
 	idMultiplayerGame();
-	
+
 	void			Shutdown();
-	
+
 	// resets everything and prepares for a match
 	void			Reset();
-	
+
 	// setup local data for a new player
 	void			SpawnPlayer( int clientNum );
-	
+
 	// checks rules and updates state of the mp game
 	void			Run();
-	
+
 	// draws mp hud, scoredboard, etc..
 	bool			Draw( int clientNum );
-	
+
 	// updates a player vote
 	void			PlayerVote( int clientNum, playerVote_t vote );
-	
+
 	// updates frag counts and potentially ends the match in sudden death
 	void			PlayerDeath( idPlayer* dead, idPlayer* killer, bool telefrag );
-	
+
 	void			AddChatLine( VERIFY_FORMAT_STRING const char* fmt, ... );// ID_INSTANCE_ATTRIBUTE_PRINTF( 2, 3 );
-	
+
 	void			UpdateMainGui();
 	idUserInterface* StartMenu();
 	const char*		HandleGuiCommands( const char* menuCommand );
 	void			SetMenuSkin();
-	
+
 	void			WriteToSnapshot( idBitMsgDelta& msg ) const;
 	void			ReadFromSnapshot( const idBitMsgDelta& msg );
-	
+
 	// game state
 	typedef enum
 	{
@@ -147,10 +147,10 @@ public:
 	} gameState_t;
 	static const char* GameStateStrings[ STATE_COUNT ];
 	idMultiplayerGame::gameState_t		GetGameState() const;
-	
+
 	static const char* GlobalSoundStrings[ SND_COUNT ];
 	void			PlayGlobalSound( int to, snd_evt_t evt, const char* shader = NULL );
-	
+
 	// more compact than a chat line
 	typedef enum
 	{
@@ -172,14 +172,14 @@ public:
 		MSG_COUNT
 	} msg_evt_t;
 	void			PrintMessageEvent( int to, msg_evt_t evt, int parm1 = -1, int parm2 = -1 );
-	
+
 	void			DisconnectClient( int clientNum );
 	static void		ForceReady_f( const idCmdArgs& args );
 	static void		DropWeapon_f( const idCmdArgs& args );
 	static void		MessageMode_f( const idCmdArgs& args );
 	static void		VoiceChat_f( const idCmdArgs& args );
 	static void		VoiceChatTeam_f( const idCmdArgs& args );
-	
+
 	typedef enum
 	{
 		VOTE_RESTART = 0,
@@ -193,7 +193,7 @@ public:
 		VOTE_COUNT,
 		VOTE_NONE
 	} vote_flags_t;
-	
+
 	typedef enum
 	{
 		VOTE_UPDATE,
@@ -202,7 +202,7 @@ public:
 		VOTE_ABORTED,
 		VOTE_RESET		// tell clients to reset vote state
 	} vote_result_t;
-	
+
 	static void		Vote_f( const idCmdArgs& args );
 	static void		CallVote_f( const idCmdArgs& args );
 	void			ClientCallVote( vote_flags_t voteIndex, const char* voteValue );
@@ -212,7 +212,7 @@ public:
 	void			ClientUpdateVote( vote_result_t result, int yesCount, int noCount );
 	void			CastVote( int clientNum, bool vote );
 	void			ExecuteVote();
-	
+
 	void			WantKilled( int clientNum );
 	int				NumActualClients( bool countSpectators, int* teamcount = NULL );
 	void			DropWeapon( int clientNum );
@@ -222,45 +222,45 @@ public:
 	bool			IsPureReady() const;
 	void			ProcessChatMessage( int clientNum, bool team, const char* name, const char* text, const char* sound );
 	void			ProcessVoiceChat( int clientNum, bool team, int index );
-	
+
 	void			Precache();
-	
+
 	// throttle UI switch rates
 	void			ThrottleUserInfo();
 	void			ToggleSpectate();
 	void			ToggleReady();
 	void			ToggleTeam();
-	
+
 	void			ClearFrags( int clientNum );
-	
+
 	void			EnterGame( int clientNum );
 	bool			CanPlay( idPlayer* p );
 	bool			IsInGame( int clientNum );
 	bool			WantRespawn( idPlayer* p );
-	
+
 	void			ServerWriteInitialReliableMessages( int clientNum );
 	void			ClientReadStartState( const idBitMsg& msg );
 	void			ClientReadWarmupTime( const idBitMsg& msg );
-	
+
 	void			ServerClientConnect( int clientNum );
-	
+
 	void			PlayerStats( int clientNum, char* data, const int len );
-	
+
 private:
 	static const char*	MPGuis[];
 	static const char*	ThrottleVars[];
 	static const char*	ThrottleVarsInEnglish[];
 	static const int	ThrottleDelay[];
-	
+
 	// state vars
 	gameState_t		gameState;				// what state the current game is in
 	gameState_t		nextState;				// state to switch to when nextStateSwitch is hit
 	int				pingUpdateTime;			// time to update ping
-	
+
 	mpPlayerState_t	playerState[ MAX_CLIENTS ];
-	
+
 	// keep track of clients which are willingly in spectator mode
-	
+
 	// vote vars
 	vote_flags_t	vote;					// active vote or VOTE_NONE
 	int				voteTimeOut;			// when the current vote expires
@@ -271,20 +271,20 @@ private:
 	idStr			voteString;				// the vote string ( client )
 	bool			voted;					// hide vote box ( client )
 	int				kickVoteMap[ MAX_CLIENTS ];
-	
+
 	// time related
 	int				nextStateSwitch;		// time next state switch
 	int				warmupEndTime;			// warmup till..
 	int				matchStartedTime;		// time current match started
-	
+
 	// tourney
 	int				currentTourneyPlayer[2];// our current set of players
 	int				lastWinner;				// plays again
-	
+
 	// warmup
 	idStr			warmupText;				// text shown in warmup area of screen
 	bool			one, two, three;		// keeps count down voice from repeating
-	
+
 	// guis
 	idUserInterface* scoreBoard;			// scoreboard
 	idUserInterface* spectateGui;			// spectate info
@@ -295,34 +295,34 @@ private:
 	int				currentMenu;			// 0 - none, 1 - mainGui, 2 - msgmodeGui
 	int				nextMenu;				// if 0, will do mainGui
 	bool			bCurrentMenuMsg;		// send menu state updates to server
-	
+
 	// chat data
 	mpChatLine_t	chatHistory[ NUM_CHAT_NOTIFY ];
 	int				chatHistoryIndex;
 	int				chatHistorySize;		// 0 <= x < NUM_CHAT_NOTIFY
 	bool			chatDataUpdated;
 	int				lastChatLineTime;
-	
+
 	// rankings are used by UpdateScoreboard and UpdateHud
 	int				numRankedPlayers;		// ranked players, others may be empty slots or spectators
 	idPlayer* 		rankedPlayers[MAX_CLIENTS];
-	
+
 	bool			pureReady;				// defaults to false, set to true once server game is running with pure checksums
 	int				fragLimitTimeout;
-	
+
 	int				switchThrottle[ 3 ];
 	int				voiceChatThrottle;
-	
+
 	gameType_t		lastGameType;			// for restarts
 	int				startFragLimit;			// synchronize to clients in initial state, set on -> GAMEON
-	
+
 private:
 	void			UpdatePlayerRanks();
-	
+
 	// updates the passed gui with current score information
 	void			UpdateRankColor( idUserInterface* gui, const char* mask, int i, const idVec3& vec );
 	void			UpdateScoreboard( idUserInterface* scoreBoard, idPlayer* player );
-	
+
 	void			ClearGuis();
 	void			DrawScoreBoard( idPlayer* player );
 	void			UpdateHud( idPlayer* player, idUserInterface* hud );

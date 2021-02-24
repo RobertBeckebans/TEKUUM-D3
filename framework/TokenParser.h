@@ -148,20 +148,20 @@ public:
 	// RB begin
 	void			LoadFromFile( const char* filename );
 	void			LoadFromFile( idFile* file );
-	
+
 	void			WriteToFile( const char* filename );
 	void			WriteToFile( idFile* file );
-	
+
 	void			LoadFromParser( idParser& parser, const char* sourceName );
 	void			LoadFromLexer( idLexer& parser, const char* sourceName );
 	// RB			 end
-	
+
 	bool			StartParsing( const char* fileName );
 	void			DoneParsing()
 	{
 		currentTokenList = -1;
 	}
-	
+
 	bool			IsLoaded()
 	{
 		return tokens.Num() > 0;
@@ -169,13 +169,13 @@ public:
 	bool			ReadToken( idToken* tok );
 	// RB begin
 	int				ReadTokenOnLine( idToken* token );
-	
+
 	// skip the rest of the current line
 	int				SkipRestOfLine();
-	
+
 	// parse the rest of the line
 	const char* 	ParseRestOfLine( idStr& out );
-	
+
 	// RB end
 	int				ExpectTokenString( const char* string );
 	int				ExpectTokenType( int type, int subtype, idToken* token );
@@ -187,14 +187,14 @@ public:
 	int				ParseInt();
 	bool			ParseBool();
 	float			ParseFloat( bool* errorFlag = NULL );
-	
+
 	// RB begin
 	// parse matrices with floats
 	int				Parse1DMatrix( int x, float* m );
 	int				Parse2DMatrix( int y, int x, float* m );
 	int				Parse3DMatrix( int z, int y, int x, float* m );
 	// RB end
-	
+
 	void			UpdateTimeStamp( ID_TIME_T& t )
 	{
 		if( t > timeStamp )

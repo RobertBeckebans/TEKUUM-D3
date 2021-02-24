@@ -295,7 +295,7 @@ void idMsgChannel::Init( const netadr_t adr, const int id )
 	this->id = id;
 	this->maxRate = 50000;
 	this->compressor = idCompressor::AllocRunLength_ZeroBased();
-	
+
 	lastSendTime = 0;
 	lastDataBytes = 0;
 	outgoingRateTime = 0;
@@ -351,7 +351,7 @@ idMsgChannel::ReadyToSend
 bool idMsgChannel::ReadyToSend( const int time ) const
 {
 	int deltaTime;
-	
+
 	if( !maxRate )
 	{
 		return true;
@@ -373,23 +373,23 @@ void idMsgChannel::WriteMessageData( idBitMsg& out, const idBitMsg& msg )
 {
 	idBitMsg tmp;
 	byte tmpBuf[MAX_MESSAGE_SIZE];
-	
+
 	tmp.Init( tmpBuf, sizeof( tmpBuf ) );
-	
+
 	// write acknowledgement of last received reliable message
 	tmp.WriteLong( reliableReceive.GetLast() );
-	
+
 	// write reliable messages
 	reliableSend.CopyToBuffer( tmp.GetData() + tmp.GetSize() );
 	tmp.SetSize( tmp.GetSize() + reliableSend.GetTotalSize() );
 	tmp.WriteShort( 0 );
-	
+
 	// write data
 	tmp.WriteData( msg.GetData(), msg.GetSize() );
-	
+
 	// write message size
 	out.WriteShort( tmp.GetSize() );
-	
+
 	// compress message
 	idFile_BitMsg file( out );
 	compressor->Init( &file, true, 3 );
@@ -406,20 +406,20 @@ idMsgChannel::ReadMessageData
 bool idMsgChannel::ReadMessageData( idBitMsg& out, const idBitMsg& msg )
 {
 	int reliableAcknowledge, reliableMessageSize, reliableSequence;
-	
+
 	// read message size
 	out.SetSize( msg.ReadShort() );
-	
+
 	// decompress message
 	idFile_BitMsg file( msg );
 	compressor->Init( &file, false, 3 );
 	compressor->Read( out.GetData(), out.GetSize() );
 	incomingCompression = compressor->GetCompressionRatio();
 	out.BeginReading();
-	
+
 	// read acknowledgement of sent reliable messages
 	reliableAcknowledge = out.ReadLong();
-	
+
 	// remove acknowledged reliable messages
 	while( reliableSend.GetFirst() <= reliableAcknowledge )
 	{
@@ -428,7 +428,7 @@ bool idMsgChannel::ReadMessageData( idBitMsg& out, const idBitMsg& msg )
 			break;
 		}
 	}
-	
+
 	// read reliable messages
 	reliableMessageSize = out.ReadShort();
 	while( reliableMessageSize != 0 )
@@ -446,7 +446,7 @@ bool idMsgChannel::ReadMessageData( idBitMsg& out, const idBitMsg& msg )
 		out.ReadData( NULL, reliableMessageSize );
 		reliableMessageSize = out.ReadShort();
 	}
-	
+
 	return true;
 }
 
@@ -462,45 +462,45 @@ void idMsgChannel::SendNextFragment( idPort& port, const int time )
 	idBitMsg	msg;
 	byte		msgBuf[MAX_PACKETLEN];
 	int			fragLength;
-	
+
 	if( remoteAddress.type == NA_BAD )
 	{
 		return;
 	}
-	
+
 	if( !unsentFragments )
 	{
 		return;
 	}
-	
+
 	// write the packet
 	msg.Init( msgBuf, sizeof( msgBuf ) );
 	msg.WriteShort( id );
 	msg.WriteLong( outgoingSequence | FRAGMENT_BIT );
-	
+
 	fragLength = FRAGMENT_SIZE;
 	if( unsentFragmentStart + fragLength > unsentMsg.GetSize() )
 	{
 		fragLength = unsentMsg.GetSize() - unsentFragmentStart;
 	}
-	
+
 	msg.WriteShort( unsentFragmentStart );
 	msg.WriteShort( fragLength );
 	msg.WriteData( unsentMsg.GetData() + unsentFragmentStart, fragLength );
-	
+
 	// send the packet
 	port.SendPacket( remoteAddress, msg.GetData(), msg.GetSize() );
-	
+
 	// update rate control variables
 	UpdateOutgoingRate( time, msg.GetSize() );
-	
+
 	if( net_channelShowPackets.GetBool() )
 	{
 		common->Printf( "%d send %4i : s = %i fragment = %i,%i\n", id, msg.GetSize(), outgoingSequence - 1, unsentFragmentStart, fragLength );
 	}
-	
+
 	unsentFragmentStart += fragLength;
-	
+
 	// this exit condition is a little tricky, because a packet
 	// that is exactly the fragment length still needs to send
 	// a second packet of zero length so that the other side
@@ -523,64 +523,64 @@ idMsgChannel::SendMessage
 int idMsgChannel::SendMessage( idPort& port, const int time, const idBitMsg& msg )
 {
 	int totalLength;
-	
+
 	if( remoteAddress.type == NA_BAD )
 	{
 		return -1;
 	}
-	
+
 	if( unsentFragments )
 	{
 		common->Error( "idMsgChannel::SendMessage: called with unsent fragments left" );
 		return -1;
 	}
-	
+
 	totalLength = 4 + reliableSend.GetTotalSize() + 4 + msg.GetSize();
-	
+
 	if( totalLength > MAX_MESSAGE_SIZE )
 	{
 		common->Printf( "idMsgChannel::SendMessage: message too large, length = %i\n", totalLength );
 		return -1;
 	}
-	
+
 	unsentMsg.Init( unsentBuffer, sizeof( unsentBuffer ) );
 	unsentMsg.BeginWriting();
-	
+
 	// fragment large messages
 	if( totalLength >= FRAGMENT_SIZE )
 	{
 		unsentFragments = true;
 		unsentFragmentStart = 0;
-		
+
 		// write out the message data
 		WriteMessageData( unsentMsg, msg );
-		
+
 		// send the first fragment now
 		SendNextFragment( port, time );
-		
+
 		return outgoingSequence;
 	}
-	
+
 	// write the header
 	unsentMsg.WriteShort( id );
 	unsentMsg.WriteLong( outgoingSequence );
-	
+
 	// write out the message data
 	WriteMessageData( unsentMsg, msg );
-	
+
 	// send the packet
 	port.SendPacket( remoteAddress, unsentMsg.GetData(), unsentMsg.GetSize() );
-	
+
 	// update rate control variables
 	UpdateOutgoingRate( time, unsentMsg.GetSize() );
-	
+
 	if( net_channelShowPackets.GetBool() )
 	{
 		common->Printf( "%d send %4i : s = %i ack = %i\n", id, unsentMsg.GetSize(), outgoingSequence - 1, incomingSequence );
 	}
-	
+
 	outgoingSequence++;
-	
+
 	return ( outgoingSequence - 1 );
 }
 
@@ -599,7 +599,7 @@ bool idMsgChannel::Process( const netadr_t from, int time, idBitMsg& msg, int& s
 	int			fragStart, fragLength, dropped;
 	bool		fragmented;
 	idBitMsg	fragMsg;
-	
+
 	// the IP port can't be used to differentiate them, because
 	// some address translating routers periodically change UDP
 	// port assignments
@@ -608,13 +608,13 @@ bool idMsgChannel::Process( const netadr_t from, int time, idBitMsg& msg, int& s
 		common->Printf( "idMsgChannel::Process: fixing up a translated port\n" );
 		remoteAddress.port = from.port;
 	}
-	
+
 	// update incoming rate
 	UpdateIncomingRate( time, msg.GetSize() );
-	
+
 	// get sequence numbers
 	sequence = msg.ReadLong();
-	
+
 	// check for fragment information
 	if( sequence & FRAGMENT_BIT )
 	{
@@ -625,7 +625,7 @@ bool idMsgChannel::Process( const netadr_t from, int time, idBitMsg& msg, int& s
 	{
 		fragmented = false;
 	}
-	
+
 	// read the fragment information
 	if( fragmented )
 	{
@@ -637,7 +637,7 @@ bool idMsgChannel::Process( const netadr_t from, int time, idBitMsg& msg, int& s
 		fragStart = 0;		// stop warning message
 		fragLength = 0;
 	}
-	
+
 	if( net_channelShowPackets.GetBool() )
 	{
 		if( fragmented )
@@ -649,7 +649,7 @@ bool idMsgChannel::Process( const netadr_t from, int time, idBitMsg& msg, int& s
 			common->Printf( "%d recv %4i : s = %i\n", id, msg.GetSize(), sequence );
 		}
 	}
-	
+
 	//
 	// discard out of order or duplicated packets
 	//
@@ -661,7 +661,7 @@ bool idMsgChannel::Process( const netadr_t from, int time, idBitMsg& msg, int& s
 		}
 		return false;
 	}
-	
+
 	//
 	// dropped packets don't keep this message from being used
 	//
@@ -674,7 +674,7 @@ bool idMsgChannel::Process( const netadr_t from, int time, idBitMsg& msg, int& s
 		}
 		UpdatePacketLoss( time, 0, dropped );
 	}
-	
+
 	//
 	// if the message is fragmented
 	//
@@ -686,7 +686,7 @@ bool idMsgChannel::Process( const netadr_t from, int time, idBitMsg& msg, int& s
 			fragmentSequence = sequence;
 			fragmentLength = 0;
 		}
-		
+
 		// if we missed a fragment, dump the message
 		if( fragStart != fragmentLength )
 		{
@@ -699,7 +699,7 @@ bool idMsgChannel::Process( const netadr_t from, int time, idBitMsg& msg, int& s
 			UpdatePacketLoss( time, 0, 1 );
 			return false;
 		}
-		
+
 		// copy the fragment to the fragment buffer
 		if( fragLength < 0 || fragLength > msg.GetRemaingData() || fragmentLength + fragLength > sizeof( fragmentBuffer ) )
 		{
@@ -710,19 +710,19 @@ bool idMsgChannel::Process( const netadr_t from, int time, idBitMsg& msg, int& s
 			UpdatePacketLoss( time, 0, 1 );
 			return false;
 		}
-		
+
 		memcpy( fragmentBuffer + fragmentLength, msg.GetData() + msg.GetReadCount(), fragLength );
-		
+
 		fragmentLength += fragLength;
-		
+
 		UpdatePacketLoss( time, 1, 0 );
-		
+
 		// if this wasn't the last fragment, don't process anything
 		if( fragLength == FRAGMENT_SIZE )
 		{
 			return false;
 		}
-		
+
 	}
 	else
 	{
@@ -730,19 +730,19 @@ bool idMsgChannel::Process( const netadr_t from, int time, idBitMsg& msg, int& s
 		fragmentLength = msg.GetRemaingData();
 		UpdatePacketLoss( time, 1, 0 );
 	}
-	
+
 	fragMsg.Init( fragmentBuffer, fragmentLength );
 	fragMsg.SetSize( fragmentLength );
 	fragMsg.BeginReading();
-	
+
 	incomingSequence = sequence;
-	
+
 	// read the message data
 	if( !ReadMessageData( msg, fragMsg ) )
 	{
 		return false;
 	}
-	
+
 	return true;
 }
 
@@ -754,7 +754,7 @@ idMsgChannel::SendReliableMessage
 bool idMsgChannel::SendReliableMessage( const idBitMsg& msg )
 {
 	bool result;
-	
+
 	assert( remoteAddress.type != NA_BAD );
 	if( remoteAddress.type == NA_BAD )
 	{
@@ -778,7 +778,7 @@ bool idMsgChannel::GetReliableMessage( idBitMsg& msg )
 {
 	int size;
 	bool result;
-	
+
 	result = reliableReceive.Get( msg.GetData(), size );
 	msg.SetSize( size );
 	msg.BeginReading();
@@ -819,7 +819,7 @@ void idMsgChannel::UpdateOutgoingRate( const int time, const int size )
 	}
 	lastDataBytes += size;
 	lastSendTime = time;
-	
+
 	// update outgoing rate variables
 	if( time - outgoingRateTime > 1000 )
 	{

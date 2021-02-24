@@ -34,9 +34,9 @@ If you have questions concerning this license or the applicable additional terms
 #include "GLWidget.h"
 
 #ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
+	#define new DEBUG_NEW
+	#undef THIS_FILE
+	static char THIS_FILE[] = __FILE__;
 #endif
 
 
@@ -59,27 +59,27 @@ static idMiniDrawVert cubeData[] =
 	idMiniDrawVert( +1.0, -1.0, +1.0, 1.0, 0.0 ),
 	idMiniDrawVert( +1.0, +1.0, +1.0, 1.0, 1.0 ),
 	idMiniDrawVert( -1.0, +1.0, +1.0, 0.0, 1.0 ),
-	
+
 	idMiniDrawVert( -1.0, -1.0, -1.0, 1.0, 0.0 ),
 	idMiniDrawVert( -1.0, +1.0, +1.0, 1.0, 1.0 ),
 	idMiniDrawVert( +1.0, +1.0, -1.0, 0.0, 1.0 ),
 	idMiniDrawVert( +1.0, -1.0, -1.0, 0.0, 0.0 ),
-	
+
 	idMiniDrawVert( -1.0, +1.0, -1.0, 0.0, 1.0 ),
 	idMiniDrawVert( -1.0, +1.0, +1.0, 0.0, 0.0 ),
 	idMiniDrawVert( +1.0, +1.0, +1.0, 1.0, 0.0 ),
 	idMiniDrawVert( +1.0, +1.0, -1.0, 1.0, 1.0 ),
-	
+
 	idMiniDrawVert( -1.0, -1.0, -1.0, 1.0, 1.0 ),
 	idMiniDrawVert( +1.0, -1.0, -1.0, 0.0, 1.0 ),
 	idMiniDrawVert( +1.0, -1.0, +1.0, 0.0, 0.0 ),
 	idMiniDrawVert( -1.0, -1.0, +1.0, 1.0, 0.0 ),
-	
+
 	idMiniDrawVert( +1.0, -1.0, -1.0, 1.0, 0.0 ),
 	idMiniDrawVert( +1.0, +1.0, -1.0, 1.0, 1.0 ),
 	idMiniDrawVert( +1.0, +1.0, +1.0, 0.0, 1.0 ),
 	idMiniDrawVert( +1.0, -1.0, +1.0, 0.0, 0.0 ),
-	
+
 	idMiniDrawVert( -1.0, -1.0, -1.0, 0.0, 0.0 ),
 	idMiniDrawVert( -1.0, -1.0, +1.0, 1.0, 0.0 ),
 	idMiniDrawVert( -1.0, +1.0, +1.0, 1.0, 1.0 ),
@@ -139,7 +139,7 @@ END_MESSAGE_MAP()
 BOOL idGLWidget::PreCreateWindow( CREATESTRUCT& cs )
 {
 	// TODO: Add your specialized code here and/or call the base class
-	
+
 	return CWnd::PreCreateWindow( cs );
 }
 
@@ -149,13 +149,13 @@ BOOL idGLWidget::Create( LPCTSTR lpszClassName, LPCTSTR lpszWindowName, DWORD dw
 	{
 		return FALSE;
 	}
-	
+
 	CDC* dc = GetDC();
 	QEW_SetupPixelFormat( dc->m_hDC, false );
 	ReleaseDC( dc );
-	
+
 	return TRUE;
-	
+
 }
 
 void idGLWidget::OnPaint()
@@ -169,30 +169,30 @@ void idGLWidget::OnPaint()
 		initialized = true;
 	}
 	CPaintDC dc( this ); // device context for painting
-	
+
 	CRect rect;
 	GetClientRect( rect );
-	
+
 	if( !wglMakeCurrent( dc.m_hDC, win32.hGLRC ) )
 	{
 	}
-	
+
 	// RB: go back to fixed function pipeline
 	renderProgManager.Unbind();
 	// RB end
-	
+
 	glViewport( 0, 0, rect.Width(), rect.Height() );
 	glScissor( 0, 0, rect.Width(), rect.Height() );
 	glMatrixMode( GL_PROJECTION );
 	glLoadIdentity();
 	glClearColor( 0.4f, 0.4f, 0.4f, 0.7f );
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-	
-	
+
+
 	glDisable( GL_DEPTH_TEST );
 	glDisable( GL_BLEND );
 	glOrtho( 0, rect.Width(), 0, rect.Height(), -256, 256 );
-	
+
 	if( drawable )
 	{
 		drawable->draw( 1, 1, rect.Width() - 1, rect.Height() - 1 );
@@ -206,11 +206,11 @@ void idGLWidget::OnPaint()
 		glClearColor( 0.4f, 0.4f, 0.4f, 0.7f );
 		glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 	}
-	
+
 	SwapBuffers( dc );
 	glFlush();
 	wglMakeCurrent( win32.hDC, win32.hGLRC );
-	
+
 }
 
 extern bool Sys_KeyDown( int key );
@@ -242,13 +242,13 @@ void idGLDrawable::mouseMove( float x, float y )
 			// scale
 			float* px = &x;
 			float* px2 = &pressX;
-			
+
 			if( fDiff( y, pressY ) > fDiff( x, pressX ) )
 			{
 				px = &y;
 				px2 = &pressY;
 			}
-			
+
 			if( *px > *px2 )
 			{
 				// zoom in
@@ -267,10 +267,10 @@ void idGLDrawable::mouseMove( float x, float y )
 					scale = 0.001f;
 				}
 			}
-			
+
 			*px2 = *px;
 			::SetCursorPos( pressX, pressY );
-			
+
 		}
 		else if( Sys_KeyDown( VK_SHIFT ) )
 		{
@@ -316,7 +316,7 @@ void idGLDrawable::draw( int x, int y, int w, int h )
 	glColor3f( 1, 1, 1 );
 	glVertex2f( w - 3, y + 3 );
 	glEnd();
-	
+
 }
 
 static int viewAngle = -98;
@@ -339,13 +339,13 @@ void idGLDrawableMaterial::mouseMove( float x, float y )
 			// scale
 			float* px = &x;
 			float* px2 = &pressX;
-			
+
 			if( fDiff( y, pressY ) > fDiff( x, pressX ) )
 			{
 				px = &y;
 				px2 = &pressY;
 			}
-			
+
 			if( *px > *px2 )
 			{
 				// zoom in
@@ -418,7 +418,7 @@ void idGLDrawableMaterial::draw( int x, int y, int w, int h )
 		glMatrixMode( GL_PROJECTION );
 		glClearColor( 0.1f, 0.1f, 0.1f, 0.0f );
 		glClear( GL_COLOR_BUFFER_BIT );
-		
+
 		if( worldDirty )
 		{
 			InitWorld();
@@ -432,53 +432,53 @@ void idGLDrawableMaterial::draw( int x, int y, int w, int h )
 			spawnArgs.Set( "_color", str );
 			gameEdit->ParseSpawnArgsToRenderLight( &spawnArgs, &parms );
 			lightDef = world->AddLightDef( &parms );
-			
+
 			idImage* img = ( mat->GetNumStages() > 0 ) ? mat->GetStage( 0 )->texture.image : mat->GetEditorImage();
-			
+
 			if( img == NULL )
 			{
 				common->Warning( "Unable to load image for preview for %s", mat->GetName() );
 				return;
 			}
-			
+
 			int width = img->GetUploadWidth();
 			int height = img->GetUploadHeight();
-			
+
 			width *= scale;
 			height *= scale;
-			
+
 			srfTriangles_t* tris = worldModel->AllocSurfaceTriangles( 4, 6 );
 			tris->numVerts = 4;
 			tris->numIndexes = 6;
-			
+
 			tris->indexes[0] = 0;
 			tris->indexes[1] = 1;
 			tris->indexes[2] = 2;
 			tris->indexes[3] = 3;
 			tris->indexes[4] = 1;
 			tris->indexes[5] = 0;
-			
+
 			// RB begin
 			tris->verts[0].xyz.x = 64;
 			tris->verts[0].xyz.y = -xOffset + 0 - width / 2;
 			tris->verts[0].xyz.z = yOffset + 0 - height / 2;
 			tris->verts[0].SetTexCoord( 1, 1 );
-			
+
 			tris->verts[1].xyz.x = 64;
 			tris->verts[1].xyz.y = -xOffset + width / 2;
 			tris->verts[1].xyz.z = yOffset + height / 2;
 			tris->verts[1].SetTexCoord( 0, 0 );
-			
+
 			tris->verts[2].xyz.x = 64;
 			tris->verts[2].xyz.y = -xOffset + 0 - width / 2;
 			tris->verts[2].xyz.z = yOffset + height / 2;
 			tris->verts[2].SetTexCoord( 1, 0 );
-			
+
 			tris->verts[3].xyz.x = 64;
 			tris->verts[3].xyz.y = -xOffset + width / 2;
 			tris->verts[3].xyz.z = yOffset + 0 - height / 2;
 			tris->verts[3].SetTexCoord( 0, 1 );
-			
+
 			idVec3 normal = tris->verts[1].xyz.Cross( tris->verts[3].xyz );
 			tris->verts[0].SetNormal( normal );
 			tris->verts[1].SetNormal( normal );
@@ -486,14 +486,14 @@ void idGLDrawableMaterial::draw( int x, int y, int w, int h )
 			tris->verts[3].SetNormal( normal );
 			AddTris( tris, mat );
 			// RB end
-			
+
 			worldModel->FinishSurfaces();
 			// RB begin
 			//worldModel->CreateVertexCache();
 			// RB end
-			
+
 			renderEntity_t worldEntity;
-			
+
 			memset( &worldEntity, 0, sizeof( worldEntity ) );
 			if( mat->HasGui() )
 			{
@@ -506,59 +506,59 @@ void idGLDrawableMaterial::draw( int x, int y, int w, int h )
 			worldEntity.shaderParms[2] = 1;
 			worldEntity.shaderParms[3] = 1;
 			modelDef = world->AddEntityDef( &worldEntity );
-			
+
 			worldDirty = false;
-			
+
 			// RB: avoid crash in R_AddSingleLight
 			world->GenerateAllInteractions();
 			// RB end
 		}
-		
+
 		// RB: BFG interface
-		
+
 		renderView_t	refdef;
 		// render it
 		//renderSystem->BeginFrame( w, h );
-		
+
 		int oldNativeScreenWidth = glConfig.nativeScreenWidth;
 		int oldNativeScreenHeight = glConfig.nativeScreenHeight;
-		
+
 		glConfig.nativeScreenWidth = w;
 		glConfig.nativeScreenHeight = h;
-		
+
 		memset( &refdef, 0, sizeof( refdef ) );
 		refdef.vieworg.Set( viewAngle, 0, 0 );
-		
+
 		refdef.viewaxis = idAngles( 0, 0, 0 ).ToMat3();
 		refdef.shaderParms[0] = 1;
 		refdef.shaderParms[1] = 1;
 		refdef.shaderParms[2] = 1;
 		refdef.shaderParms[3] = 1;
-		
+
 		//refdef.width = SCREEN_WIDTH;
 		//refdef.height = SCREEN_HEIGHT;
 		refdef.fov_x = 90;
 		refdef.fov_y = 2 * atan( ( float )h / w ) * idMath::M_RAD2DEG;
-		
+
 		refdef.time[0] = eventLoop->Milliseconds();
-		
+
 		world->RenderScene( &refdef );
-		
+
 		//int frontEnd, backEnd;
 		//renderSystem->EndFrame( &frontEnd, &backEnd );
-		
+
 		const emptyCommand_t* cmd = renderSystem->SwapCommandBuffers( NULL, NULL, NULL, NULL, true );
 		renderSystem->RenderCommandBuffers( cmd );
-		
+
 		glConfig.nativeScreenWidth = oldNativeScreenWidth;
 		glConfig.nativeScreenHeight = oldNativeScreenHeight;
-		
+
 		glMatrixMode( GL_MODELVIEW );
 		glLoadIdentity();
-		
+
 		// RB end
 	}
-	
+
 }
 
 void idGLDrawableMaterial::setMedia( const char* name )
@@ -585,10 +585,10 @@ void idGLDrawableMaterial::setMedia( const char* name )
 		material = NULL;
 	}
 	// set scale to get a good fit
-	
+
 	if( material && img )
 	{
-	
+
 		float size = ( img->GetUploadWidth() > img->GetUploadHeight() ) ? img->GetUploadWidth() : img->GetUploadHeight();
 		// use 128 as base scale of 1.0
 		scale = 128.0 / size;
@@ -625,7 +625,7 @@ void idGLDrawableModel::setMedia( const char* name )
 	}
 	// RB end
 #endif
-	
+
 	worldModel = renderModelManager->FindModel( name );
 	worldDirty = true;
 	xOffset = 0.0;
@@ -646,7 +646,7 @@ void idGLDrawableModel::buttonDown( int _button, float x, float y )
 {
 	pressX = x;
 	pressY = y;
-	
+
 	lastPress.y = -( float )( 2 * x - rect.z ) / rect.z;
 	lastPress.x = -( float )( 2 * y - rect.w ) / rect.w;
 	lastPress.z = 0.0f;
@@ -674,15 +674,15 @@ void idGLDrawableModel::mouseMove( float x, float y )
 			float len = ( lastPress - to ).Length() / ( 2.0f * radius );
 			len = idMath::ClampFloat( -1.0f, 1.0f, len );
 			float phi = 2.0f * asin( len ) ;
-			
+
 			axis.Normalize();
 			axis *= sin( phi / 2.0f );
 			idQuat rot( axis.z, axis.y, axis.x, cos( phi / 2.0f ) );
 			rot.Normalize();
-			
+
 			rotation *= rot;
 			rotation.Normalize();
-			
+
 			lastPress = to;
 			lastPress.z = 0.0f;
 		}
@@ -695,13 +695,13 @@ void idGLDrawableModel::mouseMove( float x, float y )
 				// scale
 				float* px = &x;
 				float* px2 = &pressX;
-				
+
 				if( fDiff( y, pressY ) > fDiff( x, pressX ) )
 				{
 					px = &y;
 					px2 = &pressY;
 				}
-				
+
 				if( *px > *px2 )
 				{
 					light += 0.05f;
@@ -765,15 +765,15 @@ void idGLDrawableModel::draw( int x, int y, int w, int h )
 	{
 		//return;
 	}
-	
+
 	rect.Set( x, y, w, h );
-	
+
 	glViewport( x, y, w, h );
 	glScissor( x, y, w, h );
 	glMatrixMode( GL_PROJECTION );
 	glClearColor( 0.1f, 0.1f, 0.1f, 0.0f );
 	glClear( GL_COLOR_BUFFER_BIT );
-	
+
 	if( worldDirty )
 	{
 		//InitWorld();
@@ -788,7 +788,7 @@ void idGLDrawableModel::draw( int x, int y, int w, int h )
 		spawnArgs.Set( "_color", str );
 		gameEdit->ParseSpawnArgsToRenderLight( &spawnArgs, &parms );
 		lightDef = world->AddLightDef( &parms );
-		
+
 		renderEntity_t worldEntity;
 		memset( &worldEntity, 0, sizeof( worldEntity ) );
 		spawnArgs.Clear();
@@ -801,65 +801,65 @@ void idGLDrawableModel::draw( int x, int y, int w, int h )
 		}
 		gameEdit->ParseSpawnArgsToRenderEntity( &spawnArgs, &worldEntity );
 		worldEntity.hModel = worldModel;
-		
+
 		worldEntity.axis = rotation.ToMat3();
-		
+
 		worldEntity.shaderParms[0] = 1;
 		worldEntity.shaderParms[1] = 1;
 		worldEntity.shaderParms[2] = 1;
 		worldEntity.shaderParms[3] = 1;
 		modelDef = world->AddEntityDef( &worldEntity );
-		
+
 		// RB: avoid crash in R_AddSingleLight
 		world->GenerateAllInteractions();
 		worldModel->CreateVertexCache();
 		// RB end
-		
+
 		worldDirty = false;
 	}
-	
+
 	// RB: BFG interface
-	
+
 	renderView_t	refdef;
-	
+
 	// render it
 	//renderSystem->BeginFrame( w, h );
-	
+
 	int oldNativeScreenWidth = glConfig.nativeScreenWidth;
 	int oldNativeScreenHeight = glConfig.nativeScreenHeight;
-	
+
 	glConfig.nativeScreenWidth = w;
 	glConfig.nativeScreenHeight = h;
-	
+
 	memset( &refdef, 0, sizeof( refdef ) );
 	refdef.vieworg.Set( zOffset, xOffset, -yOffset );
-	
+
 	refdef.viewaxis = idAngles( 0, 0, 0 ).ToMat3();
 	refdef.shaderParms[0] = 1;
 	refdef.shaderParms[1] = 1;
 	refdef.shaderParms[2] = 1;
 	refdef.shaderParms[3] = 1;
-	
+
 	//refdef.width = SCREEN_WIDTH;
 	//refdef.height = SCREEN_HEIGHT;
 	refdef.fov_x = 90;
 	refdef.fov_y = 2 * atan( ( float )h / w ) * idMath::M_RAD2DEG;
-	
+
 	refdef.time[0] = eventLoop->Milliseconds();
-	
+
 	world->RenderScene( &refdef );
 	//int frontEnd, backEnd;
 	//renderSystem->EndFrame( &frontEnd, &backEnd );
-	
+
 	const emptyCommand_t* cmd = renderSystem->SwapCommandBuffers( NULL, NULL, NULL, NULL, true );
 	renderSystem->RenderCommandBuffers( cmd );
-	
+
 	glConfig.nativeScreenWidth = oldNativeScreenWidth;
 	glConfig.nativeScreenHeight = oldNativeScreenHeight;
-	
+
 	glMatrixMode( GL_MODELVIEW );
 	glLoadIdentity();
-	
+
 	// RB end
 }
 
@@ -1012,7 +1012,7 @@ idGLDrawable::idGLDrawable()
 	yOffset = 0.0;
 	handleMove = false;
 	realTime = 0;
-	
+
 }
 
 void idGLDrawableConsole::draw( int x, int y, int w, int h )
@@ -1021,27 +1021,27 @@ void idGLDrawableConsole::draw( int x, int y, int w, int h )
 	glClearColor( 0.1f, 0.1f, 0.1f, 0.0f );
 	glScissor( 0, 0, w, h );
 	glClear( GL_COLOR_BUFFER_BIT );
-	
+
 	// RB: BFG interface
 	//renderSystem->BeginFrame( w, h );
-	
+
 	int oldNativeScreenWidth = glConfig.nativeScreenWidth;
 	int oldNativeScreenHeight = glConfig.nativeScreenHeight;
-	
+
 	glConfig.nativeScreenWidth = w;
 	glConfig.nativeScreenHeight = h;
-	
+
 	console->Draw( true );
-	
+
 	//renderSystem->EndFrame( NULL, NULL );
 	const emptyCommand_t* cmd = renderSystem->SwapCommandBuffers( NULL, NULL, NULL, NULL, true );
 	renderSystem->RenderCommandBuffers( cmd );
-	
+
 	glConfig.nativeScreenWidth = oldNativeScreenWidth;
 	glConfig.nativeScreenHeight = oldNativeScreenHeight;
-	
+
 	// RB end
-	
+
 	glPopAttrib();
 }
 
@@ -1053,12 +1053,12 @@ void idGLConsoleWidget::init()
 void idGLConsoleWidget::OnKeyDown( UINT nChar, UINT nRepCnt, UINT nFlags )
 {
 	sysEvent_t	ev;
-	
+
 	memset( &ev, 0, sizeof( ev ) );
 	ev.evType = SE_KEY;
 	ev.evValue2 = 1;
 	ev.evValue = nChar;
-	
+
 	::console->ProcessEvent( &ev, true );
 }
 
@@ -1077,12 +1077,12 @@ END_MESSAGE_MAP()
 void idGLConsoleWidget::OnKeyUp( UINT nChar, UINT nRepCnt, UINT nFlags )
 {
 	sysEvent_t	ev;
-	
+
 	memset( &ev, 0, sizeof( ev ) );
 	ev.evType = SE_KEY;
 	ev.evValue2 = 0;
 	ev.evValue = nChar;
-	
+
 	::console->ProcessEvent( &ev, true );
 }
 
@@ -1094,11 +1094,11 @@ void idGLConsoleWidget::OnPaint()
 void idGLConsoleWidget::OnChar( UINT nChar, UINT nRepCnt, UINT nFlags )
 {
 	sysEvent_t	ev;
-	
+
 	memset( &ev, 0, sizeof( ev ) );
 	ev.evType = SE_CHAR;
 	ev.evValue = nChar;
-	
+
 	::console->ProcessEvent( &ev, true );
 }
 
@@ -1110,7 +1110,7 @@ void idGLConsoleWidget::OnLButtonDown( UINT nFlags, CPoint point )
 BOOL idGLWidget::OnEraseBkgnd( CDC* pDC )
 {
 	return FALSE;
-	
+
 	//return CWnd::OnEraseBkgnd(pDC);
 }
 

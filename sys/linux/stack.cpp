@@ -110,7 +110,7 @@ const char* 	Sys_GetCallStackStr( const address_t* callStack, int callStackSize 
 	static char string[MAX_STRING_CHARS * 2];
 	char** strings;
 	int i;
-	
+
 	strings = backtrace_symbols( ( void** )callStack, callStackSize );
 	string[ 0 ] = '\0';
 	for( i = 0; i < callStackSize; i++ )
@@ -131,7 +131,7 @@ const char* Sys_GetCallStackCurStr( int depth )
 {
 	address_t array[ 32 ];
 	size_t size;
-	
+
 	size = backtrace( ( void** )array, Min( 32, depth ) );
 	return Sys_GetCallStackStr( array, ( int )size );
 }

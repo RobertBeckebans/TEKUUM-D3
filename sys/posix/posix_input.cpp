@@ -55,7 +55,9 @@ Posix_AddKeyboardPollEvent
 bool Posix_AddKeyboardPollEvent( int key, bool state )
 {
 	if( poll_keyboard_event_count >= MAX_POLL_EVENTS + POLL_EVENTS_HEADROOM )
+	{
 		common->FatalError( "poll_keyboard_event_count exceeded MAX_POLL_EVENT + POLL_EVENTS_HEADROOM\n" );
+	}
 	poll_events_keyboard[poll_keyboard_event_count].key = key;
 	poll_events_keyboard[poll_keyboard_event_count++].state = state;
 	if( poll_keyboard_event_count >= MAX_POLL_EVENTS )
@@ -74,7 +76,9 @@ Posix_AddMousePollEvent
 bool Posix_AddMousePollEvent( int action, int value )
 {
 	if( poll_mouse_event_count >= MAX_POLL_EVENTS + POLL_EVENTS_HEADROOM )
+	{
 		common->FatalError( "poll_mouse_event_count exceeded MAX_POLL_EVENT + POLL_EVENTS_HEADROOM\n" );
+	}
 	poll_events_mouse[poll_mouse_event_count].action = action;
 	poll_events_mouse[poll_mouse_event_count++].value = value;
 	if( poll_mouse_event_count >= MAX_POLL_EVENTS )
@@ -122,10 +126,10 @@ int Sys_PollMouseInputEvents()
 	poll_keyboard_event_count = 0;
 	poll_mouse_event_count = 0;
 #endif
-	
+
 	// that's OS specific, implemented in osx/ and linux/
 	Posix_PollInput( );
-	
+
 	return poll_mouse_event_count;
 }
 

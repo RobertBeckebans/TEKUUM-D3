@@ -48,7 +48,7 @@ MaterialDocManager::MaterialDocManager()
 MaterialDocManager::~MaterialDocManager()
 {
 	UnRegisterAllMaterialViews();
-	
+
 	ClearUndo();
 	ClearRedo();
 }
@@ -62,7 +62,7 @@ void MaterialDocManager::RegisterMaterialView( MaterialView* view )
 	ASSERT( view );
 	UnRegisterMaterialView( view );
 	materialViews.Append( view );
-	
+
 	//Notify the view of myself
 	view->SetMaterialDocManager( this );
 }
@@ -75,7 +75,7 @@ void MaterialDocManager::UnRegisterMaterialView( MaterialView* view )
 {
 	ASSERT( view );
 	materialViews.Remove( view );
-	
+
 	//Remove the reference to myself
 	view->SetMaterialDocManager( NULL );
 }
@@ -104,7 +104,7 @@ void MaterialDocManager::SetSelectedMaterial( idMaterial* material )
 {
 
 	bool change = false;
-	
+
 	//Do we need to change the material
 	if( material )
 	{
@@ -127,13 +127,13 @@ void MaterialDocManager::SetSelectedMaterial( idMaterial* material )
 			change = true;
 		}
 	}
-	
+
 	//Now make the change
 	if( change )
 	{
 		if( currentMaterial )
 		{
-		
+
 			//Delete the material unless it has been changed
 			if( !inProgressMaterials.Get( currentMaterial->name.c_str() ) )
 			{
@@ -141,18 +141,18 @@ void MaterialDocManager::SetSelectedMaterial( idMaterial* material )
 				currentMaterial = NULL;
 			}
 		}
-		
+
 		MaterialDoc** tempDoc;
 		if( material && inProgressMaterials.Get( material->GetName(), &tempDoc ) )
 		{
 			currentMaterial = *tempDoc;
-			
+
 		}
 		else
 		{
 			currentMaterial = CreateMaterialDoc( material );
 		}
-		
+
 		NotifyViews( currentMaterial, SELECTION_CHANGE );
 	}
 }
@@ -166,7 +166,9 @@ bool MaterialDocManager::DoesFileNeedApply( const char* filename )
 	{
 		MaterialDoc** pDoc = inProgressMaterials.GetIndex( i );
 		if( !strcmp( ( *pDoc )->renderMaterial->GetFileName(), filename ) && ( *pDoc )->applyWaiting )
+		{
 			return true;
+		}
 	}
 	return false;
 }
@@ -180,7 +182,9 @@ bool MaterialDocManager::DoesAnyNeedApply()
 	{
 		MaterialDoc** pDoc = inProgressMaterials.GetIndex( i );
 		if( ( *pDoc )->applyWaiting )
+		{
 			return true;
+		}
 	}
 	return false;
 }
@@ -194,7 +198,9 @@ bool MaterialDocManager::IsFileModified( const char* filename )
 	{
 		MaterialDoc** pDoc = inProgressMaterials.GetIndex( i );
 		if( !strcmp( ( *pDoc )->renderMaterial->GetFileName(), filename ) )
+		{
 			return true;
+		}
 	}
 	return false;
 }
@@ -222,24 +228,24 @@ void MaterialDocManager::AddMaterial( const char* name, const char* filename, co
 		AddMaterialModifier* mod = new AddMaterialModifier( this, name, filename );
 		AddMaterialUndoModifier( mod );
 	}
-	
+
 	MaterialDoc* newDoc = new MaterialDoc();
 	newDoc->manager = this;
 	newDoc->modified = true;
-	
+
 	idMaterial* rendMat = ( idMaterial* )declManager->CreateNewDecl( DECL_MATERIAL, name, filename );
-	
+
 	if( sourceText )
 	{
 		rendMat->SetText( sourceText );
 	}
-	
+
 	newDoc->SetRenderMaterial( rendMat, true, sourceText ? true : false );
-	
+
 	inProgressMaterials.Set( newDoc->name.c_str(), newDoc );
-	
+
 	NotifyViews( newDoc, MATERIAL_ADD );
-	
+
 	//Force an apply so the text will be generated to match the new file
 	newDoc->applyWaiting = true;
 	newDoc->ApplyMaterialChanges();
@@ -258,20 +264,20 @@ void MaterialDocManager::RedoAddMaterial( const char* name, bool clearData )
 	MaterialDoc* newDoc = new MaterialDoc();
 	newDoc->manager = this;
 	newDoc->modified = true;
-	
+
 	idMaterial* rendMat = const_cast<idMaterial*>( declManager->FindMaterial( name, false ) );
-	
+
 	if( clearData )
 	{
 		rendMat->SetText( rendMat->DefaultDefinition() );
 	}
-	
+
 	newDoc->SetRenderMaterial( rendMat, true, true );
-	
+
 	inProgressMaterials.Set( newDoc->name.c_str(), newDoc );
-	
+
 	NotifyViews( newDoc, MATERIAL_ADD );
-	
+
 	//Force an apply so the text will be generated to match the new file
 	newDoc->applyWaiting = true;
 	newDoc->ApplyMaterialChanges();
@@ -286,16 +292,16 @@ void MaterialDocManager::DeleteMaterial( MaterialDoc* material, bool addUndo )
 {
 
 	assert( material );
-	
+
 	//This will just flag for delete. The actual delete will happen during the save
 	material->Delete();
-	
+
 	if( addUndo )
 	{
 		DeleteMaterialModifier* mod = new DeleteMaterialModifier( this, material->name );
 		AddMaterialUndoModifier( mod );
 	}
-	
+
 	NotifyViews( material, MATERIAL_DELETE );
 }
 
@@ -320,7 +326,9 @@ void MaterialDocManager::ApplyFile( const char* filename )
 	{
 		MaterialDoc** pDoc = inProgressMaterials.GetIndex( i );
 		if( !strcmp( ( *pDoc )->renderMaterial->GetFileName(), filename ) )
+		{
 			( *pDoc )->ApplyMaterialChanges();
+		}
 	}
 }
 
@@ -357,9 +365,11 @@ void MaterialDocManager::SaveFile( const char* filename )
 	{
 		MaterialDoc** pDoc = inProgressMaterials.GetIndex( i );
 		if( !strcmp( ( *pDoc )->renderMaterial->GetFileName(), filename ) )
+		{
 			( *pDoc )->Save();
+		}
 	}
-	
+
 	//Notify everyone
 	NotifyViews( NULL, MATERIAL_SAVE_FILE, filename );
 }
@@ -384,7 +394,7 @@ void MaterialDocManager::ReloadFile( const char* filename )
 {
 
 	declManager->ReloadFile( filename, true );
-	
+
 	//purge the changes of any in progress materials
 	for( int j = inProgressMaterials.Num() - 1; j >= 0; j-- )
 	{
@@ -395,16 +405,16 @@ void MaterialDocManager::ReloadFile( const char* filename )
 			inProgressMaterials.Remove( ( *pDoc )->name );
 		}
 	}
-	
+
 	//Reparse the current material
 	if( currentMaterial )
 	{
 		currentMaterial->SetRenderMaterial( currentMaterial->renderMaterial );
-		
+
 		//Trigger all the views to refresh
 		NotifyViews( currentMaterial, SELECTION_CHANGE );
 	}
-	
+
 	NotifyViews( NULL, FILE_RELOAD, filename );
 }
 
@@ -433,21 +443,21 @@ MaterialDoc* MaterialDocManager::CreateMaterialDoc( idMaterial* material )
 	{
 		return existingDoc;
 	}
-	
+
 	if( currentMaterial && material && !currentMaterial->name.Icmp( material->GetName() ) )
 	{
 		return currentMaterial;
 	}
-	
+
 	if( material )
 	{
 		MaterialDoc* newDoc = new MaterialDoc();
 		newDoc->manager = this;
 		newDoc->SetRenderMaterial( material );
-		
+
 		return newDoc;
 	}
-	
+
 	return NULL;
 }
 
@@ -464,9 +474,11 @@ MaterialDoc* MaterialDocManager::GetInProgressDoc( idMaterial* material )
 		for( int i = 0; i < inProgressMaterials.Num(); i++ )
 		{
 			MaterialDoc** pDoc = inProgressMaterials.GetIndex( i );
-			
+
 			if( !( *pDoc )->name.Icmp( material->GetName() ) )
+			{
 				return *pDoc;
+			}
 		}
 	}
 	return NULL;
@@ -481,11 +493,15 @@ void MaterialDocManager::CopyMaterial( MaterialDoc* materialDoc, bool cut )
 {
 
 	cutMaterial = cut;
-	
+
 	if( materialDoc )
+	{
 		copyMaterial = materialDoc->name;
+	}
 	else
+	{
 		ClearCopy();
+	}
 }
 
 /**
@@ -524,7 +540,7 @@ void MaterialDocManager::PasteMaterial( const char* name, const char* filename )
 	{
 		return;
 	}
-	
+
 	//Apply the material if there are some changes
 	MaterialDoc* copyMat = CreateMaterialDoc( copyMaterial );
 	if( copyMat->applyWaiting )
@@ -533,25 +549,25 @@ void MaterialDocManager::PasteMaterial( const char* name, const char* filename )
 	}
 	//Paste the material
 	idMaterial* material = copyMat->renderMaterial;
-	
+
 	//Add a material with the existing source text
 	char* declText = ( char* ) _alloca( material->GetTextLength() + 1 );
 	material->GetText( declText );
-	
+
 	AddMaterial( name, filename, declText, !cutMaterial );
-	
+
 	//If this is a cut then remove the original
 	if( cutMaterial )
 	{
 		MaterialDoc* cutMaterial = CreateMaterialDoc( material );
 		DeleteMaterial( cutMaterial, false );
-		
+
 		MoveMaterialModifier* mod = new MoveMaterialModifier( this, name, filename, copyMaterial );
 		AddMaterialUndoModifier( mod );
-		
+
 		ClearCopy();
 	}
-	
+
 }
 
 /**
@@ -563,10 +579,10 @@ void MaterialDocManager::CopyStage( MaterialDoc* materialDoc, int stageNum )
 {
 
 	assert( materialDoc );
-	
+
 	copyStageMaterial = materialDoc->name;
 	copyStage = materialDoc->GetStage( stageNum );
-	
+
 	idStr stageName = copyStage.stageData.GetString( "name" );
 }
 
@@ -595,9 +611,9 @@ void MaterialDocManager::PasteStage( MaterialDoc* materialDoc )
 {
 
 	assert( materialDoc );
-	
+
 	int stageType = copyStage.stageData.GetInt( "stagetype" );
-	
+
 	//Create a new stage and copy the data
 	materialDoc->AddStage( stageType, copyStage.stageData.GetString( "name" ) );
 	materialDoc->SetData( materialDoc->GetStageCount() - 1, &copyStage.stageData );
@@ -627,9 +643,9 @@ void MaterialDocManager::Undo()
 	{
 		MaterialModifier* mod = undoModifiers[undoModifiers.Num() - 1];
 		undoModifiers.RemoveIndex( undoModifiers.Num() - 1 );
-		
+
 		mod->Undo();
-		
+
 		//Add this modifier to the redo list
 		AddMaterialRedoModifier( mod );
 	}
@@ -667,9 +683,9 @@ void MaterialDocManager::Redo()
 	{
 		MaterialModifier* mod = redoModifiers[redoModifiers.Num() - 1];
 		redoModifiers.RemoveIndex( redoModifiers.Num() - 1 );
-		
+
 		mod->Redo();
-		
+
 		//Done with the mod because the redo process will set
 		//attributes and create the appropriate redo modifier
 		AddMaterialUndoModifier( mod, false );
@@ -706,12 +722,12 @@ void MaterialDocManager::ClearRedo()
 void  MaterialDocManager::AddMaterialUndoModifier( MaterialModifier* mod, bool clearRedo )
 {
 	undoModifiers.Append( mod );
-	
+
 	while( undoModifiers.Num() > MAX_UNDOREDO )
 	{
 		undoModifiers.RemoveIndex( 0 );
 	}
-	
+
 	if( clearRedo )
 	{
 		ClearRedo();
@@ -725,7 +741,7 @@ void  MaterialDocManager::AddMaterialUndoModifier( MaterialModifier* mod, bool c
 void  MaterialDocManager::AddMaterialRedoModifier( MaterialModifier* mod )
 {
 	redoModifiers.Append( mod );
-	
+
 	while( redoModifiers.Num() > MAX_UNDOREDO )
 	{
 		redoModifiers.RemoveIndex( 0 );
@@ -743,35 +759,35 @@ bool MaterialDocManager::FindMaterial( const char* name, MaterialSearchData_t* s
 
 	//Fast way of finding the material without parsing
 	const idMaterial* material = static_cast<const idMaterial*>( declManager->FindDeclWithoutParsing( DECL_MATERIAL, name, false ) );
-	
+
 	if( material )
 	{
-	
+
 		int findPos;
-		
+
 		if( checkName )
 		{
 			//Check the name
 			idStr name = material->GetName();
-			
+
 			findPos = name.Find( searchData->searchText, false );
 			if( findPos != -1 )
 			{
 				return true;
 			}
 		}
-		
+
 		//Skip to the open braket so the name is not checked
 		char* declText = ( char* ) _alloca( material->GetTextLength() + 1 );
 		material->GetText( declText );
-		
+
 		idStr text = declText;
 		int start = text.Find( "{" );
 		if( start != -1 )
 		{
 			text = text.Right( text.Length() - start );
 		}
-		
+
 		findPos = text.Find( searchData->searchText, false );
 		if( findPos != -1 )
 		{
@@ -793,10 +809,14 @@ idStr MaterialDocManager::GetUniqueMaterialName( idStr name )
 	{
 		idStr testName;
 		if( num == 0 )
+		{
 			testName = name;
+		}
 		else
+		{
 			testName = va( "%s%d", name.c_str(), num );
-			
+		}
+
 		const idMaterial* mat = declManager->FindMaterial( testName.c_str(), false );
 		if( !mat )
 		{
@@ -804,10 +824,12 @@ idStr MaterialDocManager::GetUniqueMaterialName( idStr name )
 		}
 		else
 		{
-		
+
 			//We can reuse delete material names
 			if( mat->GetTextLength() < 1 )
+			{
 				return testName;
+			}
 		}
 		num++;
 	}
@@ -823,7 +845,7 @@ void MaterialDocManager::NotifyViews( MaterialDoc* materialDoc, int notifyType, 
 {
 
 	va_list argptr;
-	
+
 	int c = materialViews.Num();
 	for( int i = 0; i < c; i++ )
 	{
@@ -900,7 +922,7 @@ void MaterialDocManager::MaterialChanged( MaterialDoc* materialDoc )
 	{
 		inProgressMaterials.Set( materialDoc->name.c_str(), materialDoc );
 	}
-	
+
 	//Notify everyone
 	NotifyViews( materialDoc, MATERIAL_CHANGE );
 }
@@ -926,17 +948,19 @@ void MaterialDocManager::MaterialSaved( MaterialDoc* materialDoc )
 	MaterialDoc** tempDoc;
 	if( inProgressMaterials.Get( materialDoc->name.c_str(), &tempDoc ) )
 	{
-	
+
 		idStr name = materialDoc->name.c_str();
-		
+
 		//Remove this file from our in progress list
 		inProgressMaterials.Remove( name.c_str() );
-		
+
 		//Notify everyone
 		NotifyViews( materialDoc, MATERIAL_SAVE );
-		
+
 		if( materialDoc != currentMaterial )
+		{
 			delete materialDoc;
+		}
 	}
 }
 
@@ -953,7 +977,7 @@ void MaterialDocManager::MaterialNameChanged( const char* oldName, MaterialDoc* 
 		inProgressMaterials.Set( materialDoc->name, *tempDoc );
 		inProgressMaterials.Remove( oldName );
 	}
-	
+
 	NotifyViews( materialDoc, MATERIAL_NAME_CHANGE, oldName );
 }
 

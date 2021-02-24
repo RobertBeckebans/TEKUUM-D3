@@ -11,14 +11,14 @@ class InspectorEntityDock;
 class InspectorEntityDock : public QWidget
 {
 	Q_OBJECT
-	
+
 public:
 	explicit InspectorEntityDock( QWidget* parent = 0 );
 	~InspectorEntityDock();
-	
+
 protected:
 	void changeEvent( QEvent* e );
-	
+
 private:
 	Ui::InspectorEntityDock* ui;
 };

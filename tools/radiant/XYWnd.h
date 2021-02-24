@@ -29,7 +29,7 @@ If you have questions concerning this license or the applicable additional terms
 #define AFX_XYWND_H__44B4BA04_781B_11D1_B53C_00AA00A410FC__INCLUDED_
 
 #if _MSC_VER >= 1000
-#pragma once
+	#pragma once
 #endif // _MSC_VER >= 1000
 // XYWnd.h : header file
 //
@@ -72,7 +72,10 @@ public:
 	};
 	void		UpdatePointPtr()
 	{
-		if( m_pVec3 ) VectorCopy( m_ptClip, *m_pVec3 );
+		if( m_pVec3 )
+		{
+			VectorCopy( m_ptClip, *m_pVec3 );
+		}
 	};
 	void		SetPointPtr( idVec3* p )
 	{
@@ -103,7 +106,7 @@ class CXYWnd : public CWnd
 public:
 	CXYWnd();
 	virtual		~CXYWnd();
-	
+
 // Attributes
 public:
 
@@ -116,7 +119,7 @@ public:
 protected:
 	virtual BOOL	PreCreateWindow( CREATESTRUCT& cs );
 	//}}AFX_VIRTUAL
-	
+
 // Implementation
 public:
 	bool		AreaSelectOK();
@@ -161,7 +164,7 @@ public:
 		return m_bActive;
 	};
 	void 		DropClipPoint( UINT nFlags, CPoint point );
-	
+
 	int 		GetAxisHoriz()
 	{
 		return m_axisHoriz;
@@ -171,24 +174,24 @@ public:
 		return m_axisVert;
 	};
 	void 		AnalogMouseZoom( int mouseDeltaY );
-	
+
 	bool 		RogueClipMode();
 	bool 		ClipMode();
 	void 		SetClipMode( bool bMode );
 	void 		RetainClipMode( bool bMode );
-	
+
 	bool 		RotateMode();
 	bool 		SetRotateMode( bool bMode );
 	bool 		ScaleMode();
 	void 		SetScaleMode( bool bMode );
-	
+
 	bool 		PathMode();
 	void 		DropPathPoint( UINT nFlags, CPoint point );
-	
+
 	bool 		PointMode();
 	void 		AddPointPoint( UINT nFlags, idVec3* pVec );
 	void 		SetPointMode( bool b );
-	
+
 	void 		SetViewType( int n );
 	int 		GetViewType()
 	{
@@ -210,12 +213,12 @@ public:
 	{
 		return m_nHeight;
 	};
-	
+
 	void 		UpdateViewDependencies();
-	
+
 	void 		DrawPrecisionCrosshair();
 	void 		CyclePrecisionCrosshairMode();
-	
+
 	enum
 	{
 		PRECISION_CROSSHAIR_NONE = 0,
@@ -223,12 +226,12 @@ public:
 		PRECISION_CROSSHAIR_FREE = 2,
 		PRECISION_CROSSHAIR_MAX,
 	};
-	
+
 	int			m_precisionCrosshairMode;
 	int 		m_mouseX;
 	int 		m_mouseY;
 	bool 		m_bActive;
-	
+
 	// Generated message map functions
 protected:
 	int 		m_nUpdateBits;
@@ -241,16 +244,16 @@ protected:
 	idVec3 		m_vOrigin;
 	CPoint 		m_ptCursor;
 	bool 		m_bRButtonDown;
-	
+
 	int			m_nButtonstate;
 	int 		m_nPressx;
 	int 		m_nPressy;
 	idVec3		m_vPressdelta;
 	bool 		m_bPress_selection;
-	
+
 	int 		m_axisHoriz; //  <axisHoriz> and <axisVert> are one of AXIS_X, AXIS_Y, AXIS_Z and
 	int 		m_axisVert;	 //  reflect which axes are represented horizontally and vertically in the 2d view (XY, XZ, etc)
-	
+
 	/// Each of the following _mc fields are stored in map-coordinates, NOT screen-pixels
 	float 		m_mcWidth;
 	float 		m_mcHeight;
@@ -258,19 +261,19 @@ protected:
 	float 		m_mcRight;
 	float 		m_mcTop;
 	float 		m_mcBottom;
-	
+
 	friend 		CCamWnd;
 	//friend C3DFXCamWnd;
-	
+
 	CMenu 		m_mnuDrop;
 	int 		m_nViewType;
-	
+
 	unsigned int	m_nTimerID;
 	int 			m_nScrollFlags;
 	CPoint 			m_ptDrag;
 	CPoint 			m_ptDragAdj;
 	CPoint 			m_ptDragTotal;
-	
+
 	void  			OriginalButtonUp( UINT nFlags, CPoint point );
 	void  			OriginalButtonDown( UINT nFlags, CPoint point );
 	void  			ProduceSplits( brush_t** pFront, brush_t** pBack );
@@ -278,7 +281,7 @@ protected:
 	void  			HandleDrop();
 	void  			PaintSizeInfo( int nDim1, int nDim2, idVec3 vMinBounds, idVec3 vMaxBounds );
 	void  			DrawSelectedCentroid( int nDim1, int nDim2, idVec3 vMinBounds, idVec3 vMaxBounds );
-	
+
 	void  			OnEntityCreate( unsigned int nID );
 	CPoint  		m_ptDown;
 	//{{AFX_MSG(CXYWnd)

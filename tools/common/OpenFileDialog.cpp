@@ -64,7 +64,7 @@ rvOpenFileDialog::~rvOpenFileDialog()
 	{
 		ImageList_Destroy( mImageList );
 	}
-	
+
 	if( mBackBitmap )
 	{
 		DeleteObject( mBackBitmap );
@@ -81,13 +81,13 @@ Opens the dialog and returns true if a filename was found
 bool rvOpenFileDialog::DoModal( HWND parent )
 {
 	mInstance = win32.hInstance;
-	
+
 	INITCOMMONCONTROLSEX ex;
 	ex.dwICC = ICC_USEREX_CLASSES | ICC_LISTVIEW_CLASSES;
 	ex.dwSize = sizeof( INITCOMMONCONTROLSEX );
-	
+
 	InitCommonControlsEx( &ex );
-	
+
 	return DialogBoxParam( mInstance, MAKEINTRESOURCE( IDD_TOOLS_OPEN ), parent, DlgProc, ( LPARAM )this ) ? true : false;
 }
 
@@ -103,26 +103,26 @@ void rvOpenFileDialog::UpdateLookIn()
 	COMBOBOXEXITEM	item;
 	idStr			file;
 	idStr			path;
-	
+
 	// Reset the combo box
 	SendMessage( mWndLookin, CB_RESETCONTENT, 0, 0 );
-	
+
 	// Setup the common item structure components
 	ZeroMemory( &item, sizeof( item ) );
 	item.mask = CBEIF_TEXT | CBEIF_INDENT | CBEIF_IMAGE | CBEIF_SELECTEDIMAGE;
-	
+
 	// Add the top left folder
 	item.pszText = ( LPSTR )"base";
 	SendMessage( mWndLookin, CBEM_INSERTITEM, 0, ( LPARAM )&item );
-	
+
 	// Break the lookin path up into its individual components and add them
 	// to the combo box
 	path = mLookin;
-	
+
 	while( path.Length( ) )
 	{
 		int slash = path.Find( "/" );
-		
+
 		// Parse out the next subfolder
 		if( slash != -1 )
 		{
@@ -134,14 +134,14 @@ void rvOpenFileDialog::UpdateLookIn()
 			file = path;
 			path.Empty( );
 		}
-		
+
 		// Add the sub folder
 		item.pszText = ( LPSTR )file.c_str();
 		item.iIndent++;
 		item.iItem = item.iIndent;
 		SendMessage( mWndLookin, CBEM_INSERTITEM, 0, ( LPARAM )&item );
 	}
-	
+
 	// Set the selection to the last one since thats the deepest folder
 	SendMessage( mWndLookin, CB_SETCURSEL, item.iIndent, 0 );
 }
@@ -161,9 +161,9 @@ void rvOpenFileDialog::UpdateFileList()
 	HWND		list = GetDlgItem( mWnd, IDC_TOOLS_FILELIST );
 	int			i;
 	int			filter;
-	
+
 	ListView_DeleteAllItems( list );
-	
+
 	// Add all the folders first
 	files = fileSystem->ListFiles( basepath, "/", true );
 	for( i = 0; i < files->GetNumFiles(); i ++ )
@@ -172,7 +172,7 @@ void rvOpenFileDialog::UpdateFileList()
 		{
 			continue;
 		}
-		
+
 		LVITEM item;
 		item.mask = LVIF_TEXT;
 		item.iItem = ListView_GetItemCount( list );
@@ -181,7 +181,7 @@ void rvOpenFileDialog::UpdateFileList()
 		ListView_InsertItem( list, &item );
 	}
 	fileSystem->FreeFileList( files );
-	
+
 	// Add all the files in the current lookin directory that match the
 	// current filters.
 	for( filter = 0; filter < mFilters.Num(); filter ++ )
@@ -193,7 +193,7 @@ void rvOpenFileDialog::UpdateFileList()
 			{
 				continue;
 			}
-			
+
 			LVITEM item;
 			item.mask = LVIF_TEXT | LVIF_IMAGE;
 			item.iImage = 2;
@@ -218,7 +218,7 @@ void rvOpenFileDialog::HandleCommandOK()
 {
 	char	temp[256];
 	LVITEM	item;
-	
+
 	// If nothing is selected then there is nothing to open
 	int sel = ListView_GetNextItem( mWndFileList, -1, LVNI_SELECTED );
 	if( sel == -1 )
@@ -228,7 +228,7 @@ void rvOpenFileDialog::HandleCommandOK()
 		{
 			return;
 		}
-		
+
 		item.iImage = 2;
 	}
 	else
@@ -242,7 +242,7 @@ void rvOpenFileDialog::HandleCommandOK()
 		item.iItem = sel;
 		ListView_GetItem( mWndFileList, &item );
 	}
-	
+
 	// If the item is a folder then just open that folder
 	if( item.iImage == 0 )
 	{
@@ -266,7 +266,7 @@ void rvOpenFileDialog::HandleCommandOK()
 			mFilename.Append( "/" );
 		}
 		mFilename.Append( temp );
-		
+
 		// Make sure the file exists
 		if( mFlags & OFD_MUSTEXIST )
 		{
@@ -279,10 +279,10 @@ void rvOpenFileDialog::HandleCommandOK()
 			}
 			fileSystem->CloseFile( file );
 		}
-		
+
 		EndDialog( mWnd, 1 );
 	}
-	
+
 	return;
 }
 
@@ -298,27 +298,27 @@ void rvOpenFileDialog::HandleInitDialog()
 	// Cache the more used window handles
 	mWndFileList = GetDlgItem( mWnd, IDC_TOOLS_FILELIST );
 	mWndLookin   = GetDlgItem( mWnd, IDC_TOOLS_LOOKIN );
-	
+
 	// Load the custom resources used by the controls
 	mImageList  = ImageList_LoadBitmap( mInstance, MAKEINTRESOURCE( IDB_TOOLS_OPEN ), 16, 1, RGB( 255, 255, 255 ) );
 	mBackBitmap = ( HBITMAP )LoadImage( mInstance, MAKEINTRESOURCE( IDB_TOOLS_BACK ), IMAGE_BITMAP, 16, 16, LR_DEFAULTCOLOR | LR_LOADMAP3DCOLORS );
-	
+
 	// Attach the image list to the file list and lookin controls
 	ListView_SetImageList( mWndFileList, mImageList, LVSIL_SMALL );
 	SendMessage( mWndLookin, CBEM_SETIMAGELIST, 0, ( LPARAM ) mImageList );
-	
+
 	// Back button is a bitmap button
 	SendMessage( GetDlgItem( mWnd, IDC_TOOLS_BACK ), BM_SETIMAGE, IMAGE_BITMAP, ( LONG ) mBackBitmap );
-	
+
 	// Allow custom titles
 	SetWindowText( mWnd, mTitle );
-	
+
 	// Custom ok button title
 	if( mOKTitle.Length( ) )
 	{
 		SetWindowText( GetDlgItem( mWnd, IDOK ), mOKTitle );
 	}
-	
+
 	// See if there is a filename in the lookin
 	idStr temp;
 	idStr filename = mLookin;
@@ -330,7 +330,7 @@ void rvOpenFileDialog::HandleInitDialog()
 		filename.StripFilename( );
 		idStr::snPrintf( mLookin, sizeof( mLookin ), "%s", filename.c_str() );
 	}
-	
+
 	// Update our controls
 	UpdateLookIn( );
 	UpdateFileList( );
@@ -349,11 +349,11 @@ void rvOpenFileDialog::HandleLookInChange()
 	int		sel;
 	int		i;
 	idStr	lookin;
-	
+
 	temp[0] = 0;
-	
+
 	sel = SendMessage( mWndLookin, CB_GETCURSEL, 0, 0 );
-	
+
 	// If something other than base is selected then walk up the list
 	// and build the new lookin path
 	if( sel >= 1 )
@@ -370,7 +370,7 @@ void rvOpenFileDialog::HandleLookInChange()
 	{
 		mLookin[0] = 0;
 	}
-	
+
 	// Update the controls with the new lookin path
 	UpdateLookIn( );
 	UpdateFileList( );
@@ -387,7 +387,7 @@ void rvOpenFileDialog::SetFilter( const char* s )
 {
 	idStr filters = s;
 	idStr filter;
-	
+
 	while( filters.Length( ) )
 	{
 		int semi = filters.Find( ';' );
@@ -401,7 +401,7 @@ void rvOpenFileDialog::SetFilter( const char* s )
 			filter = filters;
 			filters.Empty( );
 		}
-		
+
 		mFilters.Append( filter.c_str() + ( filter[0] == '*' ? 1 : 0 ) );
 	}
 }
@@ -416,7 +416,7 @@ Dialog Procedure for the open file dialog
 INT_PTR rvOpenFileDialog::DlgProc( HWND wnd, UINT msg, WPARAM wparam, LPARAM lparam )
 {
 	rvOpenFileDialog* dlg = ( rvOpenFileDialog* ) GetWindowLong( wnd, GWL_USERDATA );
-	
+
 	switch( msg )
 	{
 		case WM_INITDIALOG:
@@ -425,7 +425,7 @@ INT_PTR rvOpenFileDialog::DlgProc( HWND wnd, UINT msg, WPARAM wparam, LPARAM lpa
 			dlg->mWnd = wnd;
 			dlg->HandleInitDialog( );
 			return TRUE;
-			
+
 		case WM_NOTIFY:
 		{
 			NMHDR* nm = ( NMHDR* ) lparam;
@@ -448,7 +448,7 @@ INT_PTR rvOpenFileDialog::DlgProc( HWND wnd, UINT msg, WPARAM wparam, LPARAM lpa
 								item.cchTextMax = sizeof( temp ) - 1;
 								item.iItem = nmlv->iItem;
 								ListView_GetItem( dlg->mWndFileList, &item );
-								
+
 								if( item.iImage == 2 )
 								{
 									SetWindowText( GetDlgItem( wnd, IDC_TOOLS_FILENAME ), temp );
@@ -456,7 +456,7 @@ INT_PTR rvOpenFileDialog::DlgProc( HWND wnd, UINT msg, WPARAM wparam, LPARAM lpa
 							}
 							break;
 						}
-						
+
 						case NM_DBLCLK:
 							dlg->HandleCommandOK( );
 							break;
@@ -465,7 +465,7 @@ INT_PTR rvOpenFileDialog::DlgProc( HWND wnd, UINT msg, WPARAM wparam, LPARAM lpa
 			}
 			break;
 		}
-		
+
 		case WM_COMMAND:
 			switch( LOWORD( wparam ) )
 			{
@@ -474,11 +474,11 @@ INT_PTR rvOpenFileDialog::DlgProc( HWND wnd, UINT msg, WPARAM wparam, LPARAM lpa
 					dlg->HandleCommandOK( );
 					break;
 				}
-				
+
 				case IDCANCEL:
 					EndDialog( wnd, 0 );
 					break;
-					
+
 				case IDC_TOOLS_BACK:
 				{
 					int sel = SendMessage( GetDlgItem( wnd, IDC_TOOLS_LOOKIN ), CB_GETCURSEL, 0, 0 );
@@ -488,10 +488,10 @@ INT_PTR rvOpenFileDialog::DlgProc( HWND wnd, UINT msg, WPARAM wparam, LPARAM lpa
 						SendMessage( GetDlgItem( wnd, IDC_TOOLS_LOOKIN ), CB_SETCURSEL, sel, 0 );
 						dlg->HandleLookInChange( );
 					}
-					
+
 					break;
 				}
-				
+
 				case IDC_TOOLS_LOOKIN:
 					if( HIWORD( wparam ) == CBN_SELCHANGE )
 					{
@@ -501,6 +501,6 @@ INT_PTR rvOpenFileDialog::DlgProc( HWND wnd, UINT msg, WPARAM wparam, LPARAM lpa
 			}
 			break;
 	}
-	
+
 	return FALSE;
 }

@@ -82,7 +82,7 @@ class idAsyncClient
 {
 public:
 	idAsyncClient();
-	
+
 	void				Shutdown();
 	bool				InitPort();
 	void				ClosePort();
@@ -101,7 +101,7 @@ public:
 	{
 		return clientPort.GetPort() != 0;
 	}
-	
+
 	bool				IsActive() const
 	{
 		return active;
@@ -121,23 +121,23 @@ public:
 	{
 		return lastFrameDelta;
 	}
-	
+
 	void				RunFrame();
 	void				SendReliableGameMessage( const idBitMsg& msg );
-	
+
 	void				SendVersionCheck( bool fromMenu = false );
 	// pass NULL for the keys you don't care to auth for
 	// returns false if internet link doesn't appear to be available
 	bool				SendAuthCheck( const char* cdkey, const char* xpkey );
-	
+
 	void				PacifierUpdate();
-	
+
 	idServerScan		serverList;
-	
+
 private:
 	bool				active;						// true if client is active
 	int					realTime;					// absolute time
-	
+
 	int					clientTime;					// client local time
 	idPort				clientPort;					// UDP port
 	int					clientId;					// client identification
@@ -146,34 +146,34 @@ private:
 	clientState_t		clientState;				// client state
 	int					clientPrediction;			// how far the client predicts ahead
 	int					clientPredictTime;			// prediction time used to send user commands
-	
+
 	netadr_t			serverAddress;				// IP address of server
 	int					serverId;					// server identification
 	int					serverChallenge;			// challenge from server
 	int					serverMessageSequence;		// sequence number of last server message
-	
+
 	netadr_t			lastRconAddress;			// last rcon address we emitted to
 	int					lastRconTime;				// when last rcon emitted
-	
+
 	idMsgChannel		channel;					// message channel to server
 	int					lastConnectTime;			// last time a connect message was sent
 	int					lastEmptyTime;				// last time an empty message was sent
 	int					lastPacketTime;				// last time a packet was received from the server
 	int					lastSnapshotTime;			// last time a snapshot was received
-	
+
 	int					snapshotSequence;			// sequence number of the last received snapshot
 	int					snapshotGameFrame;			// game frame number of the last received snapshot
 	int					snapshotGameTime;			// game time of the last received snapshot
-	
+
 	int					gameInitId;					// game initialization identification
 	int					gameFrame;					// local game frame
 	int					gameTime;					// local game time
 	int					gameTimeResidual;			// left over time from previous frame
-	
+
 	usercmd_t			userCmds[MAX_USERCMD_BACKUP][MAX_ASYNC_CLIENTS];
-	
+
 	idUserInterface* 	guiNetMenu;
-	
+
 	clientUpdateState_t updateState;
 	int					updateSentTime;
 	idStr				updateMSG;
@@ -183,20 +183,20 @@ private:
 	dlMime_t			updateMime;
 	idStr				updateFallback;
 	bool				showUpdateMessage;
-	
+
 	backgroundDownload_t	backgroundDownload;
 	int					dltotal;
 	int					dlnow;
-	
+
 	int					lastFrameDelta;
-	
+
 	int					dlRequest;		// randomized number to keep track of the requests
 	int					dlChecksums[ MAX_PURE_PAKS ]; // 0-terminated, first element is the game pak checksum or 0
 	int					dlCount;		// total number of paks we request download for ( including the game pak )
 	idList<pakDlEntry_t>dlList;			// list of paks to download, with url and name
 	int					currentDlSize;
 	int					totalDlSize;	// for partial progress stuff
-	
+
 	void				Clear();
 	void				ClearPendingPackets();
 	void				DuplicateUsercmds( int frame, int time );

@@ -67,7 +67,7 @@ class idTokenizer
 private:
 	int					currentToken;
 	idStrList			tokens;
-	
+
 public:
 	idTokenizer()
 	{
@@ -78,10 +78,10 @@ public:
 		currentToken = 0;
 		tokens.Clear();
 	};
-	
+
 	int					SetTokens( const char* buffer );
 	const char*			NextToken( const char* errorstring = NULL );
-	
+
 	bool				TokenAvailable()
 	{
 		return currentToken < tokens.Num();
@@ -140,9 +140,9 @@ class idExportOptions
 {
 private:
 	idTokenizer				tokens;
-	
+
 	void					Reset( const char* commandline );
-	
+
 public:
 	idStr					commandLine;
 	idStr					src;
@@ -171,9 +171,9 @@ public:
 	float					rotate;
 	float					jointThreshold;
 	int						cycleStart;
-	
+
 	idExportOptions( const char* commandline, const char* ospath );
-	
+
 	bool					jointInExportGroup( const char* jointname );
 };
 
@@ -194,29 +194,29 @@ public:
 	int							index;
 	int							exportNum;
 	bool						keep;
-	
+
 	float						scale;
 	float						invscale;
-	
+
 	MFnDagNode*					dagnode;
-	
+
 	idHierarchy<idExportJoint>	mayaNode;
 	idHierarchy<idExportJoint>	exportNode;
-	
+
 	idVec3						t;
 	idMat3						wm;
-	
+
 	idVec3						idt;
 	idMat3						idwm;
-	
+
 	idVec3						bindpos;
 	idMat3						bindmat;
-	
+
 	int							animBits;
 	int							firstComponent;
 	jointFrame_t				baseFrame;
 	int							depth;
-	
+
 	idExportJoint();
 	idExportJoint&				operator=( const idExportJoint& other );
 };
@@ -260,17 +260,17 @@ ID_INLINE int operator==( exportVertex_t a, exportVertex_t b )
 	{
 		return false;
 	}
-	
+
 	if( ( a.texCoords[ 0 ] != b.texCoords[ 0 ] ) || ( a.texCoords[ 1 ] != b.texCoords[ 1 ] ) )
 	{
 		return false;
 	}
-	
+
 	if( ( a.startweight != b.startweight ) || ( a.numWeights != b.numWeights ) )
 	{
 		return false;
 	}
-	
+
 	return true;
 }
 
@@ -333,22 +333,22 @@ typedef struct md3Tag_s
 typedef struct
 {
 	int			ident;				//
-	
+
 	char		name[MAX_Q3PATH];	// polyset name
-	
+
 	int			flags;
 	int			numFrames;			// all surfaces in a model should have the same
-	
+
 	int			numShaders;			// all surfaces in a model should have the same
 	int			numVerts;
-	
+
 	int			numTriangles;
 	int			ofsTriangles;
-	
+
 	int			ofsShaders;			// offset from start of md3Surface_t
 	int			ofsSt;				// texture coords are common for all frames
 	int			ofsXyzNormals;		// numVerts * numFrames
-	
+
 	int			ofsEnd;				// next surface follows
 } md3Surface_t;
 
@@ -378,21 +378,21 @@ typedef struct
 {
 	int			ident;
 	int			version;
-	
+
 	char		name[MAX_Q3PATH];	// model name
-	
+
 	int			flags;
-	
+
 	int			numFrames;
 	int			numTags;
 	int			numSurfaces;
-	
+
 	int			numSkins;
-	
+
 	int			ofsFrames;			// offset for first frame
 	int			ofsTags;			// numFrames * numTags
 	int			ofsSurfaces;		// first surface, others follow
-	
+
 	int			ofsEnd;				// end of file
 } md3Header_t;
 
@@ -410,14 +410,14 @@ public:
 
 	idStr						name;
 	idStr						shader;
-	
+
 	bool						keep;
-	
+
 	idList<exportVertex_t>		verts;
 	idList<exportTriangle_t>	tris;
 	idList<exportWeight_t>		weights;
 	idList<exportUV_t>			uv;
-	
+
 	idExportMesh()
 	{
 		keep = true;
@@ -452,7 +452,7 @@ public:
 	int							skipjoints;
 	int							export_joints;
 	idList<idExportMesh*>		meshes;
-	
+
 	idExportModel();
 	~idExportModel();
 	idExportJoint*				FindJointReal( const char* name );
@@ -475,45 +475,45 @@ class idMayaExport
 private:
 	idExportModel			model;
 	idExportOptions&			options;
-	
+
 	void					FreeDagNodes();
-	
+
 	float					TimeForFrame( int num ) const;
 	int						GetMayaFrameNum( int num ) const;
 	void					SetFrame( int num );
-	
-	
+
+
 	void					GetBindPose( MObject& jointNode, idExportJoint* joint, float scale );
 	void					GetLocalTransform( idExportJoint* joint, idVec3& pos, idMat3& mat );
 	void					GetWorldTransform( idExportJoint* joint, idVec3& pos, idMat3& mat, float scale );
-	
+
 	void					CreateJoints( float scale );
 	void					PruneJoints( idStrList& keepjoints, idStr& prefix );
 	void					RenameJoints( idList<idNamePair>& renamejoints, idStr& prefix );
 	bool					RemapParents( idList<idNamePair>& remapjoints );
-	
+
 	MObject					FindShader( MObject& setNode );
 	void					GetTextureForMesh( idExportMesh* mesh, MFnDagNode& dagNode );
-	
+
 	idExportMesh*			CopyMesh( MFnSkinCluster& skinCluster, float scale );
 	void					CreateMesh( float scale );
 	void					CombineMeshes();
-	
+
 	void					GetAlignment( idStr& alignName, idMat3& align, float rotate, int startframe );
-	
+
 	const char*				GetObjectType( MObject object );
-	
+
 	float					GetCameraFov( idExportJoint* joint );
 	void					GetCameraFrame( idExportJoint* camera, idMat3& align, cameraFrame_t* cam );
 	void					CreateCameraAnim( idMat3& align );
-	
+
 	void					GetDefaultPose( idMat3& align );
 	void					CreateAnimation( idMat3& align );
-	
+
 public:
 	idMayaExport( idExportOptions& exportOptions ) : options( exportOptions ) { };
 	~idMayaExport();
-	
+
 	void					ConvertModel();
 	void					ConvertToMD3();
 };

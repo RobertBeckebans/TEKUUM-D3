@@ -35,18 +35,18 @@ public:
 	rvDebuggerBreakpoint( const char* filename, int linenumber, int id = -1 );
 	rvDebuggerBreakpoint( rvDebuggerBreakpoint& bp );
 	~rvDebuggerBreakpoint();
-	
+
 	const char*		GetFilename();
 	int				GetLineNumber();
 	int				GetID();
-	
+
 protected:
 
 	bool	mEnabled;
 	int		mID;
 	int		mLineNumber;
 	idStr	mFilename;
-	
+
 private:
 
 	static int	mNextID;

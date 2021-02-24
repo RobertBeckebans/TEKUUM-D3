@@ -11,14 +11,14 @@ class InspectorSurfaceDialog;
 class InspectorSurfaceDialog : public QDialog
 {
 	Q_OBJECT
-	
+
 public:
 	explicit InspectorSurfaceDialog( QWidget* parent = 0 );
 	~InspectorSurfaceDialog();
-	
+
 protected:
 	void changeEvent( QEvent* e );
-	
+
 private:
 	Ui::InspectorSurfaceDialog* ui;
 };

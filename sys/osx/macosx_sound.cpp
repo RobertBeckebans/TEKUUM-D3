@@ -39,9 +39,9 @@ class idAudioHardwareOSX : public idAudioHardware
 public:
 	idAudioHardwareOSX();
 	~idAudioHardwareOSX();
-	
+
 	bool	Initialize( );
-	
+
 	// OSX driver doesn't support memory map API
 	bool	Lock( void** pDSLockedBuffer, ulong* dwDSLockedBufferSize )
 	{
@@ -59,9 +59,9 @@ public:
 	{
 		return 0;
 	}
-	
+
 	int		GetNumberOfSpeakers();
-	
+
 	// OSX driver doesn't support write API
 	bool	Flush()
 	{
@@ -72,23 +72,23 @@ public:
 	{
 		return NULL;
 	}
-	
+
 private:
 	AudioDeviceID		selectedDevice;
 	bool				activeIOProc;
-	
+
 	void				Reset();
 	void				InitFailed();
 	const char*			ExtractStatus( OSStatus status );
 	void				GetAvailableNominalSampleRates();
-	
+
 	// AudioDevicePropertyListenerProc
 	static OSStatus		DeviceListener(	AudioDeviceID			inDevice,
 										UInt32					inChannel,
 										Boolean					isInput,
 										AudioDevicePropertyID	inPropertyID,
 										void*					inClientData );
-										
+
 	// AudioDeviceIOProc
 	static OSStatus		DeviceIOProc( AudioDeviceID				inDevice,
 									  const AudioTimeStamp*		inNow,
@@ -145,7 +145,7 @@ idAudioHardwareOSX::Reset
 void idAudioHardwareOSX::Reset()
 {
 	OSStatus status;
-	
+
 	if( activeIOProc )
 	{
 		status = AudioDeviceStop( selectedDevice, DeviceIOProc );
@@ -210,10 +210,10 @@ OSStatus idAudioHardwareOSX::DeviceIOProc( AudioDeviceID			inDevice,
 	Sys_EnterCriticalSection();
 	soundSystem->AsyncMix( ( int )inOutputTime->mSampleTime, ( float* )outOutputData->mBuffers[ 0 ].mData );
 	Sys_LeaveCriticalSection();
-	
+
 	// doom mixes sound to -32768.0f 32768.0f range, scale down to -1.0f 1.0f
 	SIMDProcessor->Mul( ( Float32* )outOutputData->mBuffers[ 0 ].mData, 1.0f / 32768.0f, ( Float32* )outOutputData->mBuffers[ 0 ].mData, MIXBUFFER_SAMPLES * 2 );
-	
+
 	return kAudioHardwareNoError;
 }
 
@@ -243,7 +243,7 @@ bool idAudioHardwareOSX::Initialize( )
 	int				i, deviceCount;
 	AudioDeviceID*	deviceList;
 	char			buf[ 1024 ];
-	
+
 	status = AudioHardwareGetPropertyInfo( kAudioHardwarePropertyDevices, &size, NULL );
 	if( status != kAudioHardwareNoError )
 	{
@@ -251,7 +251,7 @@ bool idAudioHardwareOSX::Initialize( )
 		InitFailed();
 		return false;
 	}
-	
+
 	deviceCount = size / sizeof( AudioDeviceID );
 	if( !deviceCount )
 	{
@@ -259,7 +259,7 @@ bool idAudioHardwareOSX::Initialize( )
 		InitFailed();
 		return false;
 	}
-	
+
 	deviceList = ( AudioDeviceID* )malloc( size );
 	status = AudioHardwareGetProperty( kAudioHardwarePropertyDevices, &size, deviceList );
 	if( status != kAudioHardwareNoError )
@@ -269,7 +269,7 @@ bool idAudioHardwareOSX::Initialize( )
 		InitFailed();
 		return false;
 	}
-	
+
 	common->Printf( "%d sound device(s)\n", deviceCount );
 	for( i = 0; i < deviceCount; i++ )
 	{
@@ -294,7 +294,7 @@ bool idAudioHardwareOSX::Initialize( )
 		}
 		common->Printf( "%s\n", buf );
 	}
-	
+
 	if( s_device.GetInteger() != -1 && s_device.GetInteger() < deviceCount )
 	{
 		selectedDevice = deviceList[ s_device.GetInteger() ];
@@ -307,17 +307,17 @@ bool idAudioHardwareOSX::Initialize( )
 		if( status != kAudioHardwareNoError )
 		{
 			common->Warning( "AudioHardwareGetProperty kAudioHardwarePropertyDefaultOutputDevice failed. status: %s", ExtractStatus( status ) );
-			
+
 			free( deviceList );
 			InitFailed();
 			return false;
 		}
 		common->Printf( "select default device, ID %d\n", selectedDevice );
 	}
-	
+
 	free( deviceList );
 	deviceList = NULL;
-	
+
 	/*
 	// setup a listener to watch for changes to properties
 	status = AudioDeviceAddPropertyListener( selectedDevice, 0, false, kAudioDeviceProcessorOverload, DeviceListener, this );
@@ -327,7 +327,7 @@ bool idAudioHardwareOSX::Initialize( )
 		return;
 	}
 	*/
-	
+
 	Float64 sampleRate;
 	size = sizeof( sampleRate );
 	status = AudioDeviceGetProperty( selectedDevice, 0, false, kAudioDevicePropertyNominalSampleRate, &size, &sampleRate );
@@ -338,12 +338,12 @@ bool idAudioHardwareOSX::Initialize( )
 		return false;
 	}
 	common->Printf( "current nominal rate: %g\n", sampleRate );
-	
+
 	if( sampleRate != PRIMARYFREQ )
 	{
-	
+
 		GetAvailableNominalSampleRates();
-		
+
 		sampleRate = PRIMARYFREQ;
 		common->Printf( "setting rate to: %g\n", sampleRate );
 		status = AudioDeviceSetProperty( selectedDevice, NULL, 0, false, kAudioDevicePropertyNominalSampleRate, size, &sampleRate );
@@ -354,7 +354,7 @@ bool idAudioHardwareOSX::Initialize( )
 			return false;
 		}
 	}
-	
+
 	UInt32 frameSize;
 	size = sizeof( UInt32 );
 	status = AudioDeviceGetProperty( selectedDevice, 0, false, kAudioDevicePropertyBufferFrameSize, &size, &frameSize );
@@ -365,7 +365,7 @@ bool idAudioHardwareOSX::Initialize( )
 		return false;
 	}
 	common->Printf( "current frame size: %d\n", frameSize );
-	
+
 	// get the allowed frame size range
 	AudioValueRange frameSizeRange;
 	size = sizeof( AudioValueRange );
@@ -377,14 +377,14 @@ bool idAudioHardwareOSX::Initialize( )
 		return false;
 	}
 	common->Printf( "frame size allowed range: %g %g\n", frameSizeRange.mMinimum, frameSizeRange.mMaximum );
-	
+
 	if( frameSizeRange.mMaximum < MIXBUFFER_SAMPLES )
 	{
 		common->Warning( "can't obtain the required frame size of %d bits", MIXBUFFER_SAMPLES );
 		InitFailed();
 		return false;
 	}
-	
+
 	if( frameSize != ( unsigned int )MIXBUFFER_SAMPLES )
 	{
 		frameSize = MIXBUFFER_SAMPLES;
@@ -398,7 +398,7 @@ bool idAudioHardwareOSX::Initialize( )
 			return false;
 		}
 	}
-	
+
 	if( idSoundSystemLocal::s_numberOfSpeakers.GetInteger() != 2 )
 	{
 		common->Warning( "only stereo sound currently supported" );
@@ -414,7 +414,7 @@ bool idAudioHardwareOSX::Initialize( )
 		return false;
 	}
 	common->Printf( "using stereo channel IDs %d %d\n", channels[ 0 ], channels[ 1 ] );
-	
+
 	status = AudioDeviceAddIOProc( selectedDevice, DeviceIOProc, NULL );
 	if( status != kAudioHardwareNoError )
 	{
@@ -423,7 +423,7 @@ bool idAudioHardwareOSX::Initialize( )
 		return false;
 	}
 	activeIOProc = true;
-	
+
 	status = AudioDeviceStart( selectedDevice, DeviceIOProc );
 	if( status != kAudioHardwareNoError )
 	{
@@ -431,7 +431,7 @@ bool idAudioHardwareOSX::Initialize( )
 		InitFailed();
 		return false;
 	}
-	
+
 	/*
 	// allocate the mix buffer
 	// it has the space for ROOM_SLICES_IN_BUFFER DeviceIOProc loops
@@ -439,7 +439,7 @@ bool idAudioHardwareOSX::Initialize( )
 	mixBuffer = malloc( mixBufferSize );
 	memset( mixBuffer, 0, mixBufferSize );
 	*/
-	
+
 	return true;
 }
 
@@ -454,7 +454,7 @@ void idAudioHardwareOSX::GetAvailableNominalSampleRates()
 	OSStatus			status;
 	int			   		i, rangeCount;
 	AudioValueRange*		rangeArray;
-	
+
 	status = AudioDeviceGetPropertyInfo( selectedDevice, 0, false, kAudioDevicePropertyAvailableNominalSampleRates, &size, NULL );
 	if( status != kAudioHardwareNoError )
 	{
@@ -463,9 +463,9 @@ void idAudioHardwareOSX::GetAvailableNominalSampleRates()
 	}
 	rangeCount = size / sizeof( AudioValueRange );
 	rangeArray = ( AudioValueRange* )malloc( size );
-	
+
 	common->Printf( "%d possible rate(s)\n", rangeCount );
-	
+
 	status = AudioDeviceGetProperty( selectedDevice, 0, false, kAudioDevicePropertyAvailableNominalSampleRates, &size, rangeArray );
 	if( status != kAudioHardwareNoError )
 	{
@@ -473,12 +473,12 @@ void idAudioHardwareOSX::GetAvailableNominalSampleRates()
 		free( rangeArray );
 		return;
 	}
-	
+
 	for( i = 0; i < rangeCount; i++ )
 	{
 		common->Printf( "  %d: min %g max %g\n", i, rangeArray[ i ].mMinimum, rangeArray[ i ].mMaximum );
 	}
-	
+
 	free( rangeArray );
 }
 

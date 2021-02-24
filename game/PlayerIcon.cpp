@@ -68,16 +68,16 @@ void idPlayerIcon::Draw( idPlayer* player, jointHandle_t joint )
 {
 	idVec3 origin;
 	idMat3 axis;
-	
+
 	if( joint == INVALID_JOINT )
 	{
 		FreeIcon();
 		return;
 	}
-	
+
 	player->GetJointWorldTransform( joint, gameLocal.time, origin, axis );
 	origin.z += 16.0f;
-	
+
 	Draw( player, origin );
 }
 
@@ -94,9 +94,9 @@ void idPlayerIcon::Draw( idPlayer* player, const idVec3& origin )
 		FreeIcon();
 		return;
 	}
-	
+
 	idMat3 axis = localPlayer->GetRenderView()->viewaxis;
-	
+
 	if( player->isLagged && !player->spectating )
 	{
 		// create the icon if necessary, or update if already created
@@ -153,14 +153,14 @@ idPlayerIcon::CreateIcon
 bool idPlayerIcon::CreateIcon( idPlayer* player, playerIconType_t type, const char* mtr, const idVec3& origin, const idMat3& axis )
 {
 	assert( type != ICON_NONE );
-	
+
 	if( type == iconType )
 	{
 		return false;
 	}
-	
+
 	FreeIcon();
-	
+
 	memset( &renderEnt, 0, sizeof( renderEnt ) );
 	renderEnt.origin	= origin;
 	renderEnt.axis		= axis;
@@ -180,10 +180,10 @@ bool idPlayerIcon::CreateIcon( idPlayer* player, playerIconType_t type, const ch
 	renderEnt.customShader = declManager->FindMaterial( mtr );
 	renderEnt.referenceShader = 0;
 	renderEnt.bounds = renderEnt.hModel->Bounds( &renderEnt );
-	
+
 	iconHandle = gameRenderWorld->AddEntityDef( &renderEnt );
 	iconType = type;
-	
+
 	return true;
 }
 
@@ -195,7 +195,7 @@ idPlayerIcon::UpdateIcon
 void idPlayerIcon::UpdateIcon( idPlayer* player, const idVec3& origin, const idMat3& axis )
 {
 	assert( iconHandle >= 0 );
-	
+
 	renderEnt.origin = origin;
 	renderEnt.axis	= axis;
 	gameRenderWorld->UpdateEntityDef( iconHandle, &renderEnt );

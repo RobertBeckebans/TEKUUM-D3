@@ -371,9 +371,9 @@ void VPCALL idSIMD_Generic::MixSoundTwoSpeakerMono( float* mixBuffer, const floa
 	float sR = lastV[1];
 	float incL = ( currentV[0] - lastV[0] ) / MIXBUFFER_SAMPLES;
 	float incR = ( currentV[1] - lastV[1] ) / MIXBUFFER_SAMPLES;
-	
+
 	assert( numSamples == MIXBUFFER_SAMPLES );
-	
+
 	for( int j = 0; j < MIXBUFFER_SAMPLES; j++ )
 	{
 		mixBuffer[j * 2 + 0] += samples[j] * sL;
@@ -394,9 +394,9 @@ void VPCALL idSIMD_Generic::MixSoundTwoSpeakerStereo( float* mixBuffer, const fl
 	float sR = lastV[1];
 	float incL = ( currentV[0] - lastV[0] ) / MIXBUFFER_SAMPLES;
 	float incR = ( currentV[1] - lastV[1] ) / MIXBUFFER_SAMPLES;
-	
+
 	assert( numSamples == MIXBUFFER_SAMPLES );
-	
+
 	for( int j = 0; j < MIXBUFFER_SAMPLES; j++ )
 	{
 		mixBuffer[j * 2 + 0] += samples[j * 2 + 0] * sL;
@@ -419,16 +419,16 @@ void VPCALL idSIMD_Generic::MixSoundSixSpeakerMono( float* mixBuffer, const floa
 	float sL3 = lastV[3];
 	float sL4 = lastV[4];
 	float sL5 = lastV[5];
-	
+
 	float incL0 = ( currentV[0] - lastV[0] ) / MIXBUFFER_SAMPLES;
 	float incL1 = ( currentV[1] - lastV[1] ) / MIXBUFFER_SAMPLES;
 	float incL2 = ( currentV[2] - lastV[2] ) / MIXBUFFER_SAMPLES;
 	float incL3 = ( currentV[3] - lastV[3] ) / MIXBUFFER_SAMPLES;
 	float incL4 = ( currentV[4] - lastV[4] ) / MIXBUFFER_SAMPLES;
 	float incL5 = ( currentV[5] - lastV[5] ) / MIXBUFFER_SAMPLES;
-	
+
 	assert( numSamples == MIXBUFFER_SAMPLES );
-	
+
 	for( int i = 0; i < MIXBUFFER_SAMPLES; i++ )
 	{
 		mixBuffer[i * 6 + 0] += samples[i] * sL0;
@@ -459,16 +459,16 @@ void VPCALL idSIMD_Generic::MixSoundSixSpeakerStereo( float* mixBuffer, const fl
 	float sL3 = lastV[3];
 	float sL4 = lastV[4];
 	float sL5 = lastV[5];
-	
+
 	float incL0 = ( currentV[0] - lastV[0] ) / MIXBUFFER_SAMPLES;
 	float incL1 = ( currentV[1] - lastV[1] ) / MIXBUFFER_SAMPLES;
 	float incL2 = ( currentV[2] - lastV[2] ) / MIXBUFFER_SAMPLES;
 	float incL3 = ( currentV[3] - lastV[3] ) / MIXBUFFER_SAMPLES;
 	float incL4 = ( currentV[4] - lastV[4] ) / MIXBUFFER_SAMPLES;
 	float incL5 = ( currentV[5] - lastV[5] ) / MIXBUFFER_SAMPLES;
-	
+
 	assert( numSamples == MIXBUFFER_SAMPLES );
-	
+
 	for( int i = 0; i < MIXBUFFER_SAMPLES; i++ )
 	{
 		mixBuffer[i * 6 + 0] += samples[i * 2 + 0] * sL0;

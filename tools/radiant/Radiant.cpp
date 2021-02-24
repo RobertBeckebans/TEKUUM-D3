@@ -38,9 +38,9 @@ If you have questions concerning this license or the applicable additional terms
 #include <ddeml.h>  // for MSGF_DDEMGR
 
 #ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
+	#define new DEBUG_NEW
+	#undef THIS_FILE
+	static char THIS_FILE[] = __FILE__;
 #endif
 
 idCVar radiant_entityMode( "radiant_entityMode", "0", CVAR_TOOL | CVAR_ARCHIVE, "" );
@@ -119,9 +119,9 @@ void RadiantInit()
 		common->Printf( "no OpenGL running\n" );
 		return;
 	}
-	
+
 	g_editorAlive = true;
-	
+
 	// allocate a renderWorld and a soundWorld
 	if( g_qeglobals.rw == NULL )
 	{
@@ -135,7 +135,7 @@ void RadiantInit()
 	{
 		g_qeglobals.sw = soundSystem->AllocSoundWorld( g_qeglobals.rw );
 	}
-	
+
 	if( g_DoomInstance )
 	{
 		if( ::IsWindowVisible( win32.hWnd ) )
@@ -148,23 +148,23 @@ void RadiantInit()
 	else
 	{
 		Sys_GrabMouseCursor( false );
-		
+
 		g_DoomInstance = win32.hInstance;
 		CWinApp* pApp = AfxGetApp();
 		CWinThread* pThread = AfxGetThread();
-		
+
 		InitAfx();
-		
+
 		// App global initializations (rare)
 		pApp->InitApplication();
-		
+
 		// Perform specific initializations
 		pThread->InitInstance();
-		
+
 		glFinish();
 		//wglMakeCurrent(0, 0);
 		wglMakeCurrent( win32.hDC, win32.hGLRC );
-		
+
 		// hide the doom window by default
 		::ShowWindow( win32.hWnd, SW_HIDE );
 	}
@@ -183,7 +183,7 @@ void RadiantSync( const char* mapName, const idVec3& viewOrg, const idAngles& vi
 	{
 		RadiantInit();
 	}
-	
+
 	if( g_DoomInstance )
 	{
 		idStr osPath;
@@ -207,7 +207,7 @@ void RadiantRun()
 {
 	static bool exceptionErr = false;
 	int show = ::IsWindowVisible( win32.hWnd );
-	
+
 	try
 	{
 		if( !exceptionErr && !show )
@@ -243,24 +243,24 @@ BOOL CRadiantApp::InitInstance()
 {
 	//g_hOpenGL32 = ::LoadLibrary("opengl32.dll");
 	// AfxEnableControlContainer();
-	
+
 	// Standard initialization
 	// If you are not using these features and wish to reduce the size
 	//  of your final executable, you should remove from the following
 	//  the specific initialization routines you do not need.
 	//AfxEnableMemoryTracking(FALSE);
-	
+
 #ifdef _AFXDLL
 	//Enable3dControls();			// Call this when using MFC in a shared DLL
 #else
 	//Enable3dControlsStatic();	// Call this when linking to MFC statically
 #endif
-	
+
 	// If there's a .INI file in the directory use it instead of registry
-	
+
 	char RadiantPath[_MAX_PATH];
 	GetModuleFileName( NULL, RadiantPath, _MAX_PATH );
-	
+
 	// search for exe
 	CFileFind Finder;
 	Finder.FindFile( RadiantPath );
@@ -324,13 +324,13 @@ BOOL CRadiantApp::InitInstance()
 		SetRegistryKey( EDITOR_REGISTRY_KEY );
 		g_qeglobals.use_ini = false;
 	}
-	
+
 	LoadStdProfileSettings();  // Load standard INI file options (including MRU)
-	
-	
+
+
 	// Register the application's document templates.  Document templates
 	//  serve as the connection between documents, frame windows and views.
-	
+
 //	CMultiDocTemplate* pDocTemplate;
 //	pDocTemplate = new CMultiDocTemplate(
 //		IDR_RADIANTYPE,
@@ -340,37 +340,37 @@ BOOL CRadiantApp::InitInstance()
 //	AddDocTemplate(pDocTemplate);
 
 	// create main MDI Frame window
-	
+
 	g_PrefsDlg.LoadPrefs();
-	
+
 	glEnableClientState( GL_VERTEX_ARRAY );
-	
+
 	CString strTemp = m_lpCmdLine;
 	strTemp.MakeLower();
 	if( strTemp.Find( "builddefs" ) >= 0 )
 	{
 		g_bBuildList = true;
 	}
-	
+
 	CMainFrame* pMainFrame = new CMainFrame;
 	if( !pMainFrame->LoadFrame( IDR_MENU_QUAKE3 ) )
 	{
 		return FALSE;
 	}
-	
+
 	if( pMainFrame->m_hAccelTable )
 	{
 		::DestroyAcceleratorTable( pMainFrame->m_hAccelTable );
 	}
-	
+
 	pMainFrame->LoadAccelTable( MAKEINTRESOURCE( IDR_MINIACCEL ) );
-	
+
 	m_pMainWnd = pMainFrame;
-	
+
 	// The main window has been initialized, so show and update it.
 	pMainFrame->ShowWindow( m_nCmdShow );
 	pMainFrame->UpdateWindow();
-	
+
 	return TRUE;
 }
 
@@ -425,13 +425,13 @@ int CRadiantApp::Run()
 {
 	BOOL bIdle = TRUE;
 	LONG lIdleCount = 0;
-	
+
 #if _MSC_VER >= 1300
 	MSG* msg = AfxGetCurrentMessage();			// TODO Robert fix me!!
 #else
 	MSG* msg = &m_msgCur;
 #endif
-	
+
 	// phase1: check to see if we can do idle work
 	while( bIdle && !::PeekMessage( msg, NULL, NULL, NULL, PM_NOREMOVE ) )
 	{
@@ -441,7 +441,7 @@ int CRadiantApp::Run()
 			bIdle = FALSE; // assume "no idle" state
 		}
 	}
-	
+
 	// phase2: pump messages while available
 	do
 	{
@@ -450,17 +450,17 @@ int CRadiantApp::Run()
 		{
 			return ExitInstance();
 		}
-		
+
 		// reset "no idle" state after pumping "normal" message
 		if( IsIdleMessage( msg ) )
 		{
 			bIdle = TRUE;
 			lIdleCount = 0;
 		}
-		
+
 	}
 	while( ::PeekMessage( msg, NULL, NULL, NULL, PM_NOREMOVE ) );
-	
+
 	return 0;
 }
 
@@ -524,7 +524,7 @@ bool LoadWindowState( HWND hWnd, const char* pszName )
 {
 	RECT rc;
 	LONG lSize = sizeof( rc );
-	
+
 	if( LoadRegistryInfo( pszName, &rc, &lSize ) )
 	{
 		if( rc.left < 0 )
@@ -543,11 +543,11 @@ bool LoadWindowState( HWND hWnd, const char* pszName )
 		{
 			rc.bottom = rc.top + 16;
 		}
-		
+
 		MoveWindow( hWnd, rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, FALSE );
 		return true;
 	}
-	
+
 	return false;
 }
 
@@ -567,9 +567,9 @@ Sys_UpdateStatusBar
 void Sys_UpdateStatusBar()
 {
 	extern int g_numbrushes, g_numentities;
-	
+
 	char numbrushbuffer[100] = "";
-	
+
 	sprintf( numbrushbuffer, "Brushes: %d Entities: %d", g_numbrushes, g_numentities );
 	Sys_Status( numbrushbuffer, 2 );
 }

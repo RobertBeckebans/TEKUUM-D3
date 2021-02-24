@@ -76,10 +76,10 @@ bool idLangDict::Load( const char* fileName, bool clear /* _D3XP */ )
 	{
 		Clear();
 	}
-	
+
 	const char* buffer = NULL;
 	idLexer src( LEXFL_NOFATALERRORS | LEXFL_NOSTRINGCONCAT | LEXFL_ALLOWMULTICHARLITERALS | LEXFL_ALLOWBACKSLASHSTRINGCONCAT );
-	
+
 	int len = idLib::fileSystem->ReadFile( fileName, ( void** )&buffer );
 	if( len <= 0 )
 	{
@@ -91,7 +91,7 @@ bool idLangDict::Load( const char* fileName, bool clear /* _D3XP */ )
 	{
 		return false;
 	}
-	
+
 	idToken tok, tok2;
 	src.ExpectTokenString( "{" );
 	while( src.ReadToken( &tok ) )
@@ -109,20 +109,20 @@ bool idLangDict::Load( const char* fileName, bool clear /* _D3XP */ )
 			idLangKeyValue kv;
 			kv.key = tok;
 			kv.value = tok2;
-			
+
 			// RB: development HACK until we replace the BFG fonts
 			if( kv.key.Cmpn( "#font_", 6 ) != 0 )
 			{
 				assert( kv.key.Cmpn( STRTABLE_ID, STRTABLE_ID_LENGTH ) == 0 );
 			}
 			// RB
-			
+
 			hash.Add( GetHashKey( kv.key ), args.Append( kv ) );
 		}
 	}
 	idLib::common->Printf( "%i strings read from %s\n", args.Num(), fileName );
 	idLib::fileSystem->FreeFile( ( void* )buffer );
-	
+
 	return true;
 }
 
@@ -178,7 +178,7 @@ const char* idLangDict::GetString( const char* str ) const
 	{
 		return "";
 	}
-	
+
 	// RB: development HACK until we replace the BFG fonts
 	if( idStr::Cmpn( str, "#font_", 6 ) != 0 )
 	{
@@ -187,7 +187,7 @@ const char* idLangDict::GetString( const char* str ) const
 			return str;
 		}
 	}
-	
+
 	int hashKey = GetHashKey( str );
 	for( int i = hash.First( hashKey ); i != -1; i = hash.Next( i ) )
 	{
@@ -196,7 +196,7 @@ const char* idLangDict::GetString( const char* str ) const
 			return args[i].value;
 		}
 	}
-	
+
 	idLib::common->Warning( "Unknown string id %s", str );
 	return str;
 }
@@ -213,7 +213,7 @@ const char* idLangDict::AddString( const char* str )
 	{
 		return str;
 	}
-	
+
 	int c = args.Num();
 	for( int j = 0; j < c; j++ )
 	{
@@ -222,7 +222,7 @@ const char* idLangDict::AddString( const char* str )
 			return args[j].key;
 		}
 	}
-	
+
 	int id = GetNextId();
 	idLangKeyValue kv;
 	// _D3XP
@@ -280,28 +280,28 @@ bool idLangDict::ExcludeString( const char* str ) const
 	{
 		return true;
 	}
-	
+
 	int c = strlen( str );
 	if( c <= 1 )
 	{
 		return true;
 	}
-	
+
 	if( idStr::Cmpn( str, STRTABLE_ID, STRTABLE_ID_LENGTH ) == 0 )
 	{
 		return true;
 	}
-	
+
 	if( idStr::Icmpn( str, "gui::", strlen( "gui::" ) ) == 0 )
 	{
 		return true;
 	}
-	
+
 	if( str[0] == '$' )
 	{
 		return true;
 	}
-	
+
 	int i;
 	for( i = 0; i < c; i++ )
 	{
@@ -314,7 +314,7 @@ bool idLangDict::ExcludeString( const char* str ) const
 	{
 		return true;
 	}
-	
+
 	return false;
 }
 
@@ -326,15 +326,15 @@ idLangDict::GetNextId
 int idLangDict::GetNextId() const
 {
 	int c = args.Num();
-	
+
 	//Let and external user supply the base id for this dictionary
 	int id = baseID;
-	
+
 	if( c == 0 )
 	{
 		return id;
 	}
-	
+
 	idStr work;
 	for( int j = 0; j < c; j++ )
 	{

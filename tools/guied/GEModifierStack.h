@@ -29,7 +29,7 @@ If you have questions concerning this license or the applicable additional terms
 #define GEMODIFIERSTACK_H_
 
 #ifndef GEMODIFIER_H_
-#include "GEModifier.h"
+	#include "GEModifier.h"
 #endif
 
 class rvGEModifierStack
@@ -38,21 +38,21 @@ public:
 
 	rvGEModifierStack( );
 	~rvGEModifierStack( );
-	
+
 	void			BlockNextMerge();
-	
+
 	bool			Append( rvGEModifier* modifier );
 	bool			Undo();
 	bool			Redo();
-	
+
 	void			Reset();
-	
+
 	bool			CanUndo();
 	bool			CanRedo();
-	
+
 	rvGEModifier*	GetUndoModifier();
 	rvGEModifier*	GetRedoModifier();
-	
+
 protected:
 
 	idList<rvGEModifier*>	mModifiers;

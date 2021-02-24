@@ -34,9 +34,9 @@ If you have questions concerning this license or the applicable additional terms
 #include "PatchDensityDlg.h"
 
 #ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
+	#define new DEBUG_NEW
+	#undef THIS_FILE
+	static char THIS_FILE[] = __FILE__;
 #endif
 
 /////////////////////////////////////////////////////////////////////////////
@@ -75,20 +75,20 @@ void CPatchDensityDlg::OnOK()
 {
 	int nWidth = m_wndWidth.GetCurSel();
 	int nHeight = m_wndHeight.GetCurSel();
-	
+
 	if( nWidth >= 0 && nWidth <= 6 && nHeight >= 0 && nHeight <= 6 )
 	{
 		Patch_GenericMesh( g_nXLat[nWidth], g_nXLat[nHeight], g_pParentWnd->ActiveXY()->GetViewType() );
 		Sys_UpdateWindows( W_ALL );
 	}
-	
+
 	CDialog::OnOK();
 }
 
 BOOL CPatchDensityDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
-	
+
 	m_wndWidth.SetCurSel( 0 );
 	m_wndHeight.SetCurSel( 0 );
 	return TRUE;  // return TRUE unless you set the focus to a control

@@ -25,7 +25,7 @@ DEFINE_GUID( CLSID_EAXDirectSound,
 			 0x1ce0,
 			 0x11d3,
 			 0xaa, 0xb8, 0x0, 0xa0, 0xc9, 0x59, 0x49, 0xd5 );
-			 
+
 /*
 * EAX Wrapper Interface (using Direct X 8) {CA503B60-B176-11d4-A094-D0C0BF3A560C}
 */
@@ -34,9 +34,9 @@ DEFINE_GUID( CLSID_EAXDirectSound8,
 			 0xb176,
 			 0x11d4,
 			 0xa0, 0x94, 0xd0, 0xc0, 0xbf, 0x3a, 0x56, 0xc );
-			 
-			 
-			 
+
+
+
 #ifdef DIRECTSOUND_VERSION
 #if DIRECTSOUND_VERSION == 0x0800
 __declspec( dllimport ) HRESULT WINAPI EAXDirectSoundCreate8( GUID*, LPDIRECTSOUND8*, IUnknown FAR* );
@@ -89,7 +89,7 @@ DEFINE_GUID( DSPROPSETID_EAX30_ListenerProperties,
 			 0xb476,
 			 0x11d3,
 			 0xbd, 0xb9, 0x00, 0xc0, 0xf0, 0x2d, 0xdf, 0x87 );
-			 
+
 // For compatibility with future EAX versions:
 #define DSPROPSETID_EAX_ListenerProperties DSPROPSETID_EAX30_ListenerProperties
 
@@ -208,9 +208,9 @@ enum
 	EAX_ENVIRONMENT_DRUGGED,
 	EAX_ENVIRONMENT_DIZZY,
 	EAX_ENVIRONMENT_PSYCHOTIC,
-	
+
 	EAX_ENVIRONMENT_UNDEFINED,
-	
+
 	EAX_ENVIRONMENT_COUNT
 };
 
@@ -339,7 +339,7 @@ DEFINE_GUID( DSPROPSETID_EAX30_BufferProperties,
 			 0xb476,
 			 0x11d3,
 			 0xbd, 0xb9, 0x0, 0xc0, 0xf0, 0x2d, 0xdf, 0x87 );
-			 
+
 // For compatibility with future EAX versions:
 #define DSPROPSETID_EAX_BufferProperties DSPROPSETID_EAX30_BufferProperties
 #define DSPROPSETID_EAX_SourceProperties DSPROPSETID_EAX30_BufferProperties

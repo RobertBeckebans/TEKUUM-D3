@@ -96,10 +96,10 @@ idSoundShader::SetDefaultText
 bool idSoundShader::SetDefaultText()
 {
 	idStr wavname;
-	
+
 	wavname = GetName();
 	wavname.DefaultFileExtension( ".wav" );		// if the name has .ogg in it, that will stay
-	
+
 	// if there exists a wav file with the same name
 	if( 1 )    //fileSystem->ReadFile( wavname, NULL ) != -1 ) {
 	{
@@ -141,14 +141,14 @@ idSoundShader::Parse
 bool idSoundShader::Parse( const char* text, const int textLength, bool allowBinaryVersion )
 {
 	idLexer	src;
-	
+
 	src.LoadMemory( text, textLength, GetFileName(), GetLineNum() );
 	src.SetFlags( DECL_LEXER_FLAGS );
 	src.SkipUntilString( "{" );
-	
+
 	// deeper functions can set this, which will cause MakeDefault() to be called at the end
 	errorDuringParse = false;
-	
+
 	if( !ParseShader( src ) || errorDuringParse )
 	{
 		MakeDefault();
@@ -166,17 +166,17 @@ bool idSoundShader::ParseShader( idLexer& src )
 {
 	int			i;
 	idToken		token;
-	
+
 	parms.minDistance = 1;
 	parms.maxDistance = 10;
 	parms.volume = 1;
 	parms.shakes = 0;
 	parms.soundShaderFlags = 0;
 	parms.soundClass = 0;
-	
+
 	speakerMask = 0;
 	altSound = NULL;
-	
+
 	for( i = 0; i < SOUND_MAX_LIST_WAVS; i++ )
 	{
 		leadins[i] = NULL;
@@ -184,13 +184,13 @@ bool idSoundShader::ParseShader( idLexer& src )
 	}
 	numEntries = 0;
 	numLeadins = 0;
-	
+
 	int	maxSamples = idSoundSystemLocal::s_maxSoundsPerShader.GetInteger();
 	if( com_makingBuild.GetBool() || maxSamples <= 0 || maxSamples > SOUND_MAX_LIST_WAVS )
 	{
 		maxSamples = SOUND_MAX_LIST_WAVS;
 	}
-	
+
 	while( 1 )
 	{
 		if( !src.ExpectAnyToken( &token ) )
@@ -374,7 +374,7 @@ bool idSoundShader::ParseShader( idLexer& src )
 			// no longer loading sounds on demand
 			//onDemand = true;
 		}
-		
+
 		// the wave files
 		else if( !token.Icmp( "leadin" ) )
 		{
@@ -427,12 +427,12 @@ bool idSoundShader::ParseShader( idLexer& src )
 			return false;
 		}
 	}
-	
+
 	if( parms.shakes > 0.0f )
 	{
 		CheckShakesAndOgg();
 	}
-	
+
 	return true;
 }
 
@@ -445,7 +445,7 @@ bool idSoundShader::CheckShakesAndOgg() const
 {
 	int i;
 	bool ret = false;
-	
+
 	for( i = 0; i < numLeadins; i++ )
 	{
 		if( leadins[ i ]->objectInfo.wFormatTag == WAVE_FORMAT_TAG_OGG )
@@ -475,7 +475,7 @@ idSoundShader::List
 void idSoundShader::List() const
 {
 	idStrList	shaders;
-	
+
 	common->Printf( "%4i: %s\n", Index(), GetName() );
 	if( idStr::Icmp( GetDescription(), "<no description>" ) != 0 )
 	{

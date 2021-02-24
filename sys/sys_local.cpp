@@ -44,7 +44,7 @@ idSys* 				sys = &sysLocal;
 void idSysLocal::DebugPrintf( const char* fmt, ... )
 {
 	va_list argptr;
-	
+
 	va_start( argptr, fmt );
 	Sys_DebugVPrintf( fmt, argptr );
 	va_end( argptr );
@@ -171,11 +171,11 @@ const char* Sys_TimeStampToStr( ID_TIME_T timeStamp )
 {
 	static char timeString[MAX_STRING_CHARS];
 	timeString[0] = '\0';
-	
+
 	time_t ts = ( time_t )timeStamp;
 	tm*	time = localtime( &ts );
 	idStr out;
-	
+
 	idStr lang = cvarSystem->GetCVarString( "sys_lang" );
 	if( lang.Icmp( "english" ) == 0 )
 	{
@@ -223,7 +223,7 @@ const char* Sys_TimeStampToStr( ID_TIME_T timeStamp )
 		out += va( "%02d", time->tm_min );
 	}
 	idStr::Copynz( timeString, out, sizeof( timeString ) );
-	
+
 	return timeString;
 }
 

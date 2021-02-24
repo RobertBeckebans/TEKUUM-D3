@@ -58,7 +58,7 @@ class SourceModifyOwner
 public:
 	SourceModifyOwner() {};
 	virtual ~SourceModifyOwner() {};
-	
+
 	virtual idStr GetSourceText()
 	{
 		return "";
@@ -78,18 +78,18 @@ public:
 	idStr					name;
 	idMaterial*				renderMaterial;
 	MEMaterial_t			editMaterial;
-	
+
 	bool					modified;
 	bool					applyWaiting;
 	bool					deleted;
-	
+
 	bool					sourceModify;
 	SourceModifyOwner*		sourceModifyOwner;
-	
+
 public:
 	MaterialDoc();
 	~MaterialDoc();
-	
+
 	/**
 	* Define the types of stages in a material.
 	*/
@@ -98,10 +98,10 @@ public:
 		STAGE_TYPE_NORMAL,
 		STAGE_TYPE_SPECIALMAP
 	};
-	
+
 	//Initialization Methods
 	void			SetRenderMaterial( idMaterial* material, bool parseMaterial = true, bool parseRenderMatierial = false );
-	
+
 	//Stage Info Methods
 	int				GetStageCount();
 	int				FindStage( int stageType, const char* name );
@@ -109,13 +109,13 @@ public:
 	void			EnableStage( int stage, bool enabled );
 	void			EnableAllStages( bool enabled );
 	bool			IsStageEnabled( int stage );
-	
+
 	//Get Attributes
 	const char*		GetAttribute( int stage, const char* attribName, const char* defaultString = "" );
 	int				GetAttributeInt( int stage, const char* attribName, const char* defaultString = "0" );
 	float			GetAttributeFloat( int stage, const char* attribName, const char* defaultString = "0" );
 	bool			GetAttributeBool( int stage, const char* attribName, const char* defaultString = "0" );
-	
+
 	//Set Attribute Methods
 	void			SetAttribute( int stage, const char* attribName, const char* value, bool addUndo = true );
 	void			SetAttributeInt( int stage, const char* attribName, int value, bool addUndo = true );
@@ -123,29 +123,29 @@ public:
 	void			SetAttributeBool( int stage, const char* attribName, bool value, bool addUndo = true );
 	void			SetMaterialName( const char* materialName, bool addUndo = true );
 	void			SetData( int stage, idDict* data );
-	
+
 	//Source Editing Methods
 	void			SourceModify( SourceModifyOwner* owner );
 	bool			IsSourceModified();
 	void			ApplySourceModify( idStr& text );
 	const char*		GetEditSourceText();
-	
+
 	//Stage Modification Methods
 	void			AddStage( int stageType, const char* stageName, bool addUndo = true );
 	void			InsertStage( int stage, int stageType, const char* stageName, bool addUndo = true );
 	void			RemoveStage( int stage, bool addUndo = true );
 	void			ClearStages();
 	void			MoveStage( int from, int to, bool addUndo = true );
-	
+
 	void			ApplyMaterialChanges( bool force = false );
 	void			Save();
 	void			Delete();
-	
+
 protected:
 
 	//Internal Notifications
 	void			OnMaterialChanged();
-	
+
 	//Load Material Methods
 	void			ParseMaterialText( const char* source );
 	void			ParseMaterial( idLexer* src );
@@ -153,7 +153,7 @@ protected:
 	void			AddSpecialMapStage( const char* stageName, const char* map );
 	bool			ParseMaterialDef( idToken* token, idLexer* src, int type, idDict* dict );
 	void			ClearEditMaterial();
-	
+
 	//Save/Apply Material Methods
 	const char*		GenerateSourceText();
 	void			ReplaceSourceText();

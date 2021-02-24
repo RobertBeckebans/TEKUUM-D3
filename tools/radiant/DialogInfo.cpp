@@ -34,9 +34,9 @@ If you have questions concerning this license or the applicable additional terms
 #include "DialogInfo.h"
 
 #ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
+	#define new DEBUG_NEW
+	#undef THIS_FILE
+	static char THIS_FILE[] = __FILE__;
 #endif
 
 /////////////////////////////////////////////////////////////////////////////
@@ -62,7 +62,9 @@ void ShowInfoDialog( const char* pText )
 void HideInfoDialog()
 {
 	if( g_dlgInfo.GetSafeHwnd() )
+	{
 		g_dlgInfo.ShowWindow( SW_HIDE );
+	}
 }
 
 
@@ -95,7 +97,7 @@ BOOL CDialogInfo::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 	// TODO: Add extra initialization here
-	
+
 	return TRUE;  // return TRUE unless you set the focus to a control
 	// EXCEPTION: OCX Property Pages should return FALSE
 }

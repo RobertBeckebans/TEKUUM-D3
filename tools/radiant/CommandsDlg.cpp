@@ -35,9 +35,9 @@ If you have questions concerning this license or the applicable additional terms
 #include "MainFrm.h"
 
 #ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
+	#define new DEBUG_NEW
+	#undef THIS_FILE
+	static char THIS_FILE[] = __FILE__;
 #endif
 
 /////////////////////////////////////////////////////////////////////////////
@@ -75,7 +75,7 @@ BOOL CCommandsDlg::OnInitDialog()
 	CDialog::OnInitDialog();
 	m_lstCommands.SetTabStops( 120 );
 	int nCount = g_nCommandCount;
-	
+
 	CFile fileout;
 	fileout.Open( "commandlist.txt", CFile::modeCreate | CFile::modeWrite );	// sikk - commandlist.txt is no longer written to "c:\"
 	for( int n = 0; n < nCount; n++ )
@@ -92,35 +92,35 @@ BOOL CCommandsDlg::OnInitDialog()
 			}
 		}
 		CString strMod( "" );
-		
+
 		if( g_Commands[n].m_nModifiers & RAD_SHIFT )
 		{
 			strMod = "Shift";
 		}
-		
+
 		if( g_Commands[n].m_nModifiers & RAD_ALT )
 		{
 			strMod += ( strMod.GetLength() > 0 ) ? " + Alt" : "Alt";
 		}
-		
+
 		if( g_Commands[n].m_nModifiers & RAD_CONTROL )
 		{
 			strMod += ( strMod.GetLength() > 0 ) ? " + Control" : "Control";
 		}
-		
+
 		if( strMod.GetLength() > 0 )
 		{
 			strMod += " + ";
 		}
 		strLine.Format( "%s \t%s%s", g_Commands[n].m_strCommand, strMod, strKeys );
 		m_lstCommands.AddString( strLine );
-		
+
 		strLine.Format( "%s \t\t\t%s%s", g_Commands[n].m_strCommand, strMod, strKeys );
-		
+
 		fileout.Write( strLine, strLine.GetLength() );
 		fileout.Write( "\r\n", 2 );
 	}
-	
+
 	fileout.Close();
 	return TRUE;
 }

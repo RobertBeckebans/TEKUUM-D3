@@ -35,7 +35,7 @@ idRenderEntityLocal::idRenderEntityLocal()
 {
 	memset( &parms, 0, sizeof( parms ) );
 	memset( modelMatrix, 0, sizeof( modelMatrix ) );
-	
+
 	world					= NULL;
 	index					= 0;
 	lastModifiedFrameNum	= 0;
@@ -92,7 +92,7 @@ idRenderLightLocal::idRenderLightLocal()
 {
 	memset( &parms, 0, sizeof( parms ) );
 	memset( lightProject, 0, sizeof( lightProject ) );
-	
+
 	lightHasMoved			= false;
 	world					= NULL;
 	index					= 0;
@@ -108,7 +108,7 @@ idRenderLightLocal::idRenderLightLocal()
 	foggedPortals			= NULL;
 	firstInteraction		= NULL;
 	lastInteraction			= NULL;
-	
+
 	baseLightProject.Zero();
 	inverseBaseLightProject.Zero();
 }

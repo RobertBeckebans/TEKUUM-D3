@@ -43,7 +43,7 @@ static EGLSurface s_eglSurface = EGL_NO_SURFACE;
 void JE_SetResolution( int width, int height )
 {
 	common->Printf( "JNI_SetResolution( %i, %i )\n", width, height );
-	
+
 	glConfig.nativeScreenWidth = width;
 	glConfig.nativeScreenHeight = height;
 }
@@ -57,37 +57,37 @@ void GLimp_PreInit()
 bool GLimp_Init( glimpParms_t parms )
 {
 	common->Printf( "----- GLimp_Init -----\n" );
-	
+
 	//const char *glstring;
-	
+
 	// RB: use GLSL ES 1.00 instead of GLSL ES 3.00
 	glConfig.driverType = GLDRV_OPENGL_ES2;
-	
+
 	glConfig.isFullscreen = true;
-	
+
 	//s_eglDisplay = eglGetCurrentDisplay();
 	//s_eglSurface = eglGetCurrentSurface( EGL_DRAW );
-	
+
 	// FIXME check these with egl functions
 	glConfig.colorBits = 16;
 	glConfig.depthBits = 24;
 	glConfig.stencilBits = 8;
-	
+
 	glConfig.displayFrequency = 60;
 	glConfig.isStereoPixelFormat = false;
 	glConfig.multisamples = false;
-	
+
 	glConfig.pixelAspect = 1.0f;	// FIXME: some monitor modes may be distorted
-	
+
 	//glstring = (const char *) glGetString(GL_VENDOR);
 	//common->Printf("GL_VENDOR: %s\n", glstring);
-	
+
 	//glstring = (const char *) glGetString(GL_RENDERER);
 	//common->Printf("GL_RENDERER: %s\n", glstring);
-	
+
 	//glstring = (const char *) glGetString(GL_EXTENSIONS);
 	//common->Printf("GL_EXTENSIONS: %s\n", glstring);
-	
+
 	return true;
 }
 
@@ -95,7 +95,7 @@ bool GLimp_Init( glimpParms_t parms )
 bool GLimp_SetScreenParms( glimpParms_t parms )
 {
 	common->Printf( "----- GLimp_SetScreenParms -----\n" );
-	
+
 	return true;
 }
 
@@ -107,7 +107,7 @@ void GLimp_Shutdown()
 void GLimp_SwapBuffers()
 {
 	//common->Printf( "GLimp_SwapBuffers()\n" );
-	
+
 	eglSwapBuffers( eglGetCurrentDisplay(), eglGetCurrentSurface( EGL_DRAW ) );
 }
 
@@ -161,23 +161,23 @@ int Sys_GetVideoRam()
 {
 	static int run_once = 0;
 	int major, minor, value;
-	
+
 	if( run_once )
 	{
 		return run_once;
 	}
-	
+
 	if( sys_videoRam.GetInteger() )
 	{
 		run_once = sys_videoRam.GetInteger();
 		return sys_videoRam.GetInteger();
 	}
-	
+
 	// try a few strategies to guess the amount of video ram
 	common->Printf( "guessing video ram ( use +set sys_videoRam to force ) ..\n" );
-	
+
 	// TODO
-	
+
 	// try ATI /proc read ( for the lack of a better option )
 	/*
 	int fd;
@@ -211,7 +211,7 @@ int Sys_GetVideoRam()
 		}
 	}
 	*/
-	
+
 	common->Printf( "guess failed, return default low-end VRAM setting ( 64MB VRAM )\n" );
 	run_once = 64;
 	return run_once;
@@ -252,7 +252,7 @@ static void FillStaticVidModes( idList<vidMode_t>& modeList )
 	modeList.AddUnique( vidMode_t( 1920, 1200, 60 ) );
 	modeList.AddUnique( vidMode_t( 2048, 1536, 60 ) );
 	modeList.AddUnique( vidMode_t( 2560, 1600, 60 ) );
-	
+
 	modeList.SortWithTemplate( idSort_VidMode() );
 }
 
@@ -264,11 +264,11 @@ R_GetModeListForDisplay
 bool R_GetModeListForDisplay( const int requestedDisplayNum, idList<vidMode_t>& modeList )
 {
 	assert( requestedDisplayNum >= 0 );
-	
+
 	modeList.Clear();
-	
+
 	FillStaticVidModes( modeList );
-	
+
 	return true;
 }
 

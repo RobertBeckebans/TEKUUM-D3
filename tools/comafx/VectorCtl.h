@@ -78,12 +78,12 @@ class CVectorCtl : public CButton
 
 public:
 	CVectorCtl();
-	
+
 	virtual ~CVectorCtl();
-	
+
 	// Owner-drawn control support function
 	virtual void DrawItem( LPDRAWITEMSTRUCT lpDrawItemStruct );
-	
+
 	// Sets / Gets diffuse (ball) color.
 	void SetDiffuseColor( COLORREF clr )
 	{
@@ -94,7 +94,7 @@ public:
 	{
 		return m_clrDiffuse;
 	}
-	
+
 	// Sets / Gets ambient (background) color.
 	void SetAmbientColor( COLORREF clr )
 	{
@@ -105,7 +105,7 @@ public:
 	{
 		return m_clrAmbient;
 	}
-	
+
 	// Sets / Gets light color.
 	void SetLightColor( COLORREF clr )
 	{
@@ -116,32 +116,32 @@ public:
 	{
 		return m_clrLight;
 	}
-	
+
 	// Sets background gradient color (from start to finish vertically)
 	void SetBackgroundColor( COLORREF clrStart, COLORREF clrEnd );
-	
+
 	// Sets a background bitmap (resource ID)
 	BOOL SetBackgroundImage( UINT uBackgroundBitmapID );
-	
+
 	// Sets / Gets specular intensity
 	BOOL SetSpecularExponent( double dExp );
 	double GetSpecularExponent()
 	{
 		return m_dSpecularExponent;
 	}
-	
+
 	// Enables auto-update of axis controls.
 	// Place the control's ID and the SetWindowText function will be called
 	// for each vector component to display the value in the control.
 	void SetAxisControl( int nXCtl, int nYCtl, int nZCtl );
-	
+
 	// Sets / Gets ball radius (in pixels)
 	void SetRadius( UINT uRadius );
 	UINT GetRadius()
 	{
 		return UINT( m_iRadius );
 	}
-	
+
 	// Sets / Gets ball position (in pixels)
 	void SetCenter( UINT uHorizPos, UINT uVertPos );
 	UINT GetHorizCenter()
@@ -152,7 +152,7 @@ public:
 	{
 		return UINT( m_iYCenter );
 	}
-	
+
 	// Sets / Gets vector components
 	void SetX( double dx )
 	{
@@ -185,27 +185,27 @@ public:
 		rotationQuat = mat.ToQuat();
 		m_dVec = mat[2];
 	}
-	
+
 	// Sets / Gets mouse sensitivity
 	BOOL SetSensitivity( UINT uSens );
 	UINT GetSensitivity()
 	{
 		return UINT( m_dSensitivity );
 	}
-	
+
 	// Bounds / Unbounds vector to front (positive Z) only
 	void ClipToFront( BOOL bEnable )
 	{
 		m_bFrontVector = bEnable;
 	}
-	
+
 	// Set user-defined callback function to call whenever the vector has changed.
 	// Set to NULL to disable callback.
 	void SetVectorChangingCallback( VectorCtlCallbackProc proc )
 	{
 		m_procVectorChanging = proc;
 	}
-	
+
 	// Set user-defined callback function to call whenever the vector has finished
 	// changing (user dropped track-ball).
 	// Set to NULL to disable callback.
@@ -213,12 +213,12 @@ public:
 	{
 		m_procVectorChanged = proc;
 	}
-	
+
 private:
 	afx_msg void OnLButtonDown( UINT nFlags, CPoint point );
 	afx_msg void OnLButtonUp( UINT nFlags, CPoint point );
 	afx_msg void OnMouseMove( UINT nFlags, CPoint point );
-	
+
 	// Mouse is being dragged
 	void OnMouseDrag( int , int );
 	// Create and measure off-screen buffer
@@ -241,7 +241,7 @@ private:
 	void UpdateAxisControls();
 	// Sets a specific vector component to a specific value
 	void SetAxis( double d, int nAxis );
-	
+
 	CBitmap     m_bmpBuffer,            // Buffer bitmap for BitBlt
 				m_bmpBack;              // Background image bitmap
 	CDC         m_dcMem;                // Memory DC
@@ -273,15 +273,15 @@ private:
 	idQuat		previousQuat;
 	idVec3		lastPress;
 	float		radius;
-	
-	
+
+
 	VectorCtlCallbackProc   m_procVectorChanging,
 							m_procVectorChanged;
-							
+
 protected:
 	DECLARE_MESSAGE_MAP()
-	
-	
+
+
 };
 
 #endif

@@ -82,12 +82,12 @@ typedef enum
 	SIG_REMOVED,			// object was removed from the game
 	SIG_DAMAGE,				// object was damaged
 	SIG_BLOCKED,			// object was blocked
-	
+
 	SIG_MOVER_POS1,			// mover at position 1 (door closed)
 	SIG_MOVER_POS2,			// mover at position 2 (door open)
 	SIG_MOVER_1TO2,			// mover changing from position 1 to 2
 	SIG_MOVER_2TO1,			// mover changing from position 2 to 1
-	
+
 	NUM_SIGNALS
 } signalNum_t;
 
@@ -112,32 +112,32 @@ class idEntity : public idClass
 {
 public:
 	static const int		MAX_PVS_AREAS = 4;
-	
+
 	int						entityNumber;			// index into the entity list
 	int						entityDefNumber;		// index into the entity def list
-	
+
 	idLinkList<idEntity>	spawnNode;				// for being linked into spawnedEntities list
 	idLinkList<idEntity>	activeNode;				// for being linked into activeEntities list
-	
+
 	idLinkList<idEntity>	snapshotNode;			// for being linked into snapshotEntities list
 	int						snapshotSequence;		// last snapshot this entity was in
 	int						snapshotBits;			// number of bits this entity occupied in the last snapshot
-	
+
 	idStr					name;					// name of entity
 	idDict					spawnArgs;				// key/value pairs used to spawn and initialize entity
 	idScriptObject			scriptObject;			// contains all script defined data for this entity
-	
+
 	int						thinkFlags;				// TH_? flags
 	int						dormantStart;			// time that the entity was first closed off from player
 	bool					cinematic;				// during cinematics, entity will only think if cinematic is set
-	
+
 	renderView_t* 			renderView;				// for camera views from this entity
 	idEntity* 				cameraTarget;			// any remoteRenderMap shaders will use this
-	
+
 	idList< idEntityPtr<idEntity> >	targets;		// when this entity is activated these entities entity are activated
-	
+
 	int						health;					// FIXME: do all objects really need health?
-	
+
 	struct entityFlags_s
 	{
 		bool				notarget			: 1;	// if true never attack or target this entity
@@ -156,15 +156,15 @@ public:
 		bool				grabbed				: 1;	// if true object is currently being grabbed
 		// RB end
 	} fl;
-	
+
 // RB begin
 #if defined(STANDALONE)
 	int						timeGroup;
-	
+
 	bool					noGrab;
-	
+
 	void					DetermineTimeGroup( bool slowmo );
-	
+
 	void					SetGrabbedState( bool grabbed );
 	bool					IsGrabbed();
 #endif
@@ -172,24 +172,24 @@ public:
 
 public:
 	ABSTRACT_PROTOTYPE( idEntity );
-	
+
 	idEntity();
 	~idEntity();
-	
+
 	void					Spawn();
-	
+
 	void					Save( idSaveGame* savefile ) const;
 	void					Restore( idRestoreGame* savefile );
-	
+
 	const char* 			GetEntityDefName() const;
 	void					SetName( const char* name );
 	const char* 			GetName() const;
 	virtual void			UpdateChangeableSpawnArgs( const idDict* source );
-	
+
 	// clients generate views based on all the player specific options,
 	// cameras have custom code, and everything else just uses the axis orientation
 	virtual renderView_t* 	GetRenderView();
-	
+
 	// thinking
 	virtual void			Think();
 	bool					CheckDormant();	// dormant == on the active list, but out of PVS
@@ -199,7 +199,7 @@ public:
 	void					BecomeActive( int flags );
 	void					BecomeInactive( int flags );
 	void					UpdatePVSAreas( const idVec3& pos );
-	
+
 	// visuals
 	virtual void			Present();
 	virtual renderEntity_t* GetRenderEntity();
@@ -226,13 +226,13 @@ public:
 	const int* 				GetPVSAreas();
 	void					ClearPVSAreas();
 	bool					PhysicsTeamInPVS( pvsHandle_t pvsHandle );
-	
+
 	// animation
 	virtual bool			UpdateAnimationControllers();
 	bool					UpdateRenderEntity( renderEntity_s* renderEntity, const renderView_t* renderView );
 	static bool				ModelCallback( renderEntity_s* renderEntity, const renderView_t* renderView );
 	virtual idAnimator* 	GetAnimator();	// returns animator object used by this entity
-	
+
 	// sound
 	virtual bool			CanPlayChatterSounds() const;
 	bool					StartSound( const char* soundName, const s_channelType channel, int soundShaderFlags, bool broadcast, int* length );
@@ -243,7 +243,7 @@ public:
 	int						GetListenerId() const;
 	idSoundEmitter* 		GetSoundEmitter() const;
 	void					FreeSoundEmitter( bool immediate );
-	
+
 	// entity binding
 	virtual void			PreBind();
 	virtual void			PostBind();
@@ -269,7 +269,7 @@ public:
 	idVec3					GetWorldCoordinates( const idVec3& vec ) const;
 	bool					GetMasterPosition( idVec3& masterOrigin, idMat3& masterAxis ) const;
 	void					GetWorldVelocities( idVec3& linearVelocity, idVec3& angularVelocity ) const;
-	
+
 	// physics
 	// set a new physics object to be used by this entity
 	void					SetPhysics( idPhysics* phys );
@@ -309,7 +309,7 @@ public:
 	virtual void			AddContactEntity( idEntity* ent );
 	// remove a touching entity
 	virtual void			RemoveContactEntity( idEntity* ent );
-	
+
 	// damage
 	// returns true if this entity can be damaged from the given origin
 	virtual bool			CanDamage( const idVec3& origin, idVec3& damagePoint ) const;
@@ -323,7 +323,7 @@ public:
 	virtual bool			Pain( idEntity* inflictor, idEntity* attacker, int damage, const idVec3& dir, int location );
 	// notifies this entity that is has been killed
 	virtual void			Killed( idEntity* inflictor, idEntity* attacker, int damage, const idVec3& dir, int location );
-	
+
 	// scripting
 	virtual bool			ShouldConstructScriptObjectAtSpawn() const;
 	virtual idThread* 		ConstructScriptObject();
@@ -334,51 +334,51 @@ public:
 	bool					HasSignal( signalNum_t signalnum ) const;
 	void					Signal( signalNum_t signalnum );
 	void					SignalEvent( idThread* thread, signalNum_t signalnum );
-	
+
 	// gui
 	void					TriggerGuis();
 	bool					HandleGuiCommands( idEntity* entityGui, const char* cmds );
 	virtual bool			HandleSingleGuiCommand( idEntity* entityGui, idLexer* src );
-	
+
 	// targets
 	void					FindTargets();
 	void					RemoveNullTargets();
 	void					ActivateTargets( idEntity* activator ) const;
-	
+
 	// misc
 	virtual void			Teleport( const idVec3& origin, const idAngles& angles, idEntity* destination );
 	bool					TouchTriggers() const;
 	idCurve_Spline<idVec3>* GetSpline() const;
 	virtual void			ShowEditingDialog();
-	
+
 	enum
 	{
 		EVENT_STARTSOUNDSHADER,
 		EVENT_STOPSOUNDSHADER,
 		EVENT_MAXEVENTS
 	};
-	
+
 	virtual void			ClientPredictionThink();
 	virtual void			WriteToSnapshot( idBitMsgDelta& msg ) const;
 	virtual void			ReadFromSnapshot( const idBitMsgDelta& msg );
 	virtual bool			ServerReceiveEvent( int event, int time, const idBitMsg& msg );
 	virtual bool			ClientReceiveEvent( int event, int time, const idBitMsg& msg );
-	
+
 	void					WriteBindToSnapshot( idBitMsgDelta& msg ) const;
 	void					ReadBindFromSnapshot( const idBitMsgDelta& msg );
 	void					WriteColorToSnapshot( idBitMsgDelta& msg ) const;
 	void					ReadColorFromSnapshot( const idBitMsgDelta& msg );
 	void					WriteGUIToSnapshot( idBitMsgDelta& msg ) const;
 	void					ReadGUIFromSnapshot( const idBitMsgDelta& msg );
-	
+
 	void					ServerSendEvent( int eventId, const idBitMsg* msg, bool saveEvent, int excludeClient ) const;
 	void					ClientSendEvent( int eventId, const idBitMsg* msg ) const;
-	
+
 protected:
 	renderEntity_t			renderEntity;						// used to present a model to the renderer
 	int						modelDefHandle;						// handle to static renderer model
 	refSound_t				refSound;							// used to present sound to the audio engine
-	
+
 private:
 	idPhysics_Static		defaultPhysicsObj;					// default physics object
 	idPhysics* 				physics;							// physics used for this entity
@@ -387,33 +387,33 @@ private:
 	int						bindBody;							// body bound to if unequal -1
 	idEntity* 				teamMaster;							// master of the physics team
 	idEntity* 				teamChain;							// next entity in physics team
-	
+
 	int						numPVSAreas;						// number of renderer areas the entity covers
 	int						PVSAreas[MAX_PVS_AREAS];			// numbers of the renderer areas the entity covers
-	
+
 	signalList_t* 			signals;
-	
+
 	int						mpGUIState;							// local cache to avoid systematic SetStateInt
-	
+
 private:
 	void					FixupLocalizedStrings();
-	
+
 	bool					DoDormantTests();				// dormant == on the active list, but out of PVS
-	
+
 	// physics
 	// initialize the default physics
 	void					InitDefaultPhysics( const idVec3& origin, const idMat3& axis );
 	// update visual position from the physics
 	void					UpdateFromPhysics( bool moveBack );
-	
+
 	// entity binding
 	bool					InitBind( idEntity* master );		// initialize an entity binding
 	void					FinishBind();					// finish an entity binding
 	void					RemoveBinds();				// deletes any entities bound to this object
 	void					QuitTeam();					// leave the current team
-	
+
 	void					UpdatePVSAreas();
-	
+
 	// events
 	void					Event_GetName();
 	void					Event_SetName( const char* name );
@@ -511,41 +511,41 @@ class idAnimatedEntity : public idEntity
 {
 public:
 	CLASS_PROTOTYPE( idAnimatedEntity );
-	
+
 	idAnimatedEntity();
 	~idAnimatedEntity();
-	
+
 	void					Save( idSaveGame* savefile ) const;
 	void					Restore( idRestoreGame* savefile );
-	
+
 	virtual void			ClientPredictionThink();
 	virtual void			Think();
-	
+
 	void					UpdateAnimation();
-	
+
 	virtual idAnimator* 	GetAnimator();
 	virtual void			SetModel( const char* modelname );
-	
+
 	bool					GetJointWorldTransform( jointHandle_t jointHandle, int currentTime, idVec3& offset, idMat3& axis );
 	bool					GetJointTransformForAnim( jointHandle_t jointHandle, int animNum, int currentTime, idVec3& offset, idMat3& axis ) const;
-	
+
 	virtual int				GetDefaultSurfaceType() const;
 	virtual void			AddDamageEffect( const trace_t& collision, const idVec3& velocity, const char* damageDefName );
 	void					AddLocalDamageEffect( jointHandle_t jointNum, const idVec3& localPoint, const idVec3& localNormal, const idVec3& localDir, const idDeclEntityDef* def, const idMaterial* collisionMaterial );
 	void					UpdateDamageEffects();
-	
+
 	virtual bool			ClientReceiveEvent( int event, int time, const idBitMsg& msg );
-	
+
 	enum
 	{
 		EVENT_ADD_DAMAGE_EFFECT = idEntity::EVENT_MAXEVENTS,
 		EVENT_MAXEVENTS
 	};
-	
+
 protected:
 	idAnimator				animator;
 	damageEffect_t* 		damageEffects;
-	
+
 private:
 	void					Event_GetJointHandle( const char* jointname );
 	void 					Event_ClearAllJoints();
@@ -564,12 +564,12 @@ class SetTimeState
 	bool					activated;
 	bool					previousFast;
 	bool					fast;
-	
+
 public:
 	SetTimeState();
 	SetTimeState( int timeGroup );
 	~SetTimeState();
-	
+
 	void					PushState( int timeGroup );
 };
 
@@ -590,9 +590,9 @@ ID_INLINE void SetTimeState::PushState( int timeGroup )
 	// Don't mess with time in Multiplayer
 	if( !gameLocal.isMultiplayer )
 	{
-	
+
 		activated = true;
-		
+
 		// determine previous fast setting
 		if( gameLocal.time == gameLocal.slow.time )
 		{
@@ -602,7 +602,7 @@ ID_INLINE void SetTimeState::PushState( int timeGroup )
 		{
 			previousFast = true;
 		}
-		
+
 		// determine new fast setting
 		if( timeGroup )
 		{
@@ -612,7 +612,7 @@ ID_INLINE void SetTimeState::PushState( int timeGroup )
 		{
 			fast = false;
 		}
-		
+
 		// set correct time
 		gameLocal.SelectTimeGroup( timeGroup );
 	}

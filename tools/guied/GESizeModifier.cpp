@@ -36,7 +36,7 @@ rvGESizeModifier::rvGESizeModifier( const char* name, idWindow* window, float l,
 	rvGEModifier( name, window )
 {
 	mOldRect = mWrapper->GetClientRect( );
-	
+
 	mNewRect[0] = mOldRect[0] + l;
 	mNewRect[1] = mOldRect[1] + t;
 	mNewRect[2] = mOldRect[2] + r - l;
@@ -46,23 +46,23 @@ rvGESizeModifier::rvGESizeModifier( const char* name, idWindow* window, float l,
 bool rvGESizeModifier::Merge( rvGEModifier* mergebase )
 {
 	rvGESizeModifier* merge = ( rvGESizeModifier* ) mergebase;
-	
+
 	mNewRect = merge->mNewRect;
-	
+
 	return true;
 }
 
 bool rvGESizeModifier::Apply()
 {
 	mWrapper->SetRect( mNewRect );
-	
+
 	return true;
 }
 
 bool rvGESizeModifier::Undo()
 {
 	mWrapper->SetRect( mOldRect );
-	
+
 	return true;
 }
 
@@ -72,6 +72,6 @@ bool rvGESizeModifier::IsValid()
 	{
 		return false;
 	}
-	
+
 	return true;
 }

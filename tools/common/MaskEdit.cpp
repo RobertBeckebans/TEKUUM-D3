@@ -47,7 +47,7 @@ LRESULT CALLBACK MaskEdit_WndProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
 {
 	rvGEMaskEdit* edit = ( rvGEMaskEdit* )GetWindowLong( hWnd, GWL_USERDATA );
 	WNDPROC		  wndproc = edit->mProc;
-	
+
 	switch( msg )
 	{
 		case WM_CHAR:
@@ -55,15 +55,15 @@ LRESULT CALLBACK MaskEdit_WndProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
 			{
 				return 0;
 			}
-			
+
 			break;
-			
+
 		case WM_DESTROY:
 			delete edit;
 			SetWindowLong( hWnd, GWL_WNDPROC, ( LONG )wndproc );
 			break;
 	}
-	
+
 	return CallWindowProc( wndproc, hWnd, msg, wParam, lParam );
 }
 

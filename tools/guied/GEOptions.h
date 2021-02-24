@@ -30,7 +30,7 @@ If you have questions concerning this license or the applicable additional terms
 #define GEOPTIONS_H_
 
 #ifndef REGISTRYOPTIONS_H_
-#include "../common/registryoptions.h"
+	#include "../common/registryoptions.h"
 #endif
 
 class idRectangle;
@@ -40,17 +40,17 @@ class rvGEOptions
 public:
 
 	static const int MAX_MRU_SIZE = rvRegistryOptions::MAX_MRU_SIZE;
-	
+
 	rvGEOptions();
-	
+
 	void			Init();
-	
+
 	// Write the options to the registery
 	bool			Save();
-	
+
 	// Read the options from the registry
 	bool			Load();
-	
+
 	void			SetSelectionColor( idVec4& color );
 	void			SetSelectionColor( COLORREF color );
 	void			SetGridColor( idVec4& color );
@@ -65,11 +65,11 @@ public:
 	void			SetTransformerVisible( bool vis );
 	void			SetIgnoreDesktopSelect( bool ignore );
 	void			SetStatusBarVisible( bool vis );
-	
+
 	void			AddRecentFile( const char* filename );
 	int				GetRecentFileCount();
 	const char*		GetRecentFile( int index );
-	
+
 	idVec4&			GetGridColor();
 	int				GetGridWidth();
 	int				GetGridHeight();
@@ -84,39 +84,39 @@ public:
 	COLORREF*		GetCustomColors();
 	bool			GetIgnoreDesktopSelect();
 	bool			GetStatusBarVisible();
-	
+
 	void			SetWindowPlacement( const char* name, HWND hwnd );
 	bool			GetWindowPlacement( const char* name, HWND hwnd );
-	
+
 	void			SnapRectToGrid( idRectangle& rect, bool snapLeft = true, bool snapTop = true, bool snapWidth = true, bool snapHeight = true );
-	
+
 protected:
 
 	void				ConvertColor( COLORREF src, idVec4& dest );
 	void				SetModified( bool mod );
-	
+
 	bool				mModified;
 	int					mLastOptionsPage;
-	
+
 	idVec4				mGridColor;
 	int					mGridWidth;
 	int					mGridHeight;
 	bool				mGridSnap;
 	bool				mGridVisible;
-	
+
 	idVec4				mWorkspaceColor;
 	idVec4				mSelectionColor;
-	
+
 	bool				mNavigatorVisible;
 	bool				mPropertiesVisible;
 	bool				mTransformerVisible;
 	bool				mStatusBarVisible;
 	bool				mIgnoreDesktopSelect;
-	
+
 	idList<idStr>		mRecentFiles;
-	
+
 	COLORREF			mCustomColors[16];
-	
+
 	rvRegistryOptions	mRegistry;
 };
 

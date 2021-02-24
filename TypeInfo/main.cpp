@@ -62,7 +62,7 @@ class idCommonLocal : public idCommon
 {
 public:
 	idCommonLocal() {}
-	
+
 	virtual void			Init( int argc, const char** argv, const char* cmdline ) {}
 	virtual void			Shutdown() {}
 	virtual void			Quit() {}
@@ -162,16 +162,16 @@ ID_TIME_T			Sys_FileTimeStamp( FILE* fp )
 const char* Sys_Cwd()
 {
 	static char cwd[1024];
-	
+
 	_getcwd( cwd, sizeof( cwd ) - 1 );
 	cwd[sizeof( cwd ) - 1] = 0;
-	
+
 	int i = idStr::FindText( cwd, CD_BASEDIR, false );
 	if( i >= 0 )
 	{
 		cwd[i + strlen( CD_BASEDIR )] = '\0';
 	}
-	
+
 	return cwd;
 }
 
@@ -185,21 +185,21 @@ const char* Sys_DefaultBasePath()
 // RB begin
 	static char basePath[MAX_OSPATH];
 	idStr cwdPath;
-	
+
 	cwdPath = Sys_Cwd();
-	
+
 	cwdPath.Replace( "bin/win32", "" );
 	cwdPath.Replace( "bin\\win32", "" );
-	
+
 	cwdPath.Replace( "bin/win64", "" );
 	cwdPath.Replace( "bin\\win64", "" );
-	
+
 	cwdPath.Replace( "/src", "" );
 	cwdPath.Replace( "\\src", "" );
-	
+
 	cwdPath.Copynz( basePath, cwdPath.c_str(), sizeof( basePath ) );
 	return basePath;
-	
+
 	//return Sys_Cwd();
 // RB end
 }
@@ -220,12 +220,12 @@ int Sys_ListFiles( const char* directory, const char* extension, idStrList& list
 	struct _finddata_t findinfo;
 	int			findhandle;
 	int			flag;
-	
+
 	if( !extension )
 	{
 		extension = "";
 	}
-	
+
 	// passing a slash as extension will find directories
 	if( extension[0] == '/' && extension[1] == 0 )
 	{
@@ -236,18 +236,18 @@ int Sys_ListFiles( const char* directory, const char* extension, idStrList& list
 	{
 		flag = _A_SUBDIR;
 	}
-	
+
 	sprintf( search, "%s\\*%s", directory, extension );
-	
+
 	// search
 	list.Clear();
-	
+
 	findhandle = _findfirst( search, &findinfo );
 	if( findhandle == -1 )
 	{
 		return -1;
 	}
-	
+
 	do
 	{
 		if( flag ^ ( findinfo.attrib & _A_SUBDIR ) )
@@ -256,9 +256,9 @@ int Sys_ListFiles( const char* directory, const char* extension, idStrList& list
 		}
 	}
 	while( _findnext( findhandle, &findinfo ) != -1 );
-	
+
 	_findclose( findhandle );
-	
+
 	return list.Num();
 }
 
@@ -406,20 +406,20 @@ int main( int argc, char** argv )
 {
 	idStr fileName, sourcePath;
 	idTypeInfoGen* generator;
-	
+
 	idLib::common = common;
 	idLib::cvarSystem = cvarSystem;
 	idLib::fileSystem = fileSystem;
 	idLib::sys = sys;
-	
+
 	idLib::Init();
 	cmdSystem->Init();
 	cvarSystem->Init();
 	idCVar::RegisterStaticVars();
 	fileSystem->Init();
-	
+
 	generator = new idTypeInfoGen;
-	
+
 	if( argc > 1 )
 	{
 		sourcePath = idStr( "../"SOURCE_CODE_BASE_FOLDER"/" ) + argv[1];
@@ -428,7 +428,7 @@ int main( int argc, char** argv )
 	{
 		sourcePath = "../"SOURCE_CODE_BASE_FOLDER"/game";
 	}
-	
+
 	if( argc > 2 )
 	{
 		fileName = idStr( "../"SOURCE_CODE_BASE_FOLDER"/" ) + argv[2];
@@ -437,7 +437,7 @@ int main( int argc, char** argv )
 	{
 		fileName = "../"SOURCE_CODE_BASE_FOLDER"/game/gamesys/GameTypeInfo.h";
 	}
-	
+
 	if( argc > 3 )
 	{
 		for( int i = 3; i < argc; i++ )
@@ -451,19 +451,19 @@ int main( int argc, char** argv )
 		generator->AddDefine( "GAME_DLL" );
 		generator->AddDefine( "ID_TYPEINFO" );
 	}
-	
+
 	generator->CreateTypeInfo( sourcePath );
 	generator->WriteTypeInfo( fileName );
-	
+
 	delete generator;
-	
+
 	fileName.Clear();
 	sourcePath.Clear();
-	
+
 	fileSystem->Shutdown( false );
 	cvarSystem->Shutdown();
 	cmdSystem->Shutdown();
 	idLib::ShutDown();
-	
+
 	return 0;
 }

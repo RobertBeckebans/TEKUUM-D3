@@ -48,7 +48,7 @@ CreateEGLContextOnWindow
 static bool CreateEGLContextOnWindow()
 {
 	//int useOpenGL32 = r_useOpenGL32.GetInteger();
-	
+
 	const EGLint configAttribList[] =
 	{
 		EGL_RED_SIZE,			8,
@@ -60,70 +60,70 @@ static bool CreateEGLContextOnWindow()
 		EGL_SAMPLE_BUFFERS,		0,
 		EGL_NONE
 	};
-	
+
 	const EGLint surfaceAttribList[] =
 	{
 		//EGL_POST_SUB_BUFFER_SUPPORTED_NV, flags & (ES_WINDOW_POST_SUB_BUFFER_SUPPORTED) ? EGL_TRUE : EGL_FALSE,
 		EGL_NONE, EGL_NONE
 	};
-	
+
 	android.eglDisplay = eglGetDisplay( EGL_DEFAULT_DISPLAY );
 	if( android.eglDisplay == EGL_NO_DISPLAY )
 	{
 		idLib::Printf( "eglGetDisplay failed\n" );
 		return false;
 	}
-	
+
 	EGLint majorVersion, minorVersion;
 	if( !eglInitialize( android.eglDisplay, &majorVersion, &minorVersion ) )
 	{
 		idLib::Printf( "eglInitialize failed\n" );
 		return false;
 	}
-	
+
 	EGLint numConfigs;
 	if( !eglGetConfigs( android.eglDisplay, NULL, 0, &numConfigs ) )
 	{
 		idLib::Printf( "eglGetConfigs failed\n" );
 		return false;
 	}
-	
+
 	EGLConfig config;
 	if( !eglChooseConfig( android.eglDisplay, configAttribList, &config, 1, &numConfigs ) )
 	{
 		idLib::Printf( "eglChooseConfig failed\n" );
 		return false;
 	}
-	
+
 	EGLint redSize, greenSize, blueSize, alphaSize, depthSize, stencilSize;
-	
+
 	eglGetConfigAttrib( android.eglDisplay, config, EGL_RED_SIZE, &redSize );
 	eglGetConfigAttrib( android.eglDisplay, config, EGL_GREEN_SIZE, &greenSize );
 	eglGetConfigAttrib( android.eglDisplay, config, EGL_BLUE_SIZE, &blueSize );
 	eglGetConfigAttrib( android.eglDisplay, config, EGL_ALPHA_SIZE, &alphaSize );
 	eglGetConfigAttrib( android.eglDisplay, config, EGL_DEPTH_SIZE, &depthSize );
 	eglGetConfigAttrib( android.eglDisplay, config, EGL_STENCIL_SIZE, &stencilSize );
-	
+
 	glConfig.colorBits = redSize + greenSize + blueSize + alphaSize;
 	glConfig.depthBits = depthSize;
 	glConfig.stencilBits = stencilSize;
-	
+
 	/* EGL_NATIVE_VISUAL_ID is an attribute of the EGLConfig that is
 	     * guaranteed to be accepted by ANativeWindow_setBuffersGeometry().
 	     * As soon as we picked a EGLConfig, we can safely reconfigure the
 	     * ANativeWindow buffers to match, using EGL_NATIVE_VISUAL_ID. */
-	
+
 	EGLint format;
 	eglGetConfigAttrib( android.eglDisplay, config, EGL_NATIVE_VISUAL_ID, &format );
 	ANativeWindow_setBuffersGeometry( android.app->window, 0, 0, format );
-	
+
 	android.eglSurface = eglCreateWindowSurface( android.eglDisplay, config, ( EGLNativeWindowType ) android.app->window, surfaceAttribList );
 	if( android.eglSurface == EGL_NO_SURFACE )
 	{
 		idLib::Printf( "eglCreateWindowSurface failed\n" );
 		return false;
 	}
-	
+
 	const EGLint contextAttribs[] =
 	{
 		EGL_CONTEXT_CLIENT_VERSION,		3,
@@ -136,33 +136,33 @@ static bool CreateEGLContextOnWindow()
 		idLib::Printf( "eglCreateContext failed\n" );
 		return false;
 	}
-	
+
 	glConfig.driverType = GLDRV_OPENGL_ES3;
-	
+
 	return true;
 }
 
 bool GLimp_Init( glimpParms_t parms )
 {
 	common->Printf( "----- GLimp_Init -----\n" );
-	
+
 	glConfig.isFullscreen = true;
-	
+
 	CreateEGLContextOnWindow();
-	
+
 	glConfig.isFullscreen = true;
-	
+
 	glConfig.driverType = GLDRV_OPENGL_ES3;
-	
+
 	glConfig.displayFrequency = 60;
 	glConfig.isStereoPixelFormat = false;
 	glConfig.multisamples = false;
-	
+
 	glConfig.pixelAspect = 1.0f;	// FIXME: some monitor modes may be distorted
-	
+
 	eglQuerySurface( android.eglDisplay, android.eglSurface, EGL_WIDTH, &glConfig.nativeScreenWidth );
 	eglQuerySurface( android.eglDisplay, android.eglSurface, EGL_HEIGHT, &glConfig.nativeScreenHeight );
-	
+
 	common->Printf( "...making context current: " );
 	if( !eglMakeCurrent( android.eglDisplay, android.eglSurface, android.eglSurface, android.eglContext ) )
 	{
@@ -170,7 +170,7 @@ bool GLimp_Init( glimpParms_t parms )
 		return false;
 	}
 	common->Printf( "succeeded\n" );
-	
+
 	return true;
 }
 
@@ -178,7 +178,7 @@ bool GLimp_Init( glimpParms_t parms )
 bool GLimp_SetScreenParms( glimpParms_t parms )
 {
 	common->Printf( "----- GLimp_SetScreenParms -----\n" );
-	
+
 	return true;
 }
 
@@ -186,9 +186,9 @@ void GLimp_Shutdown()
 {
 	const char* success[] = { "failed", "success" };
 	int retVal;
-	
+
 	common->Printf( "Shutting down OpenGL subsystem\n" );
-	
+
 	// set current context to NULL
 	//if( wglMakeCurrent )
 	{
@@ -196,29 +196,29 @@ void GLimp_Shutdown()
 		//retVal = eglMakeCurrent(EGL_NO_DISPLAY, EGL_NO_CONTEXT, EGL_NO_SURFACE, EGL_NO_SURFACE) == EGL_TRUE;
 		//common->Printf( "...wglMakeCurrent( NULL, NULL ): %s\n", success[retVal] );
 	}
-	
+
 	if( android.eglContext )
 	{
-	
+
 		retVal = eglDestroyContext( android.eglDisplay, android.eglContext ) == EGL_TRUE;
 		common->Printf( "...deleting EGL context: %s\n", success[retVal] );
 		android.eglContext = EGL_NO_CONTEXT;
 	}
-	
+
 	if( android.eglSurface )
 	{
 		retVal = eglDestroySurface( android.eglDisplay, android.eglSurface ) == EGL_TRUE;
 		common->Printf( "...deleting EGL surface: %s\n", success[retVal] );
 		android.eglSurface = EGL_NO_SURFACE;
 	}
-	
+
 	if( android.eglDisplay )
 	{
 		retVal = eglTerminate( android.eglDisplay ) == EGL_TRUE;
 		common->Printf( "...deleting EGL display: %s\n", success[retVal] );
 		android.eglDisplay = EGL_NO_DISPLAY;
 	}
-	
+
 	// restore gamma
 	//GLimp_RestoreGamma();
 }
@@ -226,7 +226,7 @@ void GLimp_Shutdown()
 void GLimp_SwapBuffers()
 {
 	//common->Printf( "GLimp_SwapBuffers()\n" );
-	
+
 	eglSwapBuffers( android.eglDisplay, android.eglSurface );
 }
 
@@ -247,23 +247,23 @@ int Sys_GetVideoRam()
 {
 	static int run_once = 0;
 	int major, minor, value;
-	
+
 	if( run_once )
 	{
 		return run_once;
 	}
-	
+
 	if( sys_videoRam.GetInteger() )
 	{
 		run_once = sys_videoRam.GetInteger();
 		return sys_videoRam.GetInteger();
 	}
-	
+
 	// try a few strategies to guess the amount of video ram
 	common->Printf( "guessing video ram ( use +set sys_videoRam to force ) ..\n" );
-	
+
 	// TODO
-	
+
 	// try ATI /proc read ( for the lack of a better option )
 	/*
 	int fd;
@@ -297,7 +297,7 @@ int Sys_GetVideoRam()
 		}
 	}
 	*/
-	
+
 	common->Printf( "guess failed, return default low-end VRAM setting ( 64MB VRAM )\n" );
 	run_once = 64;
 	return run_once;
@@ -338,7 +338,7 @@ static void FillStaticVidModes( idList<vidMode_t>& modeList )
 	modeList.AddUnique( vidMode_t( 1920, 1200, 60 ) );
 	modeList.AddUnique( vidMode_t( 2048, 1536, 60 ) );
 	modeList.AddUnique( vidMode_t( 2560, 1600, 60 ) );
-	
+
 	modeList.SortWithTemplate( idSort_VidMode() );
 }
 
@@ -350,11 +350,11 @@ R_GetModeListForDisplay
 bool R_GetModeListForDisplay( const int requestedDisplayNum, idList<vidMode_t>& modeList )
 {
 	assert( requestedDisplayNum >= 0 );
-	
+
 	modeList.Clear();
-	
+
 	FillStaticVidModes( modeList );
-	
+
 	return true;
 }
 

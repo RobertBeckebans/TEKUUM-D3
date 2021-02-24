@@ -29,7 +29,7 @@ If you have questions concerning this license or the applicable additional terms
 #define AFX_CAMWND_H__44B4BA03_781B_11D1_B53C_00AA00A410FC__INCLUDED_
 
 #if _MSC_VER >= 1000
-#pragma once
+	#pragma once
 #endif // _MSC_VER >= 1000
 
 typedef enum
@@ -44,14 +44,14 @@ typedef enum
 typedef struct
 {
 	int			width, height;
-	
+
 	idVec3		origin;
 	idAngles	angles;
-	
+
 	camera_draw_mode	draw_mode;
-	
+
 	idVec3		color;				// background
-	
+
 	idVec3		forward, right, up;	// move matrix
 	idVec3		vup, vpn, vright;	// view matrix
 	float		viewDist;			// sikk - Added - Rotate Around Selection
@@ -69,7 +69,7 @@ class CCamWnd : public CWnd
 public:
 	CCamWnd();
 	virtual		~CCamWnd();
-	
+
 // Attributes
 public:
 
@@ -82,7 +82,7 @@ public:
 protected:
 	virtual BOOL	PreCreateWindow( CREATESTRUCT& cs );
 	//}}AFX_VIRTUAL
-	
+
 // Implementation
 public:
 	void			ShiftTexture_BrushPrimit( face_t* f, int x, int y );
@@ -103,7 +103,7 @@ public:
 	void 			ToggleSoundMode();
 	void 			SetProjectionMatrix();
 	void 			UpdateCameraView();
-	
+
 	void 			BuildEntityRenderState( entity_t* ent, bool update );
 	bool 			GetRenderMode()
 	{
@@ -129,23 +129,23 @@ public:
 	{
 		return soundMode;
 	}
-	
+
 	bool 			UpdateRenderEntities();
 	void 			MarkWorldDirty();
-	
+
 	void 			SetView( const idVec3& origin, const idAngles& angles )
 	{
 		m_Camera.origin = origin;
 		m_Camera.angles = angles;
 	}
 	void 			Cam_BuildMatrix();	// sikk - temp move until I write public wasd move functions
-	
+
 	void			PositionView();	// sikk - Added - Center on Selection
-	
+
 	brush_t*		CreateDropBrush();	// sikk - Added - New Brush creation in Cam window
-	
+
 	CXYWnd*			m_pXYFriend;
-	
+
 protected:
 	void 			Cam_Init();
 	void 			Cam_PositionDrag();
@@ -172,7 +172,7 @@ protected:
 	void			UpdateCaption();
 	bool			BuildBrushRenderData( brush_t* brush );
 	void			DrawEntityData();
-	
+
 	qhandle_t		worldModelDef;
 	idRenderModel*	worldModel;		// createRawModel of the brush and patch geometry
 	bool			worldDirty;
@@ -182,7 +182,7 @@ protected:
 	bool			selectMode;
 	bool			animationMode;
 	bool			soundMode;
-	
+
 	camera_t		m_Camera;
 	int				m_nCambuttonstate;
 	CPoint 			m_ptButton;
@@ -199,9 +199,9 @@ protected:
 	idVec3 			saveOrg;
 	idAngles 		saveAng;
 	bool 			saveValid;
-	
+
 	bool 			m_bCanCreateBrush;	// sikk - Added - New Brush creation in Cam window
-	
+
 	idVec3			m_vPressdelta;	// sikk - Added - Clip Point Manipulation
 	// Generated message map functions
 protected:

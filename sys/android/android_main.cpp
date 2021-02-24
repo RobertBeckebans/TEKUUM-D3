@@ -42,18 +42,18 @@ If you have questions concerning this license or the applicable additional terms
 #include <android/log.h>
 
 #if defined(USE_NATIVE_ACTIVITY)
-#include <jni.h>
-#include <android_native_app_glue.h>
-#include <android/sensor.h>
+	#include <jni.h>
+	#include <android_native_app_glue.h>
+	#include <android/sensor.h>
 
-AndroidGlobals android;
+	AndroidGlobals android;
 
 #else
-jniImport_t		ji;
+	jniImport_t		ji;
 #endif
 
 #ifdef ID_MCHECK
-#include <mcheck.h>
+	#include <mcheck.h>
 #endif
 
 static idStr	basepath;
@@ -74,7 +74,7 @@ void Sys_AsyncThread()
 	int now;
 	int next;
 	int	want_sleep;
-	
+
 	// multi tick compensate for poor schedulers (Linux 2.4)
 	int ticked, to_ticked;
 	now = Sys_Milliseconds();
@@ -89,11 +89,11 @@ void Sys_AsyncThread()
 		{
 			usleep( want_sleep ); // sleep 1ms less than true target
 		}
-		
+
 		// compensate if we slept too long
 		now = Sys_Milliseconds();
 		to_ticked = now / USERCMD_MSEC;
-		
+
 		// show ticking statistics - every 100 ticks, print a summary
 #if 0
 #define STAT_BUF 100
@@ -117,14 +117,14 @@ void Sys_AsyncThread()
 			counter = 0;
 		}
 #endif
-		
+
 		while( ticked < to_ticked )
 		{
 			common->Async();
 			ticked++;
 			Sys_TriggerEvent( TRIGGER_EVENT_ONE );
 		}
-		
+
 		// thread exit
 		//pthread_testcancel();
 	}
@@ -133,13 +133,13 @@ void Sys_AsyncThread()
 	int to_ticked;
 	int start;
 	int elapsed;
-	
+
 	start = Sys_Milliseconds();
 	ticked = start / USERCMD_MSEC;
 	while( 1 )
 	{
 		start = Sys_Milliseconds();
-	
+
 		to_ticked = start / USERCMD_MSEC;
 		while( ticked < to_ticked )
 		{
@@ -147,14 +147,14 @@ void Sys_AsyncThread()
 			ticked++;
 			Sys_TriggerEvent( TRIGGER_EVENT_ONE );
 		}
-	
+
 		// thread exit
 		pthread_testcancel();
-	
+
 		elapsed = Sys_Milliseconds() - start;
-	
+
 		//Sys_DebugPrintf( "elapsed = %d\n", elapsed );
-	
+
 		if( elapsed < USERCMD_MSEC )
 		{
 			usleep( ( USERCMD_MSEC - elapsed ) * 1000 );
@@ -165,27 +165,27 @@ void Sys_AsyncThread()
 	int next;
 	int want_sleep;
 	int ticked;
-	
+
 	now = Sys_Milliseconds();
 	ticked = 0;
 	while( 1 )
 	{
 		now = Sys_Milliseconds();
 		next = ( now & 0xFFFFFFF0 ) + USERCMD_MSEC;
-	
+
 		// sleep 1ms less than true target
 		want_sleep = ( next - now - 1 ) * 1000;
-	
+
 		if( want_sleep > 0 )
 		{
 			usleep( want_sleep );
 		}
-	
+
 		common->Async();
 		ticked++;
-	
+
 		Sys_TriggerEvent( TRIGGER_EVENT_ONE );
-	
+
 		// thread exit
 		//pthread_testcancel();
 	}
@@ -212,7 +212,7 @@ const char* Sys_EXEPath()
 	static char	buf[ 1024 ];
 	idStr		linkpath;
 	int			len;
-	
+
 	buf[ 0 ] = '\0';
 	sprintf( linkpath, "/proc/%d/exe", getpid() );
 	len = readlink( linkpath.c_str(), buf, sizeof( buf ) );
@@ -274,7 +274,7 @@ const char* Sys_DefaultBasePath()
 	}
 	common->Printf( "WARNING: using hardcoded default base path\n" );
 	//return LINUX_DEFAULT_PATH;
-	
+
 	return "/sdcard/rbdoom3";
 }
 
@@ -349,7 +349,7 @@ double Sys_GetClockTicks()
 {
 #if defined( __i386__ )
 	unsigned long lo, hi;
-	
+
 	__asm__ __volatile__(
 		"push %%ebx\n"			\
 		"xor %%eax,%%eax\n"		\
@@ -365,7 +365,7 @@ double Sys_GetClockTicks()
 	struct timespec now;
 	clock_gettime( CLOCK_MONOTONIC, &now );
 	return now.tv_sec * 1000000000LL + now.tv_nsec;
-	
+
 #endif
 }
 
@@ -377,7 +377,7 @@ MeasureClockTicks
 double MeasureClockTicks()
 {
 	double t0, t1;
-	
+
 	t0 = Sys_GetClockTicks( );
 	Sys_Sleep( 1000 );
 	t1 = Sys_GetClockTicks( );
@@ -393,15 +393,15 @@ double Sys_ClockTicksPerSecond()
 {
 	static bool		init = false;
 	static double	ret;
-	
+
 	int		fd, len, pos, end;
 	char	buf[ 4096 ];
-	
+
 	if( init )
 	{
 		return ret;
 	}
-	
+
 	fd = open( "/proc/cpuinfo", O_RDONLY );
 	if( fd == -1 )
 	{
@@ -461,26 +461,26 @@ void Sys_CPUCount( int& numLogicalCPUCores, int& numPhysicalCPUCores, int& numCP
 {
 	static bool		init = false;
 	static double	ret;
-	
+
 	static int		s_numLogicalCPUCores;
 	static int		s_numPhysicalCPUCores;
 	static int		s_numCPUPackages;
-	
+
 	int		fd, len, pos, end;
 	char	buf[ 4096 ];
 	char	number[100];
-	
+
 	if( init )
 	{
 		numPhysicalCPUCores = s_numPhysicalCPUCores;
 		numLogicalCPUCores = s_numLogicalCPUCores;
 		numCPUPackages = s_numCPUPackages;
 	}
-	
+
 	s_numPhysicalCPUCores = 1;
 	s_numLogicalCPUCores = 1;
 	s_numCPUPackages = 1;
-	
+
 	fd = open( "/proc/cpuinfo", O_RDONLY );
 	if( fd != -1 )
 	{
@@ -498,9 +498,9 @@ void Sys_CPUCount( int& numLogicalCPUCores, int& numPhysicalCPUCores, int& numCP
 					idStr::Copynz( number, buf + pos, sizeof( number ) );
 					assert( ( end - pos ) > 0 && ( end - pos ) < sizeof( number ) );
 					number[ end - pos ] = '\0';
-					
+
 					int processor = atoi( number );
-					
+
 					if( ( processor + 1 ) > s_numPhysicalCPUCores )
 					{
 						s_numPhysicalCPUCores = processor + 1;
@@ -521,9 +521,9 @@ void Sys_CPUCount( int& numLogicalCPUCores, int& numPhysicalCPUCores, int& numCP
 					idStr::Copynz( number, buf + pos, sizeof( number ) );
 					assert( ( end - pos ) > 0 && ( end - pos ) < sizeof( number ) );
 					number[ end - pos ] = '\0';
-					
+
 					int coreId = atoi( number );
-					
+
 					if( ( coreId + 1 ) > s_numLogicalCPUCores )
 					{
 						s_numLogicalCPUCores = coreId + 1;
@@ -535,14 +535,14 @@ void Sys_CPUCount( int& numLogicalCPUCores, int& numPhysicalCPUCores, int& numCP
 					break;
 				}
 			}
-			
+
 			pos = strchr( buf + pos, '\n' ) - buf + 1;
 		}
 	}
-	
+
 	common->Printf( "/proc/cpuinfo CPU processors: %d\n", s_numPhysicalCPUCores );
 	common->Printf( "/proc/cpuinfo CPU logical cores: %d\n", s_numLogicalCPUCores );
-	
+
 	numPhysicalCPUCores = s_numPhysicalCPUCores;
 	numLogicalCPUCores = s_numLogicalCPUCores;
 	numCPUPackages = s_numCPUPackages;
@@ -559,7 +559,7 @@ int Sys_GetSystemRam()
 {
 	long	count, page_size;
 	int		mb;
-	
+
 	count = sysconf( _SC_PHYS_PAGES );
 	if( count == -1 )
 	{
@@ -665,19 +665,19 @@ void idSysLocal::OpenURL( const char* url, bool quit )
 	const char*	script_path;
 	idFile*		script_file;
 	char		cmdline[ 1024 ];
-	
+
 	static bool	quit_spamguard = false;
-	
+
 	if( quit_spamguard )
 	{
 		common->DPrintf( "Sys_OpenURL: already in a doexit sequence, ignoring %s\n", url );
 		return;
 	}
-	
+
 	common->Printf( "Open URL: %s\n", url );
 	// opening an URL on *nix can mean a lot of things ..
 	// just spawn a script instead of deciding for the user :-)
-	
+
 	// look in the savepath first, then in the basepath
 	script_path = fileSystem->BuildOSPath( cvarSystem->GetCVarString( "fs_savepath" ), "", "openurl.sh" );
 	script_file = fileSystem->OpenExplicitFileRead( script_path );
@@ -693,15 +693,15 @@ void idSysLocal::OpenURL( const char* url, bool quit )
 		return;
 	}
 	fileSystem->CloseFile( script_file );
-	
+
 	// if we are going to quit, only accept a single URL before quitting and spawning the script
 	if( quit )
 	{
 		quit_spamguard = true;
 	}
-	
+
 	common->Printf( "URL script: %s\n", script_path );
-	
+
 	// StartProcess is going to execute a system() call with that - hence the &
 	idStr::snPrintf( cmdline, 1024, "%s '%s' &",  script_path, url );
 	sys->StartProcess( cmdline, quit );
@@ -723,7 +723,7 @@ void Sys_FPU_SetDAZ( bool enable )
 {
 	/*
 	DWORD dwData;
-	
+
 	_asm {
 		movzx	ecx, byte ptr enable
 		and		ecx, 1
@@ -747,7 +747,7 @@ void Sys_FPU_SetFTZ( bool enable )
 {
 	/*
 	DWORD dwData;
-	
+
 	_asm {
 		movzx	ecx, byte ptr enable
 		and		ecx, 1
@@ -802,36 +802,36 @@ static void Sys_HandleAndroidCommand( struct android_app* app, int32_t cmd )
 			//*((struct saved_state*)engine->app->savedState) = engine->state;
 			//engine->app->savedStateSize = sizeof(struct saved_state);
 			break;
-			
+
 		case APP_CMD_INIT_WINDOW:
 			__android_log_print( ANDROID_LOG_DEBUG, "Tekuum", "Android command: Init window" );
-			
+
 			if( android.app->window != NULL )
 			{
 				Posix_EarlyInit( );
 				common->Init( 0, NULL, NULL );
 				Posix_LateInit();
-				
+
 				common->Frame();
 			}
 			break;
-			
+
 		case APP_CMD_TERM_WINDOW:
 			__android_log_print( ANDROID_LOG_DEBUG, "Tekuum", "Android command: Terminate window" );
 			common->Shutdown();
 			android.isTerminating = true;
 			break;
-			
+
 		case APP_CMD_RESUME:
 			__android_log_print( ANDROID_LOG_DEBUG, "Tekuum", "Android command: Resume" );
 			android.isRunning = true;
 			break;
-			
+
 		case APP_CMD_PAUSE:
 			__android_log_print( ANDROID_LOG_DEBUG, "Tekuum", "Android command: Pause" );
 			android.isRunning = false;
 			break;
-			
+
 		case APP_CMD_GAINED_FOCUS:
 			__android_log_print( ANDROID_LOG_DEBUG, "Tekuum", "Android command: Gained focus" );
 			// When our app gains focus, we start monitoring the accelerometer.
@@ -844,7 +844,7 @@ static void Sys_HandleAndroidCommand( struct android_app* app, int32_t cmd )
 			//			engine->accelerometerSensor, (1000L/60)*1000);
 			//}
 			break;
-			
+
 		case APP_CMD_LOST_FOCUS:
 			__android_log_print( ANDROID_LOG_DEBUG, "Tekuum", "Android command: Lost focus" );
 			// When our app loses focus, we stop monitoring the accelerometer.
@@ -864,7 +864,7 @@ static void Sys_HandleAndroidCommand( struct android_app* app, int32_t cmd )
 static int32 Sys_HandleAndroidInputEvent( struct android_app* app, AInputEvent* event )
 {
 	__android_log_print( ANDROID_LOG_DEBUG, "Tekuum", "Sys_HandleAndroidInputEvent" );
-	
+
 	return 0;
 }
 
@@ -873,27 +873,27 @@ static int32 Sys_HandleAndroidInputEvent( struct android_app* app, AInputEvent* 
 void android_main( struct android_app* state )
 {
 	app_dummy();
-	
+
 	memset( &android, 0, sizeof( android ) );
-	
+
 	__android_log_print( ANDROID_LOG_DEBUG, "Tekuum", "Inside Tekuum source!" );
-	
+
 	state->userData = &android;
 	state->onAppCmd = Sys_HandleAndroidCommand;
 	state->onInputEvent = Sys_HandleAndroidInputEvent;
-	
+
 	android.app = state;
-	
+
 	android.sensorManager = ASensorManager_getInstance();
 	android.accelerometerSensor = ASensorManager_getDefaultSensor( android.sensorManager, ASENSOR_TYPE_ACCELEROMETER );
 	android.sensorEventQueue = ASensorManager_createEventQueue( android.sensorManager, state->looper, LOOPER_ID_USER, NULL, NULL );
-	
+
 	if( state->savedState != NULL )
 	{
 		//android.state = *(struct saved_state*)state->savedState;
 	}
-	
-	
+
+
 	while( !android.isTerminating )
 		//while( common != NULL && common->IsInitialized() )
 	{
@@ -901,7 +901,7 @@ void android_main( struct android_app* state )
 		int ident;
 		int events;
 		struct android_poll_source* source;
-		
+
 		// If not animating, we will block forever waiting for events.
 		// If animating, we loop until all events are read, then continue
 		// to draw the next frame of animation.
@@ -912,7 +912,7 @@ void android_main( struct android_app* state )
 			{
 				source->process( state, source );
 			}
-			
+
 			// If a sensor has data, process it now.
 			/*
 			if( ident == LOOPER_ID_USER )
@@ -929,7 +929,7 @@ void android_main( struct android_app* state )
 				}
 			}
 			*/
-			
+
 			// Check if we are exiting.
 			if( state->destroyRequested != 0 )
 			{
@@ -938,30 +938,30 @@ void android_main( struct android_app* state )
 				return;
 			}
 		}
-		
+
 		common->Frame();
 	}
-	
+
 }
 //}
 #else
 int JE_Main( int argc, char** argv )
 {
 	__android_log_print( ANDROID_LOG_DEBUG, "Tekuum", "Inside Tekuum source!" );
-	
+
 	for( int i = 0; i < argc; i++ )
 	{
 		__android_log_print( ANDROID_LOG_DEBUG, "Tekuum", "main(argc=%d, %s)", i, argv[i] );
 	}
-	
+
 #ifdef ID_MCHECK
 	// must have -lmcheck linkage
 	mcheck( abrt_func );
 	Sys_Printf( "memory consistency checking enabled\n" );
 #endif
-	
+
 	Posix_EarlyInit( );
-	
+
 	if( argc > 0 )
 	{
 		common->Init( argc, ( const char** )&argv[0], NULL );
@@ -970,16 +970,16 @@ int JE_Main( int argc, char** argv )
 	{
 		common->Init( 0, NULL, NULL );
 	}
-	
+
 	Posix_LateInit( );
-	
+
 #if 0 //defined(USE_NATIVE_ACTIVITY)
 	while( 1 )
 	{
 		common->Frame();
 	}
 #endif
-	
+
 	return 0;
 }
 #endif
@@ -990,7 +990,7 @@ int JE_Main( int argc, char** argv )
 void JE_DrawFrame()
 {
 	//__android_log_print(ANDROID_LOG_DEBUG, "Tekuum", "JNI_NextFrame()");
-	
+
 	common->Frame();
 }
 
@@ -1000,36 +1000,36 @@ extern "C"
 	jniExport_t* GetEngineJavaAPI( int apiVersion, jniImport_t* jimp )
 	{
 		static jniExport_t je;
-		
+
 		ji = *jimp;
-		
+
 		__android_log_print( ANDROID_LOG_DEBUG, "Tekuum", "GetEngineJavaAPI()" );
-		
+
 		memset( &je, 0, sizeof( je ) );
-		
+
 		if( apiVersion != ENGINE_JNI_API_VERSION )
 		{
 			__android_log_print( ANDROID_LOG_ERROR, "Tekuum", "GetEngineJavaAPI: Mismatched ENGINE_JNI_API_VERSION: expected %i, got %i\n", ENGINE_JNI_API_VERSION, apiVersion );
 			return NULL;
 		}
-		
+
 		je.Main = JE_Main;
 		je.DrawFrame = JE_DrawFrame;
-		
+
 		je.QueueKeyEvent = JE_QueueKeyEvent;
 		je.QueueMotionEvent = JE_QueueMotionEvent;
 		je.QueueTrackballEvent = JE_QueueTrackballEvent;
 		je.QueueJoystickEvent = JE_QueueJoystickEvent;
 		je.QueueConsoleEvent = JE_QueueConsoleEvent;
-		
+
 		je.SetResolution = JE_SetResolution;
-		
+
 		je.IsConsoleActive = JE_IsConsoleActive;
 		je.IsMenuActive = JE_IsMenuActive;
-		
+
 		return &je;
 	}
-	
+
 } // extern C
 
 #endif // #if !defined(USE_NATIVE_ACTIVITY)

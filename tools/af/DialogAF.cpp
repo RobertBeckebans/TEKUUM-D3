@@ -39,9 +39,9 @@ If you have questions concerning this license or the applicable additional terms
 #include "DialogAFConstraint.h"
 
 #ifdef ID_DEBUG_MEMORY
-#undef new
-#undef DEBUG_NEW
-#define DEBUG_NEW new
+	#undef new
+	#undef DEBUG_NEW
+	#define DEBUG_NEW new
 #endif
 
 // DialogAF
@@ -116,7 +116,7 @@ void DialogAF::LoadFile( idDeclAF* af )
 	propertiesDlg->LoadFile( af );
 	bodyDlg->LoadFile( af );
 	constraintDlg->LoadFile( af );
-	
+
 	if( file )
 	{
 		// select file in AFList
@@ -185,7 +185,7 @@ DialogAF::InitAFList
 void DialogAF::InitAFList()
 {
 	int i, c;
-	
+
 	AFList.ResetContent();
 	c = declManager->GetNumDecls( DECL_AF );
 	for( i = 0; i < c; i++ )
@@ -254,12 +254,12 @@ DialogAF::OnInitDialog
 BOOL DialogAF::OnInitDialog()
 {
 	CDialog::OnInitDialog();
-	
+
 	com_editors |= EDITOR_AF;
-	
+
 	// initialize list with articulated figure files
 	InitAFList();
-	
+
 	// initialize tabs
 	wndTabs = ( CTabCtrl* ) GetDlgItem( IDC_DIALOG_AF_TAB_MODE );
 	AddTabItem( AFTAB_VIEW, "View" );
@@ -267,29 +267,29 @@ BOOL DialogAF::OnInitDialog()
 	AddTabItem( AFTAB_BODIES, "Bodies" );
 	AddTabItem( AFTAB_CONSTRAINTS, "Constraints" );
 	SetTab( AFTAB_VIEW );
-	
+
 	// create child dialog windows
 	viewDlg = new DialogAFView( this );
 	propertiesDlg = new DialogAFProperties( this );
 	bodyDlg = new DialogAFBody( this );
 	constraintDlg = new DialogAFConstraint( this );
-	
+
 	// the body dialog may force the constraint dialog to reload the file
 	bodyDlg->constraintDlg = constraintDlg;
-	
+
 	// the properties dialog may force the body or constraint dialog to reload the file
 	propertiesDlg->bodyDlg = bodyDlg;
 	propertiesDlg->constraintDlg = constraintDlg;
-	
+
 	// set active child dialog
 	wndTabDisplay = viewDlg;
 	SetTabChildPos();
-	
+
 	EnableToolTips( TRUE );
-	
+
 	GetDlgItem( IDC_BUTTON_AF_DELETE )->EnableWindow( false );
 	GetDlgItem( IDC_BUTTON_AF_SAVE )->EnableWindow( false );
-	
+
 	return TRUE;  // return TRUE unless you set the focus to a control
 	// EXCEPTION: OCX Property Pages should return FALSE
 }
@@ -328,13 +328,13 @@ void AFEditorInit( const idDict* spawnArgs )
 						"Set r_fullscreen to 0 and vid_restart.\n" );
 		return;
 	}
-	
+
 	if( g_AFDialog == NULL )
 	{
 		InitAfx();
 		g_AFDialog = new DialogAF();
 	}
-	
+
 	if( g_AFDialog->GetSafeHwnd() == NULL )
 	{
 		g_AFDialog->Create( IDD_DIALOG_AF );
@@ -344,12 +344,12 @@ void AFEditorInit( const idDict* spawnArgs )
 				g_AFDialog->SetWindowPos( NULL, rct.left, rct.top, 0, 0, SWP_NOSIZE );
 		*/
 	}
-	
+
 	idKeyInput::ClearStates();
-	
+
 	g_AFDialog->ShowWindow( SW_SHOW );
 	g_AFDialog->SetFocus();
-	
+
 	if( spawnArgs )
 	{
 		// select AF based on spawn args
@@ -378,7 +378,7 @@ void AFEditorRun()
 #else
 	MSG* msg = &m_msgCur;
 #endif
-	
+
 	while( ::PeekMessage( msg, NULL, NULL, NULL, PM_NOREMOVE ) )
 	{
 		// pump message
@@ -442,7 +442,7 @@ void DialogAF::OnDestroy()
 {
 
 	com_editors &= ~EDITOR_AF;
-	
+
 	return CDialog::OnDestroy();
 }
 
@@ -472,17 +472,17 @@ DialogAF::OnTcnSelchangeTabMode
 void DialogAF::OnTcnSelchangeTabMode( NMHDR* pNMHDR, LRESULT* pResult )
 {
 	*pResult = 0;
-	
+
 	// hide the current tab child dialog box, if any.
 	if( wndTabDisplay != NULL )
 	{
 		wndTabDisplay->ShowWindow( SW_HIDE );
 	}
-	
+
 	TCITEM item;
 	item.mask = TCIF_PARAM;
 	wndTabs->GetItem( wndTabs->GetCurSel(), &item );
-	
+
 	// show the new tab child dialog box.
 	switch( item.lParam )
 	{
@@ -499,7 +499,7 @@ void DialogAF::OnTcnSelchangeTabMode( NMHDR* pNMHDR, LRESULT* pResult )
 			wndTabDisplay = constraintDlg;
 			break;
 	}
-	
+
 	SetTabChildPos();
 }
 
@@ -534,21 +534,21 @@ void DialogAF::OnBnClickedButtonAfNew()
 	DialogAFName nameDlg;
 	CString name;
 	idStr fileName;
-	
+
 	nameDlg.SetComboBox( &AFList );
 	if( nameDlg.DoModal() != IDOK )
 	{
 		return;
 	}
 	nameDlg.GetName( name );
-	
+
 	CFileDialog dlgSave( FALSE, "map", NULL, OFN_OVERWRITEPROMPT, "AF Files (*.af)|*.af|All Files (*.*)|*.*||", AfxGetMainWnd() );
 	if( dlgSave.DoModal() != IDOK )
 	{
 		return;
 	}
 	fileName = fileSystem->OSPathToRelativePath( dlgSave.m_ofn.lpstrFile );
-	
+
 	// create a new .af file
 	AFList.AddString( name );
 	AFList.SetCurSel( AFList.FindString( -1, name ) );
@@ -565,7 +565,7 @@ DialogAF::OnBnClickedButtonAfDelete
 void DialogAF::OnBnClickedButtonAfDelete()
 {
 	int i;
-	
+
 	i = AFList.GetCurSel();
 	if( i != CB_ERR )
 	{
@@ -644,7 +644,7 @@ DialogAF::OnBnClickedCancel
 void DialogAF::OnBnClickedCancel()
 {
 	int i, c;
-	
+
 	// check if there are modified .af files and come up with a warning if so
 	c = declManager->GetNumDecls( DECL_AF );
 	for( i = 0; i < c; i++ )

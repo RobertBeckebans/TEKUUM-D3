@@ -45,7 +45,7 @@ void rbAudioHardwarePulseAudio::Release()
 	{
 		pa_simple_free( paPlayback );
 	}
-	
+
 	if( mixBuffer )
 	{
 		free( mixBuffer );
@@ -75,16 +75,16 @@ bool rbAudioHardwarePulseAudio::Initialize()
 {
 	int err;
 	char driverName[128];
-	
+
 	common->Printf( "------ PulseAudio Sound Initialization -----\n" );
-	
+
 	// sample format to use
 	pa_sample_spec sampleSpec;
-	
+
 	sampleSpec.channels = 2;
 	sampleSpec.format = PA_SAMPLE_S16LE;
 	sampleSpec.rate = 44100;
-	
+
 	int error;
 	paPlayback = pa_simple_new( NULL, "Tekuum", PA_STREAM_PLAYBACK, NULL, "playback", &sampleSpec, NULL, NULL, &error );
 	if( paPlayback == NULL )
@@ -93,9 +93,9 @@ bool rbAudioHardwarePulseAudio::Initialize()
 		InitFailed();
 		return false;
 	}
-	
+
 	// channels
-	
+
 	// sanity over number of speakers
 #if 0
 	if( idSoundSystemLocal::s_numberOfSpeakers.GetInteger() != 6 && idSoundSystemLocal::s_numberOfSpeakers.GetInteger() != 2 )
@@ -103,7 +103,7 @@ bool rbAudioHardwarePulseAudio::Initialize()
 		common->Warning( "invalid value for s_numberOfSpeakers. Use either 2 or 6" );
 		idSoundSystemLocal::s_numberOfSpeakers.SetInteger( 2 );
 	}
-	
+
 	m_channels = idSoundSystemLocal::s_numberOfSpeakers.GetInteger();
 	if( ( err = id_snd_pcm_hw_params_set_channels( m_pcm_handle, hwparams, m_channels ) ) < 0 )
 	{
@@ -135,16 +135,16 @@ bool rbAudioHardwarePulseAudio::Initialize()
 	common->Printf( "fallback to stereo\n" );
 	idSoundSystemLocal::s_numberOfSpeakers.SetInteger( 2 );
 #endif
-	
+
 	// TODO: can use swparams to setup the device so it doesn't underrun but rather loops over
 	// snd_pcm_sw_params_set_stop_threshold
 	// To get alsa to just loop on underruns. set the swparam stop_threshold to equal buffer size. The sound buffer will just loop and never throw an xrun.
-	
+
 	// allocate the final mix buffer
 	mixBufferSize = MIXBUFFER_SAMPLES * numChannels * 2;
 	mixBuffer = malloc( mixBufferSize );
 	common->Printf( "allocated a mix buffer of %d bytes\n", mixBufferSize );
-	
+
 	common->Printf( "--------------------------------------\n" );
 	return true;
 }
@@ -189,7 +189,7 @@ rbAudioHardwarePulseAudio::Flush
 bool rbAudioHardwarePulseAudio::Flush()
 {
 	int error;
-	
+
 #if 0
 	if( pa_simple_drain( paPlayback, &error ) < 0 )
 	{
@@ -198,9 +198,9 @@ bool rbAudioHardwarePulseAudio::Flush()
 		return false;
 	}
 #endif
-	
+
 	Write( true );
-	
+
 	return true;
 }
 
@@ -213,26 +213,26 @@ rely on m_freeWriteChunks which has been set in Flush() before engine did the mi
 void rbAudioHardwarePulseAudio::Write( bool flushing )
 {
 	int error;
-	
+
 	if( !flushing && remainingFrames )
 	{
 		// if we write after a new mixing loop, we should have m_writeChunk == 0
 		// otherwise that last remaining chunk that was never flushed out to the audio device has just been overwritten
 		Sys_Printf( "rbAudioHardwarePulseAudio::Write: %d frames overflowed and dropped\n", remainingFrames );
 	}
-	
+
 	if( !flushing )
 	{
 		// if running after the mix loop, then we have a full buffer to write out
 		remainingFrames = MIXBUFFER_SAMPLES;
 	}
-	
+
 	if( remainingFrames == 0 )
 	{
 		return;
 	}
 	// write the max frames you can in one shot - we need to write it all out in Flush() calls before the next Write() happens
-	
+
 	//intptr_t pos = (intptr_t)mixBuffer + ( MIXBUFFER_SAMPLES - remainingFrames ) * numChannels * 2;
 	if( pa_simple_write( paPlayback, ( void* ) mixBuffer, mixBufferSize, &error ) < 0 )
 	{
@@ -243,7 +243,7 @@ void rbAudioHardwarePulseAudio::Write( bool flushing )
 	{
 		remainingFrames = 0;
 	}
-	
+
 	/*
 	// what to write and how much
 	int pos = (int)m_buffer + ( MIXBUFFER_CHUNKS - m_writeChunks ) * m_channels * 2 * MIXBUFFER_SAMPLES / MIXBUFFER_CHUNKS;
@@ -259,20 +259,20 @@ void rbAudioHardwarePulseAudio::Write( bool flushing )
 	}
 	m_writeChunks -= Min( m_writeChunks, m_freeWriteChunks );
 	 */
-	
+
 	/*
 	// RB: 64 bit fixes, changed int to intptr_t
 	intptr_t pos = (intptr_t)mixBuffer + ( MIXBUFFER_SAMPLES - remainingFrames ) * numChannels * 2;
 	snd_pcm_sframes_t frames = id_snd_pcm_writei( m_pcm_handle, (void*)pos, m_remainingFrames );
 	// RB end
-	
+
 	if ( frames < 0 ) {
 		if ( frames != -EAGAIN ) {
 			Sys_Printf( "snd_pcm_writei %d frames failed: %s\n", m_remainingFrames, id_snd_strerror( frames ) );
 		}
 		return;
 	}
-	
+
 	remainingFrames -= frames;
 	*/
 }

@@ -56,7 +56,7 @@ extern "C"
 //	int			luaopen_sys( lua_State* L );
 
 	int			luareg_globals( lua_State* L );
-	
+
 	int			luaopen_Window( lua_State* L );
 	int			luaopen_Rectangle( lua_State* L );
 	int			luaopen_Vec3( lua_State* L );

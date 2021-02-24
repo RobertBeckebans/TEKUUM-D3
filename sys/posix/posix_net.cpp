@@ -41,7 +41,7 @@ If you have questions concerning this license or the applicable additional terms
 #include <sys/select.h>
 #include <net/if.h>
 #if MACOS_X
-#include <ifaddrs.h>
+	#include <ifaddrs.h>
 #endif
 
 #include "../../idlib/precompiled.h"
@@ -71,18 +71,18 @@ NetadrToSockadr
 static void NetadrToSockadr( const netadr_t* a, struct sockaddr_in* s )
 {
 	memset( s, 0, sizeof( *s ) );
-	
+
 	if( a->type == NA_BROADCAST )
 	{
 		s->sin_family = AF_INET;
-		
+
 		s->sin_port = htons( ( short )a->port );
 		*( int* ) &s->sin_addr = -1;
 	}
 	else if( a->type == NA_IP || a->type == NA_LOOPBACK )
 	{
 		s->sin_family = AF_INET;
-		
+
 		*( int* ) &s->sin_addr = *( int* ) &a->ip;
 		s->sin_port = htons( ( short )a->port );
 	}
@@ -149,12 +149,12 @@ static bool StringToSockaddr( const char* s, struct sockaddr_in* sadr, bool doDN
 	struct hostent* h;
 	char buf[256];
 	int port;
-	
+
 	memset( sadr, 0, sizeof( *sadr ) );
 	sadr->sin_family = AF_INET;
-	
+
 	sadr->sin_port = 0;
-	
+
 	if( s[0] >= '0' && s[0] <= '9' )
 	{
 		if( !inet_aton( s, &sadr->sin_addr ) )
@@ -186,7 +186,7 @@ static bool StringToSockaddr( const char* s, struct sockaddr_in* sadr, bool doDN
 		*( int* ) &sadr->sin_addr =
 			*( int* ) h->h_addr_list[0];
 	}
-	
+
 	return true;
 }
 
@@ -198,12 +198,12 @@ Sys_StringToAdr
 bool Sys_StringToNetAdr( const char* s, netadr_t* a, bool doDNSResolve )
 {
 	struct sockaddr_in sadr;
-	
+
 	if( !StringToSockaddr( s, &sadr, doDNSResolve ) )
 	{
 		return false;
 	}
-	
+
 	SockadrToNetadr( &sadr, a );
 	return true;
 }
@@ -216,7 +216,7 @@ Sys_NetAdrToString
 const char* Sys_NetAdrToString( const netadr_t a )
 {
 	static char s[64];
-	
+
 	if( a.type == NA_LOOPBACK )
 	{
 		if( a.port )
@@ -248,27 +248,27 @@ bool Sys_IsLANAddress( const netadr_t adr )
 	unsigned int* p_ip;
 	unsigned int ip;
 	// RB end
-	
+
 #if ID_NOLANADDRESS
 	common->Printf( "Sys_IsLANAddress: ID_NOLANADDRESS\n" );
 	return false;
 #endif
-	
+
 	if( adr.type == NA_LOOPBACK )
 	{
 		return true;
 	}
-	
+
 	if( adr.type != NA_IP )
 	{
 		return false;
 	}
-	
+
 	if( !num_interfaces )
 	{
 		return false;	// well, if there's no networking, there are no LAN addresses, right
 	}
-	
+
 	for( i = 0; i < num_interfaces; i++ )
 	{
 		// RB: 64 bit fixes, changed long to int
@@ -280,7 +280,7 @@ bool Sys_IsLANAddress( const netadr_t adr )
 			return true;
 		}
 	}
-	
+
 	return false;
 }
 
@@ -297,12 +297,12 @@ bool Sys_CompareNetAdrBase( const netadr_t a, const netadr_t b )
 	{
 		return false;
 	}
-	
+
 	if( a.type == NA_LOOPBACK )
 	{
 		return true;
 	}
-	
+
 	if( a.type == NA_IP )
 	{
 		if( a.ip[0] == b.ip[0] && a.ip[1] == b.ip[1] && a.ip[2] == b.ip[2] && a.ip[3] == b.ip[3] )
@@ -311,7 +311,7 @@ bool Sys_CompareNetAdrBase( const netadr_t a, const netadr_t b )
 		}
 		return false;
 	}
-	
+
 	common->Printf( "Sys_CompareNetAdrBase: bad address type\n" );
 	return false;
 }
@@ -325,38 +325,46 @@ void Sys_InitNetworking()
 {
 	// haven't been able to clearly pinpoint which standards or RFCs define SIOCGIFCONF, SIOCGIFADDR, SIOCGIFNETMASK ioctls
 	// it seems fairly widespread, in Linux kernel ioctl, and in BSD .. so let's assume it's always available on our targets
-	
+
 #if MACOS_X
 	unsigned int ip, mask;
 	struct ifaddrs* ifap, *ifp;
-	
+
 	num_interfaces = 0;
-	
+
 	if( getifaddrs( &ifap ) < 0 )
 	{
 		common->FatalError( "InitNetworking: SIOCGIFCONF error - %s\n", strerror( errno ) );
 		return;
 	}
-	
+
 	for( ifp = ifap; ifp; ifp = ifp->ifa_next )
 	{
 		if( ifp->ifa_addr->sa_family != AF_INET )
+		{
 			continue;
-			
+		}
+
 		if( !( ifp->ifa_flags & IFF_UP ) )
+		{
 			continue;
-			
+		}
+
 		if( !ifp->ifa_addr )
+		{
 			continue;
-			
+		}
+
 		if( !ifp->ifa_netmask )
+		{
 			continue;
-			
+		}
+
 		// RB: 64 bit fixes, changed long to int
 		ip = ntohl( *( unsigned int* )&ifp->ifa_addr->sa_data[2] );
 		mask = ntohl( *( unsigned int* )&ifp->ifa_netmask->sa_data[2] );
 		// RB end
-		
+
 		if( ip == INADDR_LOOPBACK )
 		{
 			common->Printf( "loopback\n" );
@@ -385,9 +393,9 @@ void Sys_InitNetworking()
 	ifreq*	ifr;
 	int		ifindex;
 	unsigned int ip, mask;
-	
+
 	num_interfaces = 0;
-	
+
 	s = socket( AF_INET, SOCK_DGRAM, 0 );
 	ifc.ifc_len = MAX_INTERFACES * sizeof( ifreq );
 	ifc.ifc_buf = buf;
@@ -467,7 +475,7 @@ static int IPSocket( const char* net_interface, int port, netadr_t* bound_to = N
 	int newsocket;
 	struct sockaddr_in address;
 	int i = 1;
-	
+
 	if( net_interface )
 	{
 		common->Printf( "Opening IP socket: %s:%i\n", net_interface, port );
@@ -476,7 +484,7 @@ static int IPSocket( const char* net_interface, int port, netadr_t* bound_to = N
 	{
 		common->Printf( "Opening IP socket: localhost:%i\n", port );
 	}
-	
+
 	if( ( newsocket = socket( PF_INET, SOCK_DGRAM, IPPROTO_UDP ) ) == -1 )
 	{
 		common->Printf( "ERROR: IPSocket: socket: %s", strerror( errno ) );
@@ -496,7 +504,7 @@ static int IPSocket( const char* net_interface, int port, netadr_t* bound_to = N
 		common->Printf( "ERROR: IPSocket: setsockopt SO_BROADCAST:%s\n", strerror( errno ) );
 		return 0;
 	}
-	
+
 	if( !net_interface || !net_interface[ 0 ]
 			|| !idStr::Icmp( net_interface, "localhost" ) )
 	{
@@ -506,7 +514,7 @@ static int IPSocket( const char* net_interface, int port, netadr_t* bound_to = N
 	{
 		StringToSockaddr( net_interface, &address, true );
 	}
-	
+
 	if( port == PORT_ANY )
 	{
 		address.sin_port = 0;
@@ -515,16 +523,16 @@ static int IPSocket( const char* net_interface, int port, netadr_t* bound_to = N
 	{
 		address.sin_port = htons( ( short ) port );
 	}
-	
+
 	address.sin_family = AF_INET;
-	
+
 	if( bind( newsocket, ( const struct sockaddr* )&address, sizeof( address ) ) == -1 )
 	{
 		common->Printf( "ERROR: IPSocket: bind: %s\n", strerror( errno ) );
 		close( newsocket );
 		return 0;
 	}
-	
+
 	if( bound_to )
 	{
 		unsigned int len = sizeof( address );
@@ -536,7 +544,7 @@ static int IPSocket( const char* net_interface, int port, netadr_t* bound_to = N
 		}
 		SockadrToNetadr( &address, bound_to );
 	}
-	
+
 	return newsocket;
 }
 
@@ -586,15 +594,15 @@ bool idPort::GetPacket( netadr_t& net_from, void* data, int& size, int maxSize )
 	int ret;
 	struct sockaddr_in from;
 	int fromlen;
-	
+
 	if( !netSocket )
 	{
 		return false;
 	}
-	
+
 	fromlen = sizeof( from );
 	ret = recvfrom( netSocket, data, maxSize, 0, ( struct sockaddr* ) &from, ( socklen_t* ) &fromlen );
-	
+
 	if( ret == -1 )
 	{
 		if( errno == EWOULDBLOCK || errno == ECONNREFUSED )
@@ -605,9 +613,9 @@ bool idPort::GetPacket( netadr_t& net_from, void* data, int& size, int maxSize )
 		common->DPrintf( "idPort::GetPacket recvfrom(): %s\n", strerror( errno ) );
 		return false;
 	}
-	
+
 	assert( ret < maxSize );
-	
+
 	SockadrToNetadr( &from, &net_from );
 	size = ret;
 	return true;
@@ -623,20 +631,20 @@ bool idPort::GetPacketBlocking( netadr_t& net_from, void* data, int& size, int m
 	fd_set				set;
 	struct timeval		tv;
 	int					ret;
-	
+
 	if( !netSocket )
 	{
 		return false;
 	}
-	
+
 	if( timeout < 0 )
 	{
 		return GetPacket( net_from, data, size, maxSize );
 	}
-	
+
 	FD_ZERO( &set );
 	FD_SET( netSocket, &set );
-	
+
 	tv.tv_sec = timeout / 1000;
 	tv.tv_usec = ( timeout % 1000 ) * 1000;
 	ret = select( netSocket + 1, &set, NULL, NULL, &tv );
@@ -652,7 +660,7 @@ bool idPort::GetPacketBlocking( netadr_t& net_from, void* data, int& size, int m
 			common->Error( "idPort::GetPacketBlocking: select failed: %s\n", strerror( errno ) );
 		}
 	}
-	
+
 	if( ret == 0 )
 	{
 		// timed out
@@ -683,20 +691,20 @@ void idPort::SendPacket( const netadr_t to, const void* data, int size )
 {
 	int ret;
 	struct sockaddr_in addr;
-	
+
 	if( to.type == NA_BAD )
 	{
 		common->Warning( "idPort::SendPacket: bad address type NA_BAD - ignored" );
 		return;
 	}
-	
+
 	if( !netSocket )
 	{
 		return;
 	}
-	
+
 	NetadrToSockadr( &to, &addr );
-	
+
 	ret = sendto( netSocket, data, size, 0, ( struct sockaddr* ) &addr, sizeof( addr ) );
 	if( ret == -1 )
 	{
@@ -765,19 +773,19 @@ bool idTCP::Init( const char* host, short port )
 	common->Printf( "\"%s\" resolved to %i.%i.%i.%i:%i\n", host,
 					address.ip[0], address.ip[1], address.ip[2], address.ip[3],  address.port );
 	NetadrToSockadr( &address, &sadr );
-	
+
 	if( fd )
 	{
 		common->Warning( "idTCP::Init: already initialized?\n" );
 	}
-	
+
 	if( ( fd = socket( PF_INET, SOCK_STREAM, 0 ) ) == -1 )
 	{
 		fd = 0;
 		common->Printf( "ERROR: idTCP::Init: socket: %s\n", strerror( errno ) );
 		return false;
 	}
-	
+
 	if( connect( fd, ( const sockaddr* )&sadr, sizeof( sadr ) ) == -1 )
 	{
 		common->Printf( "ERROR: idTCP::Init: connect: %s\n", strerror( errno ) );
@@ -785,7 +793,7 @@ bool idTCP::Init( const char* host, short port )
 		fd = 0;
 		return false;
 	}
-	
+
 	int status;
 	if( ( status = fcntl( fd, F_GETFL, 0 ) ) != -1 )
 	{
@@ -799,7 +807,7 @@ bool idTCP::Init( const char* host, short port )
 		fd = 0;
 		return false;
 	}
-	
+
 	common->DPrintf( "Opened TCP connection\n" );
 	return true;
 }
@@ -826,13 +834,13 @@ idTCP::Read
 int idTCP::Read( void* data, int size )
 {
 	int nbytes;
-	
+
 	if( !fd )
 	{
 		common->Printf( "idTCP::Read: not initialized\n" );
 		return -1;
 	}
-	
+
 #if defined(_GNU_SOURCE)
 	// handle EINTR interrupted system call with TEMP_FAILURE_RETRY -  this is probably GNU libc specific
 	if( ( nbytes = TEMP_FAILURE_RETRY( read( fd, data, size ) ) ) == -1 )
@@ -854,14 +862,14 @@ int idTCP::Read( void* data, int size )
 		Close();
 		return -1;
 	}
-	
+
 	// a successful read of 0 bytes indicates remote has closed the connection
 	if( nbytes == 0 )
 	{
 		common->DPrintf( "idTCP::Read: read 0 bytes - assume connection closed\n" );
 		return -1;
 	}
-	
+
 	return nbytes;
 }
 
@@ -879,27 +887,27 @@ static void got_SIGPIPE( int signum )
 int	idTCP::Write( void* data, int size )
 {
 	int nbytes;
-	
+
 	if( !fd )
 	{
 		common->Printf( "idTCP::Write: not initialized\n" );
 		return -1;
 	}
-	
+
 	struct sigaction bak_action;
 	struct sigaction action;
-	
+
 	action.sa_handler = got_SIGPIPE;
 	sigemptyset( &action.sa_mask );
 	action.sa_flags = 0;
-	
+
 	if( sigaction( SIGPIPE, &action, &bak_action ) != 0 )
 	{
 		common->Printf( "ERROR: idTCP::Write: failed to set temporary SIGPIPE handler\n" );
 		Close();
 		return -1;
 	}
-	
+
 #if defined(_GNU_SOURCE)
 	// handle EINTR interrupted system call with TEMP_FAILURE_RETRY -  this is probably GNU libc specific
 	if( ( nbytes = TEMP_FAILURE_RETRY( write( fd, data, size ) ) ) == -1 )
@@ -917,13 +925,13 @@ int	idTCP::Write( void* data, int size )
 		Close();
 		return -1;
 	}
-	
+
 	if( sigaction( SIGPIPE, &bak_action, NULL ) != 0 )
 	{
 		common->Printf( "ERROR: idTCP::Write: failed to reset SIGPIPE handler\n" );
 		Close();
 		return -1;
 	}
-	
+
 	return nbytes;
 }

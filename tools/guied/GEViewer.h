@@ -34,21 +34,21 @@ class rvGEViewer
 public:
 
 	rvGEViewer( );
-	
+
 	bool				Create( HWND parent );
 	bool				Destroy();
 	bool				OpenFile( const char* filename );
-	
+
 	void				RunFrame();
-	
+
 	HWND				GetWindow();
-	
+
 protected:
 
 	void				Render( HDC dc );
 	void				Play();
 	void				Pause();
-	
+
 	HWND					mWnd;
 	int						mWindowWidth;
 	int						mWindowHeight;
@@ -58,13 +58,13 @@ protected:
 	HWND					mToolbar;
 	int						mLastTime;
 	int						mTime;
-	
+
 	LRESULT		HandlePaint( WPARAM wParam, LPARAM lParam );
-	
+
 private:
 
 	bool	SetupPixelFormat();
-	
+
 	static LRESULT CALLBACK WndProc( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam );
 };
 

@@ -70,12 +70,12 @@ BOOL FindDialog::Create()
 void FindDialog::DoDataExchange( CDataExchange* pDX )
 {
 	CDialog::DoDataExchange( pDX );
-	
+
 	CString temp = searchData.searchText;
 	DDX_Text( pDX, IDC_EDIT_FINDTEXT, temp );
 	DDX_Check( pDX, IDC_CHECK_NAME_ONLY, searchData.nameOnly );
 	DDX_Radio( pDX, IDC_RADIO_SEARCHFILE, searchData.searchScope );
-	
+
 	searchData.searchText = temp;
 }
 
@@ -86,11 +86,11 @@ void FindDialog::DoDataExchange( CDataExchange* pDX )
 BOOL FindDialog::OnInitDialog()
 {
 	CDialog::OnInitDialog();
-	
+
 	LoadFindSettings();
-	
+
 	GetDlgItem( IDC_EDIT_FINDTEXT )->SetFocus();
-	
+
 	return FALSE;
 }
 
@@ -111,7 +111,7 @@ void FindDialog::OnBnClickedFindNext()
 void FindDialog::OnCancel()
 {
 	SaveFindSettings();
-	
+
 	parent->CloseFind();
 	DestroyWindow();
 }
@@ -123,13 +123,13 @@ void FindDialog::OnCancel()
 void FindDialog::LoadFindSettings()
 {
 	registry.Load();
-	
+
 	searchData.searchText = registry.GetString( "searchText" );
 	searchData.nameOnly = ( int )registry.GetFloat( "nameOnly" );
 	searchData.searchScope = ( int )registry.GetFloat( "searchScope" );
-	
+
 	registry.GetWindowPlacement( "findDialog", GetSafeHwnd() );
-	
+
 	UpdateData( FALSE );
 }
 
@@ -140,13 +140,13 @@ void FindDialog::SaveFindSettings()
 {
 
 	UpdateData();
-	
+
 	registry.SetString( "searchText", searchData.searchText );
 	registry.SetFloat( "nameOnly", searchData.nameOnly );
 	registry.SetFloat( "searchScope", searchData.searchScope );
-	
+
 	registry.SetWindowPlacement( "findDialog", GetSafeHwnd() );
-	
+
 	registry.Save();
 }
 

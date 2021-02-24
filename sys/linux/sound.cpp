@@ -33,11 +33,11 @@ If you have questions concerning this license or the applicable additional terms
 #include <malloc.h>
 
 #if defined(USE_SOUND_OSS)
-#include <sys/ioctl.h>
-#include <sys/mman.h>
-// OSS sound interface
-// http://www.opensound.com/
-#include <sys/soundcard.h>
+	#include <sys/ioctl.h>
+	#include <sys/mman.h>
+	// OSS sound interface
+	// http://www.opensound.com/
+	#include <sys/soundcard.h>
 #endif
 
 #include "../../idlib/precompiled.h"
@@ -47,7 +47,7 @@ If you have questions concerning this license or the applicable additional terms
 
 // RB begin
 #if defined(USE_SOUND_SDL)
-#include "../sdl/sdl_sound.h"
+	#include "../sdl/sdl_sound.h"
 #endif
 
 #if defined(USE_SOUND_ALSA) || defined(USE_SOUND_OSS)
@@ -58,9 +58,9 @@ const char*	s_driverArgs[]	= { "best", "alsa", NULL };
 // RB end
 
 #if defined(USE_SOUND_ALSA) || defined(USE_SOUND_OSS)
-static idCVar s_driver( "s_driver", s_driverArgs[0], CVAR_SYSTEM | CVAR_ARCHIVE, "sound driver. 'best' will attempt to use alsa and fallback to OSS if not available", s_driverArgs, idCmdSystem::ArgCompletion_String<s_driverArgs> );
+	static idCVar s_driver( "s_driver", s_driverArgs[0], CVAR_SYSTEM | CVAR_ARCHIVE, "sound driver. 'best' will attempt to use alsa and fallback to OSS if not available", s_driverArgs, idCmdSystem::ArgCompletion_String<s_driverArgs> );
 #else
-static idCVar s_driver( "s_driver", "pulse", CVAR_SYSTEM | CVAR_ARCHIVE | CVAR_ROM, "sound driver. only OSS is supported in this build" );
+	static idCVar s_driver( "s_driver", "pulse", CVAR_SYSTEM | CVAR_ARCHIVE | CVAR_ROM, "sound driver. only OSS is supported in this build" );
 #endif
 
 idAudioHardware* idAudioHardware::Alloc()
@@ -76,7 +76,7 @@ idAudioHardware* idAudioHardware::Alloc()
 		}
 		common->Printf( "Alsa is not available\n" );
 		delete test;
-		
+
 		// RB begin
 #if defined(USE_SOUND_OSS)
 		return new idAudioHardwareOSS;
@@ -90,7 +90,7 @@ idAudioHardware* idAudioHardware::Alloc()
 		return new idAudioHardwareALSA;
 	}
 #endif
-	
+
 // RB begin
 #if defined(USE_SOUND_SDL)
 	return new tyAudioHardwareSDL;
@@ -198,18 +198,18 @@ idCVar s_device( "s_dsp", "/dev/dsp", CVAR_SYSTEM | CVAR_ARCHIVE, "" );
 bool idAudioHardwareOSS::Initialize( )
 {
 	common->Printf( "------ OSS Sound Initialization ------\n" );
-	
+
 	int requested_sample_format, caps, oss_version;
 	idStr s_compiled_oss_version, s_oss_version;
 	struct audio_buf_info info;
-	
+
 	memset( &info, 0, sizeof( info ) );
-	
+
 	if( m_audio_fd )
 	{
 		Release();
 	}
-	
+
 	// open device ------------------------------------------------
 	if( ( m_audio_fd = open( s_device.GetString(), O_WRONLY | O_NONBLOCK, 0 ) ) == -1 )
 	{
@@ -233,11 +233,11 @@ bool idAudioHardwareOSS::Initialize( )
 		InitFailed();
 		return false;
 	}
-	
+
 	common->Printf( "opened sound device '%s'\n", s_device.GetString() );
-	
+
 	// verify capabilities -----------------------------------------
-	
+
 	// may only be available starting with OSS API v4.0
 	// http://www.fi.opensound.com/developer/SNDCTL_SYSINFO.html
 	// NOTE: at OSS API 4.0 headers, replace OSS_SYSINFO with SNDCTL_SYSINFO
@@ -250,7 +250,7 @@ bool idAudioHardwareOSS::Initialize( )
 	{
 		common->Printf( "%s: %s %s\n", s_device.GetString(), si.product, si.version );
 	}
-	
+
 	if( ioctl( m_audio_fd, SNDCTL_DSP_GETCAPS, &caps ) == -1 )
 	{
 		common->Warning( "ioctl SNDCTL_DSP_GETCAPS failed - driver too old?" );
@@ -279,7 +279,7 @@ bool idAudioHardwareOSS::Initialize( )
 		InitFailed();
 		return false;
 	}
-	
+
 	// sample format -----------------------------------------------
 	requested_sample_format = AFMT_S16_LE;
 	m_sample_format = requested_sample_format;
@@ -295,16 +295,16 @@ bool idAudioHardwareOSS::Initialize( )
 		InitFailed();
 		return false;
 	}
-	
+
 	// channels ----------------------------------------------------
-	
+
 	// sanity over number of speakers
 	if( idSoundSystemLocal::s_numberOfSpeakers.GetInteger() != 6 && idSoundSystemLocal::s_numberOfSpeakers.GetInteger() != 2 )
 	{
 		common->Warning( "invalid value for s_numberOfSpeakers. Use either 2 or 6" );
 		idSoundSystemLocal::s_numberOfSpeakers.SetInteger( 2 );
 	}
-	
+
 	m_channels = idSoundSystemLocal::s_numberOfSpeakers.GetInteger();
 	if( ioctl( m_audio_fd, SNDCTL_DSP_CHANNELS, &m_channels ) == -1 )
 	{
@@ -340,7 +340,7 @@ bool idAudioHardwareOSS::Initialize( )
 		}
 	}
 	assert( ( int )m_channels == idSoundSystemLocal::s_numberOfSpeakers.GetInteger() );
-	
+
 	// sampling rate ------------------------------------------------
 	m_speed = PRIMARYFREQ;
 	if( ioctl( m_audio_fd, SNDCTL_DSP_SPEED, &m_speed ) == -1 )
@@ -358,7 +358,7 @@ bool idAudioHardwareOSS::Initialize( )
 		return false;
 	}
 	common->Printf( "%s - bit rate: %d, channels: %d, frequency: %d\n", s_device.GetString(), m_sample_format, m_channels, m_speed );
-	
+
 	// output buffer ------------------------------------------------
 	// allocate a final buffer target, the sound engine locks, writes, and we write back to the device
 	// we want m_buffer_size ( will have to rename those )
@@ -369,9 +369,9 @@ bool idAudioHardwareOSS::Initialize( )
 	m_buffer_size = MIXBUFFER_SAMPLES * m_channels * 2;
 	m_buffer = malloc( m_buffer_size );
 	common->Printf( "allocated a mix buffer of %d bytes\n", m_buffer_size );
-	
+
 	// toggle sound -------------------------------------------------
-	
+
 	// toggle off before toggling on. that's what OSS source code samples recommends
 	int flag = 0;
 	if( ioctl( m_audio_fd, SNDCTL_DSP_SETTRIGGER, &flag ) == -1 )
@@ -383,7 +383,7 @@ bool idAudioHardwareOSS::Initialize( )
 	{
 		common->Warning( "ioctl SNDCTL_DSP_SETTRIGGER PCM_ENABLE_OUTPUT failed: %s", strerror( errno ) );
 	}
-	
+
 	common->Printf( "--------------------------------------\n" );
 	return true;
 }

@@ -47,7 +47,7 @@ Apply the delete modifier by setting the deleted flag in the wrapper
 bool rvGEDeleteModifier::Apply()
 {
 	mWrapper->SetDeleted( true );
-	
+
 	return true;
 }
 
@@ -61,7 +61,7 @@ Undo the delete modifier by unsetting the deleted flag in the wrapper
 bool rvGEDeleteModifier::Undo()
 {
 	mWrapper->SetDeleted( false );
-	
+
 	return true;
 }
 

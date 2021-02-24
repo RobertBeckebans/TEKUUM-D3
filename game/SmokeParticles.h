@@ -59,7 +59,7 @@ typedef struct singleSmoke_s
 	idRandom					random;
 	idVec3						origin;
 	idMat3						axis;
-	
+
 // RB begin
 #if defined(STANDALONE)
 	int							timeGroup;
@@ -78,11 +78,11 @@ class idSmokeParticles
 {
 public:
 	idSmokeParticles();
-	
+
 	// creats an entity covering the entire world that will call back each rendering
 	void						Init();
 	void						Shutdown();
-	
+
 	// spits out a particle, returning false if the system will not emit any more particles in the future
 	bool						EmitSmoke( const idDeclParticle* smoke, const int startTime, const float diversity,
 										   const idVec3& origin, const idMat3& axis
@@ -92,24 +92,24 @@ public:
 #endif
 // RB end
 					   );
-					   
+
 	// free old smokes
 	void						FreeSmokes();
-	
+
 private:
 	bool						initialized;
-	
+
 	renderEntity_t				renderEntity;			// used to present a model to the renderer
 	int							renderEntityHandle;		// handle to static renderer model
-	
+
 	static const int			MAX_SMOKE_PARTICLES = 10000;
 	singleSmoke_t				smokes[MAX_SMOKE_PARTICLES];
-	
+
 	idList<activeSmokeStage_t>	activeStages;
 	singleSmoke_t* 				freeSmokes;
 	int							numActiveSmokes;
 	int							currentParticleTime;	// don't need to recalculate if == view time
-	
+
 	bool						UpdateRenderEntity( renderEntity_s* renderEntity, const renderView_t* renderView );
 	static bool					ModelCallback( renderEntity_s* renderEntity, const renderView_t* renderView );
 };

@@ -42,8 +42,8 @@ void roqParam::InitFromFile( const char* fileName )
 	idParser* src;
 	idToken token;
 	int i, readarg;
-	
-	
+
+
 	src = new idParser( fileName, LEXFL_NOSTRINGCONCAT | LEXFL_NOSTRINGESCAPECHARS | LEXFL_ALLOWPATHNAMES );
 	if( !src->IsLoaded() )
 	{
@@ -51,9 +51,9 @@ void roqParam::InitFromFile( const char* fileName )
 		common->Printf( "Error: can't open param file %s\n", fileName );
 		return;
 	}
-	
+
 	common->Printf( "initFromFile: %s\n", fileName );
-	
+
 	fullSearch = false;
 	scaleDown = false;
 	encodeVideo = false;
@@ -78,7 +78,7 @@ void roqParam::InitFromFile( const char* fileName )
 	firstframesize = 56 * 1024;
 	normalframesize = 20000;
 	jpegDefault = 85;
-	
+
 	realnum = 0;
 	while( 1 )
 	{
@@ -86,7 +86,7 @@ void roqParam::InitFromFile( const char* fileName )
 		{
 			break;
 		}
-		
+
 		readarg = 0;
 // input dir
 		if( token.Icmp( "input_dir" ) == 0 )
@@ -272,7 +272,7 @@ void roqParam::InitFromFile( const char* fileName )
 		if( token.Icmp( "input" ) == 0 )
 		{
 			int num_files = 255;
-			
+
 			range = ( int* )Mem_ClearedAlloc( num_files * sizeof( int ) );
 			padding = ( bool* )Mem_ClearedAlloc( num_files * sizeof( bool ) );
 			padding2 = ( bool* )Mem_ClearedAlloc( num_files * sizeof( bool ) );
@@ -288,7 +288,7 @@ void roqParam::InitFromFile( const char* fileName )
 			idStr empty;
 			file.AssureSize( num_files, empty );
 			file.AssureSize( num_files, empty );
-			
+
 			field = 0;
 			realnum = 0;
 			do
@@ -297,31 +297,31 @@ void roqParam::InitFromFile( const char* fileName )
 				if( token.Icmp( "end_input" ) != 0 )
 				{
 					idStr arg1, arg2, arg3;
-					
+
 					file[field] = token;
 					while( src->ReadTokenOnLine( &token ) && token.Icmp( "[" ) )
 					{
 						file[field].Append( token );
 					}
-					
+
 					arg1 = token;
 					while( src->ReadTokenOnLine( &token ) && token.Icmp( "[" ) )
 					{
 						arg1 += token;
 					}
-					
+
 					arg2 = token;
 					while( src->ReadTokenOnLine( &token ) && token.Icmp( "[" ) )
 					{
 						arg2 += token;
 					}
-					
+
 					arg3 = token;
 					while( src->ReadTokenOnLine( &token ) && token.Icmp( "[" ) )
 					{
 						arg3 += token;
 					}
-					
+
 					if( arg1[0] != '[' )
 					{
 //						common->Printf("  + reading %s\n", file[field] );
@@ -348,7 +348,7 @@ void roqParam::InitFromFile( const char* fileName )
 						else if( ( arg1[0] != '[' ) && ( arg2[0] == '[' ) && ( arg3[0] == '[' ) ) //a double ranger...
 						{
 							int files1, files2;
-							
+
 							file2[field] = arg1;
 							range[field] = 2;
 							files1 = parseRange( arg2, field, skipnum, startnum, endnum, numfiles, padding, numpadding );
@@ -375,8 +375,11 @@ void roqParam::InitFromFile( const char* fileName )
 			while( token.Icmp( "end_input" ) );
 		}
 	}
-	
-	if( TwentyFourToThirty() ) realnum = realnum + ( realnum >> 2 );
+
+	if( TwentyFourToThirty() )
+	{
+		realnum = realnum + ( realnum >> 2 );
+	}
 	numInputFiles = realnum;
 	common->Printf( "  + reading a total of %d frames in %s\n", numInputFiles, currentPath.c_str() );
 	delete src;
@@ -386,7 +389,10 @@ void roqParam::GetNthInputFileName( idStr& fileName, int n )
 {
 	int i, myfield, index, hrs, mins, secs, frs;
 	char tempfile[33], left[256], right[256], *strp;
-	if( n > realnum ) n = realnum;
+	if( n > realnum )
+	{
+		n = realnum;
+	}
 // overcome starting at zero by ++ing and then --ing.
 	if( TwentyFourToThirty() )
 	{
@@ -394,25 +400,25 @@ void roqParam::GetNthInputFileName( idStr& fileName, int n )
 		n = ( n / 5 ) * 4 + ( n % 5 );
 		n--;
 	}
-	
+
 	i = 0;
 	myfield = 0;
-	
+
 	while( i <= n )
 	{
 		i += numfiles[myfield++];
 	}
 	myfield--;
 	i -= numfiles[myfield];
-	
+
 	if( range[myfield] == 1 )
 	{
-	
+
 		strcpy( left, file[myfield] );
 		strp = strstr( left, "*" );
 		*strp++ = 0;
 		sprintf( right, "%s", strp );
-		
+
 		if( startnum[myfield] <= endnum[myfield] )
 		{
 			index = startnum[myfield] + ( ( n - i ) * skipnum[myfield] );
@@ -421,7 +427,7 @@ void roqParam::GetNthInputFileName( idStr& fileName, int n )
 		{
 			index = startnum[myfield] - ( ( n - i ) * skipnum[myfield] );
 		}
-		
+
 		if( padding[myfield] == true )
 		{
 			if( useTimecodeForRange )
@@ -456,12 +462,12 @@ void roqParam::GetNthInputFileName( idStr& fileName, int n )
 	}
 	else if( range[myfield] == 2 )
 	{
-	
+
 		strcpy( left, file[myfield] );
 		strp = strstr( left, "*" );
 		*strp++ = 0;
 		sprintf( right, "%s", strp );
-		
+
 		if( startnum[myfield] <= endnum[myfield] )
 		{
 			index = startnum[myfield] + ( ( n - i ) * skipnum[myfield] );
@@ -470,7 +476,7 @@ void roqParam::GetNthInputFileName( idStr& fileName, int n )
 		{
 			index = startnum[myfield] - ( ( n - i ) * skipnum[myfield] );
 		}
-		
+
 		if( padding[myfield] == true )
 		{
 			sprintf( tempfile, "%032d", index );
@@ -480,12 +486,12 @@ void roqParam::GetNthInputFileName( idStr& fileName, int n )
 		{
 			sprintf( fileName, "%s%d%s", left, index, right );
 		}
-		
+
 		strcpy( left, file2[myfield] );
 		strp = strstr( left, "*" );
 		*strp++ = 0;
 		sprintf( right, "%s", strp );
-		
+
 		if( startnum2[myfield] <= endnum2[myfield] )
 		{
 			index = startnum2[myfield] + ( ( n - i ) * skipnum2[myfield] );
@@ -494,7 +500,7 @@ void roqParam::GetNthInputFileName( idStr& fileName, int n )
 		{
 			index = startnum2[myfield] - ( ( n - i ) * skipnum2[myfield] );
 		}
-		
+
 		if( padding2[myfield] == true )
 		{
 			sprintf( tempfile, "%032d", index );
@@ -516,14 +522,14 @@ const char* roqParam::GetNextImageFilename()
 	idStr tempBuffer;
 	int	i;
 	int len;
-	
+
 	GetNthInputFileName( tempBuffer, onFrame++ );
 	if( justDeltaFlag == true )
 	{
 		onFrame--;
 		justDeltaFlag = false;
 	}
-	
+
 	if( addPath == true )
 	{
 		currentFile = currentPath + "/" + tempBuffer;
@@ -540,7 +546,7 @@ const char* roqParam::GetNextImageFilename()
 			currentFile[i] = ' ';
 		}
 	}
-	
+
 	return currentFile.c_str();
 }
 
@@ -557,14 +563,17 @@ const char* roqParam::SoundFilename()
 const char* roqParam::RoqTempFilename()
 {
 	int i, j, len;
-	
+
 	j = 0;
 	len = outputFilename.Length();
 	for( i = 0; i < len; i++ )
-		if( outputFilename[i] == '/' ) j = i;
-		
+		if( outputFilename[i] == '/' )
+		{
+			j = i;
+		}
+
 	sprintf( tempFilename, "/%s.temp", &outputFilename[j + 1] );
-	
+
 	return tempFilename.c_str();
 }
 
@@ -645,7 +654,7 @@ int parseRange( const char* rangeStr, int field, int skipnum[], int startnum[], 
 	char start[64], end[64], skip[64];
 	char* stptr, *enptr, *skptr;
 	int i, realnum;
-	
+
 	i = 1;
 	realnum = 0;
 	stptr = start;
@@ -706,7 +715,7 @@ int parseTimecodeRange( const char* rangeStr, int field, int skipnum[], int star
 	char start[64], end[64], skip[64];
 	char* stptr, *enptr, *skptr;
 	int i, realnum, hrs, mins, secs, frs;
-	
+
 	i = 1;//skip the '['
 	realnum = 0;
 	stptr = start;

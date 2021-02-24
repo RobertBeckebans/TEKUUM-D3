@@ -110,7 +110,7 @@ void idTokenParser::WriteToFile( idFile* outFile )
 	//{
 	//	return;
 	//}
-	
+
 	if( outFile != NULL )
 	{
 		outFile->WriteBig( ( int )guiTokenIndexes.Num() );
@@ -164,19 +164,19 @@ bool idTokenParser::ReadToken( idToken* tok )
 int idTokenParser::ReadTokenOnLine( idToken* token )
 {
 	idToken tok;
-	
+
 	if( !ReadToken( &tok ) )
 	{
 		return false;
 	}
-	
+
 	// if no lines were crossed before this token
 	if( !tok.linesCrossed )
 	{
 		*token = tok;
 		return true;
 	}
-	
+
 	//
 	UnreadToken( &tok );
 	token->Clear();
@@ -186,7 +186,7 @@ int idTokenParser::ReadTokenOnLine( idToken* token )
 int idTokenParser::SkipRestOfLine()
 {
 	idToken token;
-	
+
 	while( ReadToken( &token ) )
 	{
 		if( token.linesCrossed )
@@ -201,7 +201,7 @@ int idTokenParser::SkipRestOfLine()
 const char* idTokenParser::ParseRestOfLine( idStr& out )
 {
 	idToken token;
-	
+
 	out.Empty();
 	while( ReadToken( &token ) )
 	{
@@ -239,13 +239,13 @@ int	idTokenParser::ExpectTokenString( const char* string )
 int	idTokenParser::ExpectTokenType( int type, int subtype, idToken* token )
 {
 	idStr str;
-	
+
 	if( !ReadToken( token ) )
 	{
 		Error( "couldn't read expected token" );
 		return 0;
 	}
-	
+
 	if( token->type != type )
 	{
 		switch( type )
@@ -277,14 +277,38 @@ int	idTokenParser::ExpectTokenType( int type, int subtype, idToken* token )
 		if( ( token->subtype & subtype ) != subtype )
 		{
 			str.Clear();
-			if( subtype & TT_DECIMAL ) str = "decimal ";
-			if( subtype & TT_HEX ) str = "hex ";
-			if( subtype & TT_OCTAL ) str = "octal ";
-			if( subtype & TT_BINARY ) str = "binary ";
-			if( subtype & TT_UNSIGNED ) str += "unsigned ";
-			if( subtype & TT_LONG ) str += "long ";
-			if( subtype & TT_FLOAT ) str += "float ";
-			if( subtype & TT_INTEGER ) str += "integer ";
+			if( subtype & TT_DECIMAL )
+			{
+				str = "decimal ";
+			}
+			if( subtype & TT_HEX )
+			{
+				str = "hex ";
+			}
+			if( subtype & TT_OCTAL )
+			{
+				str = "octal ";
+			}
+			if( subtype & TT_BINARY )
+			{
+				str = "binary ";
+			}
+			if( subtype & TT_UNSIGNED )
+			{
+				str += "unsigned ";
+			}
+			if( subtype & TT_LONG )
+			{
+				str += "long ";
+			}
+			if( subtype & TT_FLOAT )
+			{
+				str += "float ";
+			}
+			if( subtype & TT_INTEGER )
+			{
+				str += "integer ";
+			}
 			str.StripTrailing( ' ' );
 			Error( "expected %s but found '%s'", str.c_str(), token->c_str() );
 			return 0;
@@ -328,22 +352,22 @@ void idTokenParser::Error( VERIFY_FORMAT_STRING const char* str, ... )
 {
 	char text[MAX_STRING_CHARS];
 	va_list ap;
-	
+
 	va_start( ap, str );
 	vsprintf( text, str, ap );
 	va_end( ap );
-	
+
 	idLib::common->Warning( text );
 }
 void idTokenParser::Warning( VERIFY_FORMAT_STRING const char* str, ... )
 {
 	char text[MAX_STRING_CHARS];
 	va_list ap;
-	
+
 	va_start( ap, str );
 	vsprintf( text, str, ap );
 	va_end( ap );
-	
+
 	idLib::common->Warning( text );
 }
 int idTokenParser::ParseInt()
@@ -422,17 +446,17 @@ float idTokenParser::ParseFloat( bool* errorFlag )
 int idTokenParser::Parse1DMatrix( int x, float* m )
 {
 	int i;
-	
+
 	if( !ExpectTokenString( "(" ) )
 	{
 		return false;
 	}
-	
+
 	for( i = 0; i < x; i++ )
 	{
 		m[i] = ParseFloat();
 	}
-	
+
 	if( !ExpectTokenString( ")" ) )
 	{
 		return false;

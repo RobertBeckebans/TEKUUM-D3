@@ -41,7 +41,7 @@ class CZClip
 public:
 	CZClip();
 	~CZClip();
-	
+
 	int		GetTop();
 	int		GetBottom();
 	void	SetTop( int iNewZ );
@@ -50,10 +50,10 @@ public:
 	bool	IsEnabled();
 	bool	Enable( bool bOnOff );
 	void	Paint();
-	
+
 protected:
 	void	Legalise();
-	
+
 	bool	m_bEnabled;
 	int		m_iZClipTop;
 	int		m_iZClipBottom;

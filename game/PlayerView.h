@@ -54,24 +54,24 @@ class idPlayerView
 {
 public:
 	idPlayerView();
-	
+
 	void				Save( idSaveGame* savefile ) const;
 	void				Restore( idRestoreGame* savefile );
-	
+
 	void				SetPlayerEntity( class idPlayer* playerEnt );
-	
+
 	void				ClearEffects();
-	
+
 	void				DamageImpulse( idVec3 localKickDir, const idDict* damageDef );
-	
+
 	void				WeaponFireFeedback( const idDict* weaponDef );
-	
+
 	idAngles			AngleOffset() const;			// returns the current kick angle
-	
+
 	idMat3				ShakeAxis() const;			// returns the current shake angle
-	
+
 	void				CalculateShake();
-	
+
 	// this may involve rendering to a texture and displaying
 	// that with a warp model or in double vision mode
 	void				RenderPlayerView( idUserInterface* hud );
@@ -80,40 +80,40 @@ public:
 // RB end
 
 	void				Fade( idVec4 color, int time );
-	
+
 	void				Flash( idVec4 color, int time );
-	
+
 	void				AddBloodSpray( float duration );
-	
+
 	// temp for view testing
 	void				EnableBFGVision( bool b )
 	{
 		bfgVision = b;
 	};
-	
+
 private:
 	void				SingleView( idUserInterface* hud, const renderView_t* view );
 	// RB begin
 	void				SingleViewOrStereo( idUserInterface* hud, const renderView_t* view );
 	// RB end
-	
+
 	void				DoubleVision( idUserInterface* hud, const renderView_t* view, int offset );
 	void				BerserkVision( idUserInterface* hud, const renderView_t* view );
 	void				InfluenceVision( idUserInterface* hud, const renderView_t* view );
 	void				ScreenFade();
-	
+
 	screenBlob_t* 		GetScreenBlob();
-	
+
 	screenBlob_t		screenBlobs[MAX_SCREEN_BLOBS];
-	
+
 	int					dvFinishTime;		// double vision will be stopped at this time
 	const idMaterial* 	dvMaterial;			// material to take the double vision screen shot
-	
+
 	int					kickFinishTime;		// view kick will be stopped at this time
 	idAngles			kickAngles;
-	
+
 	bool				bfgVision;			//
-	
+
 	const idMaterial* 	tunnelMaterial;		// health tunnel vision
 	const idMaterial* 	armorMaterial;		// armor damage view effect
 	const idMaterial* 	berserkMaterial;	// berserk effect
@@ -122,15 +122,15 @@ private:
 	const idMaterial* 	bfgMaterial;		// when targeted with BFG
 	const idMaterial* 	lagoMaterial;		// lagometer drawing
 	float				lastDamageTime;		// accentuate the tunnel effect for a while
-	
+
 	idVec4				fadeColor;			// fade color
 	idVec4				fadeToColor;		// color to fade to
 	idVec4				fadeFromColor;		// color to fade from
 	float				fadeRate;			// fade rate
 	int					fadeTime;			// fade time
-	
+
 	idAngles			shakeAng;			// from the sound sources
-	
+
 	idPlayer* 			player;
 	renderView_t		view;
 };

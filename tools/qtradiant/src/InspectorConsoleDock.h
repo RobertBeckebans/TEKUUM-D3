@@ -11,16 +11,16 @@ class InspectorConsoleDock;
 class InspectorConsoleDock : public QWidget
 {
 	Q_OBJECT
-	
+
 public:
 	explicit InspectorConsoleDock( QWidget* parent = 0 );
 	~InspectorConsoleDock();
-	
+
 	void			logMessage( const char* msg );
-	
+
 protected:
 	void changeEvent( QEvent* e );
-	
+
 private:
 	Ui::InspectorConsoleDock* ui;
 };

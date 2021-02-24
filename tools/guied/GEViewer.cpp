@@ -45,7 +45,7 @@ rvGEViewer::rvGEViewer( )
 bool rvGEViewer::Create( HWND parent )
 {
 	WNDCLASSEX	wndClass;
-	
+
 	// Make sure the alpha slider window class is registered
 	memset( &wndClass, 0, sizeof( wndClass ) );
 	wndClass.cbSize			= sizeof( WNDCLASSEX );
@@ -55,18 +55,18 @@ bool rvGEViewer::Create( HWND parent )
 	wndClass.style			= CS_OWNDC | CS_BYTEALIGNWINDOW | CS_VREDRAW | CS_HREDRAW;
 	wndClass.hbrBackground	= ( HBRUSH )( COLOR_3DFACE + 1 );
 	RegisterClassEx( &wndClass );
-	
+
 	mWnd = CreateWindowEx( WS_EX_TOOLWINDOW, "GUIED_VIEWER", "GUI Viewer",
 						   WS_SYSMENU | WS_THICKFRAME | WS_CAPTION | WS_POPUP | WS_OVERLAPPED | WS_BORDER | WS_CLIPSIBLINGS | WS_CHILD,
 						   CW_USEDEFAULT, CW_USEDEFAULT, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2,
 						   parent, NULL, gApp.GetInstance(), this );
-						   
+
 	gApp.GetOptions().GetWindowPlacement( "viewer", mWnd );
-	
-	
+
+
 	ShowWindow( mWnd, SW_SHOW );
 	UpdateWindow( mWnd );
-	
+
 	return true;
 }
 
@@ -76,10 +76,10 @@ void rvGEViewer::Play()
 	{
 		return;
 	}
-	
+
 	mLastTime = eventLoop->Milliseconds();
 	mPaused   = false;
-	
+
 	TBBUTTONINFO tbinfo;
 	tbinfo.cbSize = sizeof( TBBUTTONINFO );
 	tbinfo.dwMask = TBIF_COMMAND | TBIF_IMAGE;
@@ -94,9 +94,9 @@ void rvGEViewer::Pause()
 	{
 		return;
 	}
-	
+
 	mPaused = true;
-	
+
 	TBBUTTONINFO tbinfo;
 	tbinfo.cbSize = sizeof( TBBUTTONINFO );
 	tbinfo.dwMask = TBIF_COMMAND | TBIF_IMAGE;
@@ -109,7 +109,7 @@ void rvGEViewer::Pause()
 bool rvGEViewer::Destroy()
 {
 	gApp.GetOptions().SetWindowPlacement( "viewer", mWnd );
-	
+
 	DestroyWindow( mWnd );
 	return true;
 }
@@ -118,39 +118,39 @@ bool rvGEViewer::OpenFile( const char* filename )
 {
 	idStr tempfile;
 	idStr ospath;
-	
+
 	delete mInterface;
-	
+
 	tempfile = filename;
 	tempfile.StripPath();
 	tempfile.StripFileExtension( );
 	tempfile = va( "guis/temp.guied", tempfile.c_str() );
 	ospath = fileSystem->RelativePathToOSPath( tempfile, "fs_basepath" );
-	
+
 	// Make sure the gui directory exists
 	idStr createDir = ospath;
 	createDir.StripFilename( );
 	CreateDirectory( createDir, NULL );
-	
+
 	SetFileAttributes( ospath, FILE_ATTRIBUTE_NORMAL );
 	DeleteFile( ospath );
 	CopyFile( filename, ospath, FALSE );
 	SetFileAttributes( ospath, FILE_ATTRIBUTE_NORMAL );
-	
+
 	mInterface = reinterpret_cast< idUserInterfaceLocal* >( uiManager->FindGui( tempfile, true, true ) );
-	
+
 	mInterface->SetStateString( "guied_item_0", "guied 1" );
 	mInterface->SetStateString( "guied_item_1", "guied 2" );
 	mInterface->SetStateString( "guied_item_2", "guied 3" );
-	
+
 	mTime = 0;
-	
+
 	mInterface->Activate( true, mTime );
-	
+
 	DeleteFile( ospath );
-	
+
 	Play( );
-	
+
 	return true;
 }
 
@@ -166,12 +166,14 @@ static int MapKey( int key )
 	int result;
 	int modified;
 	bool is_extended;
-	
+
 	modified = ( key >> 16 ) & 255;
-	
+
 	if( modified > 127 )
+	{
 		return 0;
-		
+	}
+
 	if( key & ( 1 << 24 ) )
 	{
 		is_extended = true;
@@ -180,12 +182,12 @@ static int MapKey( int key )
 	{
 		is_extended = false;
 	}
-	
+
 	const unsigned char* scanToKey = Sys_GetScanTable();
 	result = scanToKey[modified];
-	
+
 	// common->Printf( "Key: 0x%08x Modified: 0x%02x Extended: %s Result: 0x%02x\n", key, modified, (is_extended?"Y":"N"), result);
-	
+
 	if( is_extended )
 	{
 		switch( result )
@@ -226,30 +228,30 @@ static int MapKey( int key )
 				return K_KP_DEL;
 		}
 	}
-	
+
 	return result;
 }
 
 LRESULT CALLBACK rvGEViewer::WndProc( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam )
 {
 	rvGEViewer* viewer = ( rvGEViewer* ) GetWindowLong( hwnd, GWL_USERDATA );
-	
+
 	switch( msg )
 	{
-	
+
 		case WM_COMMAND:
 			switch( LOWORD( wParam ) )
 			{
 				case ID_GUIED_VIEWER_PLAY:
 					viewer->Play( );
 					break;
-					
+
 				case ID_GUIED_VIEWER_PAUSE:
 					viewer->Pause( );
 					break;
 			}
 			break;
-			
+
 		case WM_SIZE:
 		{
 			RECT rToolbar;
@@ -258,19 +260,19 @@ LRESULT CALLBACK rvGEViewer::WndProc( HWND hwnd, UINT msg, WPARAM wParam, LPARAM
 			viewer->mToolbarHeight = rToolbar.bottom - rToolbar.top;
 			break;
 		}
-		
+
 		case WM_ACTIVATE:
 			common->ActivateTool( LOWORD( wParam ) != WA_INACTIVE );
 			break;
-			
+
 		case WM_ERASEBKGND:
 			return TRUE;
-			
+
 		case WM_PAINT:
 			assert( viewer );
 			viewer->HandlePaint( wParam, lParam );
 			break;
-			
+
 		case WM_LBUTTONDOWN:
 			if( viewer->mInterface )
 			{
@@ -283,7 +285,7 @@ LRESULT CALLBACK rvGEViewer::WndProc( HWND hwnd, UINT msg, WPARAM wParam, LPARAM
 				viewer->mInterface->HandleEvent( &event, viewer->mTime, &visuals );
 			}
 			break;
-			
+
 		case WM_LBUTTONUP:
 			if( viewer->mInterface )
 			{
@@ -296,7 +298,7 @@ LRESULT CALLBACK rvGEViewer::WndProc( HWND hwnd, UINT msg, WPARAM wParam, LPARAM
 				viewer->mInterface->HandleEvent( &event, viewer->mTime, &visuals );
 			}
 			break;
-			
+
 		case WM_KEYDOWN:
 			if( viewer->mInterface )
 			{
@@ -309,7 +311,7 @@ LRESULT CALLBACK rvGEViewer::WndProc( HWND hwnd, UINT msg, WPARAM wParam, LPARAM
 				viewer->mInterface->HandleEvent( &event, viewer->mTime, &visuals );
 			}
 			break;
-			
+
 		case WM_SYSKEYUP:
 		case WM_KEYUP:
 			if( viewer->mInterface )
@@ -323,15 +325,15 @@ LRESULT CALLBACK rvGEViewer::WndProc( HWND hwnd, UINT msg, WPARAM wParam, LPARAM
 				viewer->mInterface->HandleEvent( &event, viewer->mTime, &visuals );
 			}
 			break;
-			
+
 		case WM_CHAR:
-		
+
 			if( wParam == VK_ESCAPE )
 			{
 				SendMessage( hwnd, WM_CLOSE, 0, 0 );
 				break;
 			}
-			
+
 			if( viewer->mInterface )
 			{
 				sysEvent_t event;
@@ -343,7 +345,7 @@ LRESULT CALLBACK rvGEViewer::WndProc( HWND hwnd, UINT msg, WPARAM wParam, LPARAM
 				viewer->mInterface->HandleEvent( &event, viewer->mTime, &visuals );
 			}
 			break;
-			
+
 		case WM_MOUSEMOVE:
 			if( viewer->mInterface )
 			{
@@ -351,7 +353,7 @@ LRESULT CALLBACK rvGEViewer::WndProc( HWND hwnd, UINT msg, WPARAM wParam, LPARAM
 				float y = ( float )( HIWORD( lParam ) ) / ( float )( viewer->mWindowHeight - viewer->mToolbarHeight ) * SCREEN_HEIGHT;
 				sysEvent_t event;
 				bool       visuals;
-				
+
 				ZeroMemory( &event, sizeof( event ) ) ;
 				event.evType = SE_MOUSE;
 				event.evValue = ( int )x - viewer->mInterface->CursorX();
@@ -359,74 +361,74 @@ LRESULT CALLBACK rvGEViewer::WndProc( HWND hwnd, UINT msg, WPARAM wParam, LPARAM
 				viewer->mInterface->HandleEvent( &event, viewer->mTime, &visuals );
 			}
 			break;
-			
+
 		case WM_CLOSE:
 			viewer->mInterface = NULL;
 			gApp.CloseViewer( );
 			return 0;
-			
+
 		case WM_CREATE:
 		{
 			CREATESTRUCT* cs = ( CREATESTRUCT* ) lParam;
 			SetWindowLong( hwnd, GWL_USERDATA, ( LONG )cs->lpCreateParams );
-			
+
 			viewer = ( rvGEViewer* )cs->lpCreateParams;
 			viewer->mWnd = hwnd;
 			viewer->SetupPixelFormat( );
-			
+
 			viewer->mToolbar = CreateWindowEx( 0, TOOLBARCLASSNAME, "", CCS_BOTTOM | WS_CHILD | WS_VISIBLE, 0, 0, 0, 0, hwnd, ( HMENU )IDR_GUIED_VIEWERTOOLBAR, gApp.GetInstance(), NULL );
-			
+
 			// Send the TB_BUTTONSTRUCTSIZE message, which is required for backward compatibility.
 			SendMessage( viewer->mToolbar, TB_BUTTONSTRUCTSIZE, ( WPARAM )sizeof( TBBUTTON ), 0 );
-			
+
 			SendMessage( viewer->mToolbar, TB_SETBUTTONSIZE, 0, MAKELONG( 16, 15 ) );
-			
+
 			SendMessage( viewer->mToolbar, TB_SETSTYLE, 0, SendMessage( viewer->mToolbar, TB_GETSTYLE, 0, 0 ) | TBSTYLE_FLAT );
-			
+
 			TBMETRICS tbmet;
 			tbmet.cbSize = sizeof( TBMETRICS );
 			SendMessage( viewer->mToolbar, TB_GETMETRICS, 0, ( LPARAM )&tbmet );
 			tbmet.cyPad = 0;
 			tbmet.cyBarPad = 0;
 			SendMessage( viewer->mToolbar, TB_SETMETRICS, 0, ( LPARAM )&tbmet );
-			
+
 			// Add the bitmap containing button images to the toolbar.
 			TBADDBITMAP	tbab;
 			tbab.hInst = win32.hInstance;
 			tbab.nID = IDR_GUIED_VIEWERTOOLBAR;
 			SendMessage( viewer->mToolbar, TB_ADDBITMAP, ( WPARAM )4, ( LPARAM ) &tbab );
-			
+
 			TBBUTTON tbb[4];
 			tbb[0].fsStyle = BTNS_SEP;
 			tbb[0].fsState = 0;
-			
+
 			tbb[1].idCommand = ID_GUIED_VIEWER_START;
 			tbb[1].iBitmap = 2;
 			tbb[1].fsState = 0;
 			tbb[1].fsStyle = BTNS_BUTTON;
 			tbb[1].dwData = 0;
 			tbb[1].iString = -1;
-			
+
 			tbb[2].idCommand = ID_GUIED_VIEWER_PAUSE;
 			tbb[2].iBitmap = 1;
 			tbb[2].fsState = TBSTATE_ENABLED;
 			tbb[2].fsStyle = BTNS_BUTTON;
 			tbb[2].dwData = 0;
 			tbb[2].iString = -1;
-			
+
 			tbb[3].fsStyle = BTNS_SEP;
 			tbb[3].fsState = 0;
-			
+
 			SendMessage( viewer->mToolbar, TB_ADDBUTTONS, ( WPARAM )4, ( LPARAM ) &tbb );
-			
+
 			break;
 		}
-		
+
 		case WM_SETCURSOR:
 			SetCursor( NULL );
 			break;
 	}
-	
+
 	return DefWindowProc( hwnd, msg, wParam, lParam );
 }
 
@@ -434,13 +436,13 @@ LRESULT rvGEViewer::HandlePaint( WPARAM wParam, LPARAM lParam )
 {
 	HDC			dc;
 	PAINTSTRUCT ps;
-	
+
 	dc = BeginPaint( mWnd, &ps );
-	
+
 	Render( dc );
-	
+
 	EndPaint( mWnd, &ps );
-	
+
 	return 1;
 }
 
@@ -455,7 +457,7 @@ bool rvGEViewer::SetupPixelFormat()
 {
 	HDC	 hDC    = GetDC( mWnd );
 	bool result = true;
-	
+
 	int pixelFormat = ChoosePixelFormat( hDC, &win32.pfd );
 	if( pixelFormat > 0 )
 	{
@@ -468,9 +470,9 @@ bool rvGEViewer::SetupPixelFormat()
 	{
 		result = false;
 	}
-	
+
 	ReleaseDC( mWnd, hDC );
-	
+
 	return result;
 }
 
@@ -478,7 +480,7 @@ void rvGEViewer::Render( HDC dc )
 {
 	int	frontEnd;
 	int	backEnd;
-	
+
 	// Switch GL contexts to our dc
 	if( !wglMakeCurrent( dc, win32.hGLRC ) )
 	{
@@ -486,35 +488,35 @@ void rvGEViewer::Render( HDC dc )
 		common->Printf( "Please restart Q3Radiant if the Map view is not working\n" );
 		return;
 	}
-	
+
 	if( !mPaused )
 	{
 		mTime += eventLoop->Milliseconds() - mLastTime;
 		mLastTime = eventLoop->Milliseconds();
 	}
-	
+
 	RECT rClient;
 	RECT rToolbar;
 	GetClientRect( mWnd, &rClient );
 	GetClientRect( mToolbar, &rToolbar );
 	mWindowWidth = rClient.right - rClient.left;
 	mWindowHeight = rClient.bottom - rClient.top;
-	
+
 	glViewport( 0, 0, mWindowWidth, mWindowHeight );
 	glScissor( 0, 0, mWindowWidth, mWindowHeight );
 	glClearColor( 0, 0, 0, 0 );
-	
+
 	glDisable( GL_DEPTH_TEST );
 	glDisable( GL_CULL_FACE );
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-	
+
 	// Render the workspace below
 	glMatrixMode( GL_PROJECTION );
 	glLoadIdentity();
 	glOrtho( 0, mWindowWidth, mWindowHeight, 0, -1, 1 );
 	glMatrixMode( GL_MODELVIEW );
 	glLoadIdentity();
-	
+
 	if( mInterface )
 	{
 		viewDef_t viewDef;
@@ -529,17 +531,17 @@ void rvGEViewer::Render( HDC dc )
 		viewDef.scissor.x2 = mWindowWidth;
 		viewDef.scissor.y2 = mWindowHeight;
 		viewDef.isEditor = true;
-		
+
 		// Prepare the renderSystem view to draw the GUI in
 		renderSystem->BeginFrame( mWindowWidth, mWindowHeight );
-		
+
 		// Draw the gui
 		mInterface->Redraw( mTime );
-		
+
 		// We are done using the renderSystem now
 		renderSystem->EndFrame( &frontEnd, &backEnd );
 	}
-	
+
 	glFinish( );
 	SwapBuffers( dc );
 }

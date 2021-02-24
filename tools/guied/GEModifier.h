@@ -37,19 +37,19 @@ public:
 
 	rvGEModifier( const char* name, idWindow* window );
 	virtual ~rvGEModifier( ) { }
-	
+
 	virtual bool		Apply() = 0;
 	virtual bool		Undo() = 0;
 	virtual const char*	GetName();
 	virtual bool		CanMerge( rvGEModifier* merge );
-	
+
 	virtual bool		IsValid();
-	
+
 	virtual bool		Merge( rvGEModifier* merge );
-	
+
 	idWindow*			GetWindow();
-	
-	
+
+
 protected:
 
 	idWindow*			mWindow;

@@ -34,9 +34,9 @@ If you have questions concerning this license or the applicable additional terms
 #include "RotateDlg.h"
 
 #ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
+	#define new DEBUG_NEW
+	#undef THIS_FILE
+	static char THIS_FILE[] = __FILE__;
 #endif
 
 /////////////////////////////////////////////////////////////////////////////
@@ -91,13 +91,19 @@ void CRotateDlg::OnApply()
 	UpdateData( TRUE );
 	float f = atof( m_strX );
 	if( f != 0.0 )
+	{
 		Select_RotateAxis( 0, f );
+	}
 	f = atof( m_strY );
 	if( f != 0.0 )
+	{
 		Select_RotateAxis( 1, f );
+	}
 	f = atof( m_strZ );
 	if( f != 0.0 )
+	{
 		Select_RotateAxis( 2, f );
+	}
 }
 
 BOOL CRotateDlg::OnInitDialog()

@@ -39,16 +39,16 @@ rvGEZOrderModifier::rvGEZOrderModifier( const char* name, idWindow* window, EZOr
 	int			count;
 	int			index;
 	idWindow*	parent;
-	
+
 	parent = window->GetParent( );
 	if( !parent )
 	{
 		return;
 	}
-	
+
 	count = parent->GetChildCount( );
 	index = parent->GetChildIndex( mWindow );
-	
+
 	if( index + 1 >= count )
 	{
 		mUndoBefore = NULL;
@@ -57,13 +57,13 @@ rvGEZOrderModifier::rvGEZOrderModifier( const char* name, idWindow* window, EZOr
 	{
 		mUndoBefore = parent->GetChild( index + 1 );
 	}
-	
+
 	switch( change )
 	{
 		case ZO_FORWARD:
 			index += 2;
 			break;
-			
+
 		case ZO_BACKWARD:
 			if( index == 0 )
 			{
@@ -74,16 +74,16 @@ rvGEZOrderModifier::rvGEZOrderModifier( const char* name, idWindow* window, EZOr
 				index -= 1;
 			}
 			break;
-			
+
 		case ZO_BACK:
 			index = 0;
 			break;
-			
+
 		case ZO_FRONT:
 			index = count;
 			break;
 	}
-	
+
 	if( index >= count )
 	{
 		mBefore = NULL;
@@ -97,24 +97,24 @@ rvGEZOrderModifier::rvGEZOrderModifier( const char* name, idWindow* window, EZOr
 bool rvGEZOrderModifier::Apply()
 {
 	idWindow* parent;
-	
+
 	parent = mWindow->GetParent( );
-	
+
 	parent->RemoveChild( mWindow );
 	parent->InsertChild( mWindow, mBefore );
-	
+
 	return true;
 }
 
 bool rvGEZOrderModifier::Undo()
 {
 	idWindow* parent;
-	
+
 	parent = mWindow->GetParent( );
-	
+
 	parent->RemoveChild( mWindow );
 	parent->InsertChild( mWindow, mUndoBefore );
-	
+
 	return true;
 }
 
@@ -124,6 +124,6 @@ bool rvGEZOrderModifier::IsValid()
 	{
 		return false;
 	}
-	
+
 	return true;
 }

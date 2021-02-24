@@ -101,9 +101,9 @@ void idItem::Save( idSaveGame* savefile ) const
 	savefile->WriteBool( spin );
 	savefile->WriteBool( pulse );
 	savefile->WriteBool( canPickUp );
-	
+
 	savefile->WriteMaterial( shellMaterial );
-	
+
 	savefile->WriteBool( inView );
 	savefile->WriteInt( inViewTime );
 	savefile->WriteInt( lastCycle );
@@ -122,14 +122,14 @@ void idItem::Restore( idRestoreGame* savefile )
 	savefile->ReadBool( spin );
 	savefile->ReadBool( pulse );
 	savefile->ReadBool( canPickUp );
-	
+
 	savefile->ReadMaterial( shellMaterial );
-	
+
 	savefile->ReadBool( inView );
 	savefile->ReadInt( inViewTime );
 	savefile->ReadInt( lastCycle );
 	savefile->ReadInt( lastRenderViewTime );
-	
+
 	itemShellHandle = -1;
 }
 
@@ -147,23 +147,23 @@ bool idItem::UpdateRenderEntity( renderEntity_s* renderEntity, const renderView_
 #else
 	int renderViewTime = renderView->time[0];
 #endif
-	
-	
+
+
 	if( lastRenderViewTime == renderViewTime )
 	{
 		return false;
 	}
-	
+
 	lastRenderViewTime = renderViewTime;
-	
+
 	// check for glow highlighting if near the center of the view
 	idVec3 dir = renderEntity->origin - renderView->vieworg;
 	dir.Normalize();
 	float d = dir * renderView->viewaxis[0];
-	
+
 	// two second pulse cycle
 	float cycle = ( renderViewTime - inViewTime ) / 2000.0f;
-	
+
 	if( d > 0.94f )
 	{
 		if( !inView )
@@ -185,9 +185,9 @@ bool idItem::UpdateRenderEntity( renderEntity_s* renderEntity, const renderView_
 			lastCycle = ceil( cycle );
 		}
 	}
-	
+
 	// RB end
-	
+
 	// fade down after the last pulse finishes
 	if( !inView && cycle > lastCycle )
 	{
@@ -215,7 +215,7 @@ bool idItem::UpdateRenderEntity( renderEntity_s* renderEntity, const renderView_
 			renderEntity->shaderParms[4] = 0.0f;
 		}
 	}
-	
+
 	// update every single time this is in view
 	return true;
 }
@@ -228,20 +228,20 @@ idItem::ModelCallback
 bool idItem::ModelCallback( renderEntity_t* renderEntity, const renderView_t* renderView )
 {
 	const idItem* ent;
-	
+
 	// this may be triggered by a model trace or other non-view related source
 	if( !renderView )
 	{
 		return false;
 	}
-	
+
 	ent = static_cast<idItem*>( gameLocal.entities[ renderEntity->entityNum ] );
 	if( ent == NULL )
 	{
 		gameLocal.Error( "idItem::ModelCallback: callback with NULL game entity" );
 		return false;
 	}
-	
+
 	return ent->UpdateRenderEntity( renderEntity, renderView );
 }
 
@@ -258,19 +258,19 @@ void idItem::Think()
 		{
 			idAngles	ang;
 			idVec3		org;
-			
+
 			ang.pitch = ang.roll = 0.0f;
 			ang.yaw = ( gameLocal.time & 4095 ) * 360.0f / -4096.0f;
 			SetAngles( ang );
-			
+
 			float scale = 0.005f + entityNumber * 0.00001f;
-			
+
 			org = orgOrigin;
 			org.z += 4.0f + cos( ( gameLocal.time + 2000 ) * scale ) * 4.0f;
 			SetOrigin( org );
 		}
 	}
-	
+
 	Present();
 }
 
@@ -282,14 +282,14 @@ idItem::Present
 void idItem::Present()
 {
 	idEntity::Present();
-	
+
 	if( !fl.hidden && pulse )
 	{
 		// also add a highlight shell model
 		renderEntity_t	shell;
-		
+
 		shell = renderEntity;
-		
+
 		// we will mess with shader parms when the item is in view
 		// to give the "item pulse" effect
 		shell.callback = idItem::ModelCallback;
@@ -303,7 +303,7 @@ void idItem::Present()
 		{
 			gameRenderWorld->UpdateEntityDef( itemShellHandle, &shell );
 		}
-		
+
 	}
 }
 
@@ -317,18 +317,18 @@ void idItem::Spawn()
 	idStr		giveTo;
 	idEntity* 	ent;
 	float		tsize;
-	
+
 	if( spawnArgs.GetBool( "dropToFloor" ) )
 	{
 		PostEventMS( &EV_DropToFloor, 0 );
 	}
-	
+
 	if( spawnArgs.GetFloat( "triggersize", "0", tsize ) )
 	{
 		GetPhysics()->GetClipModel()->LoadModel( idTraceModel( idBounds( vec3_origin ).Expand( tsize ) ) );
 		GetPhysics()->GetClipModel()->Link( gameLocal.clip );
 	}
-	
+
 	if( spawnArgs.GetBool( "start_off" ) )
 	{
 		GetPhysics()->SetContents( 0 );
@@ -338,7 +338,7 @@ void idItem::Spawn()
 	{
 		GetPhysics()->SetContents( CONTENTS_TRIGGER );
 	}
-	
+
 	giveTo = spawnArgs.GetString( "owner" );
 	if( giveTo.Length() )
 	{
@@ -351,20 +351,20 @@ void idItem::Spawn()
 		PostEventMS( &EV_Touch, 0, ent, 0 );
 		// RB end
 	}
-	
+
 	if( spawnArgs.GetBool( "spin" ) || gameLocal.isMultiplayer )
 	{
 		spin = true;
 		BecomeActive( TH_THINK );
 	}
-	
+
 	//pulse = !spawnArgs.GetBool( "nopulse" );
 	//temp hack for tim
 	pulse = false;
 	orgOrigin = GetPhysics()->GetOrigin();
-	
+
 	canPickUp = !( spawnArgs.GetBool( "triggerFirst" ) || spawnArgs.GetBool( "no_touch" ) );
-	
+
 	inViewTime = -1000;
 	lastCycle = -1;
 	itemShellHandle = -1;
@@ -380,7 +380,7 @@ void idItem::GetAttributes( idDict& attributes )
 {
 	int					i;
 	const idKeyValue*	arg;
-	
+
 	for( i = 0; i < spawnArgs.GetNumKeyVals(); i++ )
 	{
 		arg = spawnArgs.GetKeyVal( i );
@@ -402,12 +402,12 @@ bool idItem::GiveToPlayer( idPlayer* player )
 	{
 		return false;
 	}
-	
+
 	if( spawnArgs.GetBool( "inv_carry" ) )
 	{
 		return player->GiveInventoryItem( &spawnArgs );
 	}
-	
+
 	return player->GiveItem( this );
 }
 
@@ -423,40 +423,40 @@ bool idItem::Pickup( idPlayer* player )
 	{
 		return false;
 	}
-	
+
 	if( gameLocal.isServer )
 	{
 		ServerSendEvent( EVENT_PICKUP, NULL, false, -1 );
 	}
-	
+
 	// play pickup sound
 	StartSound( "snd_acquire", SND_CHANNEL_ITEM, 0, false, NULL );
-	
+
 	// trigger our targets
 	ActivateTargets( player );
-	
+
 	// clear our contents so the object isn't picked up twice
 	GetPhysics()->SetContents( 0 );
-	
+
 	// hide the model
 	Hide();
-	
+
 	// add the highlight shell
 	if( itemShellHandle != -1 )
 	{
 		gameRenderWorld->FreeEntityDef( itemShellHandle );
 		itemShellHandle = -1;
 	}
-	
+
 	float respawn = spawnArgs.GetFloat( "respawn" );
 	bool dropped = spawnArgs.GetBool( "dropped" );
 	bool no_respawn = spawnArgs.GetBool( "no_respawn" );
-	
+
 	if( gameLocal.isMultiplayer && respawn == 0.0f )
 	{
 		respawn = 20.0f;
 	}
-	
+
 	if( respawn && !dropped && !no_respawn )
 	{
 		const char* sfx = spawnArgs.GetString( "fxRespawn" );
@@ -475,7 +475,7 @@ bool idItem::Pickup( idPlayer* player )
 			PostEventMS( &EV_Remove, 5000 );
 		}
 	}
-	
+
 	BecomeInactive( TH_THINK );
 	return true;
 }
@@ -534,13 +534,13 @@ bool idItem::ClientReceiveEvent( int event, int time, const idBitMsg& msg )
 	{
 		case EVENT_PICKUP:
 		{
-		
+
 			// play pickup sound
 			StartSound( "snd_acquire", SND_CHANNEL_ITEM, 0, false, NULL );
-			
+
 			// hide the model
 			Hide();
-			
+
 			// remove the highlight shell
 			if( itemShellHandle != -1 )
 			{
@@ -575,13 +575,13 @@ idItem::Event_DropToFloor
 void idItem::Event_DropToFloor()
 {
 	trace_t trace;
-	
+
 	// don't drop the floor if bound to another entity
 	if( GetBindMaster() != NULL && GetBindMaster() != this )
 	{
 		return;
 	}
-	
+
 	gameLocal.clip.TraceBounds( trace, renderEntity.origin, renderEntity.origin - idVec3( 0, 0, 64 ), renderEntity.bounds, MASK_SOLID | CONTENTS_CORPSE, this );
 	SetOrigin( trace.endpos );
 }
@@ -597,12 +597,12 @@ void idItem::Event_Touch( idEntity* other, trace_t* trace )
 	{
 		return;
 	}
-	
+
 	if( !canPickUp )
 	{
 		return;
 	}
-	
+
 	Pickup( static_cast<idPlayer*>( other ) );
 }
 
@@ -619,7 +619,7 @@ void idItem::Event_Trigger( idEntity* activator )
 		canPickUp = true;
 		return;
 	}
-	
+
 	if( activator && activator->IsType( idPlayer::Type ) )
 	{
 		Pickup( static_cast<idPlayer*>( activator ) );
@@ -822,7 +822,7 @@ void idObjective::Event_CamShot( )
 			renderView_t fullView = *view;
 			fullView.width = SCREEN_WIDTH;
 			fullView.height = SCREEN_HEIGHT;
-			
+
 // RB begin
 #if defined(STANDALONE)
 			// HACK : always draw sky-portal view if there is one in the map, this isn't real-time
@@ -830,36 +830,36 @@ void idObjective::Event_CamShot( )
 			{
 				renderView_t	portalView = fullView;
 				portalView.vieworg = gameLocal.portalSkyEnt.GetEntity()->GetPhysics()->GetOrigin();
-				
+
 				// setup global fixup projection vars
 				if( 1 )
 				{
 					int vidWidth, vidHeight;
 					idVec2 shiftScale;
-					
+
 					renderSystem->GetGLSettings( vidWidth, vidHeight );
-					
+
 					float pot;
 					int temp;
-					
+
 					int	 w = vidWidth;
 					for( temp = 1 ; temp < w ; temp <<= 1 )
 					{
 					}
 					pot = ( float )temp;
 					shiftScale.x = ( float )w / pot;
-					
+
 					int	 h = vidHeight;
 					for( temp = 1 ; temp < h ; temp <<= 1 )
 					{
 					}
 					pot = ( float )temp;
 					shiftScale.y = ( float )h / pot;
-					
+
 					fullView.shaderParms[4] = shiftScale.x;
 					fullView.shaderParms[5] = shiftScale.y;
 				}
-				
+
 				gameRenderWorld->RenderScene( &portalView );
 				renderSystem->CaptureRenderToImage( "_currentRender" );
 			}
@@ -886,9 +886,9 @@ void idObjective::Event_Trigger( idEntity* activator )
 	idPlayer* player = gameLocal.GetLocalPlayer();
 	if( player )
 	{
-	
+
 		//Pickup( player );
-		
+
 		if( spawnArgs.GetString( "inv_objective", NULL ) )
 		{
 			if( player && player->hud )
@@ -903,7 +903,7 @@ void idObjective::Event_Trigger( idEntity* activator )
 				player->hud->SetStateString( "objectivetext", spawnArgs.GetString( "objectivetext" ) );
 				player->hud->SetStateString( "objectivetitle", spawnArgs.GetString( "objectivetitle" ) );
 				player->GiveObjective( spawnArgs.GetString( "objectivetitle" ), spawnArgs.GetString( "objectivetext" ), shotName );
-				
+
 				// a tad slow but keeps from having to update all objectives in all maps with a name ptr
 				for( int i = 0; i < gameLocal.num_entities; i++ )
 				{
@@ -916,7 +916,7 @@ void idObjective::Event_Trigger( idEntity* activator )
 						}
 					}
 				}
-				
+
 				PostEventMS( &EV_GetPlayerPos, 2000 );
 			}
 		}
@@ -1068,9 +1068,9 @@ idMoveableItem::Save
 void idMoveableItem::Save( idSaveGame* savefile ) const
 {
 	savefile->WriteStaticObject( physicsObj );
-	
+
 	savefile->WriteClipModel( trigger );
-	
+
 	savefile->WriteParticle( smoke );
 	savefile->WriteInt( smokeTime );
 }
@@ -1084,9 +1084,9 @@ void idMoveableItem::Restore( idRestoreGame* savefile )
 {
 	savefile->ReadStaticObject( physicsObj );
 	RestorePhysics( &physicsObj );
-	
+
 	savefile->ReadClipModel( trigger );
-	
+
 	savefile->ReadParticle( smoke );
 	savefile->ReadInt( smokeTime );
 }
@@ -1102,7 +1102,7 @@ void idMoveableItem::Spawn()
 	float density, friction, bouncyness, tsize;
 	idStr clipModelName;
 	idBounds bounds;
-	
+
 // RB begin
 #if defined(STANDALONE)
 	SetTimeState ts( timeGroup );
@@ -1114,27 +1114,27 @@ void idMoveableItem::Spawn()
 	trigger = new idClipModel( idTraceModel( idBounds( vec3_origin ).Expand( tsize ) ) );
 	trigger->Link( gameLocal.clip, this, 0, GetPhysics()->GetOrigin(), GetPhysics()->GetAxis() );
 	trigger->SetContents( CONTENTS_TRIGGER );
-	
+
 	// check if a clip model is set
 	spawnArgs.GetString( "clipmodel", "", clipModelName );
 	if( !clipModelName[0] )
 	{
 		clipModelName = spawnArgs.GetString( "model" );		// use the visual model
 	}
-	
+
 	// load the trace model
 	if( !collisionModelManager->TrmFromModel( clipModelName, trm ) )
 	{
 		gameLocal.Error( "idMoveableItem '%s': cannot load collision model %s", name.c_str(), clipModelName.c_str() );
 		return;
 	}
-	
+
 	// if the model should be shrinked
 	if( spawnArgs.GetBool( "clipshrink" ) )
 	{
 		trm.Shrink( CM_CLIP_EPSILON );
 	}
-	
+
 	// get rigid body properties
 	spawnArgs.GetFloat( "density", "0.5", density );
 	density = idMath::ClampFloat( 0.001f, 1000.0f, density );
@@ -1142,7 +1142,7 @@ void idMoveableItem::Spawn()
 	friction = idMath::ClampFloat( 0.0f, 1.0f, friction );
 	spawnArgs.GetFloat( "bouncyness", "0.6", bouncyness );
 	bouncyness = idMath::ClampFloat( 0.0f, 1.0f, bouncyness );
-	
+
 	// setup the physics
 	physicsObj.SetSelf( this );
 	physicsObj.SetClipModel( new idClipModel( trm ), density );
@@ -1154,7 +1154,7 @@ void idMoveableItem::Spawn()
 	physicsObj.SetContents( CONTENTS_RENDERMODEL );
 	physicsObj.SetClipMask( MASK_SOLID | CONTENTS_MOVEABLECLIP );
 	SetPhysics( &physicsObj );
-	
+
 	smoke = NULL;
 	smokeTime = 0;
 	const char* smokeName = spawnArgs.GetString( "smoke_trail" );
@@ -1175,13 +1175,13 @@ void idMoveableItem::Think()
 {
 
 	RunPhysics();
-	
+
 	if( thinkFlags & TH_PHYSICS )
 	{
 		// update trigger position
 		trigger->Link( gameLocal.clip, this, 0, GetPhysics()->GetOrigin(), mat3_identity );
 	}
-	
+
 	if( thinkFlags & TH_UPDATEPARTICLES )
 	{
 // RB begin
@@ -1196,7 +1196,7 @@ void idMoveableItem::Think()
 			BecomeInactive( TH_UPDATEPARTICLES );
 		}
 	}
-	
+
 	Present();
 }
 
@@ -1224,18 +1224,18 @@ idEntity* idMoveableItem::DropItem( const char* classname, const idVec3& origin,
 {
 	idDict args;
 	idEntity* item;
-	
+
 	args.Set( "classname", classname );
 	args.Set( "dropped", "1" );
-	
+
 	// we sometimes drop idMoveables here, so set 'nodrop' to 1 so that it doesn't get put on the floor
 	args.Set( "nodrop", "1" );
-	
+
 	if( activateDelay )
 	{
 		args.SetBool( "triggerFirst", true );
 	}
-	
+
 	gameLocal.SpawnEntityDef( args, &item );
 	if( item )
 	{
@@ -1287,16 +1287,16 @@ void idMoveableItem::DropItems( idAnimatedEntity*  ent, const char* type, idList
 	const idDeclSkin* skin;
 	jointHandle_t joint;
 	idEntity* item;
-	
+
 	// drop all items
 	kv = ent->spawnArgs.MatchPrefix( va( "def_drop%sItem", type ), NULL );
 	while( kv )
 	{
-	
+
 		c = kv->GetKey().c_str() + kv->GetKey().Length();
 		if( idStr::Icmp( c - 5, "Joint" ) != 0 && idStr::Icmp( c - 8, "Rotation" ) != 0 )
 		{
-		
+
 			key = kv->GetKey().c_str() + 4;
 			key2 = key;
 			key += "Joint";
@@ -1321,19 +1321,19 @@ void idMoveableItem::DropItems( idAnimatedEntity*  ent, const char* type, idList
 				ent->spawnArgs.GetAngles( key, "0 0 0", angles );
 			}
 			axis = angles.ToMat3() * axis;
-			
+
 			origin += ent->spawnArgs.GetVector( key2, "0 0 0" );
-			
+
 			item = DropItem( kv->GetValue(), origin, axis, vec3_origin, 0, 0 );
 			if( list && item )
 			{
 				list->Append( item );
 			}
 		}
-		
+
 		kv = ent->spawnArgs.MatchPrefix( va( "def_drop%sItem", type ), kv );
 	}
-	
+
 	// change the skin to hide all items
 	skinName = ent->spawnArgs.GetString( va( "skin_drop%s", type ) );
 	if( skinName[0] )
@@ -1379,7 +1379,7 @@ void idMoveableItem::Gib( const idVec3& dir, const char* damageDefName )
 	if( *smokeName != '\0' )
 	{
 		const idDeclParticle* smoke = static_cast<const idDeclParticle*>( declManager->FindType( DECL_PARTICLE, smokeName ) );
-		
+
 // RB begin
 #if defined(STANDALONE)
 		gameLocal.smokeParticles->EmitSmoke( smoke, gameLocal.time, gameLocal.random.CRandomFloat(), renderEntity.origin, renderEntity.axis, timeGroup /*_D3XP*/ );
@@ -1467,7 +1467,7 @@ idItemRemover::RemoveItem
 void idItemRemover::RemoveItem( idPlayer* player )
 {
 	const char* remove;
-	
+
 	remove = spawnArgs.GetString( "remove" );
 	player->RemoveInventoryItem( remove );
 }
@@ -1555,7 +1555,7 @@ void idObjectiveComplete::Event_Trigger( idEntity* activator )
 	if( player )
 	{
 		RemoveItem( player );
-		
+
 		if( spawnArgs.GetString( "inv_objective", NULL ) )
 		{
 			if( player->hud )

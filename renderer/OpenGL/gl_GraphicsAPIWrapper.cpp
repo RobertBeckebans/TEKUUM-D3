@@ -43,15 +43,15 @@ void GL_SelectTexture( int unit )
 	{
 		return;
 	}
-	
+
 	if( unit < 0 || unit >= glConfig.maxTextureImageUnits )
 	{
 		common->Warning( "GL_SelectTexture: unit = %i", unit );
 		return;
 	}
-	
+
 	RENDERLOG_PRINTF( "GL_SelectTexture( %i );\n", unit );
-	
+
 	backEnd.glState.currenttmu = unit;
 }
 
@@ -69,7 +69,7 @@ void GL_Cull( int cullType )
 	{
 		return;
 	}
-	
+
 	if( cullType == CT_TWO_SIDED )
 	{
 		glDisable( GL_CULL_FACE );
@@ -80,7 +80,7 @@ void GL_Cull( int cullType )
 		{
 			glEnable( GL_CULL_FACE );
 		}
-		
+
 		if( cullType == CT_BACK_SIDED )
 		{
 			if( backEnd.viewDef->isMirror )
@@ -104,7 +104,7 @@ void GL_Cull( int cullType )
 			}
 		}
 	}
-	
+
 	backEnd.glState.faceCulling = cullType;
 }
 
@@ -155,7 +155,7 @@ void GL_DepthBoundsTest( const float zmin, const float zmax )
 	{
 		return;
 	}
-	
+
 	if( zmin == 0.0f && zmax == 0.0f )
 	{
 		glDisable( GL_DEPTH_BOUNDS_TEST_EXT );
@@ -272,15 +272,15 @@ void GL_Clear( bool color, bool depth, bool stencil, byte stencilValue, float r,
 		clearFlags |= GL_STENCIL_BUFFER_BIT;
 	}
 	glClear( clearFlags );
-	
+
 	// RB begin
 	if( r_useHDR.GetBool() && clearHDR && globalFramebuffers.hdrFBO != NULL )
 	{
 		bool isDefaultFramebufferActive = Framebuffer::IsDefaultFramebufferActive();
-		
+
 		globalFramebuffers.hdrFBO->Bind();
 		glClear( clearFlags );
-		
+
 		if( isDefaultFramebufferActive )
 		{
 			Framebuffer::Unbind();
@@ -300,27 +300,27 @@ may touch, including the editor.
 void GL_SetDefaultState()
 {
 	RENDERLOG_PRINTF( "--- GL_SetDefaultState ---\n" );
-	
+
 #if defined(USE_GLES2) || defined(USE_GLES3)
 	glClearDepthf( 1.0f );
 #else
 	glClearDepth( 1.0f );
 #endif
-	
+
 	// make sure our GL state vector is set correctly
 	memset( &backEnd.glState, 0, sizeof( backEnd.glState ) );
 	GL_State( 0, true );
-	
+
 	// RB begin
 #if !defined(USE_GLES2) && !defined(USE_GLES3)
 	Framebuffer::Unbind();
 #endif
 	// RB end
-	
+
 	// These are changed by GL_Cull
 	glCullFace( GL_FRONT_AND_BACK );
 	glEnable( GL_CULL_FACE );
-	
+
 	// These are changed by GL_State
 	glColorMask( GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE );
 	glBlendFunc( GL_ONE, GL_ZERO );
@@ -328,15 +328,15 @@ void GL_SetDefaultState()
 	glDepthFunc( GL_LESS );
 	glDisable( GL_STENCIL_TEST );
 	glDisable( GL_POLYGON_OFFSET_FILL );
-	
+
 #if !defined(USE_GLES2) && !defined(USE_GLES3)
 	glDisable( GL_POLYGON_OFFSET_LINE );
 #endif
-	
+
 #if !defined(USE_GLES2) && !defined(USE_GLES3)
 	glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
 #endif
-	
+
 	// These should never be changed
 	// DG: deprecated in opengl 3.2 and not needed because we don't do fixed function pipeline
 	// glShadeModel( GL_SMOOTH );
@@ -344,17 +344,17 @@ void GL_SetDefaultState()
 	glEnable( GL_DEPTH_TEST );
 	glEnable( GL_BLEND );
 	glEnable( GL_SCISSOR_TEST );
-	
+
 #if !defined(USE_GLES2) && !defined(USE_GLES3)
 	glDrawBuffer( GL_BACK );
 	glReadBuffer( GL_BACK );
 #endif
-	
+
 	if( r_useScissor.GetBool() )
 	{
 		glScissor( 0, 0, renderSystem->GetWidth(), renderSystem->GetHeight() );
 	}
-	
+
 	// RB: don't keep renderprogs that were enabled during level load
 	renderProgManager.Unbind();
 	// RB end
@@ -370,7 +370,7 @@ This routine is responsible for setting the most commonly changed state
 void GL_State( uint64 stateBits, bool forceGlState )
 {
 	uint64 diff = stateBits ^ backEnd.glState.glStateBits;
-	
+
 	if( !r_useStateCaching.GetBool() || forceGlState )
 	{
 		// make sure everything is set all the time, so we
@@ -381,7 +381,7 @@ void GL_State( uint64 stateBits, bool forceGlState )
 	{
 		return;
 	}
-	
+
 	//
 	// check depthFunc bits
 	//
@@ -403,7 +403,7 @@ void GL_State( uint64 stateBits, bool forceGlState )
 				break;
 		}
 	}
-	
+
 	//
 	// check blend bits
 	//
@@ -411,7 +411,7 @@ void GL_State( uint64 stateBits, bool forceGlState )
 	{
 		GLenum srcFactor = GL_ONE;
 		GLenum dstFactor = GL_ZERO;
-		
+
 		switch( stateBits & GLS_SRCBLEND_BITS )
 		{
 			case GLS_SRCBLEND_ZERO:
@@ -442,7 +442,7 @@ void GL_State( uint64 stateBits, bool forceGlState )
 				assert( !"GL_State: invalid src blend state bits\n" );
 				break;
 		}
-		
+
 		switch( stateBits & GLS_DSTBLEND_BITS )
 		{
 			case GLS_DSTBLEND_ZERO:
@@ -473,7 +473,7 @@ void GL_State( uint64 stateBits, bool forceGlState )
 				assert( !"GL_State: invalid dst blend state bits\n" );
 				break;
 		}
-		
+
 		// Only actually update GL's blend func if blending is enabled.
 		if( srcFactor == GL_ONE && dstFactor == GL_ZERO )
 		{
@@ -485,7 +485,7 @@ void GL_State( uint64 stateBits, bool forceGlState )
 			glBlendFunc( srcFactor, dstFactor );
 		}
 	}
-	
+
 	//
 	// check depthmask
 	//
@@ -500,7 +500,7 @@ void GL_State( uint64 stateBits, bool forceGlState )
 			glDepthMask( GL_TRUE );
 		}
 	}
-	
+
 	//
 	// check colormask
 	//
@@ -512,7 +512,7 @@ void GL_State( uint64 stateBits, bool forceGlState )
 		GLboolean a = ( stateBits & GLS_ALPHAMASK ) ? GL_FALSE : GL_TRUE;
 		glColorMask( r, g, b, a );
 	}
-	
+
 	//
 	// fill/line mode
 	//
@@ -529,7 +529,7 @@ void GL_State( uint64 stateBits, bool forceGlState )
 		}
 	}
 #endif
-	
+
 	//
 	// polygon offset
 	//
@@ -551,7 +551,7 @@ void GL_State( uint64 stateBits, bool forceGlState )
 #endif
 		}
 	}
-	
+
 #if !defined( USE_CORE_PROFILE )
 	//
 	// alpha test
@@ -561,7 +561,7 @@ void GL_State( uint64 stateBits, bool forceGlState )
 		if( ( stateBits & GLS_ALPHATEST_FUNC_BITS ) != 0 )
 		{
 			glEnable( GL_ALPHA_TEST );
-			
+
 			GLenum func = GL_ALWAYS;
 			switch( stateBits & GLS_ALPHATEST_FUNC_BITS )
 			{
@@ -586,7 +586,7 @@ void GL_State( uint64 stateBits, bool forceGlState )
 		}
 	}
 #endif
-	
+
 	//
 	// stencil
 	//
@@ -606,7 +606,7 @@ void GL_State( uint64 stateBits, bool forceGlState )
 		GLuint ref = GLuint( ( stateBits & GLS_STENCIL_FUNC_REF_BITS ) >> GLS_STENCIL_FUNC_REF_SHIFT );
 		GLuint mask = GLuint( ( stateBits & GLS_STENCIL_FUNC_MASK_BITS ) >> GLS_STENCIL_FUNC_MASK_SHIFT );
 		GLenum func = 0;
-		
+
 		switch( stateBits & GLS_STENCIL_FUNC_BITS )
 		{
 			case GLS_STENCIL_FUNC_NEVER:
@@ -641,7 +641,7 @@ void GL_State( uint64 stateBits, bool forceGlState )
 		GLenum sFail = 0;
 		GLenum zFail = 0;
 		GLenum pass = 0;
-		
+
 		switch( stateBits & GLS_STENCIL_OP_FAIL_BITS )
 		{
 			case GLS_STENCIL_OP_FAIL_KEEP:
@@ -725,7 +725,7 @@ void GL_State( uint64 stateBits, bool forceGlState )
 		}
 		glStencilOp( sFail, zFail, pass );
 	}
-	
+
 	backEnd.glState.glStateBits = stateBits;
 }
 

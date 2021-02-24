@@ -57,7 +57,7 @@ public:
 		networkServer_t serv1, serv2;
 		idStr s1, s2;
 		int ret;
-		
+
 		serv1 = ( *l_serverScan )[ a ];
 		serv2 = ( *l_serverScan )[ b ];
 		switch( l_serverScan->GetSorting() )
@@ -179,15 +179,15 @@ int idServerScan::InfoResponse( networkServer_t& server )
 	{
 		return false;
 	}
-	
+
 	idStr serv = Sys_NetAdrToString( server.adr );
-	
+
 	if( server.challenge != challenge )
 	{
 		common->DPrintf( "idServerScan::InfoResponse - ignoring response from %s, wrong challenge %d.", serv.c_str(), server.challenge );
 		return false;
 	}
-	
+
 	if( scan_state == NET_SCAN )
 	{
 		const idKeyValue* info = net_info.FindKey( serv.c_str() );
@@ -206,7 +206,7 @@ int idServerScan::InfoResponse( networkServer_t& server )
 	{
 		server.ping = Sys_Milliseconds() - lan_pingtime;
 		server.id = 0;
-		
+
 		// check for duplicate servers
 		for( int i = 0; i < Num() ; i++ )
 		{
@@ -217,7 +217,7 @@ int idServerScan::InfoResponse( networkServer_t& server )
 			}
 		}
 	}
-	
+
 	const char* si_map = server.serverInfo.GetString( "si_map" );
 	const idDecl* mapDecl = declManager->FindType( DECL_MAPDEF, si_map, false );
 	const idDeclEntityDef* mapDef = static_cast< const idDeclEntityDef* >( mapDecl );
@@ -230,7 +230,7 @@ int idServerScan::InfoResponse( networkServer_t& server )
 	{
 		server.serverInfo.Set( "si_mapName", si_map );
 	}
-	
+
 	int index = Append( server );
 	// for now, don't maintain sorting when adding new info response servers
 	m_sortedServers.Append( Num() - 1 );
@@ -242,7 +242,7 @@ int idServerScan::InfoResponse( networkServer_t& server )
 	{
 		GUIUpdateSelected();
 	}
-	
+
 	return index;
 }
 
@@ -254,11 +254,11 @@ idServerScan::AddServer
 void idServerScan::AddServer( int id, const char* srv )
 {
 	inServer_t s;
-	
+
 	incoming_net = true;
 	incoming_lastTime = Sys_Milliseconds() + INCOMING_TIMEOUT;
 	s.id = id;
-	
+
 	// using IPs, not hosts
 	if( !Sys_StringToNetAdr( srv, &s.adr, false ) )
 	{
@@ -269,7 +269,7 @@ void idServerScan::AddServer( int id, const char* srv )
 	{
 		s.adr.port = PORT_SERVER;
 	}
-	
+
 	net_servers.Append( s );
 }
 
@@ -337,13 +337,13 @@ void idServerScan::NetScan( )
 		endWaitTime = Sys_Milliseconds() + 1000;
 		return;
 	}
-	
+
 	// make sure the client port is open
 	idAsyncNetwork::client.InitPort();
-	
+
 	scan_state = NET_SCAN;
 	challenge++;
-	
+
 	idList<networkServer_t>::Clear();
 	m_sortedServers.Clear();
 	cur_info = 0;
@@ -351,7 +351,7 @@ void idServerScan::NetScan( )
 	listGUI->Clear();
 	GUIUpdateSelected();
 	common->DPrintf( "NetScan with challenge %d\n", challenge );
-	
+
 	while( cur_info < Min( net_servers.Num(), MAX_PINGREQUESTS ) )
 	{
 		netadr_t serv = net_servers[ cur_info ].adr;
@@ -373,7 +373,7 @@ void idServerScan::RunFrame( )
 	{
 		return;
 	}
-	
+
 	if( scan_state == WAIT_ON_INIT )
 	{
 		if( Sys_Milliseconds() >= endWaitTime )
@@ -383,9 +383,9 @@ void idServerScan::RunFrame( )
 		}
 		return;
 	}
-	
+
 	int timeout_limit = Sys_Milliseconds() - REPLY_TIMEOUT;
-	
+
 	if( scan_state == LAN_SCAN )
 	{
 		if( timeout_limit > lan_pingtime )
@@ -395,9 +395,9 @@ void idServerScan::RunFrame( )
 		}
 		return;
 	}
-	
+
 	// if scan_state == NET_SCAN
-	
+
 	// check for timeouts
 	int i = 0;
 	while( i < net_info.GetNumKeyVals() )
@@ -412,7 +412,7 @@ void idServerScan::RunFrame( )
 			i++;
 		}
 	}
-	
+
 	// possibly send more queries
 	while( cur_info < net_servers.Num() && net_info.GetNumKeyVals() < MAX_PINGREQUESTS )
 	{
@@ -422,7 +422,7 @@ void idServerScan::RunFrame( )
 		net_info.SetInt( Sys_NetAdrToString( serv ), cur_info );
 		cur_info++;
 	}
-	
+
 	// update state
 	if( ( !incoming_net || ( incoming_useTimeout && Sys_Milliseconds() > incoming_lastTime ) ) && net_info.GetNumKeyVals() == 0 )
 	{
@@ -480,7 +480,7 @@ idServerScan::GUIUpdateSelected
 void idServerScan::GUIUpdateSelected()
 {
 	char screenshot[ MAX_STRING_CHARS ];
-	
+
 	if( !m_pGUI )
 	{
 		return;
@@ -543,7 +543,7 @@ void idServerScan::GUIAdd( int id, const networkServer_t server )
 	idStr name = server.serverInfo.GetString( "si_name", GAME_NAME " Server" );
 	bool d3xp = false;
 	bool mod = false;
-	
+
 	if( !idStr::Icmp( server.serverInfo.GetString( "fs_game" ), "d3xp" ) ||
 			!idStr::Icmp( server.serverInfo.GetString( "fs_game_base" ), "d3xp" ) )
 	{
@@ -553,13 +553,13 @@ void idServerScan::GUIAdd( int id, const networkServer_t server )
 	{
 		mod = true;
 	}
-	
+
 	name += "\t";
 	if( server.serverInfo.GetString( "sv_punkbuster" )[ 0 ] == '1' )
 	{
 		name += "mtr_PB";
 	}
-	
+
 	name += "\t";
 	if( d3xp )
 	{
@@ -595,7 +595,7 @@ void idServerScan::ApplyFilter( )
 	int i;
 	networkServer_t serv;
 	idStr s;
-	
+
 	listGUI->SetStateChanges( false );
 	listGUI->Clear();
 	for( i = m_sortAscending ? 0 : m_sortedServers.Num() - 1;
@@ -621,7 +621,7 @@ bool idServerScan::IsFiltered( const networkServer_t server )
 {
 	int i;
 	const idKeyValue* keyval;
-	
+
 	// OS support filter
 #if 0
 	// filter out pure servers that won't provide checksumed game code for client OS
@@ -697,13 +697,13 @@ bool idServerScan::IsFiltered( const networkServer_t server )
 			return true;
 		}
 	}
-	
+
 	// autofilter D3XP games if the user does not has the XP installed
 	if( !fileSystem->HasD3XP() && !idStr::Icmp( server.serverInfo.GetString( "fs_game" ), "d3xp" ) )
 	{
 		return true;
 	}
-	
+
 	// filter based on the game doom or XP
 	if( gui_filter_game.GetInteger() == 1 ) //Only Doom
 	{
@@ -719,7 +719,7 @@ bool idServerScan::IsFiltered( const networkServer_t server )
 			return true;
 		}
 	}
-	
+
 	return false;
 }
 

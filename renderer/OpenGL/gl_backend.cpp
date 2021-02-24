@@ -49,7 +49,7 @@ idCVar r_syncEveryFrame( "r_syncEveryFrame", "1", CVAR_BOOL, "Don't let the GPU 
 static int		swapIndex;		// 0 or 1 into renderSync
 
 #if !defined(USE_GLES2) //&& !defined(USE_GLES3)
-static GLsync	renderSync[2];
+	static GLsync	renderSync[2];
 #endif
 
 void GLimp_SwapBuffers();
@@ -93,13 +93,13 @@ RB_SetBuffer
 static void	RB_SetBuffer( const void* data )
 {
 	// see which draw buffer we want to render the frame to
-	
+
 	const setBufferCommand_t* cmd = ( const setBufferCommand_t* )data;
-	
+
 	RENDERLOG_PRINTF( "---------- RB_SetBuffer ---------- to buffer # %d\n", cmd->buffer );
-	
+
 	GL_Scissor( 0, 0, tr.GetWidth(), tr.GetHeight() );
-	
+
 	// clear screen for debugging
 	// automatically enable this with several other debug tools
 	// that might leave unrendered portions of the screen
@@ -135,34 +135,34 @@ We want to exit this with the GPU idle, right at vsync
 const void GL_BlockingSwapBuffers()
 {
 	RENDERLOG_PRINTF( "***************** GL_BlockingSwapBuffers *****************\n\n\n" );
-	
+
 	const int beforeFinish = Sys_Milliseconds();
-	
+
 	if( !glConfig.syncAvailable )
 	{
 		glFinish();
 	}
-	
+
 	const int beforeSwap = Sys_Milliseconds();
 	if( r_showSwapBuffers.GetBool() && beforeSwap - beforeFinish > 1 )
 	{
 		common->Printf( "%i msec to glFinish\n", beforeSwap - beforeFinish );
 	}
-	
+
 	GLimp_SwapBuffers();
-	
+
 	const int beforeFence = Sys_Milliseconds();
 	if( r_showSwapBuffers.GetBool() && beforeFence - beforeSwap > 1 )
 	{
 		common->Printf( "%i msec to swapBuffers\n", beforeFence - beforeSwap );
 	}
-	
+
 // RB begin
 #if !defined(USE_GLES2) //&& !defined(USE_GLES3)
 	if( glConfig.syncAvailable )
 	{
 		swapIndex ^= 1;
-		
+
 		if( glIsSync( renderSync[swapIndex] ) )
 		{
 			glDeleteSync( renderSync[swapIndex] );
@@ -178,7 +178,7 @@ const void GL_BlockingSwapBuffers()
 		{
 			common->Printf( "%i msec to start fence\n", end - start );
 		}
-		
+
 		GLsync	syncToWaitOn;
 		if( r_syncEveryFrame.GetBool() )
 		{
@@ -188,7 +188,7 @@ const void GL_BlockingSwapBuffers()
 		{
 			syncToWaitOn = renderSync[!swapIndex];
 		}
-		
+
 		if( glIsSync( syncToWaitOn ) )
 		{
 			for( GLenum r = GL_TIMEOUT_EXPIRED; r == GL_TIMEOUT_EXPIRED; )
@@ -205,9 +205,9 @@ const void GL_BlockingSwapBuffers()
 	{
 		common->Printf( "%i msec to wait on fence\n", afterFence - beforeFence );
 	}
-	
+
 	const int64 exitBlockTime = Sys_Microseconds();
-	
+
 	static int64 prevBlockTime;
 	if( r_showSwapBuffers.GetBool() && prevBlockTime )
 	{
@@ -242,7 +242,7 @@ Renders the draw list twice, with slight modifications for left eye / right eye
 void RB_StereoRenderExecuteBackEndCommands( const emptyCommand_t* const allCmds )
 {
 	uint64 backEndStartTime = Sys_Microseconds();
-	
+
 	// If we are in a monoscopic context, this draws to the only buffer, and is
 	// the same as GL_BACK.  In a quad-buffer stereo context, this is necessary
 	// to prevent GL from forcing the rendering to go to both BACK_LEFT and
@@ -250,11 +250,11 @@ void RB_StereoRenderExecuteBackEndCommands( const emptyCommand_t* const allCmds 
 	// To allow stereo deghost processing, the views have to be copied to separate
 	// textures anyway, so there isn't any benefit to rendering to BACK_RIGHT for
 	// that eye.
-	
+
 #if !defined(USE_GLES2) && !defined(USE_GLES3)
 	glDrawBuffer( GL_BACK_LEFT );
 #endif
-	
+
 	// create the stereoRenderImage if we haven't already
 	static idImage* stereoRenderImages[2];
 	for( int i = 0; i < 2; i++ )
@@ -263,7 +263,7 @@ void RB_StereoRenderExecuteBackEndCommands( const emptyCommand_t* const allCmds 
 		{
 			stereoRenderImages[i] = globalImages->ImageFromFunction( va( "_stereoRender%i", i ), R_MakeStereoRenderImage );
 		}
-		
+
 		// resize the stereo render image if the main window has changed size
 		if( stereoRenderImages[i]->GetUploadWidth() != renderSystem->GetWidth() ||
 				stereoRenderImages[i]->GetUploadHeight() != renderSystem->GetHeight() )
@@ -271,27 +271,27 @@ void RB_StereoRenderExecuteBackEndCommands( const emptyCommand_t* const allCmds 
 			stereoRenderImages[i]->Resize( renderSystem->GetWidth(), renderSystem->GetHeight() );
 		}
 	}
-	
+
 	// In stereoRender mode, the front end has generated two RC_DRAW_VIEW commands
 	// with slightly different origins for each eye.
-	
+
 	// TODO: only do the copy after the final view has been rendered, not mirror subviews?
-	
+
 	// Render the 3D draw views from the screen origin so all the screen relative
 	// texture mapping works properly, then copy the portion we are going to use
 	// off to a texture.
 	bool foundEye[2] = { false, false };
-	
+
 	for( int stereoEye = 1; stereoEye >= -1; stereoEye -= 2 )
 	{
 		// set up the target texture we will draw to
 		const int targetEye = ( stereoEye == 1 ) ? 1 : 0;
-		
+
 		// Set the back end into a known default state to fix any stale render state issues
 		GL_SetDefaultState();
 		renderProgManager.Unbind();
 		renderProgManager.ZeroUniforms();
-		
+
 		for( const emptyCommand_t* cmds = allCmds; cmds != NULL; cmds = ( const emptyCommand_t* )cmds->next )
 		{
 			switch( cmds->commandId )
@@ -303,13 +303,13 @@ void RB_StereoRenderExecuteBackEndCommands( const emptyCommand_t* const allCmds 
 				{
 					const drawSurfsCommand_t* const dsc = ( const drawSurfsCommand_t* )cmds;
 					const viewDef_t&			eyeViewDef = *dsc->viewDef;
-					
+
 					if( eyeViewDef.renderView.viewEyeBuffer && eyeViewDef.renderView.viewEyeBuffer != stereoEye )
 					{
 						// this is the render view for the other eye
 						continue;
 					}
-					
+
 					foundEye[ targetEye ] = true;
 					RB_DrawView( dsc, stereoEye );
 					if( cmds->commandId == RC_DRAW_VIEW_GUI )
@@ -338,18 +338,18 @@ void RB_StereoRenderExecuteBackEndCommands( const emptyCommand_t* const allCmds 
 					break;
 			}
 		}
-		
+
 		// copy to the target
 		stereoRenderImages[ targetEye ]->CopyFramebuffer( 0, 0, renderSystem->GetWidth(), renderSystem->GetHeight() );
 	}
-	
+
 	// perform the final compositing / warping / deghosting to the actual framebuffer(s)
 	assert( foundEye[0] && foundEye[1] );
-	
+
 	GL_SetDefaultState();
-	
+
 	RB_SetMVP( renderMatrix_identity );
-	
+
 	// If we are in quad-buffer pixel format but testing another 3D mode,
 	// make sure we draw to both eyes.  This is likely to be sub-optimal
 	// performance on most cards and drivers, but it is better than getting
@@ -360,10 +360,10 @@ void RB_StereoRenderExecuteBackEndCommands( const emptyCommand_t* const allCmds 
 		glDrawBuffer( GL_BACK );
 	}
 #endif
-	
+
 	GL_State( GLS_DEPTHFUNC_ALWAYS );
 	GL_Cull( CT_TWO_SIDED );
-	
+
 	// We just want to do a quad pass - so make sure we disable any texgen and
 	// set the texture matrix to the identity so we don't get anomalies from
 	// any stale uniform data being present from a previous draw call
@@ -371,14 +371,14 @@ void RB_StereoRenderExecuteBackEndCommands( const emptyCommand_t* const allCmds 
 	const float texT[4] = { 0.0f, 1.0f, 0.0f, 0.0f };
 	renderProgManager.SetRenderParm( RENDERPARM_TEXTUREMATRIX_S, texS );
 	renderProgManager.SetRenderParm( RENDERPARM_TEXTUREMATRIX_T, texT );
-	
+
 	// disable any texgen
 	const float texGenEnabled[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
 	renderProgManager.SetRenderParm( RENDERPARM_TEXGEN_0_ENABLED, texGenEnabled );
-	
+
 	renderProgManager.BindShader_Texture();
 	GL_Color( 1, 1, 1, 1 );
-	
+
 #if !defined(USE_GLES2) && !defined(USE_GLES3)
 	switch( renderSystem->GetStereo3DMode() )
 	{
@@ -389,7 +389,7 @@ void RB_StereoRenderExecuteBackEndCommands( const emptyCommand_t* const allCmds 
 			GL_SelectTexture( 1 );
 			stereoRenderImages[0]->Bind();
 			RB_DrawElementsWithCounters( &backEnd.unitSquareSurface );
-			
+
 			glDrawBuffer( GL_BACK_LEFT );
 			GL_SelectTexture( 1 );
 			stereoRenderImages[1]->Bind();
@@ -397,7 +397,7 @@ void RB_StereoRenderExecuteBackEndCommands( const emptyCommand_t* const allCmds 
 			stereoRenderImages[0]->Bind();
 			RB_DrawElementsWithCounters( &backEnd.unitSquareSurface );
 			break;
-			
+
 		case STEREO3D_HDMI_720:
 			// HDMI 720P 3D
 			GL_SelectTexture( 0 );
@@ -406,14 +406,14 @@ void RB_StereoRenderExecuteBackEndCommands( const emptyCommand_t* const allCmds 
 			stereoRenderImages[0]->Bind();
 			GL_ViewportAndScissor( 0, 0, 1280, 720 );
 			RB_DrawElementsWithCounters( &backEnd.unitSquareSurface );
-			
+
 			GL_SelectTexture( 0 );
 			stereoRenderImages[0]->Bind();
 			GL_SelectTexture( 1 );
 			stereoRenderImages[1]->Bind();
 			GL_ViewportAndScissor( 0, 750, 1280, 720 );
 			RB_DrawElementsWithCounters( &backEnd.unitSquareSurface );
-			
+
 			// force the HDMI 720P 3D guard band to a constant color
 			glScissor( 0, 720, 1280, 30 );
 			glClear( GL_COLOR_BUFFER_BIT );
@@ -425,20 +425,20 @@ void RB_StereoRenderExecuteBackEndCommands( const emptyCommand_t* const allCmds 
 				// this is the Rift warp
 				// renderSystem->GetWidth() / GetHeight() have returned equal values (640 for initial Rift)
 				// and we are going to warp them onto a symetric square region of each half of the screen
-				
+
 				renderProgManager.BindShader_StereoWarp();
-				
+
 				// clear the entire screen to black
 				// we could be smart and only clear the areas we aren't going to draw on, but
 				// clears are fast...
 				glScissor( 0, 0, glConfig.nativeScreenWidth, glConfig.nativeScreenHeight );
 				glClearColor( 0, 0, 0, 0 );
 				glClear( GL_COLOR_BUFFER_BIT );
-				
+
 				// the size of the box that will get the warped pixels
 				// With the 7" displays, this will be less than half the screen width
 				const int pixelDimensions = ( glConfig.nativeScreenWidth >> 1 ) * stereoRender_warpTargetFraction.GetFloat();
-				
+
 				// Always scissor to the half-screen boundary, but the viewports
 				// might cross that boundary if the lenses can be adjusted closer
 				// together.
@@ -446,26 +446,26 @@ void RB_StereoRenderExecuteBackEndCommands( const emptyCommand_t* const allCmds 
 							( glConfig.nativeScreenHeight >> 1 ) - ( pixelDimensions >> 1 ),
 							pixelDimensions, pixelDimensions );
 				glScissor( 0, 0, glConfig.nativeScreenWidth >> 1, glConfig.nativeScreenHeight );
-				
+
 				idVec4	color( stereoRender_warpCenterX.GetFloat(), stereoRender_warpCenterY.GetFloat(), stereoRender_warpParmZ.GetFloat(), stereoRender_warpParmW.GetFloat() );
 				// don't use GL_Color(), because we don't want to clamp
 				renderProgManager.SetRenderParm( RENDERPARM_COLOR, color.ToFloatPtr() );
-				
+
 				GL_SelectTexture( 0 );
 				stereoRenderImages[0]->Bind();
 				glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER );
 				glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER );
 				RB_DrawElementsWithCounters( &backEnd.unitSquareSurface );
-				
+
 				idVec4	color2( stereoRender_warpCenterX.GetFloat(), stereoRender_warpCenterY.GetFloat(), stereoRender_warpParmZ.GetFloat(), stereoRender_warpParmW.GetFloat() );
 				// don't use GL_Color(), because we don't want to clamp
 				renderProgManager.SetRenderParm( RENDERPARM_COLOR, color2.ToFloatPtr() );
-				
+
 				glViewport( ( glConfig.nativeScreenWidth >> 1 ),
 							( glConfig.nativeScreenHeight >> 1 ) - ( pixelDimensions >> 1 ),
 							pixelDimensions, pixelDimensions );
 				glScissor( glConfig.nativeScreenWidth >> 1, 0, glConfig.nativeScreenWidth >> 1, glConfig.nativeScreenHeight );
-				
+
 				GL_SelectTexture( 0 );
 				stereoRenderImages[1]->Bind();
 				glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER );
@@ -482,7 +482,7 @@ void RB_StereoRenderExecuteBackEndCommands( const emptyCommand_t* const allCmds 
 			stereoRenderImages[1]->Bind();
 			GL_ViewportAndScissor( 0, 0, renderSystem->GetWidth(), renderSystem->GetHeight() );
 			RB_DrawElementsWithCounters( &backEnd.unitSquareSurface );
-			
+
 			GL_SelectTexture( 0 );
 			stereoRenderImages[1]->Bind();
 			GL_SelectTexture( 1 );
@@ -490,7 +490,7 @@ void RB_StereoRenderExecuteBackEndCommands( const emptyCommand_t* const allCmds 
 			GL_ViewportAndScissor( renderSystem->GetWidth(), 0, renderSystem->GetWidth(), renderSystem->GetHeight() );
 			RB_DrawElementsWithCounters( &backEnd.unitSquareSurface );
 			break;
-			
+
 		case STEREO3D_TOP_AND_BOTTOM_COMPRESSED:
 			GL_SelectTexture( 1 );
 			stereoRenderImages[0]->Bind();
@@ -498,7 +498,7 @@ void RB_StereoRenderExecuteBackEndCommands( const emptyCommand_t* const allCmds 
 			stereoRenderImages[1]->Bind();
 			GL_ViewportAndScissor( 0, 0, renderSystem->GetWidth(), renderSystem->GetHeight() );
 			RB_DrawElementsWithCounters( &backEnd.unitSquareSurface );
-			
+
 			GL_SelectTexture( 1 );
 			stereoRenderImages[1]->Bind();
 			GL_SelectTexture( 0 );
@@ -506,43 +506,43 @@ void RB_StereoRenderExecuteBackEndCommands( const emptyCommand_t* const allCmds 
 			GL_ViewportAndScissor( 0, renderSystem->GetHeight(), renderSystem->GetWidth(), renderSystem->GetHeight() );
 			RB_DrawElementsWithCounters( &backEnd.unitSquareSurface );
 			break;
-			
+
 		case STEREO3D_INTERLACED:
 			// every other scanline
 			GL_SelectTexture( 0 );
 			stereoRenderImages[0]->Bind();
 			glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
 			glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
-			
+
 			GL_SelectTexture( 1 );
 			stereoRenderImages[1]->Bind();
 			glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
 			glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
-			
+
 			GL_ViewportAndScissor( 0, 0, renderSystem->GetWidth(), renderSystem->GetHeight() * 2 );
 			renderProgManager.BindShader_StereoInterlace();
 			RB_DrawElementsWithCounters( &backEnd.unitSquareSurface );
-			
+
 			GL_SelectTexture( 0 );
 			glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
 			glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
-			
+
 			GL_SelectTexture( 1 );
 			glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
 			glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
-			
+
 			break;
 	}
 #endif
-	
+
 	// debug tool
 	RB_DrawFlickerBox();
-	
+
 	// make sure the drawing is actually started
 	glFlush();
-	
+
 	// we may choose to sync to the swapbuffers before the next frame
-	
+
 	// stop rendering on this thread
 	uint64 backEndFinishTime = Sys_Microseconds();
 	backEnd.pc.totalMicroSec = backEndFinishTime - backEndStartTime;
@@ -563,37 +563,37 @@ void RB_ExecuteBackEndCommands( const emptyCommand_t* cmds )
 	int c_draw2d = 0;
 	int c_setBuffers = 0;
 	int c_copyRenders = 0;
-	
+
 	// RB: we have no GPU timer queries with OpenGL ES 3.0 :(
 	resolutionScale.SetCurrentGPUFrameTime( time_lastGameFrame + time_lastGameDraw ); //commonLocal.GetRendererGPUMicroseconds() );
 	// RB end
-	
+
 	renderLog.StartFrame();
-	
+
 	if( cmds->commandId == RC_NOP && !cmds->next )
 	{
 		return;
 	}
-	
+
 	if( renderSystem->GetStereo3DMode() != STEREO3D_OFF )
 	{
 		RB_StereoRenderExecuteBackEndCommands( cmds );
 		renderLog.EndFrame();
 		return;
 	}
-	
+
 	uint64 backEndStartTime = Sys_Microseconds();
-	
+
 	// needed for editor rendering
 	GL_SetDefaultState();
-	
+
 	// If we have a stereo pixel format, this will draw to both
 	// the back left and back right buffers, which will have a
 	// performance penalty.
 #if !defined(USE_GLES2) && !defined(USE_GLES3)
 	glDrawBuffer( GL_BACK );
 #endif
-	
+
 	for( ; cmds != NULL; cmds = ( const emptyCommand_t* )cmds->next )
 	{
 		switch( cmds->commandId )
@@ -628,18 +628,18 @@ void RB_ExecuteBackEndCommands( const emptyCommand_t* cmds )
 				break;
 		}
 	}
-	
+
 	RB_DrawFlickerBox();
-	
+
 	// Fix for the steam overlay not showing up while in game without Shell/Debug/Console/Menu also rendering
 	glColorMask( 1, 1, 1, 1 );
-	
+
 	glFlush();
-	
+
 	// stop rendering on this thread
 	uint64 backEndFinishTime = Sys_Microseconds();
 	backEnd.pc.totalMicroSec = backEndFinishTime - backEndStartTime;
-	
+
 	if( r_debugRenderToTexture.GetInteger() == 1 )
 	{
 		common->Printf( "3d: %i, 2d: %i, SetBuf: %i, CpyRenders: %i, CpyFrameBuf: %i\n", c_draw3d, c_draw2d, c_setBuffers, c_copyRenders, backEnd.pc.c_copyFrameBuffer );

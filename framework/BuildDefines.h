@@ -42,49 +42,49 @@ If you have questions concerning this license or the applicable additional terms
 // if enabled, the console won't toggle upon ~, unless you start the binary with +set com_allowConsole 1
 // Ctrl+Alt+~ will always toggle the console no matter what
 #ifndef ID_CONSOLE_LOCK
-#if defined(_WIN32) || defined(MACOS_X)
-#ifdef _DEBUG
-#define ID_CONSOLE_LOCK 0
-#else
-#define ID_CONSOLE_LOCK 1
-#endif
-#else
-#define ID_CONSOLE_LOCK 0
-#endif
+	#if defined(_WIN32) || defined(MACOS_X)
+		#ifdef _DEBUG
+			#define ID_CONSOLE_LOCK 0
+		#else
+			#define ID_CONSOLE_LOCK 1
+		#endif
+	#else
+		#define ID_CONSOLE_LOCK 0
+	#endif
 #endif
 
 // useful for network debugging, turns off 'LAN' checks, all IPs are classified 'internet'
 #ifndef ID_NOLANADDRESS
-#define ID_NOLANADDRESS 0
+	#define ID_NOLANADDRESS 0
 #endif
 
 // let .dds be loaded from FS without altering pure state. only for developement.
 #ifndef ID_PURE_ALLOWDDS
-#define ID_PURE_ALLOWDDS 0
+	#define ID_PURE_ALLOWDDS 0
 #endif
 
 // build an exe with no CVAR_CHEAT controls
 #ifndef ID_ALLOW_CHEATS
-#define ID_ALLOW_CHEATS 0
+	#define ID_ALLOW_CHEATS 0
 #endif
 
 // RB begin
 #if 0 //!defined(__ANDROID__)
-#ifndef ID_ENABLE_CURL
-#define ID_ENABLE_CURL 1
-#endif
+	#ifndef ID_ENABLE_CURL
+		#define ID_ENABLE_CURL 1
+	#endif
 #endif
 // RB end
 
 // fake a pure client. useful to connect an all-debug client to a server
 #ifndef ID_FAKE_PURE
-#define ID_FAKE_PURE 0
+	#define ID_FAKE_PURE 0
 #endif
 
 // verify checksums in clientinfo traffic
 // NOTE: this makes the network protocol incompatible
 #ifndef ID_CLIENTINFO_TAGS
-#define ID_CLIENTINFO_TAGS 0
+	#define ID_CLIENTINFO_TAGS 0
 #endif
 
 // for win32 this is defined in preprocessor settings so that MFC can be
@@ -107,40 +107,40 @@ If you have questions concerning this license or the applicable additional terms
 // atm, we have no useful way to reconstruct the trace, so let's leave it off
 #define ID_BT_STUB
 #ifndef ID_BT_STUB
-#if defined( __linux__ )
-#if defined( _DEBUG )
-#define ID_BT_STUB
-#endif
-#else
-#define ID_BT_STUB
-#endif
+	#if defined( __linux__ )
+		#if defined( _DEBUG )
+			#define ID_BT_STUB
+		#endif
+	#else
+		#define ID_BT_STUB
+	#endif
 #endif
 
 // RB begin
 #if defined(USE_CDKEY)
-#ifndef ID_ENFORCE_KEY
-#	if !defined( ID_DEDICATED ) && !defined( ID_DEMO_BUILD )
-#		define ID_ENFORCE_KEY 1
-#	else
-#		define ID_ENFORCE_KEY 0
-#	endif
-#endif
+	#ifndef ID_ENFORCE_KEY
+		#if !defined( ID_DEDICATED ) && !defined( ID_DEMO_BUILD )
+			#define ID_ENFORCE_KEY 1
+		#else
+			#define ID_ENFORCE_KEY 0
+		#endif
+	#endif
 #endif // #if defined(USE_CDKEY)
 // RB end
 
 #ifndef ID_OPENAL
-#	if ( defined(_WIN32) || defined(MACOS_X) ) && !defined( ID_DEDICATED ) && defined(USE_OPENAL)
-#		define ID_OPENAL 1
-#	else
-#		define ID_OPENAL 0
-#	endif
+	#if ( defined(_WIN32) || defined(MACOS_X) ) && !defined( ID_DEDICATED ) && defined(USE_OPENAL)
+		#define ID_OPENAL 1
+	#else
+		#define ID_OPENAL 0
+	#endif
 #endif
 
 #ifndef ID_ALLOW_D3XP
-#	if defined( MACOS_X )
-#		define ID_ALLOW_D3XP 0
-#	else
-#		define ID_ALLOW_D3XP 1
-#	endif
+	#if defined( MACOS_X )
+		#define ID_ALLOW_D3XP 0
+	#else
+		#define ID_ALLOW_D3XP 1
+	#endif
 #endif
 

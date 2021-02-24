@@ -31,11 +31,11 @@ extern "C"
 	** these libs are loaded by lua.c and are readily available to any Lua
 	** program
 	*/
-	
-	
-	
+
+
+
 	int			luaopen_sys( lua_State* L );
-	
+
 	static const luaL_Reg loadedlibs[] =
 	{
 		{"_G", luaopen_base},
@@ -51,8 +51,8 @@ extern "C"
 //		{"sys", luaopen_sys},
 		{NULL, NULL}
 	};
-	
-	
+
+
 	/*
 	** these libs are preloaded and must be required before used
 	*/
@@ -60,20 +60,20 @@ extern "C"
 	{
 		{NULL, NULL}
 	};
-	
-	
-	
+
+
+
 	LUALIB_API void luaL_openlibs( lua_State* L )
 	{
 		const luaL_Reg* lib;
-		
+
 		/* call open functions from 'loadedlibs' and set results to global table */
 		for( lib = loadedlibs; lib->func; lib++ )
 		{
 			luaL_requiref( L, lib->name, lib->func, 1 );
 			lua_pop( L, 1 ); /* remove lib */
 		}
-		
+
 		/* add open functions from 'preloadedlibs' into 'package.preload' table */
 		luaL_getsubtable( L, LUA_REGISTRYINDEX, "_PRELOAD" );
 		for( lib = preloadedlibs; lib->func; lib++ )
@@ -83,7 +83,7 @@ extern "C"
 		}
 		lua_pop( L, 1 ); /* remove _PRELOAD table */
 	}
-	
+
 }
 
 #endif // #if defined(USE_LUA)

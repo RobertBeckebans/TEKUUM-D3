@@ -31,7 +31,7 @@ struct guiModelSurface_t
 {
 	const idMaterial* 		material;
 	uint64					glState;
-	
+
 	// RB: added alternative interface for no glMapBuffer support
 #if defined(NO_GL_MAPBUFFER)
 	int						firstVert;
@@ -49,21 +49,21 @@ class idGuiModel
 {
 public:
 	idGuiModel();
-	
+
 	void	Clear();
-	
+
 	void	WriteToDemo( idDemoFile* demo );
 	void	ReadFromDemo( idDemoFile* demo );
-	
+
 	// allocates memory for verts and indexes in frame-temporary buffer memory
 	void	BeginFrame();
-	
+
 	void	EmitToCurrentView( float modelMatrix[16], bool depthHack );
 	void	EmitFullScreen();
-	
+
 	// the returned pointer will be in write-combined memory, so only make contiguous
 	// 32 bit writes and never read from it.
-	
+
 	// RB: added alternative interface for no glMapBuffer support
 #if defined(NO_GL_MAPBUFFER)
 	void	AllocTris( const idDrawVert* verts, int numVerts, const triIndex_t* indexes, int numIndexes, const idMaterial* material,
@@ -73,25 +73,25 @@ public:
 						   const uint64 glState, const stereoDepthType_t stereoType );
 #endif
 	// RB end
-	
+
 	//---------------------------
 private:
 	void	AdvanceSurf();
 	void	EmitSurfaces( float modelMatrix[16], float modelViewMatrix[16],
 						  bool depthHack, bool allowFullScreenStereoDepth, bool linkAsEntity );
-						  
+
 	guiModelSurface_t* 			surf;
-	
+
 	float						shaderParms[ MAX_ENTITY_SHADER_PARMS ];
-	
+
 	static const float STEREO_DEPTH_NEAR;
 	static const float STEREO_DEPTH_MID;
 	static const float STEREO_DEPTH_FAR;
-	
+
 	// if we exceed these limits we stop rendering GUI surfaces
 	static const int MAX_INDEXES = ( 20000 * 6 );
 	static const int MAX_VERTS	 = ( 20000 * 4 );
-	
+
 	// RB: added alternative interface for no glMapBuffer support
 #if defined(NO_GL_MAPBUFFER)
 	idList<idDrawVert>			verts;
@@ -99,15 +99,15 @@ private:
 #else
 	vertCacheHandle_t			vertexBlock;
 	vertCacheHandle_t			indexBlock;
-	
+
 	idDrawVert* 				vertexPointer;
 	triIndex_t* 				indexPointer;
 #endif
 	// RB end
-	
+
 	int		numVerts;
 	int		numIndexes;
-	
+
 	idList<guiModelSurface_t >	surfaces;
 };
 

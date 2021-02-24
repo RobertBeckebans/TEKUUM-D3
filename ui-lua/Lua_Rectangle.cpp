@@ -41,9 +41,9 @@ If you have questions concerning this license or the applicable additional terms
 int idRectangle::Lua_new( lua_State* L )
 {
 	int args = lua_gettop( L );
-	
+
 	idRectangle* rect = new idRectangle(); //LuaWrapper<idWindow>::allocator(L);
-	
+
 	if( args == 4 )
 	{
 		rect->x = luaL_checknumber( L, 1 );
@@ -51,11 +51,11 @@ int idRectangle::Lua_new( lua_State* L )
 		rect->w = luaL_checknumber( L, 3 );
 		rect->h = luaL_checknumber( L, 4 );
 	}
-	
+
 	luaW_push<idRectangle>( L, rect );
 	luaW_hold<idRectangle>( L, rect );
 	//luaW_postconstructor<idWindow>(L, args);
-	
+
 	return 1;
 }
 
@@ -64,9 +64,9 @@ int idRectangle::Lua_gc( lua_State* L )
 {
 	idRectangle* rect = luaW_check<idRectangle>( L, 1 );
 	//idLib::Printf( "Lua says bye to rectangle = %p\n", rect );
-	
+
 	delete rect;
-	
+
 	return 0;
 }
 
@@ -78,30 +78,30 @@ int idRectangle::Lua_index( lua_State* L )
 		if( lua_isstring( L, 2 ) )
 		{
 			char		buf[MAX_STRING_CHARS];
-			
+
 			const char* field = luaL_checkstring( L, 2 );
-			
+
 			switch( *field )
 			{
 				case 'x':
 					lua_pushnumber( L, rect->x );
 					return 1;
-					
+
 				case 'y':
 					lua_pushnumber( L, rect->y );
 					return 1;
-					
+
 				case 'w':
 					lua_pushnumber( L, rect->w );
 					return 1;
-					
+
 				case 'h':
 					lua_pushnumber( L, rect->h );
 					return 1;
 			}
 		}
 	}
-	
+
 	return 0; //return luaW_index<idRectangle>( L );
 }
 
@@ -114,42 +114,42 @@ int idRectangle::Lua_newindex( lua_State* L )
 		{
 			const char* field = luaL_checkstring( L, 2 );
 			float n = luaL_checknumber( L, 3 );
-			
+
 			switch( *field )
 			{
 				case 'x':
 					rect->x = n;
 					return 0;
-					
+
 				case 'y':
 					rect->y = n;
 					return 0;
-					
+
 				case 'w':
 					rect->w = n;
 					return 0;
-					
+
 				case 'h':
 					rect->h = n;
 					return 0;
 			}
 		}
 	}
-	
+
 	return 0; //luaW_newindex<idRectangle>( L );
 }
 
 int idRectangle::Lua_tostring( lua_State* L )
 {
 	char		buf[MAX_STRING_CHARS];
-	
+
 	idRectangle* rect = luaW_check<idRectangle>( L, 1 );
 	if( rect )
 	{
 		sprintf( buf, "Rectangle: name='%s' ", rect->String() );
 		lua_pushstring( L, buf );
 	}
-	
+
 	return 1;
 }
 
@@ -168,7 +168,7 @@ static const luaL_Reg Rectangle_meta[] =
 	{ "__index",		idRectangle::Lua_index },
 	{ "__newindex",		idRectangle::Lua_newindex },
 	{ "__tostring",		idRectangle::Lua_tostring },
-	
+
 	{NULL, NULL}
 };
 
@@ -178,7 +178,7 @@ extern "C"
 	int luaopen_Rectangle( lua_State* L )
 	{
 		luaW_register< idRectangle >( L, "Rectangle", Rectangle_default, Rectangle_meta );
-		
+
 		return 0;
 	}
 }

@@ -40,13 +40,13 @@ If you have questions concerning this license or the applicable additional terms
 // default scripts
 // RB begin
 #if defined(USE_DOOMSHARP)
-#define SCRIPT_DEFAULTDEFS			"scriptsharp/doom_defs.script"
-#define SCRIPT_DEFAULT				"scriptsharp/doom_main.script"
-#define SCRIPT_DEFAULTFUNC			"main"
+	#define SCRIPT_DEFAULTDEFS			"scriptsharp/doom_defs.script"
+	#define SCRIPT_DEFAULT				"scriptsharp/doom_main.script"
+	#define SCRIPT_DEFAULTFUNC			"main"
 #else
-#define SCRIPT_DEFAULTDEFS			"script/doom_defs.script"
-#define SCRIPT_DEFAULT				"script/doom_main.script"
-#define SCRIPT_DEFAULTFUNC			"doom_main"
+	#define SCRIPT_DEFAULTDEFS			"script/doom_defs.script"
+	#define SCRIPT_DEFAULT				"script/doom_main.script"
+	#define SCRIPT_DEFAULTFUNC			"doom_main"
 #endif
 // RB end
 
@@ -84,123 +84,123 @@ class idGame
 {
 public:
 	virtual						~idGame() {}
-	
+
 	// Initialize the game for the first time.
 	virtual void				Init() = 0;
-	
+
 	// Shut down the entire game.
 	virtual void				Shutdown() = 0;
-	
+
 	// Set the local client number. Distinguishes listen ( == 0 ) / dedicated ( == -1 )
 	virtual void				SetLocalClient( int clientNum ) = 0;
-	
+
 	// Sets the user info for a client.
 	// if canModify is true, the game can modify the user info in the returned dictionary pointer, server will forward the change back
 	// canModify is never true on network client
 	virtual const idDict* 		SetUserInfo( int clientNum, const idDict& userInfo, bool isClient, bool canModify ) = 0;
-	
+
 	// Retrieve the game's userInfo dict for a client.
 	virtual const idDict* 		GetUserInfo( int clientNum ) = 0;
-	
+
 	// The game gets a chance to alter userinfo before they are emitted to server.
 	virtual void				ThrottleUserInfo() = 0;
-	
+
 	// Sets the serverinfo at map loads and when it changes.
 	virtual void				SetServerInfo( const idDict& serverInfo ) = 0;
-	
+
 	// The session calls this before moving the single player game to a new level.
 	virtual const idDict& 		GetPersistentPlayerInfo( int clientNum ) = 0;
-	
+
 	// The session calls this right before a new level is loaded.
 	virtual void				SetPersistentPlayerInfo( int clientNum, const idDict& playerInfo ) = 0;
-	
+
 	// Loads a map and spawns all the entities.
 	virtual void				InitFromNewMap( const char* mapName, idRenderWorld* renderWorld, idSoundWorld* soundWorld, bool isServer, bool isClient, int randseed ) = 0;
-	
+
 	// Loads a map from a savegame file.
 	virtual bool				InitFromSaveGame( const char* mapName, idRenderWorld* renderWorld, idSoundWorld* soundWorld, idFile* saveGameFile ) = 0;
-	
+
 	// Saves the current game state, the session may have written some data to the file already.
 	virtual void				SaveGame( idFile* saveGameFile ) = 0;
-	
+
 	// Shut down the current map.
 	virtual void				MapShutdown() = 0;
-	
+
 	// Caches media referenced from in key/value pairs in the given dictionary.
 	virtual void				CacheDictionaryMedia( const idDict* dict ) = 0;
-	
+
 	// Spawns the player entity to be used by the client.
 	virtual void				SpawnPlayer( int clientNum ) = 0;
-	
+
 	// Runs a game frame, may return a session command for level changing, etc
 	virtual gameReturn_t		RunFrame( const usercmd_t* clientCmds ) = 0;
-	
+
 	// Makes rendering and sound system calls to display for a given clientNum.
 	virtual bool				Draw( int clientNum ) = 0;
-	
+
 	// Let the game do it's own UI when ESCAPE is used
 	virtual escReply_t			HandleESC( idUserInterface** gui ) = 0;
-	
+
 	// get the games menu if appropriate ( multiplayer )
 	virtual idUserInterface* 	StartMenu() = 0;
-	
+
 	// When the game is running it's own UI fullscreen, GUI commands are passed through here
 	// return NULL once the fullscreen UI mode should stop, or "main" to go to main menu
 	virtual const char* 		HandleGuiCommands( const char* menuCommand ) = 0;
-	
+
 	// main menu commands not caught in the engine are passed here
 	virtual void				HandleMainMenuCommands( const char* menuCommand, idUserInterface* gui ) = 0;
-	
+
 	// Early check to deny connect.
 	virtual allowReply_t		ServerAllowClient( int numClients, const char* IP, const char* guid, const char* password, char reason[MAX_STRING_CHARS] ) = 0;
-	
+
 	// Connects a client.
 	virtual void				ServerClientConnect( int clientNum, const char* guid ) = 0;
-	
+
 	// Spawns the player entity to be used by the client.
 	virtual void				ServerClientBegin( int clientNum ) = 0;
-	
+
 	// Disconnects a client and removes the player entity from the game.
 	virtual void				ServerClientDisconnect( int clientNum ) = 0;
-	
+
 	// Writes initial reliable messages a client needs to recieve when first joining the game.
 	virtual void				ServerWriteInitialReliableMessages( int clientNum ) = 0;
-	
+
 	// Writes a snapshot of the server game state for the given client.
 	virtual void				ServerWriteSnapshot( int clientNum, int sequence, idBitMsg& msg, byte* clientInPVS, int numPVSClients ) = 0;
-	
+
 	// Patches the network entity states at the server with a snapshot for the given client.
 	virtual bool				ServerApplySnapshot( int clientNum, int sequence ) = 0;
-	
+
 	// Processes a reliable message from a client.
 	virtual void				ServerProcessReliableMessage( int clientNum, const idBitMsg& msg ) = 0;
-	
+
 	// Reads a snapshot and updates the client game state.
 	virtual void				ClientReadSnapshot( int clientNum, int sequence, const int gameFrame, const int gameTime, const int dupeUsercmds, const int aheadOfServer, const idBitMsg& msg ) = 0;
-	
+
 	// Patches the network entity states at the client with a snapshot.
 	virtual bool				ClientApplySnapshot( int clientNum, int sequence ) = 0;
-	
+
 	// Processes a reliable message from the server.
 	virtual void				ClientProcessReliableMessage( int clientNum, const idBitMsg& msg ) = 0;
-	
+
 	// Runs prediction on entities at the client.
 	virtual gameReturn_t		ClientPrediction( int clientNum, const usercmd_t* clientCmds, bool lastPredictFrame ) = 0;
-	
+
 	// Used to manage divergent time-lines
 	virtual void				SelectTimeGroup( int timeGroup ) = 0;
 	virtual int					GetTimeGroupTime( int timeGroup ) = 0;
-	
+
 	virtual void				GetBestGameType( const char* map, const char* gametype, char buf[ MAX_STRING_CHARS ] ) = 0;
-	
+
 	// Returns a summary of stats for a given client
 	virtual void				GetClientStats( int clientNum, char* data, const int len ) = 0;
-	
+
 	// Switch a player to a particular team
 	virtual void				SwitchTeam( int clientNum, int team ) = 0;
-	
+
 	virtual bool				DownloadRequest( const char* IP, const char* guid, const char* paks, char urls[ MAX_STRING_CHARS ] ) = 0;
-	
+
 	virtual void				GetMapLoadingGUI( char gui[ MAX_STRING_CHARS ] ) = 0;
 };
 
@@ -246,12 +246,12 @@ class idGameEdit
 {
 public:
 	virtual						~idGameEdit() {}
-	
+
 	// These are the canonical idDict to parameter parsing routines used by both the game and tools.
 	virtual void				ParseSpawnArgsToRenderLight( const idDict* args, renderLight_t* renderLight );
 	virtual void				ParseSpawnArgsToRenderEntity( const idDict* args, renderEntity_t* renderEntity );
 	virtual void				ParseSpawnArgsToRefSound( const idDict* args, refSound_t* refSound );
-	
+
 	// Animation system calls for non-game based skeletal rendering.
 	virtual idRenderModel* 		ANIM_GetModelFromEntityDef( const char* classname );
 	virtual const idVec3&		 ANIM_GetModelOffsetFromEntityDef( const char* classname );
@@ -265,28 +265,28 @@ public:
 	virtual int					ANIM_GetNumFrames( const idMD5Anim* anim );
 	virtual void				ANIM_CreateAnimFrame( const idRenderModel* model, const idMD5Anim* anim, int numJoints, idJointMat* frame, int time, const idVec3& offset, bool remove_origin_offset );
 	virtual idRenderModel* 		ANIM_CreateMeshForAnim( idRenderModel* model, const char* classname, const char* animname, int frame, bool remove_origin_offset );
-	
+
 	// Articulated Figure calls for AF editor and Radiant.
 	virtual bool				AF_SpawnEntity( const char* fileName );
 	virtual void				AF_UpdateEntities( const char* fileName );
 	virtual void				AF_UndoChanges();
 	virtual idRenderModel* 		AF_CreateMesh( const idDict& args, idVec3& meshOrigin, idMat3& meshAxis, bool& poseIsSet );
-	
-	
+
+
 	// Entity selection.
 	virtual void				ClearEntitySelection();
 	virtual int					GetSelectedEntities( idEntity* list[], int max );
 	virtual void				AddSelectedEntity( idEntity* ent );
-	
+
 	// Selection methods
 	virtual void				TriggerSelected();
-	
+
 	// Entity defs and spawning.
 	virtual const idDict* 		FindEntityDefDict( const char* name, bool makeDefault = true ) const;
 	virtual void				SpawnEntityDef( const idDict& args, idEntity** ent );
 	virtual idEntity* 			FindEntity( const char* name ) const;
 	virtual const char* 		GetUniqueEntityName( const char* classname ) const;
-	
+
 	// Entity methods.
 	virtual void				EntityGetOrigin( idEntity* ent, idVec3& org ) const;
 	virtual void				EntityGetAxis( idEntity* ent, idMat3& axis ) const;
@@ -301,14 +301,14 @@ public:
 	virtual void				EntityStopSound( idEntity* ent );
 	virtual void				EntityDelete( idEntity* ent );
 	virtual void				EntitySetColor( idEntity* ent, const idVec3 color );
-	
+
 	// Player methods.
 	virtual bool				PlayerIsValid() const;
 	virtual void				PlayerGetOrigin( idVec3& org ) const;
 	virtual void				PlayerGetAxis( idMat3& axis ) const;
 	virtual void				PlayerGetViewAngles( idAngles& angles ) const;
 	virtual void				PlayerGetEyePosition( idVec3& org ) const;
-	
+
 	// In game map editing support.
 	virtual const idDict* 		MapGetEntityDict( const char* name ) const;
 	virtual void				MapSave( const char* path = NULL ) const;
@@ -319,7 +319,7 @@ public:
 	virtual int					MapGetEntitiesMatchingClassWithString( const char* classname, const char* match, const char* list[], const int max ) const;
 	virtual void				MapRemoveEntity( const char* name ) const;
 	virtual void				MapEntityTranslate( const char* name, const idVec3& v ) const;
-	
+
 };
 
 extern idGameEdit* 				gameEdit;
@@ -352,7 +352,7 @@ typedef struct
 	idDeclManager* 				declManager;			// declaration manager
 	idAASFileManager* 			AASFileManager;			// AAS file manager
 	idCollisionModelManager* 	collisionModelManager;	// collision model manager
-	
+
 } gameImport_t;
 
 typedef struct
@@ -361,7 +361,7 @@ typedef struct
 	int							version;				// API version
 	idGame* 					game;					// interface to run the game
 	idGameEdit* 				gameEdit;				// interface for in-game editing
-	
+
 } gameExport_t;
 
 extern "C" {

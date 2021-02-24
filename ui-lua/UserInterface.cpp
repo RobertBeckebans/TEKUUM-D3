@@ -66,9 +66,9 @@ void idUserInterfaceManagerLocal::Init()
 	screenRect = idRectangle( 0, 0, 640, 480 );
 	dcOld.Init();
 	dcOptimized.Init();
-	
+
 	SetDrawingDC();
-	
+
 }
 
 void idUserInterfaceManagerLocal::Shutdown()
@@ -83,11 +83,11 @@ void idUserInterfaceManagerLocal::Shutdown()
 void idUserInterfaceManagerLocal::SetDrawingDC()
 {
 	static int toggle;
-	
+
 	// to make it more obvious that there is a difference between the old and
 	// new paths, toggle between them every frame if g_useNewGuiCode is set to 2
 	toggle++;
-	
+
 	if( g_useNewGuiCode.GetInteger() == 1 ||
 			( g_useNewGuiCode.GetInteger() == 2 && ( toggle & 1 ) ) )
 	{
@@ -159,7 +159,7 @@ void idUserInterfaceManagerLocal::EndLevelLoad( const char* mapName )
 		if( guis[i]->GetRefs() == 0 )
 		{
 			//common->Printf( "purging %s.\n", guis[i]->GetSourceFile() );
-			
+
 			// use this to make sure no materials still reference this gui
 			bool remove = true;
 			for( int j = 0; j < declManager->GetNumDecls( DECL_MATERIAL ); j++ )
@@ -196,7 +196,7 @@ void idUserInterfaceManagerLocal::EndLevelLoad( const char* mapName )
 void idUserInterfaceManagerLocal::Reload( bool all )
 {
 	ID_TIME_T ts;
-	
+
 	int c = guis.Num();
 	for( int i = 0; i < c; i++ )
 	{
@@ -208,7 +208,7 @@ void idUserInterfaceManagerLocal::Reload( bool all )
 				continue;
 			}
 		}
-		
+
 		guis[i]->InitFromFile( guis[i]->GetSourceFile() );
 		common->Printf( "reloading %s.\n", guis[i]->GetSourceFile() );
 	}
@@ -276,7 +276,7 @@ void idUserInterfaceManagerLocal::DeAlloc( idUserInterface* gui )
 idUserInterface* idUserInterfaceManagerLocal::FindGui( const char* qpath, bool autoLoad, bool needUnique, bool forceNOTUnique )
 {
 	int c = guis.Num();
-	
+
 	for( int i = 0; i < c; i++ )
 	{
 		idUserInterfaceLocal* gui = guis[i];
@@ -284,7 +284,7 @@ idUserInterface* idUserInterfaceManagerLocal::FindGui( const char* qpath, bool a
 		{
 			continue;
 		}
-		
+
 		if( !idStr::Icmp( gui->GetSourceFile(), qpath ) )
 		{
 			if( !forceNOTUnique && ( needUnique || guis[i]->IsInteractive() ) )
@@ -300,7 +300,7 @@ idUserInterface* idUserInterfaceManagerLocal::FindGui( const char* qpath, bool a
 			return guis[i];
 		}
 	}
-	
+
 	if( autoLoad )
 	{
 		idUserInterface* gui = Alloc();
@@ -360,7 +360,7 @@ idUserInterfaceLocal::idUserInterfaceLocal()
 	//so the reg eval in gui parsing doesn't get bogus values
 	time = 0;
 	refs = 1;
-	
+
 	luaState = NULL;
 }
 
@@ -368,7 +368,7 @@ idUserInterfaceLocal::~idUserInterfaceLocal()
 {
 	delete desktop;
 	desktop = NULL;
-	
+
 	// RB begin
 	lua_close( luaState );
 	luaState = NULL;
@@ -519,11 +519,11 @@ void idUserInterfaceLocal::RegisterLuaGlobals( lua_State* L )
 	lua_regglobalconstint( L, K_APPS );
 	lua_regglobalconstint( L, K_POWER );
 	lua_regglobalconstint( L, K_SLEEP );
-	
+
 	//------------------------
 	// lua_regglobalconstint( L, K_JOY codes must be contiguous, too
 	//------------------------
-	
+
 	lua_regglobalconstint( L, K_JOY1 );
 	lua_regglobalconstint( L, K_JOY2 );
 	lua_regglobalconstint( L, K_JOY3 );
@@ -540,29 +540,29 @@ void idUserInterfaceLocal::RegisterLuaGlobals( lua_State* L )
 	lua_regglobalconstint( L, K_JOY14 );
 	lua_regglobalconstint( L, K_JOY15 );
 	lua_regglobalconstint( L, K_JOY16 );
-	
+
 	lua_regglobalconstint( L, K_JOY_STICK1_UP );
 	lua_regglobalconstint( L, K_JOY_STICK1_DOWN );
 	lua_regglobalconstint( L, K_JOY_STICK1_LEFT );
 	lua_regglobalconstint( L, K_JOY_STICK1_RIGHT );
-	
+
 	lua_regglobalconstint( L, K_JOY_STICK2_UP );
 	lua_regglobalconstint( L, K_JOY_STICK2_DOWN );
 	lua_regglobalconstint( L, K_JOY_STICK2_LEFT );
 	lua_regglobalconstint( L, K_JOY_STICK2_RIGHT );
-	
+
 	lua_regglobalconstint( L, K_JOY_TRIGGER1 );
 	lua_regglobalconstint( L, K_JOY_TRIGGER2 );
-	
+
 	lua_regglobalconstint( L, K_JOY_DPAD_UP );
 	lua_regglobalconstint( L, K_JOY_DPAD_DOWN );
 	lua_regglobalconstint( L, K_JOY_DPAD_LEFT );
 	lua_regglobalconstint( L, K_JOY_DPAD_RIGHT );
-	
+
 	//------------------------
 	// lua_regglobalconstint( L, K_MOUSE enums must be contiguous (no char codes in the middle)
 	//------------------------
-	
+
 	lua_regglobalconstint( L, K_MOUSE1 );
 	lua_regglobalconstint( L, K_MOUSE2 );
 	lua_regglobalconstint( L, K_MOUSE3 );
@@ -571,7 +571,7 @@ void idUserInterfaceLocal::RegisterLuaGlobals( lua_State* L )
 	lua_regglobalconstint( L, K_MOUSE6 );
 	lua_regglobalconstint( L, K_MOUSE7 );
 	lua_regglobalconstint( L, K_MOUSE8 );
-	
+
 	lua_regglobalconstint( L, K_MWHEELDOWN );
 	lua_regglobalconstint( L, K_MWHEELUP );
 }
@@ -583,11 +583,11 @@ bool idUserInterfaceLocal::InitFromFile( const char* qpath, bool rebuild, bool c
 		// FIXME: Memory leak!!
 		return false;
 	}
-	
+
 	int sz = sizeof( idWindow );
 	sz = sizeof( idSimpleWindow );
 	loading = true;
-	
+
 	if( rebuild )
 	{
 		if( desktop != NULL )
@@ -595,7 +595,7 @@ bool idUserInterfaceLocal::InitFromFile( const char* qpath, bool rebuild, bool c
 			delete desktop;
 		}
 		desktop = new idWindow( this );
-		
+
 		if( luaState != NULL )
 		{
 			lua_close( luaState );
@@ -606,24 +606,24 @@ bool idUserInterfaceLocal::InitFromFile( const char* qpath, bool rebuild, bool c
 	{
 		desktop = new idWindow( this );
 	}
-	
+
 	idStrStatic< MAX_OSPATH > filename = qpath;
 	filename.SetFileExtension( "lua" );
-	
+
 	source = filename;
 	state.Set( "text", "Test Text!" );
-	
+
 	uiManagerLocal.SetLoadingGUI( this );
-	
+
 	//luaState = luaL_newstate();
 	lua_State* L = luaState = lua_newstate( LuaAlloc, NULL );
 	if( L )
 	{
 		lua_atpanic( L, &LuaPanic );
 	}
-	
+
 	luaL_openlibs( L );
-	
+
 //	PrintLuaStack();
 
 #if 0
@@ -631,22 +631,22 @@ bool idUserInterfaceLocal::InitFromFile( const char* qpath, bool rebuild, bool c
 	lua_regconstint( L, K_ESCAPE );
 	lua_setglobal( L, "keys" );
 #endif
-	
+
 	RegisterLuaGlobals( L );
-	
+
 //	PrintLuaStack();
 
 	luaopen_socket_core( L );
-	
+
 	luaopen_Window( L );
 	luaopen_Rectangle( L );
 	luaopen_Vec4( L );
-	
+
 	char* src;
-	
+
 	//Load the timestamp so reload guis will work correctly
 	fileSystem->ReadFile( filename, ( void** ) &src, &timeStamp );
-	
+
 	if( src != NULL )
 	{
 		int result = luaL_loadbuffer( L, src, strlen( src ), filename );
@@ -655,23 +655,23 @@ bool idUserInterfaceLocal::InitFromFile( const char* qpath, bool rebuild, bool c
 			idLib::Error( "Compile of file %s failed: %s ", filename.c_str(), lua_tostring( L, -1 ) );
 			lua_pop( L, 1 );
 		}
-		
+
 		fileSystem->FreeFile( src );
-		
+
 		if( lua_pcall( L, 0, 0, 0 ) )
 		{
 			idLib::Error( "Cannot pcall: %s", lua_tostring( L, -1 ) );
 			lua_pop( L, 1 );
 		}
 	}
-	
+
 	PrintLuaStack();
-	
+
 	if( RunLuaFunction( "main", "w", desktop ) )
 	{
 		desktop->SetFlag( WIN_DESKTOP );
 		desktop->FixupParms();
-		
+
 		desktop->name = "Desktop";
 		//desktop->text = va( "Lua GUI: %s", filename.c_str() );
 		desktop->rect = idRectangle( 0.0f, 0.0f, 640.0f, 480.0f );
@@ -679,27 +679,27 @@ bool idUserInterfaceLocal::InitFromFile( const char* qpath, bool rebuild, bool c
 		desktop->foreColor = idVec4( 1.0f, 1.0f, 1.0f, 1.0f );
 		desktop->backColor = idVec4( 0.0f, 0.0f, 0.5f, 1.0f );
 		desktop->SetupFromState();
-		
+
 #if 0
 		PrintLuaStack();
-		
+
 		luaW_push<idWindow>( luaState, desktop );	// ... userdata
 		lua_getfield( luaState, -1, "TestFunc" ); // ... userdata ( function | nil )
-		
+
 		if( lua_isfunction( luaState, -1 ) )
 		{
 			// push self reference
 			luaW_push<idWindow>( luaState, desktop );	// ... userdata function userdata
-			
+
 			PrintLuaStack();
-			
+
 			if( lua_pcall( luaState, 1, 0, NULL ) != 0 ) // ... userdata
 			{
 				idLib::Warning( "idUserInterfaceLocal::InitFromFile( %s ): error running function desktopWindow:TestFunc(): %s\n", source.c_str(), lua_tostring( luaState, -1 ) );
 			}
-			
+
 			lua_pop( luaState, 1 ); // ...
-			
+
 			PrintLuaStack();
 		}
 		else
@@ -707,7 +707,7 @@ bool idUserInterfaceLocal::InitFromFile( const char* qpath, bool rebuild, bool c
 			// ... nil
 			lua_pop( luaState, 1 ); // ...
 		}
-		
+
 		PrintLuaStack();
 #endif
 	}
@@ -724,16 +724,16 @@ bool idUserInterfaceLocal::InitFromFile( const char* qpath, bool rebuild, bool c
 		desktop->SetupFromState();
 		common->Warning( "Couldn't load gui: '%s'", filename.c_str() );
 	}
-	
+
 	interactive = desktop->Interactive();
 	if( uiManagerLocal.guis.Find( this ) == NULL )
 	{
 		uiManagerLocal.guis.Append( this );
 	}
 	loading = false;
-	
+
 	uiManagerLocal.SetLoadingGUI( NULL );
-	
+
 	return true;
 }
 
@@ -741,19 +741,19 @@ const char* idUserInterfaceLocal::HandleEvent( const sysEvent_t* event, int _tim
 {
 
 	time = _time;
-	
+
 	if( bindHandler && event->evType == SE_KEY && event->evValue2 == 1 )
 	{
 		const char* ret = bindHandler->HandleEvent( event, updateVisuals );
 		bindHandler = NULL;
 		return ret;
 	}
-	
+
 	if( event->evType == SE_MOUSE )
 	{
 		cursorX += event->evValue;
 		cursorY += event->evValue2;
-		
+
 		if( cursorX < 0 )
 		{
 			cursorX = 0;
@@ -763,22 +763,22 @@ const char* idUserInterfaceLocal::HandleEvent( const sysEvent_t* event, int _tim
 			cursorY = 0;
 		}
 	}
-	
+
 	// RB begin
 	if( event->evType == SE_TOUCH_MOTION_DOWN || event->evType == SE_TOUCH_MOTION_UP || event->evType == SE_TOUCH_MOTION_MOVE )
 	{
 		//common->Printf( "idUserInterfaceLocal::HandleEvent( motionEvent = %i, x = %i, y = %i )\n", event->evType, event->evValue, event->evValue2 );
-		
+
 		cursorX = idMath::ClampFloat( 0, SCREEN_WIDTH - 1, event->evValue * 0.001f * SCREEN_WIDTH );
 		cursorY = idMath::ClampFloat( 0, SCREEN_HEIGHT - 1, event->evValue2 * 0.001f * SCREEN_HEIGHT );
 	}
 	// RB end
-	
+
 	if( desktop )
 	{
 		return desktop->HandleEvent( event, updateVisuals );
 	}
-	
+
 	return "";
 }
 
@@ -915,7 +915,7 @@ void idUserInterfaceLocal::ReadFromDemoFile( class idDemoFile* f )
 	idStr work;
 	f->ReadDict( state );
 	source = state.GetString( "name" );
-	
+
 	if( desktop == NULL )
 	{
 		f->Log( "creating new gui\n" );
@@ -928,10 +928,10 @@ void idUserInterfaceLocal::ReadFromDemoFile( class idDemoFile* f )
 		f->Log( "re-using gui\n" );
 		desktop->ReadFromDemoFile( f, false );
 	}
-	
+
 	f->ReadFloat( cursorX );
 	f->ReadFloat( cursorY );
-	
+
 	bool add = true;
 	int c = uiManagerLocal.demoGuis.Num();
 	for( int i = 0; i < c; i++ )
@@ -942,7 +942,7 @@ void idUserInterfaceLocal::ReadFromDemoFile( class idDemoFile* f )
 			break;
 		}
 	}
-	
+
 	if( add )
 	{
 		uiManagerLocal.demoGuis.Append( this );
@@ -957,7 +957,7 @@ void idUserInterfaceLocal::WriteToDemoFile( class idDemoFile* f )
 	{
 		desktop->WriteToDemoFile( f );
 	}
-	
+
 	f->WriteFloat( cursorX );
 	f->WriteFloat( cursorY );
 }
@@ -967,10 +967,10 @@ bool idUserInterfaceLocal::WriteToSaveGame( idFile* savefile ) const
 	int len;
 	const idKeyValue* kv;
 	const char* string;
-	
+
 	int num = state.GetNumKeyVals();
 	savefile->Write( &num, sizeof( num ) );
-	
+
 	for( int i = 0; i < num; i++ )
 	{
 		kv = state.GetKeyVal( i );
@@ -978,13 +978,13 @@ bool idUserInterfaceLocal::WriteToSaveGame( idFile* savefile ) const
 		string = kv->GetKey().c_str();
 		savefile->Write( &len, sizeof( len ) );
 		savefile->Write( string, len );
-		
+
 		len = kv->GetValue().Length();
 		string = kv->GetValue().c_str();
 		savefile->Write( &len, sizeof( len ) );
 		savefile->Write( string, len );
 	}
-	
+
 	savefile->Write( &active, sizeof( active ) );
 	savefile->Write( &interactive, sizeof( interactive ) );
 	savefile->Write( &uniqued, sizeof( uniqued ) );
@@ -998,12 +998,12 @@ bool idUserInterfaceLocal::WriteToSaveGame( idFile* savefile ) const
 	len = returnCmd.Length();
 	savefile->Write( &len, sizeof( len ) );
 	savefile->Write( returnCmd.c_str(), len );
-	
+
 	savefile->Write( &cursorX, sizeof( cursorX ) );
 	savefile->Write( &cursorY, sizeof( cursorY ) );
-	
+
 	desktop->WriteToSaveGame( savefile );
-	
+
 	return true;
 }
 
@@ -1013,28 +1013,28 @@ bool idUserInterfaceLocal::ReadFromSaveGame( idFile* savefile )
 	int i, len;
 	idStr key;
 	idStr value;
-	
+
 	savefile->Read( &num, sizeof( num ) );
-	
+
 	state.Clear();
 	for( i = 0; i < num; i++ )
 	{
 		savefile->Read( &len, sizeof( len ) );
 		key.Fill( ' ', len );
 		savefile->Read( &key[0], len );
-		
+
 		savefile->Read( &len, sizeof( len ) );
 		value.Fill( ' ', len );
 		savefile->Read( &value[0], len );
-		
+
 		state.Set( key, value );
 	}
-	
+
 	savefile->Read( &active, sizeof( active ) );
 	savefile->Read( &interactive, sizeof( interactive ) );
 	savefile->Read( &uniqued, sizeof( uniqued ) );
 	savefile->Read( &time, sizeof( time ) );
-	
+
 	savefile->Read( &len, sizeof( len ) );
 	activateStr.Fill( ' ', len );
 	savefile->Read( &activateStr[0], len );
@@ -1044,24 +1044,24 @@ bool idUserInterfaceLocal::ReadFromSaveGame( idFile* savefile )
 	savefile->Read( &len, sizeof( len ) );
 	returnCmd.Fill( ' ', len );
 	savefile->Read( &returnCmd[0], len );
-	
+
 	savefile->Read( &cursorX, sizeof( cursorX ) );
 	savefile->Read( &cursorY, sizeof( cursorY ) );
-	
+
 	desktop->ReadFromSaveGame( savefile );
-	
+
 	return true;
 }
 
 size_t idUserInterfaceLocal::Size()
 {
 	size_t sz = sizeof( *this ) + state.Size() + source.Allocated();
-	
+
 	if( luaState )
 	{
 		sz += lua_gc( luaState, LUA_GCCOUNT, 0 );
 	}
-	
+
 	if( desktop )
 	{
 		sz += desktop->Size();
@@ -1121,7 +1121,7 @@ void* idUserInterfaceLocal::LuaAlloc( void* ud, void* ptr, size_t osize, size_t 
 {
 	( void )ud;
 	//( void )osize; /* not used */
-	
+
 #if 0
 	if( nsize == 0 )
 	{
@@ -1141,16 +1141,16 @@ void* idUserInterfaceLocal::LuaAlloc( void* ud, void* ptr, size_t osize, size_t 
 	else
 	{
 		void* mem = Mem_Alloc( nsize );
-	
+
 		if( ptr != NULL )
 		{
 			SIMDProcessor->Memcpy( mem, ptr, ( osize < nsize ) ? osize : nsize );
 			Mem_Free( ptr );
 		}
-	
+
 		return mem;
 	}
-	
+
 #endif
 }
 
@@ -1158,7 +1158,7 @@ int idUserInterfaceLocal::LuaPanic( lua_State* L )
 {
 	//luai_writestringerror( "PANIC: unprotected error in call to Lua API (%s)\n", lua_tostring( L, -1 ) );
 	idLib::Error( "PANIC: unprotected error in call to Lua API (%s)\n", lua_tostring( L, -1 ) );
-	
+
 	return 0;  /* return to Lua to abort */
 }
 
@@ -1167,13 +1167,15 @@ bool idUserInterfaceLocal::RunLuaFunction( const char* func, const char* fmt, ..
 	va_list         argptr;
 	int             numArgs, numResults;
 	lua_State*      L = luaState;
-	
+
 	if( !func || !func[0] )
+	{
 		return false;
-		
+	}
+
 	va_start( argptr, fmt );
 	lua_getglobal( L, func );
-	
+
 	// push arguments
 	numArgs = 0;
 	while( *fmt )
@@ -1183,27 +1185,27 @@ bool idUserInterfaceLocal::RunLuaFunction( const char* func, const char* fmt, ..
 			case 'f':
 				// float argument
 				lua_pushnumber( L, va_arg( argptr, double ) );
-				
+
 				break;
-				
+
 			case 'i':
 				// int argument
 				lua_pushnumber( L, va_arg( argptr, int ) );
 				break;
-				
+
 			case 's':
 				// string argument
 				lua_pushstring( L, va_arg( argptr, char* ) );
 				break;
-				
+
 			case 'w':
 				// window argument
 				luaW_push<idWindow>( L, va_arg( argptr, idWindow* ) );
 				break;
-				
+
 			case '>':
 				goto endwhile;
-				
+
 			default:
 				idLib::Warning( "idUserInterfaceLocal::RunLuaFunction( %s ): invalid option (%c)\n", source.c_str(), *( fmt - 1 ) );
 		}
@@ -1218,9 +1220,9 @@ endwhile:
 	{
 		idLib::Warning( "idUserInterfaceLocal::RunLuaFunction( %s ): error running function `%s': %s\n", source.c_str(), func, lua_tostring( L, -1 ) );
 	}
-	
+
 	bool result = true;
-	
+
 	// retrieve results
 	numResults = -numResults;				// stack index of first result
 	while( *fmt )
@@ -1228,7 +1230,7 @@ endwhile:
 		// get results
 		switch( *fmt++ )
 		{
-		
+
 			case 'f':
 				// float result
 				if( !lua_isnumber( L, numResults ) )
@@ -1237,9 +1239,9 @@ endwhile:
 					result = false;
 				}
 				*va_arg( argptr, float* ) = lua_tonumber( L, numResults );
-				
+
 				break;
-				
+
 			case 'i':
 				// int result
 				if( !lua_isnumber( L, numResults ) )
@@ -1249,7 +1251,7 @@ endwhile:
 				}
 				*va_arg( argptr, int* ) = ( int )lua_tonumber( L, numResults );
 				break;
-				
+
 			case 's':
 				// string result
 				if( !lua_isstring( L, numResults ) )
@@ -1259,7 +1261,7 @@ endwhile:
 				}
 				*va_arg( argptr, const char** ) = lua_tostring( L, numResults );
 				break;
-				
+
 			default:
 				idLib::Warning( "idUserInterfaceLocal::RunLuaFunction: invalid option (%c)\n", *( fmt - 1 ) );
 				result = false;
@@ -1267,44 +1269,44 @@ endwhile:
 		}
 		numResults++;
 	}
-	
+
 	va_end( argptr );
-	
+
 	return result;
 }
 
 void idUserInterfaceLocal::PrintLuaStack()
 {
 	lua_State* L = luaState;
-	
+
 	int top = lua_gettop( L );
-	
+
 	for( int i = 1; i <= top; i++ )
 	{
 		int t = lua_type( L, i );
-		
+
 		switch( t )
 		{
 			case LUA_TNUMBER:
 				idLib::Printf( "'%g'", lua_tonumber( L, i ) );
 				break;
-				
+
 			case LUA_TBOOLEAN:
 				idLib::Printf( "'%s'", lua_toboolean( L, i ) ? "true" : "false" );
 				break;
-				
+
 			case LUA_TSTRING:
 				idLib::Printf( "'%s'", lua_tostring( L, i ) );
 				break;
-				
+
 			default:
 				idLib::Printf( "%s", lua_typename( L, t ) );
 				break;
 		}
-		
+
 		idLib::Printf( " " );
 	}
-	
+
 	idLib::Printf( "\n" );
 }
 

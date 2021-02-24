@@ -37,10 +37,10 @@ idAsyncClient		idAsyncNetwork::client;
 idCVar				idAsyncNetwork::verbose( "net_verbose", "0", CVAR_SYSTEM | CVAR_INTEGER | CVAR_NOCHEAT, "1 = verbose output, 2 = even more verbose output", 0, 2, idCmdSystem::ArgCompletion_Integer<0, 2> );
 idCVar				idAsyncNetwork::allowCheats( "net_allowCheats", "0", CVAR_SYSTEM | CVAR_BOOL | CVAR_NETWORKSYNC, "Allow cheats in network game" );
 #ifdef ID_DEDICATED
-// dedicated executable can only have a value of 1 for net_serverDedicated
-idCVar				idAsyncNetwork::serverDedicated( "net_serverDedicated", "1", CVAR_SERVERINFO | CVAR_SYSTEM | CVAR_INTEGER | CVAR_NOCHEAT | CVAR_ROM, "" );
+	// dedicated executable can only have a value of 1 for net_serverDedicated
+	idCVar				idAsyncNetwork::serverDedicated( "net_serverDedicated", "1", CVAR_SERVERINFO | CVAR_SYSTEM | CVAR_INTEGER | CVAR_NOCHEAT | CVAR_ROM, "" );
 #else
-idCVar				idAsyncNetwork::serverDedicated( "net_serverDedicated", "0", CVAR_SERVERINFO | CVAR_SYSTEM | CVAR_INTEGER | CVAR_NOCHEAT, "1 = text console dedicated server, 2 = graphical dedicated server", 0, 2, idCmdSystem::ArgCompletion_Integer<0, 2> );
+	idCVar				idAsyncNetwork::serverDedicated( "net_serverDedicated", "0", CVAR_SERVERINFO | CVAR_SYSTEM | CVAR_INTEGER | CVAR_NOCHEAT, "1 = text console dedicated server, 2 = graphical dedicated server", 0, 2, idCmdSystem::ArgCompletion_Integer<0, 2> );
 #endif
 idCVar				idAsyncNetwork::serverSnapshotDelay( "net_serverSnapshotDelay", "50", CVAR_SYSTEM | CVAR_INTEGER | CVAR_NOCHEAT, "delay between snapshots in milliseconds" );
 idCVar				idAsyncNetwork::serverMaxClientRate( "net_serverMaxClientRate", "16000", CVAR_SYSTEM | CVAR_INTEGER | CVAR_ARCHIVE | CVAR_NOCHEAT, "maximum rate to a client in bytes/sec" );
@@ -88,14 +88,14 @@ void idAsyncNetwork::Init()
 {
 
 	realTime = 0;
-	
+
 	memset( masters, 0, sizeof( masters ) );
 	masters[0].var = &master0;
 	masters[1].var = &master1;
 	masters[2].var = &master2;
 	masters[3].var = &master3;
 	masters[4].var = &master4;
-	
+
 #ifndef	ID_DEMO_BUILD
 	cmdSystem->AddCommand( "spawnServer", SpawnServer_f, CMD_FL_SYSTEM, "spawns a server", idCmdSystem::ArgCompletion_MapName );
 	cmdSystem->AddCommand( "nextMap", NextMap_f, CMD_FL_SYSTEM, "loads the next map on the server" );
@@ -216,7 +216,7 @@ void idAsyncNetwork::WriteUserCmdDelta( idBitMsg& msg, const usercmd_t& cmd, con
 		msg.WriteDeltaShort( base->angles[2], cmd.angles[2] );
 		return;
 	}
-	
+
 	msg.WriteLong( cmd.gameTime );
 	msg.WriteByte( cmd.buttons );
 	msg.WriteShort( cmd.mx );
@@ -237,7 +237,7 @@ idAsyncNetwork::ReadUserCmdDelta
 void idAsyncNetwork::ReadUserCmdDelta( const idBitMsg& msg, usercmd_t& cmd, const usercmd_t* base )
 {
 	memset( &cmd, 0, sizeof( cmd ) );
-	
+
 	if( base )
 	{
 		cmd.gameTime = msg.ReadDeltaLongCounter( base->gameTime );
@@ -252,7 +252,7 @@ void idAsyncNetwork::ReadUserCmdDelta( const idBitMsg& msg, usercmd_t& cmd, cons
 		cmd.angles[2] = msg.ReadDeltaShort( base->angles[2] );
 		return;
 	}
-	
+
 	cmd.gameTime = msg.ReadLong();
 	cmd.buttons = msg.ReadByte();
 	cmd.mx = msg.ReadShort();
@@ -275,20 +275,29 @@ bool idAsyncNetwork::DuplicateUsercmd( const usercmd_t& previousUserCmd, usercmd
 
 	if( currentUserCmd.gameTime <= previousUserCmd.gameTime )
 	{
-	
+
 		currentUserCmd = previousUserCmd;
 		currentUserCmd.gameFrame = frame;
 		currentUserCmd.gameTime = time;
 		currentUserCmd.duplicateCount++;
-		
+
 		if( currentUserCmd.duplicateCount > MAX_USERCMD_DUPLICATION )
 		{
 			currentUserCmd.buttons &= ~BUTTON_ATTACK;
-			if( abs( currentUserCmd.forwardmove ) > 2 ) currentUserCmd.forwardmove >>= 1;
-			if( abs( currentUserCmd.rightmove ) > 2 ) currentUserCmd.rightmove >>= 1;
-			if( abs( currentUserCmd.upmove ) > 2 ) currentUserCmd.upmove >>= 1;
+			if( abs( currentUserCmd.forwardmove ) > 2 )
+			{
+				currentUserCmd.forwardmove >>= 1;
+			}
+			if( abs( currentUserCmd.rightmove ) > 2 )
+			{
+				currentUserCmd.rightmove >>= 1;
+			}
+			if( abs( currentUserCmd.upmove ) > 2 )
+			{
+				currentUserCmd.upmove >>= 1;
+			}
 		}
-		
+
 		return true;
 	}
 	return false;
@@ -322,7 +331,7 @@ void idAsyncNetwork::SpawnServer_f( const idCmdArgs& args )
 	{
 		cvarSystem->SetCVarString( "si_map", args.Argv( 1 ) );
 	}
-	
+
 	// don't let a server spawn with singleplayer game type - it will crash
 	if( idStr::Icmp( cvarSystem->GetCVarString( "si_gameType" ), "singleplayer" ) == 0 )
 	{
@@ -465,13 +474,13 @@ void idAsyncNetwork::Kick_f( const idCmdArgs& args )
 {
 	idStr clientId;
 	int iclient;
-	
+
 	if( !server.IsActive() )
 	{
 		common->Printf( "server is not running\n" );
 		return;
 	}
-	
+
 	clientId = args.Argv( 1 );
 	if( !clientId.IsNumeric() )
 	{
@@ -479,13 +488,13 @@ void idAsyncNetwork::Kick_f( const idCmdArgs& args )
 		return;
 	}
 	iclient = atoi( clientId );
-	
+
 	if( server.GetLocalClientNum() == iclient )
 	{
 		common->Printf( "can't kick the host\n" );
 		return;
 	}
-	
+
 	server.DropClient( iclient, "#str_07134" );
 }
 

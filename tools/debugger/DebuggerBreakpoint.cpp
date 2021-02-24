@@ -39,7 +39,7 @@ rvDebuggerBreakpoint::rvDebuggerBreakpoint( const char* filename, int linenumber
 	mFilename = filename;
 	mLineNumber = linenumber;
 	mEnabled = true;
-	
+
 	if( id == -1 )
 	{
 		mID = mNextID++;

@@ -42,12 +42,12 @@ class idSaveGame
 public:
 	idSaveGame( idFile* savefile );
 	~idSaveGame();
-	
+
 	void					Close();
-	
+
 	void					AddObject( const idClass* obj );
 	void					WriteObjectList();
-	
+
 	void					Write( const void* buffer, int len );
 	void					WriteInt( const int value );
 	void					WriteJoint( const jointHandle_t value );
@@ -86,14 +86,14 @@ public:
 	void					WriteTraceModel( const idTraceModel& trace );
 	void					WriteClipModel( const class idClipModel* clipModel );
 	void					WriteSoundCommands();
-	
+
 	void					WriteBuildNumber( const int value );
-	
+
 private:
 	idFile* 				file;
-	
+
 	idList<const idClass*>	objects;
-	
+
 	void					CallSave_r( const idTypeInfo* cls, const idClass* obj );
 };
 
@@ -102,13 +102,13 @@ class idRestoreGame
 public:
 	idRestoreGame( idFile* savefile );
 	~idRestoreGame();
-	
+
 	void					CreateObjects();
 	void					RestoreObjects();
 	void					DeleteObjects();
-	
+
 	void					Error( const char* fmt, ... ) id_attribute( ( format( printf, 2, 3 ) ) );
-	
+
 	void					Read( void* buffer, int len );
 	void					ReadInt( int& value );
 	void					ReadJoint( jointHandle_t& value );
@@ -147,19 +147,19 @@ public:
 	void					ReadTraceModel( idTraceModel& trace );
 	void					ReadClipModel( idClipModel*& clipModel );
 	void					ReadSoundCommands();
-	
+
 	void					ReadBuildNumber();
-	
+
 	//						Used to retrieve the saved game buildNumber from within class Restore methods
 	int						GetBuildNumber();
-	
+
 private:
 	int						buildNumber;
-	
+
 	idFile* 				file;
-	
+
 	idList<idClass*>		objects;
-	
+
 	void					CallRestore_r( const idTypeInfo* cls, idClass* obj );
 };
 

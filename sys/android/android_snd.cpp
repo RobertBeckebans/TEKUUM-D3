@@ -73,28 +73,28 @@ class rbAudioHardwareSLES : public idAudioHardware
 private:
 	// if you can't write MIXBUFFER_SAMPLES all at once to the audio device, split in MIXBUFFER_CHUNKS
 	static const int			MIXBUFFER_CHUNKS = 4;
-	
+
 	unsigned int				numChannels;
 	void*						mixBuffer;
 	int							mixBufferSize;
-	
+
 	// how many frames remaining to be written to the device
 	//int						remainingFrames;
-	
+
 	// how many chunks we have left to write in cases where we need to split
 	int							writeChunks;
-	
+
 	// how many chunks we can write to the audio device without blocking
 	//int						freeWriteChunks;
-	
+
 	static rbAudioHardwareSLES* instance;
-	
-	
+
+
 public:
 	rbAudioHardwareSLES()
 	{
 		instance = this;
-		
+
 		numChannels = 0;
 		mixBuffer = NULL;
 		mixBufferSize = 0;
@@ -102,10 +102,10 @@ public:
 		writeChunks = 0;
 	}
 	virtual				~rbAudioHardwareSLES();
-	
+
 	bool				Initialize();
-	
-	
+
+
 	// Linux driver doesn't support memory map API
 	bool				Lock( void** pDSLockedBuffer, uint32* dwDSLockedBufferSize )
 	{
@@ -119,24 +119,24 @@ public:
 	{
 		return false;
 	}
-	
+
 	bool				Flush();
 	void				Write( bool flushing );
-	
+
 	int					GetNumberOfSpeakers()
 	{
 		return numChannels;
 	}
 	int					GetMixBufferSize();
 	short*				GetMixBuffer();
-	
+
 private:
 	void				Release();
 	void				InitFailed();
-	
+
 	void				CreateEngine();
 	void				CreateBufferQueueAudioPlayer();
-	
+
 	static void			bqPlayerCallback( SLAndroidSimpleBufferQueueItf bq, void* context );
 };
 
@@ -189,7 +189,7 @@ void rbAudioHardwareSLES::Release()
 		//bqPlayerMuteSolo = NULL;
 		bqPlayerVolume = NULL;
 	}
-	
+
 	// destroy output mix object, and invalidate all associated interfaces
 	if( outputMixObject != NULL )
 	{
@@ -197,7 +197,7 @@ void rbAudioHardwareSLES::Release()
 		outputMixObject = NULL;
 		outputMixEnvironmentalReverb = NULL;
 	}
-	
+
 	// destroy engine object, and invalidate all associated interfaces
 	if( engineObject != NULL )
 	{
@@ -205,7 +205,7 @@ void rbAudioHardwareSLES::Release()
 		engineObject = NULL;
 		engineEngine = NULL;
 	}
-	
+
 	if( mixBuffer )
 	{
 		free( mixBuffer );
@@ -234,21 +234,21 @@ rbAudioHardwareSLES::Initialize
 bool rbAudioHardwareSLES::Initialize()
 {
 	common->Printf( "------ OpenSL Sound Initialization -----\n" );
-	
+
 	// channels
-	
+
 	// sanity over number of speakers
 	numChannels = 2;
 	idSoundSystemLocal::s_numberOfSpeakers.SetInteger( numChannels );
-	
+
 	// allocate the final mix buffer
 	mixBufferSize = MIXBUFFER_SAMPLES * numChannels * 2;
 	mixBuffer = malloc( mixBufferSize );
 	common->Printf( "allocated a mix buffer of %d bytes\n", mixBufferSize );
-	
+
 	CreateEngine();
 	CreateBufferQueueAudioPlayer();
-	
+
 	common->Printf( "--------------------------------------\n" );
 	return true;
 }
@@ -293,12 +293,12 @@ rbAudioHardwareSLES::Flush
 bool rbAudioHardwareSLES::Flush()
 {
 	int error;
-	
+
 	if( writeChunks > 0 )
 	{
 		//Write( true );
 	}
-	
+
 	return true;
 }
 
@@ -307,21 +307,21 @@ void rbAudioHardwareSLES::bqPlayerCallback( SLAndroidSimpleBufferQueueItf bq, vo
 {
 	assert( bq == bqPlayerBufferQueue );
 	assert( instance == context );
-	
+
 	// OpenSL thread can be different from sound engine thread
 	Sys_EnterCriticalSection( CRITICAL_SECTION_ONE );
-	
+
 	// finished a chunk
 	instance->writeChunks -= 1;
-	
+
 #if 0
 	if( instance->writeChunks > 0 )
 	{
 		int len = ( MIXBUFFER_SAMPLES * instance->numChannels * 2 ) / MIXBUFFER_CHUNKS;
-		
+
 		int offset = ( MIXBUFFER_CHUNKS - instance->writeChunks ) * len;
 		int pos = ( intptr_t )instance->mixBuffer + offset;
-		
+
 		SLresult result;
 		result = ( *bqPlayerBufferQueue )->Enqueue( bqPlayerBufferQueue, ( byte* )pos, len );
 		if( SL_RESULT_SUCCESS != result )
@@ -329,11 +329,11 @@ void rbAudioHardwareSLES::bqPlayerCallback( SLAndroidSimpleBufferQueueItf bq, vo
 			common->Printf( "rbAudioHardwareSLES::bqPlayerCallback: bqPlayerBufferQueue->Enqueue( data = %p, offset = %i, len = %i ) failed\n", ( byte* )pos, offset, len );
 			//return;
 		}
-		
+
 		//common->Printf( "rbAudioHardwareSLES::bqPlayerCallback: bqPlayerBufferQueue->Enqueue( data = %p, offset = %i, len = %i ) succeeded\n", ( byte* )pos, offset, len );
 	}
 #endif
-	
+
 	Sys_LeaveCriticalSection( CRITICAL_SECTION_ONE );
 }
 
@@ -347,14 +347,14 @@ void rbAudioHardwareSLES::Write( bool flushing )
 {
 	int error;
 	SLresult result;
-	
+
 	if( !flushing && writeChunks > 0 )
 	{
 		// if we write after a new mixing loop, we should have writeChunks == 0
 		// otherwise that last remaining chunk that was never flushed out to the audio device has just been overwritten
-		
+
 		Sys_Printf( "rbAudioHardwareSLES::Write: %d samples were overflowed and dropped\n", writeChunks * MIXBUFFER_SAMPLES / MIXBUFFER_CHUNKS );
-		
+
 		result = ( *bqPlayerBufferQueue )->Clear( bqPlayerBufferQueue );
 		if( SL_RESULT_SUCCESS != result )
 		{
@@ -362,27 +362,27 @@ void rbAudioHardwareSLES::Write( bool flushing )
 			return;
 		}
 	}
-	
+
 	if( !flushing )
 	{
 		// if running after the mix loop, then we have a full buffer to write out
 		//remainingFrames = MIXBUFFER_SAMPLES * numChannels * 2;
-		
+
 		writeChunks = MIXBUFFER_CHUNKS;
 	}
-	
+
 	if( writeChunks == 0 )
 	{
 		return;
 	}
-	
+
 	if( flushing && writeChunks > 0 )
 	{
 		return;
 	}
-	
+
 	// write the max frames you can in one shot - we need to write it all out in Flush() calls before the next Write() happens
-	
+
 #if 0
 	result = ( *bqPlayerBufferQueue )->Enqueue( bqPlayerBufferQueue, mixBuffer, mixBufferSize );
 	if( SL_RESULT_SUCCESS != result )
@@ -394,11 +394,11 @@ void rbAudioHardwareSLES::Write( bool flushing )
 	{
 		writeChunks = 0;
 	}
-	
+
 #else
-	
+
 	int len = mixBufferSize / MIXBUFFER_CHUNKS;
-	
+
 #if 1
 	for( int i = 0; i < MIXBUFFER_CHUNKS; i++ )
 #else
@@ -407,14 +407,14 @@ void rbAudioHardwareSLES::Write( bool flushing )
 	{
 		int offset = i * len;
 		int pos = ( intptr_t )mixBuffer + offset;
-	
+
 		result = ( *bqPlayerBufferQueue )->Enqueue( bqPlayerBufferQueue, ( byte* )pos, len );
 		if( SL_RESULT_SUCCESS != result )
 		{
 			common->Printf( "rbAudioHardwareSLES::Write: bqPlayerBufferQueue->Enqueue( data = %p, offset = %i, len = %i ) failed\n", ( byte* )pos, offset, len );
 			return;
 		}
-	
+
 		//writeChunks -= 1;
 	}
 #endif
@@ -424,25 +424,25 @@ void rbAudioHardwareSLES::Write( bool flushing )
 void rbAudioHardwareSLES::CreateEngine()
 {
 	SLresult result;
-	
+
 	// create engine
 	result = slCreateEngine( &engineObject, 0, NULL, 0, NULL, NULL );
 	assert( SL_RESULT_SUCCESS == result );
-	
+
 	// realize the engine
 	result = ( *engineObject )->Realize( engineObject, SL_BOOLEAN_FALSE );
 	assert( SL_RESULT_SUCCESS == result );
-	
+
 	// get the engine interface, which is needed in order to create other objects
 	result = ( *engineObject )->GetInterface( engineObject, SL_IID_ENGINE, &engineEngine );
 	assert( SL_RESULT_SUCCESS == result );
-	
+
 	// create output mix
 	const SLInterfaceID ids[1] = {SL_IID_VOLUME};
 	const SLboolean req[1] = {SL_BOOLEAN_FALSE};
 	result = ( *engineEngine )->CreateOutputMix( engineEngine, &outputMixObject, 1, ids, req );
 	assert( SL_RESULT_SUCCESS == result );
-	
+
 	// realize the output mix
 	result = ( *outputMixObject )->Realize( outputMixObject, SL_BOOLEAN_FALSE );
 	assert( SL_RESULT_SUCCESS == result );
@@ -453,7 +453,7 @@ void rbAudioHardwareSLES::CreateEngine()
 void rbAudioHardwareSLES::CreateBufferQueueAudioPlayer()
 {
 	SLresult result;
-	
+
 	// configure audio source
 	SLDataLocator_AndroidSimpleBufferQueue loc_bufq;
 	loc_bufq.locatorType = SL_DATALOCATOR_ANDROIDSIMPLEBUFFERQUEUE;
@@ -479,51 +479,51 @@ void rbAudioHardwareSLES::CreateBufferQueueAudioPlayer()
 		format_pcm.channelMask = SL_SPEAKER_FRONT_CENTER;
 	}
 	format_pcm.endianness = SL_BYTEORDER_LITTLEENDIAN;
-	
+
 	SLDataSource audioSrc = { &loc_bufq, &format_pcm };
-	
+
 	// configure audio sink
 	SLDataLocator_OutputMix loc_outmix = { SL_DATALOCATOR_OUTPUTMIX, outputMixObject };
 	SLDataSink audioSnk = {&loc_outmix, NULL};
-	
+
 	// create audio player
 	const SLInterfaceID ids[2] = { SL_IID_BUFFERQUEUE, /*SL_IID_EFFECTSEND,*/ /*SL_IID_MUTESOLO,*/ SL_IID_VOLUME };
 	const SLboolean req[2] = { SL_BOOLEAN_TRUE, /*SL_BOOLEAN_TRUE,*/ /*SL_BOOLEAN_TRUE,*/ SL_BOOLEAN_TRUE };
 	result = ( *engineEngine )->CreateAudioPlayer( engineEngine, &bqPlayerObject, &audioSrc, &audioSnk, 2, ids, req );
 	assert( SL_RESULT_SUCCESS == result );
-	
+
 	// realize the player
 	result = ( *bqPlayerObject )->Realize( bqPlayerObject, SL_BOOLEAN_FALSE );
 	assert( SL_RESULT_SUCCESS == result );
-	
+
 	// get the play interface
 	result = ( *bqPlayerObject )->GetInterface( bqPlayerObject, SL_IID_PLAY, &bqPlayerPlay );
 	assert( SL_RESULT_SUCCESS == result );
-	
+
 	// get the buffer queue interface
 	result = ( *bqPlayerObject )->GetInterface( bqPlayerObject, SL_IID_BUFFERQUEUE, &bqPlayerBufferQueue );
 	assert( SL_RESULT_SUCCESS == result );
-	
+
 	// register callback on the buffer queue
 	result = ( *bqPlayerBufferQueue )->RegisterCallback( bqPlayerBufferQueue, bqPlayerCallback, this );
 	assert( SL_RESULT_SUCCESS == result );
-	
+
 #if 0
 	// get the effect send interface
 	result = ( *bqPlayerObject )->GetInterface( bqPlayerObject, SL_IID_EFFECTSEND, &bqPlayerEffectSend );
 	assert( SL_RESULT_SUCCESS == result );
 #endif
-	
+
 #if 0   // mute/solo is not supported for sources that are known to be mono, as this is
 	// get the mute/solo interface
 	result = ( *bqPlayerObject )->GetInterface( bqPlayerObject, SL_IID_MUTESOLO, &bqPlayerMuteSolo );
 	assert( SL_RESULT_SUCCESS == result );
 #endif
-	
+
 	// get the volume interface
 	result = ( *bqPlayerObject )->GetInterface( bqPlayerObject, SL_IID_VOLUME, &bqPlayerVolume );
 	assert( SL_RESULT_SUCCESS == result );
-	
+
 	// set the player's state to playing
 	result = ( *bqPlayerPlay )->SetPlayState( bqPlayerPlay, SL_PLAYSTATE_PLAYING );
 	assert( SL_RESULT_SUCCESS == result );

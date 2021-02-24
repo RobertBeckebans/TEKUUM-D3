@@ -76,11 +76,11 @@ typedef struct unz_file_info_s
 	unsigned long size_filename;        /* filename length                 2 unsigned chars */
 	unsigned long size_file_extra;      /* extra field length              2 unsigned chars */
 	unsigned long size_file_comment;    /* file comment length             2 unsigned chars */
-	
+
 	unsigned long disk_num_start;       /* disk number start               2 unsigned chars */
 	unsigned long internal_fa;          /* internal file attributes        2 unsigned chars */
 	unsigned long external_fa;          /* external file attributes        4 unsigned chars */
-	
+
 	tm_unz tmu_date;
 } unz_file_info;
 
@@ -100,18 +100,18 @@ typedef struct z_stream_s
 	unsigned char*    next_in;  /* next input unsigned char */
 	unsigned int     avail_in;  /* number of unsigned chars available at next_in */
 	unsigned long    total_in;  /* total nb of input unsigned chars read so */
-	
+
 	unsigned char*    next_out; /* next output unsigned char should be put there */
 	unsigned int     avail_out; /* remaining free space at next_out */
 	unsigned long    total_out; /* total nb of unsigned chars output so */
-	
+
 	char*     msg;      /* last error message, NULL if no error */
 	struct internal_state* state; /* not visible by applications */
-	
+
 	alloc_func zalloc;  /* used to allocate the internal state */
 	free_func  zfree;   /* used to free the internal state */
 	unsigned char*     opaque;  /* private data object passed to zalloc and zfree */
-	
+
 	int     data_type;  /* best guess about the data type: ascii or binary */
 	unsigned long   adler;      /* adler32 value of the uncompressed data */
 	unsigned long   reserved;   /* reserved for future use */
@@ -126,14 +126,14 @@ typedef struct
 {
 	char*  read_buffer;         /* internal buffer for compressed data */
 	z_stream stream;            /* zLib stream structure for inflate */
-	
+
 	unsigned long pos_in_zipfile;       /* position in unsigned char on the zipfile, for fseek*/
 	unsigned long stream_initialised;   /* flag set if stream structure is initialised*/
-	
+
 	unsigned long offset_local_extrafield;/* offset of the static extra field */
 	unsigned int  size_local_extrafield;/* size of the static extra field */
 	unsigned long pos_local_extrafield;   /* position in the static extra field in read*/
-	
+
 	unsigned long crc32;                /* crc32 of all data uncompressed */
 	unsigned long crc32_wait;           /* crc32 we must obtain after decompress all */
 	unsigned long rest_read_compressed; /* number of unsigned char to be decompressed */
@@ -155,7 +155,7 @@ typedef struct
 	unsigned long pos_in_central_dir;   /* pos of the current file in the central dir*/
 	unsigned long current_file_ok;      /* flag about the usability of the current file*/
 	unsigned long central_pos;          /* position of the beginning of the central dir*/
-	
+
 	unsigned long size_central_dir;     /* size of the central directory  */
 	unsigned long offset_central_dir;   /* offset of start of central directory with
 								   respect to the starting disk number */

@@ -40,7 +40,7 @@ If you have questions concerning this license or the applicable additional terms
 #include "posix_public.h"
 
 #if defined(_DEBUG)
-// #define ID_VERBOSE_PTHREADS
+	// #define ID_VERBOSE_PTHREADS
 #endif
 
 /*
@@ -209,7 +209,7 @@ void Sys_DestroyThread( xthreadInfo& info )
 {
 	// the target thread must have a cancelation point, otherwise pthread_cancel is useless
 	assert( info.threadHandle );
-	
+
 // RB begin
 #if !defined(__ANDROID__)
 	if( pthread_cancel( ( pthread_t )info.threadHandle ) != 0 )
@@ -309,7 +309,7 @@ void Posix_InitPThreads( )
 {
 	int i;
 	pthread_mutexattr_t attr;
-	
+
 	// init critical sections
 	for( i = 0; i < MAX_LOCAL_CRITICAL_SECTIONS; i++ )
 	{
@@ -318,7 +318,7 @@ void Posix_InitPThreads( )
 		pthread_mutex_init( &global_lock[i], &attr );
 		pthread_mutexattr_destroy( &attr );
 	}
-	
+
 	// init event sleep/triggers
 	for( i = 0; i < MAX_TRIGGER_EVENTS; i++ )
 	{
@@ -326,7 +326,7 @@ void Posix_InitPThreads( )
 		signaled[i] = false;
 		waiting[i] = false;
 	}
-	
+
 	// init threads table
 	for( i = 0; i < MAX_THREADS; i++ )
 	{

@@ -103,7 +103,7 @@ NSBitmapImageRep& NSBitmapImageRep::operator=( const NSBitmapImageRep& a )
 	{
 		return *this;
 	}
-	
+
 	if( bmap )
 	{
 		Mem_Free( bmap );
@@ -113,7 +113,7 @@ NSBitmapImageRep& NSBitmapImageRep::operator=( const NSBitmapImageRep& a )
 	width = a.width;
 	height = a.height;
 	timestamp = a.timestamp;
-	
+
 	return *this;
 }
 

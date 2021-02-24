@@ -33,7 +33,7 @@ class DialogAFConstraintSpring : public CDialog
 {
 
 	DECLARE_DYNAMIC( DialogAFConstraintSpring )
-	
+
 public:
 	DialogAFConstraintSpring( CWnd* pParent = NULL ); // standard constructor
 	virtual				~DialogAFConstraintSpring();
@@ -42,9 +42,9 @@ public:
 	void				LoadConstraint( idDeclAF_Constraint* c );
 	void				SaveConstraint();
 	void				UpdateFile();
-	
+
 	enum { IDD = IDD_DIALOG_AF_CONSTRAINT_HINGE };
-	
+
 protected:
 	virtual void		DoDataExchange( CDataExchange* pDX );  // DDX/DDV support
 	virtual int			OnToolHitTest( CPoint point, TOOLINFO* pTI ) const;
@@ -83,13 +83,13 @@ protected:
 	afx_msg void		OnBnClickedRadioLimitMaxLength();
 	afx_msg void		OnEnChangeEditLimitMaxLength();
 	afx_msg void		OnDeltaposSpinLimitMaxLength( NMHDR* pNMHDR, LRESULT* pResult );
-	
+
 	DECLARE_MESSAGE_MAP()
-	
+
 private:
 	idDeclAF* 			file;
 	idDeclAF_Constraint* constraint;
-	
+
 	//{{AFX_DATA(DialogAFConstraintSpring)
 	CComboBox			m_comboAnchorJoint;
 	float				m_anchor_x;
@@ -106,9 +106,9 @@ private:
 	float				m_minLength;
 	float				m_maxLength;
 	//}}AFX_DATA
-	
+
 	static toolTip_t	toolTips[];
-	
+
 private:
 	void				InitJointLists();
 };

@@ -96,13 +96,13 @@ struct idNullPtr
 	// one pointer member initialized to zero so you can pass NULL as a vararg
 	void* value;
 	idNullPtr() : value( 0 ) { }
-	
+
 	// implicit conversion to all pointer types
 	template<typename T1> operator T1* () const
 	{
 		return 0;
 	}
-	
+
 	// implicit conversion to all pointer to member types
 	template<typename T1, typename T2> operator T1 T2::* () const
 	{
@@ -119,15 +119,15 @@ struct idNullPtr
 
 // C99 Standard
 #ifndef nullptr
-#define nullptr	idNullPtr()
+	#define nullptr	idNullPtr()
 #endif
 
 #ifndef BIT
-#define BIT( num )				( 1ULL << ( num ) )
+	#define BIT( num )				( 1ULL << ( num ) )
 #endif
 
 #ifndef NUMBITS
-#define NUMBITS( _type_ )		( sizeof( _type_ ) * 8 )
+	#define NUMBITS( _type_ )		( sizeof( _type_ ) * 8 )
 #endif
 
 #define	MAX_STRING_CHARS		1024		// max length of a static string
@@ -136,11 +136,11 @@ struct idNullPtr
 // maximum world size
 // RB begin
 #if defined(STANDALONE)
-#define MAX_WORLD_COORD			( 100 * 1000 * 2 )
-#define MIN_WORLD_COORD			( -100 * 1000 * 2 )
+	#define MAX_WORLD_COORD			( 100 * 1000 * 2 )
+	#define MIN_WORLD_COORD			( -100 * 1000 * 2 )
 #else
-#define MAX_WORLD_COORD			( 128 * 1024 )
-#define MIN_WORLD_COORD			( -128 * 1024 )
+	#define MAX_WORLD_COORD			( 128 * 1024 )
+	#define MIN_WORLD_COORD			( -128 * 1024 )
 #endif
 // RB end
 #define MAX_WORLD_SIZE			( MAX_WORLD_COORD - MIN_WORLD_COORD )
@@ -154,15 +154,15 @@ const float	MAX_ENTITY_COORDINATE = 64000.0f;
 // RB: changing this breaks generated rendermodels and we don't need the renderbump tool anymore
 #if 1 //defined(USE_GLES1)
 
-#define GL_INDEX_TYPE		GL_UNSIGNED_SHORT
-typedef short triIndex_t;
-//typedef unsigned short triIndex_t;
+	#define GL_INDEX_TYPE		GL_UNSIGNED_SHORT
+	typedef short triIndex_t;
+	//typedef unsigned short triIndex_t;
 
 #else
 
-#define GL_INDEX_TYPE		GL_UNSIGNED_INT
-typedef int triIndex_t;
-//typedef unsigned int triIndex_t;
+	#define GL_INDEX_TYPE		GL_UNSIGNED_INT
+	typedef int triIndex_t;
+	//typedef unsigned int triIndex_t;
 
 #endif
 
@@ -173,14 +173,14 @@ ID_INLINE void WriteIndexPair( triIndex_t* dest, const triIndex_t a, const triIn
 }
 
 #if defined(_DEBUG) || defined(_lint)
-#define NODEFAULT	default: assert( 0 )
+	#define NODEFAULT	default: assert( 0 )
 #else
-#ifdef _MSVC
-#define NODEFAULT	default: __assume( 0 )
-#else // not _MSVC
-// TODO: is that __assume an important optimization? if so, is there a gcc equivalent?
-#define NODEFAULT
-#endif
+	#ifdef _MSVC
+		#define NODEFAULT	default: __assume( 0 )
+	#else // not _MSVC
+		// TODO: is that __assume an important optimization? if so, is there a gcc equivalent?
+		#define NODEFAULT
+	#endif
 #endif
 
 /*

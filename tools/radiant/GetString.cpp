@@ -41,7 +41,7 @@ CGetString::CGetString( LPCSTR pPrompt, CString* pFeedback, CWnd* pParent /*=NUL
 	: CDialog( CGetString::IDD, pParent )
 {
 	m_strEditBox = _T( "" );
-	
+
 	m_pFeedback = pFeedback;
 	m_pPrompt	= pPrompt;
 }
@@ -59,7 +59,7 @@ void CGetString::DoDataExchange( CDataExchange* pDX )
 BOOL CGetString::OnInitDialog()
 {
 	CDialog::OnInitDialog();
-	
+
 	GetDlgItem( IDC_PROMPT )->SetWindowText( m_pPrompt );
 	return TRUE;  // return TRUE unless you set the focus to a control
 	// EXCEPTION: OCX Property Pages should return FALSE
@@ -75,9 +75,9 @@ END_MESSAGE_MAP()
 void CGetString::OnOK()
 {
 	UpdateData( DIALOG_TO_DATA );
-	
+
 	*m_pFeedback = m_strEditBox;
-	
+
 	CDialog::OnOK();
 }
 
@@ -87,16 +87,16 @@ void CGetString::OnOK()
 LPCSTR GetString( LPCSTR psPrompt )
 {
 	static CString strReturn;
-	
+
 	CGetString Input( psPrompt, &strReturn );
 	if( Input.DoModal() == IDOK )
 	{
 		strReturn.TrimLeft();
 		strReturn.TrimRight();
-		
+
 		return ( LPCSTR )strReturn;
 	}
-	
+
 	return NULL;
 }
 
@@ -104,8 +104,10 @@ LPCSTR GetString( LPCSTR psPrompt )
 bool GetYesNo( const char* psQuery )
 {
 	if( MessageBox( g_pParentWnd->GetSafeHwnd(), psQuery, "Query", MB_YESNO | MB_ICONWARNING ) == IDYES )
+	{
 		return true;
-		
+	}
+
 	return false;
 }
 

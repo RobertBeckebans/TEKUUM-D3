@@ -41,16 +41,16 @@ If you have questions concerning this license or the applicable additional terms
 #include <conio.h>
 
 #ifndef	ID_DEDICATED
-#include <comdef.h>
-#include <comutil.h>
-#include <Wbemidl.h>
+	#include <comdef.h>
+	#include <comutil.h>
+	#include <Wbemidl.h>
 
-#pragma comment (lib, "wbemuuid.lib")
+	#pragma comment (lib, "wbemuuid.lib")
 #endif
 
 // RB begin
 #if !defined(USE_MFC_TOOLS)
-#include "win_nanoafx.h"
+	#include "win_nanoafx.h"
 #endif
 // RB end
 
@@ -64,14 +64,14 @@ int Sys_Milliseconds()
 	int sys_curtime;
 	static int sys_timeBase;
 	static bool	initialized = false;
-	
+
 	if( !initialized )
 	{
 		sys_timeBase = timeGetTime();
 		initialized = true;
 	}
 	sys_curtime = timeGetTime() - sys_timeBase;
-	
+
 	return sys_curtime;
 }
 
@@ -83,13 +83,13 @@ Sys_Microseconds
 uint64 Sys_Microseconds()
 {
 	static uint64 ticksPerMicrosecondTimes1024 = 0;
-	
+
 	if( ticksPerMicrosecondTimes1024 == 0 )
 	{
 		ticksPerMicrosecondTimes1024 = ( ( uint64 )Sys_ClockTicksPerSecond() << 10 ) / 1000000;
 		assert( ticksPerMicrosecondTimes1024 > 0 );
 	}
-	
+
 	return ( ( uint64 )( ( int64 )Sys_GetClockTicks() << 10 ) ) / ticksPerMicrosecondTimes1024;
 }
 
@@ -149,61 +149,61 @@ int Sys_GetVideoRam()
 	return 512;
 #else
 	int retSize = 64;
-	
+
 #if !defined(USE_GLES2)
 	// RB: added check with OpenGL extensions for GFX cards with more than 2 GB ram
 	if( GLEW_NVX_gpu_memory_info != 0 )
 	{
 		GLint total;
-	
+
 		glGetIntegerv( GL_GPU_MEMORY_INFO_CURRENT_AVAILABLE_VIDMEM_NVX , ( GLint* )&total );
-	
+
 		retSize = total / 1024;
-	
+
 		// round to the lower 16Mb
 		retSize &= ~15;
 		return retSize;
 	}
-	
+
 	if( GLEW_ATI_meminfo != 0 )
 	{
 		GLint total;
-	
+
 		glGetIntegerv( GL_TEXTURE_FREE_MEMORY_ATI , ( GLint* )&total );
-	
+
 		retSize = total / 1024;
-	
+
 		// round to the lower 16Mb
 		retSize &= ~15;
 		return retSize;
 	}
 	// RB end
 #endif
-	
+
 	CComPtr<IWbemLocator> spLoc = NULL;
 	HRESULT hr = CoCreateInstance( CLSID_WbemLocator, 0, CLSCTX_SERVER, IID_IWbemLocator, ( LPVOID* ) &spLoc );
 	if( hr != S_OK || spLoc == NULL )
 	{
 		return retSize;
 	}
-	
+
 	CComBSTR bstrNamespace( _T( "\\\\.\\root\\CIMV2" ) );
 	CComPtr<IWbemServices> spServices;
-	
+
 	// Connect to CIM
 	hr = spLoc->ConnectServer( bstrNamespace, NULL, NULL, 0, NULL, 0, 0, &spServices );
 	if( hr != WBEM_S_NO_ERROR )
 	{
 		return retSize;
 	}
-	
+
 	// Switch the security level to IMPERSONATE so that provider will grant access to system-level objects.
 	hr = CoSetProxyBlanket( spServices, RPC_C_AUTHN_WINNT, RPC_C_AUTHZ_NONE, NULL, RPC_C_AUTHN_LEVEL_CALL, RPC_C_IMP_LEVEL_IMPERSONATE, NULL, EOAC_NONE );
 	if( hr != S_OK )
 	{
 		return retSize;
 	}
-	
+
 	// Get the vid controller
 	CComPtr<IEnumWbemClassObject> spEnumInst = NULL;
 	hr = spServices->CreateInstanceEnum( CComBSTR( "Win32_VideoController" ), WBEM_FLAG_SHALLOW, NULL, &spEnumInst );
@@ -211,11 +211,11 @@ int Sys_GetVideoRam()
 	{
 		return retSize;
 	}
-	
+
 	ULONG uNumOfInstances = 0;
 	CComPtr<IWbemClassObject> spInstance = NULL;
 	hr = spEnumInst->Next( 10000, 1, &spInstance, &uNumOfInstances );
-	
+
 	if( hr == S_OK && spInstance )
 	{
 		// Get properties from the object
@@ -251,33 +251,33 @@ void Sys_GetCurrentMemoryStatus( sysMemoryStats_t& stats )
 {
 	MEMORYSTATUSEX statex;
 	unsigned __int64 work;
-	
+
 	memset( &statex, sizeof( statex ), 0 );
 	statex.dwLength = sizeof( statex );
 	GlobalMemoryStatusEx( &statex );
-	
+
 	memset( &stats, 0, sizeof( stats ) );
-	
+
 	stats.memoryLoad = statex.dwMemoryLoad;
-	
+
 	work = statex.ullTotalPhys >> 20;
 	stats.totalPhysical = *( int* )&work;
-	
+
 	work = statex.ullAvailPhys >> 20;
 	stats.availPhysical = *( int* )&work;
-	
+
 	work = statex.ullAvailPageFile >> 20;
 	stats.availPageFile = *( int* )&work;
-	
+
 	work = statex.ullTotalPageFile >> 20;
 	stats.totalPageFile = *( int* )&work;
-	
+
 	work = statex.ullTotalVirtual >> 20;
 	stats.totalVirtual = *( int* )&work;
-	
+
 	work = statex.ullAvailVirtual >> 20;
 	stats.availVirtual = *( int* )&work;
-	
+
 	work = statex.ullAvailExtendedVirtual >> 20;
 	stats.availExtendedVirtual = *( int* )&work;
 }
@@ -321,18 +321,18 @@ char* Sys_GetCurrentUser()
 {
 	static char s_userName[1024];
 	unsigned long size = sizeof( s_userName );
-	
-	
+
+
 	if( !GetUserName( s_userName, &size ) )
 	{
 		strcpy( s_userName, "player" );
 	}
-	
+
 	if( !s_userName[0] )
 	{
 		strcpy( s_userName, "player" );
 	}
-	
+
 	return s_userName;
 }
 

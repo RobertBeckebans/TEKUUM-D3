@@ -34,9 +34,9 @@ If you have questions concerning this license or the applicable additional terms
 #include "ZWnd.h"
 
 #ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
+	#define new DEBUG_NEW
+	#undef THIS_FILE
+	static char THIS_FILE[] = __FILE__;
 #endif
 
 /////////////////////////////////////////////////////////////////////////////
@@ -91,12 +91,12 @@ int CZWnd::OnCreate( LPCREATESTRUCT lpCreateStruct )
 	{
 		return -1;
 	}
-	
+
 	m_dcZ = ::GetDC( GetSafeHwnd() );
 	QEW_SetupPixelFormat( m_dcZ, false );
-	
+
 	m_pZClip = new CZClip();
-	
+
 	return 0;
 }
 
@@ -107,7 +107,7 @@ void CZWnd::OnDestroy()
 		delete m_pZClip;
 		m_pZClip = NULL;
 	}
-	
+
 	CWnd::OnDestroy();
 }
 
@@ -181,9 +181,9 @@ void CZWnd::OnPaint()
 		// RB: go back to fixed function pipeline
 		renderProgManager.Unbind();
 		// RB end
-		
+
 		QE_CheckOpenGLForErrors();
-		
+
 		Z_Draw();
 		//qwglSwapBuffers(m_dcZ);
 		SwapBuffers( dc.m_hDC );
@@ -328,7 +328,7 @@ BOOL CZWnd::PreCreateWindow( CREATESTRUCT& cs )
 			Error( "CZWnd RegisterClass: failed" );
 		}
 	}
-	
+
 	cs.lpszClass = Z_WINDOW_CLASS;
 	cs.lpszName = "Z";
 	if( cs.style != QE3_CHILDSTYLE )
@@ -336,7 +336,7 @@ BOOL CZWnd::PreCreateWindow( CREATESTRUCT& cs )
 		cs.style = QE3_SPLITTER_STYLE;
 	}
 	cs.dwExStyle = WS_EX_TOOLWINDOW;	// sikk - Added - Tool window uses smaller tital bar (more screen space for editing)
-	
+
 	return CWnd::PreCreateWindow( cs );
 }
 

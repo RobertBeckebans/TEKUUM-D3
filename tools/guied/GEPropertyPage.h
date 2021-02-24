@@ -34,7 +34,7 @@ class rvGEPropertyPage
 public:
 
 	rvGEPropertyPage( );
-	
+
 	virtual bool	Init()
 	{
 		return true;
@@ -52,9 +52,9 @@ public:
 		return true;
 	}
 	virtual int		HandleMessage( UINT msg, WPARAM wParam, LPARAM lParam );
-	
+
 	static INT_PTR CALLBACK WndProc( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam );
-	
+
 protected:
 
 	HWND		mPage;

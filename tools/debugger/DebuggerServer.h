@@ -29,15 +29,15 @@ If you have questions concerning this license or the applicable additional terms
 #define DEBUGGERSERVER_H_
 
 #ifndef DEBUGGERMESSAGES_H_
-#include "DebuggerMessages.h"
+	#include "DebuggerMessages.h"
 #endif
 
 #ifndef DEBUGGERBREAKPOINT_H_
-#include "DebuggerBreakpoint.h"
+	#include "DebuggerBreakpoint.h"
 #endif
 
 #ifndef __GAME_LOCAL_H__
-#include "../../game/Game.h"
+	#include "../../game/Game.h"
 #endif
 
 class idInterpreter;
@@ -50,20 +50,20 @@ public:
 
 	rvDebuggerServer( );
 	~rvDebuggerServer( );
-	
+
 	bool		Initialize();
 	void		Shutdown();
-	
+
 	bool		ProcessMessages();
-	
+
 	bool		IsConnected();
-	
+
 	void		CheckBreakpoints( idInterpreter* interpreter, idProgram* program, int instructionPointer );
-	
+
 	void		Print( const char* text );
-	
+
 	void		OSPathToRelativePath( const char* osPath, idStr& qpath );
-	
+
 protected:
 
 	// protected member variables
@@ -72,9 +72,9 @@ protected:
 	idPort							mPort;
 	idList<rvDebuggerBreakpoint*>	mBreakpoints;
 	CRITICAL_SECTION				mCriticalSection;
-	
+
 	HANDLE							mGameThread;
-	
+
 	bool							mBreak;
 	bool							mBreakNext;
 	bool							mBreakStepOver;
@@ -85,20 +85,20 @@ protected:
 	idProgram*						mBreakProgram;
 	int								mBreakInstructionPointer;
 	idInterpreter*					mBreakInterpreter;
-	
+
 	idStr							mLastStatementFile;
 	int								mLastStatementLine;
-	
+
 private:
 
 	void		ClearBreakpoints();
-	
+
 	void		Break( idInterpreter* interpreter, idProgram* program, int instructionPointer );
 	void		Resume();
-	
+
 	void		SendMessage( EDebuggerMessage dbmsg );
 	void		SendPacket( void* data, int datasize );
-	
+
 	// Message handlers
 	// RB: changed msg_t* to idBitMsg&
 	void		HandleAddBreakpoint( idBitMsg& msg );
@@ -107,7 +107,7 @@ private:
 	void		HandleInspectVariable( idBitMsg& msg );
 	void		HandleInspectCallstack( idBitMsg& msg );
 	void		HandleInspectThreads( idBitMsg& msg );
-	
+
 	// MSG helper routines
 	void		MSG_WriteCallstackFunc( idBitMsg& msg, const struct prstack_s* stack );
 	// RB end

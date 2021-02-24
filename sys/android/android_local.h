@@ -47,11 +47,11 @@ struct AndroidGlobals
 	EGLDisplay			eglDisplay;
 	EGLContext			eglContext;
 	EGLSurface			eglSurface;
-	
+
 	ASensorManager*		sensorManager;
 	const ASensor*		accelerometerSensor;
 	ASensorEventQueue*	sensorEventQueue;
-	
+
 	bool				isRunning;
 	bool				isTerminating;
 };

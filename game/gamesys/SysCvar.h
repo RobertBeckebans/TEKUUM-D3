@@ -40,11 +40,11 @@ extern idCVar	g_knockback;
 extern idCVar	g_skill;
 // RB begin
 #if defined(STANDALONE)
-extern idCVar	g_gravityX;
-extern idCVar	g_gravityY;
-extern idCVar	g_gravityZ;
+	extern idCVar	g_gravityX;
+	extern idCVar	g_gravityY;
+	extern idCVar	g_gravityZ;
 #else
-extern idCVar	g_gravity;
+	extern idCVar	g_gravity;
 #endif
 // RB end
 extern idCVar	g_skipFX;
@@ -100,7 +100,7 @@ extern idCVar	ai_showObstacleAvoidance;
 extern idCVar	ai_blockedFailSafe;
 // RB begin
 #if defined(STANDALONE)
-extern idCVar	ai_showHealth;
+	extern idCVar	ai_showHealth;
 #endif
 // RB end
 
@@ -129,9 +129,9 @@ extern idCVar	g_vehicleSuspensionDamping;
 extern idCVar	g_vehicleTireFriction;
 // RB begin
 #if defined(STANDALONE)
-extern idCVar	g_vehicleDebug;
-extern idCVar	g_debugShockwave;
-extern idCVar	g_enablePortalSky;
+	extern idCVar	g_vehicleDebug;
+	extern idCVar	g_debugShockwave;
+	extern idCVar	g_enablePortalSky;
 #endif
 // RB end
 
@@ -245,16 +245,16 @@ extern idCVar	g_flushSave;
 
 // RB begin
 #if defined(STANDALONE)
-extern idCVar	g_enableSlowmo;
-extern idCVar	g_slowmoStepRate;
+	extern idCVar	g_enableSlowmo;
+	extern idCVar	g_slowmoStepRate;
 
-extern idCVar	g_moveableDamageScale;
+	extern idCVar	g_moveableDamageScale;
 
-extern idCVar	g_grabberHoldSeconds;
-extern idCVar	g_grabberEnableShake;
-extern idCVar	g_grabberRandomMotion;
-extern idCVar	g_grabberHardStop;
-extern idCVar	g_grabberDamping;
+	extern idCVar	g_grabberHoldSeconds;
+	extern idCVar	g_grabberEnableShake;
+	extern idCVar	g_grabberRandomMotion;
+	extern idCVar	g_grabberHardStop;
+	extern idCVar	g_grabberDamping;
 #endif
 // RB end
 

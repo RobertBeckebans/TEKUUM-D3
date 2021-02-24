@@ -30,9 +30,9 @@ If you have questions concerning this license or the applicable additional terms
 #pragma hdrstop
 
 #if defined( MACOS_X )
-#include <signal.h>
-#include <sys/types.h>
-#include <unistd.h>
+	#include <signal.h>
+	#include <sys/types.h>
+	#include <unistd.h>
 #endif
 
 /*
@@ -62,33 +62,33 @@ void idLib::Init()
 {
 
 	assert( sizeof( bool ) == 1 );
-	
+
 	isMainThread = 1;
 	mainThreadInitialized = 1;	// note that the thread-local isMainThread is now valid
-	
+
 	// initialize little/big endian conversion
 	Swap_Init();
-	
+
 	// initialize memory manager
 //	Mem_Init();
 
 	// init string memory allocator
 	idStr::InitMemory();
-	
+
 	// initialize generic SIMD implementation
 	idSIMD::Init();
-	
+
 	// initialize math
 	idMath::Init();
-	
+
 	// test idMatX
 	//idMatX::Test();
-	
+
 	// test idPolynomial
 #ifdef _DEBUG
 	idPolynomial::Test();
 #endif
-	
+
 	// initialize the dictionary string pools
 	idDict::Init();
 }
@@ -103,13 +103,13 @@ void idLib::ShutDown()
 
 	// shut down the dictionary string pools
 	idDict::Shutdown();
-	
+
 	// shut down the string memory allocator
 	idStr::ShutdownMemory();
-	
+
 	// shut down the SIMD engine
 	idSIMD::Shutdown();
-	
+
 	// shut down the memory manager
 //	Mem_Shutdown();
 }
@@ -150,7 +150,7 @@ dword PackColor( const idVec4& color )
 	byte dy = idMath::Ftob( color.y * 255.0f );
 	byte dz = idMath::Ftob( color.z * 255.0f );
 	byte dw = idMath::Ftob( color.w * 255.0f );
-	
+
 #if defined(_WIN32) || defined(__linux__) || (defined(MACOS_X) && defined(__i386__))
 	return ( dx << 0 ) | ( dy << 8 ) | ( dz << 16 ) | ( dw << 24 );
 #elif (defined(MACOS_X) && defined(__ppc__))
@@ -192,7 +192,7 @@ dword PackColor( const idVec3& color )
 	byte dx = idMath::Ftob( color.x * 255.0f );
 	byte dy = idMath::Ftob( color.y * 255.0f );
 	byte dz = idMath::Ftob( color.z * 255.0f );
-	
+
 #if defined(_WIN32) || defined(__linux__) || (defined(MACOS_X) && defined(__i386__))
 	return ( dx << 0 ) | ( dy << 8 ) | ( dz << 16 );
 #elif (defined(MACOS_X) && defined(__ppc__))
@@ -231,11 +231,11 @@ void idLib::FatalError( const char* fmt, ... )
 {
 	va_list		argptr;
 	char		text[MAX_STRING_CHARS];
-	
+
 	va_start( argptr, fmt );
 	idStr::vsnPrintf( text, sizeof( text ), fmt, argptr );
 	va_end( argptr );
-	
+
 	common->FatalError( "%s", text );
 }
 
@@ -248,11 +248,11 @@ void idLib::Error( const char* fmt, ... )
 {
 	va_list		argptr;
 	char		text[MAX_STRING_CHARS];
-	
+
 	va_start( argptr, fmt );
 	idStr::vsnPrintf( text, sizeof( text ), fmt, argptr );
 	va_end( argptr );
-	
+
 	common->Error( "%s", text );
 }
 
@@ -265,11 +265,11 @@ void idLib::Warning( const char* fmt, ... )
 {
 	va_list		argptr;
 	char		text[MAX_STRING_CHARS];
-	
+
 	va_start( argptr, fmt );
 	idStr::vsnPrintf( text, sizeof( text ), fmt, argptr );
 	va_end( argptr );
-	
+
 	common->Warning( "%s", text );
 }
 
@@ -284,14 +284,14 @@ void idLib::WarningIf( const bool test, const char* fmt, ... )
 	{
 		return;
 	}
-	
+
 	va_list		argptr;
 	char		text[MAX_STRING_CHARS];
-	
+
 	va_start( argptr, fmt );
 	idStr::vsnPrintf( text, sizeof( text ), fmt, argptr );
 	va_end( argptr );
-	
+
 	common->Warning( "%s", text );
 }
 
@@ -322,7 +322,7 @@ void idLib::PrintfIf( const bool test, const char* fmt, ... )
 	{
 		return;
 	}
-	
+
 	va_list		argptr;
 	va_start( argptr, fmt );
 	common->VPrintf( fmt, argptr );
@@ -404,10 +404,10 @@ ShortSwap
 short ShortSwap( short l )
 {
 	byte    b1, b2;
-	
+
 	b1 = l & 255;
 	b2 = ( l >> 8 ) & 255;
-	
+
 	return ( b1 << 8 ) + b2;
 }
 
@@ -429,12 +429,12 @@ LongSwap
 int LongSwap( int l )
 {
 	byte    b1, b2, b3, b4;
-	
+
 	b1 = l & 255;
 	b2 = ( l >> 8 ) & 255;
 	b3 = ( l >> 16 ) & 255;
 	b4 = ( l >> 24 ) & 255;
-	
+
 	return ( ( int )b1 << 24 ) + ( ( int )b2 << 16 ) + ( ( int )b3 << 8 ) + b4;
 }
 
@@ -460,8 +460,8 @@ float FloatSwap( float f )
 		float	f;
 		byte	b[4];
 	} dat1, dat2;
-	
-	
+
+
 	dat1.f = f;
 	dat2.b[0] = dat1.b[3];
 	dat2.b[1] = dat1.b[2];
@@ -497,9 +497,9 @@ RESULTS
 void RevBytesSwap( void* bp, int elsize, int elcount )
 {
 	register unsigned char* p, *q;
-	
+
 	p = ( unsigned char* ) bp;
-	
+
 	if( elsize == 2 )
 	{
 		q = p + 1;
@@ -513,7 +513,7 @@ void RevBytesSwap( void* bp, int elsize, int elcount )
 		}
 		return;
 	}
-	
+
 	while( elcount-- )
 	{
 		q = p + elsize - 1;
@@ -546,9 +546,9 @@ void RevBitFieldSwap( void* bp, int elsize )
 {
 	int i;
 	unsigned char* p, t, v;
-	
+
 	LittleRevBytes( bp, elsize, 1 );
-	
+
 	p = ( unsigned char* ) bp;
 	while( elsize-- )
 	{
@@ -655,7 +655,7 @@ Swap_Init
 void Swap_Init()
 {
 	byte	swaptest[2] = {1, 0};
-	
+
 	// set the byte swapping variables in a portable manner
 	if( *( short* )swaptest == 1 )
 	{

@@ -75,7 +75,7 @@ END_MESSAGE_MAP()
 BOOL CPreviewDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
-	
+
 	m_image.Create( IDB_BITMAP_MATERIAL, 16, 1, RGB( 255, 255, 255 ) );
 	treeMedia.SetImageList( &m_image, TVSIL_NORMAL );
 	if( disablePreview )
@@ -86,10 +86,10 @@ BOOL CPreviewDlg::OnInitDialog()
 	{
 		wndPreview.setDrawable( &m_testDrawable );
 	}
-	
+
 	SetMode( currentMode );
 	BuildTree();
-	
+
 	if( mediaName.Length() )
 	{
 		HTREEITEM root = treeMedia.GetRootItem();
@@ -101,7 +101,7 @@ BOOL CPreviewDlg::OnInitDialog()
 	}
 	mediaName = "";
 	return TRUE;  // return TRUE unless you set the focus to a control
-	
+
 }
 
 void CPreviewDlg::BuildTree()
@@ -110,9 +110,9 @@ void CPreviewDlg::BuildTree()
 	CWaitCursor cursor;
 	quickTree.Clear();
 	treeMedia.DeleteAllItems();
-	
+
 	idFileList* files;
-	
+
 	if( currentMode == GUIS )
 	{
 		files = fileSystem->ListFilesTree( "guis", ".gui" );
@@ -124,15 +124,15 @@ void CPreviewDlg::BuildTree()
 		files = fileSystem->ListFilesTree( "models", ".lwo" );
 		AddStrList( "base", files->GetList(), MODELS );
 		fileSystem->FreeFileList( files );
-		
+
 		files = fileSystem->ListFilesTree( "models", ".ase" );
 		AddStrList( "base", files->GetList(), MODELS );
 		fileSystem->FreeFileList( files );
-		
+
 		files = fileSystem->ListFilesTree( "models", ".ma" );
 		AddStrList( "base", files->GetList(), MODELS );
 		fileSystem->FreeFileList( files );
-		
+
 		// RB: added .dae
 		files = fileSystem->ListFilesTree( "models", ".dae" );
 		AddStrList( "base", files->GetList(), MODELS );
@@ -222,27 +222,27 @@ void CPreviewDlg::AddStrList( const char* root, const idStrList& list, int id )
 			base = NULL;
 		}
 	}
-	
+
 	if( base == NULL )
 	{
 		base = treeMedia.InsertItem( root );
 		treeMedia.SetItemData( base, PARENTID );
 	}
-	
+
 	HTREEITEM	item = base;
 	HTREEITEM	add;
-	
+
 	int		count = list.Num();
-	
+
 	idStr	last, qt;
 	for( int i = 0; i < count; i++ )
 	{
 		idStr name = list[i];
-		
+
 		// now break the name down convert to slashes
 		name.BackSlashesToSlashes();
 		name.Strip( ' ' );
-		
+
 		int index;
 		int len = last.Length();
 		if( len == 0 )
@@ -269,7 +269,7 @@ void CPreviewDlg::AddStrList( const char* root, const idStrList& list, int id )
 		{
 			last.Empty();
 		}
-		
+
 		index = 0;
 		item = base;
 		path = "";
@@ -300,7 +300,7 @@ void CPreviewDlg::AddStrList( const char* root, const idStrList& list, int id )
 					treeMedia.SetItemImage( newItem, 0, 1 );
 					treeMedia.SetItemData( newItem, PARENTID );
 				}
-				
+
 				assert( newItem );
 				item = newItem;
 				name.Right( name.Length() - index - 1, out );
@@ -321,7 +321,7 @@ void CPreviewDlg::AddStrList( const char* root, const idStrList& list, int id )
 			}
 		}
 	}
-	
+
 }
 
 void CPreviewDlg::OnTvnSelchangedTreeMedia( NMHDR* pNMHDR, LRESULT* pResult )
@@ -336,13 +336,13 @@ void CPreviewDlg::OnTvnSelchangedTreeMedia( NMHDR* pNMHDR, LRESULT* pResult )
 	}
 	if( item )
 	{
-	
+
 		editInfo.SetWindowText( "No comments for this item" );
 		int id = treeMedia.GetItemData( item );
 		if( id == GUIS || id == MODELS || id == MATERIALS || id == WAVES || id == PARTICLES || id == SKINS )
 		{
 			mediaName = treeMedia.GetItemText( item );
-			
+
 			// have to build the name back up
 			HTREEITEM parent = treeMedia.GetParentItem( item );
 			while( parent != NULL )
@@ -376,7 +376,7 @@ void CPreviewDlg::OnTvnSelchangedTreeMedia( NMHDR* pNMHDR, LRESULT* pResult )
 			{
 				mediaName.Strip( "base/" );
 			}
-			
+
 		}
 		else if( id == WAVES || id == SOUNDS )
 		{
@@ -397,7 +397,7 @@ void CPreviewDlg::OnTvnSelchangedTreeMedia( NMHDR* pNMHDR, LRESULT* pResult )
 				}
 			}
 		}
-		
+
 		if( currentMode == MODELS || currentMode == SKINS )
 		{
 			idStr modelMedia;
@@ -480,12 +480,12 @@ void CPreviewDlg::OnTvnSelchangedTreeMedia( NMHDR* pNMHDR, LRESULT* pResult )
 			wndPreview.RedrawWindow();
 			RedrawWindow();
 		}
-		
+
 		//m_drawGui.setMedia(matName);
 		//wndPreview.setDrawable(&m_drawMaterial);
 		//wndPreview.RedrawWindow();
 	}
-	
+
 	*pResult = 0;
 }
 
@@ -575,7 +575,7 @@ void CPreviewDlg::OnBnClickedButtonAdd()
 			str += ci.Comments;
 			str += "\"\r\n}\r\n";
 			fileSystem->WriteFile( path, ( void* )&str[0], str.Length(), "fs_devpath" );
-			
+
 		}
 	}
 }
@@ -587,17 +587,17 @@ void CPreviewDlg::AddSounds( bool rootItems )
 	idStrList list( 1024 );
 	idStrList list2( 1024 );
 	HTREEITEM base = treeMedia.InsertItem( "Sound Shaders" );
-	
+
 	for( i = 0; i < declManager->GetNumDecls( DECL_SOUND ); i++ )
 	{
 		const idSoundShader* poo = declManager->SoundByIndex( i, false );
 		list.AddUnique( poo->GetFileName() );
 	}
-	
+
 	// RB: BFG sort
 	list.SortWithTemplate( idSort_PathStr() );
 	// RB end
-	
+
 	for( i = 0; i < list.Num(); i++ )
 	{
 		HTREEITEM child = treeMedia.InsertItem( list[i], base );
@@ -612,11 +612,11 @@ void CPreviewDlg::AddSounds( bool rootItems )
 				list2.Append( poo->GetName() );
 			}
 		}
-		
+
 		// RB: BFG sort
 		list2.SortWithTemplate( idSort_PathStr() );
 		// RB end
-		
+
 		for( j = 0; j < list2.Num(); j++ )
 		{
 			HTREEITEM child2 = treeMedia.InsertItem( list2[j], child );
@@ -624,7 +624,7 @@ void CPreviewDlg::AddSounds( bool rootItems )
 			treeMedia.SetItemImage( child2, 2, 2 );
 		}
 	}
-	
+
 	idFileList* files;
 	files = fileSystem->ListFilesTree( "sound", ".wav" );
 	AddStrList( "Wave files", files->GetList(), WAVES );
@@ -639,12 +639,12 @@ void CPreviewDlg::SetMode( int mode, const char* preSelect )
 	{
 		mediaName = preSelect;
 	}
-	
+
 	if( GetSafeHwnd() == NULL )
 	{
 		return;
 	}
-	
+
 	CWnd* wnd;
 	switch( currentMode )
 	{
@@ -733,14 +733,14 @@ void CPreviewDlg::AddMaterials( bool rootItems )
 			}
 			list.Append( mat->GetName() );
 		}
-		
+
 		// RB: BFG sort
 		list.SortWithTemplate( idSort_PathStr() );
 		// RB end
-		
+
 		AddStrList( "Materials", list, MATERIALS );
 	}
-	
+
 }
 
 void CPreviewDlg::AddParticles( bool rootItems )
@@ -761,11 +761,11 @@ void CPreviewDlg::AddParticles( bool rootItems )
 			}
 			list.Append( ips->GetName() );
 		}
-		
+
 		// RB: BFG sort
 		list.SortWithTemplate( idSort_PathStr() );
 		// RB end
-		
+
 		AddStrList( "Particles", list, PARTICLES );
 	}
 }
@@ -802,12 +802,12 @@ void CPreviewDlg::AddSkins( bool rootItems )
 			}
 			list2.Append( skin->GetName() );
 		}
-		
+
 		// RB: BFG sort
 		list.SortWithTemplate( idSort_PathStr() );
 		list2.SortWithTemplate( idSort_PathStr() );
 		// RB end
-		
+
 		AddStrList( "Matching Skins", list, SKINS );
 		AddStrList( "Skins", list2, SKINS );
 	}

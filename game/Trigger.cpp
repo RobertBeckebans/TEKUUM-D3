@@ -65,7 +65,7 @@ void idTrigger::DrawDebugInfo()
 	int			i;
 	bool		show;
 	const function_t* func;
-	
+
 	viewTextBounds.ExpandSelf( 128.0f );
 	viewBounds.ExpandSelf( 512.0f );
 	for( ent = gameLocal.spawnedEntities.Next(); ent != NULL; ent = ent->spawnNode.Next() )
@@ -85,12 +85,12 @@ void idTrigger::DrawDebugInfo()
 					}
 				}
 			}
-			
+
 			if( !show )
 			{
 				continue;
 			}
-			
+
 			gameRenderWorld->DebugBounds( colorOrange, ent->GetPhysics()->GetAbsBounds() );
 			if( viewTextBounds.IntersectsBounds( ent->GetPhysics()->GetAbsBounds() ) )
 			{
@@ -104,13 +104,13 @@ void idTrigger::DrawDebugInfo()
 				{
 					func = NULL;
 				}
-				
+
 				if( func )
 				{
 					gameRenderWorld->DrawText( va( "call script '%s'", func->Name() ), ent->GetPhysics()->GetAbsBounds().GetCenter() - up, 0.1f, colorWhite, axis, 1 );
 				}
 			}
-			
+
 			for( i = 0; i < ent->targets.Num(); i++ )
 			{
 				target = ent->targets[ i ].GetEntity();
@@ -159,7 +159,7 @@ idTrigger::CallScript
 void idTrigger::CallScript() const
 {
 	idThread* thread;
-	
+
 	if( scriptFunction )
 	{
 		thread = new idThread( scriptFunction );
@@ -255,7 +255,7 @@ idTrigger::Spawn
 void idTrigger::Spawn()
 {
 	GetPhysics()->SetContents( CONTENTS_TRIGGER );
-	
+
 	idStr funcname = spawnArgs.GetString( "call", "" );
 	if( funcname.Length() )
 	{
@@ -366,24 +366,24 @@ void idTrigger_Multi::Spawn()
 	spawnArgs.GetFloat( "random", "0", random );
 	spawnArgs.GetFloat( "delay", "0", delay );
 	spawnArgs.GetFloat( "random_delay", "0", random_delay );
-	
+
 	if( random && ( random >= wait ) && ( wait >= 0 ) )
 	{
 		random = wait - 1;
 		gameLocal.Warning( "idTrigger_Multi '%s' at (%s) has random >= wait", name.c_str(), GetPhysics()->GetOrigin().ToString( 0 ) );
 	}
-	
+
 	if( random_delay && ( random_delay >= delay ) && ( delay >= 0 ) )
 	{
 		random_delay = delay - 1;
 		gameLocal.Warning( "idTrigger_Multi '%s' at (%s) has random_delay >= delay", name.c_str(), GetPhysics()->GetOrigin().ToString( 0 ) );
 	}
-	
+
 	spawnArgs.GetString( "requires", "", requires );
 	spawnArgs.GetInt( "removeItem", "0", removeItem );
 	spawnArgs.GetBool( "triggerFirst", "0", triggerFirst );
 	spawnArgs.GetBool( "triggerWithSelf", "0", triggerWithSelf );
-	
+
 	if( spawnArgs.GetBool( "anyTouch" ) )
 	{
 		touchClient = true;
@@ -404,9 +404,9 @@ void idTrigger_Multi::Spawn()
 		touchClient = true;
 		touchOther = false;
 	}
-	
+
 	nextTriggerTime = 0;
-	
+
 	if( spawnArgs.GetBool( "flashlight_trigger" ) )
 	{
 		GetPhysics()->SetContents( CONTENTS_FLASHLIGHT_TRIGGER );
@@ -451,7 +451,7 @@ void idTrigger_Multi::TriggerAction( idEntity* activator )
 {
 	ActivateTargets( triggerWithSelf ? this : activator );
 	CallScript();
-	
+
 	if( wait >= 0 )
 	{
 		nextTriggerTime = gameLocal.time + SEC2MS( wait + random * gameLocal.random.CRandomFloat() );
@@ -492,27 +492,27 @@ void idTrigger_Multi::Event_Trigger( idEntity* activator )
 		// can't retrigger until the wait is over
 		return;
 	}
-	
+
 	// see if this trigger requires an item
 	if( !gameLocal.RequirementMet( activator, requires, removeItem ) )
 	{
 		return;
 	}
-	
+
 	if( !CheckFacing( activator ) )
 	{
 		return;
 	}
-	
+
 	if( triggerFirst )
 	{
 		triggerFirst = false;
 		return;
 	}
-	
+
 	// don't allow it to trigger twice in a single frame
 	nextTriggerTime = gameLocal.time + 1;
-	
+
 	if( delay > 0 )
 	{
 		// don't allow it to trigger again until our delay has passed
@@ -536,7 +536,7 @@ void idTrigger_Multi::Event_Touch( idEntity* other, trace_t* trace )
 	{
 		return;
 	}
-	
+
 	bool player = other->IsType( idPlayer::Type );
 	if( player )
 	{
@@ -553,29 +553,29 @@ void idTrigger_Multi::Event_Touch( idEntity* other, trace_t* trace )
 	{
 		return;
 	}
-	
+
 	if( nextTriggerTime > gameLocal.time )
 	{
 		// can't retrigger until the wait is over
 		return;
 	}
-	
+
 	// see if this trigger requires an item
 	if( !gameLocal.RequirementMet( other, requires, removeItem ) )
 	{
 		return;
 	}
-	
+
 	if( !CheckFacing( other ) )
 	{
 		return;
 	}
-	
+
 	if( spawnArgs.GetBool( "toggleTriggerFirst" ) )
 	{
 		triggerFirst = true;
 	}
-	
+
 	nextTriggerTime = gameLocal.time + 1;
 	if( delay > 0 )
 	{
@@ -661,29 +661,29 @@ void idTrigger_EntityName::Spawn()
 	spawnArgs.GetFloat( "random", "0", random );
 	spawnArgs.GetFloat( "delay", "0", delay );
 	spawnArgs.GetFloat( "random_delay", "0", random_delay );
-	
+
 	if( random && ( random >= wait ) && ( wait >= 0 ) )
 	{
 		random = wait - 1;
 		gameLocal.Warning( "idTrigger_EntityName '%s' at (%s) has random >= wait", name.c_str(), GetPhysics()->GetOrigin().ToString( 0 ) );
 	}
-	
+
 	if( random_delay && ( random_delay >= delay ) && ( delay >= 0 ) )
 	{
 		random_delay = delay - 1;
 		gameLocal.Warning( "idTrigger_EntityName '%s' at (%s) has random_delay >= delay", name.c_str(), GetPhysics()->GetOrigin().ToString( 0 ) );
 	}
-	
+
 	spawnArgs.GetBool( "triggerFirst", "0", triggerFirst );
-	
+
 	entityName = spawnArgs.GetString( "entityname" );
 	if( !entityName.Length() )
 	{
 		gameLocal.Error( "idTrigger_EntityName '%s' at (%s) doesn't have 'entityname' key specified", name.c_str(), GetPhysics()->GetOrigin().ToString( 0 ) );
 	}
-	
+
 	nextTriggerTime = 0;
-	
+
 	if( !spawnArgs.GetBool( "noTouch" ) )
 	{
 		GetPhysics()->SetContents( CONTENTS_TRIGGER );
@@ -699,7 +699,7 @@ void idTrigger_EntityName::TriggerAction( idEntity* activator )
 {
 	ActivateTargets( activator );
 	CallScript();
-	
+
 	if( wait >= 0 )
 	{
 		nextTriggerTime = gameLocal.time + SEC2MS( wait + random * gameLocal.random.CRandomFloat() );
@@ -740,21 +740,21 @@ void idTrigger_EntityName::Event_Trigger( idEntity* activator )
 		// can't retrigger until the wait is over
 		return;
 	}
-	
+
 	if( !activator || ( activator->name != entityName ) )
 	{
 		return;
 	}
-	
+
 	if( triggerFirst )
 	{
 		triggerFirst = false;
 		return;
 	}
-	
+
 	// don't allow it to trigger twice in a single frame
 	nextTriggerTime = gameLocal.time + 1;
-	
+
 	if( delay > 0 )
 	{
 		// don't allow it to trigger again until our delay has passed
@@ -778,18 +778,18 @@ void idTrigger_EntityName::Event_Touch( idEntity* other, trace_t* trace )
 	{
 		return;
 	}
-	
+
 	if( nextTriggerTime > gameLocal.time )
 	{
 		// can't retrigger until the wait is over
 		return;
 	}
-	
+
 	if( !other || ( other->name != entityName ) )
 	{
 		return;
 	}
-	
+
 	nextTriggerTime = gameLocal.time + 1;
 	if( delay > 0 )
 	{
@@ -877,13 +877,13 @@ void idTrigger_Timer::Spawn()
 	spawnArgs.GetFloat( "delay", "0", delay );
 	onName = spawnArgs.GetString( "onName" );
 	offName = spawnArgs.GetString( "offName" );
-	
+
 	if( random >= wait && wait >= 0 )
 	{
 		random = wait - 0.001;
 		gameLocal.Warning( "idTrigger_Timer '%s' at (%s) has random >= wait", name.c_str(), GetPhysics()->GetOrigin().ToString( 0 ) );
 	}
-	
+
 	if( on )
 	{
 		PostEventSec( &EV_Timer, delay );
@@ -928,7 +928,7 @@ idTrigger_Timer::Event_Timer
 void idTrigger_Timer::Event_Timer()
 {
 	ActivateTargets( this );
-	
+
 	// set time before next firing
 	if( wait >= 0.0f )
 	{
@@ -1141,15 +1141,15 @@ idTrigger_Hurt::Event_Touch
 void idTrigger_Hurt::Event_Touch( idEntity* other, trace_t* trace )
 {
 	const char* damage;
-	
+
 	if( on && other && gameLocal.time >= nextTime )
 	{
 		damage = spawnArgs.GetString( "def_damage", "damage_painTrigger" );
 		other->Damage( NULL, NULL, vec3_origin, damage, 1.0f, INVALID_JOINT );
-		
+
 		ActivateTargets( other );
 		CallScript();
-		
+
 		nextTime = gameLocal.time + SEC2MS( delay );
 	}
 }
@@ -1187,7 +1187,7 @@ void idTrigger_Fade::Event_Trigger( idEntity* activator )
 	idVec4		fadeColor;
 	int			fadeTime;
 	idPlayer*	player;
-	
+
 	player = gameLocal.GetLocalPlayer();
 	if( player )
 	{
@@ -1230,10 +1230,10 @@ void idTrigger_Touch::Spawn()
 {
 	// get the clip model
 	clipModel = new idClipModel( GetPhysics()->GetClipModel() );
-	
+
 	// remove the collision model from the physics object
 	GetPhysics()->SetClipModel( NULL, 1.0f );
-	
+
 	if( spawnArgs.GetBool( "start_on" ) )
 	{
 		BecomeActive( TH_THINK );
@@ -1270,39 +1270,39 @@ void idTrigger_Touch::TouchEntities()
 	int numClipModels, i;
 	idBounds bounds;
 	idClipModel* cm, *clipModelList[ MAX_GENTITIES ];
-	
+
 	if( clipModel == NULL || scriptFunction == NULL )
 	{
 		return;
 	}
-	
+
 	bounds.FromTransformedBounds( clipModel->GetBounds(), clipModel->GetOrigin(), clipModel->GetAxis() );
 	numClipModels = gameLocal.clip.ClipModelsTouchingBounds( bounds, -1, clipModelList, MAX_GENTITIES );
-	
+
 	for( i = 0; i < numClipModels; i++ )
 	{
 		cm = clipModelList[ i ];
-		
+
 		if( !cm->IsTraceModel() )
 		{
 			continue;
 		}
-		
+
 		idEntity* entity = cm->GetEntity();
-		
+
 		if( !entity )
 		{
 			continue;
 		}
-		
+
 		if( !gameLocal.clip.ContentsModel( cm->GetOrigin(), cm, cm->GetAxis(), -1,
 										   clipModel->Handle(), clipModel->GetOrigin(), clipModel->GetAxis() ) )
 		{
 			continue;
 		}
-		
+
 		ActivateTargets( entity );
-		
+
 		idThread* thread = new idThread();
 		thread->CallFunction( entity, scriptFunction, false );
 		thread->DelayedStart( 0 );

@@ -49,35 +49,35 @@ public:
 		HT_SIZE_BOTTOMLEFT,
 		HT_SIZE_LEFT
 	};
-	
+
 	rvGESelectionMgr( );
-	
+
 	void			SetWorkspace( rvGEWorkspace* workspace );
-	
+
 	void			Set( idWindow* );
 	void			Add( idWindow* window, bool expand = true );
 	void			Remove( idWindow* );
 	void			Clear();
-	
+
 	int				Num();
-	
+
 	void			Render();
-	
+
 	EHitTest		HitTest( float x, float y );
-	
+
 	bool			IsSelected( idWindow* window );
 	bool			IsExpression();
-	
+
 	idRectangle&	GetRect();
 	idWindow*		GetBottomMost();
-	
+
 	idWindow*&		operator[]( int index );
-	
+
 protected:
 
 	void		UpdateRectangle();
 	void		UpdateExpression();
-	
+
 	idList<idWindow*>	mSelections;
 	idRectangle			mRect;
 	rvGEWorkspace*		mWorkspace;
@@ -93,7 +93,7 @@ ID_INLINE idWindow*& rvGESelectionMgr::operator[]( int index )
 {
 	assert( index >= 0 );
 	assert( index < mSelections.Num() );
-	
+
 	return mSelections[ index ];
 }
 

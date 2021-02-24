@@ -29,7 +29,7 @@ If you have questions concerning this license or the applicable additional terms
 #define AFX_IDGLWIDGET_H__6399A341_2976_4A6E_87DD_9AF4DBD4C5DB__INCLUDED_
 
 #if _MSC_VER > 1000
-#pragma once
+	#pragma once
 #endif // _MSC_VER > 1000
 
 /////////////////////////////////////////////////////////////////////////////
@@ -105,7 +105,7 @@ public:
 		light = 1.0;
 		worldDirty = true;
 	}
-	
+
 	idGLDrawableMaterial()
 	{
 		material = NULL;
@@ -113,11 +113,11 @@ public:
 		worldDirty = true;
 		realTime = 50;
 	}
-	
+
 	~idGLDrawableMaterial()
 	{
 	}
-	
+
 	virtual void setMedia( const char* name );
 	virtual void draw( int x, int y, int w, int h );
 	virtual void buttonUp( int button ) {}
@@ -127,7 +127,7 @@ public:
 	{
 		worldDirty = true ;
 	};
-	
+
 protected:
 	const idMaterial* material;
 	bool worldDirty;
@@ -139,13 +139,13 @@ class idGLDrawableModel : public idGLDrawableWorld
 public:
 
 	idGLDrawableModel( const char* name );
-	
+
 	idGLDrawableModel();
-	
+
 	~idGLDrawableModel() {}
-	
+
 	virtual void setMedia( const char* name );
-	
+
 	virtual void buttonDown( int button, float x, float y );
 	virtual void mouseMove( float x, float y );
 	virtual void draw( int x, int y, int w, int h );
@@ -158,7 +158,7 @@ public:
 		return false;
 	}
 	void SetSkin( const char* skin );
-	
+
 protected:
 	bool worldDirty;
 	float light;
@@ -167,7 +167,7 @@ protected:
 	idVec3 lastPress;
 	float radius;
 	idVec4 rect;
-	
+
 };
 
 class idGLDrawableConsole : public idGLDrawable
@@ -177,23 +177,23 @@ public:
 	idGLDrawableConsole()
 	{
 	}
-	
+
 	~idGLDrawableConsole()
 	{
 	}
-	
+
 	virtual void setMedia( const char* name )
 	{
 	}
-	
-	
+
+
 	virtual void draw( int x, int y, int w, int h );
-	
+
 	virtual int getRealTime()
 	{
 		return 0;
 	};
-	
+
 protected:
 
 };
@@ -206,7 +206,7 @@ class idGLWidget : public CWnd
 public:
 	idGLWidget();
 	void setDrawable( idGLDrawable* d );
-	
+
 // Attributes
 public:
 
@@ -221,11 +221,11 @@ public:
 protected:
 	virtual BOOL PreCreateWindow( CREATESTRUCT& cs );
 	//}}AFX_VIRTUAL
-	
+
 // Implementation
 public:
 	virtual ~idGLWidget();
-	
+
 	// Generated message map functions
 protected:
 	idGLDrawable* drawable;
@@ -243,7 +243,7 @@ protected:
 	afx_msg void OnTimer( UINT nIDEvent );
 	afx_msg BOOL OnEraseBkgnd( CDC* pDC );
 	//}}AFX_MSG
-	
+
 	DECLARE_MESSAGE_MAP()
 };
 
@@ -267,7 +267,7 @@ protected:
 	afx_msg void OnLButtonDown( UINT nFlags, CPoint point );
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
-	
+
 };
 
 /////////////////////////////////////////////////////////////////////////////

@@ -39,12 +39,12 @@ public:
 		low = _low;
 		high = _high;
 	}
-	
+
 	void SetValuePos( float val )
 	{
 		SetPos( GetRangeMin() + ( GetRangeMax() - GetRangeMin() ) * ( val - low ) / ( high - low ) );
 	}
-	
+
 	float GetValue()
 	{
 		return low + ( high - low ) * ( float )( GetPos() - GetRangeMin() ) / ( GetRangeMax() - GetRangeMin() );
@@ -59,22 +59,22 @@ class CDialogParticleEditor : public CDialog
 {
 
 	DECLARE_DYNAMIC( CDialogParticleEditor )
-	
+
 public:
 	CDialogParticleEditor( CWnd* pParent = NULL ); // standard constructor
 	virtual				~CDialogParticleEditor();
-	
+
 	void				SelectParticle( const char* name );
 	void				SetParticleVisualization( int i );
 	void				SetVectorControlUpdate( idQuat rotation );
-	
+
 	enum { TESTMODEL, IMPACT, MUZZLE, FLIGHT, SELECTED };
-	
+
 	//{{AFX_VIRTUAL(CDialogParticleEditor)
 	virtual void		DoDataExchange( CDataExchange* pDX );  // DDX/DDV support
 	virtual BOOL		OnInitDialog();
 	//}}AFX_VIRTUAL
-	
+
 protected:
 	//{{AFX_MSG(CDialogParticleEditor)
 	afx_msg void		OnCbnSelchangeComboParticles();
@@ -123,9 +123,9 @@ protected:
 	afx_msg void		OnDestroy();
 	afx_msg void		OnHScroll( UINT nSBCode, UINT nPos, CScrollBar* pScrollBar );
 	//}}AFX_MSG
-	
+
 	DECLARE_MESSAGE_MAP()
-	
+
 private:
 	//{{AFX_DATA(CDialogParticleEditor)
 	enum				{ IDD = IDD_DIALOG_PARTICLE_EDITOR };
@@ -193,12 +193,12 @@ private:
 	CString				initialAngle;
 	CString				boundsExpansion;
 	CString				customDesc;
-	
+
 	BOOL				particleMode;
 	//}}AFX_DATA
-	
+
 	int					visualization;
-	
+
 private:
 	void				EnumParticles();
 	void				AddStage();

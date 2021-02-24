@@ -43,10 +43,10 @@ idPlayerView::idPlayerView()
 	memset( &view, 0, sizeof( view ) );
 	player = NULL;
 	dvMaterial = declManager->FindMaterial( "_scratch" );
-	
+
 	//tunnelMaterial = declManager->FindMaterial( "textures/decals/tunnel" );
 	tunnelMaterial = declManager->FindMaterial( "postprocess/chromatic_aberration/blurred" );
-	
+
 	armorMaterial = declManager->FindMaterial( "armorViewEffect" );
 	berserkMaterial = declManager->FindMaterial( "textures/decals/berserk" );
 	irGogglesMaterial = declManager->FindMaterial( "textures/decals/irblend" );
@@ -64,7 +64,7 @@ idPlayerView::idPlayerView()
 	fadeToColor.Zero();
 	fadeColor.Zero();
 	shakeAng.Zero();
-	
+
 	ClearEffects();
 }
 
@@ -77,7 +77,7 @@ void idPlayerView::Save( idSaveGame* savefile ) const
 {
 	int i;
 	const screenBlob_t* blob;
-	
+
 	blob = &screenBlobs[ 0 ];
 	for( i = 0; i < MAX_SCREEN_BLOBS; i++, blob++ )
 	{
@@ -94,13 +94,13 @@ void idPlayerView::Save( idSaveGame* savefile ) const
 		savefile->WriteInt( blob->startFadeTime );
 		savefile->WriteFloat( blob->driftAmount );
 	}
-	
+
 	savefile->WriteInt( dvFinishTime );
 	savefile->WriteMaterial( dvMaterial );
 	savefile->WriteInt( kickFinishTime );
 	savefile->WriteAngles( kickAngles );
 	savefile->WriteBool( bfgVision );
-	
+
 	savefile->WriteMaterial( tunnelMaterial );
 	savefile->WriteMaterial( armorMaterial );
 	savefile->WriteMaterial( berserkMaterial );
@@ -108,15 +108,15 @@ void idPlayerView::Save( idSaveGame* savefile ) const
 	savefile->WriteMaterial( bloodSprayMaterial );
 	savefile->WriteMaterial( bfgMaterial );
 	savefile->WriteFloat( lastDamageTime );
-	
+
 	savefile->WriteVec4( fadeColor );
 	savefile->WriteVec4( fadeToColor );
 	savefile->WriteVec4( fadeFromColor );
 	savefile->WriteFloat( fadeRate );
 	savefile->WriteInt( fadeTime );
-	
+
 	savefile->WriteAngles( shakeAng );
-	
+
 	savefile->WriteObject( player );
 	savefile->WriteRenderView( view );
 }
@@ -130,7 +130,7 @@ void idPlayerView::Restore( idRestoreGame* savefile )
 {
 	int i;
 	screenBlob_t* blob;
-	
+
 	blob = &screenBlobs[ 0 ];
 	for( i = 0; i < MAX_SCREEN_BLOBS; i++, blob++ )
 	{
@@ -147,13 +147,13 @@ void idPlayerView::Restore( idRestoreGame* savefile )
 		savefile->ReadInt( blob->startFadeTime );
 		savefile->ReadFloat( blob->driftAmount );
 	}
-	
+
 	savefile->ReadInt( dvFinishTime );
 	savefile->ReadMaterial( dvMaterial );
 	savefile->ReadInt( kickFinishTime );
 	savefile->ReadAngles( kickAngles );
 	savefile->ReadBool( bfgVision );
-	
+
 	savefile->ReadMaterial( tunnelMaterial );
 	savefile->ReadMaterial( armorMaterial );
 	savefile->ReadMaterial( berserkMaterial );
@@ -161,15 +161,15 @@ void idPlayerView::Restore( idRestoreGame* savefile )
 	savefile->ReadMaterial( bloodSprayMaterial );
 	savefile->ReadMaterial( bfgMaterial );
 	savefile->ReadFloat( lastDamageTime );
-	
+
 	savefile->ReadVec4( fadeColor );
 	savefile->ReadVec4( fadeToColor );
 	savefile->ReadVec4( fadeFromColor );
 	savefile->ReadFloat( fadeRate );
 	savefile->ReadInt( fadeTime );
-	
+
 	savefile->ReadAngles( shakeAng );
-	
+
 	savefile->ReadObject( reinterpret_cast<idClass*&>( player ) );
 	savefile->ReadRenderView( view );
 }
@@ -192,15 +192,15 @@ idPlayerView::ClearEffects
 void idPlayerView::ClearEffects()
 {
 	lastDamageTime = MS2SEC( gameLocal.time - 99999 );
-	
+
 	dvFinishTime = ( gameLocal.time - 99999 );
 	kickFinishTime = ( gameLocal.time - 99999 );
-	
+
 	for( int i = 0 ; i < MAX_SCREEN_BLOBS ; i++ )
 	{
 		screenBlobs[i].finishTime = gameLocal.time;
 	}
-	
+
 	fadeTime = 0;
 	bfgVision = false;
 }
@@ -213,7 +213,7 @@ idPlayerView::GetScreenBlob
 screenBlob_t* idPlayerView::GetScreenBlob()
 {
 	screenBlob_t*	oldest = &screenBlobs[0];
-	
+
 	for( int i = 1 ; i < MAX_SCREEN_BLOBS ; i++ )
 	{
 		if( screenBlobs[i].finishTime < oldest->finishTime )
@@ -242,7 +242,7 @@ void idPlayerView::DamageImpulse( idVec3 localKickDir, const idDict* damageDef )
 		// keep shotgun from obliterating the view
 		return;
 	}
-	
+
 	float	dvTime = damageDef->GetFloat( "dv_time" );
 	if( dvTime )
 	{
@@ -257,7 +257,7 @@ void idPlayerView::DamageImpulse( idVec3 localKickDir, const idDict* damageDef )
 			dvFinishTime = gameLocal.time + 5000;
 		}
 	}
-	
+
 	//
 	// head angle kick
 	//
@@ -265,26 +265,26 @@ void idPlayerView::DamageImpulse( idVec3 localKickDir, const idDict* damageDef )
 	if( kickTime )
 	{
 		kickFinishTime = gameLocal.time + g_kickTime.GetFloat() * kickTime;
-		
+
 		// forward / back kick will pitch view
 		kickAngles[0] = localKickDir[0];
-		
+
 		// side kick will yaw view
 		kickAngles[1] = localKickDir[1] * 0.5f;
-		
+
 		// up / down kick will pitch view
 		kickAngles[0] += localKickDir[2];
-		
+
 		// roll will come from  side
 		kickAngles[2] = localKickDir[1];
-		
+
 		float kickAmplitude = damageDef->GetFloat( "kick_amplitude" );
 		if( kickAmplitude )
 		{
 			kickAngles *= kickAmplitude;
 		}
 	}
-	
+
 	//
 	// screen blob
 	//
@@ -294,14 +294,14 @@ void idPlayerView::DamageImpulse( idVec3 localKickDir, const idDict* damageDef )
 		screenBlob_t*	blob = GetScreenBlob();
 		blob->startFadeTime = gameLocal.time;
 		blob->finishTime = gameLocal.time + blobTime * g_blobTime.GetFloat();
-		
+
 		const char* materialName = damageDef->GetString( "mtr_blob" );
 		blob->material = declManager->FindMaterial( materialName );
 		blob->x = damageDef->GetFloat( "blob_x" );
 		blob->x += ( gameLocal.random.RandomInt() & 63 ) - 32;
 		blob->y = damageDef->GetFloat( "blob_y" );
 		blob->y += ( gameLocal.random.RandomInt() & 63 ) - 32;
-		
+
 		float scale = ( 256 + ( ( gameLocal.random.RandomInt() & 63 ) - 32 ) ) / 256.0f;
 		blob->w = damageDef->GetFloat( "blob_width" ) * g_blobSize.GetFloat() * scale;
 		blob->h = damageDef->GetFloat( "blob_height" ) * g_blobSize.GetFloat() * scale;
@@ -310,12 +310,12 @@ void idPlayerView::DamageImpulse( idVec3 localKickDir, const idDict* damageDef )
 		blob->s2 = 1;
 		blob->t2 = 1;
 	}
-	
+
 	//
 	// save lastDamageTime for tunnel vision accentuation
 	//
 	lastDamageTime = MS2SEC( gameLocal.time );
-	
+
 }
 
 /*
@@ -376,7 +376,7 @@ Called when a weapon fires, generates head twitches, etc
 void idPlayerView::WeaponFireFeedback( const idDict* weaponDef )
 {
 	int		recoilTime;
-	
+
 	recoilTime = weaponDef->GetInt( "recoilTime" );
 	// don't shorten a damage kick in progress
 	if( recoilTime && kickFinishTime < gameLocal.time )
@@ -387,7 +387,7 @@ void idPlayerView::WeaponFireFeedback( const idDict* weaponDef )
 		int	finish = gameLocal.time + g_kickTime.GetFloat() * recoilTime;
 		kickFinishTime = finish;
 	}
-	
+
 }
 
 /*
@@ -398,7 +398,7 @@ idPlayerView::CalculateShake
 void idPlayerView::CalculateShake()
 {
 	idVec3	origin, matrix;
-	
+
 	float shakeVolume = gameSoundWorld->CurrentShakeAmplitudeForPosition( gameLocal.time, player->firstPersonViewOrigin );
 	//
 	// shakeVolume should somehow be molded into an angle here
@@ -431,15 +431,15 @@ idPlayerView::AngleOffset
 idAngles idPlayerView::AngleOffset() const
 {
 	idAngles	ang;
-	
+
 	ang.Zero();
-	
+
 	if( gameLocal.time < kickFinishTime )
 	{
 		float offset = kickFinishTime - gameLocal.time;
-		
+
 		ang = kickAngles * offset * offset * g_kickAmplitude.GetFloat();
-		
+
 		for( int i = 0 ; i < 3 ; i++ )
 		{
 			if( ang[i] > 70.0f )
@@ -467,28 +467,28 @@ void idPlayerView::SingleView( idUserInterface* hud, const renderView_t* view )
 	{
 		return;
 	}
-	
+
 	// place the sound origin for the player
 	gameSoundWorld->PlaceListener( view->vieworg, view->viewaxis, player->entityNumber + 1, gameLocal.time, hud ? hud->State().GetString( "location" ) : "Undefined" );
-	
+
 	// if the objective system is up, don't do normal drawing
 	if( player->objectiveSystemOpen )
 	{
 		player->objectiveSystem->Redraw( gameLocal.time );
 		return;
 	}
-	
+
 	// hack the shake in at the very last moment, so it can't cause any consistency problems
 	renderView_t	hackedView = *view;
 	hackedView.viewaxis = hackedView.viewaxis * ShakeAxis();
-	
+
 	gameRenderWorld->RenderScene( &hackedView );
-	
+
 	if( player->spectating )
 	{
 		return;
 	}
-	
+
 	// draw screen blobs
 	if( !pm_thirdPerson.GetBool() && !g_skipViewEffects.GetBool() )
 	{
@@ -499,9 +499,9 @@ void idPlayerView::SingleView( idUserInterface* hud, const renderView_t* view )
 			{
 				continue;
 			}
-			
+
 			blob->y += blob->driftAmount;
-			
+
 			float	fade = ( float )( blob->finishTime - gameLocal.time ) / ( blob->finishTime - blob->startFadeTime );
 			if( fade > 1.0f )
 			{
@@ -513,7 +513,7 @@ void idPlayerView::SingleView( idUserInterface* hud, const renderView_t* view )
 				renderSystem->DrawStretchPic( blob->x, blob->y, blob->w, blob->h, blob->s1, blob->t1, blob->s2, blob->t2, blob->material );
 			}
 		}
-		
+
 		// RB: chromatic tunnel vision
 		float	health = 0.0f;
 		if( g_testHealthVision.GetFloat() != 0.0f )
@@ -533,12 +533,12 @@ void idPlayerView::SingleView( idUserInterface* hud, const renderView_t* view )
 		{
 			alpha = 1.0f;
 		}
-		
+
 		if( alpha < 1.0f )
 		{
 			// start fading if within several seconds of going away
 			const int tunnelTimeFadeSeconds = 3000;
-			
+
 			if( g_testHealthVision.GetBool() )
 			{
 				alpha = 1.0f - alpha;
@@ -546,31 +546,31 @@ void idPlayerView::SingleView( idUserInterface* hud, const renderView_t* view )
 			else
 			{
 				int tunnelTime = idMath::Abs( SEC2MS( lastDamageTime ) - gameLocal.time );
-				
+
 				alpha = ( tunnelTime < tunnelTimeFadeSeconds ) ? ( 1.0f - ( ( float )tunnelTime / tunnelTimeFadeSeconds ) ) : 0.0f;
 				alpha *= ( 1.0f - ( Min( 100.0f, Max( 1.0f, health ) ) / 100.0f ) );
 			}
-			
+
 			renderSystem->SetColor4( 1.0f, 1.0f, 1.0f, alpha );
-			
+
 			renderSystem->DrawStretchPic( 0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT, 0.0f, 0.0f, 1.0f, 1.0f, tunnelMaterial );
 		}
 		// RB end
-		
+
 		player->DrawHUD( hud );
-		
+
 		// armor impulse feedback
 		float	armorPulse = ( gameLocal.time - player->lastArmorPulse ) / 250.0f;
-		
+
 		if( armorPulse > 0.0f && armorPulse < 1.0f )
 		{
 			renderSystem->SetColor4( 1, 1, 1, 1.0 - armorPulse );
 			renderSystem->DrawStretchPic( 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0, 1, 1, armorMaterial );
 		}
-		
-		
-		
-		
+
+
+
+
 		if( player->PowerUpActive( BERSERK ) )
 		{
 			int berserkTime = player->inventory.powerupEndTime[ BERSERK ] - gameLocal.time;
@@ -582,15 +582,15 @@ void idPlayerView::SingleView( idUserInterface* hud, const renderView_t* view )
 				renderSystem->DrawStretchPic( 0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT, 0.0f, 0.0f, 1.0f, 1.0f, berserkMaterial );
 			}
 		}
-		
+
 		if( bfgVision )
 		{
 			renderSystem->SetColor4( 1.0f, 1.0f, 1.0f, 1.0f );
 			renderSystem->DrawStretchPic( 0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT, 0.0f, 0.0f, 1.0f, 1.0f, bfgMaterial );
 		}
-		
+
 	}
-	
+
 	// test a single material drawn over everything
 	if( g_testPostProcess.GetString()[0] )
 	{
@@ -638,7 +638,7 @@ void idPlayerView::DoubleVision( idUserInterface* hud, const renderView_t* view,
 		SingleView( hud, view );
 		return;
 	}
-	
+
 	float	scale = offset * g_dvAmplitude.GetFloat();
 	if( scale > 0.5f )
 	{
@@ -646,13 +646,13 @@ void idPlayerView::DoubleVision( idUserInterface* hud, const renderView_t* view,
 	}
 	float shift = scale * sin( sqrtf( offset ) * g_dvFrequency.GetFloat() );
 	shift = fabs( shift );
-	
+
 	// if double vision, render to a texture
 	//renderSystem->CropRenderSize( 512, 256, true );
 	SingleViewOrStereo( hud, view );
 	renderSystem->CaptureRenderToImage( "_scratch" );
 	//renderSystem->UnCrop();
-	
+
 	// carry red tint if in berserk mode
 	idVec4 color( 1, 1, 1, 1 );
 	if( gameLocal.time < player->inventory.powerupEndTime[ BERSERK ] )
@@ -660,7 +660,7 @@ void idPlayerView::DoubleVision( idUserInterface* hud, const renderView_t* view,
 		color.y = 0;
 		color.z = 0;
 	}
-	
+
 	renderSystem->SetColor4( color.x, color.y, color.z, 1.0f );
 	renderSystem->DrawStretchPic( 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, shift, 1, 1, 0, dvMaterial );
 	renderSystem->SetColor4( color.x, color.y, color.z, 0.5f );
@@ -721,7 +721,7 @@ void idPlayerView::Fade( idVec4 color, int time )
 		fadeFromColor = fadeColor;
 	}
 	fadeToColor = color;
-	
+
 	if( time <= 0 )
 	{
 		fadeRate = 0;
@@ -732,7 +732,7 @@ void idPlayerView::Fade( idVec4 color, int time )
 	{
 		fadeRate = 1.0f / ( float )time;
 	}
-	
+
 	if( gameLocal.realClientTime == 0 && time == 0 )
 	{
 		fadeTime = 1;
@@ -752,12 +752,12 @@ void idPlayerView::ScreenFade()
 {
 	int		msec;
 	float	t;
-	
+
 	if( !fadeTime )
 	{
 		return;
 	}
-	
+
 // RB begin
 #if defined(STANDALONE)
 	SetTimeState ts( player->timeGroup );
@@ -765,7 +765,7 @@ void idPlayerView::ScreenFade()
 // RB end
 
 	msec = fadeTime - gameLocal.realClientTime;
-	
+
 	if( msec <= 0 )
 	{
 		fadeColor = fadeToColor;
@@ -779,7 +779,7 @@ void idPlayerView::ScreenFade()
 		t = ( float )msec * fadeRate;
 		fadeColor = fadeFromColor * t + fadeToColor * ( 1.0f - t );
 	}
-	
+
 	if( fadeColor[ 3 ] != 0.0f )
 	{
 		renderSystem->SetColor4( fadeColor[ 0 ], fadeColor[ 1 ], fadeColor[ 2 ], fadeColor[ 3 ] );
@@ -840,7 +840,7 @@ struct stereoDistances_t
 	// Total distance is twice this, so 0.05 would give a 10% of screen width
 	// separation for objects at infinity.
 	float	screenSeparation;
-	
+
 	// Game world units from one eye to the centerline.
 	// Total distance is twice this.
 	float	worldSeparation;
@@ -866,7 +866,7 @@ float	CalculateWorldSeparation(
 	const float fovRadians = DEG2RAD( fov_x_degrees );
 	const float screen = tan( fovRadians * 0.5f ) * fabs( screenSeparation );
 	const float worldSeparation = screen * convergenceDistance / 0.5f;
-	
+
 	return worldSeparation;
 }
 
@@ -878,7 +878,7 @@ stereoDistances_t	CaclulateStereoDistances(
 {
 
 	stereoDistances_t	dists = {};
-	
+
 	if( convergenceWorldUnits == 0.0f )
 	{
 		// head mounted display mode
@@ -886,11 +886,11 @@ stereoDistances_t	CaclulateStereoDistances(
 		dists.screenSeparation = 0.0f;
 		return dists;
 	}
-	
+
 	// 3DTV mode
 	dists.screenSeparation = 0.5f * interOcularCentimeters / screenWidthCentimeters;
 	dists.worldSeparation = CalculateWorldSeparation( dists.screenSeparation, convergenceWorldUnits, fov_x_degrees );
-	
+
 	return dists;
 }
 
@@ -901,7 +901,7 @@ float	GetScreenSeparationForGuis()
 										renderSystem->GetPhysicalScreenWidthInCentimeters(),
 										stereoRender_convergence.GetFloat(),
 										80.0f /* fov */ );
-										
+
 	return dists.screenSeparation;
 }
 
@@ -917,20 +917,20 @@ void idPlayerView::EmitStereoEyeView( const int eye, idUserInterface* hud )
 	{
 		return;
 	}
-	
+
 	renderView_t eyeView = *view;
-	
+
 	const stereoDistances_t dists = CaclulateStereoDistances(
 										stereoRender_interOccularCentimeters.GetFloat(),
 										renderSystem->GetPhysicalScreenWidthInCentimeters(),
 										stereoRender_convergence.GetFloat(),
 										view->fov_x );
-										
+
 	eyeView.vieworg += eye * dists.worldSeparation * eyeView.viewaxis[1];
-	
+
 	eyeView.viewEyeBuffer = stereoRender_swapEyes.GetBool() ? eye : -eye;
 	eyeView.stereoScreenSeparation = eye * dists.screenSeparation;
-	
+
 	SingleView( hud, &eyeView );
 }
 
@@ -964,7 +964,7 @@ idPlayerView::RenderPlayerView
 void idPlayerView::RenderPlayerView( idUserInterface* hud )
 {
 	const renderView_t* view = player->GetRenderView();
-	
+
 	if( g_skipViewEffects.GetBool() )
 	{
 		SingleViewOrStereo( hud, view );
@@ -987,10 +987,10 @@ void idPlayerView::RenderPlayerView( idUserInterface* hud )
 		{
 			SingleViewOrStereo( hud, view );
 		}
-		
+
 		ScreenFade();
 	}
-	
+
 	if( net_clientLagOMeter.GetBool() && lagoMaterial && gameLocal.isClient )
 	{
 		renderSystem->SetColor4( 1.0f, 1.0f, 1.0f, 1.0f );

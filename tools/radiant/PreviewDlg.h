@@ -51,17 +51,17 @@ public:
 	{
 		disablePreview = b;
 	}
-	
+
 	idStr mediaName;
 	int returnCode;
-	
+
 	bool Waiting();
 	void SetModal();
 // Dialog Data
 	enum { IDD = IDD_DIALOG_PREVIEW };
 private:
 	DECLARE_DYNAMIC( CPreviewDlg )
-	
+
 	CTreeCtrl treeMedia;
 	CEdit editInfo;
 	HTREEITEM commentItem;
@@ -77,7 +77,7 @@ private:
 	void AddCommentedItems();
 	idStr data;
 	bool disablePreview;
-	
+
 protected:
 	virtual void DoDataExchange( CDataExchange* pDX );  // DDX/DDV support
 	void BuildTree();
@@ -86,9 +86,9 @@ protected:
 	void AddMaterials( bool rootItems );
 	void AddParticles( bool rootItems );
 	void AddSkins( bool rootItems );
-	
+
 	DECLARE_MESSAGE_MAP()
-	
+
 public:
 	afx_msg void OnTvnSelchangedTreeMedia( NMHDR* pNMHDR, LRESULT* pResult );
 	virtual BOOL Create( LPCTSTR lpszTemplateName, CWnd* pParentWnd = NULL );

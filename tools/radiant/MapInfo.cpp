@@ -34,9 +34,9 @@ If you have questions concerning this license or the applicable additional terms
 #include "MapInfo.h"
 
 #ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
+	#define new DEBUG_NEW
+	#undef THIS_FILE
+	static char THIS_FILE[] = __FILE__;
 #endif
 
 /////////////////////////////////////////////////////////////////////////////
@@ -77,7 +77,7 @@ END_MESSAGE_MAP()
 BOOL CMapInfo::OnInitDialog()
 {
 	CDialog::OnInitDialog();
-	
+
 	m_nTotalBrushes = 0;
 	m_nTotalEntities = 0;
 	m_nNet = 0;
@@ -85,12 +85,14 @@ BOOL CMapInfo::OnInitDialog()
 	{
 		m_nTotalBrushes++;
 		if( pBrush->owner == world_entity )
+		{
 			m_nNet++;
+		}
 	}
-	
-	
+
+
 	CMapStringToPtr mapEntity;
-	
+
 	int nValue = 0;
 	for( entity_t* pEntity = entities.next; pEntity != &entities; pEntity = pEntity->next )
 	{
@@ -100,7 +102,7 @@ BOOL CMapInfo::OnInitDialog()
 		nValue++ ;
 		mapEntity.SetAt( pEntity->eclass->name, reinterpret_cast<void*>( nValue ) );
 	}
-	
+
 	m_lstEntity.ResetContent();
 	m_lstEntity.SetTabStops( 96 );
 	CString strKey;
@@ -112,9 +114,9 @@ BOOL CMapInfo::OnInitDialog()
 		strList.Format( "%s\t%i", strKey, nValue );
 		m_lstEntity.AddString( strList );
 	}
-	
+
 	UpdateData( FALSE );
-	
+
 	return TRUE;  // return TRUE unless you set the focus to a control
 	// EXCEPTION: OCX Property Pages should return FALSE
 }

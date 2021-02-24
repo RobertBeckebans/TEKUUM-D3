@@ -95,7 +95,7 @@ ID_INLINE void idImage::DeriveOpts()
 	if( opts.format == FMT_NONE )
 	{
 		opts.colorFormat = CFM_DEFAULT;
-		
+
 		switch( usage )
 		{
 			case TD_COVERAGE:
@@ -110,7 +110,7 @@ ID_INLINE void idImage::DeriveOpts()
 				//	opts.format = FMT_RGBA8;
 				//	opts.colorFormat = CFM_GREEN_ALPHA;
 				//}
-			
+
 #elif ( defined(USE_GLES2) || defined(USE_GLES3) ) && !defined(USE_MESA)
 			opts.format = FMT_RGBA8;
 			opts.colorFormat = CFM_GREEN_ALPHA;
@@ -119,19 +119,19 @@ ID_INLINE void idImage::DeriveOpts()
 			opts.colorFormat = CFM_GREEN_ALPHA;
 #endif
 			break;
-			
+
 			case TD_DEPTH:
 				opts.format = FMT_DEPTH;
 				break;
-				
+
 			case TD_SHADOW_ARRAY:
 				opts.format = FMT_SHADOW_ARRAY;
 				break;
-				
+
 			case TD_RGBA16F:
 				opts.format = FMT_RGBA16F;
 				break;
-				
+
 			case TD_DIFFUSE:
 #if ( defined(USE_GLES2) || defined(USE_GLES3) ) && !defined(USE_MESA)
 				// TD_DIFFUSE gets only set to when its a diffuse texture for an interaction
@@ -144,7 +144,7 @@ ID_INLINE void idImage::DeriveOpts()
 				opts.colorFormat = CFM_YCOCG_DXT5;
 #endif
 				break;
-				
+
 			case TD_SPECULAR:
 #if defined(__ANDROID__)
 				//if( opts.width > 64 && opts.height > 64 )
@@ -157,7 +157,7 @@ ID_INLINE void idImage::DeriveOpts()
 				//	opts.format = FMT_RGBA8;
 				//	opts.gammaMips = true;
 				//}
-			
+
 #elif ( defined(USE_GLES2) || defined(USE_GLES3) ) && !defined(USE_MESA)
 			opts.gammaMips = true;
 			opts.format = FMT_RGBA8;
@@ -166,7 +166,7 @@ ID_INLINE void idImage::DeriveOpts()
 			opts.format = FMT_DXT1;
 #endif
 			break;
-			
+
 			case TD_DEFAULT:
 #if ( defined(USE_GLES2) || defined(USE_GLES3) ) && !defined(USE_MESA)
 				opts.gammaMips = true;
@@ -176,7 +176,7 @@ ID_INLINE void idImage::DeriveOpts()
 				opts.format = FMT_DXT5;
 #endif
 				break;
-				
+
 			case TD_BUMP:
 #if defined(__ANDROID__)
 				//if( opts.width > 64 && opts.height > 64 )
@@ -187,7 +187,7 @@ ID_INLINE void idImage::DeriveOpts()
 				//{
 				//	opts.format = FMT_RGBA8;
 				//}
-			
+
 #elif ( defined(USE_GLES2) || defined(USE_GLES3) ) && !defined(USE_MESA)
 			opts.format = FMT_RGBA8;
 #else
@@ -195,7 +195,7 @@ ID_INLINE void idImage::DeriveOpts()
 			opts.colorFormat = CFM_NORMAL_DXT5;
 #endif
 			break;
-			
+
 			case TD_FONT:
 #if ( defined(USE_GLES2) || defined(USE_GLES3) ) && !defined(USE_MESA)
 				opts.format = FMT_RGBA8;
@@ -206,7 +206,7 @@ ID_INLINE void idImage::DeriveOpts()
 				opts.numLevels = 4; // We only support 4 levels because we align to 16 in the exporter
 				opts.gammaMips = true;
 				break;
-				
+
 			case TD_LIGHT:
 #if ( defined(USE_GLES2) || defined(USE_GLES3) ) && !defined(USE_MESA)
 				opts.format = FMT_RGBA8;
@@ -216,11 +216,11 @@ ID_INLINE void idImage::DeriveOpts()
 				opts.gammaMips = true;
 #endif
 				break;
-				
+
 			case TD_LOOKUP_TABLE_MONO:
 				opts.format = FMT_INT8;
 				break;
-				
+
 			case TD_LOOKUP_TABLE_ALPHA:
 #if ( defined(USE_GLES2) || defined(USE_GLES3) ) && !defined(USE_MESA)
 				opts.format = FMT_RGBA8;
@@ -228,22 +228,22 @@ ID_INLINE void idImage::DeriveOpts()
 				opts.format = FMT_ALPHA;
 #endif
 				break;
-				
+
 			case TD_LOOKUP_TABLE_RGB1:
 			case TD_LOOKUP_TABLE_RGBA:
 				opts.format = FMT_RGBA8;
 				break;
-				
+
 			default:
 				assert( false );
 				opts.format = FMT_RGBA8;
 		}
 	}
-	
+
 	if( opts.numLevels == 0 )
 	{
 		opts.numLevels = 1;
-		
+
 		if( filter == TF_LINEAR || filter == TF_NEAREST )
 		{
 			// don't create mip maps if we aren't going to be using them
@@ -289,19 +289,19 @@ GenerateImage
 void idImage::GenerateImage( const byte* pic, int width, int height, textureFilter_t filterParm, textureRepeat_t repeatParm, textureUsage_t usageParm, int msaaSamples )
 {
 	PurgeImage();
-	
+
 	filter = filterParm;
 	repeat = repeatParm;
 	usage = usageParm;
 	cubeFiles = CF_2D;
-	
+
 	opts.textureType = ( msaaSamples > 0 ) ? TT_2D_MULTISAMPLE : TT_2D;
 	opts.width = width;
 	opts.height = height;
 	opts.numLevels = 0;
 	opts.msaaSamples = msaaSamples;
 	DeriveOpts();
-	
+
 	// if we don't have a rendering context, just return after we
 	// have filled in the parms.  We must have the values set, or
 	// an image match from a shader before the render starts would miss
@@ -310,7 +310,7 @@ void idImage::GenerateImage( const byte* pic, int width, int height, textureFilt
 	{
 		return;
 	}
-	
+
 	// RB: allow pic == NULL for internal framebuffer images
 	if( pic == NULL || opts.textureType == TT_2D_MULTISAMPLE )
 	{
@@ -320,9 +320,9 @@ void idImage::GenerateImage( const byte* pic, int width, int height, textureFilt
 	{
 		idBinaryImage im( GetName() );
 		im.Load2DFromMemory( width, height, pic, opts.numLevels, opts.format, opts.colorFormat, opts.gammaMips );
-		
+
 		AllocImage();
-		
+
 		for( int i = 0; i < im.NumImages(); i++ )
 		{
 			const bimageImage_t& img = im.GetImageHeader( i );
@@ -343,18 +343,18 @@ Non-square cube sides are not allowed
 void idImage::GenerateCubeImage( const byte* pic[6], int size, textureFilter_t filterParm, textureUsage_t usageParm )
 {
 	PurgeImage();
-	
+
 	filter = filterParm;
 	repeat = TR_CLAMP;
 	usage = usageParm;
 	cubeFiles = CF_NATIVE;
-	
+
 	opts.textureType = TT_CUBIC;
 	opts.width = size;
 	opts.height = size;
 	opts.numLevels = 0;
 	DeriveOpts();
-	
+
 	// if we don't have a rendering context, just return after we
 	// have filled in the parms.  We must have the values set, or
 	// an image match from a shader before the render starts would miss
@@ -363,12 +363,12 @@ void idImage::GenerateCubeImage( const byte* pic[6], int size, textureFilter_t f
 	{
 		return;
 	}
-	
+
 	idBinaryImage im( GetName() );
 	im.LoadCubeFromMemory( size, pic, opts.numLevels, opts.format, opts.gammaMips );
-	
+
 	AllocImage();
-	
+
 	for( int i = 0; i < im.NumImages(); i++ )
 	{
 		const bimageImage_t& img = im.GetImageHeader( i );
@@ -381,18 +381,18 @@ void idImage::GenerateCubeImage( const byte* pic[6], int size, textureFilter_t f
 void idImage::GenerateShadowArray( int width, int height, textureFilter_t filterParm, textureRepeat_t repeatParm, textureUsage_t usageParm )
 {
 	PurgeImage();
-	
+
 	filter = filterParm;
 	repeat = repeatParm;
 	usage = usageParm;
 	cubeFiles = CF_2D_ARRAY;
-	
+
 	opts.textureType = TT_2D_ARRAY;
 	opts.width = width;
 	opts.height = height;
 	opts.numLevels = 0;
 	DeriveOpts();
-	
+
 	// if we don't have a rendering context, just return after we
 	// have filled in the parms.  We must have the values set, or
 	// an image match from a shader before the render starts would miss
@@ -401,12 +401,12 @@ void idImage::GenerateShadowArray( int width, int height, textureFilter_t filter
 	{
 		return;
 	}
-	
+
 	//idBinaryImage im( GetName() );
 	//im.Load2DFromMemory( width, height, pic, opts.numLevels, opts.format, opts.colorFormat, opts.gammaMips );
-	
+
 	AllocImage();
-	
+
 	/*
 	for( int i = 0; i < im.NumImages(); i++ )
 	{
@@ -428,10 +428,10 @@ name contains GetName() upon entry
 void idImage::GetGeneratedName( idStr& _name, const textureUsage_t& _usage, const cubeFiles_t& _cube )
 {
 	idStrStatic< 64 > extension;
-	
+
 	_name.ExtractFileExtension( extension );
 	_name.StripFileExtension();
-	
+
 	_name += va( "#__%02d%02d", ( int )_usage, ( int )_cube );
 	if( extension.Length() > 0 )
 	{
@@ -456,14 +456,14 @@ void idImage::ActuallyLoadImage( bool fromBackEnd )
 	{
 		return;
 	}
-	
+
 	// this is the ONLY place generatorFunction will ever be called
 	if( generatorFunction )
 	{
 		generatorFunction( this );
 		return;
 	}
-	
+
 	if( com_productionMode.GetInteger() != 0 )
 	{
 		sourceFileTime = FILE_NOT_FOUND_TIMESTAMP;
@@ -493,16 +493,16 @@ void idImage::ActuallyLoadImage( bool fromBackEnd )
 			R_LoadImageProgram( GetName(), NULL, NULL, NULL, &sourceFileTime, &usage );
 		}
 	}
-	
+
 	// Figure out opts.colorFormat and opts.format so we can make sure the binary image is up to date
 	DeriveOpts();
-	
+
 	idStrStatic< MAX_OSPATH > generatedName = GetName();
 	GetGeneratedName( generatedName, usage, cubeFiles );
-	
+
 	idBinaryImage im( generatedName );
 	binaryFileTime = im.LoadFromGeneratedFile( sourceFileTime );
-	
+
 	// BFHACK, do not want to tweak on buildgame so catch these images here
 #if 0
 	if( binaryFileTime == FILE_NOT_FOUND_TIMESTAMP && fileSystem->UsingResourceFiles() )
@@ -548,26 +548,26 @@ void idImage::ActuallyLoadImage( bool fromBackEnd )
 		}
 	}
 #endif
-	
+
 	const bimageFile_t& header = im.GetFileHeader();
-	
+
 	// RB begin
 	if( image_exportPNG.GetBool() && ( usage == TD_FONT ) && binaryFileTime != FILE_NOT_FOUND_TIMESTAMP )
 	{
 		const bimageImage_t& img = im.GetImageHeader( 0 );
-		
+
 		const byte* data = im.GetImageData( 0 );
-		
+
 		//( img.level, 0, 0, img.destZ, img.width, img.height, data );
-		
+
 		idTempArray<byte> rgba( img.width * img.height * 4 );
 		memset( rgba.Ptr(), 255, rgba.Size() );
-		
+
 		if( header.format == FMT_DXT1 )
 		{
 			idDxtDecoder dxt;
 			dxt.DecompressImageDXT1( data, rgba.Ptr(), img.width, img.height );
-			
+
 			if( header.colorFormat == CFM_GREEN_ALPHA )
 			{
 				byte* pic = rgba.Ptr();
@@ -583,7 +583,7 @@ void idImage::ActuallyLoadImage( bool fromBackEnd )
 		else if( header.format == FMT_DXT5 )
 		{
 			idDxtDecoder dxt;
-			
+
 			if( header.colorFormat == CFM_NORMAL_DXT5 )
 			{
 				dxt.DecompressNormalMapDXT5( data, rgba.Ptr(), img.width, img.height );
@@ -594,7 +594,7 @@ void idImage::ActuallyLoadImage( bool fromBackEnd )
 			}
 			else
 			{
-			
+
 				dxt.DecompressImageDXT5( data, rgba.Ptr(), img.width, img.height );
 			}
 		}
@@ -647,15 +647,15 @@ void idImage::ActuallyLoadImage( bool fromBackEnd )
 				pic[ i ] = data[ i ];
 			}
 		}
-		
+
 		idStr pngFileNameExport = generatedName;
 		pngFileNameExport.SetFileExtension( ".png" );
-		
+
 		R_WritePNG( pngFileNameExport, rgba.Ptr(), 4, img.width, img.height, true, "fs_basepath" );
 	}
 	// RB end
-	
-	
+
+
 	// RB TODO
 	if( /*( fileSystem->InProductionMode() && binaryFileTime != FILE_NOT_FOUND_TIMESTAMP ) ||*/ ( ( binaryFileTime != FILE_NOT_FOUND_TIMESTAMP )
 			&& ( header.colorFormat == opts.colorFormat )
@@ -669,7 +669,7 @@ void idImage::ActuallyLoadImage( bool fromBackEnd )
 		opts.colorFormat = ( textureColor_t )header.colorFormat;
 		opts.format = ( textureFormat_t )header.format;
 		opts.textureType = ( textureType_t )header.textureType;
-		
+
 		/*
 		if( cvarSystem->GetCVarBool( "fs_buildresources" ) )
 		{
@@ -684,13 +684,13 @@ void idImage::ActuallyLoadImage( bool fromBackEnd )
 		{
 			int size;
 			byte* pics[6];
-			
+
 			if( !R_LoadCubeImages( GetName(), cubeFiles, pics, &size, &sourceFileTime ) || size == 0 )
 			{
 				idLib::Warning( "Couldn't load cube image: %s", GetName() );
 				return;
 			}
-			
+
 			opts.textureType = TT_CUBIC;
 			repeat = TR_CLAMP;
 			opts.width = size;
@@ -699,7 +699,7 @@ void idImage::ActuallyLoadImage( bool fromBackEnd )
 			DeriveOpts();
 			im.LoadCubeFromMemory( size, ( const byte** )pics, opts.numLevels, opts.format, opts.gammaMips );
 			repeat = TR_CLAMP;
-			
+
 			for( int i = 0; i < 6; i++ )
 			{
 				if( pics[i] )
@@ -712,10 +712,10 @@ void idImage::ActuallyLoadImage( bool fromBackEnd )
 		{
 			int width, height;
 			byte* pic;
-			
+
 			// load the full specification, and perform any image program calculations
 			R_LoadImageProgram( GetName(), &pic, &width, &height, &sourceFileTime, &usage );
-			
+
 			if( pic == NULL )
 			{
 				idLib::Warning( "Couldn't load image: %s : %s", GetName(), generatedName.c_str() );
@@ -725,7 +725,7 @@ void idImage::ActuallyLoadImage( bool fromBackEnd )
 				opts.numLevels = 1;
 				DeriveOpts();
 				AllocImage();
-				
+
 				// clear the data so it's not left uninitialized
 				idTempArray<byte> clear( opts.width * opts.height * 4 );
 				memset( clear.Ptr(), 0, clear.Size() );
@@ -733,24 +733,24 @@ void idImage::ActuallyLoadImage( bool fromBackEnd )
 				{
 					SubImageUpload( level, 0, 0, 0, opts.width >> level, opts.height >> level, clear.Ptr() );
 				}
-				
+
 				return;
 			}
-			
+
 			opts.width = width;
 			opts.height = height;
 			opts.numLevels = 0;
 			DeriveOpts();
 			im.Load2DFromMemory( opts.width, opts.height, pic, opts.numLevels, opts.format, opts.colorFormat, opts.gammaMips );
-			
+
 			Mem_Free( pic );
 		}
 		binaryFileTime = im.WriteGeneratedFile( sourceFileTime );
 	}
-	
+
 	AllocImage();
-	
-	
+
+
 	for( int i = 0; i < im.NumImages(); i++ )
 	{
 		const bimageImage_t& img = im.GetImageHeader( i );
@@ -770,16 +770,16 @@ void idImage::Bind()
 {
 
 	RENDERLOG_PRINTF( "idImage::Bind( %s )\n", GetName() );
-	
+
 	// load the image if necessary (FIXME: not SMP safe!)
 	if( !IsLoaded() )
 	{
 		// load the image on demand here, which isn't our normal game operating mode
 		ActuallyLoadImage( true );
 	}
-	
+
 	const int texUnit = backEnd.glState.currenttmu;
-	
+
 	// RB: added support for more types
 	tmu_t* tmu = &backEnd.glState.tmu[texUnit];
 	// bind the texture
@@ -788,7 +788,7 @@ void idImage::Bind()
 		if( tmu->current2DMap != texnum )
 		{
 			tmu->current2DMap = texnum;
-			
+
 #if !defined(USE_GLES2) && !defined(USE_GLES3)
 			if( glConfig.directStateAccess )
 			{
@@ -807,7 +807,7 @@ void idImage::Bind()
 		if( tmu->currentCubeMap != texnum )
 		{
 			tmu->currentCubeMap = texnum;
-			
+
 #if !defined(USE_GLES2) && !defined(USE_GLES3)
 			if( glConfig.directStateAccess )
 			{
@@ -826,7 +826,7 @@ void idImage::Bind()
 		if( tmu->current2DArray != texnum )
 		{
 			tmu->current2DArray = texnum;
-			
+
 #if !defined(USE_GLES2) && !defined(USE_GLES3)
 			if( glConfig.directStateAccess )
 			{
@@ -845,7 +845,7 @@ void idImage::Bind()
 		if( tmu->current2DMap != texnum )
 		{
 			tmu->current2DMap = texnum;
-			
+
 #if !defined(USE_GLES2) && !defined(USE_GLES3)
 			if( glConfig.directStateAccess )
 			{
@@ -902,27 +902,27 @@ void idImage::CopyFramebuffer( int x, int y, int imageWidth, int imageHeight )
 			//idLib::FatalError( "%s: bad texture type %d", GetName(), opts.textureType );
 			return;
 	}
-	
+
 	glBindTexture( target, texnum );
-	
+
 #if !defined(USE_GLES2)
 	if( Framebuffer::IsDefaultFramebufferActive() )
 	{
 		glReadBuffer( GL_BACK );
 	}
 #endif
-	
+
 	opts.width = imageWidth;
 	opts.height = imageHeight;
-	
+
 #if defined(USE_GLES2)
 	glCopyTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, x, y, imageWidth, imageHeight, 0 );
 #else
 	if( r_useHDR.GetBool() && globalFramebuffers.hdrFBO->IsBound() )
 	{
-	
+
 		//if( backEnd.glState.currentFramebuffer != NULL && backEnd.glState.currentFramebuffer->IsMultiSampled() )
-	
+
 		if( globalFramebuffers.hdrFBO->IsMultiSampled() )
 		{
 			glBindFramebuffer( GL_READ_FRAMEBUFFER, globalFramebuffers.hdrFBO->GetFramebuffer() );
@@ -931,11 +931,11 @@ void idImage::CopyFramebuffer( int x, int y, int imageWidth, int imageHeight )
 							   0, 0, glConfig.nativeScreenWidth, glConfig.nativeScreenHeight,
 							   GL_COLOR_BUFFER_BIT,
 							   GL_LINEAR );
-	
+
 			globalFramebuffers.hdrNonMSAAFBO->Bind();
-	
+
 			glCopyTexImage2D( target, 0, GL_RGBA16F, x, y, imageWidth, imageHeight, 0 );
-	
+
 			globalFramebuffers.hdrFBO->Bind();
 		}
 		else
@@ -948,14 +948,14 @@ void idImage::CopyFramebuffer( int x, int y, int imageWidth, int imageHeight )
 		glCopyTexImage2D( target, 0, GL_RGBA8, x, y, imageWidth, imageHeight, 0 );
 	}
 #endif
-	
+
 	// these shouldn't be necessary if the image was initialized properly
 	glTexParameterf( target, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
 	glTexParameterf( target, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
-	
+
 	glTexParameterf( target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
 	glTexParameterf( target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
-	
+
 	backEnd.pc.c_copyFrameBuffer++;
 }
 
@@ -967,11 +967,11 @@ CopyDepthbuffer
 void idImage::CopyDepthbuffer( int x, int y, int imageWidth, int imageHeight )
 {
 	glBindTexture( ( opts.textureType == TT_CUBIC ) ? GL_TEXTURE_CUBE_MAP : GL_TEXTURE_2D, texnum );
-	
+
 	opts.width = imageWidth;
 	opts.height = imageHeight;
 	glCopyTexImage2D( GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, x, y, imageWidth, imageHeight, 0 );
-	
+
 	backEnd.pc.c_copyFrameBuffer++;
 }
 
@@ -994,7 +994,7 @@ void idImage::UploadScratch( const byte* data, int cols, int rows )
 		{
 			pic[i] = data + cols * rows * 4 * i;
 		}
-		
+
 		if( opts.textureType != TT_CUBIC || usage != TD_LOOKUP_TABLE_RGBA )
 		{
 			GenerateCubeImage( pic, cols, TF_LINEAR, TD_LOOKUP_TABLE_RGBA );
@@ -1011,7 +1011,7 @@ void idImage::UploadScratch( const byte* data, int cols, int rows )
 		{
 			SubImageUpload( 0, 0, 0, i, opts.width, opts.height, pic[i] );
 		}
-		
+
 	}
 	else
 	{
@@ -1069,7 +1069,7 @@ void idImage::Print() const
 	{
 		common->Printf( " " );
 	}
-	
+
 	switch( opts.textureType )
 	{
 		case TT_2D:
@@ -1082,9 +1082,9 @@ void idImage::Print() const
 			common->Printf( "<BAD TYPE:%i>", opts.textureType );
 			break;
 	}
-	
+
 	common->Printf( "%4i %4i ",	opts.width, opts.height );
-	
+
 	switch( opts.format )
 	{
 #define NAME_FORMAT( x ) case FMT_##x: common->Printf( "%-16s ", #x ); break;
@@ -1108,7 +1108,7 @@ void idImage::Print() const
 			common->Printf( "<%3i>", opts.format );
 			break;
 	}
-	
+
 	switch( filter )
 	{
 		case TF_DEFAULT:
@@ -1124,7 +1124,7 @@ void idImage::Print() const
 			common->Printf( "<BAD FILTER:%i>", filter );
 			break;
 	}
-	
+
 	switch( repeat )
 	{
 		case TR_REPEAT:
@@ -1143,9 +1143,9 @@ void idImage::Print() const
 			common->Printf( "<BAD REPEAT:%i>", repeat );
 			break;
 	}
-	
+
 	common->Printf( "%4ik ", StorageSize() / 1024 );
-	
+
 	common->Printf( " %s\n", GetName() );
 }
 
@@ -1163,7 +1163,7 @@ void idImage::Reload( bool force )
 		generatorFunction( this );
 		return;
 	}
-	
+
 	// check file times
 	if( !force )
 	{
@@ -1182,11 +1182,11 @@ void idImage::Reload( bool force )
 			return;
 		}
 	}
-	
+
 	common->DPrintf( "reloading %s.\n", GetName() );
-	
+
 	PurgeImage();
-	
+
 	// Load is from the front end, so the back end must be synced
 	ActuallyLoadImage( false );
 }

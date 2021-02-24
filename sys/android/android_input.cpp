@@ -60,11 +60,11 @@ struct motion_poll_t
 	int value2;
 	int value3;
 	int value4;
-	
+
 	motion_poll_t()
 	{
 	}
-	
+
 	motion_poll_t( int a, int v, int v2, int v3, int v4 )
 	{
 		action = a;
@@ -79,11 +79,11 @@ struct mouse_poll_t
 {
 	int action;
 	int value;
-	
+
 	mouse_poll_t()
 	{
 	}
-	
+
 	mouse_poll_t( int a, int v )
 	{
 		action = a;
@@ -100,14 +100,16 @@ static idList<mouse_poll_t> mouse_polls;
 void JE_QueueKeyEvent( int key, int state )
 {
 	if( !common || !common->IsInitialized() )
+	{
 		return;
-		
+	}
+
 	common->Printf( "JE_QueueKeyEvent( key = %i, state = %i )\n", key, state );
-	
+
 	Posix_QueEvent( SE_KEY, key, state, 0, NULL );
 	//Posix_QueEvent( SE_KEY, s_scantokey[key], state, 0, NULL);
 	//Posix_QueEvent( SE_KEY, s_scantokey[key], false, 0, NULL);
-	
+
 	if( state == 1 && ( key >= ' ' && key <= 127 ) )
 	{
 		Posix_QueEvent( SE_CHAR, key, 0, 0, NULL );
@@ -120,31 +122,33 @@ enum MotionEventAction
 	MOTION_EVENT_ACTION_DOWN = 0,
 	MOTION_EVENT_ACTION_UP = 1,
 	MOTION_EVENT_ACTION_MOVE = 2,
-	
+
 	MOTION_EVENT_ACTION_POINTER_1_DOWN = 5,
 	MOTION_EVENT_ACTION_POINTER_1_UP = 6,
-	
+
 	MOTION_EVENT_ACTION_POINTER_2_DOWN = 261,
 	MOTION_EVENT_ACTION_POINTER_2_UP = 262,
-	
+
 	MOTION_EVENT_ACTION_POINTER_3_DOWN = 517,
 	MOTION_EVENT_ACTION_POINTER_3_UP = 518,
-	
+
 };
 
 void JE_QueueMotionEvent( int action, float x, float y, float pressure )
 {
 #if 0
 	if( !common || !common->IsInitialized() )
+	{
 		return;
-		
+	}
+
 	common->Printf( "JE_QueueMotionEvent( action = %i, x = %f, y = %f, pressure = %f )\n", action, x, y, pressure );
 #endif
-	
+
 #if 1
 	int rx = idMath::ClampInt( 0, 999, idMath::Ftoi( ( x / ( float )glConfig.nativeScreenWidth ) * 1000 ) );
 	int ry = idMath::ClampInt( 0, 999, idMath::Ftoi( ( y / ( float )glConfig.nativeScreenHeight ) * 1000 ) );
-	
+
 	switch( action )
 	{
 		case MOTION_EVENT_ACTION_DOWN:
@@ -152,53 +156,53 @@ void JE_QueueMotionEvent( int action, float x, float y, float pressure )
 		case MOTION_EVENT_ACTION_POINTER_2_DOWN:
 			Posix_QueEvent( SE_TOUCH_MOTION_DOWN, rx, ry, 0, NULL );
 			//Posix_QueEvent( SE_KEY, K_MOUSE1, true, 0, NULL );
-			
+
 			motion_polls.Append( motion_poll_t( TOUCH_MOTION_DOWN, rx, ry, 0, 0 ) );
 			break;
-			
+
 		case MOTION_EVENT_ACTION_UP:
 		case MOTION_EVENT_ACTION_POINTER_1_UP:
 		case MOTION_EVENT_ACTION_POINTER_2_UP:
 			Posix_QueEvent( SE_TOUCH_MOTION_UP, rx, ry, 0, NULL );
-			
+
 			//if( ( idMath::Fabs( mdx - x ) < 3 ) && ( idMath::Fabs( mdy - y ) < 3 ) )
 			{
 				//Posix_QueEvent( SE_KEY, K_MOUSE1, false, 0, NULL );
 			}
-			
+
 			motion_polls.Append( motion_poll_t( TOUCH_MOTION_UP, rx, ry , 0, 0 ) );
 			break;
-			
+
 		case MOTION_EVENT_ACTION_MOVE:
 		{
 			int dx = ( ( int ) x - mwx );
 			int dy = ( ( int ) y - mwy );
-			
+
 			Posix_QueEvent( SE_TOUCH_MOTION_MOVE, rx, ry, 0, NULL );
-			
+
 			motion_polls.Append( motion_poll_t( TOUCH_MOTION_DELTA_XY, rx, ry, dx, dy ) );
 			break;
 		}
 	}
 #else
-	
+
 	int b, dx, dy;
-	
+
 	switch( action )
 	{
 		case MOTION_EVENT_ACTION_DOWN:
 			mdx = x;
 			mdy = y;
-	
+
 			dx = ( ( int ) x - mwx );
 			dy = ( ( int ) y - mwy );
-	
+
 			Posix_QueEvent( SE_MOUSE, dx, dy, 0, NULL );
-	
+
 			mx += dx;
 			my += dy;
 			break;
-	
+
 		case MOTION_EVENT_ACTION_UP:
 			//if( ( idMath::Fabs( mdx - x ) < 3 ) && ( idMath::Fabs( mdy - y ) < 3 ) )
 		{
@@ -216,9 +220,9 @@ void JE_QueueMotionEvent( int action, float x, float y, float pressure )
 			if (x == glConfig.vidWidth / 2 && y == glConfig.vidHeight / 2) {
 				mwx = glConfig.vidWidth / 2;
 				mwy = glConfig.vidHeight / 2;
-	
+
 				Posix_QueEvent( SE_MOUSE, mx, my, 0, NULL);
-	
+
 				//Posix_AddMousePollEvent( M_DELTAX, mx );
 				//if (!Posix_AddMousePollEvent( M_DELTAY, my ))
 				//	return;
@@ -226,19 +230,19 @@ void JE_QueueMotionEvent( int action, float x, float y, float pressure )
 				break;
 			}
 			*/
-	
-	
+
+
 			dx = ( ( int ) x - mwx );
 			dy = ( ( int ) y - mwy );
-	
+
 			Posix_QueEvent( SE_MOUSE, dx, dy, 0, NULL );
-	
+
 			mx += dx;
 			my += dy;
 			break;
 	}
 #endif
-	
+
 	mwx = x;
 	mwy = y;
 }
@@ -254,7 +258,7 @@ void JE_QueueConsoleEvent( const char* s )
 	{
 		char* b;
 		int len;
-		
+
 		len = strlen( s ) + 1;
 		b = ( char* )Mem_Alloc( len );
 		strcpy( b, s );
@@ -265,16 +269,20 @@ void JE_QueueConsoleEvent( const char* s )
 int JE_IsConsoleActive()
 {
 	if( console && console->Active() )
+	{
 		return 1;
-		
+	}
+
 	return 0;
 }
 
 int JE_IsMenuActive()
 {
 	if( session && session->IsMenuActive() )
+	{
 		return 1;
-		
+	}
+
 	return 0;
 }
 
@@ -316,11 +324,11 @@ int				Sys_PollMouseInputEvents( int mouseEvents[MAX_MOUSE_EVENTS][2] )
 		common->Printf( "Sys_PollMouseInputEvents() = %i )\n", mouse_polls.Num() );
 	}
 #endif
-	
+
 	int numEvents =  mouse_polls.Num();
-	
+
 	mouse_polls.SetNum( 0 );
-	
+
 	return numEvents;
 }
 
@@ -334,7 +342,7 @@ int				Sys_PollTouchScreenInputEvents()
 		common->Printf( "Sys_PollTouchScreenInputEvents() = %i )\n", motion_polls.Num() );
 	}
 #endif
-	
+
 	return motion_polls.Num();
 }
 
@@ -344,13 +352,13 @@ int				Sys_ReturnTouchScreenInputEvent( const int n, int& action, int& value, in
 	{
 		return 0;
 	}
-	
+
 	action = motion_polls[ n ].action;
 	value = motion_polls[ n ].value;
 	value2 = motion_polls[ n ].value2;
 	value3 = motion_polls[ n ].value3;
 	value4 = motion_polls[ n ].value4;
-	
+
 	return 1;
 }
 
@@ -410,16 +418,18 @@ void JE_QueueJoystickEvent( int axis, float value )
 {
 #if 0
 	if( !common || !common->IsInitialized() )
+	{
 		return;
-		
+	}
+
 	common->Printf( "JE_QueueJoystickEvent( axis = %i, value = %f )\n", axis, value );
 #endif
-	
+
 	if( axis < 0 || axis >= MAX_JOYSTICK_AXIS )
 	{
 		return;
 	}
-	
+
 	s_joystickAxis[axis] = value;
 }
 
@@ -438,19 +448,21 @@ static int s_pollGamepadEventsCount;
 static bool IN_AddGamepadPollEvent( int action, int value, int value2 )
 {
 	if( s_pollGamepadEventsCount >= MAX_POLL_EVENTS + POLL_EVENTS_HEADROOM )
+	{
 		common->FatalError( "pollGamepadEventsCount exceeded MAX_POLL_EVENT + POLL_EVENTS_HEADROOM\n" );
-		
+	}
+
 	s_pollGamepadEvents[s_pollGamepadEventsCount].action = action;
 	s_pollGamepadEvents[s_pollGamepadEventsCount].value = value;
 	s_pollGamepadEvents[s_pollGamepadEventsCount].value2 = value2;
 	s_pollGamepadEventsCount++;
-	
+
 	if( s_pollGamepadEventsCount >= MAX_POLL_EVENTS )
 	{
 		common->DPrintf( "WARNING: reached MAX_POLL_EVENT pollGamepadEventsCount\n" );
 		return false;
 	}
-	
+
 	return true;
 }
 
@@ -472,16 +484,16 @@ static void IN_TouchScreenJoystickAxis( int event, float value, float range )
 void Sys_SetRumble( int device, int low, int hi )
 {
 	// TODO
-	
+
 	//win32.g_Joystick.SetRumble( device, low, hi );
 }
 
 int Sys_PollJoystickInputEvents( int deviceNum )
 {
 	//return win32.g_Joystick.PollInputEvents( deviceNum );
-	
+
 	s_pollGamepadEventsCount = 0;
-	
+
 	// use left analog stick for strafing
 #if 1
 	IN_AddGamepadPollEvent( J_AXIS_LEFT_X, ( s_joystickAxis[AXIS_LEFT_X] * 32767 ), 0 );
@@ -490,7 +502,7 @@ int Sys_PollJoystickInputEvents( int deviceNum )
 	IN_AddGamepadPollEvent( J_AXIS_LEFT_X, ( s_joystickAxis[AXIS_LEFT_X] * 0.5 + 0.5 ) * 32767, 0 );
 	IN_AddGamepadPollEvent( J_AXIS_LEFT_Y, ( s_joystickAxis[AXIS_LEFT_Y] * 0.5 + 0.5 ) * 32767, 0 );
 #endif
-	
+
 	return s_pollGamepadEventsCount;
 }
 
@@ -498,15 +510,15 @@ int Sys_PollJoystickInputEvents( int deviceNum )
 int Sys_ReturnJoystickInputEvent( const int n, int& action, int& value )
 {
 	// return win32.g_Joystick.ReturnInputEvent( n, action, value );
-	
+
 	if( n >= s_pollGamepadEventsCount )
 	{
 		return 0;
 	}
-	
+
 	action = s_pollGamepadEvents[ n ].action;
 	value = s_pollGamepadEvents[ n ].value;
-	
+
 	return 1;
 }
 

@@ -38,9 +38,9 @@ If you have questions concerning this license or the applicable additional terms
 #include "../../renderer/model_local.h"	// for idRenderModelLiquid
 
 #ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char		THIS_FILE[] = __FILE__;
+	#define new DEBUG_NEW
+	#undef THIS_FILE
+	static char		THIS_FILE[] = __FILE__;
 #endif
 
 const char*		g_pDimStrings[] = { "x:%.f", "y:%.f", "z:%.f" };
@@ -155,7 +155,7 @@ bool CDragPoint::PointWithin( idVec3 p, int nView )
 			return true;
 		}
 	}
-	
+
 	return false;
 }
 
@@ -170,12 +170,12 @@ CDragPoint* PointRay( const idVec3& org, const idVec3& dir, float* dist )
 	idVec3		temp;
 	CDragPoint*	drag = NULL;
 	CDragPoint*	priority = NULL;
-	
+
 	// find the point closest to the ray
 	float scale = g_pParentWnd->ActiveXY()->Scale();
 	besti = -1;
 	bestd = 12 / scale / 2;
-	
+
 	int count = dragPoints.GetSize();
 	for( i = 0; i < count; i++ )
 	{
@@ -199,18 +199,18 @@ CDragPoint* PointRay( const idVec3& org, const idVec3& dir, float* dist )
 			}
 		}
 	}
-	
+
 	if( besti == -1 )
 	{
 		return NULL;
 	}
-	
+
 	drag = reinterpret_cast < CDragPoint* >( dragPoints[besti] );
 	if( priority && !drag->priority )
 	{
 		drag = priority;
 	}
-	
+
 	return drag;
 }
 
@@ -229,7 +229,7 @@ void ClearSelectablePoints( brush_t* b )
 		CPtrArray	ptr;
 		ptr.Copy( dragPoints );
 		dragPoints.RemoveAll();
-		
+
 		int count = ptr.GetSize();
 		for( int i = 0; i < count; i++ )
 		{
@@ -280,7 +280,7 @@ void VectorToAngles( idVec3 vec, idVec3 angles )
 {
 	float	forward;
 	float	yaw, pitch;
-	
+
 	if( ( vec[0] == 0 ) && ( vec[1] == 0 ) )
 	{
 		yaw = 0;
@@ -300,7 +300,7 @@ void VectorToAngles( idVec3 vec, idVec3 angles )
 		{
 			yaw += 360;
 		}
-		
+
 		forward = ( float )idMath::Sqrt( vec[0] * vec[0] + vec[1] * vec[1] );
 		pitch = RAD2DEG( atan2( vec[2], forward ) );
 		if( pitch < 0 )
@@ -308,7 +308,7 @@ void VectorToAngles( idVec3 vec, idVec3 angles )
 			pitch += 360;
 		}
 	}
-	
+
 	angles[0] = pitch;
 	angles[1] = yaw;
 	angles[2] = 0;
@@ -338,33 +338,33 @@ static void RotateLight( idVec3& target, idVec3& up, idVec3& right, const idVec3
 	idVec3	normal;
 	double	angle, dist, d, len;
 	idMat3	rot;
-	
+
 	// calculate new target
 	newtarget = target + delta;
-	
+
 	// get the up and right vector relative to the light origin
 	up += target;
 	right += target;
-	
+
 	len = target.Length() * newtarget.Length();
-	
+
 	if( len > 0.1 )
 	{
 		// calculate the rotation angle between the vectors
 		double	dp = target * newtarget;
 		double	dv = dp / len;
-		
+
 		angle = RAD2DEG( idMath::ACos( dv ) );
-		
+
 		// get a vector orthogonal to the rotation plane
 		cross = target.Cross( newtarget );
 		cross.Normalize();
-		
+
 		if( cross[0] || cross[1] || cross[2] )
 		{
 			// build the rotation matrix
 			rot = idRotation( vec3_origin, cross, angle ).ToMat3();
-			
+
 			rot.ProjectVector( target, dst );
 			target = dst;
 			rot.ProjectVector( up, dst );
@@ -373,7 +373,7 @@ static void RotateLight( idVec3& target, idVec3& up, idVec3& right, const idVec3
 			right = dst;
 		}
 	}
-	
+
 	//
 	// project the up and right vectors onto a plane that goes through the target and
 	// has normal vector target.Normalize()
@@ -381,13 +381,13 @@ static void RotateLight( idVec3& target, idVec3& up, idVec3& right, const idVec3
 	normal = target;
 	normal.Normalize();
 	dist = normal * target;
-	
+
 	d = ( normal * up ) - dist;
 	up -= d * normal;
-	
+
 	d = ( normal * right ) - dist;
 	right -= d * normal;
-	
+
 	//
 	// FIXME: maybe calculate the right vector with a cross product between the target
 	// and up vector, just to make sure the up and right vectors are perpendicular
@@ -395,7 +395,7 @@ static void RotateLight( idVec3& target, idVec3& up, idVec3& right, const idVec3
 	//
 	up -= target;
 	right -= target;
-	
+
 	// move the target in the (target - light_origin) direction
 	target = newtarget;
 	VectorSnapGrid( target );
@@ -493,12 +493,12 @@ bool UpdateActiveDragPoint( const idVec3& move )
 			end += ( activeDrag->pBrush->trackLightOrigin ) ? activeDrag->pBrush->owner->lightOrigin : activeDrag->pBrush->owner->origin;
 			UpdateSelectablePoint( activeDrag->pBrush, Brush_TransformedPoint( activeDrag->pBrush, end ), LIGHT_CENTER );
 		}
-		
+
 		// FIXME: just build the frustrum values
 		Brush_Build( activeDrag->pBrush );
 		return true;
 	}
-	
+
 	return false;
 }
 
@@ -509,7 +509,7 @@ bool UpdateActiveDragPoint( const idVec3& move )
 bool SetDragPointCursor( idVec3 p, int nView )
 {
 	activeDrag = NULL;
-	
+
 	int numDragPoints = dragPoints.GetSize();
 	for( int i = 0; i < numDragPoints; i++ )
 	{
@@ -519,7 +519,7 @@ bool SetDragPointCursor( idVec3 p, int nView )
 			return true;
 		}
 	}
-	
+
 	return false;
 }
 
@@ -562,7 +562,7 @@ CXYWnd::CXYWnd()
 	g_brFrontSplits.next = &g_brFrontSplits;
 	g_brBackSplits.next = &g_brBackSplits;
 	m_bActive = false;
-	
+
 	m_bRButtonDown = false;
 	m_nUpdateBits = W_XY;
 	g_bPathMode = false;
@@ -588,7 +588,7 @@ CXYWnd::~CXYWnd()
 		delete pMenu;
 		nSize--;
 	}
-	
+
 	g_ptrMenus.RemoveAll();
 	m_mnuDrop.DestroyMenu();
 }
@@ -648,7 +648,7 @@ BOOL CXYWnd::PreCreateWindow( CREATESTRUCT& cs )
 			Error( "CCamWnd RegisterClass: failed" );
 		}
 	}
-	
+
 	cs.lpszClass = XY_WINDOW_CLASS;
 	cs.lpszName = "VIEW";
 	if( cs.style != QE3_CHILDSTYLE )
@@ -656,7 +656,7 @@ BOOL CXYWnd::PreCreateWindow( CREATESTRUCT& cs )
 		cs.style = QE3_SPLITTER_STYLE;
 	}
 	cs.dwExStyle = WS_EX_TOOLWINDOW;	// sikk - Added - Tool window uses smaller tital bar (more screen space for editing)
-	
+
 	return CWnd::PreCreateWindow( cs );
 }
 
@@ -710,21 +710,21 @@ LONG WINAPI XYWndProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
 	{
 		case WM_DESTROY:
 			return 0;
-			
+
 		case WM_NCCALCSIZE: // don't let windows copy pixels
 			DefWindowProc( hWnd, uMsg, wParam, lParam );
 			return WVR_REDRAW;
-			
+
 		case WM_KILLFOCUS:
 		case WM_SETFOCUS:
 			SendMessage( hWnd, WM_NCACTIVATE, uMsg == WM_SETFOCUS, 0 );
 			return 0;
-			
+
 		case WM_CLOSE:
 			DestroyWindow( hWnd );
 			return 0;
 	}
-	
+
 	return DefWindowProc( hWnd, uMsg, wParam, lParam );
 }
 
@@ -735,7 +735,7 @@ LONG WINAPI XYWndProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
 static void WXY_InitPixelFormat( PIXELFORMATDESCRIPTOR* pPFD )
 {
 	memset( pPFD, 0, sizeof( *pPFD ) );
-	
+
 	pPFD->nSize = sizeof( PIXELFORMATDESCRIPTOR );
 	pPFD->nVersion = 1;
 	pPFD->dwFlags = PFD_DOUBLEBUFFER | PFD_SUPPORT_OPENGL | PFD_DRAW_TO_WINDOW;
@@ -752,9 +752,9 @@ static void WXY_InitPixelFormat( PIXELFORMATDESCRIPTOR* pPFD )
 void WXY_Print()
 {
 	DOCINFO		di;
-	
+
 	PRINTDLG	pd;
-	
+
 	/* initialize the PRINTDLG struct and execute it */
 	memset( &pd, 0, sizeof( pd ) );
 	pd.lStructSize = sizeof( pd );
@@ -766,7 +766,7 @@ void WXY_Print()
 		g_pParentWnd->MessageBox( "Could not PrintDlg()", "QE4 Print Error", MB_OK | MB_ICONERROR );
 		return;
 	}
-	
+
 	/* StartDoc */
 	memset( &di, 0, sizeof( di ) );
 	di.cbSize = sizeof( di );
@@ -776,7 +776,7 @@ void WXY_Print()
 		g_pParentWnd->MessageBox( "Could not StartDoc()", "QE4 Print Error", MB_OK | MB_ICONERROR );
 		return;
 	}
-	
+
 	/* StartPage */
 	if( StartPage( pd.hDC ) <= 0 )
 	{
@@ -786,27 +786,27 @@ void WXY_Print()
 	{
 		int		bmwidth = 320, bmheight = 320;
 		int		pwidth, pheight;
-		
+
 		RECT	r;
-		
+
 		GetWindowRect( g_pParentWnd->GetXYWnd()->GetSafeHwnd(), &r );
-		
+
 		bmwidth = r.right - r.left;
 		bmheight = r.bottom - r.top;
-		
+
 		pwidth = GetDeviceCaps( pd.hDC, PHYSICALWIDTH ) - GetDeviceCaps( pd.hDC, PHYSICALOFFSETX );
 		pheight = GetDeviceCaps( pd.hDC, PHYSICALHEIGHT ) - GetDeviceCaps( pd.hDC, PHYSICALOFFSETY );
-		
+
 		StretchBlt( pd.hDC, 0, 0, pwidth, pheight, s_hdcXY, 0, 0, bmwidth, bmheight, SRCCOPY );
 	}
-	
+
 	/* EndPage and EndDoc */
 	if( EndPage( pd.hDC ) <= 0 )
 	{
 		g_pParentWnd->MessageBox( "QE4 Print Error", "Could not EndPage()", MB_OK | MB_ICONERROR );
 		return;
 	}
-	
+
 	if( EndDoc( pd.hDC ) <= 0 )
 	{
 		g_pParentWnd->MessageBox( "QE4 Print Error", "Could not EndDoc()", MB_OK | MB_ICONERROR );
@@ -824,10 +824,10 @@ int CXYWnd::OnCreate( LPCREATESTRUCT lpCreateStruct )
 	{
 		return -1;
 	}
-	
+
 	s_hdcXY = ::GetDC( GetSafeHwnd() );
 	QEW_SetupPixelFormat( s_hdcXY, false );
-	
+
 	glPolygonStipple( ( unsigned char* )s_stipple );
 	glLineStipple( 3, 0xaaaa );
 	return 0;
@@ -883,9 +883,9 @@ void CXYWnd::DropClipPoint( UINT nFlags, CPoint point )
 			g_Clip1.Set( true );
 			g_Clip1.m_ptScreen = point;
 		}
-		
+
 		SnapToPoint( point.x, rctZ.Height() - 1 - point.y, *pPt );
-		
+
 		// Put the off-viewaxis coordinate at the top or bottom of selected brushes
 		if( GetAsyncKeyState( VK_CONTROL ) & 0x8000 )
 		{
@@ -893,7 +893,7 @@ void CXYWnd::DropClipPoint( UINT nFlags, CPoint point )
 			{
 				idVec3	smins, smaxs;
 				Select_GetBounds( smins, smaxs );
-				
+
 				if( m_nViewType == XY )
 				{
 					if( GetAsyncKeyState( VK_SHIFT ) & 0x8000 )
@@ -930,7 +930,7 @@ void CXYWnd::DropClipPoint( UINT nFlags, CPoint point )
 			}
 		}
 	}
-	
+
 	Sys_UpdateWindows( XY | W_CAMERA_ICON );
 }
 
@@ -959,13 +959,13 @@ void CXYWnd::DropPathPoint( UINT nFlags, CPoint point )
 			{
 				g_pPathFunc( true, g_nPathCount );
 			}
-			
+
 			g_nPathCount = 0;
 			g_bPathMode = false;
 			g_pPathFunc = NULL;
 		}
 	}
-	
+
 	Sys_UpdateWindows( XY | W_CAMERA_ICON );
 }
 
@@ -976,7 +976,7 @@ void CXYWnd::DropPathPoint( UINT nFlags, CPoint point )
 void CXYWnd::AddPointPoint( UINT nFlags, idVec3* pVec )
 {
 	g_PointPoints[g_nPointCount].Set( true );
-	
+
 	// g_PointPoints[g_nPointCount].m_ptScreen = point;
 	g_PointPoints[g_nPointCount].m_ptClip = *pVec;
 	g_PointPoints[g_nPointCount].SetPointPtr( pVec );
@@ -992,7 +992,7 @@ void CXYWnd::OnLButtonDown( UINT nFlags, CPoint point )
 {
 	g_pParentWnd->SetActiveXY( this );
 	UndoCopy();
-	
+
 	if( g_pParentWnd->GetNurbMode() )
 	{
 		int i, num = g_pParentWnd->GetNurb()->GetNumValues();
@@ -1097,7 +1097,7 @@ void CXYWnd::ProduceSplits( brush_t** pFront, brush_t** pBack )
 						face.planepts[2][1] = selected_brushes.next->maxs[1];
 					}
 				}
-				
+
 				Brush_SplitBrushByFace( selected_brushes.next, &face, pFront, pBack );
 			}
 		}
@@ -1128,7 +1128,7 @@ void CXYWnd::ProduceSplitLists()
 	if( AnyPatchesSelected() )
 	{
 		Sys_Status( "Deslecting patches for clip operation.\n" );
-		
+
 		brush_t* next;
 		for( brush_t* pb = selected_brushes.next; pb != &selected_brushes; pb = next )
 		{
@@ -1141,12 +1141,12 @@ void CXYWnd::ProduceSplitLists()
 			}
 		}
 	}
-	
+
 	CleanList( &g_brFrontSplits );
 	CleanList( &g_brBackSplits );
 	g_brFrontSplits.next = &g_brFrontSplits;
 	g_brBackSplits.next = &g_brBackSplits;
-	
+
 	brush_t* pBrush;
 	for( pBrush = selected_brushes.next; pBrush != NULL && pBrush != &selected_brushes; pBrush = pBrush->next )
 	{
@@ -1187,13 +1187,13 @@ void CXYWnd::ProduceSplitLists()
 						face.planepts[2][1] = pBrush->maxs[1];
 					}
 				}
-				
+
 				Brush_SplitBrushByFace( pBrush, &face, &pFront, &pBack );
 				if( pBack )
 				{
 					Brush_AddToList( pBack, &g_brBackSplits );
 				}
-				
+
 				if( pFront )
 				{
 					Brush_AddToList( pFront, &g_brFrontSplits );
@@ -1228,7 +1228,7 @@ void CXYWnd::OnRButtonDown( UINT nFlags, CPoint point )
 	g_pParentWnd->SetActiveXY( this );
 	m_ptDown = point;
 	m_bRButtonDown = true;
-	
+
 	if( g_PrefsDlg.m_nMouseButtons == 3 )  	// 3 button mouse
 	{
 		if( ( GetAsyncKeyState( VK_CONTROL ) & 0x8000 ) )
@@ -1243,11 +1243,11 @@ void CXYWnd::OnRButtonDown( UINT nFlags, CPoint point )
 				g_bRogueClipMode = true;
 				DropClipPoint( nFlags, point );
 			}
-			
+
 			return;
 		}
 	}
-	
+
 	OriginalButtonDown( nFlags, point );
 }
 
@@ -1265,7 +1265,7 @@ void CXYWnd::OnLButtonUp( UINT nFlags, CPoint point )
 			g_pMovingClip = NULL;
 		}
 	}
-	
+
 	OriginalButtonUp( nFlags, point );
 }
 
@@ -1292,23 +1292,23 @@ void CXYWnd::OnRButtonUp( UINT nFlags, CPoint point )
 		{
 			bGo = false;
 		}
-		
+
 		if( ( GetAsyncKeyState( VK_CONTROL ) & 0x8000 ) )
 		{
 			bGo = false;
 		}
-		
+
 		if( ( GetAsyncKeyState( VK_SHIFT ) & 0x8000 ) )
 		{
 			bGo = false;
 		}
-		
+
 		if( bGo )
 		{
 			HandleDrop();
 		}
 	}
-	
+
 	OriginalButtonUp( nFlags, point );
 }
 
@@ -1325,7 +1325,7 @@ void CXYWnd::OriginalButtonDown( UINT nFlags, CPoint point )
 	{
 		BringWindowToTop();
 	}
-	
+
 	SetFocus();
 	SetCapture();
 	XY_MouseDown( point.x, rctZ.Height() - 1 - point.y, nFlags );
@@ -1358,7 +1358,7 @@ void CXYWnd::OnMouseMove( UINT nFlags, CPoint point )
 
 	m_ptDown.x = 0;
 	m_ptDown.y = 0;
-	
+
 	if
 	(
 		g_PrefsDlg.m_bChaseMouse == TRUE &&
@@ -1367,7 +1367,7 @@ void CXYWnd::OnMouseMove( UINT nFlags, CPoint point )
 	)
 	{
 		float	fAdjustment = ( g_qeglobals.d_gridsize / 8 * 64 ) / m_fScale;
-		
+
 		// m_ptDrag = point;
 		m_ptDragAdj.x = 0;
 		m_ptDragAdj.y = 0;
@@ -1379,7 +1379,7 @@ void CXYWnd::OnMouseMove( UINT nFlags, CPoint point )
 		{
 			m_ptDragAdj.x = fAdjustment;
 		}
-		
+
 		if( point.y < 0 )
 		{
 			m_ptDragAdj.y = -fAdjustment;
@@ -1388,17 +1388,17 @@ void CXYWnd::OnMouseMove( UINT nFlags, CPoint point )
 		{
 			m_ptDragAdj.y = fAdjustment;
 		}
-		
+
 		if( m_nTimerID == -1 )
 		{
 			m_nTimerID = SetTimer( 100, 50, NULL );
 			m_ptDrag = point;
 			m_ptDragTotal = 0;
 		}
-		
+
 		return;
 	}
-	
+
 	// else if (m_nTimerID != -1)
 	if( m_nTimerID != -1 )
 	{
@@ -1406,19 +1406,19 @@ void CXYWnd::OnMouseMove( UINT nFlags, CPoint point )
 		pressx -= m_ptDragTotal.x;
 		pressy += m_ptDragTotal.y;
 		m_nTimerID = -1;
-		
+
 		// return;
 	}
-	
+
 	bool	bCrossHair = false;
 	if( !m_bRButtonDown )
 	{
 		tdp[0] = tdp[1] = tdp[2] = 0.0;
 		SnapToPoint( point.x, m_nHeight - 1 - point.y, tdp );
-		
+
 		g_strStatus.Format( "x:: %.1f  y:: %.1f  z:: %.1f", tdp[0], tdp[1], tdp[2] );
 		g_pParentWnd->SetStatusText( 1, g_strStatus );
-		
+
 		//
 		// i need to generalize the point code.. having 3 flavors pretty much sucks.. once
 		// the new curve stuff looks like it is going to stick i will rationalize this
@@ -1436,7 +1436,7 @@ void CXYWnd::OnMouseMove( UINT nFlags, CPoint point )
 			else
 			{
 				g_pMovingPoint = NULL;
-				
+
 				int nDim1 = ( m_nViewType == YZ ) ? 1 : 0;
 				int nDim2 = ( m_nViewType == XY ) ? 1 : 2;
 				for( int n = 0; n < g_nPointCount; n++ )
@@ -1464,7 +1464,7 @@ void CXYWnd::OnMouseMove( UINT nFlags, CPoint point )
 			else
 			{
 				g_pMovingClip = NULL;
-				
+
 				int nDim1 = ( m_nViewType == YZ ) ? 1 : 0;
 				int nDim2 = ( m_nViewType == XY ) ? 1 : 2;
 				if( g_Clip1.Set() )
@@ -1479,7 +1479,7 @@ void CXYWnd::OnMouseMove( UINT nFlags, CPoint point )
 						g_pMovingClip = &g_Clip1;
 					}
 				}
-				
+
 				if( g_Clip2.Set() )
 				{
 					if
@@ -1492,7 +1492,7 @@ void CXYWnd::OnMouseMove( UINT nFlags, CPoint point )
 						g_pMovingClip = &g_Clip2;
 					}
 				}
-				
+
 				if( g_Clip3.Set() )
 				{
 					if
@@ -1506,7 +1506,7 @@ void CXYWnd::OnMouseMove( UINT nFlags, CPoint point )
 					}
 				}
 			}
-			
+
 			if( bCrossHair == false )
 			{
 				XY_MouseMoved( point.x, m_nHeight - 1 - point.y, nFlags );
@@ -1523,7 +1523,7 @@ void CXYWnd::OnMouseMove( UINT nFlags, CPoint point )
 			else
 			{
 				g_pMovingPath = NULL;
-				
+
 				int nDim1 = ( m_nViewType == YZ ) ? 1 : 0;
 				int nDim2 = ( m_nViewType == XY ) ? 1 : 2;
 				for( int n = 0; n < g_nPathCount; n++ )
@@ -1549,7 +1549,7 @@ void CXYWnd::OnMouseMove( UINT nFlags, CPoint point )
 	{
 		bCrossHair = XY_MouseMoved( point.x, m_nHeight - 1 - point.y, nFlags );
 	}
-	
+
 	if( bCrossHair )
 	{
 		SetCursor( ::LoadCursor( NULL, IDC_CROSS ) );
@@ -1558,7 +1558,7 @@ void CXYWnd::OnMouseMove( UINT nFlags, CPoint point )
 	{
 		SetCursor( ::LoadCursor( NULL, IDC_ARROW ) );
 	}
-	
+
 	/// If precision crosshair is active, force redraw of the 2d view on mouse move
 	if( m_precisionCrosshairMode != PRECISION_CROSSHAIR_NONE )
 	{
@@ -1610,7 +1610,7 @@ void CXYWnd::SetClipMode( bool bMode )
 			ReleaseCapture();
 			g_pMovingClip = NULL;
 		}
-		
+
 		CleanList( &g_brFrontSplits );
 		CleanList( &g_brBackSplits );
 		g_brFrontSplits.next = &g_brFrontSplits;
@@ -1682,17 +1682,17 @@ void CXYWnd::OnPaint()
 		common->Printf( "Please restart Q3Radiant if the Map view is not working\n" );
 		bPaint = false;
 	}
-	
+
 	if( bPaint )
 	{
 		// RB: go back to fixed function pipeline
 		renderProgManager.Unbind();
 		// RB end
-		
+
 		QE_CheckOpenGLForErrors();
 		XY_Draw();
 		QE_CheckOpenGLForErrors();
-		
+
 		if( m_nViewType != XY )
 		{
 			glPushMatrix();
@@ -1700,10 +1700,10 @@ void CXYWnd::OnPaint()
 			{
 				glRotatef( -90, 0, 1, 0 );	// put Z going up
 			}
-			
+
 			glRotatef( -90, 1, 0, 0 );		// put Z going up
 		}
-		
+
 		if( g_bCrossHairs )
 		{
 			glColor4f( 0.2f, 0.9f, 0.2f, 0.8f );
@@ -1729,10 +1729,10 @@ void CXYWnd::OnPaint()
 				glVertex3f( tdp[0], tdp[1], -16384 );
 				glVertex3f( tdp[0], tdp[1], 16384 );
 			}
-			
+
 			glEnd();
 		}
-		
+
 		if( ClipMode() )
 		{
 			glPointSize( 4 );
@@ -1742,58 +1742,58 @@ void CXYWnd::OnPaint()
 			{
 				glVertex3fv( g_Clip1 );
 			}
-			
+
 			if( g_Clip2.Set() )
 			{
 				glVertex3fv( g_Clip2 );
 			}
-			
+
 			if( g_Clip3.Set() )
 			{
 				glVertex3fv( g_Clip3 );
 			}
-			
+
 			glEnd();
 			glPointSize( 1 );
-			
+
 			CString strMsg;
 			if( g_Clip1.Set() )
 			{
 				glRasterPos3f( g_Clip1.m_ptClip[0] + 2, g_Clip1.m_ptClip[1] + 2, g_Clip1.m_ptClip[2] + 2 );
 				strMsg = "1";
-				
+
 				// strMsg.Format("1 (%f, %f, %f)", g_Clip1[0], g_Clip1[1], g_Clip1[2]);
 				glCallLists( strMsg.GetLength(), GL_UNSIGNED_BYTE, strMsg );
 			}
-			
+
 			if( g_Clip2.Set() )
 			{
 				glRasterPos3f( g_Clip2.m_ptClip[0] + 2, g_Clip2.m_ptClip[1] + 2, g_Clip2.m_ptClip[2] + 2 );
 				strMsg = "2";
-				
+
 				// strMsg.Format("2 (%f, %f, %f)", g_Clip2[0], g_Clip2[1], g_Clip2[2]);
 				glCallLists( strMsg.GetLength(), GL_UNSIGNED_BYTE, strMsg );
 			}
-			
+
 			if( g_Clip3.Set() )
 			{
 				glRasterPos3f( g_Clip3.m_ptClip[0] + 2, g_Clip3.m_ptClip[1] + 2, g_Clip3.m_ptClip[2] + 2 );
 				strMsg = "3";
-				
+
 				// strMsg.Format("3 (%f, %f, %f)", g_Clip3[0], g_Clip3[1], g_Clip3[2]);
 				glCallLists( strMsg.GetLength(), GL_UNSIGNED_BYTE, strMsg );
 			}
-			
+
 			if( g_Clip1.Set() && g_Clip2.Set() && selected_brushes.next != &selected_brushes )
 			{
 				ProduceSplitLists();
-				
+
 				brush_t* pBrush;
 				brush_t* pList = ( ( m_nViewType == XZ ) ? !g_bSwitch : g_bSwitch ) ? &g_brBackSplits : &g_brFrontSplits;
 				for( pBrush = pList->next; pBrush != NULL && pBrush != pList; pBrush = pBrush->next )
 				{
 					glColor3f( 1, 1, 0 );
-					
+
 					face_t*	face;
 					int		order;
 					for( face = pBrush->brush_faces, order = 0; face; face = face->next, order++ )
@@ -1803,35 +1803,35 @@ void CXYWnd::OnPaint()
 						{
 							continue;
 						}
-						
+
 						// draw the polygon
 						glBegin( GL_LINE_LOOP );
 						for( int i = 0; i < w->GetNumPoints(); i++ )
 						{
 							glVertex3fv( ( *w )[i].ToFloatPtr() );
 						}
-						
+
 						glEnd();
 					}
 				}
 			}
 		}
-		
+
 		if( PathMode() )
 		{
 			glPointSize( 4 );
 			glColor3fv( g_qeglobals.d_savedinfo.colors[COLOR_CLIPPER].ToFloatPtr() );
 			glBegin( GL_POINTS );
-			
+
 			int n;
 			for( n = 0; n < g_nPathCount; n++ )
 			{
 				glVertex3fv( g_PathPoints[n] );
 			}
-			
+
 			glEnd();
 			glPointSize( 1 );
-			
+
 			CString strMsg;
 			for( n = 0; n < g_nPathCount; n++ )
 			{
@@ -1845,12 +1845,12 @@ void CXYWnd::OnPaint()
 				glCallLists( strMsg.GetLength(), GL_UNSIGNED_BYTE, strMsg );
 			}
 		}
-		
+
 		if( m_nViewType != XY )
 		{
 			glPopMatrix();
 		}
-		
+
 		SwapBuffers( dc.m_hDC );
 		TRACE( "XY Paint\n" );
 	}
@@ -1879,17 +1879,17 @@ void CreateEntityFromName( char* pName, brush_t* pBrush, bool forceFixed, idVec3
 		g_pParentWnd->MessageBox( "Can't create an entity with worldspawn.", "info", 0 );
 		return;
 	}
-	
+
 	pecNew = Eclass_ForName( pName, false );
-	
+
 	if( ( GetAsyncKeyState( VK_SHIFT ) & 0x8000 ) )
 	{
 		Select_Ungroup();
 	}
-	
+
 	// create it
 	petNew = Entity_Create( pecNew, forceFixed );
-	
+
 	if( petNew && idStr::Icmp( pName, "light" ) == 0 )
 	{
 		idVec3	rad = max - min;
@@ -1900,8 +1900,8 @@ void CreateEntityFromName( char* pName, brush_t* pBrush, bool forceFixed, idVec3
 			DeleteKey( petNew, "light" );
 		}
 	}
-	
-	
+
+
 	if( petNew == NULL )
 	{
 		if( !( ( selected_brushes.next == &selected_brushes ) || ( selected_brushes.next->next != &selected_brushes ) ) )
@@ -1915,10 +1915,10 @@ void CreateEntityFromName( char* pName, brush_t* pBrush, bool forceFixed, idVec3
 				{
 					origin[i] = b->mins[i] - pecNew->mins[i];
 				}
-				
+
 				VectorAdd( pecNew->mins, origin, mins );
 				VectorAdd( pecNew->maxs, origin, maxs );
-				
+
 				brush_t* nb = Brush_Create( mins, maxs, &pecNew->texdef );
 				Entity_LinkBrush( b->owner, nb );
 				nb->owner->eclass = pecNew;
@@ -1930,20 +1930,20 @@ void CreateEntityFromName( char* pName, brush_t* pBrush, bool forceFixed, idVec3
 				return;
 			}
 		}
-		
+
 		g_pParentWnd->MessageBox( "Failed to create entity.", "info", 0 );
 		return;
 	}
-	
+
 	Select_Deselect();
-	
+
 	//
 	// entity_t* pEntity = world_entity; if ( selected_brushes.next !=
 	// &selected_brushes ) pEntity = selected_brushes.next->owner;
 	//
 	Select_Brush( petNew->brushes.onext );
 	Brush_Build( petNew->brushes.onext );
-	
+
 }
 
 /*
@@ -1956,28 +1956,28 @@ brush_t* CreateEntityBrush( int x, int y, CXYWnd* pWnd )
 	int		i;
 	float	temp;
 	brush_t* n;
-	
+
 	pWnd->SnapToPoint( x, y, mins );
 	x += 32;
 	y += 32;
 	pWnd->SnapToPoint( x, y, maxs );
-	
+
 	int nDim = ( pWnd->GetViewType() == XY ) ? 2 : ( pWnd->GetViewType() == YZ ) ? 0 : 1;
 	mins[nDim] = g_qeglobals.d_gridsize * ( ( int )( g_qeglobals.d_new_brush_bottom[nDim] / g_qeglobals.d_gridsize ) );
 	maxs[nDim] = g_qeglobals.d_gridsize * ( ( int )( g_qeglobals.d_new_brush_top[nDim] / g_qeglobals.d_gridsize ) );
-	
+
 	if( maxs[nDim] <= mins[nDim] )
 	{
 		maxs[nDim] = mins[nDim] + g_qeglobals.d_gridsize;
 	}
-	
+
 	for( i = 0; i < 3; i++ )
 	{
 		if( mins[i] == maxs[i] )
 		{
 			maxs[i] += 16;	// don't create a degenerate brush
 		}
-		
+
 		if( mins[i] > maxs[i] )
 		{
 			temp = mins[i];
@@ -1985,13 +1985,13 @@ brush_t* CreateEntityBrush( int x, int y, CXYWnd* pWnd )
 			maxs[i] = temp;
 		}
 	}
-	
+
 	n = Brush_Create( mins, maxs, &g_qeglobals.d_texturewin.texdef );
 	if( !n )
 	{
 		return NULL;
 	}
-	
+
 	Brush_AddToList( n, &selected_brushes );
 	Entity_LinkBrush( world_entity, n );
 	Brush_Build( n );
@@ -2007,10 +2007,10 @@ void CreateRightClickEntity( CXYWnd* pWnd, int x, int y, char* pName )
 	idVec3	min, max, org;
 	Select_GetBounds( min, max );
 	Select_GetMid( org );
-	
+
 	CRect rctZ;
 	pWnd->GetClientRect( rctZ );
-	
+
 	brush_t* pBrush;
 	if( selected_brushes.next == &selected_brushes )
 	{
@@ -2035,21 +2035,21 @@ brush_t* CreateSmartBrush( idVec3 v )
 	idVec3	mins, maxs;
 	int		i;
 	brush_t* n;
-	
+
 	for( i = 0; i < 3; i++ )
 	{
 		mins[i] = v[i] - 16;
 		maxs[i] = v[i] + 16;
 	}
-	
+
 	n = Brush_Create( mins, maxs, &g_qeglobals.d_texturewin.texdef );
 	if( !n )
 	{
 		return NULL;
 	}
-	
+
 	Brush_AddToList( n, &selected_brushes );
-	
+
 	// Entity_LinkBrush(world_entity, n);
 	Brush_Build( n );
 	return n;
@@ -2106,15 +2106,15 @@ void CreateSmartEntity( CXYWnd* pWnd, int x, int y, const char* pName )
 				DispatchMessage( &msg );
 			}
 		}
-		
+
 		HideInfoDialog();
-		
+
 		CPtrArray	array;
 		g_bScreenUpdates = false;
 		CreateRightClickEntity( g_pParentWnd->ActiveXY(), g_nSmartX, g_nSmartY, "func_rotating" );
 		array.Add( reinterpret_cast < void* >( selected_brushes.next ) );
 		Select_Deselect();
-		
+
 		brush_t* pBrush = CreateSmartBrush( g_PathPoints[0] );
 		array.Add( pBrush );
 		Select_Deselect();
@@ -2133,7 +2133,7 @@ void FinishSmartCreation()
 {
 	CPtrArray	array;
 	HideInfoDialog();
-	
+
 	brush_t* pEntities = NULL;
 	if( g_strSmartEntity.Find( "Smart_Train" ) >= 0 )
 	{
@@ -2153,7 +2153,7 @@ void FinishSmartCreation()
 			);
 			array.Add( reinterpret_cast < void* >( selected_brushes.next ) );
 		}
-		
+
 		for( n = 0; n < g_nPathCount; n++ )
 		{
 			Select_Deselect();
@@ -2161,10 +2161,10 @@ void FinishSmartCreation()
 			Select_Brush( reinterpret_cast < brush_t* >( array.GetAt( n + 1 ) ) );
 			ConnectEntities();
 		}
-		
+
 		g_bScreenUpdates = true;
 	}
-	
+
 	g_nPathCount = 0;
 	g_bPathMode = false;
 	Sys_UpdateWindows( W_ALL );
@@ -2182,7 +2182,7 @@ void CXYWnd::KillPathMode()
 	{
 		g_pPathFunc( false, g_nPathCount );
 	}
-	
+
 	g_nPathCount = 0;
 	g_pPathFunc = NULL;
 	Sys_UpdateWindows( W_ALL );
@@ -2197,7 +2197,7 @@ void CXYWnd::OnEntityCreate( unsigned int nID )
 	{
 		CString strItem;
 		m_mnuDrop.GetMenuString( nID, strItem, MF_BYCOMMAND );
-		
+
 		if( strItem.CompareNoCase( "Add to..." ) == 0 )
 		{
 			//
@@ -2214,7 +2214,7 @@ void CXYWnd::OnEntityCreate( unsigned int nID )
 			{
 			}
 		}
-		
+
 		// ++timo FIXME: remove when all hooks are in
 		if( strItem.CompareNoCase( "Add to..." ) == 0 ||
 				strItem.CompareNoCase( "Remove" ) == 0 ||
@@ -2224,7 +2224,7 @@ void CXYWnd::OnEntityCreate( unsigned int nID )
 			common->Printf( "TODO: hook drop down group menu\n" );
 			return;
 		}
-		
+
 		if( strItem.Find( "Smart_" ) >= 0 )
 		{
 			CreateSmartEntity( this, m_ptDown.x, m_ptDown.y, strItem );
@@ -2233,9 +2233,9 @@ void CXYWnd::OnEntityCreate( unsigned int nID )
 		{
 			CreateRightClickEntity( this, m_ptDown.x, m_ptDown.y, strItem.GetBuffer( 0 ) );
 		}
-		
+
 		Sys_UpdateWindows( W_ALL );
-		
+
 		// OnLButtonDown((MK_LBUTTON | MK_SHIFT), CPoint(m_ptDown.x+2, m_ptDown.y+2));
 	}
 }
@@ -2254,26 +2254,30 @@ bool MergeMenu( CMenu* pMenuDestination, const CMenu* pMenuAdd, bool bTopLevel /
 	// get the number menu items in the menus
 	int iMenuAddItemCount	= pMenuAdd->GetMenuItemCount();
 	int iMenuDestItemCount	= pMenuDestination->GetMenuItemCount();
-	
+
 	// if there are no items return
 	if( iMenuAddItemCount == 0 )
+	{
 		return true;
-		
+	}
+
 	// if we are not at top level and the destination menu is not empty
 	// -> we append a seperator
 	if( !bTopLevel && iMenuDestItemCount > 0 )
+	{
 		pMenuDestination->AppendMenu( MF_SEPARATOR );
-		
+	}
+
 	// iterate through the top level of <pMenuAdd>
 	for( int iLoop = 0; iLoop < iMenuAddItemCount; iLoop++ )
 	{
 		// get the menu string from the add menu
 		CString sMenuAddString;
 		pMenuAdd->GetMenuString( iLoop, sMenuAddString, MF_BYPOSITION );
-		
+
 		// try to get the submenu of the current menu item
 		CMenu* pSubMenu = pMenuAdd->GetSubMenu( iLoop );
-		
+
 		// check if we have a sub menu
 		if( !pSubMenu )
 		{
@@ -2295,10 +2299,10 @@ bool MergeMenu( CMenu* pMenuDestination, const CMenu* pMenuAdd, bool bTopLevel /
 		else
 		{
 			// create or insert a new popup menu item
-			
+
 			// default insert pos is like ap
 			int iInsertPosDefault = -1;
-			
+
 			// if we are at top level merge into existing popups rather than
 			// creating new ones
 			if( bTopLevel )
@@ -2308,7 +2312,7 @@ bool MergeMenu( CMenu* pMenuDestination, const CMenu* pMenuAdd, bool bTopLevel /
 				CString csAdd( sMenuAddString );
 				csAdd.Remove( '&' );	// for comparison of menu items supress '&'
 				bool bAdded = false;
-				
+
 				// try to find existing popup
 				for( int iLoop1 = 0; iLoop1 < iMenuDestItemCount; iLoop1++ )
 				{
@@ -2316,24 +2320,26 @@ bool MergeMenu( CMenu* pMenuDestination, const CMenu* pMenuAdd, bool bTopLevel /
 					CString sDest;
 					pMenuDestination->GetMenuString( iLoop1, sDest, MF_BYPOSITION );
 					sDest.Remove( '&' ); // for a better compare (s.a.)
-					
+
 					if( csAdd == sDest )
 					{
 						// we got a hit -> merge the two popups
 						// try to get the submenu of the desired destination menu item
 						CMenu* pSubMenuDest =
 							pMenuDestination->GetSubMenu( iLoop1 );
-							
+
 						if( pSubMenuDest )
 						{
 							// merge the popup recursivly and continue with outer for loop
 							if( !MergeMenu( pSubMenuDest, pSubMenu, false ) )
+							{
 								return false;
+							}
 							bAdded = true;
 							break;
 						}
 					}
-					
+
 					// alternativ insert before <Window> or <Help>
 					if( iInsertPosDefault == -1 && ( sDest == "Window"
 													 || sDest == "?" || sDest == "Help" ) )
@@ -2347,13 +2353,13 @@ bool MergeMenu( CMenu* pMenuDestination, const CMenu* pMenuAdd, bool bTopLevel /
 					continue;
 				}
 			} // if (bTopLevel)
-			
+
 			// if the top level search did not find a position append the menu
 			if( iInsertPosDefault == -1 )
 			{
 				iInsertPosDefault = pMenuDestination->GetMenuItemCount();
 			}
-			
+
 			// create a new popup and insert before <Window> or <Help>
 			CMenu NewPopupMenu;
 			if( !NewPopupMenu.CreatePopupMenu() )
@@ -2361,11 +2367,13 @@ bool MergeMenu( CMenu* pMenuDestination, const CMenu* pMenuAdd, bool bTopLevel /
 				TRACE( "MergeMenu: CreatePopupMenu failed!\n" );
 				return false;
 			}
-			
+
 			// merge the new popup recursivly
 			if( !MergeMenu( &NewPopupMenu, pSubMenu, false ) )
+			{
 				return false;
-				
+			}
+
 			// insert the new popup menu into the destination menu
 			HMENU hNewMenu = NewPopupMenu.GetSafeHmenu();
 			if( pMenuDestination->InsertMenu( iInsertPosDefault,
@@ -2380,7 +2388,7 @@ bool MergeMenu( CMenu* pMenuDestination, const CMenu* pMenuAdd, bool bTopLevel /
 				TRACE( "MergeMenu: InsertMenu failed!\n" );
 				return false;
 			}
-			
+
 			// don't destroy the new menu
 			NewPopupMenu.Detach();
 		} // if (pSubMenu)
@@ -2403,20 +2411,20 @@ void CXYWnd::HandleDrop()
 		return;
 	}
 	*/
-	
+
 	if( !m_mnuDrop.GetSafeHmenu() )  		// first time, load it up
 	{
 		m_mnuDrop.CreatePopupMenu();
-		
+
 		CMenu* drop = new CMenu;
 		drop->LoadMenu( IDR_MENU_DROP );
-		
+
 		MergeMenu( &m_mnuDrop, drop, false );
-		
+
 		int nID = ID_ENTITY_START;
-		
+
 		CMenu* pMakeEntityPop = &m_mnuDrop;
-		
+
 		// Todo: Make this a config option maybe?
 		const int entitiesOnSubMenu = false;
 		if( entitiesOnSubMenu )
@@ -2424,9 +2432,9 @@ void CXYWnd::HandleDrop()
 			pMakeEntityPop = new CMenu;
 			pMakeEntityPop->CreateMenu();
 		}
-		
+
 		CMenu*	pChild = NULL;
-		
+
 		eclass_t*	e;
 		CString		strActive;
 		CString		strLast;
@@ -2435,7 +2443,7 @@ void CXYWnd::HandleDrop()
 		{
 			strLast = strName;
 			strName = e->name;
-			
+
 			int n_ = strName.Find( "_" );
 			if( n_ > 0 )
 			{
@@ -2454,11 +2462,11 @@ void CXYWnd::HandleDrop()
 													reinterpret_cast<unsigned int>( pChild->GetSafeHmenu() ),
 													strActive );
 						g_ptrMenus.Add( pChild );
-						
+
 						// pChild->DestroyMenu(); delete pChild;
 						pChild = NULL;
 					}
-					
+
 					strActive = strLeft;
 					pChild = new CMenu;
 					pChild->CreateMenu();
@@ -2473,11 +2481,11 @@ void CXYWnd::HandleDrop()
 												reinterpret_cast<unsigned int>( pChild->GetSafeHmenu() ),
 												strActive );
 					g_ptrMenus.Add( pChild );
-					
+
 					// pChild->DestroyMenu(); delete pChild;
 					pChild = NULL;
 				}
-				
+
 				strActive = "";
 				pMakeEntityPop->AppendMenu( MF_STRING, nID++, strName );
 			}
@@ -2489,7 +2497,7 @@ void CXYWnd::HandleDrop()
 								  "Create Entity" );
 		}
 	}
-	
+
 	CPoint ptMouse;
 	GetCursorPos( &ptMouse );
 	m_mnuDrop.TrackPopupMenu( TPM_LEFTALIGN | TPM_LEFTBUTTON | TPM_RIGHTBUTTON, ptMouse.x, ptMouse.y, this );
@@ -2522,7 +2530,7 @@ void CXYWnd::SnapToPoint( int x, int y, idVec3& point )
 	{
 		XY_ToGridPoint( x, y, point );
 	}
-	
+
 	// -- else -- XY_ToPoint(x, y, point); -- //XY_ToPoint(x, y, point);
 }
 
@@ -2540,7 +2548,7 @@ void CXYWnd::XY_ToPoint( int x, int y, idVec3& point )
 	{
 		point[0] = m_vOrigin[0] + ( fx - fw / 2 ) / m_fScale;
 		point[1] = m_vOrigin[1] + ( fy - fh / 2 ) / m_fScale;
-		
+
 		// point[2] = 0;
 	}
 	else if( m_nViewType == YZ )
@@ -2559,7 +2567,7 @@ void CXYWnd::XY_ToPoint( int x, int y, idVec3& point )
 		// m_vOrigin[1] + (fy - fh / 2) / m_fScale;
 		//
 		point[0] = m_vOrigin[0] + ( fx - fw / 2 ) / m_fScale;
-		
+
 		// point[1] = 0;
 		point[2] = m_vOrigin[2] + ( fy - fh / 2 ) / m_fScale;
 	}
@@ -2575,7 +2583,7 @@ void CXYWnd::XY_ToGridPoint( int x, int y, idVec3& point )
 	{
 		point[0] = m_vOrigin[0] + ( x - m_nWidth / 2 ) / m_fScale;
 		point[1] = m_vOrigin[1] + ( y - m_nHeight / 2 ) / m_fScale;
-		
+
 		// point[2] = 0;
 		point[0] = floor( point[0] / g_qeglobals.d_gridsize + 0.5 ) * g_qeglobals.d_gridsize;
 		point[1] = floor( point[1] / g_qeglobals.d_gridsize + 0.5 ) * g_qeglobals.d_gridsize;
@@ -2617,18 +2625,18 @@ void CXYWnd::XY_MouseDown( int x, int y, int buttons )
 {
 	idVec3	point, center;
 	idVec3	origin, dir, right, up;
-	
+
 	m_nButtonstate = buttons;
 	m_nPressx = x;
 	m_nPressy = y;
 	VectorCopy( vec3_origin, m_vPressdelta );
-	
+
 	point.Zero();
-	
+
 	XY_ToPoint( x, y, point );
-	
+
 	VectorCopy( point, origin );
-	
+
 	dir.Zero();
 	if( m_nViewType == XY )
 	{
@@ -2666,16 +2674,16 @@ void CXYWnd::XY_MouseDown( int x, int y, int buttons )
 		up[1] = 0;
 		point[1] = g_pParentWnd->GetCamera()->Camera().origin[1];
 	}
-	
+
 	dragOrigin = m_vOrigin;
 	dragDir = dir;
 	dragX = right;
 	dragY = up;
-	
+
 	m_bPress_selection = ( selected_brushes.next != &selected_brushes );
-	
+
 	GetCursorPos( &m_ptCursor );
-	
+
 	// Sys_GetCursorPos (&m_ptCursor.x, &m_ptCursor.y);
 	if( buttons == MK_LBUTTON && activeDrag )
 	{
@@ -2685,7 +2693,7 @@ void CXYWnd::XY_MouseDown( int x, int y, int buttons )
 	{
 		activeDragging = false;
 	}
-	
+
 	// lbutton = manipulate selection shift-LBUTTON = select
 	if
 	(
@@ -2702,24 +2710,24 @@ void CXYWnd::XY_MouseDown( int x, int y, int buttons )
 			{
 				g_qeglobals.selectObject->addPoint( point );
 			}
-			
+
 			return;
 		}
-		
+
 		Patch_SetView( ( m_nViewType == XY ) ? W_XY : ( m_nViewType == YZ ) ? W_YZ : W_XZ );
 		Drag_Begin( x, y, buttons, right, up, origin, dir );
 		return;
 	}
-	
+
 	int nMouseButton = g_PrefsDlg.m_nMouseButtons == 2 ? MK_RBUTTON : MK_MBUTTON;
-	
+
 	// control mbutton = move camera
 	if( m_nButtonstate == ( MK_CONTROL | nMouseButton ) )
 	{
 		VectorCopyXY( point, g_pParentWnd->GetCamera()->Camera().origin );
 		Sys_UpdateWindows( W_CAMERA | W_XY_OVERLAY );
 	}
-	
+
 	// mbutton = angle camera
 	if
 	(
@@ -2728,7 +2736,7 @@ void CXYWnd::XY_MouseDown( int x, int y, int buttons )
 	)
 	{
 		VectorSubtract( point, g_pParentWnd->GetCamera()->Camera().origin, point );
-		
+
 		int n1 = ( m_nViewType == XY ) ? 1 : 2;
 		int n2 = ( m_nViewType == YZ ) ? 1 : 0;
 		int nAngle = ( m_nViewType == XY ) ? YAW : PITCH;
@@ -2738,7 +2746,7 @@ void CXYWnd::XY_MouseDown( int x, int y, int buttons )
 			Sys_UpdateWindows( W_CAMERA_ICON | W_XY_OVERLAY );
 		}
 	}
-	
+
 	// shift mbutton = move z checker
 	if( m_nButtonstate == ( MK_SHIFT | nMouseButton ) )
 	{
@@ -2750,7 +2758,7 @@ void CXYWnd::XY_MouseDown( int x, int y, int buttons )
 			{
 				VectorCopy( point, g_vBendOrigin );
 			}
-			
+
 			Sys_UpdateWindows( W_XY );
 			return;
 		}
@@ -2772,7 +2780,7 @@ void CXYWnd::XY_MouseDown( int x, int y, int buttons )
 				z.origin[0] = point[0];
 				z.origin[1] = point[2];
 			}
-			
+
 			Sys_UpdateWindows( W_XY_OVERLAY | W_Z );
 			return;
 		}
@@ -2791,7 +2799,7 @@ void CXYWnd::XY_MouseUp( int x, int y, int buttons )
 	{
 		Sys_UpdateWindows( W_ALL );
 	}
-	
+
 	m_nButtonstate = 0;
 	while( ::ShowCursor( TRUE ) < 0 )
 		;
@@ -2805,12 +2813,12 @@ bool CXYWnd::DragDelta( int x, int y, idVec3& move )
 {
 	idVec3	xvec, yvec, delta;
 	int		i;
-	
+
 	xvec[0] = 1 / m_fScale;
 	xvec[1] = xvec[2] = 0;
 	yvec[1] = 1 / m_fScale;
 	yvec[0] = yvec[2] = 0;
-	
+
 	for( i = 0; i < 3; i++ )
 	{
 		delta[i] = xvec[i] * ( x - m_nPressx ) + yvec[i] * ( y - m_nPressy );
@@ -2819,16 +2827,16 @@ bool CXYWnd::DragDelta( int x, int y, idVec3& move )
 			delta[i] = floor( delta[i] / g_qeglobals.d_gridsize + 0.5 ) * g_qeglobals.d_gridsize;
 		}
 	}
-	
+
 	VectorSubtract( delta, m_vPressdelta, move );
 	VectorCopy( delta, m_vPressdelta );
-	
-	
+
+
 	if( move[0] || move[1] || move[2] )
 	{
 		return true;
 	}
-	
+
 	return false;
 }
 
@@ -2843,27 +2851,27 @@ void CXYWnd::NewBrushDrag( int x, int y )
 	int		i;
 	float	temp;
 	brush_t* n;
-	
+
 	if( radiant_entityMode.GetBool() )
 	{
 		return;
 	}
-	
+
 	if( !DragDelta( x, y, junk ) )
 	{
 		return;
 	}
-	
+
 	// delete the current selection
 	if( selected_brushes.next != &selected_brushes )
 	{
 		Brush_Free( selected_brushes.next );
 	}
-	
+
 	SnapToPoint( m_nPressx, m_nPressy, mins );
-	
+
 	int nDim = ( m_nViewType == XY ) ? 2 : ( m_nViewType == YZ ) ? 0 : 1;
-	
+
 	mins[nDim] = g_qeglobals.d_gridsize * ( ( int )( g_qeglobals.d_new_brush_bottom[nDim] / g_qeglobals.d_gridsize ) );
 	SnapToPoint( x, y, maxs );
 	maxs[nDim] = g_qeglobals.d_gridsize * ( ( int )( g_qeglobals.d_new_brush_top[nDim] / g_qeglobals.d_gridsize ) );
@@ -2871,14 +2879,14 @@ void CXYWnd::NewBrushDrag( int x, int y )
 	{
 		maxs[nDim] = mins[nDim] + g_qeglobals.d_gridsize;
 	}
-	
+
 	for( i = 0; i < 3; i++ )
 	{
 		if( mins[i] == maxs[i] )
 		{
 			return; // don't create a degenerate brush
 		}
-		
+
 		if( mins[i] > maxs[i] )
 		{
 			temp = mins[i];
@@ -2886,24 +2894,24 @@ void CXYWnd::NewBrushDrag( int x, int y )
 			maxs[i] = temp;
 		}
 	}
-	
+
 	n = Brush_Create( mins, maxs, &g_qeglobals.d_texturewin.texdef );
 	if( !n )
 	{
 		return;
 	}
-	
+
 	idVec3	vSize;
 	VectorSubtract( maxs, mins, vSize );
 	g_strStatus.Format( "Size X:: %.1f  Y:: %.1f  Z:: %.1f", vSize[0], vSize[1], vSize[2] );
 	g_pParentWnd->SetStatusText( 2, g_strStatus );
-	
+
 	Brush_AddToList( n, &selected_brushes );
-	
+
 	Entity_LinkBrush( world_entity, n );
-	
+
 	Brush_Build( n );
-	
+
 	// Sys_UpdateWindows (W_ALL);
 	Sys_UpdateWindows( W_XY | W_CAMERA );
 }
@@ -2916,7 +2924,7 @@ void CXYWnd::NewBrushDrag( int x, int y )
 bool CXYWnd::XY_MouseMoved( int x, int y, int buttons )
 {
 	idVec3	point;
-	
+
 	if( !m_nButtonstate )
 	{
 		if( g_bCrossHairs )
@@ -2925,10 +2933,10 @@ bool CXYWnd::XY_MouseMoved( int x, int y, int buttons )
 			Sys_UpdateWindows( W_XY | W_XY_OVERLAY );
 			::ShowCursor( TRUE );
 		}
-		
+
 		return false;
 	}
-	
+
 	// lbutton without selection = drag new brush if (m_nButtonstate == MK_LBUTTON &&
 	// !m_bPress_selection && g_qeglobals.d_select_mode != sel_curvepoint &&
 	// g_qeglobals.d_select_mode != sel_splineedit)
@@ -2938,7 +2946,7 @@ bool CXYWnd::XY_MouseMoved( int x, int y, int buttons )
 		NewBrushDrag( x, y );
 		return false;
 	}
-	
+
 	// lbutton (possibly with control and or shift) with selection = drag selection
 	if( m_nButtonstate & MK_LBUTTON )
 	{
@@ -2946,9 +2954,9 @@ bool CXYWnd::XY_MouseMoved( int x, int y, int buttons )
 		Sys_UpdateWindows( W_XY_OVERLAY | W_CAMERA_ICON | W_Z );
 		return false;
 	}
-	
+
 	int nMouseButton = g_PrefsDlg.m_nMouseButtons == 2 ? MK_RBUTTON : MK_MBUTTON;
-	
+
 	// control mbutton = move camera
 	if( m_nButtonstate == ( MK_CONTROL | nMouseButton ) )
 	{
@@ -2957,7 +2965,7 @@ bool CXYWnd::XY_MouseMoved( int x, int y, int buttons )
 		Sys_UpdateWindows( W_XY_OVERLAY | W_CAMERA );
 		return false;
 	}
-	
+
 	// shift mbutton = move z checker
 	if( m_nButtonstate == ( MK_SHIFT | nMouseButton ) )
 	{
@@ -2969,7 +2977,7 @@ bool CXYWnd::XY_MouseMoved( int x, int y, int buttons )
 			{
 				VectorCopy( point, g_vBendOrigin );
 			}
-			
+
 			Sys_UpdateWindows( W_XY );
 			return false;
 		}
@@ -2992,11 +3000,11 @@ bool CXYWnd::XY_MouseMoved( int x, int y, int buttons )
 				z.origin[1] = point[2];
 			}
 		}
-		
+
 		Sys_UpdateWindows( W_XY_OVERLAY | W_Z );
 		return false;
 	}
-	
+
 	// mbutton = angle camera
 	if
 	(
@@ -3006,7 +3014,7 @@ bool CXYWnd::XY_MouseMoved( int x, int y, int buttons )
 	{
 		SnapToPoint( x, y, point );
 		VectorSubtract( point, g_pParentWnd->GetCamera()->Camera().origin, point );
-		
+
 		int n1 = ( m_nViewType == XY ) ? 1 : 2;
 		int n2 = ( m_nViewType == YZ ) ? 1 : 0;
 		int nAngle = ( m_nViewType == XY ) ? YAW : PITCH;
@@ -3015,28 +3023,28 @@ bool CXYWnd::XY_MouseMoved( int x, int y, int buttons )
 			g_pParentWnd->GetCamera()->Camera().angles[nAngle] = RAD2DEG( atan2( point[n1], point[n2] ) );
 			Sys_UpdateWindows( W_CAMERA_ICON | W_XY_OVERLAY );
 		}
-		
+
 		return false;
 	}
-	
+
 	// rbutton = drag xy origin
 	if( m_nButtonstate == MK_RBUTTON )
 	{
 		Sys_GetCursorPos( &x, &y );
-		
+
 		if( x != m_ptCursor.x || y != m_ptCursor.y )
 		{
 			if( ( GetAsyncKeyState( VK_MENU ) & 0x8000 ) )
 			{
 				int*		px = &x;
 				long*	px2 = &m_ptCursor.x;
-				
+
 				if( fDiff( y, m_ptCursor.y ) > fDiff( x, m_ptCursor.x ) )
 				{
 					px = &y;
 					px2 = &m_ptCursor.y;
 				}
-				
+
 				if( *px > *px2 )
 				{
 					// zoom in
@@ -3055,7 +3063,7 @@ bool CXYWnd::XY_MouseMoved( int x, int y, int buttons )
 						SetScale( 16.0f );
 					}
 				}
-				
+
 				*px2 = *px;
 				Sys_UpdateWindows( W_XY | W_XY_OVERLAY );
 			}
@@ -3067,17 +3075,17 @@ bool CXYWnd::XY_MouseMoved( int x, int y, int buttons )
 				m_vOrigin[nDim2] += ( y - m_ptCursor.y ) / m_fScale;
 				SetCursorPos( m_ptCursor.x, m_ptCursor.y );
 				::ShowCursor( FALSE );
-				
+
 				// XY_Draw(); RedrawWindow(NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW);
 				Sys_UpdateWindows( W_XY | W_XY_OVERLAY );
-				
+
 				// ::ShowCursor(TRUE);
 			}
 		}
-		
+
 		return false;
 	}
-	
+
 	return false;
 }
 
@@ -3092,62 +3100,62 @@ void CXYWnd::XY_DrawGrid()
 	float	x, y, xb, xe, yb, ye;
 	int		w, h;
 	char	text[32];
-	
+
 	int startPos = max( MAX_GRID , g_qeglobals.d_gridsize );
-	
+
 	w = m_nWidth / 2 / m_fScale;
 	h = m_nHeight / 2 / m_fScale;
-	
+
 	int nDim1 = ( m_nViewType == YZ ) ? 1 : 0;
 	int nDim2 = ( m_nViewType == XY ) ? 1 : 2;
-	
+
 	// int nDim1 = 0; int nDim2 = 1;
 	xb = m_vOrigin[nDim1] - w;
 	if( xb < region_mins[nDim1] )
 	{
 		xb = region_mins[nDim1];
 	}
-	
+
 #if defined(STANDALONE)
 	xb = MIN_WORLD_COORD;
 #endif
 	xb = startPos * floor( xb / startPos );
-	
+
 	xe = m_vOrigin[nDim1] + w;
 	if( xe > region_maxs[nDim1] )
 	{
 		xe = region_maxs[nDim1];
 	}
-	
+
 #if defined(STANDALONE)
 	xe = MAX_WORLD_COORD;
 #endif
 	xe = startPos * ceil( xe / startPos );
-	
+
 	yb = m_vOrigin[nDim2] - h;
 	if( yb < region_mins[nDim2] )
 	{
 		yb = region_mins[nDim2];
 	}
-	
+
 #if defined(STANDALONE)
 	yb = MIN_WORLD_COORD;
 #endif
 	yb = startPos * floor( yb / startPos );
-	
+
 	ye = m_vOrigin[nDim2] + h;
 	if( ye > region_maxs[nDim2] )
 	{
 		ye = region_maxs[nDim2];
 	}
-	
+
 #if defined(STANDALONE)
 	ye = MAX_WORLD_COORD;
 #endif
 	ye = startPos * ceil( ye / startPos );
-	
-	
-	
+
+
+
 #if 1
 	// draw minor blocks
 	if( m_fScale > .1 &&
@@ -3155,9 +3163,9 @@ void CXYWnd::XY_DrawGrid()
 			g_qeglobals.d_gridsize * m_fScale >= 4 &&
 			!g_qeglobals.d_savedinfo.colors[COLOR_GRIDMINOR].Compare( g_qeglobals.d_savedinfo.colors[COLOR_GRIDBACK] ) )
 	{
-	
+
 		glColor3fv( g_qeglobals.d_savedinfo.colors[COLOR_GRIDMINOR].ToFloatPtr() );
-		
+
 		glBegin( GL_LINES );
 		for( x = xb; x < xe; x += g_qeglobals.d_gridsize )
 		{
@@ -3167,11 +3175,11 @@ void CXYWnd::XY_DrawGrid()
 				continue;
 			}
 			*/
-			
+
 			glVertex2f( x, yb );
 			glVertex2f( x, ye );
 		}
-		
+
 		for( y = yb; y < ye; y += g_qeglobals.d_gridsize )
 		{
 			/*
@@ -3180,19 +3188,19 @@ void CXYWnd::XY_DrawGrid()
 				continue;
 			}
 			*/
-			
+
 			glVertex2f( xb, y );
 			glVertex2f( xe, y );
 		}
-		
+
 		glEnd();
 	}
 #endif
-	
+
 #if 1
 	// draw major blocks
 	glColor3fv( g_qeglobals.d_savedinfo.colors[COLOR_GRIDMAJOR].ToFloatPtr() );
-	
+
 	int stepSize = MAX_GRID * 0.1 / m_fScale;
 	if( stepSize < MAX_GRID )
 	{
@@ -3208,30 +3216,30 @@ void CXYWnd::XY_DrawGrid()
 #endif
 		{
 		}
-		
+
 		stepSize = i;
 	}
-	
+
 	if( g_qeglobals.d_showgrid )
 	{
 		glBegin( GL_LINES );
-		
+
 		for( x = xb; x <= xe; x += stepSize )
 		{
 			glVertex2f( x, yb );
 			glVertex2f( x, ye );
 		}
-		
+
 		for( y = yb; y <= ye; y += stepSize )
 		{
 			glVertex2f( xb, y );
 			glVertex2f( xe, y );
 		}
-		
+
 		glEnd();
 	}
 #endif
-	
+
 	// draw ZClip boundaries (if applicable)...
 	if( m_nViewType == XZ || m_nViewType == YZ )
 	{
@@ -3242,48 +3250,48 @@ void CXYWnd::XY_DrawGrid()
 				glColor3f( ZCLIP_COLOUR );
 				glLineWidth( 2 );
 				glBegin( GL_LINES );
-				
+
 				glVertex2f( xb, g_pParentWnd->GetZWnd()->m_pZClip->GetTop() );
 				glVertex2f( xe, g_pParentWnd->GetZWnd()->m_pZClip->GetTop() );
-				
+
 				glVertex2f( xb, g_pParentWnd->GetZWnd()->m_pZClip->GetBottom() );
 				glVertex2f( xe, g_pParentWnd->GetZWnd()->m_pZClip->GetBottom() );
-				
+
 				glEnd();
 				glLineWidth( 1 );
 			}
 		}
 	}
-	
+
 	// draw coordinate text if needed
 	if( g_qeglobals.d_savedinfo.show_coordinates )
 	{
 		// glColor4f(0, 0, 0, 0);
 		glColor3fv( g_qeglobals.d_savedinfo.colors[COLOR_GRIDTEXT].ToFloatPtr() );
-		
+
 		float	lastRaster = xb;
-		
+
 		for( x = xb; x < xe; x += stepSize )
 		{
 			glRasterPos2f( x, m_vOrigin[nDim2] + h - 10 / m_fScale );
 			sprintf( text, "%i", ( int )x );
 			glCallLists( strlen( text ), GL_UNSIGNED_BYTE, text );
 		}
-		
+
 		for( y = yb; y < ye; y += stepSize )
 		{
 			glRasterPos2f( m_vOrigin[nDim1] - w + 1, y );
 			sprintf( text, "%i", ( int )y );
 			glCallLists( strlen( text ), GL_UNSIGNED_BYTE, text );
 		}
-		
+
 		if( Active() )
 		{
 			glColor3fv( g_qeglobals.d_savedinfo.colors[COLOR_VIEWNAME].ToFloatPtr() );
 		}
-		
+
 		glRasterPos2f( m_vOrigin[nDim1] - w + 35 / m_fScale, m_vOrigin[nDim2] + h - 20 / m_fScale );
-		
+
 		char	cView[20];
 		if( m_nViewType == XY )
 		{
@@ -3297,10 +3305,10 @@ void CXYWnd::XY_DrawGrid()
 		{
 			strcpy( cView, "YZ Side" );
 		}
-		
+
 		glCallLists( strlen( cView ), GL_UNSIGNED_BYTE, cView );
 	}
-	
+
 	/*
 	 * if (true) { glColor3f(g_qeglobals.d_savedinfo.colors[COLOR_GRIDMINOR]);
 	 * glBegin (GL_LINES); glVertex2f (x, yb); glVertex2f (x, ye); glEnd(); }
@@ -3317,66 +3325,66 @@ void CXYWnd::XY_DrawBlockGrid()
 	float	x, y, xb, xe, yb, ye;
 	int		w, h;
 	char	text[32];
-	
+
 	w = m_nWidth / 2 / m_fScale;
 	h = m_nHeight / 2 / m_fScale;
-	
+
 	int nDim1 = ( m_nViewType == YZ ) ? 1 : 0;
 	int nDim2 = ( m_nViewType == XY ) ? 1 : 2;
-	
+
 	xb = m_vOrigin[nDim1] - w;
 	if( xb < region_mins[nDim1] )
 	{
 		xb = region_mins[nDim1];
 	}
-	
+
 	xb = 1024 * floor( xb / 1024 );
-	
+
 	xe = m_vOrigin[nDim1] + w;
 	if( xe > region_maxs[nDim1] )
 	{
 		xe = region_maxs[nDim1];
 	}
-	
+
 	xe = 1024 * ceil( xe / 1024 );
-	
+
 	yb = m_vOrigin[nDim2] - h;
 	if( yb < region_mins[nDim2] )
 	{
 		yb = region_mins[nDim2];
 	}
-	
+
 	yb = 1024 * floor( yb / 1024 );
-	
+
 	ye = m_vOrigin[nDim2] + h;
 	if( ye > region_maxs[nDim2] )
 	{
 		ye = region_maxs[nDim2];
 	}
-	
+
 	ye = 1024 * ceil( ye / 1024 );
-	
+
 	// draw major blocks
 	glColor3fv( g_qeglobals.d_savedinfo.colors[COLOR_GRIDBLOCK].ToFloatPtr() );
 	glLineWidth( 0.5 );
-	
+
 	glBegin( GL_LINES );
-	
+
 	for( x = xb; x <= xe; x += 1024 )
 	{
 		glVertex2f( x, yb );
 		glVertex2f( x, ye );
 	}
-	
+
 	for( y = yb; y <= ye; y += 1024 )
 	{
 		glVertex2f( xb, y );
 		glVertex2f( xe, y );
 	}
-	
+
 	glEnd();
 	glLineWidth( 0.25 );
-	
+
 	// draw coordinate text if needed
 	for( x = xb; x < xe; x += 1024 )
 	{
@@ -3387,7 +3395,7 @@ void CXYWnd::XY_DrawBlockGrid()
 			glCallLists( strlen( text ), GL_UNSIGNED_BYTE, text );
 		}
 	}
-	
+
 	glColor4f( 0, 0, 0, 0 );
 }
 
@@ -3404,7 +3412,7 @@ void GLColoredBoxWithLabel( float x, float y, float size, idVec4 color, const ch
 	glVertex3f( x + size, y + size, 0 );
 	glVertex3f( x - size, y + size, 0 );
 	glEnd();
-	
+
 	glColor4f( textColor[0], textColor[1], textColor[2], textColor[3] );
 	glLineWidth( lineSize );
 	glRasterPos2f( x + xofs, y + yofs );
@@ -3417,7 +3425,7 @@ void GLColoredBoxWithLabel( float x, float y, float size, idVec4 color, const ch
 void CXYWnd::DrawRotateIcon()
 {
 	float	x, y;
-	
+
 	if( m_nViewType == XY )
 	{
 		x = g_vRotateOrigin[0];
@@ -3433,14 +3441,14 @@ void CXYWnd::DrawRotateIcon()
 		x = g_vRotateOrigin[0];
 		y = g_vRotateOrigin[2];
 	}
-	
+
 	glEnable( GL_BLEND );
 	globalImages->BindNull();
 	glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
 	glDisable( GL_CULL_FACE );
 	glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
 	glColor4f( 0.8f, 0.1f, 0.9f, 0.25f );
-	
+
 	glBegin( GL_QUADS );
 	glVertex3f( x - 4, y - 4, 0 );
 	glVertex3f( x + 4, y - 4, 0 );
@@ -3448,13 +3456,13 @@ void CXYWnd::DrawRotateIcon()
 	glVertex3f( x - 4, y + 4, 0 );
 	glEnd();
 	glDisable( GL_BLEND );
-	
+
 	glColor4f( 1.0f, 0.2f, 1.0f, 1.0f );
 	glBegin( GL_POINTS );
 	glVertex3f( x, y, 0 );
 	glEnd();
-	
-	
+
+
 	int w = m_nWidth / 2 / m_fScale;
 	int h = m_nHeight / 2 / m_fScale;
 	int nDim1 = ( m_nViewType == YZ ) ? 1 : 0;
@@ -3485,7 +3493,7 @@ void CXYWnd::DrawRotateIcon()
 void CXYWnd::DrawCameraIcon()
 {
 	float	x, y, a;
-	
+
 	if( m_nViewType == XY )
 	{
 		x = g_pParentWnd->GetCamera()->Camera().origin[0];
@@ -3504,9 +3512,9 @@ void CXYWnd::DrawCameraIcon()
 		y = g_pParentWnd->GetCamera()->Camera().origin[2];
 		a = g_pParentWnd->GetCamera()->Camera().angles[PITCH] * idMath::M_DEG2RAD;
 	}
-	
+
 	float scale = 1.0 / m_fScale;	//jhefty - keep the camera icon proportionally the same size
-	
+
 	glColor3f( 0.0, 0.0, 1.0 );
 	glBegin( GL_LINE_STRIP );
 	glVertex3f( x - 16 * scale, y, 0 );
@@ -3516,15 +3524,15 @@ void CXYWnd::DrawCameraIcon()
 	glVertex3f( x - 16 * scale, y, 0 );
 	glVertex3f( x + 16 * scale, y, 0 );
 	glEnd();
-	
+
 	glBegin( GL_LINE_STRIP );
 	glVertex3f( x + ( 48 * cos( a + idMath::PI * 0.25f )*scale ), y + ( 48 * sin( a + idMath::PI * 0.25f )*scale ), 0 );
 	glVertex3f( x, y, 0 );
 	glVertex3f( x + ( 48 * cos( a - idMath::PI * 0.25f )*scale ), y + ( 48 * sin( a - idMath::PI * 0.25f )*scale ), 0 );
 	glEnd();
-	
+
 #if 0
-	
+
 	char	text[128];
 	glRasterPos2f( x + 64, y + 64 );
 	sprintf( text, "%f", g_pParentWnd->GetCamera()->Camera().angles[YAW] );
@@ -3554,16 +3562,16 @@ void CXYWnd::DrawZIcon()
 		glVertex3f( x - 8, y + 8, 0 );
 		glEnd();
 		glDisable( GL_BLEND );
-		
+
 		glColor4f( 0.0, 0.0, 1.0, 1 );
-		
+
 		glBegin( GL_LINE_LOOP );
 		glVertex3f( x - 8, y - 8, 0 );
 		glVertex3f( x + 8, y - 8, 0 );
 		glVertex3f( x + 8, y + 8, 0 );
 		glVertex3f( x - 8, y + 8, 0 );
 		glEnd();
-		
+
 		glBegin( GL_LINE_STRIP );
 		glVertex3f( x - 4, y + 4, 0 );
 		glVertex3f( x + 4, y + 4, 0 );
@@ -3585,17 +3593,17 @@ bool FilterBrush( brush_t* pb )
 	{
 		return false;	// during construction
 	}
-	
+
 	if( pb->hiddenBrush )
 	{
 		return true;
 	}
-	
+
 	if( pb->forceVisibile )
 	{
 		return false;
 	}
-	
+
 	if( g_pParentWnd->GetZWnd()->m_pZClip )	// ZClip class up and running? (and hence Z window built)
 	{
 		if( g_pParentWnd->GetZWnd()->m_pZClip->IsEnabled() )
@@ -3611,7 +3619,7 @@ bool FilterBrush( brush_t* pb )
 			}
 		}
 	}
-	
+
 	if( g_qeglobals.d_savedinfo.exclude & ( EXCLUDE_CAULK | EXCLUDE_VISPORTALS ) )
 	{
 		//
@@ -3637,10 +3645,10 @@ bool FilterBrush( brush_t* pb )
 					return true;
 				}
 			}
-			
+
 			f = f->next;
 		}
-		
+
 		if( g_qeglobals.d_savedinfo.exclude & EXCLUDE_CAULK )
 		{
 			if( !f )
@@ -3648,14 +3656,14 @@ bool FilterBrush( brush_t* pb )
 				return true;
 			}
 		}
-		
+
 		// ++timo FIXME: .. same deal here?
 		if( strstr( pb->brush_faces->texdef.name, "donotenter" ) )
 		{
 			return true;
 		}
 	}
-	
+
 	if( g_qeglobals.d_savedinfo.exclude & EXCLUDE_HINT )
 	{
 		if( strstr( pb->brush_faces->texdef.name, "hint" ) )
@@ -3663,7 +3671,7 @@ bool FilterBrush( brush_t* pb )
 			return true;
 		}
 	}
-	
+
 	if( g_qeglobals.d_savedinfo.exclude & EXCLUDE_CLIP )
 	{
 		if( strstr( pb->brush_faces->texdef.name, "clip" ) )
@@ -3671,7 +3679,7 @@ bool FilterBrush( brush_t* pb )
 			return true;
 		}
 	}
-	
+
 	if( g_qeglobals.d_savedinfo.exclude & EXCLUDE_TRIGGERS )
 	{
 		if( strstr( pb->brush_faces->texdef.name, "trig" ) )
@@ -3679,7 +3687,7 @@ bool FilterBrush( brush_t* pb )
 			return true;
 		}
 	}
-	
+
 	if( g_qeglobals.d_savedinfo.exclude & EXCLUDE_NODRAW )
 	{
 		if( strstr( pb->brush_faces->texdef.name, "nodraw" ) )
@@ -3687,13 +3695,13 @@ bool FilterBrush( brush_t* pb )
 			return true;
 		}
 	}
-	
-	
+
+
 	if( strstr( pb->brush_faces->texdef.name, "skip" ) )
 	{
 		return true;
 	}
-	
+
 	if( g_qeglobals.d_savedinfo.exclude & EXCLUDE_DYNAMICS )
 	{
 		if( pb->modelHandle > 0 )
@@ -3705,7 +3713,7 @@ bool FilterBrush( brush_t* pb )
 			}
 		}
 	}
-	
+
 	if( g_qeglobals.d_savedinfo.exclude & EXCLUDE_CURVES )
 	{
 		if( pb->pPatch )
@@ -3713,14 +3721,14 @@ bool FilterBrush( brush_t* pb )
 			return true;
 		}
 	}
-	
+
 	if( pb->owner == world_entity )
 	{
 		if( g_qeglobals.d_savedinfo.exclude & EXCLUDE_WORLD )
 		{
 			return true;
 		}
-		
+
 		return false;
 	}
 	else
@@ -3730,27 +3738,27 @@ bool FilterBrush( brush_t* pb )
 			return ( idStr::Cmpn( pb->owner->eclass->name, "func_static", 10 ) != 0 );
 		}
 	}
-	
+
 	if( g_qeglobals.d_savedinfo.exclude & EXCLUDE_LIGHTS && pb->owner->eclass->nShowFlags & ECLASS_LIGHT )
 	{
 		return true;
 	}
-	
+
 	if( g_qeglobals.d_savedinfo.exclude & EXCLUDE_COMBATNODES && pb->owner->eclass->nShowFlags & ECLASS_COMBATNODE )
 	{
 		return true;
 	}
-	
+
 	if( g_qeglobals.d_savedinfo.exclude & EXCLUDE_PATHS && pb->owner->eclass->nShowFlags & ECLASS_PATH )
 	{
 		return true;
 	}
-	
+
 	if( g_qeglobals.d_savedinfo.exclude & EXCLUDE_MODELS && ( pb->owner->eclass->entityModel != NULL || pb->modelHandle > 0 ) )
 	{
 		return true;
 	}
-	
+
 	return false;
 }
 
@@ -3774,12 +3782,12 @@ void DrawPathLines()
 	int			num_entities;
 	const char*		ent_target[MAX_MAP_ENTITIES];
 	entity_t*	ent_entity[MAX_MAP_ENTITIES];
-	
+
 	if( g_qeglobals.d_savedinfo.exclude & EXCLUDE_PATHS )
 	{
 		return;
 	}
-	
+
 	num_entities = 0;
 	for( te = entities.next; te != &entities && num_entities != MAX_MAP_ENTITIES; te = te->next )
 	{
@@ -3804,70 +3812,70 @@ void DrawPathLines()
 			}
 		}
 	}
-	
+
 	for( se = entities.next; se != &entities; se = se->next )
 	{
 		psz = ValueForKey( se, "name" );
-		
+
 		if( psz == NULL || psz[0] == '\0' )
 		{
 			continue;
 		}
-		
+
 		sb = se->brushes.onext;
 		if( sb == &se->brushes )
 		{
 			continue;
 		}
-		
+
 		for( k = 0; k < num_entities; k++ )
 		{
 			if( strcmp( ent_target[k], psz ) )
 			{
 				continue;
 			}
-			
+
 			te = ent_entity[k];
 			tb = te->brushes.onext;
 			if( tb == &te->brushes )
 			{
 				continue;
 			}
-			
+
 			mid = sb->owner->origin;
 			mid1 = tb->owner->origin;
-			
+
 			VectorSubtract( mid1, mid, dir );
 			len = dir.Normalize();
 			s1[0] = -dir[1] * 8 + dir[0] * 8;
 			s2[0] = dir[1] * 8 + dir[0] * 8;
 			s1[1] = dir[0] * 8 + dir[1] * 8;
 			s2[1] = -dir[0] * 8 + dir[1] * 8;
-			
+
 			glColor3f( se->eclass->color[0], se->eclass->color[1], se->eclass->color[2] );
-			
+
 			glBegin( GL_LINES );
 			glVertex3fv( mid.ToFloatPtr() );
 			glVertex3fv( mid1.ToFloatPtr() );
-			
+
 			arrows = ( int )( len / 256 ) + 1;
-			
+
 			for( i = 0; i < arrows; i++ )
 			{
 				f = len * ( i + 0.5 ) / arrows;
-				
+
 				mid1 = mid + ( f * dir );
-				
+
 				glVertex3fv( mid1.ToFloatPtr() );
 				glVertex3f( mid1[0] + s1[0], mid1[1] + s1[1], mid1[2] );
 				glVertex3fv( mid1.ToFloatPtr() );
 				glVertex3f( mid1[0] + s2[0], mid1[1] + s2[1], mid1[2] );
 			}
-			
+
 			glEnd();
 		}
 	}
-	
+
 	return;
 }
 
@@ -3880,46 +3888,46 @@ void CXYWnd::PaintSizeInfo( int nDim1, int nDim2, idVec3 vMinBounds, idVec3 vMax
 {
 	idVec3	vSize;
 	VectorSubtract( vMaxBounds, vMinBounds, vSize );
-	
+
 	glColor3f
 	(
 		g_qeglobals.d_savedinfo.colors[COLOR_SELBRUSHES][0] * .65,
 		g_qeglobals.d_savedinfo.colors[COLOR_SELBRUSHES][1] * .65,
 		g_qeglobals.d_savedinfo.colors[COLOR_SELBRUSHES][2] * .65
 	);
-	
+
 	if( m_nViewType == XY )
 	{
 		glBegin( GL_LINES );
-		
+
 		glVertex3f( vMinBounds[nDim1], vMinBounds[nDim2] - 6.0f / m_fScale, 0.0f );
 		glVertex3f( vMinBounds[nDim1], vMinBounds[nDim2] - 10.0f / m_fScale, 0.0f );
-		
+
 		glVertex3f( vMinBounds[nDim1], vMinBounds[nDim2] - 10.0f / m_fScale, 0.0f );
 		glVertex3f( vMaxBounds[nDim1], vMinBounds[nDim2] - 10.0f / m_fScale, 0.0f );
-		
+
 		glVertex3f( vMaxBounds[nDim1], vMinBounds[nDim2] - 6.0f / m_fScale, 0.0f );
 		glVertex3f( vMaxBounds[nDim1], vMinBounds[nDim2] - 10.0f / m_fScale, 0.0f );
-		
+
 		glVertex3f( vMaxBounds[nDim1] + 6.0f / m_fScale, vMinBounds[nDim2], 0.0f );
 		glVertex3f( vMaxBounds[nDim1] + 10.0f / m_fScale, vMinBounds[nDim2], 0.0f );
-		
+
 		glVertex3f( vMaxBounds[nDim1] + 10.0f / m_fScale, vMinBounds[nDim2], 0.0f );
 		glVertex3f( vMaxBounds[nDim1] + 10.0f / m_fScale, vMaxBounds[nDim2], 0.0f );
-		
+
 		glVertex3f( vMaxBounds[nDim1] + 6.0f / m_fScale, vMaxBounds[nDim2], 0.0f );
 		glVertex3f( vMaxBounds[nDim1] + 10.0f / m_fScale, vMaxBounds[nDim2], 0.0f );
-		
+
 		glEnd();
-		
+
 		glRasterPos3f( Betwixt( vMinBounds[nDim1], vMaxBounds[nDim1] ), vMinBounds[nDim2] - 20.0 / m_fScale, 0.0f );
 		g_strDim.Format( g_pDimStrings[nDim1], vSize[nDim1] );
 		glCallLists( g_strDim.GetLength(), GL_UNSIGNED_BYTE, g_strDim );
-		
+
 		glRasterPos3f( vMaxBounds[nDim1] + 16.0 / m_fScale, Betwixt( vMinBounds[nDim2], vMaxBounds[nDim2] ), 0.0f );
 		g_strDim.Format( g_pDimStrings[nDim2], vSize[nDim2] );
 		glCallLists( g_strDim.GetLength(), GL_UNSIGNED_BYTE, g_strDim );
-		
+
 		glRasterPos3f( vMinBounds[nDim1] + 4, vMaxBounds[nDim2] + 8 / m_fScale, 0.0f );
 		g_strDim.Format( g_pOrgStrings[0], vMinBounds[nDim1], vMaxBounds[nDim2] );
 		glCallLists( g_strDim.GetLength(), GL_UNSIGNED_BYTE, g_strDim );
@@ -3927,35 +3935,35 @@ void CXYWnd::PaintSizeInfo( int nDim1, int nDim2, idVec3 vMinBounds, idVec3 vMax
 	else if( m_nViewType == XZ )
 	{
 		glBegin( GL_LINES );
-		
+
 		glVertex3f( vMinBounds[nDim1], 0, vMinBounds[nDim2] - 6.0f / m_fScale );
 		glVertex3f( vMinBounds[nDim1], 0, vMinBounds[nDim2] - 10.0f / m_fScale );
-		
+
 		glVertex3f( vMinBounds[nDim1], 0, vMinBounds[nDim2] - 10.0f / m_fScale );
 		glVertex3f( vMaxBounds[nDim1], 0, vMinBounds[nDim2] - 10.0f / m_fScale );
-		
+
 		glVertex3f( vMaxBounds[nDim1], 0, vMinBounds[nDim2] - 6.0f / m_fScale );
 		glVertex3f( vMaxBounds[nDim1], 0, vMinBounds[nDim2] - 10.0f / m_fScale );
-		
+
 		glVertex3f( vMaxBounds[nDim1] + 6.0f / m_fScale, 0, vMinBounds[nDim2] );
 		glVertex3f( vMaxBounds[nDim1] + 10.0f / m_fScale, 0, vMinBounds[nDim2] );
-		
+
 		glVertex3f( vMaxBounds[nDim1] + 10.0f / m_fScale, 0, vMinBounds[nDim2] );
 		glVertex3f( vMaxBounds[nDim1] + 10.0f / m_fScale, 0, vMaxBounds[nDim2] );
-		
+
 		glVertex3f( vMaxBounds[nDim1] + 6.0f / m_fScale, 0, vMaxBounds[nDim2] );
 		glVertex3f( vMaxBounds[nDim1] + 10.0f / m_fScale, 0, vMaxBounds[nDim2] );
-		
+
 		glEnd();
-		
+
 		glRasterPos3f( Betwixt( vMinBounds[nDim1], vMaxBounds[nDim1] ), 0, vMinBounds[nDim2] - 20.0 / m_fScale );
 		g_strDim.Format( g_pDimStrings[nDim1], vSize[nDim1] );
 		glCallLists( g_strDim.GetLength(), GL_UNSIGNED_BYTE, g_strDim );
-		
+
 		glRasterPos3f( vMaxBounds[nDim1] + 16.0 / m_fScale, 0, Betwixt( vMinBounds[nDim2], vMaxBounds[nDim2] ) );
 		g_strDim.Format( g_pDimStrings[nDim2], vSize[nDim2] );
 		glCallLists( g_strDim.GetLength(), GL_UNSIGNED_BYTE, g_strDim );
-		
+
 		glRasterPos3f( vMinBounds[nDim1] + 4, 0, vMaxBounds[nDim2] + 8 / m_fScale );
 		g_strDim.Format( g_pOrgStrings[1], vMinBounds[nDim1], vMaxBounds[nDim2] );
 		glCallLists( g_strDim.GetLength(), GL_UNSIGNED_BYTE, g_strDim );
@@ -3963,35 +3971,35 @@ void CXYWnd::PaintSizeInfo( int nDim1, int nDim2, idVec3 vMinBounds, idVec3 vMax
 	else
 	{
 		glBegin( GL_LINES );
-		
+
 		glVertex3f( 0, vMinBounds[nDim1], vMinBounds[nDim2] - 6.0f / m_fScale );
 		glVertex3f( 0, vMinBounds[nDim1], vMinBounds[nDim2] - 10.0f / m_fScale );
-		
+
 		glVertex3f( 0, vMinBounds[nDim1], vMinBounds[nDim2] - 10.0f / m_fScale );
 		glVertex3f( 0, vMaxBounds[nDim1], vMinBounds[nDim2] - 10.0f / m_fScale );
-		
+
 		glVertex3f( 0, vMaxBounds[nDim1], vMinBounds[nDim2] - 6.0f / m_fScale );
 		glVertex3f( 0, vMaxBounds[nDim1], vMinBounds[nDim2] - 10.0f / m_fScale );
-		
+
 		glVertex3f( 0, vMaxBounds[nDim1] + 6.0f / m_fScale, vMinBounds[nDim2] );
 		glVertex3f( 0, vMaxBounds[nDim1] + 10.0f / m_fScale, vMinBounds[nDim2] );
-		
+
 		glVertex3f( 0, vMaxBounds[nDim1] + 10.0f / m_fScale, vMinBounds[nDim2] );
 		glVertex3f( 0, vMaxBounds[nDim1] + 10.0f / m_fScale, vMaxBounds[nDim2] );
-		
+
 		glVertex3f( 0, vMaxBounds[nDim1] + 6.0f / m_fScale, vMaxBounds[nDim2] );
 		glVertex3f( 0, vMaxBounds[nDim1] + 10.0f / m_fScale, vMaxBounds[nDim2] );
-		
+
 		glEnd();
-		
+
 		glRasterPos3f( 0, Betwixt( vMinBounds[nDim1], vMaxBounds[nDim1] ), vMinBounds[nDim2] - 20.0 / m_fScale );
 		g_strDim.Format( g_pDimStrings[nDim1], vSize[nDim1] );
 		glCallLists( g_strDim.GetLength(), GL_UNSIGNED_BYTE, g_strDim );
-		
+
 		glRasterPos3f( 0, vMaxBounds[nDim1] + 16.0 / m_fScale, Betwixt( vMinBounds[nDim2], vMaxBounds[nDim2] ) );
 		g_strDim.Format( g_pDimStrings[nDim2], vSize[nDim2] );
 		glCallLists( g_strDim.GetLength(), GL_UNSIGNED_BYTE, g_strDim );
-		
+
 		glRasterPos3f( 0, vMinBounds[nDim1] + 4.0, vMaxBounds[nDim2] + 8 / m_fScale );
 		g_strDim.Format( g_pOrgStrings[2], vMinBounds[nDim1], vMaxBounds[nDim2] );
 		glCallLists( g_strDim.GetLength(), GL_UNSIGNED_BYTE, g_strDim );
@@ -4013,15 +4021,15 @@ void CXYWnd::XY_Draw()
 	idVec3		mins, maxs;
 	int			drawn, culled;
 	int			i;
-	
+
 	if( !active_brushes.next )
 	{
 		return; // not valid yet
 	}
-	
+
 	// clear
 	m_bDirty = false;
-	
+
 	GL_State( GLS_DEFAULT );
 	glViewport( 0, 0, m_nWidth, m_nHeight );
 	glScissor( 0, 0, m_nWidth, m_nHeight );
@@ -4032,40 +4040,40 @@ void CXYWnd::XY_Draw()
 		g_qeglobals.d_savedinfo.colors[COLOR_GRIDBACK][2],
 		0
 	);
-	
+
 	glDisable( GL_DEPTH_TEST );
 	glDisable( GL_CULL_FACE );
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-	
+
 	// set up viewpoint
 	glMatrixMode( GL_PROJECTION );
 	glLoadIdentity();
-	
+
 	w = m_nWidth / 2 / m_fScale;
 	h = m_nHeight / 2 / m_fScale;
-	
+
 	int nDim1 = ( m_nViewType == YZ ) ? 1 : 0;
 	int nDim2 = ( m_nViewType == XY ) ? 1 : 2;
 	mins[0] = m_vOrigin[nDim1] - w;
 	maxs[0] = m_vOrigin[nDim1] + w;
 	mins[1] = m_vOrigin[nDim2] - h;
 	maxs[1] = m_vOrigin[nDim2] + h;
-	
+
 	idBounds viewBounds( mins, maxs );
 	viewBounds[0].z = -99999;
 	viewBounds[1].z = 99999;
-	
+
 	glOrtho( mins[0], maxs[0], mins[1], maxs[1], MIN_WORLD_COORD, MAX_WORLD_COORD );
-	
+
 	// draw stuff
 	globalImages->BindNull();
 	// now draw the grid
 	glLineWidth( 0.25 );
 	XY_DrawGrid();
 	glLineWidth( 0.5 );
-	
+
 	drawn = culled = 0;
-	
+
 	if( m_nViewType != XY )
 	{
 		glPushMatrix();
@@ -4073,13 +4081,13 @@ void CXYWnd::XY_Draw()
 		{
 			glRotatef( -90, 0, 1, 0 );	// put Z going up
 		}
-		
+
 		// else
 		glRotatef( -90, 1, 0, 0 );		// put Z going up
 	}
-	
+
 	e = world_entity;
-	
+
 	for( brush = active_brushes.next; brush != &active_brushes; brush = brush->next )
 	{
 		if( brush->forceVisibile || ( brush->owner->eclass->nShowFlags & ( ECLASS_LIGHT | ECLASS_PROJECTEDLIGHT ) ) )
@@ -4090,18 +4098,18 @@ void CXYWnd::XY_Draw()
 			culled++;
 			continue;				// off screen
 		}
-		
+
 		if( FilterBrush( brush ) )
 		{
 			continue;
 		}
-		
+
 		drawn++;
-		
+
 		if( brush->owner != e && brush->owner )
 		{
 			glColor3fv( brush->owner->eclass->color.ToFloatPtr() );
-			
+
 			// RB: avoid glGetFloatv( GL_CURRENT_COLOR ) for performance reasons
 			g_qeglobals.d_currentColor.x = brush->owner->eclass->color.x;
 			g_qeglobals.d_currentColor.y = brush->owner->eclass->color.y;
@@ -4112,34 +4120,34 @@ void CXYWnd::XY_Draw()
 		else
 		{
 			glColor3fv( g_qeglobals.d_savedinfo.colors[COLOR_BRUSHES].ToFloatPtr() );
-			
+
 			// RB: avoid glGetFloatv( GL_CURRENT_COLOR ) for performance reasons
 			g_qeglobals.d_currentColor = g_qeglobals.d_savedinfo.colors[COLOR_BRUSHES];
 			// RB end
 		}
-		
+
 		Brush_DrawXY( brush, m_nViewType );
 	}
-	
+
 	DrawPathLines();
-	
+
 	// draw pointfile
 	if( g_qeglobals.d_pointfile_display_list )
 	{
 		glCallList( g_qeglobals.d_pointfile_display_list );
 	}
-	
+
 	if( !( m_nViewType == XY ) )
 	{
 		glPopMatrix();
 	}
-	
+
 	// draw block grid
 	if( g_qeglobals.show_blocks )
 	{
 		XY_DrawBlockGrid();
 	}
-	
+
 	// now draw selected brushes
 	if( m_nViewType != XY )
 	{
@@ -4148,11 +4156,11 @@ void CXYWnd::XY_Draw()
 		{
 			glRotatef( -90, 0, 1, 0 );	// put Z going up
 		}
-		
+
 		// else
 		glRotatef( -90, 1, 0, 0 );		// put Z going up
 	}
-	
+
 	glPushMatrix();
 	glTranslatef
 	(
@@ -4160,7 +4168,7 @@ void CXYWnd::XY_Draw()
 		g_qeglobals.d_select_translate[1],
 		g_qeglobals.d_select_translate[2]
 	);
-	
+
 	if( RotateMode() )
 	{
 		glColor3f( 0.8f, 0.1f, 0.9f );
@@ -4173,34 +4181,34 @@ void CXYWnd::XY_Draw()
 	{
 		glColor3fv( g_qeglobals.d_savedinfo.colors[COLOR_SELBRUSHES].ToFloatPtr() );
 	}
-	
+
 	if( g_PrefsDlg.m_bNoStipple == FALSE )
 	{
 		glEnable( GL_LINE_STIPPLE );
 		glLineStipple( 3, 0xaaaa );
 	}
-	
+
 	glLineWidth( 1 );
-	
+
 	idVec3	vMinBounds;
 	idVec3	vMaxBounds;
 	vMinBounds[0] = vMinBounds[1] = vMinBounds[2] = 999999.9f;
 	vMaxBounds[0] = vMaxBounds[1] = vMaxBounds[2] = -999999.9f;
-	
+
 	int		nSaveDrawn = drawn;
 	bool	bFixedSize = false;
 	for( brush = selected_brushes.next; brush != &selected_brushes; brush = brush->next )
 	{
 		drawn++;
 		Brush_DrawXY( brush, m_nViewType, true );
-		
+
 		if( !bFixedSize )
 		{
 			if( brush->owner->eclass->fixedsize )
 			{
 				bFixedSize = true;
 			}
-			
+
 			if( g_PrefsDlg.m_bSizePaint )
 			{
 				for( i = 0; i < 3; i++ )
@@ -4209,7 +4217,7 @@ void CXYWnd::XY_Draw()
 					{
 						vMinBounds[i] = brush->mins[i];
 					}
-					
+
 					if( brush->maxs[i] > vMaxBounds[i] )
 					{
 						vMaxBounds[i] = brush->maxs[i];
@@ -4218,19 +4226,19 @@ void CXYWnd::XY_Draw()
 			}
 		}
 	}
-	
+
 	if( g_PrefsDlg.m_bNoStipple == FALSE )
 	{
 		glDisable( GL_LINE_STIPPLE );
 	}
-	
+
 	glLineWidth( 0.5 );
-	
+
 	if( !bFixedSize && !RotateMode() && !ScaleMode() && drawn - nSaveDrawn > 0 && g_PrefsDlg.m_bSizePaint )
 	{
 		PaintSizeInfo( nDim1, nDim2, vMinBounds, vMaxBounds );
 	}
-	
+
 	// edge / vertex flags
 	if( g_qeglobals.d_select_mode == sel_vertex )
 	{
@@ -4241,14 +4249,14 @@ void CXYWnd::XY_Draw()
 		{
 			glVertex3fv( g_qeglobals.d_points[i].ToFloatPtr() );
 		}
-		
+
 		glEnd();
 		glPointSize( 1 );
 	}
 	else if( g_qeglobals.d_select_mode == sel_edge )
 	{
 		float*	v1, *v2;
-		
+
 		glPointSize( 4 );
 		glColor3f( 0, 0, 1 );
 		glBegin( GL_POINTS );
@@ -4258,13 +4266,13 @@ void CXYWnd::XY_Draw()
 			v2 = g_qeglobals.d_points[g_qeglobals.d_edges[i].p2].ToFloatPtr();
 			glVertex3f( ( v1[0] + v2[0] ) * 0.5, ( v1[1] + v2[1] ) * 0.5, ( v1[2] + v2[2] ) * 0.5 );
 		}
-		
+
 		glEnd();
 		glPointSize( 1 );
 	}
-	
+
 	g_splineList->draw( static_cast<bool>( g_qeglobals.d_select_mode == sel_editpoint || g_qeglobals.d_select_mode == sel_addpoint ) );
-	
+
 	if( g_pParentWnd->GetNurbMode() && g_pParentWnd->GetNurb()->GetNumValues() )
 	{
 		int maxage = g_pParentWnd->GetNurb()->GetNumValues();
@@ -4291,21 +4299,21 @@ void CXYWnd::XY_Draw()
 		glEnd();
 		glPointSize( 1 );
 	}
-	
+
 	glPopMatrix();
-	
+
 	glTranslatef
 	(
 		-g_qeglobals.d_select_translate[0],
 		-g_qeglobals.d_select_translate[1],
 		-g_qeglobals.d_select_translate[2]
 	);
-	
+
 	if( !( m_nViewType == XY ) )
 	{
 		glPopMatrix();
 	}
-	
+
 	// area selection hack
 	if( g_qeglobals.d_select_mode == sel_area )
 	{
@@ -4330,24 +4338,26 @@ void CXYWnd::XY_Draw()
 			g_qeglobals.d_vAreaBR[nDim1],
 			g_qeglobals.d_vAreaBR[nDim2]
 		);
-		
+
 	}
-	
+
 	// now draw camera point
 	DrawCameraIcon();
 	DrawZIcon();
-	
+
 	if( RotateMode() )
 	{
 		DrawRotateIcon();
 	}
-	
+
 	/// Draw a "precision crosshair" if enabled
 	if( m_precisionCrosshairMode != PRECISION_CROSSHAIR_NONE )
+	{
 		DrawPrecisionCrosshair();
-		
+	}
+
 	glFlush();
-	
+
 	// QE_CheckOpenGLForErrors();
 }
 
@@ -4379,7 +4389,7 @@ void CXYWnd::SetOrigin( idVec3 org )
 void CXYWnd::OnSize( UINT nType, int cx, int cy )
 {
 	CWnd::OnSize( nType, cx, cy );
-	
+
 	CRect	rect;
 	GetClientRect( rect );
 	m_nWidth = rect.Width();
@@ -4416,7 +4426,7 @@ void CXYWnd::Clip()
 	{
 		hold_brushes.next = &hold_brushes;
 		ProduceSplitLists();
-		
+
 		// brush_t* pList = (g_bSwitch) ? &g_brFrontSplits : &g_brBackSplits;
 		brush_t* pList;
 		if( g_PrefsDlg.m_bSwitchClip )
@@ -4427,7 +4437,7 @@ void CXYWnd::Clip()
 		{
 			pList = ( ( m_nViewType == XZ ) ? !g_bSwitch : g_bSwitch ) ? &g_brFrontSplits : &g_brBackSplits;
 		}
-		
+
 		if( pList->next != pList )
 		{
 			Brush_CopyList( pList, &hold_brushes );
@@ -4443,7 +4453,7 @@ void CXYWnd::Clip()
 			{
 				RetainClipMode( true );
 			}
-			
+
 			Sys_UpdateWindows( W_ALL );
 		}
 	}
@@ -4454,7 +4464,7 @@ void CXYWnd::Clip()
 		{
 			g_pPathFunc( true, g_nPathCount );
 		}
-		
+
 		g_pPathFunc = NULL;
 		g_nPathCount = 0;
 		g_bPathMode = false;
@@ -4548,7 +4558,7 @@ void CXYWnd::VectorCopyXY( const idVec3& in, idVec3& out )
 void CXYWnd::OnDestroy()
 {
 	CWnd::OnDestroy();
-	
+
 	// delete this;
 }
 
@@ -4627,11 +4637,11 @@ bool CXYWnd::SetRotateMode( bool bMode )
 		{
 			Sys_Status( "Need a brush selected to turn on Mouse Rotation mode\n" );
 		}
-		
+
 		g_bRotateMode = false;
 		Select_FinalizeRotation();
 	}
-	
+
 	RedrawWindow();
 	return g_bRotateMode;
 }
@@ -4667,11 +4677,11 @@ void CleanCopyEntities()
 	{
 		entity_t*	next = pe->next;
 		pe->epairs.Clear();
-		
+
 		Entity_Free( pe );
 		pe = next;
 	}
-	
+
 	g_enClipboard.next = g_enClipboard.prev = &g_enClipboard;
 }
 
@@ -4682,20 +4692,20 @@ void CleanCopyEntities()
 entity_t* Entity_CopyClone( entity_t* e )
 {
 	entity_t*	n;
-	
+
 	n = Entity_New();
 	n->brushes.onext = n->brushes.oprev = &n->brushes;
 	n->eclass = e->eclass;
 	n->rotation = e->rotation;
-	
+
 	// add the entity to the entity list
 	n->next = g_enClipboard.next;
 	g_enClipboard.next = n;
 	n->next->prev = n;
 	n->prev = &g_enClipboard;
-	
+
 	n->epairs = e->epairs;
-	
+
 	return n;
 }
 
@@ -4714,7 +4724,7 @@ bool OnList( entity_t* pFind, CPtrArray* pList )
 			return true;
 		}
 	}
-	
+
 	return false;
 }
 
@@ -4728,9 +4738,9 @@ void CXYWnd::Copy()
 	CWaitCursor WaitCursor;
 	g_Clipboard.SetLength( 0 );
 	g_PatchClipboard.SetLength( 0 );
-	
+
 	Map_SaveSelected( &g_Clipboard, &g_PatchClipboard );
-	
+
 	bool	bClipped = false;
 	UINT	nClipboard = ::RegisterClipboardFormat( "RadiantClippings" );
 	if( nClipboard > 0 )
@@ -4738,7 +4748,7 @@ void CXYWnd::Copy()
 		if( OpenClipboard() )
 		{
 			::EmptyClipboard();
-			
+
 			long	lSize = g_Clipboard.GetLength();
 			HANDLE	h = ::GlobalAlloc( GMEM_ZEROINIT | GMEM_MOVEABLE | GMEM_DDESHARE, lSize + sizeof( long ) );
 			if( h != NULL )
@@ -4755,12 +4765,12 @@ void CXYWnd::Copy()
 			}
 		}
 	}
-	
+
 	if( !bClipped )
 	{
 		common->Printf( "Unable to register Windows clipboard formats, copy/paste between editors will not be possible" );
 	}
-	
+
 	/*
 	 * CString strOut; ::GetTempPath(1024, strOut.GetBuffer(1024));
 	 * strOut.ReleaseBuffer(); AddSlash(strOut); strOut += "RadiantClipboard.$$$";
@@ -4784,12 +4794,12 @@ void CXYWnd::Copy()
 			{
 				entity_t*	e = pBrush->owner;
 				holdArray.Add( reinterpret_cast < void* >( e ) );
-	
+
 				entity_t*	pEClone = Entity_CopyClone( e );
 				for( brush_t* pEB = e->brushes.onext; pEB != &e->brushes; pEB = pEB->onext )
 				{
 					brush_t* pClone = Brush_Clone( pEB );
-	
+
 					// Brush_AddToList (pClone, &g_brClipboard);
 					Entity_LinkBrush( pEClone, pClone );
 					Brush_Build( pClone );
@@ -4866,22 +4876,22 @@ void CXYWnd::Paste()
 		if( h )
 		{
 			g_Clipboard.SetLength( 0 );
-			
+
 			unsigned char*	cp = reinterpret_cast < unsigned char* >( ::GlobalLock( h ) );
 			long			lSize = 0;
 			memcpy( &lSize, cp, sizeof( long ) );
 			cp += sizeof( long );
 			g_Clipboard.Write( cp, lSize );
 		}
-		
+
 		::GlobalUnlock( h );
 		::CloseClipboard();
 	}
-	
+
 	if( g_Clipboard.GetLength() > 0 )
 	{
 		g_Clipboard.SeekToBegin();
-		
+
 		int		nLen = g_Clipboard.GetLength();
 		char*	pBuffer = new char[nLen + 1];
 		memset( pBuffer, 0, sizeof( pBuffer ) );
@@ -4890,12 +4900,12 @@ void CXYWnd::Paste()
 		Map_ImportBuffer( pBuffer, !( GetAsyncKeyState( VK_SHIFT ) & 0x8000 ) );
 		delete[] pBuffer;
 	}
-	
+
 #if 0
 	if( g_PatchClipboard.GetLength() > 0 )
 	{
 		g_PatchClipboard.SeekToBegin();
-		
+
 		int		nLen = g_PatchClipboard.GetLength();
 		char*	pBuffer = new char[nLen + 1];
 		g_PatchClipboard.Read( pBuffer, nLen );
@@ -4908,21 +4918,21 @@ void CXYWnd::Paste()
 	if( g_brClipboard.next != &g_brClipboard || g_enClipboard.next != &g_enClipboard )
 	{
 		Select_Deselect();
-	
+
 		for( brush_t* pBrush = g_brClipboard.next; pBrush != NULL && pBrush != &g_brClipboard; pBrush = pBrush->next )
 		{
 			brush_t* pClone = Brush_Clone( pBrush );
-	
+
 			// pClone->owner = pBrush->owner;
 			if( pClone->owner == NULL )
 			{
 				Entity_LinkBrush( world_entity, pClone );
 			}
-	
+
 			Brush_AddToList( pClone, &selected_brushes );
 			Brush_Build( pClone );
 		}
-	
+
 		for
 		(
 			entity_t* pEntity = g_enClipboard.next;
@@ -4943,7 +4953,7 @@ void CXYWnd::Paste()
 				}
 			}
 		}
-	
+
 		Sys_UpdateWindows( W_ALL );
 	}
 	else
@@ -4984,12 +4994,12 @@ void CXYWnd::OnTimer( UINT nIDEvent )
 		m_vOrigin[nDim1] += m_ptDragAdj.x / m_fScale;
 		m_vOrigin[nDim2] -= m_ptDragAdj.y / m_fScale;
 		Sys_UpdateWindows( W_XY | W_CAMERA );
-		
+
 		// int nH = (m_ptDrag.y == 0) ? -1 : m_ptDrag.y;
 		m_ptDrag += m_ptDragAdj;
 		m_ptDragTotal += m_ptDragAdj;
 		XY_MouseMoved( m_ptDrag.x, m_nHeight - 1 - m_ptDrag.y, m_nScrollFlags );
-		
+
 		//
 		// m_vOrigin[nDim1] -= m_ptDrag.x / m_fScale; m_vOrigin[nDim1] -= m_ptDrag.x /
 		// m_fScale;
@@ -5004,7 +5014,7 @@ void CXYWnd::OnTimer( UINT nIDEvent )
 void CXYWnd::OnKeyUp( UINT nChar, UINT nRepCnt, UINT nFlags )
 {
 	g_pParentWnd->HandleKey( nChar, nRepCnt, nFlags, false );
-	
+
 	// CWnd::OnKeyUp(nChar, nRepCnt, nFlags);
 }
 
@@ -5063,7 +5073,7 @@ bool CXYWnd::AreaSelectOK()
 BOOL CXYWnd::OnEraseBkgnd( CDC* pDC )
 {
 	return TRUE;
-	
+
 	// return CWnd::OnEraseBkgnd(pDC);
 }
 
@@ -5105,11 +5115,13 @@ BOOL CXYWnd::OnMouseWheel( UINT nFlags, short zDelta, CPoint pt )
 void CXYWnd::CyclePrecisionCrosshairMode()
 {
 	common->Printf( "TODO: Make DrawPrecisionCrosshair work..." );
-	
+
 	/// Cycle to next mode, wrap if necessary
 	m_precisionCrosshairMode ++;
 	if( m_precisionCrosshairMode >= PRECISION_CROSSHAIR_MAX )
+	{
 		m_precisionCrosshairMode = PRECISION_CROSSHAIR_NONE;
+	}
 	Sys_UpdateWindows( W_XY );
 }
 
@@ -5127,38 +5139,44 @@ void CXYWnd::DrawPrecisionCrosshair()
 {
 	// FIXME: m_mouseX, m_mouseY, m_axisHoriz, m_axisVert, etc... are never set
 	return;
-	
+
 	idVec3 mouse3dPos( 0.0f, 0.0f, 0.0f );
 	float x, y;
 	idVec4 crossEndColor( 1.0f, 0.0f, 1.0f, 1.0f ); // the RGBA color of the precision crosshair at its ends
 	idVec4 crossMidColor; // the RGBA color of the precision crosshair at the crossing point
-	
+
 	/// Transform the mouse coordinates into axis-correct map-coordinates
 	if( m_precisionCrosshairMode == PRECISION_CROSSHAIR_SNAP )
+	{
 		SnapToPoint( m_mouseX, m_mouseY, mouse3dPos );
+	}
 	else
+	{
 		XY_ToPoint( m_mouseX, m_mouseY, mouse3dPos );
+	}
 	x = mouse3dPos[ m_axisHoriz ];
 	y = mouse3dPos[ m_axisVert ];
-	
+
 	/// Use the color specified by the user
-	
+
 	crossEndColor[0] = g_qeglobals.d_savedinfo.colors[ COLOR_PRECISION_CROSSHAIR ][0];
 	crossEndColor[1] = g_qeglobals.d_savedinfo.colors[ COLOR_PRECISION_CROSSHAIR ][1];
 	crossEndColor[2] = g_qeglobals.d_savedinfo.colors[ COLOR_PRECISION_CROSSHAIR ][2];
 	crossEndColor[3] = 1.0f;
-	
+
 	crossMidColor = crossEndColor;
-	
+
 	if( m_precisionCrosshairMode == PRECISION_CROSSHAIR_FREE )
-		crossMidColor[ 3 ] = 0.0f; // intersection-color is 100% transparent (alpha = 0.0f)
-		
+	{
+		crossMidColor[ 3 ] = 0.0f;    // intersection-color is 100% transparent (alpha = 0.0f)
+	}
+
 	/// Set up OpenGL states (for drawing smooth-shaded plain-colored lines)
 	glEnable( GL_BLEND );
 	glDisable( GL_TEXTURE_2D );
 	glShadeModel( GL_SMOOTH );
 	glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
-	
+
 	/// Draw a fullscreen-sized crosshair over the cursor
 	glBegin( GL_LINES );
 	{
@@ -5171,7 +5189,7 @@ void CXYWnd::DrawPrecisionCrosshair()
 		glVertex2f( x, y );
 		glColor4fv( crossEndColor.ToFloatPtr() );
 		glVertex2f( m_mcRight, y );
-		
+
 		/// Draw the vertical precision line (in two pieces)
 		glColor4fv( crossEndColor.ToFloatPtr() );
 		glVertex2f( x, m_mcTop );
@@ -5183,7 +5201,7 @@ void CXYWnd::DrawPrecisionCrosshair()
 		glVertex2f( x, m_mcBottom );
 	}
 	glEnd(); // GL_LINES
-	
+
 	// Radiant was in opaque, flat-shaded mode by default; restore this to prevent possible slowdown
 	glShadeModel( GL_FLAT );
 	glDisable( GL_BLEND );

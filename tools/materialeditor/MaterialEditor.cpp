@@ -34,7 +34,7 @@ If you have questions concerning this license or the applicable additional terms
 #include "MEMainFrame.h"
 
 #ifdef _DEBUG
-#define new DEBUG_NEW
+	#define new DEBUG_NEW
 #endif
 
 MEMainFrame* meMainFrame = NULL;
@@ -48,55 +48,55 @@ void MaterialEditorInit()
 {
 
 	InitPropTree( win32.hInstance );
-	
+
 	com_editors = EDITOR_MATERIAL;
-	
+
 	Sys_GrabMouseCursor( false );
-	
+
 	InitAfx();
-	
+
 	InitCommonControls();
-	
+
 	// Initialize OLE libraries
 	if( !AfxOleInit() )
 	{
 		return;
 	}
 	AfxEnableControlContainer();
-	
+
 	NONCLIENTMETRICS info;
 	info.cbSize = sizeof( info );
-	
+
 	::SystemParametersInfo( SPI_GETNONCLIENTMETRICS, sizeof( info ), &info, 0 );
-	
+
 	LOGFONT lf;
 	memset( &lf, 0, sizeof( LOGFONT ) );
-	
+
 	CWindowDC dc( NULL );
 	lf.lfCharSet = ( BYTE )GetTextCharsetInfo( dc.GetSafeHdc(), NULL, 0 );
-	
+
 	lf.lfHeight = info.lfMenuFont.lfHeight;
 	lf.lfWeight = info.lfMenuFont.lfWeight;
 	lf.lfItalic = info.lfMenuFont.lfItalic;
-	
+
 	// check if we should use system font
 	_tcscpy( lf.lfFaceName, info.lfMenuFont.lfFaceName );
-	
+
 	materialEditorFont = new CFont;
 	materialEditorFont->CreateFontIndirect( &lf );
-	
-	
+
+
 	// To create the main window, this code creates a new frame window
 	// object and then sets it as the application's main window object
 	meMainFrame = new MEMainFrame;
-	
+
 	// create and load the frame with its resources
 	meMainFrame->LoadFrame( IDR_ME_MAINFRAME, WS_OVERLAPPEDWINDOW | FWS_ADDTOTITLE, NULL, NULL );
-	
-	
+
+
 	// hide the doom window by default
 	::ShowWindow( win32.hWnd, SW_HIDE );
-	
+
 	// The one and only window has been initialized, so show and update it
 	meMainFrame->ShowWindow( SW_SHOW );
 	meMainFrame->UpdateWindow();
@@ -109,7 +109,7 @@ void MaterialEditorRun()
 {
 
 	MSG* msg = AfxGetCurrentMessage();
-	
+
 	while( ::PeekMessage( msg, NULL, NULL, NULL, PM_NOREMOVE ) )
 	{
 		// pump message
@@ -126,9 +126,9 @@ void MaterialEditorShutdown()
 {
 
 	delete meMainFrame;
-	
+
 	delete materialEditorFont;
-	
+
 	meMainFrame = NULL;
 }
 
@@ -138,7 +138,9 @@ void MaterialEditorShutdown()
 void MaterialEditorPrintConsole( const char* msg )
 {
 	if( com_editors & EDITOR_MATERIAL )
+	{
 		meMainFrame->PrintConsoleMessage( msg );
+	}
 }
 
 /**
@@ -156,12 +158,12 @@ class CAboutDlg : public CDialog
 {
 public:
 	CAboutDlg();
-	
+
 	enum { IDD = IDD_ME_ABOUTBOX };
-	
+
 protected:
 	virtual void DoDataExchange( CDataExchange* pDX );  // DDX/DDV support
-	
+
 	DECLARE_MESSAGE_MAP()
 };
 

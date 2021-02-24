@@ -51,11 +51,11 @@ public:
 		WT_RENDER,
 		WT_TRANSITION
 	};
-	
+
 	rvGEWindowWrapper( idWindow* window, EWindowType type );
-	
+
 	static rvGEWindowWrapper*	GetWrapper( idWindow* window );
-	
+
 	idWindow*			GetWindow();
 	idDict&				GetStateDict();
 	idDict&				GetVariableDict();
@@ -66,48 +66,48 @@ public:
 	int					GetChildCount();
 	int					GetDepth();
 	idWindow*			GetChild( int index );
-	
+
 	void				SetRect( idRectangle& rect );
 	void				SetState( const idDict& dict );
 	void				SetStateKey( const char* key, const char* value, bool update = true );
 	void				DeleteStateKey( const char* key );
 	bool				VerfiyStateKey( const char* name, const char* value, idStr* result = NULL );
-	
+
 	bool				IsFlippedHorz();
 	bool				IsFlippedVert();
 	bool				IsHidden();
 	bool				IsDeleted();
 	bool				IsSelected();
 	bool				IsExpanded();
-	
+
 	bool				CanHaveChildren();
 	bool				CanMoveAndSize();
-	
+
 	void				SetFlippedHorz( bool f );
 	void				SetFlippedVert( bool f );
 	void				SetHidden( bool v );
 	void				SetDeleted( bool del );
 	void				SetSelected( bool sel );
 	void				SetWindowType( EWindowType type );
-	
+
 	bool				Expand();
 	bool				Collapse();
-	
+
 	bool				EnumChildren( PFNENUMCHILDRENPROC proc, void* data );
-	
+
 	idWindow*			WindowFromPoint( float x, float y, bool visibleOnly = true );
-	
+
 	void				Finish();
-	
+
 	static EWindowType	StringToWindowType( const char* string );
 	static const char*	WindowTypeToString( EWindowType type );
-	
+
 protected:
 
 	void				CalcScreenRect();
 	void				UpdateRect();
 	void				UpdateWindowState();
-	
+
 	idRectangle		mClientRect;
 	idRectangle		mScreenRect;
 	idWindow*		mWindow;

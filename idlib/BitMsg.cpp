@@ -90,18 +90,18 @@ idBitMsg::GetByteSpace
 byte* idBitMsg::GetByteSpace( int length )
 {
 	byte* ptr;
-	
+
 	if( !writeData )
 	{
 		idLib::common->FatalError( "idBitMsg::GetByteSpace: cannot write to message" );
 	}
-	
+
 	// round up to the next byte
 	WriteByteAlign();
-	
+
 	// check for overflow
 	CheckOverflow( length << 3 );
-	
+
 	ptr = writeData + curSize;
 	curSize += length;
 	return ptr;
@@ -118,18 +118,18 @@ void idBitMsg::WriteBits( int value, int numBits )
 {
 	int		put;
 	int		fraction;
-	
+
 	if( !writeData )
 	{
 		idLib::common->Error( "idBitMsg::WriteBits: cannot write to message" );
 	}
-	
+
 	// check if the number of bits is valid
 	if( numBits == 0 || numBits < -31 || numBits > 32 )
 	{
 		idLib::common->Error( "idBitMsg::WriteBits: bad numBits %i", numBits );
 	}
-	
+
 	// check for value overflows
 	// this should be an error really, as it can go unnoticed and cause either bandwidth or corrupted data transmitted
 	if( numBits != 32 )
@@ -158,18 +158,18 @@ void idBitMsg::WriteBits( int value, int numBits )
 			}
 		}
 	}
-	
+
 	if( numBits < 0 )
 	{
 		numBits = -numBits;
 	}
-	
+
 	// check for msg overflow
 	if( CheckOverflow( numBits ) )
 	{
 		return;
 	}
-	
+
 	// write the bits
 	while( numBits )
 	{
@@ -207,7 +207,7 @@ void idBitMsg::WriteString( const char* s, int maxLength, bool make7Bit )
 		int i, l;
 		byte* dataPtr;
 		const byte* bytePtr;
-		
+
 		l = idStr::Length( s );
 		if( maxLength >= 0 && l >= maxLength )
 		{
@@ -287,7 +287,7 @@ idBitMsg::WriteDeltaByteCounter
 void idBitMsg::WriteDeltaByteCounter( int oldValue, int newValue )
 {
 	int i, x;
-	
+
 	x = oldValue ^ newValue;
 	for( i = 7; i > 0; i-- )
 	{
@@ -312,7 +312,7 @@ idBitMsg::WriteDeltaShortCounter
 void idBitMsg::WriteDeltaShortCounter( int oldValue, int newValue )
 {
 	int i, x;
-	
+
 	x = oldValue ^ newValue;
 	for( i = 15; i > 0; i-- )
 	{
@@ -337,7 +337,7 @@ idBitMsg::WriteDeltaLongCounter
 void idBitMsg::WriteDeltaLongCounter( int oldValue, int newValue )
 {
 	int i, x;
-	
+
 	x = oldValue ^ newValue;
 	for( i = 31; i > 0; i-- )
 	{
@@ -364,10 +364,10 @@ bool idBitMsg::WriteDeltaDict( const idDict& dict, const idDict* base )
 	int i;
 	const idKeyValue* kv, *basekv;
 	bool changed = false;
-	
+
 	if( base != NULL )
 	{
-	
+
 		for( i = 0; i < dict.GetNumKeyVals(); i++ )
 		{
 			kv = dict.GetKeyVal( i );
@@ -379,9 +379,9 @@ bool idBitMsg::WriteDeltaDict( const idDict& dict, const idDict* base )
 				changed = true;
 			}
 		}
-		
+
 		WriteString( "" );
-		
+
 		for( i = 0; i < base->GetNumKeyVals(); i++ )
 		{
 			basekv = base->GetKeyVal( i );
@@ -392,13 +392,13 @@ bool idBitMsg::WriteDeltaDict( const idDict& dict, const idDict* base )
 				changed = true;
 			}
 		}
-		
+
 		WriteString( "" );
-		
+
 	}
 	else
 	{
-	
+
 		for( i = 0; i < dict.GetNumKeyVals(); i++ )
 		{
 			kv = dict.GetKeyVal( i );
@@ -407,11 +407,11 @@ bool idBitMsg::WriteDeltaDict( const idDict& dict, const idDict* base )
 			changed = true;
 		}
 		WriteString( "" );
-		
+
 		WriteString( "" );
-		
+
 	}
-	
+
 	return changed;
 }
 
@@ -429,21 +429,21 @@ int idBitMsg::ReadBits( int numBits ) const
 	int		get;
 	int		fraction;
 	bool	sgn;
-	
+
 	if( !readData )
 	{
 		idLib::common->FatalError( "idBitMsg::ReadBits: cannot read from message" );
 	}
-	
+
 	// check if the number of bits is valid
 	if( numBits == 0 || numBits < -31 || numBits > 32 )
 	{
 		idLib::common->FatalError( "idBitMsg::ReadBits: bad numBits %i", numBits );
 	}
-	
+
 	value = 0;
 	valueBits = 0;
-	
+
 	if( numBits < 0 )
 	{
 		numBits = -numBits;
@@ -453,13 +453,13 @@ int idBitMsg::ReadBits( int numBits ) const
 	{
 		sgn = false;
 	}
-	
+
 	// check for overflow
 	if( numBits > GetRemainingReadBits() )
 	{
 		return -1;
 	}
-	
+
 	while( valueBits < numBits )
 	{
 		if( readBit == 0 )
@@ -475,11 +475,11 @@ int idBitMsg::ReadBits( int numBits ) const
 		fraction >>= readBit;
 		fraction &= ( 1 << get ) - 1;
 		value |= fraction << valueBits;
-		
+
 		valueBits += get;
 		readBit = ( readBit + get ) & 7;
 	}
-	
+
 	if( sgn )
 	{
 		if( value & ( 1 << ( numBits - 1 ) ) )
@@ -487,7 +487,7 @@ int idBitMsg::ReadBits( int numBits ) const
 			value |= -1 ^ ( ( 1 << numBits ) - 1 );
 		}
 	}
-	
+
 	return value;
 }
 
@@ -499,7 +499,7 @@ idBitMsg::ReadString
 int idBitMsg::ReadString( char* buffer, int bufferSize ) const
 {
 	int	l, c;
-	
+
 	ReadByteAlign();
 	l = 0;
 	while( 1 )
@@ -514,7 +514,7 @@ int idBitMsg::ReadString( char* buffer, int bufferSize ) const
 		{
 			c = '.';
 		}
-		
+
 		// we will read past any excessively long string, so
 		// the following data can be read, but the string will
 		// be truncated
@@ -524,7 +524,7 @@ int idBitMsg::ReadString( char* buffer, int bufferSize ) const
 			l++;
 		}
 	}
-	
+
 	buffer[l] = 0;
 	return l;
 }
@@ -537,10 +537,10 @@ idBitMsg::ReadData
 int idBitMsg::ReadData( void* data, int length ) const
 {
 	int cnt;
-	
+
 	ReadByteAlign();
 	cnt = readCount;
-	
+
 	if( readCount + length > curSize )
 	{
 		if( data )
@@ -557,7 +557,7 @@ int idBitMsg::ReadData( void* data, int length ) const
 		}
 		readCount += length;
 	}
-	
+
 	return ( readCount - cnt );
 }
 
@@ -569,7 +569,7 @@ idBitMsg::ReadNetadr
 void idBitMsg::ReadNetadr( netadr_t* adr ) const
 {
 	int i;
-	
+
 	adr->type = NA_IP;
 	for( i = 0; i < 4; i++ )
 	{
@@ -600,14 +600,14 @@ idBitMsg::ReadDeltaByteCounter
 int idBitMsg::ReadDeltaByteCounter( int oldValue ) const
 {
 	int i, newValue;
-	
+
 	i = ReadBits( 3 );
 	if( !i )
 	{
 		return oldValue;
 	}
 	newValue = ReadBits( i );
-	
+
 	// RB: fixed missing parentheses
 	return ( ( oldValue & ~( ( 1 << i ) - 1 ) ) | newValue );
 	// RB end
@@ -621,14 +621,14 @@ idBitMsg::ReadDeltaShortCounter
 int idBitMsg::ReadDeltaShortCounter( int oldValue ) const
 {
 	int i, newValue;
-	
+
 	i = ReadBits( 4 );
 	if( !i )
 	{
 		return oldValue;
 	}
 	newValue = ReadBits( i );
-	
+
 	// RB: fixed missing parentheses
 	return ( ( oldValue & ~( ( 1 << i ) - 1 ) ) | newValue );
 	// RB end
@@ -642,14 +642,14 @@ idBitMsg::ReadDeltaLongCounter
 int idBitMsg::ReadDeltaLongCounter( int oldValue ) const
 {
 	int i, newValue;
-	
+
 	i = ReadBits( 5 );
 	if( !i )
 	{
 		return oldValue;
 	}
 	newValue = ReadBits( i );
-	
+
 	// RB: fixed missing parentheses
 	return ( ( oldValue & ~( ( 1 << i ) - 1 ) ) | newValue );
 	// RB end
@@ -665,7 +665,7 @@ bool idBitMsg::ReadDeltaDict( idDict& dict, const idDict* base ) const
 	char		key[MAX_STRING_CHARS];
 	char		value[MAX_STRING_CHARS];
 	bool		changed = false;
-	
+
 	if( base != NULL )
 	{
 		dict = *base;
@@ -674,20 +674,20 @@ bool idBitMsg::ReadDeltaDict( idDict& dict, const idDict* base ) const
 	{
 		dict.Clear();
 	}
-	
+
 	while( ReadString( key, sizeof( key ) ) != 0 )
 	{
 		ReadString( value, sizeof( value ) );
 		dict.Set( key, value );
 		changed = true;
 	}
-	
+
 	while( ReadString( key, sizeof( key ) ) != 0 )
 	{
 		dict.Delete( key );
 		changed = true;
 	}
-	
+
 	return changed;
 }
 
@@ -700,14 +700,14 @@ int idBitMsg::DirToBits( const idVec3& dir, int numBits )
 {
 	int max, bits;
 	float bias;
-	
+
 	assert( numBits >= 6 && numBits <= 32 );
 	assert( dir.LengthSqr() - 1.0f < 0.01f );
-	
+
 	numBits /= 3;
 	max = ( 1 << ( numBits - 1 ) ) - 1;
 	bias = 0.5f / max;
-	
+
 	bits = IEEE_FLT_SIGNBITSET( dir.x ) << ( numBits * 3 - 1 );
 	bits |= ( idMath::Ftoi( ( idMath::Fabs( dir.x ) + bias ) * max ) ) << ( numBits * 2 );
 	bits |= IEEE_FLT_SIGNBITSET( dir.y ) << ( numBits * 2 - 1 );
@@ -728,13 +728,13 @@ idVec3 idBitMsg::BitsToDir( int bits, int numBits )
 	int max;
 	float invMax;
 	idVec3 dir;
-	
+
 	assert( numBits >= 6 && numBits <= 32 );
-	
+
 	numBits /= 3;
 	max = ( 1 << ( numBits - 1 ) ) - 1;
 	invMax = 1.0f / max;
-	
+
 	dir.x = sign[( bits >> ( numBits * 3 - 1 ) ) & 1] * ( ( bits >> ( numBits * 2 ) ) & max ) * invMax;
 	dir.y = sign[( bits >> ( numBits * 2 - 1 ) ) & 1] * ( ( bits >> ( numBits * 1 ) ) & max ) * invMax;
 	dir.z = sign[( bits >> ( numBits * 1 - 1 ) ) & 1] * ( ( bits >> ( numBits * 0 ) ) & max ) * invMax;
@@ -764,7 +764,7 @@ void idBitMsgDelta::WriteBits( int value, int numBits )
 	{
 		newBase->WriteBits( value, numBits );
 	}
-	
+
 	if( !base )
 	{
 		writeDelta->WriteBits( value, numBits );
@@ -797,7 +797,7 @@ void idBitMsgDelta::WriteDelta( int oldValue, int newValue, int numBits )
 	{
 		newBase->WriteBits( newValue, numBits );
 	}
-	
+
 	if( !base )
 	{
 		if( oldValue == newValue )
@@ -844,7 +844,7 @@ idBitMsgDelta::ReadBits
 int idBitMsgDelta::ReadBits( int numBits ) const
 {
 	int value;
-	
+
 	if( !base )
 	{
 		value = readDelta->ReadBits( numBits );
@@ -863,7 +863,7 @@ int idBitMsgDelta::ReadBits( int numBits ) const
 			changed = true;
 		}
 	}
-	
+
 	if( newBase )
 	{
 		newBase->WriteBits( value, numBits );
@@ -879,7 +879,7 @@ idBitMsgDelta::ReadDelta
 int idBitMsgDelta::ReadDelta( int oldValue, int numBits ) const
 {
 	int value;
-	
+
 	if( !base )
 	{
 		if( readDelta->ReadBits( 1 ) == 0 )
@@ -910,7 +910,7 @@ int idBitMsgDelta::ReadDelta( int oldValue, int numBits ) const
 			changed = true;
 		}
 	}
-	
+
 	if( newBase )
 	{
 		newBase->WriteBits( value, numBits );
@@ -929,7 +929,7 @@ void idBitMsgDelta::WriteString( const char* s, int maxLength )
 	{
 		newBase->WriteString( s, maxLength );
 	}
-	
+
 	if( !base )
 	{
 		writeDelta->WriteString( s, maxLength );
@@ -963,7 +963,7 @@ void idBitMsgDelta::WriteData( const void* data, int length )
 	{
 		newBase->WriteData( data, length );
 	}
-	
+
 	if( !base )
 	{
 		writeDelta->WriteData( data, length );
@@ -998,7 +998,7 @@ void idBitMsgDelta::WriteDict( const idDict& dict )
 	{
 		newBase->WriteDeltaDict( dict, NULL );
 	}
-	
+
 	if( !base )
 	{
 		writeDelta->WriteDeltaDict( dict, NULL );
@@ -1023,7 +1023,7 @@ void idBitMsgDelta::WriteDeltaByteCounter( int oldValue, int newValue )
 	{
 		newBase->WriteBits( newValue, 8 );
 	}
-	
+
 	if( !base )
 	{
 		writeDelta->WriteDeltaByteCounter( oldValue, newValue );
@@ -1056,7 +1056,7 @@ void idBitMsgDelta::WriteDeltaShortCounter( int oldValue, int newValue )
 	{
 		newBase->WriteBits( newValue, 16 );
 	}
-	
+
 	if( !base )
 	{
 		writeDelta->WriteDeltaShortCounter( oldValue, newValue );
@@ -1089,7 +1089,7 @@ void idBitMsgDelta::WriteDeltaLongCounter( int oldValue, int newValue )
 	{
 		newBase->WriteBits( newValue, 32 );
 	}
-	
+
 	if( !base )
 	{
 		writeDelta->WriteDeltaLongCounter( oldValue, newValue );
@@ -1137,7 +1137,7 @@ void idBitMsgDelta::ReadString( char* buffer, int bufferSize ) const
 			changed = true;
 		}
 	}
-	
+
 	if( newBase )
 	{
 		newBase->WriteString( buffer );
@@ -1171,7 +1171,7 @@ void idBitMsgDelta::ReadData( void* data, int length ) const
 			changed = true;
 		}
 	}
-	
+
 	if( newBase )
 	{
 		newBase->WriteData( data, length );
@@ -1203,7 +1203,7 @@ void idBitMsgDelta::ReadDict( idDict& dict )
 			changed = readDelta->ReadDeltaDict( dict, &baseDict );
 		}
 	}
-	
+
 	if( newBase )
 	{
 		newBase->WriteDeltaDict( dict, NULL );
@@ -1218,7 +1218,7 @@ idBitMsgDelta::ReadDeltaByteCounter
 int idBitMsgDelta::ReadDeltaByteCounter( int oldValue ) const
 {
 	int value;
-	
+
 	if( !base )
 	{
 		value = readDelta->ReadDeltaByteCounter( oldValue );
@@ -1237,7 +1237,7 @@ int idBitMsgDelta::ReadDeltaByteCounter( int oldValue ) const
 			changed = true;
 		}
 	}
-	
+
 	if( newBase )
 	{
 		newBase->WriteBits( value, 8 );
@@ -1253,7 +1253,7 @@ idBitMsgDelta::ReadDeltaShortCounter
 int idBitMsgDelta::ReadDeltaShortCounter( int oldValue ) const
 {
 	int value;
-	
+
 	if( !base )
 	{
 		value = readDelta->ReadDeltaShortCounter( oldValue );
@@ -1272,7 +1272,7 @@ int idBitMsgDelta::ReadDeltaShortCounter( int oldValue ) const
 			changed = true;
 		}
 	}
-	
+
 	if( newBase )
 	{
 		newBase->WriteBits( value, 16 );
@@ -1288,7 +1288,7 @@ idBitMsgDelta::ReadDeltaLongCounter
 int idBitMsgDelta::ReadDeltaLongCounter( int oldValue ) const
 {
 	int value;
-	
+
 	if( !base )
 	{
 		value = readDelta->ReadDeltaLongCounter( oldValue );
@@ -1307,7 +1307,7 @@ int idBitMsgDelta::ReadDeltaLongCounter( int oldValue ) const
 			changed = true;
 		}
 	}
-	
+
 	if( newBase )
 	{
 		newBase->WriteBits( value, 32 );

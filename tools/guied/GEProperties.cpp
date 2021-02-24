@@ -69,7 +69,7 @@ bool rvGEProperties::Create( HWND parent, bool visible )
 	wndClass.lpszMenuName  = NULL;
 	wndClass.hInstance     = win32.hInstance;
 	RegisterClassEx( &wndClass );
-	
+
 	mWnd = CreateWindowEx( WS_EX_TOOLWINDOW,
 						   "GUIEDITOR_PROPERTIES_CLASS",
 						   "Properties",
@@ -79,17 +79,17 @@ bool rvGEProperties::Create( HWND parent, bool visible )
 						   NULL,
 						   win32.hInstance,
 						   this );
-						   
+
 	if( !mWnd )
 	{
 		return false;
 	}
-	
+
 	if( !gApp.GetOptions().GetWindowPlacement( "properties", mWnd ) )
 	{
 		RECT rParent;
 		RECT rClient;
-		
+
 		GetWindowRect( parent, &rParent );
 		GetWindowRect( mWnd, &rClient );
 		SetWindowPos( mWnd, NULL,
@@ -98,9 +98,9 @@ bool rvGEProperties::Create( HWND parent, bool visible )
 					  0, 0,
 					  SWP_NOZORDER | SWP_NOSIZE );
 	}
-	
+
 	Show( visible );
-	
+
 	return true;
 }
 
@@ -127,7 +127,7 @@ Update the properties in the window
 void rvGEProperties::Update()
 {
 	int i;
-	
+
 	if( mWorkspace && mWorkspace->GetSelectionMgr( ).Num( ) == 1 )
 	{
 		mWrapper = rvGEWindowWrapper::GetWrapper( mWorkspace->GetSelectionMgr()[0] );
@@ -136,11 +136,11 @@ void rvGEProperties::Update()
 	{
 		mWrapper = NULL;
 	}
-	
+
 	ShowWindow( mGrid.GetWindow( ), mWrapper ? SW_SHOW : SW_HIDE );
-	
+
 	mGrid.RemoveAllItems( );
-	
+
 	if( mWrapper )
 	{
 		for( i = 0; i < ( int )mWrapper->GetStateDict().GetNumKeyVals( ); i ++ )
@@ -165,7 +165,7 @@ bool rvGEProperties::AddModifier( const char* name, const char* value )
 {
 	idDict tempstate;
 	idStr  tempvalue;
-	
+
 	tempvalue = value;
 	if( !mWrapper->VerfiyStateKey( name, tempvalue ) )
 	{
@@ -178,15 +178,15 @@ bool rvGEProperties::AddModifier( const char* name, const char* value )
 			return false;
 		}
 	}
-	
+
 	tempstate = mWrapper->GetStateDict( );
-	
+
 	tempstate.Set( name, tempvalue );
-	
+
 	mWorkspace->GetModifierStack().Append( new rvGEStateModifier( "Property Change", mWrapper->GetWindow(), tempstate ) );
 	mWorkspace->SetModified( true );
 	gApp.GetNavigator().Update( );
-	
+
 	return true;
 }
 
@@ -200,18 +200,18 @@ Window Procedure for the properties window
 LRESULT CALLBACK rvGEProperties::WndProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam )
 {
 	rvGEProperties* kv = ( rvGEProperties* ) GetWindowLong( hWnd, GWL_USERDATA );
-	
+
 	if( kv && kv->mGrid.ReflectMessage( hWnd, msg, wParam, lParam ) )
 	{
 		return 0;
 	}
-	
+
 	switch( msg )
 	{
 		case WM_ACTIVATE:
 			common->ActivateTool( LOWORD( wParam ) != WA_INACTIVE );
 			break;
-			
+
 		case WM_NOTIFY:
 		{
 			NMHDR* hdr;
@@ -233,7 +233,7 @@ LRESULT CALLBACK rvGEProperties::WndProc( HWND hWnd, UINT msg, WPARAM wParam, LP
 													if ( sel != -1 )
 													{
 														const char* prop;
-						
+
 														prop = kv->mGrid.GetItemName(sel);
 														if ( !idStr::Icmp ( prop, "rect" )		||
 															 !idStr::Icmp ( prop, "visible" )	||
@@ -263,48 +263,48 @@ LRESULT CALLBACK rvGEProperties::WndProc( HWND hWnd, UINT msg, WPARAM wParam, LP
 			}
 			break;
 		}
-		
+
 		case WM_CREATE:
 		{
 			LPCREATESTRUCT	cs;
-			
+
 			// Attach the class to the window first
 			cs = ( LPCREATESTRUCT ) lParam;
 			kv = ( rvGEProperties* ) cs->lpCreateParams;
 			SetWindowLong( hWnd, GWL_USERDATA, ( LONG )kv );
-			
+
 			kv->mGrid.Create( hWnd, 999, PGS_ALLOWINSERT );
-			
+
 			kv->SetWorkspace( NULL );
 			kv->Update( );
-			
+
 			break;
 		}
-		
+
 		case WM_ERASEBKGND:
 			if( kv->mWrapper )
 			{
 				return FALSE;
 			}
 			break;
-			
+
 		case WM_SIZE:
 			kv->mGrid.Move( 0, 0, LOWORD( lParam ), HIWORD( lParam ), TRUE );
 			break;
-			
+
 		case WM_CLOSE:
 			gApp.GetOptions().SetPropertiesVisible( false );
 			kv->Show( false );
 			return 0;
-			
+
 		case WM_NCACTIVATE:
 			return gApp.ToolWindowActivate( hWnd, msg, wParam, lParam );
-			
+
 		case WM_DESTROY:
 			gApp.GetOptions().SetWindowPlacement( "properties", hWnd );
 			break;
 	}
-	
+
 	return DefWindowProc( hWnd, msg, wParam, lParam );
 }
 

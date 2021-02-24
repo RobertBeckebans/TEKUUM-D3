@@ -34,9 +34,9 @@ If you have questions concerning this license or the applicable additional terms
 #include "EntityListDlg.h"
 
 #ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
+	#define new DEBUG_NEW
+	#undef THIS_FILE
+	static char THIS_FILE[] = __FILE__;
 #endif
 
 CEntityListDlg g_EntityListDlg;
@@ -51,7 +51,7 @@ void CEntityListDlg::ShowDialog()
 	}
 	g_EntityListDlg.UpdateList();
 	g_EntityListDlg.ShowWindow( SW_SHOW );
-	
+
 }
 
 CEntityListDlg::CEntityListDlg( CWnd* pParent /*=NULL*/ )
@@ -128,16 +128,16 @@ void CEntityListDlg::OnCancel()
 BOOL CEntityListDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
-	
+
 	UpdateList();
-	
+
 	CRect rct;
 	m_lstEntity.GetClientRect( rct );
 	m_lstEntity.InsertColumn( 0, "Key", LVCFMT_LEFT, rct.Width() / 2 );
 	m_lstEntity.InsertColumn( 1, "Value", LVCFMT_LEFT, rct.Width() / 2 );
 	m_lstEntity.DeleteColumn( 2 );
 	UpdateData( FALSE );
-	
+
 	return TRUE;  // return TRUE unless you set the focus to a control
 	// EXCEPTION: OCX Property Pages should return FALSE
 }

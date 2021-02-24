@@ -36,31 +36,31 @@ If you have questions concerning this license or the applicable additional terms
 #include "../../ui/UserInterfaceLocal.h"
 
 #ifndef GEOPTIONS_H_
-#include "GEOptions.h"
+	#include "GEOptions.h"
 #endif // GEOPTIONS_H_
 
 #ifndef GEWINDOWWRAPPER_H_
-#include "GEWindowWrapper.h"
+	#include "GEWindowWrapper.h"
 #endif // GEWINDOWWRAPPER_H_
 
 #ifndef GEWORKSPACE_H_
-#include "GEWorkspace.h"
+	#include "GEWorkspace.h"
 #endif // GEWORKSPACE_H_
 
 #ifndef GENAVIGATOR_H_
-#include "GENavigator.h"
+	#include "GENavigator.h"
 #endif // GENAVIGATOR_H_
 
 #ifndef GEPROPERTIES_H_
-#include "GEProperties.h"
+	#include "GEProperties.h"
 #endif // GEPROPERTIES_H_
 
 #ifndef GETRANSFORMER_H_
-#include "GETransformer.h"
+	#include "GETransformer.h"
 #endif // GETRANSFORMER_H_
 
 #ifndef GESTATUSBAR_H_
-#include "GEStatusBar.h"
+	#include "GEStatusBar.h"
 #endif // GESTATUSBAR_H_
 
 // Utility functions
@@ -76,13 +76,13 @@ public:
 
 	rvGEApp( );
 	~rvGEApp( );
-	
+
 	bool				Initialize();
 	void				RunFrame();
 //	bool				Uninitialize			();
 
 	bool				TranslateAccelerator( LPMSG msg );
-	
+
 	rvGEWorkspace*		GetActiveWorkspace( HWND* retwnd = NULL );
 	rvGENavigator&		GetNavigator();
 	rvGEProperties&		GetProperties();
@@ -92,29 +92,29 @@ public:
 	HWND				GetMDIFrame();
 	HWND				GetMDIClient();
 	rvGEStatusBar&		GetStatusBar();
-	
+
 	bool				OpenFile( const char* filename );
 	bool				SaveFile( const char* filename );
 	bool				NewFile();
-	
+
 	bool				IsActive();
-	
+
 	void				CloseViewer();
-	
+
 	int					ToolWindowActivate( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam );
-	
+
 	int					MessageBox( const char* text, int flags );
-	
+
 protected:
 
 	int						HandleCommand( WPARAM wParam, LPARAM lParam );
 	int						HandleInitMenu( WPARAM wParam, LPARAM lParam );
-	
+
 	void					HandleCommandSave( rvGEWorkspace* workspace, const char* filename );
-	
+
 	bool					InitRecentFiles();
 	void					UpdateRecentFiles();
-	
+
 	HWND					mMDIFrame;
 	HWND					mMDIClient;
 	HINSTANCE				mInstance;
@@ -124,20 +124,20 @@ protected:
 	rvGETransformer			mTransformer;
 	rvGEStatusBar			mStatusBar;
 	rvGEProperties			mProperties;
-	
+
 	HMENU					mRecentFileMenu;
 	int						mRecentFileInsertPos;
-	
+
 	rvGEViewer*				mViewer;
-	
+
 	idList<rvGEWorkspace*>	mWorkspaces;
 	idList<HWND>			mToolWindows;
-	
+
 private:
 
 	static LRESULT CALLBACK	FrameWndProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam );
 	static LRESULT CALLBACK	MDIChildProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam );
-	
+
 };
 
 ID_INLINE bool rvGEApp::IsActive()

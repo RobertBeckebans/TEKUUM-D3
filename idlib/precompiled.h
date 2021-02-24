@@ -37,7 +37,7 @@ If you have questions concerning this license or the applicable additional terms
 
 // RB begin
 #if 1 //!defined(__ANDROID__)
-#include "sys/sys_intrinsics.h"
+	#include "sys/sys_intrinsics.h"
 #endif
 // RB end
 #include "sys/sys_threading.h"
@@ -91,90 +91,90 @@ const int MAX_EXPRESSION_REGISTERS = 4096;
 
 // RB begin
 #if defined(USE_ANGLE)
-#include <GLES2/gl2.h>
-#include <GLES2/gl2ext.h>
+	#include <GLES2/gl2.h>
+	#include <GLES2/gl2ext.h>
 
-#define GL_CLAMP_TO_BORDER GL_CLAMP_TO_EDGE
+	#define GL_CLAMP_TO_BORDER GL_CLAMP_TO_EDGE
 
-//#define glClearDepth glClearDepthf
-//#define glDepthRange glDepthRangef
+	//#define glClearDepth glClearDepthf
+	//#define glDepthRange glDepthRangef
 
 #elif !defined(ID_TYPEINFO) && !defined(__ANDROID__)
-#include "../libs/glew/include/GL/glew.h"
-//#include "../renderer/qgl.h"
+	#include "../libs/glew/include/GL/glew.h"
+	//#include "../renderer/qgl.h"
 #endif
 
 #if defined(__ANDROID__)
 
-#if defined(USE_GLES3)
-#include <GLES3/gl3.h>
-//#include <GLES3/gl3ext.h>
-#elif defined(USE_GLES2)
-#include <GLES2/gl2.h>
-#include <GLES2/gl2ext.h>
-#elif defined(USE_GLES1)
-#include <GLES/gl.h>
-#include <GLES/glext.h>
-#endif
+	#if defined(USE_GLES3)
+		#include <GLES3/gl3.h>
+		//#include <GLES3/gl3ext.h>
+	#elif defined(USE_GLES2)
+		#include <GLES2/gl2.h>
+		#include <GLES2/gl2ext.h>
+	#elif defined(USE_GLES1)
+		#include <GLES/gl.h>
+		#include <GLES/glext.h>
+	#endif
 
 
-#if defined(USE_GLES2)
+	#if defined(USE_GLES2)
 
-#define glClearDepth glClearDepthf
-#define glDepthRange glDepthRangef
+		#define glClearDepth glClearDepthf
+		#define glDepthRange glDepthRangef
 
-#define glLoadIdentity esLoadIdentity
-#define glLoadMatrixf esLoadMatrixf
-#define glMatrixMode esMatrixMode
-#define glOrtho esOrthof
-#define glPushMatrix esPushMatrix
-#define glPopMatrix glPopMatrix
+		#define glLoadIdentity esLoadIdentity
+		#define glLoadMatrixf esLoadMatrixf
+		#define glMatrixMode esMatrixMode
+		#define glOrtho esOrthof
+		#define glPushMatrix esPushMatrix
+		#define glPopMatrix glPopMatrix
 
-#define glEnableClientState esEnableClientState
-#define glDisableClientState esDisableClientState
+		#define glEnableClientState esEnableClientState
+		#define glDisableClientState esDisableClientState
 
-#define glVertexPointer esVertexPointer
-#define glNormalPointer esNormalPointer
-#define glTexCoordPointer esTexCoordPointer
-#define glColorPointer esColorPointer
+		#define glVertexPointer esVertexPointer
+		#define glNormalPointer esNormalPointer
+		#define glTexCoordPointer esTexCoordPointer
+		#define glColorPointer esColorPointer
 
-#define glColor4f esColor4f
-
-
-#define GL_MODELVIEW 0x1700
-#define GL_PROJECTION 0x1701
-
-#define GL_VERTEX_ARRAY 0x8074
-#define GL_NORMAL_ARRAY 0x8075
-#define GL_COLOR_ARRAY 0x8076
-#define GL_TEXTURE_COORD_ARRAY 0x8078
+		#define glColor4f esColor4f
 
 
-#define GL_TEXTURE_CUBE_MAP_EXT GL_TEXTURE_CUBE_MAP
-#define GL_TEXTURE_BINDING_CUBE_MAP_EXT GL_TEXTURE_BINDING_CUBE_MAP
-#define GL_TEXTURE_CUBE_MAP_POSITIVE_X_EXT GL_TEXTURE_CUBE_MAP_POSITIVE_X
-#define GL_TEXTURE_CUBE_MAP_NEGATIVE_X_EXT GL_TEXTURE_CUBE_MAP_NEGATIVE_X
-#define GL_TEXTURE_CUBE_MAP_POSITIVE_Y_EXT GL_TEXTURE_CUBE_MAP_POSITIVE_Y
-#define GL_TEXTURE_CUBE_MAP_NEGATIVE_Y_EXT GL_TEXTURE_CUBE_MAP_NEGATIVE_Y
-#define GL_TEXTURE_CUBE_MAP_POSITIVE_Z_EXT GL_TEXTURE_CUBE_MAP_POSITIVE_Z
-#define GL_TEXTURE_CUBE_MAP_NEGATIVE_Z_EXT GL_TEXTURE_CUBE_MAP_NEGATIVE_Z
+		#define GL_MODELVIEW 0x1700
+		#define GL_PROJECTION 0x1701
 
-#elif defined(USE_GLES1)
+		#define GL_VERTEX_ARRAY 0x8074
+		#define GL_NORMAL_ARRAY 0x8075
+		#define GL_COLOR_ARRAY 0x8076
+		#define GL_TEXTURE_COORD_ARRAY 0x8078
 
-#define glClearDepth glClearDepthf
-#define glDepthRange glDepthRangef
-#define glOrtho glOrthof
 
-#define GL_TEXTURE_CUBE_MAP_EXT GL_TEXTURE_CUBE_MAP_OES
-#define GL_TEXTURE_BINDING_CUBE_MAP_EXT GL_TEXTURE_BINDING_CUBE_MAP_OES
-#define GL_TEXTURE_CUBE_MAP_POSITIVE_X_EXT GL_TEXTURE_CUBE_MAP_POSITIVE_X_OES
-#define GL_TEXTURE_CUBE_MAP_NEGATIVE_X_EXT GL_TEXTURE_CUBE_MAP_NEGATIVE_X_OES
-#define GL_TEXTURE_CUBE_MAP_POSITIVE_Y_EXT GL_TEXTURE_CUBE_MAP_POSITIVE_Y_OES
-#define GL_TEXTURE_CUBE_MAP_NEGATIVE_Y_EXT GL_TEXTURE_CUBE_MAP_NEGATIVE_Y_OES
-#define GL_TEXTURE_CUBE_MAP_POSITIVE_Z_EXT GL_TEXTURE_CUBE_MAP_POSITIVE_Z_OES
-#define GL_TEXTURE_CUBE_MAP_NEGATIVE_Z_EXT GL_TEXTURE_CUBE_MAP_NEGATIVE_Z_OES
+		#define GL_TEXTURE_CUBE_MAP_EXT GL_TEXTURE_CUBE_MAP
+		#define GL_TEXTURE_BINDING_CUBE_MAP_EXT GL_TEXTURE_BINDING_CUBE_MAP
+		#define GL_TEXTURE_CUBE_MAP_POSITIVE_X_EXT GL_TEXTURE_CUBE_MAP_POSITIVE_X
+		#define GL_TEXTURE_CUBE_MAP_NEGATIVE_X_EXT GL_TEXTURE_CUBE_MAP_NEGATIVE_X
+		#define GL_TEXTURE_CUBE_MAP_POSITIVE_Y_EXT GL_TEXTURE_CUBE_MAP_POSITIVE_Y
+		#define GL_TEXTURE_CUBE_MAP_NEGATIVE_Y_EXT GL_TEXTURE_CUBE_MAP_NEGATIVE_Y
+		#define GL_TEXTURE_CUBE_MAP_POSITIVE_Z_EXT GL_TEXTURE_CUBE_MAP_POSITIVE_Z
+		#define GL_TEXTURE_CUBE_MAP_NEGATIVE_Z_EXT GL_TEXTURE_CUBE_MAP_NEGATIVE_Z
 
-#endif
+	#elif defined(USE_GLES1)
+
+		#define glClearDepth glClearDepthf
+		#define glDepthRange glDepthRangef
+		#define glOrtho glOrthof
+
+		#define GL_TEXTURE_CUBE_MAP_EXT GL_TEXTURE_CUBE_MAP_OES
+		#define GL_TEXTURE_BINDING_CUBE_MAP_EXT GL_TEXTURE_BINDING_CUBE_MAP_OES
+		#define GL_TEXTURE_CUBE_MAP_POSITIVE_X_EXT GL_TEXTURE_CUBE_MAP_POSITIVE_X_OES
+		#define GL_TEXTURE_CUBE_MAP_NEGATIVE_X_EXT GL_TEXTURE_CUBE_MAP_NEGATIVE_X_OES
+		#define GL_TEXTURE_CUBE_MAP_POSITIVE_Y_EXT GL_TEXTURE_CUBE_MAP_POSITIVE_Y_OES
+		#define GL_TEXTURE_CUBE_MAP_NEGATIVE_Y_EXT GL_TEXTURE_CUBE_MAP_NEGATIVE_Y_OES
+		#define GL_TEXTURE_CUBE_MAP_POSITIVE_Z_EXT GL_TEXTURE_CUBE_MAP_POSITIVE_Z_OES
+		#define GL_TEXTURE_CUBE_MAP_NEGATIVE_Z_EXT GL_TEXTURE_CUBE_MAP_NEGATIVE_Z_OES
+
+	#endif
 
 
 
@@ -186,17 +186,17 @@ const int MAX_EXPRESSION_REGISTERS = 4096;
 
 
 #ifndef GL_EXT_texture_compression_s3tc
-#define GL_EXT_texture_compression_s3tc 1
+	#define GL_EXT_texture_compression_s3tc 1
 
-#define GL_COMPRESSED_RGB_S3TC_DXT1_EXT							0x83F0
-#define GL_COMPRESSED_RGBA_S3TC_DXT1_EXT						0x83F1
-#define GL_COMPRESSED_RGBA_S3TC_DXT3_EXT						0x83F2
-#define GL_COMPRESSED_RGBA_S3TC_DXT5_EXT						0x83F3
+	#define GL_COMPRESSED_RGB_S3TC_DXT1_EXT							0x83F0
+	#define GL_COMPRESSED_RGBA_S3TC_DXT1_EXT						0x83F1
+	#define GL_COMPRESSED_RGBA_S3TC_DXT3_EXT						0x83F2
+	#define GL_COMPRESSED_RGBA_S3TC_DXT5_EXT						0x83F3
 
 #endif // GL_EXT_texture_compression_s3tc
 
 #ifndef GL_OES_compressed_ETC1_RGB8_texture
-#define GL_ETC1_RGB8_OES                                        0x8D64
+	#define GL_ETC1_RGB8_OES                                        0x8D64
 #endif
 
 // RB end
@@ -217,11 +217,11 @@ const int MAX_EXPRESSION_REGISTERS = 4096;
 
 // user interfaces
 #if defined(STANDALONE)
-#include "../ui-lua/ListGUI.h"
-#include "../ui-lua/UserInterface.h"
+	#include "../ui-lua/ListGUI.h"
+	#include "../ui-lua/UserInterface.h"
 #else
-#include "../ui/ListGUI.h"
-#include "../ui/UserInterface.h"
+	#include "../ui/ListGUI.h"
+	#include "../ui/UserInterface.h"
 #endif
 
 // collision detection system
@@ -233,52 +233,52 @@ const int MAX_EXPRESSION_REGISTERS = 4096;
 
 // game
 #if defined(_D3XP)
-#include "../d3xp/Game.h"
+	#include "../d3xp/Game.h"
 #else
-#include "../game/Game.h"
+	#include "../game/Game.h"
 #endif
 
 //-----------------------------------------------------
 
 #ifndef _D3SDK
 
-#ifdef GAME_DLL
+	#ifdef GAME_DLL
 
-#if defined(_D3XP)
-#include "../d3xp/Game_local.h"
-#else
-#include "../game/Game_local.h"
-#endif
+		#if defined(_D3XP)
+			#include "../d3xp/Game_local.h"
+		#else
+			#include "../game/Game_local.h"
+		#endif
 
-#else
+	#else
 
-#include "../framework/DemoChecksum.h"
+		#include "../framework/DemoChecksum.h"
 
-// framework
-#include "../framework/Compressor.h"
-#include "../framework/EventLoop.h"
-#include "../framework/KeyInput.h"
-#include "../framework/EditField.h"
-#include "../framework/DebugGraph.h"
-#include "../framework/Console.h"
-#include "../framework/DemoFile.h"
-#include "../framework/Session.h"
+		// framework
+		#include "../framework/Compressor.h"
+		#include "../framework/EventLoop.h"
+		#include "../framework/KeyInput.h"
+		#include "../framework/EditField.h"
+		#include "../framework/DebugGraph.h"
+		#include "../framework/Console.h"
+		#include "../framework/DemoFile.h"
+		#include "../framework/Session.h"
 
-// asynchronous networking
-#include "../framework/async/AsyncNetwork.h"
+		// asynchronous networking
+		#include "../framework/async/AsyncNetwork.h"
 
-// The editor entry points are always declared, but may just be
-// stubbed out on non-windows platforms.
-#if defined(USE_MFC_TOOLS) || defined(USE_QT_TOOLS) || defined(USE_GTK_TOOLS)
-#include "../tools/edit_public.h"
-#endif
+		// The editor entry points are always declared, but may just be
+		// stubbed out on non-windows platforms.
+		#if defined(USE_MFC_TOOLS) || defined(USE_QT_TOOLS) || defined(USE_GTK_TOOLS)
+			#include "../tools/edit_public.h"
+		#endif
 
-// Compilers for map, model, video etc. processing.
-#if defined(USE_CMDLINE_TOOLS)
-#include "../tools/compilers/compiler_public.h"
-#endif
+		// Compilers for map, model, video etc. processing.
+		#if defined(USE_CMDLINE_TOOLS)
+			#include "../tools/compilers/compiler_public.h"
+		#endif
 
-#endif /* !GAME_DLL */
+	#endif /* !GAME_DLL */
 
 #endif /* !_D3SDK */
 

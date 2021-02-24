@@ -47,7 +47,7 @@ class codec
 public:
 	codec();
 	~codec();
-	
+
 	void	SparseEncode();
 	void	EncodeNothing();
 	void	IRGBtab();
@@ -75,7 +75,7 @@ private:
 	float	GetCurrentRMSE( quadcel* pquad );
 	int		GetCurrentQuadOutputSize( quadcel* pquad );
 	int		AddQuad( quadcel* pquad, int lownum );
-	
+
 	NSBitmapImageRep*	image;
 	NSBitmapImageRep*	newImage;
 	NSBitmapImageRep*	 previousImage[2];		// the ones in video ram and offscreen ram
@@ -98,12 +98,12 @@ private:
 	bool				used4[256];
 	int					dimension2;
 	int					dimension4;
-	
+
 	byte				luty[256];
 	byte*				luti;
 	VQDATA**				codebook2;
 	VQDATA**				codebook4;
-	
+
 };
 
 #endif // __codec_h__

@@ -30,7 +30,7 @@ If you have questions concerning this license or the applicable additional terms
 #define AFX_MAINFRM_H__330BBF0A_731C_11D1_B539_00AA00A410FC__INCLUDED_
 
 #if _MSC_VER >= 1000
-#pragma once
+	#pragma once
 #endif // _MSC_VER >= 1000
 
 #include "XYWnd.h"
@@ -78,7 +78,7 @@ public:
 			OnKeyUp( nChar, nRepCnt, nFlags );
 		}
 	};
-	
+
 	// Attributes
 public:
 
@@ -97,7 +97,7 @@ protected:
 	virtual LRESULT		WindowProc( UINT message, WPARAM wParam, LPARAM lParam );
 	virtual BOOL		OnCreateClient( LPCREATESTRUCT lpcs, CCreateContext* pContext );
 	//}}AFX_VIRTUAL
-	
+
 	// Implementation
 public:
 	void 				UpdatePatchToolbarButtons();
@@ -121,7 +121,7 @@ public:
 		return &nurb;
 	}
 	void 				OnPrecisionCursorCycle();
-	
+
 	CXYWnd*				GetXYWnd()
 	{
 		return m_pXYWnd;
@@ -142,7 +142,7 @@ public:
 	{
 		return m_pZWnd;
 	};
-	
+
 // ---> sikk - Window Snapping
 //	CInspectorDialog*	GetInspectorsWnd() { return m_wndInspectors; };
 	CStatusBar*			GetStatusbarWnd()
@@ -162,18 +162,18 @@ public:
 			m_pActiveXY->SetActive( false );
 		}
 		m_pActiveXY = p;
-		
+
 		if( m_pActiveXY )
 		{
 			m_pActiveXY->SetActive( true );
 		}
 	};
-	
+
 #ifdef _DEBUG
 	virtual void AssertValid() const;
 	virtual void Dump( CDumpContext& dc ) const;
 #endif
-	
+
 protected:  // control bar embedded members
 //	CInspectorDialog* m_wndInspectors;
 	CStatusBar  m_wndStatusBar;
@@ -208,8 +208,8 @@ public:
 	{
 		busy = b;
 	}
-	
-	
+
+
 	// these are public so i can easily reflect messages
 	// from child windows..
 	//{{AFX_MSG(CMainFrame)
@@ -315,7 +315,7 @@ public:
 	afx_msg void OnSelectionVisibleOff();
 	afx_msg void OnAutocaulk();
 	afx_msg void OnUpdateAutocaulk( CCmdUI* pCmdUI );
-	
+
 	afx_msg void OnTexturesPopup();
 	afx_msg void OnSplinesPopup();
 	afx_msg void OnSplinesEditPoints();
@@ -587,10 +587,10 @@ public:
 	afx_msg void OnGrid1( unsigned int nID );
 	afx_msg void OnDisplayChange( WPARAM wp, LPARAM lp );
 	afx_msg void OnSelectAlltargets();
-	
+
 	//}}AFX_MSG
 	void CheckTextureScale( int id );
-	
+
 	DECLARE_MESSAGE_MAP()
 };
 

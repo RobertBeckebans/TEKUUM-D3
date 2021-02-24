@@ -33,9 +33,9 @@ If you have questions concerning this license or the applicable additional terms
 #include "CameraTargetDlg.h"
 
 #ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
+	#define new DEBUG_NEW
+	#undef THIS_FILE
+	static char THIS_FILE[] = __FILE__;
 #endif
 
 /////////////////////////////////////////////////////////////////////////////
@@ -74,5 +74,5 @@ END_MESSAGE_MAP()
 void CCameraTargetDlg::OnPopupNewcameraFixed()
 {
 	// TODO: Add your command handler code here
-	
+
 }

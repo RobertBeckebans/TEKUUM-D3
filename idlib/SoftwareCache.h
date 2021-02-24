@@ -29,7 +29,7 @@ If you have questions concerning this license or the applicable additional terms
 #define __SOFTWARECACHE_H__
 
 #ifdef _MSC_VER // DG: #pragma warning is MSVC specific
-#pragma warning( disable : 4324 )	// structure was padded due to __declspec(align())
+	#pragma warning( disable : 4324 )	// structure was padded due to __declspec(align())
 #endif
 /*
 ================================================================================================
@@ -178,7 +178,7 @@ public:
 	{
 		return objectPtr;
 	}
-	
+
 private:
 	const _type_* objectPtr;
 };
@@ -213,7 +213,7 @@ public:
 	{
 		return objectPtr;
 	}
-	
+
 private:
 	const _type_* objectPtr;
 };
@@ -245,7 +245,7 @@ public:
 	{
 		return arrayNum;
 	}
-	
+
 private:
 	const _type_* arrayPtr;
 	int arrayNum;
@@ -282,7 +282,7 @@ public:
 			arrayPtr[arrayNum++] = arrayPtr[0];
 		}
 	}
-	
+
 private:
 	const _elemType_* arrayPtr[max];
 	int arrayNum;
@@ -312,7 +312,7 @@ public:
 	{
 		*outNum = localNum;
 	}
-	
+
 	int			Num() const
 	{
 		return localNum;
@@ -327,7 +327,7 @@ public:
 		assert( localNum < outMax );
 		return outArray[localNum++];
 	}
-	
+
 private:
 	int			localNum;
 	_type_* 	outArray;
@@ -370,7 +370,7 @@ public:
 		// Flush the accessible part of the array.
 		FlushArray( inArray, cachedArrayStart * sizeof( _type_ ), cachedArrayEnd * sizeof( _type_ ) );
 	}
-	
+
 	// Fetches a new batch of array elements and returns the first index after this new batch.
 	// After calling this, the elements starting at the index returned by the previous call to
 	// FetchNextBach() (or zero if not yet called) up to (excluding) the index returned by
@@ -385,10 +385,10 @@ public:
 		{
 			cachedArrayEnd = streamArrayEnd;
 			cachedArrayStart = Max( cachedArrayEnd - _bufferSize_ * ( _sbt_ - 1 ), 0 );
-			
+
 			// Flush the last batch of elements that is no longer accessible.
 			FlushArray( inArray, ( cachedArrayStart - _bufferSize_ ) * sizeof( _type_ ), cachedArrayStart * sizeof( _type_ ) );
-			
+
 			// Prefetch the next batch of elements.
 			if( streamArrayEnd < inArrayNum )
 			{
@@ -401,7 +401,7 @@ public:
 		}
 		return ( cachedArrayEnd == inArrayNum ) ? inArrayNumRoundedUp : cachedArrayEnd;
 	}
-	
+
 	// Provides access to the elements starting at the index returned by the next-to-last call
 	// to FetchNextBach() (or zero if only called once so far) up to (excluding) the index
 	// returned by the last call to FetchNextBatch(). When quad-buffering, the elements starting
@@ -417,7 +417,7 @@ public:
 		}
 		return inArray[index];
 	}
-	
+
 private:
 	int				cachedArrayStart;
 	int				cachedArrayEnd;
@@ -425,7 +425,7 @@ private:
 	const _type_* 	inArray;
 	int				inArrayNum;
 	int				inArrayNumRoundedUp;
-	
+
 	static void FlushArray( const void* flushArray, int flushStart, int flushEnd )
 	{
 #if 0
@@ -501,7 +501,7 @@ public:
 		// Flush the accessible part of the array.
 		FlushArray( inArray, cachedArrayStart * sizeof( _elemType_ ), cachedArrayEnd * sizeof( _elemType_ ) );
 	}
-	
+
 	// Fetches a new batch of array elements and returns the first index after this new batch.
 	// After calling this, the elements starting at the index returned by the previous call to
 	// FetchNextBach() (or zero if not yet called) up to (excluding) the index returned by
@@ -520,12 +520,12 @@ public:
 				cachedArrayStart = Max( cachedArrayEnd - _bufferSize_ * ( _sbt_ - 1 ), 0 );
 				cachedIndexEnd = streamIndexEnd;
 				cachedIndexStart = Max( cachedIndexEnd - _bufferSize_ * ( _sbt_ - 1 ), 0 );
-				
+
 				// Flush the last batch of indices that are no longer accessible.
 				FlushArray( inIndex, ( cachedIndexStart - _bufferSize_ ) * sizeof( _indexType_ ), cachedIndexStart * sizeof( _indexType_ ) );
 				// Flush the last batch of elements that is no longer accessible.
 				FlushArray( inArray, ( cachedArrayStart - _bufferSize_ ) * sizeof( _elemType_ ), cachedArrayStart * sizeof( _elemType_ ) );
-				
+
 				// Prefetch the next batch of elements.
 				if( streamArrayEnd < inIndexNum )
 				{
@@ -534,12 +534,12 @@ public:
 					{
 						assert( i >= cachedIndexStart && i < cachedIndexEnd );
 						assert( inIndex[i] >= 0 && inIndex[i] < inArrayNum );
-						
+
 						Prefetch( inArray, inIndex[i] * sizeof( _elemType_ ) );
 					}
 				}
 			}
-			
+
 			// Prefetch the next batch of indices.
 			if( streamIndexEnd < inIndexNum )
 			{
@@ -552,7 +552,7 @@ public:
 		}
 		return ( cachedArrayEnd == inIndexNum ) ? inIndexNumRoundedUp : cachedArrayEnd;
 	}
-	
+
 	// Provides access to the elements starting at the index returned by the next-to-last call
 	// to FetchNextBach() (or zero if only called once so far) up to (excluding) the index
 	// returned by the last call to FetchNextBatch(). When quad-buffering, the elements starting
@@ -568,7 +568,7 @@ public:
 		}
 		return inArray[inIndex[index]];
 	}
-	
+
 private:
 	int					cachedArrayStart;
 	int					cachedArrayEnd;
@@ -581,7 +581,7 @@ private:
 	const _indexType_* 	inIndex;
 	int					inIndexNum;
 	int					inIndexNumRoundedUp;
-	
+
 	static void FlushArray( const void* flushArray, int flushStart, int flushEnd )
 	{
 #if 0

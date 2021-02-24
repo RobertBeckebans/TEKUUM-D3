@@ -43,42 +43,42 @@ class tyPortal : public idEntity
 {
 public:
 	CLASS_PROTOTYPE( tyPortal );
-	
+
 	enum
 	{
 		EVENT_TELEPORTPLAYER = idEntity::EVENT_MAXEVENTS,
 		EVENT_MAXEVENTS
 	};
-	
+
 	void					Spawn();
-	
+
 	void					Create( idEntity* owner, tyPortal* otherPortal, const idVec3& start, const idMat3& axis );
-	
-	
+
+
 	void					Save( idSaveGame* savefile ) const;
 	void					Restore( idRestoreGame* savefile );
-	
+
 	virtual void			Think();
-	
+
 	virtual renderView_t* 	GetRenderView();
 	virtual void			Killed( idEntity* inflictor, idEntity* attacker, int damage, const idVec3& dir, int location );
 	virtual bool			Pain( idEntity* inflictor, idEntity* attacker, int damage, const idVec3& dir, int location );
 	virtual void			Present();
-	
+
 	virtual bool			ClientReceiveEvent( int event, int time, const idBitMsg& msg );
-	
+
 private:
 	idEntityPtr<idEntity>	owner;
 	idEntityPtr<tyPortal>	destinationPortal;
-	
+
 	int						modelAxis;
 	bool					flipAxis;
 	float					scanDist;
 	float					scanFov;
 	float					scanFovCos;
-	
+
 	idVec3					viewOffset;
-	
+
 	int						pvsArea;
 	idPhysics_RigidBody		physicsObj;
 //	idTraceModel			trm;
@@ -86,19 +86,19 @@ private:
 	bool					CanSeePlayer();
 	void					DrawFov();
 	const idVec3			GetAxis() const;
-	
+
 	float					wait;
 	float					delay;
 	int						nextTriggerTime;
 	idStr					requires;
 	int						removeItem;
-	
+
 	bool					CheckFacing( idEntity* activator );
 	void					Event_Touch( idEntity* other, trace_t* trace );
-	
-	
+
+
 	int						teleportStage;
-	
+
 	void					Event_TeleportPlayer( idEntity* activator );
 	void					Event_TeleportStage( idEntity* player );
 	void					TeleportPlayer( idPlayer* player );

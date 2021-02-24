@@ -42,13 +42,13 @@ void    QtRadiantInit()
 		common->Printf( "no OpenGL running\n" );
 		return;
 	}
-	
+
 	if( s_qtRadiant && s_qtRadiant->isVisible() )
 	{
 		common->Printf( "QtRadiant already running\n" );
 		return;
 	}
-	
+
 	if( rw == NULL )
 	{
 		rw = renderSystem->AllocRenderWorld();
@@ -58,37 +58,37 @@ void    QtRadiantInit()
 	{
 		sw = soundSystem->AllocSoundWorld( rw );
 	}
-	
+
 	if( s_qtMain == NULL )
 	{
 		int argc = 0;
 		s_qtMain = new QApplication( argc, NULL );
 	}
-	
+
 	if( didTranslator == false )
 	{
 		QString locale = QLocale::system().name();
-		
+
 		QTranslator translator;
 		translator.load( QString( ":/translations/" ) + locale );
 		QTextCodec::setCodecForTr( QTextCodec::codecForName( "utf8" ) );
 		s_qtMain->installTranslator( &translator );
 		didTranslator = true;
 	}
-	
+
 	// thread should be deleted in QtRadiantShutdown
 	s_qtRadiantThread = new RadiantThread();
-	
+
 	s_qtRadiantThread->start();
-	
+
 	if( s_qtRadiant == NULL )
 	{
 		s_qtRadiant = new MainWindow();
 	}
 	s_qtRadiant->show();
-	
+
 	com_editors |= EDITOR_QTRADIANT;
-	
+
 	common->Printf( "Launching QtRadiant\n" );
 }
 void    QtRadiantShutdown()
@@ -100,7 +100,7 @@ void    QtRadiantShutdown()
 		s_qtRadiantThread = NULL;
 	}
 	com_editors &= ~EDITOR_QTRADIANT;
-	
+
 	common->Printf( "Closing QtRadiant\n" );
 	s_qtMain->closeAllWindows();
 	if( s_qtRadiant != NULL )
@@ -146,50 +146,50 @@ void	QtRadiantInit()
 		common->Printf( "no OpenGL running\n" );
 		return;
 	}
-	
+
 	if( s_qtRadiant ) // && s_qtRadiant->isVisible())
 	{
 		common->Printf( "QtRadiant already running\n" );
 		return;
 	}
-	
+
 	if( rw == NULL )
 	{
 		rw = renderSystem->AllocRenderWorld();
 		rw->InitFromMap( NULL );
 	}
-	
+
 	if( sw == NULL )
 	{
 		sw = soundSystem->AllocSoundWorld( rw );
 	}
-	
+
 	s_qtMain = QApplication::instance();
 	if( s_qtMain == NULL )
 	{
 		int argc = 0;
 		s_qtMain = new QApplication( argc, NULL );
 	}
-	
+
 	if( didTranslator == false )
 	{
 		QString locale = QLocale::system().name();
-		
+
 		QTranslator translator;
 		translator.load( QString( ":/translations/" ) + locale );
 		QTextCodec::setCodecForLocale( QTextCodec::codecForName( "utf8" ) );
 		s_qtMain->installTranslator( &translator );
 		didTranslator = true;
 	}
-	
+
 	if( s_qtRadiant == NULL )
 	{
 		s_qtRadiant = new MainWindow();
 	}
 	s_qtRadiant->show();
-	
+
 	com_editors |= EDITOR_QTRADIANT;
-	
+
 	common->Printf( "Launching QtRadiant\n" );
 }
 
@@ -199,7 +199,7 @@ void	QtRadiantShutdown()
 	{
 		delete s_qtRadiant;
 		s_qtRadiant = NULL;
-		
+
 		com_editors &= ~EDITOR_QTRADIANT;
 	}
 }

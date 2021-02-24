@@ -9,9 +9,9 @@
 #include "../../game/game.h"
 
 #ifdef ID_DEBUG_MEMORY
-#undef new
-#undef DEBUG_NEW
-#define DEBUG_NEW new
+	#undef new
+	#undef DEBUG_NEW
+	#define DEBUG_NEW new
 #endif
 
 static QCoreApplication*	s_qtMain = NULL;
@@ -25,10 +25,10 @@ void	QtStringEditorInit()
 		int argc = 0;
 		s_qtMain = new QApplication( argc, NULL );
 	}
-	
+
 	s_qtStringEditor = new QtStringEditor();
 	s_qtStringEditor->show();
-	
+
 	com_editors |= EDITOR_QTSTRING;
 }
 void	QtStringEditorShutdown()

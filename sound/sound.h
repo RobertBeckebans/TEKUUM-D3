@@ -43,9 +43,9 @@ If you have questions concerning this license or the applicable additional terms
 
 // RB: changed inches to centimeter
 #if defined(STANDALONE)
-const float DOOM_TO_METERS = 0.01f;						// doom to meters
+	const float DOOM_TO_METERS = 0.01f;						// doom to meters
 #else
-const float DOOM_TO_METERS = 0.0254f;					// doom to meters
+	const float DOOM_TO_METERS = 0.0254f;					// doom to meters
 #endif
 // RB end
 
@@ -90,54 +90,54 @@ class idSoundShader : public idDecl
 public:
 	idSoundShader();
 	virtual					~idSoundShader();
-	
+
 	virtual size_t			Size() const;
 	virtual bool			SetDefaultText();
 	virtual const char* 	DefaultDefinition() const;
 	virtual bool			Parse( const char* text, const int textLength, bool allowBinaryVersion );
 	virtual void			FreeData();
 	virtual void			List() const;
-	
+
 	virtual const char* 	GetDescription() const;
-	
+
 	// so the editor can draw correct default sound spheres
 	// this is currently defined as meters, which sucks, IMHO.
 	virtual float			GetMinDistance() const;		// FIXME: replace this with a GetSoundShaderParms()
 	virtual float			GetMaxDistance() const;
-	
+
 	// returns NULL if an AltSound isn't defined in the shader.
 	// we use this for pairing a specific broken light sound with a normal light sound
 	virtual const idSoundShader* GetAltSound() const;
-	
+
 	virtual bool			HasDefaultSound() const;
-	
+
 	virtual const soundShaderParms_t* GetParms() const;
 	virtual int				GetNumSounds() const;
 	virtual const char* 	GetSound( int index ) const;
-	
+
 	virtual bool			CheckShakesAndOgg() const;
-	
+
 private:
 	friend class idSoundWorldLocal;
 	friend class idSoundEmitterLocal;
 	friend class idSoundChannel;
 	friend class idSoundCache;
-	
+
 	// options from sound shader text
 	soundShaderParms_t		parms;						// can be overriden on a per-channel basis
-	
+
 	bool					onDemand;					// only load when played, and free when finished
 	int						speakerMask;
 	const idSoundShader* 	altSound;
 	idStr					desc;						// description
 	bool					errorDuringParse;
 	float					leadinVolume;				// allows light breaking leadin sounds to be much louder than the broken loop
-	
+
 	idSoundSample* 	leadins[SOUND_MAX_LIST_WAVS];
 	int						numLeadins;
 	idSoundSample* 	entries[SOUND_MAX_LIST_WAVS];
 	int						numEntries;
-	
+
 private:
 	void					Init();
 	bool					ParseShader( idLexer& src );
@@ -162,35 +162,35 @@ class idSoundEmitter
 {
 public:
 	virtual					~idSoundEmitter() {}
-	
+
 	// a non-immediate free will let all currently playing sounds complete
 	// soundEmitters are not actually deleted, they are just marked as
 	// reusable by the soundWorld
 	virtual void			Free( bool immediate ) = 0;
-	
+
 	// the parms specified will be the default overrides for all sounds started on this emitter.
 	// NULL is acceptable for parms
 	virtual void			UpdateEmitter( const idVec3& origin, int listenerId, const soundShaderParms_t* parms ) = 0;
-	
+
 	// returns the length of the started sound in msec
 	virtual int				StartSound( const idSoundShader* shader, const s_channelType channel, float diversity = 0, int shaderFlags = 0, bool allowSlow = true ) = 0;
-	
+
 	// pass SCHANNEL_ANY to effect all channels
 	virtual void			ModifySound( const s_channelType channel, const soundShaderParms_t* parms ) = 0;
 	virtual void			StopSound( const s_channelType channel ) = 0;
 	// to is in Db (sigh), over is in seconds
 	virtual void			FadeSound( const s_channelType channel, float to, float over ) = 0;
-	
+
 	// returns true if there are any sounds playing from this emitter.  There is some conservative
 	// slop at the end to remove inconsistent race conditions with the sound thread updates.
 	// FIXME: network game: on a dedicated server, this will always be false
 	virtual bool			CurrentlyPlaying() const = 0;
-	
+
 	// returns a 0.0 to 1.0 value based on the current sound amplitude, allowing
 	// graphic effects to be modified in time with the audio.
 	// just samples the raw wav file, it doesn't account for volume overrides in the
 	virtual	float			CurrentAmplitude() = 0;
-	
+
 	// for save games.  Index will always be > 0
 	virtual	int				Index() const = 0;
 };
@@ -210,45 +210,45 @@ class idSoundWorld
 {
 public:
 	virtual					~idSoundWorld() {}
-	
+
 	// call at each map start
 	virtual void			ClearAllSoundEmitters() = 0;
 	virtual void			StopAllSounds() = 0;
-	
+
 	// get a new emitter that can play sounds in this world
 	virtual idSoundEmitter* AllocSoundEmitter() = 0;
-	
+
 	// for load games, index 0 will return NULL
 	virtual idSoundEmitter* EmitterForIndex( int index ) = 0;
-	
+
 	// query sound samples from all emitters reaching a given position
 	virtual	float			CurrentShakeAmplitudeForPosition( const int time, const idVec3& listenerPosition ) = 0;
-	
+
 	// where is the camera/microphone
 	// listenerId allows listener-private and antiPrivate sounds to be filtered
 	// gameTime is in msec, and is used to time sound queries and removals so that they are independent
 	// of any race conditions with the async update
 	virtual	void			PlaceListener( const idVec3& origin, const idMat3& axis, const int listenerId, const int gameTime, const idStr& areaName ) = 0;
-	
+
 	// fade all sounds in the world with a given shader soundClass
 	// to is in Db (sigh), over is in seconds
 	virtual void			FadeSoundClasses( const int soundClass, const float to, const float over ) = 0;
-	
+
 	// background music
 	virtual	void			PlayShaderDirectly( const char* name, int channel = -1 ) = 0;
-	
+
 	// dumps the current state and begins archiving commands
 	virtual void			StartWritingDemo( idDemoFile* demo ) = 0;
 	virtual void			StopWritingDemo() = 0;
-	
+
 	// read a sound command from a demo file
 	virtual void			ProcessDemoCommand( idDemoFile* demo ) = 0;
-	
+
 	// pause and unpause the sound world
 	virtual void			Pause() = 0;
 	virtual void			UnPause() = 0;
 	virtual bool			IsPaused() = 0;
-	
+
 	// Write the sound output to multiple wav files.  Note that this does not use the
 	// work done by AsyncUpdate, it mixes explicitly in the foreground every PlaceOrigin(),
 	// under the assumption that we are rendering out screenshots and the gameTime is going
@@ -260,11 +260,11 @@ public:
 	// combined into a stereo .wav file.
 	virtual void			AVIOpen( const char* path, const char* name ) = 0;
 	virtual void			AVIClose() = 0;
-	
+
 	// SaveGame / demo Support
 	virtual void			WriteToSaveGame( idFile* savefile ) = 0;
 	virtual void			ReadFromSaveGame( idFile* savefile ) = 0;
-	
+
 	virtual void			SetSlowmo( bool active ) = 0;
 	virtual void			SetSlowmoSpeed( float speed ) = 0;
 	virtual void			SetEnviroSuit( bool active ) = 0;
@@ -298,64 +298,64 @@ class idSoundSystem
 {
 public:
 	virtual					~idSoundSystem() {}
-	
+
 	// all non-hardware initialization
 	virtual void			Init() = 0;
-	
+
 	// shutdown routine
 	virtual	void			Shutdown() = 0;
-	
+
 	// call ClearBuffer if there is a chance that the AsyncUpdate won't get called
 	// for 20+ msec, which would cause a stuttering repeat of the current
 	// buffer contents
 	virtual void			ClearBuffer() = 0;
-	
+
 	// sound is attached to the window, and must be recreated when the window is changed
 	virtual bool			InitHW() = 0;
 	virtual bool			ShutdownHW() = 0;
-	
+
 	// asyn loop, called at 60Hz
 	virtual int				AsyncUpdate( int time ) = 0;
-	
+
 	// async loop, when the sound driver uses a write strategy
 	virtual int				AsyncUpdateWrite( int time ) = 0;
-	
+
 	// it is a good idea to mute everything when starting a new level,
 	// because sounds may be started before a valid listener origin
 	// is specified
 	virtual void			SetMute( bool mute ) = 0;
-	
+
 	// for the sound level meter window
 	virtual cinData_t		ImageForTime( const int milliseconds, const bool waveform ) = 0;
-	
+
 	// get sound decoder info
 	virtual int				GetSoundDecoderInfo( int index, soundDecoderInfo_t& decoderInfo ) = 0;
-	
+
 	// if rw == NULL, no portal occlusion or rendered debugging is available
 	virtual idSoundWorld* 	AllocSoundWorld( idRenderWorld* rw ) = 0;
-	
+
 	// specifying NULL will cause silence to be played
 	virtual void			SetPlayingSoundWorld( idSoundWorld* soundWorld ) = 0;
-	
+
 	// some tools, like the sound dialog, may be used in both the game and the editor
 	// This can return NULL, so check!
 	virtual idSoundWorld* 	GetPlayingSoundWorld() = 0;
-	
+
 	// Mark all soundSamples as currently unused,
 	// but don't free anything.
 	virtual	void			BeginLevelLoad() = 0;
-	
+
 	// Free all soundSamples marked as unused
 	// We might want to defer the loading of new sounds to this point,
 	// as we do with images, to avoid having a union in memory at one time.
 	virtual	void			EndLevelLoad( const char* mapString ) = 0;
-	
+
 	// direct mixing for OSes that support it
 	virtual int				AsyncMix( int soundTime, float* mixBuffer ) = 0;
-	
+
 	// prints memory info
 	virtual void			PrintMemInfo( MemInfo_t* mi ) = 0;
-	
+
 	// is EAX support present - -1: disabled at compile time, 0: no suitable hardware, 1: ok, 2: failed to load OpenAL DLL
 	virtual int				IsEAXAvailable() = 0;
 };

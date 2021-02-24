@@ -217,7 +217,7 @@ DialogAFBody::InitBodyList
 void DialogAFBody::InitBodyList()
 {
 	CString str;
-	
+
 	bodyList.ResetContent();
 	if( !file )
 	{
@@ -245,25 +245,25 @@ DialogAFBody::InitJointLists
 void DialogAFBody::InitJointLists()
 {
 	idStrList joints;
-	
+
 	cm_comboBoneJoint1.ResetContent();
 	cm_comboBoneJoint2.ResetContent();
 	cm_originBoneCenterJoint1.ResetContent();
 	cm_originBoneCenterJoint2.ResetContent();
 	cm_originJoint.ResetContent();
 	numJoints = 0;
-	
+
 	if( !file )
 	{
 		return;
 	}
-	
+
 	const idRenderModel* model = gameEdit->ANIM_GetModelFromName( file->model );
 	if( !model )
 	{
 		return;
 	}
-	
+
 	numJoints = model->NumJoints();
 	for( int i = 0; i < numJoints; i++ )
 	{
@@ -286,7 +286,7 @@ void DialogAFBody::InitCollisionModelType()
 	int showBone, showOther;
 	bool enableOther;
 	CString str;
-	
+
 	UpdateData( TRUE );
 	cm_comboType.GetLBText( cm_comboType.GetCurSel(), str );
 	traceModel_t type = StringToModelType( str );
@@ -315,7 +315,7 @@ void DialogAFBody::InitCollisionModelType()
 	GetDlgItem( IDC_SPIN_CM_LENGTH )->ShowWindow( showOther );
 	GetDlgItem( IDC_EDIT_CM_HEIGHT )->ShowWindow( showOther );
 	GetDlgItem( IDC_SPIN_CM_HEIGHT )->ShowWindow( showOther );
-	
+
 	// enable/disable origin controls
 	GetDlgItem( IDC_EDIT_AF_VECTOR_X )->EnableWindow( enableOther );
 	GetDlgItem( IDC_SPIN_AF_VECTOR_X )->EnableWindow( enableOther );
@@ -323,12 +323,12 @@ void DialogAFBody::InitCollisionModelType()
 	GetDlgItem( IDC_SPIN_AF_VECTOR_Y )->EnableWindow( enableOther );
 	GetDlgItem( IDC_EDIT_AF_VECTOR_Z )->EnableWindow( enableOther );
 	GetDlgItem( IDC_SPIN_AF_VECTOR_Z )->EnableWindow( enableOther );
-	
+
 	// enable/disable joint controls
 	GetDlgItem( IDC_COMBO_ORIGIN_BONECENTER_JOINT1 )->EnableWindow( enableOther );
 	GetDlgItem( IDC_COMBO_ORIGIN_BONECENTER_JOINT2 )->EnableWindow( enableOther );
 	GetDlgItem( IDC_COMBO_ORIGIN_JOINT )->EnableWindow( enableOther );
-	
+
 	// enable/disable angles controls
 	GetDlgItem( IDC_STATIC_ANGLES_PITCH )->EnableWindow( enableOther );
 	GetDlgItem( IDC_EDIT_ANGLES_PITCH )->EnableWindow( enableOther );
@@ -339,11 +339,11 @@ void DialogAFBody::InitCollisionModelType()
 	GetDlgItem( IDC_STATIC_ANGLES_ROLL )->EnableWindow( enableOther );
 	GetDlgItem( IDC_EDIT_ANGLES_ROLL )->EnableWindow( enableOther );
 	GetDlgItem( IDC_SPIN_ANGLES_ROLL )->EnableWindow( enableOther );
-	
+
 	GetDlgItem( IDC_RADIO_ORIGIN_COORDINATES )->EnableWindow( enableOther );
 	GetDlgItem( IDC_RADIO_ORIGIN_BONECENTER )->EnableWindow( enableOther );
 	GetDlgItem( IDC_RADIO_ORIGIN_JOINT )->EnableWindow( enableOther );
-	
+
 	if( type == TRM_CONE || type == TRM_CYLINDER )
 	{
 		GetDlgItem( IDC_EDIT_CM_NUMSIDES )->EnableWindow( true );
@@ -365,20 +365,20 @@ void DialogAFBody::InitModifiedJointList()
 {
 	int i, j, numJoints;
 	CString str;
-	
+
 	m_comboModifiedJoint.ResetContent();
-	
+
 	if( !file )
 	{
 		return;
 	}
-	
+
 	const idRenderModel* model = gameEdit->ANIM_GetModelFromName( file->model );
 	if( !model )
 	{
 		return;
 	}
-	
+
 	numJoints = model->NumJoints();
 	for( i = 0; i < numJoints; i++ )
 	{
@@ -400,7 +400,7 @@ void DialogAFBody::InitModifiedJointList()
 		}
 		m_comboModifiedJoint.AddString( jointName );
 	}
-	
+
 	if( body )
 	{
 		if( body->jointName.Length() == 0 )
@@ -456,7 +456,7 @@ void DialogAFBody::InitNewRenameDeleteButtons()
 	{
 		GetDlgItem( IDC_BUTTON_NEWBODY )->EnableWindow( false );
 	}
-	
+
 	if( file && bodyList.GetCount() >= 1 )
 	{
 		GetDlgItem( IDC_BUTTON_RENAMEBODY )->EnableWindow( true );
@@ -502,7 +502,7 @@ void DialogAFBody::LoadBody( const char* name )
 {
 	int i, s1, s2;
 	idStr str;
-	
+
 	if( !file )
 	{
 		return;
@@ -519,7 +519,7 @@ void DialogAFBody::LoadBody( const char* name )
 		return;
 	}
 	body = file->bodies[i];
-	
+
 	// load collision model from the current idDeclAF_Body
 	SetSafeComboBoxSelection( &cm_comboType, ModelTypeToString( body->modelType ), -1 );
 	if( body->modelType == TRM_BONE )
@@ -569,19 +569,19 @@ void DialogAFBody::LoadBody( const char* name )
 	{
 		cm_inertiaScale.SetWindowText( body->inertiaScale.ToString( 1 ) );
 	}
-	
+
 	// load collision detection settings from the current idDeclAF_Body
 	m_selfCollision = body->selfCollision;
 	idDeclAF::ContentsToString( body->contents, str );
 	m_editContents.SetWindowText( str );
 	idDeclAF::ContentsToString( body->clipMask, str );
 	m_editClipMask.SetWindowText( str );
-	
+
 	// load friction settings from the current idDeclAF_Body
 	m_linearFriction = body->linearFriction;
 	m_angularFriction = body->angularFriction;
 	m_contactFriction = body->contactFriction;
-	
+
 	// friction direction and contact motor direction
 	if( body->frictionDirection.ToVec3() != vec3_origin )
 	{
@@ -603,7 +603,7 @@ void DialogAFBody::LoadBody( const char* name )
 	{
 		m_contactMotorDirection.SetWindowText( "" );
 	}
-	
+
 	// load joint settings from the current idDeclAF_Body
 	InitModifiedJointList();
 	if( body->jointMod == DECLAF_JOINTMOD_AXIS )
@@ -624,12 +624,12 @@ void DialogAFBody::LoadBody( const char* name )
 	}
 	CheckRadioButton( IDC_RADIO_MODIFY_ORIENTATION, IDC_RADIO_MODIFY_BOTH, i );
 	m_editContainedJoints.SetWindowText( body->containedJoints.c_str() );
-	
+
 	// update displayed values
 	UpdateData( FALSE );
-	
+
 	InitCollisionModelType();	// CComboBox::SetCurSel doesn't call this
-	
+
 	if( GetStyle() & WS_VISIBLE )
 	{
 		// highlight the current body ingame
@@ -646,13 +646,13 @@ void DialogAFBody::SaveBody()
 {
 	int s1, s2;
 	CString str;
-	
+
 	if( !file || !body )
 	{
 		return;
 	}
 	UpdateData( TRUE );
-	
+
 	// save the collision model to the current idDeclAF_Body
 	cm_comboType.GetLBText( cm_comboType.GetCurSel(), str );
 	body->modelType = StringToModelType( str );
@@ -718,19 +718,19 @@ void DialogAFBody::SaveBody()
 			}
 		}
 	}
-	
+
 	// save the collision detection settings to the current idDeclAF_Body
 	body->selfCollision = ( m_selfCollision != FALSE );
 	m_editContents.GetWindowText( str );
 	body->contents = idDeclAF::ContentsFromString( str );
 	m_editClipMask.GetWindowText( str );
 	body->clipMask = idDeclAF::ContentsFromString( str );
-	
+
 	// save friction settings to the current idDeclAF_Body
 	body->linearFriction = m_linearFriction;
 	body->angularFriction = m_angularFriction;
 	body->contactFriction = m_contactFriction;
-	
+
 	// friction direction and contact motor direction
 	m_frictionDirection.GetWindowText( str );
 	if( str.GetLength() != 0 )
@@ -744,13 +744,13 @@ void DialogAFBody::SaveBody()
 		body->contactMotorDirection.ToVec3().Zero();
 		sscanf( str, "%f %f %f", &body->contactMotorDirection.ToVec3().x, &body->contactMotorDirection.ToVec3().y, &body->contactMotorDirection.ToVec3().z );
 	}
-	
+
 	// save joint settings to the current idDeclAF_Body
 	GetSafeComboBoxSelection( &m_comboModifiedJoint, str, -1 );
 	body->jointName = str;
 	m_editContainedJoints.GetWindowText( str );
 	body->containedJoints = str;
-	
+
 	AFDialogSetFileModified();
 }
 
@@ -777,7 +777,7 @@ BOOL DialogAFBody::OnInitDialog()
 {
 
 	CDialog::OnInitDialog();
-	
+
 	// initialize the collision model types
 	cm_comboType.ResetContent();
 	for( int i = 0; modelTypes[i].name; i++ )
@@ -788,9 +788,9 @@ BOOL DialogAFBody::OnInitDialog()
 		}
 		cm_comboType.AddString( modelTypes[i].name );
 	}
-	
+
 	InitNewRenameDeleteButtons();
-	
+
 	return TRUE;  // return TRUE unless you set the focus to a control
 	// EXCEPTION: OCX Property Pages should return FALSE
 }
@@ -888,7 +888,7 @@ void DialogAFBody::OnShowWindow( BOOL bShow, UINT nStatus )
 void DialogAFBody::OnCbnSelchangeComboBodies()
 {
 	CString str;
-	
+
 	GetSafeComboBoxSelection( &bodyList, str, -1 );
 	LoadBody( str );
 }
@@ -898,17 +898,17 @@ void DialogAFBody::OnBnClickedButtonNewbody()
 	DialogAFName nameDlg;
 	CString str;
 	INT_PTR res;
-	
+
 	// the names 'origin' and 'world' are reserved for constraints bound to the world
 	bodyList.AddString( "origin" );
 	bodyList.AddString( "world" );
-	
+
 	nameDlg.SetComboBox( &bodyList );
 	res = nameDlg.DoModal();
-	
+
 	bodyList.DeleteString( bodyList.FindString( -1, "origin" ) );
 	bodyList.DeleteString( bodyList.FindString( -1, "world" ) );
-	
+
 	if( res == IDOK )
 	{
 		nameDlg.GetName( str );
@@ -928,12 +928,12 @@ void DialogAFBody::OnBnClickedButtonRenamebody()
 	int i;
 	CString name, newName;
 	DialogAFName nameDlg;
-	
+
 	if( !file || !body )
 	{
 		return;
 	}
-	
+
 	i = bodyList.GetCurSel();
 	if( i != CB_ERR )
 	{
@@ -959,12 +959,12 @@ void DialogAFBody::OnBnClickedButtonDeletebody()
 {
 	int i;
 	CString str;
-	
+
 	if( !file || !body )
 	{
 		return;
 	}
-	
+
 	i = bodyList.GetCurSel();
 	if( i != CB_ERR )
 	{

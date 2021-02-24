@@ -46,7 +46,7 @@ static int cmdargc = 0;
 // DG end
 
 #ifdef ID_MCHECK
-#include <mcheck.h>
+	#include <mcheck.h>
 #endif
 
 static idStr	basepath;
@@ -66,7 +66,7 @@ void Sys_AsyncThread()
 	int now;
 	int next;
 	int	want_sleep;
-	
+
 	// multi tick compensate for poor schedulers (Linux 2.4)
 	int ticked, to_ticked;
 	now = Sys_Milliseconds();
@@ -81,11 +81,11 @@ void Sys_AsyncThread()
 		{
 			usleep( want_sleep ); // sleep 1ms less than true target
 		}
-		
+
 		// compensate if we slept too long
 		now = Sys_Milliseconds();
 		to_ticked = now / USERCMD_MSEC;
-		
+
 		// show ticking statistics - every 100 ticks, print a summary
 #if 1
 #define STAT_BUF 100
@@ -109,7 +109,7 @@ void Sys_AsyncThread()
 			counter = 0;
 		}
 #endif
-		
+
 		while( ticked < to_ticked )
 		{
 			common->Async();
@@ -124,13 +124,13 @@ void Sys_AsyncThread()
 	int to_ticked;
 	int start;
 	int elapsed;
-	
+
 	start = Sys_Milliseconds();
 	ticked = start / USERCMD_MSEC;
 	while( 1 )
 	{
 		start = Sys_Milliseconds();
-	
+
 		to_ticked = start / USERCMD_MSEC;
 		while( ticked < to_ticked )
 		{
@@ -138,14 +138,14 @@ void Sys_AsyncThread()
 			ticked++;
 			Sys_TriggerEvent( TRIGGER_EVENT_ONE );
 		}
-	
+
 		// thread exit
 		pthread_testcancel();
-	
+
 		elapsed = Sys_Milliseconds() - start;
-	
+
 		Sys_DebugPrintf( "elapsed = %d\n", elapsed );
-	
+
 		if( elapsed < USERCMD_MSEC )
 		{
 			usleep( ( USERCMD_MSEC - elapsed ) * 1000 );
@@ -156,27 +156,27 @@ void Sys_AsyncThread()
 	int next;
 	int want_sleep;
 	int ticked;
-	
+
 	now = Sys_Milliseconds();
 	ticked = 0;
 	while( 1 )
 	{
 		now = Sys_Milliseconds();
 		next = ( now & 0xFFFFFFF0 ) + USERCMD_MSEC;
-	
+
 		// sleep 1ms less than true target
 		want_sleep = ( next - now - 1 ) * 1000;
-	
+
 		if( want_sleep > 0 )
 		{
 			usleep( want_sleep );
 		}
-	
+
 		common->Async();
 		ticked++;
-	
+
 		Sys_TriggerEvent( TRIGGER_EVENT_ONE );
-	
+
 		// thread exit
 		pthread_testcancel();
 	}
@@ -208,7 +208,7 @@ const char* Sys_EXEPath()
 	static char	buf[ 1024 ];
 	idStr		linkpath;
 	int			len;
-	
+
 	buf[ 0 ] = '\0';
 	sprintf( linkpath, "/proc/%d/exe", getpid() );
 	len = readlink( linkpath.c_str(), buf, sizeof( buf ) );
@@ -335,7 +335,7 @@ double Sys_GetClockTicks()
 {
 #if defined( __i386__ )
 	unsigned long lo, hi;
-	
+
 	__asm__ __volatile__(
 		"push %%ebx\n"			\
 		"xor %%eax,%%eax\n"		\
@@ -364,7 +364,7 @@ MeasureClockTicks
 double MeasureClockTicks()
 {
 	double t0, t1;
-	
+
 	t0 = Sys_GetClockTicks( );
 	Sys_Sleep( 1000 );
 	t1 = Sys_GetClockTicks( );
@@ -380,15 +380,15 @@ double Sys_ClockTicksPerSecond()
 {
 	static bool		init = false;
 	static double	ret;
-	
+
 	int		fd, len, pos, end;
 	char	buf[ 4096 ];
-	
+
 	if( init )
 	{
 		return ret;
 	}
-	
+
 	fd = open( "/proc/cpuinfo", O_RDONLY );
 	if( fd == -1 )
 	{
@@ -448,26 +448,26 @@ void Sys_CPUCount( int& numLogicalCPUCores, int& numPhysicalCPUCores, int& numCP
 {
 	static bool		init = false;
 	static double	ret;
-	
+
 	static int		s_numLogicalCPUCores;
 	static int		s_numPhysicalCPUCores;
 	static int		s_numCPUPackages;
-	
+
 	int		fd, len, pos, end;
 	char	buf[ 4096 ];
 	char	number[100];
-	
+
 	if( init )
 	{
 		numPhysicalCPUCores = s_numPhysicalCPUCores;
 		numLogicalCPUCores = s_numLogicalCPUCores;
 		numCPUPackages = s_numCPUPackages;
 	}
-	
+
 	s_numPhysicalCPUCores = 1;
 	s_numLogicalCPUCores = 1;
 	s_numCPUPackages = 1;
-	
+
 	fd = open( "/proc/cpuinfo", O_RDONLY );
 	if( fd != -1 )
 	{
@@ -485,9 +485,9 @@ void Sys_CPUCount( int& numLogicalCPUCores, int& numPhysicalCPUCores, int& numCP
 					idStr::Copynz( number, buf + pos, sizeof( number ) );
 					assert( ( end - pos ) > 0 && ( end - pos ) < sizeof( number ) );
 					number[ end - pos ] = '\0';
-					
+
 					int processor = atoi( number );
-					
+
 					if( ( processor + 1 ) > s_numPhysicalCPUCores )
 					{
 						s_numPhysicalCPUCores = processor + 1;
@@ -508,9 +508,9 @@ void Sys_CPUCount( int& numLogicalCPUCores, int& numPhysicalCPUCores, int& numCP
 					idStr::Copynz( number, buf + pos, sizeof( number ) );
 					assert( ( end - pos ) > 0 && ( end - pos ) < sizeof( number ) );
 					number[ end - pos ] = '\0';
-					
+
 					int coreId = atoi( number );
-					
+
 					if( ( coreId + 1 ) > s_numLogicalCPUCores )
 					{
 						s_numLogicalCPUCores = coreId + 1;
@@ -522,14 +522,14 @@ void Sys_CPUCount( int& numLogicalCPUCores, int& numPhysicalCPUCores, int& numCP
 					break;
 				}
 			}
-			
+
 			pos = strchr( buf + pos, '\n' ) - buf + 1;
 		}
 	}
-	
+
 	common->Printf( "/proc/cpuinfo CPU processors: %d\n", s_numPhysicalCPUCores );
 	common->Printf( "/proc/cpuinfo CPU logical cores: %d\n", s_numLogicalCPUCores );
-	
+
 	numPhysicalCPUCores = s_numPhysicalCPUCores;
 	numLogicalCPUCores = s_numLogicalCPUCores;
 	numCPUPackages = s_numCPUPackages;
@@ -546,7 +546,7 @@ int Sys_GetSystemRam()
 {
 	long	count, page_size;
 	int		mb;
-	
+
 	count = sysconf( _SC_PHYS_PAGES );
 	if( count == -1 )
 	{
@@ -652,19 +652,19 @@ void idSysLocal::OpenURL( const char* url, bool quit )
 	const char*	script_path;
 	idFile*		script_file;
 	char		cmdline[ 1024 ];
-	
+
 	static bool	quit_spamguard = false;
-	
+
 	if( quit_spamguard )
 	{
 		common->DPrintf( "Sys_OpenURL: already in a doexit sequence, ignoring %s\n", url );
 		return;
 	}
-	
+
 	common->Printf( "Open URL: %s\n", url );
 	// opening an URL on *nix can mean a lot of things ..
 	// just spawn a script instead of deciding for the user :-)
-	
+
 	// look in the savepath first, then in the basepath
 	script_path = fileSystem->BuildOSPath( cvarSystem->GetCVarString( "fs_savepath" ), "", "openurl.sh" );
 	script_file = fileSystem->OpenExplicitFileRead( script_path );
@@ -680,15 +680,15 @@ void idSysLocal::OpenURL( const char* url, bool quit )
 		return;
 	}
 	fileSystem->CloseFile( script_file );
-	
+
 	// if we are going to quit, only accept a single URL before quitting and spawning the script
 	if( quit )
 	{
 		quit_spamguard = true;
 	}
-	
+
 	common->Printf( "URL script: %s\n", script_path );
-	
+
 	// StartProcess is going to execute a system() call with that - hence the &
 	idStr::snPrintf( cmdline, 1024, "%s '%s' &",  script_path, url );
 	sys->StartProcess( cmdline, quit );
@@ -710,7 +710,7 @@ void Sys_FPU_SetDAZ( bool enable )
 {
 	/*
 	DWORD dwData;
-	
+
 	_asm {
 		movzx	ecx, byte ptr enable
 		and		ecx, 1
@@ -734,7 +734,7 @@ void Sys_FPU_SetFTZ( bool enable )
 {
 	/*
 	DWORD dwData;
-	
+
 	_asm {
 		movzx	ecx, byte ptr enable
 		and		ecx, 1
@@ -799,15 +799,17 @@ void Sys_ReLaunch()
 	// NOTE: this function used to have parameters: the commandline arguments, but as one string..
 	//       for Linux/Unix we want one char* per argument so we'll just add the friggin'
 	//       " +set com_skipIntroVideos 1" to the other commandline arguments in this function.
-	
+
 	int ret = fork();
 	if( ret < 0 )
+	{
 		idLib::Error( "Sys_ReLaunch(): Couldn't fork(), reason: %s ", strerror( errno ) );
-		
+	}
+
 	if( ret == 0 )
 	{
 		// child process
-		
+
 		// get our own session so we don't depend on the (soon to be killed)
 		// parent process anymore - else we'll freeze
 		pid_t sId = setsid();
@@ -815,7 +817,7 @@ void Sys_ReLaunch()
 		{
 			idLib::Error( "Sys_ReLaunch(): setsid() failed! Reason: %s ", strerror( errno ) );
 		}
-		
+
 		// close all FDs (except for stdin/out/err) so we don't leak FDs
 		DIR* devfd = opendir( "/dev/fd" );
 		if( devfd != NULL )
@@ -828,37 +830,41 @@ void Sys_ReLaunch()
 				char* endptr = NULL;
 				long int fd = strtol( filename, &endptr, 0 );
 				if( endptr != filename && fd > STDERR_FILENO )
+				{
 					close( fd );
+				}
 			}
 		}
 		else
 		{
 			idLib::Warning( "Sys_ReLaunch(): Couldn't open /dev/fd/ - will leak file descriptors. Reason: %s", strerror( errno ) );
 		}
-		
+
 		// + 3 because "+set" "com_skipIntroVideos" "1" - and note that while we'll skip
 		// one (the first) cmdargv argument, we need one more pointer for NULL at the end.
 		int argc = cmdargc + 3;
 		const char** argv = ( const char** )calloc( argc, sizeof( char* ) );
-		
+
 		int i;
 		for( i = 0; i < cmdargc - 1; ++i )
-			argv[i] = cmdargv[i + 1]; // ignore cmdargv[0] == executable name
-			
+		{
+			argv[i] = cmdargv[i + 1];    // ignore cmdargv[0] == executable name
+		}
+
 		// add +set com_skipIntroVideos 1
 		argv[i++] = "+set";
 		argv[i++] = "com_skipIntroVideos";
 		argv[i++] = "1";
 		// execv expects NULL terminated array
 		argv[i] = NULL;
-		
+
 		const char* exepath = Sys_EXEPath();
-		
+
 		errno = 0;
 		execv( exepath, ( char** )argv );
 		// we only get here if execv() fails, else the executable is restarted
 		idLib::Error( "Sys_ReLaunch(): WTF exec() failed! Reason: %s ", strerror( errno ) );
-		
+
 	}
 	else
 	{
@@ -886,9 +892,9 @@ int main( int argc, const char** argv )
 	mcheck( abrt_func );
 	Sys_Printf( "memory consistency checking enabled\n" );
 #endif
-	
+
 	Posix_EarlyInit( );
-	
+
 	if( argc > 1 )
 	{
 		common->Init( argc - 1, &argv[1], NULL );
@@ -897,9 +903,9 @@ int main( int argc, const char** argv )
 	{
 		common->Init( 0, NULL, NULL );
 	}
-	
+
 	Posix_LateInit( );
-	
+
 	while( 1 )
 	{
 		common->Frame();

@@ -42,24 +42,24 @@ idDict::operator=
 idDict& idDict::operator=( const idDict& other )
 {
 	int i;
-	
+
 	// check for assignment to self
 	if( this == &other )
 	{
 		return *this;
 	}
-	
+
 	Clear();
-	
+
 	args = other.args;
 	argHash = other.argHash;
-	
+
 	for( i = 0; i < args.Num(); i++ )
 	{
 		args[i].key = globalKeys.CopyString( args[i].key );
 		args[i].value = globalValues.CopyString( args[i].value );
 	}
-	
+
 	return *this;
 }
 
@@ -74,15 +74,15 @@ void idDict::Copy( const idDict& other )
 {
 	int i, n, *found;
 	idKeyValue kv;
-	
+
 	// check for assignment to self
 	if( this == &other )
 	{
 		return;
 	}
-	
+
 	n = other.args.Num();
-	
+
 	if( args.Num() )
 	{
 		found = ( int* ) _alloca16( other.args.Num() * sizeof( int ) );
@@ -95,7 +95,7 @@ void idDict::Copy( const idDict& other )
 	{
 		found = NULL;
 	}
-	
+
 	for( i = 0; i < n; i++ )
 	{
 		if( found && found[i] != -1 )
@@ -124,20 +124,20 @@ idDict::TransferKeyValues
 void idDict::TransferKeyValues( idDict& other )
 {
 	int i, n;
-	
+
 	if( this == &other )
 	{
 		return;
 	}
-	
+
 	if( other.args.Num() && other.args[0].key->GetPool() != &globalKeys )
 	{
 		common->FatalError( "idDict::TransferKeyValues: can't transfer values across a DLL boundary" );
 		return;
 	}
-	
+
 	Clear();
-	
+
 	n = other.args.Num();
 	args.SetNum( n );
 	for( i = 0; i < n; i++ )
@@ -146,7 +146,7 @@ void idDict::TransferKeyValues( idDict& other )
 		args[i].value = other.args[i].value;
 	}
 	argHash = other.argHash;
-	
+
 	other.args.Clear();
 	other.argHash.Free();
 }
@@ -161,9 +161,9 @@ bool idDict::Parse( idParser& parser )
 	idToken	token;
 	idToken	token2;
 	bool	errors;
-	
+
 	errors = false;
-	
+
 	parser.ExpectTokenString( "{" );
 	parser.ReadToken( &token );
 	while( ( token.type != TT_PUNCTUATION ) || ( token != "}" ) )
@@ -172,25 +172,25 @@ bool idDict::Parse( idParser& parser )
 		{
 			parser.Error( "Expected quoted string, but found '%s'", token.c_str() );
 		}
-		
+
 		if( !parser.ReadToken( &token2 ) )
 		{
 			parser.Error( "Unexpected end of file" );
 		}
-		
+
 		if( FindKey( token ) )
 		{
 			parser.Warning( "'%s' already defined", token.c_str() );
 			errors = true;
 		}
 		Set( token, token2 );
-		
+
 		if( !parser.ReadToken( &token ) )
 		{
 			parser.Error( "Unexpected end of file" );
 		}
 	}
-	
+
 	return !errors;
 }
 
@@ -204,7 +204,7 @@ void idDict::SetDefaults( const idDict* dict )
 	int i, n;
 	const idKeyValue* kv, *def;
 	idKeyValue newkv;
-	
+
 	n = dict->args.Num();
 	for( i = 0; i < n; i++ )
 	{
@@ -227,13 +227,13 @@ idDict::Clear
 void idDict::Clear()
 {
 	int i;
-	
+
 	for( i = 0; i < args.Num(); i++ )
 	{
 		globalKeys.FreeString( args[i].key );
 		globalValues.FreeString( args[i].value );
 	}
-	
+
 	args.Clear();
 	argHash.Free();
 }
@@ -247,7 +247,7 @@ void idDict::Print() const
 {
 	int i;
 	int n;
-	
+
 	n = args.Num();
 	for( i = 0; i < n; i++ )
 	{
@@ -271,7 +271,7 @@ int	idDict::Checksum() const
 	unsigned int ret;
 	// RB end
 	int i, n;
-	
+
 	idList<idKeyValue> sorted = args;
 	sorted.SortWithTemplate( idSort_KeyValue() );
 	n = sorted.Num();
@@ -294,13 +294,13 @@ size_t idDict::Allocated() const
 {
 	int		i;
 	size_t	size;
-	
+
 	size = args.Allocated() + argHash.Allocated();
 	for( i = 0; i < args.Num(); i++ )
 	{
 		size += args[i].Size();
 	}
-	
+
 	return size;
 }
 
@@ -313,12 +313,12 @@ void idDict::Set( const char* key, const char* value )
 {
 	int i;
 	idKeyValue kv;
-	
+
 	if( key == NULL || key[0] == '\0' )
 	{
 		return;
 	}
-	
+
 	i = FindKeyIndex( key );
 	if( i != -1 )
 	{
@@ -344,7 +344,7 @@ bool idDict::GetFloat( const char* key, const char* defaultString, float& out ) 
 {
 	const char*	s;
 	bool		found;
-	
+
 	found = GetString( key, defaultString, &s );
 	out = atof( s );
 	return found;
@@ -359,7 +359,7 @@ bool idDict::GetInt( const char* key, const char* defaultString, int& out ) cons
 {
 	const char*	s;
 	bool		found;
-	
+
 	found = GetString( key, defaultString, &s );
 	out = atoi( s );
 	return found;
@@ -374,7 +374,7 @@ bool idDict::GetBool( const char* key, const char* defaultString, bool& out ) co
 {
 	const char*	s;
 	bool		found;
-	
+
 	found = GetString( key, defaultString, &s );
 	out = ( atoi( s ) != 0 );
 	return found;
@@ -449,12 +449,12 @@ bool idDict::GetAngles( const char* key, const char* defaultString, idAngles& ou
 {
 	bool		found;
 	const char*	s;
-	
+
 	if( !defaultString )
 	{
 		defaultString = "0 0 0";
 	}
-	
+
 	found = GetString( key, defaultString, &s );
 	out.Zero();
 	sscanf( s, "%f %f %f", &out.pitch, &out.yaw, &out.roll );
@@ -470,12 +470,12 @@ bool idDict::GetVector( const char* key, const char* defaultString, idVec3& out 
 {
 	bool		found;
 	const char*	s;
-	
+
 	if( !defaultString )
 	{
 		defaultString = "0 0 0";
 	}
-	
+
 	found = GetString( key, defaultString, &s );
 	out.Zero();
 	sscanf( s, "%f %f %f", &out.x, &out.y, &out.z );
@@ -491,12 +491,12 @@ bool idDict::GetVec2( const char* key, const char* defaultString, idVec2& out ) 
 {
 	bool		found;
 	const char*	s;
-	
+
 	if( !defaultString )
 	{
 		defaultString = "0 0";
 	}
-	
+
 	found = GetString( key, defaultString, &s );
 	out.Zero();
 	sscanf( s, "%f %f", &out.x, &out.y );
@@ -512,12 +512,12 @@ bool idDict::GetVec4( const char* key, const char* defaultString, idVec4& out ) 
 {
 	bool		found;
 	const char*	s;
-	
+
 	if( !defaultString )
 	{
 		defaultString = "0 0 0 0";
 	}
-	
+
 	found = GetString( key, defaultString, &s );
 	out.Zero();
 	sscanf( s, "%f %f %f %f", &out.x, &out.y, &out.z, &out.w );
@@ -533,12 +533,12 @@ bool idDict::GetMatrix( const char* key, const char* defaultString, idMat3& out 
 {
 	const char*	s;
 	bool		found;
-	
+
 	if( !defaultString )
 	{
 		defaultString = "1 0 0 0 1 0 0 0 1";
 	}
-	
+
 	found = GetString( key, defaultString, &s );
 	out.Identity();		// sccanf has a bug in it on Mac OS 9.  Sigh.
 	sscanf( s, "%f %f %f %f %f %f %f %f %f", &out[0].x, &out[0].y, &out[0].z, &out[1].x, &out[1].y, &out[1].z, &out[2].x, &out[2].y, &out[2].z );
@@ -568,13 +568,13 @@ idDict::FindKey
 const idKeyValue* idDict::FindKey( const char* key ) const
 {
 	int i, hash;
-	
+
 	if( key == NULL || key[0] == '\0' )
 	{
 		idLib::common->DWarning( "idDict::FindKey: empty key" );
 		return NULL;
 	}
-	
+
 	hash = argHash.GenerateKey( key, false );
 	for( i = argHash.First( hash ); i != -1; i = argHash.Next( i ) )
 	{
@@ -583,7 +583,7 @@ const idKeyValue* idDict::FindKey( const char* key ) const
 			return &args[i];
 		}
 	}
-	
+
 	return NULL;
 }
 
@@ -602,7 +602,7 @@ int idDict::FindKeyIndex( const char* key ) const
 		return -1;
 		// RB end
 	}
-	
+
 	int hash = argHash.GenerateKey( key, false );
 	for( int i = argHash.First( hash ); i != -1; i = argHash.Next( i ) )
 	{
@@ -611,7 +611,7 @@ int idDict::FindKeyIndex( const char* key ) const
 			return i;
 		}
 	}
-	
+
 	return -1;
 }
 
@@ -623,7 +623,7 @@ idDict::Delete
 void idDict::Delete( const char* key )
 {
 	int hash, i;
-	
+
 	hash = argHash.GenerateKey( key, false );
 	for( i = argHash.First( hash ); i != -1; i = argHash.Next( i ) )
 	{
@@ -636,7 +636,7 @@ void idDict::Delete( const char* key )
 			break;
 		}
 	}
-	
+
 #if 0
 	// make sure all keys can still be found in the hash index
 	for( i = 0; i < args.Num(); i++ )
@@ -656,10 +656,10 @@ const idKeyValue* idDict::MatchPrefix( const char* prefix, const idKeyValue* las
 	int	i;
 	int len;
 	int start;
-	
+
 	assert( prefix );
 	len = strlen( prefix );
-	
+
 	start = -1;
 	if( lastMatch )
 	{
@@ -670,7 +670,7 @@ const idKeyValue* idDict::MatchPrefix( const char* prefix, const idKeyValue* las
 			start = 0;
 		}
 	}
-	
+
 	for( i = start + 1; i < args.Num(); i++ )
 	{
 		if( !args[i].GetKey().Icmpn( prefix, len ) )
@@ -692,7 +692,7 @@ const char* idDict::RandomPrefix( const char* prefix, idRandom& random ) const
 	const int MAX_RANDOM_KEYS = 2048;
 	const char* list[MAX_RANDOM_KEYS];
 	const idKeyValue* kv;
-	
+
 	list[0] = "";
 	for( count = 0, kv = MatchPrefix( prefix ); kv != NULL && count < MAX_RANDOM_KEYS; kv = MatchPrefix( prefix, kv ) )
 	{
@@ -723,23 +723,23 @@ void idDict::WriteToFileHandle( idFile* f ) const
 void idDict::WriteJSON( idFile* f, const char* prefix ) const
 {
 	//f->Printf( "%s[\n", prefix );
-	
+
 	//f->Printf( "%s\"dict\": {\n", prefix );
-	
+
 	idStr key;
-	
+
 	for( int i = 0; i < args.Num(); i++ )  	// don't loop on the swapped count use the original
 	{
 		//f->Printf( "%s{\"key\": \"%s\", \"value\": \"%s\"},\n", prefix, args[i].GetKey().c_str(), args[i].GetValue().c_str() );
-		
+
 		key = args[i].GetKey();
-		
+
 		//for( int j = 0; j < key.Length(); j++ )
 		key.ReplaceChar( '\t', ' ' );
-		
+
 		f->Printf( "%s\t\"%s\": \"%s\"%s\n", prefix, key.c_str(), args[i].GetValue().c_str(), ( i == ( args.Num() - 1 ) ) ? "" : "," );
 	}
-	
+
 	//f->Printf( "%s}\n", prefix );
 }
 // RB end
@@ -753,7 +753,7 @@ static idStr ReadString( idFile* f )
 {
 	char	str[MAX_STRING_CHARS];
 	int		len;
-	
+
 	for( len = 0; len < MAX_STRING_CHARS; len++ )
 	{
 		f->Read( ( void* )&str[len], 1 );
@@ -766,7 +766,7 @@ static idStr ReadString( idFile* f )
 	{
 		idLib::common->Error( "idDict::ReadFromFileHandle: bad string" );
 	}
-	
+
 	return idStr( str );
 }
 
@@ -779,9 +779,9 @@ void idDict::ReadFromFileHandle( idFile* f )
 {
 	int c;
 	idStr key, val;
-	
+
 	Clear();
-	
+
 	f->Read( &c, sizeof( c ) );
 	c = LittleLong( c );
 	for( int i = 0; i < c; i++ )
@@ -835,7 +835,7 @@ void idDict::ListKeys_f( const idCmdArgs& args )
 	idLib::Printf( "Not implemented due to sort impl issues.\n" );
 	//int i;
 	//idList<const idPoolStr *> keyStrings;
-	
+
 	//for ( i = 0; i < globalKeys.Num(); i++ ) {
 	//	keyStrings.Append( globalKeys[i] );
 	//}
@@ -856,7 +856,7 @@ void idDict::ListValues_f( const idCmdArgs& args )
 	idLib::Printf( "Not implemented due to sort impl issues.\n" );
 	//int i;
 	//idList<const idPoolStr *> valueStrings;
-	
+
 	//for ( i = 0; i < globalValues.Num(); i++ ) {
 	//	valueStrings.Append( globalValues[i] );
 	//}

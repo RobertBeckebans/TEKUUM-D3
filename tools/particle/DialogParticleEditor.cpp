@@ -43,9 +43,9 @@ If you have questions concerning this license or the applicable additional terms
 #include "DialogParticleEditor.h"
 
 #ifdef ID_DEBUG_MEMORY
-#undef new
-#undef DEBUG_NEW
-#define DEBUG_NEW new
+	#undef new
+	#undef DEBUG_NEW
+	#define DEBUG_NEW new
 #endif
 
 const int StageEnableID[] =
@@ -149,13 +149,13 @@ void ParticleEditorInit( const idDict* spawnArgs )
 						"Set r_fullscreen to 0 and vid_restart.\n" );
 		return;
 	}
-	
+
 	if( g_ParticleDialog == NULL )
 	{
 		InitAfx();
 		g_ParticleDialog = new CDialogParticleEditor();
 	}
-	
+
 	if( g_ParticleDialog->GetSafeHwnd() == NULL )
 	{
 		g_ParticleDialog->Create( IDD_DIALOG_PARTICLE_EDITOR );
@@ -165,12 +165,12 @@ void ParticleEditorInit( const idDict* spawnArgs )
 		g_AFDialog->SetWindowPos( NULL, rct.left, rct.top, 0, 0, SWP_NOSIZE );
 		*/
 	}
-	
+
 	idKeyInput::ClearStates();
-	
+
 	g_ParticleDialog->ShowWindow( SW_SHOW );
 	g_ParticleDialog->SetFocus();
-	
+
 	if( spawnArgs )
 	{
 		idStr str = spawnArgs->GetString( "model" );
@@ -178,7 +178,7 @@ void ParticleEditorInit( const idDict* spawnArgs )
 		g_ParticleDialog->SelectParticle( str );
 		g_ParticleDialog->SetParticleVisualization( static_cast<int>( CDialogParticleEditor::SELECTED ) );
 	}
-	
+
 	cvarSystem->SetCVarBool( "r_useCachedDynamicModels", false );
 }
 
@@ -195,7 +195,7 @@ void ParticleEditorRun()
 #else
 	MSG* msg = &m_msgCur;
 #endif
-	
+
 	while( ::PeekMessage( msg, NULL, NULL, NULL, PM_NOREMOVE ) )
 	{
 		// pump message
@@ -510,7 +510,7 @@ void CDialogParticleEditor::OnBnClickedButtonBrowseEntitycolor()
 	list.SetNum( 128 );
 	int count = gameEdit->GetSelectedEntities( list.Ptr(), list.Num() );
 	list.SetNum( count );
-	
+
 	if( count )
 	{
 		const idDict* dict = gameEdit->EntityGetSpawnArgs( list[0] );
@@ -546,7 +546,7 @@ void CDialogParticleEditor::OnBnClickedButtonBrowseEntitycolor()
 			wnd->EnableWindow( TRUE );
 		}
 	}
-	
+
 }
 
 void CDialogParticleEditor::OnBnClickedButtonBrowsefadecolor()
@@ -622,7 +622,7 @@ void CDialogParticleEditor::UpdateParticleData()
 	{
 		wnd->SetWindowText( va( "Particle file: %s", idp->GetFileName() ) );
 	}
-	
+
 	SetParticleView();
 }
 
@@ -661,7 +661,7 @@ void CDialogParticleEditor::UpdateControlInfo()
 	{
 		wnd->EnableWindow( orientation == 1 );
 	}
-	
+
 	idParticleStage* ps = GetCurStage();
 	if( ps == NULL )
 	{
@@ -853,11 +853,11 @@ void CDialogParticleEditor::SetSelectedModel( const char* val )
 {
 	idList<idEntity*> list;
 	idMat3 axis;
-	
+
 	list.SetNum( 128 );
 	int count = gameEdit->GetSelectedEntities( list.Ptr(), list.Num() );
 	list.SetNum( count );
-	
+
 	if( count )
 	{
 		for( int i = 0; i < count; i++ )
@@ -917,9 +917,9 @@ void CDialogParticleEditor::AddStage()
 	{
 		return;
 	}
-	
+
 	idParticleStage* stage = new idParticleStage;
-	
+
 	if( ( GetAsyncKeyState( VK_CONTROL ) & 0x8000 ) )
 	{
 		idParticleStage* source = GetCurStage();
@@ -949,12 +949,12 @@ void CDialogParticleEditor::RemoveStage()
 	{
 		return;
 	}
-	
+
 	if( MessageBox( "Are you sure you want to remove this stage?", "Remove Stage", MB_YESNO | MB_ICONQUESTION ) != IDYES )
 	{
 		return;
 	}
-	
+
 	int index = listStages.GetCurSel();
 	if( index >= 0 )
 	{
@@ -1077,9 +1077,9 @@ void CDialogParticleEditor::CurStageToDlgVars()
 	{
 		return;
 	}
-	
+
 	depthHack = va( "%.3f", idp->depthHack );
-	
+
 	idParticleStage* ps = GetCurStage();
 	if( ps == NULL )
 	{
@@ -1147,7 +1147,7 @@ void CDialogParticleEditor::DlgVarsToCurStage()
 		return;
 	}
 	idp->depthHack = atof( depthHack );
-	
+
 	idParticleStage* ps = GetCurStage();
 	if( ps == NULL )
 	{
@@ -1189,18 +1189,18 @@ void CDialogParticleEditor::DlgVarsToCurStage()
 	ps->worldGravity = ( worldGravity == TRUE );
 	ps->cycles = atof( cycles );
 	ps->cycleMsec = ( ps->particleLife + ps->deadTime ) * 1000;
-	
+
 	sscanf( customParms, "%f %f %f %f %f %f %f %f", &ps->customPathParms[0], &ps->customPathParms[1], &ps->customPathParms[2],
 			&ps->customPathParms[3], &ps->customPathParms[4], &ps->customPathParms[5],
 			&ps->customPathParms[6], &ps->customPathParms[7] );
-			
+
 	ps->SetCustomPathType( customPath );
-	
+
 	ps->initialAngle = atof( initialAngle );
 	ps->boundsExpansion = atof( boundsExpansion );
 	ps->randomDistribution = ( randomDistribution != FALSE );
 	ps->entityColor = ( entityColor == TRUE );
-	
+
 }
 
 void CDialogParticleEditor::ShowCurrentStage()
@@ -1263,7 +1263,7 @@ void CDialogParticleEditor::OnBnClickedButtonSave()
 	{
 		return;
 	}
-	
+
 	if( strstr( idp->GetFileName(), "implicit" ) )
 	{
 		// defaulted, need to choose a file
@@ -1280,7 +1280,7 @@ void CDialogParticleEditor::OnBnClickedButtonSave()
 	{
 		idp->Save();
 	}
-	
+
 }
 
 void CDialogParticleEditor::EnumParticles()
@@ -1319,11 +1319,11 @@ void CDialogParticleEditor::SetVectorControlUpdate( idQuat rotation )
 	if( particleMode )
 	{
 		idList<idEntity*> list;
-		
+
 		list.SetNum( 128 );
 		int count = gameEdit->GetSelectedEntities( list.Ptr(), list.Num() );
 		list.SetNum( count );
-		
+
 		if( count )
 		{
 			for( int i = 0; i < count; i++ )
@@ -1351,12 +1351,12 @@ BOOL CDialogParticleEditor::OnInitDialog()
 {
 
 	com_editors |= EDITOR_PARTICLE;
-	
+
 	particleMode = ( cvarSystem->GetCVarInteger( "g_editEntityMode" ) == 4 );
 	mapModified = false;
-	
+
 	CDialog::OnInitDialog();
-	
+
 	sliderBunching.SetRange( 0, 20 );
 	sliderBunching.SetValueRange( 0.0f, 1.0f );
 	sliderFadeIn.SetRange( 0, 20 );
@@ -1387,13 +1387,13 @@ BOOL CDialogParticleEditor::OnInitDialog()
 	sliderAspectTo.SetValueRange( 0.0f, 128.0f );
 	sliderFadeFraction.SetRange( 0, 20 );
 	sliderFadeFraction.SetValueRange( 0.0f, 1.0f );
-	
+
 	EnumParticles();
 	SetParticleView();
-	
+
 	toolTipCtrl.Create( this );
 	toolTipCtrl.Activate( TRUE );
-	
+
 	CWnd* wnd = GetWindow( GW_CHILD );
 	CString str;
 	while( wnd )
@@ -1404,16 +1404,16 @@ BOOL CDialogParticleEditor::OnInitDialog()
 		}
 		wnd = wnd->GetWindow( GW_HWNDNEXT );
 	}
-	
+
 	wnd = GetDlgItem( IDC_BUTTON_SAVE_PARTICLEENTITIES );
 	if( wnd )
 	{
 		wnd->EnableWindow( FALSE );
 	}
 	EnableEditControls();
-	
+
 	vectorControl.SetVectorChangingCallback( VectorCallBack );
-	
+
 	return TRUE;  // return TRUE unless you set the focus to a control
 	// EXCEPTION: OCX Property Pages should return FALSE
 }
@@ -1560,11 +1560,11 @@ void CDialogParticleEditor::UpdateSelectedOrigin( float x, float y, float z )
 	idList<idEntity*> list;
 	idVec3 origin;
 	idVec3 vec( x, y, z );
-	
+
 	list.SetNum( 128 );
 	int count = gameEdit->GetSelectedEntities( list.Ptr(), list.Num() );
 	list.SetNum( count );
-	
+
 	if( count )
 	{
 		for( int i = 0; i < count; i++ )
@@ -1625,20 +1625,20 @@ void CDialogParticleEditor::OnBtnDrop()
 	idVec3		org;
 	idDict		args;
 	idAngles	viewAngles;
-	
+
 	if( !gameEdit->PlayerIsValid() )
 	{
 		return;
 	}
-	
+
 	gameEdit->PlayerGetViewAngles( viewAngles );
 	gameEdit->PlayerGetEyePosition( org );
-	
+
 	org += idAngles( 0, viewAngles.yaw, 0 ).ToForward() * 80 + idVec3( 0, 0, 1 );
 	args.Set( "origin", org.ToString() );
 	args.Set( "classname", "func_emitter" );
 	args.Set( "angle", va( "%f", viewAngles.yaw + 180 ) );
-	
+
 	idDeclParticle* idp = GetCurParticle();
 	if( idp == NULL )
 	{
@@ -1646,9 +1646,9 @@ void CDialogParticleEditor::OnBtnDrop()
 	}
 	idStr str = idp->GetName();
 	str.SetFileExtension( ".prt" );
-	
+
 	args.Set( "model", str );
-	
+
 	idStr name = gameEdit->GetUniqueEntityName( "func_emitter" );
 	bool nameValid = false;
 	while( !nameValid )
@@ -1672,9 +1672,9 @@ void CDialogParticleEditor::OnBtnDrop()
 			}
 		}
 	}
-	
+
 	args.Set( "name", name.c_str() );
-	
+
 	idEntity* ent = NULL;
 	gameEdit->SpawnEntityDef( args, &ent );
 	if( ent )
@@ -1683,7 +1683,7 @@ void CDialogParticleEditor::OnBtnDrop()
 		gameEdit->ClearEntitySelection();
 		gameEdit->AddSelectedEntity( ent );
 	}
-	
+
 	gameEdit->MapAddEntity( &args );
 }
 

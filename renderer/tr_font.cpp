@@ -34,19 +34,19 @@ If you have questions concerning this license or the applicable additional terms
 #include "tr_local.h"
 
 #ifdef BUILD_FREETYPE
-// RB: changed to local includes
-//#include <freetype/fterrors.h>
-#include <freetype/ftsystem.h>
-#include <freetype/ftimage.h>
-#include <freetype/freetype.h>
-#include <freetype/ftoutln.h>
-// RB end
+	// RB: changed to local includes
+	//#include <freetype/fterrors.h>
+	#include <freetype/ftsystem.h>
+	#include <freetype/ftimage.h>
+	#include <freetype/freetype.h>
+	#include <freetype/ftoutln.h>
+	// RB end
 
-#define _FLOOR(x)  ((x) & -64)
-#define _CEIL(x)   (((x)+63) & -64)
-#define _TRUNC(x)  ((x) >> 6)
+	#define _FLOOR(x)  ((x) & -64)
+	#define _CEIL(x)   (((x)+63) & -64)
+	#define _TRUNC(x)  ((x) >> 6)
 
-FT_Library ftLibrary = NULL;
+	FT_Library ftLibrary = NULL;
 #endif
 
 // RB: changed 256 constants used below to FONT_SIZE
@@ -68,11 +68,11 @@ void R_GetGlyphInfo( FT_GlyphSlot glyph, int* left, int* right, int* width, int*
 	*left  = _FLOOR( glyph->metrics.horiBearingX );
 	*right = _CEIL( glyph->metrics.horiBearingX + glyph->metrics.width );
 	*width = _TRUNC( *right - *left );
-	
+
 	*top    = _CEIL( glyph->metrics.horiBearingY );
 	*bottom = _FLOOR( glyph->metrics.horiBearingY - glyph->metrics.height );
 	*height = _TRUNC( *top - *bottom );
-	
+
 	//*pitch  = ( qtrue ? (*width+3) & -4 : (*width+7) >> 3 );
 	*pitch  = ( *width + 3 ) & -4;
 }
@@ -86,40 +86,40 @@ FT_Bitmap* R_RenderGlyph( FT_GlyphSlot glyph, glyphInfo_t* glyphOut )
 {
 	FT_Bitmap*  bit2;
 	int left, right, width, top, bottom, height, pitch, size;
-	
+
 	R_GetGlyphInfo( glyph, &left, &right, &width, &top, &bottom, &height, &pitch );
-	
+
 	if( glyph->format == ft_glyph_format_outline )
 	{
 		size   = pitch * height;
-		
+
 		// RB: added missing cast
 		bit2 = ( FT_Bitmap* ) Mem_Alloc( sizeof( FT_Bitmap ) );
 		// RB end
-		
+
 		bit2->width      = width;
 		bit2->rows       = height;
 		bit2->pitch      = pitch;
 		bit2->pixel_mode = ft_pixel_mode_grays;
 		//bit2->pixel_mode = ft_pixel_mode_mono;
-		
+
 		// RB: added missing cast
 		bit2->buffer     = ( byte* ) Mem_Alloc( pitch * height );
 		// RB end
-		
+
 		bit2->num_grays = 256;
-		
+
 		memset( bit2->buffer, 0, size );
-		
+
 		FT_Outline_Translate( &glyph->outline, -left, -bottom );
-		
+
 		FT_Outline_Get_Bitmap( ftLibrary, &glyph->outline, bit2 );
-		
+
 		glyphOut->height = height;
 		glyphOut->pitch = pitch;
 		glyphOut->top = ( glyph->metrics.horiBearingY >> 6 ) + 1;
 		glyphOut->bottom = bottom;
-		
+
 		return bit2;
 	}
 	else
@@ -141,9 +141,9 @@ static glyphInfo_t* RE_ConstructGlyphInfo( unsigned char* imageOut, int* xOut, i
 	unsigned char* src, *dst;
 	float scaled_width, scaled_height;
 	FT_Bitmap* bitmap = NULL;
-	
+
 	memset( &glyph, 0, sizeof( glyphInfo_t ) );
-	
+
 	// make sure everything is here
 	if( face != NULL )
 	{
@@ -157,19 +157,19 @@ static glyphInfo_t* RE_ConstructGlyphInfo( unsigned char* imageOut, int* xOut, i
 		{
 			return &glyph;
 		}
-		
+
 		if( glyph.height > *maxHeight )
 		{
 			*maxHeight = glyph.height;
 		}
-		
+
 		if( calcHeight )
 		{
 			Mem_Free( bitmap->buffer );
 			Mem_Free( bitmap );
 			return &glyph;
 		}
-		
+
 		/*
 				// need to convert to power of 2 sizes so we do not get
 				// any scaling from the gl upload
@@ -178,10 +178,10 @@ static glyphInfo_t* RE_ConstructGlyphInfo( unsigned char* imageOut, int* xOut, i
 				for (scaled_height = 1 ; scaled_height < glyph.height ; scaled_height<<=1)
 					;
 		*/
-		
+
 		scaled_width = glyph.pitch;
 		scaled_height = glyph.height;
-		
+
 		// we need to make sure we fit
 		// RB: changed constants to FONT_SIZE -1
 		if( *xOut + scaled_width + 1 >= ( FONT_SIZE - 1 ) )
@@ -210,12 +210,12 @@ static glyphInfo_t* RE_ConstructGlyphInfo( unsigned char* imageOut, int* xOut, i
 			return &glyph;
 		}
 		// RB end
-		
+
 		src = bitmap->buffer;
 		// RB: changed constant to FONT_SIZE
 		dst = imageOut + ( *yOut * FONT_SIZE ) + *xOut;
 		// RB end
-		
+
 		if( bitmap->pixel_mode == ft_pixel_mode_mono )
 		{
 			for( i = 0; i < glyph.height; i++ )
@@ -236,19 +236,19 @@ static glyphInfo_t* RE_ConstructGlyphInfo( unsigned char* imageOut, int* xOut, i
 						*_dst = 0xff;
 					}
 					mask >>= 1;
-					
+
 					if( mask == 0 )
 					{
 						mask = 0x80;
 					}
 					_dst++;
 				}
-				
+
 				src += glyph.pitch;
 				// RB: changed constant to FONT_SIZE
 				dst += FONT_SIZE;
 				// RB end
-				
+
 			}
 		}
 		else
@@ -262,26 +262,26 @@ static glyphInfo_t* RE_ConstructGlyphInfo( unsigned char* imageOut, int* xOut, i
 				// RB end
 			}
 		}
-		
+
 		// we now have an 8 bit per pixel grey scale bitmap
 		// that is width wide and pf->ftSize->metrics.y_ppem tall
-		
+
 		glyph.imageHeight = scaled_height;
 		glyph.imageWidth = scaled_width;
-		
+
 		// RB: changed constants to FONT_SIZE
 		glyph.s = ( float ) * xOut / FONT_SIZE;
 		glyph.t = ( float ) * yOut / FONT_SIZE;
 		glyph.s2 = glyph.s + ( float )scaled_width / FONT_SIZE;
 		glyph.t2 = glyph.t + ( float )scaled_height / FONT_SIZE;
 		// RB end
-		
+
 		*xOut += scaled_width + 1;
 	}
-	
+
 	Mem_Free( bitmap->buffer );
 	Mem_Free( bitmap );
-	
+
 	return &glyph;
 }
 
@@ -293,7 +293,7 @@ static void FinalizeFontInfoEx( const char* fontName, fontInfoEx_t& font, fontIn
 	idStr name;
 	int mw = 0;
 	int mh = 0;
-	
+
 	for( int i = GLYPH_START; i < GLYPH_END; i++ )
 	{
 		// RB: FIXME find better way
@@ -305,21 +305,21 @@ static void FinalizeFontInfoEx( const char* fontName, fontInfoEx_t& font, fontIn
 		{
 			sprintf( name, "%s/%s", fontName, outFont->glyphs[i].shaderName );
 		}
-		
+
 		outFont->glyphs[i].glyph = declManager->FindMaterial( name );
 		outFont->glyphs[i].glyph->SetSort( SS_GUI );
-		
+
 		if( mh < outFont->glyphs[i].height )
 		{
 			mh = outFont->glyphs[i].height;
 		}
-		
+
 		if( mw < outFont->glyphs[i].xSkip )
 		{
 			mw = outFont->glyphs[i].xSkip;
 		}
 	}
-	
+
 	if( fontCount == 0 )
 	{
 		font.maxWidthSmall = mw;
@@ -340,12 +340,12 @@ static void FinalizeFontInfoEx( const char* fontName, fontInfoEx_t& font, fontIn
 static bool LoadFontInfo( const char* name, fontInfo_t* outFont )
 {
 	idFile* file = fileSystem->OpenFileRead( name );
-	
+
 	if( file == NULL )
 	{
 		return false;
 	}
-	
+
 	for( int i = 0; i < GLYPHS_PER_FONT; i++ )
 	{
 		file->ReadInt( outFont->glyphs[i].height );
@@ -361,28 +361,28 @@ static bool LoadFontInfo( const char* name, fontInfo_t* outFont )
 		file->ReadFloat( outFont->glyphs[i].t2 );
 		int junk; /* font.glyphs[i].glyph */
 		file->ReadInt( junk );
-		
+
 		for( int j = 0; j < 32; j++ )
 		{
 			file->ReadChar( outFont->glyphs[i].shaderName[j] );
 		}
 	}
 	file->ReadFloat( outFont->glyphScale );
-	
+
 	fileSystem->CloseFile( file );
-	
+
 	return true;
 }
 
 static bool SaveFontInfo( const char* name, const fontInfo_t* outFont )
 {
 	idFile* file = fileSystem->OpenFileWrite( name );
-	
+
 	if( file == NULL )
 	{
 		return false;
 	}
-	
+
 	for( int i = 0; i < GLYPHS_PER_FONT; i++ )
 	{
 		file->WriteInt( outFont->glyphs[i].height );
@@ -398,16 +398,16 @@ static bool SaveFontInfo( const char* name, const fontInfo_t* outFont )
 		file->WriteFloat( outFont->glyphs[i].t2 );
 		// write junk, formerly font.glyphs[i].glyph
 		file->WriteInt( 0 );
-		
+
 		for( int j = 0; j < 32; j++ )
 		{
 			file->WriteChar( outFont->glyphs[i].shaderName[j] );
 		}
 	}
 	file->WriteFloat( outFont->glyphScale );
-	
+
 	fileSystem->CloseFile( file );
-	
+
 	return true;
 }
 
@@ -434,18 +434,18 @@ bool idRenderSystemLocal::RegisterFont( const char* fontName, fontInfoEx_t& font
 	ID_TIME_T ftime;
 	int i, len, fontCount;
 	idStr name;
-	
+
 	// RB: added dpi
 	float dpi = 72;
 	// RB end
-	
+
 	int pointSize = 12;
 	/*
 		if ( registeredFontCount >= MAX_FONTS ) {
 			common->Warning( "RegisterFont: Too many fonts registered already." );
 			return false;
 		}
-	
+
 		int pointSize = 12;
 		idStr::snPrintf( name, sizeof(name), "%s/fontImage_%i.dat", fontName, pointSize );
 		for ( i = 0; i < registeredFontCount; i++ ) {
@@ -455,13 +455,13 @@ bool idRenderSystemLocal::RegisterFont( const char* fontName, fontInfoEx_t& font
 			}
 		}
 	*/
-	
+
 	memset( &font, 0, sizeof( font ) );
-	
+
 	bool allPointSizesLoaded = true;
 	for( fontCount = 0; fontCount < 3; fontCount++ )
 	{
-	
+
 		if( fontCount == 0 )
 		{
 			pointSize = 12;
@@ -477,9 +477,9 @@ bool idRenderSystemLocal::RegisterFont( const char* fontName, fontInfoEx_t& font
 		// we also need to adjust the scale based on point size relative to 48 points as the ui scaling is based on a 48 point font
 		float glyphScale = 1.0f; 		// change the scale to be relative to 1 based on 72 dpi ( so dpi of 144 means a scale of .5 )
 		glyphScale *= 48.0f / pointSize;
-		
+
 		sprintf( name, "%s/fontImage_%i.dat", fontName, pointSize );
-		
+
 		fontInfo_t* outFont;
 		if( fontCount == 0 )
 		{
@@ -493,36 +493,36 @@ bool idRenderSystemLocal::RegisterFont( const char* fontName, fontInfoEx_t& font
 		{
 			outFont = &font.fontInfoLarge;
 		}
-		
+
 		idStr::Copynz( outFont->name, name.c_str(), sizeof( outFont->name ) );
-		
+
 		if( !LoadFontInfo( name.c_str(), outFont ) )
 		{
 			allPointSizesLoaded = false;
 			break;
 		}
-		
+
 		FinalizeFontInfoEx( fontName, font, outFont, fontCount );
 	}
-	
+
 	//memcpy( &registeredFont[registeredFontCount++], &font, sizeof( fontInfoEx_t ) );
-	
+
 	if( allPointSizesLoaded )
 	{
 		return true ;
 	}
-	
+
 #ifndef BUILD_FREETYPE
 	common->Warning( "RegisterFont: couldn't load FreeType code %s", name.c_str() );
 	return false;
 #else
-	
+
 	if( ftLibrary == NULL )
 	{
 		common->Warning( "RegisterFont: FreeType not initialized." );
 		return false;
 	}
-	
+
 	name = fontName;
 	name.StripFileExtension();
 	name.SetFileExtension( ".ttf" );
@@ -532,12 +532,12 @@ bool idRenderSystemLocal::RegisterFont( const char* fontName, fontInfoEx_t& font
 		common->Warning( "RegisterFont: Unable to read font file: '%s'", name.c_str() );
 		return false;
 	}
-	
+
 	// font = registeredFonts[registeredFontCount++];
-	
+
 	// make a 256x256 image buffer, once it is full, register it, clean it and keep going
 	// until all glyphs are rendered
-	
+
 	// RB: added missing cast
 	out = ( byte* ) Mem_Alloc( 1024 * 1024 );
 	if( out == NULL )
@@ -545,7 +545,7 @@ bool idRenderSystemLocal::RegisterFont( const char* fontName, fontInfoEx_t& font
 		common->Warning( "RegisterFont: Mem_Alloc failure during output image creation." );
 		return false;
 	}
-	
+
 	for( fontCount = 0; fontCount < 3; fontCount++ )
 	{
 		if( fontCount == 0 )
@@ -560,23 +560,23 @@ bool idRenderSystemLocal::RegisterFont( const char* fontName, fontInfoEx_t& font
 		{
 			pointSize = 48;
 		}
-	
+
 		// allocate on the stack first in case we fail
 		if( FT_New_Memory_Face( ftLibrary, ( const FT_Byte* ) faceData, len, 0, &face ) )
 		{
 			common->Warning( "RegisterFont: FreeType2, unable to allocate new face." );
 			return false;
 		}
-	
-	
+
+
 		if( FT_Set_Char_Size( face, pointSize << 6, pointSize << 6, dpi, dpi ) )
 		{
 			common->Warning( "RegisterFont: FreeType2, Unable to set face char size." );
 			return false;
 		}
-	
+
 		sprintf( name, "%s/fontImage_%i.dat", fontName, pointSize );
-	
+
 		fontInfo_t* outFont;
 		if( fontCount == 0 )
 		{
@@ -590,39 +590,39 @@ bool idRenderSystemLocal::RegisterFont( const char* fontName, fontInfoEx_t& font
 		{
 			outFont = &font.fontInfoLarge;
 		}
-	
+
 		// we also need to adjust the scale based on point size relative to 48 points as the ui scaling is based on a 48 point font
 		float glyphScale = 1.0f; 		// change the scale to be relative to 1 based on 72 dpi ( so dpi of 144 means a scale of .5 )
 		glyphScale *= 48.0f / pointSize;
 		outFont->glyphScale = glyphScale;
-	
+
 		idStr::Copynz( outFont->name, name.c_str(), sizeof( outFont->name ) );
-	
+
 		memset( out, 0, 1024 * 1024 );
-	
+
 		// calculate max height
 		maxHeight = 0;
 		for( i = GLYPH_START; i < GLYPH_END; i++ )
 		{
 			glyph = RE_ConstructGlyphInfo( out, &xOut, &yOut, &maxHeight, face, ( unsigned char )i, true );
 		}
-	
+
 		xOut = 0;
 		yOut = 0;
 		i = GLYPH_START;
 		lastStart = i;
 		imageNumber = 0;
-	
+
 		while( i <= GLYPH_END )
 		{
 			glyph = RE_ConstructGlyphInfo( out, &xOut, &yOut, &maxHeight, face, ( unsigned char )i, false );
-	
+
 			if( xOut == -1 || yOut == -1 || i == GLYPH_END )
 			{
 				// ran out of room
 				// we need to create an image from the bitmap, set all the handles in the glyphs to this point
 				//
-	
+
 				// RB: changed constants to FONT_SIZE
 				scaledSize = FONT_SIZE * FONT_SIZE;
 				newSize = scaledSize * 4;
@@ -637,12 +637,12 @@ bool idRenderSystemLocal::RegisterFont( const char* fontName, fontInfoEx_t& font
 						max = out[k];
 					}
 				}
-	
+
 				if( max > 0 )
 				{
 					max = 255 / max;
 				}
-	
+
 				for( k = 0; k < ( scaledSize ) ; k++ )
 				{
 					imageBuff[left++] = 255;
@@ -650,7 +650,7 @@ bool idRenderSystemLocal::RegisterFont( const char* fontName, fontInfoEx_t& font
 					imageBuff[left++] = 255;
 					imageBuff[left++] = ( ( float )out[k] * max );
 				}
-	
+
 				//if (r_saveFontData->integer) {
 #if defined(FONT_PNG)
 				sprintf( name, "%s/fontImage_%i_%i.png", fontName, imageNumber, pointSize );
@@ -660,12 +660,12 @@ bool idRenderSystemLocal::RegisterFont( const char* fontName, fontInfoEx_t& font
 				R_WriteTGA( name.c_str(), imageBuff, FONT_SIZE, FONT_SIZE, false );
 #endif
 				//}
-	
+
 				//image = globalImages->ImageFromFile(name.c_str(), TF_LINEAR, false, TR_CLAMP_TO_BORDER, TD_HIGH_QUALITY);
-	
+
 				h = declManager->FindMaterial( name );
 				h->SetSort( SS_GUI );
-	
+
 				/*
 				for (j = lastStart; j < i; j++)
 				{
@@ -674,23 +674,23 @@ bool idRenderSystemLocal::RegisterFont( const char* fontName, fontInfoEx_t& font
 				}
 				lastStart = i;
 				*/
-	
+
 				memset( out, 0, 1024 * 1024 );
 				xOut = 0;
 				yOut = 0;
 				Mem_Free( imageBuff );
-	
+
 				//i++;
-	
+
 				// FIXME: get rid of "fonts/"
 #if defined(FONT_PNG)
 				sprintf( name, "fonts/fontImage_%i_%i.png", imageNumber, pointSize );
 #else
 				sprintf( name, "fonts/fontImage_%i_%i.tga", imageNumber, pointSize );
 #endif
-	
+
 				imageNumber++;
-	
+
 				if( i == GLYPH_END )
 				{
 					for( j = lastStart; j <= GLYPH_END; j++ )
@@ -716,25 +716,25 @@ bool idRenderSystemLocal::RegisterFont( const char* fontName, fontInfoEx_t& font
 				i++;
 			}
 		}
-	
+
 		/*
 		registeredFont[registeredFontCount].glyphScale = glyphScale;
 		font.glyphScale = glyphScale;
 		memcpy( &registeredFont[registeredFontCount++], &font, sizeof( fontInfo_t ) );
 		*/
-	
+
 		//if ( r_saveFontData->integer ) {
 		//fileSystem->WriteFile( va( "%s/fontImage_%i.dat", fontName, pointSize), outFont, sizeof( fontInfo_t ) );
 		SaveFontInfo( va( "%s/fontImage_%i.dat", fontName, pointSize ), outFont );
 		//}
-	
+
 		FinalizeFontInfoEx( fontName, font, outFont, fontCount );
 	}
-	
-	
-	
+
+
+
 	Mem_Free( out );
-	
+
 	fileSystem->FreeFile( faceData );
 #endif
 	return true;

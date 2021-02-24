@@ -65,7 +65,7 @@ idEFXFile::FindEffect
 bool idEFXFile::FindEffect( idStr& name, idSoundEffect** effect, int* index )
 {
 	int i;
-	
+
 	for( i = 0; i < effects.Num(); i++ )
 	{
 		if( ( effects[i] ) && ( effects[i]->name == name ) )
@@ -86,10 +86,12 @@ idEFXFile::ReadEffect
 bool idEFXFile::ReadEffect( idLexer& src, idSoundEffect* effect )
 {
 	idToken name, token;
-	
+
 	if( !src.ReadToken( &token ) )
+	{
 		return false;
-		
+	}
+
 	// reverb effect
 	if( token == "reverb" )
 	{
@@ -98,20 +100,20 @@ bool idEFXFile::ReadEffect( idLexer& src, idSoundEffect* effect )
 		{
 			src.ReadTokenOnLine( &token );
 			name = token;
-			
+
 			if( !src.ReadToken( &token ) )
 			{
 				Mem_Free( reverb );
 				return false;
 			}
-			
+
 			if( token != "{" )
 			{
 				src.Error( "idEFXFile::ReadEffect: { not found, found %s", token.c_str() );
 				Mem_Free( reverb );
 				return false;
 			}
-			
+
 			do
 			{
 				if( !src.ReadToken( &token ) )
@@ -120,7 +122,7 @@ bool idEFXFile::ReadEffect( idLexer& src, idSoundEffect* effect )
 					Mem_Free( reverb );
 					return false;
 				}
-				
+
 				if( token == "}" )
 				{
 					effect->name = name;
@@ -128,7 +130,7 @@ bool idEFXFile::ReadEffect( idLexer& src, idSoundEffect* effect )
 					effect->datasize = sizeof( EAXREVERBPROPERTIES );
 					break;
 				}
-				
+
 				if( token == "environment" )
 				{
 					src.ReadTokenOnLine( &token );
@@ -239,7 +241,7 @@ bool idEFXFile::ReadEffect( idLexer& src, idSoundEffect* effect )
 				}
 			}
 			while( 1 );
-			
+
 			return true;
 		}
 	}
@@ -248,7 +250,7 @@ bool idEFXFile::ReadEffect( idLexer& src, idSoundEffect* effect )
 		// other effect (not supported at the moment)
 		src.Error( "idEFXFile::ReadEffect: Unknown effect definition" );
 	}
-	
+
 	return false;
 }
 
@@ -262,24 +264,24 @@ bool idEFXFile::LoadFile( const char* filename, bool OSPath )
 {
 	idLexer src( LEXFL_NOSTRINGCONCAT );
 	idToken token;
-	
+
 	src.LoadFile( filename, OSPath );
 	if( !src.IsLoaded() )
 	{
 		return false;
 	}
-	
+
 	if( !src.ExpectTokenString( "Version" ) )
 	{
 		return NULL;
 	}
-	
+
 	if( src.ParseInt() != 1 )
 	{
 		src.Error( "idEFXFile::LoadFile: Unknown file version" );
 		return false;
 	}
-	
+
 	while( !src.EndOfFile() )
 	{
 		idSoundEffect* effect = new idSoundEffect;
@@ -288,7 +290,7 @@ bool idEFXFile::LoadFile( const char* filename, bool OSPath )
 			effects.Append( effect );
 		}
 	};
-	
+
 	return true;
 }
 

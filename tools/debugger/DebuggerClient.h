@@ -50,7 +50,7 @@ public:
 };
 
 #ifndef DEBUGGERBREAKPOINT_H_
-#include "DebuggerBreakpoint.h"
+	#include "DebuggerBreakpoint.h"
 #endif
 
 typedef idList<rvDebuggerCallstack*>	rvDebuggerCallstackList;
@@ -63,29 +63,29 @@ public:
 
 	rvDebuggerClient( );
 	~rvDebuggerClient( );
-	
+
 	bool						Initialize();
 	void						Shutdown();
 	bool						ProcessMessages();
 	bool						WaitFor( EDebuggerMessage msg, int time );
-	
+
 	bool						IsConnected();
 	bool						IsStopped();
-	
+
 	int							GetActiveBreakpointID();
 	const char*					GetBreakFilename();
 	int							GetBreakLineNumber();
 	rvDebuggerCallstackList&	GetCallstack();
 	rvDebuggerThreadList&		GetThreads();
 	const char*					GetVariableValue( const char* name, int stackDepth );
-	
+
 	void						InspectVariable( const char* name, int callstackDepth );
-	
+
 	void						Break();
 	void						Resume();
 	void						StepInto();
 	void						StepOver();
-	
+
 	// Breakpoints
 	int							AddBreakpoint( const char* filename, int lineNumber, bool onceOnly = false );
 	bool						RemoveBreakpoint( int bpID );
@@ -93,7 +93,7 @@ public:
 	int							GetBreakpointCount();
 	rvDebuggerBreakpoint*		GetBreakpoint( int index );
 	rvDebuggerBreakpoint*		FindBreakpoint( const char* filename, int linenumber );
-	
+
 protected:
 
 	void						SendMessage( EDebuggerMessage dbmsg );
@@ -101,31 +101,31 @@ protected:
 	void						SendAddBreakpoint( rvDebuggerBreakpoint& bp, bool onceOnly = false );
 	void						SendRemoveBreakpoint( rvDebuggerBreakpoint& bp );
 	void						SendPacket( void* data, int datasize );
-	
+
 	bool						mConnected;
 	netadr_t					mServerAdr;
 	idPort						mPort;
-	
+
 	bool						mBreak;
 	int							mBreakID;
 	int							mBreakLineNumber;
 	idStr						mBreakFilename;
-	
+
 	idDict						mVariables;
-	
+
 	rvDebuggerCallstackList		mCallstack;
 	rvDebuggerThreadList		mThreads;
 	rvDebuggerBreakpointList	mBreakpoints;
-	
+
 	EDebuggerMessage			mWaitFor;
-	
+
 private:
 
 	void		ClearCallstack();
 	void		ClearThreads();
-	
+
 	void		UpdateWatches();
-	
+
 	// Network message handlers
 	// RB: changed msg_t* to idBitMsg&
 	void		HandleBreak( idBitMsg& msg );

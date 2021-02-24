@@ -59,27 +59,27 @@ static void AxializeVector( idVec3& v )
 	idVec3	a;
 	float	o;
 	int		i;
-	
+
 	if( !v[0] && !v[1] )
 	{
 		return;
 	}
-	
+
 	if( !v[1] && !v[2] )
 	{
 		return;
 	}
-	
+
 	if( !v[0] && !v[2] )
 	{
 		return;
 	}
-	
+
 	for( i = 0; i < 3; i++ )
 	{
 		a[i] = idMath::Fabs( v[i] );
 	}
-	
+
 	if( a[0] > a[1] && a[0] > a[2] )
 	{
 		i = 0;
@@ -92,7 +92,7 @@ static void AxializeVector( idVec3& v )
 	{
 		i = 2;
 	}
-	
+
 	o = v[i];
 	VectorCopy( vec3_origin, v );
 	if( o < 0 )
@@ -117,18 +117,18 @@ static void Drag_Setup( int x, int y, int buttons, const idVec3& xaxis, const id
 {
 	qertrace_t	t;
 	face_t*		f;
-	
+
 	drag_first = true;
-	
+
 	VectorCopy( vec3_origin, pressdelta );
 	pressx = x;
 	pressy = y;
-	
+
 	VectorCopy( xaxis, drag_xvec );
 	AxializeVector( drag_xvec );
 	VectorCopy( yaxis, drag_yvec );
 	AxializeVector( drag_yvec );
-	
+
 	if( g_qeglobals.d_select_mode == sel_addpoint )
 	{
 		if( g_qeglobals.selectObject )
@@ -139,64 +139,64 @@ static void Drag_Setup( int x, int y, int buttons, const idVec3& xaxis, const id
 		{
 			g_qeglobals.d_select_mode = sel_brush;
 		}
-		
+
 		return;
 	}
-	
+
 	if( g_qeglobals.d_select_mode == sel_editpoint )
 	{
-	
+
 		g_Inspectors->entityDlg.SelectCurvePointByRay( origin, dir, buttons );
-		
+
 		if( g_qeglobals.d_num_move_points )
 		{
 			drag_ok = true;
 		}
-		
+
 		Sys_UpdateWindows( W_ALL );
-		
+
 		return;
 	}
-	
+
 	if( g_qeglobals.d_select_mode == sel_curvepoint )
 	{
 		SelectCurvePointByRay( origin, dir, buttons );
-		
+
 		if( g_qeglobals.d_num_move_points || g_qeglobals.d_select_mode == sel_area )
 		{
 			drag_ok = true;
 		}
-		
+
 		Sys_UpdateWindows( W_ALL );
-		
+
 		Undo_Start( "drag curve point" );
 		Undo_AddBrushList( &selected_brushes );
-		
+
 		return;
 	}
 	else
 	{
 		g_qeglobals.d_num_move_points = 0;
 	}
-	
+
 	if( selected_brushes.next == &selected_brushes )
 	{
 		// in this case a new brush is created when the dragging takes place in the XYWnd,
 		// A useless undo is created when the dragging takes place in the CamWnd
 		Undo_Start( "create brush" );
-		
+
 		Sys_Status( "No selection to drag\n", 0 );
 		return;
 	}
-	
+
 	if( g_qeglobals.d_select_mode == sel_vertex )
 	{
-	
+
 		if( radiant_entityMode.GetBool() )
 		{
 			return;
 		}
-		
+
 		SelectVertexByRay( origin, dir );
 		if( g_qeglobals.d_num_move_points )
 		{
@@ -206,15 +206,15 @@ static void Drag_Setup( int x, int y, int buttons, const idVec3& xaxis, const id
 			return;
 		}
 	}
-	
+
 	if( g_qeglobals.d_select_mode == sel_edge )
 	{
-	
+
 		if( radiant_entityMode.GetBool() )
 		{
 			return;
 		}
-		
+
 		SelectEdgeByRay( origin, dir );
 		if( g_qeglobals.d_num_move_points )
 		{
@@ -224,25 +224,25 @@ static void Drag_Setup( int x, int y, int buttons, const idVec3& xaxis, const id
 			return;
 		}
 	}
-	
+
 	// check for direct hit first
 	t = Test_Ray( origin, dir, true );
 	SetActiveDrag( t.point );
 	if( t.point )
 	{
 		drag_ok = true;
-		
+
 		// point was hit
 		return;
 	}
-	
+
 	if( t.selected )
 	{
 		drag_ok = true;
-		
+
 		Undo_Start( "drag selection" );
 		Undo_AddBrushList( &selected_brushes );
-		
+
 		if( buttons == ( MK_LBUTTON | MK_CONTROL ) )
 		{
 			Sys_Status( "Shear dragging face\n" );
@@ -260,20 +260,20 @@ static void Drag_Setup( int x, int y, int buttons, const idVec3& xaxis, const id
 		{
 			Sys_Status( "Dragging entire selection\n" );
 		}
-		
+
 		return;
 	}
-	
+
 	if( g_qeglobals.d_select_mode == sel_vertex || g_qeglobals.d_select_mode == sel_edge )
 	{
 		return;
 	}
-	
+
 	if( radiant_entityMode.GetBool() )
 	{
 		return;
 	}
-	
+
 	// check for side hit multiple brushes selected?
 	if( selected_brushes.next->next != &selected_brushes )
 	{
@@ -311,10 +311,10 @@ static void Drag_Setup( int x, int y, int buttons, const idVec3& xaxis, const id
 			Brush_SideSelect( selected_brushes.next, origin, dir, false );
 		}
 	}
-	
+
 	Sys_Status( "Side stretch\n" );
 	drag_ok = true;
-	
+
 	Undo_Start( "side stretch" );
 	Undo_AddBrushList( &selected_brushes );
 }
@@ -329,13 +329,13 @@ Drag_Begin
 void Drag_Begin( int x, int y, int buttons, const idVec3& xaxis, const idVec3& yaxis, const idVec3& origin, const idVec3& dir )
 {
 	qertrace_t	t;
-	
+
 	drag_ok = false;
 	VectorCopy( vec3_origin, pressdelta );
 	VectorCopy( vec3_origin, vPressStart );
-	
+
 	drag_first = true;
-	
+
 	// shift LBUTTON = select entire brush
 	if( buttons == ( MK_LBUTTON | MK_SHIFT ) && g_qeglobals.d_select_mode != sel_curvepoint )
 	{
@@ -348,10 +348,10 @@ void Drag_Begin( int x, int y, int buttons, const idVec3& xaxis, const idVec3& y
 		{
 			Select_Ray( origin, dir, nFlag );
 		}
-		
+
 		return;
 	}
-	
+
 	// ctrl-shift LBUTTON = select single face
 	if( buttons == ( MK_LBUTTON | MK_CONTROL | MK_SHIFT ) && g_qeglobals.d_select_mode != sel_curvepoint )
 	{
@@ -359,27 +359,27 @@ void Drag_Begin( int x, int y, int buttons, const idVec3& xaxis, const idVec3& y
 		{
 			return;
 		}
-		
+
 		// _D3XP disabled
 		//Select_Deselect( ( ::GetAsyncKeyState( VK_MENU ) == 0 ) );
 		Select_Ray( origin, dir, SF_SINGLEFACE );
 		return;
 	}
-	
+
 	// LBUTTON + all other modifiers = manipulate selection
 	if( buttons & MK_LBUTTON )
 	{
 		Drag_Setup( x, y, buttons, xaxis, yaxis, origin, dir );
 		return;
 	}
-	
+
 	if( radiant_entityMode.GetBool() )
 	{
 		return;
 	}
-	
+
 	int nMouseButton = g_PrefsDlg.m_nMouseButtons == 2 ? MK_RBUTTON : MK_MBUTTON;
-	
+
 	// middle button = grab texture
 	if( buttons == nMouseButton )
 	{
@@ -388,7 +388,7 @@ void Drag_Begin( int x, int y, int buttons, const idVec3& xaxis, const idVec3& y
 		{
 			g_qeglobals.d_new_brush_bottom = t.brush->mins;
 			g_qeglobals.d_new_brush_top = t.brush->maxs;
-			
+
 			// use a local brushprimit_texdef fitted to a default 2x2 texture
 			brushprimit_texdef_t bp_local;
 			if( t.brush && t.brush->pPatch )
@@ -415,10 +415,10 @@ void Drag_Begin( int x, int y, int buttons, const idVec3& xaxis, const idVec3& y
 		{
 			Sys_Status( "Did not select a texture\n" );
 		}
-		
+
 		return;
 	}
-	
+
 	// ctrl-middle button = set entire brush to texture
 	if( buttons == ( nMouseButton | MK_CONTROL ) )
 	{
@@ -445,10 +445,10 @@ void Drag_Begin( int x, int y, int buttons, const idVec3& xaxis, const idVec3& y
 		{
 			Sys_Status( "Didn't hit a btrush\n" );
 		}
-		
+
 		return;
 	}
-	
+
 	// ctrl-shift-middle button = set single face to texture
 	if( buttons == ( nMouseButton | MK_SHIFT | MK_CONTROL ) )
 	{
@@ -476,10 +476,10 @@ void Drag_Begin( int x, int y, int buttons, const idVec3& xaxis, const idVec3& y
 		{
 			Sys_Status( "Didn't hit a btrush\n" );
 		}
-		
+
 		return;
 	}
-	
+
 	if( buttons == ( nMouseButton | MK_SHIFT ) )
 	{
 		Sys_Status( "Set brush face texture info\n" );
@@ -493,14 +493,14 @@ void Drag_Begin( int x, int y, int buttons, const idVec3& xaxis, const idVec3& y
 								idMaterial	*pTex = declManager->FindMaterial(g_qeglobals.d_texturewin.texdef.name);
 								if (pTex) {
 									idVec3	vColor = pTex->getColor();
-			
+
 									float	fLargest = 0.0f;
 									for (int i = 0; i < 3; i++) {
 										if (vColor[i] > fLargest) {
 											fLargest = vColor[i];
 										}
 									}
-			
+
 									if (fLargest == 0.0f) {
 										vColor[0] = vColor[1] = vColor[2] = 1.0f;
 									}
@@ -510,7 +510,7 @@ void Drag_Begin( int x, int y, int buttons, const idVec3& xaxis, const idVec3& y
 											vColor[i] *= fScale;
 										}
 									}
-			
+
 									strBuff.Format("%f %f %f", pTex->getColor().x, pTex->getColor().y, pTex->getColor().z);
 									SetKeyValue(t.brush->owner, "_color", strBuff.GetBuffer(0));
 									Sys_UpdateWindows(W_ALL);
@@ -520,7 +520,7 @@ void Drag_Begin( int x, int y, int buttons, const idVec3& xaxis, const idVec3& y
 								Sys_Status("Can't select an entity brush face\n");
 							}
 						}
-			
+
 						else {
 			*/
 			// strcpy(t.face->texdef.name,g_qeglobals.d_texturewin.texdef.name);
@@ -533,7 +533,7 @@ void Drag_Begin( int x, int y, int buttons, const idVec3& xaxis, const idVec3& y
 		{
 			Sys_Status( "Didn't hit a brush\n" );
 		}
-		
+
 		return;
 	}
 }
@@ -542,20 +542,20 @@ void Drag_Begin( int x, int y, int buttons, const idVec3& xaxis, const idVec3& y
 void Brush_GetBounds( brush_t* b, idVec3& mins, idVec3& maxs )
 {
 	int		i;
-	
+
 	for( i = 0; i < 3; i++ )
 	{
 		mins[i] = 999999;
 		maxs[i] = -999999;
 	}
-	
+
 	for( i = 0; i < 3; i++ )
 	{
 		if( b->mins[i] < mins[i] )
 		{
 			mins[i] = b->mins[i];
 		}
-		
+
 		if( b->maxs[i] > maxs[i] )
 		{
 			maxs[i] = b->maxs[i];
@@ -575,18 +575,18 @@ static void MoveSelection( const idVec3& orgMove )
 	brush_t* b;
 	CString strStatus;
 	idVec3	vTemp, vTemp2, end, move;
-	
+
 	move = orgMove;
-	
+
 	if( !move[0] && !move[1] && !move[2] )
 	{
 		return;
 	}
-	
+
 	move[0] = ( g_nScaleHow & SCALE_X ) ? 0 : move[0];
 	move[1] = ( g_nScaleHow & SCALE_Y ) ? 0 : move[1];
 	move[2] = ( g_nScaleHow & SCALE_Z ) ? 0 : move[2];
-	
+
 	if( g_pParentWnd->ActiveXY()->RotateMode() || g_bPatchBendMode )
 	{
 		float	fDeg = -move[2];
@@ -604,7 +604,7 @@ static void MoveSelection( const idVec3& orgMove )
 			fAdj = move[2];
 			axis = 1;
 		}
-		
+
 		g_pParentWnd->ActiveXY()->Rotation()[g_qeglobals.rotateAxis] += fAdj;
 		strStatus.Format( "%s x:: %.1f  y:: %.1f  z:: %.1f",
 						  g_bPatchBendMode ? "Bend angle" : "Rotation",
@@ -612,7 +612,7 @@ static void MoveSelection( const idVec3& orgMove )
 						  g_pParentWnd->ActiveXY()->Rotation()[1],
 						  g_pParentWnd->ActiveXY()->Rotation()[2] );
 		g_pParentWnd->SetStatusText( 2, strStatus );
-		
+
 		if( g_bPatchBendMode )
 		{
 			Patch_SelectBendNormal();
@@ -624,10 +624,10 @@ static void MoveSelection( const idVec3& orgMove )
 		{
 			Select_RotateAxis( g_qeglobals.rotateAxis, fDeg, false, true );
 		}
-		
+
 		return;
 	}
-	
+
 	if( g_pParentWnd->ActiveXY()->ScaleMode() )
 	{
 		idVec3	v;
@@ -643,24 +643,24 @@ static void MoveSelection( const idVec3& orgMove )
 				v[i] = 0.9f;
 			}
 		}
-		
+
 		Select_Scale( v.x, v.y, v.z );
 		Sys_UpdateWindows( W_ALL );
 		return;
 	}
-	
+
 	idVec3	vDistance;
 	VectorSubtract( pressdelta, vPressStart, vDistance );
 	strStatus.Format( "Distance x: %.3f  y: %.3f  z: %.3f", vDistance[0], vDistance[1], vDistance[2] );
 	g_pParentWnd->SetStatusText( 3, strStatus );
-	
+
 	// dragging only a part of the selection
 	if( UpdateActiveDragPoint( move ) )
 	{
 		UpdateLightInspector();
 		return;
 	}
-	
+
 	//
 	// this is fairly crappy way to deal with curvepoint and area selection but it
 	// touches the smallest amount of code this way
@@ -673,14 +673,14 @@ static void MoveSelection( const idVec3& orgMove )
 			VectorAdd( g_qeglobals.d_vAreaBR, move, g_qeglobals.d_vAreaBR );
 			return;
 		}
-		
+
 		// curve point selection
 		if( g_qeglobals.d_select_mode == sel_curvepoint )
 		{
 			Patch_UpdateSelected( move );
 			return;
 		}
-		
+
 		// vertex selection
 		if( g_qeglobals.d_select_mode == sel_vertex )
 		{
@@ -689,23 +689,23 @@ static void MoveSelection( const idVec3& orgMove )
 			{
 				success &= Brush_MoveVertex( selected_brushes.next, *g_qeglobals.d_move_points[0], move, end, true );
 			}
-			
+
 			// if (success)
 			VectorCopy( end, *g_qeglobals.d_move_points[0] );
 			return;
 		}
-		
+
 		// all other selection types
 		for( i = 0; i < g_qeglobals.d_num_move_points; i++ )
 		{
 			VectorAdd( *g_qeglobals.d_move_points[i], move, *g_qeglobals.d_move_points[i] );
 		}
-		
+
 		if( g_qeglobals.d_select_mode == sel_editpoint )
 		{
 			g_Inspectors->entityDlg.UpdateEntityCurve();
 		}
-		
+
 		//
 		// VectorScale(move, .5, move); for (i=0 ; i<g_qeglobals.d_num_move_points2 ; i++)
 		// VectorAdd (g_qeglobals.d_move_points2[i], move, g_qeglobals.d_move_points2[i]);
@@ -727,18 +727,18 @@ static void MoveSelection( const idVec3& orgMove )
 					break;	// dragged backwards or messed up
 				}
 			}
-			
+
 			if( i != 3 )
 			{
 				break;
 			}
-			
+
 			if( b->pPatch )
 			{
 				VectorCopy( b->maxs, vTemp2 );
 				VectorSubtract( vTemp2, b->mins, vTemp2 );
 				VectorSubtract( vTemp2, vTemp, vTemp2 );
-				
+
 				// if (!Patch_DragScale(b->nPatchID, vTemp2, move))
 				if( !Patch_DragScale( b->pPatch, vTemp2, move ) )
 				{
@@ -747,7 +747,7 @@ static void MoveSelection( const idVec3& orgMove )
 				}
 			}
 		}
-		
+
 		// if any of the brushes were crushed out of existance calcel the entire move
 		if( b != &selected_brushes )
 		{
@@ -756,7 +756,7 @@ static void MoveSelection( const idVec3& orgMove )
 			{
 				VectorSubtract( *g_qeglobals.d_move_points[i], move, *g_qeglobals.d_move_points[i] );
 			}
-			
+
 			for( b = selected_brushes.next; b != &selected_brushes; b = b->next )
 			{
 				Brush_Build( b );
@@ -773,7 +773,7 @@ static void MoveSelection( const idVec3& orgMove )
 		{
 			Brush_ResetFaceOriginals( b );
 		}
-		
+
 		Select_Move( move );
 	}
 }
@@ -787,13 +787,13 @@ void Drag_MouseMoved( int x, int y, int buttons )
 {
 	idVec3	move, delta;
 	int		i;
-	
+
 	if( !buttons || !drag_ok )
 	{
 		drag_ok = false;
 		return;
 	}
-	
+
 	// clear along one axis
 	if( buttons & MK_SHIFT )
 	{
@@ -807,7 +807,7 @@ void Drag_MouseMoved( int x, int y, int buttons )
 			x = pressx;
 		}
 	}
-	
+
 	for( i = 0; i < 3; i++ )
 	{
 		move[i] = drag_xvec[i] * ( x - pressx ) + drag_yvec[i] * ( y - pressy );
@@ -816,10 +816,10 @@ void Drag_MouseMoved( int x, int y, int buttons )
 			move[i] = floor( move[i] / g_qeglobals.d_gridsize + 0.5 ) * g_qeglobals.d_gridsize;
 		}
 	}
-	
+
 	VectorSubtract( move, pressdelta, delta );
 	VectorCopy( move, pressdelta );
-	
+
 	if( buttons & MK_CONTROL && g_pParentWnd->ActiveXY()->RotateMode() )
 	{
 		for( i = 0; i < 3; i++ )
@@ -837,7 +837,7 @@ void Drag_MouseMoved( int x, int y, int buttons )
 			}
 		}
 	}
-	
+
 	MoveSelection( delta );
 }
 
@@ -849,29 +849,29 @@ Drag_MouseUp
 void Drag_MouseUp( int nButtons )
 {
 	Sys_Status( "drag completed.", 0 );
-	
+
 	if( g_qeglobals.d_select_mode == sel_area )
 	{
 		Patch_SelectAreaPoints();
 		g_qeglobals.d_select_mode = sel_curvepoint;
 		Sys_UpdateWindows( W_ALL );
 	}
-	
+
 	if( g_qeglobals.d_select_translate[0] || g_qeglobals.d_select_translate[1] || g_qeglobals.d_select_translate[2] )
 	{
 		Select_Move( g_qeglobals.d_select_translate );
 		VectorCopy( vec3_origin, g_qeglobals.d_select_translate );
 		Sys_UpdateWindows( W_CAMERA );
 	}
-	
+
 	g_pParentWnd->SetStatusText( 3, "" );
-	
+
 	/*
 		if (g_pParentWnd->GetCamera()->UpdateRenderEntities()) {
 			Sys_UpdateWindows(W_CAMERA);
 		}
 	*/
-	
+
 	Undo_EndBrushList( &selected_brushes );
 	Undo_End();
 }

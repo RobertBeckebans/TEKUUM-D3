@@ -41,7 +41,7 @@ class DialogAF : public CDialog
 {
 
 	DECLARE_DYNAMIC( DialogAF )
-	
+
 public:
 	DialogAF( CWnd* pParent = NULL );   // standard constructor
 	virtual				~DialogAF();
@@ -49,9 +49,9 @@ public:
 	void				SaveFile();
 	void				ReloadFile();
 	void				SetFileModified();
-	
+
 	enum				{ IDD = IDD_DIALOG_AF };
-	
+
 protected:
 	virtual BOOL		OnInitDialog();
 	virtual void		DoDataExchange( CDataExchange* pDX );    // DDX/DDV support
@@ -69,9 +69,9 @@ protected:
 	afx_msg void		OnBnClickedButtonAfKill();
 	afx_msg void		OnBnClickedButtonAfSave();
 	afx_msg void		OnBnClickedCancel();
-	
+
 	DECLARE_MESSAGE_MAP()
-	
+
 private:
 	CTabCtrl* 			wndTabs;
 	CWnd* 				wndTabDisplay;
@@ -79,15 +79,15 @@ private:
 	DialogAFProperties* propertiesDlg;
 	DialogAFBody* 		bodyDlg;
 	DialogAFConstraint* constraintDlg;
-	
+
 	idDeclAF* 			file;				// file being edited
-	
+
 	//{{AFX_DATA(DialogAF)
 	CComboBox			AFList;				// list with .af files
 	//}}AFX_DATA
-	
+
 	static toolTip_t	toolTips[];
-	
+
 private:
 	void				InitAFList();
 	void				AddTabItem( int id, const char* name );

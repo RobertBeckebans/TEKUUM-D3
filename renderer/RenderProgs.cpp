@@ -73,13 +73,13 @@ idRenderProgManager::Init()
 void idRenderProgManager::Init()
 {
 	common->Printf( "----- Initializing Render Shaders -----\n" );
-	
-	
+
+
 	for( int i = 0; i < MAX_BUILTINS; i++ )
 	{
 		builtinShaders[i] = -1;
 	}
-	
+
 	// RB: added checks for GPU skinning
 	struct builtinShaders_t
 	{
@@ -125,16 +125,16 @@ void idRenderProgManager::Init()
 		{ BUILTIN_ENVIRONMENT_SKINNED, "builtin/environment_skinned.vfp", "", 0, true },
 		{ BUILTIN_BUMPY_ENVIRONMENT, "builtin/bumpyEnvironment.vfp", "", 0, false },
 		{ BUILTIN_BUMPY_ENVIRONMENT_SKINNED, "builtin/bumpyEnvironment_skinned.vfp", "", 0, true },
-		
+
 		{ BUILTIN_DEPTH, "builtin/depth.vfp", "", 0, false },
 		{ BUILTIN_DEPTH_SKINNED, "builtin/depth_skinned.vfp", "", 0, true },
-		
+
 		{ BUILTIN_SHADOW, "builtin/shadow.vfp", "", 0, false },
 		{ BUILTIN_SHADOW_SKINNED, "builtin/shadow_skinned.vfp", "", 0, true },
-		
+
 		{ BUILTIN_SHADOW_DEBUG, "builtin/shadowDebug.vfp", "", 0, false },
 		{ BUILTIN_SHADOW_DEBUG_SKINNED, "builtin/shadowDebug_skinned.vfp", "", 0, true },
-		
+
 		// RB begin
 		{ BUILTIN_BLENDLIGHT, "builtin/blendLight.vfp", "", 0, false },
 		{ BUILTIN_BLENDLIGHT_SKINNED, "builtin/blendLight_skinned.vfp", "", 0, true },
@@ -163,38 +163,38 @@ void idRenderProgManager::Init()
 		{ BUILTIN_DEBUG_SHADOWMAP, "builtin/debug_shadowmap.vfp", "", 0, false },
 #endif
 		// RB end
-		
+
 	};
 	int numBuiltins = sizeof( builtins ) / sizeof( builtins[0] );
 	vertexShaders.SetNum( numBuiltins );
 	fragmentShaders.SetNum( numBuiltins );
 	glslPrograms.SetNum( numBuiltins );
-	
+
 	for( int i = 0; i < numBuiltins; i++ )
 	{
 		vertexShaders[i].name = builtins[i].name;
 		vertexShaders[i].nameOutSuffix = builtins[i].nameOutSuffix;
 		vertexShaders[i].shaderFeatures = builtins[i].shaderFeatures;
 		vertexShaders[i].builtin = true;
-		
+
 		fragmentShaders[i].name = builtins[i].name;
 		fragmentShaders[i].nameOutSuffix = builtins[i].nameOutSuffix;
 		fragmentShaders[i].shaderFeatures = builtins[i].shaderFeatures;
 		fragmentShaders[i].builtin = true;
-		
+
 		builtinShaders[builtins[i].index] = i;
-		
+
 		if( builtins[i].requireGPUSkinningSupport && !glConfig.gpuSkinningAvailable )
 		{
 			// RB: don't try to load shaders that would break the GLSL compiler in the OpenGL driver
 			continue;
 		}
-		
+
 		LoadVertexShader( i );
 		LoadFragmentShader( i );
 		LoadGLSLProgram( i, i, i );
 	}
-	
+
 	// special case handling for fastZ shaders
 	/*
 	switch( glConfig.driverType )
@@ -207,7 +207,7 @@ void idRenderProgManager::Init()
 			builtinShaders[BUILTIN_SHADOW] = FindVertexShader( "shadow.vp" );
 			int shadowFragmentShaderIndex = FindFragmentShader( "shadow.fp" );
 			FindGLSLProgram( "shadow.vp", builtinShaders[BUILTIN_SHADOW], shadowFragmentShaderIndex );
-	
+
 			if( glConfig.gpuSkinningAvailable )
 			{
 				builtinShaders[BUILTIN_SHADOW_SKINNED] = FindVertexShader( "shadow_skinned.vp" );
@@ -216,13 +216,13 @@ void idRenderProgManager::Init()
 				break;
 			}
 		}
-	
+
 		default:
 		{
 			// fast path on PC
 			builtinShaders[BUILTIN_SHADOW] = FindVertexShader( "shadow.vp" );
 			FindGLSLProgram( "shadow.vp", builtinShaders[BUILTIN_SHADOW], -1 );
-	
+
 			if( glConfig.gpuSkinningAvailable )
 			{
 				builtinShaders[BUILTIN_SHADOW_SKINNED] = FindVertexShader( "shadow_skinned.vp" );
@@ -231,9 +231,9 @@ void idRenderProgManager::Init()
 		}
 	}
 	*/
-	
+
 	glslUniforms.SetNum( RENDERPARM_USER + MAX_GLSL_USER_PARMS, vec4_zero );
-	
+
 	if( glConfig.gpuSkinningAvailable )
 	{
 		vertexShaders[builtinShaders[BUILTIN_TEXTURE_VERTEXCOLOR_SKINNED]].usesJoints = true;
@@ -256,7 +256,7 @@ void idRenderProgManager::Init()
 #endif
 		// RB end
 	}
-	
+
 	cmdSystem->AddCommand( "reloadShaders", R_ReloadShaders, CMD_FL_RENDERER, "reloads shaders" );
 }
 
@@ -275,7 +275,7 @@ void idRenderProgManager::LoadAllShaders()
 	{
 		LoadFragmentShader( i );
 	}
-	
+
 	for( int i = 0; i < glslPrograms.Num(); ++i )
 	{
 		if( glslPrograms[i].vertexShaderIndex == -1 || glslPrograms[i].fragmentShaderIndex == -1 )
@@ -283,10 +283,10 @@ void idRenderProgManager::LoadAllShaders()
 			// RB: skip reloading because we didn't load it initially
 			continue;
 		}
-		
+
 		LoadGLSLProgram( i, glslPrograms[i].vertexShaderIndex, glslPrograms[i].fragmentShaderIndex );
 	}
-	
+
 	Unbind();
 }
 
@@ -354,7 +354,7 @@ int idRenderProgManager::FindVertexShader( const char* name )
 	int index = vertexShaders.Append( shader );
 	LoadVertexShader( index );
 	currentVertexShader = index;
-	
+
 	// RB: removed idStr::Icmp( name, "heatHaze.vfp" ) == 0  hack
 	// this requires r_useUniformArrays 1
 	for( int i = 0; i < vertexShaders[index].uniforms.Num(); i++ )
@@ -366,7 +366,7 @@ int idRenderProgManager::FindVertexShader( const char* name )
 		}
 	}
 	// RB end
-	
+
 	return index;
 }
 
@@ -407,7 +407,7 @@ void idRenderProgManager::LoadVertexShader( int index )
 	{
 		return; // Already loaded
 	}
-	
+
 	vertexShader_t& vs = vertexShaders[index];
 	vertexShaders[index].progId = ( GLuint ) LoadGLSLShader( GL_VERTEX_SHADER, vs.name, vs.nameOutSuffix, vs.shaderFeatures, vs.builtin, vs.uniforms );
 }
@@ -423,7 +423,7 @@ void idRenderProgManager::LoadFragmentShader( int index )
 	{
 		return; // Already loaded
 	}
-	
+
 	fragmentShader_t& fs = fragmentShaders[index];
 	fragmentShaders[index].progId = ( GLuint ) LoadGLSLShader( GL_FRAGMENT_SHADER, fs.name, fs.nameOutSuffix, fs.shaderFeatures, fs.builtin, fs.uniforms );
 }
@@ -440,12 +440,12 @@ void idRenderProgManager::BindShader( int progIndex, int vIndex, int fIndex, boo
 	{
 		return;
 	}
-	
+
 	if( builtin )
 	{
 		currentVertexShader = vIndex;
 		currentFragmentShader = fIndex;
-		
+
 		// vIndex denotes the GLSL program
 		if( vIndex >= 0 && vIndex < glslPrograms.Num() )
 		{
@@ -468,10 +468,10 @@ void idRenderProgManager::BindShader( int progIndex, int vIndex, int fIndex, boo
 				}
 			}
 		}
-		
+
 		currentVertexShader = vIndex;
 		currentFragmentShader = fIndex;
-		
+
 		if( progIndex >= 0 && progIndex < glslPrograms.Num() )
 		{
 			currentRenderProgram = progIndex;
@@ -491,7 +491,7 @@ void idRenderProgManager::Unbind()
 {
 	currentVertexShader = -1;
 	currentFragmentShader = -1;
-	
+
 	glUseProgram( 0 );
 }
 

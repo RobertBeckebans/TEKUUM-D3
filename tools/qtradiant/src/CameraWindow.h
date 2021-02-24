@@ -16,14 +16,14 @@ class CameraWindow : public QWidget
 #endif
 {
 	Q_OBJECT
-	
+
 public:
 	explicit CameraWindow( QWidget* parent = 0 );
 	~CameraWindow();
-	
+
 protected:
 	void changeEvent( QEvent* e );
-	
+
 private:
 	Ui::CameraWindow* ui;
 };

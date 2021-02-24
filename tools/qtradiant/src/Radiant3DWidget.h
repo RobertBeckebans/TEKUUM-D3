@@ -19,17 +19,17 @@ public:
 #else
 	explicit Radiant3DWidget( QWidget* parent = 0 );
 #endif
-	
+
 signals:
 
 protected:
 	void initializeGL();
 	void resizeGL( int width, int height );
 	void paintGL();
-	
+
 public slots:
 	void onTimer();
-	
+
 private:
 	float rotx;
 	QTimer* timer;

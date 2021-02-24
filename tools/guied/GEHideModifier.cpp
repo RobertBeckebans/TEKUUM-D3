@@ -38,7 +38,7 @@ rvGEHideModifier::rvGEHideModifier( const char* name, idWindow* window, bool hid
 	mParent		= NULL;
 	mHide		= hide;
 	mUndoHide	= mWrapper->IsHidden( );
-	
+
 	// If unhiding then find any parent window along the way that may be hidden and prevent
 	// this window from being visible
 	if( !hide )
@@ -64,12 +64,12 @@ Apply the hide modifier by setting the visible state of the wrapper window
 bool rvGEHideModifier::Apply()
 {
 	mWrapper->SetHidden( mHide );
-	
+
 	if( mParent )
 	{
 		rvGEWindowWrapper::GetWrapper( mParent )->SetHidden( mHide );
 	}
-	
+
 	return true;
 }
 
@@ -83,12 +83,12 @@ Undo the hide modifier by setting the undo visible state of the wrapper window
 bool rvGEHideModifier::Undo()
 {
 	mWrapper->SetHidden( mUndoHide );
-	
+
 	if( mParent )
 	{
 		rvGEWindowWrapper::GetWrapper( mParent )->SetHidden( mUndoHide );
 	}
-	
+
 	return true;
 }
 

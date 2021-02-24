@@ -40,9 +40,9 @@ If you have questions concerning this license or the applicable additional terms
 static int Vec4_new( lua_State* L )
 {
 	int args = lua_gettop( L );
-	
+
 	idVec4* v = LuaWrapper<idVec4>::allocator( L );//new idVec4();
-	
+
 	if( args == 4 )
 	{
 		v->x = luaL_checknumber( L, 1 );
@@ -54,11 +54,11 @@ static int Vec4_new( lua_State* L )
 	{
 		v->Zero();
 	}
-	
+
 	luaW_push<idVec4>( L, v );
 	luaW_hold<idVec4>( L, v );
 	//luaW_postconstructor<idWindow>(L, args);
-	
+
 	return 1;
 }
 
@@ -66,9 +66,9 @@ static int Vec4_gc( lua_State* L )
 {
 	idVec4* v = luaW_check<idVec4>( L, 1 );
 	//idLib::Printf( "Lua says bye to Vec4 = %p\n", v );
-	
+
 	delete v;
-	
+
 	return 0;
 }
 
@@ -80,24 +80,24 @@ static int Vec4_index( lua_State* L )
 		if( lua_isstring( L, 2 ) )
 		{
 			const char* field = luaL_checkstring( L, 2 );
-			
+
 			switch( *field )
 			{
 				case 'r':
 				case 'x':
 					lua_pushnumber( L, v->x );
 					return 1;
-					
+
 				case 'g':
 				case 'y':
 					lua_pushnumber( L, v->y );
 					return 1;
-					
+
 				case 'b':
 				case 'z':
 					lua_pushnumber( L, v->z );
 					return 1;
-					
+
 				case 'a':
 				case 'w':
 					lua_pushnumber( L, v->w );
@@ -105,7 +105,7 @@ static int Vec4_index( lua_State* L )
 			}
 		}
 	}
-	
+
 	return 0;
 }
 
@@ -118,24 +118,24 @@ static int Vec4_newindex( lua_State* L )
 		{
 			const char* field = luaL_checkstring( L, 2 );
 			float n = luaL_checknumber( L, 3 );
-			
+
 			switch( *field )
 			{
 				case 'r':
 				case 'x':
 					v->x = n;
 					break;
-					
+
 				case 'g':
 				case 'y':
 					v->y = n;
 					break;
-					
+
 				case 'b':
 				case 'z':
 					v->z = n;
 					break;
-					
+
 				case 'a':
 				case 'w':
 					v->w = n;
@@ -143,21 +143,21 @@ static int Vec4_newindex( lua_State* L )
 			}
 		}
 	}
-	
+
 	return 0;
 }
 
 static int Vec4_tostring( lua_State* L )
 {
 	char		buf[MAX_STRING_CHARS];
-	
+
 	idVec4* v = luaW_check<idVec4>( L, 1 );
 	if( v )
 	{
 		sprintf( buf, "Vec4: '%s' ", v->ToString() );
 		lua_pushstring( L, buf );
 	}
-	
+
 	return 1;
 }
 
@@ -176,7 +176,7 @@ static const luaL_Reg Vec4_meta[] =
 	{ "__index",		Vec4_index },
 	{ "__newindex",		Vec4_newindex },
 	{ "__tostring",		Vec4_tostring },
-	
+
 	{NULL, NULL}
 };
 
@@ -186,7 +186,7 @@ extern "C"
 	int luaopen_Vec4( lua_State* L )
 	{
 		luaW_register< idVec4 >( L, "Vec4", Vec4_default, Vec4_meta );
-		
+
 		return 0;
 	}
 }

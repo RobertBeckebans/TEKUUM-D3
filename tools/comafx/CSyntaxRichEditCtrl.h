@@ -52,9 +52,9 @@ If you have questions concerning this license or the applicable additional terms
 //     no_namespace: no longer using this option, which avoids variable redifinition compile errors on Vista
 //#define GENERATE_TLH
 #ifdef GENERATE_TLH
-#	import "riched20.dll" raw_interfaces_only, raw_native_types, named_guids, no_auto_exclude, no_implementation, rename( "FindText", "FindShit" )
+	#import "riched20.dll" raw_interfaces_only, raw_native_types, named_guids, no_auto_exclude, no_implementation, rename( "FindText", "FindShit" )
 #else
-#	include "riched20.tlh"
+	#include "riched20.tlh"
 #endif
 
 static const char* 		FONT_NAME				= "Courier";
@@ -97,9 +97,9 @@ class CSyntaxRichEditCtrl : public CRichEditCtrl
 public:
 	CSyntaxRichEditCtrl();
 	~CSyntaxRichEditCtrl();
-	
+
 	void					Init();
-	
+
 	void					SetCaseSensitive( bool caseSensitive );
 	void					AllowPathNames( bool allow );
 	void					EnableKeyWordAutoCompletion( bool enable );
@@ -108,27 +108,27 @@ public:
 	void					SetObjectMemberCallback( objectMemberCallback_t callback );
 	void					SetFunctionParmCallback( toolTipCallback_t callback );
 	void					SetToolTipCallback( toolTipCallback_t callback );
-	
+
 	void					SetDefaultColor( const COLORREF color );
 	void					SetCommentColor( const COLORREF color );
 	void					SetStringColor( const COLORREF color, const COLORREF altColor = -1 );
 	void					SetLiteralColor( const COLORREF color );
-	
+
 	COLORREF				GetForeColor( int charIndex ) const;
 	COLORREF				GetBackColor( int charIndex ) const;
-	
+
 	void					GetCursorPos( int& line, int& column, int& character ) const;
 	CHARRANGE				GetVisibleRange() const;
-	
+
 	void					GetText( idStr& text ) const;
 	void					GetText( idStr& text, int startCharIndex, int endCharIndex ) const;
 	void					SetText( const char* text );
-	
+
 	void					GoToLine( int line );
 	bool					FindNext( const char* find, bool matchCase, bool matchWholeWords, bool searchForward );
 	int						ReplaceAll( const char* find, const char* replace, bool matchCase, bool matchWholeWords );
 	void					ReplaceText( int startCharIndex, int endCharIndex, const char* replace );
-	
+
 protected:
 	virtual int				OnToolHitTest( CPoint point, TOOLINFO* pTI ) const;
 	afx_msg BOOL			OnToolTipNotify( UINT id, NMHDR* pNMHDR, LRESULT* pResult );
@@ -144,9 +144,9 @@ protected:
 	afx_msg void			OnChange();
 	afx_msg void			OnAutoCompleteListBoxChange();
 	afx_msg void			OnAutoCompleteListBoxDblClk();
-	
+
 	DECLARE_MESSAGE_MAP()
-	
+
 	// settings
 	CHARFORMAT2				defaultCharFormat;
 	COLORREF				defaultColor;
@@ -155,7 +155,7 @@ protected:
 	COLORREF				stringColor[2];
 	COLORREF				literalColor;
 	COLORREF				braceHighlightColor;
-	
+
 	typedef enum
 	{
 		CT_WHITESPACE,
@@ -166,69 +166,69 @@ protected:
 		CT_NAME,
 		CT_PUNCTUATION
 	} charType_t;
-	
+
 	int						charType[256];
-	
+
 	idList<keyWord_t>		keyWordsFromFile;
 	const keyWord_t* 		keyWords;
 	int* 					keyWordLengths;
 	COLORREF* 				keyWordColors;
 	idHashIndex				keyWordHash;
-	
+
 	bool					caseSensitive;
 	bool					allowPathNames;
 	bool					keyWordAutoCompletion;
-	
+
 	objectMemberCallback_t	GetObjectMembers;
 	toolTipCallback_t		GetFunctionParms;
 	toolTipCallback_t		GetToolTip;
-	
+
 	// run-time variables
 	tom::ITextDocument* 	m_TextDoc;
 	tom::ITextFont* 		m_DefaultFont;
-	
+
 	CHARRANGE				updateRange;
 	bool					updateSyntaxHighlighting;
 	int						stringColorIndex;
 	int						stringColorLine;
-	
+
 	int						autoCompleteStart;
 	CListBox				autoCompleteListBox;
-	
+
 	int						funcParmToolTipStart;
 	CEdit					funcParmToolTip;
-	
+
 	int						bracedSection[2];
-	
+
 	CPoint					mousePoint;
 	CToolTipCtrl* 			keyWordToolTip;
 	TCHAR* 					m_pchTip;
 	WCHAR* 					m_pwchTip;
-	
+
 protected:
 	void					InitFont();
 	void					InitSyntaxHighlighting();
 	void					SetCharType( int first, int last, int type );
 	void					SetDefaultFont( int startCharIndex, int endCharIndex );
 	void					SetColor( int startCharIndex, int endCharIndex, COLORREF foreColor, COLORREF backColor, bool bold );
-	
+
 	void					FreeKeyWordsFromFile();
 	int						FindKeyWord( const char* keyWord, int length ) const;
-	
+
 	void					HighlightSyntax( int startCharIndex, int endCharIndex );
 	void					UpdateVisibleRange();
-	
+
 	bool					GetNameBeforeCurrentSelection( CString& name, int& charIndex ) const;
 	bool					GetNameForMousePosition( idStr& name ) const;
-	
+
 	void					AutoCompleteInsertText();
 	void					AutoCompleteUpdate();
 	void					AutoCompleteShow( int charIndex );
 	void					AutoCompleteHide();
-	
+
 	void					ToolTipShow( int charIndex, const char* string );
 	void					ToolTipHide();
-	
+
 	bool					BracedSectionStart( char braceStartChar, char braceEndChar );
 	bool					BracedSectionEnd( char braceStartChar, char braceEndChar );
 	void					BracedSectionAdjustEndTabs();

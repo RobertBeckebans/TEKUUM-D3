@@ -73,7 +73,7 @@ DialogAFView::DialogAFView
 */
 DialogAFView::DialogAFView( CWnd* pParent /*=NULL*/ )
 	: CDialog( DialogAFView::IDD, pParent )
-	  
+
 {
 	m_showBodies = cvarSystem->GetCVarBool( "af_showBodies" );
 	m_showBodyNames = cvarSystem->GetCVarBool( "af_showBodyNames" );
@@ -99,7 +99,7 @@ DialogAFView::DialogAFView( CWnd* pParent /*=NULL*/ )
 	m_showTimings = cvarSystem->GetCVarBool( "af_showTimings" );
 	m_dragEntity = cvarSystem->GetCVarBool( "g_dragEntity" );
 	m_dragShowSelection = cvarSystem->GetCVarBool( "g_dragShowSelection" );
-	
+
 	Create( IDD_DIALOG_AF_VIEW, pParent );
 	EnableToolTips( TRUE );
 }

@@ -36,11 +36,11 @@ If you have questions concerning this license or the applicable additional terms
 #include "win_input.h"
 // RB begin
 #if defined(USE_ANGLE)
-#include <EGL/egl.h>
-#include <EGL/eglext.h>
+	#include <EGL/egl.h>
+	#include <EGL/eglext.h>
 #else
-#include "../../libs/glew/include/GL/wglew.h"
-//#include "../../renderer/wglext.h"		// windows OpenGL extensions
+	#include "../../libs/glew/include/GL/wglew.h"
+	//#include "../../renderer/wglext.h"		// windows OpenGL extensions
 #endif
 // RB end
 
@@ -52,10 +52,10 @@ If you have questions concerning this license or the applicable additional terms
 void	Sys_QueEvent( sysEventType_t type, int value, int value2, int ptrLength, void* ptr, int inputDeviceNum );
 
 #if !defined(USE_QT_WINDOWING)
-void	Sys_CreateConsole();
-void	Sys_DestroyConsole();
+	void	Sys_CreateConsole();
+	void	Sys_DestroyConsole();
 
-char*	Sys_ConsoleInput();
+	char*	Sys_ConsoleInput();
 #endif
 
 char*	Sys_GetCurrentUser();
@@ -83,33 +83,33 @@ void	DisableTaskKeys( BOOL bDisable, BOOL bBeep, BOOL bTaskMgr );
 LONG WINAPI MainWndProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam );
 
 #if !defined(USE_QT_WINDOWING)
-void Conbuf_AppendText( const char* msg );
+	void Conbuf_AppendText( const char* msg );
 #endif
 
 typedef struct
 {
 	HWND			hWnd;
 	HINSTANCE		hInstance;
-	
+
 	bool			activeApp;			// changed with WM_ACTIVATE messages
 	bool			mouseReleased;		// when the game has the console down or is doing a long operation
 	bool			movingWindow;		// inhibit mouse grab when dragging the window
 	bool			mouseGrabbed;		// current state of grab and hide
-	
+
 	OSVERSIONINFOEX	osversion;
-	
+
 	cpuid_t			cpuid;
-	
+
 	// when we get a windows message, we store the time off so keyboard processing
 	// can know the exact time of an event (not really needed now that we use async direct input)
 	int				sysMsgTime;
-	
+
 	bool			windowClassRegistered;
-	
+
 	WNDPROC			wndproc;
-	
+
 	HDC				hDC;							// handle to device context
-	
+
 #if defined(USE_ANGLE)
 	EGLDisplay		eglDisplay;
 	EGLContext		eglContext;
@@ -119,17 +119,17 @@ typedef struct
 	PIXELFORMATDESCRIPTOR pfd;
 	int				pixelformat;
 #endif
-	
+
 	HINSTANCE		hinstOpenGL;	// HINSTANCE for the OpenGL library
-	
+
 	int				desktopBitsPixel;
 	int				desktopWidth, desktopHeight;
-	
+
 	int				cdsFullscreen;	// 0 = not fullscreen, otherwise monitor number
-	
+
 	unsigned short	oldHardwareGamma[3][256];
 	// desktop gamma is saved here for restoration at exit
-	
+
 	static idCVar	sys_arch;
 	static idCVar	sys_cpustring;
 	static idCVar	in_mouse;
@@ -141,19 +141,19 @@ typedef struct
 	static idCVar	win_viewlog;
 	static idCVar	win_timerUpdate;
 	static idCVar	win_allowMultipleInstances;
-	
+
 	CRITICAL_SECTION criticalSections[MAX_CRITICAL_SECTIONS];
 	HANDLE			backgroundDownloadSemaphore;
-	
+
 	HINSTANCE		hInstDI;			// direct input
-	
+
 	LPDIRECTINPUT8			g_pdi;
 	LPDIRECTINPUTDEVICE8	g_pMouse;
 	LPDIRECTINPUTDEVICE8	g_pKeyboard;
 #if !defined(USE_QT_WINDOWING)
 	idJoystickWin32			g_Joystick;
 #endif
-	
+
 } Win32Vars_t;
 
 extern Win32Vars_t	win32;

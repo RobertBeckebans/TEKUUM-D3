@@ -77,12 +77,12 @@ void Sys_Error( const char* error, ... )
 {
 	va_list		argptr;
 	char		text[4096];
-	
+
 	va_start( argptr, error );
 	vprintf( error, argptr );
 	va_end( argptr );
 	printf( "\n" );
-	
+
 	exit( 1 );
 }
 
@@ -146,7 +146,7 @@ void Sys_ShutdownInput()
 sysEvent_t	Sys_GetEvent()
 {
 	sysEvent_t	ev;
-	
+
 	memset( &ev, 0, sizeof( ev ) );
 	ev.evType = SE_NONE;
 	ev.evTime = Sys_Milliseconds();
@@ -175,29 +175,33 @@ int Sys_ListFiles( const char* directory, const char* extension, idStrList& list
 	char		search[MAX_OSPATH];
 	int			i;
 	struct stat st;
-	
+
 	list.Clear();
-	
+
 	if( !extension )
+	{
 		extension = "";
-		
+	}
+
 	if( extension[0] == '/' && extension[1] == 0 )
 	{
 		extension = "";
 		dironly = true;
 	}
-	
+
 	// search
 	if( ( fdir = opendir( directory ) ) == NULL )
 	{
 		return 0;
 	}
-	
+
 	while( ( d = readdir( fdir ) ) != NULL )
 	{
 		idStr::snprintf( search, sizeof( search ), "%s/%s", directory, d->d_name );
 		if( stat( search, &st ) == -1 )
+		{
 			continue;
+		}
 		if( !dironly )
 		{
 			idStr look( search );
@@ -210,13 +214,15 @@ int Sys_ListFiles( const char* directory, const char* extension, idStrList& list
 		}
 		if( ( dironly && !( st.st_mode & S_IFDIR ) ) ||
 				( !dironly && ( st.st_mode & S_IFDIR ) ) )
+		{
 			continue;
-			
+		}
+
 		list.Append( d->d_name );
 	}
-	
+
 	closedir( fdir );
-	
+
 	return list.Num();
 }
 
@@ -232,7 +238,7 @@ bool	Sys_StringToNetAdr( const char* s, netadr_t* a )
 const char* Sys_NetAdrToString( const netadr_t a )
 {
 	static char s[64];
-	
+
 	if( a.type == NA_LOOPBACK )
 	{
 		idStr::snPrintf( s, sizeof( s ), "localhost" );
@@ -263,7 +269,7 @@ int main( int argc, char** argv )
 		}
 	}
 	common->Init( cmdline );
-	
+
 	while( 1 )
 	{
 		common->Async();

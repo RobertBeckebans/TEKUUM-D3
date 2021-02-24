@@ -45,13 +45,13 @@ This is where the Binary image headers go that are also included by external too
 #define BIMAGE_VERSION_GLES			21
 
 #if defined(__ANDROID__)
-#define BIMAGE_VERSION				( BIMAGE_VERSION_GLES + 1 )
+	#define BIMAGE_VERSION				( BIMAGE_VERSION_GLES + 1 )
 #elif defined(USE_GLES2)
-#define BIMAGE_VERSION				( BIMAGE_VERSION_GLES + 2 )
+	#define BIMAGE_VERSION				( BIMAGE_VERSION_GLES + 2 )
 #elif defined(USE_GLES3) && !defined(USE_MESA)
-#define BIMAGE_VERSION				( BIMAGE_VERSION_GLES + 3 )
+	#define BIMAGE_VERSION				( BIMAGE_VERSION_GLES + 3 )
 #else
-#define BIMAGE_VERSION 10
+	#define BIMAGE_VERSION 10
 #endif
 // RB end
 

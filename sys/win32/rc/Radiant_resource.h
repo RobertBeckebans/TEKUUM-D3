@@ -849,31 +849,31 @@ If you have questions concerning this license or the applicable additional terms
 #define ID_CURVE_DECREASE_HORZ                   30380
 // RB Begin
 #if defined(STANDALONE)
-#define ID_GRID_START                            30383
-#define ID_GRID_POINT1                           30384
-#define ID_GRID_POINT5                           30385
-#define ID_GRID_1                                30386
-#define ID_GRID_5                                30387
-#define ID_GRID_10                               30388
-#define ID_GRID_25                               30389
-#define ID_GRID_50                               30390
-#define ID_GRID_100                              30391
-#define ID_GRID_1000                             30392
-#define ID_GRID_END                              30393
+	#define ID_GRID_START                            30383
+	#define ID_GRID_POINT1                           30384
+	#define ID_GRID_POINT5                           30385
+	#define ID_GRID_1                                30386
+	#define ID_GRID_5                                30387
+	#define ID_GRID_10                               30388
+	#define ID_GRID_25                               30389
+	#define ID_GRID_50                               30390
+	#define ID_GRID_100                              30391
+	#define ID_GRID_1000                             30392
+	#define ID_GRID_END                              30393
 #else
-#define ID_GRID_START                            30381
-#define ID_GRID_POINT0625                        30382
-#define ID_GRID_POINT125                         30383
-#define ID_GRID_POINT25                          30384
-#define ID_GRID_POINT5                           30385
-#define ID_GRID_1                                30386
-#define ID_GRID_2                                30387
-#define ID_GRID_4                                30388
-#define ID_GRID_8                                30389
-#define ID_GRID_16                               30390
-#define ID_GRID_32                               30391
-#define ID_GRID_64                               30392
-#define ID_GRID_END                              30393
+	#define ID_GRID_START                            30381
+	#define ID_GRID_POINT0625                        30382
+	#define ID_GRID_POINT125                         30383
+	#define ID_GRID_POINT25                          30384
+	#define ID_GRID_POINT5                           30385
+	#define ID_GRID_1                                30386
+	#define ID_GRID_2                                30387
+	#define ID_GRID_4                                30388
+	#define ID_GRID_8                                30389
+	#define ID_GRID_16                               30390
+	#define ID_GRID_32                               30391
+	#define ID_GRID_64                               30392
+	#define ID_GRID_END                              30393
 #endif
 // RB end
 #define ID_VIEW_MEDIABROWSER                     30394
@@ -901,11 +901,11 @@ If you have questions concerning this license or the applicable additional terms
 // Next default values for new objects
 //
 #ifdef APSTUDIO_INVOKED
-#ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_3D_CONTROLS                1
-#define _APS_NEXT_RESOURCE_VALUE        10083
-#define _APS_NEXT_COMMAND_VALUE         30406
-#define _APS_NEXT_CONTROL_VALUE         10555
-#define _APS_NEXT_SYMED_VALUE           10083
-#endif
+	#ifndef APSTUDIO_READONLY_SYMBOLS
+		#define _APS_3D_CONTROLS                1
+		#define _APS_NEXT_RESOURCE_VALUE        10083
+		#define _APS_NEXT_COMMAND_VALUE         30406
+		#define _APS_NEXT_CONTROL_VALUE         10555
+		#define _APS_NEXT_SYMED_VALUE           10083
+	#endif
 #endif
